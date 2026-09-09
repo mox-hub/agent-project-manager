@@ -7,6 +7,8 @@
  * 未命中的静态路由（列表页、设置页等）返回 generic 类型，由通用卡片兜底展示。
  */
 
+import { parseApmRef } from '@apm/shared/apm-ref';
+
 export type RoutePreviewType =
   | 'project'
   | 'task'
@@ -40,6 +42,10 @@ const DYNAMIC_RULES: Array<{ prefix: string; type: RoutePreviewType }> = [
 const RESERVED_SEGMENTS = new Set(['dashboard', 'new']);
 
 export function resolveRoutePreview(path: string): RoutePreviewMatch {
+  // apm:// 实体引用（v2 纪要 §13）：与路由双入口汇入同一解析
+  if (path.toLowerCase().startsWith('apm:')) {
+    return resolveApmRefMatch(path) ?? { type: 'generic' };
+  }
   for (const { prefix, type } of DYNAMIC_RULES) {
     if (!path.startsWith(prefix)) continue;
     const id = path.slice(prefix.length).split('/')[0] ?? '';
@@ -49,4 +55,26 @@ export function resolveRoutePreview(path: string): RoutePreviewMatch {
     return { type, id };
   }
   return { type: 'generic' };
+}
+
+/** apm:// kind → 预览卡类型（v2 纪要 §13：引用与路由两入口汇入同一 Match） */
+const APM_REF_PREVIEW_TYPE: Record<string, RoutePreviewType> = {
+  doc: 'document',
+  issue: 'task',
+  bug: 'bug',
+  member: 'member',
+  team: 'team',
+  acceptance: 'acceptance',
+};
+
+/**
+ * apm:// 引用入口（route-preview-registry 升级为「解析引用」）。
+ * 解析失败或无法映射时返回 null（区别于 generic 兜底），调用方自行降级。
+ */
+export function resolveApmRefMatch(href: string): RoutePreviewMatch | null {
+  const ref = parseApmRef(href);
+  if (!ref) return null;
+  const type = APM_REF_PREVIEW_TYPE[ref.kind];
+  if (!type) return null;
+  return { type, id: ref.shortId };
 }

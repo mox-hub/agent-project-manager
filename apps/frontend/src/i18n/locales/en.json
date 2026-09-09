@@ -977,6 +977,32 @@
     }
   },
   "project": {
+    "init": {
+      "workspace": {
+        "title": "Bind workspace directory",
+        "desc": "Specify the local directory for this project; contract files and AI execution are rooted here."
+      },
+      "contract": {
+        "title": "Seed standard contract files",
+        "desc": "Generate AGENTS.md (managed AI instructions), CLAUDE.md (derived alias) and CHANGELOG.md (release log)."
+      },
+      "next": {
+        "title": "Next steps",
+        "desc": "Your project is ready — keep configuring or jump straight in",
+        "playbook": {
+          "title": "Enter playbook flow",
+          "desc": "Interview-style project intake that generates a full playbook"
+        },
+        "profile": {
+          "title": "Import existing repository",
+          "desc": "Run a read-only AI archaeology scan to ingest project knowledge"
+        },
+        "overview": {
+          "title": "Back to project overview",
+          "desc": "Configure later and take a look around first"
+        }
+      }
+    },
     "title": "Projects",
     "create": "Create Project",
     "edit": "Edit Project",
@@ -1164,6 +1190,8 @@
       "profile": "Profile",
       "team": "Team & Roles",
       "settings": "Settings",
+      "init": "Project Init",
+      "initDesc": "Bind a workspace directory, seed standard contract files, and get AI and rules in place.",
       "openTaskBoard": "Open Task Board",
       "work": "Work",
       "quickAccess": "Quick Access",
@@ -3139,12 +3167,77 @@
     "lastSync": "Last sync: {{time}}",
     "syncErrorTip": "The last sync attempt failed. Click \"Sync now\" to retry, or check the integration logs from the Integrations page."
   },
+  "contract": {
+    "noWorkspace": {
+      "title": "No workspace directory bound",
+      "desc": "Contract files need a project workspace directory before seeding. Configure the workspace path in the \"Git & Terminal\" tab first."
+    },
+    "list": {
+      "title": "Standard contract files"
+    },
+    "action": {
+      "seedAll": "Seed all",
+      "seed": "Seed",
+      "adoptAll": "Format & adopt",
+      "adoptAllTitle": "Merges apm_ frontmatter into existing files and creates an observe-only binding; body text untouched",
+      "checkAll": "Check all alignment",
+      "check": "Check alignment",
+      "viewProposal": "View conflict proposal"
+    },
+    "empty": {
+      "title": "No contract files seeded yet",
+      "desc": "For new projects, bind a workspace and click \"Seed all\" to generate the trio; for existing projects, click \"Format & adopt\" to write identity markers only"
+    },
+    "fileType": {
+      "agents": "AGENTS.md (managed mirror)",
+      "claude_alias": "CLAUDE.md (derived alias)",
+      "changelog": "CHANGELOG.md (release export)",
+      "readme": "README",
+      "docs_dir": "docs/ directory"
+    },
+    "syncMode": {
+      "managed": "Managed",
+      "synced": "Synced",
+      "detached": "Detached"
+    },
+    "state": {
+      "conflicted": "Conflict",
+      "fileChanged": "File changed"
+    },
+    "seedAction": {
+      "created": "Created",
+      "updated": "Updated",
+      "adopted": "Adopted",
+      "skipped_unchanged": "Unchanged",
+      "skipped_existing": "Already exists",
+      "skipped_no_workspace": "No workspace"
+    },
+    "checkState": {
+      "aligned": "Aligned",
+      "conflicted": "Conflicted",
+      "skipped_detached": "Skipped (detached)",
+      "missing_file": "File missing"
+    },
+    "result": {
+      "seedTitle": "Last seed result",
+      "checkTitle": "Last alignment check"
+    }
+  },
   "projectSettings": {
     "loading": "Loading project settings...",
     "sidebarTitle": "Project Settings",
+    "contract": {
+      "title": "Contract Files",
+      "desc": "Binding status, seeding and alignment management for project contract files",
+      "panel": {
+        "title": "Contract Bindings",
+        "desc": "Truth-source sync modes and conflict state of workspace standard files"
+      }
+    },
     "tabs": {
       "general": "General",
       "gitTerminal": "Git & Terminal",
+      "contract": "Contract Files",
       "cloudSync": "Cloud Sync",
       "docs": "Documentation"
     },

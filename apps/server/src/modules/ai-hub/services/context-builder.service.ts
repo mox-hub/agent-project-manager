@@ -1,16 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
+import { DocRegistryService } from '../../document/services/doc-registry.service';
 
 export interface ContextData {
   projectSummary?: string;
   taskDetails?: string;
   recentActivities?: string;
   gitDiff?: string;
+  /** 项目知识段（契约与文档知识层 v2 纪要 §9/§11）：Registry catalog + 命中 digest */
+  projectKnowledge?: string;
 }
 
 @Injectable()
 export class ContextBuilderService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly docRegistry: DocRegistryService,
+  ) {}
 
   async buildContext(options: {
     projectId?: string;
@@ -19,11 +25,18 @@ export class ContextBuilderService {
     includeTaskDetails?: boolean;
     includeRecentActivities?: boolean;
     includeGitDiff?: boolean;
+    includeProjectKnowledge?: boolean;
   }): Promise<ContextData> {
     const context: ContextData = {};
 
     if (options.includeProjectSummary && options.projectId) {
       context.projectSummary = await this.getProjectSummary(options.projectId);
+    }
+
+    if (options.includeProjectKnowledge && options.projectId) {
+      context.projectKnowledge = await this.getProjectKnowledge(
+        options.projectId,
+      );
     }
 
     if (options.includeTaskDetails && options.issueId) {
@@ -75,6 +88,38 @@ export class ContextBuilderService {
 任务数: ${project._count.issues}
 迭代数: ${project._count.iterations}
 成员数: ${project._count.members}`;
+  }
+
+  /**
+   * 项目知识段（契约与文档知识层 v2 纪要 §9 通道 B 的 docs provider）：
+   * 从 DocRegistry 取 catalog + ready digest，拼装为紧凑知识清单。
+   * 只装元数据/摘要/锚点引用，永不装正文（§11）。
+   */
+  private async getProjectKnowledge(projectId: string): Promise<string> {
+    const catalog = await this.docRegistry.getCatalog(projectId);
+    if (catalog.length === 0) return '';
+
+    const topEntries = catalog.slice(0, 20);
+    const lines: string[] = ['## 项目知识文档'];
+    for (const entry of topEntries) {
+      const ref = entry.shortId ? `doc/${entry.shortId}` : entry.docId;
+      const role = entry.docRole ? ` [${entry.docRole}]` : '';
+      lines.push(
+        `- ${entry.title}${role} (${ref}, ${entry.status}${
+          entry.folderPath ? `, ${entry.folderPath}` : ''
+        })`,
+      );
+
+      if (entry.digestPolicy === 'off') continue;
+      const subset = await this.docRegistry.getSubset(entry.docId);
+      if (subset?.digest?.summary) {
+        lines.push(`  摘要: ${subset.digest.summary}`);
+      }
+    }
+    if (catalog.length > topEntries.length) {
+      lines.push(`（其余 ${catalog.length - topEntries.length} 篇见文档目录）`);
+    }
+    return lines.join('\n');
   }
 
   private async getTaskDetails(issueId: string): Promise<string> {

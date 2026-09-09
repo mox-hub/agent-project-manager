@@ -9,6 +9,7 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { DocumentQueryDto } from './dto/document-query.dto';
 import { AsyncFileSyncService } from './services/async-file-sync.service';
+import { DocumentVersionService } from './services/document-version.service';
 import { resolveTagIds } from '../../common/utils/tag-resolve.util';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class DocumentService {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
     private readonly asyncFileSync: AsyncFileSyncService,
+    private readonly documentVersionService: DocumentVersionService,
   ) {}
 
   async create(createDocumentDto: CreateDocumentDto, userId: string) {
@@ -170,31 +172,70 @@ export class DocumentService {
     };
   }
 
+  /**
+   * 按 id 取文档详情；id 形如 `D{数字}`（apm:// 短号，v2 纪要 §13）时
+   * 按 shortId 解析。响应形状不变，仅扩展查找语义。
+   */
   async findOne(id: string) {
-    const document = await this.prisma.document.findUnique({
-      where: { id },
-      include: {
-        folder: true,
-        project: {
-          select: { id: true, name: true, color: true },
-        },
-        sections: {
-          orderBy: { order: 'asc' },
-        },
-        _count: {
-          select: {
-            versions: true,
-            links: true,
-          },
+    const include = {
+      folder: true,
+      project: {
+        select: { id: true, name: true, color: true, projectCode: true },
+      },
+      sections: {
+        orderBy: { order: 'asc' as const },
+      },
+      _count: {
+        select: {
+          versions: true,
+          links: true,
         },
       },
-    });
+    };
+    const document = /^D\d+$/.test(id)
+      ? await this.prisma.document.findFirst({
+          where: { shortId: id, isDeleted: false },
+          include,
+        })
+      : await this.prisma.document.findUnique({
+          where: { id },
+          include,
+        });
 
     if (!document || document.isDeleted) {
       throw new NotFoundException(`Document ${id} not found`);
     }
 
     return document;
+  }
+
+  /**
+   * spec 双版本读取面（契约与文档知识层 v2 纪要 §10）：published 冻结快照
+   * 的内容——验收证据与外部引用以此为准；未发布过返回 null。
+   */
+  async getPublishedContent(documentId: string): Promise<{
+    documentId: string;
+    publishedVersionId: string | null;
+    version: string | null;
+    content: string | null;
+  }> {
+    const document = await this.prisma.document.findFirst({
+      where: { id: documentId, isDeleted: false },
+      select: {
+        id: true,
+        publishedVersionId: true,
+        publishedVersion: { select: { version: true, content: true } },
+      },
+    });
+    if (!document) {
+      throw new NotFoundException(`Document ${documentId} not found`);
+    }
+    return {
+      documentId: document.id,
+      publishedVersionId: document.publishedVersionId,
+      version: document.publishedVersion?.version ?? null,
+      content: document.publishedVersion?.content ?? null,
+    };
   }
 
   async update(
@@ -260,6 +301,38 @@ export class DocumentService {
     this.messageBus.publish('document.updated', {
       documentId: id,
     });
+
+    // T0 物化提升（契约与文档知识层 v2 纪要 §11）：开始被消费那刻物化摘要
+    if (
+      updateDocumentDto.status === 'published' &&
+      document.status !== 'published'
+    ) {
+      this.messageBus.publish('document.published', { documentId: id });
+    }
+
+    // spec 双版本（契约与文档知识层 v2 纪要 §10）：以发布态提交即刷新冻结
+    // 快照（内容未变时版本服务幂等复用现版），验收/引用面以
+    // publishedVersionId 指向的版本为证据；快照失败不阻断发布（T0 事件照发）
+    if (updateDocumentDto.status === 'published') {
+      try {
+        const snapshot =
+          await this.documentVersionService.createVersionWithOptions(id, {
+            content: updated.content,
+            createdBy: userId ?? document.authorId,
+            isAuto: true,
+            summary: '发布冻结版',
+          });
+        if (updated.publishedVersionId !== snapshot.id) {
+          await this.prisma.document.update({
+            where: { id },
+            data: { publishedVersionId: snapshot.id },
+          });
+          updated.publishedVersionId = snapshot.id;
+        }
+      } catch (err) {
+        console.error('[DocumentService] Publish snapshot failed:', err);
+      }
+    }
 
     // 内容或标题变化时同步落盘
     if (

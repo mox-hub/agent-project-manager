@@ -53421,6 +53421,202 @@
         ]
       }
     },
+    "/_api/projects/{projectId}/contract/bindings": {
+      "get": {
+        "operationId": "ContractController_listBindings",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractBindingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "列出契约文件绑定与工作区根（纯只读）",
+        "tags": [
+          "Contract"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/seed": {
+      "post": {
+        "operationId": "ContractController_seed",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeedContractFilesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeedContractResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管）",
+        "tags": [
+          "Contract"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/check": {
+      "post": {
+        "operationId": "ContractController_check",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckAlignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContractAlignmentReportDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "对齐检查（managed 漂移将升级冲突提案）",
+        "tags": [
+          "Contract"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/bindings/{fileType}": {
+      "patch": {
+        "operationId": "ContractController_setSyncMode",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fileType",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "agents",
+                "claude_alias",
+                "changelog",
+                "readme",
+                "docs_dir"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContractBindingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractBindingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "切换绑定同步模式（managed/synced/detached）",
+        "tags": [
+          "Contract"
+        ]
+      }
+    },
     "/_api/playbooks/templates": {
       "get": {
         "operationId": "PlaybookController_getTemplates",
@@ -65708,6 +65904,11 @@
             "type": "string",
             "description": "项目颜色（仅 findOne 返回）",
             "nullable": true
+          },
+          "projectCode": {
+            "type": "string",
+            "description": "项目代码（apm:// 命名空间，仅 findOne 返回）",
+            "nullable": true
           }
         },
         "required": [
@@ -65795,6 +65996,24 @@
           "publishedAt": {
             "type": "string",
             "description": "发布时间（ISO）",
+            "nullable": true
+          },
+          "docRole": {
+            "type": "string",
+            "enum": [
+              "charter",
+              "spec",
+              "design",
+              "decision",
+              "release-log",
+              "reference"
+            ],
+            "description": "治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）",
+            "nullable": true
+          },
+          "shortId": {
+            "type": "string",
+            "description": "apm:// 稳定短号（D{seq}，DocRegistry 回填）",
             "nullable": true
           },
           "folder": {
@@ -65930,6 +66149,24 @@
           "publishedAt": {
             "type": "string",
             "description": "发布时间（ISO）",
+            "nullable": true
+          },
+          "docRole": {
+            "type": "string",
+            "enum": [
+              "charter",
+              "spec",
+              "design",
+              "decision",
+              "release-log",
+              "reference"
+            ],
+            "description": "治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）",
+            "nullable": true
+          },
+          "shortId": {
+            "type": "string",
+            "description": "apm:// 稳定短号（D{seq}，DocRegistry 回填）",
             "nullable": true
           },
           "folder": {
@@ -66235,6 +66472,24 @@
             "description": "发布时间（ISO）",
             "nullable": true
           },
+          "docRole": {
+            "type": "string",
+            "enum": [
+              "charter",
+              "spec",
+              "design",
+              "decision",
+              "release-log",
+              "reference"
+            ],
+            "description": "治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）",
+            "nullable": true
+          },
+          "shortId": {
+            "type": "string",
+            "description": "apm:// 稳定短号（D{seq}，DocRegistry 回填）",
+            "nullable": true
+          },
           "folder": {
             "description": "所属文件夹（完整字段）",
             "nullable": true,
@@ -66267,6 +66522,11 @@
                 "$ref": "#/components/schemas/DocumentCountDto"
               }
             ]
+          },
+          "publishedVersionId": {
+            "type": "string",
+            "description": "published 冻结快照版本 ID（spec 双版本，v2 纪要 §10；验收/引用面证据版本）",
+            "nullable": true
           }
         },
         "required": [
@@ -73332,6 +73592,256 @@
         "required": [
           "colleagues",
           "totals"
+        ]
+      },
+      "ContractBindingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "agents",
+              "claude_alias",
+              "changelog",
+              "readme",
+              "docs_dir"
+            ]
+          },
+          "filePath": {
+            "type": "string",
+            "description": "工作区根相对路径（POSIX）"
+          },
+          "syncMode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "synced",
+              "detached"
+            ]
+          },
+          "truthOwner": {
+            "type": "string"
+          },
+          "baseline": {
+            "type": "string",
+            "nullable": true,
+            "description": "基线指纹 sha256"
+          },
+          "conflictState": {
+            "type": "string",
+            "nullable": true,
+            "description": "null | conflicted"
+          },
+          "lastWriter": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "fileType",
+          "filePath",
+          "syncMode",
+          "truthOwner",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ContractBindingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "workspaceRoot": {
+            "type": "string",
+            "nullable": true,
+            "description": "当前工作区根（未绑定为 null）"
+          },
+          "bindings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContractBindingResponseDto"
+            }
+          }
+        },
+        "required": [
+          "bindings"
+        ]
+      },
+      "SeedContractFilesDto": {
+        "type": "object",
+        "properties": {
+          "fileTypes": {
+            "type": "array",
+            "description": "仅种生指定类型（缺省全量三件套）",
+            "items": {
+              "type": "string",
+              "enum": [
+                "agents",
+                "claude_alias",
+                "changelog",
+                "readme",
+                "docs_dir"
+              ]
+            }
+          },
+          "formatOnly": {
+            "type": "boolean",
+            "description": "格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间"
+          }
+        }
+      },
+      "SeedFileResultDto": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "created",
+              "updated",
+              "adopted",
+              "skipped_unchanged",
+              "skipped_existing",
+              "skipped_no_workspace"
+            ]
+          },
+          "bindingId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "action"
+        ]
+      },
+      "SeedContractResultDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "workspaceRoot": {
+            "type": "string",
+            "nullable": true
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeedFileResultDto"
+            }
+          }
+        },
+        "required": [
+          "projectId",
+          "files"
+        ]
+      },
+      "CheckAlignmentDto": {
+        "type": "object",
+        "properties": {
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "agents",
+              "claude_alias",
+              "changelog",
+              "readme",
+              "docs_dir"
+            ],
+            "description": "仅检查指定类型（缺省检查全部已绑定类型）"
+          }
+        }
+      },
+      "AlignmentDiffDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "托管区间 id"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "file_differs",
+              "missing_in_file"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state"
+        ]
+      },
+      "ContractAlignmentReportDto": {
+        "type": "object",
+        "properties": {
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "agents",
+              "claude_alias",
+              "changelog",
+              "readme",
+              "docs_dir"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "aligned",
+              "conflicted",
+              "skipped_detached",
+              "missing_file"
+            ]
+          },
+          "diffs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlignmentDiffDto"
+            }
+          },
+          "proposalId": {
+            "type": "string",
+            "description": "升级出的冲突提案 id"
+          }
+        },
+        "required": [
+          "fileType",
+          "state"
+        ]
+      },
+      "UpdateContractBindingDto": {
+        "type": "object",
+        "properties": {
+          "syncMode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "synced",
+              "detached"
+            ],
+            "description": "目标同步模式"
+          }
+        },
+        "required": [
+          "syncMode"
         ]
       },
       "PlaybookQuestionDto": {

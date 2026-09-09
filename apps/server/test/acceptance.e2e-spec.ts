@@ -203,6 +203,25 @@ describe('Acceptance (e2e)', () => {
           expect(res.body.data).toBeTruthy();
         });
     });
+
+    it('should persist report with riskLevel verdict (GAP-T-03)', () => {
+      return wsHttp
+        .post(`/_api/acceptance/${acceptanceId}/audit`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({})
+        .expect(201)
+        .expect((res: Response) => {
+          const { report, result } = res.body.data;
+          expect(['red', 'yellow', 'green']).toContain(result.riskLevel);
+          expect(typeof result.summary).toBe('string');
+          expect(result.summary.length).toBeGreaterThan(0);
+          expect(result.blockedItems).toEqual(expect.any(Array));
+          expect(result.suggestedItems).toEqual(expect.any(Array));
+          expect(result.passedItems).toEqual(expect.any(Array));
+          expect(report.acceptanceId).toBe(acceptanceId);
+          expect(report.riskLevel).toBe(result.riskLevel);
+        });
+    });
   });
 
   describe('GET /_api/acceptance/:id/audit-report', () => {
@@ -227,6 +246,23 @@ describe('Acceptance (e2e)', () => {
     });
   });
 
+  describe('GET /_api/acceptance/checklists/:id (GAP-T-03)', () => {
+    it('should 404 on missing checklist', () => {
+      return wsHttp
+        .get('/_api/acceptance/checklists/cl-e2e-missing')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404);
+    });
+
+    it('should 404 on applying missing checklist to acceptance', () => {
+      return wsHttp
+        .post('/_api/acceptance/checklists/cl-e2e-missing/apply')
+        .query({ acceptanceId })
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404);
+    });
+  });
+
   describe('GET /_api/acceptance/issue/:issueId', () => {
     it('should return acceptances of task', () => {
       return wsHttp
@@ -244,7 +280,10 @@ describe('Acceptance (e2e)', () => {
       return wsHttp
         .get(`/_api/acceptance/issue/${issueId}/audit-gate`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
+        .expect(200)
+        .expect((res: Response) => {
+          expect(typeof res.body.data.allowed).toBe('boolean');
+        });
     });
   });
 

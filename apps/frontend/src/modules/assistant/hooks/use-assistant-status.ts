@@ -7,8 +7,9 @@
  * 避免高频轮询拉全量派发列表撑大响应与服务端日志）。不用 /execution/runs：
  * 该端点必填 projectId 且返回 {runs,total} 分页形状，无法支撑全局态判定。
  */
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
+import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
 import { useDecisionSummary } from '@/modules/decision/hooks/use-decisions';
 import type { DecisionSummary } from '@/modules/decision/api/decision-api';
 
@@ -27,6 +28,12 @@ interface DispatchesSummary {
 
 /** 是否存在活跃派发（工作区级；传 projectId 时收窄到该项目） */
 export function useActiveDispatchExists(projectId?: string) {
+  const queryClient = useQueryClient();
+  // 即时性由 socket 推送驱动（服务端 dispatch 生命周期 → runtime.dispatch.changed），
+  // 轮询仅作断连兜底
+  useEventSubscription('runtime.dispatch.changed', () => {
+    queryClient.invalidateQueries({ queryKey: ['assistant', 'active-dispatch'] });
+  });
   return useQuery({
     queryKey: ['assistant', 'active-dispatch', projectId ?? null],
     queryFn: async () => {
@@ -37,8 +44,9 @@ export function useActiveDispatchExists(projectId?: string) {
       const summary = (res ?? {}) as DispatchesSummary;
       return summary.active === true;
     },
-    // 页面隐藏时暂停轮询（Tauri 壳/前台闲置场景的显式保险）
-    refetchInterval: () => (document.hidden ? false : 5000),
+    // 页面隐藏时暂停轮询；可见时 30s 仅作断连兜底
+    // （即时性由 runtime.dispatch.changed 推送失效驱动）
+    refetchInterval: () => (document.hidden ? false : 30000),
   });
 }
 

@@ -20,6 +20,13 @@ export class DocumentProjectSummaryDto {
     nullable: true,
   })
   color?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: '项目代码（apm:// 命名空间，仅 findOne 返回）',
+    nullable: true,
+  })
+  projectCode?: string | null;
 }
 
 /** 关联计数（_count） */
@@ -100,6 +107,21 @@ export class DocumentBaseDto {
     nullable: true,
   })
   publishedAt?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    enum: ['charter', 'spec', 'design', 'decision', 'release-log', 'reference'],
+    description: '治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）',
+    nullable: true,
+  })
+  docRole?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: 'apm:// 稳定短号（D{seq}，DocRegistry 回填）',
+    nullable: true,
+  })
+  shortId?: string | null;
 }
 
 /** 文档（create/update/restore 返回：folder + project 摘要） */
@@ -225,4 +247,12 @@ export class DocumentDetailResponseDto extends DocumentBaseDto {
 
   @ApiProperty({ type: DocumentCountDto, description: '版本/关联计数' })
   _count: DocumentCountDto;
+
+  @ApiPropertyOptional({
+    type: String,
+    description:
+      'published 冻结快照版本 ID（spec 双版本，v2 纪要 §10；验收/引用面证据版本）',
+    nullable: true,
+  })
+  publishedVersionId?: string | null;
 }

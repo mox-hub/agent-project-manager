@@ -17,9 +17,14 @@ import {
   User,
   FileText,
   CheckSquare,
+  Check,
+  CheckCircle2,
   History,
+  PencilLine,
   Send,
+  ShieldAlert,
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
@@ -28,6 +33,7 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { MENU_ITEM_CLASS, MENU_SEPARATOR_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { useDocumentDetail } from '../hooks/use-document-detail';
 import { SectionNavigation } from '../components/section-navigation';
 import { DocumentTaskLinks } from '../components/document-task-links';
@@ -50,6 +56,12 @@ export function DocumentViewPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'toc' | 'tasks' | 'versions'>('toc');
   const detailQuery = useDocumentDetail(documentId);
+  const { copyToClipboard, isCopied } = useCopyToClipboard();
+  // apm:// 稳定地址（v2 纪要 §13）：projectCode + shortId 齐备才展示
+  const projectCode = detailQuery.data?.project?.projectCode;
+  const docShortId = detailQuery.data?.shortId;
+  const apmAddress =
+    projectCode && docShortId ? `apm://${projectCode}/doc/${docShortId}` : null;
   // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
   useSetViewingContext(
     detailQuery.data
@@ -311,11 +323,51 @@ export function DocumentViewPage() {
                 <div className="mb-3 flex items-center gap-3">
                 <h1 className="truncate text-3xl font-semibold leading-tight text-foreground">{document.title}</h1>
                 <ApprovalStatus status={document.status as 'pending' | 'approved' | 'rejected' | 'draft' | 'reviewing' | 'published'} />
+                {document.docRole && (
+                  <Badge variant="outline" className="shrink-0 font-normal text-11">
+                    {document.docRole}
+                  </Badge>
+                )}
+                {apmAddress ? (
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(apmAddress)}
+                    title="复制 apm:// 地址"
+                    data-ai-component="document.document-view.apm-address"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 font-mono text-11 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                    {apmAddress}
+                  </button>
+                ) : null}
               </div>
                 <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5"><User size={15} /> {document.authorId}</span>
                   <span className="inline-flex items-center gap-1.5"><Clock size={15} /> {new Date(document.updatedAt).toLocaleString('zh-CN')}</span>
                   <span className="inline-flex items-center gap-1.5"><GitBranch size={15} /> {document.wordCount} 字</span>
+                  {document.status === 'published' && document.publishedAt ? (
+                    <>
+                      <span className="inline-flex items-center gap-1.5 text-accent-green">
+                        <CheckCircle2 size={15} /> 已发布 · {new Date(document.publishedAt).toLocaleDateString('zh-CN')}
+                      </span>
+                      {document.publishedVersionId && (
+                        <span
+                          className="inline-flex items-center gap-1 text-muted-foreground"
+                          title="已存档发布冻结版，验收与外部引用以此版本为证据"
+                        >
+                          <History size={15} /> 冻结版已存档
+                        </span>
+                      )}
+                    </>
+                  ) : document.docRole === 'spec' ? (
+                    <span className="inline-flex items-center gap-1.5 text-accent-yellow">
+                      <ShieldAlert size={15} /> 门禁：需审批后发布
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5">
+                      <PencilLine size={15} /> 编辑中
+                    </span>
+                  )}
                 </div>
                 {tags.length > 0 ? (
                   <div className="mt-3 flex flex-wrap items-center gap-2">

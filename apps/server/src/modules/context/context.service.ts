@@ -29,6 +29,7 @@ export class ContextService {
     ]);
 
     const tokens = this.calculateTokens(system, project, session, runtime);
+    await this.loadDocumentSources(projectId);
     const sources = this.collectSources(runtime);
 
     return {
@@ -290,7 +291,7 @@ export class ContextService {
   private collectSources(runtime: any) {
     return {
       databases: [] as any[],
-      documents: [] as any[],
+      documents: this.cachedDocuments,
       files: (runtime.currentFiles || []).map((f: any) => ({
         type: 'file',
         id: f.path,
@@ -299,6 +300,37 @@ export class ContextService {
       })),
       apis: [] as any[],
     };
+  }
+
+  /**
+   * 文档取数（契约与文档知识层 v2 纪要 §9）：catalog 摘要形态填充，
+   * 消灭历史空壳。注意：本服务已整体 deprecated，dispatch 管线的
+   * docs provider 正式接入点在 ai-hub ContextBuilderService.buildContext
+   * 的 projectKnowledge 段（含 digest 命中），此处仅为兼容性兜底。
+   */
+  private cachedDocuments: any[] = [];
+  private async loadDocumentSources(projectId: string): Promise<void> {
+    const docs = await this.prisma.document.findMany({
+      where: { projectId, isDeleted: false },
+      select: {
+        id: true,
+        title: true,
+        docRole: true,
+        status: true,
+        updatedAt: true,
+      },
+      take: 50,
+      orderBy: { updatedAt: 'desc' },
+    });
+    this.cachedDocuments = docs.map((d) => ({
+      type: 'document',
+      id: d.id,
+      name: d.title,
+      role: d.docRole,
+      status: d.status,
+      relevance: d.status === 'published' ? 0.9 : 0.6,
+      lastAccessed: d.updatedAt.toISOString(),
+    }));
   }
 
   private async discoverAvailableSources(projectId: string) {

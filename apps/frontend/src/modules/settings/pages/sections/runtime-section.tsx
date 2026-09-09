@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ListChecks, Monitor, Server, ShieldCheck, Terminal, Wifi } from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
+import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
 import { PageShell } from '@/components/ui/page-shell';
 import { SectionCard } from '@/components/ui/section-card';
 import { StatusPill } from '@/components/ui/status-pill';
@@ -80,6 +81,12 @@ export function RuntimeSettingsSection() {
   const registrations = useRuntimeRegistrations();
   const approvals = useRuntimeApprovals();
   const dispatches = useRuntimeDispatches();
+
+  // 派发/审批表由 socket 推送驱动失效（runtime.dispatch.changed 聚合了
+  // dispatch 生命周期与审批事件），不再依赖高频轮询
+  useEventSubscription('runtime.dispatch.changed', () => {
+    queryClient.invalidateQueries({ queryKey: ['runtime-admin'] });
+  });
 
   const machines = pickRepresentativeRegistrations(registrations.data ?? []);
 

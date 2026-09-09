@@ -448,6 +448,8 @@ model Project {
   documents           Document[]
   issueProviderLinks  IssueProviderLink[]
   activityLogs        Activity[]
+  contractFileBindings ContractFileBinding[]
+  releases            Release[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -1528,6 +1530,19 @@ model Document {
   summary     String?
   category    String    @default("custom") // requirement|design|api|testing|guide|custom
   status      String    @default("draft") // draft|reviewing|published|rejected
+  // 治理角色（契约与文档知识层 v2 纪要 §10，分批启用；null = 未治理）
+  docRole     String? // charter|spec|design|decision|release-log|reference
+  // 产物溯源：authored=人/AI 手写真相；derived=平台派生（如 release-log），不适用 lock/审批
+  provenance  String    @default("authored") // authored|derived
+  // apm://{projectCode}/doc/{shortId} 稳定寻址（v2 纪要 §13）；由 DocRegistry 回填
+  shortId     String?   @unique // D{seq}，序号源 GlobalSequence(key=document.shortId)
+  // 内容指纹（digest T2 增量失效检测）；由 DocRegistry.rebuild 刷新
+  sourceChecksum String?
+  // AI 摘要策略（v2 纪要 §11）
+  digestPolicy String   @default("on-demand") // off|on-promote|on-demand|always
+  /// spec 双版本（v2 纪要 §10）：published 冻结快照指针；发布时落 DocumentVersion
+  /// 快照并指向之，验收/引用面以冻结版为证据，编辑中 draft 不影响已发布内容
+  publishedVersionId String? @unique
   folderId    String?
   projectId   String?
   authorId    String
@@ -1543,6 +1558,8 @@ model Document {
   links      DocumentTaskLink[]
   references DocumentReference[]
   approvals  DocumentApproval[]
+  digest     DocumentDigest?
+  publishedVersion DocumentVersion?   @relation("PublishedVersionSnapshot", fields: [publishedVersionId], references: [id], onDelete: SetNull)
   folder     DocumentFolder?     @relation("FolderDocuments", fields: [folderId], references: [id])
   project    Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
   tags       DocumentTag[]
@@ -1552,13 +1569,39 @@ model Document {
   @@index([authorId], name: "idx_documents_author_id")
   @@index([status], name: "idx_documents_status")
   @@index([category], name: "idx_documents_category")
+  @@index([docRole], name: "idx_documents_doc_role")
   @@index([isDeleted], name: "idx_documents_is_deleted")
+}
+
+/// 文档 AI 摘要物化（契约与文档知识层 v2 纪要 §11）：digest 永不装正文，
+/// 只装摘要/关键点/锚点引用；sourceChecksum 为生成时内容指纹（T2 失效依据：
+/// 与 Document.sourceChecksum 不一致即 stale，仅在其变化时重算）。
+model DocumentDigest {
+  id             String   @id @default(cuid())
+  documentId     String   @unique
+  projectId      String
+  summary        String   @default("")
+  keyPoints      Json? // string[] 关键点
+  anchors        Json? // [{anchor,title}] 章节锚点引用（不含章节正文）
+  sourceChecksum String
+  status         String   @default("pending") // pending|ready|failed
+  failReason     String?
+  model          String? // 生成器标识（溯源，如 extractive:v1 / 模型名）
+  createdBy      String   @default("system:summarizer")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([projectId], name: "idx_document_digests_project_id")
 }
 
 // 文档目录（文件夹）
 model DocumentFolder {
   id        String   @id @default(cuid())
   name      String
+  // 稳定 slug（docmap 路径用，v2 纪要 §5）：生成后不变，缺失由 DocRegistry.rebuild 回填
+  slug      String?
   parentId  String?
   projectId String?
   order     Int      @default(0)
@@ -1650,6 +1693,8 @@ model DocumentVersion {
   createdAt    DateTime @default(now())
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  /// spec 双版本：此版本作为某文档的 published 冻结快照（0..1）
+  publishedForDocument Document? @relation("PublishedVersionSnapshot")
 
   @@unique([documentId, version], name: "uniq_document_version")
   @@index([documentId], name: "idx_document_versions_document_id")
@@ -2197,6 +2242,52 @@ model DecisionProposal {
   @@index([projectId, status])
   @@index([kind, status])
   @@index([issueId])
+}
+
+// 契约文件绑定（契约与文档知识层 v2 纪要 §6.2）：车道 A 仓库契约文件
+// （AGENTS/CLAUDE/CHANGELOG/README/docs 目录）与平台的三态绑定账本。
+// 托管区间内容真相存 managedBlocks JSON；对齐以 execution 终态钩子为节拍，
+// 冲突升级为 DecisionProposal(kind=contract_conflict)。
+model ContractFileBinding {
+  id            String   @id @default(cuid())
+  projectId     String
+  fileType      String // agents | claude_alias | changelog | readme | docs_dir
+  filePath      String // 工作区根相对路径（POSIX 分隔符）
+  syncMode      String   @default("managed") // managed | synced | detached
+  managedBlocks Json? // [{ id, source, generator }]
+  truthOwner    String   @default("file_git") // file_git(车道A) | system(车道B)
+  baseline      String? // 上次对齐的文件内容指纹 (sha256)
+  conflictState String? // null | conflicted
+  lastWriter    String? // system | file | user:{id}
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, fileType])
+  @@index([projectId], name: "idx_contract_bindings_project_id")
+}
+
+// 发版（契约与文档知识层 v2 纪要 §12 缺口实体）：CHANGELOG 的唯一真相。
+// V1 由手动发版动作创建；远期由「里程碑收口 + 验收通过 + git tag + 质量门禁」
+// 聚合触发。release.created 事件驱动 CHANGELOG.md 单向导出再生。
+model Release {
+  id         String    @id @default(cuid())
+  projectId  String
+  version    String // semver，项目内唯一
+  name       String?
+  notes      String? // 发版说明 markdown（验收/里程碑聚合的入口）
+  status     String    @default("draft") // draft | released
+  gitTag     String?
+  releasedAt DateTime?
+  createdBy  String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, version])
+  @@index([projectId, status], name: "idx_releases_project_status")
 }
 
 // ============ 通用动态追踪（操作记录） ============

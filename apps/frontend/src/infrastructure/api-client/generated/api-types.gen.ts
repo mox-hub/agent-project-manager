@@ -6393,6 +6393,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/projects/{projectId}/contract/bindings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出契约文件绑定与工作区根（纯只读） */
+        get: operations["ContractController_listBindings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/projects/{projectId}/contract/seed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管） */
+        post: operations["ContractController_seed"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/projects/{projectId}/contract/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 对齐检查（managed 漂移将升级冲突提案） */
+        post: operations["ContractController_check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/projects/{projectId}/contract/bindings/{fileType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 切换绑定同步模式（managed/synced/detached） */
+        patch: operations["ContractController_setSyncMode"];
+        trace?: never;
+    };
     "/_api/playbooks/templates": {
         parameters: {
             query?: never;
@@ -11196,6 +11264,8 @@ export interface components {
             name: string;
             /** @description 项目颜色（仅 findOne 返回） */
             color?: string | null;
+            /** @description 项目代码（apm:// 命名空间，仅 findOne 返回） */
+            projectCode?: string | null;
         };
         DocumentResponseDto: {
             /** @description 文档 ID */
@@ -11234,6 +11304,13 @@ export interface components {
             updatedAt: string;
             /** @description 发布时间（ISO） */
             publishedAt?: string | null;
+            /**
+             * @description 治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）
+             * @enum {string|null}
+             */
+            docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
+            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            shortId?: string | null;
             /** @description 所属文件夹（列表场景仅含 id/name） */
             folder?: components["schemas"]["DocumentFolderResponseDto"] | null;
             /** @description 所属项目摘要 */
@@ -11284,6 +11361,13 @@ export interface components {
             updatedAt: string;
             /** @description 发布时间（ISO） */
             publishedAt?: string | null;
+            /**
+             * @description 治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）
+             * @enum {string|null}
+             */
+            docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
+            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            shortId?: string | null;
             /** @description 所属文件夹摘要（仅 id/name） */
             folder?: components["schemas"]["DocumentFolderResponseDto"];
             /** @description 所属项目摘要（仅 id/name） */
@@ -11395,6 +11479,13 @@ export interface components {
             updatedAt: string;
             /** @description 发布时间（ISO） */
             publishedAt?: string | null;
+            /**
+             * @description 治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）
+             * @enum {string|null}
+             */
+            docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
+            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            shortId?: string | null;
             /** @description 所属文件夹（完整字段） */
             folder?: components["schemas"]["DocumentFolderResponseDto"] | null;
             /** @description 所属项目（含 color） */
@@ -11403,6 +11494,8 @@ export interface components {
             sections: components["schemas"]["DocumentSectionResponseDto"][];
             /** @description 版本/关联计数 */
             _count: components["schemas"]["DocumentCountDto"];
+            /** @description published 冻结快照版本 ID（spec 双版本，v2 纪要 §10；验收/引用面证据版本） */
+            publishedVersionId?: string | null;
         };
         UpdateDocumentDto: {
             /** @description Document title */
@@ -14149,6 +14242,77 @@ export interface components {
             colleagues: components["schemas"]["OfficeColleagueDto"][];
             /** @description 汇总 */
             totals: components["schemas"]["OfficeTotalsDto"];
+        };
+        ContractBindingResponseDto: {
+            id: string;
+            projectId: string;
+            /** @enum {string} */
+            fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
+            /** @description 工作区根相对路径（POSIX） */
+            filePath: string;
+            /** @enum {string} */
+            syncMode: "managed" | "synced" | "detached";
+            truthOwner: string;
+            /** @description 基线指纹 sha256 */
+            baseline?: string | null;
+            /** @description null | conflicted */
+            conflictState?: string | null;
+            lastWriter?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ContractBindingsResponseDto: {
+            /** @description 当前工作区根（未绑定为 null） */
+            workspaceRoot?: string | null;
+            bindings: components["schemas"]["ContractBindingResponseDto"][];
+        };
+        SeedContractFilesDto: {
+            /** @description 仅种生指定类型（缺省全量三件套） */
+            fileTypes?: ("agents" | "claude_alias" | "changelog" | "readme" | "docs_dir")[];
+            /** @description 格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间 */
+            formatOnly?: boolean;
+        };
+        SeedFileResultDto: {
+            path: string;
+            /** @enum {string} */
+            action: "created" | "updated" | "adopted" | "skipped_unchanged" | "skipped_existing" | "skipped_no_workspace";
+            bindingId?: string;
+        };
+        SeedContractResultDto: {
+            projectId: string;
+            workspaceRoot?: string | null;
+            files: components["schemas"]["SeedFileResultDto"][];
+        };
+        CheckAlignmentDto: {
+            /**
+             * @description 仅检查指定类型（缺省检查全部已绑定类型）
+             * @enum {string}
+             */
+            fileType?: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
+        };
+        AlignmentDiffDto: {
+            /** @description 托管区间 id */
+            id: string;
+            /** @enum {string} */
+            state: "equal" | "file_differs" | "missing_in_file";
+        };
+        ContractAlignmentReportDto: {
+            /** @enum {string} */
+            fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
+            /** @enum {string} */
+            state: "aligned" | "conflicted" | "skipped_detached" | "missing_file";
+            diffs?: components["schemas"]["AlignmentDiffDto"][];
+            /** @description 升级出的冲突提案 id */
+            proposalId?: string;
+        };
+        UpdateContractBindingDto: {
+            /**
+             * @description 目标同步模式
+             * @enum {string}
+             */
+            syncMode: "managed" | "synced" | "detached";
         };
         PlaybookQuestionDto: {
             /** @description 问题 id（注册表稳定 key） */
@@ -44273,6 +44437,107 @@ export interface operations {
                     "application/json": components["schemas"]["ApiResponseDto"] & {
                         error?: components["schemas"]["ErrorPayloadDto"];
                     };
+                };
+            };
+        };
+    };
+    ContractController_listBindings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractBindingsResponseDto"];
+                };
+            };
+        };
+    };
+    ContractController_seed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeedContractFilesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeedContractResultDto"];
+                };
+            };
+        };
+    };
+    ContractController_check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckAlignmentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractAlignmentReportDto"][];
+                };
+            };
+        };
+    };
+    ContractController_setSyncMode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+                fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateContractBindingDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractBindingResponseDto"];
                 };
             };
         };
