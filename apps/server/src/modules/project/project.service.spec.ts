@@ -10,70 +10,70 @@ describe('ProjectService', () => {
 
   const mockPrismaService = {
     project: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      count: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
     },
     projectTemplate: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     projectModule: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
     member: {
-      findUnique: jest.fn(),
-      create: jest.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
     },
     memberProjectBinding: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
     },
     projectMember: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     issue: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     projectHealthSnapshot: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     projectAIContext: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     iteration: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     milestone: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     issueActivity: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     externalProjectLink: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     projectDocLink: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     projectApiDocLink: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     repository: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     teamProject: {
-      findMany: jest.fn().mockResolvedValue([]),
+      findMany: vi.fn().mockResolvedValue([]),
     },
     team: {
-      findMany: jest.fn().mockResolvedValue([]),
+      findMany: vi.fn().mockResolvedValue([]),
     },
   };
 
   const mockMessageBusService = {
-    publish: jest.fn(),
+    publish: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -90,7 +90,7 @@ describe('ProjectService', () => {
         },
         {
           provide: ActivityService,
-          useValue: { record: jest.fn() },
+          useValue: { record: vi.fn() },
         },
       ],
     }).compile();
@@ -99,7 +99,7 @@ describe('ProjectService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {

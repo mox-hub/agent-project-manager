@@ -32,10 +32,10 @@ function buildHarness(opts: {
 
   const prisma = {
     project: {
-      findUnique: jest.fn(async ({ where }: { where: { id: string } }) =>
+      findUnique: vi.fn(async ({ where }: { where: { id: string } }) =>
         where.id === state.project.id ? { ...state.project } : null,
       ),
-      update: jest.fn(
+      update: vi.fn(
         async ({
           where,
           data,
@@ -49,7 +49,7 @@ function buildHarness(opts: {
       ),
     },
     activity: {
-      findMany: jest.fn(async () =>
+      findMany: vi.fn(async () =>
         Promise.resolve(
           [...state.events].sort(
             (a, b) =>
@@ -58,29 +58,29 @@ function buildHarness(opts: {
           ),
         ),
       ),
-      create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+      create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
         state.skippedEvents.push(data);
         return data;
       }),
     },
     decisionProposal: {
-      findFirst: jest.fn(async () => Promise.resolve(opts.pendingGate ?? null)),
-      findMany: jest.fn(async () => Promise.resolve(opts.gates ?? [])),
+      findFirst: vi.fn(async () => Promise.resolve(opts.pendingGate ?? null)),
+      findMany: vi.fn(async () => Promise.resolve(opts.gates ?? [])),
     },
     document: {
-      findMany: jest.fn(async () => Promise.resolve([])),
+      findMany: vi.fn(async () => Promise.resolve([])),
     },
   };
 
   const documentService = {
-    create: jest.fn(async (dto: Record<string, unknown>) => {
+    create: vi.fn(async (dto: Record<string, unknown>) => {
       const doc = { id: `doc${state.createdDocs.length + 1}`, ...dto };
       state.createdDocs.push(doc);
       return doc;
     }),
   };
   const proposalService = {
-    create: jest.fn(async (dto: Record<string, unknown>) => {
+    create: vi.fn(async (dto: Record<string, unknown>) => {
       const proposal = {
         id: `prop${state.createdProposals.length + 1}`,
         ...dto,
@@ -90,7 +90,7 @@ function buildHarness(opts: {
     }),
   };
   const memoryService = {
-    note: jest.fn(async (input: Record<string, unknown>) => {
+    note: vi.fn(async (input: Record<string, unknown>) => {
       state.notedKnowledge.push(input);
       return input;
     }),

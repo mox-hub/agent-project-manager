@@ -12,7 +12,7 @@ function buildService(
 ) {
   const prisma = {
     issue: {
-      findUnique: jest.fn().mockResolvedValue({
+      findUnique: vi.fn().mockResolvedValue({
         id: 'issue_1',
         title: '实现登录页',
         description: '按设计稿实现',
@@ -21,36 +21,36 @@ function buildService(
         project: { id: 'proj_1' },
       }),
     },
-    projectWorkspace: { findUnique: jest.fn().mockResolvedValue(null) },
+    projectWorkspace: { findUnique: vi.fn().mockResolvedValue(null) },
     appConfig: {
-      findFirst: jest.fn().mockResolvedValue(null),
-      findMany: jest.fn().mockResolvedValue([]), // 无在线 runtime → 进程内回退
+      findFirst: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]), // 无在线 runtime → 进程内回退
     },
     repository: {
-      findFirst: jest.fn().mockResolvedValue({ localPath: 'E:\\repo' }),
+      findFirst: vi.fn().mockResolvedValue({ localPath: 'E:\\repo' }),
     },
-    member: { findUnique: jest.fn().mockResolvedValue(null) },
+    member: { findUnique: vi.fn().mockResolvedValue(null) },
     execution: {
-      findUnique: jest
+      findUnique: vi
         .fn()
         .mockResolvedValue(
           overrides.existing === undefined ? null : overrides.existing,
         ),
     },
-    runtime: { findFirst: jest.fn().mockResolvedValue({ id: 'rt_1' }) },
-    cliSession: { create: jest.fn().mockResolvedValue({ id: 'cs_1' }) },
-    cliExecutionBinding: { create: jest.fn().mockResolvedValue({}) },
+    runtime: { findFirst: vi.fn().mockResolvedValue({ id: 'rt_1' }) },
+    cliSession: { create: vi.fn().mockResolvedValue({ id: 'cs_1' }) },
+    cliExecutionBinding: { create: vi.fn().mockResolvedValue({}) },
   };
 
   const executionService = {
-    createExecutionRun: jest.fn().mockResolvedValue({
+    createExecutionRun: vi.fn().mockResolvedValue({
       id: 'exec_new',
       subjectType: 'external_agent',
       subjectId: 'user_1',
       projectId: 'proj_1',
       acceptanceId: null,
     }),
-    updateExecutionRun: jest.fn().mockImplementation(async (_id, dto) => ({
+    updateExecutionRun: vi.fn().mockImplementation(async (_id, dto) => ({
       id: _id,
       subjectType: 'platform_ai_member',
       subjectId: 'mem_1',
@@ -60,16 +60,16 @@ function buildService(
     })),
   };
 
-  const executor = { execute: jest.fn() };
-  const registry = { isAvailable: jest.fn().mockReturnValue(true) };
-  const cliResolution = { resolveForMember: jest.fn() };
+  const executor = { execute: vi.fn() };
+  const registry = { isAvailable: vi.fn().mockReturnValue(true) };
+  const cliResolution = { resolveForMember: vi.fn() };
   const contextBuilder = {
-    buildTaskExecutionContext: jest.fn().mockResolvedValue({ summary: 'ctx' }),
+    buildTaskExecutionContext: vi.fn().mockResolvedValue({ summary: 'ctx' }),
   };
-  const trustService = { evaluateExecution: jest.fn() };
+  const trustService = { evaluateExecution: vi.fn() };
   const acceptanceService = {};
-  const runtimeService = { createDispatch: jest.fn() };
-  const messageBus = { publish: jest.fn() };
+  const runtimeService = { createDispatch: vi.fn() };
+  const messageBus = { publish: vi.fn() };
 
   const service = new CliDispatchService(
     prisma as never,

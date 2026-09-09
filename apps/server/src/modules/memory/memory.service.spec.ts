@@ -26,7 +26,7 @@ function buildPrisma() {
   const store: Record<string, ReturnType<typeof atomRow>[]> = {};
   const prisma = {
     memoryAtom: {
-      findMany: jest.fn(
+      findMany: vi.fn(
         async (args: { where: Record<string, unknown>; orderBy?: unknown }) => {
           const where = args.where;
           const scopeFilter = where.scope as { in?: string[] } | string;
@@ -70,17 +70,16 @@ function buildPrisma() {
           return rows;
         },
       ),
-      findFirst: jest.fn(
-        async ({ where }: { where: Record<string, unknown> }) =>
-          (store['all'] ?? []).find(
-            (r) =>
-              r.scope === where.scope &&
-              r.type === where.type &&
-              r.content === where.content &&
-              ['working', 'consolidated'].includes(r.lifecycle),
-          ),
+      findFirst: vi.fn(async ({ where }: { where: Record<string, unknown> }) =>
+        (store['all'] ?? []).find(
+          (r) =>
+            r.scope === where.scope &&
+            r.type === where.type &&
+            r.content === where.content &&
+            ['working', 'consolidated'].includes(r.lifecycle),
+        ),
       ),
-      create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+      create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
         const row = atomRow({
           ...data,
           id: `mem${(store['all']?.length ?? 0) + 1}`,
@@ -90,7 +89,7 @@ function buildPrisma() {
         store['all'] = [...(store['all'] ?? []), row];
         return row;
       }),
-      update: jest.fn(
+      update: vi.fn(
         async ({
           where,
           data,
@@ -107,8 +106,8 @@ function buildPrisma() {
           return updated;
         },
       ),
-      updateMany: jest.fn(async () => ({ count: 1 })),
-      count: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
+      updateMany: vi.fn(async () => ({ count: 1 })),
+      count: vi.fn(async ({ where }: { where: Record<string, unknown> }) => {
         const scope = where.scope as string;
         return (store['all'] ?? []).filter(
           (r) =>

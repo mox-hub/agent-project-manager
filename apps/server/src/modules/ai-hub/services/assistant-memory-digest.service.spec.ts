@@ -12,10 +12,10 @@ function makeDeps(overrides?: {
 }) {
   const prisma = {
     aIConversation: {
-      findUnique: jest.fn().mockResolvedValue({ id: 'c1', projectId: 'p1' }),
+      findUnique: vi.fn().mockResolvedValue({ id: 'c1', projectId: 'p1' }),
     },
     aIMessage: {
-      findMany: jest.fn().mockResolvedValue([
+      findMany: vi.fn().mockResolvedValue([
         {
           id: 'm1',
           role: 'user',
@@ -35,18 +35,18 @@ function makeDeps(overrides?: {
       ]),
     },
     execution: {
-      findUnique: jest.fn().mockResolvedValue({
+      findUnique: vi.fn().mockResolvedValue({
         input: { source: 'assistant-chat', conversationId: 'c1' },
       }),
     },
   };
   const memoryService = {
-    note: jest.fn().mockResolvedValue({ id: 'mem1' }),
+    note: vi.fn().mockResolvedValue({ id: 'mem1' }),
   };
   const silentService = {
     run: overrides?.silentReject
-      ? jest.fn().mockRejectedValue(new Error('no provider'))
-      : jest.fn().mockResolvedValue({
+      ? vi.fn().mockRejectedValue(new Error('no provider'))
+      : vi.fn().mockResolvedValue({
           scenario: 'memory-digest',
           data: overrides?.silentData ?? {
             summary: '讨论了接口风格约定',
@@ -55,7 +55,7 @@ function makeDeps(overrides?: {
           },
         }),
   };
-  const messageBus = { subscribe: jest.fn() };
+  const messageBus = { subscribe: vi.fn() };
   const service = new AssistantMemoryDigestService(
     messageBus as unknown as MessageBusService,
     prisma as unknown as PrismaService,

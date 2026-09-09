@@ -16,41 +16,41 @@ describe('AssistantService', () => {
 
   const mockPrisma = {
     member: {
-      findUnique: jest.fn().mockResolvedValue({ id: 'member-xiaozhou' }),
+      findUnique: vi.fn().mockResolvedValue({ id: 'member-xiaozhou' }),
     },
     aIConversation: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
     },
     aIMessage: {
-      findMany: jest.fn(),
-      groupBy: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
+      findMany: vi.fn(),
+      groupBy: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
     },
   };
   const mockAiHub = {
-    chat: jest.fn(),
+    chat: vi.fn(),
   };
   const mockRuntime = {
-    listRegistrations: jest.fn(),
-    createDispatch: jest.fn(),
+    listRegistrations: vi.fn(),
+    createDispatch: vi.fn(),
   };
   const mockExecution = {
-    createExecutionRun: jest.fn(),
+    createExecutionRun: vi.fn(),
   };
   const mockAdapterRegistry = {
-    listAdapters: jest.fn().mockReturnValue([]),
+    listAdapters: vi.fn().mockReturnValue([]),
   };
   const mockAssistantTools = {
-    describeTools: jest.fn().mockReturnValue({ tools: [] }),
-    renderCatalogForPrompt: jest.fn().mockReturnValue('TOOLS'),
+    describeTools: vi.fn().mockReturnValue({ tools: [] }),
+    renderCatalogForPrompt: vi.fn().mockReturnValue('TOOLS'),
   };
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         AssistantService,
@@ -63,18 +63,18 @@ describe('AssistantService', () => {
         // 记忆切片注入：默认无记忆（recall 返回空），指令注入为旁路
         {
           provide: MemoryService,
-          useValue: { recall: jest.fn().mockResolvedValue([]) },
+          useValue: { recall: vi.fn().mockResolvedValue([]) },
         },
         // 简报切片注入：默认空简报（getBriefing 抛错走旁路），不影响对话
         {
           provide: ProfileService,
           useValue: {
-            getBriefing: jest.fn().mockRejectedValue(new Error('no briefing')),
+            getBriefing: vi.fn().mockRejectedValue(new Error('no briefing')),
           },
         },
         {
           provide: MessageBusService,
-          useValue: { publish: jest.fn(), subscribe: jest.fn() },
+          useValue: { publish: vi.fn(), subscribe: vi.fn() },
         },
       ],
     }).compile();

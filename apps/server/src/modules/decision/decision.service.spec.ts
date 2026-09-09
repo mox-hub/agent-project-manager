@@ -7,19 +7,19 @@ describe('DecisionService', () => {
 
   const mockPrismaService = {
     approvalRequest: {
-      findMany: jest.fn(),
-      count: jest.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
     },
     acceptance: {
-      findMany: jest.fn(),
-      count: jest.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
     },
     decisionProposal: {
-      findMany: jest.fn(),
-      count: jest.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
     },
     member: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
   };
 
@@ -35,7 +35,7 @@ describe('DecisionService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {

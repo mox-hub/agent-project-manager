@@ -9,7 +9,7 @@ import { DocumentTaskLinkService } from './document-task-link.service';
 
 describe('DocDigestT0Subscriber', () => {
   it('document.published → enqueueDigest 排队', async () => {
-    const enqueue = jest.fn(async () => true);
+    const enqueue = vi.fn(async () => true);
     const subscriber = new DocDigestT0Subscriber({
       enqueueDigest: enqueue,
     } as unknown as DocRegistryService);
@@ -19,7 +19,7 @@ describe('DocDigestT0Subscriber', () => {
   });
 
   it('失败降级为告警不外抛；空 documentId 忽略', async () => {
-    const enqueue = jest.fn(async () => {
+    const enqueue = vi.fn(async () => {
       throw new Error('db down');
     });
     const subscriber = new DocDigestT0Subscriber({
@@ -38,9 +38,9 @@ describe('DocumentTaskLinkService.createLink 的 T0 触发', () => {
   function makeService() {
     const created = { id: 'link-1' };
     const prisma = {
-      documentTaskLink: { create: jest.fn(async () => created) },
+      documentTaskLink: { create: vi.fn(async () => created) },
     };
-    const enqueue = jest.fn(async () => true);
+    const enqueue = vi.fn(async () => true);
     const svc = new DocumentTaskLinkService(
       prisma as never,
       { enqueueDigest: enqueue } as unknown as DocRegistryService,
@@ -61,11 +61,11 @@ describe('DocumentTaskLinkService.createLink 的 T0 触发', () => {
   });
 
   it('仅章节关联（无 documentId）不触发；enqueue 失败不阻断创建', async () => {
-    const enqueue = jest.fn(async () => {
+    const enqueue = vi.fn(async () => {
       throw new Error('boom');
     });
     const prisma = {
-      documentTaskLink: { create: jest.fn(async () => ({ id: 'link-2' })) },
+      documentTaskLink: { create: vi.fn(async () => ({ id: 'link-2' })) },
     };
     const svc = new DocumentTaskLinkService(
       prisma as never,

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { SubscriptionEventSubscriber } from './subscription-event.subscriber';
 import { NotificationService } from '../notification/notification.service';
@@ -8,19 +9,19 @@ import { LoggerService } from '../../core/logger/logger.service';
 describe('SubscriptionEventSubscriber', () => {
   let subscriber: SubscriptionEventSubscriber;
   let handlers: Map<string, (payload: unknown) => Promise<void>>;
-  let createFromEvent: jest.Mock;
+  let createFromEvent: Mock;
 
   const prismaMock = {
-    subscription: { findMany: jest.fn() },
-    member: { findMany: jest.fn() },
-    issue: { findUnique: jest.fn() },
-    execution: { findUnique: jest.fn() },
+    subscription: { findMany: vi.fn() },
+    member: { findMany: vi.fn() },
+    issue: { findUnique: vi.fn() },
+    execution: { findUnique: vi.fn() },
   };
 
   beforeEach(async () => {
     handlers = new Map();
-    createFromEvent = jest.fn().mockResolvedValue([]);
-    jest.clearAllMocks();
+    createFromEvent = vi.fn().mockResolvedValue([]);
+    vi.clearAllMocks();
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -28,7 +29,7 @@ describe('SubscriptionEventSubscriber', () => {
         {
           provide: MessageBusService,
           useValue: {
-            subscribe: jest.fn((event: string, handler: never) =>
+            subscribe: vi.fn((event: string, handler: never) =>
               handlers.set(event, handler),
             ),
           },
@@ -40,7 +41,7 @@ describe('SubscriptionEventSubscriber', () => {
         { provide: PrismaService, useValue: prismaMock },
         {
           provide: LoggerService,
-          useValue: { setContext: jest.fn(), log: jest.fn(), error: jest.fn() },
+          useValue: { setContext: vi.fn(), log: vi.fn(), error: vi.fn() },
         },
       ],
     }).compile();

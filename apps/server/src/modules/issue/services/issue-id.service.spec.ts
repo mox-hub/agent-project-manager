@@ -16,19 +16,19 @@ describe('IssueIdService.formatShortId', () => {
 
 describe('IssueIdService.nextShortId 全局序列自愈跳号', () => {
   function makeService(taskOccupied: Set<string>, prefix = 'MOX') {
-    const upsertSpy = jest.fn().mockResolvedValue({});
+    const upsertSpy = vi.fn().mockResolvedValue({});
     const prisma = {
       appConfig: {
-        findFirst: jest.fn().mockResolvedValue({ value: prefix }),
+        findFirst: vi.fn().mockResolvedValue({ value: prefix }),
       },
-      $transaction: jest.fn(async (fn: (tx: any) => Promise<number>) =>
+      $transaction: vi.fn(async (fn: (tx: any) => Promise<number>) =>
         fn({
           globalSequence: {
-            findUnique: jest.fn().mockResolvedValue(null),
+            findUnique: vi.fn().mockResolvedValue(null),
             upsert: upsertSpy,
           },
           issue: {
-            findFirst: jest.fn(({ where }: { where: { shortId: string } }) =>
+            findFirst: vi.fn(({ where }: { where: { shortId: string } }) =>
               Promise.resolve(
                 taskOccupied.has(where.shortId) ? { id: 't' } : null,
               ),
@@ -46,19 +46,19 @@ describe('IssueIdService.nextShortId 全局序列自愈跳号', () => {
   });
 
   it('计数器落后于存量任务时跳过被占用序号并落账最终值', async () => {
-    const upsertSpy = jest.fn().mockResolvedValue({});
+    const upsertSpy = vi.fn().mockResolvedValue({});
     const prisma = {
       appConfig: {
-        findFirst: jest.fn().mockResolvedValue(null), // 未配置 → APM
+        findFirst: vi.fn().mockResolvedValue(null), // 未配置 → APM
       },
-      $transaction: jest.fn(async (fn: (tx: any) => Promise<number>) =>
+      $transaction: vi.fn(async (fn: (tx: any) => Promise<number>) =>
         fn({
           globalSequence: {
-            findUnique: jest.fn().mockResolvedValue({ lastSeq: 2 }),
+            findUnique: vi.fn().mockResolvedValue({ lastSeq: 2 }),
             upsert: upsertSpy,
           },
           issue: {
-            findFirst: jest.fn(({ where }: { where: { shortId: string } }) =>
+            findFirst: vi.fn(({ where }: { where: { shortId: string } }) =>
               Promise.resolve(
                 ['APM-1', 'APM-2', 'APM-3'].includes(where.shortId)
                   ? { id: 't' }

@@ -7,17 +7,17 @@ describe('AssistantRuntimeBridge', () => {
 
   const mockPrisma = {
     execution: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     aIMessage: {
-      update: jest.fn(),
+      update: vi.fn(),
     },
     aIConversation: {
-      update: jest.fn(),
+      update: vi.fn(),
     },
   };
   const mockMessageBus = {
-    publish: jest.fn(),
+    publish: vi.fn(),
   };
 
   const assistantRun = {
@@ -30,7 +30,7 @@ describe('AssistantRuntimeBridge', () => {
   };
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     bridge = new AssistantRuntimeBridge(
       mockPrisma as unknown as PrismaService,
       mockMessageBus as unknown as MessageBusService,

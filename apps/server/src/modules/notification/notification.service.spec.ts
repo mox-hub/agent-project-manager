@@ -7,13 +7,13 @@ import { NotificationService } from './notification.service';
  */
 describe('NotificationService.createNotificationFromEvent', () => {
   const makeService = (preferenceRows: Array<Record<string, unknown>>) => {
-    const create = jest.fn().mockImplementation(({ data }) => ({
+    const create = vi.fn().mockImplementation(({ data }) => ({
       id: 'n-1',
       ...data,
     }));
-    const publish = jest.fn();
+    const publish = vi.fn();
     // 模拟真实 prisma：按 where.userId 过滤偏好行
-    const findMany = jest
+    const findMany = vi
       .fn()
       .mockImplementation(({ where }) =>
         preferenceRows.filter(

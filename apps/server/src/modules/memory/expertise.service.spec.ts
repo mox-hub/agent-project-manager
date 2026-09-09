@@ -19,7 +19,7 @@ function buildPrisma() {
 
   const prisma = {
     memoryAtom: {
-      findMany: jest.fn(
+      findMany: vi.fn(
         async ({ where }: { where: { scope: string; type: string } }) =>
           [...store.values()]
             .filter((r) => r.refs && (where.scope ? true : true))
@@ -30,14 +30,14 @@ function buildPrisma() {
               content: 'x',
             })),
       ),
-      findFirst: jest.fn(async ({ where }: { where: { content: string } }) => {
+      findFirst: vi.fn(async ({ where }: { where: { content: string } }) => {
         for (const r of store.values()) {
           if ((r.refs as { __content?: string }).__content === where.content)
             return r;
         }
         return null;
       }),
-      create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+      create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
         const id = `atom${++seq}`;
         const row = {
           id,
@@ -50,7 +50,7 @@ function buildPrisma() {
         store.set(id, row);
         return row;
       }),
-      update: jest.fn(
+      update: vi.fn(
         async ({
           where,
           data,

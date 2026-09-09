@@ -26,7 +26,7 @@ const atomRow = (overrides: Record<string, unknown> = {}) => ({
 function buildPrisma() {
   let seq = 100;
   const store: { atoms: ReturnType<typeof atomRow>[] } = { atoms: [] };
-  const findMany = jest.fn(
+  const findMany = vi.fn(
     async (args: {
       where: {
         scope: { in?: string[] } | string;
@@ -54,7 +54,7 @@ function buildPrisma() {
       );
     },
   );
-  const findFirst = jest.fn(
+  const findFirst = vi.fn(
     async (args: {
       where: {
         scope: string;
@@ -79,11 +79,11 @@ function buildPrisma() {
     memoryAtom: {
       findMany,
       findFirst,
-      findUnique: jest.fn(
+      findUnique: vi.fn(
         async (args: { where: { id: string } }) =>
           store.atoms.find((r) => r.id === args.where.id) ?? null,
       ),
-      create: jest.fn(async (args: { data: Record<string, unknown> }) => {
+      create: vi.fn(async (args: { data: Record<string, unknown> }) => {
         const row = atomRow({
           id: `atom${seq++}`,
           ...args.data,
@@ -93,7 +93,7 @@ function buildPrisma() {
         store.atoms.push(row);
         return row;
       }),
-      update: jest.fn(
+      update: vi.fn(
         async (args: {
           where: { id: string };
           data: Record<string, unknown>;
@@ -106,16 +106,16 @@ function buildPrisma() {
       ),
     },
     execution: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     activity: {
-      create: jest.fn(async () => ({})),
+      create: vi.fn(async () => ({})),
     },
     $transaction: undefined as unknown as (
       fn: (tx: unknown) => Promise<unknown>,
     ) => Promise<unknown>,
   };
-  prisma.$transaction = jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
+  prisma.$transaction = vi.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
     fn(prisma),
   );
   return { prisma, store };

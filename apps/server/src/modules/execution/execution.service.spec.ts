@@ -5,18 +5,17 @@ import { ProposalService } from '../decision/proposal.service';
 
 describe('ExecutionService 4d 状态机与人工门禁', () => {
   function makeService(run: Record<string, unknown>) {
-    const approvalCreate = jest.fn().mockResolvedValue({ id: 'ap-1' });
-    const executionUpdate = jest.fn(
-      (opts: { data?: Record<string, unknown> }) =>
-        Promise.resolve({ ...run, ...(opts?.data ?? {}) }),
+    const approvalCreate = vi.fn().mockResolvedValue({ id: 'ap-1' });
+    const executionUpdate = vi.fn((opts: { data?: Record<string, unknown> }) =>
+      Promise.resolve({ ...run, ...(opts?.data ?? {}) }),
     );
     const prisma = {
       execution: {
-        findUnique: jest.fn().mockResolvedValue(run),
+        findUnique: vi.fn().mockResolvedValue(run),
         update: executionUpdate,
       },
       approvalRequest: {
-        findFirst: jest.fn().mockResolvedValue(null),
+        findFirst: vi.fn().mockResolvedValue(null),
       },
     };
     const approvalService = {
@@ -24,9 +23,9 @@ describe('ExecutionService 4d 状态机与人工门禁', () => {
     } as unknown as ApprovalService;
     const svc = new ExecutionService(
       prisma as any,
-      { setContext: jest.fn(), log: jest.fn() } as any,
-      { publish: jest.fn() } as any,
-      { checkSpendOnRunComplete: jest.fn() } as unknown as ProposalService,
+      { setContext: vi.fn(), log: vi.fn() } as any,
+      { publish: vi.fn() } as any,
+      { checkSpendOnRunComplete: vi.fn() } as unknown as ProposalService,
       approvalService,
     );
     return { svc, approvalCreate };

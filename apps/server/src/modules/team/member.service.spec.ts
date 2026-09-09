@@ -14,26 +14,26 @@ describe('MemberService', () => {
 
   const mockPrisma = {
     member: {
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      count: jest.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
     },
     project: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     memberProjectBinding: {
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      findMany: jest.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      findMany: vi.fn(),
     },
     memberActivity: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
   };
 
@@ -42,19 +42,19 @@ describe('MemberService', () => {
       providers: [
         MemberService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: MessageBusService, useValue: { publish: jest.fn() } },
+        { provide: MessageBusService, useValue: { publish: vi.fn() } },
         {
           provide: ProjectMembershipSyncService,
           useValue: {
-            propagateMemberToProject: jest.fn(),
-            revokeMemberFromProject: jest.fn(),
+            propagateMemberToProject: vi.fn(),
+            revokeMemberFromProject: vi.fn(),
           },
         },
       ],
     }).compile();
 
     service = module.get<MemberService>(MemberService);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('create', () => {

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   AssistantSilentService,
   extractJsonObject,
@@ -34,13 +35,13 @@ describe('AssistantSilentService.run', () => {
   const makeService = (
     adapters: Array<{ provider: string; model: string }>,
   ) => {
-    const chat = jest.fn().mockResolvedValue({
+    const chat = vi.fn().mockResolvedValue({
       content: '{"prompts":["风险有哪些？","进度如何？"]}',
       model: 'test-model',
       tokens: { prompt: 10, completion: 5, total: 15 },
     });
     const service = new AssistantSilentService(
-      { aIUsageLog: { create: jest.fn().mockResolvedValue({}) } } as never,
+      { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
       {
         listAdapters: () => adapters,
         getAdapter: () => ({
@@ -49,7 +50,7 @@ describe('AssistantSilentService.run', () => {
         }),
       } as never,
       // UsagePricingService 桩：成本估算返回 null（估算不可用口径）
-      { estimateCostUsd: jest.fn().mockResolvedValue(null) } as never,
+      { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
     );
     return { service, chat };
   };
@@ -120,28 +121,28 @@ describe('AssistantSilentService.run · anchor-qa', () => {
     chatContent = '{"answer":"状态是进行中。","actions":[]}',
   ) => {
     const prisma = {
-      aIUsageLog: { create: jest.fn().mockResolvedValue({}) },
+      aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
       issue: {
-        findUnique: jest
+        findUnique: vi
           .fn()
           .mockResolvedValue(prismaOverrides.task ?? taskFacts),
       },
       issueAssignee: {
-        findMany: jest.fn().mockResolvedValue([{ memberId: 'm1' }]),
+        findMany: vi.fn().mockResolvedValue([{ memberId: 'm1' }]),
       },
       member: {
-        findMany: jest
+        findMany: vi
           .fn()
           .mockResolvedValue([
             { id: 'm1', displayName: '小码', type: 'ai_agent' },
           ]),
       },
-      acceptance: { findFirst: jest.fn().mockResolvedValue(null) },
-      issueDependency: { count: jest.fn().mockResolvedValue(0) },
-      issueActivity: { findMany: jest.fn().mockResolvedValue([]) },
-      ...(prismaOverrides.extra as Record<string, jest.Mock> | undefined),
+      acceptance: { findFirst: vi.fn().mockResolvedValue(null) },
+      issueDependency: { count: vi.fn().mockResolvedValue(0) },
+      issueActivity: { findMany: vi.fn().mockResolvedValue([]) },
+      ...(prismaOverrides.extra as Record<string, Mock> | undefined),
     };
-    const chat = jest.fn().mockResolvedValue({
+    const chat = vi.fn().mockResolvedValue({
       content: chatContent,
       model: 'test-model',
       tokens: { prompt: 10, completion: 5, total: 15 },
@@ -152,7 +153,7 @@ describe('AssistantSilentService.run · anchor-qa', () => {
         listAdapters: () => [{ provider: 'glm', model: 'm' }],
         getAdapter: () => ({ getProvider: () => 'glm', chat }),
       } as never,
-      { estimateCostUsd: jest.fn().mockResolvedValue(null) } as never,
+      { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
     );
     return { service, chat, prisma };
   };
@@ -196,7 +197,7 @@ describe('AssistantSilentService.run · anchor-qa', () => {
     ).rejects.toThrow(/只支持任务锚点/);
     const missing = makeAnchorService({
       extra: {
-        issue: { findUnique: jest.fn().mockResolvedValue(null) },
+        issue: { findUnique: vi.fn().mockResolvedValue(null) },
       },
     });
     await expect(

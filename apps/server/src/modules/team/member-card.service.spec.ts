@@ -9,27 +9,27 @@ describe('MemberCardService', () => {
 
   const mockPrisma = {
     member: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     memberProjectBinding: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     teamMember: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     memberActivity: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     project: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     team: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
   };
 
   const mockTaskAssignee = {
-    getMemberLoad: jest.fn(),
+    getMemberLoad: vi.fn(),
   };
 
   const baseMember = {
@@ -61,7 +61,7 @@ describe('MemberCardService', () => {
       ],
     }).compile();
     service = module.get<MemberCardService>(MemberCardService);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockPrisma.memberActivity.findMany.mockResolvedValue([]);
     mockTaskAssignee.getMemberLoad.mockResolvedValue({
       todo: 0,

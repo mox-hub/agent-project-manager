@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { IssueAssigneeService } from './issue-assignee.service';
@@ -8,36 +9,36 @@ import { CliDispatchService } from '../cli-dispatch/dispatch.service';
 
 describe('IssueAssigneeService', () => {
   let service: IssueAssigneeService;
-  let messageBus: { publish: jest.Mock };
+  let messageBus: { publish: Mock };
 
   const mockPrisma = {
     issue: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      findMany: jest.fn().mockResolvedValue([]),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
     },
     member: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     issueAssignee: {
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      delete: jest.fn(),
-      deleteMany: jest.fn(),
-      count: jest.fn(),
-      findMany: jest.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+      findMany: vi.fn(),
     },
     issueWatcher: {
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      delete: jest.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
     },
     issueActivity: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
     notification: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
   };
 
@@ -46,22 +47,22 @@ describe('IssueAssigneeService', () => {
       providers: [
         IssueAssigneeService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: MessageBusService, useValue: { publish: jest.fn() } },
+        { provide: MessageBusService, useValue: { publish: vi.fn() } },
         {
           provide: CliResolutionService,
-          useValue: { resolveForMember: jest.fn() },
+          useValue: { resolveForMember: vi.fn() },
         },
         {
           provide: CliDispatchService,
-          useValue: { dispatchTaskToCli: jest.fn() },
+          useValue: { dispatchTaskToCli: vi.fn() },
         },
       ],
     }).compile();
     service = module.get<IssueAssigneeService>(IssueAssigneeService);
     messageBus = module.get<MessageBusService>(
       MessageBusService,
-    ) as unknown as { publish: jest.Mock };
-    jest.clearAllMocks();
+    ) as unknown as { publish: Mock };
+    vi.clearAllMocks();
   });
 
   describe('add', () => {

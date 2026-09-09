@@ -7,19 +7,19 @@ describe('SubscriptionService', () => {
   let service: SubscriptionService;
   const prismaMock = {
     subscription: {
-      findMany: jest.fn(),
-      deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
-      upsert: jest.fn().mockResolvedValue({}),
+      findMany: vi.fn(),
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      upsert: vi.fn().mockResolvedValue({}),
     },
     member: {
-      findFirst: jest.fn(),
-      findMany: jest.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
-    $transaction: jest.fn().mockResolvedValue([]),
+    $transaction: vi.fn().mockResolvedValue([]),
   };
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const moduleRef = await Test.createTestingModule({
       providers: [
         SubscriptionService,

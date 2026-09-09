@@ -11,10 +11,10 @@ import { CliDispatchService } from '@/modules/cli-dispatch/dispatch.service';
  */
 
 const prismaMock = {
-  project: { findUnique: jest.fn() },
+  project: { findUnique: vi.fn() },
 };
-const issueServiceMock = { create: jest.fn() };
-const cliDispatchMock = { dispatchTaskToCli: jest.fn() };
+const issueServiceMock = { create: vi.fn() };
+const cliDispatchMock = { dispatchTaskToCli: vi.fn() };
 
 const service = new ArchaeologyService(
   prismaMock as unknown as PrismaService,
@@ -23,7 +23,7 @@ const service = new ArchaeologyService(
 );
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   prismaMock.project.findUnique.mockResolvedValue({
     id: 'p1',
     name: '演示项目',

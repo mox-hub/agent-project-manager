@@ -96,11 +96,11 @@ describe('ingestArchaeology 容错回落（output 内嵌文本 JSON）', () => {
     const created: unknown[] = [];
     const prisma = {
       execution: {
-        findUnique: jest.fn(async () => execution),
+        findUnique: vi.fn(async () => execution),
       },
       memoryAtom: {
-        findFirst: jest.fn(async () => null),
-        create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+        findFirst: vi.fn(async () => null),
+        create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
           created.push(data);
           return {
             id: 'a1',
@@ -110,7 +110,7 @@ describe('ingestArchaeology 容错回落（output 内嵌文本 JSON）', () => {
           };
         }),
       },
-      activity: { create: jest.fn(async () => ({})) },
+      activity: { create: vi.fn(async () => ({})) },
     };
     const service = new ProfileService(prisma as unknown as PrismaService);
     const result = await service.ingestArchaeology('p1', 'exec1', 'u1');

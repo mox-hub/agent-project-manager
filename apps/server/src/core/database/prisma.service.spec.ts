@@ -7,12 +7,12 @@ describe('PrismaService', () => {
   let service: PrismaService;
 
   const mockLoggerService = {
-    setContext: jest.fn(),
-    debug: jest.fn(),
-    error: jest.fn(),
-    log: jest.fn(),
-    warn: jest.fn(),
-    verbose: jest.fn(),
+    setContext: vi.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    log: vi.fn(),
+    warn: vi.fn(),
+    verbose: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -30,7 +30,7 @@ describe('PrismaService', () => {
   });
 
   afterEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -43,7 +43,7 @@ describe('PrismaService', () => {
 
   describe('onModuleInit', () => {
     it('should connect to database', async () => {
-      const connectSpy = jest.spyOn(PrismaClient.prototype, '$connect');
+      const connectSpy = vi.spyOn(PrismaClient.prototype, '$connect');
       connectSpy.mockResolvedValue(undefined);
 
       await service.onModuleInit();
@@ -55,7 +55,7 @@ describe('PrismaService', () => {
 
   describe('onModuleDestroy', () => {
     it('should disconnect from database', async () => {
-      const disconnectSpy = jest.spyOn(PrismaClient.prototype, '$disconnect');
+      const disconnectSpy = vi.spyOn(PrismaClient.prototype, '$disconnect');
       disconnectSpy.mockResolvedValue(undefined);
 
       await service.onModuleDestroy();

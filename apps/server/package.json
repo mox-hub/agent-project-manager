@@ -20,7 +20,7 @@
     "prisma:migrate:dev": "cross-env PRISMA_CLIENT_ENGINE_TYPE=library prisma migrate dev",
     "prisma:studio": "cross-env PRISMA_CLIENT_ENGINE_TYPE=library prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "test": "jest --runInBand",
+    "test": "vitest run",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -90,6 +90,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "@types/supertest": "^6.0.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "cross-env": "^10.1.0",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
@@ -103,7 +104,9 @@
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.23.12",
     "typescript": "catalog:",
-    "typescript-eslint": "catalog:"
+    "typescript-eslint": "catalog:",
+    "unplugin-swc": "^1.6.0",
+    "vitest": "^5.0.0"
   },
   "jest": {
     "moduleFileExtensions": [

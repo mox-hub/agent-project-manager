@@ -13,31 +13,31 @@ describe('AiHubService', () => {
   let service: AiHubService;
 
   const mockPrismaService = {
-    aIModelConfig: { findMany: jest.fn() },
-    aIConversation: { findUnique: jest.fn(), create: jest.fn() },
-    aIUsageLog: { findMany: jest.fn() },
+    aIModelConfig: { findMany: vi.fn() },
+    aIConversation: { findUnique: vi.fn(), create: vi.fn() },
+    aIUsageLog: { findMany: vi.fn() },
   };
 
   const mockMessageBusService = {
-    publish: jest.fn(),
+    publish: vi.fn(),
   };
 
   const mockContextBuilderService = {
-    buildContext: jest.fn(),
-    formatContextForPrompt: jest.fn(),
+    buildContext: vi.fn(),
+    formatContextForPrompt: vi.fn(),
   };
 
   const mockAdapterRegistryService = {
-    getAdapterByModel: jest.fn(),
-    getLoadedProviders: jest.fn().mockReturnValue(['openai']),
-    getAdapter: jest.fn(),
-    listAdapters: jest
+    getAdapterByModel: vi.fn(),
+    getLoadedProviders: vi.fn().mockReturnValue(['openai']),
+    getAdapter: vi.fn(),
+    listAdapters: vi
       .fn()
       .mockReturnValue([{ provider: 'openai', model: 'gpt-4' }]),
   };
 
   const mockEncryptionService = {
-    decrypt: jest.fn(),
+    decrypt: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -54,15 +54,15 @@ describe('AiHubService', () => {
         {
           provide: AssistantToolsService,
           useValue: {
-            buildTools: jest.fn().mockReturnValue({}),
-            describeTools: jest.fn().mockReturnValue({ tools: [] }),
-            renderCatalogForPrompt: jest.fn().mockReturnValue(''),
+            buildTools: vi.fn().mockReturnValue({}),
+            describeTools: vi.fn().mockReturnValue({ tools: [] }),
+            renderCatalogForPrompt: vi.fn().mockReturnValue(''),
           },
         },
         { provide: EncryptionService, useValue: mockEncryptionService },
         {
           provide: UsagePricingService,
-          useValue: { estimateCostUsd: jest.fn().mockResolvedValue(null) },
+          useValue: { estimateCostUsd: vi.fn().mockResolvedValue(null) },
         },
       ],
     }).compile();
@@ -71,7 +71,7 @@ describe('AiHubService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {

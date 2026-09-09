@@ -8,11 +8,11 @@ describe('IterationService', () => {
 
   const mockPrismaService = {
     project: {
-      findFirst: jest.fn(),
+      findFirst: vi.fn(),
     },
     iteration: {
-      create: jest.fn(),
-      findMany: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
     },
   };
 
@@ -31,7 +31,7 @@ describe('IterationService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {
