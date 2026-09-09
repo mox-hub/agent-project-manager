@@ -6,7 +6,7 @@ category: "report"
 status: "active"
 version: "1.0.0"
 created: "2026-02-20"
-modified: "2026-09-08"
+modified: "2026-09-09"
 scope: "全仓库版本变更"
 ai-session-types: "all"
 ai-priority: "high"
@@ -19,7 +19,23 @@ tags: "changelog,release"
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
-## [Unreleased]
+## [0.5.0] - 2026-09-09
+
+### 依赖现代化——NestJS 12 + Express 5 + @swc/cli 0.8 + 测试栈迁移 Vitest
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | @nestjs 全家 10→12（common/core/platform-*/websockets/swagger/jwt/passport/config/axios/event-emitter/mapped-types/cli/schematics/testing）+ express ^5.2.1 + @swc/cli ^0.8.1（@nestjs/cli 12 解锁）；Nest 12 为纯 ESM 包（type: module），Node 24 经 require(esm) 以 CJS 应用消费，无需应用层 ESM 化；LocalAuthGuard 适配 Nest 12 注入器收紧（passport mixin 基类的 @Optional 水印不再跨原型链继承，无构造器 guard 子类显式构造器落回本类元数据）；@nestjs/throttler 6.5.0 peer 未声明 12，运行时正常留观察 | FR-CORE-001 | 运行时冒烟：42 模块全启 + JWT 守卫链 + 路由/404 正常；全仓 type-check/lint 绿 | 无 |
+| server | 测试栈整体迁移 Jest→Vitest（vitest 5 + unplugin-swc——Nest 构造器注入依赖 emitDecoratorMetadata，esbuild 不支持，走 swc 转换）：单测 59 套件 471 用例全绿（forks 池按文件回收进程，全量 9 秒）；e2e 50 套件 362 用例全绿（fileParallelism:false 串行 215 秒）；contract:export 迁 vitest 链（octokit stub 走 resolve.alias）；jest/@types/jest/@swc/jest 依赖与内嵌配置段、test/jest-e2e.json 全摘除；CI quality-gate.yml 与根 quality:gate 摘除 --runInBand --forceExit；coverage thresholds 沿用原基线 11/10/9/11 | FR-CORE-001 | vitest run 单测/e2e 全绿；contract:export 378 paths 与仓库真相源逐字节一致（零漂移） | 无 |
+| server | 黄金路径 3（文档冻结→执行触碰→冲突升级）断言收窄至 AGENTS.md：同轮对齐因 CLAUDE.md 派生绑定指纹失配误升级无关 contract_conflict 提案（无人手改被误判，污染决策收件箱），间歇失败根源定位；CLAUDE.md 误报为独立 bug 另案追踪（嫌疑：seed baseline 写入与文件内容竞态） | FR-CONTRACT-001 | golden-path 修后 8/9 绿 + 全量 362 全绿收口 | 无 |
+
+### dev 运行时优化——SWC 编译链 + Swagger 按环境构建 + Prisma SQL 日志开关 + dispatches 推送化
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 编译链切 SWC builder（nest-cli compilerOptions.builder=swc + typeCheck=false，类型检查由 turbo type-check 门禁兜底；tsconfig.build 显式 rootDir+include 限定 src，swc 不做 tsc 式推导）；dev watch 内存从 tsc 的 1.8GB 级降至轻量档，496 文件 523ms；Swagger/OpenAPI 构建仅非 production 挂载（38 模块全量路由扫描 + 文档对象常驻内存省却），ENABLE_SWAGGER=1 逃生阀，contract:export 走 jest→vitest e2e 直调 buildOpenApiDocument 不受影响；Prisma 每条 SQL 的 query 事件日志默认关闭（PRISMA_QUERY_LOG=1 或 CONSOLE_LOG_LEVEL=debug 时挂载），error 保留；EventsGateway 聚合 dispatch 生命周期 6 事件（created/execution.event/result/approval.requested/resolved/cancelled）统一转发 runtime.dispatch.changed | FR-CORE-001 | build 437 文件 452ms；contract:export 零漂移；type-check/lint 绿 | 无 |
+| frontend | event-client 事件白名单登记 runtime.dispatch.changed；同事位「工作中」判定（useActiveDispatchExists）由 5s 轮询改推送驱动失效 + 30s 断连兜底；设置页 runtime-admin 审批/派发查询族同挂推送 | FR-RUNTIME-001 | assistant 域 vitest 4/4 绿 | 无 |
+
 
 ### 日志刷屏治理——派发活跃轻端点 + 同事位轮询改造 + HTTP 日志降噪
 
