@@ -4,9 +4,9 @@ description: 仓库统一 AI 指令入口（AGENTS.md 标准）——会话启�
 id: ROOT-001
 category: meta
 status: active
-version: 1.0.0
+version: 1.1.0
 created: "2026-09-07"
-modified: "2026-09-07"
+modified: "2026-09-08"
 scope: AI 会话（Claude Code / Codex / Cursor / opencode 等跨工具入口）
 ai-session-types: all
 ai-priority: critical
@@ -17,9 +17,9 @@ tags: "AI, governance, meta, entry, agents"
 
 # AGENTS.md — 跨工具 AI 会话入口
 
-> **本文件 = 仓库统一 AI 指令入口**（跨工具 `AGENTS.md` 标准，Claude Code / Codex / Cursor / opencode 均原生读取），取代原根 `CLAUDE.md`（已合并入库）。v1.0.0（2026-09-07）随核心模型重构落地：数据模型已物理改名（`Task` 族 → `Issue` 族、`ExecutionRun` → `Execution`）。
+> **本文件 = 仓库统一 AI 指令入口**（跨工具 `AGENTS.md` 标准，Claude Code / Codex / Cursor / opencode 均原生读取），取代原根 `CLAUDE.md`（已合并入库）。v1.0.0（2026-09-07）随核心模型重构落地：数据模型已物理改名（`Task` 族 → `Issue` 族、`ExecutionRun` → `Execution`）。v1.1.0（2026-09-08）随需求治理收口更新：模块口径 40 目录、术语基线分支已合入、补契约知识域与需求入口闸门。
 >
-> 三真相源：**代码实现** = 运行时真相；**docs/02-架构设计/** = 开发时真相；**PRD** = 需求真相。冲突时停止开发、人工裁决。
+> 三真相源：**代码实现** = 运行时真相；**docs/02-架构设计/** = 开发时真相；**PRD + 能力清单** = 需求真相。冲突时停止开发、人工裁决。
 >
 > **本文档自身受 `scripts/check-doc-sync.mjs` 管理**：必须保留 YAML frontmatter（`title`/`description`/`status`）；`docs/*` 变更需与本文件或 `CHANGELOG.md` 同 PR 提交。
 
@@ -27,9 +27,10 @@ tags: "AI, governance, meta, entry, agents"
 
 1. 读本文件 — 治理铁律 + 技术栈 + 模块地图
 2. 读根 `architecture.md` — 主架构文档（v4，双表面/系统分层/主线对象/契约）
-3. 读 `docs/01-需求/产品需求文档-v3.md` — 需求真相源
-4. 涉及具体模块时读 `docs/02-架构设计/architecture/{backend,frontend}/modules.md`
-5. 确认工作目录与分支状态
+3. 读 `docs/01-需求/产品需求文档-v3.md` — 需求真相源（范式与愿景）
+4. 读 `docs/01-需求/能力清单-v1.md` — 功能点总账（四条工作线 + 28 能力卡 + 候补区；**新功能想法先走 `requirement-intake` skill**）
+5. 涉及具体模块时读 `docs/02-架构设计/architecture/{backend,frontend}/modules.md`
+6. 确认工作目录与分支状态
 
 ## 二、项目简介
 
@@ -46,12 +47,14 @@ Agent Project Manager (APM) 是一个 **AI 驱动的项目管理工具**，采�
 
 **差异化**：AI 原生双表面 · 双轨成本（Token + 工时）· 信任演进（执行评估驱动的 Agent 信任等级）；V4 加入 **Acceptance 验收门禁收口执行闭环** 与 **工作区多库路由**。
 
+**产品主轴（2026-09-08 裁决）**：**AI 同事是手段，工程治理是目的**——治理条件（验收标准/完备性清单/契约）由 AI 同事代写、人确认、完整性审计把关，让不了解工程各环节的小白团队也能交付靠谱软件。四条工作线：主线=需求承接与拆解管道（CAP-P-01）、副线=CI/PR 证据回流（CAP-B-08）、支线=UX 手感与 e2e 深化（固定比例并行）。详见 `docs/01-需求/能力清单-v1.md` §二/§三。
+
 ## 三、治理铁律 [MUST]
 
 | 规则 | 内容 | 违反后果 |
 |------|------|---------|
 | **中文优先** | 所有对话、文档、思考输出均用**中文** | MUST |
-| **单一真相源** | 代码 = 运行时真相；设计文档 = 开发真相；PRD = 需求真相 | 冲突时停止开发，人工裁决 |
+| **单一真相源** | 代码 = 运行时真相；设计文档 = 开发真相；PRD + 能力清单 = 需求真相 | 冲突时停止开发，人工裁决 |
 | **文档即契约** | `[MUST]` 变更需显式更新文档；`[SHOULD]` 偏离记录到 `docs/02-架构设计/策略/决策日志.md`；`[MAY]` AI 自决 | 文档不同步 = CI 阻断 |
 | **变更摘要** | 每次回复附变更摘要：修改范围 / 变更类型（feature/refactor/fix/config/docs）/ 影响分析 / 同步状态 | MUST |
 | **不静默覆盖** | 文档/契约冲突一律升级人审，绝不静默覆盖 | MUST |
@@ -112,8 +115,8 @@ pnpm test:ui        # Vitest UI
 ## 六、模块地图（v4，术语一律用新口径）
 
 > 前后端模块结构、真实目录与模块注册顺序见
-> `docs/02-架构设计/architecture/backend/modules.md`（36 目录 / 38 Module 类）
-> 与 `frontend/modules.md`（36 模块目录）。下为高层地图。
+> `docs/02-架构设计/architecture/backend/modules.md`（40 目录 / 42 Module 类，v4.1.0）
+> 与 `frontend/modules.md`（37 模块目录）。下为高层地图。
 
 **域分组（后端 = 前端对齐口径）**
 
@@ -126,11 +129,12 @@ pnpm test:ui        # Vitest UI
 | 文档与知识 | `document`（+`document-enhance`）·`activity`·`subscription` | `document`·`activity` |
 | AI 执行编排 | `ai-hub`·`execution`·`runtime`·`cli-dispatch`·`cli-provider`·`skills`·`context` | `ai-hub`·`assistant`·`execution`·`executions`·`runtime`·`skills` |
 | 治理与验收 | `acceptance`·`trust`·`decision` | `acceptance`·`decision` |
-| 协作与记忆 | `collaboration`·`memory`·`office`·`dashboard` | `office`·`delivery`·`desktop`·`onboarding` |
+| 协作与记忆 | `collaboration`·`memory`·`office`·`dashboard`·`profile`·`playbook` | `office`·`delivery`·`desktop`·`onboarding` |
+| 契约知识 | `contract`·`release` | `contract` |
 | 集成与能力 | `integration`·`git`·`mail`·`mcp-server`·`notification`·`plugins`·`admin` | `integration`·`github`·`linear`·`mcp-server`·`notification`·`git`·`admin` |
 | 系统/辅助 | — | `analytics`·`boot`·`search`·`settings`·`help`·`design-system` |
 
-> 后端共 **36 目录 / 38 业务 Module 类**（`auth` 拆 `access-token`、`document` 拆 `document-enhance`）；前端共 **36 模块目录**。
+> 后端共 **40 目录 / 42 业务 Module 类**（`auth` 拆 `access-token`、`document` 拆 `document-enhance`；`contract`/`release`/`profile`/`playbook` 为 2026-09 增量）；前端共 **37 模块目录**。能力级归类与供血关系见 `docs/01-需求/能力清单-v1.md`。
 
 **主线对象（数据模型）**
 
@@ -142,6 +146,8 @@ pnpm test:ui        # Vitest UI
 | `Runtime` / `RuntimeSession` | runtime | 本地执行节点（terminal 已废弃并入）|
 | `Member`（human / platform_ai_member / external_agent）| team | 统一主体身份 |
 | `Document` 族 · `MemoryAtom` · `DecisionProposal` | document / memory / decision | 知识 / 记忆 / 决策 |
+| `ContractFileBinding`（三态绑定）| contract | 文档 spec ↔ 代码文件绑定（managed/synced/detached）|
+| `Release` | release | 发版实体，CHANGELOG 唯一真相（单向再生）|
 
 ## 七、契约与质量门禁
 
@@ -152,6 +158,7 @@ pnpm test:ui        # Vitest UI
 | API 契约（三件套）| 仓库根 `openapi.json` | server `contract:export` → 前端 + `@apm/shared` 双份 `api-types.gen.ts` → `contract:check` 零漂移 |
 | CLI 运行时协议 | `packages/apm-shared/src/runtime/protocol.ts` + server `modules/runtime/` | `check:cli-contract` |
 | 变更契约 | `CHANGELOG.md` | — |
+| 需求契约（功能点总账）| `docs/01-需求/能力清单-v1.md`（配套 `测试映射矩阵-v1.md` / `需求入口流程-v1.md`）| `requirement-intake` skill 闸门：未进清单不得开工 |
 | 文档契约 | 本文件 + README + docs/ | `check:docs-sync`（**本文件为 CI 治理对象**）|
 
 **质量门禁（根 `quality:gate` 顺序）**：`type-check` → `lint` → `test`（server swc/jest + frontend vitest）→ `contract:check` → server `test:e2e` → `api:audit --min=95` → `check:docs-sync`。CI = `quality-gate.yml`（七并行 job + pnpm 缓存）。**文档不同步 / 验收证据缺失 / api 覆盖率不达标不得合并。**
@@ -167,7 +174,7 @@ hotfix/*（从 main 检出） · release/*（从 pre-prod 检出）
 
 - 命名：`feat/<module>-<short-desc>` · `fix/<module>-<short-desc>` · `hotfix/<version>-<desc>` · `release/<version>` · `chore/<short-desc>`
 - 流程：`develop → pre-prod → main`；标签：dev 无 / alpha `-alpha` / beta `-beta` / rc `-rc.N` / release 无后缀
-- **术语口径基线分支**：`fix/core-model-refactor`（Prisma `Task` 族 → `Issue` 族落地，未合入前以该分支为模型真相）
+- **术语口径基线**：`fix/core-model-refactor` 已随 PR #23/#24 合入 develop（2026-09-08）并删分支——Prisma `Task` 族 → `Issue` 族、`ExecutionRun` → `Execution` 的新口径已是全仓唯一真相（API `/issues` + `issueId`、目录 `modules/issue` 族），旧名仅存于历史文档。
 
 ## 九、AI 协作约定
 
@@ -176,3 +183,4 @@ hotfix/*（从 main 检出） · release/*（从 pre-prod 检出）
 - CLI 协议变更 → 改 `packages/apm-shared/src/runtime/protocol.ts` 并镜像 server `modules/runtime/dto`，跑 `check:cli-contract`。
 - 行为/状态变更 → 同步 `docs/` 设计文档 + `CHANGELOG.md`（文档即契约）。
 - 定义完成：改完自查 `pnpm quality:gate`（或最小子集 type-check + test + lint），并在回复附变更摘要。
+- 需求入口：新功能想法 / 功能变更 / 功能废弃一律先走 `requirement-intake` skill（流程见 `docs/01-需求/需求入口流程-v1.md`）——**未进能力清单（`docs/01-需求/能力清单-v1.md`）的功能不得开工**；测试映射与缺口账见 `docs/01-需求/测试映射矩阵-v1.md`。

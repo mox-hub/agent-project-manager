@@ -6,8 +6,9 @@
  * 结果回写前 status=pending/running）。不用 /execution/runs：该端点必填 projectId
  * 且返回 {runs,total} 分页形状，无法支撑全局态判定。
  */
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
+import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
 import { useDecisionSummary } from '@/modules/decision/hooks/use-decisions';
 import type { DecisionSummary } from '@/modules/decision/api/decision-api';
 
@@ -29,6 +30,12 @@ interface DispatchSummary {
 
 /** 是否存在活跃派发（工作区级；传 projectId 时收窄到该项目） */
 export function useActiveDispatchExists(projectId?: string) {
+  const queryClient = useQueryClient();
+  // 即时性由 socket 推送驱动（服务端 dispatch 生命周期 → runtime.dispatch.changed），
+  // 轮询仅作断连兜底
+  useEventSubscription('runtime.dispatch.changed', () => {
+    queryClient.invalidateQueries({ queryKey: ['assistant', 'active-dispatch'] });
+  });
   return useQuery({
     queryKey: ['assistant', 'active-dispatch', projectId ?? null],
     queryFn: async () => {
@@ -45,7 +52,7 @@ export function useActiveDispatchExists(projectId?: string) {
           (!projectId || d?.projectId === projectId),
       );
     },
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 }
 

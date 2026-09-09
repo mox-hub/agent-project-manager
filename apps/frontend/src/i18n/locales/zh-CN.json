@@ -977,6 +977,32 @@
     }
   },
   "project": {
+    "init": {
+      "workspace": {
+        "title": "绑定工作区目录",
+        "desc": "指定项目在本机的目录路径，契约文件与 AI 执行都以它为根。"
+      },
+      "contract": {
+        "title": "种生契约标准文件",
+        "desc": "生成 AGENTS.md（AI 指令托管）、CLAUDE.md（派生别名）与 CHANGELOG.md（发版日志）三件套。"
+      },
+      "next": {
+        "title": "下一步",
+        "desc": "项目已就绪，可以选择继续配置或直接开始",
+        "playbook": {
+          "title": "进入剧本流程",
+          "desc": "访谈式收集项目信息，生成全流程剧本"
+        },
+        "profile": {
+          "title": "接入已有仓库",
+          "desc": "运行 AI 只读考古扫描，自动入库项目知识"
+        },
+        "overview": {
+          "title": "返回项目概览",
+          "desc": "稍后再配置，先看看项目全貌"
+        }
+      }
+    },
     "title": "项目",
     "create": "创建项目",
     "edit": "编辑项目",
@@ -1164,6 +1190,8 @@
       "profile": "档案",
       "team": "团队与角色",
       "settings": "设置",
+      "init": "项目初始化",
+      "initDesc": "绑定工作区目录，种生契约标准文件，让 AI 与规则就位。",
       "openTaskBoard": "打开任务看板",
       "work": "工作",
       "quickAccess": "快速访问",
@@ -3139,12 +3167,77 @@
     "lastSync": "上次同步：{{time}}",
     "syncErrorTip": "上次同步失败。点击「立即同步」重试，或到集成管理页查看集成日志。"
   },
+  "contract": {
+    "noWorkspace": {
+      "title": "尚未绑定工作区目录",
+      "desc": "契约文件需要项目工作区目录才能种生。请先在「Git 与终端」页签配置工作区路径。"
+    },
+    "list": {
+      "title": "标准契约文件"
+    },
+    "action": {
+      "seedAll": "全部种生",
+      "seed": "补种",
+      "adoptAll": "格式化纳管",
+      "adoptAllTitle": "已有文件仅并入 apm_ frontmatter 并建立观察绑定，不改动正文",
+      "checkAll": "检查全部对齐",
+      "check": "检查对齐",
+      "viewProposal": "查看冲突提案"
+    },
+    "empty": {
+      "title": "尚未种生契约文件",
+      "desc": "新项目绑定工作区后点「全部种生」生成三件套；已有项目点「格式化纳管」，仅写入身份标记、正文不动"
+    },
+    "fileType": {
+      "agents": "AGENTS.md（托管镜像）",
+      "claude_alias": "CLAUDE.md（派生别名）",
+      "changelog": "CHANGELOG.md（发版导出）",
+      "readme": "README",
+      "docs_dir": "docs/ 目录"
+    },
+    "syncMode": {
+      "managed": "托管",
+      "synced": "同步",
+      "detached": "独立"
+    },
+    "state": {
+      "conflicted": "冲突",
+      "fileChanged": "文件已变化"
+    },
+    "seedAction": {
+      "created": "已创建",
+      "updated": "已更新",
+      "adopted": "已纳管",
+      "skipped_unchanged": "无变化",
+      "skipped_existing": "已存在跳过",
+      "skipped_no_workspace": "无工作区跳过"
+    },
+    "checkState": {
+      "aligned": "对齐",
+      "conflicted": "冲突",
+      "skipped_detached": "独立模式跳过",
+      "missing_file": "文件缺失"
+    },
+    "result": {
+      "seedTitle": "最近一次种生结果",
+      "checkTitle": "最近一次对齐检查"
+    }
+  },
   "projectSettings": {
     "loading": "正在加载项目设置…",
     "sidebarTitle": "项目设置",
+    "contract": {
+      "title": "契约文件",
+      "desc": "项目契约文件的绑定状态、种生与对齐管理",
+      "panel": {
+        "title": "契约绑定",
+        "desc": "工作区标准文件的真相源同步模式与冲突状态"
+      }
+    },
     "tabs": {
       "general": "常规",
       "gitTerminal": "Git 与终端",
+      "contract": "契约文件",
       "cloudSync": "云端同步",
       "docs": "文档"
     },

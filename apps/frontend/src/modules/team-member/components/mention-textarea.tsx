@@ -1,10 +1,14 @@
 import { useMemo, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { FileText } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Bot } from 'lucide-react';
-import { suggestMentions } from '../api/team-member-api';
 import { MemberAvatar } from './member-avatar';
+import {
+  buildInsertText,
+  useEntityRefSuggestions,
+  type EntityRefCandidate,
+} from '@/shared/entity-ref/entity-ref-suggest';
 
 export interface SuggestedMember {
   id: string;
@@ -21,7 +25,10 @@ export interface MentionTextareaProps {
   rows?: number;
   className?: string;
   disabled?: boolean;
-  /** 命中成员选中时的回调（可用于联动解析 Mention 记录） */
+  /** 文档候选搜索范围与 apm:// 短号链接的项目代码（统一实体引用子系统，v2 纪要 §13.3） */
+  projectId?: string;
+  projectCode?: string;
+  /** 命中成员选中时的回调（可用于联动解析 Mention 记录；仅成员候选触发） */
   onMentionSelected?: (member: SuggestedMember) => void;
   /** 无候选列表时按 Enter 触发（用于聊天式输入的直接发送） */
   onEnterSubmit?: () => void;
@@ -30,8 +37,10 @@ export interface MentionTextareaProps {
 const TOKEN_RE = /@([a-zA-Z0-9_\-.]*)$/;
 
 /**
- * 支持 @ 触发成员自动补全的文本域：
- * 光标前输入 @query 时弹出建议列表，选中后以 `@handle ` 形式插入。
+ * 支持 @ 触发统一实体引用补全的文本域（v2 纪要 §13.3 重构）：
+ * 光标前输入 @query 时弹出统一候选列表（成员 + 项目文档混排同源），
+ * 成员以 `@handle ` 插入（兼容提及解析），文档以 markdown 链接插入
+ * （apm:// 短号形态优先，渲染侧由 apm-ref-chip 呈现为同一 chip）。
  */
 export function MentionTextarea({
   value,
@@ -40,6 +49,8 @@ export function MentionTextarea({
   rows = 3,
   className,
   disabled,
+  projectId,
+  projectCode,
   onMentionSelected,
   onEnterSubmit,
 }: MentionTextareaProps) {
@@ -47,17 +58,14 @@ export function MentionTextarea({
   const [query, setQuery] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const { data: suggestions } = useQuery({
-    queryKey: ['mention-suggest', query],
-    queryFn: () => suggestMentions(query ?? '', 8),
+  const { candidates } = useEntityRefSuggestions({
+    query: query ?? '',
     enabled: query !== null,
-    staleTime: 30 * 1000,
+    projectId,
+    projectCode,
   });
 
-  const list = useMemo(
-    () => (suggestions ?? []).filter((s) => s.handle),
-    [suggestions],
-  );
+  const list = useMemo(() => candidates, [candidates]);
 
   const detectToken = (text: string, caret: number) => {
     const upToCaret = text.slice(0, caret);
@@ -66,7 +74,7 @@ export function MentionTextarea({
     setActiveIndex(0);
   };
 
-  const applySelection = (member: SuggestedMember) => {
+  const applySelection = (candidate: EntityRefCandidate) => {
     const el = textareaRef.current;
     const text = value;
     const caret = el?.selectionStart ?? text.length;
@@ -74,16 +82,22 @@ export function MentionTextarea({
     const match = TOKEN_RE.exec(upToCaret);
     if (!match) return;
     const start = match.index;
-    const next =
-      text.slice(0, start) +
-      `@${member.handle} ` +
-      text.slice(caret);
+    const inserted = buildInsertText(candidate, { projectCode });
+    const next = text.slice(0, start) + inserted + text.slice(caret);
     onChange(next);
     setQuery(null);
-    onMentionSelected?.(member);
+    if (candidate.kind === 'member') {
+      onMentionSelected?.({
+        id: candidate.id,
+        type: candidate.memberType,
+        handle: candidate.handle,
+        displayName: candidate.displayName,
+        avatarUrl: candidate.avatarUrl,
+      });
+    }
     // 恢复光标到插入内容之后
     requestAnimationFrame(() => {
-      const pos = start + member.handle.length + 2;
+      const pos = start + inserted.length;
       el?.focus();
       el?.setSelectionRange(pos, pos);
     });
@@ -149,8 +163,8 @@ export function MentionTextarea({
       {query !== null && list.length > 0 && (
         <div className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-md overflow-hidden">
           <ul className="max-h-56 overflow-y-auto py-1">
-            {list.map((m, i) => (
-              <li key={m.id}>
+            {list.map((candidate, i) => (
+              <li key={`${candidate.kind}-${candidate.id}`}>
                 <button
                   type="button"
                   className={cn(
@@ -159,27 +173,39 @@ export function MentionTextarea({
                   )}
                   onMouseDown={(e) => {
                     e.preventDefault();
-                    applySelection(m);
+                    applySelection(candidate);
                   }}
                   onMouseEnter={() => setActiveIndex(i)}
                 >
-                  <MemberAvatar
-                    member={{
-                      type: m.type as 'human' | 'ai_agent',
-                      displayName: m.displayName,
-                      handle: m.handle,
-                      avatarUrl: m.avatarUrl,
-                      isOnline: false,
-                    }}
-                    size="xs"
-                    showBadge={false}
-                  />
-                  <span className="truncate">{m.displayName}</span>
-                  <span className="text-11 text-muted-foreground truncate">
-                    @{m.handle}
-                  </span>
-                  {m.type === 'ai_agent' && (
-                    <Bot className="ml-auto h-3 w-3 text-accent-purple shrink-0" />
+                  {candidate.kind === 'member' ? (
+                    <>
+                      <MemberAvatar
+                        member={{
+                          type: candidate.memberType as 'human' | 'ai_agent',
+                          displayName: candidate.displayName,
+                          handle: candidate.handle,
+                          avatarUrl: candidate.avatarUrl,
+                          isOnline: false,
+                        }}
+                        size="xs"
+                        showBadge={false}
+                      />
+                      <span className="truncate">{candidate.displayName}</span>
+                      <span className="text-11 text-muted-foreground truncate">
+                        @{candidate.handle}
+                      </span>
+                      {candidate.memberType === 'ai_agent' && (
+                        <Bot className="ml-auto h-3 w-3 text-accent-purple shrink-0" />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{candidate.title}</span>
+                      <span className="text-11 text-muted-foreground ml-auto shrink-0">
+                        文档
+                      </span>
+                    </>
                   )}
                 </button>
               </li>

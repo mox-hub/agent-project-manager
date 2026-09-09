@@ -111,10 +111,13 @@ function buildPrisma() {
     activity: {
       create: jest.fn(async () => ({})),
     },
-    $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
-      fn(prisma),
-    ),
+    $transaction: undefined as unknown as (
+      fn: (tx: unknown) => Promise<unknown>,
+    ) => Promise<unknown>,
   };
+  prisma.$transaction = jest.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
+    fn(prisma),
+  );
   return { prisma, store };
 }
 

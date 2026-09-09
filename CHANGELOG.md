@@ -19,6 +19,30 @@ tags: "changelog,release"
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
+## [Unreleased]
+
+### 夜航测试清偿——GAP-T-03 完结 + 黄金路径场景 1 + 异常流抽样 + formatOnly e2e 消竞态
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 测试映射矩阵缺口清偿（2026-09-09 夜航，分支 feat/contract-binding-entry 七提交）：GAP-T-03（P0 完整性审计零测试）完结——新增 completeness-audit.service.spec 19 条（依赖完备性 blocks/related 分级、工程完备性双向 includes 去重、三级响应 red/yellow/green、applySuggestions 四路径、enforceAuditBeforeExecution 四路径）+ completeness-checklist.service.spec 14 条（清单 CRUD 三道闸、applyToAcceptance order 续接与 template 溯源、findAll 过滤）；GAP-T-02 首条落测——新增 golden-path.e2e 8 步全链（建项目→POST seed→建 issue→执行→审批 approved→验收→发布 Release→CHANGELOG 再生与订阅链，执行/runtime 走 HTTP 面不启 daemon）；GAP-T-05 部分——新增 error-paths.e2e 6 条（issue 缺必填 400/项目不存在 404/越权 workspace 头 401 + project 缺 name 400/PATCH 不存在 403 成员守卫遮蔽/archive 重复提交幂等）；acceptance e2e 23→26 条（audit 行为级断言 riskLevel/summary/items/report 落库、checklists 404 错误路径、audit-gate allowed 断言）；release 单测桩补 projectWorkspace 访问器适配解析器三级回退；formatOnly 纳管 e2e 消竞态（等待 project.created 自动种生定局后再登记工作区，三连跑稳定） | FR-REQ-GOV-001 | quality:gate 全绿：server 单测 58 套件 453 用例、server e2e 49 套件 350 用例、contract:check 零漂移、api:audit 479 端点 100% 覆盖、check:docs-sync 通过 | 测试映射矩阵 GAP-T-03 置 done、GAP-T-02 场景 1 置 done、GAP-T-05 置部分（本地 docs/）；新增 docs/01-需求/控件清单-issue详情页-v0.md（92 控件静态盘点，本地） |
+
+### 需求治理收口——能力清单/测试映射矩阵/需求入口流程三账本落地 + requirement-intake skill
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | 需求失控治理收口（2026-09-08 讨论裁决落库）：新增 `docs/01-需求/能力清单-v1.md`（28 张能力卡按 A 底盘 10/B 治理 8/C 同事 6/D 契约知识 3/跨线桥 3 归线 + 产品主轴「AI 同事是手段、治理是目的」+ 理想管道六环节诊断 + 四条工作线：主线=需求承接拆解管道 CAP-P-01、副线=CI-PR 证据回流 CAP-B-08、支线=UX 手感与 e2e 深化 + 治理骨架分工声明 acceptance=验收证据层/contract=文件绑定层 + 候补区）；新增 `docs/01-需求/测试映射矩阵-v1.md`（五类覆盖模型 + 域×测试资产对照基线 57 单测/48 server e2e/前端 10 spec + 8 条缺口登记含 P0「完整性审计零测试」+ 黄金路径场景库 4 条 + 控件清单模板）；新增 `docs/01-需求/需求入口流程-v1.md`（五步入口流程 + C 线供血判据）；AGENTS.md 升 v1.1.0——三真相源改「PRD + 能力清单」、§一启动清单补能力清单步、§二补产品主轴与四工作线、§六模块口径 36→40 目录/42 Module 与前端 37、域表增「契约知识」行并补 profile/playbook、主线对象表补 ContractFileBinding/Release、§七契约表增「需求契约」行、§八术语基线分支改为已合入 | FR-REQ-GOV-001 | 文档落库，无代码变更；check:docs-sync passed | backend/modules.md 修正 36→40 目录口径（补 profile/playbook）；docs/README.md 索引同步 |
+| skill | 新增 `.zcode/skills/requirement-intake/SKILL.md`——需求入口闸门 skill 化：会话中出现新功能想法/功能变更/废弃意图时强制五步流程（一行声明→冲突检测→裁决归档→更新清单→开工登记），硬规则「未进清单不得开工」取代设计纪要直通开发 | FR-REQ-GOV-001 | 流程定义，随下次功能开发实测 | 能力清单候补区启用 |
+
+### 契约种生实机入口——项目 init 页 + 设置页契约绑定面板 + 契约 REST 面
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 半途项目纳管：POST seed 增 `formatOnly` 格式化纳管模式——已有 AGENTS.md 仅把 `apm_project_id/apm_file_type/apm_sync_mode` 并入 frontmatter（人工字段原样保留），**不注入 apm:managed 托管区间**（正文一字不动）；绑定落 synced + 整文件 sha256 基线（观察模式：手改文件检查对齐即报 conflicted，不升级决策收件箱提案）；缺文件时与默认种生一致生成；默认种生行为不变；action 增新枚举 `adopted`。修复半途项目（功能上线前创建）「检查对齐不可用」：根因是零绑定（check 逐类型查绑定、无绑定跳过、前端零绑定禁用检查按钮） | FR-CONTRACT-001 | e2e `contract-bindings-api` 8/8 绿（新增：自定义 frontmatter 文件纳管后仅差身份字段且无区间标记 + synced 绑定；aligned → 手改正文 conflicted 且不建提案）；contract 单测 28/28；`contract:check` 零漂移 | docs/02-架构设计/architecture/backend/modules.md contract 行补 formatOnly（本地） |
+| frontend | 契约绑定面板新增「格式化纳管」动作（FileSearch 图标，title 提示语义）与 `adopted` 结果徽章；synced 绑定冲突行显示「文件已变化」而非决策收件箱链接（观察模式不建提案，链接会落空）；空态描述区分新项目（全部种生）与已有项目（格式化纳管）两条路径；hooks 种生入参对象化 `{fileTypes?, formatOnly?}` | FR-CONTRACT-001 | 组件测试 8/8 绿（新增 formatOnly 调用形态与 synced 冲突提示两例）；tsc -b 0 错；lint 0 error；i18n 双语 3033 键同步 | 无 |
+| server | contract 模块首次开放 REST 面（`/projects/:projectId/contract/*`）：GET bindings（绑定+工作区根，只读）、POST seed（幂等种生，`fileTypes` 过滤即单文件补种）、POST check（显式对齐检查，managed 漂移照旧升级 contract_conflict 提案）、PATCH bindings/:fileType（三态切换，detached 清冲突态）。修复种生实机断层：ContractWorkspaceResolver 此前只读 `Repository.workspacePath/localPath`，而现有绑定链路（设置页 WorkspaceConfig/接入向导）写的是 `ProjectWorkspace.localPath` → 解析器增第三级回退，绑过工作区的项目种生立即可用；ContractSeedService 增 fileTypes 过滤参数 | FR-CONTRACT-001 | e2e `contract-bindings-api` 6/6 绿（含仅绑 ProjectWorkspace 种生、幂等/单文件补种、冲突升级提案、detached 清冲突）；`contract:check` 零漂移；server tsc -b 0 错 | docs/02-架构设计/architecture/backend/modules.md contract 域同步（本地） |
+| frontend | 新建 modules/contract 域（api/hooks/components）：`ContractBindingsPanel` 契约绑定面板（绑定行 × sync_mode 徽章/冲突警示→决策收件箱链接、全部种生/单文件补种/对齐检查/三态切换、种生与检查结果条）；设置页新增「契约文件」页签复用该面板；新增项目初始化页 `/:id/init`（三段式：绑定工作区复用 WorkspaceConfig → 种生契约三件套 → 下一步引导卡），统一创建面板建项后改跳 init 页（原 playbook/profile?wizard=1 直跳保留为引导卡入口，不入 tabbar）；i18n 双语键 contract.* / project.init.* / projectSettings.tabs.contract | FR-CONTRACT-001 | 组件测试 6/6 绿（面板渲染/冲突链接/空态禁用/种生过滤/结果条）；tsc -b 0 错；lint 0 error；check:i18n-sync 双语 3029 键同步 | COMPONENTS.md 登记 ContractBindingsPanel |
+
 ## [0.4.12] - 2026-09-08
 
 ### 左侧边栏改进——通知/决策计数角标 + Status Pill 标签 + 通用分组收缩 + 折叠气泡修复

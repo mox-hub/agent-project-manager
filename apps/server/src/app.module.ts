@@ -52,6 +52,8 @@ import { CollaborationModule } from './modules/collaboration/collaboration.modul
 import { ProfileModule } from './modules/profile/profile.module';
 import { PlaybookModule } from './modules/playbook/playbook.module';
 import { OfficeModule } from './modules/office/office.module';
+import { ContractModule } from './modules/contract/contract.module';
+import { ReleaseModule } from './modules/release/release.module';
 
 // Common infrastructure
 import {
@@ -112,6 +114,8 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     DecisionModule,
     DashboardModule,
     OfficeModule,
+    ContractModule,
+    ReleaseModule,
     MemoryModule,
     CollaborationModule,
     ProfileModule,

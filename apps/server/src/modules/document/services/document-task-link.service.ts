@@ -1,6 +1,7 @@
 // Document Task Link Service - 使用 Prisma
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
+import { DocRegistryService } from './doc-registry.service';
 import type {
   CreateDocumentTaskLink,
   LinkType,
@@ -8,7 +9,10 @@ import type {
 
 @Injectable()
 export class DocumentTaskLinkService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly docRegistry: DocRegistryService,
+  ) {}
 
   /**
    * 获取文档关联的任务
@@ -63,7 +67,7 @@ export class DocumentTaskLinkService {
    * 创建关联
    */
   async createLink(data: CreateDocumentTaskLink) {
-    return this.prisma.documentTaskLink.create({
+    const link = await this.prisma.documentTaskLink.create({
       data: {
         documentId: data.documentId || null,
         sectionId: data.sectionId || null,
@@ -74,6 +78,13 @@ export class DocumentTaskLinkService {
         createdBy: data.createdBy,
       },
     });
+    // T0 物化提升（v2 纪要 §11）：文档被任务引用即开始被消费
+    if (data.documentId) {
+      await this.docRegistry
+        .enqueueDigest(data.documentId)
+        .catch(() => undefined);
+    }
+    return link;
   }
 
   /**

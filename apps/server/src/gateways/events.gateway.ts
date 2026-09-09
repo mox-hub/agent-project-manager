@@ -195,6 +195,26 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
     */
 
+    // ── Runtime dispatch 生命周期 → 统一转发为 runtime.dispatch.changed ──
+    // 前端同事位状态（use-assistant-status）与设置页派发表原先各挂 5s 轮询
+    // GET /runtime/dispatches；改为事件驱动失效后轮询仅作 30s 兜底。
+    const dispatchEvents = [
+      'runtime.dispatch.created',
+      'runtime.execution.event',
+      'runtime.execution.result',
+      'runtime.approval.requested',
+      'runtime.approval.resolved',
+      'runtime.execution.cancelled',
+    ] as const;
+    dispatchEvents.forEach((evt) => {
+      this.messageBus.subscribe(evt, (payload: unknown) => {
+        this.server.emit('runtime.dispatch.changed', {
+          source: evt,
+          payload,
+        });
+      });
+    });
+
     // ── Linear sync events ─────────────────────────────────
     this.messageBus.subscribe('linear.sync.progress', (payload: any) => {
       const { projectId } = payload ?? {};

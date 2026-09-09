@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings2, GitBranch, Cloud, BookOpen, Archive } from 'lucide-react';
+import { Settings2, GitBranch, Cloud, BookOpen, Archive, ScrollText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { useUpdateProject, useArchiveProject } from '../hooks/use-project-mutations';
@@ -16,6 +16,7 @@ import { ExternalLinksManager } from '../components/external-links-manager';
 import { DocLinksManager } from '../components/doc-links-manager';
 import { ApiDocLinksManager } from '../components/api-doc-links-manager';
 import { ProjectLinearSyncStatus } from '../components/project-linear-sync-status';
+import { ContractBindingsPanel } from '@/modules/contract/components/contract-bindings-panel';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +31,7 @@ import type { ProjectType, ProjectVisibility } from '../api/project-api';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 
-type SettingsTab = 'general' | 'git' | 'cloud' | 'docs';
+type SettingsTab = 'general' | 'git' | 'contract' | 'cloud' | 'docs';
 
 const SETTINGS_TABS: Array<{
   id: SettingsTab;
@@ -39,6 +40,7 @@ const SETTINGS_TABS: Array<{
 }> = [
   { id: 'general', label: 'projectSettings.tabs.general', icon: Settings2 },
   { id: 'git', label: 'projectSettings.tabs.gitTerminal', icon: GitBranch },
+  { id: 'contract', label: 'projectSettings.tabs.contract', icon: ScrollText },
   { id: 'cloud', label: 'projectSettings.tabs.cloudSync', icon: Cloud },
   { id: 'docs', label: 'projectSettings.tabs.docs', icon: BookOpen },
 ];
@@ -572,6 +574,31 @@ export function ProjectSettingsPage() {
                         </div>
                       </div>
                     </Form>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {activeTab === 'contract' && (
+              <div
+                className="space-y-4"
+                data-ai-component="project.project-settings.contract"
+                data-ai-role="content"
+              >
+                <div>
+                  <h2 className="text-base font-semibold">{t('projectSettings.contract.title')}</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {t('projectSettings.contract.desc')}
+                  </p>
+                </div>
+
+                <Card>
+                  <CardHeader className="border-b border-border">
+                    <CardTitle>{t('projectSettings.contract.panel.title')}</CardTitle>
+                    <CardDescription>{t('projectSettings.contract.panel.desc')}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <ContractBindingsPanel projectId={projectId} />
                   </CardContent>
                 </Card>
               </div>
