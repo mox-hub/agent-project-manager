@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, Check, FileText, Inbox } from 'lucide-react';
+import { ArrowRight, Check, FileText, Inbox, Sparkles } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ import type {
   SubmitInterviewResponse,
 } from '../../api/playbook-api';
 import { useSubmitInterview } from '../../hooks/use-playbook';
+import { useInterviewPrefill } from '@/modules/assistant/hooks/use-interview-prefill';
 
 interface InterviewDialogProps {
   projectId: string;
@@ -29,19 +30,24 @@ interface InterviewDialogProps {
  * 阶段访谈向导（v2 纪要 §2.4「对照翻译」）：
  * 人话提问收集 → 服务端确定性转写成正式工件 → 展示「你说的 → 专业术语」对照
  * → 引导去决策收件箱过闸门。AI 不替用户拍板，闸门在收件箱。
+ * CAP-P-01 一期：可按一句话需求（或 grill 摘要）AI 预填候选——只填空字段，人始终可改。
  */
 export function InterviewDialog({ projectId, stage, open, onOpenChange }: InterviewDialogProps) {
   const { t } = useTranslation();
   const submit = useSubmitInterview(projectId);
+  const prefill = useInterviewPrefill(projectId);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [requirement, setRequirement] = useState('');
   const [result, setResult] = useState<SubmitInterviewResponse | null>(null);
 
   const questions = useMemo(() => stage?.interview ?? [], [stage]);
 
   const reset = () => {
     setAnswers({});
+    setRequirement('');
     setResult(null);
     submit.reset();
+    prefill.reset();
   };
 
   const close = (next: boolean) => {
@@ -53,6 +59,29 @@ export function InterviewDialog({ projectId, stage, open, onOpenChange }: Interv
     questions.length > 0 &&
     questions.every((q) => (answers[q.id] ?? '').trim().length > 0) &&
     !submit.isPending;
+
+  const handlePrefill = () => {
+    if (!stage || prefill.isPending) return;
+    prefill.mutate(
+      {
+        requirement: requirement.trim(),
+        questions: questions.map((q) => ({ id: q.id, question: q.question, hint: q.hint })),
+      },
+      {
+        // 只填空字段：已手填的答案绝不覆盖
+        onSuccess: (filled) =>
+          setAnswers((prev) => {
+            const next = { ...prev };
+            for (const item of filled) {
+              if (!(next[item.questionId] ?? '').trim()) {
+                next[item.questionId] = item.answer;
+              }
+            }
+            return next;
+          }),
+      },
+    );
+  };
 
   const handleSubmit = () => {
     if (!stage) return;
@@ -81,6 +110,36 @@ export function InterviewDialog({ projectId, stage, open, onOpenChange }: Interv
               </DialogTitle>
               <DialogDescription>{stage.purpose}</DialogDescription>
             </DialogHeader>
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-content-bg-secondary/40 px-3 py-2">
+              <Sparkles className="size-3.5 shrink-0 text-accent-purple" />
+              <input
+                value={requirement}
+                onChange={(e) => setRequirement(e.target.value)}
+                placeholder={t('project.playbookPage.interview.requirementPlaceholder')}
+                className="min-w-0 flex-1 bg-transparent text-xs text-content-text outline-none placeholder:text-content-text-muted"
+                data-ai="playbook.interview.requirement"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 shrink-0 gap-1 px-2 text-xs"
+                disabled={prefill.isPending}
+                onClick={handlePrefill}
+                data-ai="playbook.interview.aiPrefill"
+              >
+                <Sparkles className={cn('size-3', prefill.isPending && 'animate-pulse')} />
+                {prefill.isPending
+                  ? t('project.playbookPage.interview.aiPrefilling')
+                  : t('project.playbookPage.interview.aiPrefill')}
+              </Button>
+            </div>
+            {prefill.isError ? (
+              <p className="rounded-lg bg-accent-red-light/50 px-3 py-2 text-xs text-accent-red">
+                {t('project.playbookPage.interview.aiPrefillFailed', {
+                  reason: prefill.error instanceof Error ? prefill.error.message : '',
+                })}
+              </p>
+            ) : null}
             <div className="space-y-4 py-1">
               {questions.map((q, idx) => (
                 <div key={q.id} className="space-y-1.5">

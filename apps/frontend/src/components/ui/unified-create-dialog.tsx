@@ -25,6 +25,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { GrillInterview } from '@/modules/project/components/grill/grill-interview';
+import { buildGrillMinutes } from '@/modules/project/components/grill/grill-minutes';
 import type { GrillSummary } from '@/modules/assistant/hooks/use-grill';
 import {
   Dialog,
@@ -755,7 +756,7 @@ export function UnifiedCreateDialog({
     }
   };
 
-  /** CAP-P-01 AI 代理模式：grill 摘要确认后直接创建（init?grilled=1 触发自动挂载） */
+  /** CAP-P-01 AI 代理模式：grill 摘要确认后直接创建——落需求澄清纪要文档 + 跳 init 自动挂载 */
   const submitProjectFromGrill = async (summary: GrillSummary) => {
     setError(null);
     try {
@@ -768,6 +769,16 @@ export function UnifiedCreateDialog({
       };
       const resp = await createProject.mutateAsync(payload);
       if (resp?.id) {
+        // grill 产出持久化：需求澄清纪要文档（失败不阻断建项）
+        try {
+          await createDocument.mutateAsync({
+            title: `需求澄清纪要 · ${summary.name.trim()}`,
+            summary: summary.description.trim() || 'AI 需求拷问产出的澄清纪要',
+            content: buildGrillMinutes(summary),
+            category: 'requirement' as DocCategory,
+            projectId: resp.id,
+          });
+        } catch { /* 纪要落库失败不阻断建项 */ }
         handleSuccess('project', resp.id);
         navigate(`/app/projects/${resp.id}/init?grilled=1`, {
           state: { grillSummary: summary },

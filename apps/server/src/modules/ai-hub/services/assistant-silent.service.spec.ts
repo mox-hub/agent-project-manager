@@ -104,7 +104,61 @@ describe('AssistantSilentService.run', () => {
       'anchor-qa',
       'memory-digest',
       'grill-next',
+      'interview-prefill',
     ]);
+  });
+
+  describe('interview-prefill', () => {
+    const makePrefillService = (chatContent: string) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const service = new AssistantSilentService(
+        { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat };
+    };
+
+    it('按需求描述为每个问题生成答案候选，instructions 覆盖问题组', async () => {
+      const { service, chat } = makePrefillService(
+        '{"answers": [{"questionId": "problem", "answer": "会议决定记不住"}, {"questionId": "users", "answer": "小组 5 人"}]}',
+      );
+      const result = await service.run(
+        'interview-prefill',
+        {
+          requirement: '做一个会议纪要工具',
+          questions: [
+            { id: 'problem', question: '要解决什么问题？' },
+            { id: 'users', question: '谁会用？' },
+          ],
+        },
+        'p1',
+        'u1',
+      );
+
+      expect(result.data).toHaveProperty('answers');
+      const answers = result.data.answers as Array<{ questionId: string }>;
+      expect(answers).toHaveLength(2);
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('做一个会议纪要工具');
+      expect(instructions).toContain('"id":"problem"');
+    });
+
+    it('缺问题组 → 400（不触 LLM）', async () => {
+      const { service, chat } = makePrefillService('{}');
+      await expect(
+        service.run('interview-prefill', { requirement: 'x' }, 'p1', 'u1'),
+      ).rejects.toThrow(/缺少问题组/);
+      expect(chat).not.toHaveBeenCalled();
+    });
   });
 });
 

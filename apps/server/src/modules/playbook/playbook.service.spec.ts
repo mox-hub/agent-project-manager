@@ -122,6 +122,7 @@ describe('PlaybookService', () => {
       expect(templates.map((t) => t.key)).toEqual([
         'software-full-cycle',
         'maintenance-light',
+        'requirement-pipeline',
       ]);
       const research = templates[0].stages.find((s) => s.key === 'research');
       expect(research?.interview.length).toBeGreaterThan(0);

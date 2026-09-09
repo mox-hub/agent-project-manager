@@ -64,6 +64,7 @@ describe('Playbook / expertise / dashboard health (e2e, local-only paths)', () =
     expect(templates.map((t: { key: string }) => t.key)).toEqual([
       'software-full-cycle',
       'maintenance-light',
+      'requirement-pipeline',
     ]);
     const research = templates[0].stages.find(
       (s: { key: string }) => s.key === 'research',
@@ -189,6 +190,127 @@ describe('Playbook / expertise / dashboard health (e2e, local-only paths)', () =
       status: 'skipped',
       skippedReason: '需求足够简单',
     });
+  });
+
+  it('需求承接剧本（CAP-P-01）：挂载→调研拍板→澄清拍板→拆解访谈 + interview-prefill 无模型可读失败', async () => {
+    // 独立项目跑 requirement-pipeline，不污染上一个用例的 software-full-cycle 项目
+    const proj = await ws.db.project.create({
+      data: {
+        name: 'Requirement Pipeline e2e',
+        type: 'team',
+        visibility: 'internal',
+        status: 'active',
+        createdBy: 'e2e',
+      },
+    });
+    const pid = proj.id;
+
+    // 挂载需求承接剧本：首阶段 research
+    const mounted = await wsHttp
+      .post(`/_api/projects/${pid}/playbook/mount`)
+      .set(auth())
+      .send({ playbookRef: 'requirement-pipeline' })
+      .expect(201);
+    expect(mounted.body.data.currentStage).toBe('research');
+
+    // interview-prefill：无 LLM provider 时可读失败（异常流，GAP-T-09）
+    await wsHttp
+      .post('/_api/ai/assistant/silent')
+      .set(auth())
+      .send({
+        scenario: 'interview-prefill',
+        context: {
+          requirement: '会议纪要工具',
+          questions: [{ id: 'problem', question: '要解决什么问题？' }],
+        },
+      })
+      .expect((res) => {
+        if (res.status >= 500) {
+          throw new Error(
+            `interview-prefill 无模型应可读失败，实际 ${res.status}`,
+          );
+        }
+      });
+
+    const resolveGate = (proposalId: string) =>
+      wsHttp
+        .post(`/_api/decisions/proposals/${proposalId}/resolve`)
+        .set(auth())
+        .send({ action: 'accept' })
+        .expect(201);
+
+    // 调研访谈 → 工件 + 闸门 → 拍板推进 clarify
+    const research = await wsHttp
+      .post(`/_api/projects/${pid}/playbook/stages/research/interview`)
+      .set(auth())
+      .send({
+        answers: [
+          { questionId: 'problem', answer: '开完会记不清谁答应了什么' },
+          { questionId: 'users', answer: '我们小组 5 个人' },
+          { questionId: 'alternatives', answer: '现在用共享文档，经常忘更新' },
+        ],
+      })
+      .expect(201);
+    expect(research.body.data.documentId).toBeTruthy();
+    await resolveGate(research.body.data.proposalId);
+
+    // 澄清：必答校验（缺答 400）→ 补全提交 → 拍板推进 breakdown
+    await wsHttp
+      .post(`/_api/projects/${pid}/playbook/stages/clarify/interview`)
+      .set(auth())
+      .send({
+        answers: [
+          {
+            questionId: 'milestone-goal',
+            answer: '全组能在手机上登记会议决定',
+          },
+        ],
+      })
+      .expect(400);
+
+    const clarify = await wsHttp
+      .post(`/_api/projects/${pid}/playbook/stages/clarify/interview`)
+      .set(auth())
+      .send({
+        answers: [
+          {
+            questionId: 'milestone-goal',
+            answer: '全组能在手机上登记会议决定',
+          },
+          { questionId: 'non-goals', answer: '不做语音转写' },
+          { questionId: 'constraints', answer: '两周内上线' },
+        ],
+      })
+      .expect(201);
+    await resolveGate(clarify.body.data.proposalId);
+
+    // 拆解访谈提交（不拍板）：工件产出 + 闸门提案，游标停在 breakdown
+    const breakdown = await wsHttp
+      .post(`/_api/projects/${pid}/playbook/stages/breakdown/interview`)
+      .set(auth())
+      .send({
+        answers: [
+          { questionId: 'pieces', answer: '登记表、提醒、检索' },
+          { questionId: 'riskiest', answer: '提醒到达率' },
+          { questionId: 'order', answer: '先登记表' },
+        ],
+      })
+      .expect(201);
+    expect(breakdown.body.data.documentId).toBeTruthy();
+    expect(breakdown.body.data.proposalId).toBeTruthy();
+
+    const status = await wsHttp
+      .get(`/_api/projects/${pid}/playbook`)
+      .set(auth())
+      .expect(200);
+    expect(status.body.data.currentStage).toBe('breakdown');
+    const stages = Object.fromEntries(
+      status.body.data.stages.map((s: { key: string }) => [s.key, s]),
+    );
+    expect(stages.research.status).toBe('done');
+    expect(stages.clarify.status).toBe('done');
+    expect(stages.breakdown.status).toBe('active');
+    expect(stages['acceptance-draft']).toMatchObject({ status: 'pending' });
   });
 
   it('专长度档位：默认 detailed → suppress → suppressed → reset 恢复', async () => {

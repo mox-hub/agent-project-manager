@@ -978,6 +978,14 @@
   },
   "project": {
     "init": {
+      "grilled": {
+        "title": "AI requirement clarification done",
+        "desc": "A clarification brief was generated from your conversation, and the Requirement Intake playbook was mounted automatically — continue the interview to turn the requirement into tasks and acceptance criteria.",
+        "scope": "In scope",
+        "nonGoals": "Out of scope",
+        "acceptance": "How done is defined",
+        "gotoPlaybook": "Finish the playbook interview (AI prefill supported)"
+      },
       "workspace": {
         "title": "Bind workspace directory",
         "desc": "Specify the local directory for this project; contract files and AI execution are rooted here."
@@ -991,7 +999,9 @@
         "desc": "Your project is ready — keep configuring or jump straight in",
         "playbook": {
           "title": "Enter playbook flow",
-          "desc": "Interview-style project intake that generates a full playbook"
+          "desc": "Interview-style project intake that generates a full playbook",
+          "titleGrilled": "Finish the playbook interview",
+          "descGrilled": "The Requirement Intake playbook is mounted; AI prefill drafts answers from the brief"
         },
         "profile": {
           "title": "Import existing repository",
@@ -1148,6 +1158,10 @@
       "skipReasonPlaceholder": "Reason (optional, kept on record)",
       "skipConfirm": "Skip stage",
       "interview": {
+        "requirementPlaceholder": "Describe the requirement in one sentence (optional — AI drafts answers from it)",
+        "aiPrefill": "AI Prefill",
+        "aiPrefilling": "Drafting…",
+        "aiPrefillFailed": "AI prefill failed: {{reason}} (you can keep typing manually)",
         "title": "「{{stage}}」stage interview",
         "placeholder": "Say it in your own words — AI handles the professional phrasing…",
         "submit": "Generate artifact & submit gate",

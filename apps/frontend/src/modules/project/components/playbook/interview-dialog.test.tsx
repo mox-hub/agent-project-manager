@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@/i18n';
 import { InterviewDialog } from './interview-dialog';
 import * as usePlaybookModule from '../../hooks/use-playbook';
@@ -51,10 +52,15 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
       isPending: false,
       error: null,
     } as never);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
     render(
-      <MemoryRouter>
-        <InterviewDialog projectId="p1" stage={stage} open onOpenChange={() => {}} />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <InterviewDialog projectId="p1" stage={stage} open onOpenChange={() => {}} />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
     return { mutate };
   }
@@ -102,10 +108,15 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
       error: null,
     } as never);
 
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
     render(
-      <MemoryRouter>
-        <InterviewDialog projectId="p1" stage={stage} open onOpenChange={() => {}} />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <InterviewDialog projectId="p1" stage={stage} open onOpenChange={() => {}} />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     await user.type(screen.getByLabelText(/做给谁用的/), '公司内部的行政同事');
@@ -131,5 +142,49 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
     // base-ui Button render prop 会给 Link 强制 role="button"，按名字取按钮再校验 href
     const inboxBtn = screen.getByRole('button', { name: /Decide/i }) as HTMLAnchorElement;
     expect(inboxBtn.getAttribute('href')).toBe('/app/decisions');
+  });
+
+  it('AI 预填：点按钮携带问题组调用，成功后只填空字段不覆盖已填', async () => {
+    const user = userEvent.setup();
+    const prefillMutate = vi.fn((_input, opts?: { onSuccess?: (v: unknown) => void }) => {
+      opts?.onSuccess?.([
+        { questionId: 'who', answer: 'AI 猜的用户' },
+        { questionId: 'pain', answer: 'AI 猜的痛点' },
+      ]);
+    });
+    const prefillReset = vi.fn();
+    const prefillModule = await import('@/modules/assistant/hooks/use-interview-prefill');
+    vi.spyOn(prefillModule, 'useInterviewPrefill').mockReturnValue({
+      mutate: prefillMutate,
+      reset: prefillReset,
+      isError: false,
+      isPending: false,
+      error: null,
+    } as never);
+
+    setup();
+
+    // 用户先手填第一题
+    await user.type(screen.getByLabelText(/做给谁用的/), '手填的用户');
+
+    await user.click(screen.getByRole('button', { name: /AI Prefill/i }));
+
+    expect(prefillMutate).toHaveBeenCalledWith(
+      {
+        requirement: '',
+        questions: [
+          expect.objectContaining({ id: 'who' }),
+          expect.objectContaining({ id: 'pain' }),
+        ],
+      },
+      expect.anything(),
+    );
+    // 第一题保留手填，第二题被预填
+    expect(
+      (screen.getByLabelText(/做给谁用的/) as HTMLTextAreaElement).value,
+    ).toBe('手填的用户');
+    expect(
+      (screen.getByLabelText(/最头疼的一件事/) as HTMLTextAreaElement).value,
+    ).toBe('AI 猜的痛点');
   });
 });

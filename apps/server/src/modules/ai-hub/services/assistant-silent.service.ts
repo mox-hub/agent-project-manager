@@ -135,6 +135,25 @@ ${history.length ? JSON.stringify(history) : '（还没有，这是第一问）'
 按技能指令决定：未收敛时输出 {"done": false, "question": "...", "choices": [...]}；已能诚实写出摘要时输出 {"done": true, "summary": {...}}。只输出 JSON。`;
     },
   },
+  'interview-prefill': {
+    description:
+      '剧本访谈预填（CAP-P-01）：按用户一句话需求（或 grill 摘要）为当前阶段每个访谈问题生成答案候选，人修改后走既有 submitInterview',
+    buildInstructions: (context) => {
+      const questions = Array.isArray(context.questions)
+        ? context.questions
+        : [];
+      if (questions.length === 0) {
+        throw new BadRequestException('访谈预填缺少问题组（questions）');
+      }
+      const requirement = String(context.requirement ?? '').trim();
+      return `你是项目管理系统的需求访谈助手。用户对下面这份访谈表单里的每个问题，按其需求描述预填一份答案候选；用户会在此基础上修改，所以候选要具体、可执行、说人话，绝不编造需求里没有的承诺（拿不准就写「待确认：…」）。
+用户的需求描述：
+${requirement || '（未提供，按问题自身语境给出常见合理候选）'}
+访谈问题组：
+${JSON.stringify(questions)}
+只输出 JSON：{"answers": [{"questionId": "问题 id", "answer": "答案候选"}]}，answers 必须覆盖每一个问题。`;
+    },
+  },
 };
 
 /**
