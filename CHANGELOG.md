@@ -21,6 +21,13 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-P-01 一期收口——需求承接剧本 + 访谈 AI 预填 + init 自动挂载（切片 3）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | playbook 注册表新增「需求承接」剧本（requirement-pipeline，research→clarify→breakdown→acceptance-draft 四阶段：novice 向人话问题组 + 术语对照 + 闸门后果声明），纯增量注册（playbookRef 自由 TEXT 无迁移，registry version 不 bump）；静默场景 `interview-prefill`：按一句话需求/grill 摘要为当前阶段问题组生成答案候选（缺问题组 400，复用 extractJsonObject/AIUsageLog 链） | FR-P-01 | playbook.service.spec 模板清单断言扩展；assistant-silent.service.spec 18 用例（+3）；playbook e2e 6/6 含需求承接全链（挂载→调研拍板→澄清必答 400→拍板→拆解访谈 + interview-prefill 无模型可读失败） | ADR-011 |
+| frontend | InterviewDialog 预填条（一句话需求输入 + Sparkles「AI 预填」按钮）：候选只填空字段绝不覆盖手填、失败红字降级手填；use-interview-prefill hook（防御性解析：id+answer 齐全且命中问题组才收）；init 页 `?grilled=1`（grill 建项链）：幂等自动挂载 requirement-pipeline 剧本 + 澄清摘要卡与访谈引导；submitProjectFromGrill 补「需求澄清纪要」文档落库（buildGrillMinutes 摘要转 markdown，失败不阻断建项）；i18n 双语 +12 键（3069 键对齐） | FR-P-01 | interview-dialog.test 补预填交互用例（空字段才回填断言）；grill-minutes 纯函数测试；前端 tsc -b 零错误 + vitest 61 文件 263 用例全绿；契约 contract:check 零漂移 | ADR-011 |
+
 ### 技能注册表管理面——CRUD 补全 + 指令内容物化 + 本地 SKILL.md 导入（CAP-P-01 grill 前置）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
