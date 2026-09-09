@@ -80,6 +80,8 @@ class EventClient {
       'linear.task.pushed',
       'linear.task.conflict',
       'linear.task.resolved',
+      // Runtime dispatch 生命周期聚合事件（同事位状态/设置页派发表驱动）
+      'runtime.dispatch.changed',
     ] as const;
 
     this.socket.emit('subscribe', { eventTypes });

@@ -128,16 +128,25 @@ async function bootstrap() {
     (next as any)();
   });
 
-  // Swagger 配置与 contract:export 脚本共用（src/openapi.document.ts）
-  const document = buildOpenApiDocument(app);
+  // Swagger/OpenAPI 文档构建（38 模块全量路由扫描 + 文档对象常驻内存）仅保留在
+  // 开发环境；生产默认跳过，需要时设 ENABLE_SWAGGER=1 显式开启。
+  // contract:export 不经此处：jest e2e 直调 buildOpenApiDocument（OPENAPI_EXPORT=1）。
+  const swaggerEnabled =
+    configService.nodeEnv !== 'production' ||
+    configService.get('ENABLE_SWAGGER') === '1';
 
-  SwaggerModule.setup('_api/docs', app, document, swaggerUiOptions);
+  if (swaggerEnabled) {
+    // Swagger 配置与 contract:export 脚本共用（src/openapi.document.ts）
+    const document = buildOpenApiDocument(app);
 
-  // Add OpenAPI JSON export endpoint
-  app.getHttpAdapter().get('/_api/openapi.json', (req: any, res: any) => {
-    res.setHeader('Content-Type', 'application/json');
-    res.send(document);
-  });
+    SwaggerModule.setup('_api/docs', app, document, swaggerUiOptions);
+
+    // Add OpenAPI JSON export endpoint
+    app.getHttpAdapter().get('/_api/openapi.json', (req: any, res: any) => {
+      res.setHeader('Content-Type', 'application/json');
+      res.send(document);
+    });
+  }
 
   configureFrontendStaticHosting(app, logger);
 

@@ -28,12 +28,20 @@ export class PrismaService
 
     this.logger.setContext('Prisma');
 
-    this.$on('query' as never, (e: any) => {
-      this.logger.debug('Prisma Query', {
-        query: e.query,
-        duration: e.duration,
+    // Prisma query 日志默认关闭：每条 SQL 都经 sanitize + JSON 序列化写入
+    // combined.log，高轮询场景下是 GC/CPU 大户。需要 SQL 观测时设
+    // PRISMA_QUERY_LOG=1 或 CONSOLE_LOG_LEVEL=debug 重新挂载。
+    const queryLogEnabled =
+      process.env.PRISMA_QUERY_LOG === '1' ||
+      process.env.CONSOLE_LOG_LEVEL === 'debug';
+    if (queryLogEnabled) {
+      this.$on('query' as never, (e: any) => {
+        this.logger.debug('Prisma Query', {
+          query: e.query,
+          duration: e.duration,
+        });
       });
-    });
+    }
 
     this.$on('error' as never, (e: any) => {
       this.logger.error('Prisma Error', e?.stack ?? String(e));
