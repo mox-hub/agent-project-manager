@@ -30,7 +30,8 @@ export default defineConfig({
     environment: 'node',
     include: ['test/**/*.e2e-spec.ts'],
     pool: 'forks',
-    poolOptions: { forks: { singleFork: true } },
+    // 串行等价 jest --runInBand：e2e 是 gate 关卡，稳定性优先
+    fileParallelism: false,
     // AppModule 全量启动 + 工作区库副本初始化，放宽超时
     testTimeout: 30_000,
     hookTimeout: 30_000,

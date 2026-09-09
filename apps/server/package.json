@@ -21,9 +21,8 @@
     "prisma:studio": "cross-env PRISMA_CLIENT_ENGINE_TYPE=library prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
     "test": "vitest run",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.config.e2e.ts",
     "build:template-db": "pnpm exec tsx prisma/build-template.ts",
     "contract:export": "cross-env OPENAPI_EXPORT=1 vitest run --config vitest.config.e2e.ts contract-export"
@@ -79,12 +78,10 @@
     "@nestjs/testing": "^12.0.1",
     "@swc/cli": "^0.8.1",
     "@swc/core": "^1.16.2",
-    "@swc/jest": "^0.2.39",
     "@types/bcrypt": "^6.0.0",
     "@types/body-parser": "^1.19.6",
     "@types/express": "^5.0.0",
     "@types/fs-extra": "^11.0.4",
-    "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
     "@types/nodemailer": "^8.0.1",
     "@types/passport-jwt": "^4.0.1",
@@ -96,7 +93,6 @@
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-prettier": "catalog:",
     "globals": "catalog:",
-    "jest": "^29.5.0",
     "prettier": "catalog:",
     "prisma": "^6.19.2",
     "supertest": "^7.0.0",
@@ -107,38 +103,5 @@
     "typescript-eslint": "catalog:",
     "unplugin-swc": "^1.6.0",
     "vitest": "^5.0.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": [
-        "@swc/jest"
-      ]
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "coverageThreshold": {
-      "global": {
-        "statements": 11,
-        "branches": 10,
-        "functions": 9,
-        "lines": 11
-      }
-    },
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/$1"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\](?!\\.pnpm)(?!@ai-sdk[/\\\\])(?!@workflow[/\\\\])(?!ai[/\\\\])"
-    ]
   }
 }

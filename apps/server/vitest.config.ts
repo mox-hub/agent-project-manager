@@ -32,5 +32,16 @@ export default defineConfig({
     include: ['src/**/*.spec.ts'],
     // AppModule 全量启动内存重：forks 池按文件回收进程，避免 jest 式常驻累积
     pool: 'forks',
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      // 沿用 jest 时代的全局基线（--coverage 触发时生效）
+      thresholds: {
+        statements: 11,
+        branches: 10,
+        functions: 9,
+        lines: 11,
+      },
+    },
   },
 });

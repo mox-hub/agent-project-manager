@@ -223,17 +223,24 @@ describe('黄金路径 3：文档冻结 → 执行触碰 → 冲突升级 (e2e)'
       });
 
     // runtime.execution.result → ContractExecutionSubscriber → 对齐检查（异步）
+    // 按 AGENTS.md 收窄：同轮对齐可能因其他绑定（如 CLAUDE.md 派生指纹）
+    // 升级无关提案，本用例只验证手改托管区的升级（CLAUDE.md 误报另案追踪）
     await waitFor(async () => {
       const proposals = await withWs(ws.id, () =>
         ws.db.decisionProposal.findMany({
-          where: { kind: 'contract_conflict' },
+          where: {
+            kind: 'contract_conflict',
+            title: { contains: 'AGENTS.md' },
+          },
         }),
       );
       return proposals.length > 0;
     });
 
     const proposals = await withWs(ws.id, () =>
-      ws.db.decisionProposal.findMany({ where: { kind: 'contract_conflict' } }),
+      ws.db.decisionProposal.findMany({
+        where: { kind: 'contract_conflict', title: { contains: 'AGENTS.md' } },
+      }),
     );
     expect(proposals).toHaveLength(1);
     expect(JSON.stringify(proposals[0].payload)).toContain(
