@@ -105,7 +105,57 @@ ${JSON.stringify(context.messages)}
 只输出 JSON：{"summary": "...", "preferences": [{"content": "...", "confidence": 0.8}], "conclusions": [{"content": "...", "confidence": 0.8}]}`;
     },
   },
+  'grill-next': {
+    description:
+      'grill 需求拷问（创建面板 AI 代理模式）：无状态多轮——服务端加载 grilling 技能指令，按已问答历史出下一问（含猜测选项）或在收敛时输出结构化需求摘要',
+    prepareContext: async (context, { prisma }) => ({
+      ...context,
+      skillContent: await loadGrillingInstruction(prisma, context),
+    }),
+    buildInstructions: (context) => {
+      const history = Array.isArray(context.history) ? context.history : [];
+      const draft = String(context.draft ?? '').trim();
+      if (!draft && history.length === 0) {
+        throw new BadRequestException(
+          'grill 缺少输入：需求草稿（draft）与问答历史（history）至少一项',
+        );
+      }
+      if (!context.skillContent) {
+        throw new BadRequestException(
+          'grilling 技能不可用：请在 设置 → Agent 管理 → Skills 中启用或导入',
+        );
+      }
+      return `${String(context.skillContent)}
+
+——以下为本次会话数据——
+用户最初的想法：${draft || '（未提供，以问答历史为准）'}
+已完成的问答（按序）：
+${history.length ? JSON.stringify(history) : '（还没有，这是第一问）'}
+
+按技能指令决定：未收敛时输出 {"done": false, "question": "...", "choices": [...]}；已能诚实写出摘要时输出 {"done": true, "summary": {...}}。只输出 JSON。`;
+    },
+  },
 };
+
+/**
+ * grill 驱动指令加载：读启用中的 grilling 技能 content；
+ * 技能缺失/未启用/无正文时返回 null（buildInstructions 层转可读 400）。
+ */
+async function loadGrillingInstruction(
+  prisma: PrismaService,
+  context: Record<string, unknown>,
+): Promise<string | null> {
+  if (typeof context.skillContent === 'string' && context.skillContent.trim()) {
+    return context.skillContent;
+  }
+  const skill = await prisma.skillConfig.findUnique({
+    where: { key: 'grilling' },
+  });
+  if (!skill || !skill.enabled || !skill.content?.trim()) {
+    return null;
+  }
+  return skill.content;
+}
 
 /**
  * 任务锚点事实加载：只取回答相关的权威字段（含负责人/验收/依赖/近期动态），

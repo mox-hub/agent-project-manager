@@ -24,6 +24,8 @@ import * as React from 'react';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
+import { GrillInterview } from '@/modules/project/components/grill/grill-interview';
+import type { GrillSummary } from '@/modules/assistant/hooks/use-grill';
 import {
   Dialog,
   DialogContent,
@@ -573,8 +575,9 @@ export function UnifiedCreateDialog({
   const createDocument = useCreateDocument();
 
   // 项目来源分流（v2 纪要切片 1）：导入已有项目 → 创建后进档案页接入向导考古
+  // CAP-P-01：ai = AI 代理模式，grill 连续追问澄清需求后确认创建
   const navigate = useNavigate();
-  const [projectSource, setProjectSource] = useState<'scratch' | 'existing'>('scratch');
+  const [projectSource, setProjectSource] = useState<'scratch' | 'existing' | 'ai'>('scratch');
 
   const activeProjectId = (() => {
     const fromForm =
@@ -752,6 +755,29 @@ export function UnifiedCreateDialog({
     }
   };
 
+  /** CAP-P-01 AI 代理模式：grill 摘要确认后直接创建（init?grilled=1 触发自动挂载） */
+  const submitProjectFromGrill = async (summary: GrillSummary) => {
+    setError(null);
+    try {
+      const payload: CreateProjectRequest = {
+        name: summary.name.trim(),
+        description: summary.description.trim() || undefined,
+        type: 'team' as ProjectType,
+        visibility: projectForm.getValues().visibility ?? 'private',
+        priority: projectForm.getValues().priority ?? 'medium',
+      };
+      const resp = await createProject.mutateAsync(payload);
+      if (resp?.id) {
+        handleSuccess('project', resp.id);
+        navigate(`/app/projects/${resp.id}/init?grilled=1`, {
+          state: { grillSummary: summary },
+        });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '创建失败');
+    }
+  };
+
   const submitMilestone = async () => {
     const values = milestoneForm.getValues();
     if (!values.name.trim()) { setError('请输入里程碑名称'); return; }
@@ -847,7 +873,10 @@ export function UnifiedCreateDialog({
       case 'task': return submitTask();
       case 'bug': return submitBug();
       case 'doc': return submitDoc();
-      case 'project': return submitProject();
+      case 'project':
+        // AI 代理模式：提交由 grill 摘要确认卡驱动，不走手动表单
+        if (projectSource === 'ai') return;
+        return submitProject();
       case 'milestone': return submitMilestone();
       case 'ai': return submitViaAssistant();
     }
@@ -1205,6 +1234,13 @@ export function UnifiedCreateDialog({
                     className="flex-1 resize-none rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus-visible:ring-0 focus-visible:border-primary/50"
                   />
                 </div>
+              ) : activeType === 'project' && projectSource === 'ai' ? (
+                /* CAP-P-01：AI 代理模式——grill 连续追问澄清需求后确认创建 */
+                <GrillInterview
+                  onConfirm={submitProjectFromGrill}
+                  onFallback={() => setProjectSource('scratch')}
+                  confirmPending={createProject.isPending}
+                />
               ) : (
                 <>
               {/* Title */}
@@ -1299,25 +1335,31 @@ export function UnifiedCreateDialog({
           <Button variant="ghost" size="sm" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button
-            size="sm"
-            onClick={handleSubmit}
-            disabled={isSubmitting || (activeType === 'ai' ? !aiPrompt.trim() : !currentTitle.trim())}
-            className="text-white"
-            style={{ backgroundColor: (activeType === 'ai' ? aiPrompt.trim() : currentTitle.trim()) ? currentMeta.color : undefined }}
-          >
-            {isSubmitting ? (
-              <>
-                <Spinner className="size-3 text-inherit" />
-                创建中…
-              </>
-            ) : (
-              <>
-                {activeType === 'ai' ? <Sparkles className="size-3" /> : <Plus className="size-3" />}
-                {currentMeta.createLabel}
-              </>
-            )}
-          </Button>
+          {activeType === 'project' && projectSource === 'ai' ? (
+            <span className="text-xs text-muted-foreground">
+              在上面的对话里确认摘要后即可创建
+            </span>
+          ) : (
+            <Button
+              size="sm"
+              onClick={handleSubmit}
+              disabled={isSubmitting || (activeType === 'ai' ? !aiPrompt.trim() : !currentTitle.trim())}
+              className="text-white"
+              style={{ backgroundColor: (activeType === 'ai' ? aiPrompt.trim() : currentTitle.trim()) ? currentMeta.color : undefined }}
+            >
+              {isSubmitting ? (
+                <>
+                  <Spinner className="size-3 text-inherit" />
+                  创建中…
+                </>
+              ) : (
+                <>
+                  {activeType === 'ai' ? <Sparkles className="size-3" /> : <Plus className="size-3" />}
+                  {currentMeta.createLabel}
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -1478,16 +1520,17 @@ function ExtraFields({
   activeType: CreateType;
   projectForm: any;
   docForm: any;
-  projectSource: 'scratch' | 'existing';
-  onProjectSourceChange: (v: 'scratch' | 'existing') => void;
+  projectSource: 'scratch' | 'existing' | 'ai';
+  onProjectSourceChange: (v: 'scratch' | 'existing' | 'ai') => void;
 }) {
   if (activeType === 'project') {
     const name: string = projectForm.watch('name') ?? '';
     const key = name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
     const template = projectForm.watch('template');
-    const SOURCE_OPTIONS: Array<{ value: 'scratch' | 'existing'; label: string }> = [
+    const SOURCE_OPTIONS: Array<{ value: 'scratch' | 'existing' | 'ai'; label: string }> = [
       { value: 'scratch', label: '从零开始' },
       { value: 'existing', label: '导入已有项目' },
+      { value: 'ai', label: 'AI 代理 · 对话创建' },
     ];
     return (
       <div className="flex flex-col gap-3 pt-1">

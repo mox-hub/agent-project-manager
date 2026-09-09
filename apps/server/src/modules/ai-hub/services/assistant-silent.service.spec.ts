@@ -103,7 +103,119 @@ describe('AssistantSilentService.run', () => {
       'project-score',
       'anchor-qa',
       'memory-digest',
+      'grill-next',
     ]);
+  });
+});
+
+describe('AssistantSilentService.run · grill-next', () => {
+  const GRILLING = '你是 APM 的需求拷问官（grill）。一次只问一个问题。';
+
+  const makeGrillService = (
+    skillRow: { enabled: boolean; content: string | null } | null = {
+      enabled: true,
+      content: GRILLING,
+    },
+    chatContent = '{"done": false, "question": "它要解决什么问题？", "choices": [{"key": "a", "label": "记不清", "guess": true}]}',
+  ) => {
+    const chat = vi.fn().mockResolvedValue({
+      content: chatContent,
+      model: 'test-model',
+      tokens: { prompt: 10, completion: 5, total: 15 },
+    });
+    const prisma = {
+      aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+      skillConfig: { findUnique: vi.fn().mockResolvedValue(skillRow) },
+    };
+    const service = new AssistantSilentService(
+      prisma as never,
+      {
+        listAdapters: () => [{ provider: 'glm', model: 'm' }],
+        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+      } as never,
+      { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+    );
+    return { service, chat, prisma };
+  };
+
+  it('第一问：服务端加载 grilling 指令注入 instructions，含用户草稿', async () => {
+    const { service, chat, prisma } = makeGrillService();
+    const result = await service.run(
+      'grill-next',
+      { draft: '想做一个帮团队记会议的系统', history: [] },
+      null,
+      'u1',
+    );
+
+    expect(result.scenario).toBe('grill-next');
+    expect(result.data).toHaveProperty('question', '它要解决什么问题？');
+    expect(prisma.skillConfig.findUnique).toHaveBeenCalledWith({
+      where: { key: 'grilling' },
+    });
+    const [, options] = chat.mock.calls[0];
+    const instructions = (options as { instructions: string }).instructions;
+    expect(instructions).toContain('一次只问一个问题');
+    expect(instructions).toContain('帮团队记会议的系统');
+  });
+
+  it('多轮：历史问答进入 instructions；done 时透出 summary', async () => {
+    const { service } = makeGrillService(
+      undefined,
+      '{"done": true, "summary": {"name": "会议纪要库", "goals": ["不再丢结论"], "users": [], "scope": [], "nonGoals": [], "constraints": [], "acceptanceHints": []}}',
+    );
+    const result = await service.run(
+      'grill-next',
+      {
+        draft: '会议纪要系统',
+        history: [{ question: '给谁用？', answer: '小团队' }],
+      },
+      null,
+      'u1',
+    );
+    expect(result.data).toHaveProperty('done', true);
+    const summary = result.data.summary as Record<string, unknown>;
+    expect(summary).toHaveProperty('name', '会议纪要库');
+  });
+
+  it('grilling 技能缺失/未启用/无正文 → 可读 400（不触 LLM）', async () => {
+    const disabled = makeGrillService({ enabled: false, content: GRILLING });
+    await expect(
+      disabled.service.run(
+        'grill-next',
+        { draft: 'x', history: [] },
+        null,
+        'u1',
+      ),
+    ).rejects.toThrow(/grilling 技能不可用/);
+    expect(disabled.chat).not.toHaveBeenCalled();
+
+    const noContent = makeGrillService({ enabled: true, content: null });
+    await expect(
+      noContent.service.run(
+        'grill-next',
+        { draft: 'x', history: [] },
+        null,
+        'u1',
+      ),
+    ).rejects.toThrow(/grilling 技能不可用/);
+
+    const missing = makeGrillService(null);
+    await expect(
+      missing.service.run(
+        'grill-next',
+        { draft: 'x', history: [] },
+        null,
+        'u1',
+      ),
+    ).rejects.toThrow(/grilling 技能不可用/);
+  });
+
+  it('draft 与 history 全空 → 400（不触 LLM）', async () => {
+    const { service, chat } = makeGrillService();
+    await expect(
+      service.run('grill-next', { history: [] }, null, 'u1'),
+    ).rejects.toThrow(/至少一项/);
+    expect(chat).not.toHaveBeenCalled();
   });
 });
 
