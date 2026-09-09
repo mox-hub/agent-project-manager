@@ -9,23 +9,23 @@ describe('InviteService', () => {
 
   const mockPrisma = {
     teamInvite: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
     },
     team: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     user: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     teamMember: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
     },
   };
 
   const mockAuth = {
-    ensureMemberForUser: jest.fn(),
+    ensureMemberForUser: vi.fn(),
   };
 
   const future = new Date(Date.now() + 3600_000);
@@ -40,7 +40,7 @@ describe('InviteService', () => {
       ],
     }).compile();
     service = module.get<InviteService>(InviteService);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('preview 返回团队与邀请摘要', async () => {

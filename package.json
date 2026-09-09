@@ -13,7 +13,7 @@
     "type-check": "turbo run type-check",
     "check:docs-sync": "node scripts/check-doc-sync.mjs",
     "check:doc-coverage": "node scripts/check-doc-coverage.mjs",
-    "quality:gate": "pnpm type-check && pnpm lint && turbo run test && pnpm contract:check && pnpm --filter \"./apps/server\" run test:e2e --runInBand --forceExit && pnpm api:audit --min=95 && pnpm check:docs-sync",
+    "quality:gate": "pnpm type-check && pnpm lint && turbo run test && pnpm contract:check && pnpm --filter \"./apps/server\" run test:e2e && pnpm api:audit --min=95 && pnpm check:docs-sync",
     "report:weekly-governance": "node scripts/generate-weekly-governance-report.mjs",
     "prepare": "husky",
     "contract:export": "pnpm --filter ./apps/server run contract:export",

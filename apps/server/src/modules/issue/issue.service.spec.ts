@@ -17,72 +17,72 @@ describe('IssueService', () => {
 
   const mockPrismaService = {
     project: {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
       members: {
-        some: jest.fn(),
+        some: vi.fn(),
       },
     },
     projectModule: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
     },
     projectSequence: {
-      upsert: jest.fn(),
+      upsert: vi.fn(),
     },
     issue: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      count: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
     },
     statusDefinition: {
-      findFirst: jest.fn(),
+      findFirst: vi.fn(),
     },
     issueTag: {
-      create: jest.fn(),
-      deleteMany: jest.fn(),
-      findMany: jest.fn(),
+      create: vi.fn(),
+      deleteMany: vi.fn(),
+      findMany: vi.fn(),
     },
     tag: {
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
     },
     milestone: {
-      findFirst: jest.fn(),
+      findFirst: vi.fn(),
     },
     iteration: {
-      findFirst: jest.fn(),
+      findFirst: vi.fn(),
     },
     issueActivity: {
-      create: jest.fn(),
-      findMany: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
     },
     issueDependency: {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      delete: jest.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
     },
     issueType: {
-      findUnique: jest.fn().mockResolvedValue(null),
+      findUnique: vi.fn().mockResolvedValue(null),
     },
     projectMember: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
   };
 
   const mockMessageBusService = {
-    publish: jest.fn(),
+    publish: vi.fn(),
   };
 
   const mockIssueIdService = {
-    nextShortId: jest.fn().mockResolvedValue('APM-1'),
+    nextShortId: vi.fn().mockResolvedValue('APM-1'),
   };
 
   beforeEach(async () => {
@@ -103,19 +103,19 @@ describe('IssueService', () => {
         },
         {
           provide: ActivityService,
-          useValue: { record: jest.fn() },
+          useValue: { record: vi.fn() },
         },
         {
           provide: IssueTypeService,
           useValue: {
-            resolveIdByKey: jest.fn().mockResolvedValue('issuetype-task'),
+            resolveIdByKey: vi.fn().mockResolvedValue('issuetype-task'),
           },
         },
         {
           provide: ExecutionService,
           useValue: {
-            createIssueExecution: jest.fn(),
-            listIssueExecutions: jest.fn(),
+            createIssueExecution: vi.fn(),
+            listIssueExecutions: vi.fn(),
           },
         },
       ],
@@ -125,7 +125,7 @@ describe('IssueService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {

@@ -11,33 +11,33 @@ describe('AuthService', () => {
 
   const mockPrismaService = {
     user: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     session: {
-      create: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      findMany: jest.fn(),
-      deleteMany: jest.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      findMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     roleAssignment: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     actorClaimSnapshot: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
     projectMember: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
   };
 
   const mockJwtService = {
-    sign: jest.fn().mockReturnValue('mock-jwt-token'),
+    sign: vi.fn().mockReturnValue('mock-jwt-token'),
   };
 
   const mockConfigService = {
-    get: jest.fn().mockReturnValue('7d'),
-    getOrThrow: jest.fn().mockReturnValue('test-secret'),
+    get: vi.fn().mockReturnValue('7d'),
+    getOrThrow: vi.fn().mockReturnValue('test-secret'),
   };
 
   beforeEach(async () => {
@@ -63,7 +63,7 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {

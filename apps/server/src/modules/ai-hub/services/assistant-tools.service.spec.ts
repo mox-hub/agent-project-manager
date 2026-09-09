@@ -18,52 +18,52 @@ describe('AssistantToolsService', () => {
 
   const mockPrisma = {
     member: {
-      findUnique: jest.fn().mockResolvedValue({ id: 'member-xiaozhou' }),
+      findUnique: vi.fn().mockResolvedValue({ id: 'member-xiaozhou' }),
     },
     issue: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      groupBy: jest.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      groupBy: vi.fn(),
     },
-    project: { findUnique: jest.fn() },
-    decisionProposal: { findMany: jest.fn(), create: jest.fn() },
-    document: { findMany: jest.fn() },
+    project: { findUnique: vi.fn() },
+    decisionProposal: { findMany: vi.fn(), create: vi.fn() },
+    document: { findMany: vi.fn() },
   };
 
   const mockIssueService = {
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   };
   const mockDocumentService = {
-    create: jest.fn(),
-    update: jest.fn(),
-    remove: jest.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    remove: vi.fn(),
   };
-  const mockMemberService = { create: jest.fn(), update: jest.fn() };
+  const mockMemberService = { create: vi.fn(), update: vi.fn() };
   const mockTeamService = {
-    create: jest.fn(),
-    update: jest.fn(),
-    archive: jest.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    archive: vi.fn(),
   };
   const mockProjectService = {
-    create: jest.fn(),
-    update: jest.fn(),
-    archive: jest.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    archive: vi.fn(),
   };
   const mockAcceptanceService = {
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    acceptCompletion: jest.fn(),
-    rejectCompletion: jest.fn(),
-    waiveCompletion: jest.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    acceptCompletion: vi.fn(),
+    rejectCompletion: vi.fn(),
+    waiveCompletion: vi.fn(),
   };
-  const mockIssueAssigneeService = { add: jest.fn() };
+  const mockIssueAssigneeService = { add: vi.fn() };
   const mockMemoryService = {
-    recall: jest.fn().mockResolvedValue([]),
-    note: jest.fn().mockResolvedValue({ id: 'mem1' }),
-    brief: jest.fn().mockResolvedValue({
+    recall: vi.fn().mockResolvedValue([]),
+    note: vi.fn().mockResolvedValue({ id: 'mem1' }),
+    brief: vi.fn().mockResolvedValue({
       scope: 'global',
       pinned: [],
       recent: [],
@@ -71,13 +71,13 @@ describe('AssistantToolsService', () => {
     }),
   };
   const mockCollaborationService = {
-    create: jest.fn(),
-    respond: jest.fn(),
-    verify: jest.fn(),
+    create: vi.fn(),
+    respond: vi.fn(),
+    verify: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     service = new AssistantToolsService(
       mockPrisma as unknown as PrismaService,
       mockIssueService as unknown as IssueService,

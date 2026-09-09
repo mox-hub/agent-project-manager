@@ -11,44 +11,44 @@ describe('GitService', () => {
 
   const mockPrismaService = {
     project: {
-      findFirst: jest.fn(),
+      findFirst: vi.fn(),
     },
     repository: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
     },
     commit: {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
     },
     pullRequest: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
     },
     pullRequestReview: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
   };
 
   const mockMessageBusService = {
-    publish: jest.fn(),
+    publish: vi.fn(),
   };
 
   const mockLoggerService = {
-    log: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    setContext: jest.fn(),
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    setContext: vi.fn(),
   };
 
   const mockWorkspaceService = {
-    getWorkspacePath: jest.fn(),
+    getWorkspacePath: vi.fn(),
   };
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

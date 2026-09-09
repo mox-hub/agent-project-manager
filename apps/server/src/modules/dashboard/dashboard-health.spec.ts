@@ -11,14 +11,14 @@ function buildPrisma(opts: {
 }) {
   return {
     project: {
-      findMany: jest.fn(async () => opts.projects ?? []),
-      count: jest.fn(async () => opts.mountedProjects ?? 0),
+      findMany: vi.fn(async () => opts.projects ?? []),
+      count: vi.fn(async () => opts.mountedProjects ?? 0),
     },
     memoryAtom: {
-      findMany: jest.fn(async () => opts.atoms ?? []),
+      findMany: vi.fn(async () => opts.atoms ?? []),
     },
     activity: {
-      findMany: jest.fn(async () => opts.events ?? []),
+      findMany: vi.fn(async () => opts.events ?? []),
     },
   };
 }

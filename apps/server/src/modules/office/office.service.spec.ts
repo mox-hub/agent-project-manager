@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { OfficeService } from './office.service';
 import { PrismaService } from '../../core/database/prisma.service';
 
@@ -17,18 +18,18 @@ const aiMember = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-function buildPrisma(overrides: Record<string, jest.Mock> = {}) {
-  const base: Record<string, jest.Mock> = {
-    'member.findMany': jest.fn().mockResolvedValue([aiMember()]),
-    'memberProjectBinding.findMany': jest.fn().mockResolvedValue([]),
-    'execution.findMany': jest.fn().mockResolvedValue([]),
-    'execution.groupBy': jest.fn().mockResolvedValue([]),
-    'approvalRequest.findMany': jest.fn().mockResolvedValue([]),
-    'decisionProposal.groupBy': jest.fn().mockResolvedValue([]),
-    'acceptance.findMany': jest.fn().mockResolvedValue([]),
-    'aIConversation.findMany': jest.fn().mockResolvedValue([]),
-    'appConfig.findMany': jest.fn().mockResolvedValue([]),
-    'project.findUnique': jest.fn().mockResolvedValue(null),
+function buildPrisma(overrides: Record<string, Mock> = {}) {
+  const base: Record<string, Mock> = {
+    'member.findMany': vi.fn().mockResolvedValue([aiMember()]),
+    'memberProjectBinding.findMany': vi.fn().mockResolvedValue([]),
+    'execution.findMany': vi.fn().mockResolvedValue([]),
+    'execution.groupBy': vi.fn().mockResolvedValue([]),
+    'approvalRequest.findMany': vi.fn().mockResolvedValue([]),
+    'decisionProposal.groupBy': vi.fn().mockResolvedValue([]),
+    'acceptance.findMany': vi.fn().mockResolvedValue([]),
+    'aIConversation.findMany': vi.fn().mockResolvedValue([]),
+    'appConfig.findMany': vi.fn().mockResolvedValue([]),
+    'project.findUnique': vi.fn().mockResolvedValue(null),
     ...overrides,
   };
   const prisma = new Proxy(
@@ -39,7 +40,7 @@ function buildPrisma(overrides: Record<string, jest.Mock> = {}) {
           {},
           {
             get: (_t2, action: string) =>
-              base[`${model}.${action}`] ?? jest.fn().mockResolvedValue([]),
+              base[`${model}.${action}`] ?? vi.fn().mockResolvedValue([]),
           },
         ),
     },
@@ -54,7 +55,7 @@ function buildService(prisma: unknown) {
 describe('OfficeService', () => {
   it('无 AI 成员时返回空汇总', async () => {
     const { prisma, base } = buildPrisma({
-      'member.findMany': jest.fn().mockResolvedValue([]),
+      'member.findMany': vi.fn().mockResolvedValue([]),
     });
     const summary = await buildService(prisma).getSummary();
     expect(summary.colleagues).toEqual([]);
@@ -71,7 +72,7 @@ describe('OfficeService', () => {
 
   it('忙闲派生优先级：needYou > working > suggestions > idle', async () => {
     const { prisma } = buildPrisma({
-      'member.findMany': jest
+      'member.findMany': vi
         .fn()
         .mockResolvedValue([
           aiMember({ id: 'a-need', displayName: '阿堵' }),
@@ -79,12 +80,12 @@ describe('OfficeService', () => {
           aiMember({ id: 'a-sugg', displayName: '阿议' }),
           aiMember({ id: 'a-idle', displayName: '阿闲' }),
         ]),
-      'approvalRequest.findMany': jest
+      'approvalRequest.findMany': vi
         .fn()
         .mockResolvedValue([
           { id: 'ap1', executionRun: { subjectId: 'a-need' } },
         ]),
-      'execution.findMany': jest.fn().mockResolvedValue([
+      'execution.findMany': vi.fn().mockResolvedValue([
         {
           id: 'run1',
           goal: '实现登录接口',
@@ -95,7 +96,7 @@ describe('OfficeService', () => {
           issue: { id: 't1', title: '登录接口' },
         },
       ]),
-      'decisionProposal.groupBy': jest
+      'decisionProposal.groupBy': vi
         .fn()
         .mockResolvedValue([{ proposerId: 'a-sugg', _count: { _all: 2 } }]),
     });
@@ -125,7 +126,7 @@ describe('OfficeService', () => {
 
   it('验收待决按任务 aiAgentId 归因为 advisory', async () => {
     const { prisma } = buildPrisma({
-      'acceptance.findMany': jest.fn().mockResolvedValue([
+      'acceptance.findMany': vi.fn().mockResolvedValue([
         { id: 'acc1', issue: { aiAgentId: 'ai1' } },
         { id: 'acc2', issue: { aiAgentId: 'ai1' } },
         { id: 'acc3', issue: { aiAgentId: 'other' } },
@@ -138,10 +139,10 @@ describe('OfficeService', () => {
 
   it('可接活度：负载与预算封顶，超预算判 saturated', async () => {
     const { prisma } = buildPrisma({
-      'memberProjectBinding.findMany': jest
+      'memberProjectBinding.findMany': vi
         .fn()
         .mockResolvedValue([{ memberId: 'ai1' }]),
-      'execution.findMany': jest.fn().mockResolvedValue(
+      'execution.findMany': vi.fn().mockResolvedValue(
         Array.from({ length: 2 }, (_, i) => ({
           id: `run${i}`,
           goal: 'g',
@@ -152,12 +153,12 @@ describe('OfficeService', () => {
           issue: null,
         })),
       ),
-      'execution.groupBy': jest
+      'execution.groupBy': vi
         .fn()
         .mockResolvedValue([
           { subjectId: 'ai1', _sum: { totalTokens: 5000, totalCost: 6 } },
         ]),
-      'project.findUnique': jest.fn().mockResolvedValue({
+      'project.findUnique': vi.fn().mockResolvedValue({
         config: { aiBudget: { weeklyCostUsd: 10 } },
       }),
     });
@@ -179,15 +180,15 @@ describe('OfficeService', () => {
 
   it('预算超 100% 封顶并判 saturated', async () => {
     const { prisma } = buildPrisma({
-      'memberProjectBinding.findMany': jest
+      'memberProjectBinding.findMany': vi
         .fn()
         .mockResolvedValue([{ memberId: 'ai1' }]),
-      'execution.groupBy': jest
+      'execution.groupBy': vi
         .fn()
         .mockResolvedValue([
           { subjectId: 'ai1', _sum: { totalTokens: 0, totalCost: 33 } },
         ]),
-      'project.findUnique': jest.fn().mockResolvedValue({
+      'project.findUnique': vi.fn().mockResolvedValue({
         config: { aiBudget: { weeklyCostUsd: 10 } },
       }),
     });
@@ -199,7 +200,7 @@ describe('OfficeService', () => {
 
   it('项目域按 MemberProjectBinding 过滤成员', async () => {
     const { prisma, base } = buildPrisma({
-      'memberProjectBinding.findMany': jest
+      'memberProjectBinding.findMany': vi
         .fn()
         .mockResolvedValue([{ memberId: 'ai1' }, { memberId: 'ai1' }]),
     });
@@ -216,7 +217,7 @@ describe('OfficeService', () => {
 
   it('在途派发提取 CLI provider', async () => {
     const { prisma } = buildPrisma({
-      'appConfig.findMany': jest.fn().mockResolvedValue([
+      'appConfig.findMany': vi.fn().mockResolvedValue([
         {
           value: {
             subjectId: 'ai1',
@@ -239,7 +240,7 @@ describe('OfficeService', () => {
 
   it('最近会话按 createdBy 归因取最新一条', async () => {
     const { prisma } = buildPrisma({
-      'aIConversation.findMany': jest.fn().mockResolvedValue([
+      'aIConversation.findMany': vi.fn().mockResolvedValue([
         { createdBy: 'ai1', updatedAt: new Date('2026-09-06T08:00:00Z') },
         { createdBy: 'ai1', updatedAt: new Date('2026-09-05T08:00:00Z') },
       ]),

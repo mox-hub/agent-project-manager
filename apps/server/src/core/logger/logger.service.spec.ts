@@ -7,11 +7,11 @@ describe('LoggerService', () => {
   let service: LoggerService;
 
   const mockConfigService = {
-    get: jest.fn().mockReturnValue('info'),
+    get: vi.fn().mockReturnValue('info'),
   };
 
   const mockTraceContextService = {
-    getContext: jest.fn().mockReturnValue({ traceId: 'test-trace-id' }),
+    getContext: vi.fn().mockReturnValue({ traceId: 'test-trace-id' }),
   };
 
   beforeEach(async () => {
@@ -33,7 +33,7 @@ describe('LoggerService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -52,7 +52,7 @@ describe('LoggerService', () => {
 
   describe('log', () => {
     it('should log info message', () => {
-      const logSpy = jest.spyOn(service['logger'], 'info');
+      const logSpy = vi.spyOn(service['logger'], 'info');
       service.log('test message');
       expect(logSpy).toHaveBeenCalled();
     });
@@ -60,7 +60,7 @@ describe('LoggerService', () => {
 
   describe('error', () => {
     it('should log error message', () => {
-      const errorSpy = jest.spyOn(service['logger'], 'error');
+      const errorSpy = vi.spyOn(service['logger'], 'error');
       service.error('test error', 'trace');
       expect(errorSpy).toHaveBeenCalled();
     });
@@ -68,7 +68,7 @@ describe('LoggerService', () => {
 
   describe('warn', () => {
     it('should log warning message', () => {
-      const warnSpy = jest.spyOn(service['logger'], 'warn');
+      const warnSpy = vi.spyOn(service['logger'], 'warn');
       service.warn('test warning');
       expect(warnSpy).toHaveBeenCalled();
     });
@@ -76,7 +76,7 @@ describe('LoggerService', () => {
 
   describe('debug', () => {
     it('should log debug message', () => {
-      const debugSpy = jest.spyOn(service['logger'], 'debug');
+      const debugSpy = vi.spyOn(service['logger'], 'debug');
       service.debug('test debug');
       expect(debugSpy).toHaveBeenCalled();
     });
@@ -84,7 +84,7 @@ describe('LoggerService', () => {
 
   describe('verbose', () => {
     it('should log verbose message', () => {
-      const verboseSpy = jest.spyOn(service['logger'], 'verbose');
+      const verboseSpy = vi.spyOn(service['logger'], 'verbose');
       service.verbose('test verbose');
       expect(verboseSpy).toHaveBeenCalled();
     });

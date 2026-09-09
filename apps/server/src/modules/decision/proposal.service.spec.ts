@@ -8,57 +8,57 @@ describe('ProposalService', () => {
 
   const mockPrismaService = {
     decisionProposal: {
-      create: jest.fn(),
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      update: jest.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
     },
     issue: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
     },
     member: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
     },
     issueAssignee: {
-      upsert: jest.fn(),
+      upsert: vi.fn(),
     },
     statusDefinition: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     execution: {
-      aggregate: jest.fn(),
-      groupBy: jest.fn(),
+      aggregate: vi.fn(),
+      groupBy: vi.fn(),
     },
     project: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
     },
     acceptance: {
-      count: jest.fn(),
+      count: vi.fn(),
     },
     milestone: {
-      update: jest.fn(),
+      update: vi.fn(),
     },
   };
 
   const tx = {
     issue: {
-      create: jest.fn(),
-      update: jest.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
     },
     member: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     issueAssignee: {
-      upsert: jest.fn(),
+      upsert: vi.fn(),
     },
   };
 
-  const mockTx = jest.fn();
+  const mockTx = vi.fn();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -78,7 +78,7 @@ describe('ProposalService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {

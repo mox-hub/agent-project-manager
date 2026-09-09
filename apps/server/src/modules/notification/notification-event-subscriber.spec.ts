@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { NotificationEventSubscriber } from './notification-event-subscriber';
 import { NotificationService } from './notification.service';
@@ -7,22 +8,22 @@ import { LoggerService } from '../../core/logger/logger.service';
 
 describe('NotificationEventSubscriber', () => {
   let subscriber: NotificationEventSubscriber;
-  let createFromEvent: jest.Mock;
+  let createFromEvent: Mock;
   let handlers: Map<string, (payload: unknown) => Promise<void>>;
 
   const prismaMock = {
     issue: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
-    document: { findUnique: jest.fn() },
-    acceptance: { findUnique: jest.fn() },
-    project: { findUnique: jest.fn() },
-    member: { findMany: jest.fn().mockResolvedValue([]) },
+    document: { findUnique: vi.fn() },
+    acceptance: { findUnique: vi.fn() },
+    project: { findUnique: vi.fn() },
+    member: { findMany: vi.fn().mockResolvedValue([]) },
   };
 
   beforeEach(async () => {
     handlers = new Map();
-    createFromEvent = jest.fn().mockResolvedValue([]);
+    createFromEvent = vi.fn().mockResolvedValue([]);
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -30,10 +31,10 @@ describe('NotificationEventSubscriber', () => {
         {
           provide: MessageBusService,
           useValue: {
-            subscribe: jest.fn((event: string, handler: never) => {
+            subscribe: vi.fn((event: string, handler: never) => {
               handlers.set(event, handler);
             }),
-            publish: jest.fn(),
+            publish: vi.fn(),
           },
         },
         {
@@ -43,7 +44,7 @@ describe('NotificationEventSubscriber', () => {
         { provide: PrismaService, useValue: prismaMock },
         {
           provide: LoggerService,
-          useValue: { setContext: jest.fn(), log: jest.fn(), error: jest.fn() },
+          useValue: { setContext: vi.fn(), log: vi.fn(), error: vi.fn() },
         },
       ],
     }).compile();

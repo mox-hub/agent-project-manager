@@ -11,23 +11,23 @@ describe('IntegrationService', () => {
   const originalKey = process.env.INTEGRATION_ENCRYPTION_KEY;
 
   const mockPrismaService = {
-    project: { findUnique: jest.fn() },
+    project: { findUnique: vi.fn() },
     integrationConfig: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     },
     externalIssueLink: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      create: jest.fn(),
-      findMany: jest.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
     },
   };
 
-  const mockMessageBusService = { publish: jest.fn() };
+  const mockMessageBusService = { publish: vi.fn() };
   const mockEncryption = {
     encryptJson: (obj: unknown) =>
       `iv:cipher:tag:${JSON.stringify(obj).slice(0, 16)}`,
@@ -60,7 +60,7 @@ describe('IntegrationService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(() => {

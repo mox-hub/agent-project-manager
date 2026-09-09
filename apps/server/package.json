@@ -20,13 +20,12 @@
     "prisma:migrate:dev": "cross-env PRISMA_CLIENT_ENGINE_TYPE=library prisma migrate dev",
     "prisma:studio": "cross-env PRISMA_CLIENT_ENGINE_TYPE=library prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "test": "jest --runInBand",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "test:e2e": "vitest run --config vitest.config.e2e.ts",
     "build:template-db": "pnpm exec tsx prisma/build-template.ts",
-    "contract:export": "cross-env OPENAPI_EXPORT=1 jest --config ./test/jest-e2e.json --runInBand --forceExit contract-export"
+    "contract:export": "cross-env OPENAPI_EXPORT=1 vitest run --config vitest.config.e2e.ts contract-export"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.49",
@@ -34,19 +33,19 @@
     "@ai-sdk/openai": "^4.0.57",
     "@linear/sdk": "^89.0.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@nestjs/axios": "^4.0.1",
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/config": "^4.0.3",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/event-emitter": "^3.0.1",
-    "@nestjs/jwt": "^11.0.2",
-    "@nestjs/mapped-types": "^2.1.0",
-    "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^10.0.0",
-    "@nestjs/platform-socket.io": "^10.0.0",
-    "@nestjs/swagger": "^11.2.6",
+    "@nestjs/axios": "^12.0.0",
+    "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.0",
+    "@nestjs/core": "^12.0.1",
+    "@nestjs/event-emitter": "^12.0.0",
+    "@nestjs/jwt": "^12.0.1",
+    "@nestjs/mapped-types": "^12.0.0",
+    "@nestjs/passport": "^12.0.0",
+    "@nestjs/platform-express": "^12.0.1",
+    "@nestjs/platform-socket.io": "^12.0.1",
+    "@nestjs/swagger": "^12.0.1",
     "@nestjs/throttler": "^6.5.0",
-    "@nestjs/websockets": "^10.0.0",
+    "@nestjs/websockets": "^12.0.1",
     "@prisma/client": "^6.19.2",
     "ai": "^7.0.91",
     "axios": "^1.13.5",
@@ -54,7 +53,7 @@
     "body-parser": "^2.3.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
-    "express": "4",
+    "express": "^5.2.1",
     "fs-extra": "^11.3.5",
     "gray-matter": "^4.0.3",
     "helmet": "^8.1.0",
@@ -74,28 +73,26 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@nestjs/cli": "^10.0.0",
-    "@nestjs/schematics": "^10.0.0",
-    "@nestjs/testing": "^10.0.0",
-    "@swc/cli": "^0.3.14",
+    "@nestjs/cli": "^12.0.0",
+    "@nestjs/schematics": "^12.0.0",
+    "@nestjs/testing": "^12.0.1",
+    "@swc/cli": "^0.8.1",
     "@swc/core": "^1.16.2",
-    "@swc/jest": "^0.2.39",
     "@types/bcrypt": "^6.0.0",
     "@types/body-parser": "^1.19.6",
     "@types/express": "^5.0.0",
     "@types/fs-extra": "^11.0.4",
-    "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
     "@types/nodemailer": "^8.0.1",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "@types/supertest": "^6.0.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "cross-env": "^10.1.0",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-prettier": "catalog:",
     "globals": "catalog:",
-    "jest": "^29.5.0",
     "prettier": "catalog:",
     "prisma": "^6.19.2",
     "supertest": "^7.0.0",
@@ -103,39 +100,8 @@
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.23.12",
     "typescript": "catalog:",
-    "typescript-eslint": "catalog:"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": [
-        "@swc/jest"
-      ]
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "coverageThreshold": {
-      "global": {
-        "statements": 11,
-        "branches": 10,
-        "functions": 9,
-        "lines": 11
-      }
-    },
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/$1"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\](?!\\.pnpm)(?!@ai-sdk[/\\\\])(?!@workflow[/\\\\])(?!ai[/\\\\])"
-    ]
+    "typescript-eslint": "catalog:",
+    "unplugin-swc": "^1.6.0",
+    "vitest": "^5.0.0"
   }
 }

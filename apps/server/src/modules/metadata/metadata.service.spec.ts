@@ -9,31 +9,31 @@ describe('MetadataService', () => {
 
   const mockPrismaService = {
     tag: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     },
     statusDefinition: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     },
     projectRoleDefinition: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     },
     projectTemplate: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
     },
   };
 
@@ -45,7 +45,7 @@ describe('MetadataService', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
-        { provide: MessageBusService, useValue: { publish: jest.fn() } },
+        { provide: MessageBusService, useValue: { publish: vi.fn() } },
       ],
     }).compile();
 
@@ -53,7 +53,7 @@ describe('MetadataService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {

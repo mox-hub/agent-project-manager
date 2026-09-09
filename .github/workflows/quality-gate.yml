@@ -111,7 +111,7 @@ jobs:
           DATABASE_URL: file:${{ github.workspace }}/apps/server/prisma/ci-dev.db
           JWT_SECRET: ci-e2e-secret
           INTEGRATION_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef
-        run: pnpm run test:e2e --runInBand --forceExit
+        run: pnpm run test:e2e
 
   docs:
     runs-on: ubuntu-latest

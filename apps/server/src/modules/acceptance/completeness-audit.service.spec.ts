@@ -62,11 +62,11 @@ function buildPrisma() {
 
   const prisma = {
     acceptance: {
-      findUnique: jest.fn(
+      findUnique: vi.fn(
         async ({ where }: { where: { id: string } }) =>
           state.acceptances.find((a) => a.id === where.id) ?? null,
       ),
-      findFirst: jest.fn(
+      findFirst: vi.fn(
         async ({
           where,
         }: {
@@ -88,7 +88,7 @@ function buildPrisma() {
       ),
     },
     completenessAuditReport: {
-      upsert: jest.fn(
+      upsert: vi.fn(
         async ({
           where,
           create,
@@ -115,14 +115,14 @@ function buildPrisma() {
           return row;
         },
       ),
-      findUnique: jest.fn(
+      findUnique: vi.fn(
         async ({ where }: { where: { acceptanceId: string } }) =>
           state.reports.find((r) => r.acceptanceId === where.acceptanceId) ??
           null,
       ),
     },
     completenessChecklist: {
-      findFirst: jest.fn(
+      findFirst: vi.fn(
         async ({
           where,
         }: {
@@ -135,16 +135,16 @@ function buildPrisma() {
               c.isSystem === where.isSystem,
           ) ?? null,
       ),
-      findUnique: jest.fn(
+      findUnique: vi.fn(
         async ({ where }: { where: { id: string } }) =>
           state.checklists.find((c) => c.id === where.id) ?? null,
       ),
     },
     acceptanceCriteria: {
-      aggregate: jest.fn(async () => ({
+      aggregate: vi.fn(async () => ({
         _max: { order: state.existingCriteriaMaxOrder },
       })),
-      create: jest.fn(async ({ data }: { data: Record<string, any> }) => {
+      create: vi.fn(async ({ data }: { data: Record<string, any> }) => {
         const row = {
           id: `crit-${state.createdCriteria.length + 1}`,
           ...data,

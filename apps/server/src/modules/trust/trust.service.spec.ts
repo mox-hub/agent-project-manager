@@ -12,7 +12,7 @@ function buildPrisma() {
 
   const prisma = {
     appConfig: {
-      findFirst: jest.fn(
+      findFirst: vi.fn(
         async ({
           where,
         }: {
@@ -22,12 +22,12 @@ function buildPrisma() {
             (c) => c.key === where.key && c.projectId === where.projectId,
           ) ?? null,
       ),
-      create: jest.fn(async ({ data }: { data: Record<string, any> }) => {
+      create: vi.fn(async ({ data }: { data: Record<string, any> }) => {
         const row = { ...data, id: `cfg-${++state.idSeq}` };
         state.appConfigs.push(row);
         return row;
       }),
-      update: jest.fn(
+      update: vi.fn(
         async ({
           where,
           data,
@@ -43,7 +43,7 @@ function buildPrisma() {
       ),
     },
     member: {
-      updateMany: jest.fn(async (args: Record<string, any>) => {
+      updateMany: vi.fn(async (args: Record<string, any>) => {
         state.memberUpdates.push(args);
         return { count: 0 };
       }),
@@ -56,7 +56,7 @@ function buildPrisma() {
 function buildBus() {
   const events: { type: string; payload?: unknown }[] = [];
   const bus = {
-    publish: jest.fn((type: string, payload?: unknown) => {
+    publish: vi.fn((type: string, payload?: unknown) => {
       events.push({ type, payload });
     }),
   };
@@ -162,7 +162,7 @@ describe('TrustService.evaluateExecution', () => {
     const stored = state.appConfigs.find(
       (c) => c.key === 'trust.profile.agent-1',
     );
-    const value = stored.value as any;
+    const value = stored!.value as any;
     expect(value.totalEvaluations).toBe(1);
     expect(value.successfulEvaluations).toBe(1);
     expect(value.recentEvaluations).toHaveLength(1);

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { DashboardService, isDoneTransition } from './dashboard.service';
 import { PrismaService } from '../../core/database/prisma.service';
 
@@ -39,28 +40,28 @@ function taskRow(overrides: Record<string, unknown> = {}) {
 
 describe('DashboardService', () => {
   let service: DashboardService;
-  let prisma: Record<string, Record<string, jest.Mock>>;
+  let prisma: Record<string, Record<string, Mock>>;
 
   beforeEach(() => {
     prisma = {
       member: {
-        findMany: jest
+        findMany: vi
           .fn()
           .mockImplementation((args: { select: Record<string, unknown> }) =>
             args.select.displayName ? [memberRow()] : [{ id: 'm1' }],
           ),
       },
-      issue: { findMany: jest.fn().mockResolvedValue([]) },
+      issue: { findMany: vi.fn().mockResolvedValue([]) },
       aIConversation: {
-        count: jest
+        count: vi
           .fn()
           .mockImplementation((args?: { where?: unknown }) =>
             args?.where ? 3 : 12,
           ),
       },
-      aIUsageLog: { findMany: jest.fn().mockResolvedValue([]) },
+      aIUsageLog: { findMany: vi.fn().mockResolvedValue([]) },
       memberActivity: {
-        findMany: jest
+        findMany: vi
           .fn()
           .mockImplementation((args: { select: Record<string, unknown> }) =>
             args.select.type
@@ -68,9 +69,9 @@ describe('DashboardService', () => {
               : [{ memberId: 'm1' }],
           ),
       },
-      issueActivity: { findMany: jest.fn().mockResolvedValue([]) },
-      projectHealthSnapshot: { findMany: jest.fn().mockResolvedValue([]) },
-      project: { findMany: jest.fn().mockResolvedValue([]) },
+      issueActivity: { findMany: vi.fn().mockResolvedValue([]) },
+      projectHealthSnapshot: { findMany: vi.fn().mockResolvedValue([]) },
+      project: { findMany: vi.fn().mockResolvedValue([]) },
     };
     service = new DashboardService(prisma as unknown as PrismaService);
   });

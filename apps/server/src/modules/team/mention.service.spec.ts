@@ -9,13 +9,13 @@ describe('MentionService', () => {
 
   const mockPrisma = {
     member: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
     },
     mention: {
-      create: jest.fn(),
-      createMany: jest.fn(),
-      findMany: jest.fn(),
+      create: vi.fn(),
+      createMany: vi.fn(),
+      findMany: vi.fn(),
     },
   };
 
@@ -24,11 +24,11 @@ describe('MentionService', () => {
       providers: [
         MentionService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: MessageBusService, useValue: { publish: jest.fn() } },
+        { provide: MessageBusService, useValue: { publish: vi.fn() } },
       ],
     }).compile();
     service = module.get<MentionService>(MentionService);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // 幂等去重查询的默认行为：无既有提及（clearAllMocks 会清掉 resolved 值）
     mockPrisma.mention.findMany.mockResolvedValue([]);
   });
