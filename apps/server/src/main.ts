@@ -102,7 +102,10 @@ async function bootstrap() {
   // CORS configuration with whitelist
   const allowedOrigins = parseAllowedOriginsFromEnv();
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       if (isAllowedOrigin(origin, allowedOrigins)) {
         callback(null, true);
       } else {
