@@ -375,7 +375,7 @@ export function TasksPage() {
       ) : null}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto px-4 py-3.5 sm:px-6 sm:py-4">
+      <div className="flex-1 overflow-auto px-6 py-4 sm:px-8 sm:py-5 lg:px-10">
         <div className="w-full">
           {viewMode === 'list' ? (
             <TaskSimpleList

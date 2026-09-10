@@ -21,6 +21,16 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 仪表盘视觉中心聚焦、看板呼吸感边距升级与二级三级子页主栏收敛
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | `DESIGN.md` 与 `docs/design/DESIGN.md` 补全 §3.4 页面级规格：新增「概览聚焦型（Overview / Dashboard）」（max-w-7xl ~1280px + px-6~10 渐进留白），补充二级/三级详情子页主栏阅读宽度收敛约束（max-w-4xl / max-w-5xl），消除大屏长文本行长失控与宽屏视觉拉扯 | CAP-P-01 | pnpm check:docs-sync | DESIGN.md §3.4 同步更新 |
+| frontend | 仪表盘与效能分析大屏视觉居中聚焦：`DashboardPage` 引入 `max-w-7xl mx-auto w-full px-6 py-6 sm:px-8 sm:py-8 lg:px-10` 居中呼吸容器，骨架屏严格与真实结构等宽对齐；`AnalyticsPage` 升级至相同留白体系，消除首屏 KPI 与报表在 2K/4K 屏幕下的散漫拉扯 | CAP-P-01 | tsc --noEmit 0 错，Vitest 273 用例全绿 | 对齐 DESIGN.md §3.4 |
+| frontend | 项目二级子页母版留白升级：`ProjectDetailFrame` 面包屑与内容区全面收敛至 `max-w-7xl mx-auto px-6 sm:px-8 lg:px-10`，头部与内容边距严格贴合，一次性为项目概览、项目工单看板、里程碑、项目团队、项目设置等二级子页建立聚焦呼吸边距 | CAP-P-01 | tsc --noEmit 0 错 | 对齐 DESIGN.md §3.4 |
+| frontend | 全局看板与列表页呼吸感边距升级：`tasks-page`、`bugs-page`、`acceptance-list-page` 左右边距由过窄的 `px-4 sm:px-6` 升级为舒适的 `px-6 py-4 sm:px-8 sm:py-5 lg:px-10`，杜绝宽屏下首尾列卡片死贴屏幕物理边缘 | CAP-P-01 | 7 项设计治理门禁通过 | 提升宽屏阅读与拖拽手感 |
+| frontend | 6 大核心二级/三级详情页主栏居中收敛：`TaskDetailPage`、`BugDetailPage`、`AcceptanceDetailPage`、`MemberDetailPage`、`TeamDetailPage`、`RepositoryDetailPage` 保持外贴视口原生滚动条的同时，主内容区包裹 `max-w-4xl` / `max-w-5xl` 居中容器，杜绝超大屏下长文本行长过度伸展 | CAP-P-01 | tsc --noEmit 0 错，Vitest 全绿 | 对齐 DESIGN.md §3.4 |
+
 ### 页面级规格与留白体系标准落地（PageShell Profile Variants + 设置页/列表页/阅读页统一规格收敛）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

@@ -558,7 +558,7 @@ function TeamActivityTab() {
 export function AnalyticsPage() {
   return (
     <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.analytics}>
-      <div className="mx-auto w-full max-w-7xl p-6 space-y-6">
+      <div className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8 lg:px-10 space-y-6">
         <PageHeader
           aiId="analytics.overview"
           title="Analytics"

@@ -224,6 +224,7 @@ export function RepositoryDetailPage() {
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* 主区（纵向滚动） */}
         <div className="flex flex-1 min-w-0 flex-col overflow-y-auto">
+          <div className="mx-auto w-full max-w-5xl flex-1 flex flex-col">
           {/* 标题区：图标框 + 热编辑标题 + 元信息行 */}
           <div className="shrink-0 border-b px-6 pb-3 pt-5">
             <div className="flex items-center gap-3">
@@ -281,6 +282,7 @@ export function RepositoryDetailPage() {
             )}
             {activeTab === 'commands' && <GitCommandPanel repoId={repoId} />}
             {activeTab === 'pull-requests' && <PullRequestList repoId={repoId} />}
+          </div>
           </div>
         </div>
 
