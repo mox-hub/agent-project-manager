@@ -56,6 +56,12 @@ describe('ProposalService', () => {
     issueAssignee: {
       upsert: vi.fn(),
     },
+    acceptance: {
+      create: vi.fn(),
+    },
+    acceptanceCriteria: {
+      createMany: vi.fn(),
+    },
   };
 
   const mockTx = vi.fn();
@@ -123,6 +129,123 @@ describe('ProposalService', () => {
         }),
       );
       expect(result.status).toBe('accepted');
+    });
+
+    it('组合件 accept（无父任务）：以提案 projectId 建顶级任务族，验收单与 criteria 同事务落库并记 AI 溯源', async () => {
+      const composite = {
+        id: 'pr-2',
+        kind: 'plan',
+        status: 'pending',
+        projectId: 'p1',
+        issueId: null,
+        payload: {
+          added: [
+            {
+              title: '决定登记表',
+              estimate: 8,
+              acceptance: {
+                criteria: [
+                  {
+                    criteriaType: 'functional',
+                    content: '会后 10 分钟内可查到决定',
+                    category: '核心',
+                  },
+                  { criteriaType: 'technical', content: '接口 P95 < 300ms' },
+                ],
+              },
+            },
+            { title: '会后提醒' },
+          ],
+        },
+      };
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        composite,
+      );
+      tx.issue.create.mockImplementation(
+        async ({ data }: { data: { title: string } }) => ({
+          id: `t-${data.title}`,
+          title: data.title,
+        }),
+      );
+      tx.acceptance.create.mockResolvedValue({ id: 'acc-1' });
+      mockPrismaService.decisionProposal.update.mockResolvedValue({
+        ...composite,
+        status: 'accepted',
+      });
+
+      const result = await service.resolve('pr-2', { action: 'accept' }, 'u-1');
+
+      // 两个顶级任务（parentIssueId null），projectId 取提案
+      expect(tx.issue.create).toHaveBeenCalledTimes(2);
+      expect(tx.issue.create).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          data: expect.objectContaining({
+            projectId: 'p1',
+            parentIssueId: null,
+            title: '决定登记表',
+          }),
+        }),
+      );
+      // 第一任务带验收单：draft + artifact + 溯源 criteria
+      expect(tx.acceptance.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            issueId: 't-决定登记表',
+            status: 'draft',
+            title: '验收 - 决定登记表',
+            completionType: 'artifact',
+          }),
+        }),
+      );
+      expect(tx.acceptanceCriteria.createMany).toHaveBeenCalledTimes(1);
+      const criteriaArgs = tx.acceptanceCriteria.createMany.mock.calls[0][0];
+      expect(criteriaArgs.data).toHaveLength(2);
+      expect(criteriaArgs.data[0]).toMatchObject({
+        acceptanceId: 'acc-1',
+        source: 'ai-generated-from-interview',
+        content: '会后 10 分钟内可查到决定',
+        category: '核心',
+      });
+      expect(criteriaArgs.data[1].category).toBeUndefined();
+      // 第二任务无验收段 → 不建验收单
+      expect(tx.acceptance.create).toHaveBeenCalledTimes(1);
+      expect(result.status).toBe('accepted');
+    });
+
+    it('组合件 accept 缺 projectId 报 400；acceptance criteria 为空报 400', async () => {
+      const noProject = {
+        id: 'pr-3',
+        kind: 'plan',
+        status: 'pending',
+        projectId: null,
+        issueId: null,
+        payload: { added: [{ title: 'X' }] },
+      };
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        noProject,
+      );
+      await expect(
+        service.resolve('pr-3', { action: 'accept' }, 'u-1'),
+      ).rejects.toThrow(/requires projectId/);
+
+      const emptyCriteria = {
+        id: 'pr-4',
+        kind: 'plan',
+        status: 'pending',
+        projectId: 'p1',
+        issueId: null,
+        payload: {
+          added: [{ title: 'X', acceptance: { criteria: [] } }],
+        },
+      };
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        emptyCriteria,
+      );
+      tx.issue.create.mockResolvedValue({ id: 't-x', title: 'X' });
+      await expect(
+        service.resolve('pr-4', { action: 'accept' }, 'u-1'),
+      ).rejects.toThrow(/non-empty criteria/);
     });
 
     it('reject 缺 reason 报 400，且不落决议', async () => {

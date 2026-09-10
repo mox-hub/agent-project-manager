@@ -19,6 +19,7 @@ import {
   ListChecks,
   Minus,
   Plus,
+  ScrollText,
   ShieldCheck,
   TrendingUp,
   User,
@@ -73,8 +74,19 @@ interface AcceptancePayload {
 
 /** 建议类提案 payload 结构（与服务端 DecisionProposal.payload 对齐） */
 interface PlanProposalPayload {
+  /** 缺省时为组合件语义（顶级任务族） */
   issueId?: string;
-  added?: Array<{ title: string; description?: string; estimate?: number; assigneeMemberId?: string }>;
+  added?: Array<{
+    title: string;
+    description?: string;
+    estimate?: number;
+    assigneeMemberId?: string;
+    acceptance?: {
+      title?: string;
+      completionType?: string;
+      criteria?: Array<{ content: string; criteriaType?: string }>;
+    };
+  }>;
   removed?: Array<{ id?: string; title?: string }>;
 }
 
@@ -368,6 +380,18 @@ function buildPlanSlots(decision: Decision, t: TFunc): DecisionSlots {
       icon: TrendingUp,
     });
   }
+  const acceptanceCount = added.reduce(
+    (sum, s) => sum + (s.acceptance?.criteria?.length ?? 0),
+    0,
+  );
+  if (acceptanceCount > 0) {
+    impact.push({
+      label: t('decision.impactLabels.acceptanceCriteria'),
+      value: `+${acceptanceCount}`,
+      icon: ScrollText,
+      tone: 'blue',
+    });
+  }
 
   const evidence = (
     <>
@@ -395,11 +419,26 @@ function buildPlanSlots(decision: Decision, t: TFunc): DecisionSlots {
       {added.map((s, i) => (
         <div
           key={`add-${i}`}
-          className="flex items-center gap-2 rounded-lg border border-accent-green/30 bg-accent-green-light/50 px-2.5 py-1.5 text-xs"
+          className="rounded-lg border border-accent-green/30 bg-accent-green-light/50 px-2.5 py-1.5 text-xs"
         >
-          <Plus className="size-3 shrink-0 text-accent-green" />
-          <span className="flex-1 font-medium text-content-text">{s.title}</span>
-          {s.estimate ? <span className="font-mono text-11 text-content-text-muted">{s.estimate}h</span> : null}
+          <div className="flex items-center gap-2">
+            <Plus className="size-3 shrink-0 text-accent-green" />
+            <span className="flex-1 font-medium text-content-text">{s.title}</span>
+            {s.estimate ? <span className="font-mono text-11 text-content-text-muted">{s.estimate}h</span> : null}
+          </div>
+          {s.acceptance?.criteria?.length ? (
+            <div className="mt-1 space-y-0.5 pl-5">
+              {s.acceptance.criteria.map((c, j) => (
+                <p key={j} className="flex items-start gap-1.5 text-11 text-content-text-muted">
+                  <ScrollText className="mt-0.5 size-3 shrink-0 text-accent-purple" />
+                  <span className="min-w-0 flex-1">{c.content}</span>
+                  {c.criteriaType ? (
+                    <span className="shrink-0 uppercase opacity-70">{c.criteriaType === 'functional' ? '功能' : '技术'}</span>
+                  ) : null}
+                </p>
+              ))}
+            </div>
+          ) : null}
         </div>
       ))}
     </div>

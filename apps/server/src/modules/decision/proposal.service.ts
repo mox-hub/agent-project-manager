@@ -26,13 +26,33 @@ import { CreateProposalDto, ResolveProposalDto } from './dto/proposal.dto';
 
 type Proposal = Prisma.DecisionProposalGetPayload<Record<string, never>>;
 
+/**
+ * 组合件验收标准的溯源标记（ADR-012 / 开放问题 #4）：
+ * 由组合件提案（AI 同事代写）落库的 criteria 与人写的 manual 区分，供完整性审计口径。
+ */
+export const ACCEPTANCE_SOURCE_AI_INTERVIEW = 'ai-generated-from-interview';
+
+interface PlanAcceptance {
+  title?: string;
+  completionType?: 'pr' | 'test_report' | 'document' | 'artifact';
+  criteria: Array<{
+    criteriaType?: 'functional' | 'technical';
+    content: string;
+    category?: string;
+    weight?: number;
+    severity?: string;
+  }>;
+}
+
 interface PlanPayload {
-  issueId: string;
+  /** 缺省时为组合件语义：added 以顶级任务族落库（projectId 取提案自身） */
+  issueId?: string;
   added?: Array<{
     title: string;
     description?: string;
     estimate?: number;
     assigneeMemberId?: string;
+    acceptance?: PlanAcceptance;
   }>;
 }
 
@@ -243,39 +263,100 @@ export class ProposalService {
     }
   }
 
-  /** plan：父任务下批量创建子任务；分派成员走 IssueAssignee */
+  /**
+   * plan：批量建任务族；分派成员走 IssueAssignee。
+   * 组合件扩展（ADR-012）：issueId 缺省时以提案 projectId 建顶级任务族；
+   * added[].acceptance 与任务同事务落验收单 + criteria（source 记 AI 代写溯源）。
+   */
   private async applyPlan(proposal: Proposal): Promise<void> {
     const payload = (proposal.payload ?? {}) as unknown as PlanPayload;
     const added = payload.added ?? [];
-    if (!payload.issueId || added.length === 0) {
+    if (added.length === 0) {
+      throw new BadRequestException('plan proposal requires non-empty added');
+    }
+
+    let parent: { id: string; projectId: string; type: string | null } | null =
+      null;
+    if (payload.issueId) {
+      const found = await this.prisma.issue.findUnique({
+        where: { id: payload.issueId },
+      });
+      if (!found) {
+        throw new BadRequestException(
+          `Parent task ${payload.issueId} not found`,
+        );
+      }
+      if (!found.projectId) {
+        throw new BadRequestException(
+          `Parent task ${payload.issueId} has no project`,
+        );
+      }
+      parent = { id: found.id, projectId: found.projectId, type: found.type };
+    } else if (!proposal.projectId) {
       throw new BadRequestException(
-        'plan proposal requires issueId and non-empty added',
+        'composite plan proposal requires projectId on the proposal (no parent task given)',
       );
     }
-    const parent = await this.prisma.issue.findUnique({
-      where: { id: payload.issueId },
-    });
-    if (!parent)
-      throw new BadRequestException(`Parent task ${payload.issueId} not found`);
 
     await this.prisma.$transaction(async (tx) => {
       for (const sub of added) {
         const task = await tx.issue.create({
           data: {
-            projectId: parent.projectId,
-            parentIssueId: parent.id,
+            projectId: parent ? parent.projectId : proposal.projectId,
+            parentIssueId: parent ? parent.id : null,
             title: sub.title,
             description: sub.description,
             estimate: sub.estimate,
             status: 'todo',
             priority: 'medium',
-            type: parent.type ?? 'task',
+            type: parent?.type ?? 'task',
           },
         });
         if (sub.assigneeMemberId) {
           await this.bindAssignee(tx, task.id, sub.assigneeMemberId);
         }
+        if (sub.acceptance) {
+          await this.createAcceptanceForTask(tx, task, sub.acceptance);
+        }
       }
+    });
+  }
+
+  /**
+   * 组合件：任务验收单 + criteria 直写。决策模块不得注入 AcceptanceService
+   * （acceptance.module 已依赖 decision.module，反向注入成环），
+   * 故与 applyPlan 同构直接走 tx；completionType 缺省 artifact（新任务无 tags 可推断）。
+   */
+  private async createAcceptanceForTask(
+    tx: Prisma.TransactionClient,
+    task: { id: string; title: string },
+    acceptance: PlanAcceptance,
+  ): Promise<void> {
+    if (!acceptance.criteria?.length) {
+      throw new BadRequestException(
+        `acceptance for task "${task.title}" requires non-empty criteria`,
+      );
+    }
+    const record = await tx.acceptance.create({
+      data: {
+        issueId: task.id,
+        status: 'draft',
+        title: acceptance.title ?? `验收 - ${task.title}`,
+        completionType: acceptance.completionType ?? 'artifact',
+      },
+    });
+    await tx.acceptanceCriteria.createMany({
+      data: acceptance.criteria.map((c, i) => ({
+        acceptanceId: record.id,
+        criteriaType: c.criteriaType ?? 'functional',
+        content: c.content,
+        category: c.category,
+        weight: c.weight ?? 1,
+        severity: c.severity ?? 'medium',
+        status: 'pending',
+        order: i,
+        source: ACCEPTANCE_SOURCE_AI_INTERVIEW,
+      })),
     });
   }
 

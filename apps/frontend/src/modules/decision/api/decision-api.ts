@@ -4,6 +4,7 @@
  * 待闭环接线后由收件箱统一分发。
  */
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 import type { Decision, DecisionKind } from '@/shared/decision-card/types';
 
 export interface DecisionListParams {
@@ -27,6 +28,8 @@ export interface DecisionSummary {
   byKind: Record<string, number>;
 }
 
+export type CreateProposalRequest = RequestBodyOf<'ProposalController_create'>;
+
 export const decisionApi = {
   listPending: (params: DecisionListParams = {}) =>
     api.get<DecisionListResult>('/decisions/pending', params),
@@ -34,5 +37,10 @@ export const decisionApi = {
     api.get<DecisionSummary>(
       '/decisions/summary',
       projectId ? { projectId } : undefined,
+    ),
+  createProposal: (data: CreateProposalRequest) =>
+    api.post<{ id: string; kind: string; status: string }>(
+      '/decisions/proposals',
+      data,
     ),
 };

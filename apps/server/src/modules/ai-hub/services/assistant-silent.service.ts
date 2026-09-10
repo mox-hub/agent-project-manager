@@ -154,6 +154,44 @@ ${JSON.stringify(questions)}
 只输出 JSON：{"answers": [{"questionId": "问题 id", "answer": "答案候选"}]}，answers 必须覆盖每一个问题。`;
     },
   },
+  'intake-composite': {
+    description:
+      '组合件提案生成（CAP-P-01 二期）：读需求承接剧本的「任务拆解」与「验收草案」两份工件，AI 代写「任务族 + 每任务验收标准」的组合件 plan 卡 payload，人批卡后事务化落库',
+    prepareContext: async (context, { prisma }) => {
+      const ids = [
+        context.breakdownDocumentId,
+        context.acceptanceDocumentId,
+      ].filter((v): v is string => typeof v === 'string' && !!v);
+      if (ids.length === 0) {
+        throw new BadRequestException(
+          '组合件生成缺少工件：breakdownDocumentId / acceptanceDocumentId 至少一项',
+        );
+      }
+      const docs = await prisma.document.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, title: true, content: true },
+      });
+      if (docs.length === 0) {
+        throw new BadRequestException('工件文档不存在');
+      }
+      return { ...context, documents: docs };
+    },
+    buildInstructions: (context) => {
+      const docs = Array.isArray(context.documents) ? context.documents : [];
+      if (docs.length === 0) {
+        throw new BadRequestException('组合件生成缺少工件文档');
+      }
+      return `你是项目管理系统的需求拆解助手。下面是需求承接访谈产出的工件（任务拆解 / 验收草案），请把它们转成一份「任务族 + 验收清单」组合件提案 payload，供人在决策收件箱一次批卡落库。
+工件：
+${JSON.stringify(docs)}
+
+要求：
+- tasks：把拆解清单的每一块转成一个任务；title 短句动词开头；description 一句话补充；estimate 是小时数（拿不准给 8）。
+- 每个任务带 acceptance.criteria（1~4 条），从验收草案中挑选与该任务相关的可检查标准；草案不足以支撑的任务给空 criteria 数组，绝不编造。
+- 宁缺毋假：工件里没有的信息留空，不要发明需求。
+只输出 JSON：{"tasks": [{"title": "...", "description": "...", "estimate": 8, "acceptance": {"criteria": [{"criteriaType": "functional", "content": "...", "category": "..."}]}}]}`;
+    },
+  },
 };
 
 /**

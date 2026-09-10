@@ -21,6 +21,13 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-P-01 二期——组合件提案：任务族 + 验收清单一次批卡原子落库
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | applyPlan 升级组合件 applier（ADR-012）：payload.issueId 变可选（缺省时以提案 projectId 建顶级任务族）、added[] 每项可带 acceptance 段（criteria 与任务同 `$transaction` 落库，source 记 `ai-generated-from-interview` 溯源，开放问题 #4 清偿）；决策模块不注入 AcceptanceService（acceptance→decision 依赖方向，直写 tx 同构 applyPlan）；新增静默场景 `intake-composite`——读需求承接剧本「任务拆解/验收草案」两工件（prepareContext 显式文档指针），AI 代写组合件 payload；PlanProposalPayloadDto 三层嵌套校验（added→acceptance→criteria） | FR-P-01 | proposal.service.spec 10 条（组合件顶级任务族+验收溯源/缺 projectId 400/空 criteria 400/旧 payload 兼容）；assistant-silent.service.spec 19 条（intake-composite 4 条）；playbook e2e 7/7（组合件批卡全链：创建→pending 投影→accept→issue/acceptance/criteria 直查，任务 B 无验收段不建单）；server 全量 61 文件 520 用例绿；契约零漂移 | ADR-012 |
+| frontend | PlanCard 槽位渲染扩展：added 行内嵌验收标准清单（criteriaType 功能/技术标记）+ impact 区验收计数；`use-intake-composite` hook（parse 防御性收敛：title 必填/criteria 过滤/上限 20 任务）；剧本页「AI 生成任务族提案」卡（breakdown/acceptance-draft 工件就绪时显示）——生成→直接 POST plan 卡进决策收件箱→收件箱批卡；decision-api 补 createProposal（契约单源）；i18n 双语 +12 键（3081 键对齐） | FR-P-01 | tsc -b 零错误；vitest 61 文件 263 用例绿；双语键对齐校验 | ADR-012 |
+
 ### server 日志控制台彩色输出——level 按严重度着色
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

@@ -313,6 +313,111 @@ describe('Playbook / expertise / dashboard health (e2e, local-only paths)', () =
     expect(stages['acceptance-draft']).toMatchObject({ status: 'pending' });
   });
 
+  it('组合件提案（CAP-P-01 二期）：plan 卡顶级任务族 + 验收段 → accept → 任务/验收/criteria 事务落库', async () => {
+    const created = await wsHttp
+      .post('/_api/decisions/proposals')
+      .set(auth())
+      .send({
+        kind: 'plan',
+        title: '是否按此任务族开工？',
+        detail: 'AI 同事代写的组合件：任务族 + 验收清单，一次批卡原子落库',
+        payload: {
+          added: [
+            {
+              title: 'E2E 组合件任务 A',
+              estimate: 4,
+              acceptance: {
+                criteria: [
+                  {
+                    criteriaType: 'functional',
+                    content: 'A 功能可用',
+                    category: '核心',
+                  },
+                  { criteriaType: 'technical', content: 'A 无 P0 缺陷' },
+                ],
+              },
+            },
+            { title: 'E2E 组合件任务 B' },
+          ],
+        },
+        projectId,
+      })
+      .expect(201);
+    const proposalId = created.body.data.id;
+    expect(proposalId).toBeTruthy();
+
+    // 待决列表可见（收件箱投影）
+    const pending = await wsHttp
+      .get('/_api/decisions/pending')
+      .set(auth())
+      .expect(200);
+    expect(
+      pending.body.data.items.some(
+        (i: { sourceId: string; kind: string }) =>
+          i.sourceId === proposalId && i.kind === 'plan',
+      ),
+    ).toBe(true);
+
+    // 批卡：副作用先行 → accepted
+    await wsHttp
+      .post(`/_api/decisions/proposals/${proposalId}/resolve`)
+      .set(auth())
+      .send({ action: 'accept' })
+      .expect(201);
+
+    // 事务落库断言：顶级任务族（无父）
+    const tasks = await ws.db.issue.findMany({
+      where: { projectId, title: { startsWith: 'E2E 组合件任务' } },
+    });
+    expect(tasks).toHaveLength(2);
+    expect(
+      tasks.every(
+        (t: { parentIssueId: string | null }) => t.parentIssueId === null,
+      ),
+    ).toBe(true);
+
+    const taskA = tasks.find(
+      (t: { title: string }) => t.title === 'E2E 组合件任务 A',
+    ) as { id: string };
+    const taskB = tasks.find(
+      (t: { title: string }) => t.title === 'E2E 组合件任务 B',
+    ) as { id: string };
+
+    // 任务 A：验收单 + criteria（含 AI 代写溯源）
+    const accA = await ws.db.acceptance.findFirst({
+      where: { issueId: taskA.id },
+      include: { criteria: true },
+    });
+    expect(accA).toMatchObject({
+      status: 'draft',
+      completionType: 'artifact',
+      title: '验收 - E2E 组合件任务 A',
+    });
+    expect(accA?.criteria).toHaveLength(2);
+    expect(
+      accA?.criteria.every(
+        (c: { source: string }) => c.source === 'ai-generated-from-interview',
+      ),
+    ).toBe(true);
+    expect(
+      accA?.criteria.find(
+        (c: { category: string | null }) => c.category === '核心',
+      ),
+    ).toBeTruthy();
+
+    // 任务 B：无验收段 → 不建验收单
+    expect(await ws.db.acceptance.count({ where: { issueId: taskB.id } })).toBe(
+      0,
+    );
+
+    // 提案已 accepted
+    const detail = await wsHttp
+      .get(`/_api/decisions/proposals/${proposalId}`)
+      .set(auth())
+      .expect(200);
+    expect(detail.body.data.status).toBe('accepted');
+  });
+
   it('专长度档位：默认 detailed → suppress → suppressed → reset 恢复', async () => {
     const initial = await wsHttp
       .get('/_api/memory/expertise')

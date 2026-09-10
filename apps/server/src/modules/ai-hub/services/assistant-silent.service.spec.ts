@@ -105,6 +105,7 @@ describe('AssistantSilentService.run', () => {
       'memory-digest',
       'grill-next',
       'interview-prefill',
+      'intake-composite',
     ]);
   });
 
@@ -158,6 +159,84 @@ describe('AssistantSilentService.run', () => {
         service.run('interview-prefill', { requirement: 'x' }, 'p1', 'u1'),
       ).rejects.toThrow(/缺少问题组/);
       expect(chat).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('intake-composite', () => {
+    const DOCS = [
+      {
+        id: 'd1',
+        title: '工程任务拆解 · P',
+        content: '① 决定登记表 ② 会后提醒',
+      },
+      { id: 'd2', title: '验收草案 · P', content: '会后 10 分钟内可查到决定' },
+    ];
+
+    const makeCompositeService = (
+      prismaDocs: Array<{ id: string; title: string; content: string }> = DOCS,
+      chatContent = '{"tasks": [{"title": "做决定登记表", "description": "登记会议决定", "estimate": 8, "acceptance": {"criteria": [{"criteriaType": "functional", "content": "会后可查"}]}}]}',
+    ) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const prisma = {
+        aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+        document: { findMany: vi.fn().mockResolvedValue(prismaDocs) },
+      };
+      const service = new AssistantSilentService(
+        prisma as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat, prisma };
+    };
+
+    it('侦查两份工件 → instructions 含文档内容，输出 tasks payload', async () => {
+      const { service, chat, prisma } = makeCompositeService();
+      const result = await service.run(
+        'intake-composite',
+        { breakdownDocumentId: 'd1', acceptanceDocumentId: 'd2' },
+        'p1',
+        'u1',
+      );
+
+      expect(prisma.document.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: { in: ['d1', 'd2'] } },
+        }),
+      );
+      expect(result.data).toHaveProperty('tasks');
+      const tasks = result.data.tasks as Array<Record<string, unknown>>;
+      expect(tasks[0]).toMatchObject({ title: '做决定登记表' });
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('决定登记表');
+      expect(instructions).toContain('会后 10 分钟内可查到决定');
+    });
+
+    it('缺工件 id / 文档不存在 → 400（不触 LLM）', async () => {
+      const { service, chat, prisma } = makeCompositeService();
+      await expect(
+        service.run('intake-composite', {}, 'p1', 'u1'),
+      ).rejects.toThrow(/缺少工件/);
+      expect(chat).not.toHaveBeenCalled();
+
+      const missing = makeCompositeService([]);
+      await expect(
+        missing.service.run(
+          'intake-composite',
+          { breakdownDocumentId: 'gone' },
+          'p1',
+          'u1',
+        ),
+      ).rejects.toThrow(/工件文档不存在/);
+      expect(missing.chat).not.toHaveBeenCalled();
+      void prisma;
     });
   });
 });
