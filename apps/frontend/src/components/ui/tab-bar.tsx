@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTabs, type Tab } from '@/shared/tabs/tabs-context';
+import { OPEN_COMMAND_PALETTE_EVENT } from '@/shared/command-palette/command-palette-provider';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { ContextMenu, createMenuItems } from '@/components/ui/context-menu';
 import { Button } from '@/components/ui/button';
@@ -84,9 +85,9 @@ export function TabBar({ className }: TabBarProps) {
     });
   };
 
-  // 打开命令面板（模拟添加标签页功能）
+  // 打开命令面板（模拟添加标签页功能）：provider 挂载了对应监听
   const handleAddTab = () => {
-    window.dispatchEvent(new CustomEvent('open-command-palette'));
+    window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
   };
 
   return (

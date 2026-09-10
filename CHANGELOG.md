@@ -21,6 +21,18 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 命令面板全量刷新——17→25 命令/i18n 化/TabBar 入口修复
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 命令数组从 shell-layout 硬编码抽出为 `shared/command-palette/commands.ts` 注册表（条目存 i18n key，翻译时点在 shell-layout，预留 `icon?` 字段对齐图标统一线）；新增 9 条一级命令（workflows/acceptance/decisions/executions/office/repositories/notifications/search/profile），路由逐一对照 router.tsx；四分组（导航/工作流与治理/协作与工具/系统+操作）；删除 cmd-ai-management 冗余（与 cmd-ai 同目标）与全部假快捷键（G P 系 chord 从未实现，仅保留真实 Alt A）；修复 TabBar「+」按钮 `open-command-palette` 事件零监听 bug（provider effect 监听共享常量）；面板 placeholder/空态/dialog title 与兜底分组全部 i18n 化；死键清理（shell.openTerminal）与 searchPlaceholder 迁移为 `search.placeholder`（盘点纠偏：原键 search-page 在用，原写法 `t(key) || fallback` 的 fallback 永不生效） | 用户插队指令（夜航） | command-palette.test 8/8（注册表形态/id 唯一/9 新路由/防回归/仅 Alt A/CustomEvent 开面板/i18n 渲染）；受影响面回归 19 文件 89 用例全过；tsc -b 0 错；eslint 0；zh/en 各 3237 键对称脚本校验 | i18n shell.group* / commandPalette.* / search.placeholder 双语增删 |
+
+### 实体图标注册表 v0 + Issue 域试点 + HoverCard 变体扩充
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 新建 `shared/entity-icons/` 实体图标唯一注册表（13 实体+release 增量，`{icon,tone}` 条目+`getEntityIcon`+`<EntityIcon>`，文件头「实体图标规范 v0」，图标唯一性测试强制防撞车）；定夺：issue=CheckSquare/bug=Bug/project=FolderKanban/workflow=Workflow/execution=Play/acceptance=ShieldCheck/document=FileText/member=Users/team=UsersRound/decision=Scale/workspace=Database/repository=GitBranch/release=Tag（多数注册表面+语义+防撞车原则）；Issue 域试点接入（tasks-page/bugs-page PageHeader、apm-ref-chip KIND_ICON 全量、task-card 子任务计数）；状态副本收敛试点：task-rows/task-simple-list 本地 STATUS_CFG 改派生自 TASK_STATUS_VISUALS（消灭 Loader/AlertCircle 旧名偏差，第二批剩 board-presets/delivery/executions 三处）；HoverCard（base-ui PreviewCard）cva size 四档变体（sm/md/lg/xl）+HoverCardArrow，默认渲染零破坏；preview-fields 新增 PreviewSection/PreviewFooterMeta 富信息共用件，member 预览卡示范增强（资料/AI 配置/标签/底部元信息，w-72 不膨胀）；design-system 页补变体演示；COMPONENTS.md 登记更新 | 用户插队指令（夜航） | entity-icons.test 7/7 + hover-card.test 5/5；全仓 vitest 70 文件 315 用例全过；tsc -b 0 错；eslint 0 error（4 warning 经 stash 基线比对为存量）；check-icons/check-component-registry(99)/check-tailwind-arbitrary/check-semantic-classes/check-palette 全过 | 第二批铺开清单+ShieldCheck 三方重叠+MemberCardPopover 归一裁决点登记于注册表文件头（本地） |
+
 ### 测试稳定性——PrismaService e2e 负载型超时加固
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
