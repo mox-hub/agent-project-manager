@@ -107,6 +107,7 @@ describe('AssistantSilentService.run', () => {
       'grill-next',
       'interview-prefill',
       'intake-composite',
+      'interview-dynamic',
     ]);
   });
 
@@ -238,6 +239,95 @@ describe('AssistantSilentService.run', () => {
       ).rejects.toThrow(/工件文档不存在/);
       expect(missing.chat).not.toHaveBeenCalled();
       void prisma;
+    });
+  });
+
+  describe('interview-dynamic', () => {
+    const makeDynamicService = (
+      chatContent: string,
+      docs: Array<{ id: string; title: string; content: string }> = [],
+    ) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const prisma = {
+        aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+        document: { findMany: vi.fn().mockResolvedValue(docs) },
+      };
+      const service = new AssistantSilentService(
+        prisma as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat, prisma };
+    };
+
+    const QUESTIONS = [
+      { id: 'problem', question: '要解决什么问题', hint: '' },
+      { id: 'users', question: '谁在用', hint: '' },
+    ];
+
+    it('首轮追问：instructions 含问题组/阶段目的/空历史提示，输出 question 轮', async () => {
+      const { service, chat } = makeDynamicService(
+        '{"done": false, "question": "记录的决定大概多久要查一次？", "choices": ["每天", "偶尔"]}',
+      );
+      const result = await service.run(
+        'interview-dynamic',
+        { questions: QUESTIONS, stagePurpose: '澄清问题与用户', history: [] },
+        'p1',
+        'u1',
+      );
+
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('要解决什么问题');
+      expect(instructions).toContain('澄清问题与用户');
+      expect(instructions).toContain('还没有，请开始第一问');
+      expect(result.data).toMatchObject({
+        done: false,
+        question: '记录的决定大概多久要查一次？',
+      });
+    });
+
+    it('带工件 id → prepareContext 查库注入文档内容；已答历史进入 instructions', async () => {
+      const { service, chat, prisma } = makeDynamicService(
+        '{"done": true, "answers": [{"questionId": "problem", "answer": "会议决定记不住"}, {"questionId": "users", "answer": "小组 5 人"}]}',
+        [{ id: 'd1', title: '需求澄清纪要', content: '用户想做决定登记表' }],
+      );
+      const result = await service.run(
+        'interview-dynamic',
+        {
+          questions: QUESTIONS,
+          history: [
+            { question: '记录的决定大概多久要查一次？', answer: '每天' },
+          ],
+          artifactDocumentIds: ['d1'],
+        },
+        'p1',
+        'u1',
+      );
+
+      expect(prisma.document.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: { in: ['d1'] } } }),
+      );
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('需求澄清纪要');
+      expect(instructions).toContain('每天');
+      expect(result.data).toHaveProperty('answers');
+    });
+
+    it('缺问题组 → 400（不触 LLM）', async () => {
+      const { service, chat } = makeDynamicService('{}');
+      await expect(
+        service.run('interview-dynamic', { history: [] }, 'p1', 'u1'),
+      ).rejects.toThrow(/缺少问题组/);
+      expect(chat).not.toHaveBeenCalled();
     });
   });
 });

@@ -21,6 +21,13 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 需求承接三期（CAP-P-01）——剧本访谈动态追问：AI 会话访谈形态
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 新增 `interview-dynamic` 静默场景（沿用 grill-next 的无状态多轮协议，零服务端会话态）：context 收当前阶段问题组（questions）/阶段目的（stagePurpose）/已答历史（history 全量传，同 grill 先例）/阶段产物文档 id（artifactDocumentIds→prepareContext 查库注入标题+正文，遵守 ADR-012「服务端不做剧本感知」解耦原则）；指令协议：未收敛每轮一问+2~4 个猜测选项（优先追问对话与工件中模糊/缺失/矛盾处，问题组固定问题不逐条问用户——由最终答案集承载），收敛时一次性输出覆盖问题组全部 id 的 answers（沿用 interview-prefill「绝不编造、拿不准写待确认」纪律） | CAP-P-01 | assistant-silent.service.spec 31/31（+3：首轮追问 instructions 含问题组/目的/空历史提示+question 轮透传/工件查库注入与已答历史进入 instructions+done 轮 answers/缺问题组 400 不触 LLM）；listScenarios 目录断言更新 | 决策日志三期实施补记（本地）；能力清单变更记录（本地） |
+| frontend | InterviewDialog 升级双形态（ADR-010 三期「访谈 Dialog 换 AI 会话形态」落地）：默认「AI 会话访谈」（新增 interview-chat.tsx：气泡对话流+猜测选项 chips 点击即答+Enter 发送，挂载自动开问、ref 防 StrictMode 双发；收敛后答案**只填空**回填表单（不覆盖手填）并自动切回表单供人审改提交——「AI 代写→人确认」语法保留 submitInterview 确定性转写与闸门），「直接填写」静态表单保留为兜底形态（AI 不可用/8 轮上限到限时管道仍通）；新增 use-interview-dynamic hook（防御性解析 question/done 双轮，答案过滤复用 parseInterviewPrefill 只留问题组内合法 id）；剧本页传入当前阶段产物 documentId 作为 grounding；i18n 双语 10 键 | CAP-P-01 | interview-dialog.test 5/5（chat 首问自动触发+choices 即答历史累积/done 只填空回填切表单/表单兜底全链提交/预填不覆盖——原三用例适配双形态）；前端 65 文件 284 用例全绿；tsc -b 0 错；新文件 eslint 0 警告；server 官方 type-check 0 错 | 无 |
+
 ### 完整性审计前端收口（CAP-B-02）——审计清单选择器 + 完备性清单管理面
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

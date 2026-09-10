@@ -65,9 +65,94 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
     return { mutate };
   }
 
-  it('渲染全部必答问题，未答完提交按钮禁用', async () => {
+  /** 默认形态为 AI 会话：切到「直接填写」并 mock 好动态访谈 hook */
+  async function setupInFormMode() {
     const user = userEvent.setup();
+    const dynamicModule = await import('@/modules/assistant/hooks/use-interview-dynamic');
+    vi.spyOn(dynamicModule, 'useInterviewDynamic').mockReturnValue({
+      mutate: vi.fn(),
+      reset: vi.fn(),
+      isError: false,
+      isPending: false,
+      error: null,
+    } as never);
     const { mutate } = setup();
+    await user.click(await screen.findByRole('button', { name: /Fill directly/i }));
+    return { mutate };
+  }
+
+  it('默认进入 AI 会话形态并自动出第一问；choices 点击即作为回答触发下一轮', async () => {
+    const user = userEvent.setup();
+    const dynamicModule = await import('@/modules/assistant/hooks/use-interview-dynamic');
+    const dynamicMutate = vi.fn(
+      (_input: unknown, opts?: { onSuccess?: (v: unknown) => void }) => {
+        opts?.onSuccess?.({ kind: 'question', question: '记录的决定谁来查？', choices: ['行政', '全员'] });
+      },
+    );
+    vi.spyOn(dynamicModule, 'useInterviewDynamic').mockReturnValue({
+      mutate: dynamicMutate,
+      reset: vi.fn(),
+      isError: false,
+      isPending: false,
+      error: null,
+    } as never);
+    setup();
+
+    // 挂载即自动开问（首轮 history 为空）
+    await waitFor(() => {
+      expect(dynamicMutate).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.getByText('记录的决定谁来查？')).toBeTruthy();
+
+    // 点猜测选项 = 直接作为回答发送，第二轮携带已答历史
+    await user.click(screen.getByRole('button', { name: '行政' }));
+    expect(dynamicMutate).toHaveBeenCalledTimes(2);
+    const secondInput = dynamicMutate.mock.calls[1][0] as {
+      history: Array<{ question: string; answer: string }>;
+    };
+    expect(secondInput.history).toEqual([
+      { question: '记录的决定谁来查？', answer: '行政' },
+    ]);
+  });
+
+  it('AI 收敛：答案集只填空回填表单并自动切换形态，已手填字段不覆盖', async () => {
+    const user = userEvent.setup();
+    const dynamicModule = await import('@/modules/assistant/hooks/use-interview-dynamic');
+    const dynamicMutate = vi.fn(
+      (_input: unknown, opts?: { onSuccess?: (v: unknown) => void }) => {
+        opts?.onSuccess?.({
+          kind: 'done',
+          answers: [
+            { questionId: 'who', answer: 'AI 归纳的用户' },
+            { questionId: 'pain', answer: 'AI 归纳的痛点' },
+          ],
+        });
+      },
+    );
+    vi.spyOn(dynamicModule, 'useInterviewDynamic').mockReturnValue({
+      mutate: dynamicMutate,
+      reset: vi.fn(),
+      isError: false,
+      isPending: false,
+      error: null,
+    } as never);
+    setup();
+
+    // done 后自动切回表单：字段被 AI 答案填充
+    await waitFor(() => {
+      expect(
+        (screen.getByLabelText(/做给谁用的/) as HTMLTextAreaElement).value,
+      ).toBe('AI 归纳的用户');
+    });
+    expect(
+      (screen.getByLabelText(/最头疼的一件事/) as HTMLTextAreaElement).value,
+    ).toBe('AI 归纳的痛点');
+    expect(screen.getByRole('button', { name: /Generate artifact & submit gate/i })).toBeTruthy();
+  });
+
+  it('切到直接填写形态：渲染全部必答问题，未答完提交按钮禁用', async () => {
+    const user = userEvent.setup();
+    const { mutate } = await setupInFormMode();
 
     const first = screen.getByLabelText(/做给谁用的/) as HTMLTextAreaElement;
     expect(first).toBeTruthy();
@@ -82,7 +167,7 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
     expect(mutate).not.toHaveBeenCalled();
   });
 
-  it('全部作答提交：按问题顺序携带答案，成功后展示对照翻译与收件箱入口', async () => {
+  it('直接填写形态：全部作答提交，按问题顺序携带答案，成功后展示对照翻译与收件箱入口', async () => {
     const user = userEvent.setup();
     const mutate = vi.fn((_vars: unknown, opts?: { onSuccess?: (r: unknown) => void }) => {
       opts?.onSuccess?.({
@@ -108,6 +193,15 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
       error: null,
     } as never);
 
+    const dynamicModule = await import('@/modules/assistant/hooks/use-interview-dynamic');
+    vi.spyOn(dynamicModule, 'useInterviewDynamic').mockReturnValue({
+      mutate: vi.fn(),
+      reset: vi.fn(),
+      isError: false,
+      isPending: false,
+      error: null,
+    } as never);
+
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     });
@@ -118,6 +212,7 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
+    await user.click(await screen.findByRole('button', { name: /Fill directly/i }));
 
     await user.type(screen.getByLabelText(/做给谁用的/), '公司内部的行政同事');
     await user.type(screen.getByLabelText(/最头疼的一件事/), '报销要贴发票');
@@ -144,7 +239,7 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
     expect(inboxBtn.getAttribute('href')).toBe('/app/decisions');
   });
 
-  it('AI 预填：点按钮携带问题组调用，成功后只填空字段不覆盖已填', async () => {
+  it('直接填写形态：AI 预填点按钮携带问题组调用，成功后只填空字段不覆盖已填', async () => {
     const user = userEvent.setup();
     const prefillMutate = vi.fn((_input, opts?: { onSuccess?: (v: unknown) => void }) => {
       opts?.onSuccess?.([
@@ -162,7 +257,7 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
       error: null,
     } as never);
 
-    setup();
+    await setupInFormMode();
 
     // 用户先手填第一题
     await user.type(screen.getByLabelText(/做给谁用的/), '手填的用户');

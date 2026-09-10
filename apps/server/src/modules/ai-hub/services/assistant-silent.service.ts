@@ -216,6 +216,46 @@ ${JSON.stringify(docs)}
 只输出 JSON：{"tasks": [{"title": "...", "description": "...", "estimate": 8, "acceptance": {"criteria": [{"criteriaType": "functional", "content": "...", "category": "..."}]}}]}`;
     },
   },
+  'interview-dynamic': {
+    description:
+      '剧本访谈动态追问（CAP-P-01 三期）：无状态多轮——基于当前阶段问题组、已答历史与阶段工件深挖澄清（每轮一问 + 猜测选项），收敛时一次性给出问题组完整答案集，人审改后走既有 submitInterview',
+    prepareContext: async (context, { prisma }) => {
+      const ids = Array.isArray(context.artifactDocumentIds)
+        ? (context.artifactDocumentIds as unknown[]).filter(
+            (v): v is string => typeof v === 'string' && !!v,
+          )
+        : [];
+      if (ids.length === 0) return context;
+      const docs = await prisma.document.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, title: true, content: true },
+      });
+      return { ...context, documents: docs };
+    },
+    buildInstructions: (context) => {
+      const questions = Array.isArray(context.questions)
+        ? context.questions
+        : [];
+      if (questions.length === 0) {
+        throw new BadRequestException('访谈动态追问缺少问题组（questions）');
+      }
+      const history = Array.isArray(context.history) ? context.history : [];
+      const purpose = String(context.stagePurpose ?? '').trim();
+      const docs = Array.isArray(context.documents) ? context.documents : [];
+      return `你是项目管理系统的需求访谈员，正在与一位对工程术语不熟的用户对话澄清需求。本阶段目的：${purpose || '（见问题组）'}
+本阶段的访谈问题组（最终要为每一问产出答案）：
+${JSON.stringify(questions)}
+${docs.length ? `本阶段已有的工件材料（优先依据，绝不与之矛盾）：\n${JSON.stringify(docs)}\n` : ''}已完成的对话（按序）：
+${history.length ? JSON.stringify(history) : '（还没有，请开始第一问）'}
+
+规则：
+- 每轮只问一个问题：优先追问对话与工件中「模糊、缺失或自相矛盾」之处；问题组里已有固定问题不必逐条问用户，它们由最终答案集承载。
+- 说人话，不甩术语；给 2~4 个猜测选项降低思考负担（选项只是提示，用户可自由回答）；没有合适的猜测就给空数组。
+- 当对话已足够支撑问题组每一问的答案时收敛。收敛时输出覆盖问题组全部 id 的 answers：答案要具体、可执行、说人话，绝不编造用户没说的承诺（拿不准就写「待确认：…」）。
+- 未收敛只输出 JSON：{"done": false, "question": "...", "choices": ["...", "..."]}
+- 收敛只输出 JSON：{"done": true, "answers": [{"questionId": "问题 id", "answer": "答案"}]}`;
+    },
+  },
 };
 
 /**
