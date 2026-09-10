@@ -15,6 +15,11 @@ import { Prisma } from '@prisma/client';
 import { tool, type Tool } from 'ai';
 import { z } from 'zod';
 import { PrismaService } from '../../../core/database/prisma.service';
+import {
+  parseWorkflowDefinition,
+  summarizeDefinition,
+  WorkflowDefinitionError,
+} from '../../workflow/workflow.definition';
 import { IssueService } from '../../issue/issue.service';
 import { DocumentService } from '../../document/document.service';
 import { MemberService } from '../../team/member.service';
@@ -435,6 +440,48 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
       },
     },
   },
+  // ── 工作流（CAP-A-11：代写 → 人确认 → 落库）──
+  {
+    name: 'list_workflows',
+    description: '列出 workflow 定义（key/名称/版本/步骤摘要）',
+    http: { method: 'GET', path: '/_api/workflows', params: {} },
+  },
+  {
+    name: 'read_workflow',
+    description:
+      '读 workflow 定义全文（definition 文法样例；代写/修改 definition 前必读一份作参照）',
+    http: {
+      method: 'GET',
+      path: '/_api/workflows/:id',
+      params: { id: 'Workflow ID 或 key' },
+    },
+  },
+  {
+    name: 'create_workflow',
+    description:
+      '代写新 workflow 定义：POST decisions/proposals（kind=workflow_def，payload={ mode:"create", key, name, description, definition }），文法校验通过后建决策卡，人批准才落库',
+    http: {
+      method: 'POST',
+      path: '/_api/decisions/proposals',
+      params: {
+        title: '标题',
+        payload: '{ mode, key, name, description, definition }',
+      },
+    },
+  },
+  {
+    name: 'update_workflow',
+    description:
+      '修改既有 workflow 定义（版本+1）：POST decisions/proposals（kind=workflow_def，payload={ mode:"update", key, name, description, definition }），人批准才落库',
+    http: {
+      method: 'POST',
+      path: '/_api/decisions/proposals',
+      params: {
+        title: '标题',
+        payload: '{ mode, key, name, description, definition }',
+      },
+    },
+  },
   // ── 记忆 Store B（模型只读事实、写原子必带溯源）──
   {
     name: 'recall_memory',
@@ -548,6 +595,40 @@ function errText(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
+/** workflow_def 文法前置校验：AI 写错当场给可读反馈，不打扰人审批 */
+function validateWorkflowDefPayload(
+  key: string,
+  name: string,
+  definition: unknown,
+):
+  | { error: string }
+  | { steps: Array<{ id: string; type: string; title?: string }> } {
+  if (!name?.trim()) return { error: 'name 必填' };
+  if (!/^[a-z][a-z0-9-]*$/.test(key)) {
+    return { error: `key 非法（需 kebab-case）：${key}` };
+  }
+  try {
+    const doc = parseWorkflowDefinition(definition);
+    return { steps: summarizeDefinition(doc) };
+  } catch (err) {
+    return {
+      error:
+        err instanceof WorkflowDefinitionError
+          ? err.message
+          : `definition 非法：${errText(err)}`,
+    };
+  }
+}
+
+/** 列表场景的宽容摘要：历史脏数据不阻塞列表，摘要给空数组 */
+function summarizeDefinitionSafe(definition: unknown) {
+  try {
+    return summarizeDefinition(parseWorkflowDefinition(definition));
+  } catch {
+    return [];
+  }
+}
+
 @Injectable()
 export class AssistantToolsService {
   private readonly logger = new Logger(AssistantToolsService.name);
@@ -588,6 +669,68 @@ export class AssistantToolsService {
       '注意：删除/停用/归档等不可恢复操作必须先向用户确认后再执行。',
       ...(projectId ? [`当前项目 ID：${projectId}`] : []),
     ].join('\n');
+  }
+
+  /**
+   * workflow_def 决策卡创建（create_workflow/update_workflow 共用）：
+   * 提案人归因到平台助理「小周」，批准后的落库在 decision 模块 applyWorkflowDef。
+   */
+  private async createWorkflowDefProposal(input: {
+    mode: 'create' | 'update';
+    key: string;
+    name: string;
+    description: string;
+    definition: unknown;
+    currentVersion?: number;
+    defaultProjectId?: string;
+    userId?: string;
+  }) {
+    const { mode, key, name, description, definition } = input;
+    const doc = parseWorkflowDefinition(definition);
+    const steps = summarizeDefinition(doc);
+    const assistantMember = await this.prisma.member.findUnique({
+      where: { handle: SYSTEM_ASSISTANT_HANDLE },
+      select: { id: true },
+    });
+    const title =
+      mode === 'create'
+        ? `创建工作流「${name}」`
+        : `修订工作流「${name}」（v${input.currentVersion ?? '?'} → v${(input.currentVersion ?? 0) + 1}）`;
+    const proposal = await this.prisma.decisionProposal.create({
+      data: {
+        kind: 'workflow_def',
+        title,
+        detail: `步骤：${steps
+          .map((s) => `${s.id}(${s.type})`)
+          .join(
+            ' → ',
+          )}。批准后自动${mode === 'create' ? '落库' : '落库并升版'}，可在工作流页面运行。`,
+        payload: {
+          mode,
+          key,
+          name,
+          description,
+          definition: doc,
+          ...(mode === 'update' && input.currentVersion
+            ? { currentVersion: input.currentVersion }
+            : {}),
+        } as unknown as Prisma.InputJsonValue,
+        projectId: input.defaultProjectId ?? null,
+        proposerType: 'ai_agent',
+        proposerId: assistantMember?.id ?? null,
+        status: 'pending',
+      },
+    });
+    this.logger.log(`Assistant proposed workflow_def ${mode} ${key}: ${title}`);
+    return jsonSafe({
+      proposalId: proposal.id,
+      status: proposal.status,
+      mode,
+      key,
+      name,
+      steps,
+      note: '已创建 workflow_def 决策卡；人在决策收件箱批准后定义才落库生效。批准前不要向用户声称已创建',
+    });
   }
 
   /**
@@ -1881,6 +2024,138 @@ export class AssistantToolsService {
             payload,
             projectId: defaultProjectId ?? null,
             createdAt: proposal.createdAt,
+          });
+        },
+      }),
+
+      // ── 工作流（CAP-A-11：代写 → 人确认 → 落库）──
+
+      list_workflows: tool({
+        description: '列出 workflow 定义（key/名称/版本/步骤摘要）',
+        inputSchema: z.object({}),
+        execute: async () => {
+          const defs = await this.prisma.aIWorkflowDefinition.findMany({
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              key: true,
+              name: true,
+              description: true,
+              version: true,
+              definition: true,
+            },
+          });
+          return jsonSafe({
+            workflows: defs.map((d) => ({
+              id: d.id,
+              key: d.key,
+              name: d.name,
+              description: d.description,
+              version: d.version,
+              steps: summarizeDefinitionSafe(d.definition),
+            })),
+          });
+        },
+      }),
+
+      read_workflow: tool({
+        description:
+          '读 workflow 定义全文（definition 文法样例）。代写或修改 definition 前必读一份现有定义作参照',
+        inputSchema: z.object({
+          id: z.string().describe('Workflow ID 或 key'),
+        }),
+        execute: async ({ id }) => {
+          const def = await this.prisma.aIWorkflowDefinition.findFirst({
+            where: { OR: [{ id }, { key: id }] },
+          });
+          if (!def) return { error: `workflow ${id} 不存在` };
+          return jsonSafe({
+            id: def.id,
+            key: def.key,
+            name: def.name,
+            description: def.description,
+            version: def.version,
+            definition: def.definition,
+          });
+        },
+      }),
+
+      create_workflow: tool({
+        description:
+          '代写新 workflow 定义。流程：文法校验 → 建 workflow_def 决策卡 → 人批准后落库生效。key 全局唯一（已存在时改用 update_workflow）；definition 文法：{ version: 1, steps: [{ id, type: llm|http|human-confirm|condition, ... }] }——拿不准先 read_workflow 看样例。卡批准前定义不生效，不要向用户谎称已创建',
+        inputSchema: z.object({
+          key: z
+            .string()
+            .regex(/^[a-z][a-z0-9-]*$/)
+            .describe('工作流键（kebab-case，全局唯一）'),
+          name: z.string().describe('名称'),
+          description: z.string().describe('一句话说明做什么、给谁用'),
+          definition: z
+            .object({
+              version: z.literal(1),
+              steps: z.array(z.record(z.string(), z.unknown())),
+            })
+            .describe(
+              'definition 文法 v1；步骤 type 支持 llm（prompt 必填，支持插值 {input.x}/{steps.步骤id.value}）/http（url 必填）/human-confirm（message 必填，会暂停等人拍板）/condition（left/op/right，met=false 终止）',
+            ),
+        }),
+        execute: async ({ key, name, description, definition }) => {
+          const validated = validateWorkflowDefPayload(key, name, definition);
+          if ('error' in validated) return validated;
+          const exists = await this.prisma.aIWorkflowDefinition.findUnique({
+            where: { key },
+            select: { id: true },
+          });
+          if (exists) {
+            return {
+              error: `workflow key「${key}」已存在；要修改请改用 update_workflow`,
+            };
+          }
+          return this.createWorkflowDefProposal({
+            mode: 'create',
+            key,
+            name,
+            description,
+            definition,
+            defaultProjectId,
+            userId,
+          });
+        },
+      }),
+
+      update_workflow: tool({
+        description:
+          '修改既有 workflow 定义（人批准后版本 +1）。流程同 create_workflow；key 必须已存在，definition 传完整新版本（不是增量 patch）',
+        inputSchema: z.object({
+          key: z.string().describe('要修改的 workflow key'),
+          name: z.string().describe('名称'),
+          description: z.string().describe('一句话说明'),
+          definition: z
+            .object({
+              version: z.literal(1),
+              steps: z.array(z.record(z.string(), z.unknown())),
+            })
+            .describe('完整的新 definition（文法同 create_workflow）'),
+        }),
+        execute: async ({ key, name, description, definition }) => {
+          const validated = validateWorkflowDefPayload(key, name, definition);
+          if ('error' in validated) return validated;
+          const existing = await this.prisma.aIWorkflowDefinition.findUnique({
+            where: { key },
+            select: { id: true, version: true },
+          });
+          if (!existing) {
+            return { error: `workflow key「${key}」不存在，无法修改` };
+          }
+          return this.createWorkflowDefProposal({
+            mode: 'update',
+            key,
+            name,
+            description,
+            definition,
+            currentVersion: existing.version,
+            defaultProjectId,
+            userId,
           });
         },
       }),

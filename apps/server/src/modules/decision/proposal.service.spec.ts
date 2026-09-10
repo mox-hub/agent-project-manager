@@ -43,6 +43,11 @@ describe('ProposalService', () => {
     milestone: {
       update: vi.fn(),
     },
+    aIWorkflowDefinition: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
   };
 
   const tx = {
@@ -337,6 +342,152 @@ describe('ProposalService', () => {
 
       expect(proposal.title).toContain('2 个未分配任务');
       expect(proposal.payload.assignments).toHaveLength(2);
+    });
+  });
+
+  describe('workflow_def accept（CAP-A-11：AI 代写定义落库）', () => {
+    const validDefinition = {
+      version: 1,
+      steps: [
+        { id: 'draft', type: 'llm', prompt: '起草 {input.topic}' },
+        {
+          id: 'review',
+          type: 'human-confirm',
+          message: '请审核 {steps.draft.value}',
+        },
+      ],
+    };
+
+    const pendingCreate = {
+      id: 'pr-wf-1',
+      kind: 'workflow_def',
+      status: 'pending',
+      projectId: null,
+      issueId: null,
+      payload: {
+        mode: 'create',
+        key: 'standup-helper',
+        name: '站会助手',
+        description: '整理站会纪要',
+        definition: validDefinition,
+      },
+    };
+
+    it('create accept：文法合法且 key 未占用 → 落库新定义（ createdBy=批准人）', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        pendingCreate,
+      );
+      mockPrismaService.aIWorkflowDefinition.findUnique.mockResolvedValue(null);
+      mockPrismaService.aIWorkflowDefinition.create.mockResolvedValue({
+        id: 'wf-new',
+      });
+      mockPrismaService.decisionProposal.update.mockResolvedValue({
+        ...pendingCreate,
+        status: 'accepted',
+      });
+
+      await service.resolve('pr-wf-1', { action: 'accept' }, 'approver-1');
+
+      expect(
+        mockPrismaService.aIWorkflowDefinition.create,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            key: 'standup-helper',
+            name: '站会助手',
+            createdBy: 'approver-1',
+          }),
+        }),
+      );
+      // definition 中的步骤保持原样落库
+      const created = mockPrismaService.aIWorkflowDefinition.create.mock
+        .calls[0][0] as { data: { definition: unknown } };
+      expect(created.data.definition).toEqual(validDefinition);
+    });
+
+    it('create accept 但 key 已存在 → 400，不落库', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        pendingCreate,
+      );
+      mockPrismaService.aIWorkflowDefinition.findUnique.mockResolvedValue({
+        id: 'wf-exists',
+        version: 2,
+      });
+
+      await expect(
+        service.resolve('pr-wf-1', { action: 'accept' }, 'u-1'),
+      ).rejects.toThrow(/已存在/);
+      expect(
+        mockPrismaService.aIWorkflowDefinition.create,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('文法非法（步骤缺必填字段）→ 400 且不落库', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue({
+        ...pendingCreate,
+        payload: {
+          ...pendingCreate.payload,
+          definition: { version: 1, steps: [{ id: 'bad', type: 'llm' }] },
+        },
+      });
+
+      await expect(
+        service.resolve('pr-wf-1', { action: 'accept' }, 'u-1'),
+      ).rejects.toThrow(/文法非法/);
+      expect(
+        mockPrismaService.aIWorkflowDefinition.create,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('update accept：key 存在 → version+1 升版落库', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue({
+        ...pendingCreate,
+        payload: {
+          ...pendingCreate.payload,
+          mode: 'update',
+          key: 'standup-helper',
+        },
+      });
+      mockPrismaService.aIWorkflowDefinition.findUnique.mockResolvedValue({
+        id: 'wf-old',
+        version: 3,
+      });
+      mockPrismaService.aIWorkflowDefinition.update.mockResolvedValue({
+        id: 'wf-old',
+      });
+      mockPrismaService.decisionProposal.update.mockResolvedValue({
+        ...pendingCreate,
+        status: 'accepted',
+      });
+
+      await service.resolve('pr-wf-1', { action: 'accept' }, 'u-1');
+
+      expect(
+        mockPrismaService.aIWorkflowDefinition.update,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { key: 'standup-helper' },
+          data: expect.objectContaining({ version: 4 }),
+        }),
+      );
+    });
+
+    it('update accept 但 key 不存在 → 400', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue({
+        ...pendingCreate,
+        payload: {
+          ...pendingCreate.payload,
+          mode: 'update',
+        },
+      });
+      mockPrismaService.aIWorkflowDefinition.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.resolve('pr-wf-1', { action: 'accept' }, 'u-1'),
+      ).rejects.toThrow(/不存在/);
+      expect(
+        mockPrismaService.aIWorkflowDefinition.update,
+      ).not.toHaveBeenCalled();
     });
   });
 });

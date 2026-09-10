@@ -125,6 +125,17 @@ export function parseWorkflowDefinition(raw: unknown): WorkflowDefinitionDoc {
   return doc;
 }
 
+/** 步骤摘要（决策卡/列表/详情展示用，不含 prompt 全文） */
+export function summarizeDefinition(
+  doc: WorkflowDefinitionDoc,
+): Array<{ id: string; type: string; title?: string }> {
+  return doc.steps.map((s) => ({
+    id: s.id,
+    type: s.type,
+    ...(s.title ? { title: s.title } : {}),
+  }));
+}
+
 /** 模板插值：按 {input.x} / {steps.y.z} 路径从运行上下文取值，未命中留空串 */
 export function interpolateTemplate(
   template: WorkflowTemplate,

@@ -589,7 +589,14 @@
       "complete": "确认完成",
       "markCancelled": "标记取消",
       "approveBudget": "批准追加",
-      "passGate": "通过闸门"
+      "passGate": "通过闸门",
+      "applyWorkflow": "落库生效"
+    },
+    "workflow": {
+      "impactMode": "变更",
+      "modeCreate": "创建新工作流",
+      "modeUpdate": "修订既有工作流",
+      "impactVersion": "版本"
     },
     "clarify": {
       "aiGuess": "AI 当前最佳猜测",

@@ -11,6 +11,10 @@ import {
   PlaybookGatePayload,
 } from '@/modules/playbook/dto/playbook.dto';
 import { getStage, nextStageKey } from '@/modules/playbook/playbook.registry';
+import {
+  parseWorkflowDefinition,
+  WorkflowDefinitionError,
+} from '@/modules/workflow/workflow.definition';
 import { CreateProposalDto, ResolveProposalDto } from './dto/proposal.dto';
 
 /**
@@ -171,6 +175,8 @@ export class ProposalService {
         return this.applySpend(proposal);
       case 'gate':
         return this.applyGate(proposal, dto, userId);
+      case 'workflow_def':
+        return this.applyWorkflowDef(proposal, userId);
       case 'clarify':
         // 最小版：答案已随 resolution 落痕，AI 侧轮询消费；无领域副作用
         if (!dto.answer) {
@@ -182,6 +188,75 @@ export class ProposalService {
           `Unknown proposal kind: ${proposal.kind}`,
         );
     }
+  }
+
+  /**
+   * workflow_def：AI 代写的 workflow 定义落库（CAP-A-11）。
+   * create=按 key 新建（version 1，key 冲突即抛）；update=按 key 定位 version+1 升版。
+   * 文法在工具侧已前置校验，applier 再校验一次——落库行必须可编译。
+   */
+  private async applyWorkflowDef(
+    proposal: Proposal,
+    userId: string,
+  ): Promise<void> {
+    const payload = (proposal.payload ?? {}) as unknown as {
+      mode?: 'create' | 'update';
+      key?: string;
+      name?: string;
+      description?: string;
+      definition?: unknown;
+    };
+    if (
+      (payload.mode !== 'create' && payload.mode !== 'update') ||
+      !payload.key ||
+      !payload.name ||
+      !payload.definition
+    ) {
+      throw new BadRequestException(
+        'workflow_def proposal requires { mode, key, name, definition }',
+      );
+    }
+    try {
+      parseWorkflowDefinition(payload.definition);
+    } catch (err) {
+      throw new BadRequestException(
+        `definition 文法非法：${err instanceof WorkflowDefinitionError ? err.message : String(err)}`,
+      );
+    }
+    const existing = await this.prisma.aIWorkflowDefinition.findUnique({
+      where: { key: payload.key },
+    });
+    if (payload.mode === 'create') {
+      if (existing) {
+        throw new BadRequestException(
+          `workflow key ${payload.key} 已存在（v${existing.version}），请改用 update 模式`,
+        );
+      }
+      await this.prisma.aIWorkflowDefinition.create({
+        data: {
+          key: payload.key,
+          name: payload.name,
+          description: payload.description ?? null,
+          definition: payload.definition as Prisma.InputJsonValue,
+          createdBy: userId,
+        },
+      });
+      return;
+    }
+    if (!existing) {
+      throw new BadRequestException(
+        `workflow key ${payload.key} 不存在，无法 update`,
+      );
+    }
+    await this.prisma.aIWorkflowDefinition.update({
+      where: { key: payload.key },
+      data: {
+        name: payload.name,
+        description: payload.description ?? existing.description,
+        definition: payload.definition as Prisma.InputJsonValue,
+        version: existing.version + 1,
+      },
+    });
   }
 
   /**

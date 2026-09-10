@@ -589,7 +589,14 @@
       "complete": "Confirm completion",
       "markCancelled": "Mark cancelled",
       "approveBudget": "Approve budget",
-      "passGate": "Pass gate"
+      "passGate": "Pass gate",
+      "applyWorkflow": "Save & activate"
+    },
+    "workflow": {
+      "impactMode": "Change",
+      "modeCreate": "Create new workflow",
+      "modeUpdate": "Update existing workflow",
+      "impactVersion": "Version"
     },
     "clarify": {
       "aiGuess": "AI best guess",

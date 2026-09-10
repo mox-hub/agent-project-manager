@@ -334,4 +334,157 @@ describe('AssistantToolsService', () => {
     expect(typeof result.tasks[0].dueDate).toBe('string');
     expect(JSON.parse(JSON.stringify(result))).toEqual(result);
   });
+
+  it('工作流四件套登记目录且 list_workflows 返回步骤摘要', async () => {
+    const names = ASSISTANT_TOOL_CATALOG.map((t) => t.name);
+    expect(names).toContain('list_workflows');
+    expect(names).toContain('read_workflow');
+    expect(names).toContain('create_workflow');
+    expect(names).toContain('update_workflow');
+
+    mockPrisma.aIWorkflowDefinition = {
+      findUnique: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([
+        {
+          id: 'wf-1',
+          key: 'project-brief-demo',
+          name: '演示流',
+          description: null,
+          version: 1,
+          definition: {
+            version: 1,
+            steps: [
+              { id: 'draft', type: 'llm', prompt: 'x' },
+              { id: 'review', type: 'human-confirm', message: 'y' },
+            ],
+          },
+        },
+      ]),
+      create: vi.fn(),
+      update: vi.fn(),
+    };
+
+    const tools = service.buildTools({ projectId: 'p1', userId: 'u1' });
+    const listWorkflows = tools.list_workflows as unknown as {
+      execute: () => Promise<{
+        workflows: Array<{ key: string; steps: unknown[] }>;
+      }>;
+    };
+    const res = (await listWorkflows.execute()) as {
+      workflows: Array<{ key: string; steps: Array<{ id: string }> }>;
+    };
+    expect(res.workflows[0].key).toBe('project-brief-demo');
+    expect(res.workflows[0].steps.map((s) => s.id)).toEqual([
+      'draft',
+      'review',
+    ]);
+  });
+
+  it('create_workflow：文法非法当场可读报错；key 重复拒绝；合法则建 workflow_def 决策卡', async () => {
+    mockPrisma.aIWorkflowDefinition = {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    };
+    const tools = service.buildTools({
+      projectId: 'p1',
+      userId: 'u1',
+    }) as Record<string, { execute: (args: unknown) => Promise<unknown> }>;
+    const validDef = {
+      version: 1,
+      steps: [{ id: 'draft', type: 'llm', prompt: '起草 {input.topic}' }],
+    };
+
+    // 文法非法（llm 缺 prompt）→ 可读报错且不建卡
+    mockPrisma.decisionProposal.create.mockClear();
+    const bad = (await tools.create_workflow.execute({
+      key: 'w1',
+      name: 'X',
+      description: 'd',
+      definition: { version: 1, steps: [{ id: 'a', type: 'llm' }] },
+    })) as { error?: string };
+    expect(bad.error).toMatch(/缺 prompt/);
+    expect(mockPrisma.decisionProposal.create).not.toHaveBeenCalled();
+
+    // key 重复 → 拒绝并提示走 update
+    mockPrisma.aIWorkflowDefinition.findUnique.mockResolvedValue({
+      id: 'wf-x',
+    });
+    const dup = (await tools.create_workflow.execute({
+      key: 'w1',
+      name: 'X',
+      description: 'd',
+      definition: validDef,
+    })) as { error?: string };
+    expect(dup.error).toMatch(/已存在/);
+    expect(mockPrisma.decisionProposal.create).not.toHaveBeenCalled();
+
+    // 合法 → 建 workflow_def 决策卡
+    mockPrisma.aIWorkflowDefinition.findUnique.mockResolvedValue(null);
+    mockPrisma.decisionProposal.create.mockResolvedValue({
+      id: 'pr-wf',
+      status: 'pending',
+    });
+    const ok = (await tools.create_workflow.execute({
+      key: 'w1',
+      name: '站会助手',
+      description: 'd',
+      definition: validDef,
+    })) as { proposalId?: string; note?: string };
+    expect(mockPrisma.decisionProposal.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          kind: 'workflow_def',
+          proposerType: 'ai_agent',
+        }),
+      }),
+    );
+    expect(ok.proposalId).toBe('pr-wf');
+    expect(ok.note).toMatch(/批准/);
+  });
+
+  it('update_workflow：key 不存在拒绝；存在则建修订卡（payload 带 mode=update）', async () => {
+    mockPrisma.aIWorkflowDefinition = {
+      findUnique: vi.fn().mockResolvedValue(null),
+      create: vi.fn(),
+      update: vi.fn(),
+    };
+    const tools = service.buildTools({
+      projectId: 'p1',
+      userId: 'u1',
+    }) as Record<string, { execute: (args: unknown) => Promise<unknown> }>;
+    const validDef = {
+      version: 1,
+      steps: [{ id: 'draft', type: 'llm', prompt: '起草' }],
+    };
+
+    const missing = (await tools.update_workflow.execute({
+      key: 'nope',
+      name: 'X',
+      description: 'd',
+      definition: validDef,
+    })) as { error?: string };
+    expect(missing.error).toMatch(/不存在/);
+
+    mockPrisma.aIWorkflowDefinition.findUnique.mockResolvedValue({
+      id: 'wf-old',
+      version: 3,
+    });
+    mockPrisma.decisionProposal.create.mockResolvedValue({
+      id: 'pr-wf2',
+      status: 'pending',
+    });
+    const ok = (await tools.update_workflow.execute({
+      key: 'w1',
+      name: 'X',
+      description: 'd',
+      definition: validDef,
+    })) as { proposalId?: string };
+    expect(ok.proposalId).toBe('pr-wf2');
+    const created = mockPrisma.decisionProposal.create.mock.calls[0][0] as {
+      data: { payload: { mode: string; currentVersion?: number } };
+    };
+    expect(created.data.payload.mode).toBe('update');
+    expect(created.data.payload.currentVersion).toBe(3);
+  });
 });
