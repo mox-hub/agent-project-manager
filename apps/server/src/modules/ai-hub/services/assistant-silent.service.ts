@@ -85,6 +85,30 @@ ${JSON.stringify(context.task ?? {})}
 只输出 JSON：{"answer": "...", "actions": [{"label": "按钮文案", "action": "task.update_status", "params": {"status": "done"}}]}`;
     },
   },
+  'card-explain': {
+    description:
+      '局部侵入问答：用户 Ctrl/Cmd+左键实体卡片就地解释（无显式问题时解释卡片上最值得知道的事），服务端加载实体事实做精确 grounding',
+    prepareContext: async (context, { prisma }) => ({
+      ...context,
+      entityFacts: await loadCardEntityFacts(prisma, context.entity),
+    }),
+    buildInstructions: (context) => {
+      const question = String(context.question ?? '').trim();
+      return `你是项目管理系统的主 AI 助理「小周」。用户对界面上的一张卡片按下了「就地解释」（Ctrl/Cmd+左键），默认读者是不熟悉工程与项目管理的新手。请只基于下面给定的实体事实，用大白话解释这张卡片。
+实体事实（权威，来自数据库）：
+${JSON.stringify(context.entityFacts ?? {})}
+${question ? `用户带着具体问题，优先回答它：${question}` : '用户没有具体问题——解释这张卡片上「最值得知道的事」。'}
+
+输出要求：
+- summary：2~3 句大白话说清「这是什么、现在什么状态」
+- details：2~4 条逐项解释（label 用短语，text 用大白话），覆盖此卡片最关键的面（状态/负责人/验收/风险等）
+- nextStep：一句话建议用户下一步该看什么或做什么；实在没有就给空字符串
+绝不编造事实里没有的内容；事实不足以回答的部分明确说「这一点我暂时没有数据」。
+契约绑定卡要顺带用大白话解释绑定模式（managed=系统托管生成、synced=观察文件手改、detached=已解绑不管）与冲突态。
+验收卡要顺带解释审计风险级别含义（red=有强阻断项不能交付、yellow=有建议补全项、green=无缺失），并点出验收标准里最关键的一条。
+只输出 JSON：{"title": "卡片标题（任务名/决策名/成员名/文档名，契约绑定行用文件类型名）", "summary": "...", "details": [{"label": "...", "text": "..."}], "nextStep": "..."}`;
+    },
+  },
   'memory-digest': {
     description:
       '记忆消化器：会话静默后离线沉淀纪要/偏好/结论原子（写入 Store B，必带溯源）',
@@ -302,6 +326,206 @@ async function loadTaskAnchorFacts(
     dependencyCount: dependencies,
     recentActivities: activities,
   };
+}
+
+/**
+ * 卡片就地解释事实加载：按实体类型取权威字段（task 复用任务锚点事实；
+ * decision/member 取解释所需核心字段）。实体不存在抛 400——卡片是用户
+ * 显式点的，不静默吞掉。
+ */
+async function loadCardEntityFacts(
+  prisma: PrismaService,
+  entity: unknown,
+): Promise<Record<string, unknown>> {
+  const value = (
+    typeof entity === 'object' && entity !== null ? entity : {}
+  ) as { kind?: unknown; id?: unknown };
+  const id = typeof value.id === 'string' ? value.id : '';
+  const kind = typeof value.kind === 'string' ? value.kind : '';
+  if (!id) {
+    throw new BadRequestException('卡片缺少实体 id');
+  }
+
+  if (kind === 'task') {
+    return loadTaskAnchorFacts(prisma, { kind: 'task', id });
+  }
+
+  if (kind === 'decision') {
+    const proposal = await prisma.decisionProposal.findUnique({
+      where: { id },
+    });
+    if (!proposal) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    const proposer = proposal.proposerId
+      ? await prisma.member.findUnique({
+          where: { id: proposal.proposerId },
+          select: { displayName: true, type: true },
+        })
+      : null;
+    return {
+      entityType: 'decision',
+      kind: proposal.kind,
+      title: proposal.title,
+      detail: proposal.detail,
+      status: proposal.status,
+      payload: proposal.payload,
+      resolution: proposal.resolution,
+      proposer: proposer?.displayName ?? null,
+      createdAt: proposal.createdAt,
+    };
+  }
+
+  if (kind === 'member') {
+    const member = await prisma.member.findUnique({
+      where: { id },
+      select: {
+        displayName: true,
+        handle: true,
+        type: true,
+        title: true,
+        description: true,
+        status: true,
+        trustScore: true,
+        trustLevel: true,
+      },
+    });
+    if (!member) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    return { entityType: 'member', ...member };
+  }
+
+  if (kind === 'acceptance') {
+    const acceptance = await prisma.acceptance.findUnique({
+      where: { id },
+      include: {
+        issue: {
+          select: { title: true, shortId: true, status: true, type: true },
+        },
+        criteria: {
+          select: {
+            criteriaType: true,
+            content: true,
+            weight: true,
+            severity: true,
+            status: true,
+          },
+        },
+        auditReport: {
+          select: {
+            riskLevel: true,
+            blockedItems: true,
+            suggestedItems: true,
+            passedItems: true,
+            summary: true,
+            auditDate: true,
+          },
+        },
+      },
+    });
+    if (!acceptance) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    return {
+      entityType: 'acceptance',
+      title: acceptance.title,
+      status: acceptance.status,
+      type: acceptance.type,
+      completionType: acceptance.completionType,
+      issue: acceptance.issue,
+      criteria: acceptance.criteria,
+      auditReport: acceptance.auditReport,
+    };
+  }
+
+  if (kind === 'project') {
+    const project = await prisma.project.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        description: true,
+        projectCode: true,
+        type: true,
+        status: true,
+        workflowStatus: true,
+        healthStatus: true,
+        riskLevel: true,
+        targetDate: true,
+        owner: { select: { displayName: true, username: true } },
+      },
+    });
+    if (!project) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    const { owner, ...projectFields } = project;
+    return {
+      entityType: 'project',
+      ...projectFields,
+      ownerName: owner?.displayName ?? owner?.username ?? null,
+    };
+  }
+
+  if (kind === 'team') {
+    const team = await prisma.team.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        description: true,
+        status: true,
+        teamPrompt: true,
+      },
+    });
+    if (!team) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    return { entityType: 'team', ...team };
+  }
+
+  if (kind === 'contract-binding') {
+    const binding = await prisma.contractFileBinding.findUnique({
+      where: { id },
+      include: { project: { select: { id: true, name: true } } },
+    });
+    if (!binding) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    return {
+      entityType: 'contract-binding',
+      fileType: binding.fileType,
+      filePath: binding.filePath,
+      syncMode: binding.syncMode,
+      conflictState: binding.conflictState,
+      truthOwner: binding.truthOwner,
+      project: binding.project
+        ? { id: binding.project.id, name: binding.project.name }
+        : null,
+      updatedAt: binding.updatedAt,
+    };
+  }
+
+  if (kind === 'document') {
+    const document = await prisma.document.findUnique({
+      where: { id },
+      select: {
+        title: true,
+        status: true,
+        provenance: true,
+        publishedVersionId: true,
+        publishedAt: true,
+        updatedAt: true,
+        project: { select: { id: true, name: true } },
+      },
+    });
+    if (!document) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    return { entityType: 'document', ...document };
+  }
+
+  throw new BadRequestException(
+    `就地解释暂不支持该卡片类型：${kind || '未知'}`,
+  );
 }
 
 export interface SilentRunResult {

@@ -163,6 +163,7 @@ export function ContractBindingsPanel({
                 className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
                 data-ai-component="contract.bindings-panel.row"
                 data-ai-role="item"
+                data-ai-entity={`contract-binding:${binding.id}`}
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-sm font-medium">

@@ -131,6 +131,8 @@ export interface BoardCardModel<T extends { id: string }> {
   row3?: (item: T) => ReactNode;
   /** 单卡片附加样式（如 severity 左边框） */
   className?: (item: T) => string;
+  /** CAP-C-07 局部侵入问答实体指针（如 `project:${id}`；返回 undefined 则不接） */
+  dataEntity?: (item: T) => string | undefined;
 }
 
 export interface BoardViewProps<T extends { id: string }> {
@@ -764,6 +766,7 @@ function DefaultBoardCard<T extends { id: string }>({
       )}
       data-board-card-id={item.id}
       data-board-column={column.id}
+      data-ai-entity={card.dataEntity?.(item)}
     >
       {card.row1 ? (
         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">

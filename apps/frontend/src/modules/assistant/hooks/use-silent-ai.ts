@@ -106,6 +106,77 @@ export function useSilentProjectScore() {
   });
 }
 
+/** 卡片就地解释（CAP-C-07 AISlot）：Ctrl/Cmd+左键实体卡片触发 */
+export function useCardExplain() {
+  return useMutation({
+    mutationFn: (input: {
+      kind: string;
+      id: string;
+      question?: string;
+      projectId?: string;
+    }) =>
+      assistantApi.silent('card-explain', {
+        projectId: input.projectId,
+        context: {
+          entity: { kind: input.kind, id: input.id },
+          question: input.question,
+        },
+      }),
+    retry: false,
+  });
+}
+
+export interface CardExplainDetail {
+  label: string;
+  text: string;
+}
+
+export interface CardExplainInsight {
+  title?: string;
+  summary?: string;
+  details: CardExplainDetail[];
+  nextStep?: string;
+}
+
+/** 解析 card-explain 响应（容错：字段缺失/类型不符时忽略） */
+export function parseCardExplain(
+  data: Record<string, unknown> | undefined,
+): CardExplainInsight {
+  const rawDetails = data?.details;
+  const details = Array.isArray(rawDetails)
+    ? rawDetails
+        .filter(
+          (it): it is Record<string, unknown> =>
+            !!it && typeof it === 'object' && !Array.isArray(it),
+        )
+        .filter(
+          (it) =>
+            typeof it.label === 'string' &&
+            it.label.length > 0 &&
+            typeof it.text === 'string' &&
+            it.text.length > 0,
+        )
+        .map((it) => ({ label: it.label as string, text: it.text as string }))
+        .slice(0, 6)
+    : [];
+  return {
+    title:
+      typeof data?.title === 'string' && data.title.length > 0
+        ? data.title
+        : undefined,
+    summary:
+      typeof data?.summary === 'string' && data.summary.length > 0
+        ? data.summary
+        : undefined,
+    details,
+    nextStep:
+      typeof data?.nextStep === 'string' && data.nextStep.length > 0
+        ? data.nextStep
+        : undefined,
+  };
+}
+
+
 /** 解析 project-score 响应（容错：字段缺失/类型不符时忽略） */
 export function parseProjectScore(
   data: Record<string, unknown> | undefined,

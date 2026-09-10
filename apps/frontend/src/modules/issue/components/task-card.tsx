@@ -45,6 +45,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
     <div
       draggable={draggable}
       onClick={onClick}
+      data-ai-entity={`task:${task.id}`}
       className={cn(
         'relative p-3 rounded-md border border-border bg-background cursor-default transition-all duration-150',
         onClick && 'cursor-pointer hover:border-muted-foreground hover:bg-muted/50',

@@ -287,6 +287,7 @@ export function DecisionCardShell({
       onKeyDown={handleKeyDown}
       data-decision-id={decision.id}
       data-decision-urgency={decision.urgency}
+      data-ai-entity={`decision:${decision.id}`}
     >
       {/* blocking 顶部警示条 */}
       {isBlocking && (

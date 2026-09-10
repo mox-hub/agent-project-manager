@@ -102,6 +102,7 @@ describe('AssistantSilentService.run', () => {
       'create-suggestions',
       'project-score',
       'anchor-qa',
+      'card-explain',
       'memory-digest',
       'grill-next',
       'interview-prefill',
@@ -465,6 +466,385 @@ describe('AssistantSilentService.run · anchor-qa', () => {
         'u1',
       ),
     ).rejects.toThrow(/缺少问题/);
+    expect(chat).not.toHaveBeenCalled();
+  });
+});
+
+describe('AssistantSilentService.run · card-explain', () => {
+  const taskRow = {
+    id: 't1',
+    shortId: 'T-1',
+    title: '登录接口 500',
+    description: '登录接口偶发 500',
+    status: 'in_progress',
+    priority: 'high',
+    type: 'bug',
+    customFields: null,
+    dueDate: null,
+    project: { id: 'p1', name: 'Apollo' },
+    assignee: null,
+  };
+
+  const makeCardService = (
+    prismaOverrides: Record<string, unknown> = {},
+    chatContent = '{"title":"登录接口 500","summary":"这是一个缺陷任务，正在修复。","details":[{"label":"状态","text":"进行中"}],"nextStep":"等修复后验收"}',
+  ) => {
+    const prisma = {
+      aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+      issue: {
+        findUnique: vi.fn().mockResolvedValue(taskRow),
+      },
+      issueAssignee: { findMany: vi.fn().mockResolvedValue([]) },
+      member: {
+        findMany: vi.fn().mockResolvedValue([]),
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
+      acceptance: { findFirst: vi.fn().mockResolvedValue(null) },
+      issueDependency: { count: vi.fn().mockResolvedValue(0) },
+      issueActivity: { findMany: vi.fn().mockResolvedValue([]) },
+      decisionProposal: { findUnique: vi.fn().mockResolvedValue(null) },
+      ...(prismaOverrides as Record<string, Mock> | undefined),
+    };
+    const chat = vi.fn().mockResolvedValue({
+      content: chatContent,
+      model: 'test-model',
+      tokens: { prompt: 10, completion: 5, total: 15 },
+    });
+    const service = new AssistantSilentService(
+      prisma as never,
+      {
+        listAdapters: () => [{ provider: 'glm', model: 'm' }],
+        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+      } as never,
+      { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+    );
+    return { service, chat, prisma };
+  };
+
+  it('任务卡（无显式问题）：先侦查再开口，instructions 含任务事实与默认解释口径', async () => {
+    const { service, chat, prisma } = makeCardService();
+    const result = await service.run(
+      'card-explain',
+      { entity: { kind: 'task', id: 't1' } },
+      'p1',
+      'u1',
+    );
+
+    expect(result.scenario).toBe('card-explain');
+    expect(result.data).toEqual({
+      title: '登录接口 500',
+      summary: '这是一个缺陷任务，正在修复。',
+      details: [{ label: '状态', text: '进行中' }],
+      nextStep: '等修复后验收',
+    });
+    expect(prisma.issue.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 't1' } }),
+    );
+    const [, options] = chat.mock.calls[0];
+    const instructions = (options as { instructions: string }).instructions;
+    expect(instructions).toContain('登录接口 500');
+    expect(instructions).toContain('最值得知道的事');
+    expect(instructions).not.toContain('优先回答它');
+  });
+
+  it('带具体问题时 instructions 含问题文本', async () => {
+    const { service, chat } = makeCardService();
+    await service.run(
+      'card-explain',
+      { entity: { kind: 'task', id: 't1' }, question: '为什么会 500？' },
+      'p1',
+      'u1',
+    );
+    const [, options] = chat.mock.calls[0];
+    expect((options as { instructions: string }).instructions).toContain(
+      '为什么会 500？',
+    );
+  });
+
+  it('决策卡：加载提案事实与提案人名', async () => {
+    const { service, chat, prisma } = makeCardService({
+      decisionProposal: {
+        findUnique: vi.fn().mockResolvedValue({
+          kind: 'plan',
+          title: '拆解为 3 个子任务',
+          detail: '按模块拆解',
+          status: 'pending',
+          payload: { issues: [] },
+          resolution: null,
+          proposerId: 'm1',
+          createdAt: new Date('2026-09-09T00:00:00Z'),
+        }),
+      },
+      member: {
+        findMany: vi.fn().mockResolvedValue([]),
+        findUnique: vi
+          .fn()
+          .mockResolvedValue({ displayName: '小码', type: 'ai_agent' }),
+      },
+    });
+    await service.run(
+      'card-explain',
+      { entity: { kind: 'decision', id: 'dp1' } },
+      'p1',
+      'u1',
+    );
+
+    expect(prisma.decisionProposal.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'dp1' } }),
+    );
+    expect(prisma.member.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'm1' } }),
+    );
+    const [, options] = chat.mock.calls[0];
+    const instructions = (options as { instructions: string }).instructions;
+    expect(instructions).toContain('拆解为 3 个子任务');
+    expect(instructions).toContain('小码');
+  });
+
+  it('成员卡：加载成员事实（含信任分）', async () => {
+    const { service, chat, prisma } = makeCardService({
+      member: {
+        findMany: vi.fn().mockResolvedValue([]),
+        findUnique: vi.fn().mockResolvedValue({
+          displayName: '小周',
+          handle: 'xiaozhou',
+          type: 'ai_agent',
+          title: '系统助理',
+          description: null,
+          status: 'active',
+          trustScore: 80,
+          trustLevel: 2,
+        }),
+      },
+    });
+    await service.run(
+      'card-explain',
+      { entity: { kind: 'member', id: 'm1' } },
+      null,
+      'u1',
+    );
+
+    expect(prisma.member.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'm1' } }),
+    );
+    const [, options] = chat.mock.calls[0];
+    const instructions = (options as { instructions: string }).instructions;
+    expect(instructions).toContain('小周');
+    expect(instructions).toContain('xiaozhou');
+  });
+
+  it('契约绑定行：加载绑定事实（含项目名与冲突态），prompt 附绑定模式解释口径', async () => {
+    const { service, chat, prisma } = makeCardService({
+      contractFileBinding: {
+        findUnique: vi.fn().mockResolvedValue({
+          fileType: 'agents',
+          filePath: 'AGENTS.md',
+          syncMode: 'synced',
+          conflictState: 'conflicted',
+          truthOwner: 'file_git',
+          updatedAt: new Date('2026-09-09T00:00:00Z'),
+          project: { id: 'p1', name: 'Apollo' },
+        }),
+      },
+    });
+    await service.run(
+      'card-explain',
+      { entity: { kind: 'contract-binding', id: 'cfb1' } },
+      'p1',
+      'u1',
+    );
+
+    expect(prisma.contractFileBinding.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'cfb1' } }),
+    );
+    const [, options] = chat.mock.calls[0];
+    const instructions = (options as { instructions: string }).instructions;
+    expect(instructions).toContain('AGENTS.md');
+    expect(instructions).toContain('conflicted');
+    expect(instructions).toContain('managed=系统托管生成');
+  });
+
+  it('文档卡：加载文档事实（状态/发布/派生溯源/项目名）', async () => {
+    const { service, chat, prisma } = makeCardService({
+      document: {
+        findUnique: vi.fn().mockResolvedValue({
+          title: '需求澄清纪要',
+          status: 'published',
+          provenance: 'authored',
+          publishedVersionId: 'v9',
+          publishedAt: new Date('2026-09-09T00:00:00Z'),
+          updatedAt: new Date('2026-09-09T00:00:00Z'),
+          project: { id: 'p1', name: 'Apollo' },
+        }),
+      },
+    });
+    await service.run(
+      'card-explain',
+      { entity: { kind: 'document', id: 'doc1' } },
+      'p1',
+      'u1',
+    );
+
+    expect(prisma.document.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'doc1' } }),
+    );
+    const [, options] = chat.mock.calls[0];
+    const instructions = (options as { instructions: string }).instructions;
+    expect(instructions).toContain('需求澄清纪要');
+    expect(instructions).toContain('published');
+  });
+
+  it('验收卡：加载验收事实（标准明细 + 审计报告），prompt 附审计口径', async () => {
+    const { service, chat, prisma } = makeCardService({
+      acceptance: {
+        findUnique: vi.fn().mockResolvedValue({
+          title: null,
+          status: 'pending',
+          type: 'mixed',
+          completionType: 'artifact',
+          issue: {
+            title: '登录接口 500',
+            shortId: 'T-1',
+            status: 'in_review',
+            type: 'bug',
+          },
+          criteria: [
+            {
+              criteriaType: 'functional',
+              content: '偶发请求返回 200',
+              weight: 5,
+              severity: 'critical',
+              status: 'passed',
+            },
+            {
+              criteriaType: 'technical',
+              content: '压测脚本入库',
+              weight: 3,
+              severity: 'high',
+              status: 'pending',
+            },
+          ],
+          auditReport: {
+            riskLevel: 'yellow',
+            blockedItems: [],
+            suggestedItems: [
+              { type: 'log', content: '缺少日志验收标准', severity: 'medium' },
+            ],
+            passedItems: [{ content: '偶发请求返回 200' }],
+            summary: '建议补全日志标准',
+            auditDate: new Date('2026-09-09T00:00:00Z'),
+          },
+        }),
+      },
+    });
+    await service.run(
+      'card-explain',
+      { entity: { kind: 'acceptance', id: 'ac1' } },
+      'p1',
+      'u1',
+    );
+
+    expect(prisma.acceptance.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'ac1' } }),
+    );
+    const [, options] = chat.mock.calls[0];
+    const instructions = (options as { instructions: string }).instructions;
+    expect(instructions).toContain('登录接口 500');
+    expect(instructions).toContain('压测脚本入库');
+    expect(instructions).toContain('yellow');
+    expect(instructions).toContain('red=有强阻断项');
+  });
+
+  it('项目卡与团队卡：加载项目健康面与团队规则事实', async () => {
+    const { service, chat, prisma } = makeCardService({
+      project: {
+        findUnique: vi.fn().mockResolvedValue({
+          name: 'Apollo 重构',
+          description: '核心模块重构',
+          projectCode: 'APOLLO',
+          type: 'team',
+          status: 'active',
+          workflowStatus: 'in_progress',
+          healthStatus: 'at_risk',
+          riskLevel: 'high',
+          targetDate: new Date('2026-10-01T00:00:00Z'),
+          owner: { displayName: '老王', username: 'laowang' },
+        }),
+      },
+      team: {
+        findUnique: vi.fn().mockResolvedValue({
+          name: '后端突击队',
+          description: null,
+          status: 'active',
+          teamPrompt: '提交前必须跑门禁',
+        }),
+      },
+    });
+
+    await service.run(
+      'card-explain',
+      { entity: { kind: 'project', id: 'p1' } },
+      'p1',
+      'u1',
+    );
+    const [, projectOptions] = chat.mock.calls[0];
+    const projectInstructions = (projectOptions as { instructions: string })
+      .instructions;
+    expect(projectInstructions).toContain('Apollo 重构');
+    expect(projectInstructions).toContain('at_risk');
+    expect(projectInstructions).toContain('老王');
+
+    await service.run(
+      'card-explain',
+      { entity: { kind: 'team', id: 'team1' } },
+      null,
+      'u1',
+    );
+    const [, teamOptions] = chat.mock.calls[1];
+    const teamInstructions = (teamOptions as { instructions: string })
+      .instructions;
+    expect(teamInstructions).toContain('后端突击队');
+    expect(teamInstructions).toContain('提交前必须跑门禁');
+    expect(prisma.project.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'p1' } }),
+    );
+  });
+
+  it('缺 id / 不支持的类型 / 实体不存在 → 400（不触 LLM）', async () => {
+    const { service, chat } = makeCardService();
+    await expect(
+      service.run('card-explain', { entity: { kind: 'task' } }, 'p1', 'u1'),
+    ).rejects.toThrow(/缺少实体 id/);
+    await expect(
+      service.run(
+        'card-explain',
+        { entity: { kind: 'milestone', id: 'ms1' } },
+        'p1',
+        'u1',
+      ),
+    ).rejects.toThrow(/暂不支持该卡片类型/);
+    const missing = makeCardService({
+      decisionProposal: { findUnique: vi.fn().mockResolvedValue(null) },
+    });
+    await expect(
+      missing.service.run(
+        'card-explain',
+        { entity: { kind: 'decision', id: 'nope' } },
+        'p1',
+        'u1',
+      ),
+    ).rejects.toThrow(/卡片实体不存在/);
+    const missingAcceptance = makeCardService({
+      acceptance: { findUnique: vi.fn().mockResolvedValue(null) },
+    });
+    await expect(
+      missingAcceptance.service.run(
+        'card-explain',
+        { entity: { kind: 'acceptance', id: 'nope' } },
+        'p1',
+        'u1',
+      ),
+    ).rejects.toThrow(/卡片实体不存在/);
     expect(chat).not.toHaveBeenCalled();
   });
 });

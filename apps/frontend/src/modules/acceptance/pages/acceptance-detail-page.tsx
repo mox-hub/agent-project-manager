@@ -530,7 +530,11 @@ export function AcceptanceDetailPage() {
               </TabsList>
 
               {/* 验收标准 */}
-              <TabsContent value="criteria" className="mt-4 space-y-5">
+              <TabsContent
+                value="criteria"
+                className="mt-4 space-y-5"
+                data-ai-entity={`acceptance:${id}`}
+              >
                 {renderCriterionGroup(
                   t('acceptanceDetail.criteria.functional'),
                   functionalCriteria,
@@ -582,7 +586,11 @@ export function AcceptanceDetailPage() {
               </TabsContent>
 
               {/* 审计报告 */}
-              <TabsContent value="audit" className="mt-4 space-y-4">
+              <TabsContent
+                value="audit"
+                className="mt-4 space-y-4"
+                data-ai-entity={`acceptance:${id}`}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-semibold">{t('acceptanceDetail.audit.title')}</h3>
