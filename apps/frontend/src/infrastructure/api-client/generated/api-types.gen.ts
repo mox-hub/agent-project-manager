@@ -8935,7 +8935,7 @@ export interface components {
              * @description 提案类型
              * @enum {string}
              */
-            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate";
+            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def";
             /** @description 决策陈述（一句话问句） */
             title: string;
             /** @description 提案数据（结构随 kind 而定，见 docs/roadmap/decision-cards-roadmap.md） */
@@ -8964,7 +8964,7 @@ export interface components {
              * @description 提案类型
              * @enum {string}
              */
-            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate";
+            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def";
             projectId?: string | null;
             issueId?: string | null;
             /** @description 决策陈述 */

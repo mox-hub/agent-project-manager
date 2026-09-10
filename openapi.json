@@ -60561,7 +60561,8 @@
               "resolution",
               "spend",
               "clarify",
-              "gate"
+              "gate",
+              "workflow_def"
             ]
           },
           "title": {
@@ -60624,7 +60625,8 @@
               "resolution",
               "spend",
               "clarify",
-              "gate"
+              "gate",
+              "workflow_def"
             ]
           },
           "projectId": {
