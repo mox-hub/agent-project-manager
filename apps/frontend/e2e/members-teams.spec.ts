@@ -2,9 +2,8 @@
  * 成员 / 团队 / Git 仓库模块 E2E：
  * 成员列表筛选搜索与详情页、团队创建/成员/绑定项目/邀请、仓库列表与工具状态。
  */
-import { test as base, expect, type Page } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 import { makeApi, uniq, E2E_USER, type ApmApi } from './helpers/api'
-import { confirmDialog } from './helpers/ui'
 
 const test = base.extend<{ api: ApmApi }>({
   api: async ({ request }, use) => {

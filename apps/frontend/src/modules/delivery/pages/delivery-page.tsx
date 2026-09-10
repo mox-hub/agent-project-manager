@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
-import { Card, CardContent } from '@/components/ui/card';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 

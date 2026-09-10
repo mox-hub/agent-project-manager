@@ -1,6 +1,5 @@
 import { api } from '../../../infrastructure/api-client';
 import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
-import type { PaginatedData } from '@/shared/types/api';
 
 /**
  * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；契约该操作

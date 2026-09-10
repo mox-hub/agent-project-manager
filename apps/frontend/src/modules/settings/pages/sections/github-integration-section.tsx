@@ -4,13 +4,12 @@
  * - 列出 GitHub integration 配置
  * - 显示 PR 状态、设置连接
  */
-import { useEffect, useState } from 'react';
 import { PageShell } from '@/components/ui/page-shell';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
 import { GithubPanel } from '@/modules/github/components/github-panel';
 import { GithubSetupCard } from '@/modules/github/components/github-setup-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Github, Activity, MessageSquare, AlertCircle } from 'lucide-react';
+import { Github, Activity, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 

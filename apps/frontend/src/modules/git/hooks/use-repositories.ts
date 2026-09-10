@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/toast';
 import { gitApi, type CreateRepositoryDto, type UpdateRepositoryDto } from '../api/git-api';
-import type { Repository, RepositoryStatus } from '../api/git-api';
 
 export function useRepositories(params?: {
   projectId?: string;

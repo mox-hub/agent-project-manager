@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { Bot, User as UserIcon } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import type { Member } from '../types';
 
 export interface MemberAvatarProps {

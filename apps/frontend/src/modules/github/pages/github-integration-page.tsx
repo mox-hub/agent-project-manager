@@ -3,13 +3,12 @@
  * 新实现：src/modules/settings/pages/sections/github-integration-section.tsx（新路由 /app/settings/integrations/github）
  * 文件暂时保留备查，请勿在新代码中引用。
  */
-import { useEffect, useState } from 'react';
 import { PageShell } from '@/components/ui/page-shell';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
 import { GithubPanel } from '../components/github-panel';
 import { GithubSetupCard } from '../components/github-setup-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Github, Activity, MessageSquare, AlertCircle } from 'lucide-react';
+import { Github, Activity, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 

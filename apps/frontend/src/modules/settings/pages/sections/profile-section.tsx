@@ -11,7 +11,6 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
 import { toast } from '@/components/ui/toast';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { authApi } from '@/modules/auth/api/auth-api';

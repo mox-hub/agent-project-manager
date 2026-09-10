@@ -17,7 +17,6 @@ import { LinearStatusIndicator } from './linear-provider-card';
 import {
   useCreateIntegration,
 } from '@/modules/integration/hooks/use-integrations';
-import { useLinearViewer } from '../hooks/use-linear-sync';
 import type { LinearViewer } from '../api/linear-api';
 import { api } from '@/infrastructure/api-client';
 import { cn } from '@/lib/utils';

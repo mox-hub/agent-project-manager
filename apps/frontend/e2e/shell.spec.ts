@@ -2,7 +2,7 @@
  * Shell / 引导页 / 仪表盘 E2E：侧边栏导航、命令面板、浮动面板、BootPage、
  * 全局仪表盘 KPI 卡与快捷操作、analytics 只读页。
  */
-import { test as base, expect, type Page } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 import { makeApi, uniq, type ApmApi } from './helpers/api'
 import { openCommandPalette } from './helpers/ui'
 

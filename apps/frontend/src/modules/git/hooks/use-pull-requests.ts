@@ -1,7 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from '@/components/ui/toast';
 import { gitApi } from '../api/git-api';
-import type { PullRequest } from '../api/git-api';
 
 export function usePullRequests(
   repoId: string,

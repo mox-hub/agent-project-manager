@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### frontend 存量未使用 import 清理（夜航质检自修）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 按 eslint `@typescript-eslint/no-unused-vars` 报告清理 69 处未使用 import 说明符（55 文件：34 处整行删除、35 处保留其余具名导入的说明符级裁剪，含 e2e spec 4 处；纯机械删除，不改任何运行时逻辑与导出面） | 夜航质检（用户指令） | 复跑 tsc -b 0 错；vitest 70 文件 315 用例全绿；eslint 0 error / 145 warning（214→145，恰减 69）；治理 lint 七件套全过 | 无（本条目即记录） |
+
 ### 命令面板全量刷新——17→25 命令/i18n 化/TabBar 入口修复
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

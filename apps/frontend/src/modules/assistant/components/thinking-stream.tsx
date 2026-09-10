@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrainCircuit, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { BrainCircuit, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ThinkingStep {

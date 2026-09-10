@@ -1,5 +1,4 @@
 import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
 import { FolderOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TagManager } from '@/modules/core-config/components/tag-manager';

@@ -4,7 +4,6 @@ import { NumberField as NumberFieldPrimitive } from "@base-ui/react/number-field
 import { MinusIcon, PlusIcon } from "lucide-react"
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { Label } from "@/components/ui/label"
 
 /* coss ui NumberField（base-ui 配方移植，registry @coss/number-field）*/
 

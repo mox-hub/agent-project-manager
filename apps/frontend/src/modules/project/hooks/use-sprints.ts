@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { sprintApi, type Sprint, type CreateSprintRequest, type UpdateSprintRequest } from '../api/sprint-api';
+import { sprintApi, type CreateSprintRequest, type UpdateSprintRequest } from '../api/sprint-api';
 
 export function useSprints(projectId: string | undefined) {
   return useQuery({
