@@ -10418,6 +10418,19 @@ export interface components {
             /** @description 更新时间（ISO） */
             updatedAt: string;
         };
+        ChecklistItemDto: {
+            /** @description 分类 */
+            category: string;
+            /** @description 检查项内容 */
+            content: string;
+            /**
+             * @description 严重级别
+             * @enum {string}
+             */
+            severity: "critical" | "high" | "medium" | "low";
+            /** @description 是否可自动修复 */
+            autoFixable?: boolean;
+        };
         CreateChecklistDto: {
             /** @description 清单名称 */
             name: string;
@@ -10428,7 +10441,7 @@ export interface components {
             /** @description 技术栈 */
             techStack: string;
             /** @description 清单内容 */
-            checklist: Record<string, never>;
+            checklist: components["schemas"]["ChecklistItemDto"][];
         };
         UpdateChecklistDto: {
             /** @description 清单名称 */
@@ -10436,7 +10449,7 @@ export interface components {
             /** @description 清单描述 */
             description?: string;
             /** @description 清单内容 */
-            checklist?: Record<string, never>;
+            checklist?: components["schemas"]["ChecklistItemDto"][];
         };
         ApplyChecklistResponseDto: {
             /** @description 被应用的清单 */

@@ -65047,6 +65047,38 @@
           "updatedAt"
         ]
       },
+      "ChecklistItemDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "分类"
+          },
+          "content": {
+            "type": "string",
+            "description": "检查项内容"
+          },
+          "severity": {
+            "type": "string",
+            "description": "严重级别",
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "autoFixable": {
+            "type": "boolean",
+            "description": "是否可自动修复"
+          }
+        },
+        "required": [
+          "category",
+          "content",
+          "severity"
+        ]
+      },
       "CreateChecklistDto": {
         "type": "object",
         "properties": {
@@ -65067,8 +65099,11 @@
             "description": "技术栈"
           },
           "checklist": {
-            "type": "object",
-            "description": "清单内容"
+            "description": "清单内容",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChecklistItemDto"
+            }
           }
         },
         "required": [
@@ -65090,8 +65125,11 @@
             "description": "清单描述"
           },
           "checklist": {
-            "type": "object",
-            "description": "清单内容"
+            "description": "清单内容",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChecklistItemDto"
+            }
           }
         }
       },
