@@ -71,7 +71,7 @@ export function RuntimeMachineDetailSection() {
     { label: machine ? machineDisplayName(machine) : (runtimeId ?? '') },
   ];
 
-  if (registrations.isLoading) {
+  if (isLoading) {
     return (
       <PageShell padded={false}>
         <SubPageToolbar

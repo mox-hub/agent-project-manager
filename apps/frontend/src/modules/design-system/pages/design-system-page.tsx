@@ -3714,6 +3714,8 @@ export function DesignSystemPage() {
                     decision={{
                       id: 'dec-ds-01',
                       kind: 'approval',
+                      sourceId: 'dec-ds-01',
+                      status: 'pending',
                       urgency: 'blocking',
                       riskLevel: 'high_risk',
                       title: '执行破坏性样式重构：全面清理 276 处非语义裸色与废弃伪组件',
