@@ -44,6 +44,7 @@ import {
   Search,
   Palette,
   ListTree,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
@@ -172,6 +173,7 @@ export function ShellLayout() {
           // 实体导航图标统一从 entity-icons 注册表取（规范 v0 第二批铺开）
           { to: '/app/projects/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
           { to: '/app/projects', icon: getEntityIcon('project').icon, label: t('nav.projects') },
+          { to: '/app/ai-surface', icon: Sparkles, label: t('nav.aiSurface'), color: '#A855F7', capsule: 'exp' },
           { to: '/app/issues', icon: getEntityIcon('issue').icon, label: t('nav.tasks') },
           { to: '/app/bugs', icon: getEntityIcon('bug').icon, label: t('task.bug.title') },
           { to: '/app/acceptance', icon: getEntityIcon('acceptance').icon, label: t('nav.acceptance') },

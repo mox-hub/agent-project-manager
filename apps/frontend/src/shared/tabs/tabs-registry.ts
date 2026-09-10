@@ -15,7 +15,11 @@ import {
   Bell,
   HelpCircle,
   Search,
+  ShieldCheck,
+  User,
+  Users,
   UserCog,
+  Sparkles,
 } from 'lucide-react';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 
@@ -37,6 +41,7 @@ const entityIcon = (kind: Parameters<typeof getEntityIcon>[0]) => getEntityIcon(
 
 /** 精确匹配的静态路由 */
 const EXACT_ROUTES: Record<string, TabRouteConfig> = {
+  '/app/ai-surface': { titleKey: 'nav.aiSurface', icon: Sparkles },
   '/app': { titleKey: 'nav.projects', icon: entityIcon('project') },
   '/app/projects': { titleKey: 'nav.projects', icon: entityIcon('project') },
   '/app/projects/dashboard': { titleKey: 'nav.dashboard', icon: LayoutDashboard, pinnedByDefault: true },
