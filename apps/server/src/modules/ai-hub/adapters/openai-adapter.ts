@@ -99,7 +99,7 @@ export class OpenAIAdapter implements ModelAdapter {
               if (delta) {
                 yield delta;
               }
-            } catch (e) {
+            } catch {
               // Skip invalid JSON
             }
           }

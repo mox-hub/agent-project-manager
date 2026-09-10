@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { GitService } from './git.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { LoggerService } from '../../core/logger/logger.service';

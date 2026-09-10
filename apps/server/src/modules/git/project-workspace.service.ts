@@ -199,7 +199,7 @@ export class ProjectWorkspaceService {
     // Check if path is accessible
     try {
       fs.accessSync(localPath, fs.constants.R_OK | fs.constants.W_OK);
-    } catch (error) {
+    } catch {
       const result: WorkspaceValidationResult = {
         valid: false,
         status: 'invalid',
@@ -247,7 +247,7 @@ export class ProjectWorkspaceService {
         await this.updateValidationStatus(projectId, result);
         return result;
       }
-    } catch (error) {
+    } catch {
       const result: WorkspaceValidationResult = {
         valid: false,
         status: 'invalid',
@@ -372,7 +372,7 @@ export class ProjectWorkspaceService {
         if (branchMatch) {
           defaultBranch = branchMatch[1].trim();
         }
-      } catch (error) {
+      } catch {
         // Use default
       }
 

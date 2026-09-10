@@ -10,13 +10,10 @@ import {
 } from './helpers/ws-app';
 import * as bcrypt from 'bcrypt';
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/core/database/prisma.service';
 
 describe('Task (e2e)', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
   let accessToken: string;
-  let userId: string;
   let projectId: string;
   let issueId: string;
   let ws: IsolatedWorkspace;
@@ -29,8 +26,6 @@ describe('Task (e2e)', () => {
 
     app = await initTestApp(moduleFixture);
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
-
     ws = createIsolatedWorkspace('Task e2e');
     wsHttp = wsRequest(app, ws.id);
 
@@ -40,7 +35,6 @@ describe('Task (e2e)', () => {
       password: 'password123',
     });
     accessToken = loginRes.body.data.accessToken;
-    userId = loginRes.body.data.user.id;
 
     // Create a test project
     const projectRes = await wsHttp

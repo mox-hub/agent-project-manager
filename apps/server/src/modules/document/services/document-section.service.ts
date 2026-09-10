@@ -85,7 +85,8 @@ export class DocumentSectionService {
    * 更新章节
    */
   async updateSection(sectionId: string, data: Partial<CreateDocumentSection>) {
-    const section = await this.getSection(sectionId);
+    // 存在性校验：不存在时抛 NotFoundException
+    await this.getSection(sectionId);
 
     return this.prisma.documentSection.update({
       where: { id: sectionId },

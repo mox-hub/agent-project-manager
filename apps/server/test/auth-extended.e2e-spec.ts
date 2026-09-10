@@ -17,7 +17,6 @@ describe('Auth Extended (e2e)', () => {
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
   let sessionId: string;
-  let projectId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -33,11 +32,7 @@ describe('Auth Extended (e2e)', () => {
       password: 'password123',
     });
     accessToken = loginRes.body.data.accessToken;
-    projectId = await createProjectFixture(
-      wsHttp,
-      accessToken,
-      'E2E Auth Project',
-    );
+    await createProjectFixture(wsHttp, accessToken, 'E2E Auth Project');
   });
 
   afterAll(async () => {

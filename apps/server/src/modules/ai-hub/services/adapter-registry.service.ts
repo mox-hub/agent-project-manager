@@ -2,7 +2,6 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { EncryptionService } from '../../../core/crypto/encryption.service';
 import { AiSdkAdapterFactory } from '../adapters/ai-sdk-adapter.factory';
-import { AiSdkAdapter } from '../adapters/ai-sdk-adapter';
 import { ModelAdapter } from '../adapters/model-adapter.interface';
 
 /**
@@ -121,7 +120,7 @@ export class AdapterRegistryService implements OnModuleInit {
    * 按 provider + model 获取适配器
    * model 缺省时取该 provider 的默认模型
    */
-  getAdapter(provider: string, model?: string): ModelAdapter | null {
+  getAdapter(provider: string, _model?: string): ModelAdapter | null {
     return this.adapters.get(provider) || null;
   }
 

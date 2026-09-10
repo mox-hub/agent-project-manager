@@ -15,7 +15,7 @@ import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
 import { RuntimeService } from '@/modules/runtime/runtime.service';
-import { CliExecutorService, ExecutionContext } from './cli-executor.service';
+import { CliExecutorService } from './cli-executor.service';
 import { CliProviderRegistry } from './cli-provider.registry';
 import {
   CliResolutionService,

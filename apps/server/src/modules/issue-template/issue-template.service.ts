@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import {
   CreateIssueTemplateDto,
@@ -14,7 +10,7 @@ import {
 export class IssueTemplateService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateIssueTemplateDto, userId: string) {
+  async create(dto: CreateIssueTemplateDto, _userId: string) {
     const { items, ...templateData } = dto;
 
     const template = await this.prisma.issueTemplate.create({

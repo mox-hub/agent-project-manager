@@ -51,14 +51,6 @@ export class PluginLoaderService {
       errors.push('Plugin manifest.entries is required and must be an array');
     }
 
-    const requiredManifestKeys = [
-      'name',
-      'type',
-      'entry',
-      'file',
-      'permissions',
-      'dependencies',
-    ];
     for (const entry of manifest.entries || []) {
       if (!entry.file) {
         errors.push(`Manifest entry "${entry.name}" must specify a file`);

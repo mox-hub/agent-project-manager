@@ -22,7 +22,6 @@ import { AssistantToolsService } from './services/assistant-tools.service';
 import { UsagePricingService } from './services/usage-pricing.service';
 import {
   extractMessagePlainText,
-  isUiMessageRow,
   isUiMessageRunning,
 } from './utils/ui-message-text';
 import { ChatRequestDto } from './dto/chat.dto';
@@ -113,7 +112,7 @@ export class AiHubService {
     }
 
     // Save user message
-    const userMessage = await this.prisma.aIMessage.create({
+    await this.prisma.aIMessage.create({
       data: {
         conversationId: conversation.id,
         role: 'user',

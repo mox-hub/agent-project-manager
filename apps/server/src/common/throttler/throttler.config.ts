@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { HttpException, HttpStatus } from '@nestjs/common';
 

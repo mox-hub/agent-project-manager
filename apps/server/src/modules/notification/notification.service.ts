@@ -283,7 +283,7 @@ export class NotificationService {
     });
   }
 
-  private determineChannels(preferences: any[], eventType: string): string[] {
+  private determineChannels(preferences: any[], _eventType: string): string[] {
     // Merge channels from all matching preferences
     // （NotificationPreference.channels 是 String 列，存 JSON 串；Notification.channels 才是 Json 数组）
     const channels = new Set<string>();

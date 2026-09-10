@@ -213,7 +213,7 @@ export class AcceptanceCriteriaService {
    * 批量更新标准状态
    */
   async updateStatus(criteriaIds: string[], status: string) {
-    const updateData = criteriaIds.map((id, index) => ({
+    const updateData = criteriaIds.map((id, _index) => ({
       id,
       status,
       passedAt: status === 'passed' ? new Date() : undefined,

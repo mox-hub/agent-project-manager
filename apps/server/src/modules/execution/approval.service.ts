@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { LoggerService } from '@/core/logger/logger.service';
@@ -46,7 +45,7 @@ export class ApprovalService {
     this.logger.setContext('ApprovalService');
   }
 
-  async createApprovalRequest(dto: CreateApprovalRequestDto, userId?: string) {
+  async createApprovalRequest(dto: CreateApprovalRequestDto, _userId?: string) {
     const executionRun = await this.prisma.execution.findUnique({
       where: { id: dto.executionRunId },
     });
@@ -102,7 +101,7 @@ export class ApprovalService {
     return approval;
   }
 
-  async getApprovalRequest(id: string, userId: string) {
+  async getApprovalRequest(id: string, _userId: string) {
     const approval = await this.prisma.approvalRequest.findUnique({
       where: { id },
       include: {

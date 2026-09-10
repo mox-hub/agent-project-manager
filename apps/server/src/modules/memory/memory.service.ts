@@ -1,11 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
-import {
-  CreateMemoryDto,
-  MEMORY_TYPES,
-  MemoryAtomDto,
-  UpdateMemoryDto,
-} from './dto/memory.dto';
+import { MEMORY_TYPES, MemoryAtomDto, UpdateMemoryDto } from './dto/memory.dto';
 
 /**
  * 记忆 Store B（AI 同事化）：应用侧长期记忆库。

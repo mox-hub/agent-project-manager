@@ -292,7 +292,11 @@ export class TeamService {
     }));
   }
 
-  async createInvite(teamId: string, dto: CreateTeamInviteDto, userId: string) {
+  async createInvite(
+    teamId: string,
+    dto: CreateTeamInviteDto,
+    _userId: string,
+  ) {
     const team = await this.prisma.team.findUnique({ where: { id: teamId } });
     if (!team) throw new NotFoundException('Team not found');
     const token = crypto.randomBytes(16).toString('hex');

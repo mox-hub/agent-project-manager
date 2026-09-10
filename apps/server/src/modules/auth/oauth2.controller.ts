@@ -2,7 +2,6 @@ import { Controller, Get, Post, Query, Request } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
-  ApiCreatedResponse,
   ApiOkResponse,
   ApiResponse,
   ApiQuery,

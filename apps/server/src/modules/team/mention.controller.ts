@@ -42,7 +42,7 @@ export class MentionController {
   @ApiCreatedResponse({ type: MentionResponseDto })
   async create(
     @Body() dto: CreateMentionDto,
-    @Request() req: { user: { id: string } },
+    @Request() _req: { user: { id: string } },
   ) {
     return this.service.create({ ...dto });
   }

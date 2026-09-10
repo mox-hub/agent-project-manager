@@ -2,16 +2,7 @@
  * CLI Dispatch Controller
  */
 
-import {
-  Controller,
-  Post,
-  Get,
-  Param,
-  Query,
-  Body,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -66,10 +57,6 @@ class DispatchCliDto {
   @IsOptional()
   @IsString()
   executionId?: string;
-}
-
-class CancelExecutionDto {
-  reason?: string;
 }
 
 @ApiTags('CLI Dispatch')

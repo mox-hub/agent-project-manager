@@ -114,7 +114,6 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // 订阅任务更新事件
     this.messageBus.subscribe(DomainEventTypes.TaskUpdated, (payload: any) => {
-      const { projectId, issueId } = payload;
       // 可以只推送给相关项目的成员
       this.server.emit(DomainEventTypes.TaskUpdated, payload);
     });

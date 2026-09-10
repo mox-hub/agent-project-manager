@@ -1,7 +1,6 @@
 import {
   IsString,
   IsOptional,
-  IsObject,
   IsBoolean,
   ValidateNested,
 } from 'class-validator';
