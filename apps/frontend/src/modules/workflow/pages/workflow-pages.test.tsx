@@ -72,6 +72,9 @@ vi.mock('../hooks/use-workflows', () => ({
     }),
     isPending: false,
   }),
+  useWorkflowActions: () => ({ data: [], isLoading: false }),
+  useCreateWorkflow: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateWorkflow: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 // hooksState 扩展槽：记录最近一次 resume / trigger 负载

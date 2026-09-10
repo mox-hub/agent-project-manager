@@ -58,9 +58,18 @@ function makeCompiler() {
       .mockReturnValue([{ provider: 'openai', model: 'gpt-test' }]),
     getAdapter: vi.fn().mockReturnValue({ getModel: () => ({}) }),
   };
+  const prisma = {
+    issue: {
+      create: vi.fn().mockResolvedValue({ id: 'iss_1', title: '任务' }),
+    },
+    document: {
+      create: vi.fn().mockResolvedValue({ id: 'doc_1', title: '文档' }),
+    },
+  };
   return {
-    compiler: new WorkflowCompilerService(registry as never),
+    compiler: new WorkflowCompilerService(registry as never, prisma as never),
     registry,
+    prisma,
   };
 }
 
@@ -232,5 +241,59 @@ describe('Mastra 编译产物执行语义', () => {
 
     const bad = await runWorkflow(wf, { approved: false });
     expect(bad.result.status).toBe('failed');
+  });
+
+  it('action 步骤：params 插值后落库建 issue，输出进 steps[id]', async () => {
+    const { compiler, prisma } = makeCompiler();
+    const doc: WorkflowDefinitionDoc = {
+      version: 1,
+      steps: [
+        {
+          id: 'create',
+          type: 'action',
+          action: 'issue.create',
+          params: {
+            projectId: 'proj_1',
+            title: '需求：{input.requirement}',
+          },
+        },
+      ],
+    };
+    const wf = compiler.compile('wf-action', doc);
+    const { result } = await runWorkflow(wf, { requirement: '报销看板' });
+
+    expect(result.status).toBe('success');
+    expect(prisma.issue.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        projectId: 'proj_1',
+        title: '需求：报销看板',
+      }),
+    });
+    const ctx = (result.result as { steps: Record<string, unknown> }).steps;
+    expect(ctx.create).toMatchObject({ issueId: 'iss_1' });
+  });
+
+  it('action 步骤：未知 action / 缺必填参数 → run failed（可读错误）', async () => {
+    const { compiler } = makeCompiler();
+    const unknown: WorkflowDefinitionDoc = {
+      version: 1,
+      steps: [{ id: 'a', type: 'action', action: 'nope.missing' }],
+    };
+    const unknownRun = await runWorkflow(compiler.compile('wf-u', unknown), {});
+    expect(unknownRun.result.status).toBe('failed');
+
+    const missing: WorkflowDefinitionDoc = {
+      version: 1,
+      steps: [
+        {
+          id: 'a',
+          type: 'action',
+          action: 'issue.create',
+          params: { title: '缺 projectId' },
+        },
+      ],
+    };
+    const missingRun = await runWorkflow(compiler.compile('wf-m', missing), {});
+    expect(missingRun.result.status).toBe('failed');
   });
 });

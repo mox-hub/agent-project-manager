@@ -204,6 +204,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
+        handle: { selfScroll: true },
         element: <ProjectListPage />,
         errorElement: <ErrorPage />,
       },
@@ -213,6 +214,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
+            handle: { selfScroll: true },
             element: <ProjectListPage />,
             errorElement: <ErrorPage />,
           },
@@ -311,6 +313,7 @@ export const router = createBrowserRouter([
       {
         path: 'workflows/:id',
         element: <WorkflowDetailPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -320,6 +323,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'issues',
+        handle: { selfScroll: true },
         element: <TasksPage />,
         errorElement: <ErrorPage />,
       },
@@ -337,16 +341,19 @@ export const router = createBrowserRouter([
       {
         path: 'issues/:issueId',
         element: <IssueDetailRoute />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
         path: 'bugs',
+        handle: { selfScroll: true },
         element: <BugsPage />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'bugs/:bugId',
         element: <BugDetailRoute />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -360,7 +367,8 @@ export const router = createBrowserRouter([
       },
       {
         path: 'members',
-        element: (
+        handle: { selfScroll: true },
+    element: (
           <Suspense fallback={null}>
             <MembersPage />
           </Suspense>
@@ -374,11 +382,13 @@ export const router = createBrowserRouter([
             <MemberDetailPage />
           </Suspense>
         ),
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
         path: 'teams',
-        element: (
+        handle: { selfScroll: true },
+    element: (
           <Suspense fallback={null}>
             <TeamsPage />
           </Suspense>
@@ -392,6 +402,7 @@ export const router = createBrowserRouter([
             <TeamDetailPage />
           </Suspense>
         ),
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -402,14 +413,17 @@ export const router = createBrowserRouter([
       {
         path: 'acceptance/:id',
         element: <AcceptanceDetailPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
         path: 'help',
+        handle: { selfScroll: true },
         element: <HelpPage />,
         errorElement: <ErrorPage />,
       },
       {
+        handle: { selfScroll: true },
         path: 'decisions',
         element: (
           <Suspense fallback={null}>
@@ -419,6 +433,7 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        handle: { selfScroll: true },
         path: 'notifications',
         element: <NotificationCenterPage />,
         errorElement: <ErrorPage />,
@@ -442,6 +457,7 @@ export const router = createBrowserRouter([
       {
         path: 'integrations/linear/:integrationId',
         element: <LinearIntegrationRedirect />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -466,14 +482,17 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <RepositoryListPage />,
+            handle: { selfScroll: true },
           },
           {
             path: ':repoId',
             element: <RepositoryDetailPage />,
+            handle: { selfScroll: true },
           },
           {
             path: ':repoId/settings',
             element: <RepositorySettingsPage />,
+            handle: { selfScroll: true },
           },
         ],
       },
@@ -485,6 +504,7 @@ export const router = createBrowserRouter([
       },
       // 管理员成员管理页（AdminGuard 校验全局 admin 角色，非 admin 重定向回 /app）
       {
+        handle: { selfScroll: true },
         path: 'admin',
         element: (
           <Suspense fallback={null}>
@@ -495,10 +515,12 @@ export const router = createBrowserRouter([
       },
       {
         path: 'documents',
+        handle: { selfScroll: true },
         element: <DocumentsPage />,
         errorElement: <ErrorPage />,
       },
       {
+        handle: { selfScroll: true },
         path: 'documents/new',
         element: <DocumentNewPage />,
         errorElement: <ErrorPage />,
@@ -506,11 +528,13 @@ export const router = createBrowserRouter([
       {
         path: 'documents/:documentId',
         element: <DocumentViewPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
         path: 'documents/:documentId/edit',
         element: <DocumentEditPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       ...(import.meta.env.DEV

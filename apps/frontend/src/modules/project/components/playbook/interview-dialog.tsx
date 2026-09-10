@@ -11,34 +11,51 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/toast';
 import type {
   PlaybookStageTemplate,
   SubmitInterviewResponse,
 } from '../../api/playbook-api';
 import { useSubmitInterview } from '../../hooks/use-playbook';
+import { InterviewChat } from './interview-chat';
 import { useInterviewPrefill } from '@/modules/assistant/hooks/use-interview-prefill';
+import type { InterviewPrefillAnswer } from '@/modules/assistant/hooks/use-interview-prefill';
 
 interface InterviewDialogProps {
   projectId: string;
   stage: PlaybookStageTemplate | null;
+  /** 阶段产物文档（运行态 stages[].documentId），AI 会话访谈作为 grounding 材料 */
+  stageArtifactDocumentId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+type InterviewMode = 'chat' | 'form';
 
 /**
  * 阶段访谈向导（v2 纪要 §2.4「对照翻译」）：
  * 人话提问收集 → 服务端确定性转写成正式工件 → 展示「你说的 → 专业术语」对照
  * → 引导去决策收件箱过闸门。AI 不替用户拍板，闸门在收件箱。
- * CAP-P-01 一期：可按一句话需求（或 grill 摘要）AI 预填候选——只填空字段，人始终可改。
+ * CAP-P-01 一期：按一句话需求 AI 预填候选——只填空字段，人始终可改。
+ * CAP-P-01 三期：AI 会话访谈为默认形态（动态追问，收敛后答案回填表单审改），
+ * 静态表单保留为兜底形态（AI 不可用 / 轮数到限时仍可走通管道）。
  */
-export function InterviewDialog({ projectId, stage, open, onOpenChange }: InterviewDialogProps) {
+export function InterviewDialog({
+  projectId,
+  stage,
+  stageArtifactDocumentId,
+  open,
+  onOpenChange,
+}: InterviewDialogProps) {
   const { t } = useTranslation();
   const submit = useSubmitInterview(projectId);
   const prefill = useInterviewPrefill(projectId);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [requirement, setRequirement] = useState('');
   const [result, setResult] = useState<SubmitInterviewResponse | null>(null);
+  const [mode, setMode] = useState<InterviewMode>('chat');
 
   const questions = useMemo(() => stage?.interview ?? [], [stage]);
 
@@ -46,6 +63,7 @@ export function InterviewDialog({ projectId, stage, open, onOpenChange }: Interv
     setAnswers({});
     setRequirement('');
     setResult(null);
+    setMode('chat');
     submit.reset();
     prefill.reset();
   };
@@ -59,6 +77,21 @@ export function InterviewDialog({ projectId, stage, open, onOpenChange }: Interv
     questions.length > 0 &&
     questions.every((q) => (answers[q.id] ?? '').trim().length > 0) &&
     !submit.isPending;
+
+  /** AI 会话收敛：答案集只填空字段（绝不覆盖已手填内容），切回表单供人审改提交 */
+  const handleChatDone = (filled: InterviewPrefillAnswer[]) => {
+    setAnswers((prev) => {
+      const next = { ...prev };
+      for (const item of filled) {
+        if (!(next[item.questionId] ?? '').trim()) {
+          next[item.questionId] = item.answer;
+        }
+      }
+      return next;
+    });
+    setMode('form');
+    toast.success(t('project.playbookPage.interview.chatDoneHint'), { duration: 6000 });
+  };
 
   const handlePrefill = () => {
     if (!stage || prefill.isPending) return;
@@ -110,76 +143,105 @@ export function InterviewDialog({ projectId, stage, open, onOpenChange }: Interv
               </DialogTitle>
               <DialogDescription>{stage.purpose}</DialogDescription>
             </DialogHeader>
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-content-bg-secondary/40 px-3 py-2">
-              <Sparkles className="size-3.5 shrink-0 text-accent-purple" />
-              <input
-                value={requirement}
-                onChange={(e) => setRequirement(e.target.value)}
-                placeholder={t('project.playbookPage.interview.requirementPlaceholder')}
-                className="min-w-0 flex-1 bg-transparent text-xs text-content-text outline-none placeholder:text-content-text-muted"
-                data-ai="playbook.interview.requirement"
+            <SegmentedControl<InterviewMode>
+              value={mode}
+              onChange={setMode}
+              options={[
+                {
+                  value: 'chat',
+                  label: t('project.playbookPage.interview.modeChat'),
+                  tone: 'purple',
+                },
+                { value: 'form', label: t('project.playbookPage.interview.modeForm') },
+              ]}
+            />
+            {mode === 'chat' ? (
+              <InterviewChat
+                projectId={projectId}
+                questions={questions.map((q) => ({
+                  id: q.id,
+                  question: q.question,
+                  hint: q.hint,
+                }))}
+                stagePurpose={stage.purpose}
+                artifactDocumentId={stageArtifactDocumentId}
+                onDone={handleChatDone}
+                onSwitchToForm={() => setMode('form')}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 shrink-0 gap-1 px-2 text-xs"
-                disabled={prefill.isPending}
-                onClick={handlePrefill}
-                data-ai="playbook.interview.aiPrefill"
-              >
-                <Sparkles className={cn('size-3', prefill.isPending && 'animate-pulse')} />
-                {prefill.isPending
-                  ? t('project.playbookPage.interview.aiPrefilling')
-                  : t('project.playbookPage.interview.aiPrefill')}
-              </Button>
-            </div>
-            {prefill.isError ? (
-              <p className="rounded-lg bg-accent-red-light/50 px-3 py-2 text-xs text-accent-red">
-                {t('project.playbookPage.interview.aiPrefillFailed', {
-                  reason: prefill.error instanceof Error ? prefill.error.message : '',
-                })}
-              </p>
-            ) : null}
-            <div className="space-y-4 py-1">
-              {questions.map((q, idx) => (
-                <div key={q.id} className="space-y-1.5">
-                  <label
-                    htmlFor={`q-${q.id}`}
-                    className="text-xs font-medium text-content-text"
-                  >
-                    <span className="mr-1.5 text-content-text-muted">{idx + 1}.</span>
-                    {q.question}
-                  </label>
-                  <textarea
-                    id={`q-${q.id}`}
-                    value={answers[q.id] ?? ''}
-                    onChange={(e) =>
-                      setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
-                    }
-                    placeholder={q.hint ?? t('project.playbookPage.interview.placeholder')}
-                    rows={2}
-                    className="w-full resize-y rounded-lg border border-border bg-content-bg px-3 py-2 text-xs text-content-text outline-none transition-colors placeholder:text-content-text-muted focus:border-accent-blue/60"
-                    data-ai={`playbook.interview.answer.${q.id}`}
+            ) : (
+              <>
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-content-bg-secondary/40 px-3 py-2">
+                  <Sparkles className="size-3.5 shrink-0 text-accent-purple" />
+                  <input
+                    value={requirement}
+                    onChange={(e) => setRequirement(e.target.value)}
+                    placeholder={t('project.playbookPage.interview.requirementPlaceholder')}
+                    className="min-w-0 flex-1 bg-transparent text-xs text-content-text outline-none placeholder:text-content-text-muted"
+                    data-ai="playbook.interview.requirement"
                   />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 shrink-0 gap-1 px-2 text-xs"
+                    disabled={prefill.isPending}
+                    onClick={handlePrefill}
+                    data-ai="playbook.interview.aiPrefill"
+                  >
+                    <Sparkles className={cn('size-3', prefill.isPending && 'animate-pulse')} />
+                    {prefill.isPending
+                      ? t('project.playbookPage.interview.aiPrefilling')
+                      : t('project.playbookPage.interview.aiPrefill')}
+                  </Button>
                 </div>
-              ))}
-            </div>
-            {submit.isError ? (
-              <p className="rounded-lg bg-accent-red-light/50 px-3 py-2 text-xs text-accent-red">
-                {t('project.playbookPage.interview.failed', {
-                  reason: submit.error instanceof Error ? submit.error.message : '',
-                })}
-              </p>
-            ) : null}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => close(false)}>
-                {t('common.cancel')}
-              </Button>
-              <Button disabled={!canSubmit} onClick={handleSubmit} data-ai="playbook.interview.submit">
-                <Check className="size-3.5" />
-                {t('project.playbookPage.interview.submit')}
-              </Button>
-            </DialogFooter>
+                {prefill.isError ? (
+                  <p className="rounded-lg bg-accent-red-light/50 px-3 py-2 text-xs text-accent-red">
+                    {t('project.playbookPage.interview.aiPrefillFailed', {
+                      reason: prefill.error instanceof Error ? prefill.error.message : '',
+                    })}
+                  </p>
+                ) : null}
+                <div className="space-y-4 py-1">
+                  {questions.map((q, idx) => (
+                    <div key={q.id} className="space-y-1.5">
+                      <label
+                        htmlFor={`q-${q.id}`}
+                        className="text-xs font-medium text-content-text"
+                      >
+                        <span className="mr-1.5 text-content-text-muted">{idx + 1}.</span>
+                        {q.question}
+                      </label>
+                      <textarea
+                        id={`q-${q.id}`}
+                        value={answers[q.id] ?? ''}
+                        onChange={(e) =>
+                          setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                        }
+                        placeholder={q.hint ?? t('project.playbookPage.interview.placeholder')}
+                        rows={2}
+                        className="w-full resize-y rounded-lg border border-border bg-content-bg px-3 py-2 text-xs text-content-text outline-none transition-colors placeholder:text-content-text-muted focus:border-accent-blue/60"
+                        data-ai={`playbook.interview.answer.${q.id}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+                {submit.isError ? (
+                  <p className="rounded-lg bg-accent-red-light/50 px-3 py-2 text-xs text-accent-red">
+                    {t('project.playbookPage.interview.failed', {
+                      reason: submit.error instanceof Error ? submit.error.message : '',
+                    })}
+                  </p>
+                ) : null}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => close(false)}>
+                    {t('common.cancel')}
+                  </Button>
+                  <Button disabled={!canSubmit} onClick={handleSubmit} data-ai="playbook.interview.submit">
+                    <Check className="size-3.5" />
+                    {t('project.playbookPage.interview.submit')}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
           </>
         ) : (
           <>

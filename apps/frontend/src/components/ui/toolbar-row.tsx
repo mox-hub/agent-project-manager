@@ -711,7 +711,8 @@ export function ToolbarRow({
   return (
     <header
       className={cn(
-        "grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-6 py-2 md:px-7",
+        // sticky top-10：吸附在 PageHeader（固定 h-10）下方，随页面滚动保持工具栏可见
+        "sticky top-10 z-10 grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border bg-background px-6 py-2 md:px-7",
         className,
       )}
       data-ai-component={aiId ? `${aiId}.context-bar` : "ui.toolbar-row"}

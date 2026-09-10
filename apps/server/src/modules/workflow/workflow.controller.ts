@@ -16,6 +16,7 @@ import {
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
   Query,
   Request,
@@ -31,9 +32,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 import { WorkflowService } from './workflow.service';
 import {
+  CreateWorkflowDto,
   ListWorkflowRunsQuery,
   ResumeWorkflowDto,
   TriggerWorkflowDto,
+  UpdateWorkflowDto,
 } from './dto/workflow.dto';
 import {
   WorkflowDetailDto as WorkflowDetailResponseDto,
@@ -60,6 +63,16 @@ export class WorkflowController {
     return this.workflowService.listDefinitions();
   }
 
+  @Get('workflows/actions')
+  @ApiOperation({ summary: '产品动作目录（CAP-A-12 节点库单一真相）' })
+  @ApiOkResponse({
+    description: '动作清单（id/title/description/requiredParams/inputHint）',
+  })
+  @ApiStandardErrors()
+  async listActions() {
+    return this.workflowService.listActions();
+  }
+
   @Get('workflows/:id')
   @ApiOperation({ summary: '工作流定义详情' })
   @ApiParam({ name: 'id', description: 'Workflow ID' })
@@ -75,6 +88,35 @@ export class WorkflowController {
     return (await this.workflowService.getDefinition(
       id,
     )) as unknown as WorkflowDetailResponseDto;
+  }
+
+  @Post('workflows')
+  @ApiOperation({
+    summary: '创建工作流定义（画布编辑保存；人直接编辑不走决策卡）',
+  })
+  @ApiOkResponse({
+    description: '创建成功（id/key/version）',
+  })
+  @ApiStandardErrors()
+  async createWorkflow(
+    @Body() dto: CreateWorkflowDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.workflowService.createDefinition(dto, req.user.id);
+  }
+
+  @Patch('workflows/:id')
+  @ApiOperation({ summary: '更新工作流定义（definition 变更时 version 自增）' })
+  @ApiParam({ name: 'id', description: 'Workflow ID' })
+  @ApiOkResponse({
+    description: '更新成功（id/key/version/stepsSummary）',
+  })
+  @ApiStandardErrors()
+  async updateWorkflow(
+    @Param('id') id: string,
+    @Body() dto: UpdateWorkflowDto,
+  ) {
+    return this.workflowService.updateDefinition(id, dto);
   }
 
   @Post('workflows/:id/run')

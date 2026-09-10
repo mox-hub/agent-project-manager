@@ -21,6 +21,37 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 测试稳定性——PrismaService e2e 负载型超时加固
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | `prisma.service.spec.ts` 两个 onModuleInit/onModuleDestroy 用例加 15s 超时余量（默认 5s 在多进程并行负载下被推爆误报，单跑 944ms 实耗）——夜航并行代理跑全量 gate 时不再环境型误报 | — | 全量 vitest 550/550（负载复跑验证）；单套件 4/4 | 无（测试代码） |
+
+### 工作流详情页实机反馈改造（CAP-A-12）——连线/占满屏/右侧栏/节点库/标题栏/预览小窗
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 实机验收五条反馈一次性收口：①**连线与节点形态**——自定义节点补 Handle 连接点（此前边完全不渲染的根因），smoothstep 折线+语义描边，节点升级为「图标+标题+描述行+上下接口点」（描述行按类型取 prompt/URL/message/比较式/action id 摘要，数据源从 stepsSummary 换为 definition.steps 完整字段），human-confirm 出边保留动画强调；②**画布占满**——详情页改 `PageShell overflow-hidden` 自管布局，画布 flex-1 占满剩余高度（h-72 限高解除），运行历史与 run 详情整体迁入 `RightSidebar`（SubPageToolbar 侧栏开关收放，suspended 确认卡与输出面板原样保留）；③**节点库**——新增 `WorkflowNodePalette` 分类待选组件（AI 能力/人工环节/流程逻辑/集成/产品动作五组，产品动作组展开 /workflows/actions 注册表目录，点击直接插入带 action id 的步骤），编辑模式布局=左节点库+中画布+右属性面板三栏；④**标题栏标准化**——手写返回行替换 `SubPageToolbar`（返回/面包屑/v 徽章/编辑与保存动作/侧栏开关）；⑤**预览小窗**——画布加 `MiniMap`（左下角，按步骤类型语义着色，可平移缩放）与 `Controls`（右下角缩放复位） | CAP-A-12 | workflow 模块 15/15（转换器+编辑器+页面既有用例全过）；前端 67 文件 295 用例全绿；tsc -b 0 错；设计 lint 五件套过；eslint 0 警告 | i18n workflow.palette.* 双语 12 键；GAP-T-14 持续（本地） |
+
+### 工作流画布切片②③④（CAP-A-12）——画布编辑 + 产品动作节点（文法 v2）+ AI 草拟与模板库
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 切片②（编辑回写）：补定义 CRUD REST——`POST /workflows`（key kebab-case 校验+冲突 400+文法校验落库）、`PATCH /workflows/:id`（definition 变更时 version 自增，返回 stepsSummary）；人直接编辑不走决策卡（AI 代写仍走决策卡，双通道语义分立）。切片③（产品动作节点/文法 v2）：新 `action` 步骤类型（id/title/action/params，params 叶子支持插值）+ 动作注册表 `workflow-actions.ts`（单一真相，新增动作=登记一个 def）：首发 `issue.create`（projectId/title 必填，status=todo 落库）与 `document.create`（projectId/title/content 必填），执行直接走 prisma（对齐组合件 applier 先例防模块环）+ 必填参数执行期可读报错；`GET /workflows/actions` 目录端点（前端节点库与 AI 代写共用）；编译器注入 prisma 编译 action 步骤。切片④：`workflow-builtin.ts` 升级 BUILTIN_WORKFLOW_TEMPLATES 模板清单（新增「需求转任务」实战模板：llm 起标题×2 → human-confirm → condition → action issue.create，onModuleInit 遍历 upsert）；新增 `workflow-draft` 静默场景（自然语言描述 → 文法说明+动作目录注入 → 输出 {name, description, steps} 草稿，写数据前必须 human-confirm 的纪律写进指令） | CAP-A-12 | workflow-compiler.service.spec 7/7（+2：action params 插值后落库建 issue 且输出进 steps[id]/未知 action 与缺必填参数 run failed）；assistant-silent.service.spec 33/33（+2：workflow-draft 指令含五类步骤说明与动作目录+草稿透传、缺描述 400 不触 LLM）；contract:export→generate→check 零漂移；server 官方 type-check 0 错 | 能力清单 CAP-A-12 doing（本地）；GAP-T-14 部分清偿（本地） |
+| frontend | 画布升级可编辑：`WorkflowCanvas` 支持 onStepClick/selectedId（编辑模式点选高亮）；新增 `WorkflowStepEditor` 属性面板（按类型渲染字段表单：llm prompt/http url+method+body JSON/human-confirm message/condition 左值+比较符+右值/action 动作下拉+params JSON——动作下拉取 /workflows/actions 目录；结构化字段非法 JSON 不落变更；面板内集成在此后插入/删除/上移/下移）；workflow-detail-page 编辑模式（编辑按钮 → definition 步骤副本 + 画布点选 + 面板编辑 → 保存 PATCH version+1 / 取消丢弃）；list-page 新增「新建流程」对话框：基本信息 + **AI 草拟**（自然语言 → workflow-draft 场景 → steps 草稿预填，名称自动带出 → 保存进画布继续修改）；新增 useWorkflowDraft hook（防御性解析，name/steps 不完整整单拒绝）；i18n workflow.editor.*/createDialog.* 双语 38 键 | CAP-A-12 | workflow-step-editor.test 5/5（llm 字段渲染/action 下拉与参数域/onChange 携带新值/非法 JSON 不落/操作按钮边界禁用与回调）；workflow-canvas.test 6/6（+action 节点转换）；前端 67 文件 295 用例全绿；tsc -b 0 错；设计 lint 五件套过；eslint 0 警告 | GAP-T-14 持续（本地） |
+
+### 工作流节点画布切片①（CAP-A-12）——definition 只读可视化
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 新增 `modules/workflow/components/workflow-canvas.tsx`：@xyflow/react（React Flow v12）只读节点画布——`stepsToFlow` 纯函数转换器把步骤链映射为「触发 → 步骤… → 完成」垂直节点图（四类步骤各一形态：llm 紫 Sparkles / human-confirm 黄 ShieldCheck 且出边 animated 强调人工闸门 / http 蓝 / condition 橙 GitBranch 预留分支语义，未知类型回落中性形态保证文法 v2 前向兼容）；step 节点不可拖拽不可连线（只读切片）；workflow-detail-page 定义卡步骤 pills 链替换为画布（清理失效 import）；i18n workflow.canvas.* 双语 8 键；新依赖 @xyflow/react 登记入 frontend package.json（纯 UI 库无构建脚本，无需 allowBuilds） | CAP-A-12 | workflow-canvas.test 5/5（线性链节点/边首尾相接+human-confirm 边 animated/空步骤双端点/未知类型不炸/step 节点数据携带与不可拖拽 + 渲染冒烟）；前端 66 文件 289 用例全绿；tsc -b 0 错；设计 lint 五件套过（修复 interview-chat 的 max-w-[85%] 任意值违例→max-w-sm）；eslint 0 警告 | 能力清单 CAP-A-12 新卡 doing（本地）；测试映射矩阵 GAP-T-14 登记（本地） |
+
+### 需求承接三期（CAP-P-01）——剧本访谈动态追问：AI 会话访谈形态
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 新增 `interview-dynamic` 静默场景（沿用 grill-next 的无状态多轮协议，零服务端会话态）：context 收当前阶段问题组（questions）/阶段目的（stagePurpose）/已答历史（history 全量传，同 grill 先例）/阶段产物文档 id（artifactDocumentIds→prepareContext 查库注入标题+正文，遵守 ADR-012「服务端不做剧本感知」解耦原则）；指令协议：未收敛每轮一问+2~4 个猜测选项（优先追问对话与工件中模糊/缺失/矛盾处，问题组固定问题不逐条问用户——由最终答案集承载），收敛时一次性输出覆盖问题组全部 id 的 answers（沿用 interview-prefill「绝不编造、拿不准写待确认」纪律） | CAP-P-01 | assistant-silent.service.spec 31/31（+3：首轮追问 instructions 含问题组/目的/空历史提示+question 轮透传/工件查库注入与已答历史进入 instructions+done 轮 answers/缺问题组 400 不触 LLM）；listScenarios 目录断言更新 | 决策日志三期实施补记（本地）；能力清单变更记录（本地） |
+| frontend | InterviewDialog 升级双形态（ADR-010 三期「访谈 Dialog 换 AI 会话形态」落地）：默认「AI 会话访谈」（新增 interview-chat.tsx：气泡对话流+猜测选项 chips 点击即答+Enter 发送，挂载自动开问、ref 防 StrictMode 双发；收敛后答案**只填空**回填表单（不覆盖手填）并自动切回表单供人审改提交——「AI 代写→人确认」语法保留 submitInterview 确定性转写与闸门），「直接填写」静态表单保留为兜底形态（AI 不可用/8 轮上限到限时管道仍通）；新增 use-interview-dynamic hook（防御性解析 question/done 双轮，答案过滤复用 parseInterviewPrefill 只留问题组内合法 id）；剧本页传入当前阶段产物 documentId 作为 grounding；i18n 双语 10 键 | CAP-P-01 | interview-dialog.test 5/5（chat 首问自动触发+choices 即答历史累积/done 只填空回填切表单/表单兜底全链提交/预填不覆盖——原三用例适配双形态）；前端 65 文件 284 用例全绿；tsc -b 0 错；新文件 eslint 0 警告；server 官方 type-check 0 错 | 无 |
 ### 验收证据回流一期（CAP-B-08）——GitHub PR 终态与 CI 结论自动回流验收
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

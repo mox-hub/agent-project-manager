@@ -8,8 +8,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { eventClient } from '@/infrastructure/event-client';
 import {
   workflowApi,
+  type CreateWorkflowRequest,
   type ResumeWorkflowRequest,
   type TriggerWorkflowRequest,
+  type UpdateWorkflowRequest,
 } from '../api/workflow-api';
 
 export const workflowKeys = {
@@ -92,6 +94,35 @@ export function useResumeWorkflow() {
     onSuccess: (_res, vars) => {
       queryClient.invalidateQueries({ queryKey: workflowKeys.run(vars.runId) });
       queryClient.invalidateQueries({ queryKey: workflowKeys.runs() });
+    },
+  });
+}
+
+/** 产品动作目录（节点库下拉与 AI 草拟共用） */
+export function useWorkflowActions() {
+  return useQuery({
+    queryKey: [...workflowKeys.all, 'actions'],
+    queryFn: () => workflowApi.listActions(),
+  });
+}
+
+export function useCreateWorkflow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateWorkflowRequest) => workflowApi.createWorkflow(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workflowKeys.all });
+    },
+  });
+}
+
+export function useUpdateWorkflow(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateWorkflowRequest) => workflowApi.updateWorkflow(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workflowKeys.definition(id) });
+      queryClient.invalidateQueries({ queryKey: workflowKeys.all });
     },
   });
 }

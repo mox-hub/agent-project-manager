@@ -67,10 +67,43 @@ export interface ResumeWorkflowRequest {
   resumeData: Record<string, unknown>;
 }
 
+/** 产品动作目录项（CAP-A-12 节点库，GET /workflows/actions） */
+export interface WorkflowActionInfo {
+  id: string;
+  title: string;
+  description: string;
+  requiredParams: string[];
+  inputHint: Record<string, string>;
+}
+
+export interface CreateWorkflowRequest {
+  key: string;
+  name: string;
+  description?: string;
+  definition: Record<string, unknown>;
+}
+
+export interface UpdateWorkflowRequest {
+  name?: string;
+  description?: string;
+  definition?: Record<string, unknown>;
+}
+
 export const workflowApi = {
   listDefinitions: () => api.get<WorkflowSummary[]>('/workflows'),
 
   getDefinition: (id: string) => api.get<WorkflowDetail>(`/workflows/${id}`),
+
+  createWorkflow: (data: CreateWorkflowRequest) =>
+    api.post<{ id: string; key: string; version: number }>('/workflows', data),
+
+  updateWorkflow: (id: string, data: UpdateWorkflowRequest) =>
+    api.patch<{ id: string; key: string; version: number; stepsSummary?: WorkflowStepSummary[] }>(
+      `/workflows/${id}`,
+      data,
+    ),
+
+  listActions: () => api.get<WorkflowActionInfo[]>('/workflows/actions'),
 
   triggerRun: (id: string, data: TriggerWorkflowRequest) =>
     api.post<{ workflowRunId: string; status: string }>(`/workflows/${id}/run`, data),

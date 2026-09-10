@@ -60,8 +60,25 @@ export interface ConditionStepDef {
   right: unknown;
 }
 
+/**
+ * 产品动作步骤（CAP-A-12 文法 v2）：把项目暴露的功能做成 workflow 节点。
+ * action 取值见 workflow-actions.ts 注册表（GET /workflows/actions 目录）；
+ * params 叶子支持插值（上游步骤输出经 {steps.x} 流入动作入参）。
+ */
+export interface ActionStepDef {
+  id: string;
+  type: 'action';
+  title?: string;
+  action: string;
+  params?: Record<string, unknown>;
+}
+
 export type WorkflowStepDef =
-  LlmStepDef | HttpStepDef | HumanConfirmStepDef | ConditionStepDef;
+  | LlmStepDef
+  | HttpStepDef
+  | HumanConfirmStepDef
+  | ConditionStepDef
+  | ActionStepDef;
 
 export interface WorkflowDefinitionDoc {
   version: 1;
@@ -101,7 +118,7 @@ export function parseWorkflowDefinition(raw: unknown): WorkflowDefinitionDoc {
       throw new WorkflowDefinitionError(`步骤 id 重复：${step.id}`);
     }
     ids.add(step.id);
-    const known = ['llm', 'http', 'human-confirm', 'condition'];
+    const known = ['llm', 'http', 'human-confirm', 'condition', 'action'];
     if (!known.includes(step.type)) {
       throw new WorkflowDefinitionError(
         `基座暂不支持步骤类型「${String(step.type)}」（支持：${known.join('、')}；code/plugin 待沙箱落地后放开）`,
@@ -120,6 +137,11 @@ export function parseWorkflowDefinition(raw: unknown): WorkflowDefinitionDoc {
     }
     if (step.type === 'condition' && !step.left) {
       throw new WorkflowDefinitionError(`condition 步骤 ${step.id} 缺 left`);
+    }
+    if (step.type === 'action' && !step.action) {
+      throw new WorkflowDefinitionError(
+        `action 步骤 ${step.id} 缺 action（可选值见 GET /workflows/actions 目录）`,
+      );
     }
   }
   return doc;

@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { AdapterRegistryService } from './adapter-registry.service';
 import { UsagePricingService } from './usage-pricing.service';
+import { listWorkflowActions } from '../../workflow/workflow-actions';
 
 /**
  * 统一后台静默 AI 机制 —— 各页面「预留 AI 接口」的单一接入协议。
@@ -214,6 +215,73 @@ ${JSON.stringify(docs)}
 - 每个任务带 acceptance.criteria（1~4 条），从验收草案中挑选与该任务相关的可检查标准；草案不足以支撑的任务给空 criteria 数组，绝不编造。
 - 宁缺毋假：工件里没有的信息留空，不要发明需求。
 只输出 JSON：{"tasks": [{"title": "...", "description": "...", "estimate": 8, "acceptance": {"criteria": [{"criteriaType": "functional", "content": "...", "category": "..."}]}}]}`;
+    },
+  },
+  'interview-dynamic': {
+    description:
+      '剧本访谈动态追问（CAP-P-01 三期）：无状态多轮——基于当前阶段问题组、已答历史与阶段工件深挖澄清（每轮一问 + 猜测选项），收敛时一次性给出问题组完整答案集，人审改后走既有 submitInterview',
+    prepareContext: async (context, { prisma }) => {
+      const ids = Array.isArray(context.artifactDocumentIds)
+        ? (context.artifactDocumentIds as unknown[]).filter(
+            (v): v is string => typeof v === 'string' && !!v,
+          )
+        : [];
+      if (ids.length === 0) return context;
+      const docs = await prisma.document.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, title: true, content: true },
+      });
+      return { ...context, documents: docs };
+    },
+    buildInstructions: (context) => {
+      const questions = Array.isArray(context.questions)
+        ? context.questions
+        : [];
+      if (questions.length === 0) {
+        throw new BadRequestException('访谈动态追问缺少问题组（questions）');
+      }
+      const history = Array.isArray(context.history) ? context.history : [];
+      const purpose = String(context.stagePurpose ?? '').trim();
+      const docs = Array.isArray(context.documents) ? context.documents : [];
+      return `你是项目管理系统的需求访谈员，正在与一位对工程术语不熟的用户对话澄清需求。本阶段目的：${purpose || '（见问题组）'}
+本阶段的访谈问题组（最终要为每一问产出答案）：
+${JSON.stringify(questions)}
+${docs.length ? `本阶段已有的工件材料（优先依据，绝不与之矛盾）：\n${JSON.stringify(docs)}\n` : ''}已完成的对话（按序）：
+${history.length ? JSON.stringify(history) : '（还没有，请开始第一问）'}
+
+规则：
+- 每轮只问一个问题：优先追问对话与工件中「模糊、缺失或自相矛盾」之处；问题组里已有固定问题不必逐条问用户，它们由最终答案集承载。
+- 说人话，不甩术语；给 2~4 个猜测选项降低思考负担（选项只是提示，用户可自由回答）；没有合适的猜测就给空数组。
+- 当对话已足够支撑问题组每一问的答案时收敛。收敛时输出覆盖问题组全部 id 的 answers：答案要具体、可执行、说人话，绝不编造用户没说的承诺（拿不准就写「待确认：…」）。
+- 未收敛只输出 JSON：{"done": false, "question": "...", "choices": ["...", "..."]}
+- 收敛只输出 JSON：{"done": true, "answers": [{"questionId": "问题 id", "answer": "答案"}]}`;
+    },
+  },
+  'workflow-draft': {
+    description:
+      '工作流草拟（CAP-A-12）：用户描述想要的流程，AI 按文法生成 workflow definition 草稿（名称+描述+步骤链），进画布编辑器人工修改后保存',
+    buildInstructions: (context) => {
+      const description = String(context.description ?? '').trim();
+      if (!description) {
+        throw new BadRequestException('草拟工作流缺少流程描述（description）');
+      }
+      const actions = listWorkflowActions();
+      return `你是项目管理系统的流程编排助手。用户会用自然语言描述想要的自动化流程，请把它写成 workflow definition 草稿。
+
+可用的步骤类型（线性链，按顺序执行）：
+- llm：AI 生成文本。字段：id、title、system?、prompt（必填）。输出落在 steps.<id>.value
+- http：外部 HTTP 请求。字段：id、title、url（必填）、method?、body?
+- human-confirm：暂停等人拍板。字段：id、title、message（必填）。批准结果落在 steps.<id>.approved / .note
+- condition：条件闸门，不满足则整个流程失败。字段：id、title、left（插值）、op（eq/ne/gt/gte/lt/lte/contains）、right
+- action：产品动作（落库写数据）。字段：id、title、action（必填）、params。可用动作：
+${JSON.stringify(actions)}
+
+插值语法：{input.x} 引用触发入参，{steps.<stepId>.y} 引用上游输出。步骤 id 用 kebab-case。
+规则：涉及写数据的环节前必须放 human-confirm 让人拍板；params 里只能填用户描述中明确的信息，拿不准的留必填缺失让用户在画布里补；不要发明不存在的动作。
+只输出 JSON：{"name": "流程名", "description": "一句话说明", "steps": [ ...步骤数组... ]}
+
+用户想要的流程：
+${description}`;
     },
   },
 };

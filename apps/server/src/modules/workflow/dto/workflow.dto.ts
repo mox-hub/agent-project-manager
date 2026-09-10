@@ -1,5 +1,63 @@
-import { IsObject, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsObject,
+  IsOptional,
+  IsString,
+  IsArray,
+  Matches,
+  Max,
+  Min,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+/** 创建 workflow 定义（CAP-A-12 画布编辑保存） */
+export class CreateWorkflowDto {
+  @ApiProperty({ description: '唯一 key（kebab-case，冲突 400）' })
+  @IsString()
+  @Matches(/^[a-z][a-z0-9-]*$/, {
+    message: 'key 需为 kebab-case（小写字母开头，仅小写字母/数字/连字符）',
+  })
+  key!: string;
+
+  @ApiProperty({ description: '名称' })
+  @IsString()
+  name!: string;
+
+  @ApiProperty({ description: '描述', required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
+    description: 'definition 文法对象（version:1 + steps 数组）',
+    type: Object,
+    additionalProperties: true,
+  })
+  @IsObject()
+  definition!: Record<string, unknown>;
+}
+
+/** 更新 workflow 定义（按 id 定位，definition 变更时 version 自增） */
+export class UpdateWorkflowDto {
+  @ApiProperty({ description: '名称', required: false })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiProperty({ description: '描述', required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
+    description: 'definition 文法对象（提供时 version 自增）',
+    required: false,
+    type: Object,
+    additionalProperties: true,
+  })
+  @IsOptional()
+  @IsObject()
+  definition?: Record<string, unknown>;
+}
 
 /** 触发 workflow run（保持原 ai-hub RunWorkflowDto 请求形状兼容） */
 export class TriggerWorkflowDto {

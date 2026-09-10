@@ -68,6 +68,8 @@ export function ProjectPlaybookPage() {
     templateDef ??
     (templates?.templates ?? []).find((tp) => tp.key === status?.playbookRef);
   const interviewStageDef = activeTemplate?.stages.find((s) => s.key === interviewStage) ?? null;
+  // 当前访谈阶段的产物文档（若有）——AI 会话访谈的 grounding 材料
+  const interviewStageDoc = status?.stages.find((s) => s.key === interviewStage)?.documentId;
   const activeStage = status?.stages.find((s) => s.status === 'active');
   const activeGatePending = !!activeStage?.gateProposalId && activeStage.gateStatus === 'pending';
 
@@ -354,6 +356,7 @@ export function ProjectPlaybookPage() {
       <InterviewDialog
         projectId={projectId}
         stage={interviewStageDef}
+        stageArtifactDocumentId={interviewStageDoc}
         open={!!interviewStage}
         onOpenChange={(open) => !open && setInterviewStage(null)}
       />
