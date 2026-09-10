@@ -9,7 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Monitor, Server } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { SectionCard } from '@/components/ui/section-card';
 import { StatusPill } from '@/components/ui/status-pill';
@@ -71,44 +71,40 @@ export function RuntimeMachineDetailSection() {
     { label: machine ? machineDisplayName(machine) : (runtimeId ?? '') },
   ];
 
-  if (isLoading) {
+  if (registrations.isLoading) {
     return (
-      <PageShell>
+      <PageShell padded={false}>
         <SubPageToolbar
           aiId="settings.runtimeMachine"
           onBack={() => navigate('/app/settings/runtime')}
           breadcrumbs={breadcrumbs}
         />
-        <div className="p-6">
-          <div className="mx-auto w-full max-w-5xl space-y-6">
-            <SkeletonTable rows={4} columns={5} />
-          </div>
-        </div>
+        <PageBody variant="standard">
+          <SkeletonTable rows={4} columns={5} />
+        </PageBody>
       </PageShell>
     );
   }
 
   if (!machine) {
     return (
-      <PageShell>
+      <PageShell padded={false}>
         <SubPageToolbar
           aiId="settings.runtimeMachine"
           onBack={() => navigate('/app/settings/runtime')}
           breadcrumbs={breadcrumbs}
         />
-        <div className="p-6">
-          <div className="mx-auto w-full max-w-5xl space-y-6">
+        <PageBody variant="standard">
           <EmptyState
             title={t('settings.runtimeMachineNotFound')}
             description={t('settings.runtimeMachineNotFoundDesc')}
             action={
               <Button variant="outline" size="sm" onClick={() => navigate('/app/settings/runtime')}>
-                {t('settings.runtimeTitle')}
+                {t('settings.runtimeBackToOverview')}
               </Button>
             }
           />
-          </div>
-        </div>
+        </PageBody>
       </PageShell>
     );
   }
@@ -117,14 +113,13 @@ export function RuntimeMachineDetailSection() {
   const providers = [...new Set(machine.cliProviders ?? [])];
 
   return (
-    <PageShell>
+    <PageShell padded={false}>
       <SubPageToolbar
         aiId="settings.runtimeMachine"
         onBack={() => navigate('/app/settings/runtime')}
         breadcrumbs={breadcrumbs}
       />
-      <div className="p-6">
-        <div className="mx-auto w-full max-w-5xl space-y-6">
+      <PageBody variant="standard" className="space-y-6">
         {/* 机器头部：图标框 + 名称 + 状态 + 元信息行 + 心跳监控条（右上） */}
         <div className="flex flex-wrap items-start gap-4">
           <span className="relative flex size-14 shrink-0 items-center justify-center rounded-xl bg-accent-blue/10 text-accent-blue">
@@ -234,8 +229,7 @@ export function RuntimeMachineDetailSection() {
             </DataTableShell>
           </AsyncState>
         </SectionCard>
-        </div>
-      </div>
+      </PageBody>
     </PageShell>
   );
 }

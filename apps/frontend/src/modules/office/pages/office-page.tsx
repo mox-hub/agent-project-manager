@@ -39,7 +39,7 @@ export function OfficePage() {
         iconColor="#8B5CF6"
       />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4">
+      <div className="flex w-full flex-col gap-4 px-4 py-3.5 sm:px-6 sm:py-4">
         {/* 汇总条 + 项目过滤 */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-content-text-muted" data-ai-component="office.totals">

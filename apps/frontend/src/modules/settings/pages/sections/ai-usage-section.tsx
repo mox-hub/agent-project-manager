@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Coins, ListOrdered, Zap } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/ui/stats-card';
@@ -86,8 +86,7 @@ export function AiUsageSection() {
         </NativeSelect>
       </div>
 
-      <div className="p-6">
-        <div className="mx-auto w-full max-w-5xl space-y-6">
+      <PageBody variant="standard" className="space-y-6">
         {isLoading ? (
           <div className="flex flex-col gap-4">
             <Skeleton className="h-24 w-full" />
@@ -218,8 +217,7 @@ export function AiUsageSection() {
             </Card>
           </div>
         )}
-        </div>
-      </div>
+      </PageBody>
     </PageShell>
   );
 }

@@ -139,12 +139,16 @@ export function AppearanceSettingsSection() {
   const { mode, setTheme, appearance, setAppearance } = useTheme();
 
   return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Palette} iconColor="text-accent-purple" title={t('settings.appearance')} />
-      <div className="p-6">
-        <div className="mx-auto max-w-5xl space-y-6">
-          {/* 主题模式 */}
-          <Card className="border-border shadow-none">
+    <PageShell
+      variant="standard"
+      icon={Palette}
+      iconColor="text-accent-purple"
+      title={t('settings.appearance')}
+      className="bg-background text-foreground"
+      contentClassName="space-y-6"
+    >
+      {/* 主题模式 */}
+      <Card className="border-border shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <SunMoon size={16} className="text-accent-blue" />
@@ -311,8 +315,6 @@ export function AppearanceSettingsSection() {
               <LanguageSwitcher />
             </CardContent>
           </Card>
-        </div>
-      </div>
     </PageShell>
   );
 }

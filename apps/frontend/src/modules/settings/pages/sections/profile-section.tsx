@@ -91,24 +91,24 @@ export function ProfileSettingsSection() {
   };
 
   return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader
-        icon={UserRound}
-        iconColor="text-accent-blue"
-        title={t('settings.profile')}
-        actions={
-          <HeaderActionButton
-            icon={Save}
-            label={saving ? t('settings.saving') : t('settings.saveChanges')}
-            pinned
-            onClick={handleSave}
-            disabled={saving || isLoading}
-          />
-        }
-      />
-      <div className="p-6">
-        <div className="mx-auto max-w-5xl space-y-6">
-          <Card className="border-border shadow-none">
+    <PageShell
+      variant="standard"
+      icon={UserRound}
+      iconColor="text-accent-blue"
+      title={t('settings.profile')}
+      className="bg-background text-foreground"
+      contentClassName="space-y-6"
+      actions={
+        <HeaderActionButton
+          icon={Save}
+          label={saving ? t('settings.saving') : t('settings.saveChanges')}
+          pinned
+          onClick={handleSave}
+          disabled={saving || isLoading}
+        />
+      }
+    >
+      <Card className="border-border shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <UserRound size={16} className="text-accent-blue" />
@@ -195,8 +195,6 @@ export function ProfileSettingsSection() {
           </Card>
 
           <PasswordCard />
-        </div>
-      </div>
     </PageShell>
   );
 }

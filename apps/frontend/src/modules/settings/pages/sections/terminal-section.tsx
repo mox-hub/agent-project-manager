@@ -224,27 +224,27 @@ export function TerminalSettingsSection() {
   const checkboxLabelClassName = 'flex items-center gap-2 text-sm text-muted-foreground';
 
   return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader
-        icon={Terminal}
-        iconColor="text-accent-purple"
-        title={t('settings.terminal')}
-        actions={
-          <HeaderActionButton
-            icon={Save}
-            label={isSaving ? t('settings.saving') : t('settings.saveChanges')}
-            pinned
-            onClick={handleSave}
-            disabled={isSaving || isLoading}
-            data-ai-component="settings.global-settings.header.save"
-            data-ai-action="settings.global-settings.header.save.click"
-          />
-        }
-      />
-      <div className="p-6">
-        <div className="mx-auto max-w-5xl space-y-6">
-          {/* 终端工具状态卡片 */}
-          <TerminalToolStatusCard />
+    <PageShell
+      variant="standard"
+      icon={Terminal}
+      iconColor="text-accent-purple"
+      title={t('settings.terminal')}
+      className="bg-background text-foreground"
+      contentClassName="space-y-6"
+      actions={
+        <HeaderActionButton
+          icon={Save}
+          label={isSaving ? t('settings.saving') : t('settings.saveChanges')}
+          pinned
+          onClick={handleSave}
+          disabled={isSaving || isLoading}
+          data-ai-component="settings.global-settings.header.save"
+          data-ai-action="settings.global-settings.header.save.click"
+        />
+      }
+    >
+      {/* 终端工具状态卡片 */}
+      <TerminalToolStatusCard />
 
           {/* 终端配置卡片 */}
           <Card
@@ -367,8 +367,6 @@ export function TerminalSettingsSection() {
               </Form>
             </CardContent>
           </Card>
-        </div>
-      </div>
     </PageShell>
   );
 }

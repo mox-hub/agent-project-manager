@@ -711,7 +711,7 @@ export function AcceptanceListPage() {
         downloadMenu={false}
       />
 
-      <div className="mx-auto w-full max-w-screen-xl space-y-5 p-6">
+      <div className="w-full space-y-4 px-4 py-3.5 sm:px-6 sm:py-4">
         {/* KPI + 概览卡（页头切换） */}
         {cardsVisible.visible ? (
           isLoading ? (

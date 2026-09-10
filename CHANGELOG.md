@@ -6,7 +6,7 @@ category: "report"
 status: "active"
 version: "1.0.0"
 created: "2026-02-20"
-modified: "2026-09-09"
+modified: "2026-09-10"
 scope: "全仓库版本变更"
 ai-session-types: "all"
 ai-priority: "high"
@@ -20,6 +20,15 @@ tags: "changelog,release"
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
 ## [Unreleased]
+
+### 页面级规格与留白体系标准落地（PageShell Profile Variants + 设置页/列表页/阅读页统一规格收敛）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | `DESIGN.md` 与 `docs/design/DESIGN.md` 补齐 §3.4 页面级规格与留白体系标准：定义 full（100% 全宽高密）、standard（max-w-5xl ~1024px 居中）、reading（max-w-4xl ~896px 黄金阅读宽）3 档规格尺寸、内边距与典型消费场景，制定嵌套治理铁律（严禁在 PageShell 内部重复手写 max-w-5xl mx-auto 与 p-6） | CAP-P-01 | pnpm check:docs-sync | DESIGN.md §3.4 同步更新 |
+| frontend | `PageShell` 增强规格变体调度：支持 `variant="full" \| "standard" \| "reading"`、`padded`、`contentClassName`，内置 `VARIANT_CONTAINER_CLASSES` 与 `VARIANT_PADDING_CLASSES`，导出 `PageBody` 支持局部包裹与 HTMLAttributes 透传 | CAP-P-01 | tsc --noEmit 0 错，Vitest 273 用例全绿 | 对齐 DESIGN.md §3.4 |
+| frontend | 设置与配置域页面全面收敛至 `standard` 规格：重构 18 个设置与核心配置页面（Appearance、Profile、AccessTokens、Git、Linear、GitHub、Integrations、Role/Status/Tag/Template Manager、AI Usage、Memory、ShortId、IssueTypes、Storage、Terminal、Runtime/MachineDetail、AiAgents、AiExecutionCenter、AiManagement），消除各自冗余的手写 max-w-5xl 和双层嵌套 Header | CAP-P-01 | tsc --noEmit 0 错，7 项设计治理门禁通过 | 消除 300+ 行重复手写 padding 代码 |
+| frontend | 全宽高密与阅读型页面规格对齐：`tasks-page`、`bugs-page`、`office-page`、`acceptance-list-page` 消除冗余 24px (p-6) 臃肿边距，收敛至高密 px-4 py-3.5 sm:px-6 sm:py-4；`help-page` 内容区收敛至 max-w-4xl 黄金阅读宽度 | CAP-P-01 | Vitest 63 文件 273 用例全绿 | 对齐 DESIGN.md §3.4 |
 
 ### 全局设计系统规范升级与双表面高密度重构（DESIGN.md v2.0 + 低饱和多色阶 + 外舒内紧 + 5 类 AI 结构卡片）
 

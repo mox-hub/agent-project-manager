@@ -114,9 +114,11 @@ export function RuntimeSettingsSection() {
 
   return (
     <PageShell
+      variant="standard"
+      contentClassName="space-y-6"
       aiPage="settings.runtime"
       title={t('settings.runtimeTitle')}
-      icon={Server}
+      icon={Cpu}
       iconColor="text-accent-blue"
       metrics={[
         {
@@ -126,9 +128,7 @@ export function RuntimeSettingsSection() {
         },
       ]}
     >
-      <div className="p-6">
-        <div className="mx-auto w-full max-w-5xl space-y-6">
-        <SectionCard
+      <SectionCard
           icon={Monitor}
           iconColor="text-accent-blue"
           title={t('settings.runtimeMachinesTitle')}
@@ -346,8 +346,6 @@ export function RuntimeSettingsSection() {
             {t('settings.runtimeGuideExecutionsPath')}
           </Alert>
         </SectionCard>
-        </div>
-      </div>
     </PageShell>
   );
 }

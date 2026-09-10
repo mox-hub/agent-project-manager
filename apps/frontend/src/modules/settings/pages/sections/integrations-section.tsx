@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -636,8 +636,8 @@ export function IntegrationsSettingsSection() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
-          <div className="max-w-4xl mx-auto space-y-8">
+        <div className="flex-1 overflow-auto">
+          <PageBody variant="standard" className="space-y-8">
             {Object.entries(grouped).map(([cat, items]) => (
               <section key={cat}>
                 {/* Section header */}
@@ -754,7 +754,7 @@ export function IntegrationsSettingsSection() {
                 ))}
               </div>
             </section>
-          </div>
+          </PageBody>
         </div>
       </div>
 

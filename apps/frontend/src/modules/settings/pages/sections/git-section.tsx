@@ -231,27 +231,27 @@ export function GitSettingsSection() {
   const checkboxLabelClassName = 'flex items-center gap-2 text-sm text-muted-foreground';
 
   return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader
-        icon={GitBranch}
-        iconColor="text-accent-blue"
-        title={t('settings.git')}
-        actions={
-          <HeaderActionButton
-            icon={Save}
-            label={isSaving ? t('settings.saving') : t('settings.saveChanges')}
-            pinned
-            onClick={handleSave}
-            disabled={isSaving || isLoading}
-            data-ai-component="settings.global-settings.header.save"
-            data-ai-action="settings.global-settings.header.save.click"
-          />
-        }
-      />
-      <div className="p-6">
-        <div className="mx-auto max-w-5xl space-y-6">
-          {/* Git 工具状态卡片 */}
-          <GitToolStatusCard />
+    <PageShell
+      variant="standard"
+      icon={GitBranch}
+      iconColor="text-accent-blue"
+      title={t('settings.git')}
+      className="bg-background text-foreground"
+      contentClassName="space-y-6"
+      actions={
+        <HeaderActionButton
+          icon={Save}
+          label={isSaving ? t('settings.saving') : t('settings.saveChanges')}
+          pinned
+          onClick={handleSave}
+          disabled={isSaving || isLoading}
+          data-ai-component="settings.global-settings.header.save"
+          data-ai-action="settings.global-settings.header.save.click"
+        />
+      }
+    >
+      {/* Git 工具状态卡片 */}
+      <GitToolStatusCard />
 
           {/* Git 配置卡片 */}
           <Card
@@ -383,8 +383,6 @@ export function GitSettingsSection() {
               </Form>
             </CardContent>
           </Card>
-        </div>
-      </div>
     </PageShell>
   );
 }

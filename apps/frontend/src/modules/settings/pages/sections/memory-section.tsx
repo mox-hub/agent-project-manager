@@ -115,11 +115,16 @@ export function MemorySection() {
   );
 
   return (
-    <PageShell aiPage={CORE_AI_PAGE_IDS.settings} className="bg-background text-foreground">
-      <PageHeader title={t('memory.title')} icon={Brain} iconColor="text-accent-yellow" />
-      <div className="p-6">
-        <div className="mx-auto w-full max-w-5xl space-y-6">
-          <Card className="border-border shadow-none">
+    <PageShell
+      variant="standard"
+      title={t('memory.title')}
+      icon={Brain}
+      iconColor="text-accent-yellow"
+      aiPage={CORE_AI_PAGE_IDS.settings}
+      className="bg-background text-foreground"
+      contentClassName="space-y-6"
+    >
+      <Card className="border-border shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Brain size={16} className="text-accent-yellow" />
@@ -172,8 +177,6 @@ export function MemorySection() {
               )}
             </CardContent>
           </Card>
-        </div>
-      </div>
     </PageShell>
   );
 }

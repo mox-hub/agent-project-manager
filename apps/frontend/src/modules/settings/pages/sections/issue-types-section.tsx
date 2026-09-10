@@ -37,13 +37,15 @@ export function IssueTypesSettingsSection() {
   const { t } = useTranslation();
 
   return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Shapes} iconColor="text-accent-blue" title={t('settings.issueTypes')} />
-      <div className="p-6">
-        <div className="mx-auto max-w-5xl space-y-6">
-          <IssueTypesCard />
-        </div>
-      </div>
+    <PageShell
+      variant="standard"
+      icon={Shapes}
+      iconColor="text-accent-blue"
+      title={t('settings.issueTypes')}
+      className="bg-background text-foreground"
+      contentClassName="space-y-6"
+    >
+      <IssueTypesCard />
     </PageShell>
   );
 }

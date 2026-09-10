@@ -239,7 +239,8 @@ export function HelpPage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6 w-full">
+        <div className="flex-1 overflow-auto px-6 py-6 sm:px-8 sm:py-8 w-full">
+          <div className="mx-auto w-full max-w-4xl space-y-6">
           {currentArticle ? (
             <div>
               <button
@@ -313,6 +314,7 @@ export function HelpPage() {
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

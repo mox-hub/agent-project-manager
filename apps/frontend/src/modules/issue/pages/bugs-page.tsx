@@ -368,7 +368,7 @@ export function BugsPage() {
       ) : null}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto px-4 py-3.5 sm:px-6 sm:py-4">
         <div className="w-full">
           {isError ? (
             <AsyncState
