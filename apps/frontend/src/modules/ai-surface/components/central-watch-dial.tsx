@@ -103,14 +103,14 @@ export function CentralWatchDial({
   const codeArtifact = artifacts['artifact-diff-2'];
   const qaArtifact = artifacts['artifact-qa-3'];
 
-  // 生成手表表盘 60 个刻度点与数字
-  const DIAL_RADIUS = 300;
-  const DIAL_CENTER = 310;
+  // 生成手表表盘 60 个刻度点与数字 (放大至 720px 精密工业表壳)
+  const DIAL_RADIUS = 348;
+  const DIAL_CENTER = 360;
   const TICKS = Array.from({ length: 60 }, (_, i) => {
     const isMajor = i % 5 === 0;
     const angleRad = ((i * 6 - 90) * Math.PI) / 180;
     const outerR = DIAL_RADIUS;
-    const innerR = isMajor ? DIAL_RADIUS - 12 : DIAL_RADIUS - 6;
+    const innerR = isMajor ? DIAL_RADIUS - 14 : DIAL_RADIUS - 7;
 
     return {
       index: i,
@@ -119,14 +119,14 @@ export function CentralWatchDial({
       y1: DIAL_CENTER + outerR * Math.sin(angleRad),
       x2: DIAL_CENTER + innerR * Math.cos(angleRad),
       y2: DIAL_CENTER + innerR * Math.sin(angleRad),
-      numX: DIAL_CENTER + (DIAL_RADIUS - 22) * Math.cos(angleRad),
-      numY: DIAL_CENTER + (DIAL_RADIUS - 22) * Math.sin(angleRad),
+      numX: DIAL_CENTER + (DIAL_RADIUS - 26) * Math.cos(angleRad),
+      numY: DIAL_CENTER + (DIAL_RADIUS - 26) * Math.sin(angleRad),
       label: i === 0 ? '60' : String(i).padStart(2, '0'),
     };
   });
 
   // 贴合表盘内侧的弧形滚动条参数 (位于表盘内侧右缘，从 -52° 到 +52°)
-  const ARC_RADIUS = 265;
+  const ARC_RADIUS = 302;
   const ARC_START_DEG = -52;
   const ARC_END_DEG = 52;
   const ARC_SPAN_DEG = ARC_END_DEG - ARC_START_DEG;
@@ -149,12 +149,12 @@ export function CentralWatchDial({
   return (
     <div
       className="relative flex items-center justify-center select-none"
-      style={{ width: 620, height: 620 }}
+      style={{ width: 720, height: 720 }}
     >
       {/* 1. 表盘外表圈刻度与金属边框 SVG (Watch Bezel Frame) */}
       <svg
         className="pointer-events-none absolute inset-0 size-full overflow-visible z-10"
-        viewBox="0 0 620 620"
+        viewBox="0 0 720 720"
       >
         <defs>
           <radialGradient id="dialGlow" cx="50%" cy="50%" r="50%">
@@ -262,8 +262,8 @@ export function CentralWatchDial({
       <div
         className="relative overflow-hidden rounded-full backdrop-blur-3xl flex flex-col items-center justify-between"
         style={{
-          width: 536,
-          height: 536,
+          width: 624,
+          height: 624,
           background: isDark
             ? 'radial-gradient(circle at 50% 50%, rgba(18, 22, 34, 0.95) 0%, rgba(7, 8, 12, 0.98) 100%)'
             : 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.96) 0%, rgba(240, 244, 255, 0.92) 100%)',
@@ -359,11 +359,15 @@ export function CentralWatchDial({
           </div>
         </div>
 
-        {/* 内部 3D 景深滚动列表 (支持随着上下远近放大缩小) */}
+        {/* 内部 3D 景深滚动列表 (支持随着上下远近放大缩小，原生直杆滚动条已完全隐藏，仅保留右缘贴合圆弧滚动条) */}
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
           className="size-full overflow-y-auto overflow-x-hidden pt-24 pb-20 px-8 flex flex-col gap-4 no-scrollbar scroll-smooth select-text"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
         >
           {/* 卡片 1：主线任务拆解链 (CAP-P-01 演进拓扑) */}
           {(activeTab === 'overview' || activeTab === 'contract') && (

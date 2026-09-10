@@ -579,3 +579,14 @@
     animation: none !important;
   }
 }
+
+/* 隐藏原生滚动条通用工具类 (确保表盘等定制圆弧滚动场景下原生直杆滚动条彻底隐形) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
