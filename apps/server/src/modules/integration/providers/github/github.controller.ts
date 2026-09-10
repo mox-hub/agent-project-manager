@@ -227,6 +227,8 @@ export class GitHubController {
       base: string;
       body?: string;
       draft?: boolean;
+      acceptanceId?: string;
+      executionRunId?: string;
     },
     @Req() req: Request,
   ) {
@@ -242,6 +244,8 @@ export class GitHubController {
       base: body.base,
       body: body.body,
       draft: body.draft,
+      acceptanceId: body.acceptanceId,
+      executionRunId: body.executionRunId,
     });
   }
 
@@ -317,6 +321,9 @@ export class GitHubController {
       } else if (event === 'pull_request_review') {
         const payload = JSON.parse(rawBody.toString('utf8'));
         await this.sync.handlePullRequestReviewEvent(payload);
+      } else if (event === 'check_run') {
+        const payload = JSON.parse(rawBody.toString('utf8'));
+        await this.sync.handleCheckRunEvent(payload);
       } else {
         this.logger.debug(`GitHub webhook event ${event} not handled`);
       }

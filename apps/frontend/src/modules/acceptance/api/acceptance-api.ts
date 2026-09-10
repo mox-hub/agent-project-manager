@@ -42,6 +42,9 @@ export interface CompletionEvidence {
   };
   prUrl?: string;
   state?: string;
+  prNumber?: number;
+  prRepo?: string;
+  prSyncedAt?: string;
   filePaths?: string[];
   previousEvidence?: CompletionEvidence;
 }
@@ -66,6 +69,7 @@ export interface CriterionEvidence {
   storageRef?: string | null;
   submittedBy: string;
   createdAt: string;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface AcceptanceCriterion {
