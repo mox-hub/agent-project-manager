@@ -7,7 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Cpu, ListChecks, Monitor, Server, ShieldCheck, Terminal, Wifi } from 'lucide-react';
+import { ChevronRight, Cpu, ListChecks, Monitor, ShieldCheck, Terminal, Wifi } from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
 import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
 import { PageShell } from '@/components/ui/page-shell';

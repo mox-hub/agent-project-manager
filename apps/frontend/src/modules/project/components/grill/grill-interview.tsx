@@ -6,7 +6,7 @@
  * 会话态全在本地 useState（无服务端会话）；任何时刻可降级 onFallback 改手动。
  */
 import { useState } from 'react';
-import { ArrowRight, CircleAlert, RotateCcw, Sparkles } from 'lucide-react';
+import { ArrowRight, CircleAlert, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';

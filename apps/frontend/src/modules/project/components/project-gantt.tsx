@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { GanttChart, type GanttChartItem, type GanttDateRange } from '@/shared/components/gantt-chart';
-import { PROJECT_WORKFLOW_VISUALS } from '@/shared/status/status-visuals';
 import type { Project } from '../api/project-api';
 
 interface ProjectGanttProps {

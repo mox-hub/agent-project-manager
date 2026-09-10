@@ -20,7 +20,6 @@ vi.mock('@/modules/assistant/hooks/use-grill', () => ({
   })),
 }));
 
-import { useGrill } from '@/modules/assistant/hooks/use-grill';
 
 const DRAFT_PLACEHOLDER = /想给我们小组做一个记录会议决定的小工具/;
 

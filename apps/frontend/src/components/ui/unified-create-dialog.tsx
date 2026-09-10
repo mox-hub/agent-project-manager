@@ -21,7 +21,7 @@
  * 点击触发 Popover (status / priority / assignee / project / milestone / label / date)
  */
 import * as React from 'react';
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { GrillInterview } from '@/modules/project/components/grill/grill-interview';

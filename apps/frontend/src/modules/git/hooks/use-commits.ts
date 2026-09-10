@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { gitApi } from '../api/git-api';
-import type { Commit, CommitFile } from '../api/git-api';
+import type { Commit } from '../api/git-api';
 
 /**
  * 分页载荷归一化：标准契约是 {items,total,...}（PaginatedDataDto），

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { StatusPill } from '@/components/ui/status-pill';
 import { useNavigate } from 'react-router-dom';
 import { useDesktop } from '@/modules/desktop';
-import { isTauriAvailable } from '@/shared/types/electron-api';
 import { Spinner } from '@/components/ui/spinner';
 
 export function DesktopInitPage() {

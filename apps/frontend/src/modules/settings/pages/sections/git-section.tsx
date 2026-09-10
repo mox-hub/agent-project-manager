@@ -8,7 +8,6 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-tool';

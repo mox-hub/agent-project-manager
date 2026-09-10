@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { documentSyncApi, type DocumentSyncWarning } from '../api/document-api';
 import { useToastMutation } from '@/shared/hooks';
 

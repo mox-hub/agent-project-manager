@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Activity, Bot, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { ContextPreviewButton } from './context-preview-dialog';
 
 export interface ExecutionRun {
   id: string;

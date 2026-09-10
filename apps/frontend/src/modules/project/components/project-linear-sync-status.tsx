@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Lock, ExternalLink, AlertCircle, CheckCircle2, Unlink } from 'lucide-react';
+import { RefreshCw, Lock, ExternalLink, AlertCircle, Unlink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -9,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useSyncProject, useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
+import { useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
 import { LinearProjectsTable } from '@/modules/linear/components/linear-projects-table';
 import {
   LinearSourceBadge,

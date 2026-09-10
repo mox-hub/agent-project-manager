@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { api } from '@/infrastructure/api-client';
 import { gitApi } from '../api/git-api';
 import { GitBranch, Link2 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';

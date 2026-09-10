@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
 import { useUpdateShortIdPrefix, useShortIdPrefix } from '@/modules/config/hooks/use-global-config';
 import { useBackfillShortIds, useShortIdStats } from '@/modules/issue/hooks/use-project-tasks';
 import { Hash, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';

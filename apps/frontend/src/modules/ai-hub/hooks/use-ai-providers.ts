@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { aiHubApi, AIProviderConfig } from '../api/ai-hub-api';
+import { aiHubApi } from '../api/ai-hub-api';
 
 export const providerKeys = {
   all: ['providers'] as const,

@@ -7,7 +7,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useTerminalStatus, useTestShell } from '@/modules/runtime/hooks/use-terminal-status';
