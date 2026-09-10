@@ -5,10 +5,13 @@ import { z } from 'zod';
 import type { AnyWorkflow, Step } from '@mastra/core/workflows';
 import { createStep, createWorkflow } from '@mastra/core/workflows';
 import { AdapterRegistryService } from '../ai-hub/services/adapter-registry.service';
+import { PrismaService } from '@/core/database/prisma.service';
+import { WORKFLOW_ACTIONS } from './workflow-actions';
 import {
   interpolateDeep,
   interpolateTemplate,
   parseWorkflowDefinition,
+  type ActionStepDef,
   type ConditionStepDef,
   type HumanConfirmStepDef,
   type HttpStepDef,
@@ -44,7 +47,10 @@ function withStepOutput(ctx: Ctx, stepId: string, output: unknown): Ctx {
 export class WorkflowCompilerService {
   private readonly logger = new Logger(WorkflowCompilerService.name);
 
-  constructor(private readonly adapterRegistry: AdapterRegistryService) {}
+  constructor(
+    private readonly adapterRegistry: AdapterRegistryService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /** 编译 definition 文法为 Mastra workflow（每次触发即时编译，定义变更零缓存失效成本） */
   compile(workflowId: string, raw: unknown): AnyWorkflow {
@@ -73,6 +79,8 @@ export class WorkflowCompilerService {
         return this.buildHumanConfirmStep(def);
       case 'condition':
         return this.buildConditionStep(def);
+      case 'action':
+        return this.buildActionStep(def);
     }
   }
 
@@ -207,6 +215,32 @@ export class WorkflowCompilerService {
           );
         }
         return withStepOutput(ctx, def.id, { met: true });
+      },
+    }) as unknown as AnyStep;
+  }
+
+  /** 产品动作步骤（CAP-A-12）：按注册表 id 查动作，params 叶子插值后执行 */
+  private buildActionStep(def: ActionStepDef): AnyStep {
+    return createStep({
+      id: def.id,
+      inputSchema: CtxSchema,
+      outputSchema: CtxSchema,
+      execute: async ({ inputData }) => {
+        const ctx = inputData as Ctx;
+        const action = WORKFLOW_ACTIONS[def.action];
+        if (!action) {
+          throw new Error(
+            `未知产品动作「${def.action}」（步骤 ${def.id}），可选值见 GET /workflows/actions`,
+          );
+        }
+        const params = def.params
+          ? (interpolateDeep(def.params, ctx) as Record<string, unknown>)
+          : {};
+        this.logger.log(
+          `[workflow action step=${def.id}] action=${def.action}`,
+        );
+        const output = await action.execute(this.prisma, params);
+        return withStepOutput(ctx, def.id, output);
       },
     }) as unknown as AnyStep;
   }

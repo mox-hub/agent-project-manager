@@ -43295,6 +43295,254 @@
         "tags": [
           "workflows"
         ]
+      },
+      "post": {
+        "operationId": "WorkflowController_createWorkflow",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkflowDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建成功（id/key/version）"
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "创建工作流定义（画布编辑保存；人直接编辑不走决策卡）",
+        "tags": [
+          "workflows"
+        ]
+      }
+    },
+    "/_api/workflows/actions": {
+      "get": {
+        "operationId": "WorkflowController_listActions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "动作清单（id/title/description/requiredParams/inputHint）"
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "产品动作目录（CAP-A-12 节点库单一真相）",
+        "tags": [
+          "workflows"
+        ]
       }
     },
     "/_api/workflows/{id}": {
@@ -43429,6 +43677,144 @@
           }
         },
         "summary": "工作流定义详情",
+        "tags": [
+          "workflows"
+        ]
+      },
+      "patch": {
+        "operationId": "WorkflowController_updateWorkflow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Workflow ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkflowDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功（id/key/version/stepsSummary）"
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "更新工作流定义（definition 变更时 version 自增）",
         "tags": [
           "workflows"
         ]
@@ -70633,6 +71019,51 @@
           "createdAt",
           "updatedAt"
         ]
+      },
+      "CreateWorkflowDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "唯一 key（kebab-case，冲突 400）"
+          },
+          "name": {
+            "type": "string",
+            "description": "名称"
+          },
+          "description": {
+            "type": "string",
+            "description": "描述"
+          },
+          "definition": {
+            "type": "object",
+            "description": "definition 文法对象（version:1 + steps 数组）",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "definition"
+        ]
+      },
+      "UpdateWorkflowDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "名称"
+          },
+          "description": {
+            "type": "string",
+            "description": "描述"
+          },
+          "definition": {
+            "type": "object",
+            "description": "definition 文法对象（提供时 version 自增）",
+            "additionalProperties": true
+          }
+        }
       },
       "TriggerWorkflowDto": {
         "type": "object",

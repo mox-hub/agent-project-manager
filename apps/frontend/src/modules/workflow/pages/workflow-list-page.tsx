@@ -5,13 +5,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { GitBranch, Play, Workflow as WorkflowIcon } from 'lucide-react';
+import { GitBranch, Play, Plus, Sparkles, Workflow as WorkflowIcon } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
-import { useTriggerWorkflow, useWorkflowEvents, useWorkflows } from '../hooks/use-workflows';
+import { cn } from '@/lib/utils';
+import {
+  useCreateWorkflow,
+  useTriggerWorkflow,
+  useWorkflowEvents,
+  useWorkflows,
+} from '../hooks/use-workflows';
+import { useWorkflowDraft } from '@/modules/assistant/hooks/use-workflow-draft';
 import type { WorkflowSummary } from '../api/workflow-api';
 
 export function WorkflowListPage() {
@@ -31,10 +39,20 @@ export function WorkflowListPage() {
   useWorkflowEvents();
 
   const [triggerTarget, setTriggerTarget] = useState<WorkflowSummary | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <PageShell>
-      <PageHeader title={t('workflow.title')} icon={WorkflowIcon} />
+      <PageHeader
+        title={t('workflow.title')}
+        icon={WorkflowIcon}
+        actions={
+          <Button size="sm" onClick={() => setCreateOpen(true)} data-ai="workflow.create">
+            <Plus className="mr-1 size-3.5" />
+            {t('workflow.createDialog.open')}
+          </Button>
+        }
+      />
       <p className="mt-1 text-xs text-muted-foreground">{t('workflow.description')}</p>
 
       {isLoading ? (
@@ -98,7 +116,185 @@ export function WorkflowListPage() {
       )}
 
       <TriggerDialog target={triggerTarget} onClose={() => setTriggerTarget(null)} />
+      <CreateWorkflowDialog open={createOpen} onClose={() => setCreateOpen(false)} />
     </PageShell>
+  );
+}
+
+/** 新建工作流：基本信息 + AI 草拟流程（描述需求 → definition 草稿） */
+function CreateWorkflowDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const create = useCreateWorkflow();
+  const draft = useWorkflowDraft();
+
+  const [key, setKey] = useState('');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiSteps, setAiSteps] = useState<Array<Record<string, unknown>>>([]);
+
+  const reset = () => {
+    setKey('');
+    setName('');
+    setDescription('');
+    setAiPrompt('');
+    setAiSteps([]);
+  };
+
+  const handleDraft = () => {
+    if (!aiPrompt.trim() || draft.isPending) return;
+    draft.mutate(
+      { description: aiPrompt.trim() },
+      {
+        onSuccess: (result) => {
+          setName((prev) => prev || result.name);
+          setDescription((prev) => prev || result.description);
+          setAiSteps(result.steps);
+          toast.success(t('workflow.createDialog.drafted'));
+        },
+      },
+    );
+  };
+
+  const handleSave = () => {
+    if (!key.trim() || !name.trim() || aiSteps.length === 0) {
+      toast.error(t('workflow.createDialog.required'));
+      return;
+    }
+    create.mutate(
+      {
+        key: key.trim(),
+        name: name.trim(),
+        description: description.trim() || undefined,
+        definition: { version: 1, steps: aiSteps },
+      },
+      {
+        onSuccess: (res) => {
+          toast.success(t('workflow.createDialog.created'));
+          onClose();
+          reset();
+          navigate(`/app/workflows/${res.id}`);
+        },
+        onError: (err) => toast.error((err as Error).message || t('workflow.createDialog.failed')),
+      },
+    );
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) {
+          reset();
+          onClose();
+        }
+      }}
+    >
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t('workflow.createDialog.title')}</DialogTitle>
+          <DialogDescription>{t('workflow.createDialog.desc')}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5 rounded-lg border border-accent-purple/30 bg-accent-purple/5 p-3">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-content-text">
+              <Sparkles className="size-3.5 text-accent-purple" />
+              {t('workflow.createDialog.aiLabel')}
+            </label>
+            <textarea
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              rows={2}
+              placeholder={t('workflow.createDialog.aiPlaceholder')}
+              className="w-full resize-y rounded-lg border border-border bg-content-bg px-3 py-2 text-xs text-content-text outline-none transition-colors placeholder:text-content-text-muted focus:border-accent-blue/60"
+              data-ai="workflow.aiPrompt"
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-11 text-content-text-muted">
+                {aiSteps.length > 0
+                  ? t('workflow.createDialog.draftedSteps', { count: aiSteps.length })
+                  : t('workflow.createDialog.aiHint')}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                disabled={draft.isPending || !aiPrompt.trim()}
+                onClick={handleDraft}
+                data-ai="workflow.aiDraft"
+              >
+                <Sparkles
+                  className={cn(
+                    'mr-1 size-3 text-accent-purple',
+                    draft.isPending && 'animate-pulse',
+                  )}
+                />
+                {draft.isPending ? t('workflow.createDialog.drafting') : t('workflow.createDialog.draft')}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-content-text">
+              {t('workflow.createDialog.keyLabel')}
+            </label>
+            <Input
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="weekly-report"
+              className="h-8 font-mono text-xs"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-content-text">
+              {t('workflow.createDialog.nameLabel')}
+            </label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-content-text">
+              {t('workflow.createDialog.descLabel')}
+            </label>
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="h-8 text-xs"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              reset();
+              onClose();
+            }}
+          >
+            {t('common.cancel')}
+          </Button>
+          <Button
+            size="sm"
+            disabled={create.isPending || aiSteps.length === 0 || !key.trim() || !name.trim()}
+            onClick={handleSave}
+            data-ai="workflow.createSave"
+          >
+            {t('workflow.createDialog.save')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

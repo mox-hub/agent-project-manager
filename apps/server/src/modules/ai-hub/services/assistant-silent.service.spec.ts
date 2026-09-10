@@ -108,6 +108,7 @@ describe('AssistantSilentService.run', () => {
       'interview-prefill',
       'intake-composite',
       'interview-dynamic',
+      'workflow-draft',
     ]);
   });
 
@@ -327,6 +328,52 @@ describe('AssistantSilentService.run', () => {
       await expect(
         service.run('interview-dynamic', { history: [] }, 'p1', 'u1'),
       ).rejects.toThrow(/缺少问题组/);
+      expect(chat).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('workflow-draft', () => {
+    const makeDraftService = (chatContent: string) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const service = new AssistantSilentService(
+        { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat };
+    };
+
+    it('instructions 含五类步骤说明与产品动作目录，透传草稿 JSON', async () => {
+      const { service, chat } = makeDraftService(
+        '{"name": "周报流", "description": "生成周报", "steps": [{"id": "draft", "type": "llm", "prompt": "写周报"}]}',
+      );
+      const result = await service.run(
+        'workflow-draft',
+        { description: '每周五让 AI 写周报，我确认后归档' },
+        'p1',
+        'u1',
+      );
+
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('human-confirm');
+      expect(instructions).toContain('issue.create');
+      expect(instructions).toContain('document.create');
+      expect(result.data).toMatchObject({ name: '周报流' });
+    });
+
+    it('缺流程描述 → 400（不触 LLM）', async () => {
+      const { service, chat } = makeDraftService('{}');
+      await expect(
+        service.run('workflow-draft', {}, 'p1', 'u1'),
+      ).rejects.toThrow(/缺少流程描述/);
       expect(chat).not.toHaveBeenCalled();
     });
   });

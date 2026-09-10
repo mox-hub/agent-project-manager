@@ -60,6 +60,15 @@ describe('stepsToFlow（definition → 节点图转换器）', () => {
     expect(stepNode).toBeTruthy();
   });
 
+  it('action 步骤（产品动作节点）正常转换并携带数据', () => {
+    const { nodes } = stepsToFlow(
+      [{ id: 'create', type: 'action', title: '登记任务' }],
+      labelOf,
+    );
+    const stepNode = nodes.find((n) => n.id === 'create');
+    expect((stepNode!.data as { step: CanvasStep }).step.type).toBe('action');
+  });
+
   it('节点携带步骤数据，step 节点不可拖拽（只读画布）', () => {
     const { nodes } = stepsToFlow(STEPS, labelOf);
     const stepNode = nodes.find((n) => n.id === 'draft');

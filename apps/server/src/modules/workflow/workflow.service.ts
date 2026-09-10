@@ -15,11 +15,17 @@ import type { AnyWorkflow, Run } from '@mastra/core/workflows';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { WorkflowCompilerService } from './workflow-compiler.service';
+import { listWorkflowActions } from './workflow-actions';
 import {
+  BUILTIN_WORKFLOW_TEMPLATES,
   DEMO_WORKFLOW_DEFINITION,
   DEMO_WORKFLOW_KEY,
 } from './workflow-builtin';
-import { parseWorkflowDefinition } from './workflow.definition';
+import {
+  parseWorkflowDefinition,
+  summarizeDefinition,
+  WorkflowDefinitionError,
+} from './workflow.definition';
 
 /**
  * WorkflowService（CAP-A-11）——持久执行引擎基座。
@@ -74,20 +80,20 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       url: 'file:./data/mastra-workflows.db',
     });
 
-    // 内置 demo 定义：upsert 产品侧定义账 + 注册进引擎注册表
-    await this.prisma.aIWorkflowDefinition.upsert({
-      where: { key: DEMO_WORKFLOW_KEY },
-      create: {
-        key: DEMO_WORKFLOW_KEY,
-        name: '项目简介三步流（内置演示）',
-        description:
-          'AI 起草项目简介 → 人工确认（暂停等待拍板）→ 确认闸门 → AI 生成验收要点',
-        definition:
-          DEMO_WORKFLOW_DEFINITION as unknown as Prisma.InputJsonObject,
-        createdBy: null,
-      },
-      update: {},
-    });
+    // 内置模板（CAP-A-12 模板库）：遍历 upsert 产品侧定义账 + demo 注册进引擎注册表
+    for (const template of BUILTIN_WORKFLOW_TEMPLATES) {
+      await this.prisma.aIWorkflowDefinition.upsert({
+        where: { key: template.key },
+        create: {
+          key: template.key,
+          name: template.name,
+          description: template.description,
+          definition: template.definition as unknown as Prisma.InputJsonObject,
+          createdBy: null,
+        },
+        update: {},
+      });
+    }
 
     this.mastra = new Mastra({
       storage: this.storage,
@@ -141,6 +147,95 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       );
     }
     return { ...workflow, stepsSummary };
+  }
+
+  // ── 定义 CRUD（CAP-A-12 画布编辑保存；人直接编辑不走决策卡） ──
+
+  async createDefinition(
+    dto: {
+      key: string;
+      name: string;
+      description?: string;
+      definition: Record<string, unknown>;
+    },
+    userId: string,
+  ) {
+    try {
+      parseWorkflowDefinition(dto.definition);
+    } catch (err) {
+      throw new BadRequestException(
+        `definition 文法非法：${err instanceof WorkflowDefinitionError ? err.message : String(err)}`,
+      );
+    }
+    const existing = await this.prisma.aIWorkflowDefinition.findUnique({
+      where: { key: dto.key },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        `workflow key ${dto.key} 已存在（v${existing.version}）`,
+      );
+    }
+    const created = await this.prisma.aIWorkflowDefinition.create({
+      data: {
+        key: dto.key,
+        name: dto.name,
+        description: dto.description ?? null,
+        definition: dto.definition as Prisma.InputJsonObject,
+        createdBy: userId,
+      },
+    });
+    return { id: created.id, key: created.key, version: created.version };
+  }
+
+  async updateDefinition(
+    id: string,
+    dto: {
+      name?: string;
+      description?: string;
+      definition?: Record<string, unknown>;
+    },
+  ) {
+    const workflow = await this.prisma.aIWorkflowDefinition.findUnique({
+      where: { id },
+    });
+    if (!workflow) throw new NotFoundException('Workflow not found');
+    if (dto.definition !== undefined) {
+      try {
+        parseWorkflowDefinition(dto.definition);
+      } catch (err) {
+        throw new BadRequestException(
+          `definition 文法非法：${err instanceof WorkflowDefinitionError ? err.message : String(err)}`,
+        );
+      }
+    }
+    const updated = await this.prisma.aIWorkflowDefinition.update({
+      where: { id },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
+        ...(dto.definition !== undefined
+          ? {
+              definition: dto.definition as Prisma.InputJsonObject,
+              version: workflow.version + 1,
+            }
+          : {}),
+      },
+    });
+    return {
+      id: updated.id,
+      key: updated.key,
+      version: updated.version,
+      stepsSummary: summarizeDefinition(
+        parseWorkflowDefinition(updated.definition),
+      ),
+    };
+  }
+
+  /** 产品动作目录（CAP-A-12：前端节点库与 AI 代写共用单一真相） */
+  listActions() {
+    return listWorkflowActions();
   }
 
   // ── 触发 / 恢复 ──

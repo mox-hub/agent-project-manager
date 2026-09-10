@@ -13,7 +13,7 @@ import {
   type NodeProps,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Globe, GitBranch, ShieldCheck, Sparkles, PlayCircle, Flag } from 'lucide-react';
+import { Globe, GitBranch, ShieldCheck, Sparkles, PlayCircle, Flag, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
@@ -52,6 +52,11 @@ const STEP_NODE_STYLE: Record<
     icon: GitBranch,
     className: 'border-accent-orange/40 bg-accent-orange/10 text-accent-orange',
     labelKey: 'workflow.canvas.step.condition',
+  },
+  action: {
+    icon: Wrench,
+    className: 'border-accent-green/40 bg-accent-green/10 text-accent-green',
+    labelKey: 'workflow.canvas.step.action',
   },
 };
 
@@ -148,9 +153,27 @@ function StepNode({ data }: NodeProps) {
 
 const NODE_TYPES = { terminal: TerminalNode, step: StepNode };
 
-export function WorkflowCanvas({ steps }: { steps: CanvasStep[] }) {
+export function WorkflowCanvas({
+  steps,
+  selectedId,
+  onStepClick,
+}: {
+  steps: CanvasStep[];
+  /** 编辑模式：当前选中步骤 id（高亮由 selected 样式承载） */
+  selectedId?: string | null;
+  /** 编辑模式：点击步骤节点回调（只读模式不传） */
+  onStepClick?: (stepId: string) => void;
+}) {
   const { t } = useTranslation();
-  const flow = useMemo(() => stepsToFlow(steps, (key) => t(key)), [steps, t]);
+  const flow = useMemo(() => {
+    const f = stepsToFlow(steps, (key) => t(key));
+    if (selectedId) {
+      f.nodes = f.nodes.map((n) =>
+        n.id === selectedId ? { ...n, selected: true } : n,
+      );
+    }
+    return f;
+  }, [steps, t, selectedId]);
 
   return (
     <div className="h-72 w-full rounded-lg border border-border bg-content-bg" data-ai="workflow.canvas">
@@ -162,7 +185,10 @@ export function WorkflowCanvas({ steps }: { steps: CanvasStep[] }) {
         fitViewOptions={{ padding: 0.2 }}
         proOptions={{ hideAttribution: true }}
         nodesConnectable={false}
-        elementsSelectable={false}
+        elementsSelectable={!!onStepClick}
+        onNodeClick={(_event, node) => {
+          if (onStepClick && node.type === 'step') onStepClick(node.id);
+        }}
         minZoom={0.4}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />

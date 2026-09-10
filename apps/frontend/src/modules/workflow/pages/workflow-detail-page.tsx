@@ -26,12 +26,18 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
   useResumeWorkflow,
+  useUpdateWorkflow,
   useWorkflow,
+  useWorkflowActions,
   useWorkflowEvents,
   useWorkflowRun,
   useWorkflowRuns,
 } from '../hooks/use-workflows';
 import { WorkflowCanvas } from '../components/workflow-canvas';
+import {
+  WorkflowStepEditor,
+  type EditableStep,
+} from '../components/workflow-step-editor';
 import type { WorkflowRun } from '../api/workflow-api';
 
 const RUN_STATUS_META: Record<string, { icon: typeof Clock; tone: string; labelKey: string }> = {
@@ -54,9 +60,70 @@ export function WorkflowDetailPage() {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const activeRunId = selectedRunId ?? urlRunId;
 
+  // ── 编辑模式（CAP-A-12 切片②）：definition 步骤副本 + 选中步骤属性面板 ──
+  const updateMutation = useUpdateWorkflow(id);
+  const { data: actions = [] } = useWorkflowActions();
+  const [editing, setEditing] = useState(false);
+  const [editSteps, setEditSteps] = useState<EditableStep[]>([]);
+  const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
+  const { data: fullWorkflow } = useWorkflow(editing ? id : '');
+
   const steps =
     (workflow?.stepsSummary as Array<{ id: string; type: string; title?: string }> | undefined) ??
     [];
+
+  const startEditing = () => {
+    const defSteps =
+      ((fullWorkflow?.definition as { steps?: EditableStep[] } | undefined)?.steps ?? []) as EditableStep[];
+    setEditSteps(defSteps.map((s) => ({ ...s })));
+    setSelectedStepId(null);
+    setEditing(true);
+  };
+
+  const selectedStep =
+    editing && selectedStepId
+      ? (editSteps.find((s) => s.id === selectedStepId) ?? null)
+      : null;
+  const selectedIndex = selectedStep
+    ? editSteps.findIndex((s) => s.id === selectedStepId)
+    : -1;
+
+  const patchStep = (index: number, next: EditableStep) => {
+    setEditSteps((prev) => prev.map((s, i) => (i === index ? next : s)));
+  };
+
+  const insertAfter = (index: number) => {
+    let n = editSteps.length + 1;
+    const exists = (id: string) => editSteps.some((s) => s.id === id);
+    let candidate = `step-${n}`;
+    while (exists(candidate)) candidate = `step-${++n}`;
+    const next: EditableStep = { id: candidate, type: 'llm', prompt: '' };
+    setEditSteps((prev) => [...prev.slice(0, index + 1), next, ...prev.slice(index + 1)]);
+    setSelectedStepId(candidate);
+  };
+
+  const removeStep = (index: number) => {
+    setEditSteps((prev) => prev.filter((_, i) => i !== index));
+    setSelectedStepId(null);
+  };
+
+  const moveStep = (index: number, delta: -1 | 1) => {
+    setEditSteps((prev) => {
+      const next = [...prev];
+      const target = index + delta;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const saveEditing = () => {
+    const raw = (fullWorkflow?.definition ?? {}) as Record<string, unknown>;
+    updateMutation.mutate(
+      { definition: { ...raw, version: 1, steps: editSteps } },
+      { onSuccess: () => setEditing(false) },
+    );
+  };
 
   return (
     <PageShell>
@@ -76,11 +143,69 @@ export function WorkflowDetailPage() {
               v{workflow.version}
             </Badge>
           ) : null}
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto h-7 shrink-0 text-xs"
+            disabled={!workflow}
+            onClick={() => (editing ? setEditing(false) : startEditing())}
+            data-ai="workflow.editToggle"
+          >
+            {editing ? t('workflow.editor.cancel') : t('workflow.editor.edit')}
+          </Button>
         </div>
       </div>
 
       {isLoading || !workflow ? (
         <Skeleton className="h-24 rounded-lg" />
+      ) : editing ? (
+        <div className="flex items-stretch gap-3">
+          <div className="min-w-0 flex-1">
+            <WorkflowCanvas
+              steps={editSteps as Array<{ id: string; type: string; title?: string }>}
+              selectedId={selectedStepId}
+              onStepClick={setSelectedStepId}
+            />
+          </div>
+          <div className="w-72 shrink-0 rounded-lg border border-border bg-card p-3">
+            {selectedStep && selectedIndex >= 0 ? (
+              <WorkflowStepEditor
+                step={selectedStep}
+                actions={actions}
+                isFirst={selectedIndex === 0}
+                isLast={selectedIndex === editSteps.length - 1}
+                onChange={(next) => patchStep(selectedIndex, next)}
+                onDelete={() => removeStep(selectedIndex)}
+                onInsertAfter={() => insertAfter(selectedIndex)}
+                onMoveUp={() => moveStep(selectedIndex, -1)}
+                onMoveDown={() => moveStep(selectedIndex, 1)}
+              />
+            ) : (
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {t('workflow.editor.pickHint')}
+              </p>
+            )}
+            <div className="mt-3 flex justify-end gap-1.5 border-t border-border pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setEditing(false)}
+              >
+                {t('workflow.editor.cancel')}
+              </Button>
+              <Button
+                size="sm"
+                className="h-7 text-xs"
+                disabled={updateMutation.isPending || editSteps.length === 0}
+                onClick={saveEditing}
+                data-ai="workflow.saveDefinition"
+              >
+                {t('workflow.editor.save')}
+              </Button>
+            </div>
+          </div>
+        </div>
       ) : (
         <Card>
           <CardContent className="space-y-3 p-4">

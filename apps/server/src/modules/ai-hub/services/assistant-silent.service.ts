@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { AdapterRegistryService } from './adapter-registry.service';
 import { UsagePricingService } from './usage-pricing.service';
+import { listWorkflowActions } from '../../workflow/workflow-actions';
 
 /**
  * 统一后台静默 AI 机制 —— 各页面「预留 AI 接口」的单一接入协议。
@@ -254,6 +255,33 @@ ${history.length ? JSON.stringify(history) : '（还没有，请开始第一问�
 - 当对话已足够支撑问题组每一问的答案时收敛。收敛时输出覆盖问题组全部 id 的 answers：答案要具体、可执行、说人话，绝不编造用户没说的承诺（拿不准就写「待确认：…」）。
 - 未收敛只输出 JSON：{"done": false, "question": "...", "choices": ["...", "..."]}
 - 收敛只输出 JSON：{"done": true, "answers": [{"questionId": "问题 id", "answer": "答案"}]}`;
+    },
+  },
+  'workflow-draft': {
+    description:
+      '工作流草拟（CAP-A-12）：用户描述想要的流程，AI 按文法生成 workflow definition 草稿（名称+描述+步骤链），进画布编辑器人工修改后保存',
+    buildInstructions: (context) => {
+      const description = String(context.description ?? '').trim();
+      if (!description) {
+        throw new BadRequestException('草拟工作流缺少流程描述（description）');
+      }
+      const actions = listWorkflowActions();
+      return `你是项目管理系统的流程编排助手。用户会用自然语言描述想要的自动化流程，请把它写成 workflow definition 草稿。
+
+可用的步骤类型（线性链，按顺序执行）：
+- llm：AI 生成文本。字段：id、title、system?、prompt（必填）。输出落在 steps.<id>.value
+- http：外部 HTTP 请求。字段：id、title、url（必填）、method?、body?
+- human-confirm：暂停等人拍板。字段：id、title、message（必填）。批准结果落在 steps.<id>.approved / .note
+- condition：条件闸门，不满足则整个流程失败。字段：id、title、left（插值）、op（eq/ne/gt/gte/lt/lte/contains）、right
+- action：产品动作（落库写数据）。字段：id、title、action（必填）、params。可用动作：
+${JSON.stringify(actions)}
+
+插值语法：{input.x} 引用触发入参，{steps.<stepId>.y} 引用上游输出。步骤 id 用 kebab-case。
+规则：涉及写数据的环节前必须放 human-confirm 让人拍板；params 里只能填用户描述中明确的信息，拿不准的留必填缺失让用户在画布里补；不要发明不存在的动作。
+只输出 JSON：{"name": "流程名", "description": "一句话说明", "steps": [ ...步骤数组... ]}
+
+用户想要的流程：
+${description}`;
     },
   },
 };
