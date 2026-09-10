@@ -33,7 +33,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
@@ -310,8 +310,8 @@ export function AiAgentsSection() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="mx-auto max-w-5xl space-y-6" data-ai-component="ai-hub.agent-management.tab" data-ai-tab={activeTab}>
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <PageBody variant="standard" className="space-y-6" data-ai-component="ai-hub.agent-management.tab" data-ai-tab={activeTab}>
           {/* ── Overview ── */}
           {activeTab === 'overview' && (
             cliLoading || mcpLoading ? (
@@ -597,7 +597,7 @@ export function AiAgentsSection() {
               )}
             </>
           )}
-        </div>
+        </PageBody>
       </div>
 
       {/* 添加 / 编辑 MCP server */}

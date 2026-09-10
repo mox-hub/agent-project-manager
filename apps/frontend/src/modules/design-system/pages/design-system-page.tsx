@@ -263,14 +263,6 @@ import { AsyncState } from '@/components/ui/async-state'
 import { DataList } from '@/components/ui/data-list'
 import { PropsCard, PropertyRow } from '@/components/ui/property-panel'
 import { LoadingOverlay } from '@/components/ui/loading-overlay'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
 import { cn } from '@/lib/utils'
 import {
   Area,
@@ -289,6 +281,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { ThinkingStream } from '@/modules/assistant/components/thinking-stream'
+import { AgentHandoffCard } from '@/modules/office/components/agent-handoff-card'
+import { DualTrackMetricPill } from '@/shared/components/dual-track-metric-pill'
+import { AssistantToolCard } from '@/modules/assistant/components/assistant-tool-card'
+import { DecisionCardShell } from '@/shared/decision-card/decision-card-shell'
 
 const SECTIONS = [
   { id: 'colors', label: 'Color Tokens', group: 'Tokens' },
@@ -300,6 +297,7 @@ const SECTIONS = [
   { id: 'badges', label: 'Badges', group: 'Primitives' },
   { id: 'tags', label: 'Tags / Chips', group: 'Primitives' },
   { id: 'avatars', label: 'Avatars', group: 'Primitives' },
+  { id: 'member-identity', label: 'Member Identity', group: 'Primitives' },
   { id: 'cards', label: 'Cards', group: 'Primitives' },
   { id: 'forms', label: 'Forms', group: 'Primitives' },
   { id: 'number-field', label: 'Number Field', group: 'Primitives' },
@@ -355,9 +353,11 @@ const SECTIONS = [
   { id: 'page-layout', label: 'Page Layout', group: 'App Components' },
   { id: 'stat-cards', label: 'Stat Cards', group: 'App Components' },
   { id: 'loading-states', label: 'Loading & Empty', group: 'App Components' },
+  { id: 'assembly-primitives', label: 'Assembly Primitives', group: 'App Components' },
+  { id: 'ai-density-cards', label: 'AI High-Density Cards [AI]', group: 'AI Execution' },
 ]
 
-const SECTION_GROUPS = ['Tokens', 'Primitives', 'App Components']
+const SECTION_GROUPS = ['Tokens', 'Primitives', 'App Components', 'AI Execution']
 
 /** SubPageToolbar 演示：返回 + 面包屑 + 居中页签 + 翻页器/按钮组/侧栏开关 */
 function SubPageToolbarDemo({ withPager, withSidebar }: { withPager?: boolean; withSidebar?: boolean }) {
@@ -588,40 +588,40 @@ type Priority = 'urgent' | 'high' | 'medium' | 'low'
 type Severity = 'critical' | 'high' | 'medium' | 'low'
 
 const STATUS_CFG: Record<TaskStatus, { label: string; Icon: React.ElementType; color: string; bg: string }> = {
-  todo: { label: 'Todo', Icon: Circle, color: 'text-slate-500', bg: 'bg-slate-100 dark:bg-slate-800' },
-  in_progress: { label: 'In Progress', Icon: Loader, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/60' },
-  in_review: { label: 'In Review', Icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/60' },
-  done: { label: 'Done', Icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/60' },
-  canceled: { label: 'Canceled', Icon: XCircle, color: 'text-slate-400', bg: 'bg-muted' },
+  todo: { label: 'Todo', Icon: Circle, color: 'text-muted-foreground', bg: 'bg-muted/50' },
+  in_progress: { label: 'In Progress', Icon: Loader, color: 'text-accent-blue', bg: 'bg-accent-blue-light' },
+  in_review: { label: 'In Review', Icon: AlertCircle, color: 'text-accent-yellow', bg: 'bg-accent-yellow-light' },
+  done: { label: 'Done', Icon: CheckCircle2, color: 'text-accent-green', bg: 'bg-accent-green-light' },
+  canceled: { label: 'Canceled', Icon: XCircle, color: 'text-muted-foreground', bg: 'bg-muted/50' },
 }
 
 const PRIORITY_CFG: Record<Priority, { label: string; Icon: React.ElementType; color: string }> = {
-  urgent: { label: 'Urgent', Icon: ChevronsUp, color: 'text-red-500' },
-  high: { label: 'High', Icon: ArrowUp, color: 'text-orange-500' },
-  medium: { label: 'Medium', Icon: Minus, color: 'text-blue-500' },
-  low: { label: 'Low', Icon: ArrowDown, color: 'text-slate-400' },
+  urgent: { label: 'Urgent', Icon: ChevronsUp, color: 'text-accent-red' },
+  high: { label: 'High', Icon: ArrowUp, color: 'text-accent-orange' },
+  medium: { label: 'Medium', Icon: Minus, color: 'text-accent-blue' },
+  low: { label: 'Low', Icon: ArrowDown, color: 'text-muted-foreground' },
 }
 
 const SEVERITY_CFG: Record<Severity, { label: string; bar: string; text: string }> = {
-  critical: { label: 'Critical', bar: 'bg-red-500', text: 'text-red-600 dark:text-red-400' },
-  high: { label: 'High', bar: 'bg-orange-500', text: 'text-orange-600 dark:text-orange-400' },
-  medium: { label: 'Medium', bar: 'bg-amber-400', text: 'text-amber-600 dark:text-amber-400' },
-  low: { label: 'Low', bar: 'bg-slate-300', text: 'text-slate-500' },
+  critical: { label: 'Critical', bar: 'bg-accent-red', text: 'text-accent-red' },
+  high: { label: 'High', bar: 'bg-accent-orange', text: 'text-accent-orange' },
+  medium: { label: 'Medium', bar: 'bg-accent-yellow', text: 'text-accent-yellow' },
+  low: { label: 'Low', bar: 'bg-muted-foreground/30', text: 'text-muted-foreground' },
 }
 
 const MILESTONE_COLORS = [
-  { bg: 'bg-blue-50 dark:bg-blue-950/50', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800' },
-  { bg: 'bg-violet-50 dark:bg-violet-950/50', text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-200 dark:border-violet-800' },
-  { bg: 'bg-emerald-50 dark:bg-emerald-950/50', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
-  { bg: 'bg-amber-50 dark:bg-amber-950/50', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
+  { bg: 'bg-accent-blue-light', text: 'text-accent-blue', border: 'border-accent-blue/20' },
+  { bg: 'bg-accent-purple-light', text: 'text-accent-purple', border: 'border-accent-purple/20' },
+  { bg: 'bg-accent-green-light', text: 'text-accent-green', border: 'border-accent-green/20' },
+  { bg: 'bg-accent-yellow-light', text: 'text-accent-yellow', border: 'border-accent-yellow/20' },
 ]
 
 const ACCEPT_STAGES: Record<string, { label: string; color: string; bg: string }> = {
-  unit: { label: 'Unit Test', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
-  internal: { label: 'Internal', color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40' },
-  dev: { label: 'Dev Team', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
-  pm: { label: 'PM', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
-  client: { label: 'Client', color: 'text-slate-600', bg: 'bg-slate-50 dark:bg-slate-800' },
+  unit: { label: 'Unit Test', color: 'text-accent-blue', bg: 'bg-accent-blue-light' },
+  internal: { label: 'Internal', color: 'text-accent-purple', bg: 'bg-accent-purple-light' },
+  dev: { label: 'Dev Team', color: 'text-accent-green', bg: 'bg-accent-green-light' },
+  pm: { label: 'PM', color: 'text-accent-yellow', bg: 'bg-accent-yellow-light' },
+  client: { label: 'Client', color: 'text-muted-foreground', bg: 'bg-muted/60' },
 }
 
 function SectionAnchor({ id, children }: { id: string; children: React.ReactNode }) {
@@ -918,7 +918,7 @@ function FloatingDockDemo() {
 function StatusChip({ status }: { status: TaskStatus }) {
   const cfg = STATUS_CFG[status]
   return (
-    <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0', cfg.bg)} title={cfg.label}>
+    <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0 border border-border/40', cfg.bg)} title={cfg.label}>
       <cfg.Icon className={cn('w-3.5 h-3.5', cfg.color, status === 'in_progress' && 'animate-spin')}
         style={status === 'in_progress' ? { animationDuration: '2s' } : undefined} />
     </div>
@@ -931,9 +931,9 @@ function PriorityIcon({ priority }: { priority: Priority }) {
 }
 
 function MilestonePill({ name, idx = 0 }: { name: string; idx?: number }) {
-  const c = MILESTONE_COLORS[idx % 4]
+  const c = MILESTONE_COLORS[idx % MILESTONE_COLORS.length]
   return (
-    <span className={cn('inline-flex items-center text-11 font-medium px-2 py-0.5 rounded-full border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
+    <span className={cn('inline-flex items-center text-11 font-medium px-2 py-0.5 rounded-md border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
       {name}
     </span>
   )
@@ -941,8 +941,8 @@ function MilestonePill({ name, idx = 0 }: { name: string; idx?: number }) {
 
 function LabelChip({ name, color }: { name: string; color: string }) {
   return (
-    <span className="inline-flex items-center text-10 px-1.5 py-0.5 rounded-sm font-medium whitespace-nowrap"
-      style={{ backgroundColor: color + '22', color }}>
+    <span className="inline-flex items-center text-10 px-1.5 py-0.5 rounded-sm font-medium whitespace-nowrap bg-muted/60 text-foreground border border-border/40"
+      style={{ color }}>
       {name}
     </span>
   )
@@ -952,7 +952,7 @@ function ProgressRing({ done, total, size = 14 }: { done: number; total: number;
   const r = (size - 2.5) / 2
   const circ = 2 * Math.PI * r
   const ratio = total > 0 ? done / total : 0
-  const stroke = ratio === 1 ? '#10B981' : ratio > 0 ? '#3B82F6' : '#94A3B8'
+  const stroke = ratio === 1 ? 'var(--accent-green, #10B981)' : ratio > 0 ? 'var(--accent-blue, #3B82F6)' : 'var(--muted-foreground, #94A3B8)'
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 -rotate-90">
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground/20" />
@@ -964,7 +964,7 @@ function ProgressRing({ done, total, size = 14 }: { done: number; total: number;
 
 function SubtaskBadge({ done, total }: { done: number; total: number }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border bg-muted/60 text-10 font-medium text-muted-foreground shrink-0 ml-1.5">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-border/80 bg-muted/50 text-10 font-medium text-muted-foreground shrink-0 ml-1.5 font-mono">
       <ProgressRing done={done} total={total} />
       <span>{done}/{total}</span>
     </span>
@@ -974,14 +974,14 @@ function SubtaskBadge({ done, total }: { done: number; total: number }) {
 function AssigneeAvatar({ initials, color }: { initials?: string; color?: string }) {
   if (!initials) {
     return (
-      <div className="w-5.5 h-5.5 rounded-full bg-muted flex items-center justify-center shrink-0">
-        <User className="h-3 w-3 text-muted-foreground/40" />
+      <div className="w-5.5 h-5.5 rounded-full bg-muted/60 border border-border/40 flex items-center justify-center shrink-0">
+        <User className="h-3 w-3 text-muted-foreground/60" />
       </div>
     )
   }
   return (
-    <div className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-white text-10 font-semibold shrink-0"
-      style={{ backgroundColor: color || '#6366F1' }}>
+    <div className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-primary-foreground text-10 font-semibold shrink-0 bg-primary/80 border border-primary/20"
+      style={color ? { backgroundColor: color } : undefined}>
       {initials}
     </div>
   )
@@ -2028,14 +2028,13 @@ export function DesignSystemPage() {
               <div>
                 <SubLabel>Popover — functional (base-ui)</SubLabel>
                 <Popover>
-                  <PopoverTrigger>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-xs hover:bg-muted transition-colors"
-                    >
-                      <Bell className="w-4 h-4" /> Notifications
-                    </button>
-                  </PopoverTrigger>
+                  <PopoverTrigger
+                    render={
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Bell className="w-4 h-4" /> Notifications
+                      </Button>
+                    }
+                  />
                   <PopoverContent className="w-72">
                     <PopoverHeader>
                       <PopoverTitle>Notifications</PopoverTitle>
@@ -2638,14 +2637,12 @@ export function DesignSystemPage() {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-4">
-                    <ResponsiveContainer width={160} height={160}>
-                      <PieChart>
-                        <Pie data={PIE_DATA} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
-                          {PIE_DATA.map((entry, idx) => <Cell key={idx} fill={entry.fill} />)}
-                        </Pie>
-                        <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }} />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <PieChart width={160} height={160}>
+                      <Pie data={PIE_DATA} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
+                        {PIE_DATA.map((entry, idx) => <Cell key={idx} fill={entry.fill} />)}
+                      </Pie>
+                      <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }} />
+                    </PieChart>
                     <div className="space-y-2">
                       {PIE_DATA.map((e) => (
                         <div key={e.name} className="flex items-center gap-2">
@@ -3558,18 +3555,13 @@ export function DesignSystemPage() {
                 />
               </div>
               <div>
-                <SubLabel>Empty primitives</SubLabel>
-                <div className="rounded-lg border border-dashed border-border">
-                  <Empty>
-                    <EmptyMedia variant="icon"><Search className="w-5 h-5" /></EmptyMedia>
-                    <EmptyHeader>
-                      <EmptyTitle>No results</EmptyTitle>
-                      <EmptyDescription>Try adjusting your search query or clearing the filters.</EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent>
-                      <Button size="sm" variant="outline">Clear filters</Button>
-                    </EmptyContent>
-                  </Empty>
+                <SubLabel>EmptyState (In-Card / Filter Results)</SubLabel>
+                <div className="rounded-lg border border-border/60 bg-card p-2">
+                  <EmptyState
+                    title="No matching items"
+                    description="Try adjusting your search query or clearing the filters."
+                    action={<Button size="sm" variant="outline">Clear filters</Button>}
+                  />
                 </div>
               </div>
             </div>
@@ -3619,6 +3611,156 @@ export function DesignSystemPage() {
                       <span className="text-xs text-foreground">3h</span>
                     </PropertyRow>
                   </PropsCard>
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="ai-density-cards">
+            <SectionTitle>AI High-Density Cards [AI]</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              AI 执行面高信息密度卡片矩阵（DESIGN.md §6.1）：承载复杂多样化执行状态、推理链、工件交接、冷却门禁与双轨成本。
+            </p>
+
+            <div className="space-y-6">
+              {/* ① 思考折叠核 (ThinkingStream) */}
+              <div>
+                <SubLabel>① 思考折叠核 (ThinkingStream) — 26px 胶囊 · 烟熏紫脉冲 · 展开就地查看思维链</SubLabel>
+                <div className="space-y-2 max-w-xl">
+                  <ThinkingStream
+                    isThinking={true}
+                    steps={[
+                      { step: 1, title: '解析用户指令与架构契约', durationMs: 420 },
+                    ]}
+                  />
+                  <ThinkingStream
+                    isThinking={false}
+                    totalDurationMs={1850}
+                    defaultExpanded={true}
+                    steps={[
+                      { step: 1, title: '解析用户指令与架构契约', detail: '已验证 DESIGN.md 与 modules.md 架构对齐', durationMs: 420 },
+                      { step: 2, title: '静态扫描组件依赖树', detail: '确认 99 个 UI 原语与 150 个业务模块组件边界', durationMs: 680 },
+                      { step: 3, title: '构建低饱和 5 色阶与外舒内紧卡片方案', detail: '已生成 14px 标准 / 13px 密集自适应规则', durationMs: 750 },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              {/* ② 工具与命令执行胶囊 (AssistantToolCard) */}
+              <div>
+                <SubLabel>② 工具与命令执行胶囊 (AssistantToolCard) — 单行折叠 · 动词×实体 · 结果常显</SubLabel>
+                <div className="space-y-2 max-w-xl">
+                  <AssistantToolCard
+                    part={{
+                      type: 'tool-call',
+                      toolName: 'update_task',
+                      state: 'output-available',
+                      input: { taskId: 'ISSUE-104', priority: 'high', status: 'in_progress' },
+                      output: {
+                        taskId: 'ISSUE-104',
+                        title: '重构 Design System 紧凑型卡片',
+                        status: 'in_progress',
+                      },
+                    }}
+                  />
+                  <AssistantToolCard
+                    part={{
+                      type: 'tool-call',
+                      toolName: 'list_project_tasks',
+                      state: 'output-available',
+                      input: { projectId: 'p-core', limit: 10 },
+                      output: {
+                        count: 8,
+                        samples: [
+                          'ISSUE-101: 优化暗色模式色阶对比度',
+                          'ISSUE-102: 修复 PopoverTrigger 双嵌套',
+                          'ISSUE-103: 接入 DualTrackMetricPill',
+                        ],
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* ③ 多 Agent 协作交接卡 (AgentHandoffCard) */}
+              <div>
+                <SubLabel>③ 多 Agent 协作交接卡 (AgentHandoffCard) — 跨角色流转 · 显式契约门禁</SubLabel>
+                <div className="max-w-xl">
+                  <AgentHandoffCard
+                    fromAgent={{ name: 'Alice PM', role: '需求主管' }}
+                    toAgent={{ name: 'Claude Coder', role: '全栈执行 Agent' }}
+                    artifact={{
+                      title: 'DESIGN.md - APM 全局设计系统规范 v2.0',
+                      type: 'Architecture Spec',
+                    }}
+                    description="完成低饱和多色色阶、外舒内紧卡片、多端 13px/14px 双层字阶与动效白名单制定，请按清单完成卡片收口。"
+                    gates={[
+                      { id: 'g1', label: '契约绑定', status: 'passed' },
+                      { id: 'g2', label: '测试覆盖', status: 'passed' },
+                      { id: 'g3', label: '破坏性拦截', status: 'pending' },
+                    ]}
+                    metrics={{ tokens: 4280, durationMs: 2400, costUsd: 0.0064 }}
+                  />
+                </div>
+              </div>
+
+              {/* ④ 决策证据抽屉卡 (DecisionCardShell) */}
+              <div>
+                <SubLabel>④ 决策证据抽屉卡 (DecisionCardShell) — 证据强制 · 3s 冷却门禁 · 1~4 快捷键</SubLabel>
+                <div className="max-w-xl">
+                  <DecisionCardShell
+                    decision={{
+                      id: 'dec-ds-01',
+                      kind: 'approval',
+                      sourceId: 'dec-ds-01',
+                      status: 'pending',
+                      urgency: 'blocking',
+                      riskLevel: 'high_risk',
+                      title: '执行破坏性样式重构：全面清理 276 处非语义裸色与废弃伪组件',
+                      proposer: { type: 'ai_agent', name: 'Design Architect Agent' },
+                      createdAt: new Date().toISOString(),
+                      payload: { affectedFiles: 14, tokensChanged: 28, deletedLines: 120 },
+                    }}
+                    requireEvidence={true}
+                    cooldownSecs={3}
+                    impact={[
+                      { label: '波及组件', value: '18 个', tone: 'orange', icon: Sparkles },
+                      { label: '预估耗时', value: '5 分钟', tone: 'blue', icon: Clock },
+                      { label: '回滚策略', value: 'Git 分支保护', tone: 'green', icon: CheckCircle2 },
+                    ]}
+                    evidence={
+                      <div className="space-y-1 font-mono text-11 text-content-text-muted bg-content-bg-secondary p-2 rounded">
+                        <p className="text-accent-green">+ 引入 5 组低饱和多色色阶 (--accent-blue/green/amber/crimson/violet)</p>
+                        <p className="text-accent-red">- 移除 276 处 text-orange-500, bg-blue-50 等硬编码裸色</p>
+                        <p className="text-accent-blue">• 统一 Card 内边距为 p-3.5，CardTitle 设为 text-base font-semibold</p>
+                      </div>
+                    }
+                    onAction={(act) => toast.info(`触发决议动作: ${act}`)}
+                  />
+                </div>
+              </div>
+
+              {/* ⑤ 双轨成本微徽章 (DualTrackMetricPill) */}
+              <div>
+                <SubLabel>⑤ 双轨成本与执行微徽章 (DualTrackMetricPill) — 11px Mono · 低调角落常驻</SubLabel>
+                <div className="flex flex-wrap items-center gap-3">
+                  <DualTrackMetricPill
+                    tokens={3420}
+                    durationMs={1820}
+                    costUsd={0.0051}
+                    model="Claude 3.7 Sonnet"
+                  />
+                  <DualTrackMetricPill
+                    tokens={12400}
+                    durationMs={4500}
+                    costUsd={0.0186}
+                  />
+                  <DualTrackMetricPill
+                    durationMs={620}
+                    model="Gemini 2.5 Flash"
+                  />
                 </div>
               </div>
             </div>

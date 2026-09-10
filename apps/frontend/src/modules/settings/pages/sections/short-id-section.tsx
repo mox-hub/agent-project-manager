@@ -16,13 +16,15 @@ export function ShortIdSettingsSection() {
   const { t } = useTranslation();
 
   return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Hash} iconColor="text-accent-blue" title={t('settings.shortId')} />
-      <div className="p-6">
-        <div className="mx-auto max-w-5xl space-y-6">
-          <ShortIdSettingsCard />
-        </div>
-      </div>
+    <PageShell
+      variant="standard"
+      icon={Hash}
+      iconColor="text-accent-blue"
+      title={t('settings.shortId')}
+      className="bg-background text-foreground"
+      contentClassName="space-y-6"
+    >
+      <ShortIdSettingsCard />
     </PageShell>
   );
 }

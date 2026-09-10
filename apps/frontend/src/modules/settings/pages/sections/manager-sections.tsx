@@ -32,13 +32,15 @@ export function TemplatesSettingsSection() {
 export function StorageSettingsSection() {
   const { t } = useTranslation();
   return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={FolderOpen} iconColor="text-accent-yellow" title={t('settings.storageSection')} />
-      <div className="p-6">
-        <div className="mx-auto w-full max-w-5xl space-y-6">
-          <StorageSettings />
-        </div>
-      </div>
+    <PageShell
+      variant="standard"
+      icon={FolderOpen}
+      iconColor="text-accent-yellow"
+      title={t('settings.storageSection')}
+      className="bg-background text-foreground"
+      contentClassName="space-y-6"
+    >
+      <StorageSettings />
     </PageShell>
   );
 }

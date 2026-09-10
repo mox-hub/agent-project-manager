@@ -67,7 +67,7 @@ export function ProjectDetailFrame({
     <PageShell className={cn('overflow-hidden bg-content-bg', className)} aiPage={aiPage}>
       {!hideBreadcrumb && (
         <div className="shrink-0 border-b border-border bg-background">
-          <div className="mx-auto flex h-12 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+          <div className="mx-auto flex h-12 w-full max-w-7xl items-center justify-between gap-3 px-6 sm:px-8 lg:px-10">
             <div className="flex min-w-0 items-center gap-2">
               <div className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
                 <Link to="/app/projects" className="no-underline transition-colors hover:text-foreground/90">
@@ -94,10 +94,10 @@ export function ProjectDetailFrame({
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* ── Main（可独立滚动） ── */}
         <div className="flex-1 min-w-0 overflow-y-auto">
-          <div className="mx-auto w-full max-w-7xl px-4 pb-6 pt-4 sm:px-6">
+          <div className="mx-auto w-full max-w-7xl px-6 pb-8 pt-5 sm:px-8 lg:px-10">
             {!hideHeader ? (
               /* sticky 头部卡片：负 margin 抵消容器左右 padding，背景铺满横向防止内容穿缝 */
-              <div className="sticky top-0 z-20 -mx-4 bg-content-bg px-4 pb-3 sm:-mx-6 sm:px-6">
+              <div className="sticky top-0 z-20 -mx-6 bg-content-bg px-6 pb-4 sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10">
                 <ProjectDetailHeaderCard title={title} description={description} actions={actions} className="mb-0" />
               </div>
             ) : null}

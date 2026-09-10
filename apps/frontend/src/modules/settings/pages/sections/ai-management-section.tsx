@@ -16,7 +16,7 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Input, PasswordInput } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
@@ -481,11 +481,11 @@ export function AiManagementSection() {
         }
       />
 
-      {/* Content Area - 金标准：内部滚动 + 5xl 收窄列 */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="mx-auto w-full max-w-5xl space-y-6">
-        {/* Overview Section - Always visible at top */}
-        <div className="space-y-6">
+      {/* Content Area - 金标准：内部滚动 + standard 居中列 */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <PageBody variant="standard" className="space-y-6">
+          {/* Overview Section - Always visible at top */}
+          <div className="space-y-6">
           {/* Active Model Switcher Card */}
           <Card className="border-border shadow-none">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
@@ -1168,7 +1168,7 @@ export function AiManagementSection() {
             </Card>
           </NeutralAccordionCard>
         </div>
-        </div>
+      </PageBody>
       </div>
     </PageShell>
   );

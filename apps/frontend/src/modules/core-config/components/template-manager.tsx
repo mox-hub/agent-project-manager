@@ -8,7 +8,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useTranslation } from 'react-i18next';
@@ -235,9 +235,8 @@ export function TemplateManager() {
         <div />
       </div>
 
-      <div className="p-6">
-        <div className="mx-auto w-full max-w-5xl space-y-6">
-          {showProjects && (
+      <PageBody variant="standard" className="space-y-6">
+        {showProjects && (
             <Card className="border-border shadow-none">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -536,8 +535,7 @@ export function TemplateManager() {
               </CardContent>
             </Card>
           )}
-        </div>
-      </div>
+      </PageBody>
     </PageShell>
   );
 }

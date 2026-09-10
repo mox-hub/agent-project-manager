@@ -22,6 +22,7 @@ export function GithubIntegrationSection() {
 
   return (
     <PageShell
+      variant="standard"
       title="GitHub Integration"
       icon={Github}
       actions={

@@ -171,26 +171,26 @@ export function TagManager() {
   };
 
   return (
-    <PageShell aiPage="settings.labels" className="bg-background text-foreground">
-      <PageHeader
-        title={t('settings.labels')}
-        icon={Tags}
-        iconColor="text-accent-blue"
-        metrics={[{ id: 'total', label: t('settings.labels'), value: filteredTags.length }]}
-        actions={
-          // 标签创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403
-          isAdmin ? (
-            <HeaderActionButton icon={Plus} label={t('settings.addLabel')} onClick={openCreate} />
-          ) : null
-        }
-      />
-
-      <div className="p-6">
-        <div className="mx-auto flex max-w-5xl flex-col gap-4">
-          <div className="flex justify-center">
-            <SegmentedControl<TagFilter>
-              variant="rect"
-              value={filter}
+    <PageShell
+      variant="standard"
+      contentClassName="gap-4"
+      aiPage="settings.labels"
+      className="bg-background text-foreground"
+      title={t('settings.labels')}
+      icon={Tags}
+      iconColor="text-accent-blue"
+      metrics={[{ id: 'total', label: t('settings.labels'), value: filteredTags.length }]}
+      actions={
+        // 标签创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403
+        isAdmin ? (
+          <HeaderActionButton icon={Plus} label={t('settings.addLabel')} onClick={openCreate} />
+        ) : null
+      }
+    >
+      <div className="flex justify-center">
+        <SegmentedControl<TagFilter>
+          variant="rect"
+          value={filter}
               onChange={setFilter}
               options={TAG_FILTERS.map((f) => ({
                 value: f,
@@ -224,8 +224,6 @@ export function TagManager() {
               />
             </DataTableShell>
           </AsyncState>
-        </div>
-      </div>
 
       <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent>

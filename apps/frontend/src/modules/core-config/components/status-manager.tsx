@@ -183,26 +183,26 @@ export function StatusManager() {
   };
 
   return (
-    <PageShell aiPage="settings.statuses" className="bg-background text-foreground">
-      <PageHeader
-        title={t('settings.statuses')}
-        icon={Layers}
-        iconColor="text-accent-yellow"
-        metrics={[{ id: 'total', label: t('settings.statuses'), value: displayStatuses.length }]}
-        actions={
-          // 状态创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403
-          isAdmin ? (
-            <HeaderActionButton icon={Plus} label={t('settings.addStatus')} onClick={openCreate} />
-          ) : null
-        }
-      />
-
-      <div className="p-6">
-        <div className="mx-auto flex max-w-5xl flex-col gap-4">
-          <div className="flex justify-center">
-            <SegmentedControl
-              variant="rect"
-              value={typeFilter}
+    <PageShell
+      variant="standard"
+      contentClassName="gap-4"
+      aiPage="settings.statuses"
+      className="bg-background text-foreground"
+      title={t('settings.statuses')}
+      icon={Layers}
+      iconColor="text-accent-yellow"
+      metrics={[{ id: 'total', label: t('settings.statuses'), value: displayStatuses.length }]}
+      actions={
+        // 状态创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403
+        isAdmin ? (
+          <HeaderActionButton icon={Plus} label={t('settings.addStatus')} onClick={openCreate} />
+        ) : null
+      }
+    >
+      <div className="flex justify-center">
+        <SegmentedControl
+          variant="rect"
+          value={typeFilter}
               onChange={setTypeFilter}
               options={[
                 { value: '', label: t('common.all') },
@@ -358,8 +358,6 @@ export function StatusManager() {
               </DataTableShell>
             </div>
           </AsyncState>
-        </div>
-      </div>
 
       <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent>

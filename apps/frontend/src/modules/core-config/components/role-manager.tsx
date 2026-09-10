@@ -142,27 +142,27 @@ export function RoleManager() {
   };
 
   return (
-    <PageShell aiPage="settings.roles" className="bg-background text-foreground">
-      <PageHeader
-        title={t('settings.roles')}
-        icon={CircleUser}
-        iconColor="text-accent-purple"
-        metrics={[{ id: 'total', label: t('settings.roles'), value: displayRoles.length }]}
-        actions={
-          // 角色创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403
-          isAdmin ? (
-            <HeaderActionButton icon={Plus} label={t('settings.addRole')} onClick={openCreate} />
-          ) : null
-        }
-      />
-
-      <div className="p-6">
-        <div className="mx-auto flex max-w-5xl flex-col gap-4">
-          <div className="flex justify-center">
-            <SegmentedControl<RoleScopeFilter>
-              variant="rect"
-              value={scopeFilter}
-              onChange={setScopeFilter}
+    <PageShell
+      variant="standard"
+      contentClassName="gap-4"
+      aiPage="settings.roles"
+      className="bg-background text-foreground"
+      title={t('settings.roles')}
+      icon={CircleUser}
+      iconColor="text-accent-purple"
+      metrics={[{ id: 'total', label: t('settings.roles'), value: displayRoles.length }]}
+      actions={
+        // 角色创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403
+        isAdmin ? (
+          <HeaderActionButton icon={Plus} label={t('settings.addRole')} onClick={openCreate} />
+        ) : null
+      }
+    >
+      <div className="flex justify-center">
+        <SegmentedControl<RoleScopeFilter>
+          variant="rect"
+          value={scopeFilter}
+          onChange={setScopeFilter}
               options={[
                 { value: 'all', label: t('common.all') },
                 { value: 'global', label: t('settings.globalAccess'), tone: 'green' },
@@ -274,8 +274,6 @@ export function RoleManager() {
               </DataTableShell>
             )}
           </AsyncState>
-        </div>
-      </div>
 
       <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent>

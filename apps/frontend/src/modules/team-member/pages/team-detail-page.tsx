@@ -290,6 +290,7 @@ export default function TeamDetailPage() {
       <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* 主区（纵向滚动） */}
         <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+          <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
           {mutationError && (
             <div className="mx-6 mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {mutationError}
@@ -840,6 +841,7 @@ export default function TeamDetailPage() {
                 </Card>
               </>
             )}
+          </div>
           </div>
         </div>
 

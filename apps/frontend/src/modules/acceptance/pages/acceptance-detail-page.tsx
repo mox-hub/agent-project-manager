@@ -392,6 +392,7 @@ export function AcceptanceDetailPage() {
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* 主区 */}
         <div className="flex flex-1 min-w-0 flex-col overflow-y-auto">
+          <div className="mx-auto w-full max-w-5xl flex-1 flex flex-col">
           {/* 接收失败清单（聚合校验逐条展示） */}
           {acceptFailures && (
             <div className="mx-6 mt-3 rounded-lg border border-accent-red/40 bg-accent-red/10 p-3">
@@ -718,6 +719,7 @@ export function AcceptanceDetailPage() {
                 )}
               </TabsContent>
             </Tabs>
+          </div>
           </div>
         </div>
 

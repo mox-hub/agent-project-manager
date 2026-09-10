@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { cn } from '@/lib/utils';
@@ -789,13 +789,13 @@ export function AiExecutionCenterSection() {
         <div className="min-w-0" />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="mx-auto w-full max-w-5xl space-y-6">
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <PageBody variant="standard" className="space-y-6">
           {activeTab === 'execution' && <ExecutionQueueTab />}
           {activeTab === 'approvals' && <ApprovalCenterTab />}
           {activeTab === 'replay' && <ExecutionReplayTab />}
           {activeTab === 'trust' && <TrustManagementTab />}
-        </div>
+        </PageBody>
       </div>
     </PageShell>
   );

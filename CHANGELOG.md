@@ -6,7 +6,7 @@ category: "report"
 status: "active"
 version: "1.0.0"
 created: "2026-02-20"
-modified: "2026-09-09"
+modified: "2026-09-10"
 scope: "全仓库版本变更"
 ai-session-types: "all"
 ai-priority: "high"
@@ -20,6 +20,66 @@ tags: "changelog,release"
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
 ## [Unreleased]
+
+### 仪表盘与统计卡片上下间距收敛与消除内边距双重叠加（DESIGN.md §3.3）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | `DESIGN.md` 与 `docs/design/DESIGN.md` 同步更新 §3.3：明确禁止 Card 内边距双重叠加反模式（严禁在自带 py-3.5 的 Card 内为 CardContent 随意添加 p-5/p-6），确立数据卡片矩阵行间距统一为 space-y-3（12px）与 gap-3 规范 | CAP-P-01 | pnpm check:docs-sync | DESIGN.md §3.3 同步更新 |
+| frontend | 根治仪表盘卡片上下间隙过大与内部大块空白缺陷：`dashboard-page.tsx` 中 `KpiCard` 显式设置 `Card py-0` + `CardContent p-3.5`（四周精准锁定 14px，消除原 34px 巨大内边距），图标容器规整为 32px（size-8），紧凑化内部元素间隙；骨架屏同步收缩至 h-28（112px） | CAP-P-01 | 7 项设计门禁通过，tsc 0 错 | 解决 KPI 卡片上下空旷缺陷 |
+| frontend | 聚合仪表盘 KPI 卡片两排矩阵：将 Row 1（4卡）与 Row 2（3卡）收束在 `space-y-3` 统一数据区块中，卡片网格间隙规整为 `gap-3`，将原两排卡片之间高达 24px 的割裂距离减半至 12px；全页垂直区块间隙由 `space-y-6`（24px）收敛至 `space-y-4`（16px） | CAP-P-01 | 7 项设计门禁通过，Vitest 全绿 | 消除卡片行间空虚感 |
+| frontend | 消除图表卡片与分析页统计卡内边距冗余：`dashboard-page.tsx` 中生产力趋势、健康度图表、成本卡片与快捷操作卡移除 `p-5` 并规整为 `py-0` + `p-4`；`analytics-page.tsx` 中 `StatCard` 规整为 `py-0` + `p-3.5` | CAP-P-01 | Vitest 273 用例全绿 | 对齐 DESIGN.md §3.3 |
+
+### 移除主体模块割裂边界线、侧栏收缩左右对称与 Logo 垂直对齐
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | `DESIGN.md` 与 `docs/design/DESIGN.md` 同步更新 §3.5：明确一体化无分割线画布规范（取消侧栏 border-r 与顶栏 border-b）、收缩态栏宽规整为 64px（w-16）且左右留白绝对等宽（12px 对称）、展开/收缩态 Logo 与菜单项图标垂直对齐基线（展开态 X=20px，收缩态 X=32px 严格共线） | CAP-P-01 | pnpm check:docs-sync | DESIGN.md §3.5 同步更新 |
+| frontend | 消除主体模块间割裂线：`shell-layout.tsx` 根容器底色对齐 `bg-sidebar`，移除 aside 的 `border-r`、TabBar 外层的 `border-b`、移动端 Header 的 `border-b` 与底部同事位的 `border-t`，实现连续一体化的浅色/深色磨砂底座 | CAP-P-01 | 7 项设计门禁通过，tsc 0 错 | 对齐 DESIGN.md §3.5.1 |
+| frontend | 侧栏折叠态严格对称居中：`sidebarCollapsed` 宽度从 `w-17`（68px）精简为 `w-16`（64px），导航容器改为 `flex flex-col items-center px-0`，菜单项设为 `size-10`（40px 居中），消除原右侧过宽问题，实现左右严格等宽各 12px；未读红点采用 `right-1.5 top-1.5 ring-2 ring-sidebar` 贴边；折叠展开按钮尺寸规整至 `size-10` 居中 | CAP-P-01 | 7 项设计门禁通过 | 解决收缩态图标左右不等宽缺陷 |
+| frontend | Logo 与菜单图标垂直完全对齐：收缩态 Logo 按钮规整为 `size-10`（40px）在 64px 容器内水平居中，与下方 40px 菜单图标的垂直中心线在 `X = 32px` 绝对共线；展开态 Logo 外层 `px-2.5` + 内部 `px-2.5`，图标左边缘与菜单图标左边缘严格锁定在 `X = 20px` 同一垂直线上 | CAP-P-01 | 7 项设计门禁通过，Vitest 全绿 | 解决 Logo 与菜单图标视觉错位缺陷 |
+
+### 浅色模式侧边栏去黑化、Codex 类磨砂外壳与全局复合组件规范落地（DESIGN.md §3.5）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | `DESIGN.md` 与 `docs/design/DESIGN.md` 新增 §3.5 应用壳层架构（Shell Architecture）与全局交互复合组件规范：系统定义 Codex 级磨砂分层、左侧栏（w-56/w-17，h-8 菜单项）、右侧栏（w-320/360，SidebarPanel 折叠面板）、TabBar（h-10，h-7 标签项）、左下角悬浮底座（w-11 h-11 磨砂微光晕）、全局弹窗（DialogOverlay 磨砂景深 + DialogContent 磨砂微边框）、统一创建面板与命令面板的结构、尺寸与手感基线 | CAP-P-01 | pnpm check:docs-sync | DESIGN.md §3.5 同步更新 |
+| frontend | 浅色系侧栏色彩重构（去黑化）：`index.css` 根变量浅色模式全面弃用纯黑，`--sidebar-background` 统一为温润浅灰（240 5% 96%），`--sidebar-foreground` 采用高对比深字（240 10% 3.9%），悬停采用低饱和浅灰阶（240 5% 90%）；暗色模式微调深邃质感 | CAP-P-01 | 7 项设计治理门禁通过，tsc 0 错 | 对齐 DESIGN.md §3.5.1 |
+| frontend | Codex 级磨砂外壳架构落地：`shell-layout.tsx` 侧栏升级为 `bg-sidebar/85 backdrop-blur-xl border-r border-sidebar-border/60`；导航项统一为 32px 高度与 12px 500字重微浮雕卡片；主内容区采用磨砂底座上悬浮的工作台卡片结构（`rounded-xl bg-background/95 shadow-sm border border-border/60`） | CAP-P-01 | Vitest 273 用例全绿 | 对齐 DESIGN.md §3.5.2 |
+| frontend | 顶部 TabBar 规范升级：`tab-bar.tsx` 容器背景改为透明穿透磨砂底，TabItem 尺寸规整为 h-7，间距 gap-1，激活态采用温润白色/浅灰磨砂浮起效果，左右滚动按钮与新建按钮升级为微透磨砂控件 | CAP-P-01 | tsc 0 错，Vitest 全绿 | 对齐 DESIGN.md §3.5.3 |
+| frontend | 左下角悬浮操作底座升级：`floating-actions.tsx` 主触发器升级为 44px（w-11 h-11）圆角微光晕磨砂按钮，用户信息与工作区卡片升级为 `bg-card/95 backdrop-blur-xl border-border/70`，遮罩升级为轻柔磨砂 | CAP-P-01 | tsc 0 错，7 项治理通过 | 对齐 DESIGN.md §3.5.5 |
+| frontend | 全局弹窗体系磨砂升级：`dialog.tsx` 遮罩 `DialogOverlay` 升级为 `bg-black/30 backdrop-blur-sm dark:bg-black/60` 舒适景深，`DialogContent` 升级为 `bg-popover/95 backdrop-blur-xl border border-border/70 shadow-2xl` | CAP-P-01 | tsc 0 错，全量单测通过 | 对齐 DESIGN.md §3.5.6 |
+| frontend | 统一创建面板与命令面板质感收敛：`unified-create-dialog.tsx` 容器接入毛玻璃磨砂，强化顶部工具栏（h-11）与底部操作栏（h-13）细边框分隔；`command.tsx` 优化背景穿透与条目选中高亮质感 | CAP-P-01 | tsc 0 错，Vitest 273 用例全绿 | 对齐 DESIGN.md §3.5.7/8 |
+| frontend | 右侧栏与通用标签页对齐：`right-sidebar.tsx` 增加 `bg-background/50 backdrop-blur-md` 磨砂侧栏，`sidebar-panel.tsx` 折叠面板升级微透底，`tabs.tsx` 预设支持磨砂微边框 | CAP-P-01 | 7 项治理通过 | 对齐 DESIGN.md §3.5.4 |
+
+### 仪表盘视觉中心聚焦、看板呼吸感边距升级与二级三级子页主栏收敛
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | `DESIGN.md` 与 `docs/design/DESIGN.md` 补全 §3.4 页面级规格：新增「概览聚焦型（Overview / Dashboard）」（max-w-7xl ~1280px + px-6~10 渐进留白），补充二级/三级详情子页主栏阅读宽度收敛约束（max-w-4xl / max-w-5xl），消除大屏长文本行长失控与宽屏视觉拉扯 | CAP-P-01 | pnpm check:docs-sync | DESIGN.md §3.4 同步更新 |
+| frontend | 仪表盘与效能分析大屏视觉居中聚焦：`DashboardPage` 引入 `max-w-7xl mx-auto w-full px-6 py-6 sm:px-8 sm:py-8 lg:px-10` 居中呼吸容器，骨架屏严格与真实结构等宽对齐；`AnalyticsPage` 升级至相同留白体系，消除首屏 KPI 与报表在 2K/4K 屏幕下的散漫拉扯 | CAP-P-01 | tsc --noEmit 0 错，Vitest 273 用例全绿 | 对齐 DESIGN.md §3.4 |
+| frontend | 项目二级子页母版留白升级：`ProjectDetailFrame` 面包屑与内容区全面收敛至 `max-w-7xl mx-auto px-6 sm:px-8 lg:px-10`，头部与内容边距严格贴合，一次性为项目概览、项目工单看板、里程碑、项目团队、项目设置等二级子页建立聚焦呼吸边距 | CAP-P-01 | tsc --noEmit 0 错 | 对齐 DESIGN.md §3.4 |
+| frontend | 全局看板与列表页呼吸感边距升级：`tasks-page`、`bugs-page`、`acceptance-list-page` 左右边距由过窄的 `px-4 sm:px-6` 升级为舒适的 `px-6 py-4 sm:px-8 sm:py-5 lg:px-10`，杜绝宽屏下首尾列卡片死贴屏幕物理边缘 | CAP-P-01 | 7 项设计治理门禁通过 | 提升宽屏阅读与拖拽手感 |
+| frontend | 6 大核心二级/三级详情页主栏居中收敛：`TaskDetailPage`、`BugDetailPage`、`AcceptanceDetailPage`、`MemberDetailPage`、`TeamDetailPage`、`RepositoryDetailPage` 保持外贴视口原生滚动条的同时，主内容区包裹 `max-w-4xl` / `max-w-5xl` 居中容器，杜绝超大屏下长文本行长过度伸展 | CAP-P-01 | tsc --noEmit 0 错，Vitest 全绿 | 对齐 DESIGN.md §3.4 |
+
+### 页面级规格与留白体系标准落地（PageShell Profile Variants + 设置页/列表页/阅读页统一规格收敛）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | `DESIGN.md` 与 `docs/design/DESIGN.md` 补齐 §3.4 页面级规格与留白体系标准：定义 full（100% 全宽高密）、standard（max-w-5xl ~1024px 居中）、reading（max-w-4xl ~896px 黄金阅读宽）3 档规格尺寸、内边距与典型消费场景，制定嵌套治理铁律（严禁在 PageShell 内部重复手写 max-w-5xl mx-auto 与 p-6） | CAP-P-01 | pnpm check:docs-sync | DESIGN.md §3.4 同步更新 |
+| frontend | `PageShell` 增强规格变体调度：支持 `variant="full" \| "standard" \| "reading"`、`padded`、`contentClassName`，内置 `VARIANT_CONTAINER_CLASSES` 与 `VARIANT_PADDING_CLASSES`，导出 `PageBody` 支持局部包裹与 HTMLAttributes 透传 | CAP-P-01 | tsc --noEmit 0 错，Vitest 273 用例全绿 | 对齐 DESIGN.md §3.4 |
+| frontend | 设置与配置域页面全面收敛至 `standard` 规格：重构 18 个设置与核心配置页面（Appearance、Profile、AccessTokens、Git、Linear、GitHub、Integrations、Role/Status/Tag/Template Manager、AI Usage、Memory、ShortId、IssueTypes、Storage、Terminal、Runtime/MachineDetail、AiAgents、AiExecutionCenter、AiManagement），消除各自冗余的手写 max-w-5xl 和双层嵌套 Header | CAP-P-01 | tsc --noEmit 0 错，7 项设计治理门禁通过 | 消除 300+ 行重复手写 padding 代码 |
+| frontend | 全宽高密与阅读型页面规格对齐：`tasks-page`、`bugs-page`、`office-page`、`acceptance-list-page` 消除冗余 24px (p-6) 臃肿边距，收敛至高密 px-4 py-3.5 sm:px-6 sm:py-4；`help-page` 内容区收敛至 max-w-4xl 黄金阅读宽度 | CAP-P-01 | Vitest 63 文件 273 用例全绿 | 对齐 DESIGN.md §3.4 |
+
+### 全局设计系统规范升级与双表面高密度重构（DESIGN.md v2.0 + 低饱和多色阶 + 外舒内紧 + 5 类 AI 结构卡片）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | 编写并落地 `DESIGN.md` (v2.0.0)：确立低饱和多色域灰调色彩体系（5 语义色系 4 级色阶）、外舒内紧卡片分割原则（内边距紧缩至 p-3.5，子卡片 p-2.5）、多端自适应字体（双层字阶+紧凑/舒适密度模式）、系统化动效白名单（100ms 微交互/160ms 展开/1.2s 思考脉冲）、双表面组件全量标识（[AI] / [HUMAN] / [HYBRID]）以及 7 项不统一异类组件整改路线 | CAP-P-01 | pnpm check:docs-sync | 新增根目录 `DESIGN.md` 与 `docs/design/DESIGN.md` |
+| frontend | 色彩与动效基线升级：`index.css` 注入 5 组低饱和多色阶（冷灰蓝、薄荷绿、暖灰琥珀、灰粉砖红、烟熏紫），暗色饱和度由 90%+ 调谐至 30~45%；新增 `.animate-thinking-pulse`、`.motion-micro`、`.motion-expand`、`.motion-modal` 动效类 | CAP-P-01 | tsc --noEmit 0 错 | 对齐 DESIGN.md §2 与 §5 |
+| frontend | 核心容器外舒内紧优化：`Card` 默认 padding 从 p-6 紧凑收敛为 p-3.5（14px），`SectionCard` 默认背景统一为 bg-card 且垂直间隙收缩至 gap-2 | CAP-P-01 | tsc --noEmit 0 错 | 对齐 DESIGN.md §3 |
+| frontend | 落地 5 类 AI 专属高密度卡片构件：新增 `ThinkingStream`（26px 思考折叠核+烟熏紫脉冲）、`DualTrackMetricPill`（11px Mono 双轨成本微徽章）、`AgentHandoffCard`（工件流转+3 项验收门禁），与既有 `AssistantToolCard`、`DecisionCardShell` 组装完成 | CAP-P-01 | design-system-page.test 绿灯通过 | 对齐 DESIGN.md §6.1 |
+| frontend | 收敛异类组件与修复 DesignSystem 演示页：`PropertyPanel` 胶囊组件全面矩形化为 rounded-md；`StatsCard` 移除大面积刺眼底色并使用微边框与 font-mono；彻底删除无生产消费的废弃 `empty.tsx` 并统一至 `EmptyState`；修复 Popover 嵌套 button 与 PieChart 尺寸警告，补齐 MSW 拦截，消除裸色 | CAP-P-01 | 全量单测通过，无 React 嵌套 button 报错 | 对齐 DESIGN.md §7 |
 
 ### 局部侵入问答 AISlot——CAP-C-07 首批落地（card-explain 静默场景 + shared/ai-slot 机制 + 三卡试点）
 

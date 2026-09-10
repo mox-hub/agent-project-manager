@@ -90,13 +90,13 @@ export function TabBar({ className }: TabBarProps) {
   };
 
   return (
-    <div className={cn('relative flex h-10 items-center bg-sidebar pl-0 gap-1', className)}>
+    <div className={cn('relative flex h-10 items-center bg-transparent pl-0 gap-1', className)}>
       {/* Left scroll button */}
       {canScrollLeft && (
         <Button
           variant="ghost"
           size="icon-xs"
-          className="absolute left-2 z-10 h-8 w-8 shrink-0 bg-sidebar/80 hover:bg-sidebar text-sidebar-foreground rounded-lg"
+          className="absolute left-1 z-10 size-7 shrink-0 bg-background/80 hover:bg-background text-foreground/80 rounded-md border border-border/50 shadow-xs backdrop-blur-xs"
           onClick={() => scroll('left')}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -111,7 +111,7 @@ export function TabBar({ className }: TabBarProps) {
       >
         {orderedTabs.length === 0 ? (
           /* Empty state - show placeholder */
-          <div className="flex items-center gap-1.5 px-2 text-sidebar-foreground/50 text-sm">
+          <div className="flex items-center gap-1.5 px-2 text-sidebar-foreground/50 text-xs font-medium">
             <FolderKanban className="h-4 w-4" />
             <span>{t('shell.noTabsOpen', 'No tabs open')}</span>
           </div>
@@ -145,7 +145,7 @@ export function TabBar({ className }: TabBarProps) {
         <Button
           variant="ghost"
           size="icon-xs"
-          className="absolute right-11 z-10 h-8 w-8 shrink-0 bg-sidebar/80 hover:bg-sidebar text-sidebar-foreground rounded-lg"
+          className="absolute right-10 z-10 size-7 shrink-0 bg-background/80 hover:bg-background text-foreground/80 rounded-md border border-border/50 shadow-xs backdrop-blur-xs"
           onClick={() => scroll('right')}
         >
           <ChevronRight className="h-4 w-4" />
@@ -156,7 +156,7 @@ export function TabBar({ className }: TabBarProps) {
       <Button
         variant="ghost"
         size="icon-xs"
-        className="absolute right-2 z-10 h-8 w-8 shrink-0 bg-sidebar hover:bg-sidebar-accent/80 text-sidebar-foreground rounded-lg"
+        className="absolute right-1.5 z-10 size-7 shrink-0 bg-sidebar-accent/50 hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground rounded-md border border-sidebar-border/40 transition-colors"
         onClick={handleAddTab}
         title={t('tabs.add', 'Add tab')}
       >
@@ -241,16 +241,15 @@ function TabItem({
       >
         <div
           className={cn(
-            'group/tab flex h-7 max-w-50 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-all',
+            'group/tab flex h-7 max-w-50 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-all',
             'border',
             tab.pinned
-              ? 'border-sidebar-primary/30 bg-sidebar-accent/50'
-              : 'border-sidebar-border/40',
-            'hover:border-sidebar-border/80 hover:bg-sidebar-accent/60',
-            isActive && [
-              'bg-background border-primary/30 shadow-xs ring-2 ring-primary/15',
-              'dark:bg-sidebar-accent dark:border-sidebar-primary/50 dark:shadow-none dark:ring-1 dark:ring-sidebar-primary/30',
-            ]
+              ? 'border-sidebar-border/60 bg-sidebar-accent/40'
+              : 'border-transparent',
+            'hover:border-sidebar-border/50 hover:bg-sidebar-accent/50',
+            isActive
+              ? 'bg-background/95 border-border/70 shadow-2xs text-foreground font-medium backdrop-blur-xs dark:bg-background/80 dark:border-border/80'
+              : 'text-sidebar-foreground/60'
           )}
           onClick={onClick}
           data-pinned={tab.pinned ? 'true' : undefined}
@@ -272,8 +271,8 @@ function TabItem({
             className={cn(
               'max-w-35 truncate transition-colors text-center',
               isActive
-                ? 'text-foreground dark:text-sidebar-foreground font-medium'
-                : 'text-sidebar-foreground/50 group-hover/tab:text-sidebar-foreground/70'
+                ? 'text-foreground font-medium'
+                : 'text-sidebar-foreground/70 group-hover/tab:text-sidebar-foreground'
             )}
           >
             {translatedTitle}
@@ -286,7 +285,7 @@ function TabItem({
                 'h-4 w-4 shrink-0 rounded opacity-0 group-hover/tab:opacity-100 transition-all p-0',
                 isActive
                   ? 'text-foreground/50 hover:text-foreground hover:bg-foreground/10'
-                  : 'text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/80'
+                  : 'text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent'
               )}
               onClick={(e) => {
                 e.stopPropagation();

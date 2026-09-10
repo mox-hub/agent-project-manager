@@ -127,6 +127,8 @@ export function AccessTokensSettingsSection() {
 
   return (
     <PageShell
+      variant="standard"
+      contentClassName="space-y-6"
       aiPage="settings.tokens"
       title={t('settings.tokensTitle')}
       icon={KeyRound}
@@ -143,9 +145,7 @@ export function AccessTokensSettingsSection() {
         />
       }
     >
-      <div className="p-6">
-        <div className="mx-auto w-full max-w-5xl space-y-6">
-        <SectionCard
+      <SectionCard
           icon={KeyRound}
           iconColor="text-accent-yellow"
           title={t('settings.tokensListTitle')}
@@ -221,8 +221,6 @@ export function AccessTokensSettingsSection() {
             </div>
           </CardContent>
         </Card>
-        </div>
-      </div>
 
       <Dialog
         open={createOpen}

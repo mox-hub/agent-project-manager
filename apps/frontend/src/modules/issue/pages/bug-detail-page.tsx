@@ -286,6 +286,7 @@ export function BugDetailPage() {
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Main */}
         <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
+          <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
           {mutationError && (
             <div className="mx-6 mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {mutationError}
@@ -427,6 +428,7 @@ export function BugDetailPage() {
           {/* Linked documents 已移至右侧栏 */}
           <div className="px-6 py-4 flex-1 min-h-0 flex flex-col">
             <ActivityFeed entityType="bug" entityId={bugId} />
+          </div>
           </div>
         </div>
 
