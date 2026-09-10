@@ -2206,6 +2206,8 @@ model SkillConfig {
   category    String   @default("Development")
   source      String   @default("builtin") // 'builtin' | 'custom'
   enabled     Boolean  @default(true)
+  content     String? // 技能驱动指令全文（grill 等场景经 instructions 注入 AI 会话）
+  sourcePath  String? // 导入来源的本地 SKILL.md 路径留档（content 已物化入 DB）
   metadata    Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

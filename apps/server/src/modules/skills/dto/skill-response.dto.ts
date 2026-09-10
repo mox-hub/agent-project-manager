@@ -29,3 +29,27 @@ export class SkillListResponseDto {
   @ApiProperty({ type: [SkillStatusResponseDto] })
   skills: SkillStatusResponseDto[];
 }
+
+/** GET /skills/:key 返回：含指令正文与来源路径的全量形态 */
+export class SkillDetailResponseDto extends SkillStatusResponseDto {
+  @ApiPropertyOptional({
+    type: String,
+    description: '技能驱动指令全文',
+  })
+  content?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: '导入来源的本地 SKILL.md 路径',
+  })
+  sourcePath?: string;
+}
+
+/** DELETE /skills/:key 返回 */
+export class SkillDeleteResponseDto {
+  @ApiProperty({ description: '被删除的技能 key' })
+  key: string;
+
+  @ApiProperty({ description: '删除成功' })
+  deleted: boolean;
+}

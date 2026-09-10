@@ -6231,7 +6231,25 @@ export interface paths {
         /** List all registered AI skills */
         get: operations["SkillsController_listSkills"];
         put?: never;
-        post?: never;
+        /** Create a custom skill */
+        post: operations["SkillsController_createSkill"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/skills/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import a skill from a local SKILL.md path */
+        post: operations["SkillsController_importSkill"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6245,11 +6263,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        /** Update a skill (toggle / rename / recategorize) */
+        /** Get a skill with full instruction content */
+        get: operations["SkillsController_getSkill"];
+        /** Update a skill (toggle / rename / recategorize / content) */
         put: operations["SkillsController_updateSkill"];
         post?: never;
-        delete?: never;
+        /** Delete a custom skill (builtin skills cannot be deleted) */
+        delete: operations["SkillsController_removeSkill"];
         options?: never;
         head?: never;
         patch?: never;
@@ -13876,12 +13896,68 @@ export interface components {
         SkillListResponseDto: {
             skills: components["schemas"]["SkillStatusResponseDto"][];
         };
+        CreateSkillDto: {
+            /** @description 技能唯一 key（小写字母/数字/连字符） */
+            key: string;
+            /** @description 技能名 */
+            name: string;
+            description?: string;
+            /** @example Development */
+            category?: string;
+            /** @description 技能驱动指令全文；缺省且给 sourcePath 时读文件物化 */
+            content?: string;
+            /** @description 导入来源的本地 SKILL.md 路径（留档） */
+            sourcePath?: string;
+        };
+        SkillDetailResponseDto: {
+            /** @description 技能唯一 key */
+            key: string;
+            /** @description 技能名 */
+            name: string;
+            description?: string;
+            /** @description 分类（Development / Management ...） */
+            category: string;
+            /**
+             * @description 来源
+             * @enum {string}
+             */
+            source: "builtin" | "custom";
+            /** @description 是否启用 */
+            enabled: boolean;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+            /** @description 技能驱动指令全文 */
+            content?: string;
+            /** @description 导入来源的本地 SKILL.md 路径 */
+            sourcePath?: string;
+        };
+        ImportSkillDto: {
+            /** @description 本地 SKILL.md 文件路径 */
+            sourcePath: string;
+            /** @description 技能 key；缺省时从路径派生（目录名/文件名 kebab 化） */
+            key?: string;
+            /** @description 缺省时取 frontmatter.name 或 key */
+            name?: string;
+            description?: string;
+            /** @example Development */
+            category?: string;
+        };
         UpdateSkillDto: {
             name?: string;
             description?: string;
             /** @example Development */
             category?: string;
             enabled?: boolean;
+            /** @description 技能驱动指令全文 */
+            content?: string;
+            /** @description 导入来源的本地 SKILL.md 路径（留档） */
+            sourcePath?: string;
+        };
+        SkillDeleteResponseDto: {
+            /** @description 被删除的技能 key */
+            key: string;
+            /** @description 删除成功 */
+            deleted: boolean;
         };
         ProjectRoleResponseDto: {
             /** @description 角色 ID */
@@ -43567,6 +43643,263 @@ export interface operations {
             };
         };
     };
+    SkillsController_createSkill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSkillDto"];
+            };
+        };
+        responses: {
+            /** @description Created skill */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillDetailResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description Skill key already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    SkillsController_importSkill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportSkillDto"];
+            };
+        };
+        responses: {
+            /** @description Imported skill */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillDetailResponseDto"];
+                };
+            };
+            /**
+             * @description Cannot read source file
+             *
+             *     请求参数错误
+             */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description Skill key already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    SkillsController_getSkill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Skill detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillDetailResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /**
+             * @description Skill not found
+             *
+             *     资源不存在
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
     SkillsController_updateSkill: {
         parameters: {
             query?: never;
@@ -43614,6 +43947,91 @@ export interface operations {
                 };
             };
             /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /**
+             * @description Skill not found
+             *
+             *     资源不存在
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    SkillsController_removeSkill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillDeleteResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /**
+             * @description Builtin skill
+             *
+             *     无权限访问
+             */
             403: {
                 headers: {
                     [name: string]: unknown;

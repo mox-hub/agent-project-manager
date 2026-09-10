@@ -19,6 +19,42 @@ tags: "changelog,release"
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
+## [Unreleased]
+
+### CAP-P-01 二期——组合件提案：任务族 + 验收清单一次批卡原子落库
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | applyPlan 升级组合件 applier（ADR-012）：payload.issueId 变可选（缺省时以提案 projectId 建顶级任务族）、added[] 每项可带 acceptance 段（criteria 与任务同 `$transaction` 落库，source 记 `ai-generated-from-interview` 溯源，开放问题 #4 清偿）；决策模块不注入 AcceptanceService（acceptance→decision 依赖方向，直写 tx 同构 applyPlan）；新增静默场景 `intake-composite`——读需求承接剧本「任务拆解/验收草案」两工件（prepareContext 显式文档指针），AI 代写组合件 payload；PlanProposalPayloadDto 三层嵌套校验（added→acceptance→criteria） | FR-P-01 | proposal.service.spec 10 条（组合件顶级任务族+验收溯源/缺 projectId 400/空 criteria 400/旧 payload 兼容）；assistant-silent.service.spec 19 条（intake-composite 4 条）；playbook e2e 7/7（组合件批卡全链：创建→pending 投影→accept→issue/acceptance/criteria 直查，任务 B 无验收段不建单）；server 全量 61 文件 520 用例绿；契约零漂移 | ADR-012 |
+| frontend | PlanCard 槽位渲染扩展：added 行内嵌验收标准清单（criteriaType 功能/技术标记）+ impact 区验收计数；`use-intake-composite` hook（parse 防御性收敛：title 必填/criteria 过滤/上限 20 任务）；剧本页「AI 生成任务族提案」卡（breakdown/acceptance-draft 工件就绪时显示）——生成→直接 POST plan 卡进决策收件箱→收件箱批卡；decision-api 补 createProposal（契约单源）；i18n 双语 +12 键（3081 键对齐） | FR-P-01 | tsc -b 零错误；vitest 61 文件 263 用例绿；双语键对齐校验 | ADR-012 |
+
+### server 日志控制台彩色输出——level 按严重度着色
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | LoggerService 控制台行渲染重构为纯函数 `formatConsoleLine` + 色彩门控 `consoleColorEnabled`：level 按严重度着色（error 红/warn 黄/info 绿/http 青/verbose 品红/debug 灰）、context 统一亮青；默认开启（pnpm/turbo 接管 stdout 后 isTTY=false 但终端仍渲染 ANSI），`NO_COLOR=1`/`FORCE_COLOR=0` 关闭、`FORCE_COLOR=1` 强制开启；standalone `[LEVEL]` 前置与常规两种布局均支持；Bootstrap context 归一为 APM | — | logger.service.spec 18 条（布局/着色/门控矩阵）；logging.interceptor.spec 随行更新；vitest 4 套件 56 用例绿 | — |
+
+### CAP-P-01 一期收口——需求承接剧本 + 访谈 AI 预填 + init 自动挂载（切片 3）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | playbook 注册表新增「需求承接」剧本（requirement-pipeline，research→clarify→breakdown→acceptance-draft 四阶段：novice 向人话问题组 + 术语对照 + 闸门后果声明），纯增量注册（playbookRef 自由 TEXT 无迁移，registry version 不 bump）；静默场景 `interview-prefill`：按一句话需求/grill 摘要为当前阶段问题组生成答案候选（缺问题组 400，复用 extractJsonObject/AIUsageLog 链） | FR-P-01 | playbook.service.spec 模板清单断言扩展；assistant-silent.service.spec 18 用例（+3）；playbook e2e 6/6 含需求承接全链（挂载→调研拍板→澄清必答 400→拍板→拆解访谈 + interview-prefill 无模型可读失败） | ADR-011 |
+| frontend | InterviewDialog 预填条（一句话需求输入 + Sparkles「AI 预填」按钮）：候选只填空字段绝不覆盖手填、失败红字降级手填；use-interview-prefill hook（防御性解析：id+answer 齐全且命中问题组才收）；init 页 `?grilled=1`（grill 建项链）：幂等自动挂载 requirement-pipeline 剧本 + 澄清摘要卡与访谈引导；submitProjectFromGrill 补「需求澄清纪要」文档落库（buildGrillMinutes 摘要转 markdown，失败不阻断建项）；i18n 双语 +12 键（3069 键对齐） | FR-P-01 | interview-dialog.test 补预填交互用例（空字段才回填断言）；grill-minutes 纯函数测试；前端 tsc -b 零错误 + vitest 61 文件 263 用例全绿；契约 contract:check 零漂移 | ADR-011 |
+
+### 技能注册表管理面——CRUD 补全 + 指令内容物化 + 本地 SKILL.md 导入（CAP-P-01 grill 前置）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | SkillConfig 加 `content`（驱动指令全文，物化入 DB）+ `sourcePath`（导入来源留档）两列（迁移 20260909100000）；skills 补全管理面：POST /skills（key 冲突 409，带 sourcePath 缺 content 时读文件物化）、GET /skills/:key（全量含指令）、DELETE /skills/:key（builtin 禁删 403）、POST /skills/import（本地 SKILL.md 导入：frontmatter 行式解析 name/description + 正文物化，key 缺省从路径派生）；BUILTIN_SKILLS 增第 8 个内置 `grilling`（grill 需求拷问驱动指令：一次一问 + 猜测选项 + done 收敛输出结构化摘要，CAP-P-01 AI 代理模式创建的会话引擎）；契约三件套同步重导出零漂移 | FR-P-01 / FR-CORE-001 | skills.service.spec 19 用例（种子幂等/CRUD/导入 frontmatter/解析纯函数）；skills.e2e 9 用例（CRUD 全链 + 403/404/409 + 导入 400）；openapi contract:check 零漂移 | ADR-011 |
+| frontend | 设置页「Agent 管理」技能区从纯开关升级为全管理面：行内编辑（拉详情回填指令正文）与删除（custom 专属，确认弹窗）+ 顶部「新建技能」「从本地导入」入口；SkillDialog 三模式表单（create/import/edit，import 模式 sourcePath 必填、key 可留空从路径派生）；skills-api/use-skills 补 create/get/import/remove 四向（请求体走契约单源 RequestBodyOf）；i18n 双语 25 键同步（zh/en 3057 键对齐） | FR-P-01 | tsc -b 零错误；全量 vitest 58 文件 252 用例绿；双语键数对齐校验 | 无 |
+
+### 日志控制台治理——默认上下文 APM 化 + 模块上下文按调用保留 + 彩色输出
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | LoggerService 上下文解析重构：main.ts 全局默认上下文 `Bootstrap`→`APM`，格式化兜底 `App`→`APM`；新增 resolveContext——Nest Logger 实例委托时追加在尾参的 context（error 在 trace 之后）优先采用，未传时回退共享实例 moduleContext，context 尾参不再混入 meta。修复 30+ 服务 `new Logger(Xxx.name)` 的模块名被单例 `'Bootstrap'` 覆盖、运行期日志全部显示 `[Bootstrap]` 的问题；已知残留：构造器内 setContext 的注入式服务（HTTP/Prisma/MessageBus 等约 20 处）因单例共享可变状态仍显示 `[APM]`，待后续实例化改造；顺手修复 logging.interceptor.spec 存量 jest.fn/jest.Mock 残留（Jest→Vitest 迁移漏改，整套件 ReferenceError 挂 9 用例） | FR-CORE-001 | logger.service.spec 新增 context 解析 4 用例；server 全量单测 60 套件 491 用例全绿；改动文件 eslint 绿、server type-check 绿 | 无 |
+| server | 控制台彩色日志：level 按严重度着色（error 红/warn 黄/info 绿/http 青/verbose 品红/debug 灰）+ context 统一亮青色；两套 console 布局（standalone `[LEVEL] ts [CTX] msg` / 常规 `ts [CTX] level: msg`）收敛为纯函数 formatConsoleLine 并支持彩色，移除旧 `format.colorize()`（仅 level 上色）；闸门——默认开启（pnpm/turbo 接管子进程 stdout 使 isTTY=false，但终端仍可渲染 ANSI，首版 TTY 闸门会误关 dev 颜色已修正），`NO_COLOR=1` 关闭、`FORCE_COLOR=0` 显式关闭（机器捕获场景）、`FORCE_COLOR=1` 强制开启 | FR-CORE-001 | formatConsoleLine/consoleColorEnabled 新增 7 用例（双色布局逐字节断言 + ANSI 码断言 + 环境闸门）；全量 491 绿 | 无 |
+
 ## [0.5.0] - 2026-09-09
 
 ### 依赖现代化——NestJS 12 + Express 5 + @swc/cli 0.8 + 测试栈迁移 Vitest

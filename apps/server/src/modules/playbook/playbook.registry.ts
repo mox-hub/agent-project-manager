@@ -406,9 +406,188 @@ const MAINTENANCE_LIGHT: PlaybookTemplate = {
   ],
 };
 
+// CAP-P-01 需求承接管道（主线）：小白给一句需求 → 访谈澄清 → 拆解 + 验收草案。
+// 一期通常由统一创建面板「AI 代理模式」的 grill 环节前置澄清（grill 摘要可作为本剧本访谈的预填素材）。
+const REQUIREMENT_PIPELINE: PlaybookTemplate = {
+  key: 'requirement-pipeline',
+  name: '需求承接',
+  description:
+    '从一句原始需求到可开工的工程任务与验收清单：调研 → 澄清 → 拆解 → 验收草案。',
+  audience: 'novice',
+  stages: [
+    {
+      key: 'research',
+      name: '调研',
+      purpose:
+        '把「想做个什么东西」落到具体的人和痛点上——先搞清楚问题，再谈方案。',
+      domain: 'requirements',
+      interview: [
+        {
+          id: 'problem',
+          question:
+            '这个东西要解决什么问题？没有它的时候，你们现在是怎么凑合的？',
+          hint: '例如：每次开完会都记不清谁答应了什么，全靠翻群聊',
+          term: '问题陈述',
+          termNote:
+            '问题陈述 = 现象 + 影响 + 现状凑合方式，是需求的第一块积木。',
+        },
+        {
+          id: 'users',
+          question: '谁会天天用它？他们最头疼的一件事是什么？',
+          hint: '例如：我们小组 5 个人，最头疼的是会后对不上结论',
+        },
+        {
+          id: 'alternatives',
+          question:
+            '有没有现成的工具（哪怕是 Excel 或群接龙）在干类似的事？它哪里不够用？',
+          hint: '例如：现在用共享文档记，但经常忘了更新',
+        },
+      ],
+      document: {
+        titleTemplate: '需求调研纪要 · {project}',
+        category: 'requirement',
+        intro: '调研纪要记录问题、用户与现状，是后续澄清与拆解的依据。',
+      },
+      gate: {
+        title: '调研纪要已产出，确认进入需求澄清？',
+        detail: '调研是需求的源头：问题找错了，后面做得再好也没用。',
+        consequences: [
+          '调研纪要归档为项目文档，可随时回看',
+          '游标推进到「澄清」阶段',
+          '若驳回：补充调研后重新提交',
+        ],
+      },
+    },
+    {
+      key: 'clarify',
+      name: '澄清',
+      purpose: '划定这一期的边界——做到哪、不做什么、有什么约束，防止范围失控。',
+      domain: 'requirements',
+      interview: [
+        {
+          id: 'milestone-goal',
+          question: '这一期做完的标志是什么——最先让谁用上什么功能？',
+          hint: '例如：小组里所有人都能在手机上登记会议决定',
+          term: '本期范围',
+          termNote: '本期范围 = 第一个真实可用的场景，比功能清单更能对齐预期。',
+        },
+        {
+          id: 'non-goals',
+          question: '明确不做的有哪些？（想到「以后再说」的就写进来）',
+          hint: '例如：不做语音转写、不做多团队',
+          term: '非目标',
+          termNote: '非目标 = 写下来的「不做」，是防范围蔓延最有效的手段。',
+        },
+        {
+          id: 'constraints',
+          question: '有什么硬约束吗？比如必须用某个系统、必须在某天前上线。',
+          hint: '例如：只能用公司已有的账号体系，两周后要先用上',
+        },
+      ],
+      document: {
+        titleTemplate: '需求澄清纪要 · {project}',
+        category: 'requirement',
+        intro: '澄清纪要划定本期范围、非目标与约束，是拆解的输入。',
+      },
+      gate: {
+        title: '需求已澄清，确认进入任务拆解？',
+        detail: '确认后本期范围与边界就定下来了，改动需要走变更。',
+        consequences: [
+          '澄清纪要归档为项目文档',
+          '游标推进到「拆解」阶段',
+          '若驳回：范围或约束有变，修订后重新提交',
+        ],
+      },
+    },
+    {
+      key: 'breakdown',
+      name: '拆解',
+      purpose: '把需求掰成一块块能动手的工程任务，标出最不确定的部分。',
+      domain: 'technical',
+      interview: [
+        {
+          id: 'pieces',
+          question: '整件事可以拆成哪几块？每块一句话说清。',
+          hint: '例如：① 决定登记表 ② 会后提醒 ③ 历史检索',
+          term: '工作分解',
+          termNote:
+            '工作分解 = 把需求切成可独立交付的块，每块能在一两周内做完为宜。',
+        },
+        {
+          id: 'riskiest',
+          question: '哪一块最没把握、最容易出问题？',
+          hint: '例如：会后提醒的推送到达率',
+        },
+        {
+          id: 'order',
+          question: '这几块的先后顺序是什么？什么必须先做？',
+          hint: '例如：先有登记表才有数据可提醒',
+        },
+      ],
+      document: {
+        titleTemplate: '工程任务拆解 · {project}',
+        category: 'design',
+        numbered: true,
+        intro: '拆解清单按块编号；确认后可据此建立工程任务。',
+      },
+      gate: {
+        title: '任务拆解已产出，确认建立工程任务？',
+        detail: '拆解确认后，各块将作为工程任务跟踪执行。',
+        consequences: [
+          '拆解清单归档为项目文档',
+          '游标推进到「验收草案」阶段',
+          '若驳回：拆解粒度或顺序不合适，修订后重新提交',
+        ],
+      },
+    },
+    {
+      key: 'acceptance-draft',
+      name: '验收草案',
+      purpose:
+        '开工前先约定「怎么算做完」——可检查的验收标准是治理的最后一道门。',
+      domain: 'acceptance',
+      interview: [
+        {
+          id: 'criteria',
+          question: '怎么算「做完了」？试着写出 3 条能检查的标准。',
+          hint: '例如：会后 10 分钟内能在手机上查到本次决定',
+          term: '验收标准',
+          termNote:
+            '验收标准 = 可检查、可复现的完成条件，避免「我觉得做完了」。',
+        },
+        {
+          id: 'acceptor',
+          question: '谁来验收？按什么流程试一遍就算通过？',
+          hint: '例如：小组长按「登记→提醒→检索」走一遍',
+        },
+        {
+          id: 'risks',
+          question: '有哪些容易翻车的点需要重点检查？',
+          hint: '例如：手机上网络差时能不能正常提交',
+        },
+      ],
+      document: {
+        titleTemplate: '验收草案 · {project}',
+        category: 'testing',
+        intro: '验收草案约定完成标准与验收流程，执行完成后按此收口。',
+      },
+      gate: {
+        title: '验收草案已产出，确认完成需求承接？',
+        detail: '确认后本剧本走完：需求已带着验收标准进入执行管道。',
+        consequences: [
+          '验收草案归档为项目文档，供验收阶段比对',
+          '剧本游标走完，工程任务按拆解清单跟踪',
+          '若驳回：验收标准不可检查，修订后重新提交',
+        ],
+      },
+    },
+  ],
+};
+
 export const BUILTIN_PLAYBOOKS: PlaybookTemplate[] = [
   SOFTWARE_FULL_CYCLE,
   MAINTENANCE_LIGHT,
+  REQUIREMENT_PIPELINE,
 ];
 
 export const PLAYBOOK_REGISTRY_VERSION = '1';

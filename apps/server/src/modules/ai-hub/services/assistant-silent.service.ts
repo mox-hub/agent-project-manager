@@ -105,7 +105,114 @@ ${JSON.stringify(context.messages)}
 只输出 JSON：{"summary": "...", "preferences": [{"content": "...", "confidence": 0.8}], "conclusions": [{"content": "...", "confidence": 0.8}]}`;
     },
   },
+  'grill-next': {
+    description:
+      'grill 需求拷问（创建面板 AI 代理模式）：无状态多轮——服务端加载 grilling 技能指令，按已问答历史出下一问（含猜测选项）或在收敛时输出结构化需求摘要',
+    prepareContext: async (context, { prisma }) => ({
+      ...context,
+      skillContent: await loadGrillingInstruction(prisma, context),
+    }),
+    buildInstructions: (context) => {
+      const history = Array.isArray(context.history) ? context.history : [];
+      const draft = String(context.draft ?? '').trim();
+      if (!draft && history.length === 0) {
+        throw new BadRequestException(
+          'grill 缺少输入：需求草稿（draft）与问答历史（history）至少一项',
+        );
+      }
+      if (!context.skillContent) {
+        throw new BadRequestException(
+          'grilling 技能不可用：请在 设置 → Agent 管理 → Skills 中启用或导入',
+        );
+      }
+      return `${String(context.skillContent)}
+
+——以下为本次会话数据——
+用户最初的想法：${draft || '（未提供，以问答历史为准）'}
+已完成的问答（按序）：
+${history.length ? JSON.stringify(history) : '（还没有，这是第一问）'}
+
+按技能指令决定：未收敛时输出 {"done": false, "question": "...", "choices": [...]}；已能诚实写出摘要时输出 {"done": true, "summary": {...}}。只输出 JSON。`;
+    },
+  },
+  'interview-prefill': {
+    description:
+      '剧本访谈预填（CAP-P-01）：按用户一句话需求（或 grill 摘要）为当前阶段每个访谈问题生成答案候选，人修改后走既有 submitInterview',
+    buildInstructions: (context) => {
+      const questions = Array.isArray(context.questions)
+        ? context.questions
+        : [];
+      if (questions.length === 0) {
+        throw new BadRequestException('访谈预填缺少问题组（questions）');
+      }
+      const requirement = String(context.requirement ?? '').trim();
+      return `你是项目管理系统的需求访谈助手。用户对下面这份访谈表单里的每个问题，按其需求描述预填一份答案候选；用户会在此基础上修改，所以候选要具体、可执行、说人话，绝不编造需求里没有的承诺（拿不准就写「待确认：…」）。
+用户的需求描述：
+${requirement || '（未提供，按问题自身语境给出常见合理候选）'}
+访谈问题组：
+${JSON.stringify(questions)}
+只输出 JSON：{"answers": [{"questionId": "问题 id", "answer": "答案候选"}]}，answers 必须覆盖每一个问题。`;
+    },
+  },
+  'intake-composite': {
+    description:
+      '组合件提案生成（CAP-P-01 二期）：读需求承接剧本的「任务拆解」与「验收草案」两份工件，AI 代写「任务族 + 每任务验收标准」的组合件 plan 卡 payload，人批卡后事务化落库',
+    prepareContext: async (context, { prisma }) => {
+      const ids = [
+        context.breakdownDocumentId,
+        context.acceptanceDocumentId,
+      ].filter((v): v is string => typeof v === 'string' && !!v);
+      if (ids.length === 0) {
+        throw new BadRequestException(
+          '组合件生成缺少工件：breakdownDocumentId / acceptanceDocumentId 至少一项',
+        );
+      }
+      const docs = await prisma.document.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, title: true, content: true },
+      });
+      if (docs.length === 0) {
+        throw new BadRequestException('工件文档不存在');
+      }
+      return { ...context, documents: docs };
+    },
+    buildInstructions: (context) => {
+      const docs = Array.isArray(context.documents) ? context.documents : [];
+      if (docs.length === 0) {
+        throw new BadRequestException('组合件生成缺少工件文档');
+      }
+      return `你是项目管理系统的需求拆解助手。下面是需求承接访谈产出的工件（任务拆解 / 验收草案），请把它们转成一份「任务族 + 验收清单」组合件提案 payload，供人在决策收件箱一次批卡落库。
+工件：
+${JSON.stringify(docs)}
+
+要求：
+- tasks：把拆解清单的每一块转成一个任务；title 短句动词开头；description 一句话补充；estimate 是小时数（拿不准给 8）。
+- 每个任务带 acceptance.criteria（1~4 条），从验收草案中挑选与该任务相关的可检查标准；草案不足以支撑的任务给空 criteria 数组，绝不编造。
+- 宁缺毋假：工件里没有的信息留空，不要发明需求。
+只输出 JSON：{"tasks": [{"title": "...", "description": "...", "estimate": 8, "acceptance": {"criteria": [{"criteriaType": "functional", "content": "...", "category": "..."}]}}]}`;
+    },
+  },
 };
+
+/**
+ * grill 驱动指令加载：读启用中的 grilling 技能 content；
+ * 技能缺失/未启用/无正文时返回 null（buildInstructions 层转可读 400）。
+ */
+async function loadGrillingInstruction(
+  prisma: PrismaService,
+  context: Record<string, unknown>,
+): Promise<string | null> {
+  if (typeof context.skillContent === 'string' && context.skillContent.trim()) {
+    return context.skillContent;
+  }
+  const skill = await prisma.skillConfig.findUnique({
+    where: { key: 'grilling' },
+  });
+  if (!skill || !skill.enabled || !skill.content?.trim()) {
+    return null;
+  }
+  return skill.content;
+}
 
 /**
  * 任务锚点事实加载：只取回答相关的权威字段（含负责人/验收/依赖/近期动态），

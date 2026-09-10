@@ -1,4 +1,5 @@
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowRight,
@@ -6,8 +7,10 @@ import {
   History,
   LayoutDashboard,
   ScrollText,
+  Sparkles,
 } from 'lucide-react';
 import { useProjectDetail } from '../hooks/use-project-detail';
+import { useMountPlaybook } from '../hooks/use-playbook';
 import { WorkspaceConfig } from '@/modules/git/components/workspace-config';
 import { useWorkspace } from '@/modules/git/hooks/use-workspace';
 import { ContractBindingsPanel } from '@/modules/contract/components/contract-bindings-panel';
@@ -20,20 +23,36 @@ import {
 } from '@/components/ui/card';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
+import type { GrillSummaryState } from '../components/grill/grill-minutes';
 
 /**
  * 项目初始化页（v2 纪要三期：种生实机入口）。
  * 统一创建面板建项后的第一站：绑定工作区目录 → 种生契约三件套 → 引导下一步。
  * 一次性页面，不进项目 tabbar；之后可从设置页「契约文件」页签继续管理。
+ * CAP-P-01：AI 代理模式创建（?grilled=1）时自动挂载需求承接剧本，访谈可直接 AI 预填。
  */
 export function ProjectInitPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { t } = useTranslation();
+  const location = useLocation();
   const { data: project, isLoading } = useProjectDetail(projectId || '');
   // 工作区路径变化时重挂载契约面板（重挂载即重取 bindings），
   // 否则「全部种生」会拿着绑定前的 workspaceRoot=null 缓存恒禁用
   const { data: workspace } = useWorkspace(projectId || '');
   const contractPanelKey = workspace?.localPath || 'no-workspace';
+
+  const grilled = new URLSearchParams(location.search).get('grilled') === '1';
+  const grillSummary = (location.state as { grillSummary?: GrillSummaryState } | null)?.grillSummary ?? null;
+
+  const mount = useMountPlaybook(projectId || '');
+  const mountTriggeredRef = useRef(false);
+  useEffect(() => {
+    // grill 建项链：自动挂载需求承接剧本（幂等，一次性页面只触发一次）
+    if (!grilled || !projectId || mountTriggeredRef.current || mount.isPending) return;
+    mountTriggeredRef.current = true;
+    mount.mutate('requirement-pipeline');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grilled, projectId]);
 
   if (isLoading || !projectId) {
     return (
@@ -46,9 +65,13 @@ export function ProjectInitPage() {
   const nextSteps = [
     {
       to: `/app/projects/${projectId}/playbook`,
-      icon: ScrollText,
-      title: t('project.init.next.playbook.title'),
-      desc: t('project.init.next.playbook.desc'),
+      icon: grilled ? Sparkles : ScrollText,
+      title: grilled
+        ? t('project.init.next.playbook.titleGrilled')
+        : t('project.init.next.playbook.title'),
+      desc: grilled
+        ? t('project.init.next.playbook.descGrilled')
+        : t('project.init.next.playbook.desc'),
     },
     {
       to: `/app/projects/${projectId}/profile?wizard=1`,
@@ -74,6 +97,43 @@ export function ProjectInitPage() {
       description={t('project.detail.initDesc')}
     >
       <div className="mx-auto max-w-3xl space-y-6 px-8 py-6">
+        {grilled && grillSummary ? (
+          <Card
+            data-ai-component="project.init.grilled"
+            className="border-primary/30"
+          >
+            <CardHeader className="border-b border-border pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Sparkles className="h-4 w-4 text-accent-purple" />
+                {t('project.init.grilled.title')}
+              </CardTitle>
+              <CardDescription>{t('project.init.grilled.desc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-4 text-xs text-muted-foreground">
+              {[
+                { label: t('project.init.grilled.scope'), items: grillSummary.scope },
+                { label: t('project.init.grilled.nonGoals'), items: grillSummary.nonGoals },
+                { label: t('project.init.grilled.acceptance'), items: grillSummary.acceptanceHints },
+              ]
+                .filter((section) => section.items && section.items.length > 0)
+                .map((section) => (
+                  <div key={section.label}>
+                    <span className="font-medium text-foreground">{section.label}</span>
+                    <span className="ml-2">{section.items?.join('；')}</span>
+                  </div>
+                ))}
+              <Link
+                to={`/app/projects/${projectId}/playbook`}
+                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                data-ai="project.init.grilled.gotoPlaybook"
+              >
+                {t('project.init.grilled.gotoPlaybook')}
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            </CardContent>
+          </Card>
+        ) : null}
+
         <Card
           data-ai-component="project.init.workspace"
           data-ai-role="content"

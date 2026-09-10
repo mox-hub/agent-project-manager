@@ -13,6 +13,7 @@ import {
   ListChecks,
   Play,
   SkipForward,
+  Sparkles,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,10 +27,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { AsyncState } from '@/components/ui/async-state';
+import { toast } from '@/components/ui/toast';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 import { InterviewDialog } from '../components/playbook/interview-dialog';
+import { useIntakeComposite } from '@/modules/assistant/hooks/use-intake-composite';
+import { decisionApi } from '@/modules/decision';
 import {
   useMountPlaybook,
   usePlaybookStatus,
@@ -66,6 +70,42 @@ export function ProjectPlaybookPage() {
   const interviewStageDef = activeTemplate?.stages.find((s) => s.key === interviewStage) ?? null;
   const activeStage = status?.stages.find((s) => s.status === 'active');
   const activeGatePending = !!activeStage?.gateProposalId && activeStage.gateStatus === 'pending';
+
+  // ── CAP-P-01 二期：组合件提案生成（拆解/验收草案工件就绪后可用）──
+  const intake = useIntakeComposite(projectId);
+  const [intakeProposalId, setIntakeProposalId] = useState<string | null>(null);
+  const breakdownDoc = status?.stages.find((s) => s.key === 'breakdown')?.documentId;
+  const acceptanceDoc = status?.stages.find((s) => s.key === 'acceptance-draft')?.documentId;
+  const intakeReady = !!(breakdownDoc || acceptanceDoc);
+
+  const handleIntake = () => {
+    if (intake.isPending) return;
+    intake.mutate(
+      { breakdownDocumentId: breakdownDoc, acceptanceDocumentId: acceptanceDoc },
+      {
+        onSuccess: async (tasks) => {
+          try {
+            const proposal = await decisionApi.createProposal({
+              kind: 'plan',
+              title: t('project.playbookPage.intake.proposalTitle'),
+              detail: t('project.playbookPage.intake.proposalDetail', { n: tasks.length }),
+              payload: { added: tasks },
+              projectId,
+              proposerType: 'ai_agent',
+            });
+            setIntakeProposalId(proposal.id);
+            toast.success(t('project.playbookPage.intake.createdToast'));
+          } catch (err) {
+            toast.error(
+              t('project.playbookPage.intake.failedToast', {
+                reason: err instanceof Error ? err.message : '',
+              }),
+            );
+          }
+        },
+      },
+    );
+  };
 
   const stageIcon = (stage: PlaybookStageStatus) => {
     if (stage.status === 'done') return CheckCircle2;
@@ -263,6 +303,51 @@ export function ProjectPlaybookPage() {
               </div>
             );
           })}
+
+          {/* CAP-P-01 二期：AI 生成组合件提案（任务族 + 验收清单一次批卡落库） */}
+          {intakeReady ? (
+            <div
+              className="mt-3 rounded-xl border border-accent-purple/30 bg-accent-purple-light/30 p-3.5"
+              data-ai-component="playbook.intake"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Sparkles className="size-4 shrink-0 text-accent-purple" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-content-text">
+                    {t('project.playbookPage.intake.title')}
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-content-text-secondary">
+                    {t('project.playbookPage.intake.desc')}
+                  </p>
+                </div>
+                {intakeProposalId ? (
+                  <Button asChild size="sm" variant="outline" data-ai="playbook.intake.gotoInbox">
+                    <Link to="/app/decisions">{t('project.playbookPage.intake.goInbox')}</Link>
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={intake.isPending}
+                    onClick={handleIntake}
+                    data-ai="playbook.intake.generate"
+                  >
+                    <Sparkles className={cn('size-3.5', intake.isPending && 'animate-pulse')} />
+                    {intake.isPending
+                      ? t('project.playbookPage.intake.generating')
+                      : t('project.playbookPage.intake.generate')}
+                  </Button>
+                )}
+              </div>
+              {intake.isError ? (
+                <p className="mt-2 text-11 text-accent-red">
+                  {t('project.playbookPage.intake.failed', {
+                    reason: intake.error instanceof Error ? intake.error.message : '',
+                  })}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       )}
 

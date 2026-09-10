@@ -617,6 +617,7 @@
       "autoChecks": "自动校验",
       "subtasks": "子任务",
       "estimate": "预计",
+      "acceptanceCriteria": "验收标准",
       "toAgent": "分派",
       "taskUnit": "项",
       "trust": "信任",
@@ -978,6 +979,14 @@
   },
   "project": {
     "init": {
+      "grilled": {
+        "title": "AI 需求澄清完成",
+        "desc": "已按你们的对话生成需求澄清纪要，并自动挂载「需求承接」剧本——继续访谈可把需求拆成任务和验收清单。",
+        "scope": "这一期做什么",
+        "nonGoals": "明确不做什么",
+        "acceptance": "怎么算做完",
+        "gotoPlaybook": "去完成剧本访谈（支持 AI 预填）"
+      },
       "workspace": {
         "title": "绑定工作区目录",
         "desc": "指定项目在本机的目录路径，契约文件与 AI 执行都以它为根。"
@@ -991,7 +1000,9 @@
         "desc": "项目已就绪，可以选择继续配置或直接开始",
         "playbook": {
           "title": "进入剧本流程",
-          "desc": "访谈式收集项目信息，生成全流程剧本"
+          "desc": "访谈式收集项目信息，生成全流程剧本",
+          "titleGrilled": "完成剧本访谈",
+          "descGrilled": "需求承接剧本已自动挂载，访谈时可按澄清纪要 AI 预填"
         },
         "profile": {
           "title": "接入已有仓库",
@@ -1138,6 +1149,18 @@
       "statusActive": "进行中",
       "statusSkipped": "已跳过",
       "gateRejections": "闸门被驳回 {{n}} 次",
+      "intake": {
+        "title": "AI 生成任务族提案",
+        "desc": "按任务拆解与验收草案两份工件，AI 代写「任务族 + 验收清单」组合件提案，你在决策收件箱一次批卡即可建好任务和验收标准。",
+        "generate": "生成提案",
+        "generating": "生成中…",
+        "goInbox": "去决策收件箱批卡",
+        "proposalTitle": "是否按此任务族开工？",
+        "proposalDetail": "AI 按需求承接工件代写的组合件：{{n}} 个任务（含验收标准），批卡后原子落库",
+        "createdToast": "组合件提案已进决策收件箱",
+        "failedToast": "提案创建失败：{{reason}}",
+        "failed": "生成失败：{{reason}}"
+      },
       "gatePending": "闸门待拍板",
       "goInbox": "去决策收件箱",
       "startInterview": "开始访谈",
@@ -1148,6 +1171,10 @@
       "skipReasonPlaceholder": "跳过原因（可选，留痕）",
       "skipConfirm": "确认跳过",
       "interview": {
+        "requirementPlaceholder": "用一句话说说需求（可选，AI 据此预填答案候选）",
+        "aiPrefill": "AI 预填",
+        "aiPrefilling": "预填中…",
+        "aiPrefillFailed": "AI 预填失败：{{reason}}（可继续手填）",
         "title": "「{{stage}}」阶段访谈",
         "placeholder": "用你自己的话说就行，专业转写交给 AI…",
         "submit": "生成工件并提交闸门",
@@ -3029,7 +3056,31 @@
     "refreshedAllToast": "全部 MCP 服务器已刷新",
     "createFailed": "创建失败：{{message}}",
     "cliToolsDesc": "本机检测到的本地 Agent CLI。可启用/禁用提供商，或探测其在线状态。",
-    "skillsRegistryDesc": "Agent 技能注册表 — 开关会持久化到服务端。"
+    "skillsRegistryDesc": "Agent 技能注册表 — 开关与指令正文会持久化到服务端。",
+    "skillCreate": "新建技能",
+    "skillImport": "从本地导入",
+    "skillCreateTitle": "新建技能",
+    "skillImportTitle": "从本地 SKILL.md 导入",
+    "skillEditTitle": "编辑技能",
+    "skillDialogDesc": "技能指令会在 AI 场景（如 grill 需求拷问）中注入会话。",
+    "skillImportDesc": "读取本地 SKILL.md：frontmatter 提供 name/description，正文物化为指令内容，路径留档可追溯。",
+    "skillFieldSourcePath": "本地文件路径",
+    "skillFieldKey": "Key",
+    "skillFieldDescription": "描述",
+    "skillFieldCategory": "分类",
+    "skillFieldName": "名称",
+    "skillFieldContent": "指令内容",
+    "skillContentPlaceholder": "你是…（写给 AI 的驱动指令）",
+    "skillKeyFromPath": "留空则从路径派生",
+    "skillKeyInvalid": "Key 只能含小写字母、数字与连字符",
+    "skillOptional": "可选",
+    "skillImportAction": "导入",
+    "skillCreatedToast": "技能“{{name}}”已创建",
+    "skillImportedToast": "技能“{{name}}”已导入",
+    "skillUpdatedToast": "技能“{{name}}”已保存",
+    "skillDeleteTitle": "删除技能“{{name}}”？",
+    "skillDeleteDesc": "删除后不可恢复；内置技能不可删除，只能禁用。",
+    "skillDeletedToast": "技能“{{name}}”已删除"
   },
   "shell": {
     "mainNav": "主导航",

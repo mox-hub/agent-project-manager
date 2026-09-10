@@ -1,20 +1,21 @@
 import { ExecutionContext } from '@nestjs/common';
 import { of, throwError } from 'rxjs';
+import { vi } from 'vitest';
 import { LoggingInterceptor } from './logging.interceptor';
 
 type MockLogger = {
-  log: jest.Mock;
-  debug: jest.Mock;
-  error: jest.Mock;
-  setContext: jest.Mock;
+  log: ReturnType<typeof vi.fn>;
+  debug: ReturnType<typeof vi.fn>;
+  error: ReturnType<typeof vi.fn>;
+  setContext: ReturnType<typeof vi.fn>;
 };
 
 function buildLogger(): MockLogger {
   return {
-    log: jest.fn(),
-    debug: jest.fn(),
-    error: jest.fn(),
-    setContext: jest.fn(),
+    log: vi.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    setContext: vi.fn(),
   };
 }
 

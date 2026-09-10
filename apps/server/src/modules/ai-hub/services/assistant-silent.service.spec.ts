@@ -103,7 +103,252 @@ describe('AssistantSilentService.run', () => {
       'project-score',
       'anchor-qa',
       'memory-digest',
+      'grill-next',
+      'interview-prefill',
+      'intake-composite',
     ]);
+  });
+
+  describe('interview-prefill', () => {
+    const makePrefillService = (chatContent: string) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const service = new AssistantSilentService(
+        { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat };
+    };
+
+    it('按需求描述为每个问题生成答案候选，instructions 覆盖问题组', async () => {
+      const { service, chat } = makePrefillService(
+        '{"answers": [{"questionId": "problem", "answer": "会议决定记不住"}, {"questionId": "users", "answer": "小组 5 人"}]}',
+      );
+      const result = await service.run(
+        'interview-prefill',
+        {
+          requirement: '做一个会议纪要工具',
+          questions: [
+            { id: 'problem', question: '要解决什么问题？' },
+            { id: 'users', question: '谁会用？' },
+          ],
+        },
+        'p1',
+        'u1',
+      );
+
+      expect(result.data).toHaveProperty('answers');
+      const answers = result.data.answers as Array<{ questionId: string }>;
+      expect(answers).toHaveLength(2);
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('做一个会议纪要工具');
+      expect(instructions).toContain('"id":"problem"');
+    });
+
+    it('缺问题组 → 400（不触 LLM）', async () => {
+      const { service, chat } = makePrefillService('{}');
+      await expect(
+        service.run('interview-prefill', { requirement: 'x' }, 'p1', 'u1'),
+      ).rejects.toThrow(/缺少问题组/);
+      expect(chat).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('intake-composite', () => {
+    const DOCS = [
+      {
+        id: 'd1',
+        title: '工程任务拆解 · P',
+        content: '① 决定登记表 ② 会后提醒',
+      },
+      { id: 'd2', title: '验收草案 · P', content: '会后 10 分钟内可查到决定' },
+    ];
+
+    const makeCompositeService = (
+      prismaDocs: Array<{ id: string; title: string; content: string }> = DOCS,
+      chatContent = '{"tasks": [{"title": "做决定登记表", "description": "登记会议决定", "estimate": 8, "acceptance": {"criteria": [{"criteriaType": "functional", "content": "会后可查"}]}}]}',
+    ) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const prisma = {
+        aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+        document: { findMany: vi.fn().mockResolvedValue(prismaDocs) },
+      };
+      const service = new AssistantSilentService(
+        prisma as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat, prisma };
+    };
+
+    it('侦查两份工件 → instructions 含文档内容，输出 tasks payload', async () => {
+      const { service, chat, prisma } = makeCompositeService();
+      const result = await service.run(
+        'intake-composite',
+        { breakdownDocumentId: 'd1', acceptanceDocumentId: 'd2' },
+        'p1',
+        'u1',
+      );
+
+      expect(prisma.document.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: { in: ['d1', 'd2'] } },
+        }),
+      );
+      expect(result.data).toHaveProperty('tasks');
+      const tasks = result.data.tasks as Array<Record<string, unknown>>;
+      expect(tasks[0]).toMatchObject({ title: '做决定登记表' });
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('决定登记表');
+      expect(instructions).toContain('会后 10 分钟内可查到决定');
+    });
+
+    it('缺工件 id / 文档不存在 → 400（不触 LLM）', async () => {
+      const { service, chat, prisma } = makeCompositeService();
+      await expect(
+        service.run('intake-composite', {}, 'p1', 'u1'),
+      ).rejects.toThrow(/缺少工件/);
+      expect(chat).not.toHaveBeenCalled();
+
+      const missing = makeCompositeService([]);
+      await expect(
+        missing.service.run(
+          'intake-composite',
+          { breakdownDocumentId: 'gone' },
+          'p1',
+          'u1',
+        ),
+      ).rejects.toThrow(/工件文档不存在/);
+      expect(missing.chat).not.toHaveBeenCalled();
+      void prisma;
+    });
+  });
+});
+
+describe('AssistantSilentService.run · grill-next', () => {
+  const GRILLING = '你是 APM 的需求拷问官（grill）。一次只问一个问题。';
+
+  const makeGrillService = (
+    skillRow: { enabled: boolean; content: string | null } | null = {
+      enabled: true,
+      content: GRILLING,
+    },
+    chatContent = '{"done": false, "question": "它要解决什么问题？", "choices": [{"key": "a", "label": "记不清", "guess": true}]}',
+  ) => {
+    const chat = vi.fn().mockResolvedValue({
+      content: chatContent,
+      model: 'test-model',
+      tokens: { prompt: 10, completion: 5, total: 15 },
+    });
+    const prisma = {
+      aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+      skillConfig: { findUnique: vi.fn().mockResolvedValue(skillRow) },
+    };
+    const service = new AssistantSilentService(
+      prisma as never,
+      {
+        listAdapters: () => [{ provider: 'glm', model: 'm' }],
+        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+      } as never,
+      { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+    );
+    return { service, chat, prisma };
+  };
+
+  it('第一问：服务端加载 grilling 指令注入 instructions，含用户草稿', async () => {
+    const { service, chat, prisma } = makeGrillService();
+    const result = await service.run(
+      'grill-next',
+      { draft: '想做一个帮团队记会议的系统', history: [] },
+      null,
+      'u1',
+    );
+
+    expect(result.scenario).toBe('grill-next');
+    expect(result.data).toHaveProperty('question', '它要解决什么问题？');
+    expect(prisma.skillConfig.findUnique).toHaveBeenCalledWith({
+      where: { key: 'grilling' },
+    });
+    const [, options] = chat.mock.calls[0];
+    const instructions = (options as { instructions: string }).instructions;
+    expect(instructions).toContain('一次只问一个问题');
+    expect(instructions).toContain('帮团队记会议的系统');
+  });
+
+  it('多轮：历史问答进入 instructions；done 时透出 summary', async () => {
+    const { service } = makeGrillService(
+      undefined,
+      '{"done": true, "summary": {"name": "会议纪要库", "goals": ["不再丢结论"], "users": [], "scope": [], "nonGoals": [], "constraints": [], "acceptanceHints": []}}',
+    );
+    const result = await service.run(
+      'grill-next',
+      {
+        draft: '会议纪要系统',
+        history: [{ question: '给谁用？', answer: '小团队' }],
+      },
+      null,
+      'u1',
+    );
+    expect(result.data).toHaveProperty('done', true);
+    const summary = result.data.summary as Record<string, unknown>;
+    expect(summary).toHaveProperty('name', '会议纪要库');
+  });
+
+  it('grilling 技能缺失/未启用/无正文 → 可读 400（不触 LLM）', async () => {
+    const disabled = makeGrillService({ enabled: false, content: GRILLING });
+    await expect(
+      disabled.service.run(
+        'grill-next',
+        { draft: 'x', history: [] },
+        null,
+        'u1',
+      ),
+    ).rejects.toThrow(/grilling 技能不可用/);
+    expect(disabled.chat).not.toHaveBeenCalled();
+
+    const noContent = makeGrillService({ enabled: true, content: null });
+    await expect(
+      noContent.service.run(
+        'grill-next',
+        { draft: 'x', history: [] },
+        null,
+        'u1',
+      ),
+    ).rejects.toThrow(/grilling 技能不可用/);
+
+    const missing = makeGrillService(null);
+    await expect(
+      missing.service.run(
+        'grill-next',
+        { draft: 'x', history: [] },
+        null,
+        'u1',
+      ),
+    ).rejects.toThrow(/grilling 技能不可用/);
+  });
+
+  it('draft 与 history 全空 → 400（不触 LLM）', async () => {
+    const { service, chat } = makeGrillService();
+    await expect(
+      service.run('grill-next', { history: [] }, null, 'u1'),
+    ).rejects.toThrow(/至少一项/);
+    expect(chat).not.toHaveBeenCalled();
   });
 });
 

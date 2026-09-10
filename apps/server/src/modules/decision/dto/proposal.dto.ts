@@ -1,4 +1,5 @@
 import {
+  ArrayMinSize,
   IsArray,
   IsIn,
   IsInt,
@@ -102,6 +103,60 @@ export class GenerateAssignmentDto {
   projectId: string;
 }
 
+export class PlanCriteriaDto {
+  @ApiProperty({ description: '标准类型', enum: ['functional', 'technical'] })
+  @IsIn(['functional', 'technical'])
+  criteriaType: 'functional' | 'technical';
+
+  @ApiProperty({ description: '标准内容（可检查的完成条件）' })
+  @IsString()
+  content: string;
+
+  @ApiPropertyOptional({ description: '分类（如 API/日志/安全）' })
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @ApiPropertyOptional({ description: '权重（默认 1）' })
+  @IsOptional()
+  @IsInt()
+  weight?: number;
+
+  @ApiPropertyOptional({
+    description: '严重度',
+    enum: ['low', 'medium', 'high', 'critical'],
+  })
+  @IsOptional()
+  @IsIn(['low', 'medium', 'high', 'critical'])
+  severity?: string;
+}
+
+export class PlanAcceptanceDto {
+  @ApiPropertyOptional({ description: '验收单标题（缺省「验收 - {任务名}」）' })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @ApiPropertyOptional({
+    description: '完成物类型（缺省 artifact）',
+    enum: ['pr', 'test_report', 'document', 'artifact'],
+  })
+  @IsOptional()
+  @IsIn(['pr', 'test_report', 'document', 'artifact'])
+  completionType?: string;
+
+  @ApiProperty({
+    type: [PlanCriteriaDto],
+    description:
+      '验收标准（组合件落库时 source 记 ai-generated-from-interview）',
+  })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => PlanCriteriaDto)
+  criteria: PlanCriteriaDto[];
+}
+
 export class PlanSubtaskDto {
   @ApiProperty({ description: '子任务标题' })
   @IsString()
@@ -121,12 +176,24 @@ export class PlanSubtaskDto {
   @IsOptional()
   @IsString()
   assigneeMemberId?: string;
+
+  @ApiPropertyOptional({
+    description: '该任务的验收单（CAP-P-01 组合件：accept 后与任务同事务落库）',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PlanAcceptanceDto)
+  acceptance?: PlanAcceptanceDto;
 }
 
 export class PlanProposalPayloadDto {
-  @ApiProperty({ description: '父任务 ID（子任务挂其下）' })
+  @ApiPropertyOptional({
+    description:
+      '父任务 ID（子任务挂其下）；缺省时为组合件语义——added 以顶级任务族落库，要求提案带 projectId',
+  })
+  @IsOptional()
   @IsString()
-  issueId: string;
+  issueId?: string;
 
   @ApiProperty({ type: [PlanSubtaskDto], description: '拆解出的子任务' })
   @IsArray()
