@@ -27,6 +27,7 @@ import {
 } from '@/modules/settings/pages/sections/manager-sections';
 import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-id-section';
 import { IssueTypesSettingsSection } from '@/modules/settings/pages/sections/issue-types-section';
+import { ChecklistsSettingsSection } from '@/modules/settings/pages/sections/checklists-section';
 import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
 import { AiAgentsSection } from '@/modules/settings/pages/sections/ai-agents-section';
 import { AiUsageSection } from '@/modules/settings/pages/sections/ai-usage-section';
@@ -555,6 +556,7 @@ export const router = createBrowserRouter([
       { path: 'labels', element: <LabelsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'statuses', element: <StatusesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'issue-types', element: <IssueTypesSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'checklists', element: <ChecklistsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'roles', element: <RolesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'templates', element: <TemplatesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'short-id', element: <ShortIdSettingsSection />, errorElement: <ErrorPage /> },

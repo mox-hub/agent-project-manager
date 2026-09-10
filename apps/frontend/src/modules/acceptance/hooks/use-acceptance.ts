@@ -8,6 +8,9 @@ import { useAuth } from '@/modules/auth/hooks/use-auth';
 import {
   acceptanceApi,
   type Acceptance,
+  type CompletenessChecklist,
+  type CreateChecklistPayload,
+  type UpdateChecklistPayload,
 } from '@/modules/acceptance/api/acceptance-api';
 
 export const acceptanceKeys = {
@@ -16,6 +19,7 @@ export const acceptanceKeys = {
   detail: (id: string) => [...acceptanceKeys.all, 'detail', id] as const,
   audit: (id: string) => [...acceptanceKeys.all, 'audit', id] as const,
   systemChecklists: () => [...acceptanceKeys.all, 'systemChecklists'] as const,
+  checklists: () => [...acceptanceKeys.all, 'checklists'] as const,
 };
 
 export function useAcceptancesByTask(issueId: string | undefined) {
@@ -201,5 +205,44 @@ export function useSystemChecklists() {
   return useQuery({
     queryKey: acceptanceKeys.systemChecklists(),
     queryFn: () => api.get('/acceptance/checklists/system'),
+  });
+}
+
+/** 全部完备性清单（系统预置在前，供审计选择器与设置管理面共用） */
+export function useChecklists() {
+  return useQuery<CompletenessChecklist[]>({
+    queryKey: acceptanceKeys.checklists(),
+    queryFn: () => acceptanceApi.listChecklists(),
+  });
+}
+
+export function useCreateChecklist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateChecklistPayload) => acceptanceApi.createChecklist(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: acceptanceKeys.checklists() });
+    },
+  });
+}
+
+export function useUpdateChecklist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: UpdateChecklistPayload }) =>
+      acceptanceApi.updateChecklist(id, patch),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: acceptanceKeys.checklists() });
+    },
+  });
+}
+
+export function useDeleteChecklist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => acceptanceApi.deleteChecklist(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: acceptanceKeys.checklists() });
+    },
   });
 }

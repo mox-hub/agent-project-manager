@@ -388,4 +388,106 @@ describe('Acceptance (e2e)', () => {
         .expect(200);
     });
   });
+
+  describe('POST /_api/acceptance/checklists (团队自定义清单 CRUD)', () => {
+    let teamChecklistId: string;
+
+    it('should create a team checklist (isSystem=false, 归当前用户)', () => {
+      return wsHttp
+        .post('/_api/acceptance/checklists')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'e2e-owner' })
+        .send({
+          name: 'E2E 团队清单',
+          projectType: 'backend',
+          techStack: 'ts-node',
+          checklist: [
+            {
+              category: '日志',
+              content: '是否定义了日志方案',
+              severity: 'high',
+            },
+            {
+              category: '测试',
+              content: '是否有测试计划',
+              severity: 'medium',
+              autoFixable: false,
+            },
+          ],
+        })
+        .expect(201)
+        .expect((res: Response) => {
+          const created = res.body.data;
+          expect(created.name).toBe('E2E 团队清单');
+          expect(created.isSystem).toBe(false);
+          expect(created.ownerId).toBe('e2e-owner');
+          expect(created.checklist).toHaveLength(2);
+          teamChecklistId = created.id;
+        });
+    });
+
+    it('should reject create without userId', () => {
+      return wsHttp
+        .post('/_api/acceptance/checklists')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'x',
+          projectType: 'api',
+          techStack: 'ts-node',
+          checklist: [],
+        })
+        .expect(400);
+    });
+
+    it('should update own team checklist and bump version', async () => {
+      const res = await wsHttp
+        .patch(`/_api/acceptance/checklists/${teamChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'e2e-owner' })
+        .send({
+          name: 'E2E 团队清单 v2',
+          checklist: [
+            { category: '安全', content: '是否鉴权', severity: 'critical' },
+          ],
+        })
+        .expect(200);
+      expect(res.body.data.name).toBe('E2E 团队清单 v2');
+      expect(res.body.data.version).toBe(2);
+    });
+
+    it('should reject updating a system checklist', () => {
+      if (!systemChecklistId) return Promise.resolve();
+      return wsHttp
+        .patch(`/_api/acceptance/checklists/${systemChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'e2e-owner' })
+        .send({ name: 'hack' })
+        .expect(400);
+    });
+
+    it('should reject update by non-owner', () => {
+      return wsHttp
+        .patch(`/_api/acceptance/checklists/${teamChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'someone-else' })
+        .send({ name: 'not mine' })
+        .expect(400);
+    });
+
+    it('should delete own team checklist', () => {
+      return wsHttp
+        .delete(`/_api/acceptance/checklists/${teamChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'e2e-owner' })
+        .expect(200);
+    });
+
+    it('should 404 on deleting an already deleted checklist', () => {
+      return wsHttp
+        .delete(`/_api/acceptance/checklists/${teamChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'e2e-owner' })
+        .expect(404);
+    });
+  });
 });

@@ -162,6 +162,43 @@ export interface CreateAcceptancePayload {
   }>;
 }
 
+/** 完备性清单检查项（与服务端 ChecklistItemDto 对齐） */
+export interface ChecklistItem {
+  category: string;
+  content: string;
+  severity: string;
+  autoFixable?: boolean;
+}
+
+/** 完备性清单（与服务端 CompletenessChecklist 对齐） */
+export interface CompletenessChecklist {
+  id: string;
+  name: string;
+  description?: string | null;
+  projectType: string;
+  techStack: string;
+  isSystem: boolean;
+  ownerId?: string | null;
+  checklist: ChecklistItem[];
+  version: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateChecklistPayload {
+  name: string;
+  description?: string;
+  projectType: string;
+  techStack: string;
+  checklist: ChecklistItem[];
+}
+
+export interface UpdateChecklistPayload {
+  name?: string;
+  description?: string;
+  checklist?: ChecklistItem[];
+}
+
 /**
  * 从 ApiClientError 提取接收聚合校验失败清单（服务端 failures 可能落在 details 或顶层）
  */
@@ -288,5 +325,26 @@ export const acceptanceApi = {
   ): Promise<AcceptanceCriterion> {
     const qs = userId ? `?userId=${encodeURIComponent(userId)}` : '';
     return (await api.patch<AcceptanceCriterion>(`/acceptance/criteria/${criteriaId}${qs}`, data)) as AcceptanceCriterion;
+  },
+
+  /** 完备性清单列表（系统预置在前） */
+  async listChecklists(): Promise<CompletenessChecklist[]> {
+    const res = await api.get<CompletenessChecklist[]>('/acceptance/checklists/all');
+    return (Array.isArray(res) ? res : []) as CompletenessChecklist[];
+  },
+
+  /** 创建团队自定义清单（服务端按当前用户归 ownerId） */
+  async createChecklist(payload: CreateChecklistPayload): Promise<CompletenessChecklist> {
+    return (await api.post<CompletenessChecklist>('/acceptance/checklists', payload)) as CompletenessChecklist;
+  },
+
+  /** 更新团队自定义清单（系统预置 403） */
+  async updateChecklist(id: string, patch: UpdateChecklistPayload): Promise<CompletenessChecklist> {
+    return (await api.patch<CompletenessChecklist>(`/acceptance/checklists/${id}`, patch)) as CompletenessChecklist;
+  },
+
+  /** 删除团队自定义清单（系统预置 403） */
+  async deleteChecklist(id: string): Promise<void> {
+    await api.delete(`/acceptance/checklists/${id}`);
   },
 };

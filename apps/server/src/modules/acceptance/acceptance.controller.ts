@@ -30,6 +30,7 @@ import {
   CreateCriteriaDto,
   AuditRequestDto,
 } from './dto/acceptance.dto';
+import { CreateChecklistDto, UpdateChecklistDto } from './dto/checklist.dto';
 import {
   AcceptanceCriteriaDto,
   AcceptanceCriteriaWithEvidenceDto,
@@ -323,6 +324,59 @@ export class AcceptanceController {
   @ApiStandardErrors()
   async getChecklist(@Param('id') id: string) {
     return this.checklistService.findOne(id);
+  }
+
+  @Post('checklists')
+  @ApiOperation({ summary: '创建团队自定义清单' })
+  @ApiCreatedResponse({
+    type: ChecklistDto,
+    description: '创建成功（isSystem=false，归当前用户）',
+  })
+  @ApiResponse({ status: 400, description: '参数错误' })
+  @ApiStandardErrors()
+  async createChecklist(
+    @Body() dto: CreateChecklistDto,
+    @Query('userId') userId?: string,
+  ) {
+    if (!userId) {
+      throw new BadRequestException('userId is required');
+    }
+    return this.checklistService.createTeamChecklist(dto, userId);
+  }
+
+  @Patch('checklists/:id')
+  @ApiOperation({
+    summary: '更新团队自定义清单（系统预置不可改，version 自增）',
+  })
+  @ApiParam({ name: 'id', description: '清单 ID' })
+  @ApiOkResponse({ type: ChecklistDto, description: '更新成功' })
+  @ApiResponse({ status: 400, description: '系统预置清单或非所有者' })
+  @ApiStandardErrors()
+  async updateChecklist(
+    @Param('id') id: string,
+    @Body() dto: UpdateChecklistDto,
+    @Query('userId') userId?: string,
+  ) {
+    if (!userId) {
+      throw new BadRequestException('userId is required');
+    }
+    return this.checklistService.updateTeamChecklist(id, dto, userId);
+  }
+
+  @Delete('checklists/:id')
+  @ApiOperation({ summary: '删除团队自定义清单（系统预置不可删）' })
+  @ApiParam({ name: 'id', description: '清单 ID' })
+  @ApiOkResponse({ description: '删除成功' })
+  @ApiResponse({ status: 400, description: '系统预置清单或非所有者' })
+  @ApiStandardErrors()
+  async removeChecklist(
+    @Param('id') id: string,
+    @Query('userId') userId?: string,
+  ) {
+    if (!userId) {
+      throw new BadRequestException('userId is required');
+    }
+    await this.checklistService.removeTeamChecklist(id, userId);
   }
 
   @Post('checklists/:id/apply')
