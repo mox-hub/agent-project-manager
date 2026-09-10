@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### server 日志控制台彩色输出——level 按严重度着色
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | LoggerService 控制台行渲染重构为纯函数 `formatConsoleLine` + 色彩门控 `consoleColorEnabled`：level 按严重度着色（error 红/warn 黄/info 绿/http 青/verbose 品红/debug 灰）、context 统一亮青；默认开启（pnpm/turbo 接管 stdout 后 isTTY=false 但终端仍渲染 ANSI），`NO_COLOR=1`/`FORCE_COLOR=0` 关闭、`FORCE_COLOR=1` 强制开启；standalone `[LEVEL]` 前置与常规两种布局均支持；Bootstrap context 归一为 APM | — | logger.service.spec 18 条（布局/着色/门控矩阵）；logging.interceptor.spec 随行更新；vitest 4 套件 56 用例绿 | — |
+
 ### CAP-P-01 一期收口——需求承接剧本 + 访谈 AI 预填 + init 自动挂载（切片 3）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

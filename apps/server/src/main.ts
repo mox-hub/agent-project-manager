@@ -22,7 +22,7 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const logger = app.get(LoggerService);
-  logger.setContext('Bootstrap');
+  logger.setContext('APM');
   app.useLogger(logger);
   app.flushLogs();
 

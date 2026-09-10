@@ -35,6 +35,62 @@ const SENSITIVE_PATTERNS = [
 ];
 
 /**
+ * 控制台彩色输出：level 按严重度着色、context 统一亮青色便于扫读。
+ * 默认开启——pnpm/turbo 会接管子进程 stdout（isTTY=false），但终端仍能渲染 ANSI；
+ * NO_COLOR=1 关闭，FORCE_COLOR=0 显式关闭（管道捕获/机器可读场景），FORCE_COLOR=1 强制开启
+ */
+const ANSI_RESET = '\x1b[0m';
+const LEVEL_ANSI: Record<string, string> = {
+  error: '\x1b[31m', // red
+  warn: '\x1b[33m', // yellow
+  info: '\x1b[32m', // green
+  http: '\x1b[36m', // cyan
+  verbose: '\x1b[35m', // magenta
+  debug: '\x1b[90m', // gray
+};
+const CONTEXT_ANSI = '\x1b[96m'; // bright cyan
+
+export function consoleColorEnabled(): boolean {
+  if (process.env.NO_COLOR) return false;
+  if (process.env.FORCE_COLOR === '0') return false;
+  if (process.env.FORCE_COLOR) return true;
+  return true;
+}
+
+/**
+ * 控制台行渲染（纯函数，便于单测）：
+ * standalone：[LEVEL] timestamp [CONTEXT] message
+ * 常规：      timestamp [CONTEXT] level: message
+ */
+export function formatConsoleLine(input: {
+  standalone: boolean;
+  color: boolean;
+  timestamp: string;
+  level: string;
+  context?: string;
+  message: string;
+  rest: string;
+}): string {
+  const levelTag = input.standalone
+    ? `[${input.level.toUpperCase()}]`
+    : `${input.level}:`;
+  const contextTag = `[${input.context || 'APM'}]`;
+  if (!input.color) {
+    return input.standalone
+      ? `${levelTag} ${input.timestamp} ${contextTag} ${input.message}${input.rest}`
+      : `${input.timestamp} ${contextTag} ${levelTag} ${input.message}${input.rest}`;
+  }
+  const levelColor = LEVEL_ANSI[input.level] ?? '';
+  const paintedLevel = levelColor
+    ? `${levelColor}${levelTag}${ANSI_RESET}`
+    : levelTag;
+  const paintedContext = `${CONTEXT_ANSI}${contextTag}${ANSI_RESET}`;
+  return input.standalone
+    ? `${paintedLevel} ${input.timestamp} ${paintedContext} ${input.message}${input.rest}`
+    : `${input.timestamp} ${paintedContext} ${paintedLevel} ${input.message}${input.rest}`;
+}
+
+/**
  * 日志条目接口
  */
 export interface LogEntry {
@@ -64,28 +120,24 @@ export class LoggerService implements NestLoggerService {
   ) {
     const isStandalone = process.env.APP_MODE === 'standalone';
 
-    const consoleFormat = isStandalone
-      ? format.combine(
-          format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-          format.printf(({ timestamp, level, message, context, ...meta }) => {
-            const rest =
-              meta && Object.keys(meta).length
-                ? ` ${JSON.stringify(meta)}`
-                : '';
-            return `[${level.toUpperCase()}] ${timestamp} [${context || 'App'}] ${message}${rest}`;
-          }),
-        )
-      : format.combine(
-          format.colorize(),
-          format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-          format.printf(({ timestamp, level, message, context, ...meta }) => {
-            const rest =
-              meta && Object.keys(meta).length
-                ? ` ${JSON.stringify(meta)}`
-                : '';
-            return `${timestamp} [${context || 'App'}] ${level}: ${message}${rest}`;
-          }),
-        );
+    const consoleFormat = format.combine(
+      format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+      format.printf(({ timestamp, level, message, context, ...meta }) => {
+        const rest =
+          meta && Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+        return formatConsoleLine({
+          standalone: isStandalone,
+          color: consoleColorEnabled(),
+          // winston 的 TransformableInfo 索引签名把这几个值标为 unknown，
+          // 实际经 timestamp/colorize 管道后均为字符串
+          timestamp: timestamp as string,
+          level: level as string,
+          context: context as string | undefined,
+          message: message as string,
+          rest,
+        });
+      }),
+    );
 
     this.logger = createLogger({
       // 底层放宽到 debug：combined.log 收全量（含高频事件降噪行）；
@@ -185,14 +237,31 @@ export class LoggerService implements NestLoggerService {
   }
 
   /**
+   * 解析本次调用的日志上下文：Nest Logger 实例会把自身 context 追加为
+   * 最后一个参数（error 在 trace 之后），调用方有传入则优先采用；
+   * 未传入时回退到共享实例上的模块级上下文
+   */
+  private resolveContext(optionalParams: unknown[]): {
+    context?: string;
+    rest: unknown[];
+  } {
+    const last = optionalParams[optionalParams.length - 1];
+    if (typeof last === 'string') {
+      return { context: last, rest: optionalParams.slice(0, -1) };
+    }
+    return { context: this.moduleContext, rest: optionalParams };
+  }
+
+  /**
    * 记录结构化日志
    */
   log(message: string, ...optionalParams: unknown[]) {
+    const { context, rest } = this.resolveContext(optionalParams);
     const traceInfo = this.getTraceInfo();
-    const sanitizedMeta = optionalParams.map((p) => this.sanitize(p));
+    const sanitizedMeta = rest.map((p) => this.sanitize(p));
 
     this.logger.info(message, {
-      context: this.moduleContext,
+      context,
       ...traceInfo,
       meta: sanitizedMeta,
     });
@@ -202,11 +271,12 @@ export class LoggerService implements NestLoggerService {
    * 记录错误日志
    */
   error(message: string, trace?: string, ...optionalParams: unknown[]) {
+    const { context, rest } = this.resolveContext(optionalParams);
     const traceInfo = this.getTraceInfo();
-    const sanitizedMeta = optionalParams.map((p) => this.sanitize(p));
+    const sanitizedMeta = rest.map((p) => this.sanitize(p));
 
     this.logger.error(message, {
-      context: this.moduleContext,
+      context,
       trace,
       ...traceInfo,
       meta: sanitizedMeta,
@@ -217,11 +287,12 @@ export class LoggerService implements NestLoggerService {
    * 记录警告日志
    */
   warn(message: string, ...optionalParams: unknown[]) {
+    const { context, rest } = this.resolveContext(optionalParams);
     const traceInfo = this.getTraceInfo();
-    const sanitizedMeta = optionalParams.map((p) => this.sanitize(p));
+    const sanitizedMeta = rest.map((p) => this.sanitize(p));
 
     this.logger.warn(message, {
-      context: this.moduleContext,
+      context,
       ...traceInfo,
       meta: sanitizedMeta,
     });
@@ -231,11 +302,12 @@ export class LoggerService implements NestLoggerService {
    * 记录调试日志
    */
   debug(message: string, ...optionalParams: unknown[]) {
+    const { context, rest } = this.resolveContext(optionalParams);
     const traceInfo = this.getTraceInfo();
-    const sanitizedMeta = optionalParams.map((p) => this.sanitize(p));
+    const sanitizedMeta = rest.map((p) => this.sanitize(p));
 
     this.logger.debug(message, {
-      context: this.moduleContext,
+      context,
       ...traceInfo,
       meta: sanitizedMeta,
     });
@@ -245,11 +317,12 @@ export class LoggerService implements NestLoggerService {
    * 记录详细日志
    */
   verbose(message: string, ...optionalParams: unknown[]) {
+    const { context, rest } = this.resolveContext(optionalParams);
     const traceInfo = this.getTraceInfo();
-    const sanitizedMeta = optionalParams.map((p) => this.sanitize(p));
+    const sanitizedMeta = rest.map((p) => this.sanitize(p));
 
     this.logger.verbose(message, {
-      context: this.moduleContext,
+      context,
       ...traceInfo,
       meta: sanitizedMeta,
     });
