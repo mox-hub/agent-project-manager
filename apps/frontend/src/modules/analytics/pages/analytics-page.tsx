@@ -57,17 +57,17 @@ function StatCard({ label, value, sub, icon: Icon, color = 'text-foreground', tr
   const TrendIcon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : Minus;
   const trendColor = trend === 'up' ? 'text-destructive' : trend === 'down' ? 'text-accent-green' : 'text-muted-foreground';
   return (
-    <Card>
-      <CardContent className="p-4">
+    <Card className="py-0">
+      <CardContent className="p-3.5">
         <div className="flex items-center justify-between mb-1">
           <p className="text-xs text-muted-foreground">{label}</p>
-          <Icon className={cn('w-4 h-4', color)} />
+          <Icon className={cn('size-4', color)} />
         </div>
         <div className="flex items-end gap-1.5">
-          <p className={cn('text-2xl font-semibold', color)}>{value}</p>
-          {trend && <TrendIcon className={cn('w-3.5 h-3.5 mb-0.5', trendColor)} />}
+          <p className={cn('text-2xl font-semibold tracking-tight', color)}>{value}</p>
+          {trend && <TrendIcon className={cn('size-3.5 mb-0.5', trendColor)} />}
         </div>
-        <p className="text-11 text-muted-foreground mt-0.5">{sub}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
       </CardContent>
     </Card>
   );

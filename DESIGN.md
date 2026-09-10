@@ -125,6 +125,10 @@ APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主�
 * **卡片头部（CardHeader）紧凑化**：
   * 压缩 CardHeader 与 CardContent 的垂直空隙至 **`gap-2`（8px）**。
   * 标题旁图标统一规格：`size-4`（16px），与文字基线严格居中对齐。
+* **严禁内边距双重叠加（Double-Padding Anti-Pattern）**：
+  * `Card` 容器默认已包含 `py-3.5`（14px）与 `gap-3`。在使用 `CardContent` 时，严禁随意在 `CardContent` 上手写 `p-5` 或 `p-6`，否则会导致上下内边距叠加至 34px~38px，严重拉大卡片上下高度；若由 `CardContent` 全权掌控内边距（如 `p-3.5` 或 `p-4`），`Card` 必须显式声明 `py-0`。
+* **数据卡片矩阵行间距收敛**：
+  * 同类指标卡片（如仪表盘 KPI 卡、分析统计卡）多行陈列时，行与行之间垂直间距统一采用 **`space-y-3`（12px）**，卡片间隙采用 **`gap-3`（12px）**，严禁使用页面级的 `space-y-6`（24px）将同组卡片割裂开来。
 
 ### 3.4 页面级规格与留白体系标准（Page Shell Profile Variants）
 

@@ -21,6 +21,15 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 仪表盘与统计卡片上下间距收敛与消除内边距双重叠加（DESIGN.md §3.3）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | `DESIGN.md` 与 `docs/design/DESIGN.md` 同步更新 §3.3：明确禁止 Card 内边距双重叠加反模式（严禁在自带 py-3.5 的 Card 内为 CardContent 随意添加 p-5/p-6），确立数据卡片矩阵行间距统一为 space-y-3（12px）与 gap-3 规范 | CAP-P-01 | pnpm check:docs-sync | DESIGN.md §3.3 同步更新 |
+| frontend | 根治仪表盘卡片上下间隙过大与内部大块空白缺陷：`dashboard-page.tsx` 中 `KpiCard` 显式设置 `Card py-0` + `CardContent p-3.5`（四周精准锁定 14px，消除原 34px 巨大内边距），图标容器规整为 32px（size-8），紧凑化内部元素间隙；骨架屏同步收缩至 h-28（112px） | CAP-P-01 | 7 项设计门禁通过，tsc 0 错 | 解决 KPI 卡片上下空旷缺陷 |
+| frontend | 聚合仪表盘 KPI 卡片两排矩阵：将 Row 1（4卡）与 Row 2（3卡）收束在 `space-y-3` 统一数据区块中，卡片网格间隙规整为 `gap-3`，将原两排卡片之间高达 24px 的割裂距离减半至 12px；全页垂直区块间隙由 `space-y-6`（24px）收敛至 `space-y-4`（16px） | CAP-P-01 | 7 项设计门禁通过，Vitest 全绿 | 消除卡片行间空虚感 |
+| frontend | 消除图表卡片与分析页统计卡内边距冗余：`dashboard-page.tsx` 中生产力趋势、健康度图表、成本卡片与快捷操作卡移除 `p-5` 并规整为 `py-0` + `p-4`；`analytics-page.tsx` 中 `StatCard` 规整为 `py-0` + `p-3.5` | CAP-P-01 | Vitest 273 用例全绿 | 对齐 DESIGN.md §3.3 |
+
 ### 移除主体模块割裂边界线、侧栏收缩左右对称与 Logo 垂直对齐
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

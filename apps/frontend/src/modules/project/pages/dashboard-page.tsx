@@ -61,23 +61,23 @@ function KpiCard({
 }: KpiCardProps) {
   return (
     <Card
-      className="cursor-pointer hover:ring-2 hover:ring-ring/30 hover:shadow-md transition-all group"
+      className="cursor-pointer hover:ring-2 hover:ring-ring/30 hover:shadow-md transition-all group py-0"
       onClick={onClick}
     >
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-3">
-          <div className={cn('size-10 rounded-lg flex items-center justify-center shrink-0', bgColor)}>
-            <Icon className={cn('size-5', color)} />
+      <CardContent className="p-3.5">
+        <div className="flex items-start justify-between mb-2">
+          <div className={cn('size-8 rounded-lg flex items-center justify-center shrink-0', bgColor)}>
+            <Icon className={cn('size-4', color)} />
           </div>
-          <ArrowUpRight className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          <ArrowUpRight className="size-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-1">{title}</p>
-          <p className="text-2xl font-semibold text-foreground mb-0.5">{value}</p>
+          <p className="text-xs text-muted-foreground mb-0.5">{title}</p>
+          <p className="text-2xl font-semibold text-foreground mb-0.5 tracking-tight">{value}</p>
           <p className="text-xs text-muted-foreground">{subtitle}</p>
           {trend && trendValue && (
             <div className={cn(
-              'flex items-center gap-1 text-xs mt-2 font-medium',
+              'flex items-center gap-1 text-xs mt-1.5 font-medium',
               trend === 'up' ? 'text-accent-green' : 'text-destructive',
             )}>
               {trend === 'up' ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
@@ -363,13 +363,18 @@ export function DashboardPage() {
         onRetry={() => refetch()}
         loadingFallback={
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <div className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8 lg:px-10 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
+            <div className="mx-auto w-full max-w-7xl px-6 py-5 sm:px-8 sm:py-6 lg:px-10 space-y-4">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+                </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <Skeleton className="h-64 rounded-xl" />
-                <Skeleton className="h-64 rounded-xl" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+                <Skeleton className="h-56 rounded-xl" />
+                <Skeleton className="h-56 rounded-xl" />
               </div>
             </div>
           </div>
@@ -377,218 +382,221 @@ export function DashboardPage() {
       >
         {data && (
           <div className="flex-1 min-h-0 overflow-y-auto">
-            <div className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8 lg:px-10 space-y-6">
-              {/* KPI Cards - Row 1 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <KpiCard
-                title={t('dashboard.kpis.team')}
-                value={data.team.totalMembers}
-                subtitle={t('dashboard.kpis.teamSub')}
-                icon={Users}
-                color="text-accent-blue"
-                bgColor="bg-accent-blue/10"
-                onClick={() => setOpenDialog('team')}
-              />
-              <KpiCard
-                title={t('dashboard.kpis.ai')}
-                value={data.ai.conversations}
-                subtitle={t('dashboard.kpis.aiSub', { count: data.ai.weeklyGrowth })}
-                icon={Bot}
-                color="text-accent-purple"
-                bgColor="bg-accent-purple/10"
-                onClick={() => setOpenDialog('ai')}
-              />
-              <KpiCard
-                title={t('dashboard.kpis.cost')}
-                value={`$${data.cost.monthTotal.toLocaleString()}`}
-                subtitle={t('dashboard.kpis.costSub', { pct: Math.abs(data.cost.budgetDeltaPct) })}
-                icon={DollarSign}
-                trend={data.cost.budgetDeltaPct <= 0 ? 'down' : 'up'}
-                trendValue={t('dashboard.kpis.costTrend', { pct: Math.abs(data.cost.budgetDeltaPct) })}
-                color="text-accent-green"
-                bgColor="bg-accent-green/10"
-                onClick={() => setOpenDialog('cost')}
-              />
-              <KpiCard
-                title={t('dashboard.kpis.bugs')}
-                value={data.delivery.criticalBugs}
-                subtitle={t('dashboard.kpis.bugsSub', { count: data.delivery.openBugs })}
-                icon={Bug}
-                color="text-destructive"
-                bgColor="bg-destructive/10"
-                onClick={() => setOpenDialog('bugs')}
-              />
-            </div>
-
-            {/* KPI Cards - Row 2 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <KpiCard
-                title={t('dashboard.kpis.tasks')}
-                value={data.delivery.activeTasks}
-                subtitle={t('dashboard.kpis.tasksSub', { count: data.delivery.totalTasks })}
-                icon={CheckSquare}
-                color="text-accent-blue"
-                bgColor="bg-accent-blue/10"
-                onClick={() => setOpenDialog('tasks')}
-              />
-              <KpiCard
-                title={t('dashboard.kpis.health')}
-                value={data.health.avgScore}
-                subtitle={t('dashboard.kpis.healthSub')}
-                icon={Activity}
-                color="text-accent-green"
-                bgColor="bg-accent-green/10"
-                onClick={() => setOpenDialog('health')}
-              />
-              <KpiCard
-                title={t('dashboard.kpis.risks')}
-                value={data.risks.items.length}
-                subtitle={t('dashboard.kpis.risksSub')}
-                icon={AlertTriangle}
-                color="text-accent-yellow"
-                bgColor="bg-accent-yellow/10"
-                onClick={() => setOpenDialog('risks')}
-              />
-            </div>
-
-            {/* Trends - Row 3 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <Card>
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-sm font-medium">{t('dashboard.panel.productivity')}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.productivitySub')}</p>
-                    </div>
-                    <TrendingUp className="size-4 text-accent-green" />
-                  </div>
-                  <div className="space-y-2">
-                    {data.trends.productivity.slice(-6).map((item) => (
-                      <div key={item.date} className="flex items-center gap-4">
-                        <span className="text-xs text-muted-foreground w-16">{item.date}</span>
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-accent-blue rounded-full" style={{ width: `${(item.tasks / 25) * 100}%` }} />
-                        </div>
-                        <span className="text-xs font-medium w-8 text-right">{item.tasks}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-border">
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="size-2.5 rounded-full bg-accent-blue" />
-                      <span className="text-muted-foreground">{t('dashboard.panel.legendTasks')}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="size-2.5 rounded-full bg-accent-green" />
-                      <span className="text-muted-foreground">{t('dashboard.panel.legendVelocity')}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="size-2.5 rounded-full bg-accent-purple" />
-                      <span className="text-muted-foreground">{t('dashboard.panel.legendQuality')}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-sm font-medium">{t('dashboard.panel.healthTrend')}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.healthTrendSub')}</p>
-                    </div>
-                    <Activity className="size-4 text-accent-blue" />
-                  </div>
-                  <div className="flex items-end justify-between h-40 gap-2">
-                    {data.trends.health.map((item) => (
-                      <div key={item.week} className="flex-1 flex flex-col items-center gap-2">
-                        <span className="text-xs font-semibold">{item.score}</span>
-                        <div className="w-full flex-1 flex items-end">
-                          <div className="w-full bg-accent-green/70 rounded-t-sm" style={{ height: `${item.score}%` }} />
-                        </div>
-                        <span className="text-10 text-muted-foreground">{item.week}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Row 4 */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <Card className="lg:col-span-1">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-sm font-medium">{t('dashboard.panel.performance')}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.performanceSub')}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {data.trends.performance.map((item) => (
-                      <div key={item.metric} className="flex items-center gap-3">
-                        <span className="text-xs text-muted-foreground w-24">{item.metric}</span>
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-accent-purple rounded-full" style={{ width: `${item.value}%` }} />
-                        </div>
-                        <span className="text-xs font-medium w-8 text-right">{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="lg:col-span-2">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-sm font-medium">{t('dashboard.panel.cost')}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.costSub')}</p>
-                    </div>
-                    <DollarSign className="size-4 text-accent-green" />
-                  </div>
-                  <div className="space-y-3">
-                    {data.cost.byCategory.slice(0, 3).map((item) => (
-                      <div key={item.name} className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">{item.name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">${item.amount}</span>
-                            <span className="text-xs text-muted-foreground">{item.percentage}%</span>
-                          </div>
-                        </div>
-                        <Progress value={item.percentage} className="h-1.5" />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardContent className="p-5">
-                <p className="text-sm font-medium mb-3">{t('dashboard.actions.title')}</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/issues')}>
-                    <CheckSquare className="size-5" />
-                    <span className="text-xs">{t('dashboard.actions.tasks')}</span>
-                  </Button>
-                  <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/bugs')}>
-                    <Bug className="size-5" />
-                    <span className="text-xs">{t('dashboard.actions.bugs')}</span>
-                  </Button>
-                  <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/settings/ai')}>
-                    <Sparkles className="size-5" />
-                    <span className="text-xs">{t('dashboard.actions.aiHub')}</span>
-                  </Button>
-                  <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/repositories')}>
-                    <GitBranch className="size-5" />
-                    <span className="text-xs">{t('dashboard.actions.repos')}</span>
-                  </Button>
+            <div className="mx-auto w-full max-w-7xl px-6 py-5 sm:px-8 sm:py-6 lg:px-10 space-y-4">
+              {/* KPI Cards - 两排聚合在一个紧凑模块内，行距紧缩为 space-y-3 */}
+              <div className="space-y-3">
+                {/* KPI Cards - Row 1 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <KpiCard
+                    title={t('dashboard.kpis.team')}
+                    value={data.team.totalMembers}
+                    subtitle={t('dashboard.kpis.teamSub')}
+                    icon={Users}
+                    color="text-accent-blue"
+                    bgColor="bg-accent-blue/10"
+                    onClick={() => setOpenDialog('team')}
+                  />
+                  <KpiCard
+                    title={t('dashboard.kpis.ai')}
+                    value={data.ai.conversations}
+                    subtitle={t('dashboard.kpis.aiSub', { count: data.ai.weeklyGrowth })}
+                    icon={Bot}
+                    color="text-accent-purple"
+                    bgColor="bg-accent-purple/10"
+                    onClick={() => setOpenDialog('ai')}
+                  />
+                  <KpiCard
+                    title={t('dashboard.kpis.cost')}
+                    value={`$${data.cost.monthTotal.toLocaleString()}`}
+                    subtitle={t('dashboard.kpis.costSub', { pct: Math.abs(data.cost.budgetDeltaPct) })}
+                    icon={DollarSign}
+                    trend={data.cost.budgetDeltaPct <= 0 ? 'down' : 'up'}
+                    trendValue={t('dashboard.kpis.costTrend', { pct: Math.abs(data.cost.budgetDeltaPct) })}
+                    color="text-accent-green"
+                    bgColor="bg-accent-green/10"
+                    onClick={() => setOpenDialog('cost')}
+                  />
+                  <KpiCard
+                    title={t('dashboard.kpis.bugs')}
+                    value={data.delivery.criticalBugs}
+                    subtitle={t('dashboard.kpis.bugsSub', { count: data.delivery.openBugs })}
+                    icon={Bug}
+                    color="text-destructive"
+                    bgColor="bg-destructive/10"
+                    onClick={() => setOpenDialog('bugs')}
+                  />
                 </div>
-              </CardContent>
-            </Card>
+
+                {/* KPI Cards - Row 2 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <KpiCard
+                    title={t('dashboard.kpis.tasks')}
+                    value={data.delivery.activeTasks}
+                    subtitle={t('dashboard.kpis.tasksSub', { count: data.delivery.totalTasks })}
+                    icon={CheckSquare}
+                    color="text-accent-blue"
+                    bgColor="bg-accent-blue/10"
+                    onClick={() => setOpenDialog('tasks')}
+                  />
+                  <KpiCard
+                    title={t('dashboard.kpis.health')}
+                    value={data.health.avgScore}
+                    subtitle={t('dashboard.kpis.healthSub')}
+                    icon={Activity}
+                    color="text-accent-green"
+                    bgColor="bg-accent-green/10"
+                    onClick={() => setOpenDialog('health')}
+                  />
+                  <KpiCard
+                    title={t('dashboard.kpis.risks')}
+                    value={data.risks.items.length}
+                    subtitle={t('dashboard.kpis.risksSub')}
+                    icon={AlertTriangle}
+                    color="text-accent-yellow"
+                    bgColor="bg-accent-yellow/10"
+                    onClick={() => setOpenDialog('risks')}
+                  />
+                </div>
+              </div>
+
+              {/* Trends - Row 3 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+                <Card className="py-0">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-medium">{t('dashboard.panel.productivity')}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.productivitySub')}</p>
+                      </div>
+                      <TrendingUp className="size-4 text-accent-green" />
+                    </div>
+                    <div className="space-y-2">
+                      {data.trends.productivity.slice(-6).map((item) => (
+                        <div key={item.date} className="flex items-center gap-4">
+                          <span className="text-xs text-muted-foreground w-16">{item.date}</span>
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-accent-blue rounded-full" style={{ width: `${(item.tasks / 25) * 100}%` }} />
+                          </div>
+                          <span className="text-xs font-medium w-8 text-right">{item.tasks}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-center gap-6 mt-3 pt-3 border-t border-border">
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <div className="size-2.5 rounded-full bg-accent-blue" />
+                        <span className="text-muted-foreground">{t('dashboard.panel.legendTasks')}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <div className="size-2.5 rounded-full bg-accent-green" />
+                        <span className="text-muted-foreground">{t('dashboard.panel.legendVelocity')}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <div className="size-2.5 rounded-full bg-accent-purple" />
+                        <span className="text-muted-foreground">{t('dashboard.panel.legendQuality')}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="py-0">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-medium">{t('dashboard.panel.healthTrend')}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.healthTrendSub')}</p>
+                      </div>
+                      <Activity className="size-4 text-accent-blue" />
+                    </div>
+                    <div className="flex items-end justify-between h-40 gap-2">
+                      {data.trends.health.map((item) => (
+                        <div key={item.week} className="flex-1 flex flex-col items-center gap-2">
+                          <span className="text-xs font-semibold">{item.score}</span>
+                          <div className="w-full flex-1 flex items-end">
+                            <div className="w-full bg-accent-green/70 rounded-t-sm" style={{ height: `${item.score}%` }} />
+                          </div>
+                          <span className="text-10 text-muted-foreground">{item.week}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Row 4 */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+                <Card className="lg:col-span-1 py-0">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-medium">{t('dashboard.panel.performance')}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.performanceSub')}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {data.trends.performance.map((item) => (
+                        <div key={item.metric} className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground w-24">{item.metric}</span>
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-accent-purple rounded-full" style={{ width: `${item.value}%` }} />
+                          </div>
+                          <span className="text-xs font-medium w-8 text-right">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="lg:col-span-2 py-0">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-medium">{t('dashboard.panel.cost')}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.costSub')}</p>
+                      </div>
+                      <DollarSign className="size-4 text-accent-green" />
+                    </div>
+                    <div className="space-y-3">
+                      {data.cost.byCategory.slice(0, 3).map((item) => (
+                        <div key={item.name} className="space-y-1">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{item.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">${item.amount}</span>
+                              <span className="text-xs text-muted-foreground">{item.percentage}%</span>
+                            </div>
+                          </div>
+                          <Progress value={item.percentage} className="h-1.5" />
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Quick Actions */}
+              <Card className="py-0">
+                <CardContent className="p-4">
+                  <p className="text-sm font-medium mb-2.5">{t('dashboard.actions.title')}</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Button variant="outline" className="h-auto py-2.5 flex-col gap-1.5" onClick={() => navigate('/app/issues')}>
+                      <CheckSquare className="size-4.5" />
+                      <span className="text-xs">{t('dashboard.actions.tasks')}</span>
+                    </Button>
+                    <Button variant="outline" className="h-auto py-2.5 flex-col gap-1.5" onClick={() => navigate('/app/bugs')}>
+                      <Bug className="size-4.5" />
+                      <span className="text-xs">{t('dashboard.actions.bugs')}</span>
+                    </Button>
+                    <Button variant="outline" className="h-auto py-2.5 flex-col gap-1.5" onClick={() => navigate('/app/settings/ai')}>
+                      <Sparkles className="size-4.5" />
+                      <span className="text-xs">{t('dashboard.actions.aiHub')}</span>
+                    </Button>
+                    <Button variant="outline" className="h-auto py-2.5 flex-col gap-1.5" onClick={() => navigate('/app/repositories')}>
+                      <GitBranch className="size-4.5" />
+                      <span className="text-xs">{t('dashboard.actions.repos')}</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
