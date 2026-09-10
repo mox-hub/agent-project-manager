@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/shared/theme/theme-context';
 import { LivingNebulaBackground } from '../components/living-nebula-background';
 import { LuminousSynapseOverlay } from '../components/luminous-synapse-overlay';
 import { SquadCapsuleOrbit } from '../components/squad-capsule-orbit';
-import { CognitiveCanvas } from '../components/cognitive-canvas';
+import { ProjectVitalityCanvas } from '../components/project-vitality-canvas';
 import { TrustOrbitalLens } from '../components/trust-orbital-lens';
 import { OmniDock } from '../components/omni-dock';
 import {
@@ -14,15 +15,36 @@ import {
   MEMORY_ATOMS,
 } from '../mock-data';
 import type { CognitiveMessage } from '../types';
-import { Sparkles, ArrowLeft, Radio } from 'lucide-react';
+import { Sparkles, ArrowLeft, Radio, Sun, Moon, Maximize2, Minimize2 } from 'lucide-react';
 
 export function AiSurfacePage() {
   const navigate = useNavigate();
+  const { mode, toggleTheme } = useTheme();
+  const isDark = mode === 'dark';
+
   const [agents] = useState(INITIAL_AGENTS);
   const [artifacts] = useState(INITIAL_ARTIFACTS);
   const [messages, setMessages] = useState<CognitiveMessage[]>(INITIAL_MESSAGES);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>('agent-pm');
   const [overallScore, setOverallScore] = useState(95.4);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // 监听全屏状态变化
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  };
 
   const selectedAgent = agents.find((a) => a.id === selectedAgentId);
 
@@ -73,22 +95,29 @@ export function AiSurfacePage() {
   }, [navigate]);
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden text-foreground flex flex-col font-sans">
-      {/* 1. 有机极光呼吸背景 */}
-      <LivingNebulaBackground />
+    <div
+      className="fixed inset-0 z-50 w-screen h-screen overflow-y-auto overflow-x-hidden text-foreground flex flex-col font-sans select-none"
+      style={{
+        backgroundColor: isDark ? '#07080c' : '#F5F7FC',
+      }}
+    >
+      {/* 1. 有机极光呼吸背景（双模态） */}
+      <LivingNebulaBackground isDark={isDark} />
 
       {/* 2. 突触光纤连线 */}
       <LuminousSynapseOverlay />
 
-      {/* 3. 顶部微型全息导航条 (极其克制、无分割线) */}
-      <header className="sticky top-0 z-40 w-full px-6 py-4 flex items-center justify-between backdrop-blur-md bg-transparent select-none">
+      {/* 3. 顶部全屏微型全息导航条 (极其克制、通透) */}
+      <header className="sticky top-0 z-40 w-full px-6 py-3.5 flex items-center justify-between backdrop-blur-md bg-transparent select-none">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={handleExitSurface}
-            className="flex items-center justify-center size-8 rounded-xl hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all"
-            style={{ background: 'rgba(255, 255, 255, 0.05)' }}
-            title="返回人类控制面"
+            className="flex items-center justify-center size-8 rounded-xl hover:opacity-80 text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+            style={{
+              background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.06)',
+            }}
+            title="返回人类控制面 (Esc)"
           >
             <ArrowLeft className="size-4" />
           </button>
@@ -108,55 +137,100 @@ export function AiSurfacePage() {
             </span>
             <span
               className="px-2 py-0.5 rounded-full font-mono font-medium ml-1"
-              style={{ fontSize: 10, background: 'rgba(139, 92, 246, 0.2)', color: '#C4B5FD' }}
+              style={{
+                fontSize: 10,
+                background: isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(99, 102, 241, 0.15)',
+                color: isDark ? '#C4B5FD' : '#4F46E5',
+              }}
             >
               DUAL-SURFACE V4
             </span>
           </div>
         </div>
 
-        {/* 右上角环境指示 */}
-        <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground/70">
-          <div className="flex items-center gap-1.5">
+        {/* 右上角控制与指示 */}
+        <div className="flex items-center gap-3 text-xs font-mono">
+          {/* 日夜模式切换 */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            style={{
+              fontSize: 11,
+              background: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.06)',
+            }}
+            title={isDark ? '切换至日间模式' : '切换至夜间模式'}
+          >
+            {isDark ? (
+              <Sun className="size-3.5" style={{ color: '#FBBF24' }} />
+            ) : (
+              <Moon className="size-3.5" style={{ color: '#6366F1' }} />
+            )}
+            <span>{isDark ? '深空' : '明眸'}</span>
+          </button>
+
+          {/* 全屏切换 */}
+          <button
+            type="button"
+            onClick={handleToggleFullscreen}
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            style={{
+              fontSize: 11,
+              background: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.06)',
+            }}
+            title={isFullscreen ? '退出全屏模式' : '进入真正全屏模式'}
+          >
+            {isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+            <span>{isFullscreen ? '窗口' : '全屏'}</span>
+          </button>
+
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl"
+            style={{
+              fontSize: 11,
+              background: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.06)',
+            }}
+          >
             <Radio className="size-3 animate-pulse" style={{ color: '#34D399' }} />
-            <span>RUNTIME ACTIVE</span>
-          </div>
-          <div className="hidden md:flex items-center gap-1">
-            <span>PROJECT:</span>
-            <span className="text-foreground">智能协同执行引擎</span>
+            <span style={{ color: '#34D399' }}>ACTIVE</span>
           </div>
         </div>
       </header>
 
-      {/* 4. 空间无界主视界：左侧胶囊 + 中央工件河流 + 右侧信度光轨 (无边框一体化) */}
+      {/* 4. 空间无界主视界：左翼手表表圈半圆弧 + 中央项目生命力画布 + 右翼信度表圈半圆弧 */}
       <main
         className="relative z-10 flex-1 flex justify-between gap-6 px-6 py-2 mx-auto w-full"
-        style={{ maxWidth: 1600 }}
+        style={{ maxWidth: 1680 }}
       >
-        {/* 左翼：悬浮数字生命胶囊 */}
+        {/* 左翼：手表外侧半圆弧 Agent 编队导轨 */}
         <aside className="shrink-0 hidden lg:block sticky top-20 self-start">
           <SquadCapsuleOrbit
             agents={agents}
             selectedAgentId={selectedAgentId}
             onSelectAgent={(id) => setSelectedAgentId(id === selectedAgentId ? null : id)}
+            isDark={isDark}
           />
         </aside>
 
-        {/* 中央主视域：无界认知流与浮动工件 */}
-        <section className="flex-1 min-w-0">
-          <CognitiveCanvas
-            messages={messages}
+        {/* 中央主视域：项目生命力与属性全景画布 (打破规整、多维悬浮岛) */}
+        <section className="flex-1 min-w-0 pb-36">
+          <ProjectVitalityCanvas
             artifacts={artifacts}
-            onInspectArtifact={(id) => console.log('Inspect artifact', id)}
+            messages={messages}
+            isDark={isDark}
+            onApproveWorkstream={(key) => {
+              console.log('Workstream approved:', key);
+            }}
           />
         </section>
 
-        {/* 右翼：信度全息光轨与反思透镜 */}
+        {/* 右翼：手表外侧半圆弧 信度透镜与记忆星云导轨 */}
         <aside className="shrink-0 hidden xl:block sticky top-20 self-start">
           <TrustOrbitalLens
             dimensions={TRUST_DIMENSIONS}
             memoryAtoms={MEMORY_ATOMS}
             overallScore={overallScore}
+            isDark={isDark}
           />
         </aside>
       </main>
@@ -166,6 +240,8 @@ export function AiSurfacePage() {
         onSendMessage={handleSendMessage}
         onExitSurface={handleExitSurface}
         activeAgentName={selectedAgent?.name}
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
       />
     </div>
   );

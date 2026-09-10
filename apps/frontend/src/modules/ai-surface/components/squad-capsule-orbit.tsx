@@ -7,25 +7,30 @@ interface SquadCapsuleOrbitProps {
   agents: AgentPersona[];
   selectedAgentId: string | null;
   onSelectAgent: (agentId: string) => void;
+  isDark?: boolean;
 }
+
+// 4个 Agent 对应手表外侧弧度的角度分布 (从上到下)
+const ARC_ANGLES = [-34, -11, 11, 34];
 
 export function SquadCapsuleOrbit({
   agents,
   selectedAgentId,
   onSelectAgent,
+  isDark = true,
 }: SquadCapsuleOrbitProps) {
   const [hoveredAgentId, setHoveredAgentId] = useState<string | null>(null);
   const [bubbles, setBubbles] = useState<ActivityBubble[]>([]);
 
-  // 模拟生命感：每隔一段时间随机让一个 Agent "吐出"一个思维气泡
+  // 模拟生命感：每隔一段时间随机让一个 Agent 吐出思维气泡
   useEffect(() => {
     const emitterPhrases = [
-      { agentId: 'agent-pm', text: '对齐 CAP-P-01 业务边界' },
-      { agentId: 'agent-architect', text: 'OpenAPI 零漂移校验通过' },
-      { agentId: 'agent-coder', text: '组件重绘优化完成: 120fps' },
-      { agentId: 'agent-qa', text: '执行测试套件: 100% 通过' },
-      { agentId: 'agent-coder', text: '提交分支: feat/ai-surface' },
-      { agentId: 'agent-pm', text: '拆解出 3 个原子 Issue' },
+      { agentId: 'agent-pm', text: '正在拆解主线需求 CAP-P-01' },
+      { agentId: 'agent-architect', text: '校验 OpenAPI 契约无漂移' },
+      { agentId: 'agent-coder', text: '编译通过，组件硬件加速就绪' },
+      { agentId: 'agent-qa', text: '门禁审计通过率 100%' },
+      { agentId: 'agent-coder', text: '生成 Issue 原子任务卡片' },
+      { agentId: 'agent-pm', text: '对齐架构设计真相源' },
     ];
 
     const interval = setInterval(() => {
@@ -38,13 +43,12 @@ export function SquadCapsuleOrbit({
         type: 'info',
       };
 
-      setBubbles((prev) => [...prev.slice(-4), newBubble]);
+      setBubbles((prev) => [...prev.slice(-3), newBubble]);
 
-      // 4 秒后淡出移除
       setTimeout(() => {
         setBubbles((prev) => prev.filter((b) => b.id !== newBubble.id));
-      }, 4000);
-    }, 4500);
+      }, 4200);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, []);
@@ -67,73 +71,138 @@ export function SquadCapsuleOrbit({
   const getStatusGlow = (status: AgentPersona['status']) => {
     switch (status) {
       case 'reasoning':
-        return 'rgba(168, 85, 247, 0.4)'; // 紫色流光
+        return 'rgba(168, 85, 247, 0.45)';
       case 'executing':
-        return 'rgba(16, 185, 129, 0.45)'; // 翠绿流光
+        return 'rgba(16, 185, 129, 0.45)';
       case 'auditing':
-        return 'rgba(245, 158, 11, 0.4)'; // 琥珀微光
+        return 'rgba(245, 158, 11, 0.45)';
       case 'idle':
-        return 'rgba(148, 163, 184, 0.2)'; // 静息蓝灰
+        return 'rgba(148, 163, 184, 0.25)';
     }
   };
 
   return (
-    <div className="relative flex flex-col gap-3.5 select-none w-72">
-      {/* 标题提示：极简科技小字 */}
-      <div className="flex items-center gap-2 px-2 pb-1 text-xs text-muted-foreground/60 uppercase tracking-widest font-mono">
+    <div className="relative select-none flex items-center" style={{ width: 340, height: 600 }}>
+      {/* 1. 手表外侧弧形刻度导轨 SVG (Watch-Dial Outer Bezel Track) */}
+      <svg
+        className="pointer-events-none absolute left-0 top-0 size-full overflow-visible opacity-50"
+        viewBox="0 0 340 600"
+      >
+        {/* 外圆弧导轨 */}
+        <path
+          d="M 50 40 A 540 540 0 0 1 50 560"
+          fill="none"
+          stroke={isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(99, 102, 241, 0.25)'}
+          strokeWidth="2"
+          strokeDasharray="4 8"
+        />
+        {/* 内圆弧导轨 */}
+        <path
+          d="M 70 70 A 500 500 0 0 1 70 530"
+          fill="none"
+          stroke={isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.1)'}
+          strokeWidth="1"
+        />
+        {/* 表盘刻度点 (Watch Ticks) */}
+        {[-38, -25, -12, 0, 12, 25, 38].map((angle, idx) => {
+          const rad = (angle * Math.PI) / 180;
+          const cx = 50 + 520 * (1 - Math.cos(rad)) * 0.4;
+          const cy = 300 + 520 * Math.sin(rad) * 0.48;
+          return (
+            <circle
+              key={idx}
+              cx={cx}
+              cy={cy}
+              r={angle === 0 ? 3 : 2}
+              fill={isDark ? '#A78BFA' : '#6366F1'}
+              opacity={angle === 0 ? 0.9 : 0.4}
+            />
+          );
+        })}
+      </svg>
+
+      {/* 顶部标签 */}
+      <div
+        className="absolute top-2 left-6 flex items-center gap-1.5 font-mono uppercase tracking-widest text-muted-foreground/70"
+        style={{ fontSize: 10 }}
+      >
         <Activity className="size-3 text-accent-purple" />
-        <span>SQUAD ORBIT / 数字生命编队</span>
+        <span>SQUAD ARC / 角色表圈</span>
       </div>
 
-      {/* 悬浮胶囊星链 */}
-      <div className="flex flex-col gap-3">
-        {agents.map((agent) => {
+      {/* 2. 呈半圆弧分布的 Agent 胶囊卡片 */}
+      <div className="relative size-full flex flex-col justify-center">
+        {agents.map((agent, index) => {
+          const angle = ARC_ANGLES[index] ?? 0;
+          // 计算沿圆弧的偏移位置 (向右突出)
+          const rad = (angle * Math.PI) / 180;
+          const offsetX = Math.cos(rad) * 60 - 20; // 弧度凸起位移
+          const rotateDeg = angle * 0.45; // 胶囊微角度倾斜
+
           const isSelected = selectedAgentId === agent.id;
           const isHovered = hoveredAgentId === agent.id;
           const RoleIcon = getRoleIcon(agent.role);
           const glowColor = getStatusGlow(agent.status);
-
-          // 属于该 Agent 的当前悬浮气泡
           const activeAgentBubbles = bubbles.filter((b) => b.agentId === agent.id);
 
           return (
-            <div key={agent.id} className="relative group">
-              {/* 胶囊主体 */}
+            <div
+              key={agent.id}
+              className="relative transition-transform duration-300 ease-out my-2.5"
+              style={{
+                transform: `translate3d(${offsetX}px, 0, 0) rotate(${rotateDeg}deg)`,
+                transformOrigin: 'left center',
+                zIndex: isSelected || isHovered ? 30 : 10,
+              }}
+            >
+              {/* 弧形外接刻度标线 */}
+              <div
+                className="absolute -left-4 top-1/2 -translate-y-1/2 w-3 h-0.5 pointer-events-none opacity-40"
+                style={{ background: isDark ? '#A855F7' : '#6366F1' }}
+              />
+
+              {/* 胶囊卡片 */}
               <button
                 type="button"
                 onClick={() => onSelectAgent(agent.id)}
                 onMouseEnter={() => setHoveredAgentId(agent.id)}
                 onMouseLeave={() => setHoveredAgentId(null)}
                 className={cn(
-                  'relative w-full text-left rounded-2xl p-3.5 transition-all duration-300 ease-out',
-                  'backdrop-blur-xl',
-                  isSelected ? 'shadow-lg' : '',
+                  'relative w-64 text-left rounded-2xl p-3 transition-all duration-300 ease-out backdrop-blur-2xl cursor-pointer',
+                  isSelected ? 'shadow-xl scale-105' : 'hover:translate-x-1',
                 )}
                 style={{
-                  transform: isSelected ? 'scale(1.02)' : isHovered ? 'scale(1.01)' : 'none',
-                  background: isSelected
-                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%)'
-                    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                  boxShadow: isSelected
-                    ? `0 12px 32px -4px ${glowColor}, inset 0 1px 0 rgba(255, 255, 255, 0.25)`
-                    : '0 8px 24px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                  background: isDark
+                    ? isSelected
+                      ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%)'
+                      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%)'
+                    : isSelected
+                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 244, 255, 0.90) 100%)'
+                    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(248, 250, 252, 0.75) 100%)',
+                  boxShadow: isDark
+                    ? isSelected
+                      ? `0 14px 34px -4px ${glowColor}, inset 0 1px 0 rgba(255, 255, 255, 0.25)`
+                      : '0 8px 24px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+                    : isSelected
+                    ? '0 16px 36px -6px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255, 255, 255, 1)'
+                    : '0 10px 24px -6px rgba(30, 41, 59, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                  color: isDark ? '#FFFFFF' : '#0F172A',
                 }}
               >
-                {/* 顶部行：头像、状态、信度评分 */}
-                <div className="flex items-center justify-between gap-2.5">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {/* 呼吸光环头像 */}
+                {/* 顶部行：角色头像、呼吸状态灯、信度刻度 */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <div
-                      className="relative flex items-center justify-center size-9 rounded-xl text-sm font-semibold shrink-0 text-white"
+                      className="relative flex items-center justify-center size-8 rounded-xl shrink-0 text-white"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
-                        boxShadow: `0 0 16px ${glowColor}`,
+                        background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
+                        boxShadow: `0 0 14px ${glowColor}`,
                       }}
                     >
                       <RoleIcon className="size-4 text-white" />
-                      {/* 呼吸状态灯 */}
+                      {/* 呼吸状态小光球 */}
                       <span
-                        className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full"
+                        className="absolute -top-0.5 -right-0.5 size-2 rounded-full"
                         style={{
                           backgroundColor:
                             agent.status === 'executing'
@@ -143,70 +212,79 @@ export function SquadCapsuleOrbit({
                               : agent.status === 'auditing'
                               ? '#F59E0B'
                               : '#64748B',
-                          boxShadow: `0 0 8px ${glowColor}`,
+                          boxShadow: `0 0 6px ${glowColor}`,
                         }}
                       />
                     </div>
 
-                    {/* 名字与定位 */}
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium text-foreground truncate">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-semibold truncate">
                           {agent.name}
                         </span>
-                        <span className="px-1.5 py-0.2 rounded-full font-mono text-muted-foreground/80"
-                          style={{ fontSize: 10, background: 'rgba(255,255,255,0.08)' }}
+                        <span
+                          className="px-1 py-0.2 rounded font-mono"
+                          style={{
+                            fontSize: 9,
+                            background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                            color: isDark ? '#E2E8F0' : '#4F46E5',
+                          }}
                         >
                           {agent.role.toUpperCase()}
                         </span>
                       </div>
-                      <p className="text-muted-foreground truncate mt-0.5" style={{ fontSize: 11 }}>
+                      <p
+                        className="truncate"
+                        style={{
+                          fontSize: 10,
+                          color: isDark ? 'rgba(255, 255, 255, 0.55)' : 'rgba(15, 23, 42, 0.6)',
+                        }}
+                      >
                         {agent.roleTitle}
                       </p>
                     </div>
                   </div>
 
-                  {/* 信度小徽章 */}
+                  {/* 表盘刻度数值 */}
                   <div className="text-right shrink-0">
-                    <span className="text-xs font-mono font-semibold" style={{ color: '#34D399' }}>
+                    <span className="font-mono font-bold" style={{ fontSize: 11, color: '#10B981' }}>
                       {agent.trustScore}%
                     </span>
-                    <p className="text-muted-foreground/70 font-mono" style={{ fontSize: 10 }}>
+                    <p
+                      className="font-mono"
+                      style={{
+                        fontSize: 9,
+                        color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.45)',
+                      }}
+                    >
                       信度
                     </p>
                   </div>
                 </div>
 
-                {/* 实时状态/思考摘要 */}
-                <div className="mt-2.5 pt-2 border-t border-white/5">
-                  <p className="text-xs text-foreground/80 line-clamp-2 leading-relaxed">
-                    {agent.statusText}
-                  </p>
-                </div>
+                {/* 活跃动态 */}
+                <p
+                  className="mt-1.5 line-clamp-1 leading-snug"
+                  style={{
+                    fontSize: 10,
+                    color: isDark ? 'rgba(255, 255, 255, 0.75)' : 'rgba(15, 23, 42, 0.75)',
+                  }}
+                >
+                  {agent.statusText}
+                </p>
 
-                {/* 当前活跃 Issue 胶囊 */}
-                {agent.activeIssue && (
-                  <div className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg"
-                    style={{ fontSize: 11, background: 'rgba(255, 255, 255, 0.04)' }}
-                  >
-                    <span className="font-mono text-accent-purple font-semibold">
-                      {agent.activeIssue.key}
-                    </span>
-                    <span className="text-muted-foreground truncate">
-                      {agent.activeIssue.title}
-                    </span>
-                    <ChevronRight className="size-3 ml-auto text-muted-foreground/50 shrink-0" />
-                  </div>
-                )}
-
-                {/* 磁吸展开：专长技能标签（悬浮或选中时流畅渐显） */}
+                {/* 磁吸展开：专长技能标签 */}
                 {(isHovered || isSelected) && (
-                  <div className="mt-2.5 flex flex-wrap gap-1 pt-1 animate-in fade-in duration-200">
+                  <div className="mt-2 flex flex-wrap gap-1 pt-1 border-t border-current/10 animate-in fade-in duration-200">
                     {agent.specialties.map((spec) => (
                       <span
                         key={spec}
-                        className="px-1.5 py-0.5 rounded-md text-foreground/70"
-                        style={{ fontSize: 10, background: 'rgba(255, 255, 255, 0.08)' }}
+                        className="px-1.5 py-0.2 rounded"
+                        style={{
+                          fontSize: 9,
+                          background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.06)',
+                          color: isDark ? '#CBD5E1' : '#334155',
+                        }}
                       >
                         #{spec}
                       </span>
@@ -215,20 +293,20 @@ export function SquadCapsuleOrbit({
                 )}
               </button>
 
-              {/* 动态思维外溢气泡（右侧缓缓漂浮） */}
+              {/* 动态思维外溢气泡 */}
               {activeAgentBubbles.map((bubble) => (
                 <div
                   key={bubble.id}
-                  className="pointer-events-none absolute top-3 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white whitespace-nowrap shadow-xl backdrop-blur-md"
+                  className="pointer-events-none absolute top-1 z-40 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white whitespace-nowrap shadow-xl backdrop-blur-md"
                   style={{
-                    left: '102%',
-                    fontSize: 11,
-                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.85) 0%, rgba(139, 92, 246, 0.85) 100%)',
-                    animation: 'bubbleFloat 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                    left: '100%',
+                    fontSize: 10,
+                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%)',
+                    animation: 'bubbleFloat 4.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
                   }}
                 >
                   <Sparkles className="size-3 animate-spin" style={{ color: '#FCD34D', animationDuration: '3s' }} />
-                  <span className="font-medium" style={{ fontSize: 11 }}>{bubble.text}</span>
+                  <span className="font-medium">{bubble.text}</span>
                 </div>
               ))}
             </div>
@@ -240,19 +318,19 @@ export function SquadCapsuleOrbit({
         @keyframes bubbleFloat {
           0% {
             opacity: 0;
-            transform: translate3d(-8px, 4px, 0) scale(0.9);
+            transform: translate3d(-10px, 4px, 0) scale(0.88);
           }
           15% {
             opacity: 1;
-            transform: translate3d(8px, 0px, 0) scale(1);
+            transform: translate3d(10px, -2px, 0) scale(1);
           }
           85% {
             opacity: 0.95;
-            transform: translate3d(24px, -10px, 0) scale(1);
+            transform: translate3d(30px, -12px, 0) scale(1);
           }
           100% {
             opacity: 0;
-            transform: translate3d(36px, -18px, 0) scale(0.92);
+            transform: translate3d(45px, -20px, 0) scale(0.9);
           }
         }
       `}</style>

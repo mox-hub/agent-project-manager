@@ -9,6 +9,13 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
+vi.mock('@/shared/theme/theme-context', () => ({
+  useTheme: () => ({
+    mode: 'dark',
+    toggleTheme: vi.fn(),
+  }),
+}));
+
 describe('AiSurfacePage', () => {
   it('renders synthetic cognitive surface with agents and omni dock', () => {
     render(
@@ -28,8 +35,8 @@ describe('AiSurfacePage', () => {
     expect(screen.getByText('Sentinel')).toBeInTheDocument();
 
     // 验证右翼信度评分
-    expect(screen.getByText('信度总分')).toBeInTheDocument();
-    expect(screen.getByText('契约合规率')).toBeInTheDocument();
+    expect(screen.getByText('项目信度总分')).toBeInTheDocument();
+    expect(screen.getByText('契约合规率 (OpenAPI)')).toBeInTheDocument();
 
     // 验证底部 Omni-Dock
     expect(screen.getByPlaceholderText(/输入协同指令/)).toBeInTheDocument();
