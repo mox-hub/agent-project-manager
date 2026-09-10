@@ -3649,7 +3649,23 @@
         "valid": "CI 自动校验通过",
         "invalid": "CI 自动校验未通过"
       },
-      "history": "历史证据"
+      "history": "历史证据",
+      "pr": {
+        "status": "PR 状态",
+        "syncedAt": "回流于 {{time}}"
+      },
+      "list": {
+        "toggle": "展开/收起证据明细"
+      }
+    },
+    "evidenceType": {
+      "ci_result": "CI 结果",
+      "pr_review": "PR 审查",
+      "model_evaluation": "模型评估",
+      "human_approval": "人工确认",
+      "screenshot": "截图",
+      "log": "日志",
+      "test_result": "测试结果"
     },
     "delete": {
       "title": "删除验收契约",

@@ -21,6 +21,13 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 验收证据回流一期（CAP-B-08）——GitHub PR 终态与 CI 结论自动回流验收
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 激活 `RemotePullRequest` 死列关联（此前 acceptanceId/executionRunId/projectId 四列自建表起从未被写入，PR→验收无挂点）：`POST /integrations/github/:integrationId/pulls` 建端点 body 增可选 `acceptanceId`/`executionRunId` 透传，`recordPullRequest` 落库时由 acceptance→issue 推导 projectId；webhook 分发新增 `check_run` 事件（原仅 pull_request/pull_request_review，check_run 走 debug 丢弃），`GitHubSyncService.handleCheckRunEvent` 仅在 completed+conclusion 时发布 `github.check_run.completed`；新增 `acceptance/github-evidence.subscriber` 订阅两类事件——PR 终态（merged/closed）合并写入 completionEvidence（保留 artifacts/report/autoChecks，补 prUrl/state/prNumber/prRepo/prSyncedAt，打通 accept-completion 对 pr 契约「仅 merged 可接收」的前置校验，消除人工手填 PR 链接；仅 completionType=pr 且未裁决的验收消费），CI 结论按 headBranch 解析关联 PR 后落到 source='ci' 的标准（evidenceType=ci_result，submittedBy=system:github-checks 哨兵，content 含 sha 防重）。已知边界：回流落默认库（webhook 无 x-workspace-id 头，与既有 github-sync 同库口径），多库工作区跨库回流待集成配置入工作区后统一裁决 | CAP-B-08 | github-evidence.subscriber.spec 5/5（merged 补全并保留既有字段/已有 prUrl 不覆盖/非终态·无关联·非 pr 契约·已裁决四类跳过/CI 结论落 ci 标准含 metadata/无分支·无关联·无 ci 标准·重复投递四类跳过）；server tsc 0 错；contract:check 零漂移 | 能力清单 CAP-B-08 planned→doing 一期（本地） |
+| frontend | 验收详情页证据可见化：标准行证据计数由纯数字改为可展开（点开渲染证据明细列表=类型徽章+内容+外链（metadata.htmlUrl/storageRef）+时间）；完成证据卡新增 PR 状态行（GitPullRequest 图标+repo#number 链接+state 徽章 merged 绿/closed 红+回流时间）——GitHub 侧合并 PR 后 APM 内即可见，无需人工回填；`acceptance-api` 的 CriterionEvidence 补 metadata、CompletionEvidence 补 prNumber/prRepo/prSyncedAt（后端 DTO metadata 字段已存在，仅前端类型镜像缺口）；i18n acceptanceDetail.evidence.pr/list + evidenceType 七类双语 12 键 | CAP-B-08 | frontend tsc -b 0 错 | 无 |
+
 ### 完整性审计前端收口（CAP-B-02）——审计清单选择器 + 完备性清单管理面
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

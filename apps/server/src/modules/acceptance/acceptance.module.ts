@@ -5,6 +5,7 @@ import { AcceptanceService } from './acceptance.service';
 import { AcceptanceCriteriaService } from './acceptance-criteria.service';
 import { CompletenessChecklistService } from './completeness-checklist.service';
 import { CompletenessAuditService } from './completeness-audit.service';
+import { GithubEvidenceSubscriber } from './github-evidence.subscriber';
 import { AcceptanceController } from './acceptance.controller';
 
 @Module({
@@ -16,6 +17,7 @@ import { AcceptanceController } from './acceptance.controller';
     AcceptanceCriteriaService,
     CompletenessChecklistService,
     CompletenessAuditService,
+    GithubEvidenceSubscriber,
   ],
   controllers: [AcceptanceController],
   exports: [
