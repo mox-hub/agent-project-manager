@@ -69,7 +69,9 @@ import {
   useAcceptCompletion,
   useRejectCompletion,
   useWaiveCompletion,
+  useChecklists,
 } from '../hooks/use-acceptance';
+import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '@/components/ui/native-select';
 import { AuditReportPanel } from '../components/audit-report-panel';
 import {
   extractFailures,
@@ -126,6 +128,11 @@ export function AcceptanceDetailPage() {
   const { data: acceptance, isLoading } = useAcceptanceDetail(id);
   const auditMutation = useAudit(id!);
   const applySuggestionsMutation = useApplySuggestions(id!);
+  const { data: checklists = [] } = useChecklists();
+  const systemChecklists = checklists.filter((c) => c.isSystem);
+  const teamChecklists = checklists.filter((c) => !c.isSystem);
+  // 'auto' = 按项目类型与技术栈自动匹配；否则显式指定清单
+  const [auditChecklistId, setAuditChecklistId] = useState<string>('auto');
   const updateCriterion = useUpdateCriterion();
   const addCriterion = useAddCriterion();
   const deleteCriterion = useDeleteCriterion();
@@ -180,6 +187,8 @@ export function AcceptanceDetailPage() {
   const auditReport = acceptance.auditReport ?? null;
   const blockedCount = auditReport?.blockedItems?.length ?? 0;
   const suggestedCount = auditReport?.suggestedItems?.length ?? 0;
+  const runAudit = () =>
+    auditMutation.mutateAsync(auditChecklistId === 'auto' ? undefined : auditChecklistId);
 
   const TypeIcon = TYPE_ICON[acceptance.completionType];
   const canReview = acceptance.status === 'in_review' || acceptance.status === 'pending';
@@ -602,19 +611,49 @@ export function AcceptanceDetailPage() {
                         : t('acceptanceDetail.audit.never')}
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => auditMutation.mutateAsync(undefined)}
-                    disabled={auditMutation.isPending}
-                  >
-                    <Sparkles className="mr-1.5 size-3.5 text-primary" />
-                    {auditMutation.isPending
-                      ? '…'
-                      : auditReport
-                        ? t('acceptanceDetail.audit.rerun')
-                        : t('acceptanceDetail.audit.run')}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <NativeSelect
+                      value={auditChecklistId}
+                      onChange={(e) => setAuditChecklistId(e.target.value)}
+                      className="h-8 w-52 text-xs"
+                      aria-label={t('acceptanceDetail.audit.checklistSelect')}
+                    >
+                      <NativeSelectOption value="auto">
+                        {t('acceptanceDetail.audit.autoChecklist')}
+                      </NativeSelectOption>
+                      {systemChecklists.length > 0 && (
+                        <NativeSelectOptGroup label={t('acceptanceDetail.audit.systemChecklists')}>
+                          {systemChecklists.map((c) => (
+                            <NativeSelectOption key={c.id} value={c.id}>
+                              {c.name} ({c.checklist?.length ?? 0})
+                            </NativeSelectOption>
+                          ))}
+                        </NativeSelectOptGroup>
+                      )}
+                      {teamChecklists.length > 0 && (
+                        <NativeSelectOptGroup label={t('acceptanceDetail.audit.teamChecklists')}>
+                          {teamChecklists.map((c) => (
+                            <NativeSelectOption key={c.id} value={c.id}>
+                              {c.name} ({c.checklist?.length ?? 0})
+                            </NativeSelectOption>
+                          ))}
+                        </NativeSelectOptGroup>
+                      )}
+                    </NativeSelect>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => runAudit()}
+                      disabled={auditMutation.isPending}
+                    >
+                      <Sparkles className="mr-1.5 size-3.5 text-primary" />
+                      {auditMutation.isPending
+                        ? '…'
+                        : auditReport
+                          ? t('acceptanceDetail.audit.rerun')
+                          : t('acceptanceDetail.audit.run')}
+                    </Button>
+                  </div>
                 </div>
                 {auditReport ? (
                   <AuditReportPanel
@@ -637,7 +676,7 @@ export function AcceptanceDetailPage() {
                       variant="outline"
                       size="sm"
                       className="mt-3"
-                      onClick={() => auditMutation.mutateAsync(undefined)}
+                      onClick={() => runAudit()}
                       disabled={auditMutation.isPending}
                     >
                       <Sparkles className="mr-1.5 size-3.5 text-primary" />

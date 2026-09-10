@@ -21,6 +21,13 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 完整性审计前端收口（CAP-B-02）——审计清单选择器 + 完备性清单管理面
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 补齐完备性清单 CRUD 的 REST 面（service 层 createTeamChecklist/updateTeamChecklist 已存在但从未暴露）：`POST /_api/acceptance/checklists`、`PATCH /_api/acceptance/checklists/:id`（isSystem 400/非所有者 400/version 自增）、`DELETE /_api/acceptance/checklists/:id`（新增 removeTeamChecklist，同守卫口径），userId 沿用 `@Query('userId')` 仓库惯例；修复存量 DTO 缺陷——`CreateChecklistDto.checklist`/`UpdateChecklistDto.checklist` 误标 `@IsString()`（传数组必 400，此前端点不存在故未暴露），改为 `@IsArray + @ArrayMinSize(1) + @ValidateNested(each) + ChecklistItemDto`（severity 收紧 `@IsIn(critical/high/medium/low)`、autoFixable `@IsBoolean`） | CAP-B-02 | acceptance e2e +7（团队清单创建归 ownerId/缺 userId 400/update 升版 version=2/系统清单改 400/非所有者改 400/删除/重复删 404，全绿）；contract:export→generate→check 三件套零漂移 | 能力清单 CAP-B-02 gap→doing（本地） |
+| frontend | 验收详情页审计 tab 增加审计清单选择器：修复此前跑审计 `checklistId` 恒为 undefined、全靠项目 metadata 自动匹配技术栈，匹配不到时工程完备性检查**静默跳过**且用户无感知的问题——新增「自动匹配/系统预置清单/团队自定义清单」分组下拉（NativeSelect + OptGroup），runAudit 携带所选清单；新增设置子页「完备性清单」（`/app/settings/checklists`，对齐 issue-types 管理页形态）：系统预置组只读展示（名称/描述/projectType/techStack/项数/系统徽标），团队自定义组 CRUD（创建/编辑 Dialog 表单含检查项行编辑器：分类/内容/严重级别/可自动修复，仅 ownerId 本人可编辑删除）；`acceptance-api` 补 checklists 类型与四个函数、`use-acceptance` 补 useChecklists/useCreateChecklist/useUpdateChecklist/useDeleteChecklist；settings-nav/page-registry/router 三处登记；i18n 双语 35 键同步 | CAP-B-02 | checklists-section.test 5/5（分组渲染/系统行无操作按钮/创建负载含 projectType+checklist/空名校验拦截/删除走确认框）；frontend tsc -b 0 错、eslint 新文件 0 警告、设计 lint 五件套（tokens/semantic/palette/spacing/icons）全过 | 人工执行路径的审计闸门提示暂缓（与 CAP-B-08 证据回流一并设计）；能力清单变更记录已登记（本地） |
+
 ### 仪表盘风险项逾期天数改按自然日口径（消除整日边界跳变与单测 flaky）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
