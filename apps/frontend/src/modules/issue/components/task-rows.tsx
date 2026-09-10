@@ -12,23 +12,20 @@
 import { useMemo, useState } from 'react';
 import type { ElementType } from 'react';
 import {
-  AlertCircle,
   ArrowDown,
   ArrowUp,
-  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ChevronsUp,
-  Circle,
   Clock,
-  Loader,
   Minus,
   Plus,
   User,
-  XCircle,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
+import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import type { BugSeverity, Task } from '../api/issue-api';
 
 type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
@@ -36,13 +33,44 @@ type RowPriority = 'urgent' | 'high' | 'medium' | 'low';
 
 const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'canceled'];
 
-const STATUS_CFG: Record<TaskStatus, { label: string; Icon: ElementType; color: string; bg: string }> = {
-  todo: { label: 'Todo', Icon: Circle, color: 'text-muted-foreground', bg: 'bg-muted/40' },
-  in_progress: { label: 'In Progress', Icon: Loader, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
-  in_review: { label: 'In Review', Icon: AlertCircle, color: 'text-accent-yellow', bg: 'bg-accent-yellow/10' },
-  done: { label: 'Done', Icon: CheckCircle2, color: 'text-accent-green', bg: 'bg-accent-green/10' },
-  canceled: { label: 'Canceled', Icon: XCircle, color: 'text-muted-foreground', bg: 'bg-muted' },
+interface StatusCfg {
+  label: string;
+  Icon: LucideIcon;
+  color: string;
+  bg: string;
+}
+
+const STATUS_LABEL: Record<TaskStatus, string> = {
+  todo: 'Todo',
+  in_progress: 'In Progress',
+  in_review: 'In Review',
+  done: 'Done',
+  canceled: 'Canceled',
 };
+
+/** 分组头底色为本组件排版细节；图标与文字色统一取 status-visuals 唯一映射源 */
+const STATUS_BG: Record<TaskStatus, string> = {
+  todo: 'bg-muted/40',
+  in_progress: 'bg-accent-blue/10',
+  in_review: 'bg-accent-yellow/10',
+  done: 'bg-accent-green/10',
+  canceled: 'bg-muted',
+};
+
+const STATUS_CFG: Record<TaskStatus, StatusCfg> = Object.fromEntries(
+  (Object.keys(TASK_STATUS_VISUALS) as TaskStatus[]).map((status) => {
+    const visual = TASK_STATUS_VISUALS[status];
+    return [
+      status,
+      {
+        label: STATUS_LABEL[status],
+        Icon: visual.icon,
+        color: TONE_TEXT_CLASS[visual.tone],
+        bg: STATUS_BG[status],
+      },
+    ];
+  }),
+) as Record<TaskStatus, StatusCfg>;
 
 const PRIORITY_CFG: Record<RowPriority, { label: string; Icon: ElementType; color: string }> = {
   urgent: { label: 'Urgent', Icon: ChevronsUp, color: 'text-destructive' },

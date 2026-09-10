@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import type { Task, TaskPriority } from '@/modules/issue/api/issue-api';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, Calendar, MessageSquare, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
+import { Calendar, MessageSquare, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
 import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
 import { LinearExternalRefBadge } from '@/modules/linear/components/linear-status-badge';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { cn } from '@/lib/utils';
+
+/** 子任务计数的实体图标：统一从 entity-icons 注册表取（规范 v0） */
+const IssueIcon = getEntityIcon('issue').icon;
 
 const priorityBorderColors: Record<TaskPriority, string> = {
   low: 'border-l-accent-green',
@@ -137,7 +141,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
               className="flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-muted-foreground hover:text-muted-foreground"
             >
               {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-              <CheckSquare size={12} />
+              <IssueIcon size={12} />
               {task._count?.subIssues}
               {isExpanded ? ' (展开)' : ''}
             </button>

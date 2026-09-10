@@ -26,6 +26,7 @@ import {
   type FilterFieldDef,
 } from '@/components/ui/filter-chips';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useAllTasks, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import type { Task } from '../api/issue-api';
@@ -60,6 +61,9 @@ const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; dotColor
 const severityOf = (task: Task): Severity =>
   task.severity ||
   (task.priority === 'critical' ? 'critical' : task.priority === 'high' ? 'high' : task.priority === 'medium' ? 'medium' : 'low');
+
+/** 页头实体图标：统一从 entity-icons 注册表取（规范 v0） */
+const ISSUE_ENTITY = getEntityIcon('issue');
 
 export function TasksPage() {
   const { t } = useTranslation();
@@ -233,8 +237,8 @@ export function TasksPage() {
       <PageHeader
         aiId="task.tasks-list"
         title={t("task.title")}
-        icon={ListTodo}
-        iconColor="text-accent-blue"
+        icon={ISSUE_ENTITY.icon}
+        iconColor={TONE_TEXT_CLASS[ISSUE_ENTITY.tone]}
         metrics={[{ id: 'total', label: t("task.title"), value: filteredTasks.length }]}
         actions={
           <>

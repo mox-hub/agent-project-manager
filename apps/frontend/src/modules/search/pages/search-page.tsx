@@ -95,7 +95,7 @@ export function SearchPage() {
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               ref={inputRef}
-              placeholder={t('shell.searchPlaceholder') || 'Search everything...'}
+              placeholder={t('search.placeholder')}
               value={query}
               onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
               onKeyDown={handleKeyDown}

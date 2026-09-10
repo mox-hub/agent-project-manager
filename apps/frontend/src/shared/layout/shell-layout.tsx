@@ -15,6 +15,7 @@ import {
 } from '@/modules/linear/components/sync-progress-dialog';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
+import { commandEntries, COMMAND_GROUP_LABEL_KEYS, type CommandActionId } from '@/shared/command-palette/commands';
 import { FloatingActions } from '@/shared/components/floating-actions';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { AISlotLayer } from '@/shared/ai-slot/ai-slot-layer';
@@ -310,51 +311,35 @@ export function ShellLayout() {
   // Fetch real project data
   const { data: currentProject } = useProjectDetail(currentProjectId || undefined);
 
+  // 命令面板注册表：条目声明在 shared/command-palette/commands.ts（i18n key + 动作 id），
+  // 这里负责翻译时点（t() 把 labelKey/groupKey 映射成已翻译字符串）与运行时动作绑定
+  const commandActions = useMemo<Record<CommandActionId, () => void>>(
+    () => ({
+      toggleTheme: () => toggleTheme(),
+      openAiPanel: () => setAiPanelOpen(true),
+      logout,
+    }),
+    [logout, setAiPanelOpen, toggleTheme],
+  );
+
   const commandItems = useMemo<CommandPaletteItem[]>(
-    () => [
-      { id: "cmd-projects", label: t('shell.openProjects'), to: "/app/projects", shortcut: "G P", group: t('shell.navigation'), keywords: ["project", "projects"] },
-      { id: "cmd-dashboard", label: t('shell.openDashboard'), to: "/app/projects/dashboard", shortcut: "G D", group: t('shell.navigation'), keywords: ["dashboard"] },
-      { id: "cmd-tasks", label: t('shell.openTasks'), to: "/app/issues", shortcut: "G T", group: t('shell.navigation'), keywords: ["task", "tasks"] },
-      { id: "cmd-bugs", label: t('shell.openBugs'), to: "/app/bugs", shortcut: "G B", group: t('shell.navigation'), keywords: ["bug", "bugs"] },
-      { id: "cmd-documents", label: t('shell.openDocuments'), to: "/app/documents", shortcut: "G O", group: t('shell.navigation'), keywords: ["docs", "documents"] },
-      { id: "cmd-members", label: t('shell.openMembers'), to: "/app/members", shortcut: "G E", group: t('shell.navigation'), keywords: ["member", "members", "team"] },
-      { id: "cmd-teams", label: t('shell.openTeams'), to: "/app/teams", shortcut: "G M", group: t('shell.navigation'), keywords: ["team", "teams"] },
-      { id: "cmd-ai", label: t('shell.openAiSpace'), to: "/app/settings/ai", shortcut: "G A", group: t('shell.navigation'), keywords: ["ai", "assistant"] },
-      { id: "cmd-ai-management", label: t('shell.openAiManagement'), to: "/app/settings/ai", shortcut: "G M", group: t('shell.navigation'), keywords: ["ai", "management"] },
-      { id: "cmd-agents", label: t('shell.openAgents') || 'Open Agent Management', to: "/app/settings/ai/agents", shortcut: "G G", group: t('shell.navigation'), keywords: ["agent", "agents", "mcp"] },
-      { id: "cmd-analytics", label: t('shell.openAnalytics'), to: "/app/analytics", shortcut: "G N", group: t('shell.navigation'), keywords: ["analytics", "metrics"] },
-      // Terminal命令已废弃 - Terminal功能已并入Runtime模块
-      { id: "cmd-settings", label: t('shell.openSettings'), to: "/app/settings", shortcut: "G S", group: t('shell.navigation'), keywords: ["settings"] },
-      ...(isAdminRole
-        ? [{ id: "cmd-admin", label: t('nav.admin'), to: "/app/admin", group: t('shell.navigation'), keywords: ["admin", "accounts", "invites"] }]
-        : []),
-      { id: "cmd-help", label: t('shell.openHelp'), to: "/app/help", shortcut: "G H", group: t('shell.navigation'), keywords: ["help", "docs"] },
-      {
-        id: "cmd-theme",
-        label: mode === "light" ? t('shell.switchToDark') : t('shell.switchToLight'),
-        group: t('common.actions'),
-        shortcut: "T",
-        keywords: ["theme", "dark", "light"],
-        onSelect: () => toggleTheme(),
-      },
-      {
-        id: "cmd-ask-ai",
-        label: t('assistant.palette.ask'),
-        group: t('common.actions'),
-        shortcut: "Alt A",
-        keywords: ["ai", "assistant", "ask", "chat"],
-        onSelect: () => setAiPanelOpen(true),
-      },
-      {
-        id: "cmd-logout",
-        label: t('shell.logout'),
-        group: t('common.actions'),
-        shortcut: "L",
-        keywords: ["logout", "sign out"],
-        onSelect: () => logout(),
-      },
-    ],
-    [isAdminRole, logout, mode, setAiPanelOpen, toggleTheme, t],
+    () =>
+      commandEntries
+        .filter((entry) => !entry.adminOnly || isAdminRole)
+        .map((entry) => ({
+          id: entry.id,
+          label: t(
+            entry.darkModeLabelKey && mode === 'dark'
+              ? entry.darkModeLabelKey
+              : entry.labelKey,
+          ),
+          keywords: entry.keywords,
+          shortcut: entry.shortcut,
+          group: t(COMMAND_GROUP_LABEL_KEYS[entry.group]),
+          to: entry.to,
+          onSelect: entry.action ? commandActions[entry.action] : undefined,
+        })),
+    [commandActions, isAdminRole, mode, t],
   );
 
   return (

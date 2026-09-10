@@ -27,6 +27,7 @@ import {
   type FilterFieldDef,
 } from '@/components/ui/filter-chips';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { AsyncState } from '@/components/ui/async-state';
 import { useAllBugs, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
@@ -61,6 +62,9 @@ const SEVERITY_DOT: Record<Severity, string> = {
 const severityOf = (bug: Task): Severity =>
   bug.severity ||
   (bug.priority === 'critical' ? 'critical' : bug.priority === 'high' ? 'high' : bug.priority === 'medium' ? 'medium' : 'low');
+
+/** 页头实体图标：统一从 entity-icons 注册表取（规范 v0） */
+const BUG_ENTITY = getEntityIcon('bug');
 
 export function BugsPage() {
   const { t } = useTranslation();
@@ -226,8 +230,8 @@ export function BugsPage() {
       {/* Header */}
       <PageHeader
         title={t("task.bug.title") || "All Bugs"}
-        icon={Bug}
-        iconColor="text-accent-red"
+        icon={BUG_ENTITY.icon}
+        iconColor={TONE_TEXT_CLASS[BUG_ENTITY.tone]}
         metrics={[
           { id: 'total', label: t("task.bug.title"), value: filteredBugs.length },
           { id: 'open', label: t("task.bug.open") || 'open', value: stats.open, tone: 'warning' },

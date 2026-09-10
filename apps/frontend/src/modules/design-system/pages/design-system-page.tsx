@@ -145,10 +145,12 @@ import {
 } from '@/components/ui/combobox'
 import {
   HoverCard,
+  HoverCardArrow,
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger'
+import { PreviewFooterMeta, PreviewRow, PreviewSection } from '@/shared/route-preview/previews/preview-fields'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -2071,6 +2073,68 @@ export function DesignSystemPage() {
                   <HoverCardContent>
                     <p className="text-sm font-medium">Alex Chen</p>
                     <p className="text-xs text-muted-foreground mt-1">Senior Frontend Engineer · @alex</p>
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
+              <div>
+                <SubLabel>Hover Card sizes (sm / md / lg + Arrow)</SubLabel>
+                <div className="flex flex-wrap items-start gap-4">
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs underline decoration-dotted">size=sm</HoverCardTrigger>
+                    <HoverCardContent size="sm">
+                      <p className="text-sm font-medium">Small card</p>
+                      <p className="text-xs text-muted-foreground mt-1">w-56 窄栏场景</p>
+                    </HoverCardContent>
+                  </HoverCard>
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs underline decoration-dotted">size=md</HoverCardTrigger>
+                    <HoverCardContent size="md">
+                      <p className="text-sm font-medium">Default card</p>
+                      <p className="text-xs text-muted-foreground mt-1">w-64 默认档</p>
+                    </HoverCardContent>
+                  </HoverCard>
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs underline decoration-dotted">size=lg + Arrow</HoverCardTrigger>
+                    <HoverCardContent size="lg">
+                      <HoverCardArrow />
+                      <p className="text-sm font-medium">Large card with arrow</p>
+                      <p className="text-xs text-muted-foreground mt-1">w-72（route-preview 同宽），HoverCardArrow 显式放入 children 才渲染</p>
+                    </HoverCardContent>
+                  </HoverCard>
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs underline decoration-dotted">size=xl</HoverCardTrigger>
+                    <HoverCardContent size="xl">
+                      <p className="text-sm font-medium">Extra large card</p>
+                      <p className="text-xs text-muted-foreground mt-1">w-80 富信息卡（member 卡同宽档）</p>
+                    </HoverCardContent>
+                  </HoverCard>
+                </div>
+              </div>
+              <div>
+                <SubLabel>Hover Card 富信息模板（PreviewSection / PreviewFooterMeta，member 卡示范）</SubLabel>
+                <HoverCard>
+                  <HoverCardTrigger href="#" className="text-xs underline decoration-dotted">@alex 富卡</HoverCardTrigger>
+                  <HoverCardContent size="lg">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex flex-wrap items-center gap-1">
+                        <Badge variant="secondary">active</Badge>
+                      </div>
+                      <p className="line-clamp-2 text-11 text-muted-foreground">负责前端交付链路，熟悉双表面架构。</p>
+                      <PreviewSection title="资料">
+                        <PreviewRow label="账号">@alex</PreviewRow>
+                        <PreviewRow label="职务">Senior Frontend Engineer</PreviewRow>
+                        <PreviewRow label="信任">L2 标准 · 86</PreviewRow>
+                      </PreviewSection>
+                      <div className="flex flex-wrap gap-1">
+                        <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-10 font-medium text-muted-foreground">frontend</span>
+                        <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-10 font-medium text-muted-foreground">apm</span>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span className="h-1.5 w-1.5 rounded-full bg-accent-green" />
+                        <span>最近活跃 2026-09-11 10:00</span>
+                        <span className="ml-auto font-mono">MEM-A1B2</span>
+                      </PreviewFooterMeta>
+                    </div>
                   </HoverCardContent>
                 </HoverCard>
               </div>
