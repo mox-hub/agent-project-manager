@@ -7,6 +7,7 @@ import { GitHubSDKService } from './github-sdk.service';
 import { GitHubApiError } from './github-client';
 import { PR_OUTCOME_DELTAS, type GitHubPrState } from './github.constants';
 import type {
+  GitHubCheckRunWebhookPayload,
   GitHubCreatePrInput,
   GitHubPullRequest,
   GitHubPullRequestWebhookPayload,
@@ -66,8 +67,11 @@ export class GitHubSyncService {
     const client = await this.sdk.getClientForIntegration(integrationId);
     const pr = await client.createPullRequest(input);
 
-    // 立刻记录到 PullRequest 表（状态 open）
-    await this.recordPullRequest(pr, integrationId, 'open');
+    // 立刻记录到 PullRequest 表（状态 open），并落 APM 关联列（CAP-B-08 回流挂点）
+    await this.recordPullRequest(pr, integrationId, 'open', {
+      acceptanceId: input.acceptanceId,
+      executionRunId: input.executionRunId,
+    });
 
     return {
       ok: true,
@@ -162,6 +166,30 @@ export class GitHubSyncService {
     }
 
     return { recorded: true, trustApplied: false };
+  }
+
+  /**
+   * 处理 check_run webhook event（CAP-B-08 CI 结论回流）：
+   * 仅 completed 且有 conclusion 时发布 github.check_run.completed，
+   * 由 acceptance 侧订阅者按分支解析验收并落证据；此处不落表。
+   */
+  async handleCheckRunEvent(
+    payload: GitHubCheckRunWebhookPayload,
+  ): Promise<{ published: boolean }> {
+    const { action, check_run: check, repository } = payload;
+    if (action !== 'completed' || !check.conclusion) {
+      return { published: false };
+    }
+    this.messageBus.publish('github.check_run.completed', {
+      provider: 'github',
+      repo: repository.full_name,
+      branch: check.check_suite.head_branch,
+      checkName: check.name,
+      conclusion: check.conclusion,
+      sha: check.head_sha,
+      htmlUrl: check.html_url,
+    });
+    return { published: true };
   }
 
   /**
@@ -310,11 +338,22 @@ export class GitHubSyncService {
     pr: GitHubPullRequest,
     integrationId: string,
     state: GitHubPrState | 'open',
+    links?: { acceptanceId?: string; executionRunId?: string },
   ) {
     const apmState = this.mapPrState(pr.state, pr.merged);
     const existing = await this.prisma.remotePullRequest.findFirst({
       where: { provider: 'github', externalId: String(pr.id) },
     });
+
+    // 关联列：projectId 由 acceptance → issue 推导（同库查询，查不到则置空）
+    let projectId: string | null = null;
+    if (links?.acceptanceId) {
+      const acceptance = await this.prisma.acceptance.findUnique({
+        where: { id: links.acceptanceId },
+        select: { issue: { select: { projectId: true } } },
+      });
+      projectId = acceptance?.issue?.projectId ?? null;
+    }
 
     const data = {
       provider: 'github' as const,
@@ -330,6 +369,9 @@ export class GitHubSyncService {
       headBranch: pr.head.ref,
       baseBranch: pr.base.ref,
       integrationId,
+      acceptanceId: links?.acceptanceId ?? null,
+      executionRunId: links?.executionRunId ?? null,
+      projectId,
     };
 
     if (existing) {

@@ -89,6 +89,9 @@ export interface GitHubCreatePrInput {
   base: string; // 目标分支（通常 main/dev）
   body?: string;
   draft?: boolean;
+  /** 关联 APM 验收（CAP-B-08 证据回流挂点，仅落 RemotePullRequest，不进 GitHub API） */
+  acceptanceId?: string;
+  executionRunId?: string;
 }
 
 export interface GitHubMergePrInput {
@@ -176,6 +179,33 @@ export interface GitHubPullRequestReviewWebhookPayload {
     name: string;
   };
   sender: { login: string; id: number };
+}
+
+/** check_run webhook payload（CI 结论回流，CAP-B-08） */
+export interface GitHubCheckRunWebhookPayload {
+  action: 'created' | 'completed' | 'rerequested' | 'requested_action';
+  check_run: {
+    id: number;
+    name: string;
+    status: 'queued' | 'in_progress' | 'completed';
+    conclusion:
+      | 'success'
+      | 'failure'
+      | 'neutral'
+      | 'cancelled'
+      | 'timed_out'
+      | 'action_required'
+      | 'stale'
+      | 'skipped'
+      | null;
+    head_sha: string;
+    html_url: string | null;
+    check_suite: { head_branch: string | null };
+  };
+  repository: {
+    id: number;
+    full_name: string;
+  };
 }
 
 /** 同步摘要 */

@@ -149,6 +149,15 @@ export function AcceptanceDetailPage() {
   const [acceptFailures, setAcceptFailures] = useState<AcceptanceFailure[] | null>(null);
   const [addType, setAddType] = useState<'functional' | 'technical'>('functional');
   const [addContent, setAddContent] = useState('');
+  // 已展开证据明细的标准（CAP-B-08 回流证据在此展示）
+  const [expandedCriteria, setExpandedCriteria] = useState<Set<string>>(new Set());
+  const toggleCriterionEvidence = (id: string) =>
+    setExpandedCriteria((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   if (isLoading) {
     return (
@@ -333,12 +342,47 @@ export function AcceptanceDetailPage() {
                     </Badge>
                     <span>{t(`acceptance.criterionStatus.${c.status}`, c.status)}</span>
                     {c.evidences && c.evidences.length > 0 && (
-                      <span className="flex items-center gap-0.5">
+                      <button
+                        className="flex items-center gap-0.5 hover:text-foreground"
+                        title={t('acceptanceDetail.evidence.list.toggle')}
+                        onClick={() => toggleCriterionEvidence(c.id)}
+                      >
                         <ShieldCheck className="size-3" />
                         {c.evidences.length}
-                      </span>
+                      </button>
                     )}
                   </div>
+                  {c.evidences && expandedCriteria.has(c.id) && (
+                    <ul className="mt-2 space-y-1 border-l border-border pl-2.5">
+                      {c.evidences.map((ev) => {
+                        const prUrl =
+                          typeof ev.metadata?.htmlUrl === 'string'
+                            ? ev.metadata.htmlUrl
+                            : ev.storageRef;
+                        return (
+                          <li key={ev.id} className="flex items-center gap-1.5 text-10 text-muted-foreground">
+                            <Badge variant="outline" className="text-10 py-0">
+                              {t(`acceptanceDetail.evidenceType.${ev.evidenceType}`, ev.evidenceType)}
+                            </Badge>
+                            <span className="truncate">{ev.content ?? ev.evidenceType}</span>
+                            {prUrl && /^https?:\/\//.test(prUrl) && (
+                              <a
+                                href={prUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="shrink-0 text-accent-blue hover:underline"
+                              >
+                                <Link2 className="size-3" />
+                              </a>
+                            )}
+                            <span className="ml-auto shrink-0">
+                              {new Date(ev.createdAt).toLocaleString()}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </div>
                 <button
                   className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-red"
@@ -897,6 +941,40 @@ export function AcceptanceDetailPage() {
                       : t('acceptanceDetail.evidence.autoChecks.invalid')}
                     {' '}({acceptance.completionEvidence.autoChecks.passed}/
                     {acceptance.completionEvidence.autoChecks.total})
+                  </p>
+                )}
+                {acceptance.completionEvidence.prUrl && (
+                  <p className="flex items-center gap-1.5">
+                    <GitPullRequest className="size-3.5 shrink-0" />
+                    <a
+                      href={acceptance.completionEvidence.prUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="truncate text-accent-blue hover:underline"
+                    >
+                      {acceptance.completionEvidence.prRepo
+                        ? `${acceptance.completionEvidence.prRepo}#${acceptance.completionEvidence.prNumber ?? ''}`
+                        : acceptance.completionEvidence.prUrl}
+                    </a>
+                    {acceptance.completionEvidence.state && (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          'text-10 py-0 shrink-0',
+                          acceptance.completionEvidence.state === 'merged' && 'text-accent-green',
+                          acceptance.completionEvidence.state === 'closed' && 'text-accent-red',
+                        )}
+                      >
+                        {acceptance.completionEvidence.state}
+                      </Badge>
+                    )}
+                    {acceptance.completionEvidence.prSyncedAt && (
+                      <span className="shrink-0">
+                        {t('acceptanceDetail.evidence.pr.syncedAt', {
+                          time: new Date(acceptance.completionEvidence.prSyncedAt).toLocaleString(),
+                        })}
+                      </span>
+                    )}
                   </p>
                 )}
               </div>
