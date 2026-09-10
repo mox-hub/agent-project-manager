@@ -620,7 +620,8 @@ export function ShellLayout() {
                 )}
 
                 {/* Page content：项目详情路由由页面内部自管滚动（主区/右侧栏各自独立），
-                    其余页面沿用 shell 层 ScrollArea 滚动 */}
+                    其余页面沿用 shell 层 ScrollArea 滚动；fill 让页面至少占满视口高度
+                    （组件高度不再反向决定页面高度，flex-1 有了参照），超出自然滚动 */}
                 {isProjectDetailRoute ? (
                   <div className="flex h-full w-full flex-col overflow-hidden">
                     <ErrorBoundary fallback={<PageErrorFallback />}>
@@ -628,7 +629,7 @@ export function ShellLayout() {
                     </ErrorBoundary>
                   </div>
                 ) : (
-                  <ScrollArea className="h-full w-full">
+                  <ScrollArea className="h-full w-full" fill>
                     <ErrorBoundary fallback={<PageErrorFallback />}>
                       <Outlet />
                     </ErrorBoundary>
