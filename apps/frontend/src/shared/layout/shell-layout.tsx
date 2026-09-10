@@ -364,10 +364,10 @@ export function ShellLayout() {
             />
           ) : null}
 
-          {/* Sidebar - 移除分割线 */}
+          {/* Sidebar - Codex 磨砂质感与浅色/深色自适应 */}
           <aside
             className={cn(
-              'flex flex-col h-full bg-sidebar transition-all duration-200',
+              'flex flex-col h-full bg-sidebar/85 backdrop-blur-xl border-r border-sidebar-border/60 transition-all duration-200',
               mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:relative',
               sidebarCollapsed ? 'w-17' : 'w-56',
             )}
@@ -466,13 +466,13 @@ export function ShellLayout() {
                                 to={to}
                                 end={to !== '/app/projects'}
                                 className={cn(
-                                  'flex items-center rounded-lg text-sm transition-colors',
+                                  'flex items-center rounded-lg text-xs font-medium transition-colors',
                                   isNavActive(to)
-                                    ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
-                                    : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground',
+                                    ? 'bg-sidebar-accent text-sidebar-foreground shadow-2xs border border-sidebar-border/40'
+                                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground border border-transparent',
                                   sidebarCollapsed
                                     ? 'justify-center aspect-square p-2 w-9 relative'
-                                    : 'gap-2 px-2.5 py-1.5',
+                                    : 'gap-2 px-2.5 py-1.5 h-8',
                                 )}
                                 onClick={() => setMobileSidebarOpen(false)}
                               >
@@ -575,14 +575,14 @@ export function ShellLayout() {
           </aside>
 
           {/* Main content area */}
-          <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-sidebar">
-            {/* TabBar - 与侧边栏统一 */}
-            <div className="bg-sidebar">
+          <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-sidebar/85 backdrop-blur-xl">
+            {/* TabBar - 与侧边栏统一的磨砂质感与下边框 */}
+            <div className="bg-sidebar/85 backdrop-blur-md border-b border-sidebar-border/50">
               <TabBar />
             </div>
 
             {/* Mobile header */}
-            <div className="flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 py-2 md:hidden">
+            <div className="flex items-center gap-2 border-b border-sidebar-border/50 bg-sidebar/85 backdrop-blur-md px-3 py-2 md:hidden">
               <button
                 type="button"
                 className="rounded-md bg-transparent p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
@@ -595,9 +595,9 @@ export function ShellLayout() {
               <span className="text-sm font-medium text-sidebar-foreground">{t('shell.appName')}</span>
             </div>
 
-            {/* Content area with rounded rectangle - 只有页面内容在圆角矩形内 */}
-            <div className="flex flex-1 overflow-hidden p-3 pt-0 pl-0 bg-sidebar">
-              <div className="h-full w-full overflow-hidden rounded-xl bg-background shadow-lg border border-border/50">
+            {/* Content area with rounded rectangle - 悬浮在磨砂画布上的工作台卡片 */}
+            <div className="flex flex-1 overflow-hidden p-2.5 pt-0 pl-0 bg-transparent">
+              <div className="h-full w-full overflow-hidden rounded-xl bg-background/95 shadow-sm border border-border/60 backdrop-blur-xs">
                 {/* Project Context Bar (only on project sub-routes, excluding /app/projects/dashboard) */}
                 {isProjectDetailRoute && currentProjectId && (
                   <ProjectContextBar projectId={currentProjectId} project={currentProject} />

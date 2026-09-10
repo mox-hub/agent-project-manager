@@ -158,6 +158,67 @@ APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主�
   * **结构规范**：保持全视口高度与外部贴边原生滚动条（`overflow-y-auto`），主内容区采用 `max-w-4xl mx-auto w-full`（复杂验收/仓库流采用 `max-w-5xl`）居中收敛，避免超大屏下主栏描述行长过长引起视觉疲劳，同时保持主次双栏的紧凑平衡。
 * **嵌套治理铁律**：页面**严禁**在 `PageShell` 内部重复嵌套多层自创的 `p-6` 或手动 `max-w-5xl mx-auto`，一律由 `PageShell variant="..."` 统一分发接管。
 
+### 3.5 应用壳层架构（Shell Architecture）与全局交互复合组件规范
+
+为确保全端（Web 浏览器 + Tauri 桌面端）在浅色与深色模式下均具备统一的 **Codex 级磨砂毛玻璃质感（Frosted Glass Glassmorphism）** 与呼吸手感，将全站底层外壳与全局交互组件规范化如下：
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 顶栏 TabBar (h-10, bg-sidebar/85 backdrop-blur-md, border-b)             │
+├──────────────┬──────────────────────────────────────────┬───────────────┤
+│ 左侧栏 aside  │ 悬浮工作台卡片 Canvas                      │ 右侧栏 aside  │
+│ (w-56/w-17)  │ (rounded-xl bg-background/95 shadow-sm)  │ (w-320/360)   │
+│ 磨砂侧栏      │                                          │ 磨砂属性面板   │
+│ 菜单项 h-8   │ Page Content (独立滚动条贴边)              │ 收起不占位    │
+├──────────────┴──────────────────────────────────────────┴───────────────┤
+│ ❖ 左下角悬浮底座 (fixed bottom-4 left-4, w-11 h-11 磨砂微光晕)           │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 1. 浅色系色彩基准与 Codex 磨砂分层体系
+* **浅色模式去黑化**：浅色模式下全面弃用刺眼的深炭黑，`--sidebar-background` 统一采用温润浅冷灰（`240 5% 96%`），`--sidebar-foreground` 采用高对比深字（`240 10% 3.9%`），激活与悬停采用低饱和浅灰阶（`240 5% 90%`）。
+* **毛玻璃半透分层**：
+  * **底画布层**：`bg-sidebar/85 backdrop-blur-xl`，赋予外围窗口微妙的透光性。
+  * **主内容卡片**：`rounded-xl bg-background/95 backdrop-blur-xs border border-border/60 shadow-sm`，如同一块精确嵌入底座的工作台。
+
+#### 2. 左侧栏与菜单项目（Sidebar & Nav Items）
+* **栏宽标准**：展开态固定 **`224px`（`w-56`）**，折叠收起态固定 **`68px`（`w-17`）**；右边缘带有 `border-r border-sidebar-border/60` 精细分割。
+* **菜单项目（Nav Items）**：
+  * **尺寸与排版**：高度统一定义为 **`32px`（`h-8`）**，内边距 `px-2.5 py-1.5`，文字字阶统一为 **`12px 500字重`（`text-xs font-medium`）**，前置图标标准规格 **`16px`（`size-4`）**。
+  * **交互反馈**：悬停时采用 `hover:bg-sidebar-accent/60 hover:text-sidebar-foreground`；激活态采用 `bg-sidebar-accent text-sidebar-foreground shadow-2xs border border-sidebar-border/40` 微浮雕卡片质感，杜绝传统高饱和色块对视线的干扰。
+* **分组标头（Group Headers）**：`text-10 font-semibold uppercase tracking-wider text-sidebar-foreground/40`，分区折叠时右侧显示紧凑数字徽标。
+
+#### 3. 顶部标签栏与标签页体系（TabBar & Tabs）
+* **TabBar 容器**：高度 **`40px`（`h-10`）**，背景穿透底层磨砂（`bg-sidebar/85 backdrop-blur-md border-b border-sidebar-border/50`）。
+* **TabItem 规格**：
+  * 高度固定为 **`28px`（`h-7`）**，标签项横向间距 **`gap-1`（4px）**，文字 **`text-xs font-medium`**。
+  * **激活态**：`bg-background/95 border-border/70 shadow-2xs text-foreground backdrop-blur-xs`，呈现温润凸起的白色/浅灰磨砂质感；固定页（Pinned）采用 `border-sidebar-border/60 bg-sidebar-accent/40`。
+  * **未激活态**：`border-transparent bg-transparent text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground`，平滑融入磨砂背景。
+* **通用 Tabs 组件（TabsList）**：默认预设升级为 `bg-muted/70 backdrop-blur-xs border border-border/50`，分段胶囊（segmented）升级为 `bg-background/80 backdrop-blur-sm rounded-full`。
+
+#### 4. 右侧栏与折叠面板（Right Sidebar & SidebarPanel）
+* **宽度与定位**：标准详情属性栏固定为 **`320px`**，复杂流程（如验收门禁/仓库配置）为 **`360px`**；与主内容区行内并列（flex 水平排列），收起时不占位、不遮挡。
+* **磨砂与边框**：外侧左边框统一为 `border-l border-border/60 bg-background/50 backdrop-blur-md`。
+* **折叠面板（SidebarPanel）**：外壳统一为 `rounded-xl border border-border/60 bg-card/80 backdrop-blur-xs shadow-2xs`，展开为圆角矩形，收起为紧凑标题胶囊。
+
+#### 5. 左下角悬浮操作底座（Floating Action Buttons）
+* **定位规范**：严格固定于视口左下角 `fixed bottom-4 left-4 z-50`。
+* **主触发器（Trigger）**：规格为 **`44px`（`w-11 h-11`）** 圆形磨砂按钮，`bg-popover/90 hover:bg-popover backdrop-blur-md border border-border/70 shadow-lg ring-2 ring-primary/20`，展开时平滑切换为 X 图标。
+* **浮动面板与快捷按钮**：快捷卡片采用 `w-72 rounded-xl bg-card/95 backdrop-blur-xl border border-border/70 shadow-2xl`，快捷工具按钮组采用 `w-9.5 h-9.5 rounded-full bg-popover/85 backdrop-blur-md`。
+
+#### 6. 全局弹窗与遮罩体系（Dialog / Modal / Sheet）
+* **遮罩（DialogOverlay）**：升级为 **`bg-black/30 backdrop-blur-sm dark:bg-black/60`**，消除过浅漏底或死黑突兀，提供温润的焦外磨砂景深。
+* **弹窗主体（DialogContent）**：统一遵循 **`rounded-xl bg-popover/95 backdrop-blur-xl border border-border/70 shadow-2xl ring-1 ring-border/40`**，杜绝纯白生硬反光与刺眼外发光。
+
+#### 7. 统一创建面板（Unified Create Dialog）
+* **整体规格**：多类型一站式创建面板，容器采用 `bg-card/95 backdrop-blur-xl border border-border/70 shadow-2xl`。
+* **结构分栏**：左侧主表单区（440~600px）+ 右侧属性折叠胶囊区（240~280px）。
+* **分区边框**：顶部导航工具栏为 `h-11 border-b border-border/50 bg-muted/20`，底部操作按钮栏为 `h-13 border-t border-border/50 bg-muted/15`。
+
+#### 8. 命令面板（Command Palette / Spotlight）
+* **定位与质感**：居中偏上（`top-1/3`）悬浮，继承 `bg-popover/95 backdrop-blur-xl border border-border/70 shadow-2xl`。
+* **输入框与条目**：输入框采用微透磨砂底 `h-8 border-border/50 bg-muted/40`；键盘操作条目（CommandItem）采用 `min-h-8.5 rounded-lg text-xs data-selected:bg-accent data-selected:text-foreground`。
+
 ---
 
 ## 四、多端自适应字体与排版主次

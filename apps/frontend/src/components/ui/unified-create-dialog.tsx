@@ -1172,7 +1172,7 @@ export function UnifiedCreateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          'overflow-hidden p-0 gap-0 border border-border/60 bg-card',
+          'overflow-hidden p-0 gap-0 border border-border/70 bg-card/95 backdrop-blur-xl shadow-2xl',
           widthClass,
         )}
         keepDefaultWidth={false}
@@ -1185,7 +1185,7 @@ export function UnifiedCreateDialog({
         <DialogDescription className="sr-only">{currentMeta.descriptionHint}</DialogDescription>
 
         {/* ──────────── Header ──────────── */}
-        <div className="flex items-center justify-between px-4 h-12 shrink-0">
+        <div className="flex items-center justify-between px-4 h-11 shrink-0 border-b border-border/50 bg-muted/20">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <span className="px-1 rounded-sm hover:bg-accent hover:text-foreground transition-colors cursor-pointer">
               AgentPM
@@ -1326,7 +1326,7 @@ export function UnifiedCreateDialog({
         </div>
 
         {/* ──────────── Footer ──────────── */}
-        <div className="flex items-center gap-3 px-4 h-14 shrink-0">
+        <div className="flex items-center gap-3 px-4 h-13 shrink-0 border-t border-border/50 bg-muted/15">
           <button
             type="button"
             className="size-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"

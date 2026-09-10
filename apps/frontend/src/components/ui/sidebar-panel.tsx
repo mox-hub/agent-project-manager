@@ -48,8 +48,8 @@ export function SidebarPanel({
   return (
     <div
       className={cn(
-        // 同背景（bg-card）、无标题/内容分割线；圆角在展开/收起间保持一致的小圆角并做过渡
-        'rounded-xl border border-border bg-card transition-[border-radius] duration-300',
+        // 磨砂底（bg-card/80）、无标题/内容分割线；圆角在展开/收起间保持一致的小圆角并做过渡
+        'rounded-xl border border-border/60 bg-card/80 backdrop-blur-xs shadow-2xs transition-[border-radius] duration-300',
         className,
       )}
     >

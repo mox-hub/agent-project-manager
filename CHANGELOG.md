@@ -21,6 +21,19 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 浅色模式侧边栏去黑化、Codex 类磨砂外壳与全局复合组件规范落地（DESIGN.md §3.5）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | `DESIGN.md` 与 `docs/design/DESIGN.md` 新增 §3.5 应用壳层架构（Shell Architecture）与全局交互复合组件规范：系统定义 Codex 级磨砂分层、左侧栏（w-56/w-17，h-8 菜单项）、右侧栏（w-320/360，SidebarPanel 折叠面板）、TabBar（h-10，h-7 标签项）、左下角悬浮底座（w-11 h-11 磨砂微光晕）、全局弹窗（DialogOverlay 磨砂景深 + DialogContent 磨砂微边框）、统一创建面板与命令面板的结构、尺寸与手感基线 | CAP-P-01 | pnpm check:docs-sync | DESIGN.md §3.5 同步更新 |
+| frontend | 浅色系侧栏色彩重构（去黑化）：`index.css` 根变量浅色模式全面弃用纯黑，`--sidebar-background` 统一为温润浅灰（240 5% 96%），`--sidebar-foreground` 采用高对比深字（240 10% 3.9%），悬停采用低饱和浅灰阶（240 5% 90%）；暗色模式微调深邃质感 | CAP-P-01 | 7 项设计治理门禁通过，tsc 0 错 | 对齐 DESIGN.md §3.5.1 |
+| frontend | Codex 级磨砂外壳架构落地：`shell-layout.tsx` 侧栏升级为 `bg-sidebar/85 backdrop-blur-xl border-r border-sidebar-border/60`；导航项统一为 32px 高度与 12px 500字重微浮雕卡片；主内容区采用磨砂底座上悬浮的工作台卡片结构（`rounded-xl bg-background/95 shadow-sm border border-border/60`） | CAP-P-01 | Vitest 273 用例全绿 | 对齐 DESIGN.md §3.5.2 |
+| frontend | 顶部 TabBar 规范升级：`tab-bar.tsx` 容器背景改为透明穿透磨砂底，TabItem 尺寸规整为 h-7，间距 gap-1，激活态采用温润白色/浅灰磨砂浮起效果，左右滚动按钮与新建按钮升级为微透磨砂控件 | CAP-P-01 | tsc 0 错，Vitest 全绿 | 对齐 DESIGN.md §3.5.3 |
+| frontend | 左下角悬浮操作底座升级：`floating-actions.tsx` 主触发器升级为 44px（w-11 h-11）圆角微光晕磨砂按钮，用户信息与工作区卡片升级为 `bg-card/95 backdrop-blur-xl border-border/70`，遮罩升级为轻柔磨砂 | CAP-P-01 | tsc 0 错，7 项治理通过 | 对齐 DESIGN.md §3.5.5 |
+| frontend | 全局弹窗体系磨砂升级：`dialog.tsx` 遮罩 `DialogOverlay` 升级为 `bg-black/30 backdrop-blur-sm dark:bg-black/60` 舒适景深，`DialogContent` 升级为 `bg-popover/95 backdrop-blur-xl border border-border/70 shadow-2xl` | CAP-P-01 | tsc 0 错，全量单测通过 | 对齐 DESIGN.md §3.5.6 |
+| frontend | 统一创建面板与命令面板质感收敛：`unified-create-dialog.tsx` 容器接入毛玻璃磨砂，强化顶部工具栏（h-11）与底部操作栏（h-13）细边框分隔；`command.tsx` 优化背景穿透与条目选中高亮质感 | CAP-P-01 | tsc 0 错，Vitest 273 用例全绿 | 对齐 DESIGN.md §3.5.7/8 |
+| frontend | 右侧栏与通用标签页对齐：`right-sidebar.tsx` 增加 `bg-background/50 backdrop-blur-md` 磨砂侧栏，`sidebar-panel.tsx` 折叠面板升级微透底，`tabs.tsx` 预设支持磨砂微边框 | CAP-P-01 | 7 项治理通过 | 对齐 DESIGN.md §3.5.4 |
+
 ### 仪表盘视觉中心聚焦、看板呼吸感边距升级与二级三级子页主栏收敛
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
