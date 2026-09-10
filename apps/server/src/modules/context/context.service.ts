@@ -160,7 +160,7 @@ export class ContextService {
     };
   }
 
-  private async buildProjectContext(projectId: string, issueId?: string) {
+  private async buildProjectContext(projectId: string, _issueId?: string) {
     const [activeTasks, milestones, recentActivity] = await Promise.all([
       this.prisma.issue.findMany({
         where: { projectId },

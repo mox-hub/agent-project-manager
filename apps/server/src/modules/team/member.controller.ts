@@ -33,7 +33,6 @@ import {
 import {
   CreateMemberDto,
   UpdateMemberDto,
-  MemberQueryDto,
   BindMemberProjectDto,
   SetMemberToolGrantsDto,
 } from './dto/member.dto';

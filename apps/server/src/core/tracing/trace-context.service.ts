@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware, MiddlewareConsumer } from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
 import { AsyncLocalStorage } from 'async_hooks';

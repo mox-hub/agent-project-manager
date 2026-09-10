@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, UserPlus, MailPlus, Plus, User, Mail, UsersRound } from 'lucide-react';
+import { UserCog, UserPlus, MailPlus, Plus, User, Mail, UsersRound } from 'lucide-react';
 
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
@@ -196,7 +196,8 @@ function AdminPageContent() {
   return (
     <PageShell aiPage="admin.admin" className="overflow-hidden">
       <PageHeader
-        icon={ShieldCheck}
+        // admin 域图标统一 UserCog（ShieldCheck 三方重叠裁决，与 nav / page-registry 同口径）
+        icon={UserCog}
         iconColor="text-accent-red"
         title={t('nav.admin', '管理后台')}
         metrics={[

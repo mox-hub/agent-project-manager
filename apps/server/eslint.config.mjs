@@ -3,7 +3,9 @@ import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'eslint.config.mjs'] },
+  // src/generated/** 由生成器产出（如 nestjs-i18n 的 i18n.generated.ts），
+  // 生成器会回写还原，禁止手改，直接整目录 ignore。
+  { ignores: ['dist', 'coverage', 'eslint.config.mjs', 'src/generated/**'] },
   ...tseslint.configs.recommended,
   prettierRecommended,
   {

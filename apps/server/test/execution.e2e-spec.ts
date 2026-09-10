@@ -46,8 +46,6 @@ describe('Execution (e2e)', () => {
     await ws.cleanup();
   });
 
-  const auth = () => ({ Authorization: `Bearer ${accessToken}` });
-
   describe('POST /_api/execution/runs', () => {
     it('should create an execution run', () => {
       return wsHttp

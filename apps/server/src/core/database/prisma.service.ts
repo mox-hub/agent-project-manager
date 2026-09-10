@@ -1,6 +1,5 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '../logger/logger.service';
-import type { PrismaClient as PrismaClientType } from '@prisma/client';
 
 // IMPORTANT:
 // Prisma decides engine strategy when @prisma/client is loaded.

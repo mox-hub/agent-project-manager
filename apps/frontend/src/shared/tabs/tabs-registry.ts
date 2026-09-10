@@ -11,20 +11,13 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard,
-  FolderKanban,
-  CheckSquare,
-  AlertCircle,
-  FileText,
   BarChart3,
   Bell,
-  GitBranch,
   HelpCircle,
-  CheckCircle,
   Search,
-  ShieldCheck,
-  User,
-  Users,
+  UserCog,
 } from 'lucide-react';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 
 /** 单个标签页路由的显示配置 */
 export interface TabRouteConfig {
@@ -39,21 +32,25 @@ export interface TabRouteConfig {
   closable?: boolean;
 }
 
+/** 实体标签页图标统一从 entity-icons 注册表取（规范 v0 第二批铺开） */
+const entityIcon = (kind: Parameters<typeof getEntityIcon>[0]) => getEntityIcon(kind).icon;
+
 /** 精确匹配的静态路由 */
 const EXACT_ROUTES: Record<string, TabRouteConfig> = {
-  '/app': { titleKey: 'nav.projects', icon: FolderKanban },
-  '/app/projects': { titleKey: 'nav.projects', icon: FolderKanban },
+  '/app': { titleKey: 'nav.projects', icon: entityIcon('project') },
+  '/app/projects': { titleKey: 'nav.projects', icon: entityIcon('project') },
   '/app/projects/dashboard': { titleKey: 'nav.dashboard', icon: LayoutDashboard, pinnedByDefault: true },
-  '/app/issues': { titleKey: 'nav.tasks', icon: CheckSquare },
-  '/app/bugs': { titleKey: 'task.bug.title', icon: AlertCircle },
-  '/app/documents': { titleKey: 'document.title', icon: FileText },
+  '/app/issues': { titleKey: 'nav.tasks', icon: entityIcon('issue') },
+  '/app/bugs': { titleKey: 'task.bug.title', icon: entityIcon('bug') },
+  '/app/documents': { titleKey: 'document.title', icon: entityIcon('document') },
   '/app/analytics': { titleKey: 'nav.analytics', icon: BarChart3 },
   '/app/notifications': { titleKey: 'nav.notifications', icon: Bell },
-  '/app/acceptance': { titleKey: 'nav.acceptance', icon: CheckCircle },
-  '/app/repositories': { titleKey: 'nav.repositories', icon: GitBranch },
+  '/app/acceptance': { titleKey: 'nav.acceptance', icon: entityIcon('acceptance') },
+  '/app/repositories': { titleKey: 'nav.repositories', icon: entityIcon('repository') },
   '/app/search': { titleKey: 'nav.search', icon: Search },
   '/app/help': { titleKey: 'nav.help', icon: HelpCircle },
-  '/app/admin': { titleKey: 'nav.admin', icon: ShieldCheck },
+  // admin 域非验收实体：ShieldCheck 三方重叠裁决改用 UserCog（规范 v0）
+  '/app/admin': { titleKey: 'nav.admin', icon: UserCog },
 };
 
 /**
@@ -61,15 +58,16 @@ const EXACT_ROUTES: Record<string, TabRouteConfig> = {
  * 按「最长前缀优先」匹配；命中后子页面获得独立的默认标题（不再与主页面共用名称）。
  */
 const PREFIX_RULES: Array<{ prefix: string; config: TabRouteConfig }> = [
-  { prefix: '/app/projects/', config: { titleKey: 'project.title', icon: FolderKanban } },
-  { prefix: '/app/issues/', config: { titleKey: 'task.detailDrawer.title', icon: CheckSquare } },
-  { prefix: '/app/bugs/', config: { titleKey: 'task.bug.title', icon: AlertCircle } },
-  { prefix: '/app/acceptance/', config: { titleKey: 'nav.acceptance', icon: CheckCircle } },
-  { prefix: '/app/documents/', config: { titleKey: 'document.title', icon: FileText } },
-  { prefix: '/app/repositories/', config: { titleKey: 'nav.repositories', icon: GitBranch } },
-  // team-member 模块暂无 i18n key，使用静态标题占位（tabs-context 支持 title 回退）
-  { prefix: '/app/members/', config: { title: '成员', icon: User } },
-  { prefix: '/app/teams/', config: { title: '团队', icon: Users } },
+  { prefix: '/app/projects/', config: { titleKey: 'project.title', icon: entityIcon('project') } },
+  { prefix: '/app/issues/', config: { titleKey: 'task.detailDrawer.title', icon: entityIcon('issue') } },
+  { prefix: '/app/bugs/', config: { titleKey: 'task.bug.title', icon: entityIcon('bug') } },
+  { prefix: '/app/acceptance/', config: { titleKey: 'nav.acceptance', icon: entityIcon('acceptance') } },
+  { prefix: '/app/documents/', config: { titleKey: 'document.title', icon: entityIcon('document') } },
+  { prefix: '/app/repositories/', config: { titleKey: 'nav.repositories', icon: entityIcon('repository') } },
+  // team-member 模块暂无 i18n key，使用静态标题占位（tabs-context 支持 title 回退）；
+  // member/team 图标按注册表口径（member=Users 复数、team=UsersRound）
+  { prefix: '/app/members/', config: { title: '成员', icon: entityIcon('member') } },
+  { prefix: '/app/teams/', config: { title: '团队', icon: entityIcon('team') } },
 ].sort((a, b) => b.prefix.length - a.prefix.length);
 
 /**

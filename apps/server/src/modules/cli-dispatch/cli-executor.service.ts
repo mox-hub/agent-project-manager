@@ -11,7 +11,6 @@ import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
 import { ApprovalService } from '@/modules/execution/approval.service';
 import {
-  CliAdapter,
   CliExecutionInput,
   StreamEmitter,
   ExecutionStepUpdate,
@@ -363,11 +362,6 @@ export class CliExecutorService {
     options: ExecuteOptions,
   ) {
     try {
-      // Add or update step in execution
-      const existingSteps = await this.executionService.getExecutionArtifacts(
-        context.executionRunId,
-      );
-
       // Create new step
       await this.executionService.addExecutionStep(context.executionRunId, {
         stepType: step.stepType,

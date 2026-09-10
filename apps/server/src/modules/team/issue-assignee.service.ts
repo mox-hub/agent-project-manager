@@ -5,7 +5,6 @@ import {
   BulkSetIssueAssigneesDto,
   AddIssueWatcherDto,
 } from './dto/issue-assignee.dto';
-import { Prisma } from '@prisma/client';
 import { CliResolutionService } from '@/modules/cli-dispatch/cli-resolution.service';
 import { CliDispatchService } from '@/modules/cli-dispatch/dispatch.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
@@ -115,7 +114,7 @@ export class IssueAssigneeService {
     return result;
   }
 
-  async bulkSet(dto: BulkSetIssueAssigneesDto, userId: string) {
+  async bulkSet(dto: BulkSetIssueAssigneesDto, _userId: string) {
     const task = await this.prisma.issue.findUnique({
       where: { id: dto.issueId },
     });

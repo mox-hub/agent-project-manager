@@ -8,7 +8,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Plus, CheckCircle2, Bug, AlertTriangle, List, Kanban, Trash2, CircleDashed, FolderOpen,
+  Plus, CheckCircle2, Bug, AlertTriangle, List, Kanban, Trash2, CircleDashed,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
@@ -166,7 +166,7 @@ export function BugsPage() {
       {
         id: 'project',
         label: t('task.filter.projectGroup', 'Project'),
-        icon: FolderOpen,
+        icon: getEntityIcon('project').icon,
         operators: ['is', 'isNot'],
         searchable: true,
         options: projects.map((p) => ({

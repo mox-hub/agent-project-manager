@@ -159,7 +159,7 @@ export class AiSdkAdapter implements ModelAdapter {
    */
   async validateConnection(): Promise<ValidationResult> {
     try {
-      const testResult = await generateText({
+      await generateText({
         model: this.model,
         messages: [{ role: 'user', content: 'Hi' }],
         maxOutputTokens: 5,

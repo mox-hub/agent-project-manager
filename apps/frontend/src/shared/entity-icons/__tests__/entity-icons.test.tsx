@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   CheckSquare,
+  Scale,
   ShieldCheck,
   Users,
   UsersRound,
@@ -34,9 +35,12 @@ describe('entity-icons 注册表', () => {
     expect(new Set(icons).size).toBe(icons.length);
   });
 
-  it('关键裁决口径：issue=CheckSquare、acceptance=ShieldCheck、member=Users、team=UsersRound', () => {
+  it('关键裁决口径：issue=CheckSquare、acceptance=ShieldCheck、decision=Scale、member=Users、team=UsersRound', () => {
     expect(getEntityIcon('issue').icon).toBe(CheckSquare);
+    // 验收实体保留 ShieldCheck（三方重叠裁决：admin 域→UserCog、人工确认节点→UserCheck）
     expect(getEntityIcon('acceptance').icon).toBe(ShieldCheck);
+    // 第二批铺开：决策收件箱原 Inbox 已统一为裁决天平 Scale
+    expect(getEntityIcon('decision').icon).toBe(Scale);
     expect(getEntityIcon('member').icon).toBe(Users);
     expect(getEntityIcon('team').icon).toBe(UsersRound);
   });

@@ -672,7 +672,6 @@ export class IssueService {
     ]);
 
     // 手动加载里程碑信息
-    const issueIds = tasks.map((t) => t.id);
     const milestoneIds = tasks
       .filter((t) => t.milestoneId)
       .map((t) => t.milestoneId!);
@@ -847,7 +846,7 @@ export class IssueService {
     };
   }
 
-  async findBugs(projectId: string, query: IssueQueryDto, userId: string) {
+  async findBugs(projectId: string, query: IssueQueryDto, _userId: string) {
     const { filters, q, page, pageSize } = query;
     const pageNum = Number(page) || 1;
     const pageSizeNum = Number(pageSize) || 20;

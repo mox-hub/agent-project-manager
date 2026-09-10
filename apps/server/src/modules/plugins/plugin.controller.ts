@@ -150,7 +150,7 @@ export class PluginController {
   @ApiStandardErrors()
   disable(
     @Param('id') id: string,
-    @Body('enabled') enabled: boolean,
+    @Body('enabled') _enabled: boolean,
   ): Promise<any> {
     return this.pluginService.update(id, { enabled: false });
   }

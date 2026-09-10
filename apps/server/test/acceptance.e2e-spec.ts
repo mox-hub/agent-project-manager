@@ -47,8 +47,6 @@ describe('Acceptance (e2e)', () => {
     await ws.cleanup();
   });
 
-  const auth = () => ({ Authorization: `Bearer ${accessToken}` });
-
   describe('GET /_api/acceptance/checklists/system', () => {
     it('should list system checklists', () => {
       return wsHttp

@@ -37,7 +37,6 @@ function buildHarness(opts: {
       ),
       update: vi.fn(
         async ({
-          where,
           data,
         }: {
           where: { id: string };

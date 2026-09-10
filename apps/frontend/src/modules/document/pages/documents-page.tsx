@@ -11,7 +11,6 @@ import {
   Code2,
   Clock,
   FileText,
-  FileStack,
   FileEdit,
   FolderOpen,
   GitBranch,
@@ -25,6 +24,7 @@ import {
   Eye,
   X,
 } from 'lucide-react';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -166,7 +166,7 @@ export function DocumentsPage() {
         <PageHeader
           aiId="document.document-list"
           title="文档管理"
-          icon={FileStack}
+          icon={getEntityIcon('document').icon}
           iconColor="text-accent-blue"
           metrics={[{ id: 'total', label: '文档', value: stats.total }]}
           actions={(

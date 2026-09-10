@@ -7,7 +7,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
-import type { CreateDocumentVersion } from '../entities/document-version.entity';
 import { MarkdownParserService } from './markdown-parser.service';
 import { DocsGitService } from './docs-git.service';
 
@@ -157,7 +156,8 @@ export class DocumentVersionService {
     if (!newLabel || !newLabel.trim()) {
       throw new BadRequestException('版本名不能为空');
     }
-    const version = await this.getVersion(versionId);
+    // 存在性校验：不存在时抛 NotFoundException
+    await this.getVersion(versionId);
     return this.prisma.documentVersion.update({
       where: { id: versionId },
       data: { version: newLabel.trim() },

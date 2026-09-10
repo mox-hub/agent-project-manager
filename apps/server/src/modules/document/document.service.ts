@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
@@ -101,7 +97,7 @@ export class DocumentService {
     }
   }
 
-  async findAll(query: DocumentQueryDto, userId?: string) {
+  async findAll(query: DocumentQueryDto, _userId?: string) {
     const {
       q,
       category,

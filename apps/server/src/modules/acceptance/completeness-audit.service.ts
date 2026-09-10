@@ -112,7 +112,6 @@ export class CompletenessAuditService {
     }
 
     // 3. 已通过项
-    const existingCriteria = acceptance.criteria.map((c) => c.content);
     result.passedItems = acceptance.criteria
       .filter((c) => c.status === 'passed')
       .map((c) => ({

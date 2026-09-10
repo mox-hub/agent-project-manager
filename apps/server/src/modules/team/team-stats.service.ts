@@ -107,7 +107,6 @@ export class TeamStatsService {
           },
         })
       : [];
-    const memberMap = new Map(members.map((m) => [m.id, m]));
     const userIds = members
       .map((m) => m.userId)
       .filter((u): u is string => Boolean(u));

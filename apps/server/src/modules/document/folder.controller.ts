@@ -27,7 +27,6 @@ import {
   DocumentFolderDetailResponseDto,
 } from './dto/folder-response.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { Public } from '../../common/decorators/public.decorator';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Document Folders')

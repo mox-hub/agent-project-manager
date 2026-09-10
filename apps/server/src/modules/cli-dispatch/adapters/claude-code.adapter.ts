@@ -4,8 +4,7 @@
  * 解析 NDJSON 行的 type: 'assistant'|'tool_use'|'result'
  */
 
-import { spawn, ChildProcess } from 'child_process';
-import * as readline from 'readline';
+import { spawn } from 'child_process';
 import {
   CliAdapter,
   CliExecutionInput,

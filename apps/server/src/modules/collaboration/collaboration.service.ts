@@ -166,7 +166,7 @@ export class CollaborationService {
       note: input.note ?? '请求澄清',
       at: new Date().toISOString(),
     });
-    const refreshed = await this.prisma.collaborationCard.update({
+    await this.prisma.collaborationCard.update({
       where: { id },
       data: { rounds },
     });

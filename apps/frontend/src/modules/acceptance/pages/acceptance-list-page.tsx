@@ -52,6 +52,7 @@ import {
   type Acceptance,
   type AcceptanceStatus,
 } from '../api/acceptance-api';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 
 type AuditRisk = 'green' | 'yellow' | 'red';
 type ViewMode = 'list' | 'table';
@@ -626,7 +627,7 @@ export function AcceptanceListPage() {
     <PageShell>
       <PageHeader
         title={t('acceptance.title')}
-        icon={ShieldCheck}
+        icon={getEntityIcon('acceptance').icon}
         iconColor="text-accent-green"
         metrics={[
           { id: 'total', label: t('acceptance.title'), value: meta?.total ?? 0 },

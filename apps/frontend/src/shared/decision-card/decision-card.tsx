@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   TrendingUp,
   User,
+  UserCheck,
   X,
   XCircle,
 } from 'lucide-react';
@@ -845,7 +846,8 @@ function buildWorkflowDefSlots(decision: Decision, t: TFunc): DecisionSlots {
                       : 'border-border bg-content-bg-secondary text-content-text-secondary',
                   )}
                 >
-                  {s.type === 'human-confirm' ? <ShieldCheck className="mr-0.5 inline size-3" /> : null}
+                  {/* human-confirm 步骤徽章：与 workflow 人工确认节点同口径=UserCheck（裁决见 entity-icons.tsx） */}
+                  {s.type === 'human-confirm' ? <UserCheck className="mr-0.5 inline size-3" /> : null}
                   {s.title || s.id}
                 </span>
               </span>

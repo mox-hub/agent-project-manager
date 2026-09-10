@@ -6,7 +6,6 @@ import {
   Param,
   Query,
   UseGuards,
-  ForbiddenException,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -14,12 +13,12 @@ import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
-  ApiResponse,
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
 import { PrismaService } from '../../../../core/database/prisma.service';
+import { IntegrationService } from '../../integration.service';
 import { LinearSyncService, type SyncSummary } from './linear-sync.service';
 import { LinearApiError, LinearSDKService } from './linear-sdk.service';
 import {
@@ -43,30 +42,8 @@ export class LinearController {
     private readonly sync: LinearSyncService,
     private readonly prisma: PrismaService,
     private readonly sdk: LinearSDKService,
+    private readonly integrationService: IntegrationService,
   ) {}
-
-  private async assertIntegrationAccess(integrationId: string, userId: string) {
-    const ic = await this.prisma.integrationConfig.findUnique({
-      where: { id: integrationId },
-    });
-    if (!ic) {
-      throw new NotFoundException(`Integration ${integrationId} not found`);
-    }
-    if (ic.scope === 'project' && ic.projectId) {
-      const proj = await this.prisma.project.findUnique({
-        where: { id: ic.projectId },
-        include: { members: true },
-      });
-      if (!proj || !proj.members.some((m) => m.userId === userId)) {
-        throw new ForbiddenException(
-          'You do not have access to this integration',
-        );
-      }
-    } else if (ic.createdBy && ic.createdBy !== userId) {
-      // Global integrations: only the creator can access (basic check)
-      // Allow project members using global integrations via different route if needed
-    }
-  }
 
   @Get('test/:integrationId')
   @ApiOperation({ summary: 'Test connection + return viewer info' })
@@ -78,7 +55,10 @@ export class LinearController {
     @Param('integrationId') integrationId: string,
     @CurrentUser() user: { id: string },
   ) {
-    await this.assertIntegrationAccess(integrationId, user.id);
+    await this.integrationService.assertIntegrationAccess(
+      integrationId,
+      user.id,
+    );
     return this.sync.testConnection(integrationId);
   }
 
@@ -129,7 +109,10 @@ export class LinearController {
     @Param('integrationId') integrationId: string,
     @CurrentUser() user: { id: string },
   ) {
-    await this.assertIntegrationAccess(integrationId, user.id);
+    await this.integrationService.assertIntegrationAccess(
+      integrationId,
+      user.id,
+    );
     return this.sync.listRemoteProjects(integrationId);
   }
 
@@ -145,7 +128,10 @@ export class LinearController {
     @Query('projectId') projectId: string | undefined,
     @CurrentUser() user: { id: string },
   ) {
-    await this.assertIntegrationAccess(integrationId, user.id);
+    await this.integrationService.assertIntegrationAccess(
+      integrationId,
+      user.id,
+    );
     const parsedLimit = limit ? parseInt(limit, 10) || 50 : 50;
     return this.sync.getSyncLogs(integrationId, parsedLimit, projectId);
   }
@@ -159,7 +145,10 @@ export class LinearController {
     @Body() dto: LinearSyncProjectDto,
     @CurrentUser() user: { id: string },
   ) {
-    await this.assertIntegrationAccess(dto.integrationId, user.id);
+    await this.integrationService.assertIntegrationAccess(
+      dto.integrationId,
+      user.id,
+    );
     return this.sync.syncProject({
       integrationId: dto.integrationId,
       linearProjectId: dto.linearProjectId,

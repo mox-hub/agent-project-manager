@@ -9,11 +9,9 @@ import {
   type WsRequest,
 } from './helpers/ws-app';
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/core/database/prisma.service';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
 
@@ -23,8 +21,6 @@ describe('Auth (e2e)', () => {
     }).compile();
 
     app = await initTestApp(moduleFixture);
-
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
 
     ws = createIsolatedWorkspace('Auth e2e');
     wsHttp = wsRequest(app, ws.id);

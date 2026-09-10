@@ -9,15 +9,11 @@ import {
   type WsRequest,
 } from './helpers/ws-app';
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/core/database/prisma.service';
 
 describe('Iteration (e2e)', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
   let accessToken: string;
-  let userId: string;
   let projectId: string;
-  let iterationId: string;
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
 
@@ -28,8 +24,6 @@ describe('Iteration (e2e)', () => {
 
     app = await initTestApp(moduleFixture);
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
-
     ws = createIsolatedWorkspace('Iteration e2e');
     wsHttp = wsRequest(app, ws.id);
 
@@ -39,7 +33,6 @@ describe('Iteration (e2e)', () => {
       password: 'password123',
     });
     accessToken = loginRes.body.data.accessToken;
-    userId = loginRes.body.data.user.id;
 
     // Create a test project
     const projectRes = await wsHttp
@@ -82,7 +75,6 @@ describe('Iteration (e2e)', () => {
           expect(res.body.data.name).toBe('Sprint 1');
           expect(res.body.data.status).toBe('planned');
           expect(res.body.data).toHaveProperty('_count');
-          iterationId = res.body.data.id;
         });
     });
 

@@ -54,8 +54,16 @@ import {
 } from '../components/run-details-format';
 import { projectApi } from '@/modules/project/api/project-api';
 import { api } from '@/infrastructure/api-client';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
+import { TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 
-// 状态配置（服务端 8 状态全集）
+/**
+ * 状态配置（服务端 8 状态全集）。
+ * 与 status-visuals.TASK_STATUS_VISUALS 的关系：这里是「执行 run 状态」（ExecutionRunStatus，
+ * 含 pending_approval / blocked / superseded 等执行专属态），非「任务状态」，故保留本地映射；
+ * 共有态里 in_progress 用 Clock+pulse（执行=有耗时的运行）而非任务态的 Loader2（进行中的活儿），
+ * 属执行专属口径。收编到 status-visuals 需先为其扩「执行 run 状态」映射表。
+ */
 const STATUS_CONFIG: Record<
   string,
   { icon: typeof Clock; color: string; pulse?: boolean }
@@ -399,8 +407,8 @@ export function ExecutionsPage() {
     <PageShell>
       <PageHeader
         title="Execution Center"
-        icon={Activity}
-        iconColor="text-accent-purple"
+        icon={getEntityIcon('execution').icon}
+        iconColor={TONE_TEXT_CLASS[getEntityIcon('execution').tone]}
         actions={
           <HeaderActionButton
             variant="outline"

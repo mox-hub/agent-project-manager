@@ -4,7 +4,6 @@ import { PrismaService } from '../../core/database/prisma.service';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
-import * as path from 'path';
 
 const execAsync = promisify(exec);
 
@@ -91,14 +90,14 @@ export class GitToolService {
           } as any);
           resolvedPath =
             whichOutput.toString().split('\n')[0]?.trim() || gitPath;
-        } catch (error) {
+        } catch {
           // Try 'which' for Unix-like systems
           try {
             const { stdout: whichOutput } = await execAsync('which git', {
               timeout: 3000,
             } as any);
             resolvedPath = whichOutput.toString().trim() || gitPath;
-          } catch (e) {
+          } catch {
             // Keep original path
           }
         }
@@ -195,7 +194,7 @@ export class GitToolService {
     // Test if it's a valid Git executable
     try {
       await execAsync(`"${gitPath}" --version`, { timeout: 5000 } as any);
-    } catch (error) {
+    } catch {
       throw new BadRequestException('Invalid Git executable');
     }
 

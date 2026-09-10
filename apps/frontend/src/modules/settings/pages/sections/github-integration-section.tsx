@@ -4,20 +4,24 @@
  * - 列出 GitHub integration 配置
  * - 显示 PR 状态、设置连接
  */
+import { useState } from 'react';
 import { PageShell } from '@/components/ui/page-shell';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
 import { GithubPanel } from '@/modules/github/components/github-panel';
 import { GithubSetupCard } from '@/modules/github/components/github-setup-card';
+import { GithubConfigForm } from '@/modules/github/components/github-config-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Github, Activity, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export function GithubIntegrationSection() {
   const { data: integrationsResp } = useIntegrations();
   const integrations = integrationsResp?.data ?? [];
-  const githubInts = integrations.filter((i: any) => i.provider === 'github');
+  const githubInts = integrations.filter((i) => i.provider === 'github');
   const firstId = githubInts[0]?.id;
+  const [connectOpen, setConnectOpen] = useState(false);
 
   return (
     <PageShell
@@ -25,9 +29,15 @@ export function GithubIntegrationSection() {
       title="GitHub Integration"
       icon={Github}
       actions={
-        <Badge variant="outline" className="font-mono text-10">
-          V3 Stage 2
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button size="sm" className="h-7" onClick={() => setConnectOpen(true)}>
+            <Github className="mr-1 h-3.5 w-3.5" />
+            Connect GitHub
+          </Button>
+          <Badge variant="outline" className="font-mono text-10">
+            V3 Stage 2
+          </Badge>
+        </div>
       }
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -39,8 +49,14 @@ export function GithubIntegrationSection() {
                   <AlertCircle className="h-4 w-4 text-accent-yellow" />
                   尚未配置 GitHub 集成
                 </CardTitle>
-                <CardDescription>
-                  请在 <code>集成管理 → GitHub</code> 创建一个 GitHub 集成配置（PAT + Webhook Secret）
+                <CardDescription className="space-y-3">
+                  <span className="block">
+                    通过 Personal Access Token (PAT) 创建 GitHub 集成配置（可选配 Webhook Secret 以接收实时事件），凭据加密存储。
+                  </span>
+                  <Button size="sm" onClick={() => setConnectOpen(true)}>
+                    <Github className="mr-1 h-3.5 w-3.5" />
+                    立即创建 GitHub 集成
+                  </Button>
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -56,6 +72,11 @@ export function GithubIntegrationSection() {
           <Stage2SummaryCard />
         </div>
       </div>
+
+      <GithubConfigForm
+        open={connectOpen}
+        onClose={() => setConnectOpen(false)}
+      />
     </PageShell>
   );
 }

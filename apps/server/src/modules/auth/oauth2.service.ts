@@ -2,7 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '../../core/config/config.service';
 import { HttpService } from '@nestjs/axios';
 import { PrismaService } from '../../core/database/prisma.service';
-import { Prisma, OAuth2Account, OAuth2Provider, User } from '@prisma/client';
+import { Prisma, OAuth2Account, OAuth2Provider } from '@prisma/client';
 import {
   BusinessException,
   ErrorCode,

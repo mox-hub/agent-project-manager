@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
-import { Prisma, Plugin, PluginPermission } from '@prisma/client';
+import { Plugin } from '@prisma/client';
 
 @Injectable()
 export class PluginService {
@@ -103,16 +103,7 @@ export class PluginService {
     config?: any;
     enabled?: boolean;
   }) {
-    const {
-      name,
-      provider,
-      scope,
-      projectId,
-      manifest,
-      permissions,
-      config,
-      enabled = true,
-    } = createDto;
+    const { name, manifest, permissions, config, enabled = true } = createDto;
 
     // Check if plugin already exists
     const existing = await this.prisma.plugin.findFirst({

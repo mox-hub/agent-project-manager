@@ -3291,6 +3291,31 @@
     "searchPlaceholder": "Search...",
     "noMatch": "No match"
   },
+  "github": {
+    "connectDialog": {
+      "title": "Connect GitHub",
+      "desc": "Create a Personal Access Token (classic) with the repo scope:",
+      "descWebhook": "A webhook secret is required to receive push events in real time.",
+      "nameLabel": "Display name",
+      "tokenLabel": "Personal Access Token",
+      "tokenPlaceholder": "ghp_...",
+      "tokenHint": "The token is encrypted with AES-256-GCM before being stored and is never displayed again.",
+      "webhookLabel": "Webhook secret (optional)",
+      "webhookPlaceholder": "whsec_...",
+      "webhookHint": "Required for GitHub webhook events — without a secret the webhook endpoint rejects deliveries.",
+      "test": "Test",
+      "testing": "Testing…",
+      "testRequired": "Please enter a Personal Access Token first",
+      "connectedAs": "Connected as {{login}}",
+      "connectedAsWithRepo": "Connected as {{login}} · sample repo: {{repo}}",
+      "testFailed": "Connection failed",
+      "save": "Save & Connect",
+      "saving": "Saving…",
+      "saveRequired": "Personal Access Token is required",
+      "saved": "GitHub integration saved",
+      "saveFailed": "Failed to save integration"
+    }
+  },
   "integration": {
     "title": "Integrations",
     "active": "active",

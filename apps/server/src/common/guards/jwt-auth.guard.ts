@@ -80,7 +80,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return true;
   }
 
-  handleRequest(err: unknown, user: unknown, info: unknown): any {
+  handleRequest(err: unknown, user: unknown, _info: unknown): any {
     if (err || !user) {
       // Development mode without a token falls back to the mock user
       if (this.configService.nodeEnv === 'development' && !err) {

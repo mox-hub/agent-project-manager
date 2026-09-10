@@ -14,7 +14,7 @@ import {
   PauseCircle,
   Pencil,
   Play,
-  ShieldCheck,
+  UserCheck,
   XCircle,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
@@ -407,7 +407,8 @@ function RunDetailPanel({ runId }: { runId: string }) {
         {waiting ? (
           <div className="space-y-2 rounded-md border border-accent-yellow/40 bg-accent-yellow/5 p-3">
             <div className="flex items-center gap-1.5 text-xs font-medium text-accent-yellow">
-              <ShieldCheck className="size-3.5" />
+              {/* 等待人工确认提示：图标与 human-confirm 节点同口径=UserCheck（裁决见 entity-icons.tsx） */}
+              <UserCheck className="size-3.5" />
               {waiting.title || t('workflow.waitingApproval')}
             </div>
             <p className="whitespace-pre-wrap text-xs leading-relaxed">{waiting.message}</p>

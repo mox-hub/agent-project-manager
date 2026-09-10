@@ -29,7 +29,6 @@ import {
   DocumentDetailResponseDto,
 } from './dto/document-response.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 

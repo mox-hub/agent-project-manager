@@ -233,7 +233,7 @@ export class GitController {
     description:
       'Git 工具可用性（available/version/path/config/error/suggestion）',
   })
-  async checkGitTool(@CurrentUser() user: { sub: string }) {
+  async checkGitTool(@CurrentUser() _user: { sub: string }) {
     return this.gitTool.checkGitAvailability();
   }
 
@@ -241,7 +241,7 @@ export class GitController {
   @ApiOperation({ summary: '设置 Git 可执行文件路径' })
   async setGitPath(
     @Body() dto: { gitPath: string },
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() _user: { sub: string },
   ) {
     await this.gitTool.setGitPath(dto.gitPath);
   }
