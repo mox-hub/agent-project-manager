@@ -71,6 +71,46 @@ describe('IntegrationService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('assertIntegrationAccess（B5 收敛：单一访问校验实现）', () => {
+    it('should throw NotFoundException when config does not exist', async () => {
+      mockPrismaService.integrationConfig.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.assertIntegrationAccess('missing-id', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException when project-scoped config has no membership', async () => {
+      mockPrismaService.integrationConfig.findUnique.mockResolvedValue({
+        id: 'cfg-1',
+        scope: 'project',
+        projectId: 'p-1',
+      });
+      mockPrismaService.project.findUnique.mockResolvedValue({
+        id: 'p-1',
+        members: [{ userId: 'another-user' }],
+      });
+
+      await expect(
+        service.assertIntegrationAccess('cfg-1', 'user-1'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should allow global-scoped config for any authenticated user', async () => {
+      mockPrismaService.integrationConfig.findUnique.mockResolvedValue({
+        id: 'cfg-1',
+        scope: 'global',
+        projectId: null,
+      });
+
+      await expect(
+        service.assertIntegrationAccess('cfg-1', 'user-1'),
+      ).resolves.toEqual(
+        expect.objectContaining({ id: 'cfg-1', scope: 'global' }),
+      );
+    });
+  });
+
   it('createIntegrationConfig should throw when project not found', async () => {
     mockPrismaService.project.findUnique.mockResolvedValue(null);
 

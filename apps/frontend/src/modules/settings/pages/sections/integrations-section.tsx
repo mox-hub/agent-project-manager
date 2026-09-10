@@ -14,11 +14,9 @@ import {
   ChevronDown,
   RefreshCw,
   ExternalLink,
-  Settings,
   Zap,
   AlertTriangle,
   ArrowRight,
-  Globe,
   Lock,
   Webhook,
   Activity,
@@ -42,6 +40,7 @@ import type { IntegrationConfig } from '@/modules/integration/api/integration-ap
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from '@/components/ui/toast';
 import { LinearConfigForm } from '@/modules/linear/components/linear-config-form';
+import { GithubConfigForm } from '@/modules/github/components/github-config-form';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type ConnectionStatus = 'connected' | 'disconnected' | 'error' | 'pending';
@@ -529,6 +528,21 @@ export function IntegrationsSettingsSection() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [linearFormOpen, setLinearFormOpen] = useState(false);
+  const [githubFormOpen, setGithubFormOpen] = useState(false);
+
+  // Provider 动作注册表（集成接入规范 v0 §3.1 / §七#15）：有真实 Connect 流（凭据采集 →
+  // 校验 → 保存 IntegrationConfig）的 provider 在此登记；卡片渲染只消费映射，不再写
+  // `i.id === 'xxx'` 的 if-else 硬编码链。未登记的 provider 不渲染 Connect 入口。
+  const connectFlows: Record<string, () => void> = {
+    linear: () => setLinearFormOpen(true),
+    github: () => setGithubFormOpen(true),
+  };
+
+  // Provider 配置页路由：Configure 按钮跳转目标；withId = 路由需要配置实例 ID
+  const providerSettingsRoutes: Record<string, { path: string; withId: boolean }> = {
+    linear: { path: '/app/settings/integrations/linear', withId: true },
+    github: { path: '/app/settings/integrations/github', withId: false },
+  };
 
   const integrations = useMemo(() => integrationsData?.data ?? [], [integrationsData?.data]);
 
@@ -590,8 +604,6 @@ export function IntegrationsSettingsSection() {
     { value: 'communication', label: 'Communication' },
     { value: 'monitoring', label: 'Monitoring' },
   ];
-
-  const linearInstances = integrations.filter((i) => i.provider === 'linear');
 
   return (
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.integrationList}>
@@ -675,8 +687,8 @@ export function IntegrationsSettingsSection() {
                       status={i.status}
                       lastSync={i.lastSync}
                       onConnect={
-                        i.id === 'linear'
-                          ? () => setLinearFormOpen(true)
+                        connectFlows[i.id]
+                          ? () => connectFlows[i.id]()
                           : undefined
                       }
                       onDisconnect={
@@ -689,12 +701,15 @@ export function IntegrationsSettingsSection() {
                           : undefined
                       }
                       onConfigure={() => {
-                        if (i.id === 'linear') {
-                          if (linearInstances[0]) {
-                            navigate(`/app/settings/integrations/linear/${linearInstances[0].id}`);
-                          } else {
-                            setLinearFormOpen(true);
-                          }
+                        const route = providerSettingsRoutes[i.id];
+                        if (!route) return;
+                        if (config && route.withId) {
+                          navigate(`${route.path}/${config.id}`);
+                        } else if (connectFlows[i.id]) {
+                          // 尚无实例但有 Connect 流：先走创建（原 linear 行为）
+                          connectFlows[i.id]();
+                        } else {
+                          navigate(route.path);
                         }
                       }}
                     />
@@ -763,6 +778,14 @@ export function IntegrationsSettingsSection() {
         onClose={() => setLinearFormOpen(false)}
         onSuccess={(id) => {
           navigate(`/app/settings/integrations/linear/${id}`);
+        }}
+      />
+
+      <GithubConfigForm
+        open={githubFormOpen}
+        onClose={() => setGithubFormOpen(false)}
+        onSuccess={() => {
+          navigate('/app/settings/integrations/github');
         }}
       />
     </PageShell>

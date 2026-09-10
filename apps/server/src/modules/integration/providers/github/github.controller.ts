@@ -8,7 +8,7 @@ import {
   UseGuards,
   Req,
   BadRequestException,
-  NotFoundException,
+  UnauthorizedException,
   Headers,
   Logger,
 } from '@nestjs/common';
@@ -27,9 +27,10 @@ import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { PrismaService } from '../../../../core/database/prisma.service';
 import { MessageBusService } from '../../../../core/message-bus/message-bus.service';
 import { EncryptionService } from '../../../../core/crypto/encryption.service';
+import { IntegrationService } from '../../integration.service';
 import { GitHubSyncService } from './github-sync.service';
 import { GitHubSDKService } from './github-sdk.service';
-import { GitHubClient, GitHubApiError } from './github-client';
+import { GitHubApiError } from './github-client';
 import {
   GitHubCreatePrResponseDto,
   GitHubPullRequestDto,
@@ -61,7 +62,8 @@ class TestInlineDto {
 /**
  * GitHub Controller
  * - 大部分端点需要登录（read 操作）
- * - webhook 端点（POST /webhook）公开访问，靠 HMAC 签名校验
+ * - test-inline 用未保存凭据试连（Connect 流校验步骤），同样受 JWT 保护（规范 §2.5 R1 / D7）
+ * - webhook 端点（POST /webhook）公开访问，靠 HMAC 签名校验；未配置 secret 一律拒绝（§2.5 R2 / D8）
  */
 @ApiTags('Integration / GitHub')
 @Controller('integrations/github')
@@ -74,10 +76,13 @@ export class GitHubController {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
     private readonly encryption: EncryptionService,
+    private readonly integrationService: IntegrationService,
   ) {}
 
-  // ========== 公开端点：测试连接 (代理到集成内部) ==========
+  // ========== 受保护端点：未保存凭据试连（Connect 流校验步骤） ==========
   @Post('test-inline')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Test github connection with raw token' })
   @ApiStandardErrors()
   @ApiOkResponse({
@@ -146,7 +151,7 @@ export class GitHubController {
     @Param('integrationId') integrationId: string,
     @Req() req: Request,
   ) {
-    await this.assertIntegrationAccess(
+    await this.integrationService.assertIntegrationAccess(
       integrationId,
       (req.user as { id: string }).id,
     );
@@ -168,7 +173,7 @@ export class GitHubController {
     @Query('limit') limit: string | undefined,
     @Req() req: Request,
   ) {
-    await this.assertIntegrationAccess(
+    await this.integrationService.assertIntegrationAccess(
       integrationId,
       (req.user as { id: string }).id,
     );
@@ -192,7 +197,7 @@ export class GitHubController {
     @Query('state') state: 'open' | 'closed' | 'all' = 'open',
     @Req() req: Request,
   ) {
-    await this.assertIntegrationAccess(
+    await this.integrationService.assertIntegrationAccess(
       integrationId,
       (req.user as { id: string }).id,
     );
@@ -232,7 +237,7 @@ export class GitHubController {
     },
     @Req() req: Request,
   ) {
-    await this.assertIntegrationAccess(
+    await this.integrationService.assertIntegrationAccess(
       integrationId,
       (req.user as { id: string }).id,
     );
@@ -265,7 +270,7 @@ export class GitHubController {
     @Body() body: { repo: string; number: number },
     @Req() req: Request,
   ) {
-    await this.assertIntegrationAccess(
+    await this.integrationService.assertIntegrationAccess(
       integrationId,
       (req.user as { id: string }).id,
     );
@@ -297,20 +302,20 @@ export class GitHubController {
       },
     });
 
-    // 2. 校验签名（如果有 webhook secret）
-    const valid = await this.verifySignature(rawBody, signature);
-    if (!valid) {
+    // 2. 校验签名（无配置 / 未配置 secret / 签名不匹配一律拒绝，§2.5 R2）
+    const verdict = await this.verifyWebhookSignature(rawBody, signature);
+    if (!verdict.ok) {
       this.logger.warn(
-        `GitHub webhook signature mismatch (event=${event} delivery=${deliveryId})`,
+        `GitHub webhook rejected (event=${event} delivery=${deliveryId}): ${verdict.reason}`,
       );
       await this.prisma.webhookEventLog.update({
         where: { id: eventRecord.id },
         data: {
           processed: false,
-          errorMessage: 'Invalid signature',
+          errorMessage: verdict.reason,
         },
       });
-      throw new BadRequestException('Invalid webhook signature');
+      throw new UnauthorizedException(verdict.reason);
     }
 
     // 3. 分发事件
@@ -349,25 +354,6 @@ export class GitHubController {
 
   // ============= 私有 =============
 
-  private async assertIntegrationAccess(integrationId: string, userId: string) {
-    const ic = await this.prisma.integrationConfig.findUnique({
-      where: { id: integrationId },
-    });
-    if (!ic)
-      throw new NotFoundException(`Integration ${integrationId} not found`);
-    if (ic.scope === 'project' && ic.projectId) {
-      const proj = await this.prisma.project.findUnique({
-        where: { id: ic.projectId },
-        include: { members: true },
-      });
-      if (!proj || !proj.members.some((m) => m.userId === userId)) {
-        throw new BadRequestException(
-          'You do not have access to this integration',
-        );
-      }
-    }
-  }
-
   /**
    * 获取 raw body (Express 的 req.body 在被 JSON parse 后无法再用原始字节校验签名)
    * NestJS 默认使用 body-parser；如果配置了 rawBody 选项，可以从 req.rawBody 读取。
@@ -389,17 +375,23 @@ export class GitHubController {
     return Buffer.from('', 'utf8');
   }
 
-  private async verifySignature(
+  /**
+   * Webhook 签名校验（规范 §2.5 R2 / D8）：
+   * - 无任何 enabled github 配置 → 拒绝（webhook 不开放）
+   * - 有配置但未配置 webhook secret → 一律拒绝（绝不因"带任意 signature"放行）
+   * - 已配置 secret → HMAC-SHA256 必须匹配其一
+   * @returns 校验结果与拒绝原因（写入 WebhookEventLog 审计）
+   */
+  private async verifyWebhookSignature(
     rawBody: Buffer,
     signature: string | undefined,
-  ): Promise<boolean> {
+  ): Promise<{ ok: boolean; reason: string | null }> {
     // 查找任一 enabled github integration 上的 webhook secret
     const configs = await this.prisma.integrationConfig.findMany({
       where: { provider: 'github', enabled: true },
     });
     if (configs.length === 0) {
-      // 没有任何 github integration 配置 → 视为不开放 webhook
-      return signature === undefined;
+      return { ok: false, reason: 'No enabled GitHub integration config' };
     }
     const expectedSecrets: string[] = [];
     for (const cfg of configs) {
@@ -411,20 +403,20 @@ export class GitHubController {
       }
     }
     if (expectedSecrets.length === 0) {
-      // 没 secret 配置：只要任意 signature 通过（或者没有 signature 也接受，简单 demo）
-      // 这里我们保守：必须提供 signature 才放行
-      return signature !== undefined;
+      // 未配置 secret 的配置不该收 webhook：一律拒绝
+      return { ok: false, reason: 'No webhook secret configured' };
     }
-    if (!signature) return false;
+    if (!signature) return { ok: false, reason: 'Missing signature' };
     for (const secret of expectedSecrets) {
       const hmac = crypto
         .createHmac('sha256', secret)
         .update(rawBody)
         .digest('hex');
       const expected = `sha256=${hmac}`;
-      if (this.safeEqual(expected, signature)) return true;
+      if (this.safeEqual(expected, signature))
+        return { ok: true, reason: null };
     }
-    return false;
+    return { ok: false, reason: 'Invalid signature' };
   }
 
   private decryptSecretFromConfig(configJson: unknown): string | null {

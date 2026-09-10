@@ -3291,6 +3291,31 @@
     "searchPlaceholder": "搜索...",
     "noMatch": "无匹配项"
   },
+  "github": {
+    "connectDialog": {
+      "title": "连接 GitHub",
+      "desc": "创建具备 repo 权限的 Personal Access Token（classic）：",
+      "descWebhook": "要实时接收 push 事件，需配置 webhook secret。",
+      "nameLabel": "显示名称",
+      "tokenLabel": "Personal Access Token",
+      "tokenPlaceholder": "ghp_...",
+      "tokenHint": "令牌存储前经 AES-256-GCM 加密，之后不再展示。",
+      "webhookLabel": "Webhook secret（可选）",
+      "webhookPlaceholder": "whsec_...",
+      "webhookHint": "GitHub webhook 事件必需——未配置 secret 时 webhook 端点将拒绝投递。",
+      "test": "测试",
+      "testing": "测试中…",
+      "testRequired": "请先填写 Personal Access Token",
+      "connectedAs": "已连接为 {{login}}",
+      "connectedAsWithRepo": "已连接为 {{login}} · 示例仓库：{{repo}}",
+      "testFailed": "连接失败",
+      "save": "保存并连接",
+      "saving": "保存中…",
+      "saveRequired": "Personal Access Token 为必填项",
+      "saved": "GitHub 集成已保存",
+      "saveFailed": "保存集成失败"
+    }
+  },
   "integration": {
     "title": "集成",
     "active": "活跃",

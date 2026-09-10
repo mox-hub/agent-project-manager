@@ -45174,6 +45174,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "Test github connection with raw token",
         "tags": [
           "Integration / GitHub"
