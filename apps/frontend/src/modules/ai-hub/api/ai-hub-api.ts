@@ -89,26 +89,6 @@ export interface ConversationListResponse {
   };
 }
 
-export interface AIWorkflow {
-  id: string;
-  key: string;
-  name: string;
-  description?: string | null;
-  version: number;
-}
-
-export interface RunWorkflowRequest {
-  projectId?: string;
-  issueId?: string;
-  parameters?: Record<string, any>;
-  triggerType?: string;
-}
-
-export interface RunWorkflowResponse {
-  workflowRunId: string;
-  status: string;
-}
-
 export interface AIModel {
   id: string;
   name: string;
@@ -314,18 +294,6 @@ export const aiHubApi = {
 
   getConversation: (id: string) =>
     api.get<AIConversation>(`/ai/conversations/${id}`),
-
-  // ─── Workflow APIs ────────────────────────────────────────────
-
-  getWorkflows: () => api.get<AIWorkflow[]>('/ai/workflows'),
-
-  getWorkflow: (id: string) => api.get<AIWorkflow>(`/ai/workflows/${id}`),
-
-  runWorkflow: (id: string, data: RunWorkflowRequest) =>
-    api.post<RunWorkflowResponse>(`/ai/workflows/${id}/run`, data),
-
-  getWorkflowRuns: (params?: any) =>
-    api.get('/ai/workflow-runs', params),
 
   // ─── Model & Usage APIs ───────────────────────────────────────
 

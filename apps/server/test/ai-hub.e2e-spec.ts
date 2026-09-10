@@ -56,23 +56,8 @@ describe('AI Hub (e2e, local-only paths)', () => {
     });
   });
 
-  describe('GET /_api/ai/workflows', () => {
-    it('should list workflows', () => {
-      return wsHttp
-        .get('/_api/ai/workflows')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
-    });
-  });
-
-  describe('GET /_api/ai/workflow-runs', () => {
-    it('should list workflow runs', () => {
-      return wsHttp
-        .get('/_api/ai/workflow-runs')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
-    });
-  });
+  // workflow 定义/运行面已随 CAP-A-11 迁出 ai-hub，落到独立 workflow 模块
+  // （/_api/workflows*），用例见同目录 workflow.e2e-spec.ts
 
   describe('POST /_api/ai/providers', () => {
     it('should create provider config', () => {
