@@ -19,6 +19,7 @@ export const PROPOSAL_KINDS = [
   'spend',
   'clarify',
   'gate',
+  'workflow_def',
 ] as const;
 
 export class CreateProposalDto {
@@ -277,6 +278,37 @@ export class ClarifyProposalPayloadDto {
   })
   @IsArray()
   choices: Array<Record<string, unknown>>;
+}
+
+/** workflow_def 提案 payload（CAP-A-11：AI 代写 definition → 人批准 → 落库） */
+export class WorkflowDefProposalPayloadDto {
+  @ApiProperty({
+    description: 'create=新建定义；update=按 key 升版（version+1）',
+    enum: ['create', 'update'],
+  })
+  @IsIn(['create', 'update'])
+  mode: 'create' | 'update';
+
+  @ApiProperty({ description: '工作流键（唯一，kebab-case）' })
+  @IsString()
+  key: string;
+
+  @ApiProperty({ description: '名称' })
+  @IsString()
+  name: string;
+
+  @ApiPropertyOptional({ description: '描述' })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
+    description: 'definition 文法 v1（步骤数组，见 workflow.definition.ts）',
+    type: Object,
+    additionalProperties: true,
+  })
+  @IsObject()
+  definition: Record<string, unknown>;
 }
 
 export class ResolveProposalResponseDto {

@@ -47,7 +47,14 @@ type AcceptanceWithRefs = Prisma.AcceptanceGetPayload<{
 const MAX_PULL = 200;
 
 /** 建议类提案 kind（与 DecisionProposal.kind 对齐） */
-const PROPOSAL_KINDS = ['plan', 'assignment', 'resolution', 'spend', 'clarify'];
+const PROPOSAL_KINDS = [
+  'plan',
+  'assignment',
+  'resolution',
+  'spend',
+  'clarify',
+  'workflow_def',
+];
 
 export interface DecisionFilter {
   projectId?: string;

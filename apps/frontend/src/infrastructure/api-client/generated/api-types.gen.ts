@@ -3162,91 +3162,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/ai/workflows": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get available workflows */
-        get: operations["AiHubController_getWorkflows"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/ai/workflows/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get workflow by ID */
-        get: operations["AiHubController_getWorkflow"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/ai/workflows/{id}/run": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Run workflow */
-        post: operations["AiHubController_runWorkflow"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/ai/workflow-runs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get workflow runs */
-        get: operations["AiHubController_getWorkflowRuns"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/ai/workflow-runs/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get workflow run by ID */
-        get: operations["AiHubController_getWorkflowRun"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/_api/ai/usage": {
         parameters: {
             query?: never;
@@ -5163,6 +5078,108 @@ export interface paths {
         put?: never;
         /** 标记工作区最近打开（前端切换时调用） */
         post: operations["WorkspaceController_activate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workflows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 工作流定义列表 */
+        get: operations["WorkflowController_getWorkflows"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workflows/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 工作流定义详情 */
+        get: operations["WorkflowController_getWorkflow"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workflows/{id}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 触发工作流运行（异步执行） */
+        post: operations["WorkflowController_triggerRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workflow-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 工作流运行分页列表 */
+        get: operations["WorkflowController_getWorkflowRuns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workflow-runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 工作流运行详情（含步骤状态） */
+        get: operations["WorkflowController_getRun"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workflow-runs/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 恢复被人工确认暂停的工作流运行 */
+        post: operations["WorkflowController_resumeRun"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8918,7 +8935,7 @@ export interface components {
              * @description 提案类型
              * @enum {string}
              */
-            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate";
+            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def";
             /** @description 决策陈述（一句话问句） */
             title: string;
             /** @description 提案数据（结构随 kind 而定，见 docs/roadmap/decision-cards-roadmap.md） */
@@ -8947,7 +8964,7 @@ export interface components {
              * @description 提案类型
              * @enum {string}
              */
-            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate";
+            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def";
             projectId?: string | null;
             issueId?: string | null;
             /** @description 决策陈述 */
@@ -10817,117 +10834,6 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
-        WorkflowSummaryDto: {
-            id: string;
-            /** @description 工作流键（唯一） */
-            key: string;
-            name: string;
-            /** @description 描述 */
-            description?: string | null;
-            /** @description 版本号 */
-            version: number;
-        };
-        WorkflowDetailDto: {
-            id: string;
-            key: string;
-            name: string;
-            /** @description 描述 */
-            description?: string | null;
-            /** @description 工作流定义 */
-            definition: {
-                [key: string]: unknown;
-            };
-            /** @description 创建人 ID */
-            createdBy?: string | null;
-            /** @description 版本号 */
-            version: number;
-            /** @description 创建时间（ISO） */
-            createdAt: string;
-            /** @description 更新时间（ISO） */
-            updatedAt: string;
-        };
-        RunWorkflowDto: {
-            /**
-             * @description Project ID for workflow context
-             * @example project-123
-             */
-            projectId?: string;
-            /**
-             * @description Task ID for workflow context
-             * @example task-123
-             */
-            issueId?: string;
-            /**
-             * @description Workflow parameters
-             * @example {
-             *       "key": "value"
-             *     }
-             */
-            parameters?: {
-                [key: string]: unknown;
-            };
-            /**
-             * @description Workflow trigger type
-             * @example manual
-             */
-            triggerType?: string;
-        };
-        RunWorkflowResponseDto: {
-            /** @description 工作流运行 ID */
-            workflowRunId: string;
-            /** @description 运行状态（创建后初始 pending） */
-            status: string;
-        };
-        WorkflowRunDto: {
-            id: string;
-            /** @description 工作流 ID */
-            workflowId: string;
-            /** @description 项目 ID */
-            projectId?: string | null;
-            /** @description 任务 ID */
-            issueId?: string | null;
-            /** @description 触发类型 */
-            triggerType: string;
-            /** @description 运行状态 */
-            status: string;
-            /** @description 输入 */
-            input?: {
-                [key: string]: unknown;
-            } | null;
-            /** @description 输出 */
-            output?: {
-                [key: string]: unknown;
-            } | null;
-            /** @description 步骤状态 */
-            stepsState?: {
-                [key: string]: unknown;
-            } | null;
-            /** @description 开始时间（ISO） */
-            startedAt?: string | null;
-            /** @description 结束时间（ISO） */
-            finishedAt?: string | null;
-            /** @description 创建人 ID */
-            createdBy?: string | null;
-            /** @description 创建时间（ISO） */
-            createdAt: string;
-            /** @description 更新时间（ISO） */
-            updatedAt: string;
-            /** @description 所属工作流摘要 { id, key, name } */
-            workflow?: {
-                [key: string]: unknown;
-            };
-        };
-        WorkflowRunsListResponseDto: {
-            /** @description 运行列表 */
-            data: components["schemas"]["WorkflowRunDto"][];
-            /** @description 分页元信息 */
-            meta?: {
-                page: number;
-                pageSize: number;
-                total: number;
-                totalPages: number;
-            };
-        };
         UsageByModelDto: {
             /** @description 模型名 */
             modelName: string;
@@ -12639,6 +12545,139 @@ export interface components {
             name: string;
             /** @description 工作区数据库文件路径 */
             path: string;
+        };
+        WorkflowSummaryDto: {
+            id: string;
+            /** @description 工作流键（唯一） */
+            key: string;
+            name: string;
+            /** @description 描述 */
+            description?: string | null;
+            /** @description 版本号 */
+            version: number;
+        };
+        WorkflowDetailDto: {
+            id: string;
+            /** @description 工作流键（唯一） */
+            key: string;
+            name: string;
+            /** @description 描述 */
+            description?: string | null;
+            /** @description 版本号 */
+            version: number;
+            /** @description 工作流定义文法（workflow.definition.ts） */
+            definition: {
+                [key: string]: unknown;
+            };
+            createdBy?: string | null;
+            createdAt: string;
+            updatedAt: string;
+        };
+        TriggerWorkflowDto: {
+            /** @description 项目 ID（可选上下文） */
+            projectId?: string;
+            /** @description 工单 ID（可选上下文） */
+            issueId?: string;
+            /** @description workflow 入参（插值上下文 {input.*} 的来源） */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            /**
+             * @description 触发方式
+             * @example manual
+             */
+            triggerType?: string;
+        };
+        WorkflowRunTriggerResponseDto: {
+            /** @description 工作流运行 ID */
+            workflowRunId: string;
+            /** @description 运行状态（pending/running/suspended/succeeded/failed/cancelled） */
+            status: string;
+        };
+        WorkflowRunDto: {
+            id: string;
+            /** @description 工作流定义 ID */
+            workflowId: string;
+            projectId?: string | null;
+            issueId?: string | null;
+            /** @description 触发类型 */
+            triggerType: string;
+            /** @description 运行状态 */
+            status: string;
+            /** @description 输入 */
+            input?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 输出 */
+            output?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 步骤状态快照（含 engineRunId 与各步骤结果） */
+            stepsState?: {
+                [key: string]: unknown;
+            } | null;
+            startedAt?: string | null;
+            finishedAt?: string | null;
+            createdBy?: string | null;
+            createdAt: string;
+            updatedAt: string;
+            /** @description 所属工作流摘要 { id, key, name } */
+            workflow?: {
+                [key: string]: unknown;
+            };
+        };
+        WorkflowRunsListResponseDto: {
+            /** @description 运行列表 */
+            data: components["schemas"]["WorkflowRunDto"][];
+            /** @description 分页元信息 */
+            meta?: {
+                page: number;
+                pageSize: number;
+                total: number;
+                totalPages: number;
+            };
+        };
+        WorkflowRunDetailResponseDto: {
+            id: string;
+            /** @description 工作流定义 ID */
+            workflowId: string;
+            projectId?: string | null;
+            issueId?: string | null;
+            /** @description 触发类型 */
+            triggerType: string;
+            /** @description 运行状态 */
+            status: string;
+            /** @description 输入 */
+            input?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 输出 */
+            output?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 步骤状态快照（含 engineRunId 与各步骤结果） */
+            stepsState?: {
+                [key: string]: unknown;
+            } | null;
+            startedAt?: string | null;
+            finishedAt?: string | null;
+            createdBy?: string | null;
+            createdAt: string;
+            updatedAt: string;
+            /** @description 所属工作流摘要 { id, key, name } */
+            workflow?: {
+                [key: string]: unknown;
+            };
+            /** @description status=suspended 时的人工确认待办（步骤 id / 标题 / 待确认信息） */
+            waitingApproval?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        ResumeWorkflowDto: {
+            /** @description 恢复数据（human-confirm 步骤的确认结果，如 { approved: true, note: "..." }） */
+            resumeData: {
+                [key: string]: unknown;
+            };
         };
         IntegrationConfigResponseDto: {
             id: string;
@@ -29058,410 +29097,6 @@ export interface operations {
             };
         };
     };
-    AiHubController_getWorkflows: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 工作流列表（id/key/name/description/version） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkflowSummaryDto"][];
-                };
-            };
-            /** @description 请求参数错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 资源不存在 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-        };
-    };
-    AiHubController_getWorkflow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Workflow ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 工作流详情（含 definition） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkflowDetailDto"];
-                };
-            };
-            /** @description 请求参数错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /**
-             * @description 资源不存在
-             *
-             *     Workflow not found
-             */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-        };
-    };
-    AiHubController_runWorkflow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Workflow ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RunWorkflowDto"];
-            };
-        };
-        responses: {
-            /** @description 运行已创建（异步执行，初始 pending） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RunWorkflowResponseDto"];
-                };
-            };
-            /** @description 请求参数错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 资源不存在 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-        };
-    };
-    AiHubController_getWorkflowRuns: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 运行分页列表（{ data, meta }） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkflowRunsListResponseDto"];
-                };
-            };
-            /** @description 请求参数错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 资源不存在 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-        };
-    };
-    AiHubController_getWorkflowRun: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Workflow run ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 未实现占位返回 { id, message } */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description 运行 ID */
-                        id: string;
-                        /** @example Not implemented yet */
-                        message: string;
-                    };
-                };
-            };
-            /** @description 请求参数错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 资源不存在 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description Not implemented yet */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AiHubController_getUsage: {
         parameters: {
             query?: {
@@ -38923,6 +38558,484 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkspaceRecordResponseDto"];
+                };
+            };
+        };
+    };
+    WorkflowController_getWorkflows: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 工作流列表（id/key/name/description/version） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowSummaryDto"][];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    WorkflowController_getWorkflow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Workflow ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 工作流详情（含 definition 文法与步骤清单） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowDetailDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    WorkflowController_triggerRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Workflow ID（id 或 key） */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TriggerWorkflowDto"];
+            };
+        };
+        responses: {
+            /** @description 运行已创建（异步执行） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRunTriggerResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    WorkflowController_getWorkflowRuns: {
+        parameters: {
+            query?: {
+                /** @description 按 workflow 定义 id 过滤 */
+                workflowId?: string;
+                projectId?: string;
+                issueId?: string;
+                status?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 运行分页列表（{ data, meta }） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRunsListResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    WorkflowController_getRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Workflow run ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 运行详情（status=waiting_approval 时含待确认步骤信息） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRunDetailResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    WorkflowController_resumeRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Workflow run ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResumeWorkflowDto"];
+            };
+        };
+        responses: {
+            /** @description 恢复已受理（异步继续执行） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRunTriggerResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
                 };
             };
         };

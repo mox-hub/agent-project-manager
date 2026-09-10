@@ -58,6 +58,8 @@ import { BugDetailPage } from '@/modules/issue/pages/bug-detail-page';
 import { AcceptanceDetailPage } from '@/modules/acceptance/pages/acceptance-detail-page';
 import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-page';
 import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
+import { WorkflowListPage } from '@/modules/workflow/pages/workflow-list-page';
+import { WorkflowDetailPage } from '@/modules/workflow/pages/workflow-detail-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
 import { SearchPage } from '@/modules/search/pages/search-page';
 
@@ -298,6 +300,16 @@ export const router = createBrowserRouter([
       {
         path: 'executions',
         element: <ExecutionsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'workflows',
+        element: <WorkflowListPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'workflows/:id',
+        element: <WorkflowDetailPage />,
         errorElement: <ErrorPage />,
       },
       {

@@ -1,0 +1,264 @@
+/**
+ * Workflow 详情页（CAP-A-11 基座）——定义步骤时间线 + run 历史 + run 详情。
+ * suspended 的 run 显示人工确认卡（批准/拒绝 + 备注），提交即 resume。
+ * 轮询兜底（suspended/running 时 5s）+ socket 推送失效双通道。
+ */
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  CircleDashed,
+  Clock,
+  GitBranch,
+  PauseCircle,
+  ShieldCheck,
+  Sparkles,
+  XCircle,
+} from 'lucide-react';
+import { PageShell } from '@/components/ui/page-shell';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { StatusPill } from '@/components/ui/status-pill';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import {
+  useResumeWorkflow,
+  useWorkflow,
+  useWorkflowEvents,
+  useWorkflowRun,
+  useWorkflowRuns,
+} from '../hooks/use-workflows';
+import type { WorkflowRun } from '../api/workflow-api';
+
+const RUN_STATUS_META: Record<string, { icon: typeof Clock; tone: string; labelKey: string }> = {
+  running: { icon: CircleDashed, tone: 'text-accent-blue', labelKey: 'workflow.status.running' },
+  succeeded: { icon: CheckCircle2, tone: 'text-accent-green', labelKey: 'workflow.status.succeeded' },
+  failed: { icon: XCircle, tone: 'text-accent-red', labelKey: 'workflow.status.failed' },
+  suspended: { icon: PauseCircle, tone: 'text-accent-yellow', labelKey: 'workflow.status.suspended' },
+  cancelled: { icon: XCircle, tone: 'text-muted-foreground', labelKey: 'workflow.status.cancelled' },
+};
+
+export function WorkflowDetailPage() {
+  const { t } = useTranslation();
+  const { id = '' } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { data: workflow, isLoading } = useWorkflow(id);
+  const { data: runsPage, isLoading: runsLoading } = useWorkflowRuns({});
+  useWorkflowEvents();
+
+  const urlRunId = searchParams.get('runId');
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const activeRunId = selectedRunId ?? urlRunId;
+
+  const steps =
+    (workflow?.stepsSummary as Array<{ id: string; type: string; title?: string }> | undefined) ??
+    [];
+
+  return (
+    <PageShell>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon-sm" asChild>
+          <Link to="/app/workflows" aria-label={t('common.back')}>
+            <ArrowLeft className="size-4" />
+          </Link>
+        </Button>
+        <div className="flex min-w-0 items-center gap-2">
+          <GitBranch className="size-4 shrink-0 text-muted-foreground" />
+          <h1 className="truncate text-sm font-semibold">
+            {isLoading ? '…' : workflow?.name}
+          </h1>
+          {workflow ? (
+            <Badge variant="secondary" className="shrink-0">
+              v{workflow.version}
+            </Badge>
+          ) : null}
+        </div>
+      </div>
+
+      {isLoading || !workflow ? (
+        <Skeleton className="h-24 rounded-lg" />
+      ) : (
+        <Card>
+          <CardContent className="space-y-3 p-4">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {workflow.description || t('workflow.noDescription')}
+            </p>
+            {steps.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {steps.map((step, index) => (
+                  <span key={step.id} className="flex items-center gap-1.5">
+                    {index > 0 ? (
+                      <span className="text-muted-foreground/40">→</span>
+                    ) : null}
+                    <span
+                      className={cn(
+                        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-11',
+                        step.type === 'human-confirm'
+                          ? 'border-accent-yellow/40 bg-accent-yellow/10 text-accent-yellow'
+                          : 'border-border bg-muted/40 text-muted-foreground',
+                      )}
+                    >
+                      {step.type === 'human-confirm' ? (
+                        <ShieldCheck className="size-3" />
+                      ) : step.type === 'llm' ? (
+                        <Sparkles className="size-3" />
+                      ) : null}
+                      {step.title || step.id}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* run 历史 */}
+      <div className="space-y-2">
+        <h2 className="text-xs font-medium text-muted-foreground">{t('workflow.runs')}</h2>
+        {runsLoading ? (
+          <Skeleton className="h-16 rounded-lg" />
+        ) : !runsPage || runsPage.data.length === 0 ? (
+          <p className="py-4 text-center text-xs text-muted-foreground">
+            {t('workflow.noRuns')}
+          </p>
+        ) : (
+          <div className="space-y-1.5">
+            {runsPage.data.map((run) => (
+              <RunRow
+                key={run.id}
+                run={run}
+                active={run.id === activeRunId}
+                onClick={() => {
+                  setSelectedRunId(run.id);
+                  setSearchParams({ runId: run.id }, { replace: true });
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {activeRunId ? <RunDetailPanel runId={activeRunId} /> : null}
+    </PageShell>
+  );
+}
+
+function RunRow({
+  run,
+  active,
+  onClick,
+}: {
+  run: WorkflowRun;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const { t } = useTranslation();
+  const meta = RUN_STATUS_META[run.status] ?? RUN_STATUS_META.running;
+  const Icon = meta.icon;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors hover:bg-muted/40',
+        active ? 'border-primary/50 bg-muted/40' : 'border-border',
+      )}
+    >
+      <Icon className={cn('size-4 shrink-0', meta.tone, run.status === 'running' && 'animate-spin')} />
+      <span className="text-xs font-medium">{t(meta.labelKey)}</span>
+      <span className="ml-auto flex items-center gap-2 text-11 text-muted-foreground">
+        <Clock className="size-3" />
+        {new Date(run.createdAt).toLocaleString()}
+      </span>
+    </button>
+  );
+}
+
+function RunDetailPanel({ runId }: { runId: string }) {
+  const { t } = useTranslation();
+  const { data: run, isLoading } = useWorkflowRun(runId);
+
+  const resume = useResumeWorkflow();
+  const [note, setNote] = useState('');
+
+  if (isLoading || !run) return <Skeleton className="h-32 rounded-lg" />;
+
+  const waiting = run.waitingApproval;
+  const output = run.output as { error?: string } | null | undefined;
+
+  return (
+    <Card>
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-center justify-between">
+          <StatusPill tone="info">
+            <code className="text-11">{run.id.slice(0, 12)}…</code>
+          </StatusPill>
+          <span className="text-11 text-muted-foreground">
+            {t('workflow.triggerType')}: {run.triggerType}
+          </span>
+        </div>
+
+        {waiting ? (
+          <div className="space-y-2 rounded-md border border-accent-yellow/40 bg-accent-yellow/5 p-3">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-accent-yellow">
+              <ShieldCheck className="size-3.5" />
+              {waiting.title || t('workflow.waitingApproval')}
+            </div>
+            <p className="whitespace-pre-wrap text-xs leading-relaxed">{waiting.message}</p>
+            <Input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={t('workflow.notePlaceholder')}
+              className="h-7 text-xs"
+            />
+            <div className="flex justify-end gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                disabled={resume.isPending}
+                onClick={() =>
+                  resume.mutate(
+                    { runId, data: { resumeData: { approved: false, note } } },
+                    { onSuccess: () => setNote('') },
+                  )
+                }
+              >
+                {t('workflow.reject')}
+              </Button>
+              <Button
+                size="sm"
+                className="h-7 text-xs"
+                disabled={resume.isPending}
+                onClick={() =>
+                  resume.mutate(
+                    { runId, data: { resumeData: { approved: true, note } } },
+                    { onSuccess: () => setNote('') },
+                  )
+                }
+              >
+                <CheckCircle2 className="mr-1 size-3" />
+                {t('workflow.approve')}
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {output?.error ? (
+          <p className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">{output.error}</p>
+        ) : null}
+
+        {run.output && !output?.error ? (
+          <pre className="max-h-48 overflow-auto rounded-md bg-muted/50 p-2 text-11 leading-relaxed">
+            {JSON.stringify(run.output, null, 2)}
+          </pre>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}

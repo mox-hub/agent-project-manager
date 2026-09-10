@@ -14,6 +14,7 @@ import {
   EyeOff,
   FastForward,
   FileText,
+  GitBranch,
   GitPullRequest,
   Lightbulb,
   ListChecks,
@@ -165,6 +166,10 @@ export const KIND_ACTIONS: Record<DecisionKind, DecisionActionDef[]> = {
   ],
   gate: [
     { action: 'accept', label: 'decision.action.passGate', icon: Check },
+    { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
+  ],
+  workflow_def: [
+    { action: 'accept', label: 'decision.action.applyWorkflow', icon: Check },
     { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
   ],
 };
@@ -805,6 +810,70 @@ function PlaceholderBody({ decision }: { decision: Decision }) {
   );
 }
 
+/** workflow_def 槽位：AI 代写的 workflow 定义（CAP-A-11）——名称/描述/步骤链 + 变更模式 */
+function buildWorkflowDefSlots(decision: Decision, t: TFunc): DecisionSlots {
+  const p = (decision.payload ?? {}) as {
+    mode?: string;
+    key?: string;
+    name?: string;
+    description?: string;
+    definition?: { steps?: Array<{ id: string; type: string; title?: string }> };
+    currentVersion?: number;
+  };
+  const steps = p.definition?.steps ?? [];
+  const isUpdate = p.mode === 'update';
+  return {
+    body: (
+      <div className="space-y-2">
+        <div className="rounded-md bg-content-bg-secondary px-3 py-2 text-xs">
+          <p className="font-medium text-content-text">{p.name ?? decision.title}</p>
+          {p.description ? (
+            <p className="mt-1 leading-relaxed text-content-text-secondary">{p.description}</p>
+          ) : null}
+          {p.key ? <p className="mt-1 font-mono text-11 text-content-text-muted">{p.key}</p> : null}
+        </div>
+        {steps.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-1">
+            {steps.map((s, idx) => (
+              <span key={s.id} className="inline-flex items-center gap-1">
+                {idx > 0 ? <span className="text-content-text-muted">→</span> : null}
+                <span
+                  className={cn(
+                    'rounded-full border px-2 py-0.5 text-11',
+                    s.type === 'human-confirm'
+                      ? 'border-accent-yellow/40 bg-accent-yellow/10 text-accent-yellow'
+                      : 'border-border bg-content-bg-secondary text-content-text-secondary',
+                  )}
+                >
+                  {s.type === 'human-confirm' ? <ShieldCheck className="mr-0.5 inline size-3" /> : null}
+                  {s.title || s.id}
+                </span>
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    ),
+    impact: [
+      {
+        label: t('decision.workflow.impactMode'),
+        value: isUpdate ? t('decision.workflow.modeUpdate') : t('decision.workflow.modeCreate'),
+        icon: GitBranch,
+      },
+      ...(isUpdate && p.currentVersion
+        ? [
+            {
+              label: t('decision.workflow.impactVersion'),
+              value: `v${p.currentVersion} → v${p.currentVersion + 1}`,
+              icon: ListChecks,
+            },
+          ]
+        : []),
+    ],
+    evidence: decision.detail ? <p>{decision.detail}</p> : undefined,
+  };
+}
+
 type TFunc = (k: string, o?: Record<string, unknown>) => string;
 
 const SLOT_BUILDERS: Partial<Record<DecisionKind, (d: Decision, t: TFunc) => DecisionSlots>> = {
@@ -815,6 +884,7 @@ const SLOT_BUILDERS: Partial<Record<DecisionKind, (d: Decision, t: TFunc) => Dec
   resolution: buildResolutionSlots,
   spend: buildSpendSlots,
   gate: buildGateSlots,
+  workflow_def: buildWorkflowDefSlots,
 };
 
 export interface DecisionCardProps {

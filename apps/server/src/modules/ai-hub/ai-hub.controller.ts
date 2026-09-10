@@ -28,7 +28,6 @@ import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.ser
 import { ChatRequestDto } from './dto/chat.dto';
 import { UsageQueryDto } from './dto/usage-query.dto';
 import { ConversationQueryDto } from './dto/conversation-query.dto';
-import { RunWorkflowDto } from './dto/workflow-run.dto';
 import {
   CreateProviderConfigDto,
   UpdateProviderConfigDto,
@@ -44,11 +43,7 @@ import {
   ConversationListResponseDto,
   DeleteProviderResponseDto,
   DetectModelsResponseDto,
-  RunWorkflowResponseDto,
   UsageResponseDto,
-  WorkflowDetailDto,
-  WorkflowRunsListResponseDto,
-  WorkflowSummaryDto,
 } from './dto/ai-hub-response.dto';
 
 @ApiTags('AI Hub')
@@ -101,78 +96,9 @@ export class AiHubController {
     return this.aiHubService.getConversation(id, req.user.id);
   }
 
-  @Get('workflows')
-  @ApiOperation({ summary: 'Get available workflows' })
-  @ApiOkResponse({
-    type: [WorkflowSummaryDto],
-    description: '工作流列表（id/key/name/description/version）',
-  })
-  @ApiStandardErrors()
-  async getWorkflows() {
-    return this.aiHubService.getWorkflows();
-  }
-
-  @Get('workflows/:id')
-  @ApiOperation({ summary: 'Get workflow by ID' })
-  @ApiParam({ name: 'id', description: 'Workflow ID' })
-  @ApiOkResponse({
-    type: WorkflowDetailDto,
-    description: '工作流详情（含 definition）',
-  })
-  @ApiResponse({ status: 404, description: 'Workflow not found' })
-  @ApiStandardErrors()
-  async getWorkflow(@Param('id') id: string) {
-    return this.aiHubService.getWorkflow(id);
-  }
-
-  @Post('workflows/:id/run')
-  @ApiOperation({ summary: 'Run workflow' })
-  @ApiParam({ name: 'id', description: 'Workflow ID' })
-  @ApiOkResponse({
-    type: RunWorkflowResponseDto,
-    description: '运行已创建（异步执行，初始 pending）',
-  })
-  @ApiStandardErrors()
-  async runWorkflow(
-    @Param('id') id: string,
-    @Body() runDto: RunWorkflowDto,
-    @Request() req: any,
-  ) {
-    return this.aiHubService.runWorkflow(id, runDto, req.user.id);
-  }
-
-  @Get('workflow-runs')
-  @ApiOperation({ summary: 'Get workflow runs' })
-  @ApiOkResponse({
-    type: WorkflowRunsListResponseDto,
-    description: '运行分页列表（{ data, meta }）',
-  })
-  @ApiStandardErrors()
-  async getWorkflowRuns(@Query() query: any) {
-    return this.aiHubService.getWorkflowRuns(query);
-  }
-
-  @Get('workflow-runs/:id')
-  @ApiOperation({ summary: 'Get workflow run by ID' })
-  @ApiParam({ name: 'id', description: 'Workflow run ID' })
-  // TODO 端点：如实声明现状（返回 { id, message }）
-  @ApiOkResponse({
-    description: '未实现占位返回 { id, message }',
-    schema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', description: '运行 ID' },
-        message: { type: 'string', example: 'Not implemented yet' },
-      },
-      required: ['id', 'message'],
-    },
-  })
-  @ApiResponse({ status: 501, description: 'Not implemented yet' })
-  @ApiStandardErrors()
-  async getWorkflowRun(@Param('id') id: string) {
-    // TODO: Implement getWorkflowRun detail
-    return { id, message: 'Not implemented yet' };
-  }
+  // 工作流端点已迁出至 modules/workflow（CAP-A-11 Mastra 引擎基座）：
+  // GET /workflows、GET /workflows/:id、POST /workflows/:id/run、
+  // GET /workflow-runs、GET /workflow-runs/:id、POST /workflow-runs/:id/resume
 
   @Get('usage')
   @ApiOperation({ summary: 'AI 用量统计（总量/按模型/按日）' })
