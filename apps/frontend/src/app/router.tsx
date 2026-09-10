@@ -204,6 +204,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
+        handle: { selfScroll: true },
         element: <ProjectListPage />,
         errorElement: <ErrorPage />,
       },
@@ -213,6 +214,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
+            handle: { selfScroll: true },
             element: <ProjectListPage />,
             errorElement: <ErrorPage />,
           },
@@ -321,6 +323,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'issues',
+        handle: { selfScroll: true },
         element: <TasksPage />,
         errorElement: <ErrorPage />,
       },
@@ -343,6 +346,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'bugs',
+        handle: { selfScroll: true },
         element: <BugsPage />,
         errorElement: <ErrorPage />,
       },
@@ -363,7 +367,8 @@ export const router = createBrowserRouter([
       },
       {
         path: 'members',
-        element: (
+        handle: { selfScroll: true },
+    element: (
           <Suspense fallback={null}>
             <MembersPage />
           </Suspense>
@@ -382,7 +387,8 @@ export const router = createBrowserRouter([
       },
       {
         path: 'teams',
-        element: (
+        handle: { selfScroll: true },
+    element: (
           <Suspense fallback={null}>
             <TeamsPage />
           </Suspense>
@@ -412,10 +418,12 @@ export const router = createBrowserRouter([
       },
       {
         path: 'help',
+        handle: { selfScroll: true },
         element: <HelpPage />,
         errorElement: <ErrorPage />,
       },
       {
+        handle: { selfScroll: true },
         path: 'decisions',
         element: (
           <Suspense fallback={null}>
@@ -425,6 +433,7 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        handle: { selfScroll: true },
         path: 'notifications',
         element: <NotificationCenterPage />,
         errorElement: <ErrorPage />,
@@ -473,6 +482,7 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <RepositoryListPage />,
+            handle: { selfScroll: true },
           },
           {
             path: ':repoId',
@@ -494,6 +504,7 @@ export const router = createBrowserRouter([
       },
       // 管理员成员管理页（AdminGuard 校验全局 admin 角色，非 admin 重定向回 /app）
       {
+        handle: { selfScroll: true },
         path: 'admin',
         element: (
           <Suspense fallback={null}>
@@ -504,10 +515,12 @@ export const router = createBrowserRouter([
       },
       {
         path: 'documents',
+        handle: { selfScroll: true },
         element: <DocumentsPage />,
         errorElement: <ErrorPage />,
       },
       {
+        handle: { selfScroll: true },
         path: 'documents/new',
         element: <DocumentNewPage />,
         errorElement: <ErrorPage />,

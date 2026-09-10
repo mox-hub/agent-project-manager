@@ -84,7 +84,9 @@ export function PageShell({
       <div className="flex min-h-0 flex-1 flex-col">
         <div
           className={cn(
-            "flex flex-col flex-1",
+            // min-h-0 与外层包装一致：flex 压缩链必须逐层贯通，否则内容高度
+            // 反向撑破视口（自管页面溢出被裁、文档流页面撑高整页滚动）
+            "flex min-h-0 flex-col flex-1",
             VARIANT_CONTAINER_CLASSES[variant],
             shouldPad && VARIANT_PADDING_CLASSES[variant],
             contentClassName,
