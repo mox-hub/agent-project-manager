@@ -297,8 +297,22 @@
         "humanConfirm": "人工确认",
         "http": "外部请求",
         "condition": "条件闸门",
+        "action": "产品动作",
         "unknown": "步骤"
       }
+    },
+    "palette": {
+      "group": {
+        "ai": "AI 能力",
+        "human": "人工环节",
+        "logic": "流程逻辑",
+        "integration": "集成",
+        "actions": "产品动作"
+      },
+      "llmDesc": "调用大模型生成文本，支持插值引用上游输出",
+      "confirmDesc": "暂停等待人工拍板，批准/拒绝后继续",
+      "conditionDesc": "条件闸门：不满足则整个流程失败",
+      "httpDesc": "调用外部 HTTP 接口"
     },
     "empty": "暂无工作流定义",
     "noDescription": "暂无描述",

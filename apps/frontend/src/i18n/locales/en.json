@@ -297,8 +297,22 @@
         "humanConfirm": "Human Confirmation",
         "http": "HTTP Request",
         "condition": "Condition Gate",
+        "action": "Product Action",
         "unknown": "Step"
       }
+    },
+    "palette": {
+      "group": {
+        "ai": "AI Capabilities",
+        "human": "Human Steps",
+        "logic": "Flow Logic",
+        "integration": "Integrations",
+        "actions": "Product Actions"
+      },
+      "llmDesc": "Call an LLM to generate text, interpolating upstream outputs",
+      "confirmDesc": "Pause for human approval, then continue on approve/reject",
+      "conditionDesc": "Condition gate: the run fails when not met",
+      "httpDesc": "Call an external HTTP API"
     },
     "empty": "No workflow definitions yet",
     "noDescription": "No description",

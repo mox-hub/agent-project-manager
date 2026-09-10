@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 工作流详情页实机反馈改造（CAP-A-12）——连线/占满屏/右侧栏/节点库/标题栏/预览小窗
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 实机验收五条反馈一次性收口：①**连线与节点形态**——自定义节点补 Handle 连接点（此前边完全不渲染的根因），smoothstep 折线+语义描边，节点升级为「图标+标题+描述行+上下接口点」（描述行按类型取 prompt/URL/message/比较式/action id 摘要，数据源从 stepsSummary 换为 definition.steps 完整字段），human-confirm 出边保留动画强调；②**画布占满**——详情页改 `PageShell overflow-hidden` 自管布局，画布 flex-1 占满剩余高度（h-72 限高解除），运行历史与 run 详情整体迁入 `RightSidebar`（SubPageToolbar 侧栏开关收放，suspended 确认卡与输出面板原样保留）；③**节点库**——新增 `WorkflowNodePalette` 分类待选组件（AI 能力/人工环节/流程逻辑/集成/产品动作五组，产品动作组展开 /workflows/actions 注册表目录，点击直接插入带 action id 的步骤），编辑模式布局=左节点库+中画布+右属性面板三栏；④**标题栏标准化**——手写返回行替换 `SubPageToolbar`（返回/面包屑/v 徽章/编辑与保存动作/侧栏开关）；⑤**预览小窗**——画布加 `MiniMap`（左下角，按步骤类型语义着色，可平移缩放）与 `Controls`（右下角缩放复位） | CAP-A-12 | workflow 模块 15/15（转换器+编辑器+页面既有用例全过）；前端 67 文件 295 用例全绿；tsc -b 0 错；设计 lint 五件套过；eslint 0 警告 | i18n workflow.palette.* 双语 12 键；GAP-T-14 持续（本地） |
+
 ### 工作流画布切片②③④（CAP-A-12）——画布编辑 + 产品动作节点（文法 v2）+ AI 草拟与模板库
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
