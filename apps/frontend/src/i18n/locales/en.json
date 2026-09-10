@@ -242,6 +242,16 @@
     "teams": "Teams",
     "office": "Office"
   },
+  "aiSlot": {
+    "badge": "AI Explain",
+    "error": "Couldn't generate an explanation",
+    "retry": "Retry",
+    "askMore": "Ask more",
+    "askDraft": "Tell me more about \"{{title}}\"?",
+    "close": "Restore original card",
+    "nextStep": "Suggested next step: ",
+    "empty": "Nothing to explain on this card yet."
+  },
   "assistant": {
     "personaName": "Zhou",
     "personaRole": "Your PM partner",

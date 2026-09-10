@@ -242,6 +242,16 @@
     "teams": "团队",
     "office": "办公室"
   },
+  "aiSlot": {
+    "badge": "AI 解释",
+    "error": "这次没能生成解释",
+    "retry": "重试",
+    "askMore": "继续追问",
+    "askDraft": "关于「{{title}}」，展开讲讲？",
+    "close": "恢复原卡片",
+    "nextStep": "建议下一步：",
+    "empty": "这张卡片暂时没有可解释的内容。"
+  },
   "assistant": {
     "personaName": "小周",
     "personaRole": "项目管理搭档",

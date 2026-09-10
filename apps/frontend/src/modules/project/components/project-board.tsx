@@ -80,6 +80,7 @@ function useProjectCardModel(): BoardCardModel<Project> {
         <Badge variant="secondary" className="text-10">{t(`project.visibility.${project.visibility}`)}</Badge>
       </>
     ),
+    dataEntity: (project) => `project:${project.id}`,
     row3: (project) => (
       <div className="space-y-2">
         {project.description ? (

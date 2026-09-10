@@ -17,26 +17,21 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
 import { FloatingActions } from '@/shared/components/floating-actions';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { AISlotLayer } from '@/shared/ai-slot/ai-slot-layer';
 import { cn } from '@/lib/utils';
 import { StatusPill } from '@/components/ui/status-pill';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import {
   FolderKanban,
-  LayoutGrid,
   HelpCircle,
-  Sun,
-  Moon,
   LayoutDashboard,
   Bell,
   GitBranch,
   DoorOpen,
-  TerminalSquare,
   Settings,
   PanelLeftOpen,
   Menu,
-  X,
-  ArrowLeftRight,
   BarChart3,
   FileText,
   BookMarked,
@@ -52,7 +47,6 @@ import {
   CheckCircle,
   ChevronDown,
   Inbox,
-  Zap,
   Search,
   Palette,
   ListTree,
@@ -630,6 +624,9 @@ export function ShellLayout() {
 
           {/* 主 AI 助手：右下角圆形按钮 + 浮窗对话（可放大） */}
           <AssistantFab />
+
+          {/* 局部侵入问答（CAP-C-07）：Ctrl/Cmd+左键卡片就地 AI 解释 */}
+          <AISlotLayer />
 
           {/* Floating Actions - bottom left corner */}
           <FloatingActions theme={mode} onToggleTheme={toggleTheme} />

@@ -518,3 +518,29 @@
     transform: none !important;
   }
 }
+
+/* CAP-C-07 AISlot 可发现性：长按 Ctrl/Cmd 500ms 高亮全部可就地解释的卡片。
+   只在根元素挂类 + 后代选择器，React 重渲染不会覆盖高亮态。 */
+.ai-slot-discovery [data-ai-entity] {
+  cursor: pointer;
+  outline: 2px solid var(--color-primary, #5e6ad2);
+  outline-offset: 1px;
+  border-radius: inherit;
+  animation: ai-slot-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ai-slot-pulse {
+  0%,
+  100% {
+    outline-color: var(--color-primary, #5e6ad2);
+  }
+  50% {
+    outline-color: color-mix(in srgb, var(--color-primary, #5e6ad2) 45%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-slot-discovery [data-ai-entity] {
+    animation: none !important;
+  }
+}

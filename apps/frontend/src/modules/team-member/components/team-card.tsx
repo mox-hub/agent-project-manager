@@ -22,7 +22,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
   const memberCount = team.memberCount ?? team._count?.members ?? 0;
 
   return (
-    <Card className="group transition-shadow hover:shadow-md">
+    <Card className="group transition-shadow hover:shadow-md" data-ai-entity={`team:${team.id}`}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex min-w-0 items-center gap-3">

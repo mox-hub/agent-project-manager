@@ -27,7 +27,7 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
   const { t } = useTranslation();
 
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card className="transition-shadow hover:shadow-md" data-ai-entity={`member:${member.id}`}>
       <CardContent className="p-3">
         <div className="flex items-start gap-3">
           <MemberCardPopover
