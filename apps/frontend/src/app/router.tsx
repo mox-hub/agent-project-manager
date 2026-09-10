@@ -311,6 +311,7 @@ export const router = createBrowserRouter([
       {
         path: 'workflows/:id',
         element: <WorkflowDetailPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -337,6 +338,7 @@ export const router = createBrowserRouter([
       {
         path: 'issues/:issueId',
         element: <IssueDetailRoute />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -347,6 +349,7 @@ export const router = createBrowserRouter([
       {
         path: 'bugs/:bugId',
         element: <BugDetailRoute />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -374,6 +377,7 @@ export const router = createBrowserRouter([
             <MemberDetailPage />
           </Suspense>
         ),
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -392,6 +396,7 @@ export const router = createBrowserRouter([
             <TeamDetailPage />
           </Suspense>
         ),
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -402,6 +407,7 @@ export const router = createBrowserRouter([
       {
         path: 'acceptance/:id',
         element: <AcceptanceDetailPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -442,6 +448,7 @@ export const router = createBrowserRouter([
       {
         path: 'integrations/linear/:integrationId',
         element: <LinearIntegrationRedirect />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -470,10 +477,12 @@ export const router = createBrowserRouter([
           {
             path: ':repoId',
             element: <RepositoryDetailPage />,
+            handle: { selfScroll: true },
           },
           {
             path: ':repoId/settings',
             element: <RepositorySettingsPage />,
+            handle: { selfScroll: true },
           },
         ],
       },
@@ -506,11 +515,13 @@ export const router = createBrowserRouter([
       {
         path: 'documents/:documentId',
         element: <DocumentViewPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
         path: 'documents/:documentId/edit',
         element: <DocumentEditPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       ...(import.meta.env.DEV

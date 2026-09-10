@@ -78,7 +78,7 @@ export function PageShell({
           metrics={metrics}
           favoriteId={favoriteId}
           aiId={aiPage}
-          className="border-content-border bg-transparent"
+          className="border-content-border"
         />
       )}
       <div className="flex min-h-0 flex-1 flex-col">

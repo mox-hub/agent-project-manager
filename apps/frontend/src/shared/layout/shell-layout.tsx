@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation, useMatches } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
@@ -293,6 +293,12 @@ export function ShellLayout() {
   // issues/playbook 为现役路由；board/tasks/roles 为历次改名遗留，兜底重定向过渡态
   const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(issues|board|tasks|milestones|profile|playbook|team|settings|roles))?$/.test(
     location.pathname,
+  );
+
+  // 详情类路由经 router handle 声明自管滚动：页面高度锁死视口，toolbar 固定、
+  // 主区/侧栏各自独立滚动，不参与 shell 层滚动（避免标题栏跟着内容滚走）
+  const routeSelfScroll = useMatches().some(
+    (m) => (m.handle as { selfScroll?: boolean } | null)?.selfScroll === true,
   );
 
   // Get current projectId from URL for ProjectDetailNav
@@ -619,10 +625,10 @@ export function ShellLayout() {
                   <ProjectContextBar projectId={currentProjectId} project={currentProject} />
                 )}
 
-                {/* Page content：项目详情路由由页面内部自管滚动（主区/右侧栏各自独立），
-                    其余页面沿用 shell 层 ScrollArea 滚动；fill 让页面至少占满视口高度
-                    （组件高度不再反向决定页面高度，flex-1 有了参照），超出自然滚动 */}
-                {isProjectDetailRoute ? (
+                {/* Page content：项目详情与带 selfScroll handle 的详情路由由页面内部
+                    自管滚动（toolbar 固定、主区/侧栏各自独立）；其余页面沿用 shell 层
+                    ScrollArea 滚动，fill 让页面至少占满视口高度 */}
+                {isProjectDetailRoute || routeSelfScroll ? (
                   <div className="flex h-full w-full flex-col overflow-hidden">
                     <ErrorBoundary fallback={<PageErrorFallback />}>
                       <Outlet />
