@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/shared/theme/theme-context';
 import { LivingNebulaBackground } from '../components/living-nebula-background';
 import { LuminousSynapseOverlay } from '../components/luminous-synapse-overlay';
-import { SquadCapsuleOrbit } from '../components/squad-capsule-orbit';
-import { ProjectVitalityCanvas } from '../components/project-vitality-canvas';
-import { TrustOrbitalLens } from '../components/trust-orbital-lens';
+import { RadialWatchDeck } from '../components/radial-watch-deck';
 import { OmniDock } from '../components/omni-dock';
 import {
   INITIAL_AGENTS,
@@ -197,42 +195,22 @@ export function AiSurfacePage() {
         </div>
       </header>
 
-      {/* 4. 空间无界主视界：左翼手表表圈半圆弧 + 中央项目生命力画布 + 右翼信度表圈半圆弧 */}
-      <main
-        className="relative z-10 flex-1 flex justify-between gap-6 px-6 py-2 mx-auto w-full"
-        style={{ maxWidth: 1680 }}
-      >
-        {/* 左翼：手表外侧半圆弧 Agent 编队导轨 */}
-        <aside className="shrink-0 hidden lg:block sticky top-20 self-start">
-          <SquadCapsuleOrbit
-            agents={agents}
-            selectedAgentId={selectedAgentId}
-            onSelectAgent={(id) => setSelectedAgentId(id === selectedAgentId ? null : id)}
-            isDark={isDark}
-          />
-        </aside>
-
-        {/* 中央主视域：项目生命力与属性全景画布 (打破规整、多维悬浮岛) */}
-        <section className="flex-1 min-w-0 pb-36">
-          <ProjectVitalityCanvas
-            artifacts={artifacts}
-            messages={messages}
-            isDark={isDark}
-            onApproveWorkstream={(key) => {
-              console.log('Workstream approved:', key);
-            }}
-          />
-        </section>
-
-        {/* 右翼：手表外侧半圆弧 信度透镜与记忆星云导轨 */}
-        <aside className="shrink-0 hidden xl:block sticky top-20 self-start">
-          <TrustOrbitalLens
-            dimensions={TRUST_DIMENSIONS}
-            memoryAtoms={MEMORY_ATOMS}
-            overallScore={overallScore}
-            isDark={isDark}
-          />
-        </aside>
+      {/* 4. 空间主视界：中间手表圆形表盘 + 左右水平环绕卡片 + 闪光接线 */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 mx-auto w-full pb-32 overflow-x-auto no-scrollbar">
+        <RadialWatchDeck
+          agents={agents}
+          selectedAgentId={selectedAgentId}
+          onSelectAgent={(id) => setSelectedAgentId(id === selectedAgentId ? null : id)}
+          dimensions={TRUST_DIMENSIONS}
+          memoryAtoms={MEMORY_ATOMS}
+          overallScore={overallScore}
+          artifacts={artifacts}
+          messages={messages}
+          isDark={isDark}
+          onApproveWorkstream={(key) => {
+            console.log('Workstream approved:', key);
+          }}
+        />
       </main>
 
       {/* 5. 悬浮全能交互坞 (Omni-Dock) */}
