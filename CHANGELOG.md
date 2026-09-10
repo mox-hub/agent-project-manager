@@ -21,6 +21,16 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 全局设计系统规范升级与双表面高密度重构（DESIGN.md v2.0 + 低饱和多色阶 + 外舒内紧 + 5 类 AI 结构卡片）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | 编写并落地 `DESIGN.md` (v2.0.0)：确立低饱和多色域灰调色彩体系（5 语义色系 4 级色阶）、外舒内紧卡片分割原则（内边距紧缩至 p-3.5，子卡片 p-2.5）、多端自适应字体（双层字阶+紧凑/舒适密度模式）、系统化动效白名单（100ms 微交互/160ms 展开/1.2s 思考脉冲）、双表面组件全量标识（[AI] / [HUMAN] / [HYBRID]）以及 7 项不统一异类组件整改路线 | CAP-P-01 | pnpm check:docs-sync | 新增根目录 `DESIGN.md` 与 `docs/design/DESIGN.md` |
+| frontend | 色彩与动效基线升级：`index.css` 注入 5 组低饱和多色阶（冷灰蓝、薄荷绿、暖灰琥珀、灰粉砖红、烟熏紫），暗色饱和度由 90%+ 调谐至 30~45%；新增 `.animate-thinking-pulse`、`.motion-micro`、`.motion-expand`、`.motion-modal` 动效类 | CAP-P-01 | tsc --noEmit 0 错 | 对齐 DESIGN.md §2 与 §5 |
+| frontend | 核心容器外舒内紧优化：`Card` 默认 padding 从 p-6 紧凑收敛为 p-3.5（14px），`SectionCard` 默认背景统一为 bg-card 且垂直间隙收缩至 gap-2 | CAP-P-01 | tsc --noEmit 0 错 | 对齐 DESIGN.md §3 |
+| frontend | 落地 5 类 AI 专属高密度卡片构件：新增 `ThinkingStream`（26px 思考折叠核+烟熏紫脉冲）、`DualTrackMetricPill`（11px Mono 双轨成本微徽章）、`AgentHandoffCard`（工件流转+3 项验收门禁），与既有 `AssistantToolCard`、`DecisionCardShell` 组装完成 | CAP-P-01 | design-system-page.test 绿灯通过 | 对齐 DESIGN.md §6.1 |
+| frontend | 收敛异类组件与修复 DesignSystem 演示页：`PropertyPanel` 胶囊组件全面矩形化为 rounded-md；`StatsCard` 移除大面积刺眼底色并使用微边框与 font-mono；彻底删除无生产消费的废弃 `empty.tsx` 并统一至 `EmptyState`；修复 Popover 嵌套 button 与 PieChart 尺寸警告，补齐 MSW 拦截，消除裸色 | CAP-P-01 | 全量单测通过，无 React 嵌套 button 报错 | 对齐 DESIGN.md §7 |
+
 ### 局部侵入问答 AISlot——CAP-C-07 首批落地（card-explain 静默场景 + shared/ai-slot 机制 + 三卡试点）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

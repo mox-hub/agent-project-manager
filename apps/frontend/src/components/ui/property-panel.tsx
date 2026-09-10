@@ -114,7 +114,7 @@ export function Capsule({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+        'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2 rounded-md border border-border/80 bg-background/60 text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border',
         active && 'bg-accent border-border text-foreground',
         className,
       )}
@@ -160,7 +160,7 @@ export function DateCapsuleField({
       formatDate={(d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
       trigger={
         <button type="button" className={cn(
-          'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+          'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2 rounded-md border border-border/80 bg-background/60 text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border',
           value && 'bg-accent border-border text-foreground',
         )}>
           <CalendarIcon className="size-3 shrink-0 opacity-70" />
@@ -221,7 +221,7 @@ export function CapsuleSelect({
         <button
           type="button"
           className={cn(
-            'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+            'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2 rounded-md border border-border/80 bg-background/60 text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border',
             active && 'bg-accent border-border text-foreground',
           )}
         >
@@ -408,7 +408,7 @@ function SmallCaps({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-full border border-border bg-transparent text-11 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+      className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-md border border-border/80 bg-background/60 text-11 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
     >
       <Icon className="size-3" />
       <span>{label}</span>
@@ -441,11 +441,11 @@ export function SubTaskCard({
 }) {
   if (!open) {
     return (
-      <div className="px-4 py-3 border-t border-border/40 bg-card/80 backdrop-blur-sm">
+      <div className="px-3 py-2 border-t border-border/40 bg-card/80 backdrop-blur-xs">
         <button
           type="button"
           onClick={onOpen}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors w-full px-1 py-1"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors w-full px-1 py-0.5"
         >
           <Plus className="size-3.5" />
           <span>Add sub-task</span>
@@ -454,9 +454,9 @@ export function SubTaskCard({
     );
   }
   return (
-    <div className="px-4 py-3 border-t border-border/40 bg-card/80 backdrop-blur-sm">
-      <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border/40 bg-muted/30">
+    <div className="px-3 py-2.5 border-t border-border/40 bg-card/80 backdrop-blur-xs">
+      <div className="rounded-lg border border-border/80 bg-muted/20 overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/40 bg-muted/30">
           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <ListTodo className="size-3.5" />
             <span>Sub-task</span>

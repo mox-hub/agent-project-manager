@@ -552,6 +552,21 @@ const analyticsHandlers = [
   }),
 ];
 
+export const commonUtilityHandlers = [
+  http.get('*/members', () => {
+    return ok({
+      items: [
+        { id: 'm1', displayName: 'Claude Coder', handle: 'claude-coder', type: 'ai_agent' },
+        { id: 'm2', displayName: 'Alice PM', handle: 'alice', type: 'human' },
+      ],
+      total: 2,
+    });
+  }),
+  http.get('*/subscriptions/my', () => {
+    return ok({ targetIds: [] });
+  }),
+];
+
 /**
  * 配置所有 MSW 处理程序
  */
@@ -561,6 +576,7 @@ export const allHandlers = [
   ...taskHandlers,
   ...gitHandlers,
   ...analyticsHandlers,
+  ...commonUtilityHandlers,
 ];
 
 /**

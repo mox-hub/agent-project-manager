@@ -96,5 +96,19 @@ export const handlers = [
     if (forced === 'error') return errorResponse();
     return ok(makeDashboardOverview());
   }),
+
+  http.get('*/members', () => {
+    return ok({
+      items: [
+        { id: 'm1', displayName: 'Claude Coder', handle: 'claude-coder', type: 'ai_agent' },
+        { id: 'm2', displayName: 'Alice PM', handle: 'alice', type: 'human' },
+      ],
+      total: 2,
+    });
+  }),
+
+  http.get('*/subscriptions/my', () => {
+    return ok({ targetIds: [] });
+  }),
 ];
 

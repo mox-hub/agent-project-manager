@@ -326,21 +326,21 @@
     --interactive-secondary: 240 5% 96%;
     --interactive-ghost: transparent;
     --interactive-ghost-hover: 240 5% 96%;
-    --accent-blue: 217 91% 60%;
-    --accent-blue-light: 214 95% 93%;
-    --accent-green: 142 76% 36%;
-    --accent-green-light: 138 76% 92%;
-    --accent-purple: 271 91% 65%;
-    --accent-purple-light: 270 100% 96%;
-    --accent-yellow: 48 96% 53%;
-    --accent-yellow-light: 55 96% 90%;
-    --accent-red: 0 84% 60%;
-    --accent-red-light: 0 93% 94%;
-    --accent-orange: 24 93% 54%;
-    --accent-orange-light: 30 95% 92%;
-    --status-on-track: 142 76% 36%;
-    --status-at-risk: 48 96% 53%;
-    --status-off-track: 0 84% 60%;
+    --accent-blue: 216 42% 50%;
+    --accent-blue-light: 216 45% 94%;
+    --accent-green: 156 38% 40%;
+    --accent-green-light: 156 42% 93%;
+    --accent-purple: 265 36% 50%;
+    --accent-purple-light: 265 45% 94%;
+    --accent-yellow: 38 52% 44%;
+    --accent-yellow-light: 38 55% 92%;
+    --accent-red: 358 50% 48%;
+    --accent-red-light: 358 55% 94%;
+    --accent-orange: 24 55% 48%;
+    --accent-orange-light: 24 60% 93%;
+    --status-on-track: 156 38% 40%;
+    --status-at-risk: 38 52% 44%;
+    --status-off-track: 358 50% 48%;
     --scrollbar-thumb: 220 8% 72%;
     --scrollbar-thumb-hover: 220 8% 58%;
     --scrollbar-track: 220 14% 96%;
@@ -368,7 +368,7 @@
     --muted-foreground: 240 5% 64.9%;
     --accent: 240 4% 16%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62% 50%;
+    --destructive: 358 46% 54%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 4% 16%;
     --input: 240 4% 16%;
@@ -376,12 +376,12 @@
     --ring: 240 4.8% 83.9%;
     --sidebar-background: 240 6% 5%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary: 156 32% 46%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 4% 16%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 240 4% 16%;
-    --sidebar-ring: 142 76% 36%;
+    --sidebar-ring: 156 32% 46%;
     --content-background: 240 10% 4%;
     --content-foreground: 0 0% 95%;
     --content-bg: 240 10% 4%;
@@ -392,17 +392,24 @@
     --content-text-secondary: 240 5% 65%;
     --content-text-muted: 240 5% 47%;
     --content-text-tertiary: 240 5% 47%;
-    --interactive-primary: 217 91% 60%;
-    --interactive-primary-hover: 221 83% 53%;
+    --interactive-primary: 216 36% 58%;
+    --interactive-primary-hover: 216 42% 64%;
     --interactive-secondary: 240 4% 16%;
     --interactive-ghost: transparent;
     --interactive-ghost-hover: 240 4% 16%;
-    --accent-blue-light: 217 35% 25%;
-    --accent-green-light: 142 40% 24%;
-    --accent-purple-light: 271 48% 26%;
-    --accent-yellow-light: 48 44% 22%;
-    --accent-red-light: 0 45% 24%;
-    --accent-orange-light: 28 45% 26%;
+    /* 低饱和多色域灰调色阶（暗色基线）：冷灰蓝 / 薄荷绿 / 暖灰琥珀 / 灰粉砖红 / 烟熏紫 / 陶土橙 */
+    --accent-blue: 216 36% 58%;
+    --accent-blue-light: 216 28% 16%;
+    --accent-green: 156 32% 46%;
+    --accent-green-light: 156 26% 15%;
+    --accent-purple: 265 32% 60%;
+    --accent-purple-light: 265 24% 17%;
+    --accent-yellow: 38 45% 52%;
+    --accent-yellow-light: 38 32% 16%;
+    --accent-red: 358 46% 54%;
+    --accent-red-light: 358 30% 16%;
+    --accent-orange: 24 45% 52%;
+    --accent-orange-light: 24 30% 16%;
     --scrollbar-thumb: 220 8% 34%;
     --scrollbar-thumb-hover: 220 8% 46%;
     --scrollbar-track: 220 10% 12%;
@@ -487,6 +494,23 @@
   .motion-emphasis {
     transition: all var(--motion-slow) var(--motion-ease-emphasis);
   }
+
+  .motion-micro {
+    transition:
+      transform var(--motion-fast) cubic-bezier(0.2, 0, 0, 1),
+      opacity var(--motion-fast) cubic-bezier(0.2, 0, 0, 1),
+      background-color var(--motion-fast) cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .motion-expand {
+    transition:
+      transform var(--motion-normal) cubic-bezier(0.16, 1, 0.3, 1),
+      opacity var(--motion-normal) cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-thinking-pulse {
+    animation: thinking-pulse 1.2s ease-in-out infinite;
+  }
 }
 
 @keyframes motion-enter {
@@ -497,6 +521,17 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes thinking-pulse {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
   }
 }
 

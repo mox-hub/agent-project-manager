@@ -141,7 +141,7 @@
 | Skeleton 套件（Text/Card/Avatar/List/Table/Chart） | ui/skeleton.tsx | 骨架屏占位全家桶 | Text: lines；Table: rows, columns |
 | AsyncState | ui/async-state.tsx | 加载/空/错误三态统一处理容器 | isLoading, isEmpty, error, onRetry, children |
 | EmptyState | ui/empty-state.tsx | 轻量空状态（标题/描述/操作） | title, description, action |
-| Empty 套件 | ui/empty.tsx | shadcn 空状态套件 | EmptyMedia: variant |
+| ~~Empty 套件~~ | — | 已删除（2026-09 收敛为 EmptyState） | — |
 | PageLoader + usePageLoader | ui/page-loader.tsx | 全屏页面加载遮罩 | message, className |
 | GlobalLoadingState | ui/global-loading-state.tsx | 监听 Query 缓存显示全局顶部加载条（main.tsx 挂载） | 无 props |
 | MockBadge | ui/mock-badge.tsx | mock 模式全局角标（宪法 §9.3；仅 dev+VITE_API_MOCK=on 显示，main.tsx 挂载） | 无 props |
