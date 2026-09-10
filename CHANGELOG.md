@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 测试稳定性——PrismaService e2e 负载型超时加固
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | `prisma.service.spec.ts` 两个 onModuleInit/onModuleDestroy 用例加 15s 超时余量（默认 5s 在多进程并行负载下被推爆误报，单跑 944ms 实耗）——夜航并行代理跑全量 gate 时不再环境型误报 | — | 全量 vitest 550/550（负载复跑验证）；单套件 4/4 | 无（测试代码） |
+
 ### 工作流详情页实机反馈改造（CAP-A-12）——连线/占满屏/右侧栏/节点库/标题栏/预览小窗
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
