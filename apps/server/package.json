@@ -32,6 +32,8 @@
     "@ai-sdk/google": "^4.0.63",
     "@ai-sdk/openai": "^4.0.57",
     "@linear/sdk": "^89.0.0",
+    "@mastra/core": "^1.65.0",
+    "@mastra/libsql": "^1.22.4",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@nestjs/axios": "^12.0.0",
     "@nestjs/common": "^12.0.1",

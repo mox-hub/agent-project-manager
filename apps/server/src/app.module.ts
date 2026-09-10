@@ -25,6 +25,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
+import { WorkflowModule } from './modules/workflow/workflow.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { SubscriptionModule } from './modules/subscription/subscription.module';
@@ -91,6 +92,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     AdminModule,
     WorkspaceModule,
     AiHubModule,
+    WorkflowModule,
     IntegrationModule,
     NotificationModule,
     SubscriptionModule,

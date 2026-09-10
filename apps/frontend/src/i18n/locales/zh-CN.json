@@ -240,7 +240,32 @@
     "members": "成员",
     "decisions": "决策收件箱",
     "teams": "团队",
-    "office": "办公室"
+    "office": "办公室",
+    "workflow": "工作流"
+  },
+  "workflow": {
+    "title": "工作流",
+    "description": "把 AI 代写的工程流程变成可编排、可等待、可审批的确定性执行",
+    "empty": "暂无工作流定义",
+    "noDescription": "暂无描述",
+    "run": "运行",
+    "runDialogTitle": "运行「{{name}}」",
+    "runDialogHint": "入参为 JSON 对象（可留空）。例如内置演示流：{ \"topic\": \"团队任务看板\" }",
+    "invalidJson": "入参不是合法 JSON",
+    "triggered": "已触发运行",
+    "triggerFailed": "触发失败",
+    "runs": "运行历史",
+    "noRuns": "还没有运行记录",
+    "status.running": "运行中",
+    "status.succeeded": "已成功",
+    "status.failed": "已失败",
+    "status.suspended": "等待人工确认",
+    "status.cancelled": "已取消",
+    "triggerType": "触发方式",
+    "waitingApproval": "等待人工确认",
+    "notePlaceholder": "审核备注（可选）",
+    "approve": "批准并继续",
+    "reject": "拒绝"
   },
   "aiSlot": {
     "badge": "AI 解释",

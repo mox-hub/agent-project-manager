@@ -34,3 +34,7 @@ coverage
 
 # NestJS specific
 *.compiled
+*.db
+
+# Mastra workflow engine runtime storage
+data/

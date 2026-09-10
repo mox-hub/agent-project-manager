@@ -21,6 +21,13 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### workflow 执行引擎基座（CAP-A-11）——Mastra 引入 + 独立 WorkflowModule + 前端管理页
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 新增独立 `modules/workflow` 模块（编排逻辑不进 ai-hub）：引入 `@mastra/core@1.65`（Apache-2.0）+ `@mastra/libsql@1.22` 持久执行内核，LibSQLStore 落本地 `data/mastra-workflows.db`；definition JSON 文法（v1：llm/http/human-confirm/condition 四类步骤，线性链+累积上下文 `{input,steps}`+模板插值 `{input.x}/{steps.y}`，code/plugin 待沙箱落地后放开）经 WorkflowCompilerService 编译为 Mastra 可执行链；llm 步骤复用 ai-hub AdapterRegistryService（generateText，abortSignal 透传），human-confirm 走 Mastra suspend/resume（suspendPayload 记入 AIWorkflowRun.stepsState 供前端确认卡），condition 为比较闸门（met=false 整 run failed），http 为 fetch+JSON 解析+100KB 截断保护；run 记账复用 AIWorkflowRun 表（引擎 runId=产品侧 run id 双写关联），状态映射 success/failed/suspended→succeeded/failed/suspended，进度经 message-bus `ai.workflow.update`→socket 广播；REST 六端点接管原 ai-hub 空壳（GET /workflows、GET /workflows/:id、POST /workflows/:id/run、GET /workflow-runs、GET /workflow-runs/:id 真 detail 含 waitingApproval、POST /workflow-runs/:id/resume），旧 /ai/workflows* 空壳端点+workflow-engine/executor 孤儿文件删除；内置 demo `project-brief-demo`（起草→人工确认→闸门→验收要点）onModuleInit upsert。已知边界：suspended run 的 resume 依赖进程内句柄，服务重启后诚实降级 400（跨重启快照恢复留待后续） | CAP-A-11 | workflow-compiler.service.spec 5/5（文法校验/llm 插值/http 插值解析/human-confirm suspend→resume 全链/condition 双分支，真实 Mastra 引擎+LibSQL 临时库）；contract:export+contract:generate+contract:check 三件套零漂移；server tsc（除主仓库存量 spec 错）0 新错 | 能力清单 CAP-A-11 新卡 doing（本地）；GAP-T-13 登记（本地） |
+| frontend | 新增 `modules/workflow` 管理页基座：列表页（定义卡网格 v 徽章/描述/步骤摘要+运行对话框 JSON 入参校验）；详情页（步骤时间线 human-confirm 高亮+run 历史状态行+run 详情面板：状态/触发方式/输出 JSON 预览/suspended 确认卡=草稿展示+审核备注+批准并继续/拒绝）；hooks 层 TanStack Query + eventClient `ai.workflow.update` 推送失效 + run 详情 5s 轮询兜底（running/suspended 时）；路由 /app/workflows、/app/workflows/:id + 侧边栏「工作流」导航；i18n workflow.* 双语 30 键（3111 键同步）；vite proxy target 支持 VITE_API_PORT 环境变量（worktree 并行场景） | CAP-A-11 | workflow-pages.test 4/4（列表渲染/空态/触发对话框参数提交/suspended 确认卡批准负载）；前端 tsc -b 0 错；eslint 0 警告；实机全链验收：浏览器登录→列表→运行→等待人工确认→批准→已成功（四步 step 输出全落库） | COMPONENTS.md 可后补（本地） |
+
 ### 仪表盘与统计卡片上下间距收敛与消除内边距双重叠加（DESIGN.md §3.3）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

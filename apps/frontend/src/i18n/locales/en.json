@@ -240,7 +240,32 @@
     "members": "Members",
     "decisions": "Decisions",
     "teams": "Teams",
-    "office": "Office"
+    "office": "Office",
+    "workflow": "Workflows"
+  },
+  "workflow": {
+    "title": "Workflows",
+    "description": "Turn AI-drafted engineering flows into orchestrated, resumable, approval-gated execution",
+    "empty": "No workflow definitions yet",
+    "noDescription": "No description",
+    "run": "Run",
+    "runDialogTitle": "Run \"{{name}}\"",
+    "runDialogHint": "Input is a JSON object (optional). Built-in demo: { \"topic\": \"Team task board\" }",
+    "invalidJson": "Input is not valid JSON",
+    "triggered": "Run triggered",
+    "triggerFailed": "Failed to trigger",
+    "runs": "Run history",
+    "noRuns": "No runs yet",
+    "status.running": "Running",
+    "status.succeeded": "Succeeded",
+    "status.failed": "Failed",
+    "status.suspended": "Waiting for approval",
+    "status.cancelled": "Cancelled",
+    "triggerType": "Trigger",
+    "waitingApproval": "Waiting for your approval",
+    "notePlaceholder": "Review note (optional)",
+    "approve": "Approve & continue",
+    "reject": "Reject"
   },
   "aiSlot": {
     "badge": "AI Explain",
