@@ -6,8 +6,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Plus, Circle, Loader, AlertCircle, CheckCircle2, XCircle,
-  ListTodo, Bot as BotIcon, List, Kanban, Trash2, CircleDashed, FolderOpen,
+  Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, Trash2, CircleDashed,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -186,7 +185,7 @@ export function TasksPage() {
       {
         id: 'project',
         label: t('task.filter.projectGroup', 'Project'),
-        icon: FolderOpen,
+        icon: getEntityIcon('project').icon,
         operators: ['is', 'isNot'],
         searchable: true,
         options: projects.map((p) => ({
@@ -291,11 +290,12 @@ export function TasksPage() {
           <StatsCard
           items={[
             { key: 'total', value: (tasksData?.meta?.total ?? filteredTasks.length), label: t("task.stats.total"), icon: ListTodo, ...STATS_THEMES.blue },
-            { key: 'todo', value: allTasks.filter(task => task.status === 'todo').length, label: t("task.stats.todo"), icon: Circle, ...STATS_THEMES.default },
-            { key: 'inProgress', value: allTasks.filter(task => task.status === 'in_progress').length, label: t("task.stats.inProgress"), icon: Loader, ...STATS_THEMES.yellow },
-            { key: 'inReview', value: allTasks.filter(task => task.status === 'in_review').length, label: t("task.stats.inReview") , icon: AlertCircle, ...STATS_THEMES.purple },
-            { key: 'done', value: allTasks.filter(task => task.status === 'done').length, label: t("task.stats.done"), icon: CheckCircle2, ...STATS_THEMES.green },
-            { key: 'canceled', value: allTasks.filter(task => task.status === 'canceled').length, label: t("task.stats.canceled") , icon: XCircle, ...STATS_THEMES.gray },
+            // 状态图标统一取 status-visuals.TASK_STATUS_VISUALS（唯一映射源，规范 v0 对齐）
+            { key: 'todo', value: allTasks.filter(task => task.status === 'todo').length, label: t("task.stats.todo"), icon: TASK_STATUS_VISUALS.todo.icon, ...STATS_THEMES.default },
+            { key: 'inProgress', value: allTasks.filter(task => task.status === 'in_progress').length, label: t("task.stats.inProgress"), icon: TASK_STATUS_VISUALS.in_progress.icon, ...STATS_THEMES.yellow },
+            { key: 'inReview', value: allTasks.filter(task => task.status === 'in_review').length, label: t("task.stats.inReview") , icon: TASK_STATUS_VISUALS.in_review.icon, ...STATS_THEMES.purple },
+            { key: 'done', value: allTasks.filter(task => task.status === 'done').length, label: t("task.stats.done"), icon: TASK_STATUS_VISUALS.done.icon, ...STATS_THEMES.green },
+            { key: 'canceled', value: allTasks.filter(task => task.status === 'canceled').length, label: t("task.stats.canceled") , icon: TASK_STATUS_VISUALS.canceled.icon, ...STATS_THEMES.gray },
           ]}
           columns={6}
           className="grid grid-cols-6 gap-3"

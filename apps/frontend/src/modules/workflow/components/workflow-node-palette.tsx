@@ -4,7 +4,7 @@
  * 产品动作分类展开注册表目录（/workflows/actions），点击直接带 action id。
  */
 import { useTranslation } from 'react-i18next';
-import { Globe, GitBranch, Plus, ShieldCheck, Sparkles, Wrench, type LucideIcon } from 'lucide-react';
+import { Globe, GitBranch, Plus, UserCheck, Sparkles, Wrench, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WorkflowActionInfo } from '../api/workflow-api';
 
@@ -56,7 +56,8 @@ export function WorkflowNodePalette({
           key: 'human-confirm',
           label: t('workflow.canvas.step.humanConfirm'),
           desc: t('workflow.palette.confirmDesc'),
-          icon: ShieldCheck,
+          // 人工确认节点图标=UserCheck（与 workflow-canvas 节点图同口径，裁决见 entity-icons.tsx）
+          icon: UserCheck,
           className: 'text-accent-yellow',
           type: 'human-confirm',
         },

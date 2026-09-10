@@ -4,24 +4,20 @@
  */
 import type { ReactNode } from 'react';
 import {
-  AlertCircle,
   ArrowDown,
   ArrowUp,
   CalendarClock,
-  CheckCircle2,
   ChevronsUp,
-  Circle,
   FolderKanban,
   Link2,
   ListTree,
-  Loader2,
   MessageCircle,
   Minus,
-  XCircle,
   type LucideIcon,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { TASK_STATUS_VISUALS, type StatusTone } from '@/shared/status/status-visuals';
 import type { Task } from '@/modules/issue/api/issue-api';
 import type {
   BoardAccentColor,
@@ -34,13 +30,26 @@ type Translate = (key: string, options?: Record<string, unknown>) => string;
 export const TASK_STATUS_KEYS = ['todo', 'in_progress', 'in_review', 'done', 'canceled'] as const;
 export type TaskStatusKey = (typeof TASK_STATUS_KEYS)[number];
 
-export const STATUS_VISUAL: Record<TaskStatusKey, { icon: LucideIcon; color: BoardAccentColor }> = {
-  todo: { icon: Circle, color: 'muted' },
-  in_progress: { icon: Loader2, color: 'blue' },
-  in_review: { icon: AlertCircle, color: 'yellow' },
-  done: { icon: CheckCircle2, color: 'green' },
-  canceled: { icon: XCircle, color: 'muted' },
+/** 状态 tone → 看板 accent 色（BoardAccentColor 与 status-visuals 的 StatusTone 词表对齐） */
+const TONE_ACCENT: Record<StatusTone, BoardAccentColor> = {
+  default: 'muted',
+  info: 'blue',
+  warning: 'yellow',
+  success: 'green',
+  danger: 'red',
 };
+
+/**
+ * 任务状态视觉派生自 status-visuals.TASK_STATUS_VISUALS（唯一映射源，规范 v0 收敛，
+ * 消灭看板侧的旧名图标副本 AlertCircle/CheckCircle2/XCircle）；
+ * label（i18n）与列序等看板细节留在本地（getTaskStatusColumns）。
+ */
+export const STATUS_VISUAL = Object.fromEntries(
+  TASK_STATUS_KEYS.map((key) => {
+    const visual = TASK_STATUS_VISUALS[key];
+    return [key, { icon: visual.icon, color: TONE_ACCENT[visual.tone] }];
+  }),
+) as Record<TaskStatusKey, { icon: LucideIcon; color: BoardAccentColor }>;
 
 /** 状态色 → 图标文字色（静态类名，避免 Tailwind JIT 收集不到动态拼接） */
 const STATUS_ICON_TEXT: Record<BoardAccentColor, string> = {

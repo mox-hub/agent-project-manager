@@ -24,36 +24,28 @@ import { StatusPill } from '@/components/ui/status-pill';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import {
-  FolderKanban,
   HelpCircle,
   LayoutDashboard,
   Bell,
-  GitBranch,
   DoorOpen,
-  Workflow as WorkflowIcon,
   Settings,
   PanelLeftOpen,
   Menu,
   BarChart3,
-  FileText,
   BookMarked,
   ListTodo,
   Milestone,
   Route as RouteIcon,
   RefreshCw,
   Users,
-  UsersRound,
-  ShieldCheck,
-  CheckSquare,
-  AlertCircle,
-  CheckCircle,
+  UserCog,
   ChevronDown,
-  Inbox,
   Search,
   Palette,
   ListTree,
   type LucideIcon,
 } from 'lucide-react';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useTheme } from '@/shared/theme/theme-context';
 import { FAVORITE_FALLBACK_ICON, PAGE_REGISTRY } from '@/shared/layout/page-registry';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
@@ -159,7 +151,7 @@ export function ShellLayout() {
           // 侧栏红点数量：决策收件箱=待处理决策数；通知=未读数（纯数字红色药丸 / 折叠态红点）
           {
             to: '/app/decisions',
-            icon: Inbox,
+            icon: getEntityIcon('decision').icon,
             label: t('nav.decisions'),
             count: pendingDecisionCount,
           },
@@ -176,17 +168,18 @@ export function ShellLayout() {
         id: 'main',
         label: t('shell.main'),
         items: [
+          // 实体导航图标统一从 entity-icons 注册表取（规范 v0 第二批铺开）
           { to: '/app/projects/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
-          { to: '/app/projects', icon: FolderKanban, label: t('nav.projects') },
-          { to: '/app/issues', icon: CheckSquare, label: t('nav.tasks') },
-          { to: '/app/bugs', icon: AlertCircle, label: t('task.bug.title') },
-          { to: '/app/acceptance', icon: CheckCircle, label: t('nav.acceptance') },
-          { to: '/app/documents', icon: FileText, label: t('document.title') },
-          { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
+          { to: '/app/projects', icon: getEntityIcon('project').icon, label: t('nav.projects') },
+          { to: '/app/issues', icon: getEntityIcon('issue').icon, label: t('nav.tasks') },
+          { to: '/app/bugs', icon: getEntityIcon('bug').icon, label: t('task.bug.title') },
+          { to: '/app/acceptance', icon: getEntityIcon('acceptance').icon, label: t('nav.acceptance') },
+          { to: '/app/documents', icon: getEntityIcon('document').icon, label: t('document.title') },
+          { to: '/app/repositories', icon: getEntityIcon('repository').icon, label: t('git.title') },
           { to: '/app/office', icon: DoorOpen, label: t('nav.office') },
-          { to: '/app/workflows', icon: WorkflowIcon, label: t('nav.workflow') },
-          { to: '/app/members', icon: Users, label: t('nav.members') },
-          { to: '/app/teams', icon: UsersRound, label: t('nav.teams') },
+          { to: '/app/workflows', icon: getEntityIcon('workflow').icon, label: t('nav.workflow') },
+          { to: '/app/members', icon: getEntityIcon('member').icon, label: t('nav.members') },
+          { to: '/app/teams', icon: getEntityIcon('team').icon, label: t('nav.teams') },
         ],
       },
       // 收藏分区固定在主导航与系统之间（置于系统上方）；无收藏不占位
@@ -206,7 +199,8 @@ export function ShellLayout() {
             ? [
                 {
                   to: '/app/admin',
-                  icon: ShieldCheck,
+                  // admin 域导航非验收实体：ShieldCheck 三方重叠裁决改用 UserCog（规范 v0）
+                  icon: UserCog,
                   label: t('nav.admin'),
                   capsule: 'admin',
                 },

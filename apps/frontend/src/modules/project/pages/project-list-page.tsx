@@ -33,7 +33,6 @@ import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import {
   Plus,
   Settings,
-  FolderOpen,
   AlertTriangle,
   List,
   Kanban,
@@ -43,6 +42,10 @@ import {
 import { useTranslation } from 'react-i18next';
 import { ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
+
+/** 页头/空态实体图标：统一从 entity-icons 注册表取（规范 v0） */
+const PROJECT_ENTITY = getEntityIcon('project');
 
 const PROJECT_FILTER_KEYS = [
   'status',
@@ -201,7 +204,7 @@ export function ProjectListPage() {
       <PageHeader
         aiId="project.project-list"
         title={t("project.title")}
-        icon={FolderOpen}
+        icon={PROJECT_ENTITY.icon}
         iconColor="text-accent-blue"
         metrics={[{ id: 'total', label: t("project.title"), value: total }]}
         actions={(
@@ -302,7 +305,7 @@ export function ProjectListPage() {
           <div className="flex flex-1 items-center justify-center">
             <div className="text-center">
               <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
-                <FolderOpen size={20} className="text-muted-foreground" />
+                <PROJECT_ENTITY.icon size={20} className="text-muted-foreground" />
               </div>
               <p className="text-sm text-muted-foreground">No projects found</p>
               <Button

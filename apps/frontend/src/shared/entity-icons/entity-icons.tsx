@@ -13,22 +13,36 @@
  *    取图（getEntityIcon / <EntityIcon>），禁止页面自选实体图标。
  * 3. 图标名统一 lucide 新名（CircleCheck / CircleAlert / CircleX 一族）；
  *    旧名（CheckCircle2 / XCircle / AlertCircle）仅允许存在于未迁移的历史代码。
- * 4. nav / tabs 注册表（shell-layout / tabs-registry）的图标迁移留待第二批；
- *    nav 表面另有品牌配色（page-registry color 字段），与本表 tone 是两套口径，互不影响。
+ * 4. nav / tabs 注册表（shell-layout / tabs-registry / page-registry / route-preview）
+ *    已于第二批全部接入本表（getEntityIcon(kind).icon）；nav 表面另有品牌配色
+ *    （page-registry color 字段），与本表 tone 是两套口径，互不影响。
  * 5. tone 取 5 档语义色（StatusTone），文字色档复用 TONE_TEXT_CLASS；
  *    词表暂无 purple/cyan/orange 等扩展色，品牌色诉求仍由 nav 配色承载。
  * 6. EntityIcon 尺寸走设计宪法 §6.2 四档：12 / 14 / 16 / 20 px（xs/sm/md/lg），
  *    与 text-10/11、text-xs、text-sm+、标题字阶一一配对。
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * 已知重叠（登记待处置，第二批裁决）：
- * - ShieldCheck（本表 = acceptance）同时被 admin 域 nav（page-registry /app/admin、
- *   /app/settings/roles）与 workflow human-confirm 流程节点使用——前者属权限管理域、
- *   后者属流程节点域，均非「验收」实体；建议 admin 域改用 UserCog/Shield 系、
- *   流程节点改用 UserCheck，消除与验收实体的混淆。
- * - Users（本表 = member）/ UsersRound（本表 = team）成对取自 nav 既有口径
- *   （page-registry /app/members=Users、/app/teams=UsersRound），member 侧历史散落
- *   的单数 User 会在第二批铺开时统一为 Users。
+ * ShieldCheck 三方重叠裁决（2026-09-11 用户裁决，第二批落地）：
+ * ShieldCheck 专属「验收实体」（本表 acceptance），其余两方已改道——
+ * - admin 导航域（shell-layout /app/admin、page-registry /app/admin 与 /app/settings/roles、
+ *   tabs-registry /app/admin）→ UserCog（权限管理语义，非验收实体）；
+ * - workflow 人工确认节点（workflow-canvas 节点图 / WorkflowNodePalette 节点库 /
+ *   workflow-detail-page 等待审批提示 / decision-card human-confirm 步骤徽章）→
+ *   UserCheck（人工确认语义，与验收门禁区分）。
+ * 仍保留 ShieldCheck 的动作语义场景（非实体、非遗漏）：decision-card 高危/低危风险
+ * 图标与 autoChecks 通过数图标——是「检查/安全」动作语义，不属于本次裁决范围。
+ *
+ * 第二批铺开记录（2026-09-11）：
+ * - nav/tabs 注册表面（shell-layout / tabs-registry / page-registry / route-preview-card）
+ *   实体图标全部改引本表；bugs=Bug、acceptance=ShieldCheck（原 CheckCircle）、
+ *   decision=Scale（原 Inbox）、member 统一复数 Users（原散落单数 User）。
+ * - 页面 PageHeader：project-list（原 FolderOpen）、documents（原 FileStack）、
+ *   executions（原 Activity）、acceptance-list 改引本表。
+ * - tasks-page / bugs-page 筛选「项目」分组字段图标（原 FolderOpen）改引本表 project。
+ * - 状态副本收敛：board-presets.STATUS_VISUAL 改派生 status-visuals.TASK_STATUS_VISUALS；
+ *   executions-page / delivery-page 为执行 run / 验收专属状态，保留本地并注释声明。
+ * - MemberCardPopover 维持双形态（用户已裁决）：点击成员卡 = 完整操作 popover（重操作），
+ *   hover 预览 = RoutePreview 轻卡片（轻预览），两者不合并；图标均已对齐 member=Users。
  */
 
 import type { SVGProps } from 'react';
@@ -80,15 +94,16 @@ export interface EntityIconEntry {
  * - bug=Bug：bugs-page / apm-ref chip 已用，甲虫语义唯一；AlertCircle 让位给
  *   status-visuals 的 in_review / at_risk 状态语义（lucide 新名 CircleAlert）。
  * - project=FolderKanban：page-registry /app/projects、route-preview 多数派；
- *   FolderOpen（project-list-page 旧用）与「打开」动作混淆，第二批收敛。
+ *   FolderOpen（project-list-page 旧用，与「打开」动作混淆）已于第二批收敛为本口径。
  * - workflow=Workflow：shell-layout nav.workflow 已用，流程节点语义。
  * - execution=Play：page-registry settings/ai/executions 已用，「运行」语义。
- * - acceptance=ShieldCheck：acceptance-list-page 已用，门禁语义（重叠见文件头注释）。
+ * - acceptance=ShieldCheck：acceptance-list-page 已用，门禁语义；
+ *   admin 域与人工确认节点的三方重叠已裁决改道（UserCog / UserCheck，见文件头）。
  * - document=FileText：page-registry /app/documents、route-preview、apm-ref doc 多数派；
- *   FileStack（documents-page 旧用）第二批收敛。
+ *   FileStack（documents-page 旧用）已于第二批收敛为本口径。
  * - member=Users / team=UsersRound：nav 既有成对口径（见文件头注释）。
- * - decision=Scale：裁决天平语义唯一；page-registry /app/decisions 用 Inbox 是
- *   「收件箱页面」语义，属 nav 表面，第二批迁移时由 nav 口径自行裁决。
+ * - decision=Scale：裁决天平语义唯一；page-registry / shell-layout / tabs-registry
+ *   的 decisions 导航原用 Inbox（「收件箱页面」语义），已于第二批统一为本口径。
  * - workspace=Database：工作区 = 独立 SQLite 库（每工作区一库），仓库语义无撞车。
  * - repository=GitBranch：page-registry /app/repositories、route-preview 多数派。
  * - release=Tag：apm-ref chip 既有口径。

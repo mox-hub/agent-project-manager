@@ -83,6 +83,12 @@ const COL_DEFS: ColDef[] = [
 
 // ── Status / config ───────────────────────────────────────────────────────────
 
+/**
+ * 验收状态视觉（AcceptStatus 六态）。与 status-visuals.TASK_STATUS_VISUALS 的关系：
+ * 这是「验收门禁状态」（passed/waived/blocked 等验收专属态），非「任务状态」，
+ * 故保留本地映射（且 tone 词表外还用了 accent-orange）；收编需先为 status-visuals
+ * 扩「验收状态」映射表。本页为 DEV ONLY 设计还原页（data-mock），不接入真实 API。
+ */
 const STATUS_CFG: Record<AcceptStatus, { label: string; icon: React.ElementType; cell: string; text: string; border: string; bg: string }> = {
   pending:     { label: '待验收', icon: Circle,        cell: 'text-muted-foreground/30', text: 'text-muted-foreground',          border: 'border-border',                              bg: 'bg-muted/40'                        },
   in_progress: { label: '验收中', icon: Loader,        cell: 'text-accent-blue',            text: 'text-accent-blue',     border: 'border-accent-blue/30',       bg: 'bg-accent-blue/10'     },

@@ -18,7 +18,7 @@ import {
   type NodeProps,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Globe, GitBranch, ShieldCheck, Sparkles, PlayCircle, Flag, Wrench } from 'lucide-react';
+import { Globe, GitBranch, UserCheck, Sparkles, PlayCircle, Flag, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
@@ -47,7 +47,8 @@ const STEP_NODE_STYLE: Record<
     labelKey: 'workflow.canvas.step.llm',
   },
   'human-confirm': {
-    icon: ShieldCheck,
+    // 人工确认节点图标=UserCheck（ShieldCheck 三方重叠裁决：ShieldCheck 保留给验收实体）
+    icon: UserCheck,
     className: 'border-accent-yellow/50 bg-accent-yellow/10 text-accent-yellow',
     handleClass: 'bg-accent-yellow/60',
     labelKey: 'workflow.canvas.step.humanConfirm',

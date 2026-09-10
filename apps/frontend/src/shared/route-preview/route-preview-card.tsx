@@ -7,20 +7,10 @@
  */
 
 import { useMemo } from 'react';
-import {
-  AlertCircle,
-  CheckCircle,
-  CheckSquare,
-  FileText,
-  FolderKanban,
-  GitBranch,
-  Star,
-  User,
-  Users,
-  type LucideIcon,
-} from 'lucide-react';
+import { Star, type LucideIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { PAGE_REGISTRY } from '@/shared/layout/page-registry';
 import { useTranslation } from '@/hooks/useTranslation';
 import { resolveRoutePreview, type RoutePreviewType } from './route-preview-registry';
@@ -33,15 +23,17 @@ import { TeamPreviewBody } from './previews/team-preview-body';
 import { AcceptancePreviewBody } from './previews/acceptance-preview-body';
 import { GenericPreviewBody } from './previews/generic-preview-body';
 
+// 预览卡头部图标统一从 entity-icons 注册表取（规范 v0 第二批铺开）；
+// member/team 撞车按注册表口径：member=Users（复数）、team=UsersRound
 const TYPE_ICONS: Record<RoutePreviewType, LucideIcon> = {
-  project: FolderKanban,
-  task: CheckSquare,
-  bug: AlertCircle,
-  document: FileText,
-  repository: GitBranch,
-  member: User,
-  team: Users,
-  acceptance: CheckCircle,
+  project: getEntityIcon('project').icon,
+  task: getEntityIcon('issue').icon,
+  bug: getEntityIcon('bug').icon,
+  document: getEntityIcon('document').icon,
+  repository: getEntityIcon('repository').icon,
+  member: getEntityIcon('member').icon,
+  team: getEntityIcon('team').icon,
+  acceptance: getEntityIcon('acceptance').icon,
   // generic 优先用 PAGE_REGISTRY / 调用方传入的图标
   generic: Star,
 };
