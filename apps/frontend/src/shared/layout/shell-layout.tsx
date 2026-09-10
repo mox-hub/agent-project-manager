@@ -353,7 +353,7 @@ export function ShellLayout() {
     <CommandPaletteProvider initialCommands={commandItems}>
       <ShellSidebarProvider>
         <TabsProvider>
-        <div className="flex h-screen overflow-hidden bg-background text-foreground" data-ai-component="layout.shell" data-ai-role="content">
+        <div className="flex h-screen overflow-hidden bg-sidebar text-foreground" data-ai-component="layout.shell" data-ai-role="content">
           {/* Mobile sidebar backdrop */}
           {mobileSidebarOpen ? (
             <button
@@ -364,28 +364,37 @@ export function ShellLayout() {
             />
           ) : null}
 
-          {/* Sidebar - Codex 磨砂质感与浅色/深色自适应 */}
+          {/* Sidebar - Codex 磨砂一体化底座 */}
           <aside
             className={cn(
-              'flex flex-col h-full bg-sidebar/85 backdrop-blur-xl border-r border-sidebar-border/60 transition-all duration-200',
+              'flex flex-col h-full bg-sidebar/85 backdrop-blur-xl transition-all duration-200',
               mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:relative',
-              sidebarCollapsed ? 'w-17' : 'w-56',
+              sidebarCollapsed ? 'w-16' : 'w-56',
             )}
             aria-label={t('shell.mainNav')}
             data-ai-component="layout.sidebar"
             data-ai-role="nav"
           >
             <TooltipProvider>
-              {/* Logo / App Header */}
-              <div className="flex items-center h-14 px-4 shrink-0 gap-3">
+              {/* Logo / App Header - 与菜单图标严格垂直对齐与居中 */}
+              <div className={cn(
+                'flex items-center h-12 shrink-0',
+                sidebarCollapsed ? 'justify-center px-0' : 'px-2.5 gap-2'
+              )}>
                 <button
                   onClick={toggleSidebar}
-                  className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-1 min-w-0"
+                  className={cn(
+                    'flex items-center rounded-lg transition-colors hover:bg-sidebar-accent/60',
+                    sidebarCollapsed
+                      ? 'size-10 justify-center'
+                      : 'w-full gap-2.5 px-2.5 py-1.5 min-w-0'
+                  )}
                   aria-label="Toggle sidebar"
+                  title={sidebarCollapsed ? t('shell.expandSidebar') : t('shell.appName')}
                 >
-                  <Logo size="lg" variant="framed" tone="auto" className="shrink-0" ariaLabel="Agent Project Manager" />
+                  <Logo size="sm" variant="framed" tone="auto" className="shrink-0 size-6" ariaLabel="Agent Project Manager" />
                   {!sidebarCollapsed && (
-                    <span className="text-base font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
+                    <span className="text-sm font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
                   )}
                 </button>
                 {!sidebarCollapsed && (
@@ -448,7 +457,9 @@ export function ShellLayout() {
                         ))}
 
                       {!itemsHidden && (
-                        <div className="px-2.5 py-0.5 space-y-0.5">
+                        <div className={cn(
+                          sidebarCollapsed ? 'flex flex-col items-center px-0 space-y-1' : 'px-2.5 py-0.5 space-y-0.5'
+                        )}>
                           {group.items.map((item) => {
                             const { to, icon: Icon, label, color, capsule, count, favorite } = item;
                             // Tooltip/预览触发器的 hover 状态会跨渲染存活：折叠后 TooltipContent
@@ -471,13 +482,13 @@ export function ShellLayout() {
                                     ? 'bg-sidebar-accent text-sidebar-foreground shadow-2xs border border-sidebar-border/40'
                                     : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground border border-transparent',
                                   sidebarCollapsed
-                                    ? 'justify-center aspect-square p-2 w-9 relative'
-                                    : 'gap-2 px-2.5 py-1.5 h-8',
+                                    ? 'justify-center size-10 relative'
+                                    : 'gap-2.5 px-2.5 py-1.5 h-8 w-full',
                                 )}
                                 onClick={() => setMobileSidebarOpen(false)}
                               >
                                 <Icon
-                                  className="w-4 h-4 shrink-0"
+                                  className="size-4 shrink-0"
                                   style={color ? { color } : undefined}
                                 />
                                 {!sidebarCollapsed && (
@@ -507,7 +518,7 @@ export function ShellLayout() {
                                   typeof count === 'number' &&
                                   count > 0 && (
                                     <span
-                                      className="absolute right-0.5 top-0.5 size-2 rounded-full bg-destructive"
+                                      className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive ring-2 ring-sidebar"
                                       aria-hidden="true"
                                     />
                                   )}
@@ -547,22 +558,25 @@ export function ShellLayout() {
               </div>
 
               {/* 主 AI 同事位：占一个“人”的位置，点击开合助手面板 */}
-              <div className="shrink-0 border-t border-sidebar-border p-2.5">
+              <div className={cn(
+                'shrink-0 p-2.5',
+                sidebarCollapsed && 'flex justify-center px-0'
+              )}>
                 <AssistantColleagueSlot collapsed={sidebarCollapsed} />
               </div>
 
               {/* Sidebar Toggle Button - Only show when collapsed */}
               {sidebarCollapsed && (
-                <div className="shrink-0 px-3 py-3">
+                <div className="shrink-0 flex justify-center px-0 py-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
                         onClick={toggleSidebar}
-                        className="flex w-full items-center justify-center aspect-square p-2.5 rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground transition-colors"
+                        className="flex items-center justify-center size-10 rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground transition-colors"
                         aria-label={t('shell.expandSidebar')}
                       >
-                        <PanelLeftOpen className="w-5 h-5 shrink-0" />
+                        <PanelLeftOpen className="size-4.5 shrink-0" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -576,13 +590,13 @@ export function ShellLayout() {
 
           {/* Main content area */}
           <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-sidebar/85 backdrop-blur-xl">
-            {/* TabBar - 与侧边栏统一的磨砂质感与下边框 */}
-            <div className="bg-sidebar/85 backdrop-blur-md border-b border-sidebar-border/50">
+            {/* TabBar - 与侧边栏连通的一体化磨砂画布 */}
+            <div className="bg-transparent">
               <TabBar />
             </div>
 
             {/* Mobile header */}
-            <div className="flex items-center gap-2 border-b border-sidebar-border/50 bg-sidebar/85 backdrop-blur-md px-3 py-2 md:hidden">
+            <div className="flex items-center gap-2 bg-sidebar/85 backdrop-blur-md px-3 py-2 md:hidden">
               <button
                 type="button"
                 className="rounded-md bg-transparent p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"

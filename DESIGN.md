@@ -164,11 +164,11 @@ APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主�
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ 顶栏 TabBar (h-10, bg-sidebar/85 backdrop-blur-md, border-b)             │
+│ 顶栏 TabBar (h-10, bg-transparent 穿透磨砂底座, 无模块分割线)            │
 ├──────────────┬──────────────────────────────────────────┬───────────────┤
 │ 左侧栏 aside  │ 悬浮工作台卡片 Canvas                      │ 右侧栏 aside  │
-│ (w-56/w-17)  │ (rounded-xl bg-background/95 shadow-sm)  │ (w-320/360)   │
-│ 磨砂侧栏      │                                          │ 磨砂属性面板   │
+│ (w-56/w-16)  │ (rounded-xl bg-background/95 shadow-sm)  │ (w-320/360)   │
+│ 一体磨砂底座  │                                          │ 磨砂属性面板   │
 │ 菜单项 h-8   │ Page Content (独立滚动条贴边)              │ 收起不占位    │
 ├──────────────┴──────────────────────────────────────────┴───────────────┤
 │ ❖ 左下角悬浮底座 (fixed bottom-4 left-4, w-11 h-11 磨砂微光晕)           │
@@ -177,19 +177,19 @@ APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主�
 
 #### 1. 浅色系色彩基准与 Codex 磨砂分层体系
 * **浅色模式去黑化**：浅色模式下全面弃用刺眼的深炭黑，`--sidebar-background` 统一采用温润浅冷灰（`240 5% 96%`），`--sidebar-foreground` 采用高对比深字（`240 10% 3.9%`），激活与悬停采用低饱和浅灰阶（`240 5% 90%`）。
-* **毛玻璃半透分层**：
-  * **底画布层**：`bg-sidebar/85 backdrop-blur-xl`，赋予外围窗口微妙的透光性。
-  * **主内容卡片**：`rounded-xl bg-background/95 backdrop-blur-xs border border-border/60 shadow-sm`，如同一块精确嵌入底座的工作台。
+* **无分割线一体化画布**：全面取消左侧栏（aside）与主区之间的竖向边界线（`border-r`）、以及顶栏（TabBar）与内容区之间的横向边界线（`border-b`），使得窗口底板成为一整张纯净连续、无缝连贯的浅色/深色磨砂底画布。
+* **悬浮工作台卡片**：`rounded-xl bg-background/95 backdrop-blur-xs border border-border/60 shadow-sm`，作为唯一浮起在磨砂画布上的工作台卡片，视觉边界清晰聚焦。
 
 #### 2. 左侧栏与菜单项目（Sidebar & Nav Items）
-* **栏宽标准**：展开态固定 **`224px`（`w-56`）**，折叠收起态固定 **`68px`（`w-17`）**；右边缘带有 `border-r border-sidebar-border/60` 精细分割。
-* **菜单项目（Nav Items）**：
-  * **尺寸与排版**：高度统一定义为 **`32px`（`h-8`）**，内边距 `px-2.5 py-1.5`，文字字阶统一为 **`12px 500字重`（`text-xs font-medium`）**，前置图标标准规格 **`16px`（`size-4`）**。
-  * **交互反馈**：悬停时采用 `hover:bg-sidebar-accent/60 hover:text-sidebar-foreground`；激活态采用 `bg-sidebar-accent text-sidebar-foreground shadow-2xs border border-sidebar-border/40` 微浮雕卡片质感，杜绝传统高饱和色块对视线的干扰。
+* **栏宽标准**：展开态固定 **`224px`（`w-56`）**，折叠收起态固定 **`64px`（`w-16`）**；取消与主内容区之间的竖向割裂线。
+* **垂直中心对齐与左右等宽铁律**：
+  * **折叠收缩态（w-16 = 64px）**：Logo 与所有导航项、AI 同事位、展开按钮严格采用 `items-center justify-center` 居中；按钮统一为 **`size-10`（40px）**，左右两侧留白绝对等宽（均为 `(64 - 40) / 2 = 12px`），彻底消除右侧过宽的不对称感；Logo 与所有菜单图标的垂直中心线在 **`X = 32px` 绝对重合**。
+  * **展开态（w-56 = 224px）**：Logo 按钮与菜单项外层内边距统一为 `px-2.5`，项内边距统一为 `px-2.5`，Logo 与菜单项前置图标的左边缘均严格对齐在 **`X = 20px`** 基线。
+* **菜单项目（Nav Items）**：高度统一定义为 **`32px`（`h-8`）**，字阶统一为 **`12px 500字重`（`text-xs font-medium`）**，前置图标标准规格 **`16px`（`size-4`）**；激活态采用 `bg-sidebar-accent text-sidebar-foreground shadow-2xs border border-sidebar-border/40` 微浮雕卡片质感。
 * **分组标头（Group Headers）**：`text-10 font-semibold uppercase tracking-wider text-sidebar-foreground/40`，分区折叠时右侧显示紧凑数字徽标。
 
 #### 3. 顶部标签栏与标签页体系（TabBar & Tabs）
-* **TabBar 容器**：高度 **`40px`（`h-10`）**，背景穿透底层磨砂（`bg-sidebar/85 backdrop-blur-md border-b border-sidebar-border/50`）。
+* **TabBar 容器**：高度 **`40px`（`h-10`）**，背景为透明（`bg-transparent`）无缝穿透底层磨砂，取消底部横向分割线。
 * **TabItem 规格**：
   * 高度固定为 **`28px`（`h-7`）**，标签项横向间距 **`gap-1`（4px）**，文字 **`text-xs font-medium`**。
   * **激活态**：`bg-background/95 border-border/70 shadow-2xs text-foreground backdrop-blur-xs`，呈现温润凸起的白色/浅灰磨砂质感；固定页（Pinned）采用 `border-sidebar-border/60 bg-sidebar-accent/40`。

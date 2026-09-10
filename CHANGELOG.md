@@ -21,6 +21,15 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 移除主体模块割裂边界线、侧栏收缩左右对称与 Logo 垂直对齐
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | `DESIGN.md` 与 `docs/design/DESIGN.md` 同步更新 §3.5：明确一体化无分割线画布规范（取消侧栏 border-r 与顶栏 border-b）、收缩态栏宽规整为 64px（w-16）且左右留白绝对等宽（12px 对称）、展开/收缩态 Logo 与菜单项图标垂直对齐基线（展开态 X=20px，收缩态 X=32px 严格共线） | CAP-P-01 | pnpm check:docs-sync | DESIGN.md §3.5 同步更新 |
+| frontend | 消除主体模块间割裂线：`shell-layout.tsx` 根容器底色对齐 `bg-sidebar`，移除 aside 的 `border-r`、TabBar 外层的 `border-b`、移动端 Header 的 `border-b` 与底部同事位的 `border-t`，实现连续一体化的浅色/深色磨砂底座 | CAP-P-01 | 7 项设计门禁通过，tsc 0 错 | 对齐 DESIGN.md §3.5.1 |
+| frontend | 侧栏折叠态严格对称居中：`sidebarCollapsed` 宽度从 `w-17`（68px）精简为 `w-16`（64px），导航容器改为 `flex flex-col items-center px-0`，菜单项设为 `size-10`（40px 居中），消除原右侧过宽问题，实现左右严格等宽各 12px；未读红点采用 `right-1.5 top-1.5 ring-2 ring-sidebar` 贴边；折叠展开按钮尺寸规整至 `size-10` 居中 | CAP-P-01 | 7 项设计门禁通过 | 解决收缩态图标左右不等宽缺陷 |
+| frontend | Logo 与菜单图标垂直完全对齐：收缩态 Logo 按钮规整为 `size-10`（40px）在 64px 容器内水平居中，与下方 40px 菜单图标的垂直中心线在 `X = 32px` 绝对共线；展开态 Logo 外层 `px-2.5` + 内部 `px-2.5`，图标左边缘与菜单图标左边缘严格锁定在 `X = 20px` 同一垂直线上 | CAP-P-01 | 7 项设计门禁通过，Vitest 全绿 | 解决 Logo 与菜单图标视觉错位缺陷 |
+
 ### 浅色模式侧边栏去黑化、Codex 类磨砂外壳与全局复合组件规范落地（DESIGN.md §3.5）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
