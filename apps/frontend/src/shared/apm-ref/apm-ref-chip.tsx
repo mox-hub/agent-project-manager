@@ -3,15 +3,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Bug,
-  CircleDot,
-  FileText,
-  ShieldCheck,
-  Tag,
-  User,
-  Users,
-} from 'lucide-react';
-import {
   expandApmRefToPath,
   formatApmRef,
   isApmRef,
@@ -19,6 +10,7 @@ import {
   type ApmRefKind,
 } from '@apm/shared/apm-ref';
 import { cn } from '@/lib/utils';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 
 /**
@@ -28,14 +20,19 @@ import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigge
  * 其余 kind V1 同样以短号作路径段（后端逐域兼容后自动可用）。
  */
 
+/**
+ * 引用 kind → 实体图标，统一取自 entity-icons 注册表（规范 v0）：
+ * issue 原为 CircleDot、member 原为单数 User，均收敛到注册表口径
+ * （issue=CheckSquare、member=Users）；release 已作为增量实体登记入表。
+ */
 const KIND_ICON: Record<ApmRefKind, React.ComponentType<{ className?: string }>> = {
-  doc: FileText,
-  issue: CircleDot,
-  bug: Bug,
-  member: User,
-  team: Users,
-  acceptance: ShieldCheck,
-  release: Tag,
+  doc: getEntityIcon('document').icon,
+  issue: getEntityIcon('issue').icon,
+  bug: getEntityIcon('bug').icon,
+  member: getEntityIcon('member').icon,
+  team: getEntityIcon('team').icon,
+  acceptance: getEntityIcon('acceptance').icon,
+  release: getEntityIcon('release').icon,
 };
 
 const KIND_LABEL: Record<ApmRefKind, string> = {

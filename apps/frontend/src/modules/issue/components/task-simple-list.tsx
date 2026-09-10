@@ -9,18 +9,15 @@
  */
 
 import {
-  AlertCircle,
   ArrowDown,
   ArrowUp,
-  CheckCircle2,
   ChevronsUp,
-  Circle,
-  Loader,
   Minus,
-  XCircle,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { ListAvatar, ListChip, ListDate, ListIcon, ListText, DataList } from '@/components/ui/data-list';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
+import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import type { Task } from '../api/issue-api';
 import { cn } from '@/lib/utils';
 
@@ -30,14 +27,37 @@ type Severity = 'critical' | 'high' | 'medium' | 'low';
 
 const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'canceled'];
 
-// 状态/优先级配色与项目侧统一（shared/status/status-visuals 的 tone → accent token）
-const STATUS_CONFIG: Record<TaskStatus, { label: string; icon: React.ComponentType<{ className?: string }>; color: string; order: number }> = {
-  todo: { label: 'Todo', icon: Circle, color: 'text-muted-foreground', order: 0 },
-  in_progress: { label: 'In Progress', icon: Loader, color: 'text-accent-blue', order: 1 },
-  in_review: { label: 'In Review', icon: AlertCircle, color: 'text-accent-yellow', order: 2 },
-  done: { label: 'Done', icon: CheckCircle2, color: 'text-accent-green', order: 3 },
-  canceled: { label: 'Canceled', icon: XCircle, color: 'text-muted-foreground', order: 4 },
+// 状态图标/文字色统一取 shared/status/status-visuals 唯一映射源（tone → accent token），
+// 本组件只保留分组排序（order）与英文分组标签（labelKey 版待 i18n 批次统一）。
+const STATUS_LABEL: Record<TaskStatus, string> = {
+  todo: 'Todo',
+  in_progress: 'In Progress',
+  in_review: 'In Review',
+  done: 'Done',
+  canceled: 'Canceled',
 };
+
+interface StatusConfig {
+  label: string;
+  icon: LucideIcon;
+  color: string;
+  order: number;
+}
+
+const STATUS_CONFIG: Record<TaskStatus, StatusConfig> = Object.fromEntries(
+  STATUS_ORDER.map((status, order) => {
+    const visual = TASK_STATUS_VISUALS[status];
+    return [
+      status,
+      {
+        label: STATUS_LABEL[status],
+        icon: visual.icon,
+        color: TONE_TEXT_CLASS[visual.tone],
+        order,
+      },
+    ];
+  }),
+) as Record<TaskStatus, StatusConfig>;
 
 const SEVERITY_CONFIG: Record<Severity, { label: string; dotColor: string; order: number }> = {
   critical: { label: 'Critical', dotColor: 'bg-accent-red', order: 0 },

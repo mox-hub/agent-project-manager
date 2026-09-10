@@ -30,6 +30,50 @@ export function PreviewRow({
   );
 }
 
+/**
+ * 分组小节：大写 + 字距拉开的 text-10 分组标题 + 行集合（PreviewRow 等）。
+ * 富信息模板（B-2）的纵向分组件，member 等预览 body 用它提升信息密度。
+ */
+export function PreviewSection({
+  title,
+  children,
+  className,
+}: {
+  title: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn('flex min-w-0 flex-col gap-1', className)}>
+      <div className="text-10 font-medium uppercase tracking-wider text-muted-foreground">{title}</div>
+      <div className="flex min-w-0 flex-col gap-1">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * 底部元信息行：时间 / 状态点等弱化小字（text-10 + 弱化色），上缘细分隔线。
+ * children 自由组合（状态点、Clock 图标、shortId 等），保持单行不换行。
+ */
+export function PreviewFooterMeta({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'mt-0.5 flex items-center gap-1.5 border-t border-border/60 pt-1.5 text-10 text-muted-foreground',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 /** body 数据加载中的骨架占位 */
 export function PreviewBodySkeleton({ rows = 3 }: { rows?: number }) {
   return (

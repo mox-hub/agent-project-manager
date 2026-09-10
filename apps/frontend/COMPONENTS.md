@@ -36,6 +36,7 @@
 | 收藏星标 | `FavoriteToggle`（shared/components/favorite-toggle.tsx）：可复用收藏按钮，PageHeader 内置同款；详情页 SubPageToolbar actions / 项目详情上下文栏/通知/搜索页的收藏入口 |
 | 状态统一视觉 | `status-visuals`（shared/status/status-visuals.ts）：任务/项目状态→tone(语义 accent)+图标+i18n 的唯一映射源，消费方：项目列表(StatusPill)、右键子菜单、项目看板、甘特条、任务列表配色 |
 | 状态图标底框 | `StatusIconFrame`（shared/status/status-icon-frame.tsx）：tone 语义浅底+圆角框+居中图标的统一底框形态，与 status-visuals 配套；任务/BUG 详情标题、子任务行、动态时间线事件图标 |
+| 实体图标注册表 | `EntityIcon`/`getEntityIcon`（shared/entity-icons/entity-icons.tsx）：实体→图标+语义 tone 的唯一映射（issue/bug/project/workflow/execution/acceptance/document/member/team/decision/workspace/repository/release），PageHeader/引用 chip/预览卡等「实体身份」场景统一取图，尺寸四档 xs/sm/md/lg=12/14/16/20px；nav/tabs 注册表迁移留待第二批（规范 v0 见文件头注释） | entity, size, className |
 | Markdown 渲染 | `MarkdownView`（shared/components/markdown-view.tsx）：react-markdown+remark-gfm 运行时渲染（任务/BUG 描述、评论正文；GFM 表格/任务清单/删除线）；文档模块可编译 MDX 仍走 shared/mdx 管线 |
 | Markdown 编辑 | `MarkdownEditor`（shared/components/markdown-editor.tsx）：输入+所见即所得预览的标准编辑器，preview=live 分栏实时渲染（描述）/toggle 编辑预览切换（评论框）；renderInput 可换 MentionTextarea，actions 放表情/发送 |
 | 表情选择 | `EmojiPicker`（shared/components/emoji-picker/emoji-picker.tsx）：搜索+常用记录(localStorage)+分类网格面板，调用方包 Popover 触发；数据集 emoji-data.ts 中英文关键词 |
@@ -133,7 +134,7 @@
 | Popover 套件 | ui/popover.tsx | 气泡（base-ui + 兼容 PopoverAnchor） | open, side, align, sideOffset |
 | AnchoredMenu | ui/anchored-menu.tsx | 锚定下拉面板基元（portal+fixed+视口翻转） | open, onClose, anchor(Ref), align |
 | Tooltip 套件 | ui/tooltip.tsx | 提示浮层（base-ui 官方配方 + 兼容层） | open, delayDuration, side, sideOffset |
-| HoverCard 套件 | ui/hover-card.tsx | 悬浮卡（base-ui PreviewCard 官方配方） | children |
+| HoverCard 套件 | ui/hover-card.tsx | 悬浮卡（base-ui PreviewCard 官方配方）；内容宽度四档 size（sm=w-56/md=w-64 默认/lg=w-72/xl=w-80），HoverCardArrow 可选箭头（显式放入 children 才渲染） | size, side, align, sideOffset, children |
 | Alert 套件 | ui/alert.tsx | 内联提示条（局部错误/信息展示） | variant, children |
 | ToastProvider + toast() / toastManager / AnchoredToastProvider | ui/toast.tsx | coss Toast（base-ui 配方，堆叠/悬停展开/滑动关闭）；toast() 兼容 sonner 命令式 API（success/error/info/warning/loading/dismiss/promise），唯一合法 toast（main.tsx 挂 ToastProvider） | position, portalProps；toast(): message, opts(description/duration/id/action) |
 | ~~Toaster（sonner）~~ | — | 已删除（2026-08 coss toast 迁移，sonner 依赖一并移除） | — |
