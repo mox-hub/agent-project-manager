@@ -10,6 +10,28 @@ import type {
 
 const DAY_MS = 86_400_000;
 
+/**
+ * 自然日差：两端先归一到本地日历日的零点，再取相差的天数。
+ *
+ * 用于「逾期 N 天」口径——按自然日计算，而非按毫秒差向上取整。后者会让
+ * 「昨天 10:00 到期、今天 11:00 查看」显示成逾期 2 天，且任何毫秒级跳变
+ * （如刚好卡在整日边界）都会让同一任务在两个瞬间显示不同天数。
+ * 用 Math.round 吸收夏令时造成的 23/25 小时日长。
+ */
+function calendarDayDiff(from: Date, to: Date): number {
+  const fromDay = new Date(
+    from.getFullYear(),
+    from.getMonth(),
+    from.getDate(),
+  ).getTime();
+  const toDay = new Date(
+    to.getFullYear(),
+    to.getMonth(),
+    to.getDate(),
+  ).getTime();
+  return Math.round((toDay - fromDay) / DAY_MS);
+}
+
 const DONE_KEYWORDS = ['done', 'complete', 'completed', 'closed'];
 const PROGRESS_KEYWORDS = [
   'progress',
@@ -526,11 +548,10 @@ export class DashboardService {
     return {
       mitigationRatePct: 0,
       items: overdue.map((task) => {
+        // 逾期天数按自然日算：当天到期当天未完成即算 1 天
         const overdueDays = Math.max(
           1,
-          Math.ceil(
-            (now.getTime() - (task.dueDate as Date).getTime()) / DAY_MS,
-          ),
+          calendarDayDiff(task.dueDate as Date, now),
         );
         const mitigation =
           task.metadata &&

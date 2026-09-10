@@ -170,32 +170,67 @@ describe('DashboardService', () => {
   });
 
   it('risks：逾期未完成任务派生风险项，非逾期不进列表', async () => {
-    const now = Date.now();
-    prisma.issue.findMany.mockResolvedValue([
-      taskRow({
+    // 固定系统时钟：逾期天数派生自「服务端取 now」与「用例构造 dueDate」两次取时的差值，
+    // 若放任真实时钟，毫秒跳变会落在自然日边界上，用例结果不稳定
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 10, 12, 0, 0)); // 本地 2026-09-10 12:00
+    try {
+      const now = Date.now();
+      prisma.issue.findMany.mockResolvedValue([
+        taskRow({
+          id: 't-overdue',
+          title: '逾期任务',
+          status: 'in_progress',
+          priority: 'critical',
+          dueDate: new Date(now - 3 * DAY_MS),
+        }),
+        taskRow({
+          id: 't-future',
+          dueDate: new Date(now + 3 * DAY_MS),
+        }),
+      ]);
+
+      const { risks } = await service.getOverview();
+
+      expect(risks.mitigationRatePct).toBe(0);
+      expect(risks.items).toHaveLength(1);
+      expect(risks.items[0]).toMatchObject({
         id: 't-overdue',
         title: '逾期任务',
-        status: 'in_progress',
-        priority: 'critical',
-        dueDate: new Date(now - 3 * DAY_MS),
-      }),
-      taskRow({
-        id: 't-future',
-        dueDate: new Date(now + 3 * DAY_MS),
-      }),
-    ]);
+        severity: 'critical',
+        impact: '逾期 3 天 · 项目A',
+        mitigation: '',
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 
-    const { risks } = await service.getOverview();
+  it('risks：逾期天数按自然日算，25 小时前到期算 1 天而非 2 天', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 10, 12, 0, 0)); // 本地 2026-09-10 12:00
+    try {
+      prisma.issue.findMany.mockResolvedValue([
+        taskRow({
+          id: 't-overdue',
+          title: '隔夜逾期',
+          status: 'in_progress',
+          priority: 'high',
+          // 昨天 11:00 到期：跨了 1 个自然日，按时长却是 25 小时
+          dueDate: new Date(2026, 8, 9, 11, 0, 0),
+        }),
+      ]);
 
-    expect(risks.mitigationRatePct).toBe(0);
-    expect(risks.items).toHaveLength(1);
-    expect(risks.items[0]).toMatchObject({
-      id: 't-overdue',
-      title: '逾期任务',
-      severity: 'critical',
-      impact: '逾期 3 天 · 项目A',
-      mitigation: '',
-    });
+      const { risks } = await service.getOverview();
+
+      expect(risks.items).toHaveLength(1);
+      expect(risks.items[0]).toMatchObject({
+        id: 't-overdue',
+        impact: '逾期 1 天 · 项目A',
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('trends.health：快照按周分桶取均值，无快照的周不出现', async () => {
