@@ -21,6 +21,13 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 仪表盘风险项逾期天数改按自然日口径（消除整日边界跳变与单测 flaky）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | `dashboard.service.ts` 的「逾期 N 天」由 `Math.max(1, Math.ceil((now - dueDate) / 86400000))` 改为按自然日差计算（新增 `calendarDayDiff`：两端归一到本地日历日零点后再取天数，`Math.round` 吸收夏令时 23/25 小时日长）。旧口径按毫秒差向上取整，会把「昨天 10:00 到期、今天 11:00 查看」显示成逾期 2 天，且任何整日边界上的毫秒跳变都会让同一任务在两个瞬间显示不同天数——该不确定性也是 `dashboard.service.spec` 在 CI 偶发失败的根因 | 仪表盘 | `dashboard.service.spec` 8 条全绿；新增回归用例「25 小时前到期算 1 天而非 2 天」（旧口径取值 2、新口径取值 1，可稳定区分）；既有逾期用例改用 `vi.useFakeTimers` 固定系统时钟 | 产品可见行为变更：逾期天数不再按「不足一天进一天」放大，改按自然日 |
+| server | `dashboard.service.spec.ts` 逾期用例改用固定系统时钟，去除对真实时钟的依赖 | 仪表盘 | server 530 用例全绿 | CI 不再受运行时刻影响 |
+
 ### 仪表盘与统计卡片上下间距收敛与消除内边距双重叠加（DESIGN.md §3.3）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
@@ -80,7 +87,6 @@ tags: "changelog,release"
 | frontend | 核心容器外舒内紧优化：`Card` 默认 padding 从 p-6 紧凑收敛为 p-3.5（14px），`SectionCard` 默认背景统一为 bg-card 且垂直间隙收缩至 gap-2 | CAP-P-01 | tsc --noEmit 0 错 | 对齐 DESIGN.md §3 |
 | frontend | 落地 5 类 AI 专属高密度卡片构件：新增 `ThinkingStream`（26px 思考折叠核+烟熏紫脉冲）、`DualTrackMetricPill`（11px Mono 双轨成本微徽章）、`AgentHandoffCard`（工件流转+3 项验收门禁），与既有 `AssistantToolCard`、`DecisionCardShell` 组装完成 | CAP-P-01 | design-system-page.test 绿灯通过 | 对齐 DESIGN.md §6.1 |
 | frontend | 收敛异类组件与修复 DesignSystem 演示页：`PropertyPanel` 胶囊组件全面矩形化为 rounded-md；`StatsCard` 移除大面积刺眼底色并使用微边框与 font-mono；彻底删除无生产消费的废弃 `empty.tsx` 并统一至 `EmptyState`；修复 Popover 嵌套 button 与 PieChart 尺寸警告，补齐 MSW 拦截，消除裸色 | CAP-P-01 | 全量单测通过，无 React 嵌套 button 报错 | 对齐 DESIGN.md §7 |
-
 ### 局部侵入问答 AISlot——CAP-C-07 首批落地（card-explain 静默场景 + shared/ai-slot 机制 + 三卡试点）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
