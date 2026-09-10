@@ -116,7 +116,6 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
   });
 
   it('AI 收敛：答案集只填空回填表单并自动切换形态，已手填字段不覆盖', async () => {
-    const user = userEvent.setup();
     const dynamicModule = await import('@/modules/assistant/hooks/use-interview-dynamic');
     const dynamicMutate = vi.fn(
       (_input: unknown, opts?: { onSuccess?: (v: unknown) => void }) => {

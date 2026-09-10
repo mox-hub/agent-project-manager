@@ -113,7 +113,7 @@ export function InterviewChat({
           <div
             key={idx}
             className={cn(
-              'max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed',
+              'max-w-sm rounded-lg px-3 py-2 text-xs leading-relaxed',
               turn.role === 'ai'
                 ? 'self-start border border-border bg-content-bg text-content-text'
                 : 'self-end bg-accent-blue text-white',

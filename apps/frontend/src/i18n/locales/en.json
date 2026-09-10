@@ -246,6 +246,17 @@
   "workflow": {
     "title": "Workflows",
     "description": "Turn AI-drafted engineering flows into orchestrated, resumable, approval-gated execution",
+    "canvas": {
+      "trigger": "Trigger",
+      "completed": "Completed",
+      "step": {
+        "llm": "AI Step",
+        "humanConfirm": "Human Confirmation",
+        "http": "HTTP Request",
+        "condition": "Condition Gate",
+        "unknown": "Step"
+      }
+    },
     "empty": "No workflow definitions yet",
     "noDescription": "No description",
     "run": "Run",

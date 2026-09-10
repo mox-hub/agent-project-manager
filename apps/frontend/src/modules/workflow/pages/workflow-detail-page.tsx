@@ -14,7 +14,6 @@ import {
   GitBranch,
   PauseCircle,
   ShieldCheck,
-  Sparkles,
   XCircle,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
@@ -32,6 +31,7 @@ import {
   useWorkflowRun,
   useWorkflowRuns,
 } from '../hooks/use-workflows';
+import { WorkflowCanvas } from '../components/workflow-canvas';
 import type { WorkflowRun } from '../api/workflow-api';
 
 const RUN_STATUS_META: Record<string, { icon: typeof Clock; tone: string; labelKey: string }> = {
@@ -88,30 +88,7 @@ export function WorkflowDetailPage() {
               {workflow.description || t('workflow.noDescription')}
             </p>
             {steps.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-1.5">
-                {steps.map((step, index) => (
-                  <span key={step.id} className="flex items-center gap-1.5">
-                    {index > 0 ? (
-                      <span className="text-muted-foreground/40">→</span>
-                    ) : null}
-                    <span
-                      className={cn(
-                        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-11',
-                        step.type === 'human-confirm'
-                          ? 'border-accent-yellow/40 bg-accent-yellow/10 text-accent-yellow'
-                          : 'border-border bg-muted/40 text-muted-foreground',
-                      )}
-                    >
-                      {step.type === 'human-confirm' ? (
-                        <ShieldCheck className="size-3" />
-                      ) : step.type === 'llm' ? (
-                        <Sparkles className="size-3" />
-                      ) : null}
-                      {step.title || step.id}
-                    </span>
-                  </span>
-                ))}
-              </div>
+              <WorkflowCanvas steps={steps} />
             ) : null}
           </CardContent>
         </Card>

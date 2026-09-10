@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 工作流节点画布切片①（CAP-A-12）——definition 只读可视化
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 新增 `modules/workflow/components/workflow-canvas.tsx`：@xyflow/react（React Flow v12）只读节点画布——`stepsToFlow` 纯函数转换器把步骤链映射为「触发 → 步骤… → 完成」垂直节点图（四类步骤各一形态：llm 紫 Sparkles / human-confirm 黄 ShieldCheck 且出边 animated 强调人工闸门 / http 蓝 / condition 橙 GitBranch 预留分支语义，未知类型回落中性形态保证文法 v2 前向兼容）；step 节点不可拖拽不可连线（只读切片）；workflow-detail-page 定义卡步骤 pills 链替换为画布（清理失效 import）；i18n workflow.canvas.* 双语 8 键；新依赖 @xyflow/react 登记入 frontend package.json（纯 UI 库无构建脚本，无需 allowBuilds） | CAP-A-12 | workflow-canvas.test 5/5（线性链节点/边首尾相接+human-confirm 边 animated/空步骤双端点/未知类型不炸/step 节点数据携带与不可拖拽 + 渲染冒烟）；前端 66 文件 289 用例全绿；tsc -b 0 错；设计 lint 五件套过（修复 interview-chat 的 max-w-[85%] 任意值违例→max-w-sm）；eslint 0 警告 | 能力清单 CAP-A-12 新卡 doing（本地）；测试映射矩阵 GAP-T-14 登记（本地） |
+
 ### 需求承接三期（CAP-P-01）——剧本访谈动态追问：AI 会话访谈形态
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
