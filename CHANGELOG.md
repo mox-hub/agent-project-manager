@@ -19,7 +19,17 @@ tags: "changelog,release"
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
-## [Unreleased]
+## [0.6.0] - 2026-09-11
+
+### v0.6.0 发版总览——设计系统 v2 落地 + 六条能力线推进 + Dock 协同交互面
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **全局设计系统 v2 收口**：DESIGN.md v2.0 规范体系（低饱和多色色阶、外舒内紧卡片、磨砂外壳、页面级规格 PageShell Profile Variants、5 类 AI 结构卡片）+ 双表面头像体系（人类 NiceAvatar × AI Avvvatars）+ 悬浮卡片体系（收藏栏/标签页/命令面板外观）全面对齐规范 | FR-DESIGN-001 | 各切片 CHANGELOG 条目内 Vitest 全绿记录；`tsc -b` 0 错误、ESLint 0 错 0 警告 | DESIGN.md v2.0 |
+| server · frontend | **六条能力线推进**：CAP-A-11 workflow 执行引擎基座（Mastra 引入 + 独立 WorkflowModule）→ CAP-A-12 工作流画布四切片（只读可视化 + 画布编辑 + 产品动作节点文法 v2 + AI 草拟与模板库）→ CAP-P-01 需求承接三期（剧本访谈动态追问）→ CAP-B-02 完整性审计前端收口 → CAP-B-08 验收证据回流一期（GitHub PR 终态与 CI 结论自动回流）→ CAP-C-07 局部侵入问答 AISlot 首批落地 | FR-WORKFLOW-001 / FR-GRILL-001 / FR-ACCEPT-002 / FR-ACCEPT-003 / FR-AI-001 | 全量质量门禁绿（server 单测/e2e + frontend Vitest + contract 零漂移） | 能力清单 v1 各卡补记 |
+| frontend | **底部 Dock 协同交互面（新卡 CAP-A-13）**：默认自动隐藏 + 鼠标靠近浮出（包围盒坐标判定，零不可见遮挡）+「常驻显示」开关 + 默认助手固定首位 + 用户/助手头像统一真实头像 + 全局统一创建面板 +「设置 · Dock 栏」实时预览自定义 | CAP-A-13 | Vitest 前端 81 文件 418 用例全绿（Dock 域新增 ~80 条） | 能力清单 v1 新增 CAP-A-13 |
+| frontend | **工程治理**：命令面板全量刷新（17→25 命令 + i18n 化）+ 实体图标注册表 v0（导航/页签图标统一）+ eslint warning 全仓清零（frontend 142 处 + server 12 处）+ 存量未使用 import 清理（69 处） | FR-CORE-001 | `pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告 | COMPONENTS.md 图标契约 |
+| frontend | **实验表面**：ai-surface 全屏沉浸协同表面原型并入（手表表盘视界 + 项目生命力全景 + 信任轨道透镜 + Omni-Dock，mock 数据纯前端，挂 exp 胶囊） | — | Vitest 418 用例全绿（含 ai-surface-page 2 条） | 待设计系统演进裁决转正或下线 |
 
 ### Dock 头像完全填满容器 + 状态点不再被裁切
 
