@@ -18,6 +18,8 @@ export type RoutePreviewType =
   | 'member'
   | 'team'
   | 'acceptance'
+  | 'execution'
+  | 'release'
   | 'generic';
 
 export interface RoutePreviewMatch {
@@ -36,6 +38,9 @@ const DYNAMIC_RULES: Array<{ prefix: string; type: RoutePreviewType }> = [
   { prefix: '/app/members/', type: 'member' },
   { prefix: '/app/teams/', type: 'team' },
   { prefix: '/app/acceptance/', type: 'acceptance' },
+  { prefix: '/app/executions/', type: 'execution' },
+  { prefix: '/app/settings/ai/executions/', type: 'execution' },
+  { prefix: '/app/releases/', type: 'release' },
 ];
 
 /** 保留字路径段：命中时不作为实体 id 解析，回退通用卡片 */
@@ -65,6 +70,9 @@ const APM_REF_PREVIEW_TYPE: Record<string, RoutePreviewType> = {
   member: 'member',
   team: 'team',
   acceptance: 'acceptance',
+  exec: 'execution',
+  execution: 'execution',
+  release: 'release',
 };
 
 /**

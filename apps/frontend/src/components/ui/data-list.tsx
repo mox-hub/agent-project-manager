@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils';
 import { ContextMenu, type MenuItem } from '@/components/ui/context-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
 
 // ============================================================================
 // Types
@@ -149,32 +150,20 @@ export function ListIcon({
 export function ListAvatar({
   name,
   url,
-  color,
+  color: _color,
 }: {
   name?: string;
   url?: string | null;
   color?: string;
 }) {
-  if (url) {
-    return (
-      <img
-        src={url}
-        alt={name ?? ''}
-        className="size-6 shrink-0 rounded-full object-cover"
-        title={name}
-      />
-    );
-  }
-  const initial = (name ?? '').trim().split(/\s+/).filter(Boolean);
-  const text = initial.length === 0 ? '' : initial.length === 1 ? initial[0].slice(0, 2).toUpperCase() : (initial[0][0] + initial[1][0]).toUpperCase();
   return (
-    <span
-      title={name}
-      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-10 font-semibold text-white"
-      style={{ backgroundColor: color || 'hsl(var(--primary))' }}
-    >
-      {text || <UserIcon className="size-3 opacity-60" />}
-    </span>
+    <MemberAvatar
+      name={name}
+      avatarUrl={url}
+      size="sm"
+      showBadge={false}
+      className="size-6"
+    />
   );
 }
 

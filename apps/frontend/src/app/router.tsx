@@ -546,6 +546,7 @@ export const router = createBrowserRouter([
                   <DesignSystemPage />
                 </Suspense>
               ),
+              handle: { selfScroll: true },
               errorElement: <ErrorPage />,
             },
             {

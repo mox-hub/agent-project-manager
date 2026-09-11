@@ -34,6 +34,8 @@ import {
   FlaskConical,
   FolderKanban,
   GitBranch,
+  GitPullRequest,
+  GitCommit,
   Home,
   Info,
   Kanban,
@@ -44,11 +46,13 @@ import {
   Loader2,
   Mail,
   MessagesSquare,
+  Milestone,
   Minus,
   MoreHorizontal,
   Palette,
   Plus,
   RefreshCw,
+  Rocket,
   Search,
   Settings,
   Share2,
@@ -66,6 +70,7 @@ import {
   XCircle,
   Zap,
   CircleCheck,
+  ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -90,6 +95,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Slider } from '@/components/ui/slider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field'
+import Avvvatars from 'avvvatars-react'
+import NiceAvatar, { genConfig } from 'react-nice-avatar'
+import { MemberAvatar } from '@/modules/team-member/components/member-avatar'
 import { TrustLevelBadge } from '@/modules/team-member/components/trust-level-badge'
 import { MentionTextarea } from '@/modules/team-member/components/mention-textarea'
 import { MentionRenderer } from '@/modules/team-member/components/mention-renderer'
@@ -159,7 +167,6 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
-import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger'
 import { PreviewFooterMeta, PreviewRow, PreviewSection } from '@/shared/route-preview/previews/preview-fields'
 import {
   Breadcrumb,
@@ -326,6 +333,7 @@ const SECTIONS = [
   { id: 'menu', label: 'Menu (coss)', group: 'Primitives' },
   { id: 'overlays', label: 'Overlays', group: 'Primitives' },
   { id: 'popover', label: 'Popover & Combobox', group: 'Primitives' },
+  { id: 'hover-card', label: 'Hover Card', group: 'Primitives' },
   { id: 'breadcrumb', label: 'Breadcrumb', group: 'Primitives' },
   { id: 'button-group', label: 'Button Group', group: 'Primitives' },
   { id: 'toggle', label: 'Toggle & Segmented', group: 'Primitives' },
@@ -1000,11 +1008,296 @@ function AssigneeAvatar({ initials, color }: { initials?: string; color?: string
 }
 
 function AvatarPickerShowcase() {
-  const [value, setValue] = useState<string | null>(null)
+  const [value, setValue] = useState<string | null>('nice-avatar:alex')
   return (
-    <div className="space-y-2 max-w-md">
-      <AvatarPickerField value={value} onValueChange={setValue} />
-      <div className="text-10 text-muted-foreground">当前值: {value ?? '（未选择）'}</div>
+    <div className="space-y-3 max-w-xl">
+      <div className="rounded-lg border border-border/70 p-3.5 bg-muted/10 space-y-2">
+        <p className="text-xs font-medium text-foreground">双表面预设（人类同事 NiceAvatar 插画肖像 & AI 智能体 Avvvatars 算法几何）</p>
+        <AvatarPickerField value={value} onValueChange={setValue} />
+        <div className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
+          <span>当前选择路径:</span>
+          <code className="font-mono text-11 px-1.5 py-0.5 rounded bg-muted text-foreground">
+            {value ?? '（未选择）'}
+          </code>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AvatarModernizationShowcase() {
+  const [humanSeed, setHumanSeed] = useState('Alex Chen')
+  const [humanNonce, setHumanNonce] = useState(0)
+  const [agentSeed, setAgentSeed] = useState('claude-code')
+  const [avStyle, setAvStyle] = useState<'shape' | 'character'>('shape')
+  const [avShadow, setAvShadow] = useState(true)
+
+  const humanPresets = ['Alex Chen', 'Sarah Lin', 'Leo Zhang', 'David Wu', 'Emma Zhao', 'Lucas Gray']
+  const agentPresets = ['claude-code', 'codex', 'zcode', 'doc-bot', 'qa-bot', 'guardian']
+
+  // 模拟团队人类同事（react-nice-avatar）与 AI 同事（avvvatars）全景花名册
+  const humanTeam = [
+    { name: 'Alex Chen', role: '系统架构师', handle: 'alex', status: 'online' as const },
+    { name: 'Sarah Lin', role: '研发技术主管', handle: 'sarah', status: 'online' as const },
+    { name: 'Leo Zhang', role: '全栈工程师', handle: 'leo', status: 'online' as const },
+    { name: 'David Wu', role: '数据架构师', handle: 'david', status: 'offline' as const },
+    { name: 'Emma Zhao', role: '体验设计主管', handle: 'emma', status: 'online' as const },
+    { name: 'Lucas Gray', role: '交付与质保', handle: 'lucas', status: 'busy' as const },
+  ]
+
+  const agentTeam = [
+    { name: 'Claude Coder', role: '主工程智能体', handle: 'claude-code', model: 'Claude 3.7', status: 'active' as const },
+    { name: 'Codex Reviewer', role: '代码审查智能体', handle: 'codex', model: 'Codex CLI', status: 'active' as const },
+    { name: 'ZCode Daemon', role: '运行时守护', handle: 'zcode', model: 'Runtime Agent', status: 'idle' as const },
+    { name: 'Doc Architect', role: '知识库与契约', handle: 'doc-bot', model: 'Knowledge AI', status: 'active' as const },
+    { name: 'QA Gatekeeper', role: '门禁与回流', handle: 'qa-bot', model: 'Evidence Guard', status: 'active' as const },
+    { name: 'Guardian Bot', role: '安全与风险审计', handle: 'guardian', model: 'Security Agent', status: 'idle' as const },
+  ]
+
+  const effectiveHumanSeed = humanNonce > 0 ? `${humanSeed}#${humanNonce}` : humanSeed
+  const currentNiceConfig = genConfig(effectiveHumanSeed)
+
+  return (
+    <div className="space-y-4 max-w-3xl rounded-xl border border-border p-4 bg-card/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border">
+        <div>
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-accent-purple" />
+            <h3 className="text-sm font-semibold text-foreground">
+              双表面头像体系（人类同事: react-nice-avatar × AI 同事: avvvatars）
+            </h3>
+            <Badge variant="outline" className="text-10 text-accent-blue border-accent-blue/30">官方定夺</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            全面舍弃其他非标方案。人类同事采用 <code>react-nice-avatar</code> 确定性插画肖像；AI 同事采用 <code>avvvatars</code> 算法几何。纯本地 SVG 驱动，零外网依赖。
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge variant="secondary" className="text-10 text-accent-green bg-accent-green/10 border-accent-green/30">
+            双表面 100% 确定性生成
+          </Badge>
+        </div>
+      </div>
+
+      {/* 双工作台：人类肖像 vs AI 几何 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* 左栏：人类同事肖像生成器 (react-nice-avatar) */}
+        <div className="rounded-xl border border-accent-blue/30 bg-background/90 p-4 space-y-3 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <User className="size-4 text-accent-blue" />
+              <span className="text-xs font-semibold text-foreground">人类同事肖像引擎</span>
+            </div>
+            <Badge variant="secondary" className="text-10 text-accent-blue bg-accent-blue/10">react-nice-avatar</Badge>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="size-16 rounded-full overflow-hidden border-2 border-accent-blue/40 shadow-sm shrink-0">
+              <NiceAvatar style={{ width: '100%', height: '100%' }} shape="circle" {...currentNiceConfig} />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground truncate">{humanSeed}</span>
+                <button
+                  type="button"
+                  onClick={() => setHumanNonce((n) => n + 1)}
+                  className="px-2 py-0.5 rounded text-10 font-medium bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                >
+                  随机变幻
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1 text-10 font-mono text-muted-foreground">
+                <span className="px-1.5 py-0.5 rounded bg-muted/60">性别: {currentNiceConfig.sex}</span>
+                <span className="px-1.5 py-0.5 rounded bg-muted/60">发型: {currentNiceConfig.hairStyle}</span>
+                <span className="px-1.5 py-0.5 rounded bg-muted/60">服饰: {currentNiceConfig.shirtStyle}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 pt-2 border-t border-border/50">
+            <div className="flex items-center justify-between">
+              <span className="text-10 text-muted-foreground">测试 Seed / 姓名:</span>
+              <div className="flex flex-wrap gap-1">
+                {humanPresets.slice(0, 4).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => { setHumanSeed(p); setHumanNonce(0); }}
+                    className={cn(
+                      'px-1.5 py-0.5 rounded text-10 font-mono transition-colors',
+                      humanSeed === p ? 'bg-primary text-primary-foreground font-semibold' : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                    )}
+                  >
+                    {p.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Input
+              value={humanSeed}
+              onChange={(e) => { setHumanSeed(e.target.value || 'User'); setHumanNonce(0); }}
+              placeholder="输入人类成员姓名或邮箱…"
+              className="h-7 text-xs font-mono"
+            />
+          </div>
+        </div>
+
+        {/* 右栏：AI 同事算法几何生成器 (avvvatars) */}
+        <div className="rounded-xl border border-accent-purple/30 bg-background/90 p-4 space-y-3 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Bot className="size-4 text-accent-purple" />
+              <span className="text-xs font-semibold text-foreground">AI 同事几何符号引擎</span>
+            </div>
+            <Badge variant="secondary" className="text-10 text-accent-purple bg-accent-purple/10">avvvatars-react</Badge>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="size-16 rounded-full overflow-hidden border-2 border-accent-purple/40 shadow-sm shrink-0 flex items-center justify-center">
+              <Avvvatars value={agentSeed} size={64} style={avStyle} shadow={avShadow} />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground truncate">@{agentSeed}</span>
+                <div className="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
+                  <button
+                    type="button"
+                    onClick={() => setAvStyle('shape')}
+                    className={cn(
+                      'px-1.5 py-0.5 text-10 font-medium rounded transition-colors',
+                      avStyle === 'shape' ? 'bg-background text-foreground shadow-xs font-semibold' : 'text-muted-foreground'
+                    )}
+                  >
+                    Shape
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAvStyle('character')}
+                    className={cn(
+                      'px-1.5 py-0.5 text-10 font-medium rounded transition-colors',
+                      avStyle === 'character' ? 'bg-background text-foreground shadow-xs font-semibold' : 'text-muted-foreground'
+                    )}
+                  >
+                    Char
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1 text-10 font-mono text-muted-foreground">
+                <span className="px-1.5 py-0.5 rounded bg-muted/60">模式: {avStyle}</span>
+                <span className="px-1.5 py-0.5 rounded bg-muted/60">60 几何哈希</span>
+                <button
+                  type="button"
+                  onClick={() => setAvShadow(!avShadow)}
+                  className="px-1.5 py-0.5 rounded bg-muted/60 hover:bg-muted text-accent-purple"
+                >
+                  {avShadow ? '阴影: 开' : '阴影: 关'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 pt-2 border-t border-border/50">
+            <div className="flex items-center justify-between">
+              <span className="text-10 text-muted-foreground">测试智能体 Handle:</span>
+              <div className="flex flex-wrap gap-1">
+                {agentPresets.slice(0, 4).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setAgentSeed(p)}
+                    className={cn(
+                      'px-1.5 py-0.5 rounded text-10 font-mono transition-colors',
+                      agentSeed === p ? 'bg-accent-purple text-white font-semibold' : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                    )}
+                  >
+                    @{p.split('-')[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Input
+              value={agentSeed}
+              onChange={(e) => setAgentSeed(e.target.value || 'agent')}
+              placeholder="输入智能体标识…"
+              className="h-7 text-xs font-mono"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 全景团队画廊 */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <Users className="size-3.5 text-primary" />
+            全景人机协同画廊（人类同事 react-nice-avatar vs AI 同事 avvvatars）
+          </span>
+          <span className="text-10 text-muted-foreground font-mono">2 大引擎 · 12 位协同成员</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* 人类同事阵列 */}
+          <div className="rounded-xl border border-border/80 bg-background p-3 space-y-2.5">
+            <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
+              <span className="text-xs font-semibold text-accent-blue flex items-center gap-1">
+                <User className="size-3" /> 人类工程师与产品团队
+              </span>
+              <Badge variant="outline" className="text-10 text-accent-blue border-accent-blue/30">插画肖像</Badge>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {humanTeam.map((h) => (
+                <div key={h.name} className="flex flex-col items-center text-center p-2 rounded-lg bg-muted/20 border border-border/40 hover:bg-muted/40 transition-colors">
+                  <div className="relative size-11 rounded-full overflow-hidden border border-border/60 shadow-xs mb-1.5">
+                    <NiceAvatar style={{ width: '100%', height: '100%' }} shape="circle" {...genConfig(h.name)} />
+                    <span className={cn(
+                      'absolute bottom-0 right-0 size-2.5 rounded-full border border-background',
+                      h.status === 'online' ? 'bg-accent-green' : h.status === 'busy' ? 'bg-accent-yellow' : 'bg-muted-foreground'
+                    )} />
+                  </div>
+                  <span className="text-xs font-medium text-foreground truncate max-w-24">{h.name}</span>
+                  <span className="text-10 text-muted-foreground truncate max-w-24">{h.role}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* AI 同事智能体阵列 */}
+          <div className="rounded-xl border border-border/80 bg-background p-3 space-y-2.5">
+            <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
+              <span className="text-xs font-semibold text-accent-purple flex items-center gap-1">
+                <Bot className="size-3" /> AI 智能体执行面
+              </span>
+              <Badge variant="outline" className="text-10 text-accent-purple border-accent-purple/30">算法几何</Badge>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {agentTeam.map((a) => (
+                <div key={a.handle} className="flex flex-col items-center text-center p-2 rounded-lg bg-muted/20 border border-border/40 hover:bg-muted/40 transition-colors">
+                  <div className="relative size-11 rounded-full overflow-hidden border border-border/60 shadow-xs mb-1.5 flex items-center justify-center">
+                    <Avvvatars value={a.handle} size={44} style={avStyle} shadow={false} />
+                    <span className={cn(
+                      'absolute bottom-0 right-0 size-2.5 rounded-full border border-background',
+                      a.status === 'active' ? 'bg-accent-purple animate-pulse' : 'bg-muted-foreground'
+                    )} />
+                  </div>
+                  <span className="text-xs font-medium text-foreground truncate max-w-24">{a.name}</span>
+                  <span className="text-10 text-accent-purple font-mono truncate max-w-24">@{a.handle}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 架构裁决横幅 */}
+      <div className="rounded-lg border border-accent-green/30 bg-accent-green/5 p-3.5 text-xs space-y-1.5">
+        <div className="flex items-center gap-2 text-accent-green font-semibold">
+          <CheckCircle2 className="size-4" />
+          <span>架构裁决：已舍弃其余非标方案，确立人类 (react-nice-avatar) 与 AI (avvvatars) 唯一标准</span>
+        </div>
+        <p className="text-11 text-muted-foreground leading-relaxed">
+          全仓统一由 <code>MemberAvatar</code> 组件自动承接：人类成员根据名称或标识确定性生成精美人物肖像；AI 智能体自动渲染极具未来感的算法几何符号。无需配置外部图片或 CDN，在离线与 Tauri 桌面端具备 100% 稳定性与极致性能。
+        </p>
+      </div>
     </div>
   )
 }
@@ -1081,6 +1374,7 @@ function AgentPill({ name, status }: { name: string; status: 'active' | 'contrib
 
 export function DesignSystemPage() {
   const [activeSection, setActiveSection] = React.useState('colors')
+  const [navSearch, setNavSearch] = React.useState('')
   const [sliderVal, setSliderVal] = React.useState(40)
   const [groupCollapsed, setGroupCollapsed] = React.useState(false)
   const [dialogOpen, setDialogOpen] = React.useState(false)
@@ -1088,60 +1382,147 @@ export function DesignSystemPage() {
   const [segValue, setSegValue] = React.useState<string>('list')
   const [ownerValue, setOwnerValue] = React.useState('')
 
+  const mainRef = React.useRef<HTMLElement | null>(null)
+  const navRef = React.useRef<HTMLElement | null>(null)
+  const isScrollingProgrammaticallyRef = React.useRef(false)
+
   const scrollTo = (id: string) => {
     setActiveSection(id)
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    isScrollingProgrammaticallyRef.current = true
+
+    const el = document.getElementById(id)
+    if (el && mainRef.current) {
+      const mainEl = mainRef.current
+      const mainRect = mainEl.getBoundingClientRect()
+      const elRect = el.getBoundingClientRect()
+      const targetTop = mainEl.scrollTop + (elRect.top - mainRect.top) - 20
+      mainEl.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: 'smooth',
+      })
+    }
+
+    window.setTimeout(() => {
+      isScrollingProgrammaticallyRef.current = false
+    }, 600)
   }
 
-  const grouped = SECTION_GROUPS.map((g) => ({
-    label: g,
-    items: SECTIONS.filter((s) => s.group === g),
-  }))
+  const filteredSections = React.useMemo(() => {
+    if (!navSearch.trim()) return SECTIONS
+    const q = navSearch.toLowerCase()
+    return SECTIONS.filter(
+      (s) =>
+        s.label.toLowerCase().includes(q) ||
+        s.id.toLowerCase().includes(q) ||
+        s.group.toLowerCase().includes(q),
+    )
+  }, [navSearch])
+
+  const grouped = React.useMemo(
+    () =>
+      SECTION_GROUPS.map((g) => ({
+        label: g,
+        items: filteredSections.filter((s) => s.group === g),
+      })).filter((g) => g.items.length > 0),
+    [filteredSections],
+  )
+
+  const handleMainScroll = (e: React.UIEvent<HTMLElement>) => {
+    if (isScrollingProgrammaticallyRef.current) return
+    const el = e.currentTarget
+    const mainTop = el.getBoundingClientRect().top
+    let found = activeSection
+    for (const s of SECTIONS) {
+      const node = document.getElementById(s.id)
+      if (node) {
+        const offset = node.getBoundingClientRect().top - mainTop
+        if (offset <= 140) {
+          found = s.id
+        }
+      }
+    }
+    if (found && found !== activeSection) {
+      setActiveSection(found)
+    }
+  }
 
   return (
-    <div className="flex h-full overflow-hidden bg-background">
+    <div className="flex h-full w-full overflow-hidden bg-background">
 
-      <aside className="w-48 shrink-0 border-r border-border overflow-y-auto">
-        <div className="px-4 py-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-foreground">Design System</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-10 font-bold bg-violet-500 text-white uppercase tracking-wide">
-              DEV
-            </span>
-          </div>
-          <p className="text-10 text-muted-foreground mt-0.5">Tokens · Components · Patterns</p>
-        </div>
-        <nav className="p-2 space-y-3">
-          {grouped.map((g) => (
-            <div key={g.label}>
-              <p className="px-2.5 pb-1 text-10 font-bold text-muted-foreground/50 uppercase tracking-widest">{g.label}</p>
-              {g.items.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => scrollTo(s.id)}
-                  className={cn(
-                    'w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-colors',
-                    activeSection === s.id
-                      ? 'bg-accent text-foreground font-medium'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/60',
-                  )}
-                >
-                  {s.label}
-                </button>
-              ))}
+      {/* 左侧独立侧边栏：单独的滚动条，不跟右边共用，顶部常驻固定 */}
+      <aside className="w-56 shrink-0 border-r border-border h-full flex flex-col bg-background/95 select-none">
+        <div className="p-3.5 border-b border-border space-y-2.5 shrink-0 bg-background">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-foreground">Design System</span>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-10 font-bold bg-violet-500 text-white uppercase tracking-wide">
+                DEV
+              </span>
             </div>
-          ))}
+          </div>
+          {/* 快速搜索框 */}
+          <div className="relative">
+            <Search className="absolute left-2 top-2 size-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={navSearch}
+              onChange={(e) => setNavSearch(e.target.value)}
+              placeholder="搜索组件或 Token…"
+              className="w-full h-7 pl-7 pr-6 text-xs rounded-md border border-border bg-muted/40 placeholder:text-muted-foreground/60 focus:bg-background focus:outline-hidden focus:border-accent-blue transition-colors"
+            />
+            {navSearch && (
+              <button
+                type="button"
+                onClick={() => setNavSearch('')}
+                className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 侧栏导航：具有独立的垂直滚动条 */}
+        <nav ref={navRef} className="flex-1 overflow-y-auto p-2 space-y-3">
+          {grouped.length === 0 ? (
+            <p className="px-2 py-4 text-xs text-muted-foreground text-center">无匹配项</p>
+          ) : (
+            grouped.map((g) => (
+              <div key={g.label}>
+                <p className="px-2.5 pb-1 text-10 font-bold text-muted-foreground/60 uppercase tracking-widest">
+                  {g.label}
+                </p>
+                {g.items.map((s) => {
+                  const isActive = activeSection === s.id
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => scrollTo(s.id)}
+                      className={cn(
+                        'w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-colors flex items-center justify-between',
+                        isActive
+                          ? 'bg-accent text-foreground font-semibold shadow-xs'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/60',
+                      )}
+                    >
+                      <span className="truncate">{s.label}</span>
+                      {isActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent-blue shrink-0 ml-1.5" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            ))
+          )}
         </nav>
       </aside>
 
-      <main className="flex-1 overflow-y-auto"
-        onScroll={(e) => {
-          const el = e.currentTarget
-          for (const s of SECTIONS) {
-            const node = document.getElementById(s.id)
-            if (node && node.offsetTop - el.scrollTop < 120) setActiveSection(s.id)
-          }
-        }}
+      {/* 右侧主视口：具有独立的垂直滚动条，滚动不影响左侧栏 */}
+      <main
+        ref={mainRef}
+        className="flex-1 h-full overflow-y-auto"
+        onScroll={handleMainScroll}
       >
         <div className="max-w-4xl mx-auto px-8 py-6 space-y-12">
 
@@ -1500,8 +1881,82 @@ export function DesignSystemPage() {
             <SectionTitle>Member Identity</SectionTitle>
             <div className="space-y-4">
               <div>
-                <SubLabel>AvatarPickerField（内置头像 + 自定义 URL）</SubLabel>
+                <SubLabel>AvatarPickerField（人类插画肖像 + AI 算法几何 + 自定义 URL）</SubLabel>
                 <AvatarPickerShowcase />
+              </div>
+              <div>
+                <SubLabel>MemberAvatar 实体头像矩阵（人类: NiceAvatar 插画 vs AI: Avvvatars 几何 · 5 级尺寸阶梯）</SubLabel>
+                <div className="space-y-3 rounded-lg border border-border/70 p-3.5 bg-muted/10 max-w-2xl">
+                  {/* 人类成员尺寸阶梯 */}
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <span className="text-xs text-muted-foreground w-24 shrink-0 font-medium">人类成员:</span>
+                    {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((sz) => (
+                      <div key={sz} className="flex flex-col items-center gap-1">
+                        <MemberAvatar
+                          size={sz}
+                          member={{
+                            type: 'human',
+                            displayName: 'Alex Chen',
+                            handle: 'alex',
+                            isOnline: true,
+                          }}
+                        />
+                        <span className="text-10 text-muted-foreground font-mono">{sz}</span>
+                      </div>
+                    ))}
+                    {/* Fallback 纯文本模式 */}
+                    <div className="flex flex-col items-center gap-1">
+                      <MemberAvatar
+                        size="md"
+                        useInitials
+                        member={{
+                          type: 'human',
+                          displayName: 'Sarah Connor',
+                          handle: 'sarah',
+                          isOnline: false,
+                        }}
+                      />
+                      <span className="text-10 text-muted-foreground font-mono">initials</span>
+                    </div>
+                  </div>
+
+                  {/* AI 智能体尺寸阶梯 */}
+                  <div className="flex items-center gap-4 flex-wrap pt-2 border-t border-border/50">
+                    <span className="text-xs text-muted-foreground w-24 shrink-0 font-medium">AI 智能体:</span>
+                    {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((sz) => (
+                      <div key={sz} className="flex flex-col items-center gap-1">
+                        <MemberAvatar
+                          size={sz}
+                          member={{
+                            type: 'ai_agent',
+                            displayName: 'Claude Coder',
+                            handle: 'claude-coder',
+                            isOnline: true,
+                          }}
+                        />
+                        <span className="text-10 text-muted-foreground font-mono">{sz}</span>
+                      </div>
+                    ))}
+                    {/* AI 字符模式 */}
+                    <div className="flex flex-col items-center gap-1">
+                      <MemberAvatar
+                        size="md"
+                        avvvatarsStyle="character"
+                        member={{
+                          type: 'ai_agent',
+                          displayName: 'DeepSeek Architect',
+                          handle: 'deepseek-r1',
+                          isOnline: true,
+                        }}
+                      />
+                      <span className="text-10 text-muted-foreground font-mono">char-mode</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <SubLabel>双表面头像系统实装展台（人类: react-nice-avatar × AI: avvvatars）</SubLabel>
+                <AvatarModernizationShowcase />
               </div>
               <div>
                 <SubLabel>TrustLevelBadge（信任等级 L0-L4）</SubLabel>
@@ -2076,83 +2531,1420 @@ export function DesignSystemPage() {
                   </Combobox>
                 </div>
               </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="hover-card">
+            <SectionTitle>Hover Card（浮动预览卡片）</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+              用于光标悬停在触发元素时呈现上下文补充信息、富实体预览或路由直觉感知。基于{' '}
+              <code className="font-mono text-11 bg-muted px-1 py-0.5 rounded">@base-ui/react/preview-card</code>{' '}
+              封装，支持避障定位、无障碍语义与开闭过渡动画。
+            </p>
+
+            <div className="space-y-8">
+              {/* ① 尺寸规范阶梯 */}
               <div>
-                <SubLabel>Hover Card (static)</SubLabel>
-                <HoverCard>
-                  <HoverCardTrigger href="#">@alex</HoverCardTrigger>
-                  <HoverCardContent>
-                    <p className="text-sm font-medium">Alex Chen</p>
-                    <p className="text-xs text-muted-foreground mt-1">Senior Frontend Engineer · @alex</p>
-                  </HoverCardContent>
-                </HoverCard>
-              </div>
-              <div>
-                <SubLabel>Hover Card sizes (sm / md / lg + Arrow)</SubLabel>
-                <div className="flex flex-wrap items-start gap-4">
+                <SubLabel>① 尺寸规格阶梯（Sizes: sm / md / lg / xl）</SubLabel>
+                <div className="flex flex-wrap items-center gap-4">
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs underline decoration-dotted">size=sm</HoverCardTrigger>
+                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                      size="sm" (w-56)
+                    </HoverCardTrigger>
                     <HoverCardContent size="sm">
-                      <p className="text-sm font-medium">Small card</p>
-                      <p className="text-xs text-muted-foreground mt-1">w-56 窄栏场景</p>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Compact Card</span>
+                          <Badge variant="outline" className="text-10 px-1">sm</Badge>
+                        </div>
+                        <p className="text-11 text-muted-foreground leading-relaxed">
+                          适用于窄栏、密集表格单元格或单行轻量指标说明。
+                        </p>
+                      </div>
                     </HoverCardContent>
                   </HoverCard>
+
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs underline decoration-dotted">size=md</HoverCardTrigger>
+                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                      size="md" (w-64 · 默认)
+                    </HoverCardTrigger>
                     <HoverCardContent size="md">
-                      <p className="text-sm font-medium">Default card</p>
-                      <p className="text-xs text-muted-foreground mt-1">w-64 默认档</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Standard Card</span>
+                          <Badge variant="outline" className="text-10 px-1">md</Badge>
+                        </div>
+                        <p className="text-11 text-muted-foreground leading-relaxed">
+                          通用默认卡片宽度，满足绝大部分简短详情与状态预览。
+                        </p>
+                      </div>
                     </HoverCardContent>
                   </HoverCard>
+
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs underline decoration-dotted">size=lg + Arrow</HoverCardTrigger>
+                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                      size="lg" (w-72 · 路由标准)
+                    </HoverCardTrigger>
                     <HoverCardContent size="lg">
                       <HoverCardArrow />
-                      <p className="text-sm font-medium">Large card with arrow</p>
-                      <p className="text-xs text-muted-foreground mt-1">w-72（route-preview 同宽），HoverCardArrow 显式放入 children 才渲染</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Large Card + Arrow</span>
+                          <Badge variant="secondary" className="text-10 px-1">lg</Badge>
+                        </div>
+                        <p className="text-11 text-muted-foreground leading-relaxed">
+                          对齐 <code>route-preview</code> 规范标准宽，兼顾内容信息量与弹出留白。
+                        </p>
+                      </div>
                     </HoverCardContent>
                   </HoverCard>
+
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs underline decoration-dotted">size=xl</HoverCardTrigger>
+                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                      size="xl" (w-80 · 富实体宽)
+                    </HoverCardTrigger>
                     <HoverCardContent size="xl">
-                      <p className="text-sm font-medium">Extra large card</p>
-                      <p className="text-xs text-muted-foreground mt-1">w-80 富信息卡（member 卡同宽档）</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Extra Large Card</span>
+                          <Badge variant="secondary" className="text-10 px-1">xl</Badge>
+                        </div>
+                        <p className="text-11 text-muted-foreground leading-relaxed">
+                          用于成员履历、AI 智能体运行态面板等高信息密度复合组件展示。
+                        </p>
+                      </div>
                     </HoverCardContent>
                   </HoverCard>
                 </div>
               </div>
+
+              {/* ② 方位与对齐矩阵 */}
               <div>
-                <SubLabel>Hover Card 富信息模板（PreviewSection / PreviewFooterMeta，member 卡示范）</SubLabel>
-                <HoverCard>
-                  <HoverCardTrigger href="#" className="text-xs underline decoration-dotted">@alex 富卡</HoverCardTrigger>
-                  <HoverCardContent size="lg">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex flex-wrap items-center gap-1">
-                        <Badge variant="secondary">active</Badge>
-                      </div>
-                      <p className="line-clamp-2 text-11 text-muted-foreground">负责前端交付链路，熟悉双表面架构。</p>
-                      <PreviewSection title="资料">
-                        <PreviewRow label="账号">@alex</PreviewRow>
-                        <PreviewRow label="职务">Senior Frontend Engineer</PreviewRow>
-                        <PreviewRow label="信任">L2 标准 · 86</PreviewRow>
-                      </PreviewSection>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-10 font-medium text-muted-foreground">frontend</span>
-                        <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-10 font-medium text-muted-foreground">apm</span>
+                <SubLabel>② 四向方位与对齐矩阵（Placements &amp; Alignments）</SubLabel>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl">
+                  {(['top', 'bottom', 'left', 'right'] as const).map((side) => (
+                    <div key={side} className="p-3 rounded-lg border border-border/60 bg-muted/10 flex flex-col items-center gap-2">
+                      <span className="text-10 font-mono text-muted-foreground uppercase">side="{side}"</span>
+                      <HoverCard>
+                        <HoverCardTrigger
+                          render={
+                            <Button variant="outline" size="sm" className="h-7 text-xs">
+                              Hover {side}
+                            </Button>
+                          }
+                        />
+                        <HoverCardContent side={side} size="sm">
+                          <HoverCardArrow />
+                          <p className="text-xs font-medium text-foreground">side="{side}"</p>
+                          <p className="text-10 text-muted-foreground mt-0.5">自动避障且居中锚定</p>
+                        </HoverCardContent>
+                      </HoverCard>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ③ 箭头与视觉修饰对比 */}
+              <div>
+                <SubLabel>③ 视觉修饰对比（无箭头默认 vs 显式气泡箭头 HoverCardArrow）</SubLabel>
+                <div className="flex flex-wrap items-center gap-6">
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs text-muted-foreground hover:text-foreground underline decoration-dotted">
+                      无箭头平整卡片（Clean Minimal）
+                    </HoverCardTrigger>
+                    <HoverCardContent size="sm">
+                      <p className="text-xs font-semibold text-foreground">无箭头紧凑浮层</p>
+                      <p className="text-11 text-muted-foreground mt-1">适合紧贴在按钮或操作栏下方的提示。</p>
+                    </HoverCardContent>
+                  </HoverCard>
+
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs text-muted-foreground hover:text-foreground underline decoration-dotted">
+                      带气泡指向箭头（With HoverCardArrow）
+                    </HoverCardTrigger>
+                    <HoverCardContent size="sm">
+                      <HoverCardArrow />
+                      <p className="text-xs font-semibold text-foreground">带指向箭头</p>
+                      <p className="text-11 text-muted-foreground mt-1">显式放入 children，明确视觉指示来源。</p>
+                    </HoverCardContent>
+                  </HoverCard>
+                </div>
+              </div>
+
+              {/* ④ 延迟策略 */}
+              <div>
+                <SubLabel>④ 响应延迟策略（Timings: 即时调试 vs 防误触人机工程）</SubLabel>
+                <div className="flex flex-wrap items-center gap-4">
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs font-mono px-2 py-1 rounded bg-muted/60 hover:bg-muted text-foreground">
+                      delay=0 (即时)
+                    </HoverCardTrigger>
+                    <HoverCardContent size="sm">
+                      <p className="text-xs font-medium text-foreground">即时展开 (0ms)</p>
+                      <p className="text-11 text-muted-foreground mt-1">鼠标触碰瞬间展开，适合调试测试。</p>
+                    </HoverCardContent>
+                  </HoverCard>
+
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs font-mono px-2 py-1 rounded bg-muted/60 hover:bg-muted text-foreground">
+                      delay=300 · closeDelay=150 (推荐生产配置)
+                    </HoverCardTrigger>
+                    <HoverCardContent size="sm">
+                      <HoverCardArrow />
+                      <p className="text-xs font-medium text-foreground">推荐延迟 (300ms/150ms)</p>
+                      <p className="text-11 text-muted-foreground mt-1">避免鼠标横穿屏幕时引发走马灯式闪烁。</p>
+                    </HoverCardContent>
+                  </HoverCard>
+                </div>
+              </div>
+
+              {/* ⑤ 真实业务场景卡片全景 */}
+              {/* ⑤ APM 全流程核心业务卡片矩阵（6 大核心业务深度特色） */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <SubLabel>⑤ APM 全流程核心业务卡片矩阵（统一架构 × 模块特色）</SubLabel>
+                  <span className="text-10 text-muted-foreground">
+                    严格遵循「四层三列」外舒内紧架构，突出各模块专属第一视觉信号 (Hero Visual)
+                  </span>
+                </div>
+
+                {/* A. 交互悬停体验栏 (Interactive Hover Triggers) */}
+                <div className="p-3.5 rounded-xl border border-border/80 bg-muted/10 space-y-2">
+                  <p className="text-11 font-medium text-foreground">
+                    交互悬浮测试（鼠标滑过以下实体，检验定位避障、气泡箭头与浮层开闭手感）：
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* 1. 任务卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <CheckSquare className="size-3.5 text-accent-blue" />
+                        <span className="group-hover:text-accent-blue">任务: #ISSUE-104</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                              <CheckSquare className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              重构 Design System 侧栏导航与悬停规范
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0">Task</Badge>
+                          </div>
+                          {/* Hero 带：状态 + 优先级 + 迭代 */}
+                          <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
+                            <div className="flex items-center gap-1.5">
+                              <StatusPill tone="info">In Progress</StatusPill>
+                              <span className="inline-flex items-center gap-1 text-10 text-accent-red font-medium">
+                                <Flag className="size-2.5 fill-accent-red" /> High
+                              </span>
+                            </div>
+                            <span className="text-10 font-mono text-muted-foreground">Sprint 24</span>
+                          </div>
+                          <PreviewSection title="工单属性">
+                            <PreviewRow label="负责人">
+                              <div className="flex items-center gap-1.5">
+                                <MemberAvatar
+                                  size="xs"
+                                  member={{
+                                    type: 'human',
+                                    displayName: 'Alex Chen',
+                                    handle: 'alex',
+                                    isOnline: true,
+                                  }}
+                                />
+                                <span>Alex Chen (@alex)</span>
+                              </div>
+                            </PreviewRow>
+                            <PreviewRow label="所属项目">Agent Project Manager</PreviewRow>
+                            <PreviewRow label="工时进度">
+                              <div className="flex items-center gap-2 flex-1">
+                                <Progress value={62} className="h-1.5 flex-1" />
+                                <span className="font-mono text-10 text-muted-foreground">2.5h / 4h</span>
+                              </div>
+                            </PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>分支: <code>feat/design-system</code></span>
+                            <span className="ml-auto font-mono text-10">截止 2026-09-15</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 2. 缺陷阻断卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-red/30 bg-accent-red/5 hover:bg-accent-red/10 text-xs font-medium text-accent-red transition-colors group">
+                        <Bug className="size-3.5" />
+                        <span className="group-hover:underline">缺陷: #BUG-42 (阻断)</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-red/10 text-accent-red">
+                              <Bug className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              工作区路由并发死锁（阻断发版）
+                            </span>
+                            <Badge variant="destructive" className="text-10 shrink-0">Bug</Badge>
+                          </div>
+                          {/* Hero 带：严重性标尺 + 阻断发版警示 */}
+                          <div className="flex items-center justify-between p-2 rounded-md bg-accent-red/10 border border-accent-red/30">
+                            <div className="flex items-center gap-2">
+                              <SeverityBar severity="critical" />
+                              <span className="text-10 font-bold text-accent-red uppercase tracking-wider">
+                                阻塞发布 (Blocker)
+                              </span>
+                            </div>
+                            <StatusPill tone="danger">Open</StatusPill>
+                          </div>
+                          <PreviewSection title="排查上下文">
+                            <PreviewRow label="复现环境">Node 20.14 · SQLite WAL · macOS 15</PreviewRow>
+                            <PreviewRow label="根因分类">AsyncLocalStorage 作用域穿透竞态</PreviewRow>
+                            <PreviewRow label="修复关联">已关联工单 #ISSUE-112</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span className="text-accent-red flex items-center gap-1 font-medium">
+                              <AlertCircle className="size-3" /> P0 紧急响应中
+                            </span>
+                            <span className="ml-auto font-mono text-10">报障人: @qa-bot</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 3. 工程治理验收卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-green/30 bg-accent-green/5 hover:bg-accent-green/10 text-xs font-medium text-accent-green transition-colors group">
+                        <ShieldCheck className="size-3.5" />
+                        <span className="group-hover:underline">验收: ACC-2026-09</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="xl">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-green/10 text-accent-green">
+                              <ShieldCheck className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              v2.4 核心质量门禁收口与闭环
+                            </span>
+                            <Badge variant="secondary" className="text-10 shrink-0 text-accent-green bg-accent-green/10">
+                              Acceptance
+                            </Badge>
+                          </div>
+                          {/* Hero 带：门禁通过率点阵 + 进度 */}
+                          <div className="space-y-1.5 p-2 rounded-md bg-accent-green/10 border border-accent-green/30">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-accent-green flex items-center gap-1">
+                                <CheckCircle2 className="size-3.5" /> 门禁通过率: 3/4 Passed
+                              </span>
+                              <span className="font-mono text-10 font-bold text-accent-green">75%</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="h-1.5 flex-1 rounded-full bg-accent-green" title="单测覆盖率: Passed" />
+                              <span className="h-1.5 flex-1 rounded-full bg-accent-green" title="API 契约零漂移: Passed" />
+                              <span className="h-1.5 flex-1 rounded-full bg-accent-green" title="文档同步对齐: Passed" />
+                              <span className="h-1.5 flex-1 rounded-full bg-accent-yellow animate-pulse" title="破坏性静态扫描: Pending" />
+                            </div>
+                          </div>
+                          <PreviewSection title="证据回流与治理">
+                            <PreviewRow label="证据链">12 条 CI/PR 自动化回流证据</PreviewRow>
+                            <PreviewRow label="AI 代写状态">AI 同事已草拟验收标准，待人审签署</PreviewRow>
+                            <PreviewRow label="阻断风险">1 项破坏性代码扫描待确认</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span className="text-accent-yellow flex items-center gap-1 font-medium">
+                              <Clock className="size-3" /> 等待人工签署确认
+                            </span>
+                            <span className="ml-auto font-mono text-10">对应 #ISSUE-104</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 4. 项目全景卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <FolderKanban className="size-3.5 text-primary" />
+                        <span className="group-hover:text-primary">项目: Nebula Core</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                              <FolderKanban className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              Nebula Core (AgentPM 核心平台)
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0">Project</Badge>
+                          </div>
+                          {/* Hero 带：健康度 + 交付进度 */}
+                          <div className="space-y-1.5 pb-1 border-b border-border/50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <StatusPill tone="success">On Track</StatusPill>
+                                <span className="text-11 font-medium text-foreground">健康度 94 分</span>
+                              </div>
+                              <span className="text-10 font-mono text-muted-foreground">已完成 48/60 工单</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Progress value={80} className="h-1.5 flex-1" />
+                              <span className="font-mono text-10 text-muted-foreground">80%</span>
+                            </div>
+                          </div>
+                          <PreviewSection title="项目大盘">
+                            <PreviewRow label="核心仓库">agent-project-manager (develop)</PreviewRow>
+                            <PreviewRow label="协作团队">4 位人类工程师 + 2 位 AI 同事</PreviewRow>
+                            <PreviewRow label="双轨成本">累计 186k Tokens ($1.42) · 38h</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>负责人: @alex</span>
+                            <span className="ml-auto font-mono text-10">目标 GA: 2026-09-30</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 5. AI 执行与审批卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-purple/30 bg-accent-purple/5 hover:bg-accent-purple/10 text-xs font-medium text-accent-purple transition-colors group">
+                        <Bot className="size-3.5" />
+                        <span className="group-hover:underline">执行审批: EXEC-891</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="xl">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-purple/10 text-accent-purple">
+                              <Bot className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              EXEC-891: 全局样式 Token 批量重构
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0 text-accent-purple border-accent-purple/40">
+                              Execution
+                            </Badge>
+                          </div>
+                          {/* Hero 带：等待审批 + 冷却倒计时 + 双轨消耗 */}
+                          <div className="p-2 rounded-md bg-accent-purple/10 border border-accent-purple/30 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-accent-purple flex items-center gap-1">
+                                <Clock className="size-3" /> 等待人审决议 (Pending Approval)
+                              </span>
+                              <span className="text-10 font-mono px-1.5 py-0.5 rounded bg-accent-red/20 text-accent-red font-semibold">
+                                高风险拦截
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <DualTrackMetricPill tokens={4280} durationMs={2400} costUsd={0.0064} model="Claude 3.7" />
+                            </div>
+                          </div>
+                          <PreviewSection title="执行影响分析">
+                            <PreviewRow label="触发源">CLI Dispatch (`claude-code` 运行时)</PreviewRow>
+                            <PreviewRow label="破坏性评估">波及 14 个组件，涉及 28 处基础色板变更</PreviewRow>
+                            <PreviewRow label="回滚保护">Git Worktree 独立隔离，支持一键丢弃</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span className="text-accent-purple font-medium">3s 冷却门禁已解除</span>
+                            <span className="ml-auto font-mono text-10">按键 1 确认 / 2 驳回</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 6. 版本发布卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-orange/30 bg-accent-orange/5 hover:bg-accent-orange/10 text-xs font-medium text-accent-orange transition-colors group">
+                        <Rocket className="size-3.5" />
+                        <span className="group-hover:underline">发版: Release v2.4.0</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-orange/10 text-accent-orange">
+                              <Rocket className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              Release v2.4.0 (Spring GA 稳定版)
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0 text-accent-orange border-accent-orange/40">
+                              Release
+                            </Badge>
+                          </div>
+                          {/* Hero 带：发布状态 + Git Tag + 门禁收口 */}
+                          <div className="space-y-1.5 pb-1 border-b border-border/50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <StatusPill tone="success">Published</StatusPill>
+                                <span className="text-11 font-mono font-medium text-foreground">tag: v2.4.0</span>
+                              </div>
+                              <span className="text-10 font-mono text-muted-foreground">commit 9f8e12a</span>
+                            </div>
+                            <div className="flex items-center justify-between text-10 text-muted-foreground pt-0.5">
+                              <span className="flex items-center gap-1 text-accent-green font-medium">
+                                <ShieldCheck className="size-3" /> 门禁归档 100% 审计闭环
+                              </span>
+                              <span className="font-mono">4/4 全绿</span>
+                            </div>
+                          </div>
+                          <PreviewSection title="发版资产与元数据">
+                            <PreviewRow label="变更真相源">CHANGELOG.md (单向再生完成)</PreviewRow>
+                            <PreviewRow label="归档工单">28 项工单 · 6 项治理验收闭环</PreviewRow>
+                            <PreviewRow label="多端分发">Web (Vite) / Desktop (Tauri) / CLI</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>签发人: @alex (双签审计)</span>
+                            <span className="ml-auto font-mono text-10">2026-09-11 GA</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </div>
+                </div>
+
+                {/* B. 全景平铺审查画廊 (Expanded Spec Gallery) */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-11 font-medium text-foreground">
+                      全景平铺审查画廊（无需悬停，直接对比各模块卡片的统一底盘与差异化第一视觉）：
+                    </p>
+                    <Badge variant="secondary" className="text-10">静态展开对比</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* 卡片 1: 任务工单卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                            <CheckSquare className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            #ISSUE-104: 重构侧栏与 HoverCard
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0">Task</Badge>
+                        </div>
+                        <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
+                          <div className="flex items-center gap-1.5">
+                            <StatusPill tone="info">In Progress</StatusPill>
+                            <span className="inline-flex items-center gap-1 text-10 text-accent-red font-medium">
+                              <Flag className="size-2.5 fill-accent-red" /> High
+                            </span>
+                          </div>
+                          <span className="text-10 font-mono text-muted-foreground">Sprint 24</span>
+                        </div>
+                        <PreviewSection title="工单属性">
+                          <PreviewRow label="负责人">@alex (Alex Chen)</PreviewRow>
+                          <PreviewRow label="所属项目">Agent Project Manager</PreviewRow>
+                          <PreviewRow label="工时进度">2.5h / 4h (62%)</PreviewRow>
+                        </PreviewSection>
                       </div>
                       <PreviewFooterMeta>
-                        <span className="h-1.5 w-1.5 rounded-full bg-accent-green" />
-                        <span>最近活跃 2026-09-11 10:00</span>
-                        <span className="ml-auto font-mono">MEM-A1B2</span>
+                        <span>分支: <code>feat/design-system</code></span>
+                        <span className="ml-auto font-mono text-10">截止 09-15</span>
                       </PreviewFooterMeta>
                     </div>
-                  </HoverCardContent>
-                </HoverCard>
+
+                    {/* 卡片 2: 缺陷阻断卡 */}
+                    <div className="rounded-xl border border-accent-red/40 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-red/10 text-accent-red">
+                            <Bug className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            #BUG-42: 工作区路由并发死锁
+                          </span>
+                          <Badge variant="destructive" className="text-10 shrink-0">Bug</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-md bg-accent-red/10 border border-accent-red/30">
+                          <div className="flex items-center gap-2">
+                            <SeverityBar severity="critical" />
+                            <span className="text-10 font-bold text-accent-red uppercase tracking-wider">
+                              阻塞发布 (Blocker)
+                            </span>
+                          </div>
+                          <StatusPill tone="danger">Open</StatusPill>
+                        </div>
+                        <PreviewSection title="排查上下文">
+                          <PreviewRow label="复现环境">Node 20.14 · SQLite WAL</PreviewRow>
+                          <PreviewRow label="根因分类">AsyncLocalStorage 穿透竞态</PreviewRow>
+                          <PreviewRow label="修复关联">关联工单 #ISSUE-112</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span className="text-accent-red flex items-center gap-1 font-medium">
+                          <AlertCircle className="size-3" /> P0 紧急响应中
+                        </span>
+                        <span className="ml-auto font-mono text-10">@qa-bot</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 3: 工程验收卡 */}
+                    <div className="rounded-xl border border-accent-green/40 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-green/10 text-accent-green">
+                            <ShieldCheck className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            ACC-2026-09: 核心门禁收口
+                          </span>
+                          <Badge variant="secondary" className="text-10 shrink-0 text-accent-green bg-accent-green/10">
+                            Acceptance
+                          </Badge>
+                        </div>
+                        <div className="space-y-1.5 p-2 rounded-md bg-accent-green/10 border border-accent-green/30">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-semibold text-accent-green flex items-center gap-1">
+                              <CheckCircle2 className="size-3.5" /> 门禁通过率: 3/4 Passed
+                            </span>
+                            <span className="font-mono text-10 font-bold text-accent-green">75%</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="h-1.5 flex-1 rounded-full bg-accent-green" />
+                            <span className="h-1.5 flex-1 rounded-full bg-accent-green" />
+                            <span className="h-1.5 flex-1 rounded-full bg-accent-green" />
+                            <span className="h-1.5 flex-1 rounded-full bg-accent-yellow animate-pulse" />
+                          </div>
+                        </div>
+                        <PreviewSection title="证据回流与治理">
+                          <PreviewRow label="证据链">12 条 CI/PR 回流证据</PreviewRow>
+                          <PreviewRow label="AI 审计状态">AI 已草拟标准，待人审</PreviewRow>
+                          <PreviewRow label="阻断风险">1 项静态扫描待裁决</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span className="text-accent-yellow flex items-center gap-1 font-medium">
+                          <Clock className="size-3" /> 等待签署确认
+                        </span>
+                        <span className="ml-auto font-mono text-10">#ISSUE-104</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 4: 项目全景卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                            <FolderKanban className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            Nebula Core
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0">Project</Badge>
+                        </div>
+                        <div className="space-y-1.5 pb-1 border-b border-border/50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <StatusPill tone="success">On Track</StatusPill>
+                              <span className="text-11 font-medium text-foreground">健康度 94 分</span>
+                            </div>
+                            <span className="text-10 font-mono text-muted-foreground">48/60 工单</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Progress value={80} className="h-1.5 flex-1" />
+                            <span className="font-mono text-10 text-muted-foreground">80%</span>
+                          </div>
+                        </div>
+                        <PreviewSection title="项目大盘">
+                          <PreviewRow label="核心仓库">agent-project-manager</PreviewRow>
+                          <PreviewRow label="协作团队">4 位成员 + 2 位 AI</PreviewRow>
+                          <PreviewRow label="双轨成本">186k Tokens ($1.42) · 38h</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>负责人: @alex</span>
+                        <span className="ml-auto font-mono text-10">GA 09-30</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 5: AI 执行审批卡 */}
+                    <div className="rounded-xl border border-accent-purple/40 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-purple/10 text-accent-purple">
+                            <Bot className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            EXEC-891: 全局样式重构
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0 text-accent-purple border-accent-purple/40">
+                            Execution
+                          </Badge>
+                        </div>
+                        <div className="p-2 rounded-md bg-accent-purple/10 border border-accent-purple/30 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-accent-purple flex items-center gap-1">
+                              <Clock className="size-3" /> 等待人审决议
+                            </span>
+                            <span className="text-10 font-mono px-1.5 py-0.5 rounded bg-accent-red/20 text-accent-red font-semibold">
+                              高风险拦截
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DualTrackMetricPill tokens={4280} durationMs={2400} costUsd={0.0064} model="Claude 3.7" />
+                          </div>
+                        </div>
+                        <PreviewSection title="执行影响分析">
+                          <PreviewRow label="触发源">CLI Dispatch (`claude-code`)</PreviewRow>
+                          <PreviewRow label="破坏性评估">波及 14 个组件，改动 28 处样式</PreviewRow>
+                          <PreviewRow label="回滚保护">Git Worktree 隔离</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span className="text-accent-purple font-medium">3s 门禁已解除</span>
+                        <span className="ml-auto font-mono text-10">按键 1 确认 / 2 驳回</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 6: 版本发布归档卡 */}
+                    <div className="rounded-xl border border-accent-orange/40 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-orange/10 text-accent-orange">
+                            <Rocket className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            Release v2.4.0-GA
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0 text-accent-orange border-accent-orange/40">
+                            Release
+                          </Badge>
+                        </div>
+                        <div className="space-y-1.5 pb-1 border-b border-border/50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <StatusPill tone="success">Published</StatusPill>
+                              <span className="text-11 font-mono font-medium text-foreground">tag: v2.4.0</span>
+                            </div>
+                            <span className="text-10 font-mono text-muted-foreground">commit 9f8e12a</span>
+                          </div>
+                          <div className="flex items-center justify-between text-10 text-muted-foreground pt-0.5">
+                            <span className="flex items-center gap-1 text-accent-green font-medium">
+                              <ShieldCheck className="size-3" /> 门禁归档闭环
+                            </span>
+                            <span className="font-mono text-10 text-accent-green font-semibold">100% 审计</span>
+                          </div>
+                        </div>
+                        <PreviewSection title="发版资产与元数据">
+                          <PreviewRow label="变更真相源">CHANGELOG.md (单向再生)</PreviewRow>
+                          <PreviewRow label="归档工单">28 项工单 · 6 项验收闭环</PreviewRow>
+                          <PreviewRow label="多端产物">Web · Desktop · CLI</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>签发人: @alex (双签审计)</span>
+                        <span className="ml-auto font-mono text-10">09-11 GA</span>
+                      </PreviewFooterMeta>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {/* ⑥ 孪生成员卡片体系（Twin Identity Cards: 人类同事 vs AI同事 · 对称底盘 × 异构度量） */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <SubLabel>⑥ 孪生成员卡片体系（Twin Identity Cards: 人类同事 vs AI 同事）</SubLabel>
+                  <span className="text-10 text-muted-foreground">
+                    双表面核心：相同底盘框架（Header 3列 / 统一 Hero 焦点带 / 统一 PreviewSection），特化异构数据
+                  </span>
+                </div>
+
+                {/* A. 交互悬停体验栏 */}
+                <div className="p-3.5 rounded-xl border border-border/80 bg-muted/10 space-y-2">
+                  <p className="text-11 font-medium text-foreground">
+                    孪生成员交互悬浮体验（分别悬停人类同事与 AI 同事，体验相同视觉底盘下的异构数据呈现）：
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* 人类同事 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <MemberAvatar
+                          size="xs"
+                          member={{
+                            type: 'human',
+                            displayName: 'Alex Chen',
+                            handle: 'alex',
+                            isOnline: true,
+                          }}
+                        />
+                        <span className="group-hover:text-accent-blue">人类同事: Alex Chen (@alex)</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="xl">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          {/* 统一三列 Header */}
+                          <div className="flex items-start gap-3">
+                            <MemberAvatar
+                              size="lg"
+                              member={{
+                                type: 'human',
+                                displayName: 'Alex Chen',
+                                handle: 'alex',
+                                isOnline: true,
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-xs font-semibold text-foreground truncate">Alex Chen</h4>
+                                <span className="inline-flex items-center gap-1 text-10 text-accent-green font-medium">
+                                  <span className="size-1.5 rounded-full bg-accent-green" /> 在职在线
+                                </span>
+                              </div>
+                              <p className="text-11 text-muted-foreground truncate">资深全栈架构师 · @alex</p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <TrustLevelBadge level={2} score={88} />
+                                <Badge variant="outline" className="text-10 py-0">PR 评审 / 生产发布</Badge>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Hero 焦点带：工时负荷 + 技术栈 */}
+                          <div className="p-2 rounded-md bg-muted/40 border border-border/60 space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-11 font-medium text-foreground flex items-center gap-1">
+                                <Activity className="size-3 text-accent-blue" /> 本周负荷 32h / 40h
+                              </span>
+                              <span className="font-mono text-10 text-muted-foreground">80% · 3 个活跃工单</span>
+                            </div>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {['React 19', 'NestJS 10', 'Tailwind v4', 'SQLite'].map((tech) => (
+                                <span key={tech} className="text-10 font-mono px-1.5 py-0.5 rounded bg-background border border-border/60 text-muted-foreground">
+                                  {tech}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          {/* 属性小节 */}
+                          <PreviewSection title="协作与职责">
+                            <PreviewRow label="所属团队">前端架构组 (Team Lead)</PreviewRow>
+                            <PreviewRow label="核心模块">Design System · 实时协同引擎</PreviewRow>
+                            <PreviewRow label="当前攻坚">#ISSUE-104: 重构侧栏与 HoverCard</PreviewRow>
+                          </PreviewSection>
+                          {/* 底部元信息 */}
+                          <PreviewFooterMeta>
+                            <span className="flex items-center gap-1">
+                              <Clock className="size-3 text-muted-foreground" /> 远程 · UTC+8 (5m 前活跃)
+                            </span>
+                            <span className="ml-auto font-mono text-10">alex@apm.dev</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* AI 同事 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-accent-purple/30 bg-accent-purple/5 hover:bg-accent-purple/10 text-xs font-medium text-accent-purple transition-colors group">
+                        <MemberAvatar
+                          size="xs"
+                          member={{
+                            type: 'ai_agent',
+                            displayName: 'Claude Coder',
+                            handle: 'claude-coder',
+                            isOnline: true,
+                          }}
+                        />
+                        <span className="group-hover:underline">AI 同事: Claude Coder (@claude-coder)</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="xl">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          {/* 统一三列 Header */}
+                          <div className="flex items-start gap-3">
+                            <MemberAvatar
+                              size="lg"
+                              member={{
+                                type: 'ai_agent',
+                                displayName: 'Claude Coder',
+                                handle: 'claude-coder',
+                                isOnline: true,
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-xs font-semibold text-foreground truncate">Claude Coder</h4>
+                                <span className="inline-flex items-center gap-1 text-10 text-accent-green font-medium">
+                                  <span className="size-1.5 rounded-full bg-accent-green animate-pulse" /> 常驻就绪
+                                </span>
+                              </div>
+                              <p className="text-11 text-muted-foreground truncate">全栈执行 Agent · Claude 3.7 Sonnet</p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <TrustLevelBadge level={3} score={92} />
+                                <Badge variant="outline" className="text-10 py-0">自主编码权限</Badge>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Hero 焦点带：Token 消耗 + CLI 工具流 */}
+                          <div className="p-2 rounded-md bg-accent-purple/10 border border-accent-purple/30 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <DualTrackMetricPill tokens={4280} durationMs={2400} costUsd={0.0064} model="Claude 3.7" />
+                            </div>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {['Git Worktree', 'CLI Dispatch', 'Jest/Vitest', 'API Contract'].map((tool) => (
+                                <span key={tool} className="text-10 font-mono px-1.5 py-0.5 rounded bg-background/80 border border-accent-purple/30 text-accent-purple">
+                                  {tool}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          {/* 属性小节 */}
+                          <PreviewSection title="执行表现度量">
+                            <PreviewRow label="门禁通过率">96.8% (31/32 门禁一次性通过)</PreviewRow>
+                            <PreviewRow label="常驻守护">apm-runtime 节点 #rt-08</PreviewRow>
+                            <PreviewRow label="授权边界">自主编码测试 · 生产合流需人审</PreviewRow>
+                          </PreviewSection>
+                          {/* 底部元信息 */}
+                          <PreviewFooterMeta>
+                            <span className="text-accent-green flex items-center gap-1">
+                              <CheckCircle2 className="size-3" /> 契约巡检零偏差
+                            </span>
+                            <span className="ml-auto font-mono text-10">活跃分支: feat/*</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </div>
+                </div>
+
+                {/* B. 孪生卡片对称 1:1 对比画廊 */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-11 font-medium text-foreground">
+                      孪生卡片 1:1 对称平铺画廊（验证三列头部、中间 Hero 焦点带、PreviewSection 高度节奏一致性）：
+                    </p>
+                    <Badge variant="secondary" className="text-10">对称规范对比</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                    {/* 左：人类同事卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <MemberAvatar
+                            size="lg"
+                            member={{
+                              type: 'human',
+                              displayName: 'Alex Chen',
+                              handle: 'alex',
+                              isOnline: true,
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-semibold text-foreground truncate">Alex Chen</h4>
+                              <span className="inline-flex items-center gap-1 text-10 text-accent-green font-medium">
+                                <span className="size-1.5 rounded-full bg-accent-green" /> 在职在线
+                              </span>
+                            </div>
+                            <p className="text-11 text-muted-foreground truncate">资深全栈架构师 · @alex</p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <TrustLevelBadge level={2} score={88} />
+                              <Badge variant="outline" className="text-10 py-0">PR 评审 / 生产发布</Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-2 rounded-md bg-muted/40 border border-border/60 space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-11 font-medium text-foreground flex items-center gap-1">
+                              <Activity className="size-3 text-accent-blue" /> 本周负荷 32h / 40h
+                            </span>
+                            <span className="font-mono text-10 text-muted-foreground">80% · 3 工单</span>
+                          </div>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {['React 19', 'NestJS 10', 'Tailwind v4', 'SQLite'].map((tech) => (
+                              <span key={tech} className="text-10 font-mono px-1.5 py-0.5 rounded bg-background border border-border/60 text-muted-foreground">
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <PreviewSection title="协作与职责">
+                          <PreviewRow label="所属团队">前端架构组 (Team Lead)</PreviewRow>
+                          <PreviewRow label="核心模块">Design System · 实时协同引擎</PreviewRow>
+                          <PreviewRow label="当前攻坚">#ISSUE-104: 重构侧栏与 HoverCard</PreviewRow>
+                        </PreviewSection>
+                      </div>
+
+                      <PreviewFooterMeta>
+                        <span className="flex items-center gap-1">
+                          <Clock className="size-3 text-muted-foreground" /> 远程 · UTC+8 (5m 前活跃)
+                        </span>
+                        <span className="ml-auto font-mono text-10">alex@apm.dev</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 右：AI 同事卡 */}
+                    <div className="rounded-xl border border-accent-purple/40 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <MemberAvatar
+                            size="lg"
+                            member={{
+                              type: 'ai_agent',
+                              displayName: 'Claude Coder',
+                              handle: 'claude-coder',
+                              isOnline: true,
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-semibold text-foreground truncate">Claude Coder</h4>
+                              <span className="inline-flex items-center gap-1 text-10 text-accent-green font-medium">
+                                <span className="size-1.5 rounded-full bg-accent-green animate-pulse" /> 常驻就绪
+                              </span>
+                            </div>
+                            <p className="text-11 text-muted-foreground truncate">全栈执行 Agent · Claude 3.7 Sonnet</p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <TrustLevelBadge level={3} score={92} />
+                              <Badge variant="outline" className="text-10 py-0">自主编码权限</Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-2 rounded-md bg-accent-purple/10 border border-accent-purple/30 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <DualTrackMetricPill tokens={4280} durationMs={2400} costUsd={0.0064} model="Claude 3.7" />
+                          </div>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {['Git Worktree', 'CLI Dispatch', 'Jest/Vitest', 'API Contract'].map((tool) => (
+                              <span key={tool} className="text-10 font-mono px-1.5 py-0.5 rounded bg-background/80 border border-accent-purple/30 text-accent-purple">
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <PreviewSection title="执行表现度量">
+                          <PreviewRow label="门禁通过率">96.8% (31/32 门禁一次通过)</PreviewRow>
+                          <PreviewRow label="常驻守护">apm-runtime 守护节点 #rt-08</PreviewRow>
+                          <PreviewRow label="授权边界">自主编码测试 · 生产合流需人审</PreviewRow>
+                        </PreviewSection>
+                      </div>
+
+                      <PreviewFooterMeta>
+                        <span className="text-accent-green flex items-center gap-1">
+                          <CheckCircle2 className="size-3" /> 契约巡检零偏差
+                        </span>
+                        <span className="ml-auto font-mono text-10">活跃分支: feat/*</span>
+                      </PreviewFooterMeta>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ⑦ 轻量级特殊属性卡片族（Lightweight Attribute Cards: 里程碑 / 团队 / PR 审查 / Git 提交） */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <SubLabel>⑦ 轻量级特殊属性卡片族（Lightweight Attribute Cards: 里程碑 / 团队 / PR / Git）</SubLabel>
+                  <span className="text-10 text-muted-foreground">
+                    面向高频元属性上下文提供轻快、聚焦的预览能力，统一采用 size="lg" 紧凑结构
+                  </span>
+                </div>
+
+                {/* A. 交互悬停体验栏 */}
+                <div className="p-3.5 rounded-xl border border-border/80 bg-muted/10 space-y-2">
+                  <p className="text-11 font-medium text-foreground">
+                    轻量属性交互悬浮测试（鼠标滑过以下微实体，体验轻巧灵动的属性卡片）：
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* 1. 里程碑 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <Milestone className="size-3.5 text-accent-blue" />
+                        <span className="group-hover:text-accent-blue">里程碑: v2.4 门禁收口</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                              <Milestone className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              v2.4 质量门禁收口与闭环
+                            </span>
+                            <StatusPill tone="info">进行中</StatusPill>
+                          </div>
+                          <div className="space-y-1.5 pb-1 border-b border-border/50">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-11 font-medium text-foreground">18 / 24 工单完成</span>
+                              <span className="font-mono text-10 text-muted-foreground">75% · 剩余 3 天</span>
+                            </div>
+                            <Progress value={75} className="h-1.5" />
+                            <div className="flex items-center justify-between text-10 text-muted-foreground">
+                              <span className="flex items-center gap-1 text-accent-green">
+                                <TrendingUp className="size-3" /> 燃尽速率平稳
+                              </span>
+                              <span>目标 2026-09-15</span>
+                            </div>
+                          </div>
+                          <PreviewSection title="排期与交付关联">
+                            <PreviewRow label="关联迭代">Sprint 24 (09-01 ~ 09-15)</PreviewRow>
+                            <PreviewRow label="关联发版">Release v2.4.0-rc.2</PreviewRow>
+                            <PreviewRow label="阻断风险">0 项 Blocker (风险可控)</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>负责人: @alex</span>
+                            <span className="ml-auto font-mono text-10">健康度: 92%</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 2. 团队 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <Users className="size-3.5 text-accent-purple" />
+                        <span className="group-hover:text-accent-purple">团队: 前端架构组</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-purple/10 text-accent-purple">
+                              <Users className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              前端架构与工程团队
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0">Core Team</Badge>
+                          </div>
+                          <div className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/60">
+                            <div className="flex items-center -space-x-2">
+                              <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Alex Chen', handle: 'alex', isOnline: true }} className="ring-2 ring-background" />
+                              <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Sarah Lin', handle: 'sarah', isOnline: true }} className="ring-2 ring-background" />
+                              <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Leo Zhang', handle: 'leo', isOnline: true }} className="ring-2 ring-background" />
+                              <MemberAvatar size="sm" member={{ type: 'ai_agent', displayName: 'Claude Coder', handle: 'claude-coder', isOnline: true }} className="ring-2 ring-background" />
+                            </div>
+                            <div className="text-right">
+                              <span className="text-11 font-medium text-foreground block">4 位协同成员</span>
+                              <span className="text-10 text-muted-foreground block">3 人类 + 1 AI 同事</span>
+                            </div>
+                          </div>
+                          <PreviewSection title="团队范畴与负荷">
+                            <PreviewRow label="核心职责">Web · Tauri 桌面壳 · UI 规范</PreviewRow>
+                            <PreviewRow label="活跃负荷">14 个工单在跑 · 3 个分支</PreviewRow>
+                            <PreviewRow label="交付效能">本周 22 PR 合入 · 零缺陷</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>Team Lead: @alex</span>
+                            <span className="ml-auto font-mono text-10 text-accent-green flex items-center gap-1">
+                              <span className="size-1.5 rounded-full bg-accent-green" /> 全员协同就绪
+                            </span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 3. Pull Request Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <GitPullRequest className="size-3.5 text-accent-blue" />
+                        <span className="group-hover:text-accent-blue">PR: #128 HoverCard 体系</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                              <GitPullRequest className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              #128: 核心 HoverCard 体系规范化
+                            </span>
+                            <StatusPill tone="success">Approved</StatusPill>
+                          </div>
+                          <div className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/60">
+                            <div className="flex items-center gap-1.5 font-mono text-11 text-foreground min-w-0 truncate">
+                              <GitBranch className="size-3 text-muted-foreground shrink-0" />
+                              <span className="truncate">feat/design-system</span>
+                              <span className="text-muted-foreground">→</span>
+                              <span className="text-accent-blue font-semibold">develop</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 font-mono text-10 shrink-0">
+                              <span className="text-accent-green font-semibold">+248</span>
+                              <span className="text-accent-red font-semibold">-36</span>
+                            </div>
+                          </div>
+                          <PreviewSection title="审查与门禁验证">
+                            <PreviewRow label="CI 门禁">5/5 Passed (SWC, Vitest, Doc, Lint)</PreviewRow>
+                            <PreviewRow label="签署决议">@sarah (已批准) · @qa-bot (签署)</PreviewRow>
+                            <PreviewRow label="关联工单">#ISSUE-104: 重构侧栏与 HoverCard</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span className="text-accent-green flex items-center gap-1 font-medium">
+                              <CheckCircle2 className="size-3" /> 可无冲突 Squash 合并
+                            </span>
+                            <span className="ml-auto font-mono text-10">15 分钟前更新</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 4. Git 提交 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <GitCommit className="size-3.5 text-muted-foreground" />
+                        <span className="group-hover:text-foreground">提交: 7a3f8c1 (fix ALS)</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-foreground">
+                              <GitCommit className="size-3.5" />
+                            </span>
+                            <span className="font-mono text-xs font-semibold text-foreground">
+                              commit 7a3f8c1
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0 text-accent-green border-accent-green/40 flex items-center gap-0.5">
+                              <ShieldCheck className="size-2.5" /> Verified
+                            </Badge>
+                          </div>
+                          <div className="p-2 rounded-md bg-muted/40 border border-border/60">
+                            <p className="text-xs font-medium text-foreground leading-snug">
+                              fix(runtime): resolve AsyncLocalStorage scope penetration race
+                            </p>
+                          </div>
+                          <PreviewSection title="变更上下文">
+                            <PreviewRow label="提交作者">Alex Chen (@alex) · 12 分钟前</PreviewRow>
+                            <PreviewRow label="变更规模">3 个文件变更 (+42 / -8 行代码)</PreviewRow>
+                            <PreviewRow label="CI 流水线">Commit Build #982 Passed (38s)</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>所在分支: <code>develop</code></span>
+                            <span className="ml-auto font-mono text-10">关联 #ISSUE-112</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </div>
+                </div>
+
+                {/* B. 全景平铺审查画廊 */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-11 font-medium text-foreground">
+                      轻量属性卡片平铺全景画廊（4 大高频元属性规范对比）：
+                    </p>
+                    <Badge variant="secondary" className="text-10">轻量元卡对比</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* 卡片 1: 里程碑卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                            <Milestone className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            v2.4 质量门禁收口
+                          </span>
+                          <StatusPill tone="info">进行中</StatusPill>
+                        </div>
+                        <div className="space-y-1.5 pb-1 border-b border-border/50">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-11 font-medium text-foreground">18 / 24 工单</span>
+                            <span className="font-mono text-10 text-muted-foreground">75% · 剩3天</span>
+                          </div>
+                          <Progress value={75} className="h-1.5" />
+                          <div className="flex items-center justify-between text-10 text-muted-foreground">
+                            <span className="flex items-center gap-1 text-accent-green">
+                              <TrendingUp className="size-3" /> 燃尽平稳
+                            </span>
+                            <span>09-15</span>
+                          </div>
+                        </div>
+                        <PreviewSection title="排期与交付关联">
+                          <PreviewRow label="关联迭代">Sprint 24</PreviewRow>
+                          <PreviewRow label="关联发版">v2.4.0-rc.2</PreviewRow>
+                          <PreviewRow label="阻断风险">0 项 Blocker</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>负责人: @alex</span>
+                        <span className="ml-auto font-mono text-10">健康度: 92%</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 2: 团队协同卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-purple/10 text-accent-purple">
+                            <Users className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            前端架构组
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0">Core</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/60">
+                          <div className="flex items-center -space-x-2">
+                            <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Alex Chen', handle: 'alex', isOnline: true }} className="ring-2 ring-background" />
+                            <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Sarah Lin', handle: 'sarah', isOnline: true }} className="ring-2 ring-background" />
+                            <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Leo Zhang', handle: 'leo', isOnline: true }} className="ring-2 ring-background" />
+                            <MemberAvatar size="sm" member={{ type: 'ai_agent', displayName: 'Claude Coder', handle: 'claude-coder', isOnline: true }} className="ring-2 ring-background" />
+                          </div>
+                          <div className="text-right">
+                            <span className="text-11 font-medium text-foreground block">4 位成员</span>
+                            <span className="text-10 text-muted-foreground block">3人+1AI</span>
+                          </div>
+                        </div>
+                        <PreviewSection title="团队范畴与负荷">
+                          <PreviewRow label="核心职责">Web · Desktop · UI</PreviewRow>
+                          <PreviewRow label="活跃负荷">14 工单 · 3 分支</PreviewRow>
+                          <PreviewRow label="交付效能">22 PR · 零缺陷</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>Lead: @alex</span>
+                        <span className="ml-auto font-mono text-10 text-accent-green flex items-center gap-1">
+                          <span className="size-1.5 rounded-full bg-accent-green" /> 全员就绪
+                        </span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 3: PR 审查卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                            <GitPullRequest className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            #128: HoverCard
+                          </span>
+                          <StatusPill tone="success">Approved</StatusPill>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/60">
+                          <div className="flex items-center gap-1 font-mono text-10 text-foreground min-w-0 truncate">
+                            <GitBranch className="size-3 text-muted-foreground shrink-0" />
+                            <span className="truncate">feat/ui</span>
+                            <span className="text-muted-foreground">→</span>
+                            <span className="text-accent-blue font-semibold">dev</span>
+                          </div>
+                          <div className="flex items-center gap-1 font-mono text-10 shrink-0">
+                            <span className="text-accent-green font-semibold">+248</span>
+                            <span className="text-accent-red font-semibold">-36</span>
+                          </div>
+                        </div>
+                        <PreviewSection title="审查与门禁验证">
+                          <PreviewRow label="CI 门禁">5/5 Passed</PreviewRow>
+                          <PreviewRow label="签署决议">@sarah · @qa-bot</PreviewRow>
+                          <PreviewRow label="关联工单">#ISSUE-104</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span className="text-accent-green flex items-center gap-1 font-medium">
+                          <CheckCircle2 className="size-3" /> 可无冲突合并
+                        </span>
+                        <span className="ml-auto font-mono text-10">15m 前</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 4: Git 提交卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-foreground">
+                            <GitCommit className="size-3.5" />
+                          </span>
+                          <span className="font-mono text-xs font-semibold text-foreground">
+                            7a3f8c1
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0 text-accent-green border-accent-green/40 flex items-center gap-0.5">
+                            <ShieldCheck className="size-2.5" /> Verified
+                          </Badge>
+                        </div>
+                        <div className="p-2 rounded-md bg-muted/40 border border-border/60">
+                          <p className="text-11 font-medium text-foreground leading-snug line-clamp-2">
+                            fix(runtime): resolve AsyncLocalStorage scope penetration race
+                          </p>
+                        </div>
+                        <PreviewSection title="变更上下文">
+                          <PreviewRow label="提交作者">Alex Chen · 12m前</PreviewRow>
+                          <PreviewRow label="变更规模">3 文件 (+42 / -8)</PreviewRow>
+                          <PreviewRow label="流水线">Build #982 Passed</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>分支: <code>develop</code></span>
+                        <span className="ml-auto font-mono text-10">#ISSUE-112</span>
+                      </PreviewFooterMeta>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ⑧ HoverCard 现存问题诊断与优化点看板 */}
               <div>
-                <SubLabel>Route Preview (tab / favorites hover card)</SubLabel>
-                <RoutePreviewTrigger path="/app/projects" title="Projects">
-                  <Button variant="outline" size="sm">Projects — hover me</Button>
-                </RoutePreviewTrigger>
+                <SubLabel>⑧ 现行 HoverCard 样式诊断与优化点审查（Design System Audit）</SubLabel>
+                <div className="rounded-xl border border-accent-yellow/30 bg-accent-yellow/5 p-4 space-y-3 max-w-3xl">
+                  <div className="flex items-center gap-2 text-accent-yellow font-semibold text-xs">
+                    <AlertTriangle className="size-4" />
+                    <span>HoverCard 现状审查清单与 5 大改进建议</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-11">
+                    <div className="p-2.5 rounded-lg border border-border/80 bg-background/80 space-y-1">
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <span className="text-accent-red">1. 暗色模式边缘对比度较弱</span>
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        现状仅使用 <code className="text-10 bg-muted px-1 py-0.5 rounded">ring-1 ring-foreground/10 shadow-md</code>，在纯暗色或半透明底板上阴影被吸收，卡片边界不够清晰。建议补充 <code className="text-10 bg-muted px-1 py-0.5 rounded">border border-border/80 dark:shadow-black/70</code>。
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg border border-border/80 bg-background/80 space-y-1">
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <span className="text-accent-orange">2. HoverCardArrow 边缘描边断层</span>
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        箭头是旋转小方块，但未带 border。当主卡片有清晰边框时，箭头两侧与主卡片接合部会形成 1px 缺失断层。建议在 Arrow 上追加对齐的主边框色。
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg border border-border/80 bg-background/80 space-y-1">
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <span className="text-accent-blue">3. 移动端/触控环境降级缺失</span>
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        在触控屏或移动设备上无 hover 状态，Trigger 会直接跳转或失效。建议为纯 Trigger 增加点击弹出切换（Click Fallback）或长按呼出。
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg border border-border/80 bg-background/80 space-y-1">
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <span className="text-accent-purple">4. 视口越界高度与溢出滚动保护</span>
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        长内容卡片在低分辨率屏幕或视口边缘时可能被浏览器底部裁切。HoverCardContent 需具备默认的 <code className="text-10 bg-muted px-1 py-0.5 rounded">max-h-96 overflow-y-auto</code> 安全线。
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg border border-border/80 bg-background/80 space-y-1 sm:col-span-2">
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <span className="text-accent-green">5. 统一数据加载态骨架屏（Skeleton规范）</span>
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        当 HoverCardContent 挂载时触发异步请求（如获取成员实时任务或 Git 提交），目前缺乏标准通用的 <code className="text-10 bg-muted px-1 py-0.5 rounded">HoverCardSkeleton</code>，易出现高度剧烈跳跃（Layout Shift）。
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </SectionAnchor>

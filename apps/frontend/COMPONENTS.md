@@ -68,6 +68,7 @@
 | ScrollArea / ScrollBar | ui/scroll-area.tsx | 滚动容器（coss 配方：滚动条浮现、边缘渐隐 scrollFade、滚动沟位 scrollbarGutter、滚动链隔离 overscrollContain） | className, children, scrollFade, scrollbarGutter, overscrollContain, fill |
 | AspectRatio | ui/aspect-ratio.tsx | 固定宽高比容器 | ratio, children |
 | QuickCardsToggle | ui/quick-cards-toggle.tsx | 页头幽灵按钮：显隐「快捷统计卡」栏目 | visible, onToggle, label, aiId |
+| AppDock / AppDockItem / AppDockSeparator | ui/app-dock.tsx | 底部悬浮 Dock 栏容器（桌面级磨砂胶囊底座、弹簧微交互项、垂直分隔线） | children, label, badge, badgeTone, active |
 
 ### 表单输入
 

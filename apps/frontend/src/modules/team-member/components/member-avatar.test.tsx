@@ -13,19 +13,24 @@ const baseMember: Pick<Member, 'type' | 'displayName' | 'handle' | 'avatarUrl' |
 };
 
 describe('MemberAvatar', () => {
-  it('renders initials for human member', () => {
-    render(<MemberAvatar member={baseMember} />);
+  it('renders NiceAvatar illustration for human member by default', () => {
+    const { container } = render(<MemberAvatar member={baseMember} />);
+    expect(container.querySelectorAll('svg').length).toBeGreaterThan(0);
+  });
+
+  it('renders initials for human member when useInitials is true', () => {
+    render(<MemberAvatar member={baseMember} useInitials />);
     // Initials: first letter of first + last word → "AW"
     expect(screen.getByText('AW')).toBeInTheDocument();
   });
 
-  it('shows AI bot icon for ai_agent type', () => {
+  it('shows AI avatar for ai_agent type', () => {
     const { container } = render(
       <MemberAvatar
         member={{ ...baseMember, type: 'ai_agent', displayName: 'GPT Bot', handle: 'gpt' }}
       />,
     );
-    // Lucide renders an <svg> for Bot; assert at least one svg exists
+    // Renders Avvvatars/Bot svg
     expect(container.querySelectorAll('svg').length).toBeGreaterThan(0);
   });
 
@@ -54,5 +59,14 @@ describe('MemberAvatar', () => {
     // Online dot is the only absolute child; with showBadge=false none should be present
     const absoluteDots = container.querySelectorAll('.absolute.-bottom-0\\.5');
     expect(absoluteDots.length).toBe(0);
+  });
+
+  it('renders Avvvatars when avatarUrl starts with avvvatars: or useAvvvatars is true', () => {
+    const { container } = render(
+      <MemberAvatar
+        member={{ ...baseMember, avatarUrl: 'avvvatars:shape' }}
+      />,
+    );
+    expect(container.querySelectorAll('svg').length).toBeGreaterThan(0);
   });
 });

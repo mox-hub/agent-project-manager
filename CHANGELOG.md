@@ -21,6 +21,20 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 生产悬浮卡片体系（收藏夹栏与标签页）全面对齐 Design System 规范与头像全面圆形化
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**收藏夹栏与标签页悬浮卡片全面升级**：彻底替换侧边栏收藏栏与 TabBar 标签页弹出卡片的旧版样式——`RoutePreviewTrigger` 显式挂载 `HoverCardArrow` 气泡指向箭头，依据路由类型智能分发 `size="lg"` / `size="xl"`，统一 `p-3.5` 标准内边距；②**RoutePreviewCard 核心壳重塑**：移除陈旧生硬的 `<Separator />` 灰色横线，图标底块全面接入实体语义色彩池（`ENTITY_COLOR_CLASSES`，task/bug/project/acceptance/execution/release/member/team 专属语义色），标题采用高密度 `text-xs font-semibold`，类型徽章升级为细线描边或语义胶囊；③**全量业务卡片对齐 Design System 四层架构**：重构 `TaskPreviewBody`（引入 `StatusPill`、`PriorityFlag` 与 `SeverityBar`，常规工单呈现状态+优先级彩旗+迭代，P0 缺陷呈现 Blocker 高危红色告警带与环境/关联工单）、`ProjectPreviewBody`（健康度评级+交付进度条+项目大盘属性区）、`AcceptancePreviewBody`（门禁通过率点阵矩阵+审计风险预警）、`ExecutionPreviewBody`（双轨指标胶囊+审批拦截告警）、`ReleasePreviewBody`（SemVer Tag+门禁归档闭环）、`MemberPreviewBody`（双表面对称三列头部+圆形头像+在线状态）、`DocumentPreviewBody`、`TeamPreviewBody`、`RepositoryPreviewBody` 与 `GenericPreviewBody`；④**头像规格全面圆形化**：全仓头像选择器、列表、详情、卡片统一采用 `rounded-full`，彻底清零圆角矩形；⑤**门禁与单测**：`tsc -b` 0 错，Vitest 70 个文件 317 项用例全绿通过，7 项治理脚本与 ESLint 保持 0 error 0 warning，`check:docs-sync` 100% 校验通过。 | 用户指令（侧边栏收藏夹与标签页悬浮卡片老旧样式彻底升级对齐 Design System） | `tsc -b` 0 错；Vitest 70 文件 317 用例全绿；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`pnpm check:docs-sync` 通过 | 同步更新 CHANGELOG.md |
+
+### Design System 深度优化——双表面头像体系（人类 NiceAvatar × AI Avvvatars）与 HoverCard 闭环矩阵
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**双表面头像体系裁决与落地**：舍弃所有非标与旧版方案（Dicebear、Emoji 及静态临时 SVG），正式确立双表面唯一样式契约——人类同事采用 `react-nice-avatar` 确定性插画肖像（生动、温暖、专业，具备多种发型、肤色、服饰与表情）；AI 同事与 Agent 采用 `avvvatars-react` 确定性算法几何符号（冷峻、精密、高科技感）；②**统一组件升级**：`MemberAvatar` 自动按 `type`（`human` vs `ai_agent`）路由至双引擎，`AvatarPickerField` 预设项全面替换为人类插画肖像与 AI 算法几何，全仓头像均由本地纯 SVG 驱动，零外网 API 依赖，离线与 Tauri 桌面端 100% 稳定；③**Design System 展台全景重塑**：重构 `AvatarModernizationShowcase` 展台为双引擎实时工作台（支持人类肖像随机变幻换装、AI 几何/字符模式切换、参数实时展示）及 12 位人机协同全景团队画廊；MemberAvatar 5 级尺寸阶梯全部接入双表面新规范；④**HoverCard 闭环矩阵落地**：补齐 Release 版本发布卡片，与 Task 工单、Bug 缺陷、Acceptance 验收门禁、Project 项目、Execution 执行审批共同构成 2 行 × 3 列 6 卡闭环审查矩阵；⑤**治理与门禁**：修复非标 `text-9` 字阶，清除 arbitrary class 与 unused imports，全套治理门禁（palette/arbitrary/registry/spacing/icons/eslint）0 error 0 warning 100% 通过。 | 用户指令（双表面头像规范定夺与外观优化） | `tsc -b` 0 错；`vitest run src/modules/design-system/pages/design-system-page.test.tsx src/modules/team-member/components/member-avatar.test.tsx` 8/8 全绿；`pnpm lint` 7 道治理门禁 + eslint 全部 0 错 0 警告通过；`check:docs-sync` 校验通过 | 同步更新 CHANGELOG.md |
+
+
+
 ### 命令面板外观对齐 design-system 设计语言——图标/键位徽章/底部键位提示栏
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

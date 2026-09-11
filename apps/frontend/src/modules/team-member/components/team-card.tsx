@@ -30,11 +30,11 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
               <img
                 src={team.avatarUrl}
                 alt={team.name}
-                className="size-10 shrink-0 rounded-lg object-cover"
+                className="size-10 shrink-0 rounded-full object-cover"
               />
             ) : (
               <div
-                className="flex size-10 shrink-0 items-center justify-center font-semibold text-white"
+                className="flex size-10 shrink-0 items-center justify-center rounded-full font-semibold text-white"
                 style={{ backgroundColor: team.color || '#5E6AD2' }}
               >
                 {team.name.slice(0, 2).toUpperCase()}
