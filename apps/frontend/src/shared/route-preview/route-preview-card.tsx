@@ -9,7 +9,7 @@
 import { useMemo } from 'react';
 import { Star, type LucideIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { PAGE_REGISTRY } from '@/shared/layout/page-registry';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -21,6 +21,8 @@ import { RepositoryPreviewBody } from './previews/repository-preview-body';
 import { MemberPreviewBody } from './previews/member-preview-body';
 import { TeamPreviewBody } from './previews/team-preview-body';
 import { AcceptancePreviewBody } from './previews/acceptance-preview-body';
+import { ExecutionPreviewBody } from './previews/execution-preview-body';
+import { ReleasePreviewBody } from './previews/release-preview-body';
 import { GenericPreviewBody } from './previews/generic-preview-body';
 
 // 预览卡头部图标统一从 entity-icons 注册表取（规范 v0 第二批铺开）；
@@ -34,9 +36,83 @@ const TYPE_ICONS: Record<RoutePreviewType, LucideIcon> = {
   member: getEntityIcon('member').icon,
   team: getEntityIcon('team').icon,
   acceptance: getEntityIcon('acceptance').icon,
+  execution: getEntityIcon('execution').icon,
+  release: getEntityIcon('release').icon,
   // generic 优先用 PAGE_REGISTRY / 调用方传入的图标
   generic: Star,
 };
+
+const ENTITY_COLOR_CLASSES: Record<RoutePreviewType, string> = {
+  project: 'bg-primary/10 text-primary',
+  task: 'bg-accent-blue/10 text-accent-blue',
+  bug: 'bg-accent-red/10 text-accent-red',
+  document: 'bg-accent-blue/10 text-accent-blue',
+  repository: 'bg-accent-purple/10 text-accent-purple',
+  member: 'bg-accent-yellow/10 text-accent-yellow',
+  team: 'bg-accent-blue/10 text-accent-blue',
+  acceptance: 'bg-accent-green/10 text-accent-green',
+  execution: 'bg-accent-purple/10 text-accent-purple',
+  release: 'bg-accent-orange/10 text-accent-orange',
+  generic: 'bg-muted text-muted-foreground',
+};
+
+const TYPE_FALLBACK_LABELS: Record<RoutePreviewType, string> = {
+  project: '项目',
+  task: '任务',
+  bug: 'Bug',
+  document: '文档',
+  repository: '仓库',
+  member: '成员',
+  team: '团队',
+  acceptance: '验收',
+  execution: '执行',
+  release: '发版',
+  generic: '页面',
+};
+
+function renderTypeBadge(type: RoutePreviewType, label: string) {
+  switch (type) {
+    case 'bug':
+      return (
+        <Badge variant="destructive" className="text-10 shrink-0">
+          {label}
+        </Badge>
+      );
+    case 'execution':
+      return (
+        <Badge
+          variant="outline"
+          className="text-10 shrink-0 text-accent-purple border-accent-purple/40"
+        >
+          {label}
+        </Badge>
+      );
+    case 'release':
+      return (
+        <Badge
+          variant="outline"
+          className="text-10 shrink-0 text-accent-orange border-accent-orange/40"
+        >
+          {label}
+        </Badge>
+      );
+    case 'acceptance':
+      return (
+        <Badge
+          variant="secondary"
+          className="text-10 shrink-0 text-accent-green bg-accent-green/10"
+        >
+          {label}
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="outline" className="text-10 shrink-0">
+          {label}
+        </Badge>
+      );
+  }
+}
 
 export interface RoutePreviewCardProps {
   /** 路由 path（解析预览类型与实体 id 的依据） */
@@ -65,6 +141,10 @@ function PreviewBody({ type, id, path }: { type: RoutePreviewType; id?: string; 
       return <TeamPreviewBody id={id!} />;
     case 'acceptance':
       return <AcceptancePreviewBody id={id!} />;
+    case 'execution':
+      return <ExecutionPreviewBody id={id!} />;
+    case 'release':
+      return <ReleasePreviewBody id={id!} />;
     default:
       return <GenericPreviewBody path={path} />;
   }
@@ -88,9 +168,14 @@ export function RoutePreviewCard({ path, fallbackTitle, fallbackIcon }: RoutePre
     path;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
+        <span
+          className={cn(
+            'flex size-7 shrink-0 items-center justify-center rounded-md',
+            ENTITY_COLOR_CLASSES[match.type],
+          )}
+        >
           <Icon
             className="size-3.5"
             style={
@@ -100,10 +185,14 @@ export function RoutePreviewCard({ path, fallbackTitle, fallbackIcon }: RoutePre
             }
           />
         </span>
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{title}</span>
-        <Badge variant="secondary">{t(`routePreview.type.${match.type}`)}</Badge>
+        <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">{title}</span>
+        {renderTypeBadge(
+          match.type,
+          t(`routePreview.type.${match.type}`, {
+            defaultValue: TYPE_FALLBACK_LABELS[match.type] ?? match.type,
+          }),
+        )}
       </div>
-      <Separator />
       <PreviewBody type={match.type} id={match.id} path={path} />
     </div>
   );

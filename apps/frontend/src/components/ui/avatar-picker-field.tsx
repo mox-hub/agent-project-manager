@@ -1,26 +1,31 @@
 import * as React from "react"
+import Avvvatars from "avvvatars-react"
+import NiceAvatar, { genConfig } from "react-nice-avatar"
 
 import { cn } from "@/lib/utils"
 
-/** 内置头像清单（public/avatars 下随应用分发，avatarUrl 直接存该路径） */
+/** 内置头像清单（人类同事: react-nice-avatar 插画肖像；AI 同事: avvvatars 算法几何） */
 export const BUILT_IN_AVATARS: Array<{
   key: string
   url: string
   label: string
   kind: "human" | "ai"
 }> = [
-  { key: "human-01", url: "/avatars/human-01.svg", label: "商务", kind: "human" },
-  { key: "human-02", url: "/avatars/human-02.svg", label: "开发", kind: "human" },
-  { key: "human-03", url: "/avatars/human-03.svg", label: "设计", kind: "human" },
-  { key: "human-04", url: "/avatars/human-04.svg", label: "科研", kind: "human" },
-  { key: "human-05", url: "/avatars/human-05.svg", label: "探索", kind: "human" },
-  { key: "human-06", url: "/avatars/human-06.svg", label: "教学", kind: "human" },
-  { key: "bot-01", url: "/avatars/bot-01.svg", label: "机器人", kind: "ai" },
-  { key: "bot-02", url: "/avatars/bot-02.svg", label: "机械臂", kind: "ai" },
-  { key: "bot-03", url: "/avatars/bot-03.svg", label: "智能", kind: "ai" },
-  { key: "bot-04", url: "/avatars/bot-04.svg", label: "引擎", kind: "ai" },
-  { key: "bot-05", url: "/avatars/bot-05.svg", label: "蜂群", kind: "ai" },
-  { key: "bot-06", url: "/avatars/bot-06.svg", label: "像素", kind: "ai" },
+  // 人类同事（react-nice-avatar 确定性算法插画肖像）
+  { key: "nice-alex", url: "nice-avatar:alex", label: "人类: 领航 / 架构 (Alex)", kind: "human" },
+  { key: "nice-sarah", url: "nice-avatar:sarah", label: "人类: 工程 / 研发 (Sarah)", kind: "human" },
+  { key: "nice-leo", url: "nice-avatar:leo", label: "人类: 前端 / 全栈 (Leo)", kind: "human" },
+  { key: "nice-david", url: "nice-avatar:david", label: "人类: 服务 / 数据 (David)", kind: "human" },
+  { key: "nice-emma", url: "nice-avatar:emma", label: "人类: 体验 / 设计 (Emma)", kind: "human" },
+  { key: "nice-lucas", url: "nice-avatar:lucas", label: "人类: 敏捷 / 质保 (Lucas)", kind: "human" },
+
+  // AI 同事（avvvatars 确定性算法几何符号）
+  { key: "av-claude", url: "avvvatars:claude-code", label: "AI: 编码智能体 (@claude-code)", kind: "ai" },
+  { key: "av-codex", url: "avvvatars:codex", label: "AI: 审查智能体 (@codex)", kind: "ai" },
+  { key: "av-zcode", url: "avvvatars:zcode", label: "AI: 运行时守护 (@zcode)", kind: "ai" },
+  { key: "av-doc", url: "avvvatars:doc-bot", label: "AI: 知识架构 (@doc-bot)", kind: "ai" },
+  { key: "av-qa", url: "avvvatars:qa-bot", label: "AI: 验收门禁 (@qa-bot)", kind: "ai" },
+  { key: "av-guardian", url: "avvvatars:guardian", label: "AI: 安全审计 (@guardian)", kind: "ai" },
 ]
 
 function AvatarPickerField({
@@ -54,13 +59,32 @@ function AvatarPickerField({
               disabled={disabled}
               onClick={() => onValueChange(selected ? null : avatar.url)}
               className={cn(
-                "size-10 overflow-hidden rounded-lg border border-border transition-colors",
+                "size-10 overflow-hidden rounded-full border border-border transition-colors",
                 "hover:border-accent-blue/60 hover:bg-accent-blue/5",
                 selected && "border-accent-blue bg-accent-blue/10 ring-2 ring-accent-blue/30",
                 disabled && "pointer-events-none opacity-50",
               )}
             >
-              <img src={avatar.url} alt={avatar.label} className="size-full object-cover" />
+              {avatar.url.startsWith("nice-avatar:") ? (
+                <div className="size-full flex items-center justify-center overflow-hidden">
+                  <NiceAvatar
+                    style={{ width: "100%", height: "100%" }}
+                    shape="circle"
+                    {...genConfig(avatar.url.replace("nice-avatar:", ""))}
+                  />
+                </div>
+              ) : avatar.url.startsWith("avvvatars:") ? (
+                <div className="size-full flex items-center justify-center overflow-hidden">
+                  <Avvvatars
+                    value={avatar.url.replace("avvvatars:", "") || avatar.key}
+                    size={36}
+                    style={avatar.url.includes("character") ? "character" : "shape"}
+                    shadow={false}
+                  />
+                </div>
+              ) : (
+                <img src={avatar.url} alt={avatar.label} className="size-full object-cover" />
+              )}
             </button>
           )
         })}
@@ -70,7 +94,7 @@ function AvatarPickerField({
           disabled={disabled}
           onClick={() => onValueChange(null)}
           className={cn(
-            "size-10 rounded-lg border border-dashed border-border text-sm text-muted-foreground transition-colors",
+            "size-10 rounded-full border border-dashed border-border text-sm text-muted-foreground transition-colors",
             "hover:border-accent-red/60 hover:text-accent-red",
             !value && "border-accent-red/60 text-accent-red",
             disabled && "pointer-events-none opacity-50",

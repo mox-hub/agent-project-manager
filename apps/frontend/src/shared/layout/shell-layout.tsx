@@ -16,7 +16,8 @@ import {
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
 import { commandEntries, COMMAND_GROUP_LABEL_KEYS, type CommandActionId } from '@/shared/command-palette/commands';
-import { FloatingActions } from '@/shared/components/floating-actions';
+import { BottomDock } from '@/shared/components/bottom-dock';
+import { GlobalCreateDialog } from '@/shared/components/global-create-dialog';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { AISlotLayer } from '@/shared/ai-slot/ai-slot-layer';
 import { cn } from '@/lib/utils';
@@ -64,7 +65,7 @@ import {
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
-import { AssistantFab, AssistantColleagueSlot } from '@/modules/assistant';
+import { AssistantFab } from '@/modules/assistant';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /** 侧栏导航项（收藏分区的项带 favorite 标记，渲染时挂 hover 预览卡） */
@@ -548,14 +549,6 @@ export function ShellLayout() {
               </nav>
               </div>
 
-              {/* 主 AI 同事位：占一个“人”的位置，点击开合助手面板 */}
-              <div className={cn(
-                'shrink-0 p-2.5',
-                sidebarCollapsed && 'flex justify-center px-0'
-              )}>
-                <AssistantColleagueSlot collapsed={sidebarCollapsed} />
-              </div>
-
               {/* Sidebar Toggle Button - Only show when collapsed */}
               {sidebarCollapsed && (
                 <div className="shrink-0 flex justify-center px-0 py-2">
@@ -634,8 +627,11 @@ export function ShellLayout() {
           {/* 局部侵入问答（CAP-C-07）：Ctrl/Cmd+左键卡片就地 AI 解释 */}
           <AISlotLayer />
 
-          {/* Floating Actions - bottom left corner */}
-          <FloatingActions theme={mode} onToggleTheme={toggleTheme} />
+          {/* 底部统一操作中枢与 AI 协同面 (Dock 栏) */}
+          <BottomDock />
+
+          {/* 全局统一创建面板（Dock「新建」等与页面无关的创建入口） */}
+          <GlobalCreateDialog />
         </div>
       </TabsProvider>
       </ShellSidebarProvider>

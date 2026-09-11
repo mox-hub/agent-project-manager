@@ -274,18 +274,24 @@ function EscalationForm({
     { id: 'senior_dev', name: '高级开发者' },
   ];
 
+  // label 映射：base-ui 须经 Root 的 items 才能把 value（id）显示成名称
+  const assigneeItems = assigneeOptions.map((option) => ({
+    value: option.id,
+    label: option.name,
+  }));
+
   return (
     <div className="space-y-3">
       <div className="space-y-2">
         <Label>转交给</Label>
-        <Select value={escalateTo} onValueChange={onEscalateToChange}>
+        <Select value={escalateTo} onValueChange={onEscalateToChange} items={assigneeItems}>
           <SelectTrigger>
             <SelectValue placeholder="选择接收人" />
           </SelectTrigger>
           <SelectContent>
-            {assigneeOptions.map((option) => (
-              <SelectItem key={option.id} value={option.id}>
-                {option.name}
+            {assigneeItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
               </SelectItem>
             ))}
           </SelectContent>

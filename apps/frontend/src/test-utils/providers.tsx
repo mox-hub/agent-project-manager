@@ -53,14 +53,21 @@ export const RouterWrapper = ({
   initialEntries = ['/'],
   routes = [],
 }: RouterWrapperProps) => {
-  const router = createMemoryRouter(routes || [
+  // 注意：默认参数是空数组，`routes || 兜底` 对空数组不生效（空数组是 truthy），
+  // 必须按长度判断，否则 createMemoryRouter 会收到空路由表直接抛错。
+  const router = createMemoryRouter(
+    routes.length > 0
+      ? routes
+      : [
+          {
+            path: '*',
+            element: <>{children}</>,
+          },
+        ],
     {
-      path: '*',
-      element: <>{children}</>,
+      initialEntries,
     },
-  ], {
-    initialEntries,
-  });
+  );
 
   return <RouterProvider router={router} />;
 };

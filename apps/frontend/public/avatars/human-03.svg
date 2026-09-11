@@ -1,10 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#8b5cf6"/>
-      <stop offset="1" stop-color="#d946ef"/>
+    <linearGradient id="hbg3" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#be123c"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#g)"/>
-  <text x="32" y="41" text-anchor="middle" font-size="30" font-family="'Segoe UI Emoji','Apple Color Emoji',sans-serif">🧑‍🎨</text>
+  <rect width="64" height="64" rx="16" fill="url(#hbg3)"/>
+  <circle cx="32" cy="24" r="10" fill="#fff1f2"/>
+  <path d="M16 52c0-8.837 7.163-16 16-16s16 7.163 16 16H16z" fill="#fff1f2"/>
+  <!-- Creative Star / Sparkle on Chest -->
+  <path d="M32 40v8M28 44h8" stroke="#f43f5e" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="48" cy="20" r="5" fill="#fda4af" opacity="0.6"/>
 </svg>

@@ -27,6 +27,20 @@ const categories: { value: DocumentCategory; label: string; icon: string }[] = [
   { value: 'custom', label: '自定义', icon: '📄' },
 ];
 
+/**
+ * Select 的 label 映射（`SelectItem` 展示内容与 Root 的 `items` 共用同一份）：
+ * base-ui 必须经 Root 的 `items` 才能把 value 显示成名称，否则 trigger 显示原始 value。
+ */
+const CATEGORY_ITEMS = categories.map((cat) => ({
+  value: cat.value,
+  label: (
+    <span className="flex items-center gap-2">
+      <span>{cat.icon}</span>
+      <span>{cat.label}</span>
+    </span>
+  ),
+}));
+
 export function DocumentForm({
   defaultValues = {},
   onSubmit,
@@ -78,19 +92,20 @@ export function DocumentForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>分类</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                items={CATEGORY_ITEMS}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="选择文档分类" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      <span className="flex items-center gap-2">
-                        <span>{cat.icon}</span>
-                        <span>{cat.label}</span>
-                      </span>
+                  {CATEGORY_ITEMS.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

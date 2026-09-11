@@ -304,11 +304,11 @@ export default function TeamDetailPage() {
                 <img
                   src={team.avatarUrl}
                   alt={team.name}
-                  className="size-10 shrink-0 rounded-lg object-cover"
+                  className="size-10 shrink-0 rounded-full object-cover"
                 />
               ) : (
                 <div
-                  className="flex size-10 shrink-0 items-center justify-center font-semibold text-white"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full font-semibold text-white"
                   style={{ backgroundColor: team.color || '#5E6AD2' }}
                 >
                   {team.name.slice(0, 2).toUpperCase()}
@@ -510,6 +510,17 @@ export default function TeamDetailPage() {
                         <Select
                           value={bindProjectId || '__none__'}
                           onValueChange={(value) => setBindProjectId(value === '__none__' ? '' : value)}
+                          // items：让 trigger 显示项目名而非项目 id（含「选择项目」哨兵项）
+                          items={[
+                            {
+                              value: '__none__',
+                              label: t('teamDetail.projects.pickPlaceholder', '选择项目'),
+                            },
+                            ...bindableProjects.map((candidate) => ({
+                              value: candidate.id,
+                              label: candidate.name,
+                            })),
+                          ]}
                         >
                           <SelectTrigger className="w-56">
                             <SelectValue placeholder={t('teamDetail.projects.pickPlaceholder', '选择项目')} />

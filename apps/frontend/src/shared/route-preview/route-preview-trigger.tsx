@@ -16,8 +16,11 @@ import {
   HoverCard,
   HoverCardTrigger,
   HoverCardContent,
+  HoverCardArrow,
 } from '@/components/ui/hover-card';
+import { cn } from '@/lib/utils';
 import { RoutePreviewCard } from './route-preview-card';
+import { resolveRoutePreview } from './route-preview-registry';
 
 export interface RoutePreviewTriggerProps
   extends Omit<React.ComponentProps<typeof HoverCardTrigger>, 'render' | 'children'> {
@@ -26,10 +29,13 @@ export interface RoutePreviewTriggerProps
   icon?: LucideIcon;
   side?: 'top' | 'bottom' | 'left' | 'right';
   align?: 'start' | 'center' | 'end';
-  /** hover 打开延迟（ms），避免鼠标快速划过时误弹；默认 400 */
+  /** 卡片宽度档位（默认根据路由类型智能分发：acceptance/execution 为 xl，其余为 lg） */
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  /** hover 打开延迟（ms），避免鼠标快速划过时误弹；默认 300 */
   delay?: number;
   /** 触发元素（作为 render 目标被克隆） */
   children: ReactElement;
+  className?: string;
 }
 
 export function RoutePreviewTrigger({
@@ -38,14 +44,21 @@ export function RoutePreviewTrigger({
   icon,
   side = 'bottom',
   align = 'start',
-  delay = 400,
+  size,
+  delay = 300,
   children,
+  className,
   ...rest
 }: RoutePreviewTriggerProps) {
+  const match = resolveRoutePreview(path);
+  const resolvedSize =
+    size ?? (match.type === 'acceptance' || match.type === 'execution' ? 'xl' : 'lg');
+
   return (
     <HoverCard>
       <HoverCardTrigger delay={delay} closeDelay={150} render={children} {...rest} />
-      <HoverCardContent side={side} align={align} className="w-72 p-3">
+      <HoverCardContent side={side} align={align} size={resolvedSize} className={cn('p-3.5', className)}>
+        <HoverCardArrow />
         <RoutePreviewCard path={path} fallbackTitle={title} fallbackIcon={icon} />
       </HoverCardContent>
     </HoverCard>

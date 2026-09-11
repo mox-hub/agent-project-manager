@@ -68,6 +68,7 @@
 | ScrollArea / ScrollBar | ui/scroll-area.tsx | 滚动容器（coss 配方：滚动条浮现、边缘渐隐 scrollFade、滚动沟位 scrollbarGutter、滚动链隔离 overscrollContain） | className, children, scrollFade, scrollbarGutter, overscrollContain, fill |
 | AspectRatio | ui/aspect-ratio.tsx | 固定宽高比容器 | ratio, children |
 | QuickCardsToggle | ui/quick-cards-toggle.tsx | 页头幽灵按钮：显隐「快捷统计卡」栏目 | visible, onToggle, label, aiId |
+| AppDock / AppDockItem / AppDockSeparator | ui/app-dock.tsx | 底部悬浮 Dock 栏容器（桌面级磨砂胶囊底座、弹簧微交互项、垂直分隔线） | children, label, badge, badgeTone, active |
 
 ### 表单输入
 
@@ -75,8 +76,8 @@
 |------|------|------|-----------|
 | Input / PasswordInput | ui/input.tsx | 文本输入框与密码框（带显隐切换） | type, value, onChange, placeholder |
 | Textarea | ui/textarea.tsx | 多行文本框（field-sizing 自适应） | value, onChange, rows |
-| NativeSelect / OptGroup / Option | ui/native-select.tsx | 原生 select 样式化（含 size） | value, onChange, size, children |
-| Select 套件 | ui/select.tsx | 下拉选择（base-ui） | value, onValueChange；SelectTrigger: size(sm/default) |
+| NativeSelect / OptGroup / Option | ui/native-select.tsx | 原生 select 样式化（含 size）；**已从组件层接好 label 映射，直接写 `<option>` 即可** | value, onChange, size, children |
+| Select 套件 | ui/select.tsx | 下拉选择（base-ui）；**value ≠ 展示文本时必须传 `items`（`{value,label}[]` 或 Record），否则 trigger 显示原始 value（id）** —— 见「Select label 契约」 | value, onValueChange, **items**, itemToStringLabel；SelectTrigger: size(sm/default) |
 | Combobox 套件 | ui/combobox.tsx | 可搜索下拉（base-ui，支持 chips 多选） | value, onValueChange, options, multiple |
 | Checkbox | ui/checkbox.tsx | 复选框（coss 配方：分层阴影/勾选填充/indeterminate + onCheckedChange 兼容层） | checked, onCheckedChange, value |
 | CheckboxGroup | ui/checkbox-group.tsx | 复选组（coss 配方，组值受控） | value, onValueChange |
@@ -98,6 +99,18 @@
 | Stepper | ui/stepper.tsx | 受控步骤条（向导/分步流程，状态派生自 current） | steps({id,label}), current |
 | AvatarPickerField | ui/avatar-picker-field.tsx | 内置头像选择表单字段 | value, onValueChange, memberType(human/ai/all) |
 | PropertyPanel 套件（CapsuleSelect/DateCapsuleField/AutoSizeTextarea/PropertyRow/PropsCard/SuggestionsCard 等） | ui/property-panel.tsx | 详情页属性面板（Linear 风格可编辑胶囊+属性行+折叠卡） | CapsuleSelect: value, options, onChange, active；PropsCard: title, collapsed；SuggestionsCard: title, items；DateCapsuleField: placeholder, clearLabel |
+
+#### Select label 契约（2026-09-11 定案，写下拉框前必读）
+
+base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映射成 label，否则回退 `String(value)`
+——trigger 就会显示原始 value（也就是 id）。`SelectItem` 里的文本救不了场：**弹层关闭时 item 根本没挂载**（已实证），
+无法从中反推 label。
+
+- 用 `NativeSelect`：无需关心，组件层已把解析出的 `{ value, label }` 交给 Root。
+- 用 `Select` 裸件：**value ≠ 展示文本时**必须给 `Select` 传 `items`（`{ value, label }[]`，或 `Record<value, label>`），
+  或改用 `SelectValue` 的函数式 children `{(value) => label}`；`SelectValue` 上的显式 children 优先级最高，
+  老写法不受影响。value 与展示文本相同的场景（如 role 字符串、字体名）可以不传。
+- 哨兵项（`__none__` 之类）同样要写进 `items`，否则 trigger 会把它当文本渲染出来。
 
 ### 数据展示
 

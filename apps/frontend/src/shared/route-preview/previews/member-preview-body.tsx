@@ -15,14 +15,16 @@ import {
 } from '@/shared/member/types';
 import { TONE_DOT_CLASS, type StatusTone } from '@/shared/status/status-visuals';
 import { cn } from '@/lib/utils';
+import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
+import { StatusPill } from '@/components/ui/status-pill';
 import {
   PreviewBodyError,
   PreviewBodySkeleton,
   PreviewFooterMeta,
   PreviewRow,
   PreviewSection,
-  StatusPreviewBadge,
   formatPreviewDateTime,
+  getStatusTone,
 } from './preview-fields';
 
 // 新增文案的 i18n 键留待 locale 解冻批次补齐（本批次禁改 locale JSON），
@@ -59,13 +61,37 @@ export function MemberPreviewBody({ id }: { id: string }) {
   const statusTone = MEMBER_STATUS_TONE[member.status] ?? 'default';
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-1">
-        <StatusPreviewBadge status={member.status} />
-        {isAi && <StatusPreviewBadge status={member.type} namespace="memberType" />}
-        {member.isOnline && (
-          <span className="text-11 text-muted-foreground">{t('routePreview.member.online')}</span>
-        )}
+    <div className="space-y-3">
+      {/* 顶部成员身份带：Avatar + Name + Status */}
+      <div className="flex items-start gap-2.5 pb-1 border-b border-border/50">
+        <MemberAvatar
+          member={member}
+          size="md"
+          showBadge={false}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-1">
+            <span className="truncate text-xs font-semibold text-foreground">
+              {member.displayName}
+            </span>
+            <span className="flex shrink-0 items-center gap-1 text-10 font-medium">
+              <span className={cn('size-1.5 rounded-full', TONE_DOT_CLASS[statusTone])} />
+              <span className="text-muted-foreground">
+                {member.isOnline ? t('routePreview.member.online') : member.status}
+              </span>
+            </span>
+          </div>
+          <p className="truncate text-11 text-muted-foreground">
+            @{member.handle}
+            {member.title ? ` · ${member.title}` : ''}
+          </p>
+          <div className="mt-1 flex items-center gap-1.5">
+            <StatusPill tone={getStatusTone(member.status)}>
+              {member.isOnline ? 'Online' : member.status}
+            </StatusPill>
+            {isAi && <StatusPill tone="info">AI Agent</StatusPill>}
+          </div>
+        </div>
       </div>
 
       {member.bio && <p className="line-clamp-2 text-11 text-muted-foreground">{member.bio}</p>}

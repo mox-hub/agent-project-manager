@@ -13,7 +13,7 @@ describe('resolveRoutePreview', () => {
     expect(resolveRoutePreview('/app/projects/dashboard/sub')).toEqual({ type: 'generic' });
   });
 
-  it('解析任务 / Bug / 文档 / 仓库 / 成员 / 团队 / 验收详情', () => {
+  it('解析任务 / Bug / 文档 / 仓库 / 成员 / 团队 / 验收 / 执行 / 发版详情', () => {
     expect(resolveRoutePreview('/app/issues/t1')).toEqual({ type: 'task', id: 't1' });
     expect(resolveRoutePreview('/app/bugs/b1')).toEqual({ type: 'bug', id: 'b1' });
     expect(resolveRoutePreview('/app/documents/d1')).toEqual({ type: 'document', id: 'd1' });
@@ -23,6 +23,8 @@ describe('resolveRoutePreview', () => {
     expect(resolveRoutePreview('/app/members/m1')).toEqual({ type: 'member', id: 'm1' });
     expect(resolveRoutePreview('/app/teams/tm1')).toEqual({ type: 'team', id: 'tm1' });
     expect(resolveRoutePreview('/app/acceptance/a1')).toEqual({ type: 'acceptance', id: 'a1' });
+    expect(resolveRoutePreview('/app/executions/e1')).toEqual({ type: 'execution', id: 'e1' });
+    expect(resolveRoutePreview('/app/releases/v1')).toEqual({ type: 'release', id: 'v1' });
   });
 
   it('新建页保留字回退通用卡片', () => {

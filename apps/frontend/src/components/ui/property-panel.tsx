@@ -38,7 +38,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MemberAvatar as StandardMemberAvatar } from '@/modules/team-member/components/member-avatar';
 import { Textarea } from '@/components/ui/textarea';
 
 // ============================================================================
@@ -76,21 +76,25 @@ export const PropertyPanelIcons = {
 // MemberAvatar
 // ============================================================================
 
-export function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
-  if (avatarUrl) {
-    return (
-      <Avatar size="sm" className="shrink-0">
-        <AvatarImage src={avatarUrl} alt={name} />
-        <AvatarFallback>{name[0]?.toUpperCase() ?? '?'}</AvatarFallback>
-      </Avatar>
-    );
-  }
+export function MemberAvatar({
+  name,
+  avatarUrl,
+  size = 'sm',
+  className,
+}: {
+  name: string;
+  avatarUrl?: string | null;
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+}) {
   return (
-    <Avatar size="sm" className="shrink-0">
-      <AvatarFallback className="bg-primary/15 text-primary text-10 font-semibold">
-        {name[0]?.toUpperCase() ?? '?'}
-      </AvatarFallback>
-    </Avatar>
+    <StandardMemberAvatar
+      name={name}
+      avatarUrl={avatarUrl}
+      size={size}
+      className={className}
+      showBadge={false}
+    />
   );
 }
 

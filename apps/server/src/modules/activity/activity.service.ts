@@ -15,6 +15,31 @@ export interface ActivityChange {
   newValue?: unknown;
 }
 
+/**
+ * `Activity.changes` 归一化为 `ActivityChange[] | null`。
+ *
+ * 契约（Prisma 注释 / OpenAPI / DTO）声明的是「字段变更数组」，但**存量迁移数据不是**：
+ * 迁移脚本 `20260827000000_add_activity_module` 把旧 `TaskActivity.detail` 整段灌进了
+ * 新的 `changes` 列，而旧 `detail` 的形状是**对象**——`{ changes: [...] }`（旧包装）
+ * 或更早的 `{ from, to }`。这些行读出来不是数组，前端 `changes.find(...)` /
+ * `changes.slice(...)` 会直接抛 `is not a function` 并把整页打白（2026-09-11 修复）。
+ *
+ * 处理策略（尽量救回历史信息，而不是一律丢弃）：
+ * - 已是数组 → 原样使用；
+ * - 对象且带数组型 `changes` → 取出内层数组（旧包装形状）；
+ * - 其余不可解释的形状 → `null`（与既有 nullable 契约一致）。
+ */
+export function normalizeActivityChanges(
+  value: unknown,
+): ActivityChange[] | null {
+  if (Array.isArray(value)) return value as ActivityChange[];
+  if (value && typeof value === 'object') {
+    const nested = (value as { changes?: unknown }).changes;
+    if (Array.isArray(nested)) return nested as ActivityChange[];
+  }
+  return null;
+}
+
 export interface RecordActivityInput {
   entityType: ActivityEntityType;
   entityId: string;
@@ -319,7 +344,8 @@ export class ActivityService {
       type: row.type,
       summary: row.summary,
       content: row.content,
-      changes: row.changes ?? null,
+      // 归一化：存量迁移行的 changes 可能是对象形状，不能直接透出（见 normalizeActivityChanges）
+      changes: normalizeActivityChanges(row.changes),
       source: row.source,
       metadata: row.metadata ?? null,
       createdAt: row.createdAt,

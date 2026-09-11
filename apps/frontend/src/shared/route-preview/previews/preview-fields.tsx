@@ -7,10 +7,80 @@
 
 import { format } from 'date-fns';
 import type { ReactNode } from 'react';
+import { Flag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
+
+export type StatusTone = 'default' | 'success' | 'warning' | 'danger' | 'info';
+
+export function getStatusTone(status?: string | null): StatusTone {
+  if (!status) return 'default';
+  const s = status.toLowerCase();
+  if (['done', 'completed', 'passed', 'resolved', 'closed', 'success', 'published', 'active', 'on_track'].includes(s)) {
+    return 'success';
+  }
+  if (['in_progress', 'inprogress', 'running', 'reviewing', 'in_review'].includes(s)) {
+    return 'info';
+  }
+  if (['at_risk', 'warning', 'paused', 'suspended', 'pending_approval'].includes(s)) {
+    return 'warning';
+  }
+  if (['blocked', 'critical', 'failed', 'rejected', 'off_track', 'danger', 'urgent'].includes(s)) {
+    return 'danger';
+  }
+  return 'default';
+}
+
+const SEVERITY_CFG: Record<string, { bar: string; text: string; label: string }> = {
+  critical: { bar: 'bg-accent-red', text: 'text-accent-red', label: '严重' },
+  major: { bar: 'bg-accent-yellow', text: 'text-accent-yellow', label: '主要' },
+  minor: { bar: 'bg-accent-blue', text: 'text-accent-blue', label: '次要' },
+  trivial: { bar: 'bg-muted-foreground', text: 'text-muted-foreground', label: '微小' },
+};
+
+export function SeverityBar({ severity }: { severity?: string | null }) {
+  if (!severity) return null;
+  const sev = severity.toLowerCase();
+  const cfg = SEVERITY_CFG[sev] ?? {
+    bar: 'bg-muted-foreground',
+    text: 'text-muted-foreground',
+    label: severity,
+  };
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={cn('w-1 h-3.5 rounded-full shrink-0', cfg.bar)} />
+      <span className={cn('text-10 font-medium', cfg.text)}>{cfg.label}</span>
+    </div>
+  );
+}
+
+export function PriorityFlag({ priority }: { priority?: string | null }) {
+  if (!priority) return null;
+  const p = priority.toLowerCase();
+  const isCritical = p === 'critical' || p === 'urgent';
+  const isHigh = p === 'high';
+  const isMed = p === 'medium';
+  const colorClass = isCritical || isHigh
+    ? 'text-accent-red fill-accent-red'
+    : isMed
+      ? 'text-accent-yellow fill-accent-yellow'
+      : 'text-muted-foreground fill-muted-foreground';
+  const label =
+    isCritical
+      ? 'Urgent'
+      : isHigh
+        ? 'High'
+        : isMed
+          ? 'Medium'
+          : 'Low';
+  return (
+    <span className={cn('inline-flex items-center gap-1 text-10 font-medium', colorClass)}>
+      <Flag className={cn('size-2.5', colorClass)} /> {label}
+    </span>
+  );
+}
 
 /** 单行「标签 + 值」，值超长截断 */
 export function PreviewRow({

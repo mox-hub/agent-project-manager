@@ -98,7 +98,17 @@ describe('ContractBindingsPanel', () => {
     expect(screen.getByText('/ws/demo')).toBeTruthy();
     expect(screen.getByText('contract.fileType.agents')).toBeTruthy();
     expect(screen.getByText('AGENTS.md')).toBeTruthy();
-    expect(screen.getByText('contract.syncMode.managed')).toBeTruthy();
+
+    // 同步模式 label 现在出现两处：行内徽章 + 同步模式下拉框的 trigger。
+    // 下拉框此前显示的是原始 value（managed）而非 label（2026-09-11 修复 Select 的 items 映射），
+    // 故此处按 data-slot 分别断言，避免 getByText 多元素歧义。
+    const syncModeLabels = screen.getAllByText('contract.syncMode.managed');
+    expect(
+      syncModeLabels.some((el) => el.getAttribute('data-slot') === 'badge'),
+    ).toBe(true);
+    expect(
+      syncModeLabels.some((el) => el.getAttribute('data-slot') === 'select-value'),
+    ).toBe(true);
   });
 
   it('冲突绑定渲染冲突徽章并链接决策收件箱', () => {

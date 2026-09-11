@@ -6,7 +6,7 @@ category: "report"
 status: "active"
 version: "1.0.0"
 created: "2026-02-20"
-modified: "2026-09-10"
+modified: "2026-09-11"
 scope: "全仓库版本变更"
 ai-session-types: "all"
 ai-priority: "high"
@@ -20,6 +20,57 @@ tags: "changelog,release"
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
 ## [Unreleased]
+
+### Dock 头像完全填满容器 + 状态点不再被裁切
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**头像完全填满**：`MemberAvatar` 的尺寸是固定档位（xs/sm/md/lg/xl = 20/24/32/40/56px），而 Dock 头像按钮原为 `size-7.5`（30px）内嵌 `size="xs"`（20px）——**圆环里露出一圈容器底色**。把容器尺寸对齐档位（`size-8` = `md` = 32px），头像即与容器**逐像素重合**；展开输入栏的选中角色头像同样修正（原 `size="sm"` 24px 内嵌 32px 容器）。容器描边改回**不占布局的 `ring`**（原为 `border`）——`border` 会占掉 1px 内容盒逼头像缩小 2px，「填满」与「描边」将无法同时成立，`ring` 是盒阴影故二者可兼得。注：`NiceAvatar` 是流式（100% 填充），`Avvvatars` 是按 `size` 固定px 的——所以只能让**容器对齐头像档位**，不能让头像自适应容器；②**状态点不再被裁切**：头像按钮原带 `overflow-hidden`，而右下角呼吸状态点以 `-bottom-0.5 -right-0.5` 挂在按钮**外侧**，被裁掉一角。头像填满后不再需要它裁任何东西（`MemberAvatar` 自身有 `overflow-hidden`，负责把方图裁成圆），故移除；③**连带清理**：头像填满容器后，容器底色已完全被覆盖，`DockAiColleague.color` / `bgColor` 与 hook 里的 `COLOR_SCHEMES` 轮转成为死字段——一并删除（AI 头像配色本就由 `MemberAvatar` 按 `displayName` 种子确定性生成，与成员管理页一致）。 | 用户指令（头像完全填满容器；右下角状态点不要被切割遮挡，要和之前一样完整显示） | Vitest 前端 **79 文件 416 用例全绿**（新增 3 条：容器与头像同尺寸 32px 的填满断言、描边走 ring 不走 border、容器无 `overflow-hidden` 且状态点挂外侧的不裁切断言）；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`tsc -b` 既有 6 行错误不变（无新增） | 同步更新 `docs/01-需求/能力清单-v1.md`（CAP-A-13 补记）、`docs/01-需求/测试映射矩阵-v1.md`（GAP-T-18 用例补充）、本 CHANGELOG |
+
+### Dock 默认助手固定首位且不可关闭 + 用户/助手头像统一取真实头像
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**默认助手（小周）固定首位且不可关闭**：`DockAiColleague` 新增 `isMain` 标识把「谁是默认助手」收敛到一处（此前散落按名字/固定 id 判断）；hook 保证默认助手排首位，设置页「常驻 AI 助手」再按 `isMain` 稳定排序并把它渲染为**禁用且恒为开启**的开关 + 「默认」徽章；Dock 的可见同事过滤与设置页的计数都对其豁免隐藏名单——**即便该 id 混进持久化的隐藏名单（存量脏数据/改名残留）也不会消失**；②**头像统一取真实头像**：用户头像（`DockUserPopover`，触发胶囊 + 浮层身份条）与助手头像（Dock 头像群、展开输入栏、设置页 AI 列表）**全部改由 `MemberAvatar` 渲染**——成员信息里有 `avatarUrl` 就显示真实图片；③**由此修掉一个真实缺陷**：用户头像此前把 `currentUser.avatarUrl` 直塞 `<img src>`，而头像选择器的内置项存的是**哨兵串**（`nice-avatar:alex` / `avvvatars:claude-code`）而非 URL，**选了内置头像的用户在 Dock 上看到的是坏图**；`MemberAvatar` 会区分「真实 URL / 哨兵 / 无头像」三种情况；④**回退档不再自画图标**：无真实头像的 AI 同事此前在 Dock 上画一个 lucide 通用图标（`DockAiColleague.icon` 字段，现已删除），与成员管理页显示的确定性生成头像不一致；现统一回落双表面规范的头像，两处观感一致；⑤**顺带修复**：`MemberAvatar` 的 `title` 在调用方只传「类型+显示名+头像」（无 `handle`）时会拼出 `(@undefined)`；`DockUserPopover` 触发元素原用 Radix 的 `asChild`（base-ui 只认 `render`），会渲染出「button 套 button」的非法结构并持续报 TS 错误——改用 `render` 后该结构消失，既有类型错误由 7 行降至 6 行。 | 用户指令（Dock 栏：默认助手固定首位且不可手动关闭；用户头像与助手头像采用真实头像） | Vitest 前端 **79 文件 413 用例全绿**（新增 13 条：`bottom-dock.test` 3 条头像/默认助手豁免 + `dock-section.test` 4 条首位与不可关闭 + 新增 `dock-user-popover.test` 6 条真实 URL/哨兵/无头像/触发元素非嵌套）；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`tsc -b` 既有错误 7 行 → **6 行** | 同步更新 `docs/01-需求/能力清单-v1.md`（CAP-A-13 补记）、`docs/01-需求/测试映射矩阵-v1.md`（GAP-T-18 登记并当日清偿）、本 CHANGELOG |
+
+> ⚠️ 两个既有问题**未处理**（本次只修了落在 dock 文件里的那一处，避免夹带大范围重构）：①`asChild` 是全仓性问题——`asChild` 是 Radix 惯例，base-ui 只认 `render`，仓库内共 **62 处** `asChild` 用法，其余位置很可能同样在渲染嵌套元素；建议单开一轮排查，不要顺手改；②`ensureMemberForUser` 创建 Member 时不同步 `User.avatarUrl`，故 OAuth 登录用户的 Member 镜像头像恒为 null（用户侧头像走 User 字段不受影响，但成员列表/成员卡会缺失）。
+
+### 底部 Dock 自动隐藏：平时只留徽章栏贴底，鼠标靠近底部才浮出（含「常驻显示」开关）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**默认自动隐藏**：Dock 平时收起（下沉 + 淡出 + 不可点），底部只留**徽章栏贴底**——`DockMetricBadge` 新增 `collapsed` 形态（`bottom-0` ↔ `bottom-full mb-2.5` 之间过渡），浮出时徽章栏随之抬到 Dock 上方；②**靠近浮出、停留保持**：判定区域 = Dock 自身包围盒向外扩 32px、并向下延伸到视口底边；收起态监听 `document` 的 mousemove 做坐标判定，指针离开区域（含移出窗口）即收起。**刻意不用透明热区元素**——那会在页面底部压出一条看不见却吞点击的条带（先按热区实现过一版：约 88px 高、Dock 宽 +64px 的一整片，范围内页面元素全部点不动），改为坐标判定后**页面可点区域零损失**。包围盒取自根节点（其盒高即胶囊高度），不受收起动画那层 transform 影响，因此浮出/收起不会让判定区域抖动；输入栏展开时胶囊变宽，判定区域随包围盒自动变大；③**键盘可达性**：焦点进入 Dock 即浮出，且焦点在 Dock 内部按钮之间移动时不收起（比对 `relatedTarget`），避免 Tab 落到不可见按钮上；④**两个例外**：输入栏展开时不隐藏（正在输入，收起会打断操作）、设置页预览态强制常显（否则预览失去意义）；⑤**设置页新增「显示方式」卡片**：`常驻显示` 开关（默认关闭 = 自动隐藏），改动即时落盘，`恢复默认` 一并还原；⑥**合并** `fix/activity-select-settings-back`（三项缺陷修复）——冲突仅 CHANGELOG（两批都在 Unreleased 顶部加条目），保留双方。 | 用户指令（Dock 平时隐藏、设置页加常驻开关、鼠标靠近浮出且停留保持） | Vitest 前端 **78 文件 400 用例全绿**（新增 14 条：`bottom-dock.test` 自动隐藏/浮出/保持/横向离开/移出窗口/常驻/预览/输入栏例外 9 条 + `dock-section.test` 常驻开关 3 条 + `app-store.test` 2 条）；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`tsc -b` 无新增错误（既有 5 处分支既有错误不变） | 同步更新 `docs/01-需求/能力清单-v1.md`（CAP-A-13 切片补记）、`docs/01-需求/测试映射矩阵-v1.md`（GAP-T-17 登记并当日清偿）、本 CHANGELOG |
+
+> ⚠️ 交互取舍（有意为之，非缺陷）：靠近判定的监听只在收起态挂载（常驻显示时零开销）；每次 mousemove 读一次根节点包围盒（一次布局读取），这是换取「零不可见遮挡」的代价。收起态下键盘 Tab 仍可进入 Dock 并触发浮出，故未使用 `inert`——用了键盘用户就再也够不到 Dock。
+
+### 三项缺陷修复：工单动态页白屏 / 设置页返回目标 / 全站下拉框显示 id
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server · frontend | ①**工单详情页白屏修复**（`activity.changes?.find is not a function`）：根因是**存量迁移数据**——`20260827000000_add_activity_module` 把旧 `TaskActivity.detail`（对象形状 `{ changes: [...] }` 或更早的 `{ from, to }`）整段灌进了新的 `Activity.changes` 列，而契约（Prisma/OpenAPI/DTO）声明的是数组；`shapeActivity` 原先以 `unknown` 原样透出、无运行时收窄，前端 `changes.find` / `changes.slice` 直接抛错。后端新增 `normalizeActivityChanges`（数组原样、旧包装取出内层数组以**救回历史信息**、不可解释形状置 null），前端 `toActivityChanges` 再做一层兜底——契约外数据不该让整页白屏；②**设置页返回目标修复**：`settings-page.tsx` 按「当前历史索引 − 进入时索引」回退，但**少退了一步**（未计跨出设置页那一步），于是「在设置页翻过至少一个分页」时返回会落到上一个设置分页而非进入前的业务页面。抽出纯函数 `resolveBackSteps`（`currentIdx - entryIdx + 1`）并加注释锁定该 off-by-one；③**全站下拉框显示 id 修复**：base-ui 的 `Select.Value` 只在 Root 收到 `items` 时才能把 value 映射成 label，否则回退 `String(value)`；`SelectItem` 里的文本救不了场（**弹层关闭时 item 根本不挂载，已实证**）。`NativeSelect` 从组件层把解析好的 `{ value, label }` 交给 Root（**一处修复覆盖 121 处用法**，其中 `__native_select_empty__` 内部哨兵也不再被当文本渲染，空值显示空选项文本）；裸 `Select` 的 value≠label 站点按同一契约补 `items`（document-form / execution-recovery-dialog / bind-repository-dialog ×2 / task-detail-drawer ×2 / project-roles-section ×2 / team-detail-page / design-system 演示，共 10 处）。 | 用户指令（三项运行时缺陷：工单详情页报错、设置页返回错位、所有下拉框显示 id） | Vitest 前端 **74 文件 341 用例全绿**（本分支基线 70/317，新增 24 条：`native-select.test` 7 + `select.test` 3 + `history-back.test` 9 + `activity-display.test` 5，其中 1 条既有契约测试按新行为收紧断言）；后端 **65 文件 569 用例全绿**（新增 `activity.service.spec` 6 条）；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；server `type-check` 通过。**旁证**：契约绑定面板（未改任何调用点）的同步模式下拉框从显示 `managed` 变为显示 `contract.syncMode.managed`，即组件层修复在真实消费方生效。 | 同步更新 `apps/frontend/COMPONENTS.md`（Select label 契约硬规则）、`docs/02-架构设计/策略/决策日志.md`（ADR-013）、`docs/01-需求/测试映射矩阵-v1.md`（回归用例登记）、本 CHANGELOG |
+
+> ⚠️ 已知遗留（非本次引入，未处理）：①`MEMBER_ROLE_OPTIONS`（团队角色）与字体名等下拉项 value 与展示文本相同，显示的是英文 role 字面量而非本地化名称——属 i18n 范畴，非本次「显示 id」缺陷；②`apps/frontend` 的 `tsc -b` 仍有 5 处**分支既有**类型错误（`app-dock.tsx` / `dock-metric-badge.tsx` / `dock-user-popover.tsx`），本次改动未新增错误（已用同一命令对照验证）。
+### 底部协同交互面（Dock）四项修复 + 「设置 · Dock 栏」自定义（新卡 CAP-A-13）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**「新建」按钮修复断链**：原实现 `navigate('/app/issues?create=true')` 的 query 参数**全仓无消费方**，点新建只跳页不开面板。改为经 `app-store` 的 `createDialog` 唤起**全局统一创建面板**（新增 `shared/components/global-create-dialog.tsx` 挂载于 `ShellLayout`，任意页面可开、不跳页丢上下文；六类创建形态由面板内切换）；②**退出判定区域修正（含决策侧栏解耦）**：Dock 的 outside-click 原先只判定自身容器 `dockContainerRef.contains()`，而 AI 对话浮窗（`fixed bottom-28`）与决策侧栏都在容器之外——**点对话面板内部、其按钮、或决策侧栏「收起」按钮，都会被误判为「外部点击」，连带把主窗口一起关掉**。新增 `shared/lib/floating-layers.ts` 定义「AI 协同交互面」（Dock ＋ 对话浮窗 ＋ 就地问答浮层 ＋ 任意 Portal 弹层），面内点击一律不关闭；并为对话浮窗补上此前**完全缺失**的 ESC 关闭与外部点击关闭（内层浮层已打开时 ESC 先让位，避免模型选择器/历史菜单与主窗口一起关）；③**新增「设置 · Dock 栏」自定义**：页面**置顶为一张实时预览卡片，内嵌完整 Dock 栏本体**（`BottomDock` 新增 `preview` 定位态，与真实 Dock 同源同交互，配置一改预览即变），其下为功能按钮（新建/搜索/通知/主题）显隐 + 上下移排序 + 常驻 AI 助手名单，改动即时生效并落盘（`app-store` + zustand persist，与 `sidebarItemVisibility` 同款设备级偏好机制），Dock 渲染改为配置驱动；④**重构去重**：AI 同事清单生成逻辑（真实成员优先 + 缺省兜底）从 `bottom-dock.tsx` 抽为共享 hook `use-dock-ai-colleagues`，Dock 与设置页共用同一数据源；⑤**顺带修复**：`test-utils/providers.tsx` 空路由表兜底失效（`routes \|\| 默认` 对空数组不生效，致 `renderWithProviders` 不传 `routes` 即抛错）。 | 用户指令（底部 dock 栏修复：新建入口导向统一创建面板、弹窗关闭校验区域不含弹窗自身与按钮、设置页新增 dock 栏设置、决策侧栏关闭不影响主窗口关闭） | Vitest **74 文件 362 用例全绿**（新增 45 条：`floating-layers.test` 9 + `bottom-dock.test` 10 + `assistant-fab.test` 5 + `dock-section.test` 11 + `app-store.test` 增 12）；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告 | 同步更新 `docs/01-需求/能力清单-v1.md`（新增 CAP-A-13 + §4.1 卡数口径修正 + 变更记录）、`docs/01-需求/测试映射矩阵-v1.md`（GAP-T-15 登记并当日清偿 + §三 A-13 行 + 变更记录）、本 CHANGELOG |
+
+> ⚠️ 遗留（**非本次改动引入**，已用 `git stash` 对照验证）：`apps/frontend` 在执行 `tsc -b` 时有 5 处**分支既有**类型错误，位于上一提交（aa181b4）新增的 Dock 相关文件——`components/ui/app-dock.tsx`（base-ui `TooltipProvider` 无 `delayDuration`；motion `children` 类型含 `MotionValue`）、`shared/components/bottom-dock/dock-metric-badge.tsx`（`AssistantRunEntry` 无 `status`/`tokens` 字段）、`shared/components/bottom-dock/dock-user-popover.tsx`（base-ui `PopoverTrigger` 无 `asChild`；`WorkspaceRecord` 无 `slug` 字段）。因 `type-check` 门禁在分支上已红，本次未一并处理，建议单独修复。
+
+### 生产悬浮卡片体系（收藏夹栏与标签页）全面对齐 Design System 规范与头像全面圆形化
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**收藏夹栏与标签页悬浮卡片全面升级**：彻底替换侧边栏收藏栏与 TabBar 标签页弹出卡片的旧版样式——`RoutePreviewTrigger` 显式挂载 `HoverCardArrow` 气泡指向箭头，依据路由类型智能分发 `size="lg"` / `size="xl"`，统一 `p-3.5` 标准内边距；②**RoutePreviewCard 核心壳重塑**：移除陈旧生硬的 `<Separator />` 灰色横线，图标底块全面接入实体语义色彩池（`ENTITY_COLOR_CLASSES`，task/bug/project/acceptance/execution/release/member/team 专属语义色），标题采用高密度 `text-xs font-semibold`，类型徽章升级为细线描边或语义胶囊；③**全量业务卡片对齐 Design System 四层架构**：重构 `TaskPreviewBody`（引入 `StatusPill`、`PriorityFlag` 与 `SeverityBar`，常规工单呈现状态+优先级彩旗+迭代，P0 缺陷呈现 Blocker 高危红色告警带与环境/关联工单）、`ProjectPreviewBody`（健康度评级+交付进度条+项目大盘属性区）、`AcceptancePreviewBody`（门禁通过率点阵矩阵+审计风险预警）、`ExecutionPreviewBody`（双轨指标胶囊+审批拦截告警）、`ReleasePreviewBody`（SemVer Tag+门禁归档闭环）、`MemberPreviewBody`（双表面对称三列头部+圆形头像+在线状态）、`DocumentPreviewBody`、`TeamPreviewBody`、`RepositoryPreviewBody` 与 `GenericPreviewBody`；④**头像规格全面圆形化**：全仓头像选择器、列表、详情、卡片统一采用 `rounded-full`，彻底清零圆角矩形；⑤**门禁与单测**：`tsc -b` 0 错，Vitest 70 个文件 317 项用例全绿通过，7 项治理脚本与 ESLint 保持 0 error 0 warning，`check:docs-sync` 100% 校验通过。 | 用户指令（侧边栏收藏夹与标签页悬浮卡片老旧样式彻底升级对齐 Design System） | `tsc -b` 0 错；Vitest 70 文件 317 用例全绿；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`pnpm check:docs-sync` 通过 | 同步更新 CHANGELOG.md |
+
+### Design System 深度优化——双表面头像体系（人类 NiceAvatar × AI Avvvatars）与 HoverCard 闭环矩阵
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**双表面头像体系裁决与落地**：舍弃所有非标与旧版方案（Dicebear、Emoji 及静态临时 SVG），正式确立双表面唯一样式契约——人类同事采用 `react-nice-avatar` 确定性插画肖像（生动、温暖、专业，具备多种发型、肤色、服饰与表情）；AI 同事与 Agent 采用 `avvvatars-react` 确定性算法几何符号（冷峻、精密、高科技感）；②**统一组件升级**：`MemberAvatar` 自动按 `type`（`human` vs `ai_agent`）路由至双引擎，`AvatarPickerField` 预设项全面替换为人类插画肖像与 AI 算法几何，全仓头像均由本地纯 SVG 驱动，零外网 API 依赖，离线与 Tauri 桌面端 100% 稳定；③**Design System 展台全景重塑**：重构 `AvatarModernizationShowcase` 展台为双引擎实时工作台（支持人类肖像随机变幻换装、AI 几何/字符模式切换、参数实时展示）及 12 位人机协同全景团队画廊；MemberAvatar 5 级尺寸阶梯全部接入双表面新规范；④**HoverCard 闭环矩阵落地**：补齐 Release 版本发布卡片，与 Task 工单、Bug 缺陷、Acceptance 验收门禁、Project 项目、Execution 执行审批共同构成 2 行 × 3 列 6 卡闭环审查矩阵；⑤**治理与门禁**：修复非标 `text-9` 字阶，清除 arbitrary class 与 unused imports，全套治理门禁（palette/arbitrary/registry/spacing/icons/eslint）0 error 0 warning 100% 通过。 | 用户指令（双表面头像规范定夺与外观优化） | `tsc -b` 0 错；`vitest run src/modules/design-system/pages/design-system-page.test.tsx src/modules/team-member/components/member-avatar.test.tsx` 8/8 全绿；`pnpm lint` 7 道治理门禁 + eslint 全部 0 错 0 警告通过；`check:docs-sync` 校验通过 | 同步更新 CHANGELOG.md |
+
+
 
 ### 命令面板外观对齐 design-system 设计语言——图标/键位徽章/底部键位提示栏
 

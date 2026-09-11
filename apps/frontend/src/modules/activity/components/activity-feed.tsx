@@ -22,6 +22,7 @@ import {
   isCommentActivity,
   OPAQUE_VALUE_FIELDS,
   resolveActivityType,
+  toActivityChanges,
 } from '../activity-display';
 import { ActivityComment } from './activity-comment';
 import { CommentInput } from './comment-input';
@@ -89,7 +90,7 @@ function ActivityEventRow({ activity }: { activity: ActivityItem }) {
     locale: i18n.language === 'zh-CN' ? zhCN : undefined,
   });
 
-  const changes = activity.changes ?? [];
+  const changes = toActivityChanges(activity.changes);
   const phraseKey = eventPhraseKey(activity);
   const phrase =
     phraseKey === 'activity.event.generic'

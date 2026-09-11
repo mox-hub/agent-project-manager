@@ -1,14 +1,30 @@
 import { cn } from '@/lib/utils';
 import { Bot } from 'lucide-react';
+import Avvvatars from 'avvvatars-react';
+import NiceAvatar, { genConfig } from 'react-nice-avatar';
 import type { Member } from '../types';
 
 export interface MemberAvatarProps {
-  member?: Pick<Member, 'type' | 'displayName' | 'handle' | 'avatarUrl' | 'isOnline'> | null;
+  member?: (Pick<Member, 'type' | 'displayName'> & { handle?: string; avatarUrl?: string | null; isOnline?: boolean }) | null;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   showBadge?: boolean;
   fallbackInitials?: string;
+  useAvvvatars?: boolean;
+  avvvatarsStyle?: 'shape' | 'character';
+  useNiceAvatar?: boolean;
+  useInitials?: boolean;
+  name?: string;
+  avatarUrl?: string | null;
 }
+
+const NUMERIC_SIZES = {
+  xs: 20,
+  sm: 24,
+  md: 32,
+  lg: 40,
+  xl: 56,
+};
 
 const SIZE_CLASSES = {
   xs: 'h-5 w-5 text-10',
@@ -16,14 +32,6 @@ const SIZE_CLASSES = {
   md: 'h-8 w-8 text-xs',
   lg: 'h-10 w-10 text-sm',
   xl: 'h-14 w-14 text-base',
-};
-
-const ICON_SIZES = {
-  xs: 'h-2.5 w-2.5',
-  sm: 'h-3 w-3',
-  md: 'h-4 w-4',
-  lg: 'h-5 w-5',
-  xl: 'h-7 w-7',
 };
 
 const BADGE_SIZES = {
@@ -55,36 +63,85 @@ export function MemberAvatar({
   className,
   showBadge = true,
   fallbackInitials,
+  useAvvvatars,
+  avvvatarsStyle = 'shape',
+  useNiceAvatar,
+  useInitials,
+  name,
+  avatarUrl,
 }: MemberAvatarProps) {
-  const initials = fallbackInitials || (member ? getInitials(member.displayName || member.handle || '') : '?');
-  const hue = member ? getHue(member.displayName || member.handle || '') : 200;
-  const isAI = member?.type === 'ai_agent';
+  const resolvedDisplayName = member?.displayName || name || '';
+  const resolvedHandle = member?.handle || '';
+  const resolvedAvatarUrl = avatarUrl !== undefined ? avatarUrl : member?.avatarUrl;
+  const hasMemberInfo = Boolean(member || name || fallbackInitials);
+  const isAI = member?.type === 'ai_agent' || resolvedAvatarUrl?.startsWith('avvvatars:');
+  const isNiceAvatarUri = Boolean(resolvedAvatarUrl?.startsWith('nice-avatar:'));
+  const isAvvvatarsUri = Boolean(resolvedAvatarUrl?.startsWith('avvvatars:'));
+  const hasCustomImg = Boolean(
+    resolvedAvatarUrl && !isAvvvatarsUri && !isNiceAvatarUri,
+  );
+
+  const seed = resolvedDisplayName || resolvedHandle || fallbackInitials || (isAI ? 'agent' : 'user');
+  const initials = fallbackInitials || (resolvedDisplayName || resolvedHandle ? getInitials(resolvedDisplayName || resolvedHandle) : '?');
+  const hue = getHue(seed);
+
+  // 双表面规则：人类优先 NiceAvatar，AI 优先 Avvvatars
+  const shouldRenderAvvvatars = hasMemberInfo && (isAI || useAvvvatars || isAvvvatarsUri);
+  const shouldRenderNiceAvatar =
+    hasMemberInfo && !isAI && !hasCustomImg && !useInitials && (useNiceAvatar !== false || isNiceAvatarUri);
+
+  const avvvatarsStyleResolved =
+    resolvedAvatarUrl === 'avvvatars:character' || avvvatarsStyle === 'character'
+      ? 'character'
+      : 'shape';
 
   return (
     <div
       className={cn(
         'relative inline-flex items-center justify-center rounded-full font-semibold text-white shrink-0 overflow-hidden border border-border/50',
         SIZE_CLASSES[size],
-        !member?.avatarUrl && 'ring-1 ring-inset ring-border/40',
+        !hasCustomImg && !shouldRenderAvvvatars && !shouldRenderNiceAvatar && 'ring-1 ring-inset ring-border/40',
         className,
       )}
       style={
-        member?.avatarUrl
+        hasCustomImg || shouldRenderAvvvatars || shouldRenderNiceAvatar
           ? undefined
           : {
               background: `linear-gradient(135deg, hsl(${hue} 65% 55%), hsl(${(hue + 40) % 360} 65% 45%))`,
             }
       }
-      title={member ? `${member.displayName} (@${member.handle})` : ''}
+      // 只传「类型 + 显示名 + 头像」的调用方没有 handle，不能拼出「(@undefined)」
+      title={
+        member
+          ? member.handle
+            ? `${member.displayName} (@${member.handle})`
+            : member.displayName
+          : resolvedDisplayName || ''
+      }
     >
-      {member?.avatarUrl ? (
+      {hasCustomImg ? (
         <img
-          src={member.avatarUrl}
-          alt={member.displayName}
+          src={resolvedAvatarUrl!}
+          alt={resolvedDisplayName}
           className="h-full w-full object-cover"
         />
-      ) : isAI ? (
-        <Bot className={cn('text-white/90', ICON_SIZES[size])} />
+      ) : shouldRenderAvvvatars ? (
+        <div className="size-full flex items-center justify-center overflow-hidden">
+          <Avvvatars
+            value={seed}
+            size={NUMERIC_SIZES[size]}
+            style={avvvatarsStyleResolved}
+            shadow={false}
+          />
+        </div>
+      ) : shouldRenderNiceAvatar ? (
+        <div className="size-full flex items-center justify-center overflow-hidden">
+          <NiceAvatar
+            style={{ width: '100%', height: '100%' }}
+            shape="circle"
+            {...genConfig(seed)}
+          />
+        </div>
       ) : (
         <span className="leading-none tracking-tight">{initials}</span>
       )}
