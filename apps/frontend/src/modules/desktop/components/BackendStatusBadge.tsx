@@ -21,7 +21,6 @@ export function BackendStatusBadge({ showControls = true }: BackendStatusBadgePr
 
   const isRunning = backendStatus?.running ?? false;
   const port = backendStatus?.info?.port;
-  const pid = backendStatus?.info?.pid;
 
   return (
     <div className="flex items-center gap-2">

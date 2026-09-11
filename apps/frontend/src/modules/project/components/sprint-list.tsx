@@ -49,7 +49,6 @@ const statusConfig = {
 
 function SprintCard({
   sprint,
-  projectId,
   onEdit,
   onDelete,
   onStart,
@@ -180,17 +179,15 @@ export function SprintList({
   isLoading,
   onCreateSprint,
   onUpdateSprint,
-  onDeleteSprint,
   onStartSprint,
   onCompleteSprint,
   onCancelSprint,
   isCreating,
   isUpdating,
-  isDeleting,
 }: SprintListProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);
-  const [deletingSprint, setDeletingSprint] = useState<Sprint | null>(null);
+  const [, setDeletingSprint] = useState<Sprint | null>(null);
 
   const sortedSprints = useMemo(() => {
     if (!sprints) return [];
@@ -215,13 +212,6 @@ export function SprintList({
     if (editingSprint) {
       onUpdateSprint(editingSprint.id, data);
       setEditingSprint(null);
-    }
-  };
-
-  const handleDeleteConfirm = () => {
-    if (deletingSprint) {
-      onDeleteSprint(deletingSprint.id);
-      setDeletingSprint(null);
     }
   };
 

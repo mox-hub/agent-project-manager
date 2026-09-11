@@ -335,7 +335,7 @@ function Row<T extends DataListItem>({
 // 内部：grouping bar
 // ============================================================================
 
-function GroupBar<T extends DataListItem>({
+function GroupBar({
   meta,
   count,
   expanded,
@@ -539,7 +539,6 @@ export function DataList<T extends DataListItem>({
     });
     const arr = Array.from(buckets.entries()).map(([key, list]) => {
       const metaOverride = groupLabel?.(key, list) ?? {};
-      const first = list[0];
       const meta: DataListGroupMeta = {
         key,
         label: metaOverride.label ?? key,

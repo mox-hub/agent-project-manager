@@ -58,10 +58,6 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
     rollback.mutate({ versionId, createdBy: currentUserId });
   };
 
-  const handleStartCompare = (versionId: string) => {
-    setCompareTargetId(versionId);
-  };
-
   const handleStartRename = (versionId: string, currentLabel: string) => {
     setRenamingId(versionId);
     setRenameDraft(currentLabel);

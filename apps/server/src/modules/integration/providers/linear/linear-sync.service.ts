@@ -1308,8 +1308,8 @@ export class LinearSyncService {
    * - 注意：Linear SDK 的 Project 类型不直接支持 cycles，需要通过 Team 获取
    */
   private async syncMilestones(
-    projectId: string,
-    linearProjectId: string,
+    _projectId: string,
+    _linearProjectId: string,
   ): Promise<{ created: number; updated: number }> {
     // Linear SDK 不直接支持通过 Project 获取 cycles
     // 暂时跳过，后续可以通过 Team API 扩展

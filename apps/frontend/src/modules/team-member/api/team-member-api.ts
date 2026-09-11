@@ -4,6 +4,7 @@ import type {
   Member,
   MemberCard,
   Team,
+  TeamMember,
   TaskAssignee,
   TaskWatcher,
   DocumentAuthor,
@@ -24,8 +25,20 @@ export async function listTeams(params?: { status?: string; q?: string; limit?: 
   return res;
 }
 
+/** getTeam 聚合响应：服务端返回 Team + 关联数组 + 计数（契约 DTO 对齐前维持手写口径） */
+type TeamDetail = Team & {
+  members: TeamMember[];
+  projects: Array<{
+    id: string;
+    projectId: string;
+    createdAt: string;
+    project?: { id: string; name: string; color?: string | null } | null;
+  }>;
+  invites: unknown[];
+};
+
 export async function getTeam(id: string) {
-  const res = await api.get<Team & { members: any[]; projects: any[]; invites: any[] }>(`/teams/${id}`);
+  const res = await api.get<TeamDetail>(`/teams/${id}`);
   return res;
 }
 

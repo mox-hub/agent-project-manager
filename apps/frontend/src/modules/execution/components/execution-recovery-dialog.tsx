@@ -22,7 +22,6 @@ import {
   XCircle,
   CheckCircle,
   X,
-  ChevronRight,
 } from 'lucide-react';
 import {
   Select,
@@ -309,7 +308,6 @@ function EscalationForm({
 export function ExecutionRecoveryDialog({
   open,
   onOpenChange,
-  issueId,
   run,
   steps,
   onRecovery,

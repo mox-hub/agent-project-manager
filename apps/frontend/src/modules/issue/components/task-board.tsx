@@ -5,7 +5,6 @@
  */
 import { useMemo } from 'react';
 import type { Task } from '@/modules/issue/api/issue-api';
-import { useTranslation } from 'react-i18next';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
 import {
   STATUS_VISUAL,
@@ -39,8 +38,6 @@ export function TaskBoard({
   onTaskMove,
   onCreateTask,
 }: TaskBoardProps) {
-  const { t } = useTranslation();
-
   const boardColumns = useMemo<BoardColumnDef[]>(
     () =>
       columns.map((column) => {

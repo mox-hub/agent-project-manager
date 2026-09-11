@@ -73,7 +73,8 @@ export interface Member {
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
-  metadata?: { isSystemAssistant?: boolean } | null;
+  /** 后端 Json 自由列：除 isSystemAssistant 外还存 phone/timezone 等扩展字段 */
+  metadata?: Record<string, unknown> | null;
   user?: MemberUserRef | null;
   aiModelConfig?: MemberAIModelConfig | null;
 }

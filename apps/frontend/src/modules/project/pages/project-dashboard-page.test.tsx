@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProjectDashboardPage } from './project-dashboard-page';
+import type { ProjectDashboardSummary } from '../api/project-api';
 
 class ResizeObserverMock {
   observe() {}
@@ -88,7 +90,8 @@ vi.mock('../hooks/use-project-dashboard-summary', () => ({
     isError: false,
     error: null,
   }),
-  selectProjectHealthDetails: (value: any) => value?.health?.details ?? [],
+  selectProjectHealthDetails: (value: ProjectDashboardSummary | undefined) =>
+    value?.health.details ?? [],
 }));
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -96,7 +99,19 @@ vi.mock('@/hooks/use-toast', () => ({
 }));
 
 vi.mock('@/modules/project/components/dashboard/project-detail-frame', () => ({
-  ProjectDetailFrame: ({ children, projectName, title, description, actions }: any) => (
+  ProjectDetailFrame: ({
+    children,
+    projectName,
+    title,
+    description,
+    actions,
+  }: {
+    children?: ReactNode;
+    projectName?: string;
+    title?: ReactNode;
+    description?: ReactNode;
+    actions?: ReactNode;
+  }) => (
     <div data-testid="project-detail-frame">
       <h1>{projectName}</h1>
       <p>{title}</p>
@@ -117,7 +132,7 @@ vi.mock('@/modules/project/components/dashboard/project-right-sidebar', () => ({
 
 vi.mock('@/modules/project/components/dashboard/project-sidebar-context', () => ({
   useProjectSidebar: () => null,
-  ProjectSidebarProvider: ({ children }: any) => children,
+  ProjectSidebarProvider: ({ children }: { children?: ReactNode }) => children,
 }));
 
 vi.mock('@/modules/project/components/dashboard/ai-insight-card', () => ({

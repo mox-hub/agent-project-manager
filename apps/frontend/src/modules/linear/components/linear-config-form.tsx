@@ -98,9 +98,9 @@ export function LinearConfigForm({
               orgCount: viewer.organizations.length,
             }
           : undefined,
-      } as any);
+      });
       toast.success('Linear integration saved');
-      onSuccess?.((result as any).id);
+      onSuccess?.(result.id);
       onClose();
     } catch (err) {
       toast.error(

@@ -9,7 +9,7 @@
  * 仅用于展示 refer 设计还原效果，不接入真实 API。
  * 顶层容器标记 data-mock="true" 便于检索与后续替换。
  */
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   ListTree, ChevronRight, ChevronDown, Check, X, Minus, Clock,
   AlertTriangle, Circle, Code2, FlaskConical, Building2,
@@ -28,7 +28,7 @@ import { toast } from '@/components/ui/toast';
 type ViewMode = 'dev' | 'pm' | 'user';
 import type {
   AcceptStatus, NodeLevel, StageKey, AgentKey, AgentStatus,
-  AcceptanceRecord, AgentRecord, Annotation, DeliveryNode,
+  AcceptanceRecord, Annotation, DeliveryNode,
 } from '../api/delivery-api';
 import { useDeliveryOverview } from '../hooks/use-delivery';
 
@@ -809,16 +809,19 @@ const VIEW_CONFIG: Record<ViewMode, { label: string; icon: React.ElementType; de
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function DeliveryPage() {
-  const { data: overview, isLoading } = useDeliveryOverview();
-  const DELIVERY_DATA = overview?.nodes ?? [];
+  const { data: overview } = useDeliveryOverview();
+  const DELIVERY_DATA = useMemo(() => overview?.nodes ?? [], [overview]);
   const [viewMode, setViewMode]       = useState<ViewMode>('dev');
   const [expanded, setExpanded]       = useState<Set<string>>(new Set(['p1', 'p2', 'm1', 'm2', 'm4']));
-  const [acceptance, setAcceptance]   = useState<Record<string, AcceptanceRecord>>({});
-
-  // 数据到达/变化后重置验收矩阵（原为静态数据一次性初始化）
-  useEffect(() => {
-    if (DELIVERY_DATA.length > 0) setAcceptance(initAcceptance(DELIVERY_DATA));
-  }, [overview]);
+  // 数据版本化编辑：编辑值绑定生成它的 overview 版本，数据变化即重置回 initAcceptance
+  const [acceptanceEdit, setAcceptanceEdit] = useState<{
+    src: typeof overview;
+    value: Record<string, AcceptanceRecord>;
+  } | null>(null);
+  const acceptance = useMemo(
+    () => (acceptanceEdit?.src === overview && acceptanceEdit ? acceptanceEdit.value : initAcceptance(DELIVERY_DATA)),
+    [acceptanceEdit, overview, DELIVERY_DATA],
+  );
   const [annotations, setAnnotations] = useState<Annotation[]>([
     { id: 'a1', nodeId: 'f11', author: 'Maria', content: '已与用户确认，Webhook延迟问题在2周内修复，用户表示可接受临时状态', tag: 'negotiated', timestamp: '08-01 14:30' },
     { id: 'a2', nodeId: 'f10', author: 'Ben', content: '3D Secure 目前仅支持欧区，国内暂时豁免该验收项', tag: 'decision', timestamp: '08-03 09:15' },
@@ -843,10 +846,14 @@ export function DeliveryPage() {
   }, []);
 
   const handleAcceptChange = useCallback((nodeId: string, key: StageKey, status: AcceptStatus) => {
-    setAcceptance(prev => ({ ...prev, [nodeId]: { ...prev[nodeId], [key]: status } }));
+    setAcceptanceEdit(prev => {
+      const base =
+        prev?.src === overview && prev ? prev.value : initAcceptance(DELIVERY_DATA);
+      return { src: overview, value: { ...base, [nodeId]: { ...base[nodeId], [key]: status } } };
+    });
     const node = flattenNodes(DELIVERY_DATA).find(n => n.id === nodeId);
     toast.success(`${node?.title ?? nodeId} · ${COL_DEFS.find(c => c.id === key)?.label} → ${STATUS_CFG[status].label}`);
-  }, []);
+  }, [overview, DELIVERY_DATA]);
 
   const handleAnnotationAdd = useCallback((ann: Omit<Annotation, 'id' | 'timestamp'>) => {
     const now = new Date();

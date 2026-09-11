@@ -33,7 +33,6 @@ import {
   ListIcon,
   ListText,
 } from '@/components/ui/data-list';
-import type { DataListItem } from '@/components/ui/data-list';
 import { AsyncState } from '@/components/ui/async-state';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
@@ -53,8 +52,6 @@ import { useGitToolStatus } from '../hooks/use-git-tool';
 import type { GitToolStatusData } from '../api/git-api';
 import type { Repository } from '../api/git-api';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
-
-interface RepositoryRow extends DataListItem, Repository {}
 
 const PROVIDER_OPTIONS = ['github', 'gitlab', 'bitbucket'] as const;
 

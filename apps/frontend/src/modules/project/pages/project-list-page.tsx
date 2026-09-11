@@ -32,7 +32,6 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import {
   Plus,
-  Settings,
   AlertTriangle,
   List,
   Kanban,

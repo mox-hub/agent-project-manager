@@ -54,7 +54,7 @@ describe('useProjectHealthSnapshots', () => {
       ];
 
       vi.mocked(projectApi.getHealthSnapshots).mockResolvedValue(
-        mockSnapshots as any
+        mockSnapshots as Awaited<ReturnType<typeof projectApi.getHealthSnapshots>>,
       );
 
       const { result } = renderHook(

@@ -9,7 +9,6 @@ import {
   pickContextMenu,
   confirmDialog,
   dragUntil,
-  capsuleByRowLabel,
   pickCapsuleOption,
   dialogTitleInput,
   modalDialog,
@@ -96,7 +95,7 @@ test('B01 报告Bug-对话框与严重度', async ({ page, api }) => {
 test('B02 Bug列表-搜索与严重度筛选', async ({ page, api }) => {
   const p = await newProject(api, 'Bug筛选项目')
   const a = await newBug(api, uniq('崩溃Bug'), p.id, { severity: 'critical' })
-  const b = await newBug(api, uniq('样式Bug'), p.id, { severity: 'low' })
+  await newBug(api, uniq('样式Bug'), p.id, { severity: 'low' })
   await gotoBugs(page)
 
   // 筛选级联菜单：字段名回退英文 Severity

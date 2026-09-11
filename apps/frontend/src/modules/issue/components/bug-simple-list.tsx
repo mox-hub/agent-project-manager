@@ -9,7 +9,7 @@
 
 import { Bug } from 'lucide-react';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
-import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
+import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals';
 import {
   DataList,
   ListAvatar,
@@ -33,9 +33,6 @@ const STAT_C = {
   done: { label: 'Done', order: 3 },
   canceled: { label: 'Canceled', order: 4 },
 } as const;
-
-const statusTextClass = (status: TaskStatus) =>
-  TONE_TEXT_CLASS[(TASK_STATUS_VISUALS[status] ?? TASK_STATUS_VISUALS.todo).tone];
 
 const SEV_C = {
   critical: { label: 'Critical', color: 'text-destructive', dotColor: 'bg-destructive', order: 0 },

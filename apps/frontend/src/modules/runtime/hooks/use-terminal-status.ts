@@ -44,7 +44,7 @@ export function useTerminalStatus() {
  */
 export function useTestShell() {
   return useMutation<ShellTestResult, Error, string>({
-    mutationFn: async (shellPath: string) => {
+    mutationFn: async (_shellPath: string) => {
       // Runtime 模块会处理实际的 shell 测试
       return {
         success: true,

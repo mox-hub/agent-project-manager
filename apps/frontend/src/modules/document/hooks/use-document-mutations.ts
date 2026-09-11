@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { documentApi, type CreateDocumentRequest, type UpdateDocumentRequest, type Document } from '../api/document-api';
 import { useToastMutation } from '@/shared/hooks';
 
-function unwrap<T>(payload: any): T {
+function unwrap<T>(payload: unknown): T {
   if (payload && typeof payload === 'object' && 'data' in payload) {
     return (payload as { data: T }).data;
   }

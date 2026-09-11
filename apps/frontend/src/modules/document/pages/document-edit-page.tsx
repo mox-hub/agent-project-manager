@@ -9,7 +9,6 @@ import {
   Sparkles,
   Wand2,
   X,
-  Plus,
   Hash,
   Image as ImageIcon,
   AlignLeft,
@@ -85,7 +84,6 @@ function DocumentEditWorkspace({
   const [editorMode, setEditorMode] = useState<EditorMode>('split');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
-  const [tagInput, setTagInput] = useState('');
   const editorRef = useRef<MdxEditorRef | null>(null);
 
   const [title] = useState(data.title);
@@ -97,7 +95,8 @@ function DocumentEditWorkspace({
   // 元数据 (frontmatter) 草稿态
   const [summary, setSummary] = useState<string>(initialFrontmatter.summary ?? '');
   const [coverImage, setCoverImage] = useState<string>(initialFrontmatter.coverImage ?? '');
-  const [tags, setTags] = useState<string[]>(initialFrontmatter.tags ?? []);
+  // 标签来源 frontmatter，页面内只读展示
+  const [tags] = useState<string[]>(initialFrontmatter.tags ?? []);
 
   const updateDocument = useUpdateDocument();
   const createVersion = useCreateVersion(data.id);
@@ -105,21 +104,6 @@ function DocumentEditWorkspace({
   // app-store.currentUser 刷新后异步回填，用它会让快照/保存判定偶发失效
   const { currentUser } = useAuth();
   const currentUserId = currentUser?.id ?? '';
-
-  const addTag = () => {
-    const t = tagInput.trim();
-    if (!t) return;
-    if (tags.includes(t)) {
-      setTagInput('');
-      return;
-    }
-    setTags((prev) => [...prev, t]);
-    setTagInput('');
-  };
-
-  const removeTag = (t: string) => {
-    setTags((prev) => prev.filter((x) => x !== t));
-  };
 
   const handleSave = () => {
     // 把元数据合并到 markdown 顶部的 frontmatter, 再随 content 一起提交

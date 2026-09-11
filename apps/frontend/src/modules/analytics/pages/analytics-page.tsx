@@ -24,8 +24,8 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useAnalyticsOverview, usePlaybookHealth, useProfileHealth } from '../hooks/use-analytics-overview';
 import type { ProfileHealthItem } from '../api/analytics-api';
 import {
-  BarChart, Bar, LineChart, Line, AreaChart, Area, RadarChart, Radar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PolarGrid, PolarAngleAxis,
+  BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { cn } from '@/lib/utils';
 

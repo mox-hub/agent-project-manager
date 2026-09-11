@@ -4,9 +4,7 @@ import {
   Team,
   Project,
   Issue,
-  WorkflowState,
   IssueLabel,
-  User,
   ProjectLabel,
   RatelimitedLinearError,
   NetworkLinearError,
@@ -194,7 +192,6 @@ export class LinearSDKService {
 
     return {
       projects: projects.nodes.map((p: Project) => {
-        const data = (p as any)._data || {};
         return {
           id: p.id,
           name: p.name,
@@ -514,7 +511,7 @@ export class LinearSDKService {
   /**
    * 获取项目周期（Cycles）
    */
-  async fetchProjectCycles(client: LinearClient, projectId: string) {
+  async fetchProjectCycles(_client: LinearClient, _projectId: string) {
     return [];
   }
 }

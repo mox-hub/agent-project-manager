@@ -80,7 +80,7 @@ export function extractHeadings(markdown: string): Heading[] {
  */
 export async function compileMdx(
   source: string,
-  options?: MdxCompileOptions,
+  _options?: MdxCompileOptions,
 ): Promise<MdxCompileResult> {
   const { data: frontmatter, body } = parseFrontmatter(source);
   const headings = extractHeadings(body);
@@ -101,6 +101,7 @@ export async function compileMdx(
 
   // run() 在 react/jsx-runtime 沙箱里执行编译产物
   const mod = await run(code, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- react/jsx-runtime 命名空间与 @mdx-js Runtime 的 Pick 形状不重合（缺 createIdentity 等），运行时兼容，属第三方类型边界
     ...(runtime as any),
     baseUrl: import.meta.url,
   });

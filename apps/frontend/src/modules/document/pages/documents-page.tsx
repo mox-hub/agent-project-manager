@@ -36,8 +36,6 @@ import { DocumentPreviewDialog } from '@/components/ui/document-preview-dialog';
 import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useDocuments } from '../hooks/use-documents';
-import { useDeleteDocument } from '../hooks/use-document-mutations';
-import { useCreateDocument } from '../hooks/use-document-mutations';
 import { useSyncWarnings, useClearSyncWarning } from '../hooks/use-sync-warnings';
 import type { DocumentCategory, DocumentStatus, DocumentListItem } from '../api/document-api';
 
@@ -133,13 +131,9 @@ export function DocumentsPage() {
     [allDocuments],
   );
 
-  const createDocument = useCreateDocument();
-  const deleteDocument = useDeleteDocument();
   const { data: syncWarnings = [] } = useSyncWarnings();
   const clearSyncWarning = useClearSyncWarning();
   const [showSyncBanner, setShowSyncBanner] = useState(true);
-
-  const syncWarningForDoc = (id: string) => syncWarnings.find((w) => w.documentId === id);
 
   if (isLoading) {
     return (

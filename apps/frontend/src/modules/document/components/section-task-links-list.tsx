@@ -221,14 +221,14 @@ function SectionGroupCard({
       }>).detail;
       if (!detail || detail.sectionId !== group.sectionId) return;
       if (!detail.currentUserId) return;
+      // createdBy 由服务端从认证身份取，DTO 不收该字段
       create.mutate({
         issueId: detail.issueId,
         projectId: detail.projectId,
         documentId: detail.documentId,
         sectionId: detail.sectionId,
         linkType: detail.linkType,
-        createdBy: detail.currentUserId,
-      } as any);
+      });
     };
     window.addEventListener('apm:create-section-link', handler);
     return () => window.removeEventListener('apm:create-section-link', handler);

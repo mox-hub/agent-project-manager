@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDocLinks, useAddDocLink, useDeleteDocLink } from '../hooks/use-project-links';
+import type { ProjectDocLinkRequest } from '../api/project-api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,10 +28,10 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
   const deleteLink = useDeleteDocLink(projectId);
 
   const [isAdding, setIsAdding] = useState(false);
-  const [newLink, setNewLink] = useState({
+  const [newLink, setNewLink] = useState<ProjectDocLinkRequest>({
     label: '',
     url: '',
-    type: 'wiki' as const,
+    type: 'wiki',
     description: '',
     aiIndexed: false,
   });
@@ -78,7 +79,7 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
                 <NativeSelect
                   className="w-full"
                   value={newLink.type}
-                  onChange={(e) => setNewLink({ ...newLink, type: e.target.value as any })}
+                  onChange={(e) => setNewLink({ ...newLink, type: e.target.value as ProjectDocLinkRequest['type'] })}
                 >
                   {DOC_TYPE_OPTIONS.map((opt) => (
                     <NativeSelectOption key={opt.value} value={opt.value}>

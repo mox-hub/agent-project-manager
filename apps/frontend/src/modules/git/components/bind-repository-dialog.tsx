@@ -69,7 +69,7 @@ export function BindRepositoryDialog({
       form.reset();
       onSuccess?.();
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       setError(err.message || 'Failed to bind repository');
     },
   });

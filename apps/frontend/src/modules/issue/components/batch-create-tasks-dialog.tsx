@@ -35,8 +35,6 @@ interface TaskRow {
 }
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical'] as const;
-const STATUSES = ['todo', 'in_progress', 'in_review', 'done'] as const;
-
 const TASK_TEMPLATES = [
   {
     id: 'feature',
@@ -286,8 +284,10 @@ function AiBatchCreate({ tasks, onTasksChange }: {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        const generatedTasks = data.tasks.map((t: any) => ({
+        const data = (await response.json()) as {
+          tasks: Array<{ title: string; description?: string; priority?: string }>;
+        };
+        const generatedTasks = data.tasks.map((t) => ({
           ...createEmptyRow(),
           title: t.title,
           description: t.description || '',
@@ -377,7 +377,7 @@ export function BatchCreateTasksDialog({
           title: task.title,
           description: task.description,
           priority: task.priority as CreateTaskRequest['priority'],
-          status: task.status as any,
+          status: task.status as CreateTaskRequest['status'],
         } as CreateTaskRequest);
       }
       setTasks([]);

@@ -417,9 +417,9 @@ export function useCreateSubTask(options?: { onSuccess?: (task: Task) => void })
   return useMutation({
     mutationFn: (data: Omit<CreateTaskRequest, 'parentIssueId'> & { parentIssueId: string }) =>
       taskApi.create(data),
-    onSuccess: (newTask) => {
-      queryClient.invalidateQueries({ queryKey: ['subIssues', (newTask as any).parentIssueId] });
-      queryClient.invalidateQueries({ queryKey: ['task', (newTask as any).parentIssueId] });
+    onSuccess: (newTask, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['subIssues', variables.parentIssueId] });
+      queryClient.invalidateQueries({ queryKey: ['task', variables.parentIssueId] });
       queryClient.invalidateQueries({ queryKey: ['allTasks'] });
       queryClient.invalidateQueries({ queryKey: ['allBugs'] });
       toast.success('子任务已创建');

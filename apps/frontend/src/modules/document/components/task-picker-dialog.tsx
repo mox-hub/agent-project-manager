@@ -39,7 +39,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
         pageSize: 50,
         q: search || undefined,
         type: filterType === 'all' ? undefined : filterType,
-      } as any;
+      };
       const res = projectId
         ? await taskApi.getProjectTasks(projectId, params)
         : await taskApi.getAccessibleTasks(params);
