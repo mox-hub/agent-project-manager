@@ -23,6 +23,7 @@ import {
   UserCog,
   UserRound,
   BarChart3,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { getEntityIcon } from "@/shared/entity-icons/entity-icons";
@@ -45,6 +46,7 @@ export interface PageRegistryEntry {
  * 实体，保留 HardDrive。
  */
 export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
+  "/app/ai-surface": { icon: Sparkles, labelKey: "nav.aiSurface", color: "#8B5CF6" },
   "/app/decisions": { icon: getEntityIcon("decision").icon, labelKey: "nav.decisions", color: "#F97316" },
   "/app/search": { icon: Search, labelKey: "nav.search", color: "#6366F1" },
   "/app/notifications": { icon: Bell, labelKey: "nav.notifications", color: "#F59E0B" },

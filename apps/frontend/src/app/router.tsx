@@ -160,6 +160,12 @@ const DecisionInboxPage = lazy(() =>
   })),
 );
 
+const AiSurfacePage = lazy(() =>
+  import('@/modules/ai-surface/pages/ai-surface-page').then((m) => ({
+    default: m.AiSurfacePage,
+  })),
+);
+
 export const router = createBrowserRouter([
   // Boot startup page (first screen shown on cold start)
   {
@@ -362,6 +368,15 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={null}>
             <OfficePage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'ai-surface',
+        element: (
+          <Suspense fallback={null}>
+            <AiSurfacePage />
           </Suspense>
         ),
         errorElement: <ErrorPage />,
