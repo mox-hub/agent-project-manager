@@ -275,6 +275,15 @@ describe('BottomDock —— 助手头像取自成员信息', () => {
     expect(avatarRoot.className).toContain('w-8');
   });
 
+  it('描边用 ring（不占布局）而非 border——否则头像会被挤小、填不满', () => {
+    renderDock();
+
+    const btn = screen.getByTitle(/点击向 \[小周\]/);
+    expect(btn.className).toContain('ring-1');
+    // border 会占掉 1px 内容盒；容器不得有 border 宽度类
+    expect(btn.className).not.toMatch(/(^|\s)border(\s|$)/);
+  });
+
   it('状态点不被裁切：容器不得 overflow-hidden，且状态点挂在右下角外侧', () => {
     renderDock();
 
