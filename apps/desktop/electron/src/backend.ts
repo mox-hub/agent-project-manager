@@ -8,6 +8,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import net from 'node:net';
 import http from 'node:http';
+import path from 'node:path';
 import { utilityProcess } from 'electron';
 import type { AppConfig } from './config';
 import { getDatabaseUrl } from './config';
@@ -90,6 +91,9 @@ function buildServerEnv(config: AppConfig, port: number): NodeJS.ProcessEnv {
     PRISMA_CLIENT_ENGINE_TYPE: 'library',
     NODE_ENV: 'production',
     APP_MODE: 'standalone',
+    // 工作区注册表指向用户数据目录：默认按 server cwd 解析会落进安装目录，
+    // 升级覆盖安装时随 resources 重写而丢失用户工作区注册（安装冒烟实证）
+    WORKSPACE_REGISTRY_PATH: path.join(config.userDataDir, 'workspaces.json'),
   };
 }
 

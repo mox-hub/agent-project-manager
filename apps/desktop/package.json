@@ -22,6 +22,7 @@
     "electron-builder": "^26.15.3",
     "eslint": "catalog:",
     "tsup": "^8.5.1",
+    "typescript": "catalog:",
     "typescript-eslint": "catalog:"
   }
 }

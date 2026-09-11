@@ -39,6 +39,42 @@
 
 环境变量 `APM_SERVER_TRANSPORT=node` 可强制路径 ②（调试用）。
 
+## 启动顺序契约（规定的初始化次序，main.ts 强制）
+
+```
+① 壳初始化（同步，毫秒级）
+   解析路径 → 创建用户目录（%APPDATA%/agent-project-manager/{logs,uploads,data}）
+   → 生成/加载 secrets.json 密钥（JWT_SECRET / INTEGRATION_ENCRYPTION_KEY）
+② 数据库就绪（阻塞 ③）
+   全新安装：Prisma db push 建库（ELECTRON_RUN_AS_NODE 跑 CLI）；已有库跳过，绝不重建
+   失败 → initError 置位 → ③ 被前置拦截，前端 init 页可见错误
+③ server 拉起（utilityProcess / spawn node.exe）
+   env 注入：PORT、DATABASE_URL、JWT_SECRET、INTEGRATION_ENCRYPTION_KEY、
+   FRONTEND_DIST_DIR、UPLOAD_DIR、WORKSPACE_REGISTRY_PATH（用户数据目录，
+   防升级覆盖丢失）、ALLOWED_ORIGINS、PRISMA_CLIENT_ENGINE_TYPE、NODE_ENV、APP_MODE
+   → /_api/health 轮询（30s/500ms）通过才算启动成功
+④ 前端加载（依赖 ③ 健康通过）
+   生产：loadURL(server) 同源托管（server 自带 SPA history fallback）
+   dev：优先 vite 5173（HMR）
+⑤ apm-runtime 守护进程（AI 执行面）——不在桌面版
+   按四裁决点（不随包分发，v0.6.1）；server 在无 runtime 连接时健康降级，
+   控制面功能完整、AI 执行能力不可用。并入桌面版需重新裁决（二期评估）。
+```
+
+退出（窗口关闭/before-quit）：杀全部托管子进程，server 无残留。
+
+## 数据与文件布局
+
+| 位置 | 内容 | 生成方 |
+|------|------|--------|
+| `%APPDATA%/agent-project-manager/data/agent-project-manager.db` | 主库（= default 工作区） | Prisma db push（首启） |
+| `%APPDATA%/agent-project-manager/workspaces.json` | 工作区注册表（default + 用户工作区） | server 数据层（env 指向 userData） |
+| `%APPDATA%/agent-project-manager/secrets.json` | JWT/集成加密密钥 | 壳首启生成 |
+| `%APPDATA%/agent-project-manager/uploads/`、`logs/` | 上传文件、壳+server 日志 | 壳创建 |
+| 用户工作区目录（创建工作区时指定） | `data/apm.db`（自 template.db 复制）+ `uploads/` + `logs/` + `workspace.json` | server（PRISMA 模板 = 随包 `resources/server/prisma/template.db`） |
+
+工作区多库实测（安装版）：创建工作区 → 模板库复制 → 注册表登记 → `x-workspace-id` 头路由，全链路通过。
+
 ## 用户数据位置
 
 `%APPDATA%\agent-project-manager\`（Electron 的 appData 语义为 Roaming）
