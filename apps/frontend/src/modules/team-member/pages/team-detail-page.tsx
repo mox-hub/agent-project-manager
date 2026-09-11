@@ -510,6 +510,17 @@ export default function TeamDetailPage() {
                         <Select
                           value={bindProjectId || '__none__'}
                           onValueChange={(value) => setBindProjectId(value === '__none__' ? '' : value)}
+                          // items：让 trigger 显示项目名而非项目 id（含「选择项目」哨兵项）
+                          items={[
+                            {
+                              value: '__none__',
+                              label: t('teamDetail.projects.pickPlaceholder', '选择项目'),
+                            },
+                            ...bindableProjects.map((candidate) => ({
+                              value: candidate.id,
+                              label: candidate.name,
+                            })),
+                          ]}
                         >
                           <SelectTrigger className="w-56">
                             <SelectValue placeholder={t('teamDetail.projects.pickPlaceholder', '选择项目')} />

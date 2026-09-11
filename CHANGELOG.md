@@ -6,7 +6,7 @@ category: "report"
 status: "active"
 version: "1.0.0"
 created: "2026-02-20"
-modified: "2026-09-10"
+modified: "2026-09-11"
 scope: "全仓库版本变更"
 ai-session-types: "all"
 ai-priority: "high"
@@ -20,6 +20,14 @@ tags: "changelog,release"
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
 ## [Unreleased]
+
+### 三项缺陷修复：工单动态页白屏 / 设置页返回目标 / 全站下拉框显示 id
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server · frontend | ①**工单详情页白屏修复**（`activity.changes?.find is not a function`）：根因是**存量迁移数据**——`20260827000000_add_activity_module` 把旧 `TaskActivity.detail`（对象形状 `{ changes: [...] }` 或更早的 `{ from, to }`）整段灌进了新的 `Activity.changes` 列，而契约（Prisma/OpenAPI/DTO）声明的是数组；`shapeActivity` 原先以 `unknown` 原样透出、无运行时收窄，前端 `changes.find` / `changes.slice` 直接抛错。后端新增 `normalizeActivityChanges`（数组原样、旧包装取出内层数组以**救回历史信息**、不可解释形状置 null），前端 `toActivityChanges` 再做一层兜底——契约外数据不该让整页白屏；②**设置页返回目标修复**：`settings-page.tsx` 按「当前历史索引 − 进入时索引」回退，但**少退了一步**（未计跨出设置页那一步），于是「在设置页翻过至少一个分页」时返回会落到上一个设置分页而非进入前的业务页面。抽出纯函数 `resolveBackSteps`（`currentIdx - entryIdx + 1`）并加注释锁定该 off-by-one；③**全站下拉框显示 id 修复**：base-ui 的 `Select.Value` 只在 Root 收到 `items` 时才能把 value 映射成 label，否则回退 `String(value)`；`SelectItem` 里的文本救不了场（**弹层关闭时 item 根本不挂载，已实证**）。`NativeSelect` 从组件层把解析好的 `{ value, label }` 交给 Root（**一处修复覆盖 121 处用法**，其中 `__native_select_empty__` 内部哨兵也不再被当文本渲染，空值显示空选项文本）；裸 `Select` 的 value≠label 站点按同一契约补 `items`（document-form / execution-recovery-dialog / bind-repository-dialog ×2 / task-detail-drawer ×2 / project-roles-section ×2 / team-detail-page / design-system 演示，共 10 处）。 | 用户指令（三项运行时缺陷：工单详情页报错、设置页返回错位、所有下拉框显示 id） | Vitest 前端 **74 文件 341 用例全绿**（本分支基线 70/317，新增 24 条：`native-select.test` 7 + `select.test` 3 + `history-back.test` 9 + `activity-display.test` 5，其中 1 条既有契约测试按新行为收紧断言）；后端 **65 文件 569 用例全绿**（新增 `activity.service.spec` 6 条）；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；server `type-check` 通过。**旁证**：契约绑定面板（未改任何调用点）的同步模式下拉框从显示 `managed` 变为显示 `contract.syncMode.managed`，即组件层修复在真实消费方生效。 | 同步更新 `apps/frontend/COMPONENTS.md`（Select label 契约硬规则）、`docs/02-架构设计/策略/决策日志.md`（ADR-013）、`docs/01-需求/测试映射矩阵-v1.md`（回归用例登记）、本 CHANGELOG |
+
+> ⚠️ 已知遗留（非本次引入，未处理）：①`MEMBER_ROLE_OPTIONS`（团队角色）与字体名等下拉项 value 与展示文本相同，显示的是英文 role 字面量而非本地化名称——属 i18n 范畴，非本次「显示 id」缺陷；②`apps/frontend` 的 `tsc -b` 仍有 5 处**分支既有**类型错误（`app-dock.tsx` / `dock-metric-badge.tsx` / `dock-user-popover.tsx`），本次改动未新增错误（已用同一命令对照验证）。
 
 ### 生产悬浮卡片体系（收藏夹栏与标签页）全面对齐 Design System 规范与头像全面圆形化
 
