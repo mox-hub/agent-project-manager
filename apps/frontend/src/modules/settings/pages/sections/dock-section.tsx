@@ -21,6 +21,7 @@ import {
   ChevronUp,
   Eye,
   LayoutList,
+  PanelBottom,
   Plus,
   RotateCcw,
   Search,
@@ -66,11 +67,48 @@ export function DockSettingsSection() {
       contentClassName="space-y-6"
     >
       <DockPreviewCard />
+      <DockDisplayCard />
       <DockActionsCard />
       <DockAiColleaguesCard />
       {/* 设置页不在 ShellLayout 内，预览里的「新建」需要一个就近的宿主 */}
       <GlobalCreateDialog />
     </PageShell>
+  );
+}
+
+/** 显示方式：常驻显示 / 自动隐藏（平时只留徽章栏贴底，鼠标靠近才浮出） */
+function DockDisplayCard() {
+  const { t } = useTranslation();
+  const dockAlwaysVisible = useAppStore((s) => s.dockAlwaysVisible);
+  const setDockAlwaysVisible = useAppStore((s) => s.setDockAlwaysVisible);
+
+  return (
+    <Card className="border-border shadow-none">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <PanelBottom size={16} className="text-accent-green" />
+          <CardTitle className="text-base">{t('settings.dockDisplayTitle')}</CardTitle>
+        </div>
+        <CardDescription>{t('settings.dockDisplayDesc')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
+          <div className="min-w-0">
+            <p className="text-sm text-foreground">{t('settings.dockAlwaysVisible')}</p>
+            <p className="text-xs text-muted-foreground">
+              {t('settings.dockAlwaysVisibleDesc')}
+            </p>
+          </div>
+          <Switch
+            size="sm"
+            checked={dockAlwaysVisible}
+            onCheckedChange={setDockAlwaysVisible}
+            aria-label={t('settings.dockAlwaysVisible')}
+            data-testid="dock-always-visible"
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -85,7 +123,12 @@ function DockPreviewCard() {
           <Eye size={16} className="text-accent-purple" />
           <CardTitle className="text-base">{t('settings.dockPreviewTitle')}</CardTitle>
         </div>
-        <CardDescription>{t('settings.dockPreviewDesc')}</CardDescription>
+        <CardDescription>
+          {t('settings.dockPreviewDesc')}
+          <span className="mt-1 block text-xs text-content-text-muted">
+            {t('settings.dockPreviewAlwaysOn')}
+          </span>
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {/*

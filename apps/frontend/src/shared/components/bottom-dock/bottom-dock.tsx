@@ -46,6 +46,19 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
   const [selectedColleagueId, setSelectedColleagueId] = useState<string>('assistant');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  /**
+   * 自动隐藏（默认）：平时只留徽章栏贴底，鼠标靠近底部区域才浮出 Dock，
+   * 鼠标不脱离该区域就一直保持显示。
+   *
+   * - 预览态强制常显（否则设置页里看不见 Dock，预览失去意义）；
+   * - 输入栏展开时不隐藏（正在输入，收起来会打断操作）；
+   * - 键盘可达性：焦点进入 Dock 时同样浮出（见下方 onFocus），避免 Tab 落到不可见按钮上。
+   */
+  const dockAlwaysVisible = useAppStore((s) => s.dockAlwaysVisible);
+  const [dockRevealed, setDockRevealed] = useState(false);
+  const autoHide = !preview && !dockAlwaysVisible;
+  const dockVisible = !autoHide || dockRevealed || isPromptOpen;
+
   // 派生当前选中的 AI 同事
   const selectedColleague = useMemo(() => {
     return aiColleagues.find((c) => c.id === selectedColleagueId) || aiColleagues[0];
@@ -173,6 +186,18 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
   return (
     <div
       {...{ [DOCK_ROOT_ATTR]: '' }}
+      data-dock-visible={dockVisible ? 'true' : 'false'}
+      // 靠近判定挂在根节点：热区是其子节点，鼠标进入热区即冒泡到此；
+      // 只要鼠标还在 Dock 或其热区内就不会触发 mouseleave，Dock 保持显示。
+      onMouseEnter={() => setDockRevealed(true)}
+      onMouseLeave={() => setDockRevealed(false)}
+      onFocus={() => setDockRevealed(true)}
+      onBlur={(e) => {
+        // 焦点仍在 Dock 内部（按钮之间移动）时不收起
+        const next = e.relatedTarget as Node | null;
+        if (next && e.currentTarget.contains(next)) return;
+        setDockRevealed(false);
+      }}
       className={cn(
         'select-none',
         // 预览态需保留定位上下文：上方指标徽章以 absolute bottom-full 锚定于此
@@ -181,13 +206,36 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
           : 'fixed bottom-4 left-1/2 -translate-x-1/2 z-40',
       )}
     >
-      {/* 1. 悬浮在 Dock 上方的双轨成本与执行微徽章 (常驻 / 变形响应) */}
+      {/*
+        热区：收起态下唯一能感知「鼠标靠近底部」的透明条带，覆盖 Dock 所在条带并略向外扩，
+        因此鼠标靠近即浮出、停留其中即保持。
+        必须始终可命中——若浮出后改为 pointer-events-none，鼠标停在条带内却不落在任何子节点上，
+        浏览器会判定已离开根节点而立刻收起，形成「浮出→收起」闪烁。
+      */}
+      {autoHide && (
+        <div
+          aria-hidden="true"
+          data-dock-hotzone=""
+          className="absolute -top-6 -right-8 -bottom-4 -left-8"
+        />
+      )}
+
+      {/* 1. 双轨成本与执行微徽章 (常驻 / 变形响应)；Dock 收起时落到底边成为唯一可见元素 */}
       <DockMetricBadge
         isPromptOpen={isPromptOpen}
         activeModel={selectedColleague.name}
+        collapsed={!dockVisible}
       />
 
-      {/* 2. 可平滑形变的 Dock 主体容器 */}
+      {/* 2. 可平滑形变的 Dock 主体容器（收起态下沉淡出；外层包一层承载位移，
+          避免与 framer-motion 的 layout 动画争夺 transform） */}
+      <div
+        data-testid="dock-capsule"
+        className={cn(
+          'transition-all duration-200 ease-out',
+          !dockVisible && 'pointer-events-none translate-y-3 opacity-0',
+        )}
+      >
       <motion.div
         layout
         transition={{ type: 'spring', stiffness: 420, damping: 32 }}
@@ -404,6 +452,7 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
           )}
         </AnimatePresence>
       </motion.div>
+      </div>
     </div>
   );
 }

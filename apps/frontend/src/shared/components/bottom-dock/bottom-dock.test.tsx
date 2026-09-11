@@ -53,18 +53,25 @@ vi.mock('@/modules/notification/hooks/use-notifications', () => ({
   useUnreadNotificationsCount: () => ({ data: 0 }),
 }));
 
-// 身份 Popover 与成本徽章各自有独立数据源，本测试不涉及
+// 身份 Popover 各自有独立数据源，本测试不涉及
 vi.mock('./dock-user-popover', () => ({ DockUserPopover: () => <div /> }));
-vi.mock('./dock-metric-badge', () => ({ DockMetricBadge: () => null }));
+
+// 徽章栏：暴露 collapsed 契约（收尾态应贴底），并证明它始终在 DOM 中
+vi.mock('./dock-metric-badge', () => ({
+  DockMetricBadge: ({ collapsed }: { collapsed?: boolean }) => (
+    <div data-testid="dock-badge" data-collapsed={String(Boolean(collapsed))} />
+  ),
+}));
 
 const DEFAULT_STORE = {
   aiPanelOpen: true,
   dockItems: [...DOCK_ITEM_IDS],
   dockHiddenAssistantIds: [] as string[],
+  dockAlwaysVisible: false,
 };
 
 /** 渲染「对话浮窗（含决策侧栏）+ Dock」——模拟真实的同屏结构 */
-function renderDock() {
+function renderDock(options?: { preview?: boolean }) {
   return render(
     <>
       <div data-ai-component="assistant.fab-window" data-testid="assistant-window">
@@ -74,9 +81,18 @@ function renderDock() {
           </button>
         </div>
       </div>
-      <BottomDock />
+      <BottomDock preview={options?.preview} />
     </>,
   );
+}
+
+/** Dock 当前是否浮出（根节点上的状态属性） */
+function dockVisibleAttr(): string | null {
+  return document.querySelector('[data-dock-root]')?.getAttribute('data-dock-visible') ?? null;
+}
+
+function hotZone(): Element | null {
+  return document.querySelector('[data-dock-hotzone]');
 }
 
 /** 展开 Dock 的 Prompt 输入栏（会同时打开 AI 对话面板） */
@@ -189,5 +205,74 @@ describe('BottomDock —— 配置驱动渲染（CAP-A-13 Dock 自定义）', ()
 
     expect(screen.queryByTitle(/验收审计员/)).toBeNull();
     expect(screen.getByTitle(/主协同助手/)).toBeTruthy();
+  });
+});
+
+describe('BottomDock —— 自动隐藏与鼠标靠近浮出', () => {
+  it('默认收起：只留徽章栏贴底，胶囊淡出且不可点（但仍留在 DOM 便于键盘可达）', () => {
+    renderDock();
+
+    expect(dockVisibleAttr()).toBe('false');
+    const capsule = screen.getByTestId('dock-capsule');
+    expect(capsule.className).toContain('opacity-0');
+    expect(capsule.className).toContain('pointer-events-none');
+    // 徽章栏仍在，且切到「贴底」形态——收起态它是底部唯一可见元素
+    expect(screen.getByTestId('dock-badge').getAttribute('data-collapsed')).toBe('true');
+  });
+
+  it('浮出后徽章栏抬回 Dock 上方（collapsed 解除）', () => {
+    renderDock();
+
+    fireEvent.mouseOver(hotZone() as Element);
+
+    expect(screen.getByTestId('dock-badge').getAttribute('data-collapsed')).toBe('false');
+  });
+
+  it('鼠标靠近底部热区即浮出，离开后收起', () => {
+    renderDock();
+    const zone = hotZone();
+    expect(zone).not.toBeNull();
+
+    fireEvent.mouseOver(zone as Element);
+    expect(dockVisibleAttr()).toBe('true');
+
+    fireEvent.mouseOut(zone as Element);
+    expect(dockVisibleAttr()).toBe('false');
+  });
+
+  it('鼠标停留在热区内时保持显示（不因未直接悬停胶囊而收起）', () => {
+    renderDock();
+    const zone = hotZone() as Element;
+
+    fireEvent.mouseOver(zone);
+    expect(dockVisibleAttr()).toBe('true');
+    // 在热区内继续移动不触发离开
+    fireEvent.mouseMove(zone);
+    expect(dockVisibleAttr()).toBe('true');
+  });
+
+  it('开启「常驻显示」后始终可见，且不再渲染热区', () => {
+    useAppStore.setState({ dockAlwaysVisible: true });
+    renderDock();
+
+    expect(dockVisibleAttr()).toBe('true');
+    expect(hotZone()).toBeNull();
+    expect(screen.getByTestId('dock-capsule').className).not.toContain('opacity-0');
+  });
+
+  it('设置页预览态始终展示完整 Dock（否则预览失去意义）', () => {
+    renderDock({ preview: true });
+
+    expect(dockVisibleAttr()).toBe('true');
+    expect(hotZone()).toBeNull();
+  });
+
+  it('展开输入栏时不隐藏（正在输入，收起会打断操作）', () => {
+    renderDock();
+    expect(dockVisibleAttr()).toBe('false');
+
+    openPromptBar();
+
+    expect(dockVisibleAttr()).toBe('true');
   });
 });

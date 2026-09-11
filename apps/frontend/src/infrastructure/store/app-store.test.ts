@@ -144,6 +144,7 @@ describe('Dock 配置', () => {
     useAppStore.setState({
       dockItems: [...DOCK_ITEM_IDS],
       dockHiddenAssistantIds: [],
+      dockAlwaysVisible: false,
     });
   });
 
@@ -184,11 +185,27 @@ describe('Dock 配置', () => {
     expect(useAppStore.getState().dockItems).toEqual(before);
   });
 
-  it('resetDockSettings 还原功能按钮与 AI 常驻名单', () => {
-    useAppStore.setState({ dockItems: ['theme'], dockHiddenAssistantIds: ['m-2'] });
+  it('常驻显示默认关闭（Dock 自动隐藏）', () => {
+    expect(useAppStore.getState().dockAlwaysVisible).toBe(false);
+  });
+
+  it('setDockAlwaysVisible 切换常驻状态', () => {
+    useAppStore.getState().setDockAlwaysVisible(true);
+    expect(useAppStore.getState().dockAlwaysVisible).toBe(true);
+    useAppStore.getState().setDockAlwaysVisible(false);
+    expect(useAppStore.getState().dockAlwaysVisible).toBe(false);
+  });
+
+  it('resetDockSettings 还原功能按钮、AI 常驻名单与常驻显示开关', () => {
+    useAppStore.setState({
+      dockItems: ['theme'],
+      dockHiddenAssistantIds: ['m-2'],
+      dockAlwaysVisible: true,
+    });
     useAppStore.getState().resetDockSettings();
     expect(useAppStore.getState().dockItems).toEqual([...DOCK_ITEM_IDS]);
     expect(useAppStore.getState().dockHiddenAssistantIds).toEqual([]);
+    expect(useAppStore.getState().dockAlwaysVisible).toBe(false);
   });
 });
 

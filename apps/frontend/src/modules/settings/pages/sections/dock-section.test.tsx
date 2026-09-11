@@ -74,6 +74,7 @@ beforeEach(() => {
   useAppStore.setState({
     dockItems: [...DOCK_ITEM_IDS],
     dockHiddenAssistantIds: [],
+    dockAlwaysVisible: false,
   });
 });
 
@@ -96,6 +97,32 @@ describe('DockSettingsSection —— 顶部实时预览', () => {
     expect(
       preview.compareDocumentPosition(actionsTitle) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+});
+
+describe('DockSettingsSection —— 显示方式（常驻开关）', () => {
+  it('默认关闭常驻（Dock 自动隐藏）', () => {
+    render(<DockSettingsSection />);
+    expect(useAppStore.getState().dockAlwaysVisible).toBe(false);
+  });
+
+  it('切换开关写入常驻状态', () => {
+    render(<DockSettingsSection />);
+
+    fireEvent.click(screen.getByTestId('dock-always-visible'));
+    expect(useAppStore.getState().dockAlwaysVisible).toBe(true);
+
+    fireEvent.click(screen.getByTestId('dock-always-visible'));
+    expect(useAppStore.getState().dockAlwaysVisible).toBe(false);
+  });
+
+  it('「恢复默认」把常驻开关一并还原为关闭', () => {
+    useAppStore.setState({ dockAlwaysVisible: true });
+    render(<DockSettingsSection />);
+
+    fireEvent.click(screen.getByTestId('dock-reset'));
+
+    expect(useAppStore.getState().dockAlwaysVisible).toBe(false);
   });
 });
 

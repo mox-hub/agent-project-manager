@@ -156,6 +156,13 @@ interface AppState {
    */
   dockHiddenAssistantIds: string[];
   setDockHiddenAssistantIds: (ids: string[]) => void;
+  /**
+   * Dock 是否常驻显示。
+   * `false`（默认）= 自动隐藏：平时只留徽章栏在底部，鼠标靠近底部区域才浮出 Dock，
+   * 且鼠标停留在该区域内时保持显示。
+   */
+  dockAlwaysVisible: boolean;
+  setDockAlwaysVisible: (visible: boolean) => void;
   /** 恢复 Dock 默认配置 */
   resetDockSettings: () => void;
 
@@ -310,8 +317,14 @@ export const useAppStore = create<AppState>()(
         }),
       dockHiddenAssistantIds: [],
       setDockHiddenAssistantIds: (ids) => set({ dockHiddenAssistantIds: ids }),
+      dockAlwaysVisible: false,
+      setDockAlwaysVisible: (visible) => set({ dockAlwaysVisible: visible }),
       resetDockSettings: () =>
-        set({ dockItems: [...DOCK_ITEM_IDS], dockHiddenAssistantIds: [] }),
+        set({
+          dockItems: [...DOCK_ITEM_IDS],
+          dockHiddenAssistantIds: [],
+          dockAlwaysVisible: false,
+        }),
 
       onboardingCompleted: false,
       setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),
@@ -342,6 +355,7 @@ export const useAppStore = create<AppState>()(
         favoritePages: state.favoritePages,
         dockItems: state.dockItems,
         dockHiddenAssistantIds: state.dockHiddenAssistantIds,
+        dockAlwaysVisible: state.dockAlwaysVisible,
         onboardingCompleted: state.onboardingCompleted,
       }),
     },

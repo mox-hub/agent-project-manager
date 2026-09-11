@@ -10,6 +10,11 @@ export interface DockMetricBadgeProps {
   isPromptOpen: boolean;
   activeModel?: string;
   className?: string;
+  /**
+   * Dock 收起态（自动隐藏且鼠标未靠近）：徽章栏落到底边，成为底部唯一可见元素。
+   * 浮出时随之抬到 Dock 上方——两个位置之间用 transition 平滑过渡。
+   */
+  collapsed?: boolean;
 }
 
 /**
@@ -21,6 +26,7 @@ export function DockMetricBadge({
   isPromptOpen,
   activeModel = 'Claude 3.7 Sonnet',
   className,
+  collapsed = false,
 }: DockMetricBadgeProps) {
   const location = useLocation();
   const match = location.pathname.match(/^\/app\/projects\/(?!dashboard$)([^/]+)/);
@@ -42,7 +48,10 @@ export function DockMetricBadge({
   return (
     <div
       className={cn(
-        'absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 pointer-events-none select-none z-10 whitespace-nowrap',
+        'absolute left-1/2 -translate-x-1/2 pointer-events-none select-none z-10 whitespace-nowrap',
+        'transition-all duration-200 ease-out',
+        // 收起态贴底（底部唯一可见元素）；浮出态抬到 Dock 胶囊上方
+        collapsed ? 'bottom-0' : 'bottom-full mb-2.5',
         className,
       )}
     >
