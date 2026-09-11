@@ -2,3 +2,4 @@
 # Electron 打包产物（大文件严禁入库）
 apps/desktop/dist-release/
 apps/desktop/release/
+apps/desktop/dist-release*/
