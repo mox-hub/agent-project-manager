@@ -873,6 +873,14 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                     <Select
                       value={selectedAgentId || '__none__'}
                       onValueChange={(value) => setSelectedAgentId(value === '__none__' ? '' : value)}
+                      // items：base-ui 据此把 value（id / 哨兵）显示成名称，否则 trigger 显示原始值
+                      items={[
+                        { value: '__none__', label: 'Select AI agent' },
+                        ...activeAgents.map((agent) => ({
+                          value: agent.id,
+                          label: agent.displayName,
+                        })),
+                      ]}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select AI agent" />
@@ -1177,6 +1185,14 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
             <Select
               value={newDependencyTaskId || '__none__'}
               onValueChange={(value) => setNewDependencyTaskId(value === '__none__' ? '' : value)}
+              // items：同上，让 trigger 显示任务标题而非任务 id
+              items={[
+                { value: '__none__', label: t('task.detailDrawer.selectTask') },
+                ...dependencyOptions.map((candidate) => ({
+                  value: candidate.id,
+                  label: candidate.title,
+                })),
+              ]}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={t('task.detailDrawer.selectTask')} />

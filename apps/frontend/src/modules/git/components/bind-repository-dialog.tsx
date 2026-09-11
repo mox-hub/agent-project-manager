@@ -38,6 +38,31 @@ interface BindRepositoryForm {
   role: 'primary' | 'secondary' | 'mirror';
 }
 
+/**
+ * Select 的 label 映射（`SelectItem` 展示内容与 Root 的 `items` 共用同一份）：
+ * base-ui 必须经 Root 的 `items` 才能把 value 显示成名称，否则 trigger 显示原始 value。
+ */
+const PROVIDER_ITEMS = [
+  { value: 'github', label: 'GitHub' },
+  { value: 'gitlab', label: 'GitLab' },
+  { value: 'bitbucket', label: 'Bitbucket' },
+  { value: 'local', label: 'Local Repository' },
+];
+
+const REPOSITORY_ROLE_ITEMS = [
+  {
+    value: 'primary',
+    label: (
+      <div className="flex items-center gap-2">
+        <GitBranch className="h-4 w-4" />
+        Primary - Main development repository
+      </div>
+    ),
+  },
+  { value: 'secondary', label: 'Secondary - Feature/backup repository' },
+  { value: 'mirror', label: 'Mirror - Read-only sync' },
+];
+
 export function BindRepositoryDialog({
   open,
   onOpenChange,
@@ -139,17 +164,22 @@ export function BindRepositoryDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Provider</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    items={PROVIDER_ITEMS}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select provider" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="github">GitHub</SelectItem>
-                      <SelectItem value="gitlab">GitLab</SelectItem>
-                      <SelectItem value="bitbucket">Bitbucket</SelectItem>
-                      <SelectItem value="local">Local Repository</SelectItem>
+                      {PROVIDER_ITEMS.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -180,25 +210,22 @@ export function BindRepositoryDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Role</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    items={REPOSITORY_ROLE_ITEMS}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="primary">
-                        <div className="flex items-center gap-2">
-                          <GitBranch className="h-4 w-4" />
-                          Primary - Main development repository
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="secondary">
-                        Secondary - Feature/backup repository
-                      </SelectItem>
-                      <SelectItem value="mirror">
-                        Mirror - Read-only sync
-                      </SelectItem>
+                      {REPOSITORY_ROLE_ITEMS.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

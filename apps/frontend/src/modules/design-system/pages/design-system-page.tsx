@@ -2060,7 +2060,13 @@ export function DesignSystemPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Select</Label>
-                  <Select>
+                  <Select
+                    items={[
+                      { value: 'a', label: 'Option Alpha' },
+                      { value: 'b', label: 'Option Beta' },
+                      { value: 'c', label: 'Option Gamma' },
+                    ]}
+                  >
                     <SelectTrigger className="w-full"><SelectValue placeholder="Choose…" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="a">Option Alpha</SelectItem>
