@@ -36,6 +36,38 @@ export type ViewingEntityType =
   | 'member'
   | 'project';
 
+/**
+ * 统一创建面板可创建的类型（与 `components/ui/unified-create-dialog` 的 `CreateType` 结构一致）。
+ * 定义在本处是为了让 store 不反向依赖 UI 层（ui → infrastructure 单向）。
+ */
+export type CreateDialogType =
+  | 'task'
+  | 'bug'
+  | 'doc'
+  | 'project'
+  | 'milestone'
+  | 'ai';
+
+/** 全局统一创建面板的唤起参数 */
+export interface CreateDialogState {
+  open: boolean;
+  type: CreateDialogType;
+  /** 预置项目（缺省时面板内自选） */
+  projectId?: string;
+  /** 预置负责人（成员卡「派发任务」等入口） */
+  assigneeId?: string;
+}
+
+/** 底部 Dock 可配置的功能按钮（数组顺序即 Dock 中的展示顺序） */
+export type DockItemId = 'create' | 'search' | 'notifications' | 'theme';
+
+export const DOCK_ITEM_IDS: DockItemId[] = [
+  'create',
+  'search',
+  'notifications',
+  'theme',
+];
+
 /** 「正在查看」上下文：详情页上报，AI 助手侧边栏随消息附带 */
 export interface ViewingContext {
   type: ViewingEntityType;
@@ -102,6 +134,30 @@ interface AppState {
   openAssistantConversation: (conversationId: string, draft?: string) => void;
   /** 唤起助手（跟随当前会话）并预填输入框（统一创建面板「AI 创建」用） */
   openAssistantWithDraft: (draft: string) => void;
+
+  /** 全局统一创建面板（ShellLayout 挂载；底部 Dock「新建」等入口唤起） */
+  createDialog: CreateDialogState;
+  openCreateDialog: (options?: {
+    type?: CreateDialogType;
+    projectId?: string;
+    assigneeId?: string;
+  }) => void;
+  closeCreateDialog: () => void;
+
+  /** Dock 功能按钮：可见项及其顺序（不在数组内 = 已隐藏） */
+  dockItems: DockItemId[];
+  setDockItemVisible: (id: DockItemId, visible: boolean) => void;
+  /** 在可见列表内上/下移一位（direction: -1 上移 / 1 下移） */
+  moveDockItem: (id: DockItemId, direction: -1 | 1) => void;
+  /**
+   * Dock 上**不展示**的 AI 同事 id（名单制而非白名单制）：
+   * 空数组 = 全部展示（默认）。用「隐藏名单」是为了避免「空 = 全部」的歧义——
+   * 白名单下「取消最后一个勾选」会得到空数组，语义反转成全选。
+   */
+  dockHiddenAssistantIds: string[];
+  setDockHiddenAssistantIds: (ids: string[]) => void;
+  /** 恢复 Dock 默认配置 */
+  resetDockSettings: () => void;
 
   onboardingCompleted: boolean;
   setOnboardingCompleted: (completed: boolean) => void;
@@ -219,6 +275,44 @@ export const useAppStore = create<AppState>()(
           },
         })),
 
+      createDialog: { open: false, type: 'task' },
+      openCreateDialog: (options) =>
+        set({
+          createDialog: {
+            open: true,
+            type: options?.type ?? 'task',
+            projectId: options?.projectId,
+            assigneeId: options?.assigneeId,
+          },
+        }),
+      closeCreateDialog: () =>
+        set((state) => ({ createDialog: { ...state.createDialog, open: false } })),
+
+      dockItems: [...DOCK_ITEM_IDS],
+      setDockItemVisible: (id, visible) =>
+        set((state) => ({
+          dockItems: visible
+            ? state.dockItems.includes(id)
+              ? state.dockItems
+              : [...state.dockItems, id]
+            : state.dockItems.filter((item) => item !== id),
+        })),
+      moveDockItem: (id, direction) =>
+        set((state) => {
+          const index = state.dockItems.indexOf(id);
+          const target = index + direction;
+          if (index === -1 || target < 0 || target >= state.dockItems.length) {
+            return { dockItems: state.dockItems };
+          }
+          const next = [...state.dockItems];
+          [next[index], next[target]] = [next[target], next[index]];
+          return { dockItems: next };
+        }),
+      dockHiddenAssistantIds: [],
+      setDockHiddenAssistantIds: (ids) => set({ dockHiddenAssistantIds: ids }),
+      resetDockSettings: () =>
+        set({ dockItems: [...DOCK_ITEM_IDS], dockHiddenAssistantIds: [] }),
+
       onboardingCompleted: false,
       setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),
     }),
@@ -246,6 +340,8 @@ export const useAppStore = create<AppState>()(
         currentProjectId: state.currentProjectId,
         projectListVisibleColumns: state.projectListVisibleColumns,
         favoritePages: state.favoritePages,
+        dockItems: state.dockItems,
+        dockHiddenAssistantIds: state.dockHiddenAssistantIds,
         onboardingCompleted: state.onboardingCompleted,
       }),
     },

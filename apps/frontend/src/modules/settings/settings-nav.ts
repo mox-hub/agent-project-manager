@@ -20,6 +20,7 @@ import {
   Play,
   Plug,
   Github,
+  LayoutList,
 } from 'lucide-react';
 
 export interface SettingsNavItem {
@@ -47,7 +48,10 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
   },
   {
     labelKey: 'settings.groupGeneral',
-    items: [{ to: '/app/settings/appearance', labelKey: 'settings.appearance', icon: Palette }],
+    items: [
+      { to: '/app/settings/appearance', labelKey: 'settings.appearance', icon: Palette },
+      { to: '/app/settings/dock', labelKey: 'settings.dock', icon: LayoutList },
+    ],
   },
   {
     labelKey: 'settings.groupWorkspace',

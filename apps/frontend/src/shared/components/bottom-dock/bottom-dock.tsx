@@ -1,152 +1,64 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useRef, useEffect, useMemo, useCallback, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  Bell,
-  Search,
-  Sun,
-  Moon,
-  Plus,
-  Send,
-  X,
-  Sparkles,
-  Bot,
-  Terminal,
-  ShieldCheck,
-  type LucideIcon,
-} from 'lucide-react';
+import { Bell, Search, Sun, Moon, Plus, Send, X, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { AppDockItem, AppDockSeparator } from '@/components/ui/app-dock';
 import { DockUserPopover } from './dock-user-popover';
 import { DockMetricBadge } from './dock-metric-badge';
-import { useAppStore } from '@/infrastructure/store/app-store';
+import { STATUS_DOT_CLASS, useDockAiColleagues, type DockAiColleague } from './use-dock-ai-colleagues';
+import { useAppStore, type DockItemId } from '@/infrastructure/store/app-store';
+import { DOCK_ROOT_ATTR, isWithinAiCollabSurface } from '@/shared/lib/floating-layers';
 import { useTheme } from '@/shared/theme/theme-context';
 import { useUnreadNotificationsCount } from '@/modules/notification/hooks/use-notifications';
-import { useOfficeSummary } from '@/modules/office/hooks/use-office-summary';
-import { useAssistantStatus } from '@/modules/assistant/hooks/use-assistant-status';
 import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
-import { cn } from '@/lib/utils';
 
-export interface DockAiColleague {
-  id: string;
-  name: string;
-  title?: string;
-  avatarUrl?: string | null;
-  icon: LucideIcon;
-  color: string;
-  bgColor: string;
-  status: 'needYou' | 'working' | 'suggestions' | 'idle';
-  placeholder: string;
+export type { DockAiColleague };
+
+export interface BottomDockProps {
+  /**
+   * 预览态：取消 `fixed` 定位，改为随容器排布，供设置页「Dock 栏」内嵌展示。
+   * 交互保持真实（所见即所得）——预览里点按钮就是真操作，便于直接试用配置结果。
+   */
+  preview?: boolean;
 }
 
-const STATUS_DOT_CLASS: Record<string, string> = {
-  needYou: 'bg-accent-red animate-pulse ring-2 ring-popover',
-  working: 'bg-accent-blue animate-pulse ring-2 ring-popover',
-  suggestions: 'bg-accent-yellow ring-2 ring-popover',
-  idle: 'bg-accent-green ring-2 ring-popover',
-};
-
-export function BottomDock() {
+export function BottomDock({ preview = false }: BottomDockProps = {}) {
   const { t } = useTranslation();
+  const isMac =
+    typeof navigator !== 'undefined' && navigator.platform.toUpperCase().includes('MAC');
   const navigate = useNavigate();
-  const location = useLocation();
   const { mode, toggleTheme } = useTheme();
   const openAssistantWithDraft = useAppStore((s) => s.openAssistantWithDraft);
   const setAiPanelOpen = useAppStore((s) => s.setAiPanelOpen);
-  const storeProjectId = useAppStore((s) => s.currentProjectId);
+  const openCreateDialog = useAppStore((s) => s.openCreateDialog);
+  const dockItems = useAppStore((s) => s.dockItems);
+  const dockHiddenAssistantIds = useAppStore((s) => s.dockHiddenAssistantIds);
   const { data: unreadCount = 0 } = useUnreadNotificationsCount();
 
-  // 当前激活的项目 ID（优先从路由路径提取，其次取 store 中的 currentProjectId）
-  const routeProjectId = (() => {
-    const match = location.pathname.match(/\/app\/projects\/([^/]+)/);
-    return match ? match[1] : null;
-  })();
-  const activeProjectId = routeProjectId || storeProjectId || undefined;
-
-  // 接入真实数据：获取当前项目/工作区的真实 AI 团队摘要与主助手状态
-  const { data: officeSummary } = useOfficeSummary(activeProjectId);
-  const assistantStatus = useAssistantStatus(activeProjectId);
-
-  // 动态生成可供协同的 AI 同事清单（真实成员优先，缺省优雅兜底）
-  const aiColleagues: DockAiColleague[] = useMemo(() => {
-    const mainColleagueName = t('assistant.personaName') || '主协同助手';
-    const mainAssistant: DockAiColleague = {
-      id: 'assistant',
-      name: mainColleagueName,
-      title: t('assistant.personaRole') || '主协同助手',
-      avatarUrl: null,
-      icon: Bot,
-      color: 'text-accent-purple',
-      bgColor: 'bg-accent-purple-light',
-      status: assistantStatus.state,
-      placeholder: `向${mainColleagueName}提问或安排任务...`,
-    };
-
-    const realList = officeSummary?.colleagues ?? [];
-    if (realList.length === 0) {
-      return [
-        mainAssistant,
-        {
-          id: 'executor',
-          name: '执行守护专员',
-          title: '终端与代码执行',
-          avatarUrl: null,
-          icon: Terminal,
-          color: 'text-accent-blue',
-          bgColor: 'bg-accent-blue-light',
-          status: 'idle' as const,
-          placeholder: '指派终端命令、Git 或代码执行任务...',
-        },
-        {
-          id: 'auditor',
-          name: '验收审计员',
-          title: '门禁与契约审计',
-          avatarUrl: null,
-          icon: ShieldCheck,
-          color: 'text-accent-green',
-          bgColor: 'bg-accent-green-light',
-          status: 'idle' as const,
-          placeholder: '请求检查验收门禁、契约与审计状态...',
-        },
-      ];
-    }
-
-    const items: DockAiColleague[] = realList.map((c, index) => {
-      const colorSchemes = [
-        { color: 'text-accent-purple', bgColor: 'bg-accent-purple-light', icon: Bot },
-        { color: 'text-accent-blue', bgColor: 'bg-accent-blue-light', icon: Terminal },
-        { color: 'text-accent-green', bgColor: 'bg-accent-green-light', icon: ShieldCheck },
-      ];
-      const scheme = colorSchemes[index % colorSchemes.length];
-
-      return {
-        id: c.memberId,
-        name: c.displayName,
-        title: c.title || c.executionRole || 'AI 同事',
-        avatarUrl: c.avatarUrl ?? null,
-        icon: scheme.icon,
-        color: scheme.color,
-        bgColor: scheme.bgColor,
-        status: c.status,
-        placeholder: `向 [${c.displayName}] 提问或安排任务...`,
-      };
-    });
-
-    const hasMain = items.some((item) => item.name === mainColleagueName);
-    return hasMain ? items : [mainAssistant, ...items];
-  }, [officeSummary?.colleagues, assistantStatus.state, t]);
+  // 可供协同的 AI 同事清单（与「设置 · Dock 栏」共用同一数据源）
+  const { colleagues: aiColleagues } = useDockAiColleagues();
 
   // 展开状态：是否变形展开为 Prompt 输入框
   const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [promptText, setPromptText] = useState('');
   const [selectedColleagueId, setSelectedColleagueId] = useState<string>('assistant');
   const inputRef = useRef<HTMLInputElement>(null);
-  const dockContainerRef = useRef<HTMLDivElement>(null);
 
   // 派生当前选中的 AI 同事
   const selectedColleague = useMemo(() => {
     return aiColleagues.find((c) => c.id === selectedColleagueId) || aiColleagues[0];
   }, [aiColleagues, selectedColleagueId]);
+
+  // 常驻配置：隐藏名单为空 = 全部展示（默认）
+  const visibleColleagues = useMemo(
+    () => aiColleagues.filter((c) => !dockHiddenAssistantIds.includes(c.id)),
+    [aiColleagues, dockHiddenAssistantIds],
+  );
+
+  // Sparkles 快捷呼出的默认角色：优先第一个常驻同事，常驻配置失效时回落主助手
+  const defaultColleagueId = visibleColleagues[0]?.id ?? aiColleagues[0]?.id ?? 'assistant';
 
   // 退出展开：默认同时关闭 AI 对话面板（按 Esc、点 X 或点外部均同步关闭）
   const handleClosePrompt = useCallback(
@@ -170,14 +82,13 @@ export function BottomDock() {
     }
   }, [isPromptOpen]);
 
-  // 点击外部收起展开的 Prompt 输入框，同时关闭对话面板
+  // 点击「AI 协同交互面」之外的区域才收起输入栏并关闭对话面板。
+  // 判定不能用 dockContainerRef.contains()——对话浮窗与决策侧栏都在 Dock 容器之外，
+  // 那样会把「点对话面板内部（含其按钮、决策侧栏收起按钮）」误判为外部点击，连带关闭主窗口。
   useEffect(() => {
     if (!isPromptOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dockContainerRef.current &&
-        !dockContainerRef.current.contains(e.target as Node)
-      ) {
+      if (!isWithinAiCollabSurface(e.target)) {
         handleClosePrompt(true);
       }
     };
@@ -205,7 +116,6 @@ export function BottomDock() {
 
   // 全局命令面板快捷触发
   const handleOpenSearch = () => {
-    const isMac = navigator.platform.toUpperCase().includes('MAC');
     const event = new KeyboardEvent('keydown', {
       key: 'k',
       code: 'KeyK',
@@ -216,10 +126,60 @@ export function BottomDock() {
     window.dispatchEvent(event);
   };
 
+  /**
+   * Dock 功能按钮注册表：渲染由 store 的 `dockItems`（可见项 + 顺序）驱动，
+   * 设置页「Dock 栏」可增删与排序（见 settings/pages/sections/dock-section.tsx）。
+   */
+  const dockActions: Record<
+    DockItemId,
+    {
+      label: string;
+      node: ReactNode;
+      badge?: number | string;
+      badgeTone?: 'destructive' | 'primary' | 'warning';
+      onClick: () => void;
+    }
+  > = {
+    create: {
+      label: t('dock.new'),
+      node: <Plus className="size-4" />,
+      // 统一创建面板（6 类：任务/缺陷/文档/项目/里程碑/AI 创建），由 ShellLayout 全局挂载
+      onClick: () => openCreateDialog({ type: 'task' }),
+    },
+    search: {
+      label: `${t('dock.search')} (${isMac ? '⌘K' : 'Ctrl+K'})`,
+      node: <Search className="size-4" />,
+      onClick: handleOpenSearch,
+    },
+    notifications: {
+      label: t('nav.notifications'),
+      node: <Bell className="size-4" />,
+      badge: unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : undefined,
+      badgeTone: 'destructive',
+      onClick: () => navigate('/app/notifications'),
+    },
+    theme: {
+      label: mode === 'dark' ? t('dock.lightMode') : t('dock.darkMode'),
+      node:
+        mode === 'dark' ? (
+          <Sun className="size-4 text-accent-yellow" />
+        ) : (
+          <Moon className="size-4" />
+        ),
+      onClick: toggleTheme,
+    },
+  };
+
   return (
     <div
-      ref={dockContainerRef}
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 select-none"
+      {...{ [DOCK_ROOT_ATTR]: '' }}
+      className={cn(
+        'select-none',
+        // 预览态需保留定位上下文：上方指标徽章以 absolute bottom-full 锚定于此
+        preview
+          ? 'relative mx-auto w-fit'
+          : 'fixed bottom-4 left-1/2 -translate-x-1/2 z-40',
+      )}
     >
       {/* 1. 悬浮在 Dock 上方的双轨成本与执行微徽章 (常驻 / 变形响应) */}
       <DockMetricBadge
@@ -351,49 +311,32 @@ export function BottomDock() {
 
               <AppDockSeparator />
 
-              {/* ② 常用全局操作 */}
-              <AppDockItem
-                label={t('nav.issues') ? `新建 (${t('nav.issues')})` : '新建'}
-                onClick={() => navigate('/app/issues?create=true')}
-              >
-                <Plus className="size-4" />
-              </AppDockItem>
+              {/* ② 常用全局操作（可见项与顺序由「设置 · Dock 栏」决定） */}
+              {dockItems.map((id) => {
+                const action = dockActions[id];
+                if (!action) return null;
+                return (
+                  <AppDockItem
+                    key={id}
+                    label={action.label}
+                    badge={action.badge}
+                    badgeTone={action.badgeTone}
+                    onClick={action.onClick}
+                    data-testid={`dock-item-${id}`}
+                  >
+                    {action.node}
+                  </AppDockItem>
+                );
+              })}
 
-              <AppDockItem
-                label={`命令与搜索 (${navigator.platform.toUpperCase().includes('MAC') ? '⌘K' : 'Ctrl+K'})`}
-                onClick={handleOpenSearch}
-              >
-                <Search className="size-4" />
-              </AppDockItem>
-
-              <AppDockItem
-                label={t('nav.notifications')}
-                badge={unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : undefined}
-                badgeTone="destructive"
-                onClick={() => navigate('/app/notifications')}
-              >
-                <Bell className="size-4" />
-              </AppDockItem>
-
-              <AppDockItem
-                label={mode === 'dark' ? '浅色模式' : '深色模式'}
-                onClick={toggleTheme}
-              >
-                {mode === 'dark' ? (
-                  <Sun className="size-4 text-accent-yellow" />
-                ) : (
-                  <Moon className="size-4" />
-                )}
-              </AppDockItem>
-
-              <AppDockSeparator />
+              {dockItems.length > 0 && <AppDockSeparator />}
 
               {/* ③ AI 协同执行面：Sparkles 快捷呼出 | 真实 AI 成员头像群 */}
               <div className="flex items-center gap-1.5 pl-0.5 pr-1">
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedColleagueId(aiColleagues[0].id);
+                    setSelectedColleagueId(defaultColleagueId);
                     setIsPromptOpen(true);
                     setAiPanelOpen(true);
                   }}
@@ -403,11 +346,14 @@ export function BottomDock() {
                   <Sparkles className="size-4 text-accent-yellow" />
                 </button>
 
-                <div className="h-4 w-px bg-border/60" aria-hidden="true" />
+                {visibleColleagues.length > 0 && (
+                  <div className="h-4 w-px bg-border/60" aria-hidden="true" />
+                )}
 
-                {/* AI 同事头像群（真实数据接入，支持点击指定角色直接展开针对该角色的 Prompt 输入） */}
+                {/* AI 同事头像群（真实数据接入，支持点击指定角色直接展开针对该角色的 Prompt 输入；
+                    展示哪些同事由「设置 · Dock 栏」的常驻配置决定，未配置 = 全部展示） */}
                 <div className="flex items-center gap-1.5">
-                  {aiColleagues.map((colleague) => {
+                  {visibleColleagues.map((colleague) => {
                     const isCustomAvatar = Boolean(colleague.avatarUrl);
                     const Icon = colleague.icon;
                     const statusDotColor =

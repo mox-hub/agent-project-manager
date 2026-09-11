@@ -6,7 +6,7 @@ category: "report"
 status: "active"
 version: "1.0.0"
 created: "2026-02-20"
-modified: "2026-09-10"
+modified: "2026-09-11"
 scope: "全仓库版本变更"
 ai-session-types: "all"
 ai-priority: "high"
@@ -20,6 +20,14 @@ tags: "changelog,release"
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
 ## [Unreleased]
+
+### 底部协同交互面（Dock）四项修复 + 「设置 · Dock 栏」自定义（新卡 CAP-A-13）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**「新建」按钮修复断链**：原实现 `navigate('/app/issues?create=true')` 的 query 参数**全仓无消费方**，点新建只跳页不开面板。改为经 `app-store` 的 `createDialog` 唤起**全局统一创建面板**（新增 `shared/components/global-create-dialog.tsx` 挂载于 `ShellLayout`，任意页面可开、不跳页丢上下文；六类创建形态由面板内切换）；②**退出判定区域修正（含决策侧栏解耦）**：Dock 的 outside-click 原先只判定自身容器 `dockContainerRef.contains()`，而 AI 对话浮窗（`fixed bottom-28`）与决策侧栏都在容器之外——**点对话面板内部、其按钮、或决策侧栏「收起」按钮，都会被误判为「外部点击」，连带把主窗口一起关掉**。新增 `shared/lib/floating-layers.ts` 定义「AI 协同交互面」（Dock ＋ 对话浮窗 ＋ 就地问答浮层 ＋ 任意 Portal 弹层），面内点击一律不关闭；并为对话浮窗补上此前**完全缺失**的 ESC 关闭与外部点击关闭（内层浮层已打开时 ESC 先让位，避免模型选择器/历史菜单与主窗口一起关）；③**新增「设置 · Dock 栏」自定义**：页面**置顶为一张实时预览卡片，内嵌完整 Dock 栏本体**（`BottomDock` 新增 `preview` 定位态，与真实 Dock 同源同交互，配置一改预览即变），其下为功能按钮（新建/搜索/通知/主题）显隐 + 上下移排序 + 常驻 AI 助手名单，改动即时生效并落盘（`app-store` + zustand persist，与 `sidebarItemVisibility` 同款设备级偏好机制），Dock 渲染改为配置驱动；④**重构去重**：AI 同事清单生成逻辑（真实成员优先 + 缺省兜底）从 `bottom-dock.tsx` 抽为共享 hook `use-dock-ai-colleagues`，Dock 与设置页共用同一数据源；⑤**顺带修复**：`test-utils/providers.tsx` 空路由表兜底失效（`routes \|\| 默认` 对空数组不生效，致 `renderWithProviders` 不传 `routes` 即抛错）。 | 用户指令（底部 dock 栏修复：新建入口导向统一创建面板、弹窗关闭校验区域不含弹窗自身与按钮、设置页新增 dock 栏设置、决策侧栏关闭不影响主窗口关闭） | Vitest **74 文件 362 用例全绿**（新增 45 条：`floating-layers.test` 9 + `bottom-dock.test` 10 + `assistant-fab.test` 5 + `dock-section.test` 11 + `app-store.test` 增 12）；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告 | 同步更新 `docs/01-需求/能力清单-v1.md`（新增 CAP-A-13 + §4.1 卡数口径修正 + 变更记录）、`docs/01-需求/测试映射矩阵-v1.md`（GAP-T-15 登记并当日清偿 + §三 A-13 行 + 变更记录）、本 CHANGELOG |
+
+> ⚠️ 遗留（**非本次改动引入**，已用 `git stash` 对照验证）：`apps/frontend` 在执行 `tsc -b` 时有 4 处**分支既有**类型错误，位于上一提交（aa181b4）新增的 Dock 相关文件——`components/ui/app-dock.tsx`（base-ui `TooltipProvider` 无 `delayDuration`；motion `children` 类型含 `MotionValue`）、`shared/components/bottom-dock/dock-metric-badge.tsx`（`AssistantRunEntry` 无 `status`/`tokens` 字段）、`shared/components/bottom-dock/dock-user-popover.tsx`（base-ui `PopoverTrigger` 无 `asChild`；`WorkspaceRecord` 无 `slug` 字段）。因 `type-check` 门禁在分支上已红，本次未一并处理，建议单独修复。
 
 ### 生产悬浮卡片体系（收藏夹栏与标签页）全面对齐 Design System 规范与头像全面圆形化
 

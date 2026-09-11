@@ -17,6 +17,7 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
 import { commandEntries, COMMAND_GROUP_LABEL_KEYS, type CommandActionId } from '@/shared/command-palette/commands';
 import { BottomDock } from '@/shared/components/bottom-dock';
+import { GlobalCreateDialog } from '@/shared/components/global-create-dialog';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { AISlotLayer } from '@/shared/ai-slot/ai-slot-layer';
 import { cn } from '@/lib/utils';
@@ -628,6 +629,9 @@ export function ShellLayout() {
 
           {/* 底部统一操作中枢与 AI 协同面 (Dock 栏) */}
           <BottomDock />
+
+          {/* 全局统一创建面板（Dock「新建」等与页面无关的创建入口） */}
+          <GlobalCreateDialog />
         </div>
       </TabsProvider>
       </ShellSidebarProvider>

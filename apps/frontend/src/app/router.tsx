@@ -15,6 +15,7 @@ import { ErrorPage } from '@/shared/pages/error-page';
 // TerminalPage 已废弃 - Terminal模块已并入Runtime模块的terminal capability
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
 import { AppearanceSettingsSection } from '@/modules/settings/pages/sections/appearance-section';
+import { DockSettingsSection } from '@/modules/settings/pages/sections/dock-section';
 import { ProfileSettingsSection } from '@/modules/settings/pages/sections/profile-section';
 import { GitSettingsSection } from '@/modules/settings/pages/sections/git-section';
 import { TerminalSettingsSection } from '@/modules/settings/pages/sections/terminal-section';
@@ -576,6 +577,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/app/settings/appearance" replace /> },
       { path: 'profile', element: <ProfileSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'appearance', element: <AppearanceSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'dock', element: <DockSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'git', element: <GitSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'terminal', element: <TerminalSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'labels', element: <LabelsSettingsSection />, errorElement: <ErrorPage /> },

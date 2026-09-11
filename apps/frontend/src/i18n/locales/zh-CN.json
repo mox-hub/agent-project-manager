@@ -1579,6 +1579,12 @@
       "reportIssue": "报告问题"
     }
   },
+  "dock": {
+    "new": "新建",
+    "search": "命令与搜索",
+    "lightMode": "浅色模式",
+    "darkMode": "深色模式"
+  },
   "settings": {
     "title": "设置",
     "general": "通用",
@@ -1606,6 +1612,25 @@
     "profilePasswordMismatch": "两次输入的新密码不一致",
     "profilePasswordTooShort": "新密码至少 8 位",
     "appearance": "外观",
+    "dock": "Dock 栏",
+    "dockActionsTitle": "功能按钮",
+    "dockActionsDesc": "勾选要显示在 Dock 栏的功能，并用箭头调整它们的排列顺序。",
+    "dockVisible": "显示",
+    "dockMoveUp": "上移",
+    "dockMoveDown": "下移",
+    "dockItemCreate": "新建",
+    "dockItemSearch": "命令与搜索",
+    "dockItemNotifications": "通知",
+    "dockItemTheme": "主题切换",
+    "dockAiTitle": "常驻 AI 助手",
+    "dockAiDesc": "选择常驻在 Dock 栏的 AI 同事；一个都不选表示展示全部。",
+    "dockAiEmpty": "当前没有可常驻的 AI 同事",
+    "dockAiAll": "全部展示",
+    "dockAiPinned": "已常驻 {{count}} 位",
+    "dockPreviewTitle": "预览",
+    "dockPreviewDesc": "下方为完整 Dock 栏本体实时预览——改动下面的配置会立刻反映在这里。",
+    "dockReset": "恢复默认",
+    "dockResetDone": "Dock 配置已恢复默认",
     "groupGeneral": "通用",
     "groupWorkspace": "工作区",
     "groupTools": "开发工具",

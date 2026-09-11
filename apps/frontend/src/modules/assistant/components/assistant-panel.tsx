@@ -214,6 +214,7 @@ export function AssistantPanel() {
               onClick={() => setShowDecisionSide(false)}
               className="text-content-text-muted hover:text-foreground rounded-md p-1 hover:bg-accent transition-colors"
               title="收起决策侧栏"
+              data-ai-action="assistant.decision.collapse.click"
             >
               <PanelLeftClose className="size-3.5" />
             </button>
@@ -234,6 +235,7 @@ export function AssistantPanel() {
             onClick={() => setShowDecisionSide(true)}
             className="group flex flex-col items-center justify-center gap-2 w-9 py-3 rounded-2xl border border-border/80 bg-background/95 shadow-xl backdrop-blur-xl text-accent-purple hover:bg-accent hover:border-accent-purple/40 transition-all active:scale-95"
             title="展开待办决策侧栏"
+            data-ai-action="assistant.decision.expand.click"
           >
             <Inbox className="size-4 group-hover:scale-110 transition-transform" />
             <span className="flex size-4 items-center justify-center rounded-full bg-accent-purple text-10 text-primary-foreground font-bold tabular-nums">
