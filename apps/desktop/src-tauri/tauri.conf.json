@@ -1,11 +1,11 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Agent Project Manager",
-  "version": "0.1.0",
+  "version": "0.6.1",
   "identifier": "com.agentpm.desktop",
   "build": {
     "beforeDevCommand": "",
-    "beforeBuildCommand": "",
+    "beforeBuildCommand": "node scripts/pack.mjs",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../../frontend/dist"
   },
@@ -35,9 +35,9 @@
       "icons/icon.png"
     ],
     "resources": [
-      "../../server/dist/**/*",
-      "../../server/prisma/**/*",
-      "../../server/package.json"
+      "resources/bin/node.exe",
+      "resources/server",
+      "resources/frontend"
     ]
   }
 }

@@ -2,74 +2,78 @@ mod backend;
 mod commands;
 mod config;
 mod frontend;
+mod setup;
 mod state;
 mod unified_logging;
 
-use backend::{start_backend_process, wait_for_backend_health};
 use config::AppConfig;
-use frontend::start_frontend_process;
-use state::{AppState, BackendInfo, FrontendInfo};
+use state::AppState;
 use std::path::PathBuf;
-use tauri::Manager;
+use tauri::{Manager, RunEvent};
 use tauri_plugin_log::{Target, TargetKind};
 use tracing::{error, info};
 
 fn resolve_workspace_root() -> PathBuf {
     // Debug: use CARGO_MANIFEST_DIR (apps/desktop/src-tauri) → workspace root
-    #[cfg(debug_assertions)]
-    {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent() // src-tauri
-            .expect("expected src-tauri dir")
-            .parent() // apps/desktop
-            .expect("expected desktop dir")
-            .parent() // apps
-            .expect("expected apps dir")
-            .to_path_buf()
-    }
-
-    // Release: use executable directory → look for resources sibling to exe
-    #[cfg(not(debug_assertions))]
-    {
-        std::env::current_exe()
-            .expect("failed to get exe path")
-            .parent()
-            .expect("exe has no parent dir")
-            .to_path_buf()
-    }
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent() // src-tauri
+        .expect("expected src-tauri dir")
+        .parent() // apps/desktop
+        .expect("expected desktop dir")
+        .parent() // apps
+        .expect("expected apps dir")
+        .to_path_buf()
 }
 
 fn create_app_config() -> AppConfig {
     let mut config = AppConfig::new();
-    let root = resolve_workspace_root();
 
     #[cfg(debug_assertions)]
     {
+        let root = resolve_workspace_root();
         config.server_cwd = root.join("apps").join("server");
         config.frontend_dist = root.join("apps").join("frontend").join("dist");
+        // node_exe = None → setup::resolve_node 回落 PATH 上的 node
     }
 
     #[cfg(not(debug_assertions))]
     {
-        config.server_cwd = root.join("server");
-        config.frontend_dist = root.join("frontend");
+        // Release：全部运行时资产随包分发，位于安装目录 resources/ 下
+        //（NSIS 的资源目录 = exe 所在目录）。
+        let exe_dir = std::env::current_exe()
+            .expect("failed to get exe path")
+            .parent()
+            .expect("exe has no parent dir")
+            .to_path_buf();
+        let resources = exe_dir.join("resources");
+        config.server_cwd = resources.join("server");
+        config.frontend_dist = resources.join("frontend");
+        config.node_exe = Some(
+            resources
+                .join("bin")
+                .join(if cfg!(windows) { "node.exe" } else { "node" }),
+        );
     }
 
-    config.server_entry = config
-        .server_cwd
-        .join("dist")
-        .join("src")
-        .join("main.js");
+    // SWC builder 以 src 为 rootDir 平铺输出，入口是 dist/main.js（非旧的 dist/src/main.js）
+    config.server_entry = config.server_cwd.join("dist").join("main.js");
 
     config
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let config = create_app_config();
-    let server_cwd = config.server_cwd.clone();
-    let init_config = create_app_config();
+    let mut config = create_app_config();
 
+    // 目录与密钥同步就绪（毫秒级）——服务启动与 db push 都依赖它们，不能与后台初始化竞态。
+    if let Err(e) = setup::initialize_dirs(&config) {
+        error!("{}", e);
+    }
+    if let Err(e) = setup::ensure_secrets(&mut config) {
+        error!("{}", e);
+    }
+
+    let init_config = config.clone();
     let app_state = AppState::with_config(config);
 
     let log_level = if cfg!(debug_assertions) {
@@ -78,16 +82,29 @@ pub fn run() {
         log::LevelFilter::Info
     };
 
-    std::thread::spawn(move || {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            if let Err(e) = initialize_app(&server_cwd, &init_config).await {
-                error!("应用初始化失败: {}", e);
-            } else {
-                info!("应用初始化完成，准备就绪");
-            }
+    // Prisma 建库放后台（秒级），失败经 AppState.init_error 透出到前端 init 页
+    {
+        let app_state = app_state.clone();
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async {
+                match setup::run_db_push_if_needed(&init_config) {
+                    Ok(created) => {
+                        app_state.set_init_error(None);
+                        if created {
+                            info!("应用初始化完成（新库已创建）");
+                        } else {
+                            info!("应用初始化完成");
+                        }
+                    }
+                    Err(e) => {
+                        error!("应用初始化失败: {}", e);
+                        app_state.set_init_error(Some(e));
+                    }
+                }
+            });
         });
-    });
+    }
 
     tauri::Builder::default()
         .plugin(
@@ -111,6 +128,7 @@ pub fn run() {
             commands::open_log_dir,
             commands::get_backend_status,
             commands::get_frontend_status,
+            commands::get_init_status,
             commands::start_backend,
             commands::stop_backend,
             commands::restart_backend,
@@ -131,135 +149,20 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
-
-async fn initialize_app(
-    server_cwd: &std::path::Path,
-    config: &AppConfig,
-) -> Result<(), String> {
-    info!("开始应用初始化...");
-
-    for dir in [&config.user_data_dir, &config.logs_dir, &config.upload_dir] {
-        if !dir.exists() {
-            std::fs::create_dir_all(dir)
-                .map_err(|e| format!("创建目录失败 {}: {}", dir.display(), e))?;
-        }
-    }
-
-    let prisma_schema = server_cwd.join("prisma").join("schema.prisma");
-
-    if prisma_schema.exists() {
-        let node_exe = std::env::current_exe()
-            .map_err(|e| format!("获取 Node.exe 路径失败: {}", e))?
-            .parent()
-            .ok_or("无法获取 Node.exe 父目录")?
-            .join(if cfg!(windows) { "node.exe" } else { "node" });
-
-        let prisma_entry = server_cwd
-            .join("node_modules")
-            .join("prisma")
-            .join("build")
-            .join("index.js");
-
-        if node_exe.exists() && prisma_entry.exists() {
-            info!("运行 Prisma db push...");
-            let output = std::process::Command::new(&node_exe)
-                .arg(&prisma_entry)
-                .args([
-                    "db",
-                    "push",
-                    "--schema",
-                    &prisma_schema.to_string_lossy(),
-                    "--skip-generate",
-                    "--accept-data-loss",
-                ])
-                .env("DATABASE_URL", config.get_database_url())
-                .env("PRISMA_CLIENT_ENGINE_TYPE", "library")
-                .output()
-                .map_err(|e| format!("执行 Prisma 失败: {}", e))?;
-
-            if !output.status.success() {
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                error!("Prisma 错误: {}", stderr);
-            } else {
-                info!("Prisma db push 完成");
+        .build(tauri::generate_context!())
+        .expect("error while running tauri application")
+        .run(|_app_handle, event| {
+            // 退出时杀掉托管子进程，避免 node 后端在任务管理器残留
+            if let RunEvent::Exit = event {
+                let state = _app_handle.state::<AppState>();
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(async {
+                    let mut bg = state.backend_process.write().await;
+                    let _ = backend::stop_backend_process(&mut bg);
+                    let mut fg = state.frontend_process.write().await;
+                    let _ = frontend::stop_frontend_process(&mut fg);
+                });
+                info!("子进程已清理，应用退出");
             }
-        }
-    }
-
-    info!("应用初始化完成");
-    Ok(())
-}
-
-async fn start_all_services(state: &AppState) -> Result<(), String> {
-    info!("========== 开始启动所有服务 ==========");
-
-    let node_exe = std::env::current_exe()
-        .map_err(|e| format!("获取 Node.exe 路径失败: {}", e))?
-        .parent()
-        .ok_or("无法获取 Node.exe 父目录")?
-        .join(if cfg!(windows) { "node.exe" } else { "node" });
-
-    if !node_exe.exists() {
-        return Err("未找到 Node.js 可执行文件".to_string());
-    }
-
-    info!("[启动服务] 前端开发服务器...");
-    match start_frontend_process(&node_exe, &state.config) {
-        Ok(frontend) => {
-            let pid = frontend.child.id();
-            let info = FrontendInfo {
-                port: frontend.port,
-                url: frontend.url.clone(),
-                pid,
-            };
-            state.set_frontend(frontend.child, info).await;
-            info!("[启动成功] 前端服务: {} (PID: {})", frontend.url, pid);
-        }
-        Err(e) => {
-            error!("[启动失败] 前端服务: {}", e);
-        }
-    }
-
-    info!("[启动服务] 后端服务...");
-    let (server_entry, server_cwd, _) = state.resolve_runtime_assets();
-
-    if !server_entry.exists() {
-        return Err(format!("未找到后端入口文件: {}", server_entry.display()));
-    }
-
-    let port = backend::pick_backend_port(state.config.default_port, state.config.max_port)
-        .await?;
-
-    let mut config = state.config.clone();
-    config.server_cwd = server_cwd;
-
-    match start_backend_process(&node_exe, &server_entry, port, &config) {
-        Ok(mut child) => {
-            let api_base_url = format!("http://127.0.0.1:{}", port);
-
-            info!("[启动服务] 等待后端健康检查...");
-            if let Err(e) = wait_for_backend_health(&api_base_url).await {
-                let _ = child.kill();
-                error!("[启动失败] 后端服务: {}", e);
-            } else {
-                let pid = child.id();
-                let info = BackendInfo {
-                    port,
-                    api_base_url: api_base_url.clone(),
-                    pid,
-                };
-                state.set_backend(child, info).await;
-                info!("[启动成功] 后端服务: {} (PID: {})", api_base_url, pid);
-            }
-        }
-        Err(e) => {
-            error!("[启动失败] 后端服务: {}", e);
-        }
-    }
-
-    info!("========== 所有服务启动完成 ==========");
-    Ok(())
+        });
 }

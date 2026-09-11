@@ -13,7 +13,7 @@ pub struct FrontendProcess {
 }
 
 pub fn start_frontend_process(
-    node_exe: &Path,
+    _node_exe: &Path,
     _config: &AppConfig,
 ) -> Result<FrontendProcess, String> {
     let frontend_root = Path::new("E:/Project/agent-project-manager/apps/frontend");

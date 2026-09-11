@@ -19,6 +19,16 @@ tags: "changelog,release"
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
+## [Unreleased]
+
+### CAP-A-14 桌面壳发布级打包与运作——六处关键缺口清偿（v0.6.1 桌面版）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| desktop · server | **打包资源自包含**：pack.mjs 资源准备链（server `pnpm deploy --prod --legacy` 硬拷贝 node_modules + 补拷 dist + 剥离 src/test 等非运行时文件 + Prisma 客户端与 query engine 预生成 + Node 运行时随包 + 前端 dist），落位 `src-tauri/resources/`（gitignore）；`prisma` 从 server devDependencies 移入 dependencies（桌面首启要跑 prisma CLI，它就是运行时依赖）；tauri.conf `bundle.resources` 改为 resources/{bin,server,frontend}，`beforeBuildCommand` 接 `node scripts/pack.mjs`。**顺带修两个陈旧缺陷**：server 入口实为 SWC 平铺的 `dist/main.js`（Rust 与 `start:prod` 均还指向旧 `dist/src/main.js`）；`frontend.rs` 硬编码 `E:/Project` 路径致 release 下 `start_all_services` 必炸（生产模式前端随应用内嵌，改为跳过前端进程启动）。 | CAP-A-14 | 自包含 staging 冷启动冒烟：`resources/bin/node.exe resources/server/dist/main.js`（不依赖仓库任何东西）路由全映射 + Database connected + `/_api/health` HTTP 200 + 静态托管 HTTP 200；query engine `query_engine-windows.dll.node` 落位核验 | `apps/desktop/README.md`（新增：架构/打包/数据目录/边界） |
+| desktop | **密钥持久化与初始化收口**：新增 `setup.rs` 共享初始化模块（目录/密钥/db push/Node 解析，后台初始化与 `init_app` 命令共用一条路径）——首启随机生成 `JWT_SECRET`/`INTEGRATION_ENCRYPTION_KEY` 落盘 `secrets.json`、后续启动复用（修复空串密钥致 Joi `required` 校验拒启）；db push 仅在库文件不存在（全新安装）时执行，已存在的库不再带 `--accept-data-loss` 重建；init 失败经 `AppState.init_error` 透出（新增 `get_init_status` 命令，`start_backend`/`start_all_services` 在初始化未完成时前置拦截报错）；node.exe 解析收敛进 `AppConfig.node_exe`（打包模式指向随包 node.exe 且缺失时给出可操作报错，开发模式回落 PATH——原 4 处 `current_exe().parent()/node.exe` 写法在 debug 下必挂）；退出时（`RunEvent::Exit`）杀掉全部托管子进程，node 后端不再残留。 | CAP-A-14 | `cargo check` 0 error；GAP-T-19 冒烟项随安装包实测清偿（v0.6.1 版本号已对齐 tauri.conf/desktop package.json） | 计划文档 `docs/roadmap/tauri-desktop-v0.6.1-plan.md`、能力清单 CAP-A-14 |
+| 工程化 | pnpm `verifyDepsBeforeRun: false`——tauri `beforeBuildCommand` 以 `NODE_ENV=production` 运行，pnpm 依赖自检会自动触发根目录 `pnpm install --prod` 并要求清空整个 node_modules（无 TTY 时中止；TTY 下会真删开发依赖）。被实际触发一次并被 TTY 保护拦下，全局关闭该自检。 | CAP-A-14 | `desktop:pack` 一键链（构建两端 → 资源准备 → cargo release → NSIS 安装包）全链跑通 | pnpm-workspace.yaml 注释说明缘由 |
+
 ## [0.6.0] - 2026-09-11
 
 ### v0.6.0 发版总览——设计系统 v2 落地 + 六条能力线推进 + Dock 协同交互面

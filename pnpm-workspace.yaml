@@ -1,6 +1,9 @@
 packages:
   - "apps/*"
   - "packages/*"
+# 禁用脚本运行前的依赖自检自动安装：NODE_ENV=production 下（如 tauri beforeBuildCommand）
+# 会触发根目录 `pnpm install --prod` 并要求清空 node_modules，破坏开发环境
+verifyDepsBeforeRun: false
 catalog:
   eslint: ^9.39.5
   eslint-config-prettier: ^9.1.2
