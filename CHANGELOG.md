@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### Dock 头像完全填满容器 + 状态点不再被裁切
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**头像完全填满**：`MemberAvatar` 的尺寸是固定档位（xs/sm/md/lg/xl = 20/24/32/40/56px），而 Dock 头像按钮原为 `size-7.5`（30px）内嵌 `size="xs"`（20px）——**圆环里露出一圈容器底色**。把容器尺寸对齐档位（`size-8` = `md` = 32px），头像即与容器**逐像素重合**；展开输入栏的选中角色头像同样修正（原 `size="sm"` 24px 内嵌 32px 容器）。注：`NiceAvatar` 是流式（100% 填充），`Avvvatars` 是按 `size` 固定px 的——所以只能让**容器对齐头像档位**，不能让头像自适应容器；②**状态点不再被裁切**：头像按钮原带 `overflow-hidden`，而右下角呼吸状态点以 `-bottom-0.5 -right-0.5` 挂在按钮**外侧**，被裁掉一角。头像填满后不再需要它裁任何东西（`MemberAvatar` 自身有 `overflow-hidden`，负责把方图裁成圆），故移除；③**连带清理**：头像填满容器后，容器底色已完全被覆盖，`DockAiColleague.color` / `bgColor` 与 hook 里的 `COLOR_SCHEMES` 轮转成为死字段——一并删除（AI 头像配色本就由 `MemberAvatar` 按 `displayName` 种子确定性生成，与成员管理页一致）。 | 用户指令（头像完全填满容器；右下角状态点不要被切割遮挡，要和之前一样完整显示） | Vitest 前端 **79 文件 415 用例全绿**（新增 2 条：容器与头像同尺寸 32px 的填满断言、容器无 `overflow-hidden` 且状态点挂外侧的不裁切断言）；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`tsc -b` 既有 6 行错误不变（无新增） | 同步更新 `docs/01-需求/能力清单-v1.md`（CAP-A-13 补记）、`docs/01-需求/测试映射矩阵-v1.md`（GAP-T-18 用例补充）、本 CHANGELOG |
+
 ### Dock 默认助手固定首位且不可关闭 + 用户/助手头像统一取真实头像
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

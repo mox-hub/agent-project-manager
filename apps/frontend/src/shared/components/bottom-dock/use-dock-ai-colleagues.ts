@@ -18,12 +18,10 @@ export interface DockAiColleague {
   title?: string;
   avatarUrl?: string | null;
   /**
-   * 头像**不再由本类型承载图标**：统一交给 `MemberAvatar` 渲染——
-   * 成员信息里有真实头像就显示真实头像，没有则回落双表面规范里该身份的确定性头像。
-   * color/bgColor 仅用于 Dock 上的容器底色。
+   * 头像与配色都**不由本类型承载**：头像统一交给 `MemberAvatar` 渲染——
+   * 成员信息里有真实头像就显示真实头像，没有则回落双表面规范里该身份的确定性头像；
+   * 其确定性配色也由该组件按 `displayName` 种子生成，故这里不再需要颜色字段。
    */
-  color: string;
-  bgColor: string;
   status: 'needYou' | 'working' | 'suggestions' | 'idle';
   placeholder: string;
   /**
@@ -41,13 +39,6 @@ export const STATUS_DOT_CLASS: Record<string, string> = {
   suggestions: 'bg-accent-yellow ring-2 ring-popover',
   idle: 'bg-accent-green ring-2 ring-popover',
 };
-
-/** 兜底角色配色轮转（真实成员无专属色时按序取模） */
-const COLOR_SCHEMES = [
-  { color: 'text-accent-purple', bgColor: 'bg-accent-purple-light' },
-  { color: 'text-accent-blue', bgColor: 'bg-accent-blue-light' },
-  { color: 'text-accent-green', bgColor: 'bg-accent-green-light' },
-];
 
 export function useDockAiColleagues() {
   const { t } = useTranslation();
@@ -71,8 +62,6 @@ export function useDockAiColleagues() {
       name: mainColleagueName,
       title: t('assistant.personaRole') || '主协同助手',
       avatarUrl: null,
-      color: 'text-accent-purple',
-      bgColor: 'bg-accent-purple-light',
       status: assistantStatus.state,
       placeholder: `向${mainColleagueName}提问或安排任务...`,
       isMain: true,
@@ -87,8 +76,6 @@ export function useDockAiColleagues() {
           name: '执行守护专员',
           title: '终端与代码执行',
           avatarUrl: null,
-          color: 'text-accent-blue',
-          bgColor: 'bg-accent-blue-light',
           status: 'idle' as const,
           placeholder: '指派终端命令、Git 或代码执行任务...',
           isMain: false,
@@ -98,8 +85,6 @@ export function useDockAiColleagues() {
           name: '验收审计员',
           title: '门禁与契约审计',
           avatarUrl: null,
-          color: 'text-accent-green',
-          bgColor: 'bg-accent-green-light',
           status: 'idle' as const,
           placeholder: '请求检查验收门禁、契约与审计状态...',
           isMain: false,
@@ -107,16 +92,13 @@ export function useDockAiColleagues() {
       ];
     }
 
-    const items: DockAiColleague[] = realList.map((c, index) => {
-      const scheme = COLOR_SCHEMES[index % COLOR_SCHEMES.length];
+    const items: DockAiColleague[] = realList.map((c) => {
       return {
         id: c.memberId,
         name: c.displayName,
         title: c.title || c.executionRole || 'AI 同事',
         // 真实头像：来自成员信息（Member.avatarUrl），无上传头像时回落双表面生成头像
         avatarUrl: c.avatarUrl ?? null,
-        color: scheme.color,
-        bgColor: scheme.bgColor,
         status: c.status,
         placeholder: `向 [${c.displayName}] 提问或安排任务...`,
         isMain: c.displayName === mainColleagueName,

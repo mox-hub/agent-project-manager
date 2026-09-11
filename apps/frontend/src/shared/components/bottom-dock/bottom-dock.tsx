@@ -282,12 +282,9 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
             >
               {/* 左侧：选中的 AI 角色真实头像（带真实在线状态点） */}
               <div className="relative shrink-0 pl-1">
+                {/* 容器 32px 与头像 md 档对齐，头像完全填满；状态点在外层 relative 上，不被裁切 */}
                 <div
-                  className={cn(
-                    'flex size-8 items-center justify-center rounded-full shadow-xs border border-border/60 overflow-hidden',
-                    selectedColleague.bgColor,
-                    selectedColleague.color,
-                  )}
+                  className="flex size-8 items-center justify-center rounded-full shadow-xs"
                   title={`当前受托角色：${selectedColleague.name} (${selectedColleague.title || 'AI 同事'})`}
                 >
                   {/* 统一交给 MemberAvatar：成员信息里有真实头像就显示真实头像，
@@ -299,7 +296,7 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
                       displayName: selectedColleague.name,
                       avatarUrl: selectedColleague.avatarUrl,
                     }}
-                    size="sm"
+                    size="md"
                     showBadge={false}
                   />
                 </div>
@@ -434,11 +431,11 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
                           setIsPromptOpen(true);
                           setAiPanelOpen(true);
                         }}
-                        className={cn(
-                          'relative flex size-7.5 items-center justify-center rounded-full border border-border/70 shadow-2xs transition-all overflow-hidden',
-                          colleague.bgColor,
-                          colleague.color,
-                        )}
+                        /*
+                          容器尺寸与头像档位对齐（size-8 = md = 32px），头像才能**完全填满**圆；
+                          不再用 overflow-hidden —— 状态点挂在右下角外侧，裁切会把它切掉。
+                        */
+                        className="relative flex size-8 items-center justify-center rounded-full shadow-2xs"
                         title={`点击向 [${colleague.name}] 发送指令 · 状态: ${colleague.status}`}
                       >
                         {/* 同选中态：真实头像优先，无则用该 AI 身份的确定性头像 */}
@@ -448,7 +445,7 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
                             displayName: colleague.name,
                             avatarUrl: colleague.avatarUrl,
                           }}
-                          size="xs"
+                          size="md"
                           showBadge={false}
                         />
                         {/* 真实状态指示点 */}

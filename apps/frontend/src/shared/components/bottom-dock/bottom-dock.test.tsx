@@ -28,8 +28,6 @@ const { COLLEAGUES, AUDITOR_AVATAR_URL } = vi.hoisted(() => {
         title: '项目管理搭档',
         // 无真实头像 → 走双表面生成式头像
         avatarUrl: null,
-        color: 'text-accent-purple',
-        bgColor: 'bg-accent-purple-light',
         status: 'idle',
         placeholder: '向小周提问或安排任务...',
         isMain: true,
@@ -40,8 +38,6 @@ const { COLLEAGUES, AUDITOR_AVATAR_URL } = vi.hoisted(() => {
         title: '门禁与契约审计',
         // 成员信息里有真实头像
         avatarUrl: AUDITOR_AVATAR_URL,
-        color: 'text-accent-green',
-        bgColor: 'bg-accent-green-light',
         status: 'idle',
         placeholder: '向 [验收审计员] 提问或安排任务...',
         isMain: false,
@@ -265,6 +261,34 @@ describe('BottomDock —— 助手头像取自成员信息', () => {
     // 但也不该是 lucide 通用图标（svg.lucide 是 lucide 的标记），而是生成式头像
     expect(mainBtn.querySelector('svg.lucide')).toBeNull();
     expect(mainBtn.querySelector('svg')).not.toBeNull();
+  });
+
+  it('头像完全填满容器：容器与头像同为 32px（size-8 / h-8 w-8）', () => {
+    renderDock();
+
+    const btn = screen.getByTitle(/点击向 \[小周\]/);
+    expect(btn.className).toContain('size-8');
+
+    // MemberAvatar 根节点：档位尺寸必须与容器一致，否则圆环里会露底色
+    const avatarRoot = btn.querySelector('div') as HTMLElement;
+    expect(avatarRoot.className).toContain('h-8');
+    expect(avatarRoot.className).toContain('w-8');
+  });
+
+  it('状态点不被裁切：容器不得 overflow-hidden，且状态点挂在右下角外侧', () => {
+    renderDock();
+
+    const btn = screen.getByTitle(/点击向 \[小周\]/);
+    // 头像自身会 overflow-hidden（把方图裁成圆），但**外层按钮**绝不能裁，
+    // 否则 -bottom-0.5/-right-0.5 的状态点会被切掉一角
+    expect(btn.className).not.toContain('overflow-hidden');
+
+    const dot = Array.from(btn.children).find(
+      (el) => el.getAttribute('aria-hidden') === 'true',
+    );
+    expect(dot).toBeTruthy();
+    expect(dot?.className).toContain('-bottom-0.5');
+    expect(dot?.className).toContain('-right-0.5');
   });
 });
 
