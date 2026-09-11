@@ -14,7 +14,6 @@ export function initLogger(logsDir: string): void {
 
 function write(level: 'INFO' | 'WARN' | 'ERROR', message: string): void {
   const line = `[${new Date().toISOString()}] [${level}] ${message}`;
-  // eslint-disable-next-line no-console
   console.log(line);
   if (logFile) {
     try {

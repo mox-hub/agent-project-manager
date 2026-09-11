@@ -6,6 +6,7 @@
   "main": "electron/dist/main.js",
   "scripts": {
     "type-check": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint electron/src/**/*.ts",
     "build:electron": "tsup",
     "desktop:dev": "tsup && electron .",
     "pack:resources": "node scripts/pack.mjs",
@@ -19,6 +20,8 @@
     "@types/node": "^24.13.3",
     "electron": "^44.3.0",
     "electron-builder": "^26.15.3",
-    "tsup": "^8.5.1"
+    "eslint": "catalog:",
+    "tsup": "^8.5.1",
+    "typescript-eslint": "catalog:"
   }
 }
