@@ -119,7 +119,7 @@ export function ProjectVitalityCanvas({
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'overview' | 'contract' | 'acceptance')}
                 className={cn(
                   'px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer',
                   activeTab === tab.id

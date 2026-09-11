@@ -15,9 +15,6 @@ import {
   Bell,
   HelpCircle,
   Search,
-  ShieldCheck,
-  User,
-  Users,
   UserCog,
   Sparkles,
 } from 'lucide-react';

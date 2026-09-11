@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { TrustDimension, MemoryAtom } from '../types';
-import { cn } from '@/lib/utils';
 import { Sparkles, Database, Award, Info, ShieldCheck } from 'lucide-react';
 
 interface TrustOrbitalLensProps {
@@ -10,11 +9,7 @@ interface TrustOrbitalLensProps {
   isDark?: boolean;
 }
 
-// 右侧手表外弧角度 (从上到下)
-const RIGHT_ARC_ANGLES = [-34, -11, 11, 34];
-
 export function TrustOrbitalLens({
-  dimensions,
   memoryAtoms,
   overallScore,
   isDark = true,

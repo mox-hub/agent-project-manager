@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { AgentPersona, ActivityBubble } from '../types';
 import { cn } from '@/lib/utils';
-import { Brain, Cpu, Shield, Sparkles, ChevronRight, Activity } from 'lucide-react';
+import { Brain, Cpu, Shield, Sparkles, Activity } from 'lucide-react';
 
 interface SquadCapsuleOrbitProps {
   agents: AgentPersona[];
