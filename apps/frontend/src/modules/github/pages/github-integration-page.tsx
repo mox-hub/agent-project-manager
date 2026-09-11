@@ -20,7 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 export function GithubIntegrationPage() {
   const { data: integrationsResp } = useIntegrations();
   const integrations = integrationsResp?.data ?? [];
-  const githubInts = integrations.filter((i: any) => i.provider === 'github');
+  const githubInts = integrations.filter((i) => i.provider === 'github');
   const firstId = githubInts[0]?.id;
 
   return (

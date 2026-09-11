@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -30,12 +30,16 @@ export function UserEditDialog({
   const [email, setEmail] = useState('');
   const updateUser = useUpdateAdminUser();
 
-  useEffect(() => {
+  // 渲染期比较：对话框每次打开都从选中用户重置表单（等价原 effect，避免级联渲染）
+  const [lastInitKey, setLastInitKey] = useState('');
+  const initKey = open && user ? `open:${user.id}` : 'closed';
+  if (initKey !== lastInitKey) {
+    setLastInitKey(initKey);
     if (open && user) {
       setDisplayName(user.displayName);
       setEmail(user.email ?? '');
     }
-  }, [open, user]);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

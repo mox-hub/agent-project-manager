@@ -94,14 +94,16 @@ export type SocketEventMap = {
     workflowRunId: string;
     stepId?: string;
     status: string;
-    output?: any;
-    error?: any;
+    /** 后端自由 JSON 载荷 */
+    output?: unknown;
+    error?: unknown;
   };
   'workflow:completed': {
     workflowRunId: string;
     status: 'succeeded' | 'failed';
-    output?: any;
-    error?: any;
+    /** 后端自由 JSON 载荷 */
+    output?: unknown;
+    error?: unknown;
   };
 };
 

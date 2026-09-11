@@ -42,14 +42,14 @@ export function SectionTaskLinks({ documentId, sectionId, projectId }: SectionTa
 
   const handleSelect = (issueId: string, linkType: DocumentTaskLink['linkType']) => {
     if (!currentUserId) return;
+    // createdBy 由服务端从认证身份取，DTO 不收该字段
     create.mutate({
       issueId,
       projectId,
       documentId,
       sectionId,
       linkType,
-      createdBy: currentUserId,
-    } as any);
+    });
   };
 
   return (

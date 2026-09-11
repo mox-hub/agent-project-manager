@@ -122,7 +122,7 @@ export function BugsPage() {
 
   // 获取项目列表用于过滤
   const { data: projectsResponse } = useProjectList();
-  const projects = projectsResponse?.items ?? [];
+  const projects = useMemo(() => projectsResponse?.items ?? [], [projectsResponse]);
   const deleteTask = useDeleteTask();
   const queryClient = useQueryClient();
   const confirmAction = useConfirm();

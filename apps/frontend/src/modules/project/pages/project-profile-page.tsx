@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { FolderGit2, ScanSearch } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -44,17 +44,22 @@ export function ProjectProfilePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: profile, isLoading, isError } = useProfile(projectId);
 
-  // ?wizard=1：创建流程选「导入已有项目」后带参跳入，自动打开接入向导
-  const [wizardOpen, setWizardOpen] = useState(searchParams.get('wizard') === '1');
-  useEffect(() => {
-    if (searchParams.get('wizard') === '1') {
-      setWizardOpen(true);
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
+  // ?wizard=1：创建流程选「导入已有项目」后带参跳入，自动打开接入向导。
+  // 以 URL 参数为真相源派生开关，避免 effect 同步 setState。
+  const wizardOpen = searchParams.get('wizard') === '1';
+  const openWizard = () =>
+    setSearchParams(
+      (prev) => {
+        prev.set('wizard', '1');
+        return prev;
+      },
+      { replace: true },
+    );
+  const closeWizard = () => setSearchParams({}, { replace: true });
 
   const [archaeologyExecutionId, setArchaeologyExecutionId] = useState<string | null>(null);
-  const [ingested, setIngested] = useState(false);
+  // 一次性触发闸：终态到达后只 ingest 一次（ref 不参与渲染，不触级联重渲染）
+  const ingestTriggeredRef = useRef<string | null>(null);
   const { data: runDetail } = useExecutionRunDetail(archaeologyExecutionId, {
     // 未到终态时 4s 轮询跟随（考古执行在后台推进，页面须主动拉取）
     refetchInterval: (query) =>
@@ -82,10 +87,11 @@ export function ProjectProfilePage() {
   // 考古执行到终态：completed 自动入库；失败/阻塞停在原地由人查看执行日志
   const runCompleted = runDetail?.status === 'completed';
   useEffect(() => {
-    if (!archaeologyExecutionId || ingested || !runCompleted) return;
-    setIngested(true);
+    if (!archaeologyExecutionId || !runCompleted) return;
+    if (ingestTriggeredRef.current === archaeologyExecutionId) return;
+    ingestTriggeredRef.current = archaeologyExecutionId;
     ingest.mutate(archaeologyExecutionId);
-  }, [archaeologyExecutionId, runCompleted, ingested, ingest]);
+  }, [archaeologyExecutionId, runCompleted, ingest]);
 
   const busy =
     createAtom.isPending ||
@@ -120,7 +126,7 @@ export function ProjectProfilePage() {
           <HeaderActionButton
             icon={FolderGit2}
             label={t('project.profilePage.importExisting')}
-            onClick={() => setWizardOpen(true)}
+            onClick={openWizard}
             data-ai-component="project.project-profile.import"
             data-ai-action="project.project-profile.import.click"
             data-ai-role="jump"
@@ -136,7 +142,8 @@ export function ProjectProfilePage() {
             onClick={() =>
               startArchaeology.mutate(undefined, {
                 onSuccess: (res) => {
-                  setIngested(false);
+                  ingestTriggeredRef.current = null;
+                  ingest.reset();
                   setArchaeologyExecutionId(res.executionId);
                 },
               })
@@ -173,7 +180,7 @@ export function ProjectProfilePage() {
           })}
         </p>
       )}
-      {ingested && !ingest.isPending && (
+      {ingest.isSuccess && !ingest.isPending && (
         <p className="mb-3 rounded-lg bg-accent-green-light/50 px-3 py-2 text-xs text-accent-green">
           {t('project.profilePage.ingestDone', { created: ingest.data?.created ?? 0, skipped: ingest.data?.skipped ?? 0 })}
         </p>
@@ -220,7 +227,7 @@ export function ProjectProfilePage() {
       <ProjectEntryWizard
         projectId={projectId}
         open={wizardOpen}
-        onOpenChange={setWizardOpen}
+        onOpenChange={(open) => (open ? openWizard() : closeWizard())}
       />
 
       <Dialog open={!!addSlot} onOpenChange={(open) => !open && setAddSlot(null)}>

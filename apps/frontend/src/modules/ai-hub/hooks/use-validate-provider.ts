@@ -85,7 +85,7 @@ export function useProviderValidation(
   const validate = (provider: string, apiKeyValue: string, baseUrl?: string) => {
     setApiKey(apiKeyValue);
     mutation.mutate({
-      provider: provider as any,
+      provider,
       apiKey: apiKeyValue,
       baseUrl,
     });

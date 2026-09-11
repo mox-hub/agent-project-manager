@@ -213,7 +213,7 @@ export class IntegrationService {
     dto: UpdateIntegrationConfigDto,
     userId: string,
   ) {
-    const existing = await this.assertIntegrationAccess(id, userId);
+    await this.assertIntegrationAccess(id, userId);
 
     if (dto.provider && !ALLOWED_PROVIDERS.has(dto.provider)) {
       throw new BadRequestException(

@@ -968,11 +968,9 @@ function SkillDialog({
   const [sourcePath, setSourcePath] = useState('');
   const [initializedFor, setInitializedFor] = useState<string | null>(null);
 
-  // 打开时初始化；edit 模式异步拉详情回填指令正文
-  useEffect(() => {
-    if (!open) return;
-    const initKey = `${mode}:${editing?.key ?? 'new'}:${open}`;
-    if (initializedFor === initKey) return;
+  // 打开时同步初始化表单（渲染期比较，等价原 effect 的同步段）
+  const initKey = open ? `${mode}:${editing?.key ?? 'new'}` : null;
+  if (initKey !== null && initializedFor !== initKey) {
     setInitializedFor(initKey);
     setKey(editing?.key ?? '');
     setName(editing?.name ?? '');
@@ -980,19 +978,22 @@ function SkillDialog({
     setCategory(editing?.category ?? '');
     setContent('');
     setSourcePath('');
-    if (mode === 'edit' && editing) {
-      let cancelled = false;
-      skillsApi.getSkill(editing.key).then(
-        (detail) => {
-          if (!cancelled) setContent(detail.content ?? '');
-        },
-        () => undefined,
-      );
-      return () => {
-        cancelled = true;
-      };
-    }
-  }, [open, mode, editing, initializedFor]);
+  }
+
+  // edit 模式异步拉详情回填指令正文
+  useEffect(() => {
+    if (!(open && mode === 'edit' && editing)) return;
+    let cancelled = false;
+    skillsApi.getSkill(editing.key).then(
+      (detail) => {
+        if (!cancelled) setContent(detail.content ?? '');
+      },
+      () => undefined,
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [open, mode, editing]);
 
   const keyValid = /^[a-z0-9][a-z0-9-]*$/.test(key);
   const valid =

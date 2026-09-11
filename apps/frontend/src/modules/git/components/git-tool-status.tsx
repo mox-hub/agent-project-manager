@@ -10,7 +10,7 @@ export interface GitToolStatusProps {
   onStatusChange?: (available: boolean) => void;
 }
 
-export function GitToolStatusPanel({ onStatusChange }: GitToolStatusProps) {
+export function GitToolStatusPanel(_props: GitToolStatusProps) {
   const [showPathDialog, setShowPathDialog] = useState(false);
   const [pathInput, setPathInput] = useState('');
 

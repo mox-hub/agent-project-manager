@@ -1,4 +1,5 @@
 import { api } from '@/infrastructure/api-client';
+import type { QueryOf, ResponseOf } from '@/infrastructure/api-client/contract';
 
 // ============================================
 // Chat Types
@@ -42,7 +43,8 @@ export interface AIMessage {
   content: string;
   modelName?: string | null;
   tokens?: number | null;
-  metadata?: any;
+  /** 后端 Json 自由字段，前端无结构化消费，收窄为 unknown */
+  metadata?: unknown;
   createdAt: string;
 }
 
@@ -54,7 +56,8 @@ export interface AIConversation {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
-  metadata?: any;
+  /** 后端 Json 自由字段，前端无结构化消费，收窄为 unknown */
+  metadata?: unknown;
   messages?: AIMessage[];
   project?: {
     id: string;
@@ -129,6 +132,10 @@ export interface AssignTaskToAIRequest {
 
 export interface AssignTaskToAIResponse {
   success: boolean;
+  /** 仅 AI 成员自动派发失败时返回（不阻塞指派），见 openapi IssueAssigneeWithMemberDto */
+  dispatchError?: string;
+  /** 两级审计 gate：派发黄牌警告文案（审计 red，不阻断执行） */
+  auditWarning?: string;
   executionRunId?: string;
   error?: string;
 }
@@ -300,7 +307,7 @@ export const aiHubApi = {
   getModels: (provider?: string) =>
     api.get<AIModel[]>('/ai/models', provider ? { provider } : undefined),
 
-  getUsage: (params?: any) => api.get<UsageStats>('/ai/usage', params),
+  getUsage: (params?: QueryOf<'AiHubController_getUsage'>) => api.get<UsageStats>('/ai/usage', params),
 
   // ─── Provider APIs ────────────────────────────────────────────
 
@@ -353,7 +360,10 @@ export const aiHubApi = {
     api.get<ExecutionRunsResponse>('/execution/runs', params),
 
   getPendingApprovals: (projectId?: string) =>
-    api.get<any>('/execution/approvals/pending', projectId ? { projectId } : undefined),
+    api.get<ResponseOf<'ExecutionController_getPendingApprovals'>>(
+      '/execution/approvals/pending',
+      projectId ? { projectId } : undefined,
+    ),
 
   // ─── MCP APIs ────────────────────────────────────────────────
 

@@ -722,7 +722,6 @@ function CompactEditorMenu({
   onQueryChange,
   members,
   onPatch,
-  onClose,
 }: {
   editing: { projectId: string; field: EditableField; anchorRect: DOMRect };
   project: Project;

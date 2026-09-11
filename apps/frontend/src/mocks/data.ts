@@ -13,7 +13,6 @@ function daysAgo(n: number): string {
 
 const PROJECT_STATUSES = ['planning', 'in_progress', 'on_hold', 'completed'] as const;
 const HEALTH = ['on_track', 'at_risk', 'off_track'] as const;
-const OWNERS = ['moxhub', 'alice', 'bob', 'carol', 'dave'] as const;
 
 export function makeProjects(count = 42) {
   seq = 0;

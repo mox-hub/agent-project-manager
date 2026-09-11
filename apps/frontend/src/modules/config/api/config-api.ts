@@ -13,7 +13,7 @@ export type SetConfigParams = RequestBodyOf<'ConfigController_setConfig'>;
 
 export type DeleteConfigParams = RequestBodyOf<'ConfigController_deleteConfig'>;
 
-export type ConfigValues = Record<string, any>;
+export type ConfigValues = Record<string, unknown>;
 
 export const configApi = {
   /**

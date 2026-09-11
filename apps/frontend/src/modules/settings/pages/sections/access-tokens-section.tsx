@@ -3,7 +3,7 @@
  * @description 创建（明文一次性展示+复制）、列表（前缀/状态/最近使用）、吊销。
  *              Token 供 AI/外部工具免登录调用 API：apm login --token <token>。
  */
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { KeyRound, Plus, Copy, Check, Trash2, Terminal } from 'lucide-react';
@@ -111,11 +111,8 @@ export function AccessTokensSettingsSection() {
     if (ok) revokeToken.mutate(item.id);
   };
 
-  // 过期判定需要当前时间：effect 中取快照，保持渲染纯度（首帧未判定、随后修正）
-  const [nowMs, setNowMs] = useState(0);
-  useEffect(() => {
-    setNowMs(Date.now());
-  }, [tokens.data]);
+  // 过期判定需要当前时间：以挂载时刻为快照（无 SSR，一次定格即可保持渲染纯度）
+  const [nowMs] = useState(() => Date.now());
 
   const tokenStatus = (item: AccessTokenItem) => {
     if (item.revokedAt) return { tone: 'default' as const, label: t('settings.tokenStatusRevoked') };

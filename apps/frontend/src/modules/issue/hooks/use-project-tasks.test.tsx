@@ -12,6 +12,9 @@ import {
 
 import { taskApi } from '../api/issue-api';
 
+/** fixture 仅填断言所需字段；统一经此声明目标 API 形状（避免 as any / 链式断言） */
+const asApi = <T,>(value: object) => value as T;
+
 // Mock task API
 vi.mock('../api/issue-api', () => ({
   taskApi: {
@@ -64,7 +67,7 @@ describe('useProjectTasks', () => {
         pageSize: 20,
       };
 
-      vi.mocked(taskApi.getProjectTasks).mockResolvedValue(mockTasks as any);
+      vi.mocked(taskApi.getProjectTasks).mockResolvedValue(asApi(mockTasks));
 
       const { result } = renderHook(
         () => useProjectTasks('project-1', {}),
@@ -113,7 +116,7 @@ describe('useProjectTasks', () => {
         title: 'Test Task',
       };
 
-      vi.mocked(taskApi.getDetail).mockResolvedValue(mockTask as any);
+      vi.mocked(taskApi.getDetail).mockResolvedValue(asApi(mockTask));
 
       const { result } = renderHook(() => useTaskDetail('task-1'), { wrapper });
 
@@ -155,9 +158,7 @@ describe('useCreateTask', () => {
       title: 'New Task',
     };
 
-    vi.mocked(taskApi.create).mockResolvedValue({
-      data: mockTask,
-    } as any);
+    vi.mocked(taskApi.create).mockResolvedValue(asApi({ data: mockTask }));
 
     const { result } = renderHook(() => useCreateTask(), { wrapper });
 
@@ -219,9 +220,7 @@ describe('useUpdateTask', () => {
       title: 'Updated Task',
     };
 
-    vi.mocked(taskApi.update).mockResolvedValue({
-      data: updatedTask,
-    } as any);
+    vi.mocked(taskApi.update).mockResolvedValue(asApi({ data: updatedTask }));
 
     const { result } = renderHook(() => useUpdateTask(), { wrapper });
 
@@ -279,9 +278,7 @@ describe('useDeleteTask', () => {
   );
 
   it('should delete task successfully', async () => {
-    vi.mocked(taskApi.delete).mockResolvedValue({
-      data: { message: 'Task deleted' },
-    } as any);
+    vi.mocked(taskApi.delete).mockResolvedValue(asApi({ data: { message: 'Task deleted' } }));
 
     const { result } = renderHook(() => useDeleteTask(), { wrapper });
 
@@ -327,9 +324,7 @@ describe('useMoveTask', () => {
   );
 
   it('should move task successfully', async () => {
-    vi.mocked(taskApi.update).mockResolvedValue({
-      data: { id: '1', status: 'in_progress' },
-    } as any);
+    vi.mocked(taskApi.update).mockResolvedValue(asApi({ data: { id: '1', status: 'in_progress' } }));
 
     const { result } = renderHook(() => useMoveTask(), { wrapper });
 

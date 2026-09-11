@@ -2,9 +2,6 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   executionApi,
-  type ExecutionRun,
-  type ExecutionStep,
-  type RecoveryOptions,
   type RecoveryAction,
 } from '../api/execution-api';
 

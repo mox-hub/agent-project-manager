@@ -140,7 +140,8 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
   const { data: task, isLoading: taskLoading } = useTaskDetail(issueId || undefined);
   const { data: activities } = useTaskActivities(issueId || undefined);
   const { data: executions = [] } = useTaskExecutions(issueId || undefined);
-  const { data: project } = useProjectDetail(task?.projectId);
+  // 项目详情仅用于驱动关联查询缓存，不直接渲染
+  useProjectDetail(task?.projectId);
   // AI 员工与负责人候选均为全仓注册成员，不要求项目绑定
   const { data: agentsData } = useMembers({ type: 'ai_agent', limit: 200 });
   const { data: membersData } = useMembers({ limit: 200 });

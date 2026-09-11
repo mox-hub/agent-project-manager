@@ -15,7 +15,7 @@ import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
 import {
   useMembers,
 } from '@/modules/team-member/hooks';
-import { useProjectRoles } from '@/modules/project-role';
+import { useProjectRoles, type ExecutionRole } from '@/modules/project-role';
 import { useAssignTaskToAI } from '../hooks/use-ai-task-operations';
 import { toast } from '@/components/ui/toast';
 
@@ -68,7 +68,7 @@ export function AiAssignDialog({
         projectId,
       },
       {
-        onSuccess: (data: any) => {
+        onSuccess: (data) => {
           if (data?.executionRunId) {
             toast.success(
               `已派发任务到 AI 员工 (ExecutionRun ${data.executionRunId.slice(0, 8)}…)`,
@@ -133,9 +133,9 @@ export function AiAssignDialog({
           </div>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {members.map((m: any) => {
+            {members.map((m) => {
               const role = m.defaultExecutionRole
-                ? (roleByExecutionRole.get(m.defaultExecutionRole) as
+                ? (roleByExecutionRole.get(m.defaultExecutionRole as ExecutionRole) as
                     | { defaultCliProviderId?: string | null }
                     | undefined)
                 : null;

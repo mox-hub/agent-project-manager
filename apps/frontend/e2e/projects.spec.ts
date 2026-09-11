@@ -14,7 +14,6 @@ import { makeApi, uniq, type ApmApi } from './helpers/api'
 import {
   openRowContextMenu,
   pickContextMenu,
-  rowByTitle,
   selectRowByTitle,
   confirmDialog,
   dragUntil,

@@ -16,6 +16,7 @@ import {
   LinearSyncStatusBadge,
 } from '@/modules/linear/components/linear-status-badge';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
+import type { SyncDirection } from '@/modules/linear/api/linear-api';
 import { projectApi } from '@/modules/project/api/project-api';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { toast } from '@/components/ui/toast';
@@ -39,14 +40,6 @@ interface ProjectLinearSyncStatusProps {
   showActions?: boolean;
   className?: string;
 }
-
-const SYNC_DIRECTIONS = [
-  { value: 'pull', label: 'Pull from Linear' },
-  { value: 'push', label: 'Push to Linear' },
-  { value: 'two-way', label: 'Two-way sync' },
-  { value: 'force-pull', label: 'Force Pull (overwrite local)' },
-  { value: 'force-push', label: 'Force Push (overwrite Linear)' },
-] as const;
 
 export function ProjectLinearSyncStatus({
   projectId,
@@ -95,10 +88,10 @@ export function ProjectLinearSyncStatus({
     return null;
   }
 
-  const handleSyncTasks = (direction: typeof SYNC_DIRECTIONS[number]['value']) => {
+  const handleSyncTasks = (direction: SyncDirection) => {
     syncTasks.mutate({
       projectId,
-      direction: direction as any,
+      direction,
       confirm: direction.startsWith('force-') ? true : undefined,
     });
   };

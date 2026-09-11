@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '../hooks/use-onboarding';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +20,6 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
-  SkipForward,
   Sparkles,
   Users,
   Zap,
@@ -378,8 +376,6 @@ function ConfigureAiStep({ onNext, onSkip, isPending }: StepContentProps) {
 }
 
 function CompleteStep({ onFinish }: { onFinish: () => void }) {
-  const { resetOnboarding } = useOnboarding();
-  const navigate = useNavigate();
 
   const handleFinish = () => {
     onFinish();

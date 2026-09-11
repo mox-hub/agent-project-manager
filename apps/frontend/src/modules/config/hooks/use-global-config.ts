@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { configApi } from '../api/config-api';
+import { configApi, type ConfigValues } from '../api/config-api';
 
 const SHORT_ID_PREFIX_KEY = 'task.shortIdPrefix';
 const DEFAULT_SHORT_ID_PREFIX = 'APM';
@@ -22,7 +22,7 @@ export function useUpdateGlobalConfig() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (config: Record<string, any>) =>
+    mutationFn: (config: ConfigValues) =>
       configApi.setConfig({ scope: 'global', config }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['config', 'global'] });

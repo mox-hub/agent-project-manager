@@ -49,7 +49,7 @@ export function MembersSection({
   const deleteMember = useDeleteMember();
   const confirmDialog = useConfirm();
 
-  const members = data?.items ?? [];
+  const members = useMemo(() => data?.items ?? [], [data]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

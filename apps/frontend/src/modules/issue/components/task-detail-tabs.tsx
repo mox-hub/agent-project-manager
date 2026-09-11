@@ -203,8 +203,16 @@ interface TaskDetailSheetProps {
   issueId: string;
 }
 
+/** 审批列表行（GET /_api/issues/:id/approvals 聚合视图，契约 DTO 未生成前手写） */
+interface TaskApprovalRow {
+  id: string;
+  status: string;
+  createdAt: string;
+  description: string;
+}
+
 function TaskApprovalsTab({ issueId }: TaskDetailSheetProps) {
-  const { data: approvals, isLoading } = useQuery({
+  const { data: approvals, isLoading } = useQuery<TaskApprovalRow[]>({
     queryKey: ['taskApprovals', issueId],
     enabled: !!issueId,
     queryFn: async () => {
@@ -230,7 +238,7 @@ function TaskApprovalsTab({ issueId }: TaskDetailSheetProps) {
   return (
     <ScrollArea className="h-full">
       <div className="space-y-2 p-2">
-        {approvals.map((approval: any) => (
+        {approvals.map((approval) => (
           <div key={approval.id} className="rounded-lg border p-3">
             <div className="flex items-center justify-between">
               <Badge variant={approval.status === 'approved' ? 'default' : 'destructive'}>
@@ -246,18 +254,6 @@ function TaskApprovalsTab({ issueId }: TaskDetailSheetProps) {
       </div>
     </ScrollArea>
   );
-}
-
-function useTaskDetail(issueId: string) {
-  return useQuery({
-    queryKey: ['task', issueId],
-    enabled: !!issueId,
-    queryFn: async () => {
-      const response = await fetch(`/_api/issues/${issueId}`);
-      if (!response.ok) throw new Error('Failed to fetch task');
-      return response.json();
-    },
-  });
 }
 
 function TaskDiscussionTab({ issueId }: TaskDetailSheetProps) {
@@ -288,7 +284,7 @@ function TaskDiscussionTab({ issueId }: TaskDetailSheetProps) {
   return (
     <ScrollArea className="h-full">
       <div className="space-y-3 p-2">
-        {activities.map((activity: any) => (
+        {activities.map((activity) => (
           <div key={activity.id} className="flex gap-2">
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
               {activity.actorId?.[0]?.toUpperCase() || '?'}

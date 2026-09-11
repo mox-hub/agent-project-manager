@@ -54,7 +54,6 @@ import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
 
 type ViewMode = 'list' | 'board';
 type GroupBy = 'none' | 'status' | 'severity';
-type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
 const SEVERITY_LABELS: Record<Severity, string> = {

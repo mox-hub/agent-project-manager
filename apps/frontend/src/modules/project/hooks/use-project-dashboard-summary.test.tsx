@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { projectApi } from '../api/project-api';
 import { useProjectDashboardSummary } from './use-project-dashboard-summary';
 
+/** fixture 仅填断言所需字段；统一经此声明目标 API 形状（避免 as any / 链式断言） */
+const asApi = <T,>(value: object) => value as T;
+
 vi.mock('../api/project-api', () => ({
   projectApi: {
     getDashboardSummary: vi.fn(),
@@ -30,7 +33,7 @@ describe('useProjectDashboardSummary', () => {
   );
 
   it('should fetch dashboard summary', async () => {
-    vi.mocked(projectApi.getDashboardSummary).mockResolvedValue({
+    vi.mocked(projectApi.getDashboardSummary).mockResolvedValue(asApi({
       data: {
         projectMeta: { id: 'p1', name: 'Demo', members: [] },
         taskStats: { total: 0, todo: 0, inProgress: 0, inReview: 0, done: 0, overdue: 0 },
@@ -43,7 +46,7 @@ describe('useProjectDashboardSummary', () => {
         iterations: [],
         integrations: { repositories: [], externalLinksCount: 0, docLinksCount: 0, apiDocLinksCount: 0 },
       },
-    } as any);
+    }));
 
     const { result } = renderHook(() => useProjectDashboardSummary('p1'), { wrapper });
 

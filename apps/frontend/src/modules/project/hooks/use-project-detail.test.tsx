@@ -50,7 +50,9 @@ describe('useProjectDetail', () => {
         updatedAt: '2024-01-01T00:00:00Z',
       };
 
-      vi.mocked(projectApi.getDetail).mockResolvedValue(mockProject as any);
+      vi.mocked(projectApi.getDetail).mockResolvedValue(
+        mockProject as Awaited<ReturnType<typeof projectApi.getDetail>>,
+      );
 
       const { result } = renderHook(
         () => useProjectDetail('project-1'),
@@ -103,7 +105,9 @@ describe('useProjectDetail', () => {
         name: 'Test Project',
       };
 
-      vi.mocked(projectApi.getDetail).mockResolvedValue(mockProject as any);
+      vi.mocked(projectApi.getDetail).mockResolvedValue(
+        mockProject as Awaited<ReturnType<typeof projectApi.getDetail>>,
+      );
 
       const { result } = renderHook(() => useProjectDetail('project-1'), { wrapper });
 

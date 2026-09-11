@@ -5,7 +5,6 @@ import { MemberAvatar } from './member-avatar';
 import { TrustLevelBadge } from './trust-level-badge';
 import {
   Bot,
-  Circle,
   Clock,
   Copy,
   Check,

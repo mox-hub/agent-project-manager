@@ -23,7 +23,7 @@
 import * as React from 'react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, type UseFormReturn } from 'react-hook-form';
 import { GrillInterview } from '@/modules/project/components/grill/grill-interview';
 import { buildGrillMinutes } from '@/modules/project/components/grill/grill-minutes';
 import type { GrillSummary } from '@/modules/assistant/hooks/use-grill';
@@ -41,7 +41,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useCreateProject } from '@/modules/project/hooks/use-project-mutations';
 import { useProjectModules } from '@/modules/project/hooks/use-project-modules';
@@ -78,7 +77,6 @@ import type { DocumentCategory as DocCategory } from '@/modules/document/api/doc
   ChevronRight,
   Loader2,
   Flag,
-  Diamond,
   Tag,
   User,
   Paperclip,
@@ -250,15 +248,6 @@ const PROJECT_TEMPLATES = [
   { value: 'marketing', label: 'Marketing' },
 ];
 
-const TAG_SUGGESTIONS: Record<CreateType, string[]> = {
-  task: ['frontend', 'backend', 'bug', 'feature', 'urgent'],
-  bug: ['regression', 'crash', 'data-loss', 'ui-bug', 'p1'],
-  doc: ['spec', 'design', 'api', 'guide', 'rfc'],
-  project: ['platform', 'internal', 'client'],
-  milestone: ['mvp', 'ga', 'beta'],
-  ai: [],
-};
-
 // ============================================================================
 // Form values
 // ============================================================================
@@ -330,24 +319,6 @@ const DEFAULT_MILESTONE: MilestoneFormValues = {
 // ============================================================================
 // Atoms
 // ============================================================================
-
-function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
-  if (avatarUrl) {
-    return (
-      <Avatar size="sm" className="shrink-0">
-        <AvatarImage src={avatarUrl} alt={name} />
-        <AvatarFallback>{name[0]?.toUpperCase() ?? '?'}</AvatarFallback>
-      </Avatar>
-    );
-  }
-  return (
-    <Avatar size="sm" className="shrink-0">
-      <AvatarFallback className="bg-primary/15 text-primary text-10 font-semibold">
-        {name[0]?.toUpperCase() ?? '?'}
-      </AvatarFallback>
-    </Avatar>
-  );
-}
 
 /**
  * Capsule - 右侧属性栏的 pill 控件
@@ -594,7 +565,8 @@ export function UnifiedCreateDialog({
 
   // members
   const [members, setMembers] = useState<Member[]>([]);
-  const [membersLoading, setMembersLoading] = useState(false);
+  // loading 值当前无消费方，仅 setter 用于触发刷新重渲染
+  const [, setMembersLoading] = useState(false);
   useEffect(() => {
     if (!activeProjectId) { setMembers([]); return; }
     let cancelled = false;
@@ -726,7 +698,7 @@ export function UnifiedCreateDialog({
         projectId: values.projectId || projectId || undefined,
         tags: values.labels,
       });
-      if (resp?.id) handleSuccess('doc', (resp as any).id);
+      if (resp?.id) handleSuccess('doc', resp.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建失败');
     }
@@ -929,7 +901,6 @@ export function UnifiedCreateDialog({
   }, [open, activeType, createMore]);
 
   const currentMeta = TYPE_META[activeType];
-  const CurrentIcon = currentMeta.Icon;
 
   // ── Width classes for dialog
   const widthClass = maximized
@@ -937,11 +908,6 @@ export function UnifiedCreateDialog({
     : (showProps ? 'w-[min(96vw,720px)]' : 'w-[min(96vw,520px)]');
 
   // ── Render helpers ───────────────────────────────────────
-
-  const renderProjectName = (projectId?: string | null): string => {
-    if (!projectId) return 'No Project';
-    return projectList.find((p) => p.id === projectId)?.name ?? 'No Project';
-  };
 
   const currentProjectId = activeProjectId;
 
@@ -1480,11 +1446,11 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
 
 function TitleField(props: {
   activeType: CreateType;
-  taskForm: any;
-  bugForm: any;
-  docForm: any;
-  projectForm: any;
-  milestoneForm: any;
+  taskForm: UseFormReturn<TaskFormValues>;
+  bugForm: UseFormReturn<BugFormValues>;
+  docForm: UseFormReturn<DocFormValues>;
+  projectForm: UseFormReturn<ProjectFormValues>;
+  milestoneForm: UseFormReturn<MilestoneFormValues>;
   currentMeta: TypeMeta;
 }) {
   const cls = 'w-full text-2xl font-semibold placeholder:text-muted-foreground/50 resize-none leading-tight focus-visible:ring-0';
@@ -1499,11 +1465,11 @@ function TitleField(props: {
 
 function DescriptionField(props: {
   activeType: CreateType;
-  taskForm: any;
-  bugForm: any;
-  docForm: any;
-  projectForm: any;
-  milestoneForm: any;
+  taskForm: UseFormReturn<TaskFormValues>;
+  bugForm: UseFormReturn<BugFormValues>;
+  docForm: UseFormReturn<DocFormValues>;
+  projectForm: UseFormReturn<ProjectFormValues>;
+  milestoneForm: UseFormReturn<MilestoneFormValues>;
   currentMeta: TypeMeta;
 }) {
   const cls = 'w-full text-xs font-normal leading-relaxed text-foreground/80 placeholder:text-muted-foreground/50 focus-visible:ring-0';
@@ -1529,8 +1495,8 @@ function ExtraFields({
   onProjectSourceChange,
 }: {
   activeType: CreateType;
-  projectForm: any;
-  docForm: any;
+  projectForm: UseFormReturn<ProjectFormValues>;
+  docForm: UseFormReturn<DocFormValues>;
   projectSource: 'scratch' | 'existing' | 'ai';
   onProjectSourceChange: (v: 'scratch' | 'existing' | 'ai') => void;
 }) {

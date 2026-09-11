@@ -4,8 +4,7 @@ import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { EncryptionService } from '@/core/crypto/encryption.service';
 import { TrustService } from '@/modules/trust/trust.service';
 import { GitHubSDKService } from './github-sdk.service';
-import { GitHubApiError } from './github-client';
-import { PR_OUTCOME_DELTAS, type GitHubPrState } from './github.constants';
+import { type GitHubPrState } from './github.constants';
 import type {
   GitHubCheckRunWebhookPayload,
   GitHubCreatePrInput,
@@ -290,7 +289,6 @@ export class GitHubSyncService {
       const client = await this.sdk.getClientForIntegration(integrationId);
       const [owner, repo] = repoFullName.split('/');
       const pr = await client.fetchPullRequest(owner, repo, prNumber);
-      const apmState = this.mapPrState(pr.state, pr.merged);
 
       // write log
       await this.prisma.integrationSyncLog.create({
@@ -383,7 +381,8 @@ export class GitHubSyncService {
     return this.prisma.remotePullRequest.create({ data });
   }
 
-  private async findIntegrationByRepo(fullName: string) {
+  // 全局单 GitHub 集成口径，repo 维度过滤待多集成配置落工作区后启用
+  private async findIntegrationByRepo(_fullName: string) {
     return this.prisma.integrationConfig.findFirst({
       where: { provider: 'github', enabled: true },
     });

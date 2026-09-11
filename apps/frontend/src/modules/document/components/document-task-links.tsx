@@ -29,7 +29,6 @@ interface LinkedTaskCardProps {
 const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
   link,
   onDelete,
-  onUpdateType,
 }: LinkedTaskCardProps) {
   const [showMenu, setShowMenu] = useState(false);
 
