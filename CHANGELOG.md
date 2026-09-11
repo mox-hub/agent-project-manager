@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 命令面板外观对齐 design-system 设计语言——图标/键位徽章/底部键位提示栏
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 真实全局面板（shared/command-palette）外观对齐 design-system 页 Command Palette 设计：①原语层 command.tsx——CommandInput 搜索图标移左+右侧 ESC 键位徽章+外框 border-b、CommandShortcut 升级为 kbd 键位徽章、CommandItem 条目间距/圆角对齐设计稿（px-3 py-2 rounded-md）、CommandGroup 分组标题小型大写字距（text-10 uppercase tracking-wider）、新增 CommandFooter 底部键位提示栏（↑↓ 导航/↵ 选择/ESC 关闭+右侧触发键 ⌘//Ctrl+/ 平台感知，自包含 i18n）、Dialog 容器 w-140+shadow-2xl；②注册表 commands.ts 图标双通道填充——页面命令给 entity（shell-layout 经 getEntityIcon 解析，单一图标真相源，原「icon 预留不填充」口径废止）、动作/非实体页面直接给 lucide 图标（admin=UserCog 对齐裁决），25 条命令全部有图标；③design-system 页演示段由手写静态假模型改为消费真实 Command 原语+真实数据形态（entity-icons 图标/真实 Alt A 键位），删除从未实现的 G D/G P 系假快捷键展示，静态展示变活体（键盘上下键可导航） | 用户指令（外观对齐设计稿） | vitest 70 文件 316 用例全绿（含 design-system 页 cmdk scrollIntoView stub 修复）；tsc -b 0 错；eslint 改动文件 0 error 0 warning；治理脚本 icons/registry(99)/arbitrary 全过；i18n 双侧 3261 键对称（+hintNavigate/hintSelect/hintClose） | commandPalette.hint* 双语 3 键；COMPONENTS.md command 登记行不变（原语文件未新增） |
+
 ### 集成接入 P0 收敛性修复（集成接入规范 v0 §九 P0：①②③④）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

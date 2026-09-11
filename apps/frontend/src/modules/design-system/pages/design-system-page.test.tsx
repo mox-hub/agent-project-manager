@@ -12,6 +12,9 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
+// jsdom 未实现 scrollIntoView，cmdk 渲染选中项时会调用（Command Palette 演示段为真实原语）
+Element.prototype.scrollIntoView = vi.fn();
+
 describe('DesignSystemPage', () => {
   it('renders all sections including AI High-Density Cards without errors', () => {
     const queryClient = new QueryClient({

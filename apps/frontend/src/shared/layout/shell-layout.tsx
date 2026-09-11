@@ -331,6 +331,10 @@ export function ShellLayout() {
           shortcut: entry.shortcut,
           group: t(COMMAND_GROUP_LABEL_KEYS[entry.group]),
           to: entry.to,
+          // 实体命令经 entity-icons 注册表解析（单一图标真相源），动作命令用自带 lucide 图标
+          icon: entry.entity
+            ? getEntityIcon(entry.entity).icon
+            : (entry.icon ?? undefined),
           onSelect: entry.action ? commandActions[entry.action] : undefined,
         })),
     [commandActions, isAdminRole, mode, t],

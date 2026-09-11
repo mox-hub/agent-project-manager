@@ -7,6 +7,7 @@ import {
   useCommandPalette,
 } from './command-palette-provider';
 import { commandEntries, COMMAND_GROUP_LABEL_KEYS } from './commands';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 
 // vitest 环境无 i18next 实例：t() 直通返回 key（与现有组件测试做法一致）
 vi.mock('@/hooks/useTranslation', () => ({
@@ -18,7 +19,7 @@ beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn();
 });
 
-/** 复刻 shell-layout 的映射逻辑：i18n key → 已翻译 label（provider 契约为已翻译字符串） */
+/** 复刻 shell-layout 的映射逻辑：i18n key → 已翻译 label；entity/icon → 图标组件 */
 function buildInitialCommands() {
   const t = (key: string) => key;
   return commandEntries
@@ -30,6 +31,9 @@ function buildInitialCommands() {
       shortcut: entry.shortcut,
       group: t(COMMAND_GROUP_LABEL_KEYS[entry.group]),
       to: entry.to,
+      icon: entry.entity
+        ? getEntityIcon(entry.entity).icon
+        : (entry.icon ?? undefined),
     }));
 }
 
@@ -82,15 +86,28 @@ describe('command palette registry (commands.ts)', () => {
     expect(shortcuts).toEqual(['Alt A']);
   });
 
-  it('每个条目都有 labelKey 与合法分组，icon 预留字段未被填充', () => {
+  it('每个条目都有 labelKey 与合法分组，图标二选一（entity 或 icon）已填充', () => {
     const validGroups = new Set(Object.keys(COMMAND_GROUP_LABEL_KEYS));
     for (const entry of commandEntries) {
       expect(entry.labelKey).toBeTruthy();
       expect(validGroups.has(entry.group)).toBe(true);
-      expect(entry.icon).toBeUndefined();
+      // 外观改造后每条命令必须有图标：实体命令走 entity（注册表解析），动作/非实体页面给 icon
+      expect(entry.entity || entry.icon).toBeTruthy();
       // 路由跳转与运行时动作至少有其一
       expect(entry.to || entry.action).toBeTruthy();
     }
+  });
+
+  it('实体命令的 entity 值合法且动作命令不误用 entity 通道', () => {
+    for (const entry of commandEntries) {
+      if (entry.entity) {
+        expect(entry.action).toBeUndefined();
+      }
+    }
+    // 抽查注册表口径：tasks 走 issue 实体、admin 用 UserCog（裁决口径）
+    const byId = new Map(commandEntries.map((entry) => [entry.id, entry]));
+    expect(byId.get('cmd-tasks')?.entity).toBe('issue');
+    expect(byId.get('cmd-admin')?.icon?.displayName).toBe('UserCog');
   });
 
   it('admin 命令正确标记 adminOnly，其余条目不标', () => {
