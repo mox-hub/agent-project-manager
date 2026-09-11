@@ -204,7 +204,7 @@ export function DockUserPopover() {
                       {ws.name}
                     </div>
                     <div className="text-10 text-content-text-muted font-mono leading-tight truncate">
-                      {ws.slug || ws.id.slice(0, 8)}
+                      {ws.id.slice(0, 8)}
                     </div>
                   </div>
 

@@ -11,6 +11,9 @@ export interface AssistantRunEntry {
   runId: string;
   content: string;
   createdAt: string;
+  /** 在途状态（Dock 徽章消费；轮询回填前为空） */
+  status?: 'queued' | 'running' | 'succeeded' | 'failed';
+  tokens?: number;
 }
 
 export const assistantRunKeys = {

@@ -12,7 +12,7 @@ export interface AppDockProps extends React.HTMLAttributes<HTMLElement> {
  */
 export function AppDock({ className, children, ...props }: AppDockProps) {
   return (
-    <TooltipProvider delayDuration={150}>
+    <TooltipProvider>
       <nav
         role="toolbar"
         aria-label="Application Dock"
@@ -31,7 +31,8 @@ export function AppDock({ className, children, ...props }: AppDockProps) {
   );
 }
 
-export interface AppDockItemProps extends HTMLMotionProps<'button'> {
+export interface AppDockItemProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
+  children: React.ReactNode;
   label: string;
   badge?: number | string;
   badgeTone?: 'destructive' | 'primary' | 'warning';
