@@ -56,8 +56,47 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
    */
   const dockAlwaysVisible = useAppStore((s) => s.dockAlwaysVisible);
   const [dockRevealed, setDockRevealed] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const autoHide = !preview && !dockAlwaysVisible;
   const dockVisible = !autoHide || dockRevealed || isPromptOpen;
+
+  /**
+   * 「靠近区域」= Dock 自身包围盒向外扩 APPROACH_PX、并向下延伸到视口底边。
+   *
+   * 刻意**不用透明热区元素**：那会在页面底部压出一条看不见却吞点击的条带，
+   * 覆盖范围内的页面元素全部点不动。改为收起态监听 document 的 mousemove 做区域判定，
+   * 页面可点区域零损失；指针一旦离开区域立即收起（含移出窗口）。
+   *
+   * 包围盒取自**根节点**：它的盒高就是胶囊高度，不受收起动画那层 transform 影响，
+   * 因此浮出/收起不会让区域抖动。输入栏展开时胶囊变宽，区域随包围盒自动变大。
+   */
+  useEffect(() => {
+    if (!autoHide) return;
+    const APPROACH_PX = 32;
+
+    const isInsideRegion = (x: number, y: number): boolean => {
+      const rect = rootRef.current?.getBoundingClientRect();
+      if (!rect) return false;
+      return (
+        x >= rect.left - APPROACH_PX &&
+        x <= rect.right + APPROACH_PX &&
+        y >= rect.top - APPROACH_PX &&
+        y <= window.innerHeight
+      );
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setDockRevealed(isInsideRegion(e.clientX, e.clientY));
+    };
+    const handleMouseLeaveWindow = () => setDockRevealed(false);
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseleave', handleMouseLeaveWindow);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeaveWindow);
+    };
+  }, [autoHide]);
 
   // 派生当前选中的 AI 同事
   const selectedColleague = useMemo(() => {
@@ -185,15 +224,12 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
 
   return (
     <div
+      ref={rootRef}
       {...{ [DOCK_ROOT_ATTR]: '' }}
       data-dock-visible={dockVisible ? 'true' : 'false'}
-      // 靠近判定挂在根节点：热区是其子节点，鼠标进入热区即冒泡到此；
-      // 只要鼠标还在 Dock 或其热区内就不会触发 mouseleave，Dock 保持显示。
-      onMouseEnter={() => setDockRevealed(true)}
-      onMouseLeave={() => setDockRevealed(false)}
+      // 键盘可达性：焦点进入即浮出；焦点仍在 Dock 内部（按钮之间移动）时不收起
       onFocus={() => setDockRevealed(true)}
       onBlur={(e) => {
-        // 焦点仍在 Dock 内部（按钮之间移动）时不收起
         const next = e.relatedTarget as Node | null;
         if (next && e.currentTarget.contains(next)) return;
         setDockRevealed(false);
@@ -206,20 +242,6 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
           : 'fixed bottom-4 left-1/2 -translate-x-1/2 z-40',
       )}
     >
-      {/*
-        热区：收起态下唯一能感知「鼠标靠近底部」的透明条带，覆盖 Dock 所在条带并略向外扩，
-        因此鼠标靠近即浮出、停留其中即保持。
-        必须始终可命中——若浮出后改为 pointer-events-none，鼠标停在条带内却不落在任何子节点上，
-        浏览器会判定已离开根节点而立刻收起，形成「浮出→收起」闪烁。
-      */}
-      {autoHide && (
-        <div
-          aria-hidden="true"
-          data-dock-hotzone=""
-          className="absolute -top-6 -right-8 -bottom-4 -left-8"
-        />
-      )}
-
       {/* 1. 双轨成本与执行微徽章 (常驻 / 变形响应)；Dock 收起时落到底边成为唯一可见元素 */}
       <DockMetricBadge
         isPromptOpen={isPromptOpen}

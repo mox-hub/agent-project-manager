@@ -91,8 +91,32 @@ function dockVisibleAttr(): string | null {
   return document.querySelector('[data-dock-root]')?.getAttribute('data-dock-visible') ?? null;
 }
 
-function hotZone(): Element | null {
-  return document.querySelector('[data-dock-hotzone]');
+/**
+ * 靠近区域按 Dock 的包围盒算，而 jsdom 的 getBoundingClientRect 被全局 stub 成 800×400，
+ * 故这里按「视口底部居中」的真实位置改写根节点包围盒（jsdom 视口高 768）。
+ */
+function stubDockRect({ top = 700, left = 300, width = 200 } = {}) {
+  const root = document.querySelector('[data-dock-root]') as HTMLElement;
+  // 原型上的 getBoundingClientRect 是不可写数据属性，只能另定义自有属性覆盖它
+  Object.defineProperty(root, 'getBoundingClientRect', {
+    configurable: true,
+    value: () =>
+      ({
+        top,
+        bottom: top + 48,
+        left,
+        right: left + width,
+        width,
+        height: 48,
+        x: left,
+        y: top,
+        toJSON: () => ({}),
+      }) as DOMRect,
+  });
+}
+
+function moveMouseTo(x: number, y: number) {
+  fireEvent.mouseMove(document, { clientX: x, clientY: y });
 }
 
 /** 展开 Dock 的 Prompt 输入栏（会同时打开 AI 对话面板） */
@@ -222,49 +246,79 @@ describe('BottomDock —— 自动隐藏与鼠标靠近浮出', () => {
 
   it('浮出后徽章栏抬回 Dock 上方（collapsed 解除）', () => {
     renderDock();
+    stubDockRect();
 
-    fireEvent.mouseOver(hotZone() as Element);
+    moveMouseTo(400, 760);
 
     expect(screen.getByTestId('dock-badge').getAttribute('data-collapsed')).toBe('false');
   });
 
-  it('鼠标靠近底部热区即浮出，离开后收起', () => {
+  it('鼠标靠近底部区域即浮出，离开后收起', () => {
     renderDock();
-    const zone = hotZone();
-    expect(zone).not.toBeNull();
+    stubDockRect();
+    expect(dockVisibleAttr()).toBe('false');
 
-    fireEvent.mouseOver(zone as Element);
+    moveMouseTo(400, 760); // 区域内（y ∈ [668, 768]）
     expect(dockVisibleAttr()).toBe('true');
 
-    fireEvent.mouseOut(zone as Element);
+    moveMouseTo(400, 300); // 区域外（远在 Dock 上方）
     expect(dockVisibleAttr()).toBe('false');
   });
 
-  it('鼠标停留在热区内时保持显示（不因未直接悬停胶囊而收起）', () => {
+  it('鼠标停留在区域内时一直保持显示', () => {
     renderDock();
-    const zone = hotZone() as Element;
+    stubDockRect();
 
-    fireEvent.mouseOver(zone);
+    moveMouseTo(400, 760);
     expect(dockVisibleAttr()).toBe('true');
-    // 在热区内继续移动不触发离开
-    fireEvent.mouseMove(zone);
+
+    // 在区域内继续移动（横向微移、纵向贴近 Dock）不收起
+    moveMouseTo(340, 730);
+    expect(dockVisibleAttr()).toBe('true');
+    moveMouseTo(460, 712);
     expect(dockVisibleAttr()).toBe('true');
   });
 
-  it('开启「常驻显示」后始终可见，且不再渲染热区', () => {
+  it('横向离开区域同样收起', () => {
+    renderDock();
+    stubDockRect();
+
+    moveMouseTo(400, 760);
+    expect(dockVisibleAttr()).toBe('true');
+
+    moveMouseTo(900, 760); // 横向超出 Dock ± 32px 的判定范围
+    expect(dockVisibleAttr()).toBe('false');
+  });
+
+  it('指针移出窗口后收起', () => {
+    renderDock();
+    stubDockRect();
+
+    moveMouseTo(400, 760);
+    expect(dockVisibleAttr()).toBe('true');
+
+    fireEvent.mouseLeave(document);
+    expect(dockVisibleAttr()).toBe('false');
+  });
+
+  it('开启「常驻显示」后始终可见，且不再监听靠近区域', () => {
     useAppStore.setState({ dockAlwaysVisible: true });
     renderDock();
+    stubDockRect();
 
     expect(dockVisibleAttr()).toBe('true');
-    expect(hotZone()).toBeNull();
+    moveMouseTo(400, 300); // 区域外移动也不影响
+    expect(dockVisibleAttr()).toBe('true');
     expect(screen.getByTestId('dock-capsule').className).not.toContain('opacity-0');
   });
 
   it('设置页预览态始终展示完整 Dock（否则预览失去意义）', () => {
     renderDock({ preview: true });
+    stubDockRect();
 
     expect(dockVisibleAttr()).toBe('true');
-    expect(hotZone()).toBeNull();
+    moveMouseTo(400, 300);
+    expect(dockVisibleAttr()).toBe('true');
   });
 
   it('展开输入栏时不隐藏（正在输入，收起会打断操作）', () => {
