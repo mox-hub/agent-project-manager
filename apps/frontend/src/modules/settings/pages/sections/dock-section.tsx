@@ -5,11 +5,13 @@
  * ① 实时预览：内嵌**完整 Dock 栏本体**（同一个 `BottomDock`，仅切到预览定位态），
  *    下方任何配置改动即时反映在预览里，无需离开页面反复确认；
  * ② 功能按钮：勾选显示哪些全局操作，并用上下箭头调整它们在 Dock 中的排列顺序；
- * ③ 常驻 AI 助手：选择哪些 AI 同事常驻在 Dock 右侧，一个不屏蔽 = 全部展示。
+ * ③ 常驻 AI 助手：选择哪些 AI 同事常驻在 Dock 右侧，一个不屏蔽 = 全部展示；
+ *    **默认助手（小周）固定首位且不可关闭**——它是主协同助手，必须始终在场。
  *
  * 持久化走 app-store（zustand persist），与侧边栏的 `sidebarItemVisibility` 同款机制——
  * 属设备级 UI 偏好，不进后端配置。改动即时生效并落盘，无「保存」按钮。
  */
+import { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -38,6 +40,7 @@ import {
 import { BottomDock } from '@/shared/components/bottom-dock';
 import { useDockAiColleagues } from '@/shared/components/bottom-dock/use-dock-ai-colleagues';
 import { GlobalCreateDialog } from '@/shared/components/global-create-dialog';
+import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
 
 const DOCK_ITEM_ICONS: Record<DockItemId, LucideIcon> = {
   create: Plus,
@@ -238,14 +241,26 @@ function DockActionsCard() {
   );
 }
 
-/** 常驻 AI 助手：勾选 = 展示在 Dock；全部取消勾选后 Dock 仍保留 Sparkles 快捷呼出 */
+/**
+ * 常驻 AI 助手：勾选 = 展示在 Dock；全部取消勾选后 Dock 仍保留 Sparkles 快捷呼出。
+ * 默认助手（小周）固定首位且不可关闭——它是主协同助手，列表里必须始终在场。
+ */
 function DockAiColleaguesCard() {
   const { t } = useTranslation();
   const { colleagues } = useDockAiColleagues();
   const hiddenIds = useAppStore((s) => s.dockHiddenAssistantIds);
   const setHiddenIds = useAppStore((s) => s.setDockHiddenAssistantIds);
 
-  const visibleCount = colleagues.filter((c) => !hiddenIds.includes(c.id)).length;
+  // 默认助手置顶：列表顺序即用户先看到谁；sort 稳定，不扰乱其余同事的相对次序
+  const orderedColleagues = useMemo(
+    () => [...colleagues].sort((a, b) => Number(b.isMain) - Number(a.isMain)),
+    [colleagues],
+  );
+
+  // 默认助手永远计入「已常驻」，不受隐藏名单影响
+  const visibleCount = colleagues.filter(
+    (c) => c.isMain || !hiddenIds.includes(c.id),
+  ).length;
 
   const setVisible = (id: string, visible: boolean) => {
     setHiddenIds(
@@ -281,28 +296,39 @@ function DockAiColleaguesCard() {
         ) : (
           <>
             <ul className="divide-y divide-border rounded-lg border border-border">
-              {colleagues.map((colleague) => {
-                const visible = !hiddenIds.includes(colleague.id);
-                const Icon = colleague.icon;
+              {orderedColleagues.map((colleague) => {
+                // 默认助手永远视为已常驻，且开关禁用（不可手动关闭）
+                const locked = colleague.isMain;
+                const visible = locked || !hiddenIds.includes(colleague.id);
                 return (
                   <li key={colleague.id} className="flex items-center gap-3 p-3">
-                    <span
-                      className={cn(
-                        'flex size-8 shrink-0 items-center justify-center rounded-full border border-border/70',
-                        colleague.bgColor,
-                        colleague.color,
-                      )}
-                    >
-                      <Icon className="size-4" />
-                    </span>
+                    {/* 与成员管理页同源：成员信息里有真实头像就显示真实头像 */}
+                    <MemberAvatar
+                      member={{
+                        type: 'ai_agent',
+                        displayName: colleague.name,
+                        avatarUrl: colleague.avatarUrl,
+                      }}
+                      size="md"
+                      showBadge={false}
+                    />
                     <span className="min-w-0 flex-1">
                       <span
                         className={cn(
-                          'block truncate text-sm',
+                          'flex items-center gap-1.5 truncate text-sm',
                           visible ? 'text-foreground' : 'text-muted-foreground',
                         )}
                       >
                         {colleague.name}
+                        {locked && (
+                          <span
+                            className="shrink-0 rounded-full bg-accent-purple-light px-1.5 text-10 font-semibold text-accent-purple"
+                            title={t('settings.dockAiDefaultLocked')}
+                            data-testid={`dock-ai-default-badge-${colleague.id}`}
+                          >
+                            {t('settings.dockAiDefaultBadge')}
+                          </span>
+                        )}
                       </span>
                       {colleague.title && (
                         <span className="block truncate text-xs text-muted-foreground">
@@ -313,8 +339,13 @@ function DockAiColleaguesCard() {
                     <Switch
                       size="sm"
                       checked={visible}
+                      disabled={locked}
                       onCheckedChange={(checked) => setVisible(colleague.id, checked)}
-                      aria-label={`${colleague.name} ${t('settings.dockVisible')}`}
+                      aria-label={
+                        locked
+                          ? `${colleague.name} ${t('settings.dockAiDefaultLocked')}`
+                          : `${colleague.name} ${t('settings.dockVisible')}`
+                      }
                       data-testid={`dock-ai-visible-${colleague.id}`}
                     />
                   </li>

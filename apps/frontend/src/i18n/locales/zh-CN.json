@@ -1627,6 +1627,8 @@
     "dockAiEmpty": "当前没有可常驻的 AI 同事",
     "dockAiAll": "全部展示",
     "dockAiPinned": "已常驻 {{count}} 位",
+    "dockAiDefaultBadge": "默认",
+    "dockAiDefaultLocked": "默认助手，固定首位且不可关闭",
     "dockPreviewTitle": "预览",
     "dockPreviewDesc": "下方为完整 Dock 栏本体实时预览——改动下面的配置会立刻反映在这里。",
     "dockPreviewAlwaysOn": "预览始终展示 Dock 的完整形态（不受「常驻显示」开关影响）。",

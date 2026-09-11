@@ -103,9 +103,9 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
     return aiColleagues.find((c) => c.id === selectedColleagueId) || aiColleagues[0];
   }, [aiColleagues, selectedColleagueId]);
 
-  // 常驻配置：隐藏名单为空 = 全部展示（默认）
+  // 常驻配置：隐藏名单为空 = 全部展示（默认）；默认助手（小周）始终在场，不受名单影响
   const visibleColleagues = useMemo(
-    () => aiColleagues.filter((c) => !dockHiddenAssistantIds.includes(c.id)),
+    () => aiColleagues.filter((c) => c.isMain || !dockHiddenAssistantIds.includes(c.id)),
     [aiColleagues, dockHiddenAssistantIds],
   );
 
@@ -290,22 +290,18 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
                   )}
                   title={`当前受托角色：${selectedColleague.name} (${selectedColleague.title || 'AI 同事'})`}
                 >
-                  {selectedColleague.avatarUrl ? (
-                    <MemberAvatar
-                      member={{
-                        type: 'ai_agent',
-                        displayName: selectedColleague.name,
-                        avatarUrl: selectedColleague.avatarUrl,
-                      }}
-                      size="sm"
-                      showBadge={false}
-                    />
-                  ) : (
-                    (() => {
-                      const Icon = selectedColleague.icon;
-                      return <Icon className="size-4" />;
-                    })()
-                  )}
+                  {/* 统一交给 MemberAvatar：成员信息里有真实头像就显示真实头像，
+                      没有则回落双表面规范里 AI 身份该有的确定性头像（与成员管理页一致），
+                      而不是此处另画一个通用图标 */}
+                  <MemberAvatar
+                    member={{
+                      type: 'ai_agent',
+                      displayName: selectedColleague.name,
+                      avatarUrl: selectedColleague.avatarUrl,
+                    }}
+                    size="sm"
+                    showBadge={false}
+                  />
                 </div>
                 {/* 真实呼吸状态指示点 */}
                 <span
@@ -424,8 +420,6 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
                     展示哪些同事由「设置 · Dock 栏」的常驻配置决定，未配置 = 全部展示） */}
                 <div className="flex items-center gap-1.5">
                   {visibleColleagues.map((colleague) => {
-                    const isCustomAvatar = Boolean(colleague.avatarUrl);
-                    const Icon = colleague.icon;
                     const statusDotColor =
                       STATUS_DOT_CLASS[colleague.status] || STATUS_DOT_CLASS.idle;
 
@@ -447,19 +441,16 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
                         )}
                         title={`点击向 [${colleague.name}] 发送指令 · 状态: ${colleague.status}`}
                       >
-                        {isCustomAvatar ? (
-                          <MemberAvatar
-                            member={{
-                              type: 'ai_agent',
-                              displayName: colleague.name,
-                              avatarUrl: colleague.avatarUrl,
-                            }}
-                            size="xs"
-                            showBadge={false}
-                          />
-                        ) : (
-                          <Icon className="size-3.5" />
-                        )}
+                        {/* 同选中态：真实头像优先，无则用该 AI 身份的确定性头像 */}
+                        <MemberAvatar
+                          member={{
+                            type: 'ai_agent',
+                            displayName: colleague.name,
+                            avatarUrl: colleague.avatarUrl,
+                          }}
+                          size="xs"
+                          showBadge={false}
+                        />
                         {/* 真实状态指示点 */}
                         <span
                           className={cn('absolute -bottom-0.5 -right-0.5 size-2 rounded-full', statusDotColor)}

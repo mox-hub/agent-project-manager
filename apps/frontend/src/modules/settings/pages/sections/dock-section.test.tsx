@@ -26,29 +26,30 @@ vi.mock('@/components/ui/page-shell', () => ({
   PageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+// 故意乱序（默认助手排在后面），用来验证卡片会把默认助手提到首位
 const { COLLEAGUES } = vi.hoisted(() => ({
   COLLEAGUES: [
-    {
-      id: 'assistant',
-      name: '主协同助手',
-      title: '主协同助手',
-      avatarUrl: null,
-      icon: () => null,
-      color: 'text-accent-purple',
-      bgColor: 'bg-accent-purple-light',
-      status: 'idle',
-      placeholder: '向主协同助手提问...',
-    },
     {
       id: 'm-2',
       name: '验收审计员',
       title: '门禁与契约审计',
       avatarUrl: null,
-      icon: () => null,
       color: 'text-accent-green',
       bgColor: 'bg-accent-green-light',
       status: 'idle',
       placeholder: '向 [验收审计员] 提问...',
+      isMain: false,
+    },
+    {
+      id: 'assistant',
+      name: '小周',
+      title: '项目管理搭档',
+      avatarUrl: null,
+      color: 'text-accent-purple',
+      bgColor: 'bg-accent-purple-light',
+      status: 'idle',
+      placeholder: '向小周提问...',
+      isMain: true,
     },
   ],
 }));
@@ -213,5 +214,43 @@ describe('DockSettingsSection —— 常驻 AI 助手', () => {
   it('无勾选遗漏时（全部常驻）不渲染「全部展示」按钮', () => {
     render(<DockSettingsSection />);
     expect(screen.queryByTestId('dock-ai-show-all')).toBeNull();
+  });
+
+  it('默认助手（小周）固定排在第一位，即使数据源里它靠后', () => {
+    render(<DockSettingsSection />);
+
+    // 按 DOM 顺序取「常驻 AI 助手」各行的开关（页面另有功能按钮列表，不能按 li 序号取）
+    const orderedIds = screen
+      .getAllByTestId(/^dock-ai-visible-/)
+      .map((el) => el.getAttribute('data-testid'));
+    expect(orderedIds).toEqual(['dock-ai-visible-assistant', 'dock-ai-visible-m-2']);
+  });
+
+  it('默认助手不可关闭：开关禁用且恒为开启，并带「默认」标记', () => {
+    render(<DockSettingsSection />);
+
+    // base-ui 的 Switch 渲染为 <span role="switch">，禁用态标记是 aria-disabled/data-disabled
+    const mainSwitch = screen.getByTestId('dock-ai-visible-assistant');
+    expect(mainSwitch.getAttribute('aria-disabled')).toBe('true');
+    expect(mainSwitch.getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByTestId('dock-ai-default-badge-assistant')).toBeTruthy();
+  });
+
+  it('其余同事的开关不受影响，仍可正常关闭', () => {
+    render(<DockSettingsSection />);
+
+    const otherSwitch = screen.getByTestId('dock-ai-visible-m-2');
+    expect(otherSwitch.getAttribute('aria-disabled')).toBeNull();
+
+    fireEvent.click(otherSwitch);
+    expect(useAppStore.getState().dockHiddenAssistantIds).toEqual(['m-2']);
+  });
+
+  it('即便默认助手的 id 混进隐藏名单，它仍显示为已常驻', () => {
+    useAppStore.setState({ dockHiddenAssistantIds: ['assistant'] });
+    render(<DockSettingsSection />);
+
+    const mainSwitch = screen.getByTestId('dock-ai-visible-assistant');
+    expect(mainSwitch.getAttribute('aria-checked')).toBe('true');
   });
 });

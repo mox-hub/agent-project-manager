@@ -1627,6 +1627,8 @@
     "dockAiEmpty": "No AI colleagues available to pin",
     "dockAiAll": "Show all",
     "dockAiPinned": "{{count}} pinned",
+    "dockAiDefaultBadge": "Default",
+    "dockAiDefaultLocked": "Default assistant — pinned first and cannot be turned off",
     "dockPreviewTitle": "Preview",
     "dockPreviewDesc": "A live preview of the full Dock below — changes take effect here immediately.",
     "dockPreviewAlwaysOn": "The preview always shows the full Dock, regardless of the \"Always visible\" switch.",

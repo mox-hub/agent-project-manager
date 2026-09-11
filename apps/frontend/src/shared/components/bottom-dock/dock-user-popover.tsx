@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Layers, Check, Plus, ArrowUpRight, LogOut, Settings, Database } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
+import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
 import {
   getCurrentWorkspaceId,
   switchWorkspace,
@@ -39,51 +39,65 @@ export function DockUserPopover() {
     'U'
   )[0]?.toUpperCase();
 
+  /**
+   * 自己的头像统一交给 `MemberAvatar`，**不要**把 avatarUrl 直接塞给 `<img>`：
+   * 头像选择器内置项存的是哨兵串（`nice-avatar:alex` / `avvvatars:claude-code`）而非 URL，
+   * 直塞会渲染成坏图。MemberAvatar 会区分「真实 URL / 哨兵 / 无头像」三种情况，
+   * 并对人类身份回落双表面规范里的确定性插画头像（与成员管理页显示一致）。
+   */
+  const selfMember = {
+    type: 'human' as const,
+    displayName: currentUser?.displayName || currentUser?.username || '',
+    avatarUrl: currentUser?.avatarUrl ?? null,
+  };
+
   const isGlobalAdmin = roles.some(
     (r) => r.scopeType === 'global' && r.role === 'admin',
   );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label="账号与工作区菜单"
-          className={cn(
-            'group flex items-center gap-2 py-1 pl-1 pr-2.5 rounded-full transition-all duration-150',
-            'hover:bg-accent/70 text-foreground active:scale-95',
-            open && 'bg-accent/80 shadow-xs',
-          )}
-        >
-          <div className="relative">
-            <Avatar className="size-7 ring-1 ring-border/70 group-hover:ring-border transition-all">
-              {currentUser?.avatarUrl && (
-                <AvatarImage
-                  src={currentUser.avatarUrl}
-                  alt={currentUser?.displayName || currentUser?.username || 'User'}
-                />
-              )}
-              <AvatarFallback className="text-11 bg-primary text-primary-foreground font-semibold">
-                {initialLetter}
-              </AvatarFallback>
-            </Avatar>
-            {/* 在线指示绿点 */}
-            <span
-              className="absolute -bottom-0.5 -right-0.5 size-2 rounded-full bg-accent-green ring-2 ring-popover"
-              aria-hidden="true"
-            />
-          </div>
+      {/*
+        用 base-ui 的 `render` 自定义触发元素，**不能**用 Radix 的 `asChild`：
+        base-ui 不认 asChild，会把它透传到 DOM 并另外渲染一个自带 <button>，
+        结果就是「button 套 button」的非法结构（TS 也一直报 asChild 不存在）。
+      */}
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            aria-label="账号与工作区菜单"
+            className={cn(
+              'group flex items-center gap-2 py-1 pl-1 pr-2.5 rounded-full transition-all duration-150',
+              'hover:bg-accent/70 text-foreground active:scale-95',
+              open && 'bg-accent/80 shadow-xs',
+            )}
+          >
+            <div className="relative">
+              <MemberAvatar
+                member={selfMember}
+                size="sm"
+                showBadge={false}
+                fallbackInitials={initialLetter}
+              />
+              {/* 在线指示绿点 */}
+              <span
+                className="absolute -bottom-0.5 -right-0.5 size-2 rounded-full bg-accent-green ring-2 ring-popover"
+                aria-hidden="true"
+              />
+            </div>
 
-          <div className="flex flex-col text-left">
-            <span className="text-xs font-semibold text-foreground max-w-24 truncate leading-tight">
-              {currentWorkspace?.name ?? '默认空间'}
-            </span>
-            <span className="text-10 text-content-text-muted leading-tight">
-              工作区路由
-            </span>
-          </div>
-        </button>
-      </PopoverTrigger>
+            <div className="flex flex-col text-left">
+              <span className="text-xs font-semibold text-foreground max-w-24 truncate leading-tight">
+                {currentWorkspace?.name ?? '默认空间'}
+              </span>
+              <span className="text-10 text-content-text-muted leading-tight">
+                工作区路由
+              </span>
+            </div>
+          </button>
+        }
+      />
 
       <PopoverContent
         side="top"
@@ -93,17 +107,12 @@ export function DockUserPopover() {
       >
         {/* 1. 一体化紧凑身份条：头像 + 姓名/角色 + 快捷设置与登出 */}
         <div className="flex items-center gap-2.5 rounded-xl bg-accent/40 px-3 py-2 border border-border/40">
-          <Avatar className="size-8 ring-1 ring-border/60 shrink-0">
-            {currentUser?.avatarUrl && (
-              <AvatarImage
-                src={currentUser.avatarUrl}
-                alt={currentUser?.displayName || currentUser?.username || 'User'}
-              />
-            )}
-            <AvatarFallback className="text-11 bg-primary text-primary-foreground font-semibold">
-              {initialLetter}
-            </AvatarFallback>
-          </Avatar>
+          <MemberAvatar
+            member={selfMember}
+            size="md"
+            showBadge={false}
+            fallbackInitials={initialLetter}
+          />
           <div className="min-w-0 flex-1">
             <div className="font-semibold text-xs truncate text-foreground leading-snug">
               {currentUser?.displayName || currentUser?.username || 'User'}

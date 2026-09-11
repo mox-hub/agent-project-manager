@@ -8,7 +8,6 @@
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Bot, Terminal, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useOfficeSummary } from '@/modules/office/hooks/use-office-summary';
 import { useAssistantStatus } from '@/modules/assistant/hooks/use-assistant-status';
@@ -18,11 +17,21 @@ export interface DockAiColleague {
   name: string;
   title?: string;
   avatarUrl?: string | null;
-  icon: LucideIcon;
+  /**
+   * 头像**不再由本类型承载图标**：统一交给 `MemberAvatar` 渲染——
+   * 成员信息里有真实头像就显示真实头像，没有则回落双表面规范里该身份的确定性头像。
+   * color/bgColor 仅用于 Dock 上的容器底色。
+   */
   color: string;
   bgColor: string;
   status: 'needYou' | 'working' | 'suggestions' | 'idle';
   placeholder: string;
+  /**
+   * 默认助手（小周）：**固定排在首位且不可关闭**——它是主协同助手，
+   * 「常驻 AI 助手」列表里必须始终在场，Dock 头像群也不受隐藏名单影响。
+   * 判定口径统一收在这里，避免各处按名字/固定 id 散落判断。
+   */
+  isMain: boolean;
 }
 
 /** AI 同事状态呼吸点样式（Dock 头像与展开输入栏共用） */
@@ -35,9 +44,9 @@ export const STATUS_DOT_CLASS: Record<string, string> = {
 
 /** 兜底角色配色轮转（真实成员无专属色时按序取模） */
 const COLOR_SCHEMES = [
-  { color: 'text-accent-purple', bgColor: 'bg-accent-purple-light', icon: Bot },
-  { color: 'text-accent-blue', bgColor: 'bg-accent-blue-light', icon: Terminal },
-  { color: 'text-accent-green', bgColor: 'bg-accent-green-light', icon: ShieldCheck },
+  { color: 'text-accent-purple', bgColor: 'bg-accent-purple-light' },
+  { color: 'text-accent-blue', bgColor: 'bg-accent-blue-light' },
+  { color: 'text-accent-green', bgColor: 'bg-accent-green-light' },
 ];
 
 export function useDockAiColleagues() {
@@ -62,11 +71,11 @@ export function useDockAiColleagues() {
       name: mainColleagueName,
       title: t('assistant.personaRole') || '主协同助手',
       avatarUrl: null,
-      icon: Bot,
       color: 'text-accent-purple',
       bgColor: 'bg-accent-purple-light',
       status: assistantStatus.state,
       placeholder: `向${mainColleagueName}提问或安排任务...`,
+      isMain: true,
     };
 
     const realList = officeSummary?.colleagues ?? [];
@@ -78,22 +87,22 @@ export function useDockAiColleagues() {
           name: '执行守护专员',
           title: '终端与代码执行',
           avatarUrl: null,
-          icon: Terminal,
           color: 'text-accent-blue',
           bgColor: 'bg-accent-blue-light',
           status: 'idle' as const,
           placeholder: '指派终端命令、Git 或代码执行任务...',
+          isMain: false,
         },
         {
           id: 'auditor',
           name: '验收审计员',
           title: '门禁与契约审计',
           avatarUrl: null,
-          icon: ShieldCheck,
           color: 'text-accent-green',
           bgColor: 'bg-accent-green-light',
           status: 'idle' as const,
           placeholder: '请求检查验收门禁、契约与审计状态...',
+          isMain: false,
         },
       ];
     }
@@ -104,17 +113,21 @@ export function useDockAiColleagues() {
         id: c.memberId,
         name: c.displayName,
         title: c.title || c.executionRole || 'AI 同事',
+        // 真实头像：来自成员信息（Member.avatarUrl），无上传头像时回落双表面生成头像
         avatarUrl: c.avatarUrl ?? null,
-        icon: scheme.icon,
         color: scheme.color,
         bgColor: scheme.bgColor,
         status: c.status,
         placeholder: `向 [${c.displayName}] 提问或安排任务...`,
+        isMain: c.displayName === mainColleagueName,
       };
     });
 
-    const hasMain = items.some((item) => item.name === mainColleagueName);
-    return hasMain ? items : [mainAssistant, ...items];
+    // 默认助手固定首位：Dock 头像群与设置页「常驻 AI 助手」都依赖这个稳定次序
+    const mainIndex = items.findIndex((item) => item.isMain);
+    if (mainIndex === -1) return [mainAssistant, ...items];
+    if (mainIndex === 0) return items;
+    return [items[mainIndex], ...items.filter((_, index) => index !== mainIndex)];
   }, [officeSummary?.colleagues, assistantStatus.state, t]);
 
   return { colleagues, activeProjectId };

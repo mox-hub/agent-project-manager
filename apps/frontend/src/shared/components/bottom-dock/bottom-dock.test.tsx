@@ -17,32 +17,38 @@ const { navigateMock } = vi.hoisted(() => ({ navigateMock: vi.fn() }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => navigateMock }));
 
 // AI 同事清单由 office/assistant 查询驱动，此处注入固定清单
-const { COLLEAGUES } = vi.hoisted(() => ({
-  COLLEAGUES: [
-    {
-      id: 'assistant',
-      name: '主协同助手',
-      title: '主协同助手',
-      avatarUrl: null,
-      icon: () => null,
-      color: 'text-accent-purple',
-      bgColor: 'bg-accent-purple-light',
-      status: 'idle',
-      placeholder: '向主协同助手提问或安排任务...',
-    },
-    {
-      id: 'm-2',
-      name: '验收审计员',
-      title: '门禁与契约审计',
-      avatarUrl: null,
-      icon: () => null,
-      color: 'text-accent-green',
-      bgColor: 'bg-accent-green-light',
-      status: 'idle',
-      placeholder: '向 [验收审计员] 提问或安排任务...',
-    },
-  ],
-}));
+const { COLLEAGUES, AUDITOR_AVATAR_URL } = vi.hoisted(() => {
+  const AUDITOR_AVATAR_URL = 'https://cdn.example.com/auditor.png';
+  return {
+    AUDITOR_AVATAR_URL,
+    COLLEAGUES: [
+      {
+        id: 'assistant',
+        name: '小周',
+        title: '项目管理搭档',
+        // 无真实头像 → 走双表面生成式头像
+        avatarUrl: null,
+        color: 'text-accent-purple',
+        bgColor: 'bg-accent-purple-light',
+        status: 'idle',
+        placeholder: '向小周提问或安排任务...',
+        isMain: true,
+      },
+      {
+        id: 'm-2',
+        name: '验收审计员',
+        title: '门禁与契约审计',
+        // 成员信息里有真实头像
+        avatarUrl: AUDITOR_AVATAR_URL,
+        color: 'text-accent-green',
+        bgColor: 'bg-accent-green-light',
+        status: 'idle',
+        placeholder: '向 [验收审计员] 提问或安排任务...',
+        isMain: false,
+      },
+    ],
+  };
+});
 
 vi.mock('./use-dock-ai-colleagues', () => ({
   STATUS_DOT_CLASS: { idle: 'bg-accent-green' },
@@ -227,8 +233,38 @@ describe('BottomDock —— 配置驱动渲染（CAP-A-13 Dock 自定义）', ()
     useAppStore.setState({ dockHiddenAssistantIds: ['m-2'] });
     renderDock();
 
-    expect(screen.queryByTitle(/验收审计员/)).toBeNull();
-    expect(screen.getByTitle(/主协同助手/)).toBeTruthy();
+    // 用头像按钮的专属 title 定位（内层 MemberAvatar 自己也有同名 title）
+    expect(screen.queryByTitle(/点击向 \[验收审计员\]/)).toBeNull();
+    expect(screen.getByTitle(/点击向 \[小周\]/)).toBeTruthy();
+  });
+
+  it('默认助手（小周）不受隐藏名单影响，始终在 Dock 头像群中', () => {
+    // 即便其 id 被写进隐藏名单（存量脏数据/名字变更后残留），也不该消失
+    useAppStore.setState({ dockHiddenAssistantIds: ['assistant'] });
+    renderDock();
+
+    expect(screen.getByTitle(/点击向 \[小周\]/)).toBeTruthy();
+  });
+});
+
+describe('BottomDock —— 助手头像取自成员信息', () => {
+  it('成员信息里有真实头像的同事，Dock 上渲染真实图片', () => {
+    renderDock();
+
+    expect(
+      document.querySelector(`img[src="${AUDITOR_AVATAR_URL}"]`),
+    ).not.toBeNull();
+  });
+
+  it('没有真实头像的同事不渲染 <img>，也不回落到通用图标（走双表面生成式头像）', () => {
+    renderDock();
+
+    const mainBtn = screen.getByTitle(/点击向 \[小周\]/);
+    // 无真实头像 → 不出 <img>
+    expect(mainBtn.querySelector('img')).toBeNull();
+    // 但也不该是 lucide 通用图标（svg.lucide 是 lucide 的标记），而是生成式头像
+    expect(mainBtn.querySelector('svg.lucide')).toBeNull();
+    expect(mainBtn.querySelector('svg')).not.toBeNull();
   });
 });
 

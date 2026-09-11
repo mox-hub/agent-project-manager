@@ -21,6 +21,14 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### Dock 默认助手固定首位且不可关闭 + 用户/助手头像统一取真实头像
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**默认助手（小周）固定首位且不可关闭**：`DockAiColleague` 新增 `isMain` 标识把「谁是默认助手」收敛到一处（此前散落按名字/固定 id 判断）；hook 保证默认助手排首位，设置页「常驻 AI 助手」再按 `isMain` 稳定排序并把它渲染为**禁用且恒为开启**的开关 + 「默认」徽章；Dock 的可见同事过滤与设置页的计数都对其豁免隐藏名单——**即便该 id 混进持久化的隐藏名单（存量脏数据/改名残留）也不会消失**；②**头像统一取真实头像**：用户头像（`DockUserPopover`，触发胶囊 + 浮层身份条）与助手头像（Dock 头像群、展开输入栏、设置页 AI 列表）**全部改由 `MemberAvatar` 渲染**——成员信息里有 `avatarUrl` 就显示真实图片；③**由此修掉一个真实缺陷**：用户头像此前把 `currentUser.avatarUrl` 直塞 `<img src>`，而头像选择器的内置项存的是**哨兵串**（`nice-avatar:alex` / `avvvatars:claude-code`）而非 URL，**选了内置头像的用户在 Dock 上看到的是坏图**；`MemberAvatar` 会区分「真实 URL / 哨兵 / 无头像」三种情况；④**回退档不再自画图标**：无真实头像的 AI 同事此前在 Dock 上画一个 lucide 通用图标（`DockAiColleague.icon` 字段，现已删除），与成员管理页显示的确定性生成头像不一致；现统一回落双表面规范的头像，两处观感一致；⑤**顺带修复**：`MemberAvatar` 的 `title` 在调用方只传「类型+显示名+头像」（无 `handle`）时会拼出 `(@undefined)`；`DockUserPopover` 触发元素原用 Radix 的 `asChild`（base-ui 只认 `render`），会渲染出「button 套 button」的非法结构并持续报 TS 错误——改用 `render` 后该结构消失，既有类型错误由 7 行降至 6 行。 | 用户指令（Dock 栏：默认助手固定首位且不可手动关闭；用户头像与助手头像采用真实头像） | Vitest 前端 **79 文件 413 用例全绿**（新增 13 条：`bottom-dock.test` 3 条头像/默认助手豁免 + `dock-section.test` 4 条首位与不可关闭 + 新增 `dock-user-popover.test` 6 条真实 URL/哨兵/无头像/触发元素非嵌套）；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`tsc -b` 既有错误 7 行 → **6 行** | 同步更新 `docs/01-需求/能力清单-v1.md`（CAP-A-13 补记）、`docs/01-需求/测试映射矩阵-v1.md`（GAP-T-18 登记并当日清偿）、本 CHANGELOG |
+
+> ⚠️ 两个既有问题**未处理**（本次只修了落在 dock 文件里的那一处，避免夹带大范围重构）：①`asChild` 是全仓性问题——`asChild` 是 Radix 惯例，base-ui 只认 `render`，仓库内共 **62 处** `asChild` 用法，其余位置很可能同样在渲染嵌套元素；建议单开一轮排查，不要顺手改；②`ensureMemberForUser` 创建 Member 时不同步 `User.avatarUrl`，故 OAuth 登录用户的 Member 镜像头像恒为 null（用户侧头像走 User 字段不受影响，但成员列表/成员卡会缺失）。
+
 ### 底部 Dock 自动隐藏：平时只留徽章栏贴底，鼠标靠近底部才浮出（含「常驻显示」开关）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

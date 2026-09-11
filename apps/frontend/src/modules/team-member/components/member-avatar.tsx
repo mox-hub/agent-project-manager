@@ -110,7 +110,14 @@ export function MemberAvatar({
               background: `linear-gradient(135deg, hsl(${hue} 65% 55%), hsl(${(hue + 40) % 360} 65% 45%))`,
             }
       }
-      title={member ? `${member.displayName} (@${member.handle})` : resolvedDisplayName || ''}
+      // 只传「类型 + 显示名 + 头像」的调用方没有 handle，不能拼出「(@undefined)」
+      title={
+        member
+          ? member.handle
+            ? `${member.displayName} (@${member.handle})`
+            : member.displayName
+          : resolvedDisplayName || ''
+      }
     >
       {hasCustomImg ? (
         <img
