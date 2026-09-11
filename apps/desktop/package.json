@@ -2,15 +2,23 @@
   "name": "desktop",
   "private": true,
   "version": "0.6.1",
-  "description": "Agent Project Manager desktop shell (Tauri 2)",
+  "description": "Agent Project Manager desktop shell (Electron)",
+  "main": "electron/dist/main.js",
   "scripts": {
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "build:electron": "tsup",
+    "desktop:dev": "tsup && electron .",
+    "pack:resources": "node scripts/pack.mjs",
+    "desktop:pack": "pnpm pack:resources && pnpm build:electron && electron-builder --win nsis",
     "tauri:dev": "pnpm dlx @tauri-apps/cli@2 dev",
     "tauri:build": "pnpm dlx @tauri-apps/cli@2 build",
-    "tauri:dist:win": "pnpm dlx @tauri-apps/cli@2 build --target x86_64-pc-windows-msvc",
-    "pack:resources": "node scripts/pack.mjs",
-    "desktop:pack": "pnpm pack:resources && pnpm tauri:build"
+    "tauri:dist:win": "pnpm dlx @tauri-apps/cli@2 build --target x86_64-pc-windows-msvc"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "2"
+    "@tauri-apps/cli": "2",
+    "@types/node": "^24.13.3",
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3",
+    "tsup": "^8.5.1"
   }
 }

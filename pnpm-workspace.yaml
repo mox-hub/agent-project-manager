@@ -19,6 +19,8 @@ allowBuilds:
   '@scarf/scarf': true
   '@swc/core': true
   bcrypt: true
+  electron: true
+  electron-winstaller: true
   esbuild: true
   msw: true
   prisma: true
