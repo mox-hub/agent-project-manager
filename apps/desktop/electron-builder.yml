@@ -1,0 +1,38 @@
+# Electron 桌面壳打包配置（CAP-A-14 / ADR-014）
+# 资源准备：pnpm pack:resources → src-tauri/target/desktop-pack/{bin,server,frontend}
+# （壳无关的共享 staging，与 Tauri 打包链共用同一份产物）
+appId: com.agentpm.desktop
+productName: Agent Project Manager
+# 直接用本地 electron 的已解压产物：跳过「下载 zip→解压到 release/*.tmp→rename」环节——
+# 实测该解压产物会被 Defender 实时扫描长期锁死（EBUSY/EPERM，分钟到小时级），换既过扫描期的
+# node_modules/electron/dist 即根治，打包也更快
+electronDist: node_modules/electron/dist
+directories:
+  # 输出路径一旦被 Defender/未知句柄锁死（asar 文件 EBUSY 且 rm 无法删除），换全新路径即绕开；
+  # 历史锁死的 release/ 目录稍后手动清理
+  output: dist-release
+  buildResources: build
+# 关闭 asar：Defender 对 asar 包格式有专门深度解析（防脚本藏匿），扫描窗口与 builder 的
+# 写入/替换操作竞态导致 EBUSY unlink（重试 5 次全撞，均在 resources/*.asar）。
+# 应用以散装 JS 落 resources/app/，无 asar 可深扫；安全基线由 contextIsolation+sandbox 保证
+asar: false
+files:
+  - electron/dist/**
+  - package.json
+  - '!**/*.map'
+# server 运行时（dist + node_modules + prisma 预生成客户端）、前端产物、node.exe
+# 必须放 asar 外（native 引擎 dll 无法从 asar 加载）
+extraResources:
+  - from: src-tauri/target/desktop-pack
+    to: .
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+nsis:
+  oneClick: true
+  perMachine: false
+  deleteAppDataOnUninstall: false
+  artifactName: ${productName}_${version}_x64-setup.exe
