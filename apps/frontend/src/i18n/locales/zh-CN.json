@@ -3273,10 +3273,13 @@
   },
   "commandPalette": {
     "title": "命令面板",
-    "description": "搜索并运行命令",
+    "description": "搜索并跳转到任意页面或动作",
     "placeholder": "搜索命令...",
-    "empty": "未找到匹配命令",
-    "ungrouped": "未分组"
+    "empty": "没有匹配的命令。",
+    "ungrouped": "其他",
+    "hintNavigate": "导航",
+    "hintSelect": "选择",
+    "hintClose": "关闭"
   },
   "search": {
     "placeholder": "搜索一切..."

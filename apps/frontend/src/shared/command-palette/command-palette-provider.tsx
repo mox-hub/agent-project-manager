@@ -8,7 +8,8 @@ import {
   type ReactNode,
 } from "react"
 import { useNavigate } from "react-router-dom"
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command"
+import type { LucideIcon } from "lucide-react"
+import { CommandDialog, CommandEmpty, CommandFooter, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command"
 import { useTranslation } from "@/hooks/useTranslation"
 
 /** 外部入口（如 TabBar「+」按钮）请求打开命令面板的 CustomEvent 名 */
@@ -21,6 +22,8 @@ export type CommandPaletteItem = {
   shortcut?: string
   group?: string
   to?: string
+  /** 条目图标（shell-layout 已从 entity-icons/注册表解析），缺省无图标 */
+  icon?: LucideIcon
   onSelect?: () => void
 }
 
@@ -130,25 +133,32 @@ export function CommandPaletteProvider({
           <CommandEmpty>{t('commandPalette.empty')}</CommandEmpty>
           {grouped.map(([group, groupItems]) => (
             <CommandGroup key={group} heading={group}>
-              {groupItems.map((item) => (
-                <CommandItem
-                  key={item.id}
-                  onSelect={() => {
-                    if (item.to) {
-                      navigate(item.to)
-                    }
-                    item.onSelect?.()
-                    setOpen(false)
-                    setQuery("")
-                  }}
-                >
-                  <span>{item.label}</span>
-                  {item.shortcut ? <CommandShortcut>{item.shortcut}</CommandShortcut> : null}
-                </CommandItem>
-              ))}
+              {groupItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <CommandItem
+                    key={item.id}
+                    onSelect={() => {
+                      if (item.to) {
+                        navigate(item.to)
+                      }
+                      item.onSelect?.()
+                      setOpen(false)
+                      setQuery("")
+                    }}
+                  >
+                    {Icon ? <Icon className="text-muted-foreground" /> : null}
+                    <span>{item.label}</span>
+                    {item.shortcut ? (
+                      <CommandShortcut>{item.shortcut}</CommandShortcut>
+                    ) : null}
+                  </CommandItem>
+                )
+              })}
             </CommandGroup>
           ))}
         </CommandList>
+        <CommandFooter />
       </CommandDialog>
     </CommandPaletteContext.Provider>
   )

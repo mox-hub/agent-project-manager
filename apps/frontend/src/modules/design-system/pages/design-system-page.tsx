@@ -43,6 +43,7 @@ import {
   Loader,
   Loader2,
   Mail,
+  MessagesSquare,
   Minus,
   MoreHorizontal,
   Palette,
@@ -53,6 +54,7 @@ import {
   Share2,
   Sparkles,
   Star,
+  SunMoon,
   Tag,
   Target,
   Trash2,
@@ -66,6 +68,16 @@ import {
   CircleCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandGroup,
+  CommandItem,
+  CommandShortcut,
+  CommandFooter,
+} from '@/components/ui/command'
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -3430,63 +3442,46 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="command">
             <SectionTitle>Command Palette</SectionTitle>
-            <SubLabel>Static preview — opened with ⌘K / Ctrl+/</SubLabel>
+            <SubLabel>Live primitives (components/ui/command) — 全局面板同源，⌘K / Ctrl+/ 唤起真实面板</SubLabel>
             <div className="flex justify-center">
-              <div className="w-140 rounded-xl border border-border shadow-2xl bg-card overflow-hidden">
-                <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
-                  <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <span className="flex-1 text-sm text-muted-foreground/50">输入命令或搜索…</span>
-                  <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-10 text-muted-foreground">ESC</kbd>
-                </div>
-
-                <div className="max-h-72 overflow-hidden p-2 space-y-1">
-                  <p className="px-2 py-1.5 text-10 font-semibold text-muted-foreground uppercase tracking-wider">导航</p>
-                  {[
-                    { Icon: Home, label: 'Go to Dashboard', shortcut: 'G D', active: false },
-                    { Icon: FolderKanban, label: 'Go to Projects', shortcut: 'G P', active: true },
-                    { Icon: CheckSquare, label: 'Go to Tasks', shortcut: 'G T', active: false },
-                    { Icon: Sparkles, label: 'Go to AI Hub', shortcut: 'G A', active: false },
-                    { Icon: GitBranch, label: 'Go to Repositories', shortcut: 'G R', active: false },
-                  ].map(({ Icon, label, shortcut, active }) => (
-                    <div key={label}
-                      className={cn(
-                        'flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm cursor-pointer transition-colors',
-                        active ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/60',
-                      )}>
-                      <div className="flex items-center gap-3">
-                        <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span>{label}</span>
-                      </div>
-                      <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-10 text-muted-foreground">{shortcut}</kbd>
-                    </div>
-                  ))}
-                  <p className="px-2 py-1.5 text-10 font-semibold text-muted-foreground uppercase tracking-wider pt-2">新建</p>
-                  {[
-                    { Icon: Plus, label: 'Create New Task', shortcut: 'C T' },
-                    { Icon: FileText, label: 'Create New Document', shortcut: 'C D' },
-                  ].map(({ Icon, label, shortcut }) => (
-                    <div key={label}
-                      className="flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-accent/60 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span>{label}</span>
-                      </div>
-                      <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-10 text-muted-foreground">{shortcut}</kbd>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border-t border-border px-4 py-2 flex items-center justify-between bg-muted/30">
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    {[['↑↓', '导航'], ['↵', '选择'], ['ESC', '关闭']].map(([key, label]) => (
-                      <div key={key} className="flex items-center gap-1">
-                        <kbd className="inline-flex h-5 items-center rounded border border-border/50 bg-background px-1.5 font-mono text-10">{key}</kbd>
-                        <span>{label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <kbd className="inline-flex h-5 items-center rounded border border-border/50 bg-background px-1.5 font-mono text-10 text-muted-foreground">Ctrl+/</kbd>
-                </div>
+              <div className="w-140 overflow-hidden rounded-xl border border-border shadow-2xl bg-card">
+                <Command shouldFilter={false}>
+                  <CommandInput placeholder="输入命令或搜索…" />
+                  <CommandList>
+                    <CommandGroup heading="导航">
+                      {(
+                        [
+                          { entity: 'project', label: '打开项目' },
+                          { entity: 'issue', label: '打开任务' },
+                          { entity: 'workflow', label: '打开工作流' },
+                          { entity: 'acceptance', label: '打开验收' },
+                          { entity: 'decision', label: '打开决策收件箱' },
+                          { entity: 'repository', label: '打开仓库' },
+                        ] as const
+                      ).map(({ entity, label }) => {
+                        const { icon: Icon } = getEntityIcon(entity)
+                        return (
+                          <CommandItem key={entity} onSelect={() => undefined}>
+                            <Icon className="text-muted-foreground" />
+                            <span>{label}</span>
+                          </CommandItem>
+                        )
+                      })}
+                    </CommandGroup>
+                    <CommandGroup heading="操作">
+                      <CommandItem onSelect={() => undefined}>
+                        <MessagesSquare className="text-muted-foreground" />
+                        <span>问主 AI</span>
+                        <CommandShortcut>Alt A</CommandShortcut>
+                      </CommandItem>
+                      <CommandItem onSelect={() => undefined}>
+                        <SunMoon className="text-muted-foreground" />
+                        <span>切换到深色 / 浅色模式</span>
+                      </CommandItem>
+                    </CommandGroup>
+                  </CommandList>
+                  <CommandFooter />
+                </Command>
               </div>
             </div>
           </SectionAnchor>

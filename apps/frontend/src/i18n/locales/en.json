@@ -3276,7 +3276,10 @@
     "description": "Search for a command to run...",
     "placeholder": "Search for a command...",
     "empty": "No command found.",
-    "ungrouped": "Ungrouped"
+    "ungrouped": "Ungrouped",
+    "hintNavigate": "Navigate",
+    "hintSelect": "Select",
+    "hintClose": "Close"
   },
   "search": {
     "placeholder": "Search everything..."
