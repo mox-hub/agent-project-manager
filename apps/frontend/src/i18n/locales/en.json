@@ -58,7 +58,9 @@
     "archive": "Archive",
     "dragToSort": "Drag to reorder",
     "download": "Download",
-    "export": "Export"
+    "export": "Export",
+    "grid": "Grid",
+    "cards": "Cards"
   },
   "workspace": {
     "title": "New Workspace",
@@ -1034,7 +1036,8 @@
       "byPriority": "By Priority",
       "byAssignee": "By Assignee",
       "byLabel": "By Label",
-      "searchPlaceholder": "Search tasks..."
+      "searchPlaceholder": "Search tasks...",
+      "all": "All"
     },
     "sort": {
       "createdAt": "Created Date",
@@ -1093,7 +1096,9 @@
       "list": "List",
       "board": "Board",
       "gantt": "Gantt",
-      "table": "Table"
+      "table": "Table",
+      "grid": "Grid",
+      "cards": "Cards"
     }
   },
   "project": {
@@ -1528,6 +1533,15 @@
       },
       "viewSettings": "View Settings",
       "searchPlaceholder": "Search projects..."
+    },
+    "filter": {
+      "all": "All"
+    },
+    "view": {
+      "list": "List",
+      "board": "Board",
+      "gantt": "Gantt",
+      "table": "Table"
     }
   },
   "notification": {
@@ -3414,6 +3428,14 @@
       "blocks": "Blocks",
       "relates": "Relates",
       "implements": "Implements"
+    },
+    "filter": {
+      "all": "All"
+    },
+    "view": {
+      "list": "List",
+      "grid": "Grid",
+      "cards": "Cards"
     }
   },
   "linearSync": {
@@ -3635,7 +3657,7 @@
   "acceptance": {
     "title": "Acceptance Center",
     "view": {
-      "list": "Cards",
+      "list": "List",
       "table": "Table"
     },
     "new": "New Acceptance",
@@ -3936,7 +3958,9 @@
       "list": "List",
       "board": "Board",
       "gantt": "Gantt",
-      "table": "Table"
+      "table": "Table",
+      "grid": "Grid",
+      "cards": "Cards"
     },
     "sections": {
       "grouping": "Grouping",

@@ -54,7 +54,6 @@ import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigge
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { Logo } from '@/components/brand/logo';
 import { TabBar } from '@/components/ui/tab-bar';
-import { NotificationPopover } from '@/components/ui/notification-popover';
 import { TabsProvider } from '@/shared/tabs/tabs-context';
 import {
   ProjectSidebarProvider,
@@ -150,7 +149,7 @@ export function ShellLayout() {
         id: 'utilities',
         label: t('shell.utilities'),
         items: [
-          // 侧栏红点数量：决策收件箱=待处理决策数；通知=未读数（纯数字红色药丸 / 折叠态红点）
+          // 侧栏红点数量：决策收件箱=待处理决策数
           {
             to: '/app/decisions',
             icon: getEntityIcon('decision').icon,
@@ -158,12 +157,6 @@ export function ShellLayout() {
             count: pendingDecisionCount,
           },
           { to: '/app/search', icon: Search, label: t('nav.search') },
-          {
-            to: '/app/notifications',
-            icon: Bell,
-            label: t('nav.notifications'),
-            count: unreadCount,
-          },
         ],
       },
       {
@@ -223,7 +216,7 @@ export function ShellLayout() {
     return favoriteGroupItems.length === 0
       ? groups.filter((g) => g.id !== 'favorites')
       : groups;
-  }, [favoriteGroupItems, isAdminRole, t, unreadCount, pendingDecisionCount]);
+  }, [favoriteGroupItems, isAdminRole, t, pendingDecisionCount]);
 
   useEffect(() => {
     if (!eventClient.isConnected()) {
@@ -381,7 +374,7 @@ export function ShellLayout() {
                     'flex items-center rounded-lg transition-colors hover:bg-sidebar-accent/60',
                     sidebarCollapsed
                       ? 'size-10 justify-center'
-                      : 'w-full gap-2.5 px-2.5 py-1.5 min-w-0'
+                      : 'flex-1 min-w-0 gap-2.5 px-2.5 py-1.5'
                   )}
                   aria-label="Toggle sidebar"
                   title={sidebarCollapsed ? t('shell.expandSidebar') : t('shell.appName')}
@@ -393,7 +386,31 @@ export function ShellLayout() {
                 </button>
                 {!sidebarCollapsed && (
                   <div className="shrink-0">
-                    <NotificationPopover />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <NavLink
+                          to="/app/notifications"
+                          className={({ isActive }) =>
+                            cn(
+                              'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                              isActive && 'bg-sidebar-accent text-sidebar-foreground',
+                            )
+                          }
+                          aria-label={t('nav.notifications')}
+                        >
+                          <Bell className="size-4" />
+                          {unreadCount > 0 && (
+                            <span
+                              className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive ring-2 ring-sidebar"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </NavLink>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        {t('nav.notifications')}
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 )}
               </div>
@@ -551,9 +568,34 @@ export function ShellLayout() {
               </nav>
               </div>
 
-              {/* Sidebar Toggle Button - Only show when collapsed */}
+              {/* Sidebar Toggle Button & Notification - Only show when collapsed */}
               {sidebarCollapsed && (
-                <div className="shrink-0 flex justify-center px-0 py-2">
+                <div className="shrink-0 flex flex-col items-center gap-1.5 px-0 py-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <NavLink
+                        to="/app/notifications"
+                        className={({ isActive }) =>
+                          cn(
+                            'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                            isActive && 'bg-sidebar-accent text-sidebar-foreground',
+                          )
+                        }
+                        aria-label={t('nav.notifications')}
+                      >
+                        <Bell className="size-4" />
+                        {unreadCount > 0 && (
+                          <span
+                            className="absolute right-1 top-1 size-2 rounded-full bg-destructive ring-2 ring-sidebar"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </NavLink>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {t('nav.notifications')}
+                    </TooltipContent>
+                  </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button

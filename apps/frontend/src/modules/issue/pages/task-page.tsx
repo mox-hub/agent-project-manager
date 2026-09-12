@@ -61,7 +61,7 @@ export function TaskPage() {
     key: 'task-workspace',
     defaults: [{
       id: 'all',
-      name: t('task.filter.all', 'All'),
+      name: t('common.all', '全部'),
       icon: 'board',
       builtIn: true,
       snapshot: { search: '', filters: {}, viewStyle: 'board' },
@@ -232,10 +232,10 @@ export function TaskPage() {
             layout: 'centered',
             onChange: (value) => setViewMode(value as ViewMode),
             options: [
-              { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
-              { value: 'list', label: t('task.view.list', 'List'), icon: List },
-              { value: 'gantt', label: t('task.view.gantt', 'Gantt'), icon: CalendarRange },
-              { value: 'table', label: 'Table', icon: TableProperties },
+              { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
+              { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+              { value: 'gantt', label: t('viewDisplay.views.gantt', 'Gantt'), icon: CalendarRange },
+              { value: 'table', label: t('viewDisplay.views.table', 'Table'), icon: TableProperties },
             ],
           }}
           filterMenu={{

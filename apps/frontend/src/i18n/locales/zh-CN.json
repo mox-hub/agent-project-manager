@@ -58,7 +58,9 @@
     "archive": "归档",
     "dragToSort": "拖动排序",
     "download": "下载",
-    "export": "导出"
+    "export": "导出",
+    "grid": "卡片",
+    "cards": "卡片"
   },
   "workspace": {
     "title": "新建工作区",
@@ -1034,7 +1036,8 @@
       "byPriority": "按优先级",
       "byAssignee": "按负责人",
       "byLabel": "按标签",
-      "searchPlaceholder": "搜索任务..."
+      "searchPlaceholder": "搜索任务...",
+      "all": "全部"
     },
     "sort": {
       "createdAt": "创建时间",
@@ -1093,7 +1096,9 @@
       "list": "列表",
       "board": "看板",
       "gantt": "甘特图",
-      "table": "表格"
+      "table": "表格",
+      "grid": "卡片",
+      "cards": "卡片"
     }
   },
   "project": {
@@ -1528,6 +1533,15 @@
       },
       "viewSettings": "视图设置",
       "searchPlaceholder": "搜索项目..."
+    },
+    "filter": {
+      "all": "全部"
+    },
+    "view": {
+      "list": "列表",
+      "board": "看板",
+      "gantt": "甘特图",
+      "table": "表格"
     }
   },
   "notification": {
@@ -3414,6 +3428,14 @@
       "blocks": "阻塞",
       "relates": "相关",
       "implements": "实现"
+    },
+    "filter": {
+      "all": "全部"
+    },
+    "view": {
+      "list": "列表",
+      "grid": "卡片",
+      "cards": "卡片"
     }
   },
   "linearSync": {
@@ -3635,7 +3657,7 @@
   "acceptance": {
     "title": "验收中心",
     "view": {
-      "list": "卡片",
+      "list": "列表",
       "table": "表格"
     },
     "new": "新建验收契约",
@@ -3936,7 +3958,9 @@
       "list": "列表",
       "board": "看板",
       "gantt": "甘特图",
-      "table": "表格"
+      "table": "表格",
+      "grid": "卡片",
+      "cards": "卡片"
     },
     "sections": {
       "grouping": "分组",

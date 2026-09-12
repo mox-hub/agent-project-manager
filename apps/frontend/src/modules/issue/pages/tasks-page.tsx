@@ -140,7 +140,7 @@ export function TasksPage() {
     key: 'tasks-page',
     defaults: [{
       id: 'all',
-      name: t('task.filter.all', 'All'),
+      name: t('common.all', '全部'),
       icon: 'list',
       builtIn: true,
       snapshot: { search: '', conditions: [], viewMode: 'list', groupBy: 'none' },
@@ -413,10 +413,10 @@ export function TasksPage() {
             if (v === 'board' && groupBy === 'none') setGroupBy('status');
           },
           options: [
-            { value: 'list', label: t('task.view.list', 'List'), icon: List },
-            { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
-            { value: 'gantt', label: t('task.view.gantt', 'Gantt'), icon: CalendarRange },
-            { value: 'table', label: 'Table', icon: TableProperties },
+            { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+            { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
+            { value: 'gantt', label: t('viewDisplay.views.gantt', 'Gantt'), icon: CalendarRange },
+            { value: 'table', label: t('viewDisplay.views.table', 'Table'), icon: TableProperties },
           ],
         }}
         filterMenu={{

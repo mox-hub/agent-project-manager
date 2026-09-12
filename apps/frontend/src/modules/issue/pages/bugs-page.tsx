@@ -123,7 +123,7 @@ export function BugsPage() {
     key: 'bugs-page',
     defaults: [{
       id: 'all',
-      name: t('task.filter.all', 'All'),
+      name: t('common.all', '全部'),
       icon: 'bug',
       builtIn: true,
       snapshot: { search: '', conditions: [], viewMode: 'list', groupBy: 'none' },

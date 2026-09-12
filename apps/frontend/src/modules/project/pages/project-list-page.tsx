@@ -248,9 +248,9 @@ export function ProjectListPage() {
           value: viewMode,
           onChange: (value) => setViewMode(value as ViewMode),
           options: [
-            { value: 'list', label: t('project.view.list', 'List'), icon: List },
-            { value: 'board', label: t('project.view.board', 'Board'), icon: Kanban },
-            { value: 'gantt', label: t('project.view.gantt', 'Gantt'), icon: CalendarRange },
+            { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+            { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
+            { value: 'gantt', label: t('viewDisplay.views.gantt', 'Gantt'), icon: CalendarRange },
           ],
         }}
         filterMenu={{

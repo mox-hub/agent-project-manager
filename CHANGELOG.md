@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [0.6.0] - 2026-09-11
 
+### 视图模式与工具栏重构及视觉缺陷修复 (feat/ui-views-and-toolbar-refactor)
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**视图滑块与胶囊全量 i18n 补齐**：`zh-CN.json` / `en.json` 补齐 `common.grid/cards`、`task.filter.all`、`project.filter.all`、`document.filter.all`、`task.view.*`、`project.view.*`、`document.view.*`、`acceptance.view.*` 与 `viewDisplay.views.*`；`ToolbarRow` 的 `ViewPill` 针对 built-in `all` 增加动态兜底避免历史存量缓存残留英文，`SegmentedControl` 与 `ViewStyleDropdown` 均增加统一翻译兜底；②**验收中心卡片视图彻底改造为 List 视图**：废除并清理原大卡片 `AcceptanceRow`，改用统一的 `@/components/ui/data-list` 的 `DataList` 紧凑呈现（集成勾选批量删除、状态图标、标题、验收标准进度条、审计风险色标、成本统计与分页），与全站列表视觉一致；③**文档管理页重构列表与卡片视图**：严格对齐 Design System 的 Document Cards 规范（`rounded-xl`、`size-9` 浅色背景类别图标盒、`StatusPill`、分类文本、标签栏、项目归属与预览时间），统一列表与卡片组件语言；④**通知侧边栏条目移除与圆形无弹窗按钮**：从侧边栏主导航移除通知条目，侧边栏顶部及收起态底部均改用标准圆形通知按钮（`rounded-full size-8`），含 Tooltip 标题与未读红点（`unreadCount > 0`），取消原有无实际通知内容的 `NotificationPopover` 弹窗，点击直达 `/app/notifications`；⑤**成员管理卡片上下留白修复**：解决 `MemberCard` 中 `Card` 默认 `py-3.5` 与 `CardContent` 的 padding 叠加导致的过高纵向留白问题，显式指定 `gap-0 py-0` 与 `px-3.5 py-2.5`，使视觉比例紧凑自然。 | 用户指令（视图与工具栏重构及视图缺陷修复） | Vitest 前端 **81 文件 421 用例全绿**；`tsc -b` 0 错误；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`pnpm check:docs-sync` 通过 | 本 CHANGELOG |
+
 ### v0.6.0 发版总览——设计系统 v2 落地 + 六条能力线推进 + Dock 协同交互面
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

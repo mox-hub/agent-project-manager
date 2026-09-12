@@ -115,7 +115,7 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
     key: `project-tasks:${projectId}`,
     defaults: [{
       id: 'all',
-      name: t('task.filter.all', 'All'),
+      name: t('common.all', '全部'),
       icon: 'list',
       builtIn: true,
       snapshot: { search: '', conditions: [], viewMode: 'board', groupBy: 'status' },
@@ -251,8 +251,8 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
                 if (v === 'board' && groupBy === 'none') setGroupBy('status');
               },
               options: [
-                { value: 'list', label: t('task.view.list', 'List'), icon: List },
-                { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
+                { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+                { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
               ],
             }}
             filterMenu={{

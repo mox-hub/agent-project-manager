@@ -662,6 +662,12 @@ function ViewPill({
       : []),
   ];
 
+  const { t } = useTranslation();
+  const displayName =
+    view.builtIn && (view.id === 'all' || view.name === 'All')
+      ? t('common.all', '全部')
+      : view.name;
+
   return (
     <div className="relative inline-flex shrink-0">
       <ContextMenu items={contextMenuItems}>
@@ -669,8 +675,8 @@ function ViewPill({
           ref={anchorRef}
           type="button"
           onClick={() => onSelect(view.id)}
-          title={`${view.name} (右键管理)`}
-          aria-label={view.name}
+          title={`${displayName} (右键管理)`}
+          aria-label={displayName}
           className={cn(
             "flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-all select-none [transition-duration:var(--motion-fast)]",
             active
@@ -679,7 +685,7 @@ function ViewPill({
           )}
         >
           {Icon ? <Icon className="size-3.5 shrink-0 opacity-80" strokeWidth={1.75} /> : null}
-          <span className="max-w-32 truncate">{view.name}</span>
+          <span className="max-w-32 truncate">{displayName}</span>
           {active && isDirty ? (
             <span
               title="包含未保存的筛选或显示改动"
@@ -748,17 +754,23 @@ function ViewStyleDropdown({
   onChange: (value: string) => void;
   options: ToolbarViewStyleOption[];
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLButtonElement>(null);
   const current = options.find((option) => option.value === value) ?? options[0];
   if (!current) return null;
+
+  const currentLabel =
+    typeof current.label === "string"
+      ? t(`viewDisplay.views.${current.value}`, current.label)
+      : current.label;
 
   return (
     <>
       <HeaderActionButton
         ref={anchorRef}
         icon={current.icon ?? LayoutGrid}
-        label={current.label}
+        label={currentLabel}
         variant="outline"
         pinned
         trailing={<ChevronDown className="ml-0.5 size-3 opacity-70" />}
@@ -770,6 +782,10 @@ function ViewStyleDropdown({
         <div className="min-w-36">
           {options.map((option) => {
             const Icon = option.icon;
+            const label =
+              typeof option.label === "string"
+                ? t(`viewDisplay.views.${option.value}`, option.label)
+                : option.label;
             return (
               <button
                 key={option.value}
@@ -781,7 +797,7 @@ function ViewStyleDropdown({
                 className={cn(MENU_ITEM_CLASS, "text-xs")}
               >
                 {Icon ? <Icon className="mr-2 size-4 shrink-0" strokeWidth={1.75} /> : null}
-                <span className="flex-1 truncate">{option.label}</span>
+                <span className="flex-1 truncate">{label}</span>
                 {option.value === current.value ? (
                   <Check className="ml-2 size-3.5 shrink-0 text-primary" strokeWidth={2.5} />
                 ) : null}
@@ -857,9 +873,13 @@ export function ToolbarRow({
             onChange={viewStyle.onChange}
             options={viewStyle.options.map((option) => {
               const Icon = option.icon;
+              const label =
+                typeof option.label === "string"
+                  ? t(`viewDisplay.views.${option.value}`, option.label)
+                  : option.label;
               return {
                 value: option.value,
-                label: option.label,
+                label,
                 icon: Icon ? <Icon className="size-3.5" strokeWidth={1.75} /> : undefined,
                 tone: option.tone,
               };
