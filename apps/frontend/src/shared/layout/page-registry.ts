@@ -24,6 +24,7 @@ import {
   UserRound,
   BarChart3,
   Sparkles,
+  Rocket,
   type LucideIcon,
 } from "lucide-react";
 import { getEntityIcon } from "@/shared/entity-icons/entity-icons";
@@ -86,6 +87,8 @@ export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
   "/app/admin": { icon: UserCog, labelKey: "nav.admin", color: "#EF4444" },
   "/app/design-system": { icon: Palette, label: "Design System", color: "#8B5CF6" },
   "/app/delivery": { icon: ListTree, labelKey: "nav.delivery", label: "交付视图", color: "#10B981" },
+  "/app/releases": { icon: Rocket, labelKey: "nav.releases", label: "发版交付", color: "#22C55E" },
+  "/app/releases/:id": { icon: Rocket, labelKey: "nav.releases", label: "发版详情", color: "#22C55E" },
 };
 
 /** 收藏页面未命中注册表时的兜底图标 */

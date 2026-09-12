@@ -247,7 +247,90 @@
     "office": "办公室",
     "aiSurface": "AI 表面",
     "workflow": "工作流",
-    "delivery": "交付视图"
+    "delivery": "交付视图",
+    "releases": "发版交付"
+  },
+  "release": {
+    "title": "发版交付",
+    "filter": {
+      "project": "选择项目",
+      "pickProject": "选择项目…"
+    },
+    "table": {
+      "version": "版本",
+      "name": "名称",
+      "status": "状态",
+      "tag": "Git Tag",
+      "releasedAt": "发布时间"
+    },
+    "empty": {
+      "pickProject": "先选择一个项目",
+      "pickProjectDesc": "发版按项目组织，选择项目后查看发版记录",
+      "none": "该项目还没有发版",
+      "noneDesc": "创建发版草案：圈定范围 → 门禁 → 审批 → 发布"
+    },
+    "status": {
+      "draft": "草案",
+      "gated": "门禁通过",
+      "approved": "已批准",
+      "publishing": "发布中",
+      "released": "已发布",
+      "failed": "失败"
+    },
+    "create": {
+      "open": "新建发版",
+      "needProject": "请先在上方选择项目",
+      "title": "新建发版草案",
+      "desc": "版本号须为 semver 且大于当前基线（只前滚不回退）",
+      "project": "项目",
+      "version": "版本号",
+      "recommend": "推荐版本",
+      "basis": "基线 {{base}}，{{type}}递增（conventional commits 推断）",
+      "type": {
+        "major": "主版本",
+        "minor": "次版本",
+        "patch": "修订号"
+      },
+      "nameLabel": "发版名称（可选）",
+      "submit": "创建草案",
+      "created": "发版草案已创建"
+    },
+    "gate": {
+      "title": "发布门禁",
+      "submit": "提交门禁",
+      "ranAt": "上次检查：",
+      "notRun": "尚未提交门禁——门禁校验范围归属、验收全绿、CI 证据、契约绑定与完整性审计"
+    },
+    "action": {
+      "title": "审批与发布",
+      "draftHint": "完善发版说明并提交门禁后，可发起发布审批",
+      "requestApproval": "发起发布审批（决策卡）",
+      "reject": "打回草案",
+      "publish": "立即发布",
+      "reopen": "重开草案",
+      "publishingHint": "发布执行中：导出 CHANGELOG → 打 tag 推送 → GitHub Release，可稍后刷新查看进度",
+      "releasedHint": "本版本已发布，CHANGELOG 已自动再生"
+    },
+    "detail": {
+      "loading": "发版详情",
+      "failureTitle": "发布失败",
+      "notesTitle": "发版说明",
+      "aiDraft": "AI 起草",
+      "aiEmpty": "AI 未返回内容，请重试或手写",
+      "aiFailed": "AI 起草失败",
+      "notesSaved": "发版说明已保存",
+      "noNotes": "暂无发版说明——可用 AI 起草后人工修订",
+      "tag": "Git Tag",
+      "tagPending": "发布时创建",
+      "github": "GitHub Release",
+      "yes": "已创建",
+      "no": "未创建",
+      "approvalSent": "审批决策卡已创建，请到决策收件箱批准",
+      "publishDone": "发布已执行",
+      "rejected": "已打回草案",
+      "reopened": "已重开草案",
+      "logTitle": "发布执行日志"
+    }
   },
   "workflow": {
     "title": "工作流",

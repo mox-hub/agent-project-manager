@@ -247,7 +247,90 @@
     "office": "Office",
     "aiSurface": "AI Surface",
     "workflow": "Workflows",
-    "delivery": "Delivery"
+    "delivery": "Delivery",
+    "releases": "Releases"
+  },
+  "release": {
+    "title": "Releases",
+    "filter": {
+      "project": "Select project",
+      "pickProject": "Pick a project…"
+    },
+    "table": {
+      "version": "Version",
+      "name": "Name",
+      "status": "Status",
+      "tag": "Git Tag",
+      "releasedAt": "Released"
+    },
+    "empty": {
+      "pickProject": "Pick a project first",
+      "pickProjectDesc": "Releases are organized per project — pick one to view its history",
+      "none": "No releases in this project",
+      "noneDesc": "Create a draft: scope → gate → approval → publish"
+    },
+    "status": {
+      "draft": "Draft",
+      "gated": "Gated",
+      "approved": "Approved",
+      "publishing": "Publishing",
+      "released": "Released",
+      "failed": "Failed"
+    },
+    "create": {
+      "open": "New release",
+      "needProject": "Pick a project above first",
+      "title": "New release draft",
+      "desc": "Version must be valid semver greater than the current baseline (forward-only)",
+      "project": "Project",
+      "version": "Version",
+      "recommend": "Recommend",
+      "basis": "Baseline {{base}}, {{type}} bump (inferred from conventional commits)",
+      "type": {
+        "major": "major",
+        "minor": "minor",
+        "patch": "patch"
+      },
+      "nameLabel": "Release name (optional)",
+      "submit": "Create draft",
+      "created": "Release draft created"
+    },
+    "gate": {
+      "title": "Release gate",
+      "submit": "Run gate",
+      "ranAt": "Last checked:",
+      "notRun": "Gate not run yet — checks scope ownership, acceptance, CI evidence, contract bindings and completeness audit"
+    },
+    "action": {
+      "title": "Approval & publish",
+      "draftHint": "Finalize notes and run the gate, then request approval",
+      "requestApproval": "Request approval (decision card)",
+      "reject": "Reject to draft",
+      "publish": "Publish now",
+      "reopen": "Reopen draft",
+      "publishingHint": "Publishing: export CHANGELOG → push tag → GitHub Release; refresh to see progress",
+      "releasedHint": "Released — CHANGELOG regenerated automatically"
+    },
+    "detail": {
+      "loading": "Release detail",
+      "failureTitle": "Publish failed",
+      "notesTitle": "Release notes",
+      "aiDraft": "AI draft",
+      "aiEmpty": "AI returned nothing — retry or write manually",
+      "aiFailed": "AI draft failed",
+      "notesSaved": "Release notes saved",
+      "noNotes": "No notes yet — try AI draft and refine manually",
+      "tag": "Git Tag",
+      "tagPending": "created on publish",
+      "github": "GitHub Release",
+      "yes": "Created",
+      "no": "Not created",
+      "approvalSent": "Approval decision card created — approve it in the decision inbox",
+      "publishDone": "Publish executed",
+      "rejected": "Rejected back to draft",
+      "reopened": "Draft reopened",
+      "logTitle": "Publish execution log"
+    }
   },
   "workflow": {
     "title": "Workflows",

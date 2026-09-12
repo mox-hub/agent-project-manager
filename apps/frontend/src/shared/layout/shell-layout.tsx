@@ -46,6 +46,7 @@ import {
   Palette,
   ListTree,
   Sparkles,
+  Rocket,
   type LucideIcon,
 } from 'lucide-react';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
@@ -238,6 +239,14 @@ export function ShellLayout() {
             label: t('task.bug.title'),
             stageNumber: '08',
             hint: t('task.bug.title', '缺陷追踪'),
+          },
+          // 09 发版交付（CAP-K-03 驱动型发版）
+          {
+            to: '/app/releases',
+            icon: Rocket,
+            label: t('nav.releases', '发版交付'),
+            stageNumber: '09',
+            hint: t('nav.releases', '发版交付'),
           },
         ],
       },

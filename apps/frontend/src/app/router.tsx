@@ -62,6 +62,8 @@ import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-p
 import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
 import { WorkflowListPage } from '@/modules/workflow/pages/workflow-list-page';
 import { WorkflowDetailPage } from '@/modules/workflow/pages/workflow-detail-page';
+import { ReleaseListPage } from '@/modules/release/pages/release-list-page';
+import { ReleaseDetailPage } from '@/modules/release/pages/release-detail-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
 import { SearchPage } from '@/modules/search/pages/search-page';
 
@@ -320,6 +322,18 @@ export const router = createBrowserRouter([
       {
         path: 'workflows/:id',
         element: <WorkflowDetailPage />,
+        handle: { selfScroll: true },
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'releases',
+        element: <ReleaseListPage />,
+        handle: { selfScroll: true },
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'releases/:id',
+        element: <ReleaseDetailPage />,
         handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
