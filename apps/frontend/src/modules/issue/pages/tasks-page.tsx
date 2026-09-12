@@ -444,12 +444,18 @@ export function TasksPage() {
                   ? "border border-accent-purple/40 bg-accent-purple/10 text-accent-purple hover:bg-accent-purple/20"
                   : "border border-border/60 bg-card text-muted-foreground hover:border-accent-purple/30 hover:text-foreground",
             )}
-            title={isAiFiltering ? "点击取消筛选 AI 执行任务" : "点击一键筛选正在 AI 执行的任务"}
+            title={
+              isAiFiltering
+                ? t("viewDisplay.aiFilter.cancelFilterTooltip", "点击取消筛选 AI 执行任务")
+                : t("viewDisplay.aiFilter.filterTooltip", "点击一键筛选正在 AI 执行的任务")
+            }
           >
             <BotIcon className={cn("size-3.5", totalActiveAiCount > 0 && !isAiFiltering && "animate-pulse")} />
             <span>
-              {totalActiveAiCount > 0 ? `${totalActiveAiCount} 个 ` : ''}AI 执行中
-              {isAiFiltering ? " (已筛选)" : ""}
+              {totalActiveAiCount > 0
+                ? t("viewDisplay.aiFilter.executingCount", { count: totalActiveAiCount })
+                : t("viewDisplay.aiFilter.executing", "AI 执行中")}
+              {isAiFiltering ? ` (${t("viewDisplay.aiFilter.filtered", "已筛选")})` : ""}
             </span>
           </button>
         }
@@ -461,18 +467,18 @@ export function TasksPage() {
               if (v === 'board' && groupBy === 'none') setGroupBy('status');
             },
             viewOptions: [
-              { value: 'list', label: t('task.view.list', 'List'), icon: List },
-              { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
-              { value: 'gantt', label: t('task.view.gantt', 'Gantt'), icon: CalendarRange },
-              { value: 'table', label: 'Table', icon: TableProperties },
+              { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+              { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
+              { value: 'gantt', label: t('viewDisplay.views.gantt', 'Gantt'), icon: CalendarRange },
+              { value: 'table', label: t('viewDisplay.views.table', 'Table'), icon: TableProperties },
             ],
             groupBy,
             onGroupByChange: (g) => setGroupBy(g as GroupBy),
             groupByOptions: [
-              ...(viewMode !== 'board' ? [{ value: 'none', label: t('task.groupBy.none', 'No grouping') }] : []),
-              { value: 'status', label: t('task.groupBy.status') },
-              { value: 'severity', label: t('task.groupBy.severity') },
-              { value: 'project', label: t('task.groupBy.project') },
+              ...(viewMode !== 'board' ? [{ value: 'none', label: t('viewDisplay.groupOptions.none', 'No grouping') }] : []),
+              { value: 'status', label: t('viewDisplay.groupOptions.status', 'Status') },
+              { value: 'severity', label: t('viewDisplay.groupOptions.severity', 'Severity') },
+              { value: 'project', label: t('viewDisplay.groupOptions.project', 'Project') },
             ],
             orderBy,
             onOrderByChange: setOrderBy,

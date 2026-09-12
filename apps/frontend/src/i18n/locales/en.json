@@ -56,7 +56,9 @@
     "createdAt": "Created at",
     "updatedAt": "Updated at",
     "archive": "Archive",
-    "dragToSort": "Drag to reorder"
+    "dragToSort": "Drag to reorder",
+    "download": "Download",
+    "export": "Export"
   },
   "workspace": {
     "title": "New Workspace",
@@ -1086,6 +1088,12 @@
       "messages": {
         "noBugs": "No bugs found"
       }
+    },
+    "view": {
+      "list": "List",
+      "board": "Board",
+      "gantt": "Gantt",
+      "table": "Table"
     }
   },
   "project": {
@@ -3920,5 +3928,81 @@
       "capability": "Capability"
     },
     "atomsList": "Memory atoms"
+  },
+  "viewDisplay": {
+    "title": "Display Options",
+    "display": "Display",
+    "views": {
+      "list": "List",
+      "board": "Board",
+      "gantt": "Gantt",
+      "table": "Table"
+    },
+    "sections": {
+      "grouping": "Grouping",
+      "subGrouping": "Sub-grouping",
+      "ordering": "Ordering",
+      "completedIssues": "Completed issues",
+      "listOptions": "List options",
+      "boardOptions": "Board options",
+      "ganttOptions": "Gantt options",
+      "tableOptions": "Table options",
+      "viewOptions": "View options",
+      "displayProperties": "Display properties"
+    },
+    "groupOptions": {
+      "none": "No grouping",
+      "status": "Status",
+      "severity": "Severity",
+      "priority": "Priority",
+      "project": "Project",
+      "milestone": "Milestone"
+    },
+    "orderOptions": {
+      "priority": "Priority",
+      "dueDate": "Due date",
+      "created": "Created",
+      "updated": "Updated",
+      "title": "Title"
+    },
+    "orderDirections": {
+      "asc": "Ascending",
+      "desc": "Descending",
+      "ascPrompt": "Ascending (click to desc)",
+      "descPrompt": "Descending (click to asc)"
+    },
+    "completedFilters": {
+      "all": "All",
+      "active": "Active only",
+      "completed": "Completed only"
+    },
+    "switches": {
+      "showSubIssues": "Show sub-issues",
+      "showEmptyGroups": "Show empty groups"
+    },
+    "properties": {
+      "id": "ID",
+      "status": "Status",
+      "assignee": "Assignee",
+      "priority": "Priority",
+      "project": "Project",
+      "dueDate": "Due date",
+      "milestone": "Milestone",
+      "labels": "Labels",
+      "links": "Links",
+      "timeInStatus": "Time in status",
+      "created": "Created",
+      "updated": "Updated",
+      "aiExecution": "AI State"
+    },
+    "aiFilter": {
+      "executingCount": "{{count}} AI Running",
+      "executing": "AI Running",
+      "filtered": "Filtered",
+      "cancelFilterTooltip": "Click to clear AI task filter",
+      "filterTooltip": "Click to filter AI executing tasks",
+      "cancelFilterTooltipBug": "Click to clear AI bug filter",
+      "filterTooltipBug": "Click to filter AI executing bugs"
+    }
   }
 }

@@ -6,6 +6,7 @@ import {
   type ComponentProps,
   type ReactNode,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Bot,
   Bug,
@@ -82,6 +83,8 @@ export interface ToolbarMenuItem {
 }
 
 export interface ToolbarMenuSlot {
+  /** 自定义按钮文案（未传时按插槽类型采用默认国际化） */
+  label?: string;
   /** 完全自定义按钮+弹层节点（如二级级联筛选菜单 FilterCascadeMenu），提供时优先于 content/items */
   render?: () => ReactNode;
   /** 高级显示弹窗配置（直接渲染 Linear 风格 ViewDisplayPopover） */
@@ -811,6 +814,8 @@ export function ToolbarRow({
   extraActions,
   actions,
 }: ToolbarRowProps) {
+  const { t } = useTranslation();
+
   // 当 layout 为 centered 时优先居中；若未显式指定，当选项 > 3 种时自动下拉收纳（兼容历史规则）
   const styleLayout =
     viewStyle?.layout === "centered" || viewStyle?.layout === "dropdown"
@@ -874,18 +879,30 @@ export function ToolbarRow({
           filterMenu.render ? (
             filterMenu.render()
           ) : (
-            <ToolbarMenuButton icon={Filter} label="Filter" menu={filterMenu} />
+            <ToolbarMenuButton
+              icon={Filter}
+              label={filterMenu.label ?? t("common.filters", "Filter")}
+              menu={filterMenu}
+            />
           )
         ) : null}
         {displayMenu ? (
           displayMenu.render ? (
             displayMenu.render()
           ) : (
-            <ToolbarMenuButton icon={SlidersHorizontal} label="Display" menu={displayMenu} />
+            <ToolbarMenuButton
+              icon={SlidersHorizontal}
+              label={displayMenu.label ?? t("viewDisplay.display", "Display")}
+              menu={displayMenu}
+            />
           )
         ) : null}
         {downloadMenu ? (
-          <ToolbarMenuButton icon={Download} label="Download" menu={downloadMenu} />
+          <ToolbarMenuButton
+            icon={Download}
+            label={downloadMenu.label ?? t("common.download", "Download")}
+            menu={downloadMenu}
+          />
         ) : null}
         {extraActions?.map((action) => (
           <ExtraActionButton key={action.id} action={action} />

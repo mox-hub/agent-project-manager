@@ -226,14 +226,6 @@ export const taskCardModel: BoardCardModel<Task> = {
   row3: (task) => taskCardRow3(task),
 };
 
-/** Bug 卡片：severity 左边框 */
-const SEVERITY_BORDER: Record<string, string> = {
-  critical: 'border-l-accent-red',
-  high: 'border-l-accent-yellow',
-  medium: 'border-l-accent-blue',
-  low: 'border-l-muted-foreground/40',
-};
-
 const SEVERITY_BADGE_CLASS: Record<string, string> = {
   critical: 'bg-accent-red/15 text-accent-red border-accent-red/30',
   high: 'bg-accent-yellow/15 text-accent-yellow border-accent-yellow/30',
@@ -353,5 +345,4 @@ export const bugCardModel: BoardCardModel<Task> = {
   title: (bug) => bug.title,
   row1: (bug) => bugCardRow1(bug),
   row3: (bug) => bugCardRow3(bug),
-  className: (bug) => cn('border-l-3', SEVERITY_BORDER[bug.severity ?? 'low'] ?? SEVERITY_BORDER.low),
 };

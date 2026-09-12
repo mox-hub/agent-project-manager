@@ -56,7 +56,9 @@
     "createdAt": "创建时间",
     "updatedAt": "更新时间",
     "archive": "归档",
-    "dragToSort": "拖动排序"
+    "dragToSort": "拖动排序",
+    "download": "下载",
+    "export": "导出"
   },
   "workspace": {
     "title": "新建工作区",
@@ -1086,6 +1088,12 @@
       "messages": {
         "noBugs": "暂无 Bug"
       }
+    },
+    "view": {
+      "list": "列表",
+      "board": "看板",
+      "gantt": "甘特图",
+      "table": "表格"
     }
   },
   "project": {
@@ -3920,5 +3928,81 @@
       "capability": "能力"
     },
     "atomsList": "记忆原子"
+  },
+  "viewDisplay": {
+    "title": "显示配置",
+    "display": "显示",
+    "views": {
+      "list": "列表",
+      "board": "看板",
+      "gantt": "甘特图",
+      "table": "表格"
+    },
+    "sections": {
+      "grouping": "分组",
+      "subGrouping": "次级分组",
+      "ordering": "排序",
+      "completedIssues": "已完成工单",
+      "listOptions": "列表选项",
+      "boardOptions": "看板选项",
+      "ganttOptions": "甘特图选项",
+      "tableOptions": "表格选项",
+      "viewOptions": "视图选项",
+      "displayProperties": "展示属性"
+    },
+    "groupOptions": {
+      "none": "不分组",
+      "status": "状态",
+      "severity": "严重度",
+      "priority": "优先级",
+      "project": "项目",
+      "milestone": "里程碑"
+    },
+    "orderOptions": {
+      "priority": "优先级",
+      "dueDate": "截止日期",
+      "created": "创建时间",
+      "updated": "更新时间",
+      "title": "标题"
+    },
+    "orderDirections": {
+      "asc": "升序",
+      "desc": "降序",
+      "ascPrompt": "升序（点击切换为降序）",
+      "descPrompt": "降序（点击切换为升序）"
+    },
+    "completedFilters": {
+      "all": "全部",
+      "active": "仅进行中",
+      "completed": "仅已完成"
+    },
+    "switches": {
+      "showSubIssues": "显示子工单",
+      "showEmptyGroups": "显示空分组"
+    },
+    "properties": {
+      "id": "编号",
+      "status": "状态",
+      "assignee": "负责人",
+      "priority": "优先级",
+      "project": "所属项目",
+      "dueDate": "截止日期",
+      "milestone": "里程碑",
+      "labels": "标签",
+      "links": "关联",
+      "timeInStatus": "停留时间",
+      "created": "创建时间",
+      "updated": "更新时间",
+      "aiExecution": "AI 状态"
+    },
+    "aiFilter": {
+      "executingCount": "{{count}} 个 AI 执行中",
+      "executing": "AI 执行中",
+      "filtered": "已筛选",
+      "cancelFilterTooltip": "点击取消筛选 AI 执行任务",
+      "filterTooltip": "点击一键筛选正在 AI 执行的任务",
+      "cancelFilterTooltipBug": "点击取消筛选 AI 执行 Bug",
+      "filterTooltipBug": "点击一键筛选正在 AI 执行的 Bug"
+    }
   }
 }

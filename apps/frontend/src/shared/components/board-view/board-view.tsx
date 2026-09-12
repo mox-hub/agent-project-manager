@@ -778,12 +778,6 @@ function DefaultBoardCard<T extends { id: string }>({
       data-board-column={column.id}
       data-ai-entity={card.dataEntity?.(item)}
     >
-      {isAi ? (
-        <div
-          className="h-1 -mx-3 -mt-2.5 mb-2 rounded-t-xl bg-accent-purple ring-1 ring-accent-purple/30 animate-pulse"
-          title="AI 接管执行中"
-        />
-      ) : null}
       {card.row1 ? (
         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
           {card.row1(item)}
