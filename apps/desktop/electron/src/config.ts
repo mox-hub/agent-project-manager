@@ -10,10 +10,14 @@ export interface AppConfig {
   serverEntry: string;
   serverCwd: string;
   frontendDist: string;
+  /** apm-runtime 守护进程入口（apps/cli 构建产物）；dev 未构建时报可操作错误 */
+  cliEntry: string;
   userDataDir: string;
   logsDir: string;
   databasePath: string;
   uploadDir: string;
+  /** 守护进程配置文件（APM_CONFIG_PATH 指向）——与用户手动 CLI 的 ~/.apm 隔离 */
+  apmConfigPath: string;
   jwtSecret: string;
   integrationKey: string;
   /** 打包模式指向随包分发的 node.exe；开发模式为 null（回退 Electron 内置 Node，见 setup.ts） */
@@ -39,17 +43,20 @@ export function resolveAppConfig(): AppConfig {
 
   let serverCwd: string;
   let frontendDist: string;
+  let cliEntry: string;
   let nodeExe: string | null = null;
 
   if (isDevMode()) {
     const root = resolveWorkspaceRoot();
     serverCwd = path.join(root, 'apps', 'server');
     frontendDist = path.join(root, 'apps', 'frontend', 'dist');
+    cliEntry = path.join(root, 'apps', 'cli', 'dist', 'runtime', 'index.js');
   } else {
     // Release：运行时资产经 electron-builder extraResources 落在 <安装目录>/resources/ 下
     const resources = process.resourcesPath;
     serverCwd = path.join(resources, 'server');
     frontendDist = path.join(resources, 'frontend');
+    cliEntry = path.join(resources, 'cli', 'dist', 'runtime', 'index.js');
     nodeExe = path.join(resources, 'bin', process.platform === 'win32' ? 'node.exe' : 'node');
   }
 
@@ -60,10 +67,12 @@ export function resolveAppConfig(): AppConfig {
     serverEntry,
     serverCwd,
     frontendDist,
+    cliEntry,
     userDataDir,
     logsDir,
     databasePath,
     uploadDir,
+    apmConfigPath: path.join(userDataDir, 'apm-config.json'),
     jwtSecret: '',
     integrationKey: '',
     nodeExe,

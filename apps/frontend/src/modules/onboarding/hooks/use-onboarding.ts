@@ -3,6 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { onboardingApi, type OnboardingData, type CreateProjectData } from '../api/onboarding-api';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/infrastructure/store/app-store';
+import { isTauriAvailable } from '@/shared/types/electron-api';
+import { persistOnboardingToShell } from '@/shared/lib/desktop-session';
 
 export interface OnboardingStep {
   id: string;
@@ -51,6 +53,36 @@ const DEFAULT_STEPS: OnboardingStep[] = [
   },
 ];
 
+/** 桌面模式在欢迎页后插入「工作目录」步骤（AI 执行面的工作根目录，可跳过） */
+const DESKTOP_EXTRA_STEPS: Record<string, OnboardingStep | null> = {
+  'workspace-root': {
+    id: 'workspace-root',
+    title: '工作目录',
+    description: '设置 AI 同事执行任务的工作目录',
+    status: 'pending',
+  },
+};
+
+function buildSteps(isDesktop: boolean): OnboardingStep[] {
+  if (!isDesktop) {
+    return DEFAULT_STEPS.map((step, index) => ({
+      ...step,
+      status: index === 0 ? ('current' as const) : ('pending' as const),
+    }));
+  }
+  const steps: OnboardingStep[] = [];
+  for (const step of DEFAULT_STEPS) {
+    steps.push({ ...step, status: steps.length === 0 ? 'current' : 'pending' });
+    const extra = DESKTOP_EXTRA_STEPS[step.id];
+    if (extra) {
+      steps.push({ ...extra, status: 'pending' });
+    }
+  }
+  return steps;
+}
+
+const isDesktopShell = isTauriAvailable();
+
 export function useOnboarding() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -58,10 +90,7 @@ export function useOnboarding() {
 
   const [state, setState] = useState<OnboardingState>({
     currentStep: 0,
-    steps: DEFAULT_STEPS.map((step, index) => ({
-      ...step,
-      status: index === 0 ? 'current' : 'pending',
-    })),
+    steps: buildSteps(isDesktopShell),
     data: {},
     isCompleted: false,
   });
@@ -150,6 +179,8 @@ export function useOnboarding() {
       })),
     }));
     setOnboardingCompleted(true);
+    // 桌面模式镜像到壳侧：动态端口漂移换 origin 后向导不重弹
+    persistOnboardingToShell(true);
     queryClient.invalidateQueries({ queryKey: ['user-settings'] });
   }, [queryClient, setOnboardingCompleted]);
 
@@ -191,10 +222,7 @@ export function useOnboarding() {
   const resetOnboarding = useCallback(() => {
     setState({
       currentStep: 0,
-      steps: DEFAULT_STEPS.map((step, index) => ({
-        ...step,
-        status: index === 0 ? 'current' : 'pending',
-      })),
+      steps: buildSteps(isDesktopShell),
       data: {},
       isCompleted: false,
     });

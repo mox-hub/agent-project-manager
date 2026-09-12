@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useOnboarding } from '../hooks/use-onboarding';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
+import { invoke } from '@/shared/types/electron-api';
 import {
   Rocket,
   FolderPlus,
@@ -24,6 +25,9 @@ import {
   Users,
   Zap,
   Shield,
+  FolderOpen,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 
 interface StepContentProps {
@@ -36,8 +40,8 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
   const features = [
     { icon: FolderPlus, title: '项目管理', description: '创建和管理项目，跟踪进度' },
     { icon: GitBranch, title: 'Git 集成', description: '连接仓库，管理分支和提交' },
-    { icon: Bot, title: 'AI 助手', description: 'AI 驱动的任务自动化' },
-    { icon: Zap, title: '终端集成', description: '内置终端，实时执行命令' },
+    { icon: Bot, title: 'AI 同事', description: '读写任务、执行代码、发起审批' },
+    { icon: Zap, title: '治理闭环', description: 'AI 代写方案，您只需确认把关' },
   ];
 
   return (
@@ -65,6 +69,20 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
         ))}
       </div>
 
+      <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+        <div className="flex items-start gap-3">
+          <Bot className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+          <div>
+            <p className="text-sm font-medium">认识您的 AI 同事</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              APM 内置 AI 同事可以像团队成员一样接任务、写代码、提交验收证据；
+              所有执行都在验收门禁与您的审批之下进行——AI 负责干活，您负责决策。
+              后续步骤中配置好 AI 服务即可启用。
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center gap-2 rounded-lg bg-muted/30 p-4">
         <Sparkles className="h-5 w-5 text-primary" />
         <p className="text-sm text-muted-foreground">
@@ -78,6 +96,111 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
         </Button>
         <Button onClick={onNext}>
           开始设置
+          <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      </DialogFooter>
+    </div>
+  );
+}
+
+function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
+  const [roots, setRoots] = useState<string[]>([]);
+  const [isChoosing, setIsChoosing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    invoke<{ roots: string[] }>('get_workspace_roots')
+      .then((r) => setRoots(r.roots))
+      .catch(() => setRoots([]));
+  }, []);
+
+  const handleChoose = async () => {
+    setError(null);
+    setIsChoosing(true);
+    try {
+      const { path } = await invoke<{ path: string | null }>('choose_directory', {
+        title: '选择 AI 执行的工作目录',
+      });
+      if (path && !roots.includes(path)) {
+        const next = [...roots, path];
+        const { roots: saved } = await invoke<{ roots: string[] }>('set_workspace_roots', {
+          roots: next,
+        });
+        setRoots(saved);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsChoosing(false);
+    }
+  };
+
+  const handleRemove = async (root: string) => {
+    const next = roots.filter((r) => r !== root);
+    try {
+      const { roots: saved } = await invoke<{ roots: string[] }>('set_workspace_roots', {
+        roots: next,
+      });
+      setRoots(saved);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <DialogHeader>
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <FolderOpen className="h-7 w-7 text-primary" />
+        </div>
+        <DialogTitle className="text-center text-xl">配置工作目录</DialogTitle>
+        <DialogDescription className="text-center">
+          AI 同事将在这些目录内读写代码、执行命令
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          选择一个存放项目代码的文件夹。您可以稍后在「设置 → 运行时」中随时修改。
+        </p>
+
+        {roots.length > 0 && (
+          <div className="space-y-1.5">
+            {roots.map((root) => (
+              <div
+                key={root}
+                className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2"
+              >
+                <span className="truncate font-mono text-xs text-foreground">{root}</span>
+                <button
+                  type="button"
+                  onClick={() => void handleRemove(root)}
+                  className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  aria-label={`移除 ${root}`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Button type="button" variant="outline" onClick={() => void handleChoose()} disabled={isChoosing} className="w-full">
+          <Plus className="mr-1 h-4 w-4" />
+          {isChoosing ? '选择中...' : '选择目录'}
+        </Button>
+
+        {error && (
+          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        )}
+      </div>
+
+      <DialogFooter className="gap-2 sm:gap-0">
+        <Button type="button" variant="outline" onClick={onSkip}>
+          跳过
+        </Button>
+        <Button onClick={onNext}>
+          下一步
           <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </DialogFooter>
@@ -455,6 +578,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
     state,
     progress,
     currentStepData,
+    isLastStep,
     nextStep,
     prevStep,
     skipStep,
@@ -470,31 +594,34 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
       onSkip: () => skipStep(currentStepData?.id || ''),
     };
 
-    switch (state.currentStep) {
-      case 0:
+    // 按步骤 id 分发（桌面模式会在 welcome 后插入 workspace-root 步骤，索引随模式漂移）
+    switch (currentStepData?.id) {
+      case 'welcome':
         return <WelcomeStep {...commonProps} isPending={false} />;
-      case 1:
+      case 'workspace-root':
+        return <WorkspaceRootStep {...commonProps} isPending={false} />;
+      case 'create-project':
         return (
           <CreateProjectStep
             {...commonProps}
             isPending={createProject.isPending}
           />
         );
-      case 2:
+      case 'connect-repository':
         return (
           <ConnectRepositoryStep
             {...commonProps}
             isPending={connectRepository.isPending}
           />
         );
-      case 3:
+      case 'add-ai':
         return (
           <ConfigureAiStep
             {...commonProps}
             isPending={configureAi.isPending}
           />
         );
-      case 4:
+      case 'complete':
         return (
           <CompleteStep
             onFinish={() => finishOnboarding.mutate()}
@@ -520,7 +647,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
 
         <div className="min-h-100">{renderStepContent()}</div>
 
-        {state.currentStep < 4 && state.currentStep > 0 && (
+        {!isLastStep && state.currentStep > 0 && (
           <div className="mt-4 flex items-center justify-between border-t pt-4">
             <Button
               variant="ghost"

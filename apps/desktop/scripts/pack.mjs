@@ -1,10 +1,11 @@
 /**
- * 桌面端打包资源准备（CAP-A-14）——由 tauri build 的 beforeBuildCommand 自动触发，也可 `pnpm pack:resources` 单跑。
+ * 桌面端打包资源准备（CAP-A-14）——`pnpm desktop:pack` / `pnpm pack:resources` 触发。
  *
- * 产出到 src-tauri/target/desktop-pack/（tauri.conf bundle.resources 打进安装包）：
+ * 产出到 src-tauri/target/desktop-pack/（electron-builder extraResources 原样拷进安装包 resources/）：
  *   server/    自包含的 server 运行时（npm 平铺 node_modules + dist + prisma + 预生成客户端）
- *   frontend/  前端构建产物（server 静态托管用；webview 本体走 tauri 内嵌资源）
- *   bin/node.exe  Node 运行时（Rust 侧 resolve_node 消费）
+ *   frontend/  前端构建产物（server 静态托管用）
+ *   cli/       apm-runtime 守护进程自包含运行时（@apm/shared 以 file: 引用随装；壳自动拉起）
+ *   bin/node.exe  Node 运行时（server 承载路径 A 降级兜底用）
  *
  * 路径刻意放在 target/ 下（而非 src-tauri/resources/）：target 本就是构建产物区，
  * 且全新的稳定路径可避开历史产物上残留的文件锁（实测 Defender 扫描/进程 CWD 会锁住
@@ -131,6 +132,59 @@ run(
     env: { ...process.env, DATABASE_URL: 'file:./pack-placeholder.db' },
   },
 );
+
+// 3c. apm-runtime 守护进程（apps/cli）自包含产物——AI 执行面随包（壳自动拉起 + 设置页可控制）。
+//     @apm/shared 是 workspace 包，npm 无法解析 workspace: 协议——随 staging 以 file: 引用自带
+//     （shared 的 axios/zod 由 npm 一并解析安装），与 server staging 同一套「剥 devDeps 再裸装」模式。
+run('pnpm', ['--filter', '@apm/cli', 'build'], { cwd: repoRoot });
+const cliSrc = path.join(repoRoot, 'apps', 'cli');
+const cliStaging = path.join(packRoot, 'cli');
+const sharedSrc = path.join(repoRoot, 'packages', 'apm-shared');
+if (!existsSync(path.join(cliSrc, 'dist', 'runtime', 'index.js'))) {
+  throw new Error('cli dist/runtime/index.js 不存在，@apm/cli build 疑似失败');
+}
+if (!existsSync(path.join(sharedSrc, 'dist', 'index.js'))) {
+  throw new Error('shared dist/index.js 不存在，@apm/shared build 疑似失败');
+}
+cpSync(path.join(cliSrc, 'dist'), path.join(cliStaging, 'dist'), { recursive: true });
+cpSync(path.join(sharedSrc, 'dist'), path.join(cliStaging, 'shared', 'dist'), { recursive: true });
+const cliPkg = JSON.parse(readFileSync(path.join(cliSrc, 'package.json'), 'utf-8'));
+const sharedPkg = JSON.parse(readFileSync(path.join(sharedSrc, 'package.json'), 'utf-8'));
+// shared staging 的 package.json 保留 prod dependencies（axios/zod），剥掉 private 之外的 dev 字段
+writeFileSync(
+  path.join(cliStaging, 'shared', 'package.json'),
+  JSON.stringify(
+    {
+      name: sharedPkg.name,
+      version: sharedPkg.version,
+      main: sharedPkg.main,
+      types: sharedPkg.types,
+      dependencies: sharedPkg.dependencies,
+    },
+    null,
+    2,
+  ),
+);
+writeFileSync(
+  path.join(cliStaging, 'package.json'),
+  JSON.stringify(
+    {
+      name: cliPkg.name,
+      version: cliPkg.version,
+      private: true,
+      dependencies: {
+        '@apm/shared': 'file:./shared',
+        commander: cliPkg.dependencies.commander,
+        'socket.io-client': cliPkg.dependencies['socket.io-client'],
+      },
+    },
+    null,
+    2,
+  ),
+);
+run('npm', ['install', '--omit=dev', '--no-audit', '--no-fund', '--legacy-peer-deps', '--loglevel=error'], {
+  cwd: cliStaging,
+});
 
 // 5. Node 运行时 + 前端 dist
 cpSync(process.execPath, path.join(binStaging, 'node.exe'));

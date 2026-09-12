@@ -1,7 +1,7 @@
 /**
  * Electron 主进程入口（翻译自 Tauri src-tauri/src/lib.rs 的编排职责）。
- * 启动顺序：目录/密钥（同步毫秒级）→ 窗口（loading 页）→ 后台 db push →
- * 自动拉起 server → 健康检查通过后窗口切换到正式页面。
+ * 启动顺序：目录/密钥（同步毫秒级）→ 窗口（品牌启动屏）→ 后台 db push →
+ * 自动拉起 server → 健康检查通过 → 自动拉起 apm-runtime 守护进程 → 切换到正式页面。
  * 窗口加载源：dev 优先 vite（5173，HMR）；否则 server 静态托管的前端（同源免 CORS，
  * server 侧自带 SPA history fallback）。
  */
@@ -10,7 +10,9 @@ import net from 'node:net';
 import path from 'node:path';
 import { commandHandlers } from './commands';
 import { isDevMode, resolveAppConfig } from './config';
+import { bootErrorScript, bootScreenUrl, bootStatusScript } from './loading';
 import { initLogger, logger } from './logger';
+import { startRuntimeDaemon } from './runtime-daemon';
 import { ensureSecrets, initializeDirs, runDbPushIfNeeded } from './setup';
 import { setInitError, state, stopAllProcesses } from './state';
 
@@ -31,21 +33,34 @@ function portInUse(port: number): Promise<boolean> {
   });
 }
 
-function pageUrl(title: string, detail: string): string {
-  const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
-<title>${title}</title><style>
-body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;display:flex;
-min-height:100vh;align-items:center;justify-content:center;margin:0}
-main{text-align:center;max-width:560px;padding:32px}
-h1{font-size:18px;font-weight:600;margin:0 0 12px}
-p{font-size:13px;line-height:1.7;color:#8b949e;white-space:pre-wrap;word-break:break-all;margin:0}
-.spin{width:28px;height:28px;margin:0 auto 20px;border:3px solid #30363d;
-border-top-color:#58a6ff;border-radius:50%;animation:s 1s linear infinite}
-@keyframes s{to{transform:rotate(360deg)}}
-.hidden{display:none}</style></head>
-<body><main><div class="spin${detail ? ' hidden' : ''}"></div>
-<h1>${title}</h1><p>${detail}</p></main></body></html>`;
-  return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
+/**
+ * 启动屏阶段文案。did-finish-load 前先缓冲（data URL 文档尚未就绪），就绪后直通
+ * executeJavaScript 原地更新——不重新 loadURL，避免闪屏。
+ */
+let bootScreenReady = false;
+let bootStatus = { message: '正在启动…', detail: '' };
+
+function setBootStatus(message: string, detail = ''): void {
+  bootStatus = { message, detail };
+  if (bootScreenReady && mainWindow) {
+    void mainWindow.webContents.executeJavaScript(bootStatusScript(message, detail), true);
+  }
+}
+
+function showBootError(message: string, detail = ''): void {
+  logger.error(`${message}${detail ? `: ${detail}` : ''}`);
+  if (mainWindow) {
+    void mainWindow.webContents.executeJavaScript(bootErrorScript(message, detail), true);
+  }
+}
+
+/** 调试模式：dev 自动开；打包版经 --devtools 参数或 APM_DESKTOP_DEBUG=1 打开（v0.6.1 体验切片）。 */
+function shouldAutoOpenDevTools(): boolean {
+  return (
+    isDevMode() ||
+    process.argv.includes('--devtools') ||
+    process.env.APM_DESKTOP_DEBUG === '1'
+  );
 }
 
 function createWindow(): void {
@@ -65,9 +80,30 @@ function createWindow(): void {
   });
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   mainWindow.once('ready-to-show', () => mainWindow?.show());
-  mainWindow.loadURL(pageUrl('正在启动 Agent Project Manager…', ''));
+  mainWindow.webContents.once('did-finish-load', () => {
+    bootScreenReady = true;
+    setBootStatus(bootStatus.message, bootStatus.detail);
+  });
+  // F12 / Ctrl+Shift+I 随时开关 DevTools（打包版调试模式入口，命令面另有 toggle_devtools）
+  mainWindow.webContents.on('before-input-event', (_event, input) => {
+    const isF12 = input.type === 'keyDown' && input.key === 'F12';
+    const isDevToolsChord =
+      input.type === 'keyDown' && input.control && input.shift && input.key.toLowerCase() === 'i';
+    if (isF12 || isDevToolsChord) {
+      const wc = mainWindow?.webContents;
+      if (wc) {
+        if (wc.isDevToolsOpened()) {
+          wc.closeDevTools();
+        } else {
+          wc.openDevTools({ mode: 'detach' });
+        }
+      }
+    }
+  });
+  mainWindow.loadURL(bootScreenUrl());
   mainWindow.on('closed', () => {
     mainWindow = null;
+    bootScreenReady = false;
   });
 }
 
@@ -88,19 +124,24 @@ async function loadAppSurface(): Promise<void> {
   logger.info(`窗口已加载: ${target}`);
 }
 
-function showFatalError(message: string): void {
-  logger.error(message);
-  const win = mainWindow;
-  if (!win) {
+/** server 健康后自动拉起 apm-runtime 守护进程；失败仅记日志，不阻断主流程（设置页可手动重试）。 */
+async function autoStartRuntimeDaemon(): Promise<void> {
+  const port = state.backend?.info.port;
+  if (!port) {
     return;
   }
-  void win.loadURL(
-    pageUrl('启动失败', `${message}\n\n可点击托盘/日志目录查看 desktop-main.log 排查。\n数据目录：${state.config.userDataDir}`),
-  );
+  try {
+    await startRuntimeDaemon(port);
+  } catch (err) {
+    logger.warn(
+      `守护进程自动启动失败（不影响本地服务主流程）: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
 }
 
 async function bootstrapServer(): Promise<void> {
   try {
+    setBootStatus('正在准备数据目录…');
     try {
       runDbPushIfNeeded(state.config);
       setInitError(null);
@@ -110,13 +151,21 @@ async function bootstrapServer(): Promise<void> {
       logger.error(`应用初始化失败: ${message}`);
     }
 
-    if (!state.initError) {
-      await commandHandlers.start_all_services();
+    if (state.initError) {
+      throw new Error(`应用初始化失败: ${state.initError}`);
     }
+
+    setBootStatus('正在启动本地服务…', '首次启动需要初始化数据库，可能需要一小会儿');
+    await commandHandlers.start_all_services();
+
+    setBootStatus('正在连接 AI 执行运行时…');
+    await autoStartRuntimeDaemon();
+
+    setBootStatus('正在加载界面…');
     await loadAppSurface();
     logger.info('应用启动完成');
   } catch (err) {
-    showFatalError(err instanceof Error ? err.message : String(err));
+    showBootError(err instanceof Error ? err.message : String(err), `数据目录：${state.config.userDataDir}\n日志：${state.config.logsDir}`);
   }
 }
 
@@ -136,7 +185,7 @@ app.whenReady().then(() => {
   logger.info(
     `desktop 壳启动: mode=${isDevMode() ? 'development' : 'production'} transport=${
       process.env.APM_SERVER_TRANSPORT ?? 'utility'
-    }`,
+    } devtools=${shouldAutoOpenDevTools() ? 'on' : 'off'}`,
   );
 
   // 目录与密钥同步就绪（毫秒级）——服务启动与 db push 都依赖它们，不与后台初始化竞态
@@ -154,6 +203,6 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
-  // 退出时杀掉全部托管子进程，避免 server 在任务管理器残留（kill() 为终止信号即返回）
+  // 退出时杀掉全部托管子进程（server + 守护进程），避免任务管理器残留
   void stopAllProcesses();
 });

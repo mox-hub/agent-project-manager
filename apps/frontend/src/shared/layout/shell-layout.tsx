@@ -20,6 +20,7 @@ import { BottomDock } from '@/shared/components/bottom-dock';
 import { GlobalCreateDialog } from '@/shared/components/global-create-dialog';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { AISlotLayer } from '@/shared/ai-slot/ai-slot-layer';
+import { OnboardingGate } from '@/modules/onboarding/components/onboarding-gate';
 import { cn } from '@/lib/utils';
 import { StatusPill } from '@/components/ui/status-pill';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -634,6 +635,9 @@ export function ShellLayout() {
 
           {/* 全局统一创建面板（Dock「新建」等与页面无关的创建入口） */}
           <GlobalCreateDialog />
+
+          {/* 桌面端首启初始化向导（桌面模式且未完成时弹出） */}
+          <OnboardingGate />
         </div>
       </TabsProvider>
       </ShellSidebarProvider>

@@ -1,5 +1,6 @@
 import { api } from '@/infrastructure/api-client';
 import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+import { persistWorkspaceToShell } from '@/shared/lib/desktop-session';
 
 /** 请求体单源于契约 CreateWorkspaceDto（name/path） */
 export type CreateWorkspaceRequest =
@@ -27,6 +28,7 @@ export function switchWorkspace(id: string, redirect = '/login') {
   } else {
     localStorage.setItem(WORKSPACE_STORAGE_KEY, id);
   }
+  persistWorkspaceToShell(id === 'default' ? null : id);
   api.post(`/workspaces/${id}/activate`).catch(() => undefined);
   window.location.href = redirect;
 }

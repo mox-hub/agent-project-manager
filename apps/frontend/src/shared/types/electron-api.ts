@@ -37,6 +37,21 @@ export interface DesktopActionResult {
   error?: string;
 }
 
+/** 壳侧跨 origin 持久化的会话状态（desktop-state.json；键名与前端 localStorage 键对齐） */
+export interface DesktopPersistentState {
+  access_token?: string;
+  'apm-workspace-id'?: string;
+  onboarding_completed?: boolean;
+}
+
+export interface RuntimeDaemonStatus {
+  running: boolean;
+  pid?: number;
+  startedAt?: string;
+  configPath: string;
+  workspaceRoots: string[];
+}
+
 export interface TauriAPI {
   getAppInfo: () => Promise<DesktopAppInfo>;
   getBackendStatus: () => Promise<BackendStatus>;

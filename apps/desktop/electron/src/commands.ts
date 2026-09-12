@@ -3,7 +3,7 @@
  * 命令名沿用 Tauri snake_case（前端 invoke('get_backend_status') 字面参数不变）；
  * 返回数据字段名一律 camelCase（前端接口契约，见 state.ts 顶部说明）。
  */
-import { shell } from 'electron';
+import { BrowserWindow, dialog, shell } from 'electron';
 import fs from 'node:fs';
 import net from 'node:net';
 import pkg from '../../package.json';
@@ -14,7 +14,20 @@ import {
   waitForBackendHealth,
 } from './backend';
 import { isDevMode, type AppConfig } from './config';
+import {
+  clearDesktopStateKeys,
+  loadDesktopState,
+  saveDesktopState,
+  type DesktopPersistentState,
+} from './desktop-state';
 import { logger } from './logger';
+import {
+  getRuntimeDaemonStatus,
+  readWorkspaceRoots,
+  startRuntimeDaemon,
+  stopRuntimeDaemon,
+  writeWorkspaceRoots,
+} from './runtime-daemon';
 import { initializeDirs, resolveNodeExe, runDbPushIfNeeded } from './setup';
 import { state, setInitError, type BackendInfo, type FrontendInfo } from './state';
 
@@ -255,6 +268,76 @@ export const commandHandlers = {
       setInitError(message);
       throw new Error(message);
     }
+  },
+
+  // ---------- 会话跨 origin 持久化（动态端口漂移下 localStorage 隔离的兜底） ----------
+
+  async get_desktop_state(): Promise<DesktopPersistentState> {
+    return loadDesktopState(state.config.userDataDir);
+  },
+
+  async set_desktop_state(args?: Partial<DesktopPersistentState>): Promise<DesktopPersistentState> {
+    return saveDesktopState(state.config.userDataDir, args ?? {});
+  },
+
+  async clear_desktop_state(args?: { keys?: string[] }): Promise<DesktopPersistentState> {
+    return clearDesktopStateKeys(
+      state.config.userDataDir,
+      args?.keys ?? ['access_token', 'apm-workspace-id', 'onboarding_completed'],
+    );
+  },
+
+  // ---------- apm-runtime 守护进程（AI 执行面） ----------
+
+  async get_runtime_daemon_status(): Promise<ReturnType<typeof getRuntimeDaemonStatus>> {
+    return getRuntimeDaemonStatus();
+  },
+
+  async start_runtime_daemon(): Promise<{ pid: number }> {
+    const port = state.backend?.info.port;
+    if (!port) {
+      throw new Error('后端未运行，守护进程无从注册——请先启动本地服务');
+    }
+    return startRuntimeDaemon(port);
+  },
+
+  async stop_runtime_daemon(): Promise<ActionResult> {
+    await stopRuntimeDaemon();
+    return { ok: true };
+  },
+
+  async get_workspace_roots(): Promise<{ roots: string[] }> {
+    return { roots: readWorkspaceRoots(state.config) };
+  },
+
+  async set_workspace_roots(args?: { roots?: string[] }): Promise<{ roots: string[] }> {
+    return { roots: writeWorkspaceRoots(state.config, args?.roots ?? []) };
+  },
+
+  /** 原生目录选择器（初始化向导「工作目录」步骤）；取消返回 null。 */
+  async choose_directory(args?: { title?: string }): Promise<{ path: string | null }> {
+    const win = BrowserWindow.getAllWindows()[0];
+    const result = await dialog.showOpenDialog(win, {
+      title: args?.title ?? '选择工作目录',
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    if (result.canceled || result.filePaths.length === 0) {
+      return { path: null };
+    }
+    return { path: result.filePaths[0] };
+  },
+
+  async toggle_devtools(): Promise<ActionResult> {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (!win) {
+      return { ok: false };
+    }
+    if (win.webContents.isDevToolsOpened()) {
+      win.webContents.closeDevTools();
+    } else {
+      win.webContents.openDevTools({ mode: 'detach' });
+    }
+    return { ok: true };
   },
 };
 
