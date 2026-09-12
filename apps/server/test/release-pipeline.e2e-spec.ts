@@ -22,7 +22,7 @@ import {
 const flush = () =>
   new Promise((resolve) => setImmediate(() => setImmediate(resolve)));
 
-async function waitFor(fn: () => Promise<boolean>, tries = 40): Promise<void> {
+async function waitFor(fn: () => Promise<boolean>, tries = 200): Promise<void> {
   for (let i = 0; i < tries; i += 1) {
     if (await fn()) return;
     await flush();
@@ -239,11 +239,23 @@ describe('驱动型发版全链 (e2e)', () => {
       .send({ action: 'accept' })
       .expect(201);
 
+    // applier 置 approved 后事件驱动发布异步执行——轻负载下可能已直达 released
+    await waitFor(async () => {
+      const detail = await wsHttp
+        .get(`/_api/releases/${releaseId}`)
+        .set(auth());
+      return ['approved', 'publishing', 'released'].includes(
+        detail.body.data?.status,
+      );
+    });
+
     const detail = await wsHttp
       .get(`/_api/releases/${releaseId}`)
       .set(auth())
       .expect(200);
-    expect(detail.body.data.status).toBe('approved');
+    expect(['approved', 'publishing', 'released']).toContain(
+      detail.body.data.status,
+    );
     expect(detail.body.data.approvedBy).toBeTruthy();
   });
 
