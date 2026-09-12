@@ -7,6 +7,10 @@
 # build output
 **/dist/
 **/build/
+# 例外：Electron 桌面壳 buildResources（icon.ico/品牌位图/installer.nsh——源资产非构建产物）；
+# 曾被上方 **/build/ 静默排除出库，CI 打包报 cannot find build/installerHeader.bmp
+!apps/desktop/build/
+!apps/desktop/build/**
 **/out/
 .next/
 refers/
