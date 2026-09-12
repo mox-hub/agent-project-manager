@@ -1,3 +1,6 @@
+/** 优雅关闭宽限：postMessage shutdown 后等守护进程收尾（socket 断开/锁释放），超时强杀 */
+const GRACEFUL_DAEMON_SHUTDOWN_TIMEOUT_MS = 3_000;
+
 /**
  * apm-runtime 守护进程托管（CAP-A-14 体验切片：运行时自动启动 + 手动控制）。
  *
@@ -205,7 +208,15 @@ export async function startRuntimeDaemon(backendPort: number): Promise<{ pid: nu
     stop: () =>
       new Promise((resolve) => {
         proc.once('exit', () => resolve());
-        proc.kill();
+        // 优雅优先（P2）：daemon 的 cli 入口经 parentPort 桥接到 SIGTERM 同一 shutdown
+        // 路径（socket.close + 锁释放）；Windows kill() 无 SIGTERM，超时强杀兜底
+        try {
+          proc.postMessage({ type: 'apm:shutdown' });
+        } catch {
+          // 进程已死，exit 事件即达
+        }
+        const killTimer = setTimeout(() => proc.kill(), GRACEFUL_DAEMON_SHUTDOWN_TIMEOUT_MS);
+        proc.once('exit', () => clearTimeout(killTimer));
       }),
   };
 

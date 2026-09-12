@@ -3,7 +3,7 @@
  * 命令名沿用 Tauri snake_case（前端 invoke('get_backend_status') 字面参数不变）；
  * 返回数据字段名一律 camelCase（前端接口契约，见 state.ts 顶部说明）。
  */
-import { BrowserWindow, dialog, shell } from 'electron';
+import { BrowserWindow, dialog, Notification, shell } from 'electron';
 import fs from 'node:fs';
 import net from 'node:net';
 import pkg from '../../package.json';
@@ -38,6 +38,7 @@ import {
 } from './runtime-daemon';
 import { initializeDirs, resolveNodeExe, runDbPushIfNeeded } from './setup';
 import { state, setInitError, type BackendInfo, type FrontendInfo } from './state';
+import { resolveTrayIconPath } from './tray';
 import { checkForUpdates, getUpdateStatus, type UpdateStatus } from './updater';
 
 const FRONTEND_DEV_PORT = 5173;
@@ -431,6 +432,34 @@ export const commandHandlers = {
       daemon: { running: !!state.daemon, pid: state.daemon?.pid },
       processStats,
     });
+  },
+
+  /** 系统原生通知（ADR-015 P2）：前端 notification.created 转发；点击唤起主窗口。 */
+  async show_notification(args?: {
+    title?: string;
+    body?: string;
+  }): Promise<ActionResult> {
+    if (!Notification.isSupported()) {
+      return { ok: false, error: '当前系统不支持原生通知' };
+    }
+    const notification = new Notification({
+      title: args?.title ?? 'Agent Project Manager',
+      body: args?.body ?? '',
+      icon: resolveTrayIconPath(),
+      silent: false,
+    });
+    notification.on('click', () => {
+      const win = BrowserWindow.getAllWindows()[0];
+      if (win) {
+        if (win.isMinimized()) {
+          win.restore();
+        }
+        win.show();
+        win.focus();
+      }
+    });
+    notification.show();
+    return { ok: true };
   },
 };
 

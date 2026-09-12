@@ -11,7 +11,7 @@ import { logger } from './logger';
 let tray: Tray | null = null;
 
 /** dev: electron/assets（__dirname=electron/dist）；prod: resources/app/electron/assets，相对深度一致 */
-function resolveTrayIconPath(): string {
+export function resolveTrayIconPath(): string {
   return path.resolve(__dirname, '..', 'assets', 'tray.png');
 }
 

@@ -156,6 +156,24 @@ async function bootstrap() {
   const port = configService.port;
   await app.listen(port);
 
+  // 桌面壳 utility 承载的优雅关闭桥（ADR-015 P2）：壳 stop 流程先经 parentPort
+  // 发 apm:shutdown，Nest shutdown hooks 收尾（HTTP 连接池/Prisma 断开）后退出；
+  // 普通 node 进程无 parentPort，桥不挂载。SIGTERM 同路径由 enableShutdownHooks 兜住。
+  app.enableShutdownHooks();
+  type UtilityParentPort = {
+    on: (event: 'message', cb: (e: { data: unknown }) => void) => void;
+  };
+  const parentPort = (
+    process as typeof process & { parentPort?: UtilityParentPort }
+  ).parentPort;
+  if (parentPort) {
+    parentPort.on('message', (e) => {
+      if (e?.data === 'apm:shutdown') {
+        void app.close().finally(() => process.exit(0));
+      }
+    });
+  }
+
   logger.log(`Application is running on: http://localhost:${port}`);
   logger.log(`Environment: ${configService.nodeEnv}`);
   logger.log(`Swagger documentation: http://localhost:${port}/_api/docs`);

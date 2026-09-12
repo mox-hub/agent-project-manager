@@ -80,6 +80,12 @@
 | 卸载语义 | 卸载器询问是否删除 `~/.apm`（默认保留） |
 | 诊断导出 | `export_diagnostics`：日志 + 元数据 + 进程快照 zip（不含密钥/凭证） |
 | 壳级 e2e | `pnpm e2e:shell`（Playwright _electron，`APM_DATA_DIR` 临时目录隔离） |
+| 应用菜单 | Alt 唤出：关于/检查更新/重载/缩放/DevTools/日志目录（`menu.ts`） |
+| 日志轮转 | desktop-main.log 超 5MB 轮转 `.1/.2/.3`（保留 3 份） |
+| 优雅关闭 | utility 路径先 postMessage `apm:shutdown`（server/cli 经 parentPort 桥到 shutdown 钩子收尾），3s 宽限后强杀；node 路径无 IPC 通道直接强杀 |
+| 电源事件 | 系统唤醒探活失败自动重启服务组；会话结束（注销/关机）兜底清理子进程 |
+| 系统通知 | `notification.created` 桌面模式转发壳侧原生通知（免网页授权），点击唤起主窗口 |
+| 深链 | `apm://<内部路径>`（如 `apm://issues/42`）直达页面；second-instance 与冷启动 argv 均可携带 |
 
 启动检查更新与诊断导出入口在设置 → 运行时 → 「桌面偏好」卡片；托盘菜单另有检查更新入口。
 

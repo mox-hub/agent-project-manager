@@ -110,6 +110,8 @@ declare global {
     __TAURI__?: {
       core: {
         invoke: <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
+        /** apm:// 深链订阅（ADR-015 P2）；返回解绑函数。旧壳版本无此能力为可选 */
+        onDeepLink?: (callback: (url: string) => void) => () => void;
       };
     };
     __DESKTOP_API_BASE_URL__?: string;

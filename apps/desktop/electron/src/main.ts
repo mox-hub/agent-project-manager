@@ -7,14 +7,16 @@
  * 生命周期强化（ADR-015）：单实例锁防双开抢 ~/.apm；关窗最小化到托盘（服务保活）；
  * server/daemon 意外退出自动重启（指数退避+熔断）；渲染进程崩溃白屏自动重载。
  */
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, powerMonitor, shell } from 'electron';
 import net from 'node:net';
 import path from 'node:path';
 import { commandHandlers } from './commands';
 import { isDevMode, resolveAppConfig } from './config';
+import { probeBackendHealth } from './backend';
 import { bootErrorScript, bootScreenUrl, bootStatusScript } from './loading';
 import { initLogger, logger } from './logger';
-import { startRuntimeDaemon } from './runtime-daemon';
+import { installApplicationMenu } from './menu';
+import { startRuntimeDaemon, stopRuntimeDaemon } from './runtime-daemon';
 import {
   detectFirstInstall,
   ensureSecrets,
@@ -28,11 +30,37 @@ import { setInitError, state, stopAllProcesses } from './state';
 import { loadDesktopState, saveDesktopState } from './desktop-state';
 
 const FRONTEND_DEV_PORT = 5173;
+const DEEP_LINK_SCHEME = 'apm';
 
 const config = resolveAppConfig();
 // Chromium 自身 profile（缓存/LocalStorage）收敛到 ~/.apm/electron 子目录，
 // 避免缓存文件污染项目数据根；官方要求在 ready 前设置，故放模块顶层
 app.setPath('userData', path.join(config.userDataDir, 'electron'));
+
+// deep link 协议（ADR-015 P2）：apm://<前端路径> 直达页面（apm://issues/42）。
+// dev 模式（defaultApp）需带 electron 入口参数注册；解析失败静默忽略
+if (process.defaultApp) {
+  app.setAsDefaultProtocolClient(DEEP_LINK_SCHEME, process.execPath, [
+    path.resolve(process.argv[1] ?? '.'),
+  ]);
+} else {
+  app.setAsDefaultProtocolClient(DEEP_LINK_SCHEME);
+}
+
+/** 从 argv 提取 apm:// 深链（Windows 冷启动/second-instance 均经 argv 传递） */
+function extractDeepLink(argv: string[]): string | null {
+  return argv.find((a) => a.startsWith(`${DEEP_LINK_SCHEME}://`)) ?? null;
+}
+
+/** 启动带入的深链在窗口就绪后补转发（second-instance 场景直接转发） */
+let pendingDeepLink: string | null = null;
+
+function forwardDeepLink(url: string): void {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('desktop:deep-link', url);
+    logger.info(`深链已转发前端: ${url}`);
+  }
+}
 
 let mainWindow: BrowserWindow | null = null;
 /** 区分「用户退出」与「关窗常驻」：仅 before-quit（含托盘退出/quitAndInstall）置位 */
@@ -230,6 +258,29 @@ async function autoStartRuntimeDaemon(): Promise<void> {
   }
 }
 
+/** 系统唤醒自愈（ADR-015 P2）：休眠期间 server 可能失联/被回收，探活失败即整组重启。 */
+async function reviveAfterResume(): Promise<void> {
+  if (!state.backend) {
+    return;
+  }
+  const base = state.backend.info.apiBaseUrl;
+  if (await probeBackendHealth(base)) {
+    logger.info('系统唤醒：本地服务存活');
+    return;
+  }
+  logger.warn('系统唤醒：本地服务失联，自动重启（服务与守护进程）');
+  try {
+    if (state.daemon) {
+      await stopRuntimeDaemon();
+    }
+    await commandHandlers.restart_backend();
+    await autoStartRuntimeDaemon();
+    logger.info('唤醒后服务组重启完成');
+  } catch (err) {
+    logger.error(`唤醒后重启失败: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
 async function bootstrapServer(): Promise<void> {
   try {
     setBootStatus('正在准备数据目录…');
@@ -254,6 +305,10 @@ async function bootstrapServer(): Promise<void> {
 
     setBootStatus('正在加载界面…');
     await loadAppSurface();
+    if (pendingDeepLink) {
+      forwardDeepLink(pendingDeepLink);
+      pendingDeepLink = null;
+    }
     logger.info('应用启动完成');
   } catch (err) {
     showBootError(err instanceof Error ? err.message : String(err), `数据目录：${state.config.userDataDir}\n日志：${state.config.logsDir}`);
@@ -319,6 +374,22 @@ function bootstrap(): void {
   state.config = config;
 
   initAutoUpdater();
+  installApplicationMenu({
+    showMainWindow,
+    checkUpdates: () => {
+      void checkForUpdates().then(() => showMainWindow());
+    },
+    openLogs: () => {
+      void commandHandlers.open_log_dir();
+    },
+  });
+  // 系统会话事件（ADR-015 P2）：唤醒自愈 + 会话结束兜底清理（before-quit 在
+  // 某些注销/关机路径不触发，shutdown 事件是最后防线）
+  powerMonitor.on('resume', () => void reviveAfterResume());
+  powerMonitor.on('shutdown', () => {
+    isQuitting = true;
+    void stopAllProcesses();
+  });
   registerIpc();
   registerGlobalErrorHandlers();
   createWindow();
@@ -330,7 +401,18 @@ function bootstrap(): void {
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.on('second-instance', () => showMainWindow());
+  app.on('second-instance', (_event, argv) => {
+    showMainWindow();
+    const link = extractDeepLink(argv);
+    if (link) {
+      forwardDeepLink(link);
+    }
+  });
+  // 冷启动自带深链（如开机自启/协议唤起）：窗口就绪后经 bootstrapServer 转发
+  const startupDeepLink = extractDeepLink(process.argv);
+  if (startupDeepLink) {
+    pendingDeepLink = startupDeepLink;
+  }
 
   app.whenReady().then(() => {
     bootstrap();

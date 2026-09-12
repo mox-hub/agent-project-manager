@@ -7,6 +7,11 @@ import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { useUnreadNotificationsCount } from "../hooks/use-notifications";
 import { useEventSubscription } from "@/infrastructure/hooks/use-event-subscription";
 import { notificationApi } from "../api/notification-api";
+import {
+  invoke,
+  isTauriAvailable,
+  type DesktopActionResult,
+} from "@/shared/types/electron-api";
 import { NotificationCenter } from "./notification-center";
 
 interface NotificationCreatedPayload {
@@ -47,7 +52,16 @@ export function NotificationButton() {
 
   useEventSubscription("notification.created", (payload) => {
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    showDesktopBanner(payload as NotificationCreatedPayload, prefs);
+    const created = payload as NotificationCreatedPayload;
+    // 桌面模式走壳侧原生通知（主进程 Notification，免网页授权）；web 回落浏览器横幅
+    if (isTauriAvailable()) {
+      void invoke<DesktopActionResult>("show_notification", {
+        title: created.title ?? "Agent Project Manager",
+        body: created.body ?? "",
+      }).catch(() => undefined);
+    } else {
+      showDesktopBanner(created, prefs);
+    }
   });
 
   useEventSubscription("notification.read", () => {

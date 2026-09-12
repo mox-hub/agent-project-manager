@@ -16,6 +16,8 @@ import { logger } from './logger';
 
 const HEALTH_CHECK_TIMEOUT_MS = 30_000;
 const HEALTH_CHECK_POLL_MS = 500;
+/** 优雅关闭宽限：postMessage shutdown 指令后等 NestJS 收尾（连接池/WAL），超时强杀 */
+const GRACEFUL_SHUTDOWN_TIMEOUT_MS = 3_000;
 
 export type ServerTransport = 'utility' | 'node';
 
@@ -78,6 +80,21 @@ export function waitForBackendHealth(apiBaseUrl: string): Promise<void> {
       req.on('error', () => setTimeout(attempt, HEALTH_CHECK_POLL_MS));
     };
     attempt();
+  });
+}
+
+/** 单次快速探活（系统唤醒自愈用，P2）：一次请求定生死，不轮询。 */
+export function probeBackendHealth(apiBaseUrl: string, timeoutMs = 2000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const req = http.get(`${apiBaseUrl}/_api/health`, { timeout: timeoutMs }, (res) => {
+      res.resume();
+      resolve(!!res.statusCode && res.statusCode < 500);
+    });
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+    req.on('error', () => resolve(false));
   });
 }
 
@@ -162,7 +179,15 @@ export function startServerProcess(
         new Promise((resolve) => {
           stopped = true;
           proc.on('exit', () => resolve());
-          proc.kill();
+          // 优雅优先（P2）：utility 通道发 shutdown 指令，server 收尾（HTTP 连接池/
+          // Prisma 断开）后自退；Windows kill() 是 TerminateProcess 无优雅路径，超时兜底强杀
+          try {
+            proc.postMessage({ type: 'apm:shutdown' });
+          } catch {
+            // 进程已死，exit 事件即达
+          }
+          const killTimer = setTimeout(() => proc.kill(), GRACEFUL_SHUTDOWN_TIMEOUT_MS);
+          proc.once('exit', () => clearTimeout(killTimer));
         }),
       onUnexpectedExit: (callback) => {
         onUnexpectedExit = callback;
@@ -192,6 +217,7 @@ export function startServerProcess(
       new Promise((resolve) => {
         stopped = true;
         child.once('exit', () => resolve());
+        // node 路径无 IPC 通道（stdio pipe），Windows kill 无 SIGTERM 等价——直接强杀
         child.kill();
       }),
     onUnexpectedExit: (callback) => {

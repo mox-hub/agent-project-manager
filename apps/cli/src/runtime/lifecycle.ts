@@ -177,4 +177,19 @@ export async function runRuntimeDaemon(): Promise<void> {
   };
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
+  // Electron 壳 utility 承载桥（ADR-015 P2）：Windows kill() 不投递 SIGTERM，
+  // 壳 stop 流程先经 parentPort 发 apm:shutdown 桥接到同一 shutdown 路径；
+  // 手动 CLI（普通 node）无 parentPort，桥不挂载
+  const parentPort = (
+    process as typeof process & {
+      parentPort?: { on: (event: 'message', cb: (e: { data: unknown }) => void) => void };
+    }
+  ).parentPort;
+  if (parentPort) {
+    parentPort.on('message', (e) => {
+      if (e?.data === 'apm:shutdown') {
+        shutdown();
+      }
+    });
+  }
 }
