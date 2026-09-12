@@ -584,4 +584,65 @@ export class GitHubClient {
       changedFiles: p.changed_files,
     };
   }
+
+  /**
+   * 创建 tag ref（驱动型发版：受控 tag 创建，CAP-K-03）。
+   * target 指定 tag 指向的 commit sha；不传则用仓库默认分支 HEAD。
+   */
+  async createTagRef(opts: {
+    owner: string;
+    repo: string;
+    tag: string;
+    targetSha?: string;
+  }): Promise<{ sha: string }> {
+    const sha =
+      opts.targetSha ?? (await this.getDefaultBranchSha(opts.owner, opts.repo));
+    try {
+      const res = (await this.withRetry(() =>
+        this.octokit.rest.git.createRef({
+          owner: opts.owner,
+          repo: opts.repo,
+          ref: `refs/tags/${opts.tag}`,
+          sha,
+        }),
+      )) as { data: { object: { sha: string } } };
+      return { sha: res.data.object.sha };
+    } catch (err) {
+      throw new GitHubApiError(
+        `createTagRef failed: ${(err as Error).message}`,
+        (err as { status?: number }).status,
+        undefined,
+        `${opts.owner}/${opts.repo}`,
+      );
+    }
+  }
+
+  /** 创建 GitHub Release（驱动型发版终步，CAP-K-03） */
+  async createRelease(opts: {
+    owner: string;
+    repo: string;
+    tagName: string;
+    name: string;
+    body?: string;
+  }): Promise<{ id: number; htmlUrl: string }> {
+    try {
+      const res = (await this.withRetry(() =>
+        this.octokit.rest.repos.createRelease({
+          owner: opts.owner,
+          repo: opts.repo,
+          tag_name: opts.tagName,
+          name: opts.name,
+          body: opts.body,
+        }),
+      )) as { data: { id: number; html_url: string } };
+      return { id: res.data.id, htmlUrl: res.data.html_url };
+    } catch (err) {
+      throw new GitHubApiError(
+        `createRelease failed: ${(err as Error).message}`,
+        (err as { status?: number }).status,
+        undefined,
+        `${opts.owner}/${opts.repo}`,
+      );
+    }
+  }
 }

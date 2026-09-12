@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import {
   GATE_PLAYBOOK_TYPE,
   PlaybookGatePayload,
@@ -79,7 +80,10 @@ interface SpendPayload {
 export class ProposalService {
   private readonly logger = new Logger(ProposalService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messageBus: MessageBusService,
+  ) {}
 
   async create(dto: CreateProposalDto, userId?: string) {
     const proposal = await this.prisma.decisionProposal.create({
@@ -177,6 +181,8 @@ export class ProposalService {
         return this.applyGate(proposal, dto, userId);
       case 'workflow_def':
         return this.applyWorkflowDef(proposal, userId);
+      case 'release':
+        return this.applyRelease(proposal, dto, userId);
       case 'clarify':
         // 最小版：答案已随 resolution 落痕，AI 侧轮询消费；无领域副作用
         if (!dto.answer) {
@@ -257,6 +263,62 @@ export class ProposalService {
         version: existing.version + 1,
       },
     });
+  }
+
+  /**
+   * release：发布审批决策卡（CAP-K-03 驱动型发版）。
+   * accept = 人确认授权发布 → gated → approved，广播 release.approved
+   * 由 ReleasePublishService 异步执行（tag/GitHub Release/CHANGELOG）。
+   * reject = 打回 draft。经 prisma 直写（防模块环，对齐 workflow_def 先例），
+   * 状态转换校验复用 release-status 纯函数（无 DI 依赖）。
+   */
+  private async applyRelease(
+    proposal: Proposal,
+    dto: ResolveProposalDto,
+    userId: string,
+  ): Promise<void> {
+    const payload = (proposal.payload ?? {}) as unknown as {
+      releaseId?: string;
+    };
+    if (!payload.releaseId) {
+      throw new BadRequestException('release proposal requires releaseId');
+    }
+    const release = await this.prisma.release.findUnique({
+      where: { id: payload.releaseId },
+    });
+    if (!release) {
+      throw new BadRequestException(`发版不存在: ${payload.releaseId}`);
+    }
+    if (dto.action === 'reject') {
+      if (release.status !== 'gated' && release.status !== 'approved') {
+        throw new BadRequestException(
+          `发版状态为 ${release.status}，不允许打回（仅 gated/approved 可打回）`,
+        );
+      }
+      await this.prisma.release.update({
+        where: { id: release.id },
+        data: {
+          status: 'draft',
+          failureReason: dto.reason ? `审批打回: ${dto.reason}` : '审批打回',
+        },
+      });
+      return;
+    }
+    // accept：gated → approved，事件驱动自动发布
+    if (release.status !== 'gated') {
+      throw new BadRequestException(
+        `发版状态为 ${release.status}，仅 gated 可批准发布（门禁先过，打回后需重新 submitGate）`,
+      );
+    }
+    await this.prisma.release.update({
+      where: { id: release.id },
+      data: {
+        status: 'approved',
+        approvedBy: userId,
+        approvedAt: new Date(),
+      },
+    });
+    this.messageBus.publish('release.approved', { releaseId: release.id });
   }
 
   /**

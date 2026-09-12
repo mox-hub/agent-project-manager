@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MessageBusModule } from '@/core/message-bus/message-bus.module';
 import { DecisionService } from './decision.service';
 import { ProposalService } from './proposal.service';
 import { DecisionController } from './decision.controller';
@@ -11,6 +12,7 @@ import { ProposalController } from './proposal.controller';
  * 本模块不承载第二套状态变更语义。
  */
 @Module({
+  imports: [MessageBusModule],
   providers: [
     // PrismaService 由全局 DatabaseModule 提供（工作区 ALS 代理），
     // 此处不可重复声明，否则覆盖为直连默认库的裸实例
