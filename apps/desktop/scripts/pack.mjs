@@ -62,7 +62,16 @@ if (!existsSync(serverDist)) {
   throw new Error('server dist 不存在，nest build 疑似失败');
 }
 cpSync(serverDist, path.join(serverStaging, 'dist'), { recursive: true });
-cpSync(path.join(serverSrc, 'prisma'), path.join(serverStaging, 'prisma'), { recursive: true });
+// prisma 目录白名单拷贝：整目录拷会把开发者的 dev.db/dev.db-wal/*.bak 连数据带进安装包
+// （实测 22MB，2026-09-12 发现——既是体积浪费更是数据泄露）。运行时资产只这三样：
+// schema、migrations（未来 migrate deploy）、template.db（工作区多库模板）。
+// default-template.db（默认库模板）由下方 4b 步生成。
+for (const name of ['schema.prisma', 'migrations', 'template.db']) {
+  const from = path.join(serverSrc, 'prisma', name);
+  if (existsSync(from)) {
+    cpSync(from, path.join(serverStaging, 'prisma', name), { recursive: true });
+  }
+}
 // i18n 翻译 JSON 是运行时资产：nestjs-i18n 按 cwd 相对的 src/i18n/resources 解析（dev 语义硬编码），
 // staging 必须保持同形状目录，否则 server Bootstrap failed: i18n path cannot be found（安装冒烟实测踩坑）
 cpSync(path.join(serverSrc, 'src', 'i18n'), path.join(serverStaging, 'src', 'i18n'), {
@@ -71,7 +80,12 @@ cpSync(path.join(serverSrc, 'src', 'i18n'), path.join(serverStaging, 'src', 'i18
 // staging 的 package.json 只留 prod 依赖：npm 在解析阶段就会校验全部依赖字段，
 // devDependencies 里的 pnpm catalog: 协议会让 install 直接 EUNSUPPORTEDPROTOCOL
 // （prod 依赖均为具体版本、无 workspace:/catalog: 引用，可安全裸装）
+// prisma CLI 剪除（ADR-015 瘦身，2026-09-12 验证）：它只服务打包机的 db push/generate；
+// 用户机建库改为恢复 default-template.db 模板（壳侧 setup.ts）。剪除后实测 server
+// 启动 + 健康检查 + 真实查询全部正常（运行时依赖 = @prisma/client + .prisma/client）
 const serverPkg = JSON.parse(readFileSync(path.join(serverSrc, 'package.json'), 'utf-8'));
+const serverProdDeps = { ...serverPkg.dependencies };
+delete serverProdDeps.prisma;
 writeFileSync(
   path.join(serverStaging, 'package.json'),
   JSON.stringify(
@@ -79,7 +93,7 @@ writeFileSync(
       name: serverPkg.name,
       version: serverPkg.version,
       private: true,
-      dependencies: serverPkg.dependencies,
+      dependencies: serverProdDeps,
     },
     null,
     2,
@@ -117,21 +131,53 @@ function stripNonRuntime(root) {
     rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   }
 }
-stripNonRuntime(path.join(serverStaging, 'node_modules'));
+// 注意：strip 在 4c（prisma generate/剪除）之后执行——generate 会生成 .prisma/client
+// （含 8MB index.d.ts），strip 必须覆盖其产物
 
-// 4. 预生成 Prisma 客户端（含 query engine dll），安装后免 generate
+// 4. 预生成 Prisma 客户端（含 query engine dll），安装后免 generate。
+//    CLI 用开发区的（staging 已剪 prisma 依赖不再安装）；generate/db push 的输出
+//    位置由 --schema 路径决定（staging/node_modules/.prisma），与 CLI 所在无关
+const prismaCli = path.join(repoRoot, 'apps', 'server', 'node_modules', 'prisma', 'build', 'index.js');
+const prismaSchema = path.join(serverStaging, 'prisma', 'schema.prisma');
+if (!existsSync(prismaCli)) {
+  throw new Error(`未找到开发区 Prisma CLI: ${prismaCli}（先在 apps/server 跑 pnpm install）`);
+}
 run(
   process.execPath,
-  [
-    path.join(serverStaging, 'node_modules', 'prisma', 'build', 'index.js'),
-    'generate',
-    '--schema',
-    path.join(serverStaging, 'prisma', 'schema.prisma'),
-  ],
+  [prismaCli, 'generate', '--schema', prismaSchema],
   {
     env: { ...process.env, DATABASE_URL: 'file:./pack-placeholder.db' },
   },
 );
+
+// 4b. 生成干净默认库模板（file: 路径相对 schema 目录解析）：用户机首启直接拷贝，
+//     免现场 db push（实测 ~40s）——与 CLI 剪除配套，见 4c
+run(
+  process.execPath,
+  [prismaCli, 'db', 'push', '--schema', prismaSchema, '--skip-generate'],
+  {
+    env: { ...process.env, DATABASE_URL: 'file:./default-template.db' },
+  },
+);
+
+// 4c. 剪除 Prisma CLI（~58MB）与引擎仓库（~77MB）：generate/db push 只在打包机跑，
+//     运行时唯一引擎是 .prisma/client 内的 query engine dll。剪后 node_modules
+//     437MB → 303MB（实测 2026-09-12）
+rmSync(path.join(serverStaging, 'node_modules', 'prisma'), {
+  recursive: true,
+  force: true,
+  maxRetries: 5,
+  retryDelay: 200,
+});
+rmSync(path.join(serverStaging, 'node_modules', '@prisma', 'engines'), {
+  recursive: true,
+  force: true,
+  maxRetries: 5,
+  retryDelay: 200,
+});
+
+// 4d. 非运行时文件剥离（.d.ts/.map/.md/_types/examples）——覆盖含 prisma generate 产物
+stripNonRuntime(path.join(serverStaging, 'node_modules'));
 
 // 3c. apm-runtime 守护进程（apps/cli）自包含产物——AI 执行面随包（壳自动拉起 + 设置页可控制）。
 //     @apm/shared 是 workspace 包，npm 无法解析 workspace: 协议——随 staging 以 file: 引用自带

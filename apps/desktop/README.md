@@ -50,7 +50,8 @@
    （~/.apm/{logs,uploads,data,desktop}）→ 首装校验（无既有密钥/库 = 全新安装）
    → 生成/加载 secrets.json 密钥（JWT_SECRET / INTEGRATION_ENCRYPTION_KEY）
 ② 数据库就绪（阻塞 ③）
-   全新安装：Prisma db push 建库（ELECTRON_RUN_AS_NODE 跑 CLI）；已有库跳过，绝不重建
+   全新安装：恢复随包 default-template.db（打包时 db push 生成的干净库，秒级拷贝）；
+   已有库跳过，绝不重建。dev 无模板时回退 prisma db push（ELECTRON_RUN_AS_NODE 跑 CLI）
    失败 → initError 置位 → ③ 被前置拦截，前端 init 页可见错误
 ③ server 拉起（utilityProcess / spawn node.exe）
    env 注入：PORT、DATABASE_URL、JWT_SECRET、INTEGRATION_ENCRYPTION_KEY、
@@ -118,7 +119,9 @@
 | `desktop/apm-config.json`、`desktop/runtime.lock` | 守护进程配置与单实例锁（与手动 CLI 隔离） |
 | `electron/` | Chromium profile（缓存/LocalStorage，非项目数据） |
 
-Prisma CLI（db push）经 Electron 内置 Node（`ELECTRON_RUN_AS_NODE=1`）执行，不依赖系统或随包 node.exe。
+Prisma 运行时只随包 `@prisma/client` + 预生成客户端（含 query engine dll）；prisma
+CLI 与引擎仓库不随包（瘦身剪除，~135MB），建库由打包时预生成的 default-template.db
+恢复完成。dev 场景的 db push 经 Electron 内置 Node（`ELECTRON_RUN_AS_NODE=1`）执行。
 
 ## 开发调试
 

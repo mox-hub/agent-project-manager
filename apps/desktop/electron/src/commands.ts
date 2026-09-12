@@ -36,7 +36,7 @@ import {
   stopRuntimeDaemon,
   writeWorkspaceRoots,
 } from './runtime-daemon';
-import { initializeDirs, resolveNodeExe, runDbPushIfNeeded } from './setup';
+import { initializeDirs, resolveNodeExe, restoreDefaultDbIfNeeded } from './setup';
 import { state, setInitError, type BackendInfo, type FrontendInfo } from './state';
 import { resolveTrayIconPath } from './tray';
 import { checkForUpdates, getUpdateStatus, type UpdateStatus } from './updater';
@@ -316,7 +316,7 @@ export const commandHandlers = {
     // 与启动时的后台初始化走同一条 setup 路径；失败写回 initError 供 init 页展示
     try {
       initializeDirs(state.config);
-      runDbPushIfNeeded(state.config);
+      restoreDefaultDbIfNeeded(state.config);
       setInitError(null);
       logger.info('应用初始化完成');
       return { ok: true };

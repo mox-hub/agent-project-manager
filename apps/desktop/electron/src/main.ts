@@ -22,7 +22,7 @@ import {
   ensureSecrets,
   initializeDirs,
   migrateLegacyUserData,
-  runDbPushIfNeeded,
+  restoreDefaultDbIfNeeded,
 } from './setup';
 import { createTray, hasTray } from './tray';
 import { checkForUpdates, initAutoUpdater } from './updater';
@@ -285,7 +285,7 @@ async function bootstrapServer(): Promise<void> {
   try {
     setBootStatus('正在准备数据目录…');
     try {
-      runDbPushIfNeeded(state.config);
+      restoreDefaultDbIfNeeded(state.config);
       setInitError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

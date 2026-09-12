@@ -166,16 +166,32 @@ export function ensureSecrets(config: AppConfig): void {
 }
 
 /**
- * 仅在库文件不存在（全新安装）时执行 prisma db push——已存在的库绝不带
- * `--accept-data-loss` 重建；升级场景的 schema 演进另行走 migrate deploy（v0.6.1 后再议）。
- * 返回值表示是否实际执行了建库。
+ * 首启建库（Prisma 瘦身配套，ADR-015）：打包模式恢复随包 default-template.db
+ * （打包时由 db push 生成干净库，见 pack.mjs 4b）——用户机免 prisma CLI（剪除
+ * ~135MB）也免 ~40s 现场建库；已有库跳过，绝不覆盖。dev 模式无模板时回退
+ * prisma db push（开发环境有完整 CLI）。
  */
-export function runDbPushIfNeeded(config: AppConfig): boolean {
+export function restoreDefaultDbIfNeeded(config: AppConfig): boolean {
   if (fs.existsSync(config.databasePath)) {
-    logger.info(`数据库已存在，跳过 db push: ${config.databasePath}`);
+    logger.info(`数据库已存在，跳过建库: ${config.databasePath}`);
     return false;
   }
 
+  fs.mkdirSync(path.dirname(config.databasePath), { recursive: true });
+
+  const templatePath = path.join(config.serverCwd, 'prisma', 'default-template.db');
+  if (fs.existsSync(templatePath)) {
+    fs.copyFileSync(templatePath, config.databasePath);
+    logger.info(`已恢复默认库模板: ${templatePath} → ${config.databasePath}`);
+    return false;
+  }
+
+  // 打包模式模板缺失 = 包不完整（随包已无 prisma CLI，无法现场建库）
+  if (config.nodeExe) {
+    throw new Error(`未找到默认库模板（${templatePath}）。安装包可能不完整，请重新安装。`);
+  }
+
+  // dev 回退：现场 db push（原路径，开发环境有完整 prisma CLI）
   const prismaSchema = path.join(config.serverCwd, 'prisma', 'schema.prisma');
   if (!fs.existsSync(prismaSchema)) {
     throw new Error(`未找到 Prisma schema: ${prismaSchema}`);
@@ -184,8 +200,6 @@ export function runDbPushIfNeeded(config: AppConfig): boolean {
   if (!fs.existsSync(prismaEntry)) {
     throw new Error(`未找到 Prisma CLI: ${prismaEntry}`);
   }
-
-  fs.mkdirSync(path.dirname(config.databasePath), { recursive: true });
 
   logger.info('首次启动，运行 Prisma db push...');
   // ELECTRON_RUN_AS_NODE=1 让 electron.exe 以纯 Node 模式执行 CLI（Prisma CLI 用

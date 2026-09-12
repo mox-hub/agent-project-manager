@@ -10,7 +10,7 @@ electronDist: node_modules/electron/dist
 directories:
   # 输出路径一旦被 Defender/未知句柄锁死（asar 文件 EBUSY 且 rm 无法删除），换全新路径即绕开；
   # 历史锁死的 release/、dist-release/ 目录稍后手动清理
-  output: dist-release-2
+  output: dist-release-3
   buildResources: build
 # 关闭 asar：Defender 对 asar 包格式有专门深度解析（防脚本藏匿），扫描窗口与 builder 的
 # 写入/替换操作竞态导致 EBUSY unlink（重试 5 次全撞，均在 resources/*.asar）。
@@ -47,8 +47,7 @@ nsis:
   artifactName: ${productName}_${version}_x64-setup.exe
   # 安装期校验既有数据目录（~/.apm）：存在 = 升级安装，提示并保留数据
   include: build/installer.nsh
-  # 品牌位图（scripts/gen-icon.mjs 从 logo.svg 生成）；图标沿用 win.icon（build/icon.ico）
+  # 品牌位图（scripts/gen-icon.mjs 从 logo.svg 生成）；图标沿用 win.icon（build/icon.ico）。
+  # 注意：schema 只有 installerHeader/installerSidebar（无 uninstaller 变体，配了会校验失败）
   installerHeader: build/installerHeader.bmp
   installerSidebar: build/installerSidebar.bmp
-  uninstallerHeader: build/installerHeader.bmp
-  uninstallerSidebar: build/installerSidebar.bmp
