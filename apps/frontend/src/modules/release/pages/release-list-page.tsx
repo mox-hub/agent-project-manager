@@ -39,12 +39,12 @@ import type { ReleaseStatus } from '../api/release-api';
 import { cn } from '@/lib/utils';
 
 export const RELEASE_STATUS_TONE: Record<ReleaseStatus, string> = {
-  draft: 'bg-slate-500/15 text-slate-600 dark:text-slate-300',
-  gated: 'bg-amber-500/15 text-amber-600 dark:text-amber-300',
-  approved: 'bg-accent-blue/15 text-accent-blue',
-  publishing: 'bg-amber-500/15 text-amber-600 dark:text-amber-300 animate-pulse',
-  released: 'bg-accent-green/15 text-accent-green',
-  failed: 'bg-red-500/15 text-red-600 dark:text-red-300',
+  draft: 'bg-muted/50 text-muted-foreground',
+  gated: 'bg-accent-yellow-light text-accent-yellow',
+  approved: 'bg-accent-blue-light text-accent-blue',
+  publishing: 'bg-accent-yellow-light text-accent-yellow animate-pulse',
+  released: 'bg-accent-green-light text-accent-green',
+  failed: 'bg-accent-red-light text-accent-red',
 };
 
 export function statusLabelKey(status: ReleaseStatus): string {

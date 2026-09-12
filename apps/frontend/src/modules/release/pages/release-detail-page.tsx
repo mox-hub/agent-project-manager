@@ -4,7 +4,7 @@
  * → publishing（轮询执行日志）→ released / failed（可重开）。
  * 门禁快照与发布执行日志来自服务端只读证据聚合，本页不做第二套判定。
  */
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -27,7 +27,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
 import { assistantApi } from '@/modules/assistant/api/assistant-api';
-import { useProjectTasks } from '@/modules/issue/hooks/use-project-tasks';
 import {
   useApprovalRequest,
   useGateRelease,
@@ -358,7 +357,7 @@ function GateCard({
                 {c.passed ? (
                   <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-accent-green" />
                 ) : (
-                  <XCircle className="mt-0.5 size-3.5 shrink-0 text-red-500" />
+                  <XCircle className="mt-0.5 size-3.5 shrink-0 text-accent-red" />
                 )}
                 <span>
                   <span className="font-medium">{c.label}</span>
@@ -447,12 +446,11 @@ function ActionCard({
 }
 
 function ExecutionStepRow({ step }: { step: ExecutionStep }) {
-  const { t } = useTranslation();
   const tone =
     step.status === 'ok'
       ? 'text-accent-green'
       : step.status === 'failed'
-        ? 'text-red-500'
+        ? 'text-accent-red'
         : 'text-content-text-muted';
   return (
     <div className="flex items-start gap-2 text-xs">
