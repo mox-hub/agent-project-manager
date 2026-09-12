@@ -2,6 +2,21 @@
 
 人类控制面的桌面壳：把 Web 前端与本地 NestJS 后端打包成一个 Windows 安装包（NSIS），非开发用户装上即用——首启自动建库，无需 Node/pnpm/git 开发环境。
 
+## 发布流程（desktop-release.yml，ADR-015 收口）
+
+```
+合并 develop → 归版 CHANGELOG → apps/desktop/package.json 升版本（如 0.6.2）
+→ git tag v0.6.2 && git push origin v0.6.2
+→ GitHub Actions（windows runner）：质量前置（type-check/lint/单测）
+  → pack:resources（自包含 staging + default-template.db + Prisma 剪除）
+  → electron-builder --publish always
+→ GitHub Release（draft：exe + blockmap + latest.yml）
+→ 人工在 Releases 页核对后点 Publish（防误发闸门）
+→ 已装用户壳内 electron-updater（启动 30s 静默检查）自动拉取更新
+```
+
+tag 必须与 package.json version 一致（electron-builder 以 `v{version}` 命名 Release）。发布前真机冒烟：向导安装、`~/.apm` 首启建库、托盘常驻、卸载数据询问。签名未启用（单独裁决，见决策日志 ADR-015）。
+
 对应能力卡：**CAP-A-14 桌面壳发布级打包与运作**（`docs/01-需求/能力清单-v1.md` §4.1）；壳选型变更（Tauri 2 → Electron）见决策日志 **ADR-014**；执行计划与验收清单见 `docs/roadmap/electron-desktop-v0.6.1-plan.md`。
 
 > 过渡期说明：分支上 `src-tauri/`（Tauri 旧壳）与 `scripts/pack.mjs`（资源准备，两壳共享）暂时共存，Electron 通过同等验收后删除 Tauri 侧。

@@ -21,6 +21,17 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### v0.6.2——桌面壳安装包三调整 + 分发与生命周期强化（CAP-A-14，feat/desktop-electron-spike）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| desktop | **安装包三调整**：①图标换项目内置 logo（`gen-icon.mjs` Playwright 渲染 logo.svg 产出 7 帧 ICO + NSIS 品牌位图 + 托盘图标，替换蓝底白 A 占位图，零新依赖）；②NSIS 改向导模式（可自选安装位置 + 品牌位图 + 安装期检测既有 `~/.apm` 数据提示升级安装）；③数据根固定 `~/.apm`（库/日志/上传/密钥/会话全收敛；守护进程配置与锁落 `desktop/` 子目录与手动 CLI 隔离；Chromium profile 收敛 `electron/`；v0.6.1 旧 `%APPDATA%` 数据白名单自动迁移留档；`isFirstInstall` 首装校验暴露 IPC） | CAP-A-14 | ICO 7 帧结构校验通过；desktop tsc/lint/tsup 全绿 | apps/desktop/README.md 数据布局表重写 |
+| desktop | **P0 生命周期**：单实例锁（双开唤起既有窗口，防两套 server 抢 `~/.apm`）；崩溃自愈——server/daemon 意外退出自动重启（指数退避 1s→30s、连续 5 次熔断）、渲染进程崩溃白屏重载（60s 窗 3 次熔断）、主进程 uncaughtException 兜底；自动更新消费端（electron-updater + GitHub Releases feed：启动 30s 静默检查/手动检查/下载完成询问安装/退出自动装，dev 禁用） | CAP-A-14 / ADR-015 | 壳级 e2e（Playwright _electron + 临时数据目录隔离）9 断言 ALL PASS | 决策日志 ADR-015（推翻 ADR-014「不自动更新」边界；签名单列待办） |
+| desktop · frontend | **P1 体验**：托盘常驻（关窗默认最小化保活，`close_to_tray` 偏好可关，托盘菜单三入口）；窗口位置尺寸持久化；`will-navigate` 白名单拦截；IPC 参数形状校验；secrets.json 经 safeStorage(DPAPI) 加密（旧明文兼容、跨机器解密失败拒绝启动不静默重生成）；卸载器询问是否删除 `~/.apm`；一键导出诊断包（日志+元数据+进程快照 zip，无凭证）；前端设置页「桌面偏好」卡（关闭行为/检查更新/导出诊断，i18n 双语 + 6 组件测试） | CAP-A-14 / ADR-015 | frontend desktop/settings 模块 41 测试全绿；e2e-shell ALL PASS | README 生命周期与分发契约表 |
+| desktop · frontend | **P2 打磨**：应用菜单（Alt 唤出，关于/检查更新/重载/缩放/日志目录）；日志轮转（5MB×3 份）；优雅关闭（utility postMessage `apm:shutdown` → server/cli parentPort 桥接 shutdown 钩子，3s 宽限强杀兜底；dev/手动 CLI 无 parentPort 不挂载）；电源事件（唤醒探活失败自动重启服务组；会话结束兜底清理）；系统通知桥（`notification.created` 桌面模式转发主进程原生通知，web 保持浏览器横幅）；深链 `apm://<内部路径>`（协议注册 + second-instance/冷启动转发 + preload 桥 + DesktopGate 消费） | CAP-A-14 / ADR-015 | desktop/cli tsc、server lint、frontend 22 测试全绿；e2e 复跑 ALL PASS | README 生命周期契约表扩 P2 行 |
+| desktop | **包体瘦身 242MB → 188MB（-22%）**：bundle 路线证伪弃用；定向剪除 Prisma CLI(58MB)+engines(77MB)（实测剪后 server 启动/健康/DB 读写全正常）；**封死数据泄露**——整目录拷 prisma/ 曾把开发者 dev.db+wal+bak（22MB）打进安装包，改白名单拷贝；打包时预生成 `default-template.db`（首启拷贝建库 40s→秒级，壳侧 `restoreDefaultDbIfNeeded`，dev 回退 db push）；strip 挪至 generate 后覆盖生成产物 | CAP-A-14 / ADR-015 补记 2 | 真包 `desktop:pack` 全链跑通 188MB；新管线产物启动冒烟（health 200/注册 201/JWT 签发）全过 | 决策日志 ADR-015 补记 2；README 建库契约更新 |
+| ci | **发布管线接线（取代 Tauri 版 release.yml）**：`desktop-release.yml`——tag `v*` 触发 windows 构建（质量前置 type-check/lint/单测 → pack:resources → electron-builder `--publish always`）→ GitHub Release **draft**（exe + blockmap + latest.yml）→ 人工确认 Publish 防误发 → 已装用户 electron-updater 静默拉取；workflow_dispatch dry_run 仅构建留档 | CAP-A-14 / ADR-015 | 管线设计经 188MB 真包全链本地验证；CI 侧待首 tag 实跑 | 本条目；ADR-015 补记（发布端闭环） |
+
 ### CAP-A-14 桌面体验五切片——初始化向导/登录缓存/启动屏/守护进程托管/调试模式（v0.6.1）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
