@@ -1892,7 +1892,7 @@ model AcceptanceCriteria {
   category     String? // 功能/性能/安全/可维护性/日志/错误处理...
   content      String // 标准内容描述
   source       String    @default("manual")
-  // manual | linear | document | template | ci | model_evaluation
+  // manual | linear | document | template | ci | pr_review | model_evaluation
   weight       Int       @default(1) // 权重（用于聚合计算）
   status       String    @default("pending")
   // pending | passed | failed | blocked
@@ -2271,20 +2271,31 @@ model ContractFileBinding {
 }
 
 // 发版（契约与文档知识层 v2 纪要 §12 缺口实体）：CHANGELOG 的唯一真相。
-// V1 由手动发版动作创建；远期由「里程碑收口 + 验收通过 + git tag + 质量门禁」
-// 聚合触发。release.created 事件驱动 CHANGELOG.md 单向导出再生。
+// 驱动型发版（CAP-K-03）：Release = 主线管道⑥交付执行器——已验收范围圈定 →
+// 版本裁决 → 门禁 → 决策卡审批 → tag/GitHub Release 执行 → 发布广播。
+// 单一版本真相源：tag（v{version}）与 CHANGELOG 头由本实体派生；只前滚不回退。
 model Release {
   id         String    @id @default(cuid())
   projectId  String
   version    String // semver，项目内唯一
   name       String?
   notes      String? // 发版说明 markdown（验收/里程碑聚合的入口）
-  status     String    @default("draft") // draft | released
+  status     String    @default("draft") // draft | gated | approved | publishing | released | failed
   gitTag     String?
   releasedAt DateTime?
   createdBy  String
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+
+  // ── 驱动型发版扩展 ──
+  scope          Json? // 发布范围 { issueIds: string[] }
+  gateResult     Json? // 门禁快照 { passed, ranAt, checks: [{key,label,passed,detail}] }
+  executionLog   Json? // 发布执行步骤 [{step,status,detail,at}]
+  failureReason  String?
+  approvedBy     String?
+  approvedAt     DateTime?
+  tagPushed      Boolean @default(false)
+  githubReleased Boolean @default(false)
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 

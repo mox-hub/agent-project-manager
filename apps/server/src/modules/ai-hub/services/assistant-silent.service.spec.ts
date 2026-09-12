@@ -109,6 +109,7 @@ describe('AssistantSilentService.run', () => {
       'intake-composite',
       'interview-dynamic',
       'workflow-draft',
+      'release-notes',
     ]);
   });
 

@@ -6,7 +6,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, Trash2, CircleDashed,
+  Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, CalendarRange, TableProperties, Trash2, CircleDashed,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -33,10 +33,15 @@ import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import { useTranslation } from 'react-i18next';
 import { AiAssignDialog } from '../components/ai-assign-dialog';
 import { TaskSimpleList } from '../components/task-simple-list';
+import { TaskTableView } from '../components/task-table-view';
+import { TaskGantt } from '../components/task-gantt';
+import { useActiveExecutionsMap, type ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
+import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
 import { ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
+import { cn } from '@/lib/utils';
 import {
   getProjectColumns,
   getSeverityColumns,
@@ -45,7 +50,7 @@ import {
   taskCardModel,
 } from '../components/board-presets';
 
-type ViewMode = 'list' | 'board';
+type ViewMode = 'list' | 'board' | 'gantt' | 'table';
 type GroupBy = 'none' | 'status' | 'severity' | 'project';
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -77,6 +82,39 @@ export function TasksPage() {
   const [dispatchTask, setDispatchTask] = useState<{ task: Task; projectId: string } | null>(null);
   const statsCards = usePersistentToggle('tasks-page.stats');
 
+  // Linear 风格 Display 选项
+  const [orderBy, setOrderBy] = useState<string>('priority');
+  const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
+  const [completedFilter, setCompletedFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [showSubIssues, setShowSubIssues] = useState(true);
+  const [showEmptyGroups, setShowEmptyGroups] = useState(false);
+  const [displayProperties, setDisplayProperties] = useState<Record<string, boolean>>({
+    id: true,
+    status: true,
+    assignee: true,
+    priority: true,
+    project: true,
+    dueDate: true,
+    labels: true,
+    created: true,
+    aiExecution: true,
+  });
+
+  const isAiFiltering = useMemo(() => {
+    return conditions.some((c) => c.fieldId === 'aiExecution' && c.values.includes('active'));
+  }, [conditions]);
+
+  const toggleAiFilter = () => {
+    if (isAiFiltering) {
+      setConditions((prev) => prev.filter((c) => c.fieldId !== 'aiExecution'));
+    } else {
+      setConditions((prev) => [
+        ...prev.filter((c) => c.fieldId !== 'aiExecution'),
+        { id: 'cond-ai', fieldId: 'aiExecution', operator: 'is', values: ['active'] },
+      ]);
+    }
+  };
+
   // 成员卡「派发任务」入口：/app/issues?state 携带 openCreate + presetAssignee。
   // 渲染期间检测 state 变化调整弹窗状态，replaceState 副作用留在独立 effect。
   const location = useLocation();
@@ -102,7 +140,7 @@ export function TasksPage() {
     key: 'tasks-page',
     defaults: [{
       id: 'all',
-      name: t('task.filter.all', 'All'),
+      name: t('common.all', '全部'),
       icon: 'list',
       builtIn: true,
       snapshot: { search: '', conditions: [], viewMode: 'list', groupBy: 'none' },
@@ -135,6 +173,9 @@ export function TasksPage() {
     updateActiveSnapshot({ search, conditions, viewMode, groupBy });
   }, [updateActiveSnapshot, search, conditions, viewMode, groupBy]);
 
+  // AI 活跃执行接管状态
+  const { getIssueExecution, totalActiveAiCount } = useActiveExecutionsMap();
+
   // 跨项目查询所有 task + bug, 同时包含 inbox 项目下的未绑定任务
   const { data: tasksData, isLoading, refetch } = useAllTasks({ pageSize: 1000 });
   const deleteTask = useDeleteTask();
@@ -153,6 +194,8 @@ export function TasksPage() {
     const statusCounts = countBy(allTasks, (task) => task.status);
     const severityCounts = countBy(allTasks, severityOf);
     const projectCounts = countBy(allTasks, (task) => task.projectId);
+    const aiActiveCounts = allTasks.filter((t) => !!getIssueExecution(t)?.isExecuting).length;
+
     return [
       {
         id: 'status',
@@ -169,6 +212,19 @@ export function TasksPage() {
             hint: statusCounts.get(value)?.toString(),
           };
         }),
+      },
+      {
+        id: 'aiExecution',
+        label: 'AI 执行态',
+        icon: BotIcon,
+        operators: ['is'],
+        options: [
+          {
+            value: 'active',
+            label: 'AI 接管执行中',
+            hint: aiActiveCounts.toString(),
+          },
+        ],
       },
       {
         id: 'severity',
@@ -195,19 +251,32 @@ export function TasksPage() {
         })),
       },
     ];
-  }, [t, projects, allTasks]);
+  }, [t, projects, allTasks, getIssueExecution]);
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
     const statusSets = filterConditionSets(conditions, 'status');
     const severitySets = filterConditionSets(conditions, 'severity');
     const projectSets = filterConditionSets(conditions, 'project');
-    return allTasks.filter((task) => {
+    const aiSets = filterConditionSets(conditions, 'aiExecution');
+
+    const list = allTasks.filter((task) => {
       if (search && !task.title.toLowerCase().includes(search.toLowerCase()) &&
           !task.id.toLowerCase().includes(search.toLowerCase())) {
         return false;
       }
       if (!matchesConditionSets(task.status, statusSets)) {
+        return false;
+      }
+      // AI 执行状态筛选
+      if (aiSets.include.includes('active') && !getIssueExecution(task)?.isExecuting) {
+        return false;
+      }
+      // 完成项显示控制
+      if (completedFilter === 'active' && (task.status === 'done' || task.status === 'canceled')) {
+        return false;
+      }
+      if (completedFilter === 'completed' && task.status !== 'done' && task.status !== 'canceled') {
         return false;
       }
       // severity 缺失时从 priority 推导（severityOf 统一口径）
@@ -219,7 +288,28 @@ export function TasksPage() {
       }
       return true;
     });
-  }, [allTasks, search, conditions]);
+
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      let res = 0;
+      if (orderBy === 'priority') {
+        const pOrder: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+        res = (pOrder[a.priority ?? 'low'] ?? 0) - (pOrder[b.priority ?? 'low'] ?? 0);
+      } else if (orderBy === 'dueDate') {
+        const da = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+        const db = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+        res = da - db;
+      } else if (orderBy === 'created') {
+        const ca = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const cb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        res = ca - cb;
+      } else if (orderBy === 'title') {
+        res = a.title.localeCompare(b.title);
+      }
+      return orderDirection === 'desc' ? -res : res;
+    });
+    return sorted;
+  }, [allTasks, search, conditions, getIssueExecution, completedFilter, orderBy, orderDirection]);
 
   const getProjectName = (projectId: string | null | undefined) => {
     if (!projectId) return t('common.noProject');
@@ -312,16 +402,21 @@ export function TasksPage() {
         onCreateView={toolbar.createView}
         onUpdateView={toolbar.updateView}
         onDeleteView={toolbar.deleteView}
+        isDirty={toolbar.isDirty}
+        onSaveCurrentView={toolbar.saveCurrentToActive}
         viewStyle={{
           value: viewMode,
+          layout: 'centered',
           onChange: (v) => {
             setViewMode(v as ViewMode);
             // board 视图不支持 no grouping，切入时兜底为按状态分组
             if (v === 'board' && groupBy === 'none') setGroupBy('status');
           },
           options: [
-            { value: 'list', label: t('task.view.list', 'List'), icon: List },
-            { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
+            { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+            { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
+            { value: 'gantt', label: t('viewDisplay.views.gantt', 'Gantt'), icon: CalendarRange },
+            { value: 'table', label: t('viewDisplay.views.table', 'Table'), icon: TableProperties },
           ],
         }}
         filterMenu={{
@@ -336,25 +431,69 @@ export function TasksPage() {
             />
           ),
         }}
+        actions={
+          <button
+            type="button"
+            onClick={toggleAiFilter}
+            aria-pressed={isAiFiltering}
+            className={cn(
+              "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-all select-none shadow-2xs",
+              isAiFiltering
+                ? "border border-accent-purple bg-accent-purple text-white shadow-xs font-semibold"
+                : totalActiveAiCount > 0
+                  ? "border border-accent-purple/40 bg-accent-purple/10 text-accent-purple hover:bg-accent-purple/20"
+                  : "border border-border/60 bg-card text-muted-foreground hover:border-accent-purple/30 hover:text-foreground",
+            )}
+            title={
+              isAiFiltering
+                ? t("viewDisplay.aiFilter.cancelFilterTooltip", "点击取消筛选 AI 执行任务")
+                : t("viewDisplay.aiFilter.filterTooltip", "点击一键筛选正在 AI 执行的任务")
+            }
+          >
+            <BotIcon className={cn("size-3.5", totalActiveAiCount > 0 && !isAiFiltering && "animate-pulse")} />
+            <span>
+              {totalActiveAiCount > 0
+                ? t("viewDisplay.aiFilter.executingCount", { count: totalActiveAiCount })
+                : t("viewDisplay.aiFilter.executing", "AI 执行中")}
+              {isAiFiltering ? ` (${t("viewDisplay.aiFilter.filtered", "已筛选")})` : ""}
+            </span>
+          </button>
+        }
         displayMenu={{
-          items: [
-            { type: 'label', label: t('task.groupBy.label', 'Group by') },
-            // board 视图不支持 no grouping，仅 list 视图提供该项
-            ...(viewMode === 'list' ? [{
-              id: 'groupby-none',
-              type: 'checkbox' as const,
-              label: t('task.groupBy.none', 'No grouping'),
-              checked: groupBy === 'none',
-              onSelect: () => setGroupBy('none'),
-            }] : []),
-            ...(['status', 'severity', 'project'] as const).map((value) => ({
-              id: `groupby-${value}`,
-              type: 'checkbox' as const,
-              label: t(`task.groupBy.${value}`),
-              checked: groupBy === value,
-              onSelect: () => setGroupBy(value),
-            })),
-          ],
+          displayConfig: {
+            viewMode,
+            onViewModeChange: (v) => {
+              setViewMode(v as ViewMode);
+              if (v === 'board' && groupBy === 'none') setGroupBy('status');
+            },
+            viewOptions: [
+              { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+              { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
+              { value: 'gantt', label: t('viewDisplay.views.gantt', 'Gantt'), icon: CalendarRange },
+              { value: 'table', label: t('viewDisplay.views.table', 'Table'), icon: TableProperties },
+            ],
+            groupBy,
+            onGroupByChange: (g) => setGroupBy(g as GroupBy),
+            groupByOptions: [
+              ...(viewMode !== 'board' ? [{ value: 'none', label: t('viewDisplay.groupOptions.none', 'No grouping') }] : []),
+              { value: 'status', label: t('viewDisplay.groupOptions.status', 'Status') },
+              { value: 'severity', label: t('viewDisplay.groupOptions.severity', 'Severity') },
+              { value: 'project', label: t('viewDisplay.groupOptions.project', 'Project') },
+            ],
+            orderBy,
+            onOrderByChange: setOrderBy,
+            orderDirection,
+            onOrderDirectionToggle: () => setOrderDirection((prev) => (prev === 'asc' ? 'desc' : 'asc')),
+            completedFilter,
+            onCompletedFilterChange: setCompletedFilter,
+            showSubIssues,
+            onShowSubIssuesChange: setShowSubIssues,
+            showEmptyGroups,
+            onShowEmptyGroupsChange: setShowEmptyGroups,
+            displayProperties,
+            onToggleDisplayProperty: (key) =>
+              setDisplayProperties((prev) => ({ ...prev, [key]: !prev[key] })),
+          },
         }}
         downloadMenu={{
           items: [
@@ -388,6 +527,7 @@ export function TasksPage() {
               onTaskClick={handleTaskClick}
               groupBy={groupBy}
               getProjectName={getProjectName}
+              getAiExecution={getIssueExecution}
               onGroupCreate={() => setShowCreateDialog(true)}
               selectionActions={(selected, close) => (
                 <>
@@ -424,15 +564,75 @@ export function TasksPage() {
                 </>
               )}
             />
-          ) : (
+          ) : viewMode === 'board' ? (
             <TasksBoardView
               tasks={filteredTasks}
               loading={isLoading}
               groupBy={groupBy === 'none' ? 'status' : groupBy}
               projects={projects}
               onTaskClick={handleTaskClick}
+              getAiExecution={getIssueExecution}
               onDispatchTask={(task, projectId) => setDispatchTask({ task, projectId })}
               onMoveTask={(task, data) => updateTask.mutate({ issueId: task.id, data })}
+            />
+          ) : viewMode === 'gantt' ? (
+            <TaskGantt
+              tasks={filteredTasks}
+              onTaskClick={handleTaskClick}
+              getAiExecution={getIssueExecution}
+              onDateRangeChange={(issueId, range) =>
+                updateTask
+                  .mutateAsync({
+                    issueId,
+                    data: {
+                      startDate: range.startDate,
+                      dueDate: range.dueDate,
+                    },
+                  })
+                  .then(() => undefined)
+              }
+            />
+          ) : (
+            <TaskTableView
+              tasks={filteredTasks}
+              loading={isLoading}
+              onTaskClick={handleTaskClick}
+              getAiExecution={getIssueExecution}
+              getProjectName={getProjectName}
+              selectionActions={(selected, close) => (
+                <>
+                  <ListActionButton
+                    onClick={() => {
+                      const first = selected.find((t) => t.projectId);
+                      if (first) setDispatchTask({ task: first, projectId: first.projectId! });
+                    }}
+                    disabled={!selected.some((t) => t.projectId)}
+                    title="指派 AI"
+                    className="text-accent-purple"
+                  >
+                    <BotIcon className="size-3.5" /> 指派 AI
+                  </ListActionButton>
+                  <ListActionButton
+                    onClick={async () => {
+                      const ok = await confirmAction({
+                        title: `删除选中的 ${selected.length} 项？`,
+                        description: '该操作会删除选中的任务及其子任务，且不可撤销。',
+                        confirmText: '删除',
+                        cancelText: '取消',
+                        variant: 'destructive',
+                      });
+                      if (!ok) return;
+                      await Promise.allSettled(selected.map((t) => deleteTask.mutateAsync(t.id)));
+                      close();
+                      refetch();
+                    }}
+                    title="删除"
+                    className="text-destructive"
+                  >
+                    <Trash2 className="size-3.5" /> 删除
+                  </ListActionButton>
+                </>
+              )}
             />
           )}
         </div>
@@ -448,6 +648,7 @@ function TasksBoardView({
   groupBy,
   projects,
   onTaskClick,
+  getAiExecution,
   onDispatchTask,
   onMoveTask,
   loading,
@@ -457,6 +658,7 @@ function TasksBoardView({
   projects: { id: string; name: string }[];
   loading?: boolean;
   onTaskClick: (task: Task) => void;
+  getAiExecution?: (task: Task) => ActiveAiExecution | null;
   onDispatchTask?: (task: Task, projectId: string) => void;
   onMoveTask?: (task: Task, data: { status?: string; severity?: Task['severity'] }) => void;
 }) {
@@ -508,6 +710,12 @@ function TasksBoardView({
 
   const card = {
     ...taskCardModel,
+    isAiExecuting: (task: Task) => !!getAiExecution?.(task)?.isExecuting,
+    aiExecutionNode: (task: Task) => {
+      const ai = getAiExecution?.(task);
+      if (!ai) return null;
+      return <AiExecutionBadge execution={ai} size="xs" variant="line" />;
+    },
     row3: (task: Task) => (
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1">{taskCardRow3(task)}</div>

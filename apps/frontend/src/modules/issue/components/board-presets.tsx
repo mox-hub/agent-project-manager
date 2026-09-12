@@ -226,15 +226,123 @@ export const taskCardModel: BoardCardModel<Task> = {
   row3: (task) => taskCardRow3(task),
 };
 
-/** Bug 卡片：severity 左边框 */
-const SEVERITY_BORDER: Record<string, string> = {
-  critical: 'border-l-accent-red',
-  high: 'border-l-accent-yellow',
-  medium: 'border-l-accent-blue',
-  low: 'border-l-muted-foreground/40',
+const SEVERITY_BADGE_CLASS: Record<string, string> = {
+  critical: 'bg-accent-red/15 text-accent-red border-accent-red/30',
+  high: 'bg-accent-yellow/15 text-accent-yellow border-accent-yellow/30',
+  medium: 'bg-accent-blue/15 text-accent-blue border-accent-blue/30',
+  low: 'bg-muted/40 text-muted-foreground border-border/40',
 };
 
+/** Bug 行1：重要性/严重度图标 + Bug编号 + 严重度胶囊 + 状态图标 */
+export function bugCardRow1(bug: Task, t?: Translate): ReactNode {
+  const sevKey = (bug.severity ?? 'low') as SeverityKey;
+  const sevVisual = SEVERITY_VISUAL[sevKey] ?? SEVERITY_VISUAL.low;
+  const SevIcon = sevVisual.icon;
+  const statusVisual = STATUS_VISUAL[(bug.status as TaskStatusKey) ?? 'todo'] ?? STATUS_VISUAL.todo;
+  const StatusIcon = statusVisual.icon;
+  const statusLabel = t?.(`task.status.${bug.status}`) ?? bug.status;
+  const sevLabel = t?.(`task.bug.severity.${sevKey}`) ?? sevKey;
+
+  return (
+    <div className="flex w-full items-center justify-between gap-1.5 min-w-0">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <SevIcon
+          size={13}
+          className={STATUS_ICON_TEXT[sevVisual.color]}
+          aria-label={sevKey}
+        />
+        <span className="font-mono text-xs font-semibold tracking-tight text-foreground truncate">
+          {issueIdentifier(bug)}
+        </span>
+        <span
+          className={cn(
+            'inline-flex items-center rounded-sm border px-1 py-0 text-10 font-medium uppercase leading-tight',
+            SEVERITY_BADGE_CLASS[sevKey] ?? SEVERITY_BADGE_CLASS.low,
+          )}
+        >
+          {sevLabel}
+        </span>
+      </div>
+      <span
+        className="inline-flex size-5 shrink-0 items-center justify-center rounded-md bg-muted/40"
+        title={statusLabel}
+      >
+        <StatusIcon
+          size={12}
+          className={cn(
+            STATUS_ICON_TEXT[statusVisual.color],
+            bug.status === 'in_progress' ? 'animate-spin [animation-duration:3s]' : '',
+          )}
+        />
+      </span>
+    </div>
+  );
+}
+
+/** Bug 行3：截止日期/发现时间 + 子任务/关联 + 评论 + 项目 + 负责人 */
+export function bugCardRow3(bug: Task, projectName?: string): ReactNode {
+  const dueDate = bug.dueDate ? new Date(bug.dueDate) : null;
+  const isOverdue = !!dueDate && dueDate.getTime() < Date.now() && bug.status !== 'done' && bug.status !== 'canceled';
+
+  return (
+    <div className="flex items-center justify-between gap-2 pt-0.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-11 text-muted-foreground">
+        {dueDate ? (
+          <span
+            className={cn(
+              'inline-flex items-center gap-1 font-medium',
+              isOverdue ? 'text-accent-red font-semibold' : 'text-muted-foreground',
+            )}
+            title={isOverdue ? '已超期' : '截止日期'}
+          >
+            <CalendarClock size={11} />
+            {dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </span>
+        ) : null}
+        {projectName ? (
+          <span
+            className="max-w-20 truncate rounded-sm bg-muted/50 px-1 py-0.2 text-10 font-medium text-muted-foreground"
+            title={projectName}
+          >
+            {projectName}
+          </span>
+        ) : null}
+        {(bug._count?.subIssues ?? 0) > 0 ? (
+          <span className="inline-flex items-center gap-0.5" title="Subtasks">
+            <ListTree size={11} />
+            {bug._count?.subIssues}
+          </span>
+        ) : null}
+        {(bug._count?.comments ?? 0) > 0 ? (
+          <span className="inline-flex items-center gap-0.5" title="Comments">
+            <MessageCircle size={11} />
+            {bug._count?.comments}
+          </span>
+        ) : null}
+      </div>
+      {bug.assignee ? (
+        <Avatar className="size-5 shrink-0 border border-background shadow-2xs">
+          {bug.assignee.avatarUrl ? (
+            <AvatarImage src={bug.assignee.avatarUrl} alt={bug.assignee.displayName} />
+          ) : null}
+          <AvatarFallback className="text-10">
+            {(bug.assignee.displayName || bug.assignee.username).slice(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      ) : (
+        <span
+          className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-muted/60 text-10 font-semibold text-muted-foreground/60"
+          title="Unassigned"
+        >
+          ?
+        </span>
+      )}
+    </div>
+  );
+}
+
 export const bugCardModel: BoardCardModel<Task> = {
-  ...taskCardModel,
-  className: (bug) => cn('border-l-3', SEVERITY_BORDER[bug.severity ?? 'low'] ?? SEVERITY_BORDER.low),
+  title: (bug) => bug.title,
+  row1: (bug) => bugCardRow1(bug),
+  row3: (bug) => bugCardRow3(bug),
 };

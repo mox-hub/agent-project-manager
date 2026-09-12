@@ -55181,6 +55181,1483 @@
         ]
       }
     },
+    "/_api/releases": {
+      "post": {
+        "operationId": "ReleaseController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReleaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "创建发版草案（版本号须合法 semver、项目内唯一、大于基线）",
+        "tags": [
+          "Releases"
+        ]
+      },
+      "get": {
+        "operationId": "ReleaseController_list",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "发版列表（按项目过滤）",
+        "tags": [
+          "Releases"
+        ]
+      }
+    },
+    "/_api/releases/version-recommend": {
+      "get": {
+        "operationId": "ReleaseController_recommend",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "excludeReleaseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "版本推荐（conventional commits 机械推断 + semver 递增）",
+        "tags": [
+          "Releases"
+        ]
+      },
+      "post": {
+        "operationId": "ReleaseController_recommendPost",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionRecommendRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "版本推荐（POST 形态，body 传 projectId）",
+        "tags": [
+          "Releases"
+        ]
+      }
+    },
+    "/_api/releases/{id}": {
+      "get": {
+        "operationId": "ReleaseController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "发版详情（含门禁快照与发布执行日志）",
+        "tags": [
+          "Releases"
+        ]
+      },
+      "patch": {
+        "operationId": "ReleaseController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReleaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "编辑草案（仅 draft：名称/说明/版本/范围）",
+        "tags": [
+          "Releases"
+        ]
+      }
+    },
+    "/_api/releases/{id}/gate": {
+      "post": {
+        "operationId": "ReleaseController_gate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "提交门禁（draft → 跑四证据源检查 + CHANGELOG 一致性；全过转 gated）",
+        "tags": [
+          "Releases"
+        ]
+      }
+    },
+    "/_api/releases/{id}/approval-request": {
+      "post": {
+        "operationId": "ReleaseController_approvalRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalProposalRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "发起发布审批（gated → 创建 kind=release 决策卡待人确认）",
+        "tags": [
+          "Releases"
+        ]
+      }
+    },
+    "/_api/releases/{id}/publish": {
+      "post": {
+        "operationId": "ReleaseController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "执行发布（approved → publishing → released/failed）",
+        "tags": [
+          "Releases"
+        ]
+      }
+    },
+    "/_api/releases/{id}/reject": {
+      "post": {
+        "operationId": "ReleaseController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectReleaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "打回草案（gated/approved → draft）",
+        "tags": [
+          "Releases"
+        ]
+      }
+    },
+    "/_api/releases/{id}/reopen": {
+      "post": {
+        "operationId": "ReleaseController_reopen",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "失败重开（failed → draft，重走门禁）",
+        "tags": [
+          "Releases"
+        ]
+      }
+    },
     "/_api/playbooks/templates": {
       "get": {
         "operationId": "PlaybookController_getTemplates",
@@ -60440,6 +61917,10 @@
                 "$ref": "#/components/schemas/IssueParentSummaryDto"
               }
             ]
+          },
+          "auditWarning": {
+            "type": "string",
+            "description": "审计闸门黄牌提示（人工执行项且活契约完整性审计 riskLevel=red 时返回，不阻断创建）"
           }
         },
         "required": [
@@ -75758,6 +77239,92 @@
         "required": [
           "syncMode"
         ]
+      },
+      "CreateReleaseDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "项目 ID"
+          },
+          "version": {
+            "type": "string",
+            "description": "版本号（semver，项目内唯一）"
+          },
+          "name": {
+            "type": "string",
+            "description": "发版名称"
+          },
+          "notes": {
+            "type": "string",
+            "description": "发版说明（markdown）"
+          },
+          "scopeIssueIds": {
+            "description": "发布范围（纳入本版本的工单 ID 列表）",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "projectId",
+          "version"
+        ]
+      },
+      "VersionRecommendRequestDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "项目 ID"
+          }
+        },
+        "required": [
+          "projectId"
+        ]
+      },
+      "UpdateReleaseDto": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "版本号（semver，项目内唯一）"
+          },
+          "name": {
+            "type": "string",
+            "description": "发版名称"
+          },
+          "notes": {
+            "type": "string",
+            "description": "发版说明（markdown）"
+          },
+          "scopeIssueIds": {
+            "description": "发布范围（纳入本版本的工单 ID 列表）",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ApprovalProposalRequestDto": {
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string",
+            "description": "预留：附言"
+          }
+        }
+      },
+      "RejectReleaseDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "打回原因"
+          }
+        }
       },
       "PlaybookQuestionDto": {
         "type": "object",

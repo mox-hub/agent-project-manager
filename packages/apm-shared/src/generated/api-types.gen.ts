@@ -6536,6 +6536,145 @@ export interface paths {
         patch: operations["ContractController_setSyncMode"];
         trace?: never;
     };
+    "/_api/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 发版列表（按项目过滤） */
+        get: operations["ReleaseController_list"];
+        put?: never;
+        /** 创建发版草案（版本号须合法 semver、项目内唯一、大于基线） */
+        post: operations["ReleaseController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/releases/version-recommend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 版本推荐（conventional commits 机械推断 + semver 递增） */
+        get: operations["ReleaseController_recommend"];
+        put?: never;
+        /** 版本推荐（POST 形态，body 传 projectId） */
+        post: operations["ReleaseController_recommendPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/releases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 发版详情（含门禁快照与发布执行日志） */
+        get: operations["ReleaseController_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 编辑草案（仅 draft：名称/说明/版本/范围） */
+        patch: operations["ReleaseController_update"];
+        trace?: never;
+    };
+    "/_api/releases/{id}/gate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交门禁（draft → 跑四证据源检查 + CHANGELOG 一致性；全过转 gated） */
+        post: operations["ReleaseController_gate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/releases/{id}/approval-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发起发布审批（gated → 创建 kind=release 决策卡待人确认） */
+        post: operations["ReleaseController_approvalRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/releases/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 执行发布（approved → publishing → released/failed） */
+        post: operations["ReleaseController_publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/releases/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 打回草案（gated/approved → draft） */
+        post: operations["ReleaseController_reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/releases/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 失败重开（failed → draft，重走门禁） */
+        post: operations["ReleaseController_reopen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/playbooks/templates": {
         parameters: {
             query?: never;
@@ -8547,6 +8686,8 @@ export interface components {
             project?: components["schemas"]["IssueProjectSummaryDto"];
             /** @description 工单摘要（人工执行项路径返回） */
             issue?: components["schemas"]["IssueParentSummaryDto"];
+            /** @description 审计闸门黄牌提示（人工执行项且活契约完整性审计 riskLevel=red 时返回，不阻断创建） */
+            auditWarning?: string;
         };
         ExecutionCreateResponseDto: {
             /** @description 执行项（含审批列表） */
@@ -14521,6 +14662,40 @@ export interface components {
              * @enum {string}
              */
             syncMode: "managed" | "synced" | "detached";
+        };
+        CreateReleaseDto: {
+            /** @description 项目 ID */
+            projectId: string;
+            /** @description 版本号（semver，项目内唯一） */
+            version: string;
+            /** @description 发版名称 */
+            name?: string;
+            /** @description 发版说明（markdown） */
+            notes?: string;
+            /** @description 发布范围（纳入本版本的工单 ID 列表） */
+            scopeIssueIds?: string[];
+        };
+        VersionRecommendRequestDto: {
+            /** @description 项目 ID */
+            projectId: string;
+        };
+        UpdateReleaseDto: {
+            /** @description 版本号（semver，项目内唯一） */
+            version?: string;
+            /** @description 发版名称 */
+            name?: string;
+            /** @description 发版说明（markdown） */
+            notes?: string;
+            /** @description 发布范围（纳入本版本的工单 ID 列表） */
+            scopeIssueIds?: string[];
+        };
+        ApprovalProposalRequestDto: {
+            /** @description 预留：附言 */
+            comment?: string;
+        };
+        RejectReleaseDto: {
+            /** @description 打回原因 */
+            reason?: string;
         };
         PlaybookQuestionDto: {
             /** @description 问题 id（注册表稳定 key） */
@@ -45647,6 +45822,773 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContractBindingResponseDto"];
+                };
+            };
+        };
+    };
+    ReleaseController_list: {
+        parameters: {
+            query: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReleaseDto"];
+            };
+        };
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_recommend: {
+        parameters: {
+            query: {
+                /** @description 项目 ID */
+                projectId: string;
+                excludeReleaseId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_recommendPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRecommendRequestDto"];
+            };
+        };
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReleaseDto"];
+            };
+        };
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_gate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_approvalRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApprovalProposalRequestDto"];
+            };
+        };
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectReleaseDto"];
+            };
+        };
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_reopen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
                 };
             };
         };

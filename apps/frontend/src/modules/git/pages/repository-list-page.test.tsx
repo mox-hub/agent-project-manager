@@ -87,7 +87,7 @@ const renderPage = () =>
 
 /** 搜索框在筛选下拉内：先点开工具栏筛选按钮 */
 async function openFilterAndSearch() {
-  fireEvent.click(screen.getByRole('button', { name: 'Filter' }));
+  fireEvent.click(screen.getByRole('button', { name: /filter|筛选/i }));
   return screen.findByPlaceholderText('Search repositories...');
 }
 

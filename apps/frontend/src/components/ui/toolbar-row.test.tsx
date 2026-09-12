@@ -48,7 +48,7 @@ function renderToolbar(overrides?: {
 describe('ToolbarRow', () => {
   it('渲染视图胶囊、加号与默认三按钮', () => {
     renderToolbar();
-    expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /all|全部/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mine' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add view' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Filter' })).toBeInTheDocument();

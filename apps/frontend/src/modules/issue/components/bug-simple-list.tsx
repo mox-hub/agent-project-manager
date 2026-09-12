@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/data-list';
 import type { Task } from '../api/issue-api';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
+import { AiExecutionBadge, type IssueAiExecutionState } from '@/shared/components/ai-execution-badge';
 import { cn } from '@/lib/utils';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
@@ -76,6 +77,7 @@ export interface BugSimpleListProps {
   onGroupCreate?: (key: string, items: Task[]) => void;
   groupProgress?: (items: Task[]) => DataListProgress | null;
   getProjectName?: (projectId: string | null | undefined) => string;
+  getAiExecution?: (bug: Task) => IssueAiExecutionState | undefined;
   selectionActions?: (selected: Task[], close: () => void) => React.ReactNode;
   className?: string;
 }
@@ -89,6 +91,7 @@ export function BugSimpleList({
   onGroupCreate,
   groupProgress,
   getProjectName,
+  getAiExecution,
   selectionActions,
   className,
 }: BugSimpleListProps) {
@@ -139,8 +142,15 @@ export function BugSimpleList({
       selectionActions={selectionActions}
       renderLeading={(bug) => {
         const sev = SEV_C[severityOf(bug)];
+        const aiExecution = getAiExecution?.(bug);
         return (
           <>
+            {aiExecution ? (
+              <span
+                className="h-6 w-1 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
+                title={`AI 接管中: ${aiExecution.agentName} (${aiExecution.stepSummary || '执行中'})`}
+              />
+            ) : null}
             {/* 严重度指示条 */}
             <span className={cn('h-6 w-1.5 shrink-0 rounded-full', sev.dotColor)} />
             {/* 状态图标 */}
@@ -150,6 +160,9 @@ export function BugSimpleList({
             {/* 标题（带 Bug 图标） */}
             <Bug className="size-4 shrink-0 text-destructive" />
             <ListText className="min-w-0 flex-1">{bug.title}</ListText>
+            {aiExecution ? (
+              <AiExecutionBadge execution={aiExecution} size="xs" variant="compact" />
+            ) : null}
           </>
         );
       }}
@@ -158,8 +171,12 @@ export function BugSimpleList({
         const tags = bug.issueTags ?? [];
         const shown = tags.slice(0, 2);
         const extra = tags.length - shown.length;
+        const aiExecution = getAiExecution?.(bug);
         return (
           <>
+            {aiExecution ? (
+              <AiExecutionBadge execution={aiExecution} size="sm" variant="pill" />
+            ) : null}
             {/* 项目 */}
             <ListChip className="border border-border bg-muted/40 text-muted-foreground">{getProjectName?.(bug.projectId) ?? ''}</ListChip>
             {/* 严重度标签 */}

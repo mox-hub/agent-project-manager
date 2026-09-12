@@ -62,6 +62,8 @@ import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-p
 import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
 import { WorkflowListPage } from '@/modules/workflow/pages/workflow-list-page';
 import { WorkflowDetailPage } from '@/modules/workflow/pages/workflow-detail-page';
+import { ReleaseListPage } from '@/modules/release/pages/release-list-page';
+import { ReleaseDetailPage } from '@/modules/release/pages/release-detail-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
 import { SearchPage } from '@/modules/search/pages/search-page';
 
@@ -324,6 +326,18 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: 'releases',
+        element: <ReleaseListPage />,
+        handle: { selfScroll: true },
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'releases/:id',
+        element: <ReleaseDetailPage />,
+        handle: { selfScroll: true },
+        errorElement: <ErrorPage />,
+      },
+      {
         path: 'ai/management',
         element: <RedirectToSettings to="/app/settings/ai" />,
         errorElement: <ErrorPage />,
@@ -429,6 +443,16 @@ export const router = createBrowserRouter([
       {
         path: 'acceptance/:id',
         element: <AcceptanceDetailPage />,
+        handle: { selfScroll: true },
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'delivery',
+        element: (
+          <Suspense fallback={null}>
+            <DeliveryPage />
+          </Suspense>
+        ),
         handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
@@ -563,15 +587,6 @@ export const router = createBrowserRouter([
                 </Suspense>
               ),
               handle: { selfScroll: true },
-              errorElement: <ErrorPage />,
-            },
-            {
-              path: 'delivery',
-              element: (
-                <Suspense fallback={null}>
-                  <DeliveryPage />
-                </Suspense>
-              ),
               errorElement: <ErrorPage />,
             },
           ]

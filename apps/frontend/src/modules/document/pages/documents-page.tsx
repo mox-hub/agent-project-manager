@@ -43,13 +43,13 @@ type StatusFilter = DocumentStatus | 'all';
 type CategoryFilter = DocumentCategory | 'all';
 type ViewMode = 'grid' | 'list';
 
-const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; color: string }> = {
-  requirement: { label: '需求文档', icon: FileText, color: 'text-accent-blue' },
-  design: { label: '设计文档', icon: Palette, color: 'text-accent-purple' },
-  api: { label: 'API文档', icon: Code2, color: 'text-accent-green' },
-  testing: { label: '测试文档', icon: TestTube2, color: 'text-accent-yellow' },
-  guide: { label: '用户指南', icon: BookOpen, color: 'text-accent-blue' },
-  custom: { label: '自定义', icon: FolderOpen, color: 'text-muted-foreground' },
+const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; color: string; bg: string }> = {
+  requirement: { label: '需求文档', icon: FileText, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
+  design: { label: '设计文档', icon: Palette, color: 'text-accent-purple', bg: 'bg-accent-purple/10' },
+  api: { label: 'API文档', icon: Code2, color: 'text-accent-green', bg: 'bg-accent-green/10' },
+  testing: { label: '测试文档', icon: TestTube2, color: 'text-accent-yellow', bg: 'bg-accent-yellow/10' },
+  guide: { label: '用户指南', icon: BookOpen, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
+  custom: { label: '自定义', icon: FolderOpen, color: 'text-muted-foreground', bg: 'bg-muted/50' },
 };
 
 const STATUS_CONFIG: Record<StatusFilter, { label: string }> = {
@@ -79,15 +79,15 @@ export function DocumentsPage() {
   const [status, setStatus] = useState<StatusFilter>('all');
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [previewDocument, setPreviewDocument] = useState<DocumentListItem | null>(null);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
   // 已保存视图：快照记忆搜索/状态/分类/视图样式
   const toolbar = useToolbarViews({
     key: 'documents-page',
     defaults: [{
       id: 'all',
-      name: t('document.filter.all', '全部'),
+      name: t('common.all', '全部'),
       icon: 'grid',
       builtIn: true,
       snapshot: { search: '', status: 'all', category: 'all', viewStyle: 'grid' },
@@ -243,8 +243,8 @@ export function DocumentsPage() {
             value: viewMode,
             onChange: (v) => setViewMode(v as ViewMode),
             options: [
-              { value: 'grid', label: t('document.view.grid', 'Grid'), icon: LayoutGrid },
-              { value: 'list', label: t('document.view.list', 'List'), icon: List },
+              { value: 'grid', label: t('viewDisplay.views.grid', '卡片'), icon: LayoutGrid },
+              { value: 'list', label: t('viewDisplay.views.list', '列表'), icon: List },
             ],
           }}
           filterMenu={{
@@ -342,91 +342,118 @@ function DocumentCard({
 
   return (
     <div
-      className="group rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-xs"
+      onClick={() => onPreview(document)}
+      className="group flex flex-col justify-between rounded-xl border border-border bg-card p-4 transition-all hover:border-border/80 hover:shadow-md cursor-pointer space-y-3"
       data-ai-component={`document.document-list.card.${document.id}`}
     >
-      <div className="mb-3 flex items-start justify-between">
-        <div className={cn('rounded-lg bg-muted/50 p-2', catConfig.color)}>
-          <CatIcon size={18} />
-        </div>
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              onMenuToggle(menuOpen === document.id ? null : document.id);
-            }}
-          >
-            <MoreVertical size={16} />
-          </Button>
-          {menuOpen === document.id && (
-            <div
-              className={`absolute right-0 top-full z-20 mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Link
-                to={`/app/documents/${document.id}`}
-                className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left no-underline`}
-                onClick={() => onMenuToggle(null)}
-                data-ai-component={`document.document-list.card.${document.id}.view`}
-                data-ai-action={`document.document-list.card.${document.id}.view.click`}
-                data-ai-role="jump"
+      <div className="space-y-3">
+        {/* 顶部：彩色图标盒子 + 状态徽章 + 操作菜单 */}
+        <div className="flex items-start justify-between gap-2">
+          <div className={cn('size-9 rounded-lg flex items-center justify-center shrink-0', catConfig.bg)}>
+            <CatIcon className={cn('size-4', catConfig.color)} />
+          </div>
+          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <StatusPill tone={DOC_STATUS_TONE[document.status]} className="text-11 px-1.5 py-0.5 rounded-md">
+              {statusConfig.label}
+            </StatusPill>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 opacity-0 transition-opacity group-hover:opacity-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMenuToggle(menuOpen === document.id ? null : document.id);
+                }}
               >
-                查看
-              </Link>
-              <Link
-                to={`/app/documents/${document.id}/edit`}
-                className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left no-underline`}
-                onClick={() => onMenuToggle(null)}
-                data-ai-component={`document.document-list.card.${document.id}.edit`}
-                data-ai-action={`document.document-list.card.${document.id}.edit.click`}
-                data-ai-role="jump"
-              >
-                编辑
-              </Link>
-              <button
-                type="button"
-                className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
-                onClick={() => onMenuToggle(null)}
-                data-ai-component={`document.document-list.card.${document.id}.delete`}
-                data-ai-action={`document.document-list.card.${document.id}.delete.click`}
-                data-ai-role="danger"
-              >
-                <Trash2 size={14} />
-                删除
-              </button>
+                <MoreVertical className="size-3.5" />
+              </Button>
+              {menuOpen === document.id && (
+                <div
+                  className={`absolute right-0 top-full z-20 mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Link
+                    to={`/app/documents/${document.id}`}
+                    className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left no-underline`}
+                    onClick={() => onMenuToggle(null)}
+                    data-ai-component={`document.document-list.card.${document.id}.view`}
+                    data-ai-action={`document.document-list.card.${document.id}.view.click`}
+                    data-ai-role="jump"
+                  >
+                    查看
+                  </Link>
+                  <Link
+                    to={`/app/documents/${document.id}/edit`}
+                    className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left no-underline`}
+                    onClick={() => onMenuToggle(null)}
+                    data-ai-component={`document.document-list.card.${document.id}.edit`}
+                    data-ai-action={`document.document-list.card.${document.id}.edit.click`}
+                    data-ai-role="jump"
+                  >
+                    编辑
+                  </Link>
+                  <button
+                    type="button"
+                    className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
+                    onClick={() => onMenuToggle(null)}
+                    data-ai-component={`document.document-list.card.${document.id}.delete`}
+                    data-ai-action={`document.document-list.card.${document.id}.delete.click`}
+                    data-ai-role="danger"
+                  >
+                    <Trash2 className="size-3.5" />
+                    删除
+                  </button>
+                </div>
+              )}
             </div>
+          </div>
+        </div>
+
+        {/* 标题与分类 */}
+        <div>
+          <h3 className="text-sm font-medium text-foreground line-clamp-2 transition-colors group-hover:text-primary">
+            {document.title}
+          </h3>
+          <p className={cn('text-10 font-medium mt-1', catConfig.color)}>
+            {catConfig.label}
+          </p>
+        </div>
+
+        {/* 标签或短 ID */}
+        <div className="flex flex-wrap items-center gap-1">
+          {document.shortId && (
+            <span className="font-mono text-10 px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground">
+              {document.shortId}
+            </span>
+          )}
+          {document.docRole && (
+            <Badge variant="outline" className="text-10 font-normal px-1.5 py-0">
+              {document.docRole}
+            </Badge>
           )}
         </div>
       </div>
 
-      <h3
-        className="mb-2 line-clamp-2 cursor-pointer font-medium text-foreground hover:text-primary"
-        onClick={() => onPreview(document)}
-      >
-        {document.title}
-      </h3>
-
-      <div className="mb-3 flex items-center gap-2">
-        <StatusPill tone={DOC_STATUS_TONE[document.status]}>
-          {statusConfig.label}
-        </StatusPill>
-      </div>
-
-      <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPreview(document);
-          }}
-          className="flex items-center gap-1 text-accent-blue hover:underline"
-        >
-          <Eye size={12} />
-          预览
-        </button>
+      {/* 底部信息栏 */}
+      <div className="flex items-center justify-between text-10 text-muted-foreground pt-2 border-t border-border/50">
+        <span className="truncate max-w-32">
+          {document.project?.name ?? '公共文档'}
+        </span>
+        <div className="flex items-center gap-2">
+          <span>{new Date(document.updatedAt).toLocaleDateString('zh-CN')}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview(document);
+            }}
+            className="flex items-center gap-0.5 text-accent-blue hover:underline"
+          >
+            <Eye className="size-3" />
+            <span>预览</span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -449,100 +476,95 @@ function DocumentListItem({
 
   return (
     <div
-      className="group rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-primary/30 hover:shadow-xs"
+      onClick={() => onPreview(document)}
+      className="group flex items-center gap-3.5 rounded-xl border border-border bg-card px-4 py-3 transition-all hover:border-border/80 hover:shadow-2xs cursor-pointer"
       data-ai-component={`document.document-list.list-item.${document.id}`}
     >
-      <div className="flex items-center gap-4">
-        <div className={cn('shrink-0 rounded-lg bg-muted/50 p-2', catConfig.color)}>
-          <CatIcon size={16} />
-        </div>
+      <div className={cn('size-9 rounded-lg flex items-center justify-center shrink-0', catConfig.bg)}>
+        <CatIcon className={cn('size-4', catConfig.color)} />
+      </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2">
-            <h3
-              className="cursor-pointer truncate font-medium text-foreground hover:text-primary"
-              onClick={() => onPreview(document)}
-            >
-              {document.title}
-            </h3>
-            <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0">
-              {statusConfig.label}
-            </StatusPill>
-            {document.docRole && (
-              <Badge variant="outline" className="shrink-0 font-normal text-11">
-                {document.docRole}
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span className={catConfig.color}>{catConfig.label}</span>
-            <span>{new Date(document.updatedAt).toLocaleDateString('zh-CN')}</span>
-            {document.shortId && (
-              <span className="font-mono text-11">{document.shortId}</span>
-            )}
-          </div>
+      <div className="min-w-0 flex-1">
+        <div className="mb-0.5 flex items-center gap-2">
+          <h3 className="truncate text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+            {document.title}
+          </h3>
+          <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0 text-10 px-1.5 py-0.5 rounded">
+            {statusConfig.label}
+          </StatusPill>
+          {document.docRole && (
+            <Badge variant="outline" className="shrink-0 font-normal text-10 px-1.5 py-0">
+              {document.docRole}
+            </Badge>
+          )}
         </div>
+        <div className="flex items-center gap-3 text-11 text-muted-foreground">
+          <span className={catConfig.color}>{catConfig.label}</span>
+          <span className="truncate max-w-36">{document.project?.name ?? '公共文档'}</span>
+          <span>{new Date(document.updatedAt).toLocaleDateString('zh-CN')}</span>
+          {document.shortId && (
+            <span className="font-mono text-10 text-muted-foreground/70">{document.shortId}</span>
+          )}
+        </div>
+      </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <Link
-            to={`/app/documents/${document.id}`}
-            className="text-sm text-accent-blue no-underline opacity-0 transition-opacity hover:underline group-hover:opacity-100"
-            data-ai-component={`document.document-list.list-item.${document.id}.view`}
-            data-ai-action={`document.document-list.list-item.${document.id}.view.click`}
-            data-ai-role="jump"
+      <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
+        <Link
+          to={`/app/documents/${document.id}`}
+          className="text-xs text-accent-blue no-underline opacity-0 transition-opacity hover:underline group-hover:opacity-100"
+          data-ai-component={`document.document-list.list-item.${document.id}.view`}
+          data-ai-action={`document.document-list.list-item.${document.id}.view.click`}
+          data-ai-role="jump"
+        >
+          查看
+        </Link>
+        <Link
+          to={`/app/documents/${document.id}/edit`}
+          className="text-xs text-accent-blue no-underline opacity-0 transition-opacity hover:underline group-hover:opacity-100"
+          data-ai-component={`document.document-list.list-item.${document.id}.edit`}
+          data-ai-action={`document.document-list.list-item.${document.id}.edit.click`}
+          data-ai-role="jump"
+        >
+          编辑
+        </Link>
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMenuToggle(menuOpen === document.id ? null : document.id);
+            }}
           >
-            <LayoutGrid size={14} className="mr-1 inline" />
-            查看
-          </Link>
-          <Link
-            to={`/app/documents/${document.id}/edit`}
-            className="text-sm text-accent-blue no-underline opacity-0 transition-opacity hover:underline group-hover:opacity-100"
-            data-ai-component={`document.document-list.list-item.${document.id}.edit`}
-            data-ai-action={`document.document-list.list-item.${document.id}.edit.click`}
-            data-ai-role="jump"
-          >
-            <List size={14} className="mr-1 inline" />
-            编辑
-          </Link>
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMenuToggle(menuOpen === document.id ? null : document.id);
-              }}
+            <MoreVertical className="size-3.5" />
+          </Button>
+          {menuOpen === document.id && (
+            <div
+              className={`absolute right-0 top-full z-20 mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
+              onClick={(e) => e.stopPropagation()}
             >
-              <MoreVertical size={16} />
-            </Button>
-            {menuOpen === document.id && (
-              <div
-                className={`absolute right-0 top-full z-20 mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
-                onClick={(e) => e.stopPropagation()}
+              <button
+                type="button"
+                className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`}
+                onClick={() => onMenuToggle(null)}
               >
-                <button
-                  type="button"
-                  className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`}
-                  onClick={() => onMenuToggle(null)}
-                >
-                  <GitBranch size={14} />
-                  版本历史
-                </button>
-                <button
-                  type="button"
-                  className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
-                  onClick={() => onMenuToggle(null)}
-                  data-ai-component={`document.document-list.list-item.${document.id}.delete`}
-                  data-ai-action={`document.document-list.list-item.${document.id}.delete.click`}
-                  data-ai-role="danger"
-                >
-                  <Trash2 size={14} />
-                  删除
-                </button>
-              </div>
-            )}
-          </div>
+                <GitBranch className="size-3.5" />
+                版本历史
+              </button>
+              <button
+                type="button"
+                className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
+                onClick={() => onMenuToggle(null)}
+                data-ai-component={`document.document-list.list-item.${document.id}.delete`}
+                data-ai-action={`document.document-list.list-item.${document.id}.delete.click`}
+                data-ai-role="danger"
+              >
+                <Trash2 className="size-3.5" />
+                删除
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
