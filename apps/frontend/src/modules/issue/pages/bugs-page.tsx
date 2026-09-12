@@ -45,8 +45,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
+import { AiAssignDialog } from '../components/ai-assign-dialog';
 import {
   bugCardModel,
+  bugCardRow3,
   getProjectColumns,
   getSeverityColumns,
   getTaskStatusColumns,
@@ -80,7 +82,41 @@ export function BugsPage() {
   // 筛选条件条（Linear 形态）：字段 + 算子 + 值集，空数组 = 无筛选
   const [conditions, setConditions] = useState<FilterCondition[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [dispatchBug, setDispatchBug] = useState<{ bug: Task; projectId: string } | null>(null);
   const statsCards = usePersistentToggle('bugs-page.stats');
+
+  // Linear 风格 Display 选项
+  const [orderBy, setOrderBy] = useState<string>('priority');
+  const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
+  const [completedFilter, setCompletedFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [showSubIssues, setShowSubIssues] = useState(true);
+  const [showEmptyGroups, setShowEmptyGroups] = useState(false);
+  const [displayProperties, setDisplayProperties] = useState<Record<string, boolean>>({
+    id: true,
+    status: true,
+    assignee: true,
+    priority: true,
+    project: true,
+    dueDate: true,
+    labels: true,
+    created: true,
+    aiExecution: true,
+  });
+
+  const isAiFiltering = useMemo(() => {
+    return conditions.some((c) => c.fieldId === 'aiExecution' && c.values.includes('active'));
+  }, [conditions]);
+
+  const toggleAiFilter = () => {
+    if (isAiFiltering) {
+      setConditions((prev) => prev.filter((c) => c.fieldId !== 'aiExecution'));
+    } else {
+      setConditions((prev) => [
+        ...prev.filter((c) => c.fieldId !== 'aiExecution'),
+        { id: 'cond-ai', fieldId: 'aiExecution', operator: 'is', values: ['active'] },
+      ]);
+    }
+  };
 
   // 已保存视图：快照记忆当前页全部筛选 + 显示样式 + 分组
   const toolbar = useToolbarViews({
@@ -213,7 +249,8 @@ export function BugsPage() {
     const severitySets = filterConditionSets(conditions, 'severity');
     const projectSets = filterConditionSets(conditions, 'project');
     const aiSets = filterConditionSets(conditions, 'aiExecution');
-    return allBugs.filter((bug) => {
+
+    const list = allBugs.filter((bug) => {
       if (search && !bug.title.toLowerCase().includes(search.toLowerCase()) &&
           !bug.id.toLowerCase().includes(search.toLowerCase())) {
         return false;
@@ -225,6 +262,13 @@ export function BugsPage() {
       if (aiSets.include.includes('active') && !getIssueExecution(bug)?.isExecuting) {
         return false;
       }
+      // 完成项显示控制
+      if (completedFilter === 'active' && (bug.status === 'done' || bug.status === 'canceled')) {
+        return false;
+      }
+      if (completedFilter === 'completed' && bug.status !== 'done' && bug.status !== 'canceled') {
+        return false;
+      }
       // severity 缺失时从 priority 推导（severityOf 统一口径）
       if (!matchesConditionSets(severityOf(bug), severitySets)) {
         return false;
@@ -234,7 +278,28 @@ export function BugsPage() {
       }
       return true;
     });
-  }, [allBugs, search, conditions, getIssueExecution]);
+
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      let res = 0;
+      if (orderBy === 'priority') {
+        const sOrder: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+        res = (sOrder[a.severity ?? 'low'] ?? 0) - (sOrder[b.severity ?? 'low'] ?? 0);
+      } else if (orderBy === 'dueDate') {
+        const da = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+        const db = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+        res = da - db;
+      } else if (orderBy === 'created') {
+        const ca = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const cb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        res = ca - cb;
+      } else if (orderBy === 'title') {
+        res = a.title.localeCompare(b.title);
+      }
+      return orderDirection === 'desc' ? -res : res;
+    });
+    return sorted;
+  }, [allBugs, search, conditions, getIssueExecution, completedFilter, orderBy, orderDirection]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -292,6 +357,18 @@ export function BugsPage() {
         }}
       />
 
+      {/* AI Dispatch Dialog */}
+      {dispatchBug && (
+        <AiAssignDialog
+          open={!!dispatchBug}
+          onOpenChange={(open) => { if (!open) setDispatchBug(null); }}
+          issueId={dispatchBug.bug.id}
+          projectId={dispatchBug.projectId}
+          taskTitle={dispatchBug.bug.title}
+          onSuccess={() => { setDispatchBug(null); refetch(); }}
+        />
+      )}
+
       {/* Stats Cards（默认隐藏，header 幽灵按钮切换） */}
       {statsCards.visible ? (
         <div className="border-b border-border bg-background px-6 py-4">
@@ -337,32 +414,26 @@ export function BugsPage() {
         isDirty={toolbar.isDirty}
         onSaveCurrentView={toolbar.saveCurrentToActive}
         actions={
-          activeCount > 0 ? (
-            <button
-              type="button"
-              onClick={() => {
-                const hasActive = conditions.some((c) => c.fieldId === 'aiExecution' && c.values.includes('active'));
-                if (hasActive) {
-                  setConditions((prev) => prev.filter((c) => c.fieldId !== 'aiExecution'));
-                } else {
-                  setConditions((prev) => [
-                    ...prev.filter((c) => c.fieldId !== 'aiExecution'),
-                    { id: 'quick-ai-active', fieldId: 'aiExecution', operator: 'is', values: ['active'] },
-                  ]);
-                }
-              }}
-              className={cn(
-                'inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors',
-                conditions.some((c) => c.fieldId === 'aiExecution' && c.values.includes('active'))
-                  ? 'bg-accent-purple text-white shadow-xs'
-                  : 'bg-accent-purple/10 text-accent-purple hover:bg-accent-purple/20',
-              )}
-              title="筛选 AI 接管执行中的 Bug"
-            >
-              <Bot className="size-3.5" />
-              <span>{activeCount} 个 AI 执行中</span>
-            </button>
-          ) : null
+          <button
+            type="button"
+            onClick={toggleAiFilter}
+            aria-pressed={isAiFiltering}
+            className={cn(
+              "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-all select-none shadow-2xs",
+              isAiFiltering
+                ? "border border-accent-purple bg-accent-purple text-white shadow-xs font-semibold"
+                : activeCount > 0
+                  ? "border border-accent-purple/40 bg-accent-purple/10 text-accent-purple hover:bg-accent-purple/20"
+                  : "border border-border/60 bg-card text-muted-foreground hover:border-accent-purple/30 hover:text-foreground",
+            )}
+            title={isAiFiltering ? "点击取消筛选 AI 执行 Bug" : "点击一键筛选正在 AI 执行的 Bug"}
+          >
+            <Bot className={cn("size-3.5", activeCount > 0 && !isAiFiltering && "animate-pulse")} />
+            <span>
+              {activeCount > 0 ? `${activeCount} 个 ` : ''}AI 执行中
+              {isAiFiltering ? " (已筛选)" : ""}
+            </span>
+          </button>
         }
         viewStyle={{
           layout: 'centered',
@@ -392,24 +463,40 @@ export function BugsPage() {
           ),
         }}
         displayMenu={{
-          items: [
-            { type: 'label', label: t('task.groupBy.label', 'Group by') },
-            // board 视图不支持 no grouping，仅 list 视图提供该项
-            ...(viewMode === 'list' ? [{
-              id: 'groupby-none',
-              type: 'checkbox' as const,
-              label: t('task.groupBy.none', 'No grouping'),
-              checked: groupBy === 'none',
-              onSelect: () => setGroupBy('none'),
-            }] : []),
-            ...(['status', 'severity', 'project'] as const).map((value) => ({
-              id: `groupby-${value}`,
-              type: 'checkbox' as const,
-              label: t(`task.groupBy.${value}`),
-              checked: groupBy === value,
-              onSelect: () => setGroupBy(value),
-            })),
-          ],
+          displayConfig: {
+            viewMode,
+            onViewModeChange: (v) => {
+              setViewMode(v as ViewMode);
+              if (v === 'board' && groupBy === 'none') setGroupBy('status');
+            },
+            viewOptions: [
+              { value: 'list', label: t('task.view.list', 'List'), icon: List },
+              { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
+              { value: 'gantt', label: t('task.view.gantt', 'Gantt'), icon: CalendarRange },
+              { value: 'table', label: t('task.view.table', 'Table'), icon: TableProperties },
+            ],
+            groupBy,
+            onGroupByChange: (g) => setGroupBy(g as GroupBy),
+            groupByOptions: [
+              ...(viewMode !== 'board' ? [{ value: 'none', label: t('task.groupBy.none', 'No grouping') }] : []),
+              { value: 'status', label: t('task.groupBy.status') },
+              { value: 'severity', label: t('task.groupBy.severity') },
+              { value: 'project', label: t('task.groupBy.project') },
+            ],
+            orderBy,
+            onOrderByChange: setOrderBy,
+            orderDirection,
+            onOrderDirectionToggle: () => setOrderDirection((prev) => (prev === 'asc' ? 'desc' : 'asc')),
+            completedFilter,
+            onCompletedFilterChange: setCompletedFilter,
+            showSubIssues,
+            onShowSubIssuesChange: setShowSubIssues,
+            showEmptyGroups,
+            onShowEmptyGroupsChange: setShowEmptyGroups,
+            displayProperties,
+            onToggleDisplayProperty: (key) =>
+              setDisplayProperties((prev) => ({ ...prev, [key]: !prev[key] })),
+          },
         }}
         downloadMenu={{
           items: [
@@ -484,6 +571,7 @@ export function BugsPage() {
               onBugClick={handleBugClick}
               getAiExecution={getIssueExecution}
               onMoveBug={(bug, data) => updateTask.mutate({ issueId: bug.id, data })}
+              onDispatchBug={(bug, projectId) => setDispatchBug({ bug, projectId })}
             />
           ) : viewMode === 'gantt' ? (
             <TaskGantt
@@ -548,6 +636,7 @@ function BugBoardView({
   onBugClick,
   onMoveBug,
   getAiExecution,
+  onDispatchBug,
   loading,
 }: {
   bugs: Task[];
@@ -557,10 +646,16 @@ function BugBoardView({
   onBugClick: (bug: Task) => void;
   getAiExecution?: (bug: Task) => IssueAiExecutionState | undefined;
   onMoveBug?: (bug: Task, data: { status?: string; severity?: Task['severity'] }) => void;
+  onDispatchBug?: (bug: Task, projectId: string) => void;
 }) {
   const { t } = useTranslation();
   // list 与 kanban 共享右键菜单：与 BugSimpleList 同源构建（bug 域标签 + /app/bugs 链接）
   const onItemContextMenu = useIssueRowMenu({ kind: 'bug', entityName: 'Bug' });
+
+  const getProjectName = (projectId: string | null | undefined) => {
+    if (!projectId) return undefined;
+    return projects.find((p) => p.id === projectId)?.name || projectId;
+  };
 
   const columns = useMemo<BoardColumnDef[]>(() => {
     switch (groupBy) {
@@ -612,6 +707,24 @@ function BugBoardView({
       if (!ai) return null;
       return <AiExecutionBadge execution={ai} size="xs" variant="line" />;
     },
+    row3: (bug: Task) => (
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">{bugCardRow3(bug, getProjectName(bug.projectId))}</div>
+        {bug.projectId && onDispatchBug ? (
+          <button
+            type="button"
+            className="shrink-0 rounded p-1 text-accent-purple transition-colors hover:bg-accent-purple/20"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDispatchBug(bug, bug.projectId!);
+            }}
+            title={t('task.dispatchToAi', '派发给 AI 修复')}
+          >
+            <Bot size={12} />
+          </button>
+        ) : null}
+      </div>
+    ),
   };
 
   return (

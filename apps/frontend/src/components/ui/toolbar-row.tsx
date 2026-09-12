@@ -22,7 +22,6 @@ import {
   Kanban,
   LayoutGrid,
   List,
-  MoreHorizontal,
   Plus,
   SlidersHorizontal,
   Sparkles,
@@ -45,6 +44,11 @@ import {
   MENU_LABEL_CLASS,
   MENU_SEPARATOR_CLASS,
 } from "./menu-surface";
+import { ContextMenu, type MenuItem } from "./context-menu";
+import {
+  ViewDisplayPopover,
+  type ViewDisplayPopoverProps,
+} from "./view-display-popover";
 
 /* ────────────────────────────── 类型 ────────────────────────────── */
 
@@ -80,6 +84,8 @@ export interface ToolbarMenuItem {
 export interface ToolbarMenuSlot {
   /** 完全自定义按钮+弹层节点（如二级级联筛选菜单 FilterCascadeMenu），提供时优先于 content/items */
   render?: () => ReactNode;
+  /** 高级显示弹窗配置（直接渲染 Linear 风格 ViewDisplayPopover） */
+  displayConfig?: ViewDisplayPopoverProps;
   /** 结构化菜单项 */
   items?: ToolbarMenuItem[];
   /** 完全自定义下拉内容（优先于 items） */
@@ -450,17 +456,21 @@ function ToolbarMenuButton({
         </span>
       ) : null}
       <AnchoredMenu open={open} onClose={close} anchor={anchorRef}>
-        {menu.content ?? (
-          <div className="flex max-h-80 flex-col">
-            {menu.search ? (
-              <div className="mb-1 shrink-0">
-                <ToolbarSearchBox {...menu.search} />
+        {menu.displayConfig ? (
+          <ViewDisplayPopover {...menu.displayConfig} />
+        ) : (
+          menu.content ?? (
+            <div className="flex max-h-80 flex-col">
+              {menu.search ? (
+                <div className="mb-1 shrink-0">
+                  <ToolbarSearchBox {...menu.search} />
+                </div>
+              ) : null}
+              <div className="min-h-0 overflow-y-auto">
+                <ToolbarMenuItems items={menu.items ?? []} close={close} />
               </div>
-            ) : null}
-            <div className="min-h-0 overflow-y-auto">
-              <ToolbarMenuItems items={menu.items ?? []} close={close} />
             </div>
-          </div>
+          )
         )}
       </AnchoredMenu>
     </span>
@@ -600,7 +610,7 @@ function ViewEditorPanel({
   );
 }
 
-/** 现代重构版 ViewPill：6px 矩形圆角、脏状态小点、右侧更多管理菜单 */
+/** 胶囊风格 ViewPill：rounded-full 胶囊、取消三个点、右键呼出系统 ContextMenu */
 function ViewPill({
   view,
   active,
@@ -619,93 +629,62 @@ function ViewPill({
   onSaveCurrent?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const anchorRef = useRef<HTMLButtonElement>(null);
-  const menuAnchorRef = useRef<HTMLButtonElement>(null);
   const Icon = view.icon ? TOOLBAR_VIEW_ICONS[view.icon] : undefined;
 
-  return (
-    <div
-      className={cn(
-        "group relative inline-flex h-8 shrink-0 items-center rounded-md border transition-all [transition-duration:var(--motion-fast)]",
-        active
-          ? "border-border bg-card text-foreground shadow-xs"
-          : "border-transparent text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-      )}
-    >
-      <button
-        ref={anchorRef}
-        type="button"
-        onClick={() => onSelect(view.id)}
-        title={view.name}
-        aria-label={view.name}
-        className="flex h-full items-center gap-1.5 px-2.5 text-xs font-medium"
-      >
-        {Icon ? <Icon className="size-3.5 shrink-0 opacity-80" strokeWidth={1.75} /> : null}
-        <span className="max-w-28 truncate">{view.name}</span>
-        {active && isDirty ? (
-          <span
-            title="包含未保存的筛选或显示改动"
-            className="size-1.5 rounded-full bg-accent-yellow ring-1 ring-accent-yellow/40"
-          />
-        ) : null}
-      </button>
+  const contextMenuItems: MenuItem[] = [
+    ...(active && isDirty && onSaveCurrent
+      ? [
+          {
+            id: "save",
+            label: "保存当前改动到视图",
+            onClick: () => onSaveCurrent(),
+          },
+        ]
+      : []),
+    {
+      id: "edit",
+      label: "编辑名称与图标",
+      onClick: () => setEditing(true),
+    },
+    ...(!view.builtIn
+      ? [
+          {
+            id: "delete",
+            label: "删除视图",
+            destructive: true,
+            onClick: () => onDelete(view.id),
+          },
+        ]
+      : []),
+  ];
 
-      {/* 激活状态下的轻量级管理菜单触发器 */}
-      {active ? (
-        <>
-          <button
-            ref={menuAnchorRef}
-            type="button"
-            aria-label="View options"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMenuOpen(true);
-            }}
-            className="flex h-full w-5 items-center justify-center rounded-r-md opacity-40 hover:opacity-100 hover:bg-muted"
-          >
-            <MoreHorizontal className="size-3" />
-          </button>
-          <AnchoredMenu open={menuOpen} onClose={() => setMenuOpen(false)} anchor={menuAnchorRef}>
-            <div className="min-w-36 py-1">
-              {isDirty && onSaveCurrent ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onSaveCurrent();
-                    setMenuOpen(false);
-                  }}
-                  className={cn(MENU_ITEM_CLASS, "text-xs font-medium text-primary")}
-                >
-                  保存当前改动到视图
-                </button>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setEditing(true);
-                }}
-                className={cn(MENU_ITEM_CLASS, "text-xs")}
-              >
-                编辑名称与图标
-              </button>
-              {!view.builtIn ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onDelete(view.id);
-                  }}
-                  className={cn(MENU_ITEM_CLASS, "text-xs text-destructive hover:text-destructive")}
-                >
-                  删除视图
-                </button>
-              ) : null}
-            </div>
-          </AnchoredMenu>
-        </>
-      ) : null}
+  return (
+    <div className="relative inline-flex shrink-0">
+      <ContextMenu items={contextMenuItems}>
+        <button
+          ref={anchorRef}
+          type="button"
+          onClick={() => onSelect(view.id)}
+          title={`${view.name} (右键管理)`}
+          aria-label={view.name}
+          className={cn(
+            "flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-all select-none [transition-duration:var(--motion-fast)]",
+            active
+              ? "border-border bg-card text-foreground shadow-2xs font-semibold"
+              : "border-border/40 bg-transparent text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+          )}
+        >
+          {Icon ? <Icon className="size-3.5 shrink-0 opacity-80" strokeWidth={1.75} /> : null}
+          <span className="max-w-32 truncate">{view.name}</span>
+          {active && isDirty ? (
+            <span
+              title="包含未保存的筛选或显示改动"
+              className="size-1.5 rounded-full bg-accent-yellow ring-1 ring-accent-yellow/40"
+            />
+          ) : null}
+        </button>
+      </ContextMenu>
 
       <AnchoredMenu open={editing} onClose={() => setEditing(false)} anchor={anchorRef}>
         <ViewEditorPanel
@@ -727,7 +706,7 @@ function ViewPill({
   );
 }
 
-/** 现代重构版新增视图按钮：带微虚线框与明确提示 */
+/** 胶囊风格新增视图按钮：rounded-full 微虚线 */
 function AddViewButton({ onCreate }: { onCreate: (name: string, icon?: string) => void }) {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -740,7 +719,7 @@ function AddViewButton({ onCreate }: { onCreate: (name: string, icon?: string) =
         onClick={() => setOpen(true)}
         aria-label="Add view"
         title="Add view"
-        className="flex size-8 shrink-0 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+        className="flex h-7 shrink-0 items-center justify-center rounded-full border border-dashed border-border/70 px-2 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
       >
         <Plus className="size-3.5" strokeWidth={2} aria-hidden />
       </button>

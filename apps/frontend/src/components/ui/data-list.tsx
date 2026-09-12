@@ -634,10 +634,10 @@ export function DataList<T extends DataListItem>({
             return (
               <div
                 key={meta.key}
-                className={cn('overflow-hidden rounded-lg border border-border bg-background', isCollapsed && '')}
+                className={cn('rounded-lg border border-border bg-background transition-all', isCollapsed && '')}
                 data-group={meta.key}
               >
-                <div className="group">
+                <div className="group sticky top-0 z-10 rounded-t-lg bg-background/95 backdrop-blur-xs border-b border-border/40 shadow-2xs transition-shadow">
                   <GroupBar
                     meta={meta}
                     count={list.length}

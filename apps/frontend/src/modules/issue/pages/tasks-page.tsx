@@ -41,6 +41,7 @@ import { ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
+import { cn } from '@/lib/utils';
 import {
   getProjectColumns,
   getSeverityColumns,
@@ -80,6 +81,39 @@ export function TasksPage() {
   const [presetAssigneeId, setPresetAssigneeId] = useState<string | undefined>(undefined);
   const [dispatchTask, setDispatchTask] = useState<{ task: Task; projectId: string } | null>(null);
   const statsCards = usePersistentToggle('tasks-page.stats');
+
+  // Linear 风格 Display 选项
+  const [orderBy, setOrderBy] = useState<string>('priority');
+  const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
+  const [completedFilter, setCompletedFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [showSubIssues, setShowSubIssues] = useState(true);
+  const [showEmptyGroups, setShowEmptyGroups] = useState(false);
+  const [displayProperties, setDisplayProperties] = useState<Record<string, boolean>>({
+    id: true,
+    status: true,
+    assignee: true,
+    priority: true,
+    project: true,
+    dueDate: true,
+    labels: true,
+    created: true,
+    aiExecution: true,
+  });
+
+  const isAiFiltering = useMemo(() => {
+    return conditions.some((c) => c.fieldId === 'aiExecution' && c.values.includes('active'));
+  }, [conditions]);
+
+  const toggleAiFilter = () => {
+    if (isAiFiltering) {
+      setConditions((prev) => prev.filter((c) => c.fieldId !== 'aiExecution'));
+    } else {
+      setConditions((prev) => [
+        ...prev.filter((c) => c.fieldId !== 'aiExecution'),
+        { id: 'cond-ai', fieldId: 'aiExecution', operator: 'is', values: ['active'] },
+      ]);
+    }
+  };
 
   // 成员卡「派发任务」入口：/app/issues?state 携带 openCreate + presetAssignee。
   // 渲染期间检测 state 变化调整弹窗状态，replaceState 副作用留在独立 effect。
@@ -226,7 +260,7 @@ export function TasksPage() {
     const projectSets = filterConditionSets(conditions, 'project');
     const aiSets = filterConditionSets(conditions, 'aiExecution');
 
-    return allTasks.filter((task) => {
+    const list = allTasks.filter((task) => {
       if (search && !task.title.toLowerCase().includes(search.toLowerCase()) &&
           !task.id.toLowerCase().includes(search.toLowerCase())) {
         return false;
@@ -238,6 +272,13 @@ export function TasksPage() {
       if (aiSets.include.includes('active') && !getIssueExecution(task)?.isExecuting) {
         return false;
       }
+      // 完成项显示控制
+      if (completedFilter === 'active' && (task.status === 'done' || task.status === 'canceled')) {
+        return false;
+      }
+      if (completedFilter === 'completed' && task.status !== 'done' && task.status !== 'canceled') {
+        return false;
+      }
       // severity 缺失时从 priority 推导（severityOf 统一口径）
       if (!matchesConditionSets(severityOf(task), severitySets)) {
         return false;
@@ -247,7 +288,28 @@ export function TasksPage() {
       }
       return true;
     });
-  }, [allTasks, search, conditions, getIssueExecution]);
+
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      let res = 0;
+      if (orderBy === 'priority') {
+        const pOrder: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+        res = (pOrder[a.priority ?? 'low'] ?? 0) - (pOrder[b.priority ?? 'low'] ?? 0);
+      } else if (orderBy === 'dueDate') {
+        const da = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+        const db = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+        res = da - db;
+      } else if (orderBy === 'created') {
+        const ca = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const cb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        res = ca - cb;
+      } else if (orderBy === 'title') {
+        res = a.title.localeCompare(b.title);
+      }
+      return orderDirection === 'desc' ? -res : res;
+    });
+    return sorted;
+  }, [allTasks, search, conditions, getIssueExecution, completedFilter, orderBy, orderDirection]);
 
   const getProjectName = (projectId: string | null | undefined) => {
     if (!projectId) return t('common.noProject');
@@ -369,25 +431,63 @@ export function TasksPage() {
             />
           ),
         }}
+        actions={
+          <button
+            type="button"
+            onClick={toggleAiFilter}
+            aria-pressed={isAiFiltering}
+            className={cn(
+              "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-all select-none shadow-2xs",
+              isAiFiltering
+                ? "border border-accent-purple bg-accent-purple text-white shadow-xs font-semibold"
+                : totalActiveAiCount > 0
+                  ? "border border-accent-purple/40 bg-accent-purple/10 text-accent-purple hover:bg-accent-purple/20"
+                  : "border border-border/60 bg-card text-muted-foreground hover:border-accent-purple/30 hover:text-foreground",
+            )}
+            title={isAiFiltering ? "点击取消筛选 AI 执行任务" : "点击一键筛选正在 AI 执行的任务"}
+          >
+            <BotIcon className={cn("size-3.5", totalActiveAiCount > 0 && !isAiFiltering && "animate-pulse")} />
+            <span>
+              {totalActiveAiCount > 0 ? `${totalActiveAiCount} 个 ` : ''}AI 执行中
+              {isAiFiltering ? " (已筛选)" : ""}
+            </span>
+          </button>
+        }
         displayMenu={{
-          items: [
-            { type: 'label', label: t('task.groupBy.label', 'Group by') },
-            // board 视图不支持 no grouping，仅 list/table 视图提供该项
-            ...(viewMode !== 'board' ? [{
-              id: 'groupby-none',
-              type: 'checkbox' as const,
-              label: t('task.groupBy.none', 'No grouping'),
-              checked: groupBy === 'none',
-              onSelect: () => setGroupBy('none'),
-            }] : []),
-            ...(['status', 'severity', 'project'] as const).map((value) => ({
-              id: `groupby-${value}`,
-              type: 'checkbox' as const,
-              label: t(`task.groupBy.${value}`),
-              checked: groupBy === value,
-              onSelect: () => setGroupBy(value),
-            })),
-          ],
+          displayConfig: {
+            viewMode,
+            onViewModeChange: (v) => {
+              setViewMode(v as ViewMode);
+              if (v === 'board' && groupBy === 'none') setGroupBy('status');
+            },
+            viewOptions: [
+              { value: 'list', label: t('task.view.list', 'List'), icon: List },
+              { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
+              { value: 'gantt', label: t('task.view.gantt', 'Gantt'), icon: CalendarRange },
+              { value: 'table', label: 'Table', icon: TableProperties },
+            ],
+            groupBy,
+            onGroupByChange: (g) => setGroupBy(g as GroupBy),
+            groupByOptions: [
+              ...(viewMode !== 'board' ? [{ value: 'none', label: t('task.groupBy.none', 'No grouping') }] : []),
+              { value: 'status', label: t('task.groupBy.status') },
+              { value: 'severity', label: t('task.groupBy.severity') },
+              { value: 'project', label: t('task.groupBy.project') },
+            ],
+            orderBy,
+            onOrderByChange: setOrderBy,
+            orderDirection,
+            onOrderDirectionToggle: () => setOrderDirection((prev) => (prev === 'asc' ? 'desc' : 'asc')),
+            completedFilter,
+            onCompletedFilterChange: setCompletedFilter,
+            showSubIssues,
+            onShowSubIssuesChange: setShowSubIssues,
+            showEmptyGroups,
+            onShowEmptyGroupsChange: setShowEmptyGroups,
+            displayProperties,
+            onToggleDisplayProperty: (key) =>
+              setDisplayProperties((prev) => ({ ...prev, [key]: !prev[key] })),
+          },
         }}
         downloadMenu={{
           items: [
@@ -396,24 +496,6 @@ export function TasksPage() {
             { id: 'json', type: 'item', label: 'JSON', disabled: true },
           ],
         }}
-        extraActions={
-          totalActiveAiCount > 0
-            ? [
-                {
-                  id: 'ai-active-indicator',
-                  icon: BotIcon,
-                  label: `${totalActiveAiCount} 个 AI 执行中`,
-                  variant: 'ghost',
-                  onClick: () => {
-                    setConditions((prev) => [
-                      ...prev.filter((c) => c.fieldId !== 'aiExecution'),
-                      { id: 'cond-ai', fieldId: 'aiExecution', operator: 'is', values: ['active'] },
-                    ]);
-                  },
-                },
-              ]
-            : undefined
-        }
       />
 
       {/* 筛选条件条（Linear 形态，单开一行；有条件才占行） */}

@@ -17,6 +17,7 @@ export interface TaskTableViewProps {
   getAiExecution?: (task: Task) => ActiveAiExecution | null;
   getProjectName?: (projectId: string | null | undefined) => string;
   selectionActions?: (selected: Task[], clear: () => void) => React.ReactNode;
+  maxHeight?: string;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ export function TaskTableView({
   getAiExecution,
   getProjectName,
   selectionActions,
+  maxHeight = 'calc(100vh - 220px)',
   className,
 }: TaskTableViewProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -203,6 +205,8 @@ export function TaskTableView({
             : undefined
         }
         pageSize={50}
+        stickyHeader
+        maxHeight={maxHeight}
         emptyContent={
           <div className="p-8 text-center text-sm text-muted-foreground">
             {loading ? 'Loading tasks...' : 'No tasks to display'}
