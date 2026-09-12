@@ -1,11 +1,15 @@
 import { useMemo } from 'react';
-import { GanttChart, type GanttDateRange, type GanttChartItem } from '@/shared/components/gantt-chart';
+import { GanttChart, type GanttDateRange, type GanttChartItem, type GanttScale } from '@/shared/components/gantt-chart';
 import type { Task } from '../api/issue-api';
+import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
 
 interface TaskGanttProps {
   tasks: Task[];
   onTaskClick?: (task: Task) => void;
   onDateRangeChange?: (issueId: string, range: { startDate: string; dueDate: string }) => Promise<void> | void;
+  getAiExecution?: (task: Task) => ActiveAiExecution | null;
+  scale?: GanttScale;
+  onScaleChange?: (scale: GanttScale) => void;
 }
 
 function parseDate(value?: string | null): Date | null {
@@ -44,25 +48,35 @@ function mapTaskToRange(task: Task): { startDate: string; endDate: string } | nu
   };
 }
 
-export function TaskGantt({ tasks, onTaskClick, onDateRangeChange }: TaskGanttProps) {
+export function TaskGantt({
+  tasks,
+  onTaskClick,
+  onDateRangeChange,
+  getAiExecution,
+  scale,
+  onScaleChange,
+}: TaskGanttProps) {
   const taskMap = useMemo(() => new Map(tasks.map((task) => [task.id, task])), [tasks]);
 
   const items = useMemo<GanttChartItem[]>(() => {
     return tasks.reduce<GanttChartItem[]>((acc, task) => {
       const range = mapTaskToRange(task);
       if (!range) return acc;
+      const ai = getAiExecution?.(task);
       acc.push({
-          id: task.id,
-          title: task.title,
-          startDate: range.startDate,
-          endDate: range.endDate,
-          status: task.status,
-          priority: task.priority,
-          meta: task.estimate ? `${task.estimate}h` : undefined,
+        id: task.id,
+        title: task.title,
+        startDate: range.startDate,
+        endDate: range.endDate,
+        status: task.status,
+        priority: task.priority,
+        meta: task.estimate ? `${task.estimate}h` : undefined,
+        isAiExecuting: !!ai?.isExecuting,
+        aiExecutionSummary: ai?.stepSummary,
       });
       return acc;
     }, []);
-  }, [tasks]);
+  }, [tasks, getAiExecution]);
 
   const handleItemClick = (itemId: string) => {
     const task = taskMap.get(itemId);
@@ -83,6 +97,8 @@ export function TaskGantt({ tasks, onTaskClick, onDateRangeChange }: TaskGanttPr
       onItemDateChange={handleDateChange}
       leftColumnTitle="Task"
       emptyMessage="No tasks with valid dates to display"
+      scale={scale}
+      onScaleChange={onScaleChange}
     />
   );
 }

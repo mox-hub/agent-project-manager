@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Bot,
   Bug,
   CalendarRange,
   Check,
@@ -21,10 +22,12 @@ import {
   Kanban,
   LayoutGrid,
   List,
+  MoreHorizontal,
   Plus,
   SlidersHorizontal,
   Sparkles,
   Star,
+  TableProperties,
   Tag,
   Target,
   User,
@@ -132,6 +135,10 @@ export interface ToolbarRowProps {
   onCreateView: (name: string, icon?: string) => void;
   onUpdateView: (id: string, patch: Partial<Pick<ToolbarViewEntry, "name" | "icon">>) => void;
   onDeleteView: (id: string) => void;
+  /** 当前视图是否有未保存变动（指示脏状态） */
+  isDirty?: boolean;
+  /** 保存当前改动到当前激活视图 */
+  onSaveCurrentView?: () => void;
   /* 视图样式切换（居中 / 右侧下拉） */
   viewStyle?: {
     value: string;
@@ -146,14 +153,18 @@ export interface ToolbarRowProps {
   downloadMenu?: ToolbarMenuSlot | false;
   /** 页面注册的附加按钮（追加在默认按钮之后） */
   extraActions?: ToolbarActionDescriptor[];
+  /** 自定义动作/状态节点（渲染在右侧按钮组前） */
+  actions?: ReactNode;
 }
 
 /** 视图可选图标（存储为字符串 key） */
 export const TOOLBAR_VIEW_ICONS: Record<string, LucideIcon> = {
   list: List,
-  grid: LayoutGrid,
   board: Kanban,
   gantt: CalendarRange,
+  table: TableProperties,
+  grid: LayoutGrid,
+  bot: Bot,
   star: Star,
   flag: Flag,
   inbox: Inbox,
@@ -195,9 +206,6 @@ function loadViews(key: string, defaults: ToolbarViewEntry[]): ToolbarViewEntry[
 
 /**
  * 已保存视图状态管理：持久化到 localStorage（每页独立 key）。
- * 页面接入模式：
- *   const toolbar = useToolbarViews({ key, defaults, onApply });
- *   useEffect(() => toolbar.updateActiveSnapshot({ ...当前筛选/样式/排序 }), [deps]);
  */
 export function useToolbarViews({ key, defaults, onApply }: UseToolbarViewsOptions) {
   const [initialState] = useState(() => {
@@ -206,28 +214,26 @@ export function useToolbarViews({ key, defaults, onApply }: UseToolbarViewsOptio
   });
   const [views, setViews] = useState<ToolbarViewEntry[]>(initialState.views);
   const [activeViewId, setActiveViewId] = useState<string>(initialState.activeViewId);
+  const [isDirty, setIsDirty] = useState(false);
 
-  // 最新值 ref：仅在事件/-effect 回调中读取，渲染后由 effect 同步（避免渲染期访问 ref）
   const onApplyRef = useRef(onApply);
   const viewsRef = useRef(views);
   const activeIdRef = useRef(activeViewId);
   const snapshotRef = useRef<Record<string, unknown> | undefined>(initialState.views[0]?.snapshot);
 
-  // key 变化（按实体隔离存储，如 project-tasks:${projectId}；同路由参数切换不卸载组件）时
-  // 重载目标 key 的视图，避免沿用旧 key 数据或把旧 key 视图写入新 key（渲染期调整态模式）
   const [loadedKey, setLoadedKey] = useState(key);
   if (loadedKey !== key) {
     setLoadedKey(key);
     const reloaded = loadViews(key, defaults);
     setViews(reloaded);
     setActiveViewId(reloaded[0]?.id ?? "");
+    setIsDirty(false);
   }
 
   useEffect(() => {
     onApplyRef.current = onApply;
     viewsRef.current = views;
     activeIdRef.current = activeViewId;
-    // 激活视图的存储快照兜底同步（覆盖 key 切换重载后的 snapshotRef 刷新）
     const activeSnapshot = views.find((v) => v.id === activeViewId)?.snapshot;
     if (activeSnapshot !== undefined) snapshotRef.current = activeSnapshot;
   });
@@ -245,10 +251,11 @@ export function useToolbarViews({ key, defaults, onApply }: UseToolbarViewsOptio
     if (!target || id === activeIdRef.current) return;
     snapshotRef.current = target.snapshot;
     setActiveViewId(id);
+    setIsDirty(false);
     onApplyRef.current?.(target.snapshot);
   }, []);
 
-  /** 页面状态变化时上报，写入当前激活视图的快照（相等则跳过，保持引用稳定） */
+  /** 页面状态变化时上报，写入当前激活视图的快照 */
   const updateActiveSnapshot = useCallback((snapshot: Record<string, unknown>) => {
     snapshotRef.current = snapshot;
     setViews((prev) => {
@@ -269,6 +276,7 @@ export function useToolbarViews({ key, defaults, onApply }: UseToolbarViewsOptio
     const snapshot = snapshotRef.current ?? {};
     setViews((prev) => [...prev, { id, name: name.trim() || "View", icon: icon ?? "star", snapshot }]);
     setActiveViewId(id);
+    setIsDirty(false);
   }, []);
 
   const updateView = useCallback(
@@ -288,11 +296,29 @@ export function useToolbarViews({ key, defaults, onApply }: UseToolbarViewsOptio
       const fallback = next[0];
       snapshotRef.current = fallback.snapshot;
       setActiveViewId(fallback.id);
+      setIsDirty(false);
       onApplyRef.current?.(fallback.snapshot);
     }
   }, []);
 
-  return { views, activeViewId, selectView, updateActiveSnapshot, createView, updateView, deleteView };
+  const saveCurrentToActive = useCallback(() => {
+    if (snapshotRef.current) {
+      updateActiveSnapshot(snapshotRef.current);
+      setIsDirty(false);
+    }
+  }, [updateActiveSnapshot]);
+
+  return {
+    views,
+    activeViewId,
+    selectView,
+    updateActiveSnapshot,
+    createView,
+    updateView,
+    deleteView,
+    isDirty,
+    saveCurrentToActive,
+  };
 }
 
 /* ─────────────────────────── 内部子组件 ─────────────────────────── */
@@ -303,8 +329,6 @@ function ToolbarSearchBox({
   placeholder,
 }: NonNullable<ToolbarMenuSlot["search"]>) {
   const [buffer, setBuffer] = useState(value);
-  // 记录上一次的外部受控值：变化时同步内部缓冲（React 官方派生状态重置模式，
-  // 避免在 effect 中同步 setState 造成级联渲染）
   const [prevValue, setPrevValue] = useState(value);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -313,12 +337,10 @@ function ToolbarSearchBox({
     setBuffer(value);
   }
 
-  // 外部值变化时取消挂起的 debounce（仅清理副作用，不触发 setState）
   useEffect(() => {
     clearTimeout(timer.current);
   }, [value]);
 
-  // 卸载时清理挂起的 debounce
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const handleChange = (next: string) => {
@@ -367,17 +389,15 @@ function ToolbarMenuItems({ items, close }: { items: ToolbarMenuItem[]; close: (
             disabled={item.disabled}
             onClick={() => {
               item.onSelect?.();
-              // checkbox 支持多选连续勾选，不自动关闭
               if (!isCheckbox) close();
             }}
             className={cn(
               MENU_ITEM_CLASS,
               "text-xs",
-              item.disabled && "pointer-events-none opacity-50"
+              item.disabled && "pointer-events-none opacity-50",
             )}
           >
             {isCheckbox ? (
-              // Checkbox 经 render 降级为纯指示器 span：交互统一由行按钮接管，避免嵌套 button
               <Checkbox
                 className="mr-2"
                 checked={item.checked ?? false}
@@ -473,6 +493,15 @@ function ExtraActionButton({ action }: { action: ToolbarActionDescriptor }) {
   );
 }
 
+const PRESET_VIEW_NAMES = [
+  { label: "全部工单", icon: "list" },
+  { label: "我的待办", icon: "star" },
+  { label: "按状态看板", icon: "board" },
+  { label: "时间线排期", icon: "gantt" },
+  { label: "高优缺陷", icon: "bug" },
+  { label: "AI 自动化", icon: "bot" },
+];
+
 /** 视图新建/编辑面板（AnchoredMenu 内容） */
 function ViewEditorPanel({
   initialName = "",
@@ -494,20 +523,44 @@ function ViewEditorPanel({
 
   return (
     <form
-      className="flex w-64 flex-col gap-2 p-2"
+      className="flex w-72 flex-col gap-2.5 p-3"
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit(name.trim() || "View", icon);
       }}
     >
+      <div className="text-xs font-semibold text-foreground">
+        {builtIn ? "编辑视图" : submitText === "Create" ? "新建自定义视图" : "编辑视图"}
+      </div>
+
       <Input
         value={name}
         onChange={(event) => setName(event.target.value)}
-        placeholder="View name"
+        placeholder="输入视图名称..."
         className="h-8 text-xs"
         autoFocus
       />
-      <div className="grid grid-cols-8 gap-1">
+
+      {submitText === "Create" ? (
+        <div className="flex flex-wrap gap-1">
+          {PRESET_VIEW_NAMES.map((preset) => (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={() => {
+                setName(preset.label);
+                setIcon(preset.icon);
+              }}
+              className="rounded border border-border bg-muted/30 px-1.5 py-0.5 text-11 text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="text-11 text-muted-foreground">选择代表图标</div>
+      <div className="grid grid-cols-6 gap-1.5 max-h-36 overflow-y-auto pr-1">
         {Object.entries(TOOLBAR_VIEW_ICONS).map(([key, Icon]) => (
           <button
             key={key}
@@ -515,20 +568,21 @@ function ViewEditorPanel({
             onClick={() => setIcon(key)}
             aria-label={key}
             className={cn(
-              "flex size-7 items-center justify-center rounded-md border transition-colors",
+              "flex size-8 items-center justify-center rounded-md border transition-colors",
               icon === key
-                ? "border-primary bg-primary/10 text-primary"
+                ? "border-primary bg-primary/10 text-primary shadow-2xs"
                 : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            <Icon className="size-3.5" strokeWidth={1.75} />
+            <Icon className="size-4" strokeWidth={1.75} />
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-2">
+
+      <div className="flex items-center gap-2 pt-1">
         <button
           type="submit"
-          className="inline-flex h-8 flex-1 items-center justify-center rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="inline-flex h-8 flex-1 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
         >
           {submitText}
         </button>
@@ -536,9 +590,9 @@ function ViewEditorPanel({
           <button
             type="button"
             onClick={onDelete}
-            className="inline-flex h-8 items-center justify-center rounded-full border border-border px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+            className="inline-flex h-8 items-center justify-center rounded-md border border-border px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
-            Delete
+            删除
           </button>
         ) : null}
       </div>
@@ -546,46 +600,119 @@ function ViewEditorPanel({
   );
 }
 
+/** 现代重构版 ViewPill：6px 矩形圆角、脏状态小点、右侧更多管理菜单 */
 function ViewPill({
   view,
   active,
+  isDirty,
   onSelect,
   onUpdate,
   onDelete,
+  onSaveCurrent,
 }: {
   view: ToolbarViewEntry;
   active: boolean;
+  isDirty?: boolean;
   onSelect: (id: string) => void;
   onUpdate: (id: string, patch: Partial<Pick<ToolbarViewEntry, "name" | "icon">>) => void;
   onDelete: (id: string) => void;
+  onSaveCurrent?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const anchorRef = useRef<HTMLButtonElement>(null);
+  const menuAnchorRef = useRef<HTMLButtonElement>(null);
   const Icon = view.icon ? TOOLBAR_VIEW_ICONS[view.icon] : undefined;
 
   return (
-    <>
+    <div
+      className={cn(
+        "group relative inline-flex h-8 shrink-0 items-center rounded-md border transition-all [transition-duration:var(--motion-fast)]",
+        active
+          ? "border-border bg-card text-foreground shadow-xs"
+          : "border-transparent text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+      )}
+    >
       <button
         ref={anchorRef}
         type="button"
-        onClick={() => (active ? setEditing(true) : onSelect(view.id))}
-        title={active ? "Edit view" : view.name}
-        className={cn(
-          "flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors [transition-duration:var(--motion-fast)]",
-          active
-            ? "border-transparent bg-primary text-primary-foreground"
-            : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
-        )}
+        onClick={() => onSelect(view.id)}
+        title={view.name}
+        aria-label={view.name}
+        className="flex h-full items-center gap-1.5 px-2.5 text-xs font-medium"
       >
-        {Icon ? <Icon className="size-3.5 shrink-0" strokeWidth={1.75} /> : null}
-        <span className="max-w-32 truncate">{view.name}</span>
+        {Icon ? <Icon className="size-3.5 shrink-0 opacity-80" strokeWidth={1.75} /> : null}
+        <span className="max-w-28 truncate">{view.name}</span>
+        {active && isDirty ? (
+          <span
+            title="包含未保存的筛选或显示改动"
+            className="size-1.5 rounded-full bg-accent-yellow ring-1 ring-accent-yellow/40"
+          />
+        ) : null}
       </button>
+
+      {/* 激活状态下的轻量级管理菜单触发器 */}
+      {active ? (
+        <>
+          <button
+            ref={menuAnchorRef}
+            type="button"
+            aria-label="View options"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(true);
+            }}
+            className="flex h-full w-5 items-center justify-center rounded-r-md opacity-40 hover:opacity-100 hover:bg-muted"
+          >
+            <MoreHorizontal className="size-3" />
+          </button>
+          <AnchoredMenu open={menuOpen} onClose={() => setMenuOpen(false)} anchor={menuAnchorRef}>
+            <div className="min-w-36 py-1">
+              {isDirty && onSaveCurrent ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSaveCurrent();
+                    setMenuOpen(false);
+                  }}
+                  className={cn(MENU_ITEM_CLASS, "text-xs font-medium text-primary")}
+                >
+                  保存当前改动到视图
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setEditing(true);
+                }}
+                className={cn(MENU_ITEM_CLASS, "text-xs")}
+              >
+                编辑名称与图标
+              </button>
+              {!view.builtIn ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDelete(view.id);
+                  }}
+                  className={cn(MENU_ITEM_CLASS, "text-xs text-destructive hover:text-destructive")}
+                >
+                  删除视图
+                </button>
+              ) : null}
+            </div>
+          </AnchoredMenu>
+        </>
+      ) : null}
+
       <AnchoredMenu open={editing} onClose={() => setEditing(false)} anchor={anchorRef}>
         <ViewEditorPanel
           initialName={view.name}
           initialIcon={view.icon}
           builtIn={view.builtIn}
-          submitText="Save"
+          submitText="保存"
           onSubmit={(name, icon) => {
             onUpdate(view.id, { name, icon });
             setEditing(false);
@@ -596,10 +723,11 @@ function ViewPill({
           }}
         />
       </AnchoredMenu>
-    </>
+    </div>
   );
 }
 
+/** 现代重构版新增视图按钮：带微虚线框与明确提示 */
 function AddViewButton({ onCreate }: { onCreate: (name: string, icon?: string) => void }) {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -612,9 +740,9 @@ function AddViewButton({ onCreate }: { onCreate: (name: string, icon?: string) =
         onClick={() => setOpen(true)}
         aria-label="Add view"
         title="Add view"
-        className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="flex size-8 shrink-0 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
       >
-        <Plus className="size-4" strokeWidth={1.75} aria-hidden />
+        <Plus className="size-3.5" strokeWidth={2} aria-hidden />
       </button>
       <AnchoredMenu open={open} onClose={() => setOpen(false)} anchor={anchorRef}>
         <ViewEditorPanel
@@ -695,12 +823,16 @@ export function ToolbarRow({
   onCreateView,
   onUpdateView,
   onDeleteView,
+  isDirty,
+  onSaveCurrentView,
   viewStyle,
   filterMenu,
   displayMenu,
   downloadMenu,
   extraActions,
+  actions,
 }: ToolbarRowProps) {
+  // 当 layout 为 centered 时优先居中；若未显式指定，当选项 > 3 种时自动下拉收纳（兼容历史规则）
   const styleLayout =
     viewStyle?.layout === "centered" || viewStyle?.layout === "dropdown"
       ? viewStyle.layout
@@ -711,7 +843,6 @@ export function ToolbarRow({
   return (
     <header
       className={cn(
-        // sticky top-10：吸附在 PageHeader（固定 h-10）下方，随页面滚动保持工具栏可见
         "sticky top-10 z-10 grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border bg-background px-6 py-2 md:px-7",
         className,
       )}
@@ -724,9 +855,11 @@ export function ToolbarRow({
             key={view.id}
             view={view}
             active={view.id === activeViewId}
+            isDirty={view.id === activeViewId ? isDirty : false}
             onSelect={onSelectView}
             onUpdate={onUpdateView}
             onDelete={onDeleteView}
+            onSaveCurrent={onSaveCurrentView}
           />
         ))}
         <AddViewButton onCreate={onCreateView} />
@@ -754,6 +887,7 @@ export function ToolbarRow({
       )}
 
       <div className="flex items-center justify-end gap-2">
+        {actions}
         {viewStyle && styleLayout === "dropdown" ? (
           <ViewStyleDropdown value={viewStyle.value} onChange={viewStyle.onChange} options={viewStyle.options} />
         ) : null}
@@ -765,7 +899,11 @@ export function ToolbarRow({
           )
         ) : null}
         {displayMenu ? (
-          <ToolbarMenuButton icon={SlidersHorizontal} label="Display" menu={displayMenu} />
+          displayMenu.render ? (
+            displayMenu.render()
+          ) : (
+            <ToolbarMenuButton icon={SlidersHorizontal} label="Display" menu={displayMenu} />
+          )
         ) : null}
         {downloadMenu ? (
           <ToolbarMenuButton icon={Download} label="Download" menu={downloadMenu} />

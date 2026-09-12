@@ -8,7 +8,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Plus, CheckCircle2, Bug, AlertTriangle, List, Kanban, Trash2, CircleDashed,
+  Plus, CheckCircle2, Bug, AlertTriangle, List, Kanban, CalendarRange, TableProperties, Bot, Trash2, CircleDashed,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
@@ -35,6 +35,11 @@ import type { Task } from '../api/issue-api';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import { ListActionButton } from '@/components/ui/data-list';
 import { BugSimpleList } from '../components/bug-simple-list';
+import { TaskTableView } from '../components/task-table-view';
+import { TaskGantt } from '../components/task-gantt';
+import { useActiveExecutionsMap } from '@/modules/execution/hooks/use-active-executions-map';
+import { AiExecutionBadge, type IssueAiExecutionState } from '@/shared/components/ai-execution-badge';
+import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useConfirm } from '@/shared/confirm/use-confirm';
@@ -47,7 +52,7 @@ import {
   getTaskStatusColumns,
 } from '../components/board-presets';
 
-type ViewMode = 'list' | 'board';
+type ViewMode = 'list' | 'board' | 'gantt' | 'table';
 type GroupBy = 'none' | 'status' | 'severity' | 'project';
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -120,6 +125,9 @@ export function BugsPage() {
     pageSize: 100,
   });
 
+  // AI 执行活跃状态
+  const { getIssueExecution, activeCount } = useActiveExecutionsMap();
+
   // 获取项目列表用于过滤
   const { data: projectsResponse } = useProjectList();
   const projects = useMemo(() => projectsResponse?.items ?? [], [projectsResponse]);
@@ -134,6 +142,7 @@ export function BugsPage() {
     const statusCounts = countBy(allBugs, (bug) => bug.status);
     const severityCounts = countBy(allBugs, severityOf);
     const projectCounts = countBy(allBugs, (bug) => bug.projectId);
+    const aiActiveCounts = allBugs.filter((b) => getIssueExecution(b)?.isExecuting).length;
     return [
       {
         id: 'status',
@@ -150,6 +159,19 @@ export function BugsPage() {
             hint: statusCounts.get(value)?.toString(),
           };
         }),
+      },
+      {
+        id: 'aiExecution',
+        label: 'AI 执行态',
+        icon: Bot,
+        operators: ['is'],
+        options: [
+          {
+            value: 'active',
+            label: 'AI 接管执行中',
+            hint: aiActiveCounts.toString(),
+          },
+        ],
       },
       {
         id: 'severity',
@@ -176,7 +198,7 @@ export function BugsPage() {
         })),
       },
     ];
-  }, [t, projects, allBugs]);
+  }, [t, projects, allBugs, getIssueExecution]);
 
   const updateTask = useUpdateTask();
 
@@ -190,12 +212,17 @@ export function BugsPage() {
     const statusSets = filterConditionSets(conditions, 'status');
     const severitySets = filterConditionSets(conditions, 'severity');
     const projectSets = filterConditionSets(conditions, 'project');
+    const aiSets = filterConditionSets(conditions, 'aiExecution');
     return allBugs.filter((bug) => {
       if (search && !bug.title.toLowerCase().includes(search.toLowerCase()) &&
           !bug.id.toLowerCase().includes(search.toLowerCase())) {
         return false;
       }
       if (!matchesConditionSets(bug.status, statusSets)) {
+        return false;
+      }
+      // AI 执行状态筛选
+      if (aiSets.include.includes('active') && !getIssueExecution(bug)?.isExecuting) {
         return false;
       }
       // severity 缺失时从 priority 推导（severityOf 统一口径）
@@ -207,15 +234,16 @@ export function BugsPage() {
       }
       return true;
     });
-  }, [allBugs, search, conditions]);
+  }, [allBugs, search, conditions, getIssueExecution]);
 
   // Statistics
   const stats = useMemo(() => {
     const critical = filteredBugs.filter((b) => b.severity === 'critical').length;
     const open = filteredBugs.filter((b) => b.status !== 'done' && b.status !== 'canceled').length;
     const resolved = filteredBugs.filter((b) => b.status === 'done').length;
-    return { critical, open, resolved };
-  }, [filteredBugs]);
+    const aiExecuting = filteredBugs.filter((b) => getIssueExecution(b)?.isExecuting).length;
+    return { critical, open, resolved, aiExecuting };
+  }, [filteredBugs, getIssueExecution]);
 
   const handleBugClick = (bug: Task) => {
     navigate(`/app/bugs/${bug.id}`);
@@ -237,6 +265,7 @@ export function BugsPage() {
           { id: 'open', label: t("task.bug.open") || 'open', value: stats.open, tone: 'warning' },
           { id: 'critical', label: t("task.bug.critical") || 'critical', value: stats.critical, tone: 'danger' },
           { id: 'resolved', label: t("task.bug.resolved") || 'resolved', value: stats.resolved, tone: 'success' },
+          ...(stats.aiExecuting > 0 ? [{ id: 'ai', label: 'AI 执行中', value: stats.aiExecuting, tone: 'default' as const }] : []),
         ]}
         actions={
           <>
@@ -305,7 +334,38 @@ export function BugsPage() {
         onCreateView={toolbar.createView}
         onUpdateView={toolbar.updateView}
         onDeleteView={toolbar.deleteView}
+        isDirty={toolbar.isDirty}
+        onSaveCurrentView={toolbar.saveCurrentToActive}
+        actions={
+          activeCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => {
+                const hasActive = conditions.some((c) => c.fieldId === 'aiExecution' && c.values.includes('active'));
+                if (hasActive) {
+                  setConditions((prev) => prev.filter((c) => c.fieldId !== 'aiExecution'));
+                } else {
+                  setConditions((prev) => [
+                    ...prev.filter((c) => c.fieldId !== 'aiExecution'),
+                    { id: 'quick-ai-active', fieldId: 'aiExecution', operator: 'is', values: ['active'] },
+                  ]);
+                }
+              }}
+              className={cn(
+                'inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors',
+                conditions.some((c) => c.fieldId === 'aiExecution' && c.values.includes('active'))
+                  ? 'bg-accent-purple text-white shadow-xs'
+                  : 'bg-accent-purple/10 text-accent-purple hover:bg-accent-purple/20',
+              )}
+              title="筛选 AI 接管执行中的 Bug"
+            >
+              <Bot className="size-3.5" />
+              <span>{activeCount} 个 AI 执行中</span>
+            </button>
+          ) : null
+        }
         viewStyle={{
+          layout: 'centered',
           value: viewMode,
           onChange: (v) => {
             setViewMode(v as ViewMode);
@@ -315,6 +375,8 @@ export function BugsPage() {
           options: [
             { value: 'list', label: t('task.view.list', 'List'), icon: List },
             { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
+            { value: 'gantt', label: t('task.view.gantt', 'Gantt'), icon: CalendarRange },
+            { value: 'table', label: t('task.view.table', 'Table'), icon: TableProperties },
           ],
         }}
         filterMenu={{
@@ -388,6 +450,7 @@ export function BugsPage() {
               onBugClick={handleBugClick}
               groupBy={groupBy}
               getProjectName={getProjectName}
+              getAiExecution={getIssueExecution}
               onGroupCreate={() => setShowCreateDialog(true)}
               selectionActions={(selected, close) => (
                 <ListActionButton
@@ -412,14 +475,62 @@ export function BugsPage() {
                 </ListActionButton>
               )}
             />
-          ) : (
+          ) : viewMode === 'board' ? (
             <BugBoardView
               bugs={filteredBugs}
               loading={isLoading}
               groupBy={groupBy === 'none' ? 'status' : groupBy}
               projects={projects}
               onBugClick={handleBugClick}
+              getAiExecution={getIssueExecution}
               onMoveBug={(bug, data) => updateTask.mutate({ issueId: bug.id, data })}
+            />
+          ) : viewMode === 'gantt' ? (
+            <TaskGantt
+              tasks={filteredBugs}
+              onTaskClick={handleBugClick}
+              getAiExecution={getIssueExecution}
+              onDateRangeChange={(issueId, range) =>
+                updateTask
+                  .mutateAsync({
+                    issueId,
+                    data: {
+                      startDate: range.startDate,
+                      dueDate: range.dueDate,
+                    },
+                  })
+                  .then(() => undefined)
+              }
+            />
+          ) : (
+            <TaskTableView
+              tasks={filteredBugs}
+              loading={isLoading}
+              onTaskClick={handleBugClick}
+              getAiExecution={getIssueExecution}
+              getProjectName={getProjectName}
+              selectionActions={(selected, close) => (
+                <ListActionButton
+                  onClick={async () => {
+                    const ok = await confirmAction({
+                      title: `删除选中的 ${selected.length} 项？`,
+                      description: '该操作会删除选中的 Bug 及其子任务，且不可撤销。',
+                      confirmText: '删除',
+                      cancelText: '取消',
+                      variant: 'destructive',
+                    });
+                    if (!ok) return;
+                    await Promise.allSettled(selected.map((bug) => deleteTask.mutateAsync(bug.id)));
+                    close();
+                    queryClient.invalidateQueries({ queryKey: ['bugs'] });
+                    refetch();
+                  }}
+                  title="删除"
+                  className="text-destructive"
+                >
+                  <Trash2 className="size-4" /> 删除
+                </ListActionButton>
+              )}
             />
           )}
         </div>
@@ -436,6 +547,7 @@ function BugBoardView({
   projects,
   onBugClick,
   onMoveBug,
+  getAiExecution,
   loading,
 }: {
   bugs: Task[];
@@ -443,6 +555,7 @@ function BugBoardView({
   projects: { id: string; name: string }[];
   loading?: boolean;
   onBugClick: (bug: Task) => void;
+  getAiExecution?: (bug: Task) => IssueAiExecutionState | undefined;
   onMoveBug?: (bug: Task, data: { status?: string; severity?: Task['severity'] }) => void;
 }) {
   const { t } = useTranslation();
@@ -491,6 +604,16 @@ function BugBoardView({
         }
       : undefined;
 
+  const card = {
+    ...bugCardModel,
+    isAiExecuting: (bug: Task) => !!getAiExecution?.(bug)?.isExecuting,
+    aiExecutionNode: (bug: Task) => {
+      const ai = getAiExecution?.(bug);
+      if (!ai) return null;
+      return <AiExecutionBadge execution={ai} size="xs" variant="line" />;
+    },
+  };
+
   return (
     <BoardView<Task>
       className="h-full"
@@ -498,7 +621,7 @@ function BugBoardView({
       items={bugs}
       loading={loading}
       groupBy={groupByFn}
-      card={bugCardModel}
+      card={card}
       onItemMove={handleItemMove}
       onItemClick={(bug) => onBugClick(bug)}
       onItemContextMenu={onItemContextMenu}

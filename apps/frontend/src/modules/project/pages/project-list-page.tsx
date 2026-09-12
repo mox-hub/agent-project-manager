@@ -30,6 +30,7 @@ import type { FilterState } from '@/shared/filters/types';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
+import { useActiveExecutionsMap } from '@/modules/execution/hooks/use-active-executions-map';
 import {
   Plus,
   AlertTriangle,
@@ -37,6 +38,7 @@ import {
   Kanban,
   CalendarRange,
   Archive,
+  Bot,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ListActionButton } from '@/components/ui/data-list';
@@ -116,6 +118,7 @@ export function ProjectListPage() {
   const { data, isLoading, isError, error, refetch } = useProjectList(filters);
   const updateProject = useUpdateProject();
   const confirmAction = useConfirm();
+  const { getProjectExecutionCount, activeCount } = useActiveExecutionsMap();
 
   const projects = data?.items ?? [];
   const projectFilterGroups = useProjectFilterOptions({ projects });
@@ -227,7 +230,21 @@ export function ProjectListPage() {
         onCreateView={toolbar.createView}
         onUpdateView={toolbar.updateView}
         onDeleteView={toolbar.deleteView}
+        isDirty={toolbar.isDirty}
+        onSaveCurrentView={toolbar.saveCurrentToActive}
+        actions={
+          activeCount > 0 ? (
+            <span
+              className="inline-flex h-7 items-center gap-1.5 rounded-md bg-accent-purple/10 px-2 text-xs font-medium text-accent-purple"
+              title="当前有 AI 正在接管执行任务"
+            >
+              <Bot className="size-3.5" />
+              <span>{activeCount} 个任务 AI 执行中</span>
+            </span>
+          ) : null
+        }
         viewStyle={{
+          layout: 'centered',
           value: viewMode,
           onChange: (value) => setViewMode(value as ViewMode),
           options: [
@@ -322,6 +339,7 @@ export function ProjectListPage() {
             {viewMode === 'board' ? (
               <ProjectBoard
                 projects={projects}
+                getProjectExecutionCount={getProjectExecutionCount}
                 onProjectClick={(project) => {
                   navigate(`/app/projects/${project.id}`);
                 }}
@@ -335,6 +353,7 @@ export function ProjectListPage() {
             ) : viewMode === 'gantt' ? (
               <ProjectGantt
                 projects={projects}
+                getProjectExecutionCount={getProjectExecutionCount}
                 onProjectClick={(project) => {
                   navigate(`/app/projects/${project.id}`);
                 }}
@@ -354,6 +373,7 @@ export function ProjectListPage() {
               <ProjectSimpleList
                 projects={projects}
                 loading={isLoading}
+                getProjectExecutionCount={getProjectExecutionCount}
                 onProjectClick={(project) => navigate(`/app/projects/${project.id}`)}
                 selectionActions={(selected, close) => (
                   <ListActionButton
