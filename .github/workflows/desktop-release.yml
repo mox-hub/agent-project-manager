@@ -16,6 +16,10 @@
 #   命名 Release，latest.yml 供 updater 比对版本）
 # - pnpm 版本经根 package.json packageManager（pnpm@11.25.0）解析，勿显式降版
 #   （旧文件写死 8.15.9 已随 Tauri 管线废弃）
+# - electron ≥44.3.0 的 npm 包移除了 postinstall 自动下载（改为暴露 install-electron
+#   bin，allowBuilds 对它无效）。CI 全新安装后 node_modules/electron/dist 恒缺失，
+#   而 electron-builder.yml 的 electronDist 本地直指（Defender 锁规避）会硬报错——
+#   故 install 后必须显式补一次二进制下载（本地开发同因，见 README 的 ELECTRON_MIRROR）
 name: desktop-release
 
 on:
@@ -58,6 +62,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Download Electron binary
+        run: node apps/desktop/node_modules/electron/install.js
 
       - name: Prisma generate（server build 依赖 client 类型）
         run: pnpm --filter "./apps/server" run prisma:generate
