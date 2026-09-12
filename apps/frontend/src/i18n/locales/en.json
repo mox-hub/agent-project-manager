@@ -246,11 +246,19 @@
     "teams": "Teams",
     "office": "Office",
     "aiSurface": "AI Surface",
-    "workflow": "Workflows"
+    "workflow": "Workflows",
+    "delivery": "Delivery"
   },
   "workflow": {
     "title": "Workflows",
     "description": "Turn AI-drafted engineering flows into orchestrated, resumable, approval-gated execution",
+    "view": {
+      "grid": "Grid",
+      "list": "List"
+    },
+    "filter": {
+      "searchPlaceholder": "Search workflows by name, key, or description..."
+    },
     "editor": {
       "edit": "Edit Flow",
       "cancel": "Cancel Editing",
@@ -3287,6 +3295,13 @@
   "shell": {
     "mainNav": "Main",
     "main": "Main",
+    "workbench": "Workbench",
+    "pipeline": "Lifecycle Pipeline",
+    "collaboration": "Collaboration & Assets",
+    "stageDiscovery": "Discovery",
+    "stagePlanning": "Planning",
+    "stageExecution": "Execution",
+    "stageAcceptance": "Acceptance",
     "aiTools": "AI & Tools",
     "system": "System",
     "utilities": "Utilities",

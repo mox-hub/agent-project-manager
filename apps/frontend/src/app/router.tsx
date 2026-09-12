@@ -433,6 +433,16 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: 'delivery',
+        element: (
+          <Suspense fallback={null}>
+            <DeliveryPage />
+          </Suspense>
+        ),
+        handle: { selfScroll: true },
+        errorElement: <ErrorPage />,
+      },
+      {
         path: 'help',
         handle: { selfScroll: true },
         element: <HelpPage />,
@@ -563,15 +573,6 @@ export const router = createBrowserRouter([
                 </Suspense>
               ),
               handle: { selfScroll: true },
-              errorElement: <ErrorPage />,
-            },
-            {
-              path: 'delivery',
-              element: (
-                <Suspense fallback={null}>
-                  <DeliveryPage />
-                </Suspense>
-              ),
               errorElement: <ErrorPage />,
             },
           ]

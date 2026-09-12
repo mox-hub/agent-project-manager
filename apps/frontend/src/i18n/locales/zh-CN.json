@@ -246,11 +246,19 @@
     "teams": "团队",
     "office": "办公室",
     "aiSurface": "AI 表面",
-    "workflow": "工作流"
+    "workflow": "工作流",
+    "delivery": "交付视图"
   },
   "workflow": {
     "title": "工作流",
     "description": "把 AI 代写的工程流程变成可编排、可等待、可审批的确定性执行",
+    "view": {
+      "grid": "卡片",
+      "list": "列表"
+    },
+    "filter": {
+      "searchPlaceholder": "搜索工作流名称、键名或描述..."
+    },
     "editor": {
       "edit": "编辑流程",
       "cancel": "取消编辑",
@@ -3287,6 +3295,13 @@
   "shell": {
     "mainNav": "主导航",
     "main": "主导航",
+    "workbench": "工作台",
+    "pipeline": "研发生命周期",
+    "collaboration": "协同与底座",
+    "stageDiscovery": "需求调研",
+    "stagePlanning": "规划拆解",
+    "stageExecution": "研发执行",
+    "stageAcceptance": "质量验收",
     "aiTools": "AI 与工具",
     "system": "系统",
     "utilities": "工具",

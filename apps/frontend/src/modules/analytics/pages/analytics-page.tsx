@@ -7,16 +7,19 @@
  * - Cost / Quality / Risk / Team Activity 四个 Tab 暂无真实数据源，
  *   采用 refer 的静态示例数据并标记（仅展示形态）
  */
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowRight, ArrowUp, BarChart3, DollarSign, Activity, ShieldAlert, Users, Zap, AlertTriangle, XCircle, TrendingUp, TrendingDown, Target, Minus, CheckCircle2 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { SkeletonCard, SkeletonChart } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangleIcon, RefreshCwIcon } from 'lucide-react';
@@ -555,26 +558,122 @@ function TeamActivityTab() {
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
+type AnalyticsTab = 'overview' | 'cost' | 'quality' | 'risk' | 'team';
+
 export function AnalyticsPage() {
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>('overview');
+  const { data: overviewData, refetch: refetchOverview } = useAnalyticsOverview();
+
+  const metrics = useMemo(() => {
+    if (!overviewData) return [];
+    return [
+      { id: 'projects', label: '项目总数', value: overviewData.totalProjects },
+      { id: 'agents', label: '活跃 Agent', value: overviewData.activeAgents },
+      { id: 'delivery', label: '交付率', value: `${overviewData.deliveryRate}%` },
+      { id: 'quality', label: '质量评分', value: overviewData.qualityScore },
+    ];
+  }, [overviewData]);
+
+  const toolbar = useToolbarViews({
+    key: 'analytics-page',
+    defaults: [
+      {
+        id: 'overview',
+        name: '概览 Overview',
+        icon: 'target',
+        builtIn: true,
+        snapshot: { tab: 'overview' },
+      },
+      {
+        id: 'cost',
+        name: '成本 Cost',
+        icon: 'tag',
+        builtIn: true,
+        snapshot: { tab: 'cost' },
+      },
+      {
+        id: 'quality',
+        name: '质量 Quality',
+        icon: 'check',
+        builtIn: true,
+        snapshot: { tab: 'quality' },
+      },
+      {
+        id: 'risk',
+        name: '风险 Risk',
+        icon: 'bug',
+        builtIn: true,
+        snapshot: { tab: 'risk' },
+      },
+      {
+        id: 'team',
+        name: '团队 Team',
+        icon: 'user',
+        builtIn: true,
+        snapshot: { tab: 'team' },
+      },
+    ],
+    onApply: (snapshot) => {
+      const snap = (snapshot ?? {}) as Partial<{ tab: AnalyticsTab }>;
+      if (snap.tab) setActiveTab(snap.tab);
+    },
+  });
+  const { updateActiveSnapshot } = toolbar;
+
+  useEffect(() => {
+    updateActiveSnapshot({ tab: activeTab });
+  }, [updateActiveSnapshot, activeTab]);
+
   return (
-    <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.analytics}>
-      <div className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8 lg:px-10 space-y-6">
-        <PageHeader
-          aiId="analytics.overview"
-          title="Analytics"
-          icon={BarChart3}
-          iconColor="text-accent-blue"
-        />
+    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.analytics}>
+      <PageHeader
+        aiId="analytics.overview"
+        title="Analytics"
+        icon={BarChart3}
+        iconColor="text-accent-blue"
+        metrics={metrics}
+        actions={
+          <HeaderActionButton
+            icon={RefreshCwIcon}
+            label="刷新数据"
+            onClick={() => {
+              refetchOverview();
+            }}
+            data-ai-component="analytics.refresh"
+            data-ai-action="analytics.refresh.click"
+          />
+        }
+      />
 
-        <Tabs defaultValue="overview">
-          <TabsList className="mb-5 h-9">
-            <TabsTrigger value="overview" className="text-xs gap-1.5"><BarChart3 className="w-3.5 h-3.5" />Overview</TabsTrigger>
-            <TabsTrigger value="cost" className="text-xs gap-1.5"><DollarSign className="w-3.5 h-3.5" />Cost</TabsTrigger>
-            <TabsTrigger value="quality" className="text-xs gap-1.5"><Activity className="w-3.5 h-3.5" />Quality</TabsTrigger>
-            <TabsTrigger value="risk" className="text-xs gap-1.5"><ShieldAlert className="w-3.5 h-3.5" />Risk</TabsTrigger>
-            <TabsTrigger value="team" className="text-xs gap-1.5"><Users className="w-3.5 h-3.5" />Team Activity</TabsTrigger>
-          </TabsList>
+      <ToolbarRow
+        aiId="analytics.overview"
+        views={toolbar.views}
+        activeViewId={toolbar.activeViewId}
+        onSelectView={toolbar.selectView}
+        onCreateView={toolbar.createView}
+        onUpdateView={toolbar.updateView}
+        onDeleteView={toolbar.deleteView}
+        isDirty={toolbar.isDirty}
+        onSaveCurrentView={toolbar.saveCurrentToActive}
+        viewStyle={{
+          layout: 'centered',
+          value: activeTab,
+          onChange: (v) => setActiveTab(v as AnalyticsTab),
+          options: [
+            { value: 'overview', label: 'Overview', icon: BarChart3 },
+            { value: 'cost', label: 'Cost', icon: DollarSign },
+            { value: 'quality', label: 'Quality', icon: Activity },
+            { value: 'risk', label: 'Risk', icon: ShieldAlert },
+            { value: 'team', label: 'Team Activity', icon: Users },
+          ],
+        }}
+        filterMenu={false}
+        displayMenu={false}
+        downloadMenu={false}
+      />
 
+      <div className="flex w-full min-w-0 flex-1 flex-col overflow-y-auto px-6 py-4 sm:px-8 sm:py-5 lg:px-10 space-y-5">
+        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as AnalyticsTab)} className="w-full">
           <TabsContent value="overview"><OverviewTab /></TabsContent>
           <TabsContent value="cost"><CostTab /></TabsContent>
           <TabsContent value="quality"><QualityTab /></TabsContent>
