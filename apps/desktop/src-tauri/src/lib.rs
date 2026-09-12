@@ -38,19 +38,18 @@ fn create_app_config() -> AppConfig {
 
     #[cfg(not(debug_assertions))]
     {
-        // Release：全部运行时资产随包分发，位于安装目录 resources/ 下
-        //（NSIS 的资源目录 = exe 所在目录）。
+        // Release：全部运行时资产随包分发，位于安装目录 target/desktop-pack/ 下
+        //（NSIS 的资源目录 = exe 所在目录；资源按其相对 src-tauri 的路径原样落位）。
         let exe_dir = std::env::current_exe()
             .expect("failed to get exe path")
             .parent()
             .expect("exe has no parent dir")
             .to_path_buf();
-        let resources = exe_dir.join("resources");
-        config.server_cwd = resources.join("server");
-        config.frontend_dist = resources.join("frontend");
+        let pack = exe_dir.join("target").join("desktop-pack");
+        config.server_cwd = pack.join("server");
+        config.frontend_dist = pack.join("frontend");
         config.node_exe = Some(
-            resources
-                .join("bin")
+            pack.join("bin")
                 .join(if cfg!(windows) { "node.exe" } else { "node" }),
         );
     }

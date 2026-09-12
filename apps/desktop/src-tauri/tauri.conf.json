@@ -35,9 +35,9 @@
       "icons/icon.png"
     ],
     "resources": [
-      "resources/bin/node.exe",
-      "resources/server",
-      "resources/frontend"
+      "target/desktop-pack/bin/node.exe",
+      "target/desktop-pack/server",
+      "target/desktop-pack/frontend"
     ]
   }
 }
