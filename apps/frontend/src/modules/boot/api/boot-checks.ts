@@ -13,8 +13,13 @@ import type { BootCheck, BootContext } from '../types';
 
 const TOKEN_STORAGE_KEY = 'access_token';
 
-function getWsBaseUrl(): string {
-  return getApiBaseUrl().replace(/^http/, 'ws');
+export function getWsBaseUrl(): string {
+  // getApiBaseUrl 恒带 REST 全局前缀 /_api；socket.io 网关挂在 origin 根上
+  //（HTTP path 默认 /socket.io + namespace /events）。不剥掉会把命名空间拼成
+  // /_api/events——服务端无此 namespace，握手直接 connect_error: Invalid namespace。
+  return getApiBaseUrl()
+    .replace(/\/_api\/?$/, '')
+    .replace(/^http/, 'ws');
 }
 
 export function buildBootContext(signal: AbortSignal): BootContext {
@@ -107,6 +112,32 @@ export const bootChecks: BootCheck[] = [
         await api.get('/health', undefined, { signal: ctx.signal });
       });
       return { status: 'success', detail: `${ctx.apiBaseUrl}/health · ${ms}ms` };
+    },
+  },
+  {
+    id: 'check-runtime-daemon',
+    title: '检查 AI 执行运行时',
+    description: '桌面端确认 apm-runtime 守护进程已自动拉起并注册本机（AI 同事的执行面）',
+    skipIf: (ctx) => !ctx.isTauri,
+    async run() {
+      const status = await invoke<{
+        running: boolean;
+        pid?: number;
+        workspaceRoots: string[];
+      }>('get_runtime_daemon_status');
+      if (status.running) {
+        return {
+          status: 'success',
+          detail: `守护进程运行中 · PID ${status.pid} · 工作目录 ${status.workspaceRoots.length} 个`,
+        };
+      }
+      // 未运行（如曾手动停止或意外退出）：boot 阶段自动重拉一次，失败则作为
+      // 可重试项展示（重试按钮重跑本项）；也可在 设置 → 运行时 手动启动
+      const started = await invoke<{ pid: number }>('start_runtime_daemon');
+      return {
+        status: 'success',
+        detail: `已重新拉起守护进程 · PID ${started.pid}`,
+      };
     },
   },
   {

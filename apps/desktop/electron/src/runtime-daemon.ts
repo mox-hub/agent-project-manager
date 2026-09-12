@@ -56,6 +56,58 @@ function assertCliEntry(config: AppConfig): void {
   throw new Error(`未找到守护进程入口（${config.cliEntry}）。安装包可能不完整，请重新安装。`);
 }
 
+/**
+ * 接管上一代壳残留的孤儿守护进程。
+ *
+ * 壳崩溃/被强杀时 before-quit 清理不执行——utilityProcess 守护进程是独立 OS 进程，
+ * 会孤儿化存活并持有 userData 目录的 runtime.lock，导致下次启动锁冲突必失败。
+ * 该锁目录经 APM_CONFIG_PATH 重定向，持有者只可能是壳拉起的守护进程（用户手动
+ * CLI 走 ~/.apm，互不相干），因此活着即可判定孤儿、安全终止。持锁方已死（陈旧
+ * 锁）则仅清锁——这一分支守护进程自身的 stale 锁接管也能处理，这里提前做省一次
+ * 失败重启。
+ */
+function reapOrphanDaemon(config: AppConfig): void {
+  const lockPath = path.join(path.dirname(config.apmConfigPath), 'runtime.lock');
+  let holder: { pid?: number } | null = null;
+  try {
+    holder = JSON.parse(fs.readFileSync(lockPath, 'utf-8')) as { pid?: number };
+  } catch {
+    return;
+  }
+  const pid = holder?.pid;
+  if (typeof pid !== 'number' || pid <= 0 || pid === process.pid) {
+    return;
+  }
+  let alive = false;
+  try {
+    process.kill(pid, 0);
+    alive = true;
+  } catch {
+    // 已死：清掉陈旧锁即可
+  }
+  logger.warn(
+    `发现上一代守护进程锁（pid=${pid}，${alive ? '孤儿存活，接管终止' : '已死，清理陈旧锁'}）`,
+  );
+  if (alive) {
+    try {
+      process.kill(pid);
+    } catch {
+      // 竞态退出——无碍
+    }
+    // 等待进程退出（同步等待，fork 必须在锁释放后进行）
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      try {
+        process.kill(pid, 0);
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
+      } catch {
+        break;
+      }
+    }
+  }
+  fs.rmSync(lockPath, { force: true });
+}
+
 function pipeLog(source: NodeJS.ReadableStream | null, tag: string, onFirstOutput?: () => void): void {
   if (!source) {
     return;
@@ -81,6 +133,8 @@ export async function startRuntimeDaemon(backendPort: number): Promise<{ pid: nu
     throw new Error('守护进程已在运行');
   }
   assertCliEntry(config);
+  // 先接管上一代壳的孤儿/陈旧锁，再fork——否则锁冲突必失败
+  reapOrphanDaemon(config);
   // 配置文件就位：守护进程首启会把 runtimeId/deviceSecret 等写回同一文件
   if (!fs.existsSync(config.apmConfigPath)) {
     writeWorkspaceRoots(config, readWorkspaceRoots(config));

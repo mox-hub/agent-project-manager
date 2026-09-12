@@ -23,6 +23,11 @@ class EventClient {
 
   connect(url?: string) {
     if (this.socket?.connected || this.isConnecting) return;
+    // 上次连接失败留下的死 socket（boot 重试场景）：断开丢弃，避免泄漏与双连接
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
 
     const wsUrl = url || import.meta.env.VITE_WS_URL || this.inferDefaultWsUrl();
     if (!wsUrl) {
