@@ -156,7 +156,6 @@ export function ShellLayout() {
             label: t('nav.decisions'),
             count: pendingDecisionCount,
           },
-          { to: '/app/search', icon: Search, label: t('nav.search') },
         ],
       },
       {
@@ -385,7 +384,26 @@ export function ShellLayout() {
                   )}
                 </button>
                 {!sidebarCollapsed && (
-                  <div className="shrink-0">
+                  <div className="shrink-0 flex items-center gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <NavLink
+                          to="/app/search"
+                          className={({ isActive }) =>
+                            cn(
+                              'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                              isActive && 'bg-sidebar-accent text-sidebar-foreground',
+                            )
+                          }
+                          aria-label={t('nav.search')}
+                        >
+                          <Search className="size-4" />
+                        </NavLink>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {t('nav.search')}
+                      </TooltipContent>
+                    </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <NavLink
@@ -407,7 +425,7 @@ export function ShellLayout() {
                           )}
                         </NavLink>
                       </TooltipTrigger>
-                      <TooltipContent side="right">
+                      <TooltipContent side="bottom">
                         {t('nav.notifications')}
                       </TooltipContent>
                     </Tooltip>
@@ -568,9 +586,28 @@ export function ShellLayout() {
               </nav>
               </div>
 
-              {/* Sidebar Toggle Button & Notification - Only show when collapsed */}
+              {/* Sidebar Toggle Button & Notification & Search - Only show when collapsed */}
               {sidebarCollapsed && (
                 <div className="shrink-0 flex flex-col items-center gap-1.5 px-0 py-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <NavLink
+                        to="/app/search"
+                        className={({ isActive }) =>
+                          cn(
+                            'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                            isActive && 'bg-sidebar-accent text-sidebar-foreground',
+                          )
+                        }
+                        aria-label={t('nav.search')}
+                      >
+                        <Search className="size-4" />
+                      </NavLink>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {t('nav.search')}
+                    </TooltipContent>
+                  </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <NavLink

@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [0.6.0] - 2026-09-11
 
+### 搜索按钮圆形图标化与侧边栏导航样式优化 (feat/ui-views-and-toolbar-refactor)
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**搜索按钮与通知按钮一致圆形化**：将搜索按钮从侧边栏普通导航分组（`utilities` items）中移除，取消原有长条形导航链接样式，对齐通知按钮样式重构为标准圆形按钮（`relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground`，激活态高亮）；②**布局位置调整至通知按钮左侧**：在展开态侧边栏顶部 header 中放置于通知按钮左侧并列；在收起态侧边栏底部容器中置于通知按钮上方（从上到下依次为搜索、通知、展开侧边栏），配套统一的 `Tooltip` 提示（`t('nav.search')`），点击直达全局搜索。 | 用户指令（搜索按钮也做和通知相同的处理，放到通知按钮的左侧，取消导航栏的样式） | Vitest 前端 **81 文件 421 用例全绿**；`tsc -b` 0 错误；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`pnpm check:docs-sync` 通过 | 本 CHANGELOG |
+
 ### 多选操作栏避开 Dock 触发区平移与 count 基数真实数据加载 (feat/ui-views-and-toolbar-refactor)
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
