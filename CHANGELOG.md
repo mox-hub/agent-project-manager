@@ -21,6 +21,22 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-K-03 驱动型发版三期——Release 升级为主线管道⑥交付执行器（feat/release-pipeline-driver，2026-09-13）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server · frontend | **驱动型发版三期一夜达成**：Release 从「事后记录 CHANGELOG」升级为「主线管道⑥交付执行器」——①状态机（draft/gated/approved/publishing/released/failed，只前滚禁删 tag）+ 版本推断（semver + conventional-recommended-bump 机械增量，基线取库内版本与 git tag 较大者，AI 润色人拍板）；②门禁聚合五检查（范围归属/验收全 passed|waived/CI 证据无失败/契约无 detached/审计无 red + CHANGELOG 一致性追加）只读四证据源；③发布审批决策卡（kind=release，借鉴 release-please「人确认才发布」，accept 即授权→release.approved 事件驱动自动发布）；④发布执行（CAS 并发互斥，CHANGELOG 导出→本地 tag+push→GitHub Release 三步骤如实落 executionLog，失败置 failed 可重开）；⑤前端发布管理页（列表/详情/门禁面板/AI 起草/执行日志，pipeline 导航 09 发版交付）；⑥workflow 产品动作 release.create/release.latest + 静默场景 release-notes | CAP-K-03 / B-02 / B-08 接口并轨 | 状态机 5 条 + 门禁 8 条 + 既有 spec 6 条单测全绿；e2e release-pipeline 全链 7 条（草案→异常流 400→门禁→审批→自动发布诚实 skipped→released）；前端页面测试 4 条；type-check 双端 0 错误；契约三件套零漂移 | 能力清单 CAP-K-03 扩卡、GAP-T-22、§2.2 管道⑥ |
+| server | **SQLite 手写 migration 的 Json 列类型修正**：`JSON` 声明落 NUMERIC affinity，Prisma RETURNING 读回报「Value JSON not supported」；对齐 20260811 先例改 JSONB（BLOB affinity 原样存储）；已同步重建 dev.db 与 template.db 五列 | — | probe 脚本直写/读回验证；e2e 全链绿 | migration.sql 注释留痕 |
+
+### CAP-B-08 二期证据回流收口 + workflow 补测试/C-07 滚轮拦截/llm 记账三项搭车（feat/workflow-tests-evidence-sprint，2026-09-13）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server · frontend | **证据回流二期五落点**：①PR 中间态证据——subscriber 放开 open（opened/reopened/synchronize）回写 completionEvidence（state='open'，前端蓝徽标，质量把关从「终态事后看」到「过程可观测」），乱序防御：终态已回写后迟到的中间态不覆盖；②criteria 级 pr_review 证据——github-sync review submitted 发 `github.pr_review.submitted`，subscriber 落 source='pr_review' 证据（criteria.source 口径扩 pr_review，evidenceType 一期已预留），reviewId+state+reviewer 防重；③check_run repo 校验——反查 PR 加 repoFullName 匹配，多仓库同名分支不再误配；④人工执行审计闸门提示（收口 B-02 悬空项）——createIssueExecution human 路径响应带 auditWarning（与 dispatch AI 指派同口径黄牌，red 不阻断），前端执行项面板 toast，契约 ExecutionRunResponseDto 扩 auditWarning；⑤多库边界裁决 ADR-016——证据回流统一落默认库，跨库迁移随「集成配置入工作区」一次性收口 | CAP-B-08 / ADR-016 / B-02 | subscriber spec 9 用例、execution spec 7 用例、issue.service 18 用例、integration 域 21 用例全绿；contract 三件套零漂移 | 能力清单 B-08 卡二期落点、B-02 暂缓解除、管道诊断表④⑤、决策日志 ADR-016 |
+| frontend | **CAP-C-07 滚轮冲突修复（用户拍板）**：ai-slot 高亮期间（长按 Ctrl/Cmd 500ms 进入 discovery）document capture 级拦截 Ctrl/Cmd+滚轮缩放（preventDefault+stopPropagation，passive:false）——页缩放会触发 resize/scroll 误关已打开的解释卡，且同一手势在 workflow 画布内外语义相反；普通滚轮不受影响，退出高亮即恢复 | CAP-C-07 | ai-slot-layer 测试 10 用例全绿（拦截/普通滚轮放行/退出后恢复） | 能力清单登记流水（C-07 冲突裁决落地） |
+| server | **AIUsageLog 接 workflow llm 步骤（CAP-A-11 余留）**：compiler buildLlmStep 捕获 Mastra execute 的 runId（=AIWorkflowRun.id，零结构改动）归因 AIUsageLog.workflowRunId；generateText usage → promptTokens/completionTokens/totalTokens，UsagePricingService 估价 estimatedCost，responseMetadata 记 {kind:'workflow', stepId}；记账失败仅 warn 不阻断执行；注入 UsagePricingService（AiHubModule 已导出，模块装配零变更） | CAP-A-11 / 双轨成本 | workflow-compiler spec 9 用例全绿（记账载荷/失败不阻断） | — |
+| server · frontend | **GAP-T-14 workflow 画布测试赤字清偿**：编辑回写（saveEditing definition 组装 + server updateDefinition 校验/version 自增）、产品动作节点文法（parseWorkflowDefinition action 分支 + workflow-actions requireParams）、模板库 upsert（onModuleInit 遍历断言）四块补回归 | CAP-A-12 / GAP-T-14 | 新增 spec 全绿（详见提交） | 测试映射矩阵 GAP-T-14 状态更新 |
+
 ### v0.6.2——桌面壳安装包三调整 + 分发与生命周期强化（CAP-A-14，feat/desktop-electron-spike）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
