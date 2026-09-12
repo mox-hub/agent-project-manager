@@ -193,29 +193,13 @@ export function useOnboarding() {
     },
   });
 
-  const connectRepositoryMutation = useMutation({
-    mutationFn: (data: { repositoryUrl: string; projectId?: string }) =>
-      onboardingApi.connectRepository(data),
-    onSuccess: () => {
-      nextStep();
-    },
-  });
-
-  const configureAiMutation = useMutation({
-    mutationFn: (data: { provider: string; apiKey?: string; endpoint?: string }) =>
-      onboardingApi.configureAi(data),
-    onSuccess: () => {
-      nextStep();
-    },
-  });
-
-  const finishOnboarding = useMutation({
-    mutationFn: () => onboardingApi.finishOnboarding(),
-    onSuccess: () => {
-      completeOnboarding();
-      navigate('/app');
-    },
-  });
+  const finishOnboarding = useCallback(() => {
+    // 完成标记是前端/壳侧状态（zustand persist + desktop-state.json 镜像），
+    // 不走服务端——曾指向从未实现的 POST /onboarding/finish，404 静默失败
+    // 导致「进入 APM」点了没反应（2026-09-12 实机暴露，回归见 use-onboarding.test）
+    completeOnboarding();
+    navigate('/app');
+  }, [completeOnboarding, navigate]);
 
   const resetOnboarding = useCallback(() => {
     setState({
@@ -263,23 +247,10 @@ export function useOnboarding() {
       isPending: createProjectMutation.isPending,
       error: createProjectMutation.error,
     },
-    connectRepository: {
-      mutate: connectRepositoryMutation.mutate,
-      mutateAsync: connectRepositoryMutation.mutateAsync,
-      isPending: connectRepositoryMutation.isPending,
-      error: connectRepositoryMutation.error,
-    },
-    configureAi: {
-      mutate: configureAiMutation.mutate,
-      mutateAsync: configureAiMutation.mutateAsync,
-      isPending: configureAiMutation.isPending,
-      error: configureAiMutation.error,
-    },
     finishOnboarding: {
-      mutate: finishOnboarding.mutate,
-      mutateAsync: finishOnboarding.mutateAsync,
-      isPending: finishOnboarding.isPending,
-      error: finishOnboarding.error,
+      mutate: finishOnboarding,
+      isPending: false,
+      error: null,
     },
   };
 }

@@ -29,6 +29,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+    // WebSocket 上下文：getRequest() 是 Socket、没有 headers，进 passport
+    // 会 TypeError（同 common 守卫的修法，防 @UseGuards 上到网关处理器时复发）。
+    if (context.getType() !== 'http') {
+      return true;
+    }
+
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),

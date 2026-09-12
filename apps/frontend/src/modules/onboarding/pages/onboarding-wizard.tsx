@@ -306,195 +306,75 @@ function CreateProjectStep({
   );
 }
 
-function ConnectRepositoryStep({ onNext, onSkip, isPending }: StepContentProps) {
-  const { connectRepository } = useOnboarding();
-  const [repositoryUrl, setRepositoryUrl] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!repositoryUrl.trim()) return;
-
-    setError(null);
-    connectRepository.mutate(
-      { repositoryUrl: repositoryUrl.trim() },
-      {
-        onSuccess: () => onNext(),
-        onError: () => {
-          setError('连接仓库失败，请检查 URL 是否正确');
-        },
-      },
-    );
-  };
-
+/**
+ * 仓库连接引导页（2026-09-12 诚实化改造）。
+ * 历史版本是表单 + 假 mutation（POST /onboarding/repository 恒 404，静默失败）；
+ * 仓库连接在契约面没有单一端点，真实入口在项目内，此处只做引导。
+ */
+function ConnectRepositoryStep({ onNext, onSkip }: StepContentProps) {
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
       <DialogHeader>
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <GitBranch className="h-7 w-7 text-primary" />
         </div>
         <DialogTitle className="text-center text-xl">连接 Git 仓库</DialogTitle>
         <DialogDescription className="text-center">
-          关联您的代码仓库，获取更好的开发体验
+          关联您的代码仓库，跟踪代码变更和分支
         </DialogDescription>
       </DialogHeader>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="repo-url">
-            仓库地址
-          </label>
-          <Input
-            id="repo-url"
-            value={repositoryUrl}
-            onChange={(e) => setRepositoryUrl(e.target.value)}
-            placeholder="https://github.com/username/repository"
-            type="url"
-          />
-        </div>
-
-        {error && (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-            {error}
-          </div>
-        )}
-
-        <div className="rounded-lg bg-muted/30 p-4">
-          <h4 className="font-medium">支持的服务</h4>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {['GitHub', 'GitLab', 'Gitee', 'Bitbucket'].map((service) => (
-              <span
-                key={service}
-                className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground"
-              >
-                {service}
-              </span>
-            ))}
-          </div>
-        </div>
+      <div className="rounded-lg bg-muted/30 p-4 text-sm text-muted-foreground">
+        仓库连接支持 GitHub、GitLab、Gitee 等平台，可在进入 APM
+        后于项目内随时完成——此步可以先跳过，不影响使用。
       </div>
 
       <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onSkip}>
           跳过
         </Button>
-        <Button type="submit" disabled={!repositoryUrl.trim() || isPending}>
-          {isPending ? '连接中...' : '连接仓库'}
+        <Button onClick={onNext}>
+          下一步
+          <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </DialogFooter>
-    </form>
+    </div>
   );
 }
 
-function ConfigureAiStep({ onNext, onSkip, isPending }: StepContentProps) {
-  const { configureAi } = useOnboarding();
-  const [provider, setProvider] = useState('openai');
-  const [apiKey, setApiKey] = useState('');
-  const [endpoint, setEndpoint] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    configureAi.mutate(
-      { provider, apiKey: apiKey || undefined, endpoint: endpoint || undefined },
-      {
-        onSuccess: () => onNext(),
-      },
-    );
-  };
-
-  const providers = [
-    { id: 'openai', name: 'OpenAI', models: ['GPT-4o', 'GPT-4o-mini', 'GPT-4-Turbo'] },
-    { id: 'anthropic', name: 'Anthropic', models: ['Claude 3.5 Sonnet', 'Claude 3 Opus'] },
-    { id: 'zhipu', name: '智谱 GLM', models: ['GLM-4', 'GLM-4V', 'GLM-3-Turbo'] },
-    { id: 'deepseek', name: 'DeepSeek', models: ['DeepSeek-V3', 'DeepSeek-Coder'] },
-  ];
-
-  const currentProvider = providers.find((p) => p.id === provider);
-
+/**
+ * AI 配置引导页（2026-09-12 诚实化改造）。
+ * 历史版本是表单 + 假 mutation（POST /onboarding/ai 恒 404）；真实的模型
+ * 配置入口在「设置 → AI 管理」（作用于既有 provider 记录），此处只做引导。
+ */
+function ConfigureAiStep({ onNext, onSkip }: StepContentProps) {
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
       <DialogHeader>
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <Bot className="h-7 w-7 text-primary" />
         </div>
         <DialogTitle className="text-center text-xl">配置 AI 模型</DialogTitle>
         <DialogDescription className="text-center">
-          连接 AI 服务，启用智能辅助功能
+          连接 AI 服务，启用智能辅助
         </DialogDescription>
       </DialogHeader>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">AI 服务提供商</label>
-          <div className="grid grid-cols-2 gap-2">
-            {providers.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setProvider(p.id)}
-                className={`rounded-lg border p-3 text-left transition-colors ${
-                  provider === p.id
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:bg-muted/50'
-                }`}
-              >
-                <span className="font-medium">{p.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {currentProvider && (
-          <div className="rounded-lg bg-muted/30 p-3">
-            <span className="text-xs text-muted-foreground">可用模型：</span>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {currentProvider.models.map((model) => (
-                <span
-                  key={model}
-                  className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                >
-                  {model}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="api-key">
-            API Key
-          </label>
-          <Input
-            id="api-key"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="sk-..."
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="endpoint">
-            自定义端点（可选）
-          </label>
-          <Input
-            id="endpoint"
-            value={endpoint}
-            onChange={(e) => setEndpoint(e.target.value)}
-            placeholder="https://api.openai.com/v1"
-          />
-        </div>
+      <div className="rounded-lg bg-muted/30 p-4 text-sm text-muted-foreground">
+        支持 OpenAI、Anthropic、智谱 GLM、DeepSeek
+        等模型服务。进入 APM 后可在「设置 → AI 管理」中随时配置 API Key 与端点——此步可以先跳过。
       </div>
 
       <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onSkip}>
           跳过
         </Button>
-        <Button type="submit" disabled={isPending}>
-          {isPending ? '配置中...' : '保存配置'}
+        <Button onClick={onNext}>
+          下一步
+          <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </DialogFooter>
-    </form>
+    </div>
   );
 }
 
@@ -526,8 +406,8 @@ function CompleteStep({ onFinish }: { onFinish: () => void }) {
             <FolderPlus className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="font-medium">项目已创建</p>
-            <p className="text-xs text-muted-foreground">您可以在项目中管理任务和成员</p>
+            <p className="font-medium">项目空间已就绪</p>
+            <p className="text-xs text-muted-foreground">随时创建项目，管理任务、文档与成员</p>
           </div>
           <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
         </div>
@@ -537,8 +417,8 @@ function CompleteStep({ onFinish }: { onFinish: () => void }) {
             <GitBranch className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="font-medium">仓库已连接</p>
-            <p className="text-xs text-muted-foreground">开始跟踪代码变更和分支</p>
+            <p className="font-medium">代码仓库可随时连接</p>
+            <p className="text-xs text-muted-foreground">连接后开始跟踪代码变更和分支</p>
           </div>
           <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
         </div>
@@ -548,8 +428,8 @@ function CompleteStep({ onFinish }: { onFinish: () => void }) {
             <Bot className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="font-medium">AI 已配置</p>
-            <p className="text-xs text-muted-foreground">智能辅助已准备就绪</p>
+            <p className="font-medium">AI 同事整装待发</p>
+            <p className="text-xs text-muted-foreground">在「设置 → AI 管理」配置模型后即可执行任务</p>
           </div>
           <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
         </div>
@@ -584,8 +464,6 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
     skipStep,
     finishOnboarding,
     createProject,
-    connectRepository,
-    configureAi,
   } = useOnboarding();
 
   const renderStepContent = () => {
@@ -608,19 +486,9 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
           />
         );
       case 'connect-repository':
-        return (
-          <ConnectRepositoryStep
-            {...commonProps}
-            isPending={connectRepository.isPending}
-          />
-        );
+        return <ConnectRepositoryStep {...commonProps} isPending={false} />;
       case 'add-ai':
-        return (
-          <ConfigureAiStep
-            {...commonProps}
-            isPending={configureAi.isPending}
-          />
-        );
+        return <ConfigureAiStep {...commonProps} isPending={false} />;
       case 'complete':
         return (
           <CompleteStep

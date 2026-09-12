@@ -12,6 +12,11 @@ export function initLogger(logsDir: string): void {
   logFile = path.join(logsDir, 'desktop-main.log');
 }
 
+/** 日志面板的读取目标（initLogger 前为 null，调用方按未初始化处理）。 */
+export function getLogFilePath(): string {
+  return logFile ?? '';
+}
+
 function write(level: 'INFO' | 'WARN' | 'ERROR', message: string): void {
   const line = `[${new Date().toISOString()}] [${level}] ${message}`;
   console.log(line);
