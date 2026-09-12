@@ -11,6 +11,7 @@
     "desktop:dev": "tsup && electron .",
     "pack:resources": "node scripts/pack.mjs",
     "desktop:pack": "pnpm pack:resources && pnpm build:electron && electron-builder --win nsis",
+    "e2e:shell": "node scripts/e2e-shell.mjs",
     "tauri:dev": "pnpm dlx @tauri-apps/cli@2 dev",
     "tauri:build": "pnpm dlx @tauri-apps/cli@2 build",
     "tauri:dist:win": "pnpm dlx @tauri-apps/cli@2 build --target x86_64-pc-windows-msvc"
@@ -24,5 +25,8 @@
     "tsup": "^8.5.1",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
   }
 }

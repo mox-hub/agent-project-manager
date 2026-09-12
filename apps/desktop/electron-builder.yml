@@ -18,6 +18,7 @@ directories:
 asar: false
 files:
   - electron/dist/**
+  - electron/assets/**
   - package.json
   - '!**/*.map'
 # server 运行时（dist + node_modules + prisma 预生成客户端）、前端产物、node.exe
@@ -31,8 +32,23 @@ win:
       arch:
         - x64
   icon: build/icon.ico
+# 自动更新 feed（ADR-015）：electron-updater 消费 GitHub Releases 的 latest.yml；
+# 发布端（tag 触发构建+上传）待 CI 接线。签名未启用（单独裁决），见决策日志。
+publish:
+  provider: github
+  owner: mox-hub
+  repo: agent-project-manager
 nsis:
-  oneClick: true
+  # 向导模式：允许用户自选安装位置（oneClick 单击安装无目录选择页）
+  oneClick: false
   perMachine: false
+  allowToChangeInstallationDirectory: true
   deleteAppDataOnUninstall: false
   artifactName: ${productName}_${version}_x64-setup.exe
+  # 安装期校验既有数据目录（~/.apm）：存在 = 升级安装，提示并保留数据
+  include: build/installer.nsh
+  # 品牌位图（scripts/gen-icon.mjs 从 logo.svg 生成）；图标沿用 win.icon（build/icon.ico）
+  installerHeader: build/installerHeader.bmp
+  installerSidebar: build/installerSidebar.bmp
+  uninstallerHeader: build/installerHeader.bmp
+  uninstallerSidebar: build/installerSidebar.bmp

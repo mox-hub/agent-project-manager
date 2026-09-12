@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
 import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
-import { useDesktop } from '@/modules/desktop';
+import { useDesktop, ProcessMonitorCard, DesktopLogCard, DesktopPreferencesCard } from '@/modules/desktop';
 import { PageShell } from '@/components/ui/page-shell';
 import { SectionCard } from '@/components/ui/section-card';
 import { StatusPill } from '@/components/ui/status-pill';
@@ -264,6 +264,13 @@ export function RuntimeSettingsSection() {
     >
       {/* 桌面模式：本机守护进程控制（web 模式内部自渲染 null） */}
       <LocalDaemonCard />
+
+      {/* 桌面模式：本机进程监控 + 服务日志（web 模式内部自渲染 null） */}
+      <ProcessMonitorCard />
+      <DesktopLogCard />
+
+      {/* 桌面模式：桌面偏好（关窗行为/检查更新/诊断导出，web 模式内部自渲染 null） */}
+      <DesktopPreferencesCard />
 
       <SectionCard
           icon={Monitor}

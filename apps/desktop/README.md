@@ -21,10 +21,13 @@
                │（前端 electron-api.ts 声明的壳桥契约，非 Tauri 官方 API）
 ┌──────────────┴──────────────────────────────┐
 │ Electron main（TS，electron/src/）          │
-│  setup.ts   目录/密钥/Prisma db push         │
+│  setup.ts   目录/密钥(safeStorage)/db push  │
 │  backend.ts 端口探测 4300-4399 + 健康检查    │
-│  commands.ts 13 个 IPC 命令（对齐 Tauri 面） │
-│  main.ts    编排 + 退出清理                  │
+│  commands.ts IPC 命令面（29 个）             │
+│  tray.ts    托盘常驻 + 关窗语义             │
+│  updater.ts 自动更新（electron-updater）     │
+│  diagnostics.ts 诊断包导出                  │
+│  main.ts    编排 + 退出清理                 │
 └──────────────┬──────────────────────────────┘
                │ 承载双路径（ADR-014 E① 实验定版）
                │ ① utilityProcess 内嵌 Node 跑 server dist（默认，省 ~75MB）
@@ -43,7 +46,8 @@
 
 ```
 ① 壳初始化（同步，毫秒级）
-   解析路径 → 创建用户目录（%APPDATA%/agent-project-manager/{logs,uploads,data}）
+   旧版数据迁移（%APPDATA% → ~/.apm，仅 v0.6.1 升级触发）→ 创建用户目录
+   （~/.apm/{logs,uploads,data,desktop}）→ 首装校验（无既有密钥/库 = 全新安装）
    → 生成/加载 secrets.json 密钥（JWT_SECRET / INTEGRATION_ENCRYPTION_KEY）
 ② 数据库就绪（阻塞 ③）
    全新安装：Prisma db push 建库（ELECTRON_RUN_AS_NODE 跑 CLI）；已有库跳过，绝不重建
@@ -56,28 +60,48 @@
 ④ 前端加载（依赖 ③ 健康通过）
    生产：loadURL(server) 同源托管（server 自带 SPA history fallback）
    dev：优先 vite 5173（HMR）
-⑤ apm-runtime 守护进程（AI 执行面）——不在桌面版
-   按四裁决点（不随包分发，v0.6.1）；server 在无 runtime 连接时健康降级，
-   控制面功能完整、AI 执行能力不可用。并入桌面版需重新裁决（二期评估）。
+⑤ apm-runtime 守护进程（AI 执行面）
+   随包分发并由壳在 server 健康后自动拉起（设置页可手动启停）；配置与单实例锁
+   在 ~/.apm/desktop/ 子目录（与手动 CLI 的 ~/.apm/runtime.lock 隔离）。
 ```
 
 退出（窗口关闭/before-quit）：杀全部托管子进程，server 无残留。
+
+## 生命周期与分发契约（ADR-015）
+
+| 机制 | 行为 |
+|------|------|
+| 单实例锁 | `requestSingleInstanceLock`，双开时第二实例退出并唤起既有窗口（防两套 server 抢 `~/.apm`） |
+| 崩溃自愈 | server 意外退出自动重启、daemon 意外退出自动重拉（指数退避 1s→30s，连续 5 次熔断）；渲染进程崩溃白屏重载（60s 内 ≥3 次熔断）；主进程异常记日志不弹崩溃框 |
+| 托盘常驻 | 关窗默认最小化到托盘（`close_to_tray` 偏好，设置页可关）；托盘菜单：显示主窗口/检查更新/退出 |
+| 窗口状态 | 位置尺寸（正常态 bounds）持久化到 desktop-state.json，下次启动恢复 |
+| 自动更新 | electron-updater + GitHub Releases feed；启动 30s 后静默检查、手动检查、下载完成询问安装、退出自动安装；dev 恒禁用；发布端 CI 接线待办 |
+| 密钥安全 | secrets.json 经 safeStorage（Windows DPAPI）加密；旧明文兼容；跨机器解密失败报错不重生成（防登录态/集成密文连锁失效） |
+| 卸载语义 | 卸载器询问是否删除 `~/.apm`（默认保留） |
+| 诊断导出 | `export_diagnostics`：日志 + 元数据 + 进程快照 zip（不含密钥/凭证） |
+| 壳级 e2e | `pnpm e2e:shell`（Playwright _electron，`APM_DATA_DIR` 临时目录隔离） |
+
+启动检查更新与诊断导出入口在设置 → 运行时 → 「桌面偏好」卡片；托盘菜单另有检查更新入口。
 
 ## 数据与文件布局
 
 | 位置 | 内容 | 生成方 |
 |------|------|--------|
-| `%APPDATA%/agent-project-manager/data/agent-project-manager.db` | 主库（= default 工作区） | Prisma db push（首启） |
-| `%APPDATA%/agent-project-manager/workspaces.json` | 工作区注册表（default + 用户工作区） | server 数据层（env 指向 userData） |
-| `%APPDATA%/agent-project-manager/secrets.json` | JWT/集成加密密钥 | 壳首启生成 |
-| `%APPDATA%/agent-project-manager/uploads/`、`logs/` | 上传文件、壳+server 日志 | 壳创建 |
+| `~/.apm/data/agent-project-manager.db` | 主库（= default 工作区） | Prisma db push（首启） |
+| `~/.apm/workspaces.json` | 工作区注册表（default + 用户工作区） | server 数据层（env 指向 userData） |
+| `~/.apm/secrets.json` | JWT/集成加密密钥 | 壳首启生成 |
+| `~/.apm/uploads/`、`logs/` | 上传文件、壳+server 日志 | 壳创建 |
+| `~/.apm/desktop/apm-config.json`、`runtime.lock` | 守护进程配置与单实例锁 | 壳/守护进程 |
 | 用户工作区目录（创建工作区时指定） | `data/apm.db`（自 template.db 复制）+ `uploads/` + `logs/` + `workspace.json` | server（PRISMA 模板 = 随包 `resources/server/prisma/template.db`） |
 
 工作区多库实测（安装版）：创建工作区 → 模板库复制 → 注册表登记 → `x-workspace-id` 头路由，全链路通过。
 
 ## 用户数据位置
 
-`%APPDATA%\agent-project-manager\`（Electron 的 appData 语义为 Roaming）
+`~/.apm/`（用户主目录，固定不受安装位置影响；与手动 CLI 的 config.json 同根）。
+安装器在安装期校验该目录：已存在 = 升级安装（提示且数据全保留），应用首启时若
+检测到 v0.6.1 旧版数据（`%APPDATA%\agent-project-manager\`）会自动迁移并留档
+（`.migrated.bak`）。Chromium 自身 profile（缓存/LocalStorage）单独放 `~/.apm/electron/`。
 
 | 路径 | 内容 |
 |------|------|
@@ -85,6 +109,8 @@
 | `secrets.json` | 首启随机生成并持久化的 `JWT_SECRET` / `INTEGRATION_ENCRYPTION_KEY`，跨重启复用 |
 | `logs/desktop-main.log` | 壳与 server 运行日志（`open_log_dir` 命令可直接打开） |
 | `uploads/` | 上传文件 |
+| `desktop/apm-config.json`、`desktop/runtime.lock` | 守护进程配置与单实例锁（与手动 CLI 隔离） |
+| `electron/` | Chromium profile（缓存/LocalStorage，非项目数据） |
 
 Prisma CLI（db push）经 Electron 内置 Node（`ELECTRON_RUN_AS_NODE=1`）执行，不依赖系统或随包 node.exe。
 

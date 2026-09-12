@@ -28,6 +28,10 @@ export interface ServerHandle {
   /** 进程是否产出过任何 stdout/stderr——fork 静默失败（如杀毒软件短暂锁文件）的判定依据 */
   sawOutput: () => boolean;
   stop: () => Promise<void>;
+  /**
+   * 订阅「未经 stop() 的退出」= 崩溃（ADR-015 自愈依据）。stop() 内部退出不算。
+   */
+  onUnexpectedExit: (callback: () => void) => void;
 }
 
 export function isPortAvailable(port: number): Promise<boolean> {
@@ -144,14 +148,25 @@ export function startServerProcess(
     });
     pipeLog(proc.stdout, 'backend:stdout', markOutput);
     pipeLog(proc.stderr, 'backend:stderr', markOutput);
+    let stopped = false;
+    let onUnexpectedExit: (() => void) | null = null;
+    proc.on('exit', () => {
+      if (!stopped) {
+        onUnexpectedExit?.();
+      }
+    });
     return {
       pid: proc.pid ?? 0,
       sawOutput: () => sawOutput,
       stop: () =>
         new Promise((resolve) => {
+          stopped = true;
           proc.on('exit', () => resolve());
           proc.kill();
         }),
+      onUnexpectedExit: (callback) => {
+        onUnexpectedExit = callback;
+      },
     };
   }
 
@@ -163,13 +178,24 @@ export function startServerProcess(
   });
   pipeLog(child.stdout, 'backend:stdout', markOutput);
   pipeLog(child.stderr, 'backend:stderr', markOutput);
+  let stopped = false;
+  let onUnexpectedExit: (() => void) | null = null;
+  child.once('exit', () => {
+    if (!stopped) {
+      onUnexpectedExit?.();
+    }
+  });
   return {
     pid: child.pid ?? 0,
     sawOutput: () => sawOutput,
     stop: () =>
       new Promise((resolve) => {
+        stopped = true;
         child.once('exit', () => resolve());
         child.kill();
       }),
+    onUnexpectedExit: (callback) => {
+      onUnexpectedExit = callback;
+    },
   };
 }

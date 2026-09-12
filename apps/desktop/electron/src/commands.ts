@@ -20,7 +20,15 @@ import {
   saveDesktopState,
   type DesktopPersistentState,
 } from './desktop-state';
+import { exportDiagnostics } from './diagnostics';
 import { logger } from './logger';
+import {
+  clearDesktopLogs,
+  getDesktopLogs,
+  getProcessStats,
+  type DesktopLogSnapshot,
+  type ProcessStat,
+} from './monitor';
 import {
   getRuntimeDaemonStatus,
   readWorkspaceRoots,
@@ -30,6 +38,7 @@ import {
 } from './runtime-daemon';
 import { initializeDirs, resolveNodeExe, runDbPushIfNeeded } from './setup';
 import { state, setInitError, type BackendInfo, type FrontendInfo } from './state';
+import { checkForUpdates, getUpdateStatus, type UpdateStatus } from './updater';
 
 const FRONTEND_DEV_PORT = 5173;
 
@@ -47,6 +56,8 @@ interface AppInfo {
   dataPath: string;
   logPath: string;
   mode: 'development' | 'production';
+  /** 首装校验：true = ~/.apm 无既有数据（全新安装）；false = 升级安装 */
+  isFirstInstall: boolean;
 }
 
 interface ActionResult {
@@ -79,6 +90,48 @@ function assertServerEntryExists(): void {
   }
 }
 
+// ---------- server 崩溃自愈（ADR-015）：意外退出自动重启，指数退避 + 熔断防 crash loop ----------
+
+const MAX_SERVER_CONSECUTIVE_CRASHES = 5;
+const SERVER_RESTART_MAX_DELAY_MS = 30_000;
+let serverCrashCount = 0;
+
+function scheduleServerRestart(delayMs: number): void {
+  setTimeout(() => {
+    if (state.backend) {
+      return; // 用户已手动拉起，自动路径让位
+    }
+    logger.info('server 自动重启中…');
+    startBackendInternal()
+      .then((info) => logger.info(`server 自动重启成功: ${info.apiBaseUrl}`))
+      .catch((err) =>
+        logger.error(
+          `server 自动重启失败（等待下次触发或手动启动）: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
+  }, delayMs);
+}
+
+function handleServerUnexpectedExit(): void {
+  if (!state.backend) {
+    return;
+  }
+  const prevPid = state.backend.info.pid;
+  state.backend = null;
+  serverCrashCount += 1;
+  if (serverCrashCount > MAX_SERVER_CONSECUTIVE_CRASHES) {
+    logger.error(
+      `server 连续崩溃 ${serverCrashCount} 次，已停止自动重启（防 crash loop）——请检查日志或开启调试模式排查`,
+    );
+    return;
+  }
+  const delay = Math.min(1000 * 2 ** (serverCrashCount - 1), SERVER_RESTART_MAX_DELAY_MS);
+  logger.error(
+    `server 意外退出（pid=${prevPid}），${delay}ms 后自动重启（第 ${serverCrashCount} 次自愈）`,
+  );
+  scheduleServerRestart(delay);
+}
+
 async function startBackendInternal(): Promise<BackendInfo> {
   if (state.backend) {
     throw new Error('后端已在运行');
@@ -95,6 +148,9 @@ async function startBackendInternal(): Promise<BackendInfo> {
     const apiBaseUrl = `http://127.0.0.1:${port}`;
     const info: BackendInfo = { port, apiBaseUrl, pid: handle.pid };
     state.backend = { handle, info };
+    // 自愈链路：崩溃计数清零（人工启动或重启成功都视为恢复）+ 订阅意外退出
+    serverCrashCount = 0;
+    handle.onUnexpectedExit(() => handleServerUnexpectedExit());
     logger.info(`后端启动成功: ${apiBaseUrl}`);
     return info;
   } catch (err) {
@@ -146,6 +202,7 @@ export const commandHandlers = {
       dataPath: state.config.userDataDir,
       logPath: state.config.logsDir,
       mode: isDevMode() ? 'development' : 'production',
+      isFirstInstall: state.isFirstInstall,
     };
   },
 
@@ -338,6 +395,42 @@ export const commandHandlers = {
       win.webContents.openDevTools({ mode: 'detach' });
     }
     return { ok: true };
+  },
+
+  // ---------- 本机可观测性（进程端口/内存 + 服务日志） ----------
+
+  async get_process_stats(): Promise<{ processes: ProcessStat[] }> {
+    return { processes: await getProcessStats() };
+  },
+
+  async get_desktop_logs(args?: { tail?: number }): Promise<DesktopLogSnapshot> {
+    return getDesktopLogs(args?.tail);
+  },
+
+  async clear_desktop_logs(): Promise<ActionResult> {
+    await clearDesktopLogs();
+    logger.info('日志已由用户在设置页清空');
+    return { ok: true };
+  },
+
+  // ---------- 更新与诊断（ADR-015） ----------
+
+  async check_updates(): Promise<UpdateStatus> {
+    return checkForUpdates();
+  },
+
+  async get_update_status(): Promise<UpdateStatus> {
+    return getUpdateStatus();
+  },
+
+  /** 一键导出诊断包（日志+元数据+进程快照；不含任何密钥/凭证）。取消返回 path=null。 */
+  async export_diagnostics(): Promise<{ path: string | null }> {
+    const processStats = await getProcessStats().catch(() => []);
+    return exportDiagnostics(state.config, {
+      backend: { running: !!state.backend, port: state.backend?.info.port },
+      daemon: { running: !!state.daemon, pid: state.daemon?.pid },
+      processStats,
+    });
   },
 };
 

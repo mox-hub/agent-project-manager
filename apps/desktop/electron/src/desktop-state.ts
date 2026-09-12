@@ -17,6 +17,10 @@ export interface DesktopPersistentState {
   'apm-workspace-id'?: string;
   /** 初始化向导是否已完成 */
   onboarding_completed?: boolean;
+  /** 关窗行为（ADR-015）：true（默认）= 最小化到托盘服务保活；false = 关窗即退出 */
+  close_to_tray?: boolean;
+  /** 主窗口位置与尺寸（正常态，非最大化），下次启动恢复 */
+  window_bounds?: { x: number; y: number; width: number; height: number };
 }
 
 const STATE_FILE = 'desktop-state.json';
