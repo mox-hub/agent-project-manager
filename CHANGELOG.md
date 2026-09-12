@@ -59,6 +59,24 @@ tags: "changelog,release"
 
 ## [0.6.0] - 2026-09-11
 
+### 搜索按钮圆形图标化与侧边栏导航样式优化 (feat/ui-views-and-toolbar-refactor)
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**搜索按钮与通知按钮一致圆形化**：将搜索按钮从侧边栏普通导航分组（`utilities` items）中移除，取消原有长条形导航链接样式，对齐通知按钮样式重构为标准圆形按钮（`relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground`，激活态高亮）；②**布局位置调整至通知按钮左侧**：在展开态侧边栏顶部 header 中放置于通知按钮左侧并列；在收起态侧边栏底部容器中置于通知按钮上方（从上到下依次为搜索、通知、展开侧边栏），配套统一的 `Tooltip` 提示（`t('nav.search')`），点击直达全局搜索。 | 用户指令（搜索按钮也做和通知相同的处理，放到通知按钮的左侧，取消导航栏的样式） | Vitest 前端 **81 文件 421 用例全绿**；`tsc -b` 0 错误；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`pnpm check:docs-sync` 通过 | 本 CHANGELOG |
+
+### 多选操作栏避开 Dock 触发区平移与 count 基数真实数据加载 (feat/ui-views-and-toolbar-refactor)
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**多选菜单栏向上平移避开 Dock 触发区**：将 `DataList` 的 `SelectionBar` 与 `DataTable` 的多选悬浮胶囊定位统一从 `fixed bottom-5`（20px）向上平移至 `fixed bottom-28`（112px），彻底离开底部 Dock 栏展开触发感应区（0~96px），避免鼠标移动到多选栏操作按钮时意外唤醒 Dock 造成视觉重叠与争抢焦点；②**count 基数区域加载真实数据与 i18n 插值修复**：彻底修复 `zh-CN.json` 与 `en.json` 中因为单花括号 `{count}` 导致 i18next 无法插值直接打印字面量文本的缺陷（包括 `dataTable.selected`、`dataTable.range`、`acceptance.results`、`acceptance.pagination.page` 等 13 处关键动态字符串），新增 `dataTable.selectedWithTotal`（`已选 {{count}} / 共 {{total}} 项` / `{{count}} of {{total}} selected`）；并在 `DataList`（支持 `totalCount`，默认为 `items.length`）与 `DataTable`（采用服务端 `manualPagination.total` 或本地过滤行数基数）中实时计算并加载真实基数分母，全面支持「已选 X / 共 Y 项」真实响应式计数呈现。 | 用户指令（多选菜单栏向上平移，避开dock栏的触发区域，count基数区域加载真实数据） | Vitest 前端 **81 文件 421 用例全绿**；`tsc -b` 0 错误；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`pnpm check:docs-sync` 通过 | 本 CHANGELOG |
+
+### 视图模式与工具栏重构及视觉缺陷修复 (feat/ui-views-and-toolbar-refactor)
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**视图滑块与胶囊全量 i18n 补齐**：`zh-CN.json` / `en.json` 补齐 `common.grid/cards`、`task.filter.all`、`project.filter.all`、`document.filter.all`、`task.view.*`、`project.view.*`、`document.view.*`、`acceptance.view.*` 与 `viewDisplay.views.*`；`ToolbarRow` 的 `ViewPill` 针对 built-in `all` 增加动态兜底避免历史存量缓存残留英文，`SegmentedControl` 与 `ViewStyleDropdown` 均增加统一翻译兜底；②**验收中心卡片视图彻底改造为 List 视图**：废除并清理原大卡片 `AcceptanceRow`，改用统一的 `@/components/ui/data-list` 的 `DataList` 紧凑呈现（集成勾选批量删除、状态图标、标题、验收标准进度条、审计风险色标、成本统计与分页），与全站列表视觉一致；③**文档管理页重构列表与卡片视图**：严格对齐 Design System 的 Document Cards 规范（`rounded-xl`、`size-9` 浅色背景类别图标盒、`StatusPill`、分类文本、标签栏、项目归属与预览时间），统一列表与卡片组件语言；④**通知侧边栏条目移除与圆形无弹窗按钮**：从侧边栏主导航移除通知条目，侧边栏顶部及收起态底部均改用标准圆形通知按钮（`rounded-full size-8`），含 Tooltip 标题与未读红点（`unreadCount > 0`），取消原有无实际通知内容的 `NotificationPopover` 弹窗，点击直达 `/app/notifications`；⑤**成员管理卡片上下留白修复**：解决 `MemberCard` 中 `Card` 默认 `py-3.5` 与 `CardContent` 的 padding 叠加导致的过高纵向留白问题，显式指定 `gap-0 py-0` 与 `px-3.5 py-2.5`，使视觉比例紧凑自然。 | 用户指令（视图与工具栏重构及视图缺陷修复） | Vitest 前端 **81 文件 421 用例全绿**；`tsc -b` 0 错误；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`pnpm check:docs-sync` 通过 | 本 CHANGELOG |
+
 ### v0.6.0 发版总览——设计系统 v2 落地 + 六条能力线推进 + Dock 协同交互面
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

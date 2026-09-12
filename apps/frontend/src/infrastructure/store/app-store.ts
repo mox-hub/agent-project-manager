@@ -89,15 +89,9 @@ interface AppState {
 
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
-  /** 导航分组收缩态（工具组不参与收缩） */
-  navGroupsCollapsed: {
-    main: boolean;
-    favorites: boolean;
-    system: boolean;
-  };
-  toggleNavGroupCollapsed: (
-    group: 'main' | 'favorites' | 'system',
-  ) => void;
+  /** 导航分组收缩态 */
+  navGroupsCollapsed: Record<string, boolean>;
+  toggleNavGroupCollapsed: (group: string) => void;
   sidebarSections: {
     primary: boolean;
     workspace: boolean;
@@ -187,7 +181,14 @@ export const useAppStore = create<AppState>()(
       sidebarCollapsed: false,
       toggleSidebar: () =>
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-      navGroupsCollapsed: { main: false, favorites: false, system: false },
+      navGroupsCollapsed: {
+        workbench: false,
+        pipeline: false,
+        collaboration: false,
+        favorites: false,
+        system: false,
+        main: false,
+      },
       toggleNavGroupCollapsed: (group) =>
         set((state) => ({
           navGroupsCollapsed: {

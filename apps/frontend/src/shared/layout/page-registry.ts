@@ -85,7 +85,7 @@ export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
   // admin 域导航同上：UserCog（非验收实体）
   "/app/admin": { icon: UserCog, labelKey: "nav.admin", color: "#EF4444" },
   "/app/design-system": { icon: Palette, label: "Design System", color: "#8B5CF6" },
-  "/app/delivery": { icon: ListTree, label: "Delivery", color: "#F59E0B" },
+  "/app/delivery": { icon: ListTree, labelKey: "nav.delivery", label: "交付视图", color: "#10B981" },
 };
 
 /** 收藏页面未命中注册表时的兜底图标 */

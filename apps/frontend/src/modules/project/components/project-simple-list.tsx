@@ -9,6 +9,7 @@
  */
 
 import {
+  Bot,
   FolderKanban,
   Rocket,
   Sparkles,
@@ -71,6 +72,7 @@ export interface ProjectSimpleListProps {
   groupBy?: GroupBy;
   groupProgress?: (items: Project[]) => { done: number; total: number } | null;
   onGroupCreate?: (key: string, items: Project[]) => void;
+  getProjectExecutionCount?: (projectId: string) => number;
   selectionActions?: (selected: Project[], close: () => void) => React.ReactNode;
   className?: string;
 }
@@ -83,6 +85,7 @@ export function ProjectSimpleList({
   groupBy = 'none',
   groupProgress,
   onGroupCreate,
+  getProjectExecutionCount,
   selectionActions,
   className,
 }: ProjectSimpleListProps) {
@@ -161,8 +164,15 @@ export function ProjectSimpleList({
       selectionActions={selectionActions}
       renderLeading={(project) => {
         const color = project.color || '#5E6AD2';
+        const activeCount = getProjectExecutionCount?.(project.id) ?? 0;
         return (
           <>
+            {activeCount > 0 ? (
+              <span
+                className="h-6 w-1 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
+                title={`AI 接管中: ${activeCount} 个任务正在执行`}
+              />
+            ) : null}
             {/* 图标 */}
             <span
               className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-white"
@@ -173,6 +183,12 @@ export function ProjectSimpleList({
             </span>
             {/* 名称（完整展示，不截断）+ 来源徽标 */}
             <span className="min-w-0 shrink-0 whitespace-nowrap text-sm font-medium text-foreground">{project.name}</span>
+            {activeCount > 0 ? (
+              <span className="inline-flex items-center gap-1 rounded-md bg-accent-purple/15 px-1.5 py-0.5 text-11 font-medium text-accent-purple border border-accent-purple/30 animate-pulse">
+                <Bot className="size-3" />
+                {activeCount} AI 执行中
+              </span>
+            ) : null}
             <ListChip className="border border-border bg-muted/40 uppercase text-muted-foreground">
               {getSourceBadgeText(project.source)}
             </ListChip>

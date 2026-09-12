@@ -10,6 +10,8 @@ import { TaskBoard } from '../components/task-board';
 import { TaskDetailDrawer } from '../components/task-detail-drawer';
 import { TaskSimpleList } from '../components/task-simple-list';
 import { TaskGantt } from '../components/task-gantt';
+import { TaskTableView } from '../components/task-table-view';
+import { useActiveExecutionsMap } from '@/modules/execution/hooks/use-active-executions-map';
 import { TaskImportExport } from '../components/task-import-export';
 import { BatchCreateTasksDialog } from '../components/batch-create-tasks-dialog';
 import {
@@ -21,7 +23,7 @@ import {
 } from '../hooks/use-project-tasks';
 import { useTaskFilterOptions } from '../hooks/use-task-filter-options';
 import type { Task, TaskListParams } from '../api/issue-api';
-import { Plus, CheckSquare, ListPlus, Kanban, List, CalendarRange, Trash2 } from 'lucide-react';
+import { Plus, CheckSquare, ListPlus, Kanban, List, CalendarRange, TableProperties, Trash2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ListActionButton } from '@/components/ui/data-list';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
@@ -32,7 +34,7 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 
-type ViewMode = 'board' | 'list' | 'gantt';
+type ViewMode = 'board' | 'list' | 'gantt' | 'table';
 const TASK_FILTER_KEYS = ['status', 'assigneeId', 'iterationId', 'tag'] as const;
 
 export function TaskPage() {
@@ -59,7 +61,7 @@ export function TaskPage() {
     key: 'task-workspace',
     defaults: [{
       id: 'all',
-      name: t('task.filter.all', 'All'),
+      name: t('common.all', '全部'),
       icon: 'board',
       builtIn: true,
       snapshot: { search: '', filters: {}, viewStyle: 'board' },
@@ -95,6 +97,8 @@ export function TaskPage() {
   const confirmAction = useConfirm();
   const queryClient = useQueryClient();
   const filteredTasks = tasksData?.data ?? [];
+  const { getIssueExecution, totalActiveAiCount } = useActiveExecutionsMap();
+
   const handleTaskClick = (task: Task) => {
     setSelectedTaskId(task.id);
   };
@@ -221,13 +225,17 @@ export function TaskPage() {
           onCreateView={toolbar.createView}
           onUpdateView={toolbar.updateView}
           onDeleteView={toolbar.deleteView}
+          isDirty={toolbar.isDirty}
+          onSaveCurrentView={toolbar.saveCurrentToActive}
           viewStyle={{
             value: viewMode,
+            layout: 'centered',
             onChange: (value) => setViewMode(value as ViewMode),
             options: [
-              { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
-              { value: 'list', label: t('task.view.list', 'List'), icon: List },
-              { value: 'gantt', label: t('task.view.gantt', 'Gantt'), icon: CalendarRange },
+              { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
+              { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+              { value: 'gantt', label: t('viewDisplay.views.gantt', 'Gantt'), icon: CalendarRange },
+              { value: 'table', label: t('viewDisplay.views.table', 'Table'), icon: TableProperties },
             ],
           }}
           filterMenu={{
@@ -277,6 +285,18 @@ export function TaskPage() {
               { id: 'json', type: 'item', label: 'JSON', disabled: true },
             ],
           }}
+          extraActions={
+            totalActiveAiCount > 0
+              ? [
+                  {
+                    id: 'ai-active-indicator',
+                    icon: CheckSquare,
+                    label: `${totalActiveAiCount} 个 AI 执行中`,
+                    variant: 'ghost',
+                  },
+                ]
+              : undefined
+          }
         />
 
         <section className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
@@ -304,6 +324,7 @@ export function TaskPage() {
               <TaskGantt
                 tasks={filteredTasks}
                 onTaskClick={handleTaskClick}
+                getAiExecution={getIssueExecution}
                 onDateRangeChange={(issueId, range) =>
                   updateTask
                     .mutateAsync({
@@ -316,11 +337,40 @@ export function TaskPage() {
                     .then(() => undefined)
                 }
               />
+            ) : viewMode === 'table' ? (
+              <TaskTableView
+                tasks={filteredTasks}
+                loading={isLoading}
+                onTaskClick={handleTaskClick}
+                getAiExecution={getIssueExecution}
+                selectionActions={(selected, close) => (
+                  <ListActionButton
+                    onClick={async () => {
+                      const ok = await confirmAction({
+                        title: `删除选中的 ${selected.length} 项？`,
+                        description: '该操作会删除选中的任务及其子任务，且不可撤销。',
+                        confirmText: '删除',
+                        cancelText: '取消',
+                        variant: 'destructive',
+                      });
+                      if (!ok) return;
+                      await Promise.allSettled(selected.map((task) => deleteTask.mutateAsync(task.id)));
+                      close();
+                      queryClient.invalidateQueries({ queryKey: ['project-tasks'] });
+                    }}
+                    title="删除"
+                    className="text-destructive"
+                  >
+                    <Trash2 className="size-4" /> 删除
+                  </ListActionButton>
+                )}
+              />
             ) : (
               <TaskSimpleList
                 tasks={filteredTasks}
                 loading={isLoading}
                 onTaskClick={handleTaskClick}
+                getAiExecution={getIssueExecution}
                 groupBy="status"
                 getProjectName={() => ''}
                 onGroupCreate={(key) => handleCreateTask(key)}

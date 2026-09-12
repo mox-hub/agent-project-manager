@@ -6,7 +6,7 @@
  * 修复了 props 变化不同步、按索引 diff 找变更项两个既有缺陷。
  */
 import { useMemo } from 'react';
-import { Calendar, Users } from 'lucide-react';
+import { Bot, Calendar, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,6 +31,7 @@ export interface ProjectBoardProps {
   onProjectClick?: (project: Project) => void;
   /** 拖拽换列：newWorkflowStatus 为 workflowStatus 值 */
   onProjectMove?: (projectId: string, newWorkflowStatus: string) => void;
+  getProjectExecutionCount?: (projectId: string) => number;
 }
 
 /** workflowStatus → 看板列 accent（与 status-visuals tone 对齐） */
@@ -51,9 +52,20 @@ const healthScoreClass = (score?: number) => {
   return 'bg-accent-red';
 };
 
-function useProjectCardModel(): BoardCardModel<Project> {
+function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => number): BoardCardModel<Project> {
   const { t } = useTranslation();
   return {
+    isAiExecuting: (project) => (getProjectExecutionCount?.(project.id) ?? 0) > 0,
+    aiExecutionNode: (project) => {
+      const count = getProjectExecutionCount?.(project.id) ?? 0;
+      if (count <= 0) return null;
+      return (
+        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-10 font-medium bg-accent-purple/15 text-accent-purple border border-accent-purple/30 animate-pulse">
+          <Bot className="size-3" />
+          <span>{count} 个任务 AI 执行中</span>
+        </span>
+      );
+    },
     title: (project) => {
       const priorityVisual = project.priority
         ? (PRIORITY_VISUALS[project.priority] ?? PRIORITY_VISUALS.medium)
@@ -136,9 +148,9 @@ function useProjectCardModel(): BoardCardModel<Project> {
   };
 }
 
-export function ProjectBoard({ projects, onProjectClick, onProjectMove }: ProjectBoardProps) {
+export function ProjectBoard({ projects, onProjectClick, onProjectMove, getProjectExecutionCount }: ProjectBoardProps) {
   const { t } = useTranslation();
-  const card = useProjectCardModel();
+  const card = useProjectCardModel(getProjectExecutionCount);
   const columns = useMemo<BoardColumnDef[]>(
     () =>
       WORKFLOW_ORDER.map((value) => {

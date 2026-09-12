@@ -129,6 +129,10 @@ export interface BoardCardModel<T extends { id: string }> {
   row1?: (item: T) => ReactNode;
   /** 行3：其他信息 + 子任务图标等 */
   row3?: (item: T) => ReactNode;
+  /** 是否处于 AI 执行接管状态 */
+  isAiExecuting?: (item: T) => boolean;
+  /** AI 执行状态微胶囊节点 */
+  aiExecutionNode?: (item: T) => ReactNode;
   /** 单卡片附加样式（如 severity 左边框） */
   className?: (item: T) => string;
   /** CAP-C-07 局部侵入问答实体指针（如 `project:${id}`；返回 undefined 则不接） */
@@ -152,6 +156,9 @@ export interface BoardViewProps<T extends { id: string }> {
   /** 列拖拽重排（默认关闭） */
   enableColumnReorder?: boolean;
   onColumnReorder?: (columnIds: string[]) => void;
+  /** 折叠的列 ID 集合 */
+  collapsedColumnIds?: string[];
+  onToggleCollapseColumn?: (columnId: string) => void;
   /** 完全自定义卡片（返回完整卡片节点，包括容器） */
   renderCard?: (item: T, column: BoardColumnDef) => ReactNode;
   /** 默认卡片槽位模型（renderCard 未提供时生效） */
@@ -755,12 +762,15 @@ function DefaultBoardCard<T extends { id: string }>({
   overlay: boolean;
   onClick: () => void;
 }) {
+  const isAi = card.isAiExecuting?.(item);
+
   return (
     <article
       onClick={onClick}
       className={cn(
-        'space-y-2 rounded-xl border border-border bg-card px-3 py-2.5 shadow-xs transition-all duration-200',
+        'relative space-y-2 rounded-xl border border-border bg-card px-3 py-2.5 shadow-xs transition-all duration-200',
         'hover:-translate-y-0.5 hover:shadow-md dark:shadow-none',
+        isAi && 'border-accent-purple/50 ring-1 ring-accent-purple/30',
         overlay && 'rotate-0 shadow-xl',
         card.className?.(item),
       )}
@@ -776,6 +786,9 @@ function DefaultBoardCard<T extends { id: string }>({
       <h4 className="line-clamp-2 text-sm font-semibold leading-[1.35] text-foreground">
         {card.title(item)}
       </h4>
+      {isAi && card.aiExecutionNode ? (
+        <div className="pt-0.5">{card.aiExecutionNode(item)}</div>
+      ) : null}
       {card.row3 ? <div className="text-xs text-muted-foreground">{card.row3(item)}</div> : null}
     </article>
   );

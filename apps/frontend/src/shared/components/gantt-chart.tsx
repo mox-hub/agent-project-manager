@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { cn } from '@/lib/utils';
 
+import { Bot } from 'lucide-react';
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const DAY_WIDTH = 28;
 
 export interface GanttChartItem {
   id: string;
@@ -13,12 +14,16 @@ export interface GanttChartItem {
   priority?: string;
   colorClassName?: string;
   meta?: string;
+  isAiExecuting?: boolean;
+  aiExecutionSummary?: string;
 }
 
 export interface GanttDateRange {
   startDate: string;
   endDate: string;
 }
+
+export type GanttScale = 'day' | 'week' | 'month';
 
 export interface GanttChartProps {
   items: GanttChartItem[];
@@ -28,6 +33,8 @@ export interface GanttChartProps {
   className?: string;
   emptyMessage?: string;
   leftColumnTitle?: string;
+  scale?: GanttScale;
+  onScaleChange?: (scale: GanttScale) => void;
 }
 
 type DragMode = 'move' | 'resize-start' | 'resize-end';
@@ -81,7 +88,15 @@ export function GanttChart({
   className,
   emptyMessage = 'No timeline data to display',
   leftColumnTitle = 'Item',
+  scale = 'day',
+  onScaleChange,
 }: GanttChartProps) {
+  const [internalScale, setInternalScale] = useState<GanttScale>(scale);
+  const currentScale = onScaleChange ? scale : internalScale;
+  const setScale = onScaleChange ?? setInternalScale;
+
+  const dayWidth = currentScale === 'month' ? 14 : currentScale === 'week' ? 20 : 28;
+
   const [draftRanges, setDraftRanges] = useState<Record<string, { start: Date; end: Date }>>({});
   const dragStateRef = useRef<DragState | null>(null);
 
@@ -123,7 +138,7 @@ export function GanttChart({
     const handlePointerMove = (event: PointerEvent) => {
       const drag = dragStateRef.current;
       if (!drag) return;
-      const deltaDays = Math.round((event.clientX - drag.startX) / DAY_WIDTH);
+      const deltaDays = Math.round((event.clientX - drag.startX) / dayWidth);
       if (!Number.isFinite(deltaDays)) return;
       if (deltaDays === 0) return;
 
@@ -183,7 +198,7 @@ export function GanttChart({
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
     };
-  }, [draftRanges, onItemDateChange]);
+  }, [draftRanges, onItemDateChange, dayWidth]);
 
   if (!timeline || normalizedItems.length === 0) {
     return (
@@ -193,7 +208,7 @@ export function GanttChart({
     );
   }
 
-  const totalWidth = timeline.days.length * DAY_WIDTH;
+  const totalWidth = timeline.days.length * dayWidth;
   const today = parseDateOnly(new Date().toISOString());
   const todayOffset = today ? dayDiff(timeline.start, today) : -1;
 
@@ -224,8 +239,25 @@ export function GanttChart({
       <div className="overflow-x-auto">
         <div className="min-w-230">
           <div className="sticky top-0 z-20 flex border-b border-border bg-background">
-            <div className="w-60 min-w-60 border-r border-border bg-muted/50 p-3 text-sm font-semibold text-foreground">
-              {leftColumnTitle}
+            <div className="flex w-60 min-w-60 items-center justify-between border-r border-border bg-muted/50 px-3 py-2 text-sm font-semibold text-foreground">
+              <span>{leftColumnTitle}</span>
+              <div className="flex items-center gap-1">
+                {(['day', 'week', 'month'] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setScale(s)}
+                    className={cn(
+                      'rounded px-1.5 py-0.5 text-10 font-medium transition-colors',
+                      currentScale === s
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    )}
+                  >
+                    {s === 'day' ? '日' : s === 'week' ? '周' : '月'}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="relative" style={{ width: `${totalWidth}px` }}>
               <div className="flex h-11.5">
@@ -233,7 +265,7 @@ export function GanttChart({
                   <div
                     key={day.toISOString()}
                     className="border-r border-border px-1 py-1 text-center text-10 leading-tight text-muted-foreground"
-                    style={{ width: `${DAY_WIDTH}px` }}
+                    style={{ width: `${dayWidth}px` }}
                   >
                     <div>{day.getUTCDate()}</div>
                     {day.getUTCDate() === 1 ? (
@@ -245,7 +277,7 @@ export function GanttChart({
               {todayOffset >= 0 && todayOffset <= timeline.days.length ? (
                 <div
                   className="pointer-events-none absolute bottom-0 top-0 z-10 w-px bg-accent-red"
-                  style={{ left: `${todayOffset * DAY_WIDTH}px` }}
+                  style={{ left: `${todayOffset * dayWidth}px` }}
                 />
               ) : null}
             </div>
@@ -254,8 +286,9 @@ export function GanttChart({
           {normalizedItems.map((item) => {
             const offsetDays = dayDiff(timeline.start, item.start);
             const durationDays = Math.max(1, dayDiff(item.start, item.end) + 1);
-            const left = offsetDays * DAY_WIDTH;
-            const width = durationDays * DAY_WIDTH;
+            const left = offsetDays * dayWidth;
+            const width = durationDays * dayWidth;
+            const isAi = item.isAiExecuting;
 
             return (
               <div
@@ -267,7 +300,12 @@ export function GanttChart({
                   onClick={() => onItemClick?.(item.id)}
                   className="flex w-60 min-w-60 items-center gap-2 border-r border-border px-3 py-2 text-left"
                 >
-                  <span className={cn('h-2 w-2 rounded-full', getBarColorClass(item))} />
+                  <span
+                    className={cn(
+                      'h-2 w-2 rounded-full',
+                      isAi ? 'bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse' : getBarColorClass(item),
+                    )}
+                  />
                   <span className="truncate text-sm text-foreground">{item.title}</span>
                   {item.meta ? (
                     <span className="truncate text-xs text-muted-foreground">{item.meta}</span>
@@ -280,7 +318,7 @@ export function GanttChart({
                       <div
                         key={`${item.id}-${day.toISOString()}`}
                         className="border-r border-border/40"
-                        style={{ width: `${DAY_WIDTH}px` }}
+                        style={{ width: `${dayWidth}px` }}
                       />
                     ))}
                   </div>
@@ -297,8 +335,8 @@ export function GanttChart({
                     }}
                     onPointerDown={(event) => startDrag(event, item, 'move')}
                     className={cn(
-                      'absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded px-2 text-xs text-white shadow-xs',
-                      getBarColorClass(item),
+                      'absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded px-2 text-xs text-white shadow-xs transition-all',
+                      isAi ? 'bg-accent-purple ring-1 ring-accent-purple/40 animate-pulse' : getBarColorClass(item),
                       readonly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
                     )}
                     style={{ left: `${left}px`, width: `${width}px` }}
@@ -310,6 +348,7 @@ export function GanttChart({
                         onPointerDown={(event) => startDrag(event, item, 'resize-start')}
                       />
                     ) : null}
+                    {isAi ? <Bot className="mr-1 size-3 shrink-0 animate-pulse text-white" /> : null}
                     <span className="truncate">{item.title}</span>
                     {!readonly ? (
                       <div

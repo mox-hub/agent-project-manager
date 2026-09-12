@@ -20,6 +20,8 @@ import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import type { Task } from '../api/issue-api';
 import { cn } from '@/lib/utils';
+import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
+import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
 
 type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
 type RowPriority = 'urgent' | 'high' | 'medium' | 'low';
@@ -178,6 +180,10 @@ export interface TaskSimpleListProps {
   /** 分组进度：页面提供完成条件（此处返回任务完成数/总数） */
   groupProgress?: (items: Task[]) => { done: number; total: number } | null;
   getProjectName?: (projectId: string | null | undefined) => string;
+  /** 获取任务的活跃 AI 执行状态 */
+  getAiExecution?: (task: Task) => ActiveAiExecution | null;
+  /** 列表密度（dense: 32px 紧凑 / comfortable: 40px 默认） */
+  density?: 'dense' | 'comfortable';
   /** 多选快捷操作按钮组 */
   selectionActions?: (selected: Task[], close: () => void) => React.ReactNode;
   className?: string;
@@ -192,6 +198,8 @@ export function TaskSimpleList({
   onGroupCreate,
   groupProgress,
   getProjectName,
+  getAiExecution,
+  density = 'comfortable',
   selectionActions,
   className,
 }: TaskSimpleListProps) {
@@ -242,8 +250,15 @@ export function TaskSimpleList({
       renderLeading={(task) => {
         const todoTotal = task.todoItems?.length ?? task._count?.subIssues ?? 0;
         const todoDone = task.todoItems?.filter((item) => item.completed).length ?? 0;
+        const aiExecution = getAiExecution?.(task);
         return (
           <>
+            {aiExecution ? (
+              <span
+                className="h-6 w-1 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
+                title={`AI 接管中: ${aiExecution.agentName} (${aiExecution.stepSummary || '执行中'})`}
+              />
+            ) : null}
             {task.type === 'bug' ? (
               <span className={cn('h-6 w-1.5 shrink-0 rounded-full', SEVERITY_BAR[severityOf(task)])} />
             ) : null}
@@ -251,6 +266,9 @@ export function TaskSimpleList({
             <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{idOf(task)}</span>
             <ListIcon icon={PRIORITY_CONFIG[priorityOf(task)].icon} className={PRIORITY_CONFIG[priorityOf(task)].color} />
             <ListText className="min-w-0 flex-1">{task.title}</ListText>
+            {aiExecution ? (
+              <AiExecutionBadge execution={aiExecution} size="xs" variant="compact" />
+            ) : null}
             {/* 子任务胶囊（design-system 标准），展示在任务标题右侧 */}
             {todoTotal > 0 ? <SubtaskBadge done={todoDone} total={todoTotal} /> : null}
           </>
@@ -260,27 +278,34 @@ export function TaskSimpleList({
         const tags = task.issueTags ?? [];
         const shownTags = tags.slice(0, 2);
         const extraTags = tags.length - shownTags.length;
+        const aiExecution = getAiExecution?.(task);
         return (
           <>
             {/* 项目名称完整展示，不截断 */}
             <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">{getProjectName?.(task.projectId) ?? ''}</span>
-            <div className="flex shrink-0 items-center gap-1">
-              {shownTags.map(({ tag }) => (
-                <ListChip key={tag.id} color={tag.color}>{tag.name}</ListChip>
-              ))}
-              {extraTags > 0 ? <ListChip className="opacity-80 text-muted-foreground">+{extraTags}</ListChip> : null}
-            </div>
-            {task.milestone?.name ? (
+            {density !== 'dense' ? (
+              <div className="flex shrink-0 items-center gap-1">
+                {shownTags.map(({ tag }) => (
+                  <ListChip key={tag.id} color={tag.color}>{tag.name}</ListChip>
+                ))}
+                {extraTags > 0 ? <ListChip className="opacity-80 text-muted-foreground">+{extraTags}</ListChip> : null}
+              </div>
+            ) : null}
+            {task.milestone?.name && density !== 'dense' ? (
               <ListChip className="border border-border bg-muted/40 text-muted-foreground">{task.milestone.name}</ListChip>
             ) : (
               <span className="w-0" />
             )}
             <ListDate value={task.dueDate} overdue={isOverdue(task)} />
-            <ListAvatar
-              name={assigneeNameOf(task)}
-              url={task.assignee?.avatarUrl}
-              color={assigneeNameOf(task) ? colorOf(assigneeNameOf(task)!) : undefined}
-            />
+            {aiExecution ? (
+              <AiExecutionBadge execution={aiExecution} size="xs" variant="pill" />
+            ) : (
+              <ListAvatar
+                name={assigneeNameOf(task)}
+                url={task.assignee?.avatarUrl}
+                color={assigneeNameOf(task) ? colorOf(assigneeNameOf(task)!) : undefined}
+              />
+            )}
           </>
         );
       }}

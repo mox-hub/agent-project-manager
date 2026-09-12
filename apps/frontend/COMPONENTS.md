@@ -59,6 +59,7 @@
 | PageShell | ui/page-shell.tsx | 页面外壳（内嵌 PageHeader 的整体骨架） | aiPage, title, icon, metrics, actions, children |
 | PageHeader | ui/page-header.tsx | 单行页头（图标+标题+收藏星标+计数胶囊+操作组） | title, icon, iconColor, metrics, actions, favoriteId |
 | ToolbarRow + useToolbarViews | ui/toolbar-row.tsx | 列表页工具栏（已保存视图+样式切换+筛选/显示/下载下拉）+视图快照持久化 hook | views, viewStyle, filterMenu, displayMenu, downloadMenu, extraActions(支持 render 自定义动作件)；hook: key, defaults, onApply |
+| ViewDisplayPopover | ui/view-display-popover.tsx | Linear 风格视图显示弹窗（视图切换+Grouping+Ordering+Completed 过滤+子项开关+Display properties 胶囊） | viewMode, onViewModeChange, groupBy, onGroupByChange, orderBy, onOrderByChange, completedFilter, displayProperties |
 | SubPageToolbar | ui/sub-page-toolbar.tsx | 二级页工具栏（返回+面包屑+居中页签+翻页+侧栏开关） | breadcrumbs, tabs, pager, actions, sidebar, onBack |
 | RightSidebar / SidebarButtonGroup / SidebarButton / SidebarToggle | ui/right-sidebar.tsx | 详情页右侧栏容器与按钮组（flex 并列可收起） | hidden, width；SidebarButton: icon, label, variant |
 | SidebarPanel | ui/sidebar-panel.tsx | 右侧栏折叠面板（圆角矩形↔胶囊） | title, icon, collapsed, onToggle, action |

@@ -72,6 +72,10 @@ export interface DataTableProps<T> {
   emptyContent?: ReactNode
   /** 表格外层附加类名 */
   className?: string
+  /** 是否固定吸顶表头（默认 true） */
+  stickyHeader?: boolean
+  /** 滚动容器最大高度（内容独立滚动，表头稳固吸顶） */
+  maxHeight?: string
 }
 
 export function DataTable<T>({
@@ -87,6 +91,8 @@ export function DataTable<T>({
   pageSize = 20,
   emptyContent,
   className,
+  stickyHeader = true,
+  maxHeight,
 }: DataTableProps<T>) {
   const { t } = useTranslation()
   const [sorting, setSorting] = useState<SortingState>([])
@@ -232,10 +238,21 @@ export function DataTable<T>({
       aria-label="Table. Use arrow keys to navigate, Enter to open."
     >
       {/* 卡片式外壳（coss CardFrame 结构）：表格 + border-t 分隔 footer */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-        <div className="w-full overflow-x-auto">
+      <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+        <div
+          className={cn(
+            "w-full overflow-x-auto",
+            maxHeight ? "overflow-y-auto" : "",
+          )}
+          style={maxHeight ? { maxHeight } : undefined}
+        >
           <Table>
-            <TableHeader className="bg-muted/40">
+            <TableHeader
+              className={cn(
+                "bg-muted/40",
+                stickyHeader && "sticky top-0 z-20 bg-card/95 backdrop-blur-xs border-b border-border shadow-2xs",
+              )}
+            >
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
@@ -244,6 +261,7 @@ export function DataTable<T>({
                     return (
                       <TableHead
                         key={header.id}
+                        className={cn(stickyHeader && "sticky top-0 z-20 bg-inherit")}
                         style={header.getSize() !== 150 ? { width: header.getSize() } : undefined}
                         aria-sort={
                           sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined
@@ -342,10 +360,15 @@ export function DataTable<T>({
 
       {/* 多选悬浮胶囊（对齐 DataList SelectionBar 形态） */}
       {selectionManaged && selectionActions && selectedRows.length > 0 && (
-        <div className="pointer-events-none fixed bottom-5 left-1/2 z-50 -translate-x-1/2">
+        <div className="pointer-events-none fixed bottom-28 left-1/2 z-50 -translate-x-1/2 transition-all duration-200">
           <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-2 shadow-lg">
             <span className="px-2 text-sm font-semibold tabular-nums">
-              {t("dataTable.selected", { count: selectedRows.length })}
+              {total > 0
+                ? t("dataTable.selectedWithTotal", {
+                    count: selectedRows.length,
+                    total,
+                  })
+                : t("dataTable.selected", { count: selectedRows.length })}
             </span>
             <div className="flex items-center gap-1">
               {selectionActions(selectedRows, clearSelection)}

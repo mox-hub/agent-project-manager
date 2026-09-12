@@ -8,6 +8,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
+  Check,
   CheckCircle2,
   CircleDashed,
   Clock,
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { RightSidebar } from '@/components/ui/right-sidebar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -178,7 +180,7 @@ export function WorkflowDetailPage() {
   };
 
   return (
-    <PageShell className="overflow-hidden">
+    <PageShell className="overflow-hidden" aiPage="workflow.detail">
       <SubPageToolbar
         aiId="workflow.detail"
         onBack={() => navigate('/app/workflows')}
@@ -189,42 +191,39 @@ export function WorkflowDetailPage() {
         actions={
           <>
             {workflow ? (
-              <Badge variant="secondary" className="shrink-0">
+              <Badge variant="secondary" className="shrink-0 text-10">
                 v{workflow.version}
               </Badge>
             ) : null}
             {editing ? (
               <>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="h-7 text-xs"
+                  className="h-7 px-2.5 text-xs text-muted-foreground"
                   onClick={() => setEditing(false)}
                 >
                   {t('workflow.editor.cancel')}
                 </Button>
-                <Button
-                  size="sm"
-                  className="h-7 text-xs"
+                <HeaderActionButton
+                  icon={Check}
+                  label={t('workflow.editor.save')}
+                  variant="primary"
                   disabled={updateMutation.isPending || editSteps.length === 0}
                   onClick={saveEditing}
-                  data-ai="workflow.saveDefinition"
-                >
-                  {t('workflow.editor.save')}
-                </Button>
+                  data-ai-component="workflow.detail.save-definition"
+                  data-ai-action="workflow.detail.save-definition.click"
+                />
               </>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1.5 text-xs"
+              <HeaderActionButton
+                icon={Pencil}
+                label={t('workflow.editor.edit')}
                 disabled={!workflow}
                 onClick={startEditing}
-                data-ai="workflow.editToggle"
-              >
-                <Pencil className="size-3" />
-                {t('workflow.editor.edit')}
-              </Button>
+                data-ai-component="workflow.detail.edit-toggle"
+                data-ai-action="workflow.detail.edit-toggle.click"
+              />
             )}
           </>
         }
