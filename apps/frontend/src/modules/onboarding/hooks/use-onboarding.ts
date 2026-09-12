@@ -53,29 +53,27 @@ const DEFAULT_STEPS: OnboardingStep[] = [
   },
 ];
 
-/** 桌面模式在欢迎页后插入「工作目录」步骤（AI 执行面的工作根目录，可跳过） */
-const DESKTOP_EXTRA_STEPS: Record<string, OnboardingStep | null> = {
-  'workspace-root': {
-    id: 'workspace-root',
-    title: '工作目录',
-    description: '设置 AI 同事执行任务的工作目录',
-    status: 'pending',
-  },
+/** 桌面模式在「欢迎」步骤后插入「工作目录」步骤（AI 执行面的工作根目录，可跳过） */
+const DESKTOP_INSERT_AFTER = 'welcome';
+const DESKTOP_EXTRA_STEP: Omit<OnboardingStep, 'status'> = {
+  id: 'workspace-root',
+  title: '工作目录',
+  description: '设置 AI 同事执行任务的工作目录',
 };
 
-function buildSteps(isDesktop: boolean): OnboardingStep[] {
+export function buildSteps(isDesktop: boolean): OnboardingStep[] {
+  const base = DEFAULT_STEPS.map((step, index) => ({
+    ...step,
+    status: index === 0 ? ('current' as const) : ('pending' as const),
+  }));
   if (!isDesktop) {
-    return DEFAULT_STEPS.map((step, index) => ({
-      ...step,
-      status: index === 0 ? ('current' as const) : ('pending' as const),
-    }));
+    return base;
   }
   const steps: OnboardingStep[] = [];
-  for (const step of DEFAULT_STEPS) {
-    steps.push({ ...step, status: steps.length === 0 ? 'current' : 'pending' });
-    const extra = DESKTOP_EXTRA_STEPS[step.id];
-    if (extra) {
-      steps.push({ ...extra, status: 'pending' });
+  for (const step of base) {
+    steps.push(step);
+    if (step.id === DESKTOP_INSERT_AFTER) {
+      steps.push({ ...DESKTOP_EXTRA_STEP, status: 'pending' });
     }
   }
   return steps;
