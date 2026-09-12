@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [0.6.0] - 2026-09-11
 
+### 多选操作栏避开 Dock 触发区平移与 count 基数真实数据加载 (feat/ui-views-and-toolbar-refactor)
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | ①**多选菜单栏向上平移避开 Dock 触发区**：将 `DataList` 的 `SelectionBar` 与 `DataTable` 的多选悬浮胶囊定位统一从 `fixed bottom-5`（20px）向上平移至 `fixed bottom-28`（112px），彻底离开底部 Dock 栏展开触发感应区（0~96px），避免鼠标移动到多选栏操作按钮时意外唤醒 Dock 造成视觉重叠与争抢焦点；②**count 基数区域加载真实数据与 i18n 插值修复**：彻底修复 `zh-CN.json` 与 `en.json` 中因为单花括号 `{count}` 导致 i18next 无法插值直接打印字面量文本的缺陷（包括 `dataTable.selected`、`dataTable.range`、`acceptance.results`、`acceptance.pagination.page` 等 13 处关键动态字符串），新增 `dataTable.selectedWithTotal`（`已选 {{count}} / 共 {{total}} 项` / `{{count}} of {{total}} selected`）；并在 `DataList`（支持 `totalCount`，默认为 `items.length`）与 `DataTable`（采用服务端 `manualPagination.total` 或本地过滤行数基数）中实时计算并加载真实基数分母，全面支持「已选 X / 共 Y 项」真实响应式计数呈现。 | 用户指令（多选菜单栏向上平移，避开dock栏的触发区域，count基数区域加载真实数据） | Vitest 前端 **81 文件 421 用例全绿**；`tsc -b` 0 错误；`pnpm lint` 7 项治理脚本 + ESLint 0 错 0 警告；`pnpm check:docs-sync` 通过 | 本 CHANGELOG |
+
 ### 视图模式与工具栏重构及视觉缺陷修复 (feat/ui-views-and-toolbar-refactor)
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

@@ -2021,7 +2021,7 @@
     "issueTypesCreated": "类型已创建",
     "issueTypesUpdated": "类型已更新",
     "issueTypesDeleted": "类型已删除",
-    "issueTypesDeleteConfirm": "确定删除类型「{name}」吗？仍有任务引用时将无法删除。",
+    "issueTypesDeleteConfirm": "确定删除类型「{{name}}」吗？仍有任务引用时将无法删除。",
     "issueTypesLocked": "不可删除",
     "issueTypesBuiltin": "内置",
     "issueTypesKeyPlaceholder": "key，如 page",
@@ -2030,7 +2030,7 @@
     "issueTypesDeleteConfirmTitle": "确定删除该工单类型吗？",
     "issueTypesFields": "字段定义",
     "issueTypesFieldsHint": "定义该类型工单的自定义字段（fieldSchema），保存时整体替换，空列表即清空。",
-    "issueTypesFieldsCount": "{count} 个字段",
+    "issueTypesFieldsCount": "{{count}} 个字段",
     "issueTypesFieldsEmpty": "暂无字段定义",
     "issueTypesFieldsAdd": "添加字段",
     "issueTypesFieldKeyPlaceholder": "key，如 severity",
@@ -3648,11 +3648,12 @@
     }
   },
   "dataTable": {
-    "range": "显示 {from}–{to} 条，共 {total} 条",
+    "range": "显示 {{from}}–{{to}} 条，共 {{total}} 条",
     "prev": "上一页",
     "next": "下一页",
     "empty": "暂无数据",
-    "selected": "已选 {count} 项"
+    "selected": "已选 {{count}} 项",
+    "selectedWithTotal": "已选 {{count}} / 共 {{total}} 项"
   },
   "acceptance": {
     "title": "验收中心",
@@ -3661,7 +3662,7 @@
       "table": "表格"
     },
     "new": "新建验收契约",
-    "results": "{count} 条结果",
+    "results": "{{count}} 条结果",
     "empty": "暂无验收契约",
     "emptyHint": "派发任务时将自动创建，或手动新建",
     "searchPlaceholder": "搜索验收标题或任务…",
@@ -3711,7 +3712,7 @@
     "pagination": {
       "prev": "上一页",
       "next": "下一页",
-      "page": "第 {page}/{totalPages} 页 · 共 {total} 条"
+      "page": "第 {{page}}/{{totalPages}} 页 · 共 {{total}} 条"
     },
     "activeBadge": "活契约",
     "titleFallback": "验收契约 {{id}}",
@@ -3754,7 +3755,7 @@
     "criteria": {
       "functional": "功能标准",
       "technical": "技术标准",
-      "progress": "{passed}/{total} 已通过",
+      "progress": "{{passed}}/{{total}} 已通过",
       "add": "添加标准",
       "addPlaceholder": "输入标准内容，回车添加…",
       "emptyFunctional": "暂无功能标准",
@@ -3777,13 +3778,13 @@
       "suggested": "建议补全",
       "passed": "已通过检查",
       "apply": "采纳",
-      "applyAll": "一键补全全部（{count} 项）",
+      "applyAll": "一键补全全部（{{count}} 项）",
       "checklistSelect": "选择审计清单",
       "autoChecklist": "自动匹配（按项目与技术栈）",
       "systemChecklists": "系统预置清单",
       "teamChecklists": "团队自定义清单",
-      "bannerBlocked": "{count} 个审计阻断项 — 接收将被红牌拦截",
-      "bannerWarn": "{count} 个审计建议项 — 建议补全后接收"
+      "bannerBlocked": "{{count}} 个审计阻断项 — 接收将被红牌拦截",
+      "bannerWarn": "{{count}} 个审计建议项 — 建议补全后接收"
     },
     "actions": {
       "approve": "接收",
@@ -3808,8 +3809,8 @@
       "title": "执行历史",
       "empty": "暂无执行记录",
       "emptyHint": "在任务页派发 AI 执行后，产物将自动回写为验收证据",
-      "total": "共 {count} 次执行 · 成本 ${cost}",
-      "tokens": "{count} tokens"
+      "total": "共 {{count}} 次执行 · 成本 ${{cost}}",
+      "tokens": "{{count}} tokens"
     },
     "props": {
       "title": "属性",
@@ -3830,7 +3831,7 @@
     "evidence": {
       "title": "完成证据",
       "none": "暂无证据（派发执行完成后自动回写）",
-      "artifacts": "{count} 个产物",
+      "artifacts": "{{count}} 个产物",
       "autoChecks": {
         "valid": "CI 自动校验通过",
         "invalid": "CI 自动校验未通过"

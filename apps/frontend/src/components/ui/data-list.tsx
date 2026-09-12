@@ -14,6 +14,7 @@
  */
 
 import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Check,
   ChevronDown,
@@ -53,6 +54,8 @@ export interface DataListProps<T extends DataListItem> {
   loading?: boolean;
   emptyMessage?: ReactNode;
   className?: string;
+  /** 总条数基数（默认使用 items.length） */
+  totalCount?: number;
 
   // ---- 行内容（页面注册） ----
   /** 多选框右侧首要信息区 */
@@ -403,22 +406,30 @@ function SelectionBar<T extends DataListItem>({
   selected,
   actions,
   count,
+  total,
   onClose,
 }: {
   selected: T[];
   actions: DataListProps<T>['selectionActions'];
   count: number;
+  total?: number;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+  const summaryText =
+    typeof total === 'number' && total > 0
+      ? t('dataTable.selectedWithTotal', { count, total })
+      : t('dataTable.selected', { count });
+
   return (
-    <div className="pointer-events-none fixed bottom-5 left-1/2 z-50 -translate-x-1/2">
+    <div className="pointer-events-none fixed bottom-28 left-1/2 z-50 -translate-x-1/2 transition-all duration-200">
       <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-2 shadow-lg">
-        <span className="px-2 text-sm font-semibold tabular-nums">{count} selected</span>
+        <span className="px-2 text-sm font-semibold tabular-nums">{summaryText}</span>
         {actions ? <div className="flex items-center gap-1">{actions(selected, onClose)}</div> : null}
         <button
           type="button"
-          aria-label="Close"
-          title="Close"
+          aria-label={t('common.close', { defaultValue: 'Close' })}
+          title={t('common.close', { defaultValue: 'Close' })}
           onClick={onClose}
           className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
@@ -478,6 +489,7 @@ export function DataList<T extends DataListItem>({
   loading,
   emptyMessage = 'No items',
   className,
+  totalCount,
   renderLeading,
   renderTrailing,
   renderChildren,
@@ -675,7 +687,13 @@ export function DataList<T extends DataListItem>({
       )}
 
       {selectable && selected.size > 0 ? (
-        <SelectionBar selected={selectedItems} actions={selectionActions} count={selected.size} onClose={clearSelection} />
+        <SelectionBar
+          selected={selectedItems}
+          actions={selectionActions}
+          count={selected.size}
+          total={totalCount ?? items.length}
+          onClose={clearSelection}
+        />
       ) : null}
     </div>
   );
