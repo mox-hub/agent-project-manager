@@ -1,0 +1,106 @@
+# 桌面壳发布管线（ADR-015 收口：消费端 electron-updater + 本 workflow 发布端闭环）。
+# 取代旧 Tauri 版 release.yml（tauri-action 已随 ADR-014 壳选型变更过时）。
+#
+# 管线全景：
+#   PR        → quality-gate.yml（七并行门禁，不变）
+#   tag v*    → 本 workflow：windows 构建机 → 质量前置（type-check/lint/单测）→
+#               pack:resources（server/frontend/cli 自包含 staging + default-template.db
+#               预生成 + Prisma CLI/engines 剪除瘦身）→ electron-builder --publish always
+#               → GitHub Release（**draft**：exe + blockmap + latest.yml）
+#               → 人工在 Releases 页核对后点 Publish（防误发）→
+#               已装用户壳内 electron-updater（启动 30s 静默检查）拉到更新
+#   手动 dry_run → 只构建 + artifact 留档，不创建 Release（管线自验）
+#
+# 注意：
+# - tag 必须与 apps/desktop/package.json version 一致（electron-builder 以 v{version}
+#   命名 Release，latest.yml 供 updater 比对版本）
+# - pnpm 版本经根 package.json packageManager（pnpm@11.25.0）解析，勿显式降版
+#   （旧文件写死 8.15.9 已随 Tauri 管线废弃）
+name: desktop-release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "仅构建不发布（产物走 artifact 留档）"
+        type: boolean
+        default: false
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-desktop:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write # 创建 Release 草稿并上传产物
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm（版本取 packageManager 字段）
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prisma generate（server build 依赖 client 类型）
+        run: pnpm --filter "./apps/server" run prisma:generate
+
+      # 发布前质量前置（全量门禁已在 PR 的 quality-gate 执行过）
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Lint
+        run: pnpm -r lint
+
+      - name: Unit tests
+        run: |
+          pnpm --filter "./apps/server" run test
+          pnpm --filter "./apps/frontend" run test
+
+      # 自包含资源：server/frontend/cli staging + default-template.db + Prisma 剪除（pack.mjs）
+      - name: Pack resources
+        run: pnpm --filter desktop run pack:resources
+
+      - name: Build shell (main/preload)
+        run: pnpm --filter desktop run build:electron
+
+      # draft Release：exe + blockmap + latest.yml；GITHUB_TOKEN 只能建 draft，
+      # 由人工在 Releases 页确认 Publish——防误发的最后闸门
+      - name: Publish draft release
+        if: ${{ github.event_name == 'push' }}
+        run: pnpm --filter desktop exec electron-builder --win nsis --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 手动 dry_run：只构建不发版
+      - name: Build only (dry run)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: pnpm --filter desktop exec electron-builder --win nsis
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-installer-${{ github.ref_name }}
+          path: |
+            apps/desktop/dist-release-3/*.exe
+            apps/desktop/dist-release-3/*.blockmap
+            apps/desktop/dist-release-3/latest.yml
+          if-no-files-found: error
+          retention-days: 14

@@ -27,6 +27,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+    // WebSocket 上下文（网关 @SubscribeMessage）：switchToHttp().getRequest()
+    // 是 Socket 对象、没有 headers，递给 passport-jwt 读 authorization 直接
+    // TypeError（守护进程每次 runtime:heartbeat 心跳都会炸一次）。两个网关
+    // 均在连接层自验（EventsGateway 验 JWT / RuntimeGateway 验 session），
+    // 非 http 上下文直接放行。
+    if (context.getType() !== 'http') {
+      return true;
+    }
+
     // Check if route is marked as public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),

@@ -8,6 +8,7 @@ import {
   type FrontendInfo,
   type FrontendStatus,
   type DesktopActionResult,
+  type RuntimeDaemonStatus,
   setApiBaseUrl,
 } from '@/shared/types/electron-api';
 
@@ -15,6 +16,7 @@ export interface UseDesktopReturn {
   appInfo: DesktopAppInfo | null;
   backendStatus: BackendStatus | null;
   frontendStatus: FrontendStatus | null;
+  daemonStatus: RuntimeDaemonStatus | null;
   isLoading: boolean;
   error: string | null;
   isDesktop: boolean;
@@ -27,12 +29,19 @@ export interface UseDesktopReturn {
   startAllServices: () => Promise<void>;
   stopAllServices: () => Promise<void>;
   openLogDir: () => Promise<void>;
+  startDaemon: () => Promise<void>;
+  stopDaemon: () => Promise<void>;
+  chooseWorkspaceRoot: () => Promise<string | null>;
+  addWorkspaceRoot: (root: string) => Promise<void>;
+  removeWorkspaceRoot: (root: string) => Promise<void>;
+  toggleDevtools: () => Promise<void>;
 }
 
 export function useDesktop(): UseDesktopReturn {
   const [appInfo, setAppInfo] = useState<DesktopAppInfo | null>(null);
   const [backendStatus, setBackendStatus] = useState<BackendStatus | null>(null);
   const [frontendStatus, setFrontendStatus] = useState<FrontendStatus | null>(null);
+  const [daemonStatus, setDaemonStatus] = useState<RuntimeDaemonStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isDesktop = isTauriAvailable();
@@ -192,24 +201,100 @@ export function useDesktop(): UseDesktopReturn {
     }
   }, [isDesktop]);
 
+  const getDaemonStatus = useCallback(async () => {
+    if (!isDesktop) return;
+    try {
+      const status = await invoke<RuntimeDaemonStatus>('get_runtime_daemon_status');
+      setDaemonStatus(status);
+    } catch {
+      // 守护进程命令在旧壳版本可能不存在——状态保持 null，UI 按不支持处理
+    }
+  }, [isDesktop]);
+
+  const startDaemon = useCallback(async () => {
+    if (!isDesktop) return;
+    try {
+      setIsLoading(true);
+      setError(null);
+      await invoke<{ pid: number }>('start_runtime_daemon');
+      await getDaemonStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isDesktop, getDaemonStatus]);
+
+  const stopDaemon = useCallback(async () => {
+    if (!isDesktop) return;
+    try {
+      setIsLoading(true);
+      setError(null);
+      await invoke<DesktopActionResult>('stop_runtime_daemon');
+      await getDaemonStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isDesktop, getDaemonStatus]);
+
+  const chooseWorkspaceRoot = useCallback(async (): Promise<string | null> => {
+    if (!isDesktop) return null;
+    const result = await invoke<{ path: string | null }>('choose_directory', {
+      title: '选择 AI 执行的工作目录',
+    });
+    return result.path;
+  }, [isDesktop]);
+
+  const addWorkspaceRoot = useCallback(
+    async (root: string) => {
+      const current = daemonStatus?.workspaceRoots ?? [];
+      const { roots } = await invoke<{ roots: string[] }>('set_workspace_roots', {
+        roots: [...current, root],
+      });
+      setDaemonStatus((prev) => (prev ? { ...prev, workspaceRoots: roots } : prev));
+    },
+    [daemonStatus],
+  );
+
+  const removeWorkspaceRoot = useCallback(
+    async (root: string) => {
+      const current = daemonStatus?.workspaceRoots ?? [];
+      const { roots } = await invoke<{ roots: string[] }>('set_workspace_roots', {
+        roots: current.filter((r) => r !== root),
+      });
+      setDaemonStatus((prev) => (prev ? { ...prev, workspaceRoots: roots } : prev));
+    },
+    [daemonStatus],
+  );
+
+  const toggleDevtools = useCallback(async () => {
+    if (!isDesktop) return;
+    await invoke<DesktopActionResult>('toggle_devtools');
+  }, [isDesktop]);
+
   useEffect(() => {
     if (isDesktop) {
       getAppInfo();
       getBackendStatus();
       getFrontendStatus();
+      getDaemonStatus();
       // 定期刷新状态
       const interval = setInterval(() => {
         getBackendStatus();
         getFrontendStatus();
+        getDaemonStatus();
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [isDesktop, getAppInfo, getBackendStatus, getFrontendStatus]);
+  }, [isDesktop, getAppInfo, getBackendStatus, getFrontendStatus, getDaemonStatus]);
 
   return {
     appInfo,
     backendStatus,
     frontendStatus,
+    daemonStatus,
     isLoading,
     error,
     isDesktop,
@@ -222,5 +307,11 @@ export function useDesktop(): UseDesktopReturn {
     startAllServices,
     stopAllServices,
     openLogDir,
+    startDaemon,
+    stopDaemon,
+    chooseWorkspaceRoot,
+    addWorkspaceRoot,
+    removeWorkspaceRoot,
+    toggleDevtools,
   };
 }

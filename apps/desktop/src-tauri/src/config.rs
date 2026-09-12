@@ -12,6 +12,8 @@ pub struct AppConfig {
     pub upload_dir: PathBuf,
     pub jwt_secret: String,
     pub integration_key: String,
+    /// 打包模式指向随包分发的 node.exe；开发模式为 None（回落 PATH 上的 node）。
+    pub node_exe: Option<PathBuf>,
     pub default_port: u16,
     pub max_port: u16,
 }
@@ -36,6 +38,7 @@ impl AppConfig {
             upload_dir,
             jwt_secret: String::new(),
             integration_key: String::new(),
+            node_exe: None,
             default_port: 4300,
             max_port: 4399,
         }

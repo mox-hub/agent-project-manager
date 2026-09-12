@@ -115,6 +115,9 @@ apps/desktop/src-tauri/target/
 apps/desktop/src-tauri/Cargo.lock
 apps/desktop/src-tauri/.taurignore
 apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/resources/
+apps/desktop/electron/dist/
+apps/desktop/electron-resources/
 
 # Agent Tools (should not be version controlled)
 .claude/

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../api/auth-api';
 import type { LoginRequest } from '../api/auth-api';
 import { useAppStore } from '@/infrastructure/store/app-store';
+import { persistTokenToShell } from '@/shared/lib/desktop-session';
 import { useNavigate } from 'react-router-dom';
 
 export function useAuth() {
@@ -14,6 +15,7 @@ export function useAuth() {
     onSuccess: (data) => {
       const { accessToken, user } = data;
       localStorage.setItem('access_token', accessToken);
+      persistTokenToShell(accessToken);
       setCurrentUser(user);
       queryClient.setQueryData(['auth', 'me'], data);
       navigate('/app');
@@ -24,6 +26,7 @@ export function useAuth() {
     mutationFn: () => authApi.logout(),
     onSuccess: () => {
       localStorage.removeItem('access_token');
+      persistTokenToShell(null);
       setCurrentUser(null);
       queryClient.clear();
       navigate('/login');

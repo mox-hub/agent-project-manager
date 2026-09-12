@@ -2,11 +2,24 @@ use crate::backend::{
     pick_backend_port, start_backend_process, stop_backend_process, wait_for_backend_health,
 };
 use crate::frontend::{start_frontend_process, stop_frontend_process};
+use crate::setup;
 use crate::state::{AppState, BackendInfo, BackendStatus, FrontendInfo, FrontendStatus};
 use serde::Serialize;
-use std::process::Command;
 use tauri::State;
 use tracing::{error, info};
+
+#[derive(Debug, Serialize)]
+pub struct InitStatus {
+    /// 最近一次初始化（db push 等）的错误；None = 正常
+    pub error: Option<String>,
+}
+
+#[tauri::command]
+pub async fn get_init_status(state: State<'_, AppState>) -> Result<InitStatus, String> {
+    Ok(InitStatus {
+        error: state.get_init_error(),
+    })
+}
 
 #[derive(Debug, Serialize)]
 pub struct AppInfo {
@@ -122,18 +135,13 @@ pub async fn start_backend(state: State<'_, AppState>) -> Result<BackendInfo, St
         return Err("后端已在运行".to_string());
     }
 
-    let port = pick_backend_port(state.config.default_port, state.config.max_port).await?;
-
-    let node_exe = std::env::current_exe()
-        .map_err(|e| format!("获取 Node.exe 路径失败: {}", e))?
-        .parent()
-        .ok_or("无法获取 Node.exe 父目录")?
-        .join(if cfg!(windows) { "node.exe" } else { "node" });
-
-    if !node_exe.exists() {
-        return Err("未找到 Node.js 可执行文件".to_string());
+    if let Some(err) = state.get_init_error() {
+        return Err(format!("初始化未完成: {}", err));
     }
 
+    let port = pick_backend_port(state.config.default_port, state.config.max_port).await?;
+
+    let node_exe = setup::resolve_node(&state.config)?;
     let (server_entry, server_cwd, _) = state.resolve_runtime_assets();
 
     if !server_entry.exists() {
@@ -189,15 +197,7 @@ pub async fn start_frontend(state: State<'_, AppState>) -> Result<FrontendInfo, 
         return Err("前端已在运行".to_string());
     }
 
-    let node_exe = std::env::current_exe()
-        .map_err(|e| format!("获取 Node.exe 路径失败: {}", e))?
-        .parent()
-        .ok_or("无法获取 Node.exe 父目录")?
-        .join(if cfg!(windows) { "node.exe" } else { "node" });
-
-    if !node_exe.exists() {
-        return Err("未找到 Node.js 可执行文件".to_string());
-    }
+    let node_exe = setup::resolve_node(&state.config)?;
 
     match start_frontend_process(&node_exe, &state.config) {
         Ok(frontend) => {
@@ -226,17 +226,10 @@ pub async fn stop_frontend(state: State<'_, AppState>) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn start_all_services(state: State<'_, AppState>) -> Result<(), String> {
-    let node_exe = std::env::current_exe()
-        .map_err(|e| format!("获取 Node.exe 路径失败: {}", e))?
-        .parent()
-        .ok_or("无法获取 Node.exe 父目录")?
-        .join(if cfg!(windows) { "node.exe" } else { "node" });
+    let node_exe = setup::resolve_node(&state.config)?;
 
-    if !node_exe.exists() {
-        return Err("未找到 Node.js 可执行文件".to_string());
-    }
-
-    // 启动前端
+    // 启动前端：仅开发模式需要本地 vite dev server；生产模式前端随应用内嵌（webview 资源），无进程可启
+    #[cfg(debug_assertions)]
     match start_frontend_process(&node_exe, &state.config) {
         Ok(frontend) => {
             let info = FrontendInfo {
@@ -251,8 +244,13 @@ pub async fn start_all_services(state: State<'_, AppState>) -> Result<(), String
             error!("[前端] 启动失败: {}", e);
         }
     }
+    #[cfg(not(debug_assertions))]
+    info!("[前端] 生产模式随应用内嵌，跳过开发服务器启动");
 
     // 启动后端
+    if let Some(err) = state.get_init_error() {
+        return Err(format!("初始化未完成: {}", err));
+    }
     let (server_entry, server_cwd, _) = state.resolve_runtime_assets();
     if !server_entry.exists() {
         return Err(format!("未找到后端入口文件: {}", server_entry.display()));
@@ -310,60 +308,23 @@ pub async fn stop_all_services(state: State<'_, AppState>) -> Result<(), String>
 
 #[tauri::command]
 pub async fn init_app(state: State<'_, AppState>) -> Result<(), String> {
-    let user_data_dir = &state.config.user_data_dir;
-    let logs_dir = &state.config.logs_dir;
-    let upload_dir = &state.config.upload_dir;
+    // 与启动时的后台初始化走同一条 setup 路径；失败写回 init_error 供 init 页展示
+    let result = (|| -> Result<(), String> {
+        setup::initialize_dirs(&state.config)?;
+        setup::run_db_push_if_needed(&state.config)?;
+        Ok(())
+    })();
 
-    for dir in [user_data_dir, logs_dir, upload_dir] {
-        if !dir.exists() {
-            std::fs::create_dir_all(dir)
-                .map_err(|e| format!("创建目录失败 {}: {}", dir.display(), e))?;
+    match result {
+        Ok(()) => {
+            state.set_init_error(None);
+            info!("应用初始化完成");
+            Ok(())
+        }
+        Err(e) => {
+            error!("应用初始化失败: {}", e);
+            state.set_init_error(Some(e.clone()));
+            Err(e)
         }
     }
-
-    let prisma_schema = state.config.server_cwd.join("prisma").join("schema.prisma");
-
-    if prisma_schema.exists() {
-        let node_exe = std::env::current_exe()
-            .map_err(|e| format!("获取 Node.exe 路径失败: {}", e))?
-            .parent()
-            .ok_or("无法获取 Node.exe 父目录")?
-            .join(if cfg!(windows) { "node.exe" } else { "node" });
-
-        let prisma_entry = state
-            .config
-            .server_cwd
-            .join("node_modules")
-            .join("prisma")
-            .join("build")
-            .join("index.js");
-
-        if node_exe.exists() && prisma_entry.exists() {
-            info!("运行 Prisma db push...");
-            let output = Command::new(&node_exe)
-                .arg(&prisma_entry)
-                .args([
-                    "db",
-                    "push",
-                    "--schema",
-                    &prisma_schema.to_string_lossy(),
-                    "--skip-generate",
-                    "--accept-data-loss",
-                ])
-                .env("DATABASE_URL", state.config.get_database_url())
-                .env("PRISMA_CLIENT_ENGINE_TYPE", "library")
-                .output()
-                .map_err(|e| format!("执行 Prisma 失败: {}", e))?;
-
-            if !output.status.success() {
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                error!("Prisma 错误: {}", stderr);
-            } else {
-                info!("Prisma db push 完成");
-            }
-        }
-    }
-
-    info!("应用初始化完成");
-    Ok(())
 }

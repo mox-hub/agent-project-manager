@@ -7,9 +7,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Cpu, ListChecks, Monitor, ShieldCheck, Terminal, Wifi } from 'lucide-react';
+import {
+  ChevronRight,
+  Cpu,
+  FolderOpen,
+  ListChecks,
+  Monitor,
+  Play,
+  Plus,
+  ShieldCheck,
+  Square,
+  Terminal,
+  TerminalSquare,
+  Trash2,
+  Wifi,
+} from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
 import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
+import { useDesktop, ProcessMonitorCard, DesktopLogCard, DesktopPreferencesCard } from '@/modules/desktop';
 import { PageShell } from '@/components/ui/page-shell';
 import { SectionCard } from '@/components/ui/section-card';
 import { StatusPill } from '@/components/ui/status-pill';
@@ -74,6 +89,125 @@ function useRuntimeDispatches() {
   });
 }
 
+/**
+ * 桌面模式专属：本机 apm-runtime 守护进程控制卡片。
+ * 守护进程由壳随应用启动自动拉起（AI 执行面），此处提供状态可视、手动启停、
+ * 工作目录维护与开发者工具入口。
+ */
+function LocalDaemonCard() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const {
+    daemonStatus,
+    isDesktop,
+    isLoading,
+    startDaemon,
+    stopDaemon,
+    chooseWorkspaceRoot,
+    addWorkspaceRoot,
+    removeWorkspaceRoot,
+    toggleDevtools,
+  } = useDesktop();
+
+  if (!isDesktop) {
+    return null;
+  }
+
+  const refreshMachines = () => {
+    // 守护进程注册/下线有几秒延迟，先立即刷再延迟补刷一次
+    queryClient.invalidateQueries({ queryKey: ['runtime-admin', 'registrations'] });
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['runtime-admin', 'registrations'] });
+    }, 3000);
+  };
+
+  const handleChooseRoot = async () => {
+    const path = await chooseWorkspaceRoot();
+    if (path) {
+      await addWorkspaceRoot(path);
+    }
+  };
+
+  const running = !!daemonStatus?.running;
+
+  return (
+    <SectionCard
+      icon={Cpu}
+      iconColor="text-accent-purple"
+      title={t('settings.desktopDaemonTitle')}
+      description={t('settings.desktopDaemonDesc')}
+      actions={
+        <div className="flex items-center gap-1.5">
+          {running ? (
+            <Button size="sm" variant="outline" disabled={isLoading} onClick={() => void stopDaemon().then(refreshMachines)}>
+              <Square className="mr-1 size-3.5" />
+              {t('settings.desktopDaemonStop')}
+            </Button>
+          ) : (
+            <Button size="sm" disabled={isLoading} onClick={() => void startDaemon().then(refreshMachines)}>
+              <Play className="mr-1 size-3.5" />
+              {t('settings.desktopDaemonStart')}
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" onClick={() => void toggleDevtools()}>
+            <TerminalSquare className="mr-1 size-3.5" />
+            {t('settings.desktopDevtools')}
+          </Button>
+        </div>
+      }
+    >
+      <div className="mb-3 flex items-center gap-2">
+        <StatusPill tone={running ? 'success' : 'default'} className="gap-1.5">
+          <span className={`h-1.5 w-1.5 rounded-full ${running ? 'bg-accent-green' : 'bg-muted-foreground/40'}`} />
+          {running ? t('settings.runtimeOnline') : t('settings.runtimeOffline')}
+        </StatusPill>
+        {running && daemonStatus?.pid ? (
+          <span className="font-mono text-xs text-muted-foreground">PID {daemonStatus.pid}</span>
+        ) : null}
+      </div>
+
+      <div className="rounded-lg border border-border bg-muted/30 p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-sm font-medium">
+            <FolderOpen className="size-4 text-accent-blue" />
+            {t('settings.desktopDaemonRoots')}
+          </span>
+          <Button size="sm" variant="outline" disabled={isLoading} onClick={() => void handleChooseRoot()}>
+            <Plus className="mr-1 size-3.5" />
+            {t('settings.desktopDaemonAddRoot')}
+          </Button>
+        </div>
+        {(daemonStatus?.workspaceRoots?.length ?? 0) === 0 ? (
+          <p className="text-xs text-muted-foreground">{t('settings.desktopDaemonRootsEmpty')}</p>
+        ) : (
+          <div className="space-y-1">
+            {(daemonStatus?.workspaceRoots ?? []).map((root) => (
+              <div key={root} className="group flex items-center justify-between gap-2 rounded px-2 py-1 hover:bg-accent">
+                <span className="truncate font-mono text-xs">{root}</span>
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => void removeWorkspaceRoot(root)}
+                  className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                  aria-label={t('settings.desktopDaemonRemoveRoot')}
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="mt-2 text-xs text-muted-foreground">{t('settings.desktopDaemonRootsTip')}</p>
+      </div>
+
+      <Alert>
+        <Monitor className="size-4" />
+        {t('settings.desktopDaemonTip')}
+      </Alert>
+    </SectionCard>
+  );
+}
+
 export function RuntimeSettingsSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -128,6 +262,16 @@ export function RuntimeSettingsSection() {
         },
       ]}
     >
+      {/* 桌面模式：本机守护进程控制（web 模式内部自渲染 null） */}
+      <LocalDaemonCard />
+
+      {/* 桌面模式：本机进程监控 + 服务日志（web 模式内部自渲染 null） */}
+      <ProcessMonitorCard />
+      <DesktopLogCard />
+
+      {/* 桌面模式：桌面偏好（关窗行为/检查更新/诊断导出，web 模式内部自渲染 null） */}
+      <DesktopPreferencesCard />
+
       <SectionCard
           icon={Monitor}
           iconColor="text-accent-blue"

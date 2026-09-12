@@ -5,6 +5,7 @@ import axios, {
 } from 'axios';
 import { serializeFilters } from '@/shared/filters/adapters';
 import { logger } from '@/shared/lib/logger';
+import { persistTokenToShell } from '@/shared/lib/desktop-session';
 import { unwrapEnvelope as parseEnvelope } from '@apm/shared/http/envelope';
 import {
   ApiClientError,
@@ -92,6 +93,7 @@ apiClient.interceptors.response.use(
 
     if (status === 401) {
       localStorage.removeItem('access_token');
+      persistTokenToShell(null);
       const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
       // 启动页与登录页本身不应被 401 重定向踢出流程
       const isBootOrLogin = pathname === '/login' || pathname === '/boot' || pathname === '/';

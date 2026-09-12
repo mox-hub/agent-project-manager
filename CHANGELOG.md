@@ -19,6 +19,44 @@ tags: "changelog,release"
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
+## [Unreleased]
+
+### v0.6.2——桌面壳安装包三调整 + 分发与生命周期强化（CAP-A-14，feat/desktop-electron-spike）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| desktop | **安装包三调整**：①图标换项目内置 logo（`gen-icon.mjs` Playwright 渲染 logo.svg 产出 7 帧 ICO + NSIS 品牌位图 + 托盘图标，替换蓝底白 A 占位图，零新依赖）；②NSIS 改向导模式（可自选安装位置 + 品牌位图 + 安装期检测既有 `~/.apm` 数据提示升级安装）；③数据根固定 `~/.apm`（库/日志/上传/密钥/会话全收敛；守护进程配置与锁落 `desktop/` 子目录与手动 CLI 隔离；Chromium profile 收敛 `electron/`；v0.6.1 旧 `%APPDATA%` 数据白名单自动迁移留档；`isFirstInstall` 首装校验暴露 IPC） | CAP-A-14 | ICO 7 帧结构校验通过；desktop tsc/lint/tsup 全绿 | apps/desktop/README.md 数据布局表重写 |
+| desktop | **P0 生命周期**：单实例锁（双开唤起既有窗口，防两套 server 抢 `~/.apm`）；崩溃自愈——server/daemon 意外退出自动重启（指数退避 1s→30s、连续 5 次熔断）、渲染进程崩溃白屏重载（60s 窗 3 次熔断）、主进程 uncaughtException 兜底；自动更新消费端（electron-updater + GitHub Releases feed：启动 30s 静默检查/手动检查/下载完成询问安装/退出自动装，dev 禁用） | CAP-A-14 / ADR-015 | 壳级 e2e（Playwright _electron + 临时数据目录隔离）9 断言 ALL PASS | 决策日志 ADR-015（推翻 ADR-014「不自动更新」边界；签名单列待办） |
+| desktop · frontend | **P1 体验**：托盘常驻（关窗默认最小化保活，`close_to_tray` 偏好可关，托盘菜单三入口）；窗口位置尺寸持久化；`will-navigate` 白名单拦截；IPC 参数形状校验；secrets.json 经 safeStorage(DPAPI) 加密（旧明文兼容、跨机器解密失败拒绝启动不静默重生成）；卸载器询问是否删除 `~/.apm`；一键导出诊断包（日志+元数据+进程快照 zip，无凭证）；前端设置页「桌面偏好」卡（关闭行为/检查更新/导出诊断，i18n 双语 + 6 组件测试） | CAP-A-14 / ADR-015 | frontend desktop/settings 模块 41 测试全绿；e2e-shell ALL PASS | README 生命周期与分发契约表 |
+| desktop · frontend | **P2 打磨**：应用菜单（Alt 唤出，关于/检查更新/重载/缩放/日志目录）；日志轮转（5MB×3 份）；优雅关闭（utility postMessage `apm:shutdown` → server/cli parentPort 桥接 shutdown 钩子，3s 宽限强杀兜底；dev/手动 CLI 无 parentPort 不挂载）；电源事件（唤醒探活失败自动重启服务组；会话结束兜底清理）；系统通知桥（`notification.created` 桌面模式转发主进程原生通知，web 保持浏览器横幅）；深链 `apm://<内部路径>`（协议注册 + second-instance/冷启动转发 + preload 桥 + DesktopGate 消费） | CAP-A-14 / ADR-015 | desktop/cli tsc、server lint、frontend 22 测试全绿；e2e 复跑 ALL PASS | README 生命周期契约表扩 P2 行 |
+| desktop | **包体瘦身 242MB → 188MB（-22%）**：bundle 路线证伪弃用；定向剪除 Prisma CLI(58MB)+engines(77MB)（实测剪后 server 启动/健康/DB 读写全正常）；**封死数据泄露**——整目录拷 prisma/ 曾把开发者 dev.db+wal+bak（22MB）打进安装包，改白名单拷贝；打包时预生成 `default-template.db`（首启拷贝建库 40s→秒级，壳侧 `restoreDefaultDbIfNeeded`，dev 回退 db push）；strip 挪至 generate 后覆盖生成产物 | CAP-A-14 / ADR-015 补记 2 | 真包 `desktop:pack` 全链跑通 188MB；新管线产物启动冒烟（health 200/注册 201/JWT 签发）全过 | 决策日志 ADR-015 补记 2；README 建库契约更新 |
+| ci | **发布管线接线（取代 Tauri 版 release.yml）**：`desktop-release.yml`——tag `v*` 触发 windows 构建（质量前置 type-check/lint/单测 → pack:resources → electron-builder `--publish always`）→ GitHub Release **draft**（exe + blockmap + latest.yml）→ 人工确认 Publish 防误发 → 已装用户 electron-updater 静默拉取；workflow_dispatch dry_run 仅构建留档 | CAP-A-14 / ADR-015 | 管线设计经 188MB 真包全链本地验证；CI 侧待首 tag 实跑 | 本条目；ADR-015 补记（发布端闭环） |
+
+### CAP-A-14 桌面体验五切片——初始化向导/登录缓存/启动屏/守护进程托管/调试模式（v0.6.1）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| desktop · frontend | **登录缓存（跨 origin 会话镜像）**：根因=生产模式 API 端口在 4300–4399 动态探测，重启后 origin 漂移而 localStorage 按 origin 隔离，登录态/工作区/向导标记全丢。新增壳侧 `desktop-state.json` 持久化（IPC：get/set/clear_desktop_state）+ 前端 desktop-session 桥——启动时恢复进 localStorage（onboarding 标记 merge 进 zustand persist JSON），登录/登出/401 清除/工作区切换四点镜像回壳；JWT 7d 过期仍由服务端兜底（401 回登录页） | CAP-A-14 | 前端 `desktop-session.test` 7 条全绿（token 恢复/不覆盖现值/merge/壳桥不可用 no-op/镜像/清除/web 不调壳）；tsc -b 0 错误 | 能力清单 CAP-A-14 体验切片、GAP-T-20 |
+| desktop · frontend | **首启初始化向导**：OnboardingGate 挂 ShellLayout 全局层（桌面模式且未完成时自动弹出，web 不渲染）；向导步骤动态化（按 id 分发），桌面模式在欢迎页后插入「工作目录」步骤——壳原生目录选择器（choose_directory）写守护进程 apm-config.json 的 workspaceRoots；欢迎页新增 AI 同事说明块（代写→确认→把关治理语法）；完成标记双重持久化（zustand persist + 壳侧镜像） | CAP-A-14 | 前端 type-check/lint 全绿；既有 OnboardingWizard/Onboarding API 复用零 server 变更 | 能力清单 CAP-A-14 体验切片 |
+| desktop | **品牌全屏启动屏**：data-URL 内联页重做——logo SVG + 双轨道旋转弧 + 呼吸动画 + 分阶段状态文案（准备数据目录→启动本地服务→连接 AI 执行运行时→加载界面）+ 底部扫光进度条；阶段经 executeJavaScript 原地更新（did-finish-load 前缓冲），不再重载 URL 闪屏；失败态红字 + 数据/日志目录指引 | CAP-A-14 | desktop type-check/lint/tsup 全绿 | apps/desktop/README.md |
+| desktop · cli | **apm-runtime 守护进程托管（运行时自动启动+手动控制）**：apps/cli 自包含随包（pack.mjs 新增 cli/ staging——dist + @apm/shared 以 file: 引用 npm 装平铺）；壳 runtime-daemon.ts 经 utilityProcess 拉起（APM_BACKEND/APM_CONFIG_PATH 指向 userData，与用户手动 CLI 的 ~/.apm 完全隔离），server 健康后自动启动（失败仅告警不阻断），注册端点 Public 无需凭证→上线即出现在设置页机器列表；退出随 stopAllProcesses 清理；IPC 新增 get_runtime_daemon_status/start/stop + get/set_workspace_roots + choose_directory；设置页运行时区新增「本机守护进程」卡片（状态 Pill/启停按钮/工作目录增删/开发者工具入口，web 模式不渲染）。**边界更新**：守护进程本体随包（原「AI 执行面不随包」裁决更新），外部 CLI 二进制仍不随包 | CAP-A-14 | desktop type-check/lint/tsup 全绿；守护进程 1.5s 宽限观察防 fork 即退假成功 | 能力清单 CAP-A-14 边界更新、pack.mjs 注释、GAP-T-20 |
+| desktop | **调试模式**：dev 模式自动开 DevTools（detach）；打包版三入口——`--devtools` 启动参数 / `APM_DESKTOP_DEBUG=1` 环境变量 / F12·Ctrl+Shift+I 随时开关（before-input-event）/ 设置页「开发者工具」按钮（toggle_devtools 命令） | CAP-A-14 | desktop type-check/lint 全绿 | apps/desktop/README.md |
+
+### CAP-A-14 桌面壳发布级打包与运作——六处关键缺口清偿（v0.6.1 桌面版）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| desktop · server | **打包资源自包含**：pack.mjs 资源准备链（server `pnpm deploy --prod --legacy` 硬拷贝 node_modules + 补拷 dist + 剥离 src/test 等非运行时文件 + Prisma 客户端与 query engine 预生成 + Node 运行时随包 + 前端 dist），落位 `src-tauri/resources/`（gitignore）；`prisma` 从 server devDependencies 移入 dependencies（桌面首启要跑 prisma CLI，它就是运行时依赖）；tauri.conf `bundle.resources` 改为 resources/{bin,server,frontend}，`beforeBuildCommand` 接 `node scripts/pack.mjs`。**顺带修两个陈旧缺陷**：server 入口实为 SWC 平铺的 `dist/main.js`（Rust 与 `start:prod` 均还指向旧 `dist/src/main.js`）；`frontend.rs` 硬编码 `E:/Project` 路径致 release 下 `start_all_services` 必炸（生产模式前端随应用内嵌，改为跳过前端进程启动）。 | CAP-A-14 | 自包含 staging 冷启动冒烟：`resources/bin/node.exe resources/server/dist/main.js`（不依赖仓库任何东西）路由全映射 + Database connected + `/_api/health` HTTP 200 + 静态托管 HTTP 200；query engine `query_engine-windows.dll.node` 落位核验 | `apps/desktop/README.md`（新增：架构/打包/数据目录/边界） |
+| desktop | **密钥持久化与初始化收口**：新增 `setup.rs` 共享初始化模块（目录/密钥/db push/Node 解析，后台初始化与 `init_app` 命令共用一条路径）——首启随机生成 `JWT_SECRET`/`INTEGRATION_ENCRYPTION_KEY` 落盘 `secrets.json`、后续启动复用（修复空串密钥致 Joi `required` 校验拒启）；db push 仅在库文件不存在（全新安装）时执行，已存在的库不再带 `--accept-data-loss` 重建；init 失败经 `AppState.init_error` 透出（新增 `get_init_status` 命令，`start_backend`/`start_all_services` 在初始化未完成时前置拦截报错）；node.exe 解析收敛进 `AppConfig.node_exe`（打包模式指向随包 node.exe 且缺失时给出可操作报错，开发模式回落 PATH——原 4 处 `current_exe().parent()/node.exe` 写法在 debug 下必挂）；退出时（`RunEvent::Exit`）杀掉全部托管子进程，node 后端不再残留。 | CAP-A-14 | `cargo check` 0 error；GAP-T-19 冒烟项随安装包实测清偿（v0.6.1 版本号已对齐 tauri.conf/desktop package.json） | 计划文档 `docs/roadmap/tauri-desktop-v0.6.1-plan.md`、能力清单 CAP-A-14 |
+| 工程化 | pnpm `verifyDepsBeforeRun: false`——tauri `beforeBuildCommand` 以 `NODE_ENV=production` 运行，pnpm 依赖自检会自动触发根目录 `pnpm install --prod` 并要求清空整个 node_modules（无 TTY 时中止；TTY 下会真删开发依赖）。被实际触发一次并被 TTY 保护拦下，全局关闭该自检。 | CAP-A-14 | `desktop:pack` 一键链（构建两端 → 资源准备 → cargo release → NSIS 安装包）全链跑通 | pnpm-workspace.yaml 注释说明缘由 |
+
+### CAP-A-14 壳选型转 Electron——验证 spike 通过，定为正式路径（v0.6.1，ADR-014）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| desktop | **壳技术栈 Tauri 2 → Electron**：main/preload 全 TS（electron/src 8 模块，Rust 胶水层一比一翻译）；preload 以 `window.__TAURI__.core.invoke` 同形状契约（electron-api.ts 自定义壳桥）实现**前端零改动**；server 承载 utilityProcess 内嵌 Node 一次通过（省 ~75MB 随包 node.exe），spawn 随包 node.exe 保留为自动降级；electron-builder NSIS 打包链（electronDist 本地直指/asar:false/换新输出路径三招解 Defender 锁竞态）。顺带修正 Tauri 版潜伏缺陷：Rust serde snake_case 与前端 camelCase 契约错位（生产动态端口注入会失效，dev 被 vite proxy 掩盖） | CAP-A-14 | smoke-ipc.mjs CDP 全字段断言 PASS；本机静默安装冒烟：/S 安装→生产 server 启动→health 200→优雅退出无残留；安装包 241MB、5 进程内存 584MB | apps/desktop/README.md 重写、`docs/roadmap/electron-desktop-v0.6.1-plan.md`、ADR-014 补记 |
+| desktop · server | **打包链两坑修复（pack.mjs）**：staging package.json 剥离 devDependencies（npm 解析阶段即校验全部依赖字段，devDeps 的 pnpm `catalog:` 协议直接 EUNSUPPORTEDPROTOCOL）；i18n 翻译 JSON 按 cwd 相对 src/i18n/resources 硬编码解析，staging 补拷 src/i18n 保持目录形状（否则生产 Bootstrap failed: i18n path cannot be found） | CAP-A-14 | 安装版 i18n 正常加载、server 完整启动 | pack.mjs 注释 |
+
 ## [0.6.0] - 2026-09-11
 
 ### v0.6.0 发版总览——设计系统 v2 落地 + 六条能力线推进 + Dock 协同交互面

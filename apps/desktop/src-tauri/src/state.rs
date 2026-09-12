@@ -38,6 +38,8 @@ pub struct AppState {
     pub backend_info: Arc<RwLock<Option<BackendInfo>>>,
     pub frontend_process: Arc<RwLock<Option<Child>>>,
     pub frontend_info: Arc<RwLock<Option<FrontendInfo>>>,
+    /// 初始化（db push 等）失败的最新错误；None = 未失败。前端 init 页经 get_init_status 消费。
+    pub init_error: Arc<std::sync::Mutex<Option<String>>>,
 }
 
 impl AppState {
@@ -48,6 +50,7 @@ impl AppState {
             backend_info: Arc::new(RwLock::new(None)),
             frontend_process: Arc::new(RwLock::new(None)),
             frontend_info: Arc::new(RwLock::new(None)),
+            init_error: Arc::new(std::sync::Mutex::new(None)),
         }
     }
 
@@ -58,7 +61,19 @@ impl AppState {
             backend_info: Arc::new(RwLock::new(None)),
             frontend_process: Arc::new(RwLock::new(None)),
             frontend_info: Arc::new(RwLock::new(None)),
+            init_error: Arc::new(std::sync::Mutex::new(None)),
         }
+    }
+
+    pub fn set_init_error(&self, error: Option<String>) {
+        *self.init_error.lock().expect("init_error mutex poisoned") = error;
+    }
+
+    pub fn get_init_error(&self) -> Option<String> {
+        self.init_error
+            .lock()
+            .expect("init_error mutex poisoned")
+            .clone()
     }
 
     pub async fn set_backend(&self, process: Child, info: BackendInfo) {

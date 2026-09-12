@@ -3,6 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { onboardingApi, type OnboardingData, type CreateProjectData } from '../api/onboarding-api';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/infrastructure/store/app-store';
+import { isTauriAvailable } from '@/shared/types/electron-api';
+import { persistOnboardingToShell } from '@/shared/lib/desktop-session';
 
 export interface OnboardingStep {
   id: string;
@@ -51,6 +53,34 @@ const DEFAULT_STEPS: OnboardingStep[] = [
   },
 ];
 
+/** 桌面模式在「欢迎」步骤后插入「工作目录」步骤（AI 执行面的工作根目录，可跳过） */
+const DESKTOP_INSERT_AFTER = 'welcome';
+const DESKTOP_EXTRA_STEP: Omit<OnboardingStep, 'status'> = {
+  id: 'workspace-root',
+  title: '工作目录',
+  description: '设置 AI 同事执行任务的工作目录',
+};
+
+export function buildSteps(isDesktop: boolean): OnboardingStep[] {
+  const base = DEFAULT_STEPS.map((step, index) => ({
+    ...step,
+    status: index === 0 ? ('current' as const) : ('pending' as const),
+  }));
+  if (!isDesktop) {
+    return base;
+  }
+  const steps: OnboardingStep[] = [];
+  for (const step of base) {
+    steps.push(step);
+    if (step.id === DESKTOP_INSERT_AFTER) {
+      steps.push({ ...DESKTOP_EXTRA_STEP, status: 'pending' });
+    }
+  }
+  return steps;
+}
+
+const isDesktopShell = isTauriAvailable();
+
 export function useOnboarding() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -58,10 +88,7 @@ export function useOnboarding() {
 
   const [state, setState] = useState<OnboardingState>({
     currentStep: 0,
-    steps: DEFAULT_STEPS.map((step, index) => ({
-      ...step,
-      status: index === 0 ? 'current' : 'pending',
-    })),
+    steps: buildSteps(isDesktopShell),
     data: {},
     isCompleted: false,
   });
@@ -150,6 +177,8 @@ export function useOnboarding() {
       })),
     }));
     setOnboardingCompleted(true);
+    // 桌面模式镜像到壳侧：动态端口漂移换 origin 后向导不重弹
+    persistOnboardingToShell(true);
     queryClient.invalidateQueries({ queryKey: ['user-settings'] });
   }, [queryClient, setOnboardingCompleted]);
 
@@ -164,37 +193,18 @@ export function useOnboarding() {
     },
   });
 
-  const connectRepositoryMutation = useMutation({
-    mutationFn: (data: { repositoryUrl: string; projectId?: string }) =>
-      onboardingApi.connectRepository(data),
-    onSuccess: () => {
-      nextStep();
-    },
-  });
-
-  const configureAiMutation = useMutation({
-    mutationFn: (data: { provider: string; apiKey?: string; endpoint?: string }) =>
-      onboardingApi.configureAi(data),
-    onSuccess: () => {
-      nextStep();
-    },
-  });
-
-  const finishOnboarding = useMutation({
-    mutationFn: () => onboardingApi.finishOnboarding(),
-    onSuccess: () => {
-      completeOnboarding();
-      navigate('/app');
-    },
-  });
+  const finishOnboarding = useCallback(() => {
+    // 完成标记是前端/壳侧状态（zustand persist + desktop-state.json 镜像），
+    // 不走服务端——曾指向从未实现的 POST /onboarding/finish，404 静默失败
+    // 导致「进入 APM」点了没反应（2026-09-12 实机暴露，回归见 use-onboarding.test）
+    completeOnboarding();
+    navigate('/app');
+  }, [completeOnboarding, navigate]);
 
   const resetOnboarding = useCallback(() => {
     setState({
       currentStep: 0,
-      steps: DEFAULT_STEPS.map((step, index) => ({
-        ...step,
-        status: index === 0 ? 'current' : 'pending',
-      })),
+      steps: buildSteps(isDesktopShell),
       data: {},
       isCompleted: false,
     });
@@ -237,23 +247,10 @@ export function useOnboarding() {
       isPending: createProjectMutation.isPending,
       error: createProjectMutation.error,
     },
-    connectRepository: {
-      mutate: connectRepositoryMutation.mutate,
-      mutateAsync: connectRepositoryMutation.mutateAsync,
-      isPending: connectRepositoryMutation.isPending,
-      error: connectRepositoryMutation.error,
-    },
-    configureAi: {
-      mutate: configureAiMutation.mutate,
-      mutateAsync: configureAiMutation.mutateAsync,
-      isPending: configureAiMutation.isPending,
-      error: configureAiMutation.error,
-    },
     finishOnboarding: {
-      mutate: finishOnboarding.mutate,
-      mutateAsync: finishOnboarding.mutateAsync,
-      isPending: finishOnboarding.isPending,
-      error: finishOnboarding.error,
+      mutate: finishOnboarding,
+      isPending: false,
+      error: null,
     },
   };
 }
