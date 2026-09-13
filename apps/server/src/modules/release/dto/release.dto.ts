@@ -43,6 +43,15 @@ export class CreateReleaseDto {
   @ArrayNotEmpty()
   @IsString({ each: true })
   scopeIssueIds?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      '所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除）',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  milestoneId?: string | null;
 }
 
 export class UpdateReleaseDto extends PartialType(
@@ -116,6 +125,19 @@ export class ReleaseDto {
 
   @ApiPropertyOptional({ description: '发版说明（markdown）' })
   notes?: string | null;
+
+  @ApiPropertyOptional({
+    description: '所属里程碑 ID（无关联时为 null）',
+    nullable: true,
+  })
+  milestoneId?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      '所属里程碑摘要（轻量投影：version 维度关联信息以 milestone 为准）',
+    nullable: true,
+  })
+  milestone?: { id: string; name: string; status: string } | null;
 
   @ApiProperty({
     description: '状态',

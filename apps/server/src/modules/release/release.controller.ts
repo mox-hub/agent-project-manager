@@ -70,16 +70,18 @@ export class ReleaseController {
       name: dto.name,
       notes: dto.notes,
       scopeIssueIds: dto.scopeIssueIds,
+      milestoneId: dto.milestoneId,
       createdBy: req.user.id,
     });
   }
 
   @Get()
-  @ApiOperation({ summary: '发版列表（按项目过滤）' })
-  @ApiQuery({ name: 'projectId', required: true, description: '项目 ID' })
+  @ApiOperation({
+    summary: '发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水）',
+  })
+  @ApiQuery({ name: 'projectId', required: false, description: '项目 ID' })
   @ApiStandardErrors()
   async list(@Query('projectId') projectId?: string) {
-    if (!projectId) throw new BadRequestException('projectId 必填');
     return this.releases.listReleases(projectId);
   }
 

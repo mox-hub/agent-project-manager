@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FolderKanban, List, Rocket, Sparkles } from 'lucide-react';
+import { List, Rocket, Sparkles } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -31,6 +31,7 @@ import { SkeletonTable } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from '@/components/ui/toast';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
+import { useProjectMilestones } from '@/modules/issue/hooks/use-project-tasks';
 import {
   useCreateRelease,
   useRecommendVersion,
@@ -58,7 +59,8 @@ export function ReleaseListPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const projectId = searchParams.get('projectId') ?? '';
+  // 项目聚焦统一参数名 ?project（CAP-A-15，与管道筛选器联动）；无参 = 全部项目
+  const projectId = searchParams.get('project') ?? '';
   const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReleaseStatus | 'all'>('all');
@@ -88,9 +90,18 @@ export function ReleaseListPage() {
     [releases, statusFilter, search],
   );
 
-  // 项目筛选的真相源在 URL（深链/详情页返回），工具栏快照 apply 时写回 URL
+  // 项目筛选的真相源在 URL（深链/详情页返回/管道聚焦），工具栏快照 apply 时写回 URL；
+  // 保留其他 searchParams（如管道聚焦未来追加的参数），仅增删 project
   const setProjectFilter = (pid: string) => {
-    setSearchParams(pid ? { projectId: pid } : {});
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (pid) next.set('project', pid);
+        else next.delete('project');
+        return next;
+      },
+      { replace: true },
+    );
   };
 
   const toolbar = useToolbarViews({
@@ -200,16 +211,11 @@ export function ReleaseListPage() {
         }}
       />
 
-      {/* 内容区：状态分支 = 加载骨架 / 未选项目引导 / 空发版（带创建动作）/ 表格 */}
+      {/* 内容区：状态分支 = 加载骨架 / 空发版（带创建动作）/ 筛选无结果 / 表格。
+          CAP-A-15：无 ?project 时仍发起请求（后端返回全部项目），不再渲染“先选项目”引导 */}
       <div className="flex-1 overflow-auto p-6">
         {releasesQuery.isLoading ? (
           <SkeletonTable rows={4} columns={5} />
-        ) : !projectId ? (
-          <EmptyState
-            icon={FolderKanban}
-            title={t('release.empty.pickProject')}
-            description={t('release.empty.pickProjectDesc')}
-          />
         ) : filtered.length === 0 ? (
           releases.length === 0 ? (
             <EmptyState
@@ -250,6 +256,7 @@ export function ReleaseListPage() {
                     <TableHead className="w-32">{t('release.table.version')}</TableHead>
                     <TableHead>{t('release.table.name')}</TableHead>
                     <TableHead className="w-28">{t('release.table.status')}</TableHead>
+                    <TableHead className="w-36">{t('release.table.milestone')}</TableHead>
                     <TableHead className="w-32">{t('release.table.tag')}</TableHead>
                     <TableHead className="w-40">{t('release.table.releasedAt')}</TableHead>
                   </TableRow>
@@ -272,6 +279,9 @@ export function ReleaseListPage() {
                         >
                           {t(statusLabelKey(r.status))}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-content-text-secondary">
+                        {r.milestone?.name || '—'}
                       </TableCell>
                       <TableCell className="font-mono text-11 text-content-text-muted">
                         {r.gitTag || '—'}
@@ -319,10 +329,13 @@ function CreateReleaseDialog({
   const pid = pidOverride ?? projectId;
   const [version, setVersion] = useState('');
   const [name, setName] = useState('');
+  const [milestoneId, setMilestoneId] = useState('');
   const [basis, setBasis] = useState('');
 
   const recommend = useRecommendVersion(pid || undefined);
   const create = useCreateRelease();
+  // 所属里程碑（CAP-A-16 计划-交付轴）：数据源 = 该项目的 milestones 列表
+  const { data: milestones } = useProjectMilestones(pid || undefined);
 
   const handleRecommend = () => {
     recommend.mutate(undefined, {
@@ -339,7 +352,12 @@ function CreateReleaseDialog({
 
   const handleCreate = () => {
     create.mutate(
-      { projectId: pid, version: version.trim(), name: name.trim() || undefined },
+      {
+        projectId: pid,
+        version: version.trim(),
+        name: name.trim() || undefined,
+        milestoneId: milestoneId || null,
+      },
       {
         onSuccess: (release) => {
           toast.success(t('release.create.created'));
@@ -414,6 +432,22 @@ function CreateReleaseDialog({
               onChange={(e) => setName(e.target.value)}
               className="h-8 text-xs"
             />
+          </div>
+          <div className="space-y-1.5" data-testid="release-milestone-select">
+            <label className="text-xs font-medium text-content-text">
+              {t('release.create.milestoneLabel')}
+            </label>
+            <NativeSelect
+              value={milestoneId}
+              onChange={(e) => setMilestoneId(e.target.value)}
+              disabled={!pid}
+              className="h-8 w-full text-xs"
+            >
+              <option value="">{t('release.create.milestoneNone')}</option>
+              {(milestones ?? []).map((m) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </NativeSelect>
           </div>
         </div>
         <DialogFooter>

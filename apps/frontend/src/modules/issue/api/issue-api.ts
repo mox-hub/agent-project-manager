@@ -77,16 +77,6 @@ export interface MilestoneTaskRef {
   priority?: string;
 }
 
-export interface MilestoneRef {
-  id: string;
-  name: string;
-  status: string;
-  targetDate?: string | null;
-  description?: string | null;
-  taskCount?: number;
-  tasks?: MilestoneTaskRef[];
-}
-
 export interface TodoItem {
   id: string;
   content: string;
@@ -164,6 +154,28 @@ export interface IterationRef {
   id: string;
   name: string;
   status: string;
+  /** 时间盒起止（CAP-A-16 时间轴：后端 GET /projects/:id/iterations 全量投影） */
+  startDate?: string | null;
+  endDate?: string | null;
+  /** 容量：迭代内工单数（_count.issues） */
+  _count?: { issues?: number };
+}
+
+export interface MilestoneRef {
+  id: string;
+  name: string;
+  status: string;
+  targetDate?: string | null;
+  description?: string | null;
+  taskCount?: number;
+  tasks?: MilestoneTaskRef[];
+  /** 关联发版轻量投影（CAP-A-16 计划-交付轴：里程碑下挂发版标记） */
+  releases?: Array<{
+    id: string;
+    version: string;
+    status: string;
+    releasedAt?: string | null;
+  }>;
 }
 
 export interface TaskListResponse {

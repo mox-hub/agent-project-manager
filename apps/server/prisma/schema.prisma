@@ -515,6 +515,7 @@ model Milestone {
   project   Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
   iteration Iteration?      @relation(fields: [iterationId], references: [id], onDelete: SetNull)
   tasks     MilestoneTask[]
+  releases  Release[]       @relation("MilestoneReleases")
 
   @@index([projectId], name: "idx_milestones_project_id")
   @@index([projectId, status], name: "idx_milestones_project_id_status")
@@ -1530,7 +1531,7 @@ model Document {
   title       String
   content     String    @default("")
   summary     String?
-  category    String    @default("custom") // requirement|design|api|testing|guide|custom
+  category    String    @default("custom") // requirement|analysis|design|api|testing|guide|custom（analysis=需求分析报告，CAP-P-01 四期）
   status      String    @default("draft") // draft|reviewing|published|rejected
   // 治理角色（契约与文档知识层 v2 纪要 §10，分批启用；null = 未治理）
   docRole     String? // charter|spec|design|decision|release-log|reference
@@ -2302,10 +2303,15 @@ model Release {
   tagPushed      Boolean @default(false)
   githubReleased Boolean @default(false)
 
+  // ── 里程碑关联（CAP-A-16 计划-交付轴整合）：Release 挂可选里程碑 ──
+  milestoneId String?
+  milestone   Milestone? @relation("MilestoneReleases", fields: [milestoneId], references: [id], onDelete: SetNull)
+
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, version])
   @@index([projectId, status], name: "idx_releases_project_status")
+  @@index([milestoneId], name: "idx_releases_milestone_id")
 }
 
 // ============ 通用动态追踪（操作记录） ============

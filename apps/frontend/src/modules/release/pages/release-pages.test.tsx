@@ -3,6 +3,7 @@
  * hooks 层整体 mock（api 经由 hooks 消费），i18n 走键名直读。
  */
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -25,6 +26,10 @@ vi.mock('react-i18next', () => ({
         'release.detail.logTitle': '发布执行日志',
         'release.detail.loading': '发版详情',
         'release.create.basis': '基线 {{base}}',
+        'release.create.open': '创建发版',
+        'release.create.milestoneLabel': '所属里程碑（可选）',
+        'release.create.milestoneNone': '不关联里程碑',
+        'release.table.milestone': '里程碑',
       };
       const base = translations[key] ?? key;
       return base.replace('{{base}}', opts?.base ?? '');
@@ -45,6 +50,15 @@ vi.mock('@/modules/project/hooks/use-project-list', () => ({
 
 vi.mock('@/modules/issue/hooks/use-project-tasks', () => ({
   useProjectTasks: () => ({ data: { data: [] }, isLoading: false }),
+  // 创建对话框的「所属里程碑」下拉数据源（CAP-A-16）
+  useProjectMilestones: () => ({
+    data: [
+      { id: 'ms-1', name: 'MVP', status: 'reached', targetDate: null },
+      { id: 'ms-2', name: '公开上线', status: 'planned', targetDate: null },
+    ],
+    isLoading: false,
+  }),
+  useProjectIterations: () => ({ data: [], isLoading: false }),
 }));
 
 vi.mock('@/modules/assistant/api/assistant-api', () => ({
@@ -93,16 +107,44 @@ function renderWithRouter(ui: React.ReactElement, route = '/') {
 }
 
 describe('ReleaseListPage', () => {
-  it('渲染发版记录：版本/状态徽章/tag', () => {
-    renderWithRouter(<ReleaseListPage />, '/?projectId=p-1');
+  it('渲染发版记录：版本/状态徽章/tag（?project 统一参数名，CAP-A-15）', () => {
+    renderWithRouter(<ReleaseListPage />, '/?project=p-1');
     const versions = screen.getAllByText('v1.0.0');
     expect(versions.length).toBeGreaterThan(0);
     expect(screen.getByText('已发布')).toBeTruthy();
   });
 
-  it('未选项目时渲染空态引导', () => {
+  it('无 ?project 时仍渲染全部项目发版列表（不再要求先选项目）', () => {
     renderWithRouter(<ReleaseListPage />, '/');
-    expect(screen.getByText('先选择一个项目')).toBeTruthy();
+    const versions = screen.getAllByText('v1.0.0');
+    expect(versions.length).toBeGreaterThan(0);
+  });
+
+  it('列表行显示所属里程碑列（CAP-A-16）', () => {
+    renderWithRouter(<ReleaseListPage />, '/?project=p-1');
+    expect(screen.getByText('里程碑')).toBeTruthy();
+  });
+
+  it('创建对话框可选所属里程碑（CAP-A-16 计划-交付轴）', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<ReleaseListPage />, '/?project=p-1');
+    await user.click(screen.getByText('创建发版'));
+    expect(screen.getByText('所属里程碑（可选）')).toBeTruthy();
+    // 里程碑下拉（NativeSelect=base-ui 封装，trigger 为 BUTTON，jsdom 下用键盘开层）
+    const milestoneTrigger = document.querySelector(
+      '[data-testid="release-milestone-select"] [data-slot="native-select"]',
+    ) as HTMLElement;
+    expect(milestoneTrigger).toBeTruthy();
+    expect(milestoneTrigger.textContent).toContain('不关联里程碑');
+    milestoneTrigger.focus();
+    await user.keyboard('{ArrowDown}');
+    // 打开弹层后该项目的里程碑出现在选项中（MVP/公开上线来自 useProjectMilestones mock）
+    expect(await screen.findByText('MVP')).toBeTruthy();
+    expect(await screen.findByText('公开上线')).toBeTruthy();
+    expect(
+      document.querySelectorAll('[data-testid="release-milestone-select"]')
+        .length,
+    ).toBe(1);
   });
 });
 

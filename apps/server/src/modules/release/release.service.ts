@@ -27,6 +27,11 @@ import type { Release as ReleaseModel, Prisma } from '@prisma/client';
 
 export const CHANGELOG_FILE_PATH = 'CHANGELOG.md';
 
+/** Release 关联轻量投影（CAP-A-16）：列表/详情带所属里程碑摘要 */
+const RELEASE_MILESTONE_INCLUDE = {
+  milestone: { select: { id: true, name: true, status: true } },
+} satisfies Prisma.ReleaseInclude;
+
 export interface CreateReleaseInput {
   projectId: string;
   version: string;
@@ -34,6 +39,7 @@ export interface CreateReleaseInput {
   notes?: string;
   createdBy: string;
   scopeIssueIds?: string[];
+  milestoneId?: string | null;
 }
 
 /**
@@ -64,6 +70,9 @@ export class ReleaseService {
         err instanceof Error ? err.message : String(err),
       );
     }
+    if (input.milestoneId) {
+      await this.assertMilestoneUsable(input.projectId, input.milestoneId);
+    }
     return this.prisma.release.create({
       data: {
         projectId: input.projectId,
@@ -74,23 +83,45 @@ export class ReleaseService {
         scope: input.scopeIssueIds
           ? ({ issueIds: input.scopeIssueIds } as Prisma.InputJsonValue)
           : undefined,
+        milestoneId: input.milestoneId ?? undefined,
       },
+      include: RELEASE_MILESTONE_INCLUDE,
     });
   }
 
-  async listReleases(projectId: string) {
+  /** 发版列表：projectId 缺省返回全部（CAP-A-15 跨项目发版流水） */
+  async listReleases(projectId?: string) {
     return this.prisma.release.findMany({
-      where: { projectId },
+      where: projectId ? { projectId } : undefined,
       orderBy: [{ releasedAt: 'desc' }, { createdAt: 'desc' }],
+      include: RELEASE_MILESTONE_INCLUDE,
     });
   }
 
   async getRelease(releaseId: string) {
     const release = await this.prisma.release.findUnique({
       where: { id: releaseId },
+      include: RELEASE_MILESTONE_INCLUDE,
     });
     if (!release) throw new NotFoundException(`发版不存在: ${releaseId}`);
     return release;
+  }
+
+  /** 里程碑关联校验（CAP-A-16）：存在 + 同项目（跨项目 400） */
+  private async assertMilestoneUsable(
+    projectId: string,
+    milestoneId: string,
+  ): Promise<void> {
+    const milestone = await this.prisma.milestone.findUnique({
+      where: { id: milestoneId },
+      select: { projectId: true },
+    });
+    if (!milestone) {
+      throw new BadRequestException(`里程碑不存在: ${milestoneId}`);
+    }
+    if (milestone.projectId !== projectId) {
+      throw new BadRequestException('里程碑不属于该项目，跨项目关联被拒绝');
+    }
   }
 
   /** 改草案：仅 draft 可改（版本唯一性/只前滚校验复用） */
@@ -101,6 +132,7 @@ export class ReleaseService {
       notes?: string;
       version?: string;
       scopeIssueIds?: string[];
+      milestoneId?: string | null;
     },
   ) {
     const release = await this.getRelease(releaseId);
@@ -120,6 +152,9 @@ export class ReleaseService {
         );
       }
     }
+    if (dto.milestoneId) {
+      await this.assertMilestoneUsable(release.projectId, dto.milestoneId);
+    }
     return this.prisma.release.update({
       where: { id: releaseId },
       data: {
@@ -130,7 +165,9 @@ export class ReleaseService {
           dto.scopeIssueIds !== undefined
             ? ({ issueIds: dto.scopeIssueIds } as Prisma.InputJsonValue)
             : undefined,
+        milestoneId: dto.milestoneId,
       },
+      include: RELEASE_MILESTONE_INCLUDE,
     });
   }
 

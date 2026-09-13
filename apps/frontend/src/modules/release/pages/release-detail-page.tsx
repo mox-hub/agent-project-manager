@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   CircleDashed,
   Clock,
+  Flag,
   Rocket,
   Sparkles,
   XCircle,
@@ -230,6 +231,12 @@ export function ReleaseDetailPage() {
                       {t('release.detail.github')}:{' '}
                       {release.githubReleased ? t('release.detail.yes') : t('release.detail.no')}
                     </span>
+                    {release.milestone ? (
+                      <span className="flex items-center gap-1">
+                        <Flag className="size-3 text-accent-purple" />
+                        {t('release.detail.milestone')}: {release.milestone.name}
+                      </span>
+                    ) : null}
                     {release.releasedAt ? (
                       <span className="flex items-center gap-1">
                         <Clock className="size-3" />
