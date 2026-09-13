@@ -10,6 +10,12 @@ import {
 } from '../api/integration-api';
 
 function normalizeIntegrationListResponse(payload: unknown): IntegrationListResponse {
+  // api-client 已统一解包 {success,data} 信封，契约真相是裸数组；
+  // 信封/双层信封形状仅作历史防御，不得让裸数组落进兜底空列表。
+  if (Array.isArray(payload)) {
+    return { data: payload as IntegrationConfig[] };
+  }
+
   if (!payload || typeof payload !== 'object') {
     return { data: [] };
   }
