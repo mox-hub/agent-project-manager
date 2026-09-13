@@ -25,7 +25,10 @@ import { WorkflowCompilerService } from './workflow-compiler.service';
 import type { WorkflowDefinitionDoc } from './workflow.definition';
 
 vi.mock('ai', () => ({
-  generateText: vi.fn().mockResolvedValue({ text: '模拟生成文本' }),
+  generateText: vi.fn().mockResolvedValue({
+    text: '模拟生成文本',
+    usage: { promptTokens: 100, completionTokens: 50, totalTokens: 150 },
+  }),
 }));
 
 const TEST_DB = `file:./data/wf-spec-${randomUUID()}.db`;
@@ -56,7 +59,14 @@ function makeCompiler() {
     listAdapters: vi
       .fn()
       .mockReturnValue([{ provider: 'openai', model: 'gpt-test' }]),
-    getAdapter: vi.fn().mockReturnValue({ getModel: () => ({}) }),
+    getAdapter: vi.fn().mockReturnValue({
+      getModel: () => ({}),
+      getModelName: () => 'gpt-test',
+      getProvider: () => 'openai',
+    }),
+  };
+  const usagePricing = {
+    estimateCostUsd: vi.fn().mockResolvedValue(0.0009),
   };
   const prisma = {
     issue: {
@@ -65,21 +75,33 @@ function makeCompiler() {
     document: {
       create: vi.fn().mockResolvedValue({ id: 'doc_1', title: '文档' }),
     },
+    aIUsageLog: {
+      create: vi.fn().mockResolvedValue({ id: 'usage_1' }),
+    },
   };
   return {
-    compiler: new WorkflowCompilerService(registry as never, prisma as never),
+    compiler: new WorkflowCompilerService(
+      registry as never,
+      prisma as never,
+      usagePricing as never,
+    ),
     registry,
     prisma,
+    usagePricing,
   };
 }
 
 /** 经 Mastra 注册后执行（storage 快照注入），suspend/resume 才有持久化语义 */
-async function runWorkflow(wf: AnyWorkflow, input: Record<string, unknown>) {
+async function runWorkflow(
+  wf: AnyWorkflow,
+  input: Record<string, unknown>,
+  runId?: string,
+) {
   const mastra = new Mastra({ storage, workflows: { wf } as never });
   const registered = mastra.getWorkflow(
     'wf' as never,
   ) as unknown as AnyWorkflow;
-  const run = await registered.createRun();
+  const run = await registered.createRun({ ...(runId ? { runId } : {}) });
   const result = await run.start({ inputData: { input, steps: {} } });
   return { run, result };
 }
@@ -136,6 +158,54 @@ describe('Mastra 编译产物执行语义', () => {
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({ prompt: '主题是 看板，参考 ' }),
     );
+  });
+
+  it('llm 步骤：用量记账落 AIUsageLog（workflowRunId 归因引擎 run）', async () => {
+    const { compiler, prisma, usagePricing } = makeCompiler();
+    const doc: WorkflowDefinitionDoc = {
+      version: 1,
+      steps: [{ id: 'draft', type: 'llm', prompt: '起草 {input.topic}' }],
+    };
+    await runWorkflow(
+      compiler.compile('wf-usage', doc),
+      { topic: '看板' },
+      'run-usage-1',
+    );
+
+    expect(usagePricing.estimateCostUsd).toHaveBeenCalledWith({
+      modelName: 'gpt-test',
+      provider: 'openai',
+      promptTokens: 100,
+      completionTokens: 50,
+    });
+    expect(prisma.aIUsageLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        workflowRunId: 'run-usage-1',
+        modelName: 'gpt-test',
+        provider: 'openai',
+        promptTokens: 100,
+        completionTokens: 50,
+        totalTokens: 150,
+        estimatedCost: 0.0009,
+        responseMetadata: { kind: 'workflow', stepId: 'draft' },
+      }),
+    });
+  });
+
+  it('llm 步骤：记账失败只警告不阻断，run 仍 success', async () => {
+    const { compiler, prisma, usagePricing } = makeCompiler();
+    usagePricing.estimateCostUsd.mockRejectedValue(new Error('pricing down'));
+    const doc: WorkflowDefinitionDoc = {
+      version: 1,
+      steps: [{ id: 'draft', type: 'llm', prompt: '起草' }],
+    };
+    const { result } = await runWorkflow(
+      compiler.compile('wf-usage-fail', doc),
+      {},
+    );
+
+    expect(result.status).toBe('success');
+    expect(prisma.aIUsageLog.create).not.toHaveBeenCalled();
   });
 
   it('http 步骤：URL/Body 插值、JSON 解析、状态码落 steps[id]', async () => {

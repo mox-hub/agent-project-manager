@@ -766,6 +766,8 @@ export class ExecutionService {
    *   多人协作以 metadata.collaborators 留档，不建关系表。
    * - subjectType=platform_ai_member：初始 planned，走既有派发审批流。
    * - 绑定 issue 时自动挂接活验收契约（ensureActiveAcceptance）。
+   * - CAP-B-08 二期（B-02 悬空项收口）：人工执行路径与 AI 指派路径同口径，
+   *   活契约审计 riskLevel=red 时响应带 auditWarning 黄牌提示（不阻断创建）。
    */
   async createIssueExecution(
     issueId: string,
@@ -802,7 +804,7 @@ export class ExecutionService {
       }
     }
 
-    return this.createExecutionRun({
+    const run = await this.createExecutionRun({
       projectId: issue.projectId,
       issueId,
       subjectType: dto.subjectType,
@@ -819,5 +821,19 @@ export class ExecutionService {
         ? { collaborators: dto.collaborators }
         : undefined,
     });
+
+    // 人工执行黄牌：口径与 dispatchIssue 的 AI 指派路径一致（red 提示不阻断）
+    let auditWarning: string | undefined;
+    if (dto.subjectType === 'human' && run.acceptanceId) {
+      const report = await this.prisma.completenessAuditReport.findUnique({
+        where: { acceptanceId: run.acceptanceId },
+        select: { riskLevel: true, blockedItems: true },
+      });
+      if (report?.riskLevel === 'red') {
+        const blocked = (report.blockedItems as unknown[]) ?? [];
+        auditWarning = `验收完整性审计存在 ${blocked.length} 个强阻断项，建议补全验收标准（接收时将被红牌拦截）`;
+      }
+    }
+    return { ...run, auditWarning };
   }
 }

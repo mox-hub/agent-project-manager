@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { AnyWorkflow, Step } from '@mastra/core/workflows';
 import { createStep, createWorkflow } from '@mastra/core/workflows';
 import { AdapterRegistryService } from '../ai-hub/services/adapter-registry.service';
+import { UsagePricingService } from '../ai-hub/services/usage-pricing.service';
 import { PrismaService } from '@/core/database/prisma.service';
 import { WORKFLOW_ACTIONS } from './workflow-actions';
 import {
@@ -50,6 +51,7 @@ export class WorkflowCompilerService {
   constructor(
     private readonly adapterRegistry: AdapterRegistryService,
     private readonly prisma: PrismaService,
+    private readonly usagePricing: UsagePricingService,
   ) {}
 
   /** 编译 definition 文法为 Mastra workflow（每次触发即时编译，定义变更零缓存失效成本） */
@@ -89,7 +91,7 @@ export class WorkflowCompilerService {
       id: def.id,
       inputSchema: CtxSchema,
       outputSchema: CtxSchema,
-      execute: async ({ inputData, abortSignal }) => {
+      execute: async ({ inputData, abortSignal, runId }) => {
         const adapters = this.adapterRegistry.listAdapters();
         if (adapters.length === 0) {
           throw new Error(
@@ -107,7 +109,7 @@ export class WorkflowCompilerService {
         this.logger.log(
           `[workflow llm step=${def.id}] prompt ${prompt.length} chars`,
         );
-        const { text } = await generateText({
+        const { text, usage } = await generateText({
           model,
           ...(def.system
             ? { system: interpolateTemplate(def.system, inputData as Ctx) }
@@ -118,6 +120,42 @@ export class WorkflowCompilerService {
           prompt,
           abortSignal,
         });
+        // 用量记账（A-11 余留）：引擎 runId = AIWorkflowRun.id，直接归因
+        // AIUsageLog.workflowRunId；记账失败只警告不阻断执行。
+        try {
+          // ai@7 的 LanguageModelUsage 字段从 prompt/completion 更名为 input/output，兼容两代
+          const usageRecord = (usage ?? {}) as unknown as Record<
+            string,
+            number | undefined
+          >;
+          const promptTokens =
+            usageRecord.promptTokens ?? usageRecord.inputTokens ?? 0;
+          const completionTokens =
+            usageRecord.completionTokens ?? usageRecord.outputTokens ?? 0;
+          const estimatedCost = await this.usagePricing.estimateCostUsd({
+            modelName: adapter.getModelName(),
+            provider: adapter.getProvider(),
+            promptTokens,
+            completionTokens,
+          });
+          await this.prisma.aIUsageLog.create({
+            data: {
+              workflowRunId: runId,
+              modelName: adapter.getModelName(),
+              provider: adapter.getProvider(),
+              promptTokens,
+              completionTokens,
+              totalTokens:
+                usage?.totalTokens ?? promptTokens + completionTokens,
+              estimatedCost,
+              responseMetadata: { kind: 'workflow', stepId: def.id },
+            },
+          });
+        } catch (err) {
+          this.logger.warn(
+            `Failed to write workflow AI usage log: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
         return withStepOutput(inputData as Ctx, def.id, { value: text });
       },
     }) as unknown as AnyStep;

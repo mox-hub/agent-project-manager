@@ -265,7 +265,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
     if (!title.trim() || !subjectId) return;
     const hours = parseFloat(estimateHours);
     try {
-      await createExecution.mutateAsync({
+      const created = await createExecution.mutateAsync({
         issueId,
         data: {
           subjectType: 'human',
@@ -275,6 +275,10 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
           estimate: Number.isFinite(hours) && hours > 0 ? Math.round(hours * 60) : undefined,
         },
       });
+      // 人工执行审计闸门黄牌（CAP-B-08 二期）：与 AI 指派路径同口径，不阻断
+      if (created?.auditWarning) {
+        toast.warning(created.auditWarning, { duration: 8000 });
+      }
       setTitle('');
       setDescription('');
       setEstimateHours('');
