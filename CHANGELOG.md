@@ -6,7 +6,7 @@ category: "report"
 status: "active"
 version: "1.0.0"
 created: "2026-02-20"
-modified: "2026-09-11"
+modified: "2026-09-13"
 scope: "全仓库版本变更"
 ai-session-types: "all"
 ai-priority: "high"
@@ -20,6 +20,44 @@ tags: "changelog,release"
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
 ## [Unreleased]
+
+### 页面风格统一（执行记录/发版交付）+ 发版前因后果关联 + 全系统空态专题（2026-09-13）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **执行记录页按 list-page 模板重写**：PageShell(overflow-hidden)+selfScroll 路由、PageHeader metrics 计数、QuickCardsToggle+StatsCard 六项 KPI（持久化开关）、ToolbarRow+useToolbarViews（状态/Agent/项目筛选收进下拉+搜索，快照持久化）、DataList 行原语列表（行点击弹 RunDetailsDialog，右键菜单承载总览/验收跳转/取消执行）、空态两分支（无记录引导去任务页/筛选无结果清筛选）+ 全量 i18n（消灭页面全部硬编码英文）；执行状态视觉提取为 `executions/components/run-status.tsx` 共享件（页面与发版链路共用，收编口径注释随迁） | CAP-K-03 配套 / 宪法 §10.3 | 全量 93 文件 476 用例绿（task-rows loading 断言随骨架化同步）；lint 五项 0 违例 | `apps/frontend/COMPONENTS.md`（EmptyState/AsyncState/DataList 行 props 更新） |
+| frontend | **发版列表页 ToolbarRow 化**：项目/状态筛选+搜索收进 filterMenu（项目真相源保持 URL searchParams，视图快照 apply 时写回）、metrics 计数、SkeletonTable 加载、空态三分支补 action（创建发版/清筛选）；**发版详情页新增「前因后果」关联区**（`release/components/release-trace-section.tsx`）：scope.issueIds → 每任务实时验收状态（listByTask）+ 执行运行记录（/execution/runs?issueId=，useExecutionRuns 补 issueId 类型）+ 成本汇总，纯前端组合现成端点零后端契约变更；draft 态内联圈定范围编辑器（勾选项目任务→useUpdateRelease({scopeIssueIds})，补齐 CreateReleaseRequest 已支持但 UI 缺失的入口）；展开行验收单/执行记录子列表分别跳验收详情与复用 RunDetailsDialog；`void scopeIds` 丢弃位替换为实渲染 | CAP-K-03 | release-pages.test 11 用例（含列表空态引导/门禁面板断言天然兼容新结构） | — |
+| frontend | **空状态专题补足（宪法 §9/§10.2 三态收口）**：基座——EmptyState 加 `icon` prop（muted 圆块规范形态，design-system「Empty States」节样例同步为组件直用消除第二实现）、AsyncState 默认文案 i18n 化（common.loadFailed 键新增）+emptyIcon 透传、DataList 内建空态升级 EmptyState 形态（消灭 'No items' 英文默认，新增 emptyIcon/emptyDescription props）；迁移 14 处手写空态——acceptance 列表/详情×3、task-rows（含 loading 换 DataListSkeleton）、workflow 列表、PR 列表（双语键 git.pulls.*）、office、search×2、settings 集成/记忆、project-list（含 loading 换 SkeletonList）、sprint-list（硬编码中文 i18n 化）、analytics×2、通知中心、run-event-list；豁免四处（github-integration 死代码页/cli-dispatch 按钮禁用态/ai-management 功能性引导态/delivery dev-only mock 页） | 宪法 §8/§9/§10 | 同上全量绿；JSON 双语键 node.exe 解析校验通过 | design-system 展示页两节同步 |
+| frontend | **实机验收修复（发版详情 + 分析页，截图驱动）**：①发版前因后果区——scope 为空且编辑中不再叠加渲染空态（圈定列表与 EmptyState 重叠根因）、范围圈定器任务状态名改走 StatusDefinition 动态解析（`useStatuses` key→name，修复六站自定义状态键如 backlog 回退英文原文）、「圈定范围/提交门禁」按钮由仅图标 HeaderActionButton 改带文字 outline Button（可读性）、状态进度链居中+连接线去 gap 间隙连贯；②分析页——Overview Tab 数据源由 404 契约提案端点 `/analytics/overview` 切换为已实装 `/dashboard/overview`（七段真实字段映射：项目总数/活跃任务/AI 周用量/平均健康分四卡 + 项目健康表 on_track/at_risk/off_track 徽标 + 风险聚焦卡 severity 徽标与缓解率，重试按钮由整页 reload 改 query refetch）；`useAnalyticsOverview` 加 `enabled: isMockModeEnabled()`（真实模式不再发 404 请求，成本/质量/风险/团队四 Tab 静默回退形态数据）；工具栏 Tab 标签中文化缩短（Team Activity→团队）修复截断 | CAP-K-03 / 分析页可用性 | analytics-page.test 重写（dashboard hook 注入 + 中文标签断言）；全量 93 文件 476 用例绿；lint 0 | — |
+
+### CAP-C-08 需求入口登记——AI 表面（实时盯盘 · 代理 · 叙述 · 演示）（2026-09-13，**未开工**）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| （登记条目，**代码零改动**） | **CAP-C-08 新卡 doing**：AI 表面由 mock 形态实验升格为真实驾驶舱——①实时盯盘（同事工位卡 + 六站管道泳道 + 待你拍板区，接真实执行/门禁/阻塞数据）②代理态（待办就地拍板 + 输入框接既有 assistant + AISlot 保留，**不开第二个拍板入口**）③叙述层（静默场景 `surface-narration`：事实与叙事分离·数字由事实层算好注入 / TTL≈30s+记账 / 模型挂掉回落确定性模板不白屏 / 不主动弹窗）④演示模式（**新手首次上手**，先回放后实况；回放零 token 零 runtime 依赖） | CAP-C-08（†供血 B 全线） | — （登记期，尚无实现与测试；GAP-T-26 已登记验收义务，S1/S2 子项列为 P0） | `docs/01-需求/能力清单-v1.md`（新增 CAP-C-08 卡 + C 线卡数勘误 6→8 + 候补区条目升格 + 变更记录）、`docs/01-需求/测试映射矩阵-v1.md`（C 线补 C-07/C-08 行 + GAP-T-26 登记）、新增 `docs/02-架构设计/策略/AI表面-实时盯盘与演示-设计纪要-v1.md` |
+| （登记期勘明，待 S1 落地） | **两项关键前置事实**（登记期代码级核验，非实现）：①**实时瓶颈不在后端**——message-bus 已发 `execution.step.*`（步骤级）/ `terminal.output`（chunk 级流式）/ `runtime.execution.event` / `runtime.heartbeat` / `approval.*` / `acceptance.*` / `release.approved`，而前端 `event-client` 订阅白名单**硬编码 12 条**、全仓 `useEventSubscription` 仅 4 处，执行族事件**零订阅**（UI 靠轮询）→ 改造是**扩订 + 补事件名单源**，非造链路；②`terminal.output` 现注释为「前端已无消费者，待 Terminal 退役一并摘除」，但它是**当前唯一 chunk 级管道**，决定盯盘粒度天花板 → 裁决**先接后删**，未确认接替前不得摘除。同时确认 `ai-surface` 十文件 **215 处硬编码裸色**违反 `DESIGN.md`，而 `check-palette` / `check-semantic` **实测通过**（只扫 className 不扫 `style={{}}` 内联色）——该门禁缺口随 S1 收口（窄范围起步） | CAP-C-08 / DESIGN.md §2·§3·§5·§8 | 核验手段：`node ./scripts/check-palette.mjs` 与 `check-semantic-classes.mjs` 均 EXIT=0；事件面为 `apps/server/src` 发布侧全量扫描 | 同上；建议 `DESIGN.md` §七 补 ai-surface 入风格整改路线 |
+
+### 内置工单类型落地 + issue 列表类型可视化 + 添加类型报错修复（2026-09-13，用户三项反馈）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **内置工单类型 task/bug 落地**（此前 IssueType 表全仓零种子，「内置 bug 六字段已预置」仅是 schema 注释）：新增 `prisma/builtin-issue-types.ts` 单一事实源（seed.ts 与 build-template.ts 共用）——task/bug 均 isSystem=true，bug 带六字段 fieldSchema（severity=select 规范四值经存量 38 条 customFields 核验安全，复现概率/步骤/环境/预期/实际=自由文本保兼容），upsert 只补缺不覆盖用户修改；服务端删除守卫扩为 isSystem 全量不可删（task 禁用守卫保留）；dev.db 已跑 seed（task/bug 落库），template.db 已重建 | CAP-A-04 | issue-type 套件 14 条（新增 isSystem 删除守卫 3 条：bug 400 不落库/task 原守卫保留/自定义类型零引用正常删）；issue 族 e2e 28 条过 | 能力清单 CAP-A-04 注记 |
+| frontend | **issue 列表类型可视化**（统一工单视图下区分类型，Linear 式行首图标）：列表行（TaskSimpleList renderLeading）、表格 ID 列（替换原 task/bug 硬编码双色条）、看板卡行1（taskCardRow1/bugCardRow1 增可选 typeMeta 参数）三视图统一渲染 `IssueTypeIcon`（icon+color 来自 IssueType 元数据）；新增 `useIssueTypeOf` 解析 hook（typeId 事实源 → 遗留 type 字符串桥接 → 缺省 task）；类型管理面删除菜单对 isSystem 类型禁用并提示「内置类型不可删除」 | CAP-A-04 | use-issue-types.test 1 条（四路解析断言）+ 全量 93 文件 476 用例绿；lint 0 错误 | — |
+| server | **「添加任务类型」报错根因修复**：dev server 重启后新 Prisma client 查询 dev.db 不存在的 description/enabled 列 → issue-types 端点全量 SQL 报错；`prisma migrate deploy` 与 `migrate resolve` 均被运行中 server 持锁挡死（EPERM database is locked，migrate status 静默无输出），改用 `prisma db execute --file` WAL 直写三条 ALTER + SQL 直插 `_prisma_migrations` 账本（sha384 校验和计算）绕过 schema engine 锁，**零重启完成修复** | — | pragma_table_info 验证三列生效、账本行落库 | 运维技巧留痕 |
+
+### CAP-A-15 导航信息架构 + CAP-A-04 类型管理面重设计与缺陷降级（2026-09-13）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **研发生命周期九站重构为六站**（对齐能力清单 §2.2 理想管道①-⑥）：01 需求承接（新页 `/app/intake`：「提出需求」CTA 唤起统一创建面板 project AI 代理模式 + 承接管道四步说明 + category=requirement 需求纪要列表）→ 02 规划拆解（issues）→ 03 代码研发（repositories）→ 04 派发执行（executions）→ 05 质量验收（acceptance）→ 06 交付发布（releases）；六站唯一定义源抽 `shared/layout/pipeline-stages.ts`；迁位裁决：ai-surface（候补 pending 实验）迁协同组保留 exp 徽标、delivery（mock 还原页）移出编号仅 DEV 展示、bugs 撤销独立导航位回归类型视角、documents 迁协同组；补齐 04-09 阶段语义 hint（此前复制 label）；PAGE_REGISTRY 补 intake/executions/workflows | CAP-A-15（新卡）/ CAP-P-01 | 前端 pipeline-stages.test 4 条 + intake 页 3 条；全量 92 文件 475 用例绿；lint 五治理 + type-check 0/0 | 能力清单 CAP-A-15 新卡 + 变更记录、测试映射矩阵 GAP-T-24 |
+| server · frontend | **工单类型管理面按 Linear 风格重设计**（设置 · 任务类型）：类型列表（dnd-kit 拖拽排序持久化 order、启用开关 Switch、默认徽标、状态·字段·任务三计数、描述行）+ 推荐类型库（10 个常用类型带类别标签一键添加、已存在去重）+ 新类型详情页 `/app/settings/issue-types/:typeKey` 三页签（基本信息/自定义字段/状态分组）；自定义字段对话框支持九种字段类型与默认值/描述/必填；状态页签按 group 聚合渲染（六组受控词表：triage/backlog/unstarted/started/completed/canceled）+ 添加状态对话框；issues 列表页补类型筛选条件（typeId 事实源，遗留行按旧 type 字符串解析） | CAP-A-04 增强 | server issue-type-management.spec 6 条（字段类型扩展/默认值校验/task 禁用守卫）；前端类型管理面 4 条（统计行/开关守卫/推荐库去重/一键添加）；全量回归双端绿（645 + 475）；e2e 全量 53 文件 393 用例全过（唯一失败为 assistant-cli-chat afterAll 清理 EPERM 环境噪声）；契约三件套零漂移；api:audit 502 端点 100% | 能力清单 CAP-A-04 增强注记、测试映射矩阵 GAP-T-25 |
+| server | **schema 扩展**：IssueType +description/enabled 列、fieldSchema 类型词表扩 boolean/member/url + defaultValue/description/enabled 字段（含 select 默认值必须在 options 内校验）；StatusDefinition +group 状态分组列（默认 unstarted）；seed 补四内置状态 group 回填；默认类型 task 禁用守卫（400）；metadata 响应 DTO 透传 group | CAP-A-04 | 迁移 20260913150000 已应用 template.db（dev.db 因 dev server 持锁待重启窗口执行 `prisma migrate deploy`）；issue-type 套件 11 条绿 | schema 注释留痕 |
+
+### CAP-A-08 增强——仓库页 PR 列表服务端回源（2026-09-13）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server · frontend | **Git 仓库详情页 PR 页签从恒空死表回源 GitHub 实时数据**：本地 `PullRequest` 表全仓零写入路径（历史死链路，页签恒「No pull requests found」）——`GET /git/repos/:repoId/pull-requests` 在本地无数据且仓库 `remoteUrl` 指向 GitHub（https/ssh 均解析）时，复用 github 集成凭据 octokit 实时拉取并映射既有 `PullRequestResponseDto` 形状（draft/merged/open/closed 四态、label 名提取、htmlUrl 落 metadata）；`merged/draft` 过滤全量拉取后本地筛，`open/closed` 透传 GitHub state；无集成/回源失败诚实回落空态不抛 500。**集成候选选择防废配置雷**：不用无排序 findFirst（实机恒命中 08-10 密钥轮换前的废配置致解密必炸、回源恒空），改为候选列表（project 优先、同 scope 取新）逐个尝试、解密失败跳过。只读展示不落任何表（B-08 证据回流边界不动）；前端卡片带 htmlUrl 时点击外跳 GitHub。搭车：`GitHubClient.normalizePullRequest` 补 `draft`/`labels` 归一化透传 | CAP-A-08（与 B-08 划接口：只读展示 vs 证据回流） | `git.service.spec` getPullRequests 组 8 条（含废配置跳过回归）全套件 19/19 绿；github provider 既有 5 用例回归绿；触及模块 type-check/eslint 0/0；**实机端到端验证**：修复前 dev.db findFirst 实锤命中废配置，修复后真实接口返回 mox-hub/agent-project-manager 全量 PR（#49 open） | 能力清单 CAP-A-08 增强注记 + 变更记录、测试映射矩阵 GAP-T-23（done） |
 
 ### CAP-K-03 驱动型发版三期——Release 升级为主线管道⑥交付执行器（feat/release-pipeline-driver，2026-09-13）
 
