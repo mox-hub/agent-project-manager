@@ -52,6 +52,7 @@ import { useGitToolStatus } from '../hooks/use-git-tool';
 import type { GitToolStatusData } from '../api/git-api';
 import type { Repository } from '../api/git-api';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
+import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 
 const PROVIDER_OPTIONS = ['github', 'gitlab', 'bitbucket'] as const;
 
@@ -60,10 +61,14 @@ export function RepositoryListPage() {
   const { t } = useTranslation();
   const confirmAction = useConfirm();
 
+  // 管道项目聚焦（CAP-A-15）：聚焦时预置 projectIds 多选为该单选（仅初值，页内可再改）
+  const { focusProjectId } = usePipelineProjectFilter();
   const [showBindDialog, setShowBindDialog] = useState(false);
   const [search, setSearch] = useState('');
   const [providers, setProviders] = useState<string[]>([]);
-  const [projectIds, setProjectIds] = useState<string[]>([]);
+  const [projectIds, setProjectIds] = useState<string[]>(() =>
+    focusProjectId ? [focusProjectId] : [],
+  );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const stats = usePersistentToggle('repository-list-page.stats');
 

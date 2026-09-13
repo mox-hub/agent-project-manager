@@ -42,6 +42,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { useAcceptanceList } from '../hooks/use-acceptance';
+import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { AcceptanceFormDialog } from '../components/acceptance-form-dialog';
 import { DataList, ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
@@ -351,9 +352,13 @@ export function AcceptanceListPage() {
     updateActiveSnapshot({ search, status: statusFilter, risk: riskFilter, viewMode });
   }, [updateActiveSnapshot, search, statusFilter, riskFilter, viewMode]);
 
-  // 服务端筛选：status + 分页；risk/search 为当前页客户端过滤
+  // 管道项目聚焦（CAP-A-15）：URL ?project 优先，服务端按 projectId 过滤
+  const { focusProjectId } = usePipelineProjectFilter();
+
+  // 服务端筛选：status + projectId + 分页；risk/search 为当前页客户端过滤
   const { data: pageData, isLoading } = useAcceptanceList({
     status: statusFilter === 'all' ? undefined : statusFilter,
+    projectId: focusProjectId ?? undefined,
     page,
     pageSize: 20,
   });

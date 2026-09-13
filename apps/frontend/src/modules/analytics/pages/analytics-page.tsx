@@ -1,14 +1,14 @@
 /**
- * analytics-page.tsx - 全局分析页面
+ * analytics-page.tsx - 全局分析页面（CAP-C-06 消费面去重后口径）
  *
- * 还原参考: refers/APM/src/app/pages/AnalyticsPage.tsx（5-Tab 结构）
- * 原则:
- * - Overview Tab 使用真实 API（useAnalyticsOverview），不影响数据
- * - Cost / Quality / Risk / Team Activity 四个 Tab 暂无真实数据源，
- *   采用 refer 的静态示例数据并标记（仅展示形态）
+ * 定位分工：运行态实时指标（活跃任务/平均健康分/AI 用量/项目健康表/风险聚焦）
+ * 的唯一消费面 = Dashboard（/app/projects/dashboard，useDashboardOverview）；
+ * analytics 保留回顾性内容：项目总数 + 项目档案健康 + 剧本健康。
+ * Cost / Quality / Risk / Team Activity 四个 Tab 暂无真实数据源（mock），
+ * 仅 DEV 可见（import.meta.env.DEV 过滤，生产构建不出现，代码保留）。
  */
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, BarChart3, DollarSign, Activity, ShieldAlert, Users, Zap, AlertTriangle, XCircle, TrendingUp, TrendingDown, Target, Minus, CheckCircle2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, BarChart3, DollarSign, Activity, ShieldAlert, Users, Zap, AlertTriangle, XCircle, TrendingUp, TrendingDown, Target, Minus, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -16,7 +16,6 @@ import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
-import { StatusPill } from '@/components/ui/status-pill';
 import { Progress } from '@/components/ui/progress';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -34,6 +33,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Overview 数据：GET /dashboard/overview（真实端点）；其余 Tab 形态数据走 msw mock（见 use-analytics-overview 注释）
 const TOOLTIP_STYLE = { fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' };
@@ -73,21 +73,7 @@ function StatCard({ label, value, sub, icon: Icon, color = 'text-foreground', tr
   );
 }
 
-// ── Overview（真实 API：GET /dashboard/overview，七段聚合按真实字段映射）──────────
-
-/** 项目健康状态 → 徽标（on_track/at_risk/off_track） */
-const HEALTH_STATUS: Record<string, { tone: 'success' | 'warning' | 'danger'; label: string }> = {
-  on_track: { tone: 'success', label: '正常' },
-  at_risk: { tone: 'warning', label: '有风险' },
-  off_track: { tone: 'danger', label: '偏离' },
-};
-
-/** 风险等级 → 徽标（critical/high/medium） */
-const RISK_SEVERITY: Record<string, { tone: 'danger' | 'warning' | 'default'; label: string }> = {
-  critical: { tone: 'danger', label: '严重' },
-  high: { tone: 'warning', label: '高' },
-  medium: { tone: 'default', label: '中' },
-};
+// ── Overview（真实 API：GET /dashboard/overview，仅取回顾性字段）──────────────
 
 function OverviewTab() {
   const { data, isLoading, isError, refetch } = useDashboardOverview();
@@ -96,7 +82,7 @@ function OverviewTab() {
     return (
       <div className="space-y-5">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
+          <SkeletonCard />
         </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <SkeletonChart /><SkeletonChart />
@@ -120,78 +106,13 @@ function OverviewTab() {
     );
   }
 
+  // CAP-C-06 消费面去重：与 Dashboard 同源的活跃任务/平均健康分/AI 周用量
+  // StatCard、项目健康表、风险聚焦卡已移除（真相源 = /app/projects/dashboard）；
+  // 此处保留 analytics 独有的回顾性内容：项目总数 + 档案健康 + 剧本健康。
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="项目总数" value={data.health.projects.length} sub="全部项目" icon={Target} color="text-accent-blue" />
-        <StatCard label="活跃任务" value={data.delivery.activeTasks} sub={`共 ${data.delivery.totalTasks} 项`} icon={Zap} color="text-accent-purple" />
-        <StatCard label="AI 周用量" value={data.ai.tokensUsed.toLocaleString()} sub={`对话 ${data.ai.conversations} 轮`} icon={CheckCircle2} color="text-accent-green" />
-        <StatCard label="平均健康分" value={data.health.avgScore} sub="项目健康 0-100" icon={Activity} color="text-accent-yellow" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">项目健康</CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 pb-3">
-            {data.health.projects.length === 0 ? (
-              <EmptyState title="暂无项目" className="min-h-20" />
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>项目</TableHead>
-                    <TableHead>评分</TableHead>
-                    <TableHead>状态</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.health.projects.map((p) => {
-                    const st = HEALTH_STATUS[p.status] ?? HEALTH_STATUS.on_track;
-                    return (
-                      <TableRow key={p.id}>
-                        <TableCell className="font-medium">{p.name}</TableCell>
-                        <TableCell className="tabular-nums">{p.score}</TableCell>
-                        <TableCell>
-                          <StatusPill tone={st.tone}>{st.label}</StatusPill>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">
-              风险聚焦
-              {data.risks.items.length > 0 ? ` · 缓解率 ${data.risks.mitigationRatePct}%` : ''}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 px-4 pb-4">
-            {data.risks.items.length === 0 ? (
-              <EmptyState title="当前无风险项" description="识别到风险项目后将会聚到这里" className="min-h-20" />
-            ) : (
-              data.risks.items.map((risk) => {
-                const sev = RISK_SEVERITY[risk.severity] ?? RISK_SEVERITY.medium;
-                return (
-                  <div key={risk.id} className="rounded-lg border border-border bg-muted/50 p-3">
-                    <div className="flex items-center gap-2">
-                      <StatusPill tone={sev.tone}>{sev.label}</StatusPill>
-                      <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{risk.title}</p>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">{risk.impact}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">建议: {risk.mitigation}</p>
-                  </div>
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -599,31 +520,67 @@ function TeamActivityTab() {
 
 type AnalyticsTab = 'overview' | 'cost' | 'quality' | 'risk' | 'team';
 
+/** Tab 定义：overview 为真实数据回顾面；其余四项无后端（mock 形态），devOnly */
+interface AnalyticsTabDef {
+  value: AnalyticsTab;
+  label: string;
+  icon: LucideIcon;
+  /** useToolbarViews 默认视图图标名（ToolbarRow 视图下拉消费字符串图标名） */
+  viewIcon: string;
+  devOnly: boolean;
+}
+
+const ANALYTICS_TAB_DEFS: AnalyticsTabDef[] = [
+  { value: 'overview', label: '概览', icon: BarChart3, viewIcon: 'target', devOnly: false },
+  { value: 'cost', label: '成本', icon: DollarSign, viewIcon: 'tag', devOnly: true },
+  { value: 'quality', label: '质量', icon: Activity, viewIcon: 'check', devOnly: true },
+  { value: 'risk', label: '风险', icon: ShieldAlert, viewIcon: 'bug', devOnly: true },
+  { value: 'team', label: '团队', icon: Users, viewIcon: 'user', devOnly: true },
+];
+
+/** 可用 Tab 计算（纯函数，测试消费）：mock 形态 Tab 仅 DEV 可见（CAP-C-06） */
+export function getAvailableAnalyticsTabs(isDev: boolean): AnalyticsTabDef[] {
+  return ANALYTICS_TAB_DEFS.filter((def) => !def.devOnly || isDev);
+}
+
+const ANALYTICS_TAB_CONTENT: Record<AnalyticsTab, React.ComponentType> = {
+  overview: OverviewTab,
+  cost: CostTab,
+  quality: QualityTab,
+  risk: RiskTab,
+  team: TeamActivityTab,
+};
+
 export function AnalyticsPage() {
-  const [activeTab, setActiveTab] = useState<AnalyticsTab>('overview');
+  const { t } = useTranslation();
+  // 四个 mock Tab 仅 DEV 可见（生产构建不出现）；默认选中第一个可用 Tab（= overview）
+  const availableTabs = useMemo(() => getAvailableAnalyticsTabs(import.meta.env.DEV), []);
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>(availableTabs[0]?.value ?? 'overview');
   const { data: overviewData, refetch: refetchOverview } = useDashboardOverview();
 
+  // CAP-C-06 消费面去重：页头指标只留项目总数（活跃任务/平均健康分真相源在 Dashboard）
   const metrics = useMemo(() => {
     if (!overviewData) return [];
     return [
       { id: 'projects', label: '项目', value: overviewData.health.projects.length },
-      { id: 'tasks', label: '活跃任务', value: overviewData.delivery.activeTasks },
-      { id: 'health', label: '平均健康分', value: overviewData.health.avgScore },
     ];
   }, [overviewData]);
 
   const toolbar = useToolbarViews({
     key: 'analytics-page',
-    defaults: [
-      { id: 'overview', name: '概览', icon: 'target', builtIn: true, snapshot: { tab: 'overview' } },
-      { id: 'cost', name: '成本', icon: 'tag', builtIn: true, snapshot: { tab: 'cost' } },
-      { id: 'quality', name: '质量', icon: 'check', builtIn: true, snapshot: { tab: 'quality' } },
-      { id: 'risk', name: '风险', icon: 'bug', builtIn: true, snapshot: { tab: 'risk' } },
-      { id: 'team', name: '团队', icon: 'user', builtIn: true, snapshot: { tab: 'team' } },
-    ],
+    defaults: availableTabs.map((def) => ({
+      id: def.value,
+      name: def.label,
+      icon: def.viewIcon,
+      builtIn: true,
+      snapshot: { tab: def.value },
+    })),
     onApply: (snapshot) => {
       const snap = (snapshot ?? {}) as Partial<{ tab: AnalyticsTab }>;
-      if (snap.tab) setActiveTab(snap.tab);
+      // 生产模式下 mock Tab 不可用：快照指向已下线 Tab 时忽略，保持当前 Tab
+      if (snap.tab && availableTabs.some((def) => def.value === snap.tab)) {
+        setActiveTab(snap.tab);
+      }
     },
   });
   const { updateActiveSnapshot } = toolbar;
@@ -636,7 +593,7 @@ export function AnalyticsPage() {
     <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.analytics}>
       <PageHeader
         aiId="analytics.overview"
-        title="Analytics"
+        title={t('analytics.title', '分析')}
         icon={BarChart3}
         iconColor="text-accent-blue"
         metrics={metrics}
@@ -667,13 +624,7 @@ export function AnalyticsPage() {
           layout: 'centered',
           value: activeTab,
           onChange: (v) => setActiveTab(v as AnalyticsTab),
-          options: [
-            { value: 'overview', label: '概览', icon: BarChart3 },
-            { value: 'cost', label: '成本', icon: DollarSign },
-            { value: 'quality', label: '质量', icon: Activity },
-            { value: 'risk', label: '风险', icon: ShieldAlert },
-            { value: 'team', label: '团队', icon: Users },
-          ],
+          options: availableTabs.map(({ value, label, icon }) => ({ value, label, icon })),
         }}
         filterMenu={false}
         displayMenu={false}
@@ -682,11 +633,14 @@ export function AnalyticsPage() {
 
       <div className="flex w-full min-w-0 flex-1 flex-col overflow-y-auto px-6 py-4 sm:px-8 sm:py-5 lg:px-10 space-y-5">
         <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as AnalyticsTab)} className="w-full">
-          <TabsContent value="overview"><OverviewTab /></TabsContent>
-          <TabsContent value="cost"><CostTab /></TabsContent>
-          <TabsContent value="quality"><QualityTab /></TabsContent>
-          <TabsContent value="risk"><RiskTab /></TabsContent>
-          <TabsContent value="team"><TeamActivityTab /></TabsContent>
+          {availableTabs.map((def) => {
+            const Content = ANALYTICS_TAB_CONTENT[def.value];
+            return (
+              <TabsContent key={def.value} value={def.value}>
+                <Content />
+              </TabsContent>
+            );
+          })}
         </Tabs>
       </div>
     </PageShell>

@@ -29,6 +29,7 @@ import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useAllTasks, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
 import { useIssueTypes, useIssueTypeOf } from '../hooks/use-issue-types';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
+import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import type { Task } from '../api/issue-api';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import { useTranslation } from 'react-i18next';
@@ -74,11 +75,18 @@ const ISSUE_ENTITY = getEntityIcon('issue');
 export function TasksPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // 管道项目聚焦（CAP-A-15）：URL ?project 优先——作为项目筛选 chips 的受控初值
+  const { focusProjectId } = usePipelineProjectFilter();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
   const [search, setSearch] = useState('');
-  // 筛选条件条（Linear 形态）：字段 + 算子 + 值集，空数组 = 无筛选
-  const [conditions, setConditions] = useState<FilterCondition[]>([]);
+  // 筛选条件条（Linear 形态）：字段 + 算子 + 值集，空数组 = 无筛选；
+  // 聚焦项目时初值预置 project is <focusProjectId>（仅初值，用户可在页内再改）
+  const [conditions, setConditions] = useState<FilterCondition[]>(() =>
+    focusProjectId
+      ? [{ id: 'cond-pipeline-focus-project', fieldId: 'project', operator: 'is', values: [focusProjectId] }]
+      : [],
+  );
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [presetAssigneeId, setPresetAssigneeId] = useState<string | undefined>(undefined);
   const [dispatchTask, setDispatchTask] = useState<{ task: Task; projectId: string } | null>(null);

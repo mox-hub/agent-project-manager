@@ -62,6 +62,7 @@ import { api } from '@/infrastructure/api-client';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
+import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 
 const STATUS_KEYS = Object.keys(RUN_STATUS_CONFIG) as ExecutionRunStatus[];
 
@@ -74,11 +75,15 @@ export function ExecutionsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  // 管道项目聚焦（CAP-A-15）：URL ?project 作为 projectFilter 受控初值；
+  // 用户在页内改动仍写自身状态（不回写 URL）
+  const { focusProjectId } = usePipelineProjectFilter();
+
   // 筛选状态
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ExecutionRunStatus | 'all'>('all');
   const [agentFilter, setAgentFilter] = useState<string>('all');
-  const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [projectFilter, setProjectFilter] = useState<string>(focusProjectId ?? 'all');
   const [detailRunId, setDetailRunId] = useState<string | null>(null);
   const [overviewRun, setOverviewRun] = useState<ExecutionRunRecord | null>(null);
 
