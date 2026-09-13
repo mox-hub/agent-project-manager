@@ -335,6 +335,8 @@ model StatusDefinition {
   type                  String
   key                   String
   name                  String
+  /// 状态分组（Linear 式）：triage | backlog | unstarted | started | completed | canceled；分组词表受控，UI 按组聚合渲染
+  group                 String  @default("unstarted")
   order                 Int
   isFinal               Boolean @default(false)
   isBlockedState        Boolean @default(false)
@@ -2128,18 +2130,21 @@ model GlobalSequence {
 /// 工单类型（适配引擎元数据源）：icon/color/name 驱动前端渲染，可无限扩展；
 /// 内置 task 类型不可删除，bug 为可删除的内置类型
 model IssueType {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  name      String
-  icon      String   @default("Circle") // lucide 图标名
-  color     String   @default("#5E6AD2")
-  order     Int      @default(100)
-  isSystem  Boolean  @default(false) // 内置类型（task/bug）
-  /// 字段定义（4d 二期适配引擎）：[{ key, label, type: 'text'|'textarea'|'select'|'multiselect'|'number'|'date', required?, options?, order }]
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  icon        String   @default("Circle") // lucide 图标名
+  color       String   @default("#5E6AD2")
+  order       Int      @default(100)
+  isSystem    Boolean  @default(false) // 内置类型（task/bug）
+  /// 启用开关：禁用类型不在创建入口可选（既有工单保留类型与渲染）；默认类型 task 恒开
+  enabled     Boolean  @default(true)
+  /// 字段定义（4d 二期适配引擎）：[{ key, label, type: 'text'|'textarea'|'select'|'multiselect'|'number'|'date'|'boolean'|'member'|'url', required?, options?, defaultValue?, description?, enabled?, order }]
   /// Issue.customFields 的键集与此对齐；内置 bug 六字段定义已预置
   fieldSchema Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   issues Issue[]
 }

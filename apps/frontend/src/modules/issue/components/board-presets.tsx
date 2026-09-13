@@ -19,6 +19,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { TASK_STATUS_VISUALS, type StatusTone } from '@/shared/status/status-visuals';
 import type { Task } from '@/modules/issue/api/issue-api';
+import type { IssueTypeMeta } from '@/modules/issue/api/issue-type-api';
+import { IssueTypeIcon } from '@/shared/components/issue-type-icon';
 import type {
   BoardAccentColor,
   BoardCardModel,
@@ -130,8 +132,12 @@ const PRIORITY_VISUAL: Record<string, { icon: LucideIcon; className: string }> =
 const issueIdentifier = (task: Task) =>
   task.shortId || `APM-${task.id.slice(0, 4).toUpperCase()}`;
 
-/** 行1：重要性图标 + 任务编号 + 状态图标 */
-export function taskCardRow1(task: Task, t?: Translate): ReactNode {
+/** 行1：类型图标 + 重要性图标 + 任务编号 + 状态图标（typeMeta 由页面经 useIssueTypeOf 解析传入） */
+export function taskCardRow1(
+  task: Task,
+  t?: Translate,
+  typeMeta?: Pick<IssueTypeMeta, 'icon' | 'color'>,
+): ReactNode {
   const priority = PRIORITY_VISUAL[task.priority] ?? PRIORITY_VISUAL.low;
   const PriorityIcon = priority.icon;
   const statusVisual = STATUS_VISUAL[(task.status as TaskStatusKey) ?? 'todo'] ?? STATUS_VISUAL.todo;
@@ -139,6 +145,7 @@ export function taskCardRow1(task: Task, t?: Translate): ReactNode {
   const statusLabel = t?.(`task.status.${task.status}`) ?? task.status;
   return (
     <>
+      <IssueTypeIcon meta={typeMeta} />
       <PriorityIcon
         size={13}
         className={priority.className}
@@ -233,8 +240,12 @@ const SEVERITY_BADGE_CLASS: Record<string, string> = {
   low: 'bg-muted/40 text-muted-foreground border-border/40',
 };
 
-/** Bug 行1：重要性/严重度图标 + Bug编号 + 严重度胶囊 + 状态图标 */
-export function bugCardRow1(bug: Task, t?: Translate): ReactNode {
+/** Bug 行1：类型图标 + 重要性/严重度图标 + Bug编号 + 严重度胶囊 + 状态图标 */
+export function bugCardRow1(
+  bug: Task,
+  t?: Translate,
+  typeMeta?: Pick<IssueTypeMeta, 'icon' | 'color'>,
+): ReactNode {
   const sevKey = (bug.severity ?? 'low') as SeverityKey;
   const sevVisual = SEVERITY_VISUAL[sevKey] ?? SEVERITY_VISUAL.low;
   const SevIcon = sevVisual.icon;
@@ -246,6 +257,7 @@ export function bugCardRow1(bug: Task, t?: Translate): ReactNode {
   return (
     <div className="flex w-full items-center justify-between gap-1.5 min-w-0">
       <div className="flex items-center gap-1.5 min-w-0">
+        <IssueTypeIcon meta={typeMeta} />
         <SevIcon
           size={13}
           className={STATUS_ICON_TEXT[sevVisual.color]}

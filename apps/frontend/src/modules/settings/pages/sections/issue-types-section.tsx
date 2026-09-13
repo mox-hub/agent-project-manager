@@ -1,37 +1,69 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  DndContext,
+  PointerSensor,
+  KeyboardSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
+  ChevronRight,
+  GripVertical,
+  MoreHorizontal,
+  Plus,
+  Shapes,
+  Trash2,
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { PageShell } from '@/components/ui/page-shell';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { SectionCard } from '@/components/ui/section-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { NativeSelect } from '@/components/ui/native-select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { PageShell } from '@/components/ui/page-shell';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu';
+import { AsyncState } from '@/components/ui/async-state';
 import {
   useIssueTypes,
   useCreateIssueType,
   useUpdateIssueType,
   useDeleteIssueType,
 } from '@/modules/issue/hooks/use-issue-types';
-import type { FieldSchemaDef, FieldSchemaType, IssueTypeMeta } from '@/modules/issue/api/issue-type-api';
-import { ISSUE_TYPE_ICONS, IssueTypeIcon } from '@/shared/components/issue-type-icon';
-import { Plus, Shapes, Trash2, Pencil, Lock, ChevronDown } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { toast } from '@/components/ui/toast';
+import { RECOMMENDED_ISSUE_TYPES } from '@/modules/issue/constants/recommended-issue-types';
+import type { IssueTypeMeta } from '@/modules/issue/api/issue-type-api';
+import { ISSUE_TYPE_ICONS, IssueTypeIcon, issueTypeIcon } from '@/shared/components/issue-type-icon';
+import { useStatuses } from '@/modules/core-config/hooks/use-metadata';
 import { useConfirm } from '@/shared/confirm/use-confirm';
-import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/toast';
 
 const ICON_CHOICES = Object.keys(ISSUE_TYPE_ICONS);
 
-/** 与服务端 FIELD_SCHEMA_TYPES 对齐的六种字段类型 */
-const FIELD_TYPE_CHOICES: FieldSchemaType[] = [
-  'text',
-  'textarea',
-  'select',
-  'multiselect',
-  'number',
-  'date',
-];
-
-/** 工单类型设置子页：类型元数据的创建 / 修改 / 删除（适配引擎管理端） */
+/**
+ * 任务类型与状态管理（设置 · 任务类型，CAP-A-04 增强重设计）：
+ * 类型列表（启用开关 / 拖拽排序 / 统计行）+ 推荐类型库一键添加；
+ * 类型详情（基本信息 / 自定义字段 / 状态分组）见 issue-type-detail-section。
+ */
 export function IssueTypesSettingsSection() {
   const { t } = useTranslation();
 
@@ -40,129 +72,84 @@ export function IssueTypesSettingsSection() {
       variant="standard"
       icon={Shapes}
       iconColor="text-accent-blue"
-      title={t('settings.issueTypes')}
+      title={t('settings.issueTypesTitle', '任务类型 & 状态')}
+      actions={
+        <HeaderActionButton icon={Plus} label={t('settings.addIssueType', '添加任务类型')} />
+      }
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
-      <IssueTypesCard />
+      <TypesListCard />
+      <RecommendedTypesCard />
     </PageShell>
   );
 }
 
-interface DraftForm {
-  key: string;
-  name: string;
-  icon: string;
-  color: string;
+/** 类型统计行：N 个状态 · M 个自定义字段 · K 个任务（状态为全局共享族） */
+function useTypeStats() {
+  const statusesQuery = useStatuses();
+  const globalStatuses = useMemo(
+    () => (statusesQuery.data ?? []).filter((s) => !s.projectId),
+    [statusesQuery.data],
+  );
+  return globalStatuses.length;
 }
 
-const EMPTY_DRAFT: DraftForm = { key: '', name: '', icon: 'Circle', color: '#5E6AD2' };
-
-function IssueTypesCard() {
+function TypesListCard() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const confirmAction = useConfirm();
-  const { types, isLoading } = useIssueTypes();
-  const createType = useCreateIssueType();
+  const { types, isLoading } = useIssueTypes(true);
   const updateType = useUpdateIssueType();
   const deleteType = useDeleteIssueType();
+  const statusCount = useTypeStats();
+  const [createOpen, setCreateOpen] = useState(false);
 
-  const [draft, setDraft] = useState<DraftForm>(EMPTY_DRAFT);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<DraftForm>(EMPTY_DRAFT);
-  // 展开字段定义编辑器的类型 id + 该类型的 fieldSchema 草稿
-  const [fieldsId, setFieldsId] = useState<string | null>(null);
-  const [fieldsDraft, setFieldsDraft] = useState<FieldSchemaDef[]>([]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
-  const startEdit = (id: string, name: string, icon: string, color: string) => {
-    setEditingId(id);
-    setEditDraft({ key: '', name, icon, color });
-    setFieldsId(null);
-  };
-
-  const toggleFields = (type: IssueTypeMeta) => {
-    if (fieldsId === type.id) {
-      setFieldsId(null);
-      return;
-    }
-    setFieldsId(type.id);
-    setFieldsDraft((type.fieldSchema ?? []).map((def) => ({ ...def })));
-  };
-
-  const handleCreate = async () => {
-    if (!draft.key || !draft.name) {
-      toast.error(t('settings.issueTypesRequired'));
-      return;
-    }
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = types.findIndex((ty) => ty.id === active.id);
+    const newIndex = types.findIndex((ty) => ty.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(types, oldIndex, newIndex);
     try {
-      await createType.mutateAsync({
-        key: draft.key,
-        name: draft.name,
-        icon: draft.icon,
-        color: draft.color,
-      });
-      setDraft(EMPTY_DRAFT);
-      toast.success(t('settings.issueTypesCreated'));
+      // order 以 10 步长重排，仅提交位置变化的项
+      await Promise.all(
+        next
+          .map((ty, index) => ({ id: ty.id, currentOrder: ty.order, order: (index + 1) * 10 }))
+          .filter(({ currentOrder, order }) => currentOrder !== order)
+          .map(({ id, order }) => updateType.mutateAsync({ id, data: { order } })),
+      );
     } catch (e) {
       toast.error((e as Error).message || t('settings.updateFailed'));
     }
   };
 
-  const handleUpdate = async (id: string) => {
+  const handleEnabledChange = async (type: IssueTypeMeta, enabled: boolean) => {
     try {
-      await updateType.mutateAsync({
-        id,
-        data: { name: editDraft.name, icon: editDraft.icon, color: editDraft.color },
-      });
-      setEditingId(null);
+      await updateType.mutateAsync({ id: type.id, data: { enabled } });
       toast.success(t('settings.issueTypesUpdated'));
     } catch (e) {
       toast.error((e as Error).message || t('settings.updateFailed'));
     }
   };
 
-  const handleSaveFields = async (id: string) => {
-    // 与服务端校验对齐的轻校验：key 非空唯一；select/multiselect 需选项
-    const keys = fieldsDraft.map((def) => def.key.trim());
-    const invalid =
-      keys.some((key) => !key) ||
-      new Set(keys).size !== keys.length ||
-      fieldsDraft.some(
-        (def) =>
-          (def.type === 'select' || def.type === 'multiselect') &&
-          (def.options ?? []).length === 0,
-      );
-    if (invalid) {
-      toast.error(t('settings.issueTypesFieldInvalid'));
-      return;
-    }
-    try {
-      await updateType.mutateAsync({
-        id,
-        data: {
-          fieldSchema: fieldsDraft.map((def, index) => ({
-            ...def,
-            key: def.key.trim(),
-            order: def.order ?? index,
-          })),
-        },
-      });
-      toast.success(t('settings.issueTypesFieldsSaved'));
-    } catch (e) {
-      toast.error((e as Error).message || t('settings.updateFailed'));
-    }
-  };
-
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = async (type: IssueTypeMeta) => {
     const ok = await confirmAction({
       title: t('settings.issueTypesDeleteConfirmTitle'),
-      description: t('settings.issueTypesDeleteConfirm', { name }),
+      description: t('settings.issueTypesDeleteConfirm', { name: type.name }),
       confirmText: t('common.delete'),
       cancelText: t('common.cancel'),
       variant: 'destructive',
     });
     if (!ok) return;
     try {
-      await deleteType.mutateAsync(id);
+      await deleteType.mutateAsync(type.id);
       toast.success(t('settings.issueTypesDeleted'));
     } catch (e) {
       toast.error((e as Error).message || t('settings.deleteFailed'));
@@ -170,262 +157,328 @@ function IssueTypesCard() {
   };
 
   return (
-    <Card className="border-border shadow-none">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Shapes size={16} className="text-accent-blue" />
-          <CardTitle className="text-base">{t('settings.issueTypesTitle')}</CardTitle>
-        </div>
-        <CardDescription>{t('settings.issueTypesDesc')}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {isLoading ? (
-          <div className="text-sm text-muted-foreground">{t('common.loading')}</div>
-        ) : (
-          <div className="space-y-2">
-            {types.map((type) =>
-              editingId === type.id ? (
-                <div key={type.id} className="rounded-lg border border-accent-blue/40 bg-accent-blue/5 p-3 space-y-2">
-                  <div className="flex gap-2">
-                    <Input
-                      value={editDraft.name}
-                      onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })}
-                      className="w-40"
-                    />
-                    <Input
-                      type="color"
-                      value={editDraft.color}
-                      onChange={(e) => setEditDraft({ ...editDraft, color: e.target.value })}
-                      className="h-9 w-12 cursor-pointer p-1"
-                    />
-                    <div className="flex-1" />
-                    <Button size="sm" onClick={() => handleUpdate(type.id)} disabled={updateType.isPending}>
-                      {t('common.save')}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
-                      {t('common.cancel')}
-                    </Button>
-                  </div>
-                  <IconPicker value={editDraft.icon} onChange={(icon) => setEditDraft({ ...editDraft, icon })} />
-                </div>
-              ) : (
-                <div key={type.id} className="rounded-lg border border-border bg-muted/20">
-                  <div className="flex items-center gap-3 px-3 py-2">
-                    <IssueTypeIcon meta={type} />
-                    <span className="text-sm font-medium text-foreground">{type.name}</span>
-                    <span className="font-mono text-xs text-muted-foreground">{type.key}</span>
-                    {type.fieldSchema?.length ? (
-                      <span className="text-xs text-muted-foreground">
-                        {t('settings.issueTypesFieldsCount', { count: type.fieldSchema.length })}
-                      </span>
-                    ) : null}
-                    {type.isSystem ? (
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Lock size={10} />
-                        {type.key === 'task' ? t('settings.issueTypesLocked') : t('settings.issueTypesBuiltin')}
-                      </span>
-                    ) : null}
-                    <div className="flex-1" />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-7"
-                      title={t('settings.issueTypesFields')}
-                      onClick={() => toggleFields(type)}
-                    >
-                      <ChevronDown size={13} className={cn(fieldsId === type.id && 'rotate-180')} />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-7"
-                      onClick={() => startEdit(type.id, type.name, type.icon, type.color)}
-                    >
-                      <Pencil size={13} />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-7 text-destructive"
-                      disabled={type.key === 'task'}
-                      title={type.key === 'task' ? t('settings.issueTypesLocked') : undefined}
-                      onClick={() => handleDelete(type.id, type.name)}
-                    >
-                      <Trash2 size={13} />
-                    </Button>
-                  </div>
-                  {fieldsId === type.id && (
-                    <FieldsEditor
-                      draft={fieldsDraft}
-                      onChange={setFieldsDraft}
-                      onSave={() => void handleSaveFields(type.id)}
-                      onCancel={() => setFieldsId(null)}
-                      saving={updateType.isPending}
-                    />
-                  )}
-                </div>
-              ),
-            )}
-          </div>
-        )}
-
-        {/* 新建自定义类型 */}
-        <div className="rounded-lg border border-dashed border-border p-3 space-y-2">
-          <div className="flex gap-2">
-            <Input
-              value={draft.key}
-              onChange={(e) => setDraft({ ...draft, key: e.target.value.toLowerCase() })}
-              placeholder={t('settings.issueTypesKeyPlaceholder')}
-              className="w-40 font-mono"
-              maxLength={32}
-            />
-            <Input
-              value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              placeholder={t('settings.issueTypesNamePlaceholder')}
-              className="w-40"
-              maxLength={50}
-            />
-            <Input
-              type="color"
-              value={draft.color}
-              onChange={(e) => setDraft({ ...draft, color: e.target.value })}
-              className="h-9 w-12 cursor-pointer p-1"
-            />
-            <div className="flex-1" />
-            <Button size="sm" className="gap-1" onClick={handleCreate} disabled={createType.isPending}>
-              <Plus size={13} />
-              {t('common.create')}
-            </Button>
-          </div>
-          <IconPicker value={draft.icon} onChange={(icon) => setDraft({ ...draft, icon })} />
-        </div>
-      </CardContent>
-    </Card>
+    <SectionCard
+      title={t('settings.issueTypesListTitle', '任务类型')}
+      description={t('settings.issueTypesListDesc', '任务类型及其状态按空间配置。')}
+      actions={
+        <Button size="sm" className="gap-1" onClick={() => setCreateOpen(true)}>
+          <Plus size={14} />
+          {t('settings.addIssueType', '添加任务类型')}
+        </Button>
+      }
+    >
+      <AsyncState
+        isLoading={isLoading}
+        isEmpty={!isLoading && types.length === 0}
+        emptyTitle={t('settings.issueTypesEmpty', '暂无任务类型')}
+      >
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={(event) => void handleDragEnd(event)}
+        >
+          <SortableContext
+            items={types.map((ty) => ty.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="divide-y divide-border rounded-lg border border-border">
+              {types.map((type) => (
+                <SortableTypeRow
+                  key={type.id}
+                  type={type}
+                  statusCount={statusCount}
+                  isDefault={type.key === 'task'}
+                  onOpen={() => navigate(`/app/settings/issue-types/${type.key}`)}
+                  onEnabledChange={(enabled) => void handleEnabledChange(type, enabled)}
+                  onDelete={() => void handleDelete(type)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </AsyncState>
+      <CreateTypeDialog open={createOpen} onOpenChange={setCreateOpen} />
+    </SectionCard>
   );
 }
 
-/** 字段定义编辑器：每行 key/label/type/required/options/order，可增删；保存整体替换 fieldSchema */
-function FieldsEditor({
-  draft,
-  onChange,
-  onSave,
-  onCancel,
-  saving,
+function SortableTypeRow({
+  type,
+  statusCount,
+  isDefault,
+  onOpen,
+  onEnabledChange,
+  onDelete,
 }: {
-  draft: FieldSchemaDef[];
-  onChange: (draft: FieldSchemaDef[]) => void;
-  onSave: () => void;
-  onCancel: () => void;
-  saving: boolean;
+  type: IssueTypeMeta;
+  statusCount: number;
+  isDefault: boolean;
+  onOpen: () => void;
+  onEnabledChange: (enabled: boolean) => void;
+  onDelete: () => void;
 }) {
   const { t } = useTranslation();
-
-  const updateDef = (index: number, patch: Partial<FieldSchemaDef>) =>
-    onChange(draft.map((def, i) => (i === index ? { ...def, ...patch } : def)));
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: type.id,
+  });
 
   return (
-    <div className="space-y-2 border-t border-border px-3 py-2">
-      <p className="text-xs text-muted-foreground">{t('settings.issueTypesFieldsHint')}</p>
-      {draft.length === 0 ? (
-        <p className="text-xs text-muted-foreground">{t('settings.issueTypesFieldsEmpty')}</p>
-      ) : (
-        <div className="space-y-1.5">
-          {draft.map((def, index) => (
-            <div key={index} className="flex flex-wrap items-center gap-2">
-              <Input
-                value={def.key}
-                placeholder={t('settings.issueTypesFieldKeyPlaceholder')}
-                onChange={(e) => updateDef(index, { key: e.target.value.toLowerCase() })}
-                className="w-36 font-mono"
-                maxLength={64}
-              />
-              <Input
-                value={def.label}
-                placeholder={t('settings.issueTypesFieldLabelPlaceholder')}
-                onChange={(e) => updateDef(index, { label: e.target.value })}
-                className="w-28"
-                maxLength={50}
-              />
-              <div className="w-32">
-                <NativeSelect
-                  value={def.type}
-                  onChange={(e) => updateDef(index, { type: e.target.value as FieldSchemaType })}
-                >
-                  {FIELD_TYPE_CHOICES.map((type) => (
-                    <option key={type} value={type}>
-                      {t(`settings.issueTypesFieldTypes${type.charAt(0).toUpperCase()}${type.slice(1)}`)}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </div>
-              <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
-                <Checkbox
-                  checked={!!def.required}
-                  onCheckedChange={(checked) => updateDef(index, { required: checked === true })}
-                />
-                {t('settings.issueTypesFieldRequired')}
-              </label>
-              {(def.type === 'select' || def.type === 'multiselect') && (
-                <Input
-                  value={(def.options ?? []).join(',')}
-                  placeholder={t('settings.issueTypesFieldOptionsPlaceholder')}
-                  onChange={(e) =>
-                    updateDef(index, {
-                      options: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
-                    })
-                  }
-                  className="w-44"
-                />
-              )}
-              <Input
-                type="number"
-                value={def.order ?? index}
-                title={t('settings.issueTypesFieldOrder')}
-                onChange={(e) =>
-                  updateDef(index, { order: e.target.value === '' ? undefined : Number(e.target.value) })
-                }
-                className="w-16"
-              />
-              <Button
-                size="icon"
-                variant="ghost"
-                className="size-7 text-destructive"
-                onClick={() => onChange(draft.filter((_, i) => i !== index))}
-              >
-                <Trash2 size={13} />
-              </Button>
-            </div>
-          ))}
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`flex items-center gap-3 bg-card px-3 py-2.5 motion-shift ${
+        isDragging ? 'z-10 opacity-80' : ''
+      } ${type.enabled ? '' : 'opacity-60'}`}
+    >
+      <button
+        type="button"
+        className="cursor-grab touch-none text-content-text-muted hover:text-content-text-secondary"
+        aria-label={t('common.reorder', '拖拽排序')}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={14} />
+      </button>
+      <IssueTypeIcon meta={type} />
+      <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm font-medium text-foreground">{type.name}</span>
+          {isDefault ? <Badge variant="secondary">{t('settings.defaultType', '默认')}</Badge> : null}
+          {!type.enabled ? <Badge variant="outline">{t('settings.typeDisabled', '已停用')}</Badge> : null}
         </div>
-      )}
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          className="gap-1"
-          onClick={() => onChange([...draft, { key: '', label: '', type: 'text', order: draft.length }])}
-        >
-          <Plus size={13} />
-          {t('settings.issueTypesFieldsAdd')}
-        </Button>
-        <div className="flex-1" />
-        <Button size="sm" onClick={onSave} disabled={saving}>
-          {t('common.save')}
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}>
-          {t('common.cancel')}
-        </Button>
-      </div>
+        <div className="truncate text-xs text-content-text-secondary">
+          {type.description || t('settings.issueTypesStats', '{{status}} 个状态 · {{fields}} 个自定义字段 · {{tasks}} 个任务', {
+            status: statusCount,
+            fields: type.fieldSchema?.length ?? 0,
+            tasks: type._count?.tasks ?? 0,
+          })}
+        </div>
+        {type.description ? (
+          <div className="truncate text-xs text-content-text-muted">
+            {t('settings.issueTypesStats', '{{status}} 个状态 · {{fields}} 个自定义字段 · {{tasks}} 个任务', {
+              status: statusCount,
+              fields: type.fieldSchema?.length ?? 0,
+              tasks: type._count?.tasks ?? 0,
+            })}
+          </div>
+        ) : null}
+      </button>
+      <Switch
+        checked={type.enabled}
+        disabled={isDefault}
+        onCheckedChange={onEnabledChange}
+        aria-label={t('settings.enabled', '启用')}
+      />
+      <Menu>
+        <MenuTrigger
+          render={
+            <Button variant="ghost" size="icon-sm" aria-label={t('common.more', '更多')}>
+              <MoreHorizontal size={14} />
+            </Button>
+          }
+        />
+        <MenuPopup align="end">
+          <MenuItem
+            variant="destructive"
+            disabled={isDefault || type.isSystem}
+            onSelect={onDelete}
+          >
+            <Trash2 size={14} />
+            {type.isSystem || isDefault
+              ? t('settings.builtinTypeNoDelete', '内置类型不可删除')
+              : t('common.delete')}
+          </MenuItem>
+        </MenuPopup>
+      </Menu>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="text-content-text-muted hover:text-content-text-secondary"
+        aria-label={t('settings.openTypeDetail', '查看类型详情')}
+      >
+        <ChevronRight size={14} />
+      </button>
     </div>
   );
 }
 
-function IconPicker({ value, onChange }: { value: string; onChange: (icon: string) => void }) {
+const EMPTY_DRAFT = {
+  name: '',
+  description: '',
+  icon: 'Circle',
+  color: '#5E6AD2',
+};
+
+function CreateTypeDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const { t } = useTranslation();
+  const createType = useCreateIssueType();
+  const [draft, setDraft] = useState(EMPTY_DRAFT);
+  const [key, setKey] = useState('');
+
+  const submit = async () => {
+    if (!key || !draft.name) {
+      toast.error(t('settings.issueTypesRequired'));
+      return;
+    }
+    try {
+      await createType.mutateAsync({
+        key,
+        name: draft.name,
+        description: draft.description || undefined,
+        icon: draft.icon,
+        color: draft.color,
+      });
+      toast.success(t('settings.issueTypesCreated'));
+      setDraft(EMPTY_DRAFT);
+      setKey('');
+      onOpenChange(false);
+    } catch (e) {
+      toast.error((e as Error).message || t('settings.updateFailed'));
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('settings.issueTypesCreateTitle', '创建任务类型')}</DialogTitle>
+          <DialogDescription>
+            {t('settings.issueTypesCreateDesc', '为空间新增一种任务类型，可在详情中继续配置字段与状态。')}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeKeyLabel', '键（小写 slug）')}</label>
+            <Input
+              value={key}
+              onChange={(e) => setKey(e.target.value.toLowerCase())}
+              placeholder="story"
+              className="font-mono"
+              maxLength={32}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeNameLabel', '名称')}</label>
+            <Input
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              placeholder={t('settings.issueTypesNamePlaceholder')}
+              maxLength={50}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeDescLabel', '描述')}</label>
+            <Textarea
+              value={draft.description}
+              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              placeholder={t('settings.issueTypeDescPlaceholder', '一句话说明该类型跟踪什么工作')}
+              rows={2}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeIcon', '图标')}</label>
+            <IconPicker value={draft.icon} onChange={(icon) => setDraft({ ...draft, icon })} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeColor', '颜色')}</label>
+            <Input
+              type="color"
+              value={draft.color}
+              onChange={(e) => setDraft({ ...draft, color: e.target.value })}
+              className="h-9 w-20 cursor-pointer p-1"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button onClick={() => void submit()} disabled={createType.isPending}>
+            {t('common.save')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RecommendedTypesCard() {
+  const { t } = useTranslation();
+  const { byKey } = useIssueTypes();
+  const createType = useCreateIssueType();
+
+  const handleAdd = async (rec: (typeof RECOMMENDED_ISSUE_TYPES)[number]) => {
+    try {
+      await createType.mutateAsync({
+        key: rec.key,
+        name: t(`settings.recommendedTypes.${rec.key}.name`),
+        description: t(`settings.recommendedTypes.${rec.key}.desc`),
+        icon: rec.icon,
+        color: rec.color,
+      });
+      toast.success(t('settings.issueTypesCreated'));
+    } catch (e) {
+      toast.error((e as Error).message || t('settings.updateFailed'));
+    }
+  };
+
+  return (
+    <SectionCard
+      title={t('settings.recommended', '推荐')}
+      description={t('settings.recommendedDesc', '常用任务类型，一键添加。')}
+    >
+      <div className="divide-y divide-border rounded-lg border border-border">
+        {RECOMMENDED_ISSUE_TYPES.map((rec) => {
+          const exists = byKey.has(rec.key);
+          const Icon = issueTypeIcon(rec.icon);
+          return (
+            <div key={rec.key} className="flex items-center gap-3 bg-card px-3 py-2.5">
+              <span
+                className="flex size-7 shrink-0 items-center justify-center rounded-md"
+                style={{ backgroundColor: `${rec.color}1A`, color: rec.color }}
+              >
+                <Icon size={15} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-foreground">
+                  {t(`settings.recommendedTypes.${rec.key}.name`)}
+                </div>
+                <div className="truncate text-xs text-content-text-secondary">
+                  {t(`settings.recommendedTypes.${rec.key}.desc`)}
+                </div>
+              </div>
+              <div className="hidden items-center gap-1 sm:flex">
+                {rec.categories.map((cat) => (
+                  <Badge key={cat} variant="outline">
+                    {t(`settings.typeCategory.${cat}`)}
+                  </Badge>
+                ))}
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={exists || createType.isPending}
+                onClick={() => void handleAdd(rec)}
+              >
+                {exists ? t('settings.added', '已添加') : t('settings.addOne', '添加')}
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+    </SectionCard>
+  );
+}
+
+function IconPicker({ value, onChange }: { value: string; onChange: (icon: string) => void }) {
   return (
     <div className="flex flex-wrap items-center gap-1">
-      <span className="mr-1 text-xs text-muted-foreground">{t('settings.issueTypesIcon')}</span>
       {ICON_CHOICES.map((iconName) => {
         const Icon = ISSUE_TYPE_ICONS[iconName];
         return (
@@ -433,14 +486,14 @@ function IconPicker({ value, onChange }: { value: string; onChange: (icon: strin
             key={iconName}
             type="button"
             onClick={() => onChange(iconName)}
-            className={`flex size-6 items-center justify-center rounded-md border transition-colors ${
+            className={`flex size-7 items-center justify-center rounded-md border motion-shift ${
               value === iconName
                 ? 'border-accent-blue bg-accent-blue/10'
-                : 'border-transparent hover:bg-muted'
+                : 'border-transparent hover:bg-accent'
             }`}
             title={iconName}
           >
-            <Icon size={13} />
+            <Icon size={14} />
           </button>
         );
       })}

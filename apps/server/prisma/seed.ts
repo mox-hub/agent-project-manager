@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { buildBuiltinIssueTypes } from './builtin-issue-types';
 
 const prisma = new PrismaClient();
 
@@ -35,7 +36,10 @@ async function main() {
     },
   });
 
-  console.log('✅ Created users:', { adminUser: adminUser.username, testUser: testUser.username });
+  console.log('✅ Created users:', {
+    adminUser: adminUser.username,
+    testUser: testUser.username,
+  });
 
   // Create global role assignments
   const existingAdminRole = await prisma.roleAssignment.findFirst({
@@ -82,10 +86,25 @@ async function main() {
 
   // Create default tags
   const tags = [
-    { name: 'backend', color: '#FF5733', description: '后端相关', resourceType: 'task' },
-    { name: 'frontend', color: '#33FF57', description: '前端相关', resourceType: 'task' },
+    {
+      name: 'backend',
+      color: '#FF5733',
+      description: '后端相关',
+      resourceType: 'task',
+    },
+    {
+      name: 'frontend',
+      color: '#33FF57',
+      description: '前端相关',
+      resourceType: 'task',
+    },
     { name: 'bug', color: '#FF3333', description: 'Bug', resourceType: 'bug' },
-    { name: 'feature', color: '#3333FF', description: '新功能', resourceType: 'task' },
+    {
+      name: 'feature',
+      color: '#3333FF',
+      description: '新功能',
+      resourceType: 'task',
+    },
   ];
 
   for (const tag of tags) {
@@ -109,11 +128,40 @@ async function main() {
   console.log('✅ Created default tags');
 
   // Create default status definitions
+  // group：状态分组（Linear 式受控词表），类型管理面「状态」页签按组聚合渲染
   const statuses = [
-    { type: 'task', key: 'todo', name: '待办', order: 10, isFinal: false },
-    { type: 'task', key: 'in_progress', name: '进行中', order: 20, isFinal: false },
-    { type: 'task', key: 'in_review', name: '待评审', order: 30, isFinal: false },
-    { type: 'task', key: 'done', name: '已完成', order: 40, isFinal: true },
+    {
+      type: 'task',
+      key: 'todo',
+      name: '待办',
+      order: 10,
+      isFinal: false,
+      group: 'unstarted',
+    },
+    {
+      type: 'task',
+      key: 'in_progress',
+      name: '进行中',
+      order: 20,
+      isFinal: false,
+      group: 'started',
+    },
+    {
+      type: 'task',
+      key: 'in_review',
+      name: '待评审',
+      order: 30,
+      isFinal: false,
+      group: 'started',
+    },
+    {
+      type: 'task',
+      key: 'done',
+      name: '已完成',
+      order: 40,
+      isFinal: true,
+      group: 'completed',
+    },
   ];
 
   for (const status of statuses) {
@@ -129,10 +177,29 @@ async function main() {
       await prisma.statusDefinition.create({
         data: status,
       });
+    } else if (existing.group === 'unstarted' && status.group !== 'unstarted') {
+      // 存量库补 group（迁移默认值为 unstarted，内置键按上表回填真实分组）
+      await prisma.statusDefinition.update({
+        where: { id: existing.id },
+        data: { group: status.group },
+      });
     }
   }
 
   console.log('✅ Created default status definitions');
+
+  // 内置工单类型 task/bug（CAP-A-04）：isSystem 只可修改不可删除，定义与 build-template 共用
+  // buildBuiltinIssueTypes（单一事实源）；upsert 只补缺不覆盖用户已做的修改
+  for (const issueType of buildBuiltinIssueTypes()) {
+    const existingType = await prisma.issueType.findUnique({
+      where: { key: issueType.key },
+    });
+    if (!existingType) {
+      await prisma.issueType.create({ data: issueType });
+    }
+  }
+
+  console.log('✅ Created built-in issue types (task/bug)');
 
   // Create a sample project template
   const existingTemplate = await prisma.projectTemplate.findUnique({
@@ -296,14 +363,46 @@ async function main() {
       projectType: 'backend',
       techStack: 'java-spring',
       checklist: [
-        { category: '日志', content: '结构化日志配置（logback/Log4j2）', severity: 'high' },
-        { category: '错误追踪', content: 'Sentry/错误上报集成', severity: 'high' },
-        { category: '健康检查', content: '/actuator/health 端点配置', severity: 'high' },
-        { category: '数据库', content: 'Flyway/Liquibase 迁移脚本管理', severity: 'medium' },
-        { category: 'API文档', content: 'OpenAPI/Springdoc 文档', severity: 'medium' },
-        { category: '测试', content: '单元测试覆盖率 >= 70%', severity: 'high' },
-        { category: '安全性', content: '输入校验与 SQL 注入防护', severity: 'critical' },
-        { category: '性能', content: '关键接口响应时间 < 200ms', severity: 'medium' },
+        {
+          category: '日志',
+          content: '结构化日志配置（logback/Log4j2）',
+          severity: 'high',
+        },
+        {
+          category: '错误追踪',
+          content: 'Sentry/错误上报集成',
+          severity: 'high',
+        },
+        {
+          category: '健康检查',
+          content: '/actuator/health 端点配置',
+          severity: 'high',
+        },
+        {
+          category: '数据库',
+          content: 'Flyway/Liquibase 迁移脚本管理',
+          severity: 'medium',
+        },
+        {
+          category: 'API文档',
+          content: 'OpenAPI/Springdoc 文档',
+          severity: 'medium',
+        },
+        {
+          category: '测试',
+          content: '单元测试覆盖率 >= 70%',
+          severity: 'high',
+        },
+        {
+          category: '安全性',
+          content: '输入校验与 SQL 注入防护',
+          severity: 'critical',
+        },
+        {
+          category: '性能',
+          content: '关键接口响应时间 < 200ms',
+          severity: 'medium',
+        },
       ],
     },
     {
@@ -313,13 +412,37 @@ async function main() {
       techStack: 'ts-node',
       checklist: [
         { category: '日志', content: 'pino/结构化日志配置', severity: 'high' },
-        { category: '错误处理', content: '全局错误中间件与异常处理', severity: 'high' },
+        {
+          category: '错误处理',
+          content: '全局错误中间件与异常处理',
+          severity: 'high',
+        },
         { category: '健康检查', content: '/health 端点配置', severity: 'high' },
-        { category: 'API文档', content: 'OpenAPI/Swagger 文档', severity: 'medium' },
-        { category: '测试', content: 'Jest 测试覆盖率 >= 70%', severity: 'high' },
-        { category: '类型安全', content: 'TypeScript strict 模式', severity: 'high' },
-        { category: '安全性', content: '输入校验与安全头配置', severity: 'critical' },
-        { category: '性能', content: '关键接口响应时间 < 200ms', severity: 'medium' },
+        {
+          category: 'API文档',
+          content: 'OpenAPI/Swagger 文档',
+          severity: 'medium',
+        },
+        {
+          category: '测试',
+          content: 'Jest 测试覆盖率 >= 70%',
+          severity: 'high',
+        },
+        {
+          category: '类型安全',
+          content: 'TypeScript strict 模式',
+          severity: 'high',
+        },
+        {
+          category: '安全性',
+          content: '输入校验与安全头配置',
+          severity: 'critical',
+        },
+        {
+          category: '性能',
+          content: '关键接口响应时间 < 200ms',
+          severity: 'medium',
+        },
       ],
     },
     {
@@ -328,13 +451,37 @@ async function main() {
       projectType: 'frontend',
       techStack: 'react',
       checklist: [
-        { category: '错误边界', content: 'Error Boundary 组件实现', severity: 'high' },
-        { category: '性能', content: 'Web Vitals 监控（LCP < 2.5s）', severity: 'medium' },
-        { category: '可访问性', content: '基础 a11y 合规（aria-label）', severity: 'medium' },
-        { category: '测试', content: 'Vitest 组件测试覆盖率 >= 60%', severity: 'medium' },
-        { category: '类型安全', content: 'TypeScript strict 模式', severity: 'high' },
+        {
+          category: '错误边界',
+          content: 'Error Boundary 组件实现',
+          severity: 'high',
+        },
+        {
+          category: '性能',
+          content: 'Web Vitals 监控（LCP < 2.5s）',
+          severity: 'medium',
+        },
+        {
+          category: '可访问性',
+          content: '基础 a11y 合规（aria-label）',
+          severity: 'medium',
+        },
+        {
+          category: '测试',
+          content: 'Vitest 组件测试覆盖率 >= 60%',
+          severity: 'medium',
+        },
+        {
+          category: '类型安全',
+          content: 'TypeScript strict 模式',
+          severity: 'high',
+        },
         { category: '错误处理', content: 'API 错误状态处理', severity: 'high' },
-        { category: '安全性', content: 'XSS 防护与 CSP 配置', severity: 'critical' },
+        {
+          category: '安全性',
+          content: 'XSS 防护与 CSP 配置',
+          severity: 'critical',
+        },
       ],
     },
     {
@@ -343,14 +490,46 @@ async function main() {
       projectType: 'backend',
       techStack: 'python-django',
       checklist: [
-        { category: '日志', content: '结构化日志配置（structlog）', severity: 'high' },
-        { category: '错误追踪', content: 'Sentry/Django 错误上报集成', severity: 'high' },
-        { category: '健康检查', content: '/health/ 端点配置', severity: 'high' },
-        { category: '数据库', content: 'Django migrations 迁移管理', severity: 'high' },
-        { category: 'API文档', content: 'DRF Spectacular/OpenAPI 文档', severity: 'medium' },
-        { category: '测试', content: 'pytest 测试覆盖率 >= 70%', severity: 'high' },
-        { category: '安全性', content: 'Django 安全中间件配置', severity: 'critical' },
-        { category: '类型安全', content: 'pyright/mypy 类型检查', severity: 'medium' },
+        {
+          category: '日志',
+          content: '结构化日志配置（structlog）',
+          severity: 'high',
+        },
+        {
+          category: '错误追踪',
+          content: 'Sentry/Django 错误上报集成',
+          severity: 'high',
+        },
+        {
+          category: '健康检查',
+          content: '/health/ 端点配置',
+          severity: 'high',
+        },
+        {
+          category: '数据库',
+          content: 'Django migrations 迁移管理',
+          severity: 'high',
+        },
+        {
+          category: 'API文档',
+          content: 'DRF Spectacular/OpenAPI 文档',
+          severity: 'medium',
+        },
+        {
+          category: '测试',
+          content: 'pytest 测试覆盖率 >= 70%',
+          severity: 'high',
+        },
+        {
+          category: '安全性',
+          content: 'Django 安全中间件配置',
+          severity: 'critical',
+        },
+        {
+          category: '类型安全',
+          content: 'pyright/mypy 类型检查',
+          severity: 'medium',
+        },
       ],
     },
     {
@@ -360,13 +539,33 @@ async function main() {
       techStack: 'go-gin',
       checklist: [
         { category: '日志', content: 'zap/结构化日志配置', severity: 'high' },
-        { category: '错误处理', content: '错误封装与传播规范', severity: 'high' },
+        {
+          category: '错误处理',
+          content: '错误封装与传播规范',
+          severity: 'high',
+        },
         { category: '健康检查', content: '/health 端点配置', severity: 'high' },
-        { category: 'API文档', content: 'Swagger/OpenAPI 文档', severity: 'medium' },
-        { category: '测试', content: 'go test 覆盖率 >= 70%', severity: 'high' },
-        { category: '安全性', content: '输入校验与安全头配置', severity: 'critical' },
+        {
+          category: 'API文档',
+          content: 'Swagger/OpenAPI 文档',
+          severity: 'medium',
+        },
+        {
+          category: '测试',
+          content: 'go test 覆盖率 >= 70%',
+          severity: 'high',
+        },
+        {
+          category: '安全性',
+          content: '输入校验与安全头配置',
+          severity: 'critical',
+        },
         { category: '性能', content: 'pprof 性能分析配置', severity: 'medium' },
-        { category: '代码质量', content: 'golangci-lint 代码检查', severity: 'high' },
+        {
+          category: '代码质量',
+          content: 'golangci-lint 代码检查',
+          severity: 'high',
+        },
       ],
     },
   ];
@@ -463,22 +662,94 @@ async function main() {
   // ============================================
   const aiModels = [
     // OpenAI
-    { name: 'gpt-4o', provider: 'openai', taskTypes: ['chat', 'code', 'vision'], maxTokens: 128000, costPer1kTokens: 0.005 },
-    { name: 'gpt-4o-mini', provider: 'openai', taskTypes: ['chat', 'code'], maxTokens: 128000, costPer1kTokens: 0.00015 },
-    { name: 'gpt-4-turbo', provider: 'openai', taskTypes: ['chat', 'code', 'vision'], maxTokens: 128000, costPer1kTokens: 0.01 },
+    {
+      name: 'gpt-4o',
+      provider: 'openai',
+      taskTypes: ['chat', 'code', 'vision'],
+      maxTokens: 128000,
+      costPer1kTokens: 0.005,
+    },
+    {
+      name: 'gpt-4o-mini',
+      provider: 'openai',
+      taskTypes: ['chat', 'code'],
+      maxTokens: 128000,
+      costPer1kTokens: 0.00015,
+    },
+    {
+      name: 'gpt-4-turbo',
+      provider: 'openai',
+      taskTypes: ['chat', 'code', 'vision'],
+      maxTokens: 128000,
+      costPer1kTokens: 0.01,
+    },
     // Anthropic
-    { name: 'claude-sonnet-4-20250514', provider: 'anthropic', taskTypes: ['chat', 'code'], maxTokens: 200000, costPer1kTokens: 0.003 },
-    { name: 'claude-3-5-sonnet-20241022', provider: 'anthropic', taskTypes: ['chat', 'code'], maxTokens: 200000, costPer1kTokens: 0.003 },
-    { name: 'claude-3-5-haiku-20241022', provider: 'anthropic', taskTypes: ['chat', 'code'], maxTokens: 200000, costPer1kTokens: 0.0008 },
+    {
+      name: 'claude-sonnet-4-20250514',
+      provider: 'anthropic',
+      taskTypes: ['chat', 'code'],
+      maxTokens: 200000,
+      costPer1kTokens: 0.003,
+    },
+    {
+      name: 'claude-3-5-sonnet-20241022',
+      provider: 'anthropic',
+      taskTypes: ['chat', 'code'],
+      maxTokens: 200000,
+      costPer1kTokens: 0.003,
+    },
+    {
+      name: 'claude-3-5-haiku-20241022',
+      provider: 'anthropic',
+      taskTypes: ['chat', 'code'],
+      maxTokens: 200000,
+      costPer1kTokens: 0.0008,
+    },
     // Gemini
-    { name: 'gemini-1.5-pro', provider: 'gemini', taskTypes: ['chat', 'code', 'vision'], maxTokens: 2000000, costPer1kTokens: 0.00125 },
-    { name: 'gemini-1.5-flash', provider: 'gemini', taskTypes: ['chat', 'code', 'vision'], maxTokens: 1000000, costPer1kTokens: 0.000075 },
+    {
+      name: 'gemini-1.5-pro',
+      provider: 'gemini',
+      taskTypes: ['chat', 'code', 'vision'],
+      maxTokens: 2000000,
+      costPer1kTokens: 0.00125,
+    },
+    {
+      name: 'gemini-1.5-flash',
+      provider: 'gemini',
+      taskTypes: ['chat', 'code', 'vision'],
+      maxTokens: 1000000,
+      costPer1kTokens: 0.000075,
+    },
     // DeepSeek
-    { name: 'deepseek-chat', provider: 'deepseek', taskTypes: ['chat', 'code'], maxTokens: 64000, costPer1kTokens: 0.00014 },
-    { name: 'deepseek-coder', provider: 'deepseek', taskTypes: ['code'], maxTokens: 64000, costPer1kTokens: 0.00014 },
+    {
+      name: 'deepseek-chat',
+      provider: 'deepseek',
+      taskTypes: ['chat', 'code'],
+      maxTokens: 64000,
+      costPer1kTokens: 0.00014,
+    },
+    {
+      name: 'deepseek-coder',
+      provider: 'deepseek',
+      taskTypes: ['code'],
+      maxTokens: 64000,
+      costPer1kTokens: 0.00014,
+    },
     // GLM
-    { name: 'glm-4', provider: 'glm', taskTypes: ['chat', 'code'], maxTokens: 128000, costPer1kTokens: 0.0001 },
-    { name: 'glm-4v', provider: 'glm', taskTypes: ['chat', 'code', 'vision'], maxTokens: 64000, costPer1kTokens: 0.001 },
+    {
+      name: 'glm-4',
+      provider: 'glm',
+      taskTypes: ['chat', 'code'],
+      maxTokens: 128000,
+      costPer1kTokens: 0.0001,
+    },
+    {
+      name: 'glm-4v',
+      provider: 'glm',
+      taskTypes: ['chat', 'code', 'vision'],
+      maxTokens: 64000,
+      costPer1kTokens: 0.001,
+    },
   ];
 
   for (const m of aiModels) {
@@ -581,7 +852,9 @@ async function main() {
       });
     }
   }
-  console.log(`✅ Created/updated ${defaultExecutionRoles.length} default execution role templates`);
+  console.log(
+    `✅ Created/updated ${defaultExecutionRoles.length} default execution role templates`,
+  );
 
   console.log('🎉 Seeding completed!');
 }

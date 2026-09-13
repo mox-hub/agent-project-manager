@@ -7127,6 +7127,8 @@ export interface components {
             key: string;
             /** @description 显示名 */
             name: string;
+            /** @description 状态分组（triage/backlog/unstarted/started/completed/canceled），类型管理面按组聚合渲染 */
+            group: string;
             /** @description 排序序号 */
             order: number;
             /** @description 是否终态 */
@@ -9239,11 +9241,17 @@ export interface components {
              * @description 字段类型
              * @enum {string}
              */
-            type: "text" | "textarea" | "select" | "multiselect" | "number" | "date";
+            type: "text" | "textarea" | "select" | "multiselect" | "number" | "date" | "boolean" | "member" | "url";
             /** @description 是否必填（create 时强制） */
             required?: boolean;
             /** @description select/multiselect 选项 */
             options?: string[];
+            /** @description 缺省值（字符串口径；boolean 存 true/false，渲染层按类型转换） */
+            defaultValue?: string;
+            /** @description 字段用途描述 */
+            description?: string;
+            /** @description 字段级启用开关（false = 不出现在工单表单，既有值保留） */
+            enabled?: boolean;
             /** @description 排序权重 */
             order?: number;
         };
@@ -9264,6 +9272,10 @@ export interface components {
              * @example 缺陷
              */
             name: string;
+            /** @description 类型描述（未配置时为 null） */
+            description: Record<string, never> | null;
+            /** @description 启用开关（禁用类型不在创建入口可选） */
+            enabled: boolean;
             /**
              * @description lucide 图标名
              * @example Circle
@@ -9298,6 +9310,10 @@ export interface components {
              * @example 页面
              */
             name: string;
+            /** @description 类型描述（一句话用途说明） */
+            description?: string;
+            /** @description 启用开关（默认 true） */
+            enabled?: boolean;
             /**
              * @description lucide 图标名
              * @example FileCode
@@ -9316,6 +9332,10 @@ export interface components {
         UpdateIssueTypeDto: {
             /** @description 类型名称 */
             name?: string;
+            /** @description 类型描述 */
+            description?: string;
+            /** @description 启用开关（默认类型 task 不可禁用，服务端守卫） */
+            enabled?: boolean;
             /** @description lucide 图标名 */
             icon?: string;
             /** @description 颜色（hex） */

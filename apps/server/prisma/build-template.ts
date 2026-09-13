@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { buildBuiltinIssueTypes } from './builtin-issue-types';
 
 const prismaDir = __dirname;
 const templatePath = path.join(prismaDir, 'template.db');
@@ -71,13 +72,25 @@ async function seed() {
       metadata: { isSystemAssistant: true },
     },
   });
+
+  // 内置工单类型 task/bug（CAP-A-04）：isSystem 类型只可修改不可删除（守卫在 issue-type.service）；
+  // bug 六字段 fieldSchema 与 issue-custom-fields.util BUILTIN_CUSTOM_FIELD_KEYS 对齐
+  for (const issueType of buildBuiltinIssueTypes()) {
+    await prisma.issueType.upsert({
+      where: { key: issueType.key },
+      update: {},
+      create: issueType,
+    });
+  }
 }
 
 seed()
   .then(async () => {
     await prisma.$disconnect();
     const size = fs.statSync(templatePath).size;
-    console.log(`✓ 模板库已生成: ${templatePath} (${(size / 1024).toFixed(0)} KB)`);
+    console.log(
+      `✓ 模板库已生成: ${templatePath} (${(size / 1024).toFixed(0)} KB)`,
+    );
   })
   .catch(async (e) => {
     console.error(e);

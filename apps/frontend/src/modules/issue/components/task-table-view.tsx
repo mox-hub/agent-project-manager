@@ -6,6 +6,8 @@ import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { ListAvatar, ListDate } from '@/components/ui/data-list';
 import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
 import type { Task } from '../api/issue-api';
+import { useIssueTypeOf } from '../hooks/use-issue-types';
+import { IssueTypeIcon } from '@/shared/components/issue-type-icon';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
 import { ArrowDown, ArrowUp, ChevronsUp, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -40,6 +42,9 @@ export function TaskTableView({
 }: TaskTableViewProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // 类型图标（统一工单视图下区分 task/bug/自定义类型）
+  const issueTypeOf = useIssueTypeOf();
+
   const columns = useMemo<ColumnDef<Task, unknown>[]>(() => {
     return [
       {
@@ -49,15 +54,9 @@ export function TaskTableView({
         cell: ({ row }) => {
           const task = row.original;
           const id = task.shortId || task.externalIdentifier || task.id.slice(0, 8);
-          const isBug = task.type === 'bug';
           return (
             <div className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
-              <span
-                className={cn(
-                  'h-3.5 w-1 rounded-full',
-                  isBug ? 'bg-destructive' : 'bg-accent-blue',
-                )}
-              />
+              <IssueTypeIcon meta={issueTypeOf(task)} />
               <span>{id}</span>
             </div>
           );
@@ -187,7 +186,7 @@ export function TaskTableView({
         },
       },
     ];
-  }, [getAiExecution, getProjectName]);
+  }, [getAiExecution, getProjectName, issueTypeOf]);
 
   return (
     <div className={cn('w-full', className)}>

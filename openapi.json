@@ -58429,6 +58429,10 @@
             "type": "string",
             "description": "显示名"
           },
+          "group": {
+            "type": "string",
+            "description": "状态分组（triage/backlog/unstarted/started/completed/canceled），类型管理面按组聚合渲染"
+          },
           "order": {
             "type": "number",
             "description": "排序序号"
@@ -58459,6 +58463,7 @@
           "type",
           "key",
           "name",
+          "group",
           "order",
           "isFinal",
           "isBlockedState"
@@ -63174,7 +63179,10 @@
               "select",
               "multiselect",
               "number",
-              "date"
+              "date",
+              "boolean",
+              "member",
+              "url"
             ]
           },
           "required": {
@@ -63187,6 +63195,18 @@
             "items": {
               "type": "string"
             }
+          },
+          "defaultValue": {
+            "type": "string",
+            "description": "缺省值（字符串口径；boolean 存 true/false，渲染层按类型转换）"
+          },
+          "description": {
+            "type": "string",
+            "description": "字段用途描述"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "字段级启用开关（false = 不出现在工单表单，既有值保留）"
           },
           "order": {
             "type": "number",
@@ -63227,6 +63247,15 @@
             "type": "string",
             "description": "类型名称",
             "example": "缺陷"
+          },
+          "description": {
+            "type": "object",
+            "description": "类型描述（未配置时为 null）",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "启用开关（禁用类型不在创建入口可选）"
           },
           "icon": {
             "type": "string",
@@ -63275,6 +63304,8 @@
           "id",
           "key",
           "name",
+          "description",
+          "enabled",
           "icon",
           "color",
           "order",
@@ -63296,6 +63327,14 @@
             "type": "string",
             "description": "类型名称",
             "example": "页面"
+          },
+          "description": {
+            "type": "string",
+            "description": "类型描述（一句话用途说明）"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "启用开关（默认 true）"
           },
           "icon": {
             "type": "string",
@@ -63330,6 +63369,14 @@
           "name": {
             "type": "string",
             "description": "类型名称"
+          },
+          "description": {
+            "type": "string",
+            "description": "类型描述"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "启用开关（默认类型 task 不可禁用，服务端守卫）"
           },
           "icon": {
             "type": "string",
