@@ -28,6 +28,7 @@ import {
 } from '@/modules/settings/pages/sections/manager-sections';
 import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-id-section';
 import { IssueTypesSettingsSection } from '@/modules/settings/pages/sections/issue-types-section';
+import { IssueTypeDetailSection } from '@/modules/settings/pages/sections/issue-type-detail-section';
 import { ChecklistsSettingsSection } from '@/modules/settings/pages/sections/checklists-section';
 import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
 import { AiAgentsSection } from '@/modules/settings/pages/sections/ai-agents-section';
@@ -165,6 +166,12 @@ const DecisionInboxPage = lazy(() =>
 const AiSurfacePage = lazy(() =>
   import('@/modules/ai-surface/pages/ai-surface-page').then((m) => ({
     default: m.AiSurfacePage,
+  })),
+);
+
+const RequirementIntakePage = lazy(() =>
+  import('@/modules/intake/pages/requirement-intake-page').then((m) => ({
+    default: m.RequirementIntakePage,
   })),
 );
 
@@ -312,6 +319,7 @@ export const router = createBrowserRouter([
       {
         path: 'executions',
         element: <ExecutionsPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -391,6 +399,15 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={null}>
             <AiSurfacePage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'intake',
+        element: (
+          <Suspense fallback={null}>
+            <RequirementIntakePage />
           </Suspense>
         ),
         errorElement: <ErrorPage />,
@@ -613,6 +630,11 @@ export const router = createBrowserRouter([
       { path: 'labels', element: <LabelsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'statuses', element: <StatusesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'issue-types', element: <IssueTypesSettingsSection />, errorElement: <ErrorPage /> },
+      {
+        path: 'issue-types/:typeKey',
+        element: <IssueTypeDetailSection />,
+        errorElement: <ErrorPage />,
+      },
       { path: 'checklists', element: <ChecklistsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'roles', element: <RolesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'templates', element: <TemplatesSettingsSection />, errorElement: <ErrorPage /> },

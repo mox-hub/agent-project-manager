@@ -46,11 +46,11 @@ import {
   Palette,
   ListTree,
   Sparkles,
-  Rocket,
   type LucideIcon,
 } from 'lucide-react';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useTheme } from '@/shared/theme/theme-context';
+import { PIPELINE_STAGES } from '@/shared/layout/pipeline-stages';
 import { FAVORITE_FALLBACK_ICON, PAGE_REGISTRY } from '@/shared/layout/page-registry';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
@@ -173,91 +173,37 @@ export function ShellLayout() {
         id: 'pipeline',
         label: t('shell.pipeline', '研发生命周期'),
         isPipeline: true,
-        items: [
-          // 01 需求调研 / 规格
-          {
-            to: '/app/documents',
-            icon: getEntityIcon('document').icon,
-            label: t('document.title'),
-            stageNumber: '01',
-            hint: t('shell.stageDiscovery', '需求调研'),
-          },
-          // 02 任务拆解 / 工单
-          {
-            to: '/app/issues',
-            icon: getEntityIcon('issue').icon,
-            label: t('nav.tasks'),
-            stageNumber: '02',
-            hint: t('shell.stagePlanning', '规划拆解'),
-          },
-          // 03 代码工程 / 仓库
-          {
-            to: '/app/repositories',
-            icon: getEntityIcon('repository').icon,
-            label: t('git.title'),
-            stageNumber: '03',
-            hint: t('shell.stageExecution', '代码研发'),
-          },
-          // 04 自动化执行
-          {
-            to: '/app/executions',
-            icon: getEntityIcon('execution').icon,
-            label: t('nav.executions', '执行记录'),
-            stageNumber: '04',
-            hint: t('nav.executions', '执行记录'),
-          },
-          // 05 智能执行面
-          {
-            to: '/app/ai-surface',
-            icon: Sparkles,
-            label: t('nav.aiSurface'),
-            color: '#A855F7',
-            capsule: 'exp',
-            stageNumber: '05',
-            hint: t('nav.aiSurface', 'AI 表面'),
-          },
-          // 06 验收门禁
-          {
-            to: '/app/acceptance',
-            icon: getEntityIcon('acceptance').icon,
-            label: t('nav.acceptance'),
-            stageNumber: '06',
-            hint: t('shell.stageAcceptance', '质量验收'),
-          },
-          // 07 交付视图 ★ 放置在验收下面
-          {
-            to: '/app/delivery',
-            icon: ListTree,
-            label: t('nav.delivery', '交付视图'),
-            stageNumber: '07',
-            hint: t('nav.delivery', '交付视图'),
-          },
-          // 08 缺陷管理
-          {
-            to: '/app/bugs',
-            icon: getEntityIcon('bug').icon,
-            label: t('task.bug.title'),
-            stageNumber: '08',
-            hint: t('task.bug.title', '缺陷追踪'),
-          },
-          // 09 发版交付（CAP-K-03 驱动型发版）
-          {
-            to: '/app/releases',
-            icon: Rocket,
-            label: t('nav.releases', '发版交付'),
-            stageNumber: '09',
-            hint: t('nav.releases', '发版交付'),
-          },
-        ],
+        // 六站唯一定义源见 pipeline-stages.ts（CAP-A-15）：01 承接→02 拆解→03 研发→04 执行→05 验收→06 交付
+        items: PIPELINE_STAGES.map((stage) => ({
+          to: stage.to,
+          icon: stage.icon,
+          label: t(stage.labelKey, stage.labelFallback),
+          stageNumber: stage.stageNumber,
+          hint: t(stage.hintKey, stage.hintFallback),
+        })),
       },
       {
         id: 'collaboration',
         label: t('shell.collaboration', '协同与底座'),
         items: [
           { to: '/app/office', icon: DoorOpen, label: t('nav.office') },
+          // 文档知识库：D 线契约知识承载，不在生命周期编号内（CAP-A-15 迁位）
+          {
+            to: '/app/documents',
+            icon: getEntityIcon('document').icon,
+            label: t('document.title'),
+          },
           { to: '/app/members', icon: getEntityIcon('member').icon, label: t('nav.members') },
           { to: '/app/teams', icon: getEntityIcon('team').icon, label: t('nav.teams') },
           { to: '/app/workflows', icon: getEntityIcon('workflow').icon, label: t('nav.workflow') },
+          // AI 表面：候补区 pending 形态实验（非流程站），带 exp 徽标放协同组
+          {
+            to: '/app/ai-surface',
+            icon: Sparkles,
+            label: t('nav.aiSurface'),
+            color: '#A855F7',
+            capsule: 'exp',
+          },
           { to: '/app/analytics', icon: BarChart3, label: t('nav.analytics') },
         ],
       },
@@ -287,6 +233,8 @@ export function ShellLayout() {
           ...(import.meta.env.DEV
             ? [
                 { to: '/app/design-system', icon: Palette, label: 'Design System', capsule: 'dev' },
+                // 交付视图：mock 还原页（data-mock），不进正式导航（CAP-A-15），仅 DEV 可达
+                { to: '/app/delivery', icon: ListTree, label: t('nav.delivery', '交付视图'), capsule: 'dev' },
               ]
             : []),
         ],

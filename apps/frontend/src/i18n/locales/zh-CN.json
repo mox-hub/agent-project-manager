@@ -1,6 +1,10 @@
 {
   "common": {
     "noProject": "无项目",
+    "more": "更多",
+    "reorder": "拖拽排序",
+    "moveUp": "上移",
+    "moveDown": "下移",
     "confirm": "确认",
     "cancel": "取消",
     "delete": "删除",
@@ -32,6 +36,7 @@
     "unknown": "未知",
     "retry": "重试",
     "retryLoad": "重新加载",
+    "loadFailed": "加载失败",
     "filters": "筛选",
     "filterOpIs": "是",
     "filterOpIsNot": "不是",
@@ -221,6 +226,7 @@
   },
   "nav": {
     "dashboard": "仪表盘",
+    "intake": "需求承接",
     "projects": "项目",
     "tasks": "任务",
     "settings": "设置",
@@ -250,11 +256,33 @@
     "delivery": "交付视图",
     "releases": "发版交付"
   },
+  "intake": {
+    "title": "需求承接",
+    "heroTitle": "提出一句需求，AI 同事接手",
+    "heroDesc": "从一句原始需求开始：AI 同事连续追问澄清目标，访谈补全细节，生成任务族与验收清单，确认后落库进工单。",
+    "cta": "提出需求",
+    "pipelineTitle": "承接管道",
+    "step1Title": "需求澄清",
+    "step1Desc": "AI 同事连续追问，澄清原始需求与目标",
+    "step2Title": "访谈补全",
+    "step2Desc": "结构化访谈补全背景、边界与验收期望",
+    "step3Title": "生成与确认",
+    "step3Desc": "AI 生成任务族与验收清单，批卡确认后落库",
+    "step4Title": "审计把关",
+    "step4Desc": "完整性审计校验验收标准，缺口黄牌提示",
+    "docsTitle": "需求纪要",
+    "docsDesc": "澄清纪要与访谈产物（需求类文档）",
+    "docsEmpty": "尚无需求纪要",
+    "docsEmptyDesc": "提出第一条需求后，澄清纪要与访谈产物会出现在这里"
+  },
   "release": {
     "title": "发版交付",
     "filter": {
       "project": "选择项目",
-      "pickProject": "选择项目…"
+      "pickProject": "选择项目…",
+      "searchPlaceholder": "搜索版本/名称/Tag…",
+      "projectGroup": "项目",
+      "statusGroup": "状态"
     },
     "table": {
       "version": "版本",
@@ -267,7 +295,10 @@
       "pickProject": "先选择一个项目",
       "pickProjectDesc": "发版按项目组织，选择项目后查看发版记录",
       "none": "该项目还没有发版",
-      "noneDesc": "创建发版草案：圈定范围 → 门禁 → 审批 → 发布"
+      "noneDesc": "创建发版草案：圈定范围 → 门禁 → 审批 → 发布",
+      "createAction": "创建发版",
+      "filtered": "没有符合条件的发版",
+      "filteredDesc": "调整搜索关键词或清除筛选再试"
     },
     "status": {
       "draft": "草案",
@@ -276,6 +307,28 @@
       "publishing": "发布中",
       "released": "已发布",
       "failed": "失败"
+    },
+    "trace": {
+      "title": "发版范围与前因后果",
+      "summary": "{{issues}} 个任务 · 验收 {{passed}}/{{total}} 通过 · 执行 {{runs}} 条 · {{cost}}",
+      "editScope": "圈定范围",
+      "closeEditor": "收起",
+      "emptyTitle": "未圈定发版范围",
+      "emptyDraftDesc": "圈定本次发版包含的任务；门禁将校验范围归属、验收状态与执行证据",
+      "emptyFixedDesc": "该发版创建时未圈定任务范围",
+      "noAcceptance": "无验收",
+      "acceptanceRatio": "验收 {{passed}}/{{total}}",
+      "runCount": "{{count}} 次执行",
+      "acceptanceSection": "验收单",
+      "runSection": "执行记录",
+      "noAcceptanceDesc": "该任务尚无验收单",
+      "noRunsDesc": "该任务尚无执行运行记录",
+      "openIssue": "打开任务",
+      "unnamedAcceptance": "未命名验收单",
+      "scopeEditorTitle": "圈定发版范围（勾选任务）",
+      "noProjectTasks": "项目内暂无任务",
+      "selectedCount": "已选 {{count}} 项",
+      "scopeSaved": "发版范围已保存"
     },
     "create": {
       "open": "新建发版",
@@ -411,6 +464,7 @@
       "httpDesc": "调用外部 HTTP 接口"
     },
     "empty": "暂无工作流定义",
+    "emptyHint": "从需求承接或画布创建第一个工作流定义",
     "noDescription": "暂无描述",
     "run": "运行",
     "runDialogTitle": "运行「{{name}}」",
@@ -675,6 +729,23 @@
     }
   },
   "execution": {
+    "stats": {
+      "toggle": "快捷统计"
+    },
+    "agentConsole": "Agent 控制台",
+    "filter": {
+      "searchPlaceholder": "搜索执行目标或任务…",
+      "statusGroup": "状态",
+      "agentGroup": "Agent",
+      "projectGroup": "项目"
+    },
+    "empty": {
+      "none": "暂无执行记录",
+      "noneDesc": "从任务派发 AI 执行后，运行记录会出现在这里",
+      "goTasks": "去任务页",
+      "filtered": "没有符合条件的执行记录",
+      "filteredDesc": "调整搜索关键词或清除筛选再试"
+    },
     "kpi": {
       "total": "总运行数",
       "totalSub": "全部时间",
@@ -692,7 +763,9 @@
       "issue": "任务",
       "started": "开始时间",
       "tokens": "Tokens",
-      "cost": "费用"
+      "cost": "费用",
+      "viewAcceptance": "查看验收",
+      "cancel": "取消执行"
     }
   },
   "decision": {
@@ -1193,6 +1266,16 @@
     }
   },
   "project": {
+    "empty": {
+      "none": "暂无项目",
+      "noneDesc": "创建第一个项目，开始管理你的工作",
+      "create": "新建项目"
+    },
+    "sprint": {
+      "empty": "暂无 Sprint",
+      "emptyDesc": "创建第一个 Sprint 来开始敏捷开发流程",
+      "create": "创建 Sprint"
+    },
     "init": {
       "grilled": {
         "title": "AI 需求澄清完成",
@@ -1701,6 +1784,10 @@
   },
   "settings": {
     "title": "设置",
+    "integration": {
+      "emptyFiltered": "没有符合条件的集成",
+      "emptyFilteredHint": "调整搜索关键词或清除筛选再试"
+    },
     "general": "通用",
     "groupAccount": "账号",
     "profile": "个人资料",
@@ -2128,6 +2215,100 @@
     "storageNoFiles": "尚未同步任何文件",
     "memory": "记忆档案",
     "issueTypes": "工单类型",
+    "issueTypesPageDesc": "管理空间所有的任务类型。",
+    "addIssueType": "添加任务类型",
+    "issueTypesListTitle": "任务类型",
+    "issueTypesListDesc": "任务类型及其状态按空间配置。",
+    "issueTypesEmpty": "暂无任务类型",
+    "issueTypesStats": "{{status}} 个状态 · {{fields}} 个自定义字段 · {{tasks}} 个任务",
+    "defaultType": "默认",
+    "builtinTypeNoDelete": "内置类型不可删除",
+    "typeDisabled": "已停用",
+    "enabled": "启用",
+    "enabledHint": "停用后新工单不再可选此类型，既有工单不受影响",
+    "defaultTypeAlwaysOn": "默认类型不可停用",
+    "openTypeDetail": "查看类型详情",
+    "issueTypesCreateTitle": "创建任务类型",
+    "issueTypesCreateDesc": "为空间新增一种任务类型，可在详情中继续配置字段与状态。",
+    "issueTypeKeyLabel": "键（小写 slug）",
+    "issueTypeNameLabel": "名称",
+    "issueTypeDescLabel": "描述",
+    "issueTypeDescPlaceholder": "一句话说明该类型跟踪什么工作",
+    "issueTypeIcon": "图标",
+    "issueTypeColor": "颜色",
+    "issueTypeDetail": "任务类型详情",
+    "issueTypeNotFound": "类型不存在或已被删除",
+    "issueTypeNoDesc": "尚未填写类型描述",
+    "basicsTab": "基本信息",
+    "fieldsTab": "自定义字段",
+    "statusTab": "状态",
+    "recommended": "推荐",
+    "recommendedDesc": "常用任务类型，一键添加。",
+    "added": "已添加",
+    "addOne": "添加",
+    "typeCategory": {
+      "engineering": "工程与产品",
+      "pmo": "PMO",
+      "support": "支持",
+      "design": "创意与设计",
+      "finance": "财务与会计",
+      "marketing": "市场",
+      "ops": "运营",
+      "professional": "专业服务",
+      "hr": "HR 与招聘",
+      "personal": "个人使用",
+      "other": "其他"
+    },
+    "recommendedTypes": {
+      "requirement": { "name": "需求", "desc": "跟踪产品需求与规格" },
+      "story": { "name": "用户故事", "desc": "从最终用户角度描述需求或功能" },
+      "request": { "name": "请求", "desc": "处理来自客户或团队成员的请求或任务" },
+      "asset": { "name": "资产", "desc": "跟踪和管理实体或数字资产" },
+      "campaign": { "name": "活动", "desc": "规划和监控市场或推广活动" },
+      "content": { "name": "内容", "desc": "管理内容的创作和发布" },
+      "deal": { "name": "交易", "desc": "跟踪商业交易和谈判的进展与详情" },
+      "client": { "name": "客户", "desc": "管理客户账户详情和互动" },
+      "plan": { "name": "计划", "desc": "组织面向更大业务目标的工作" },
+      "goal": { "name": "目标", "desc": "跟踪战略目标与进展" }
+    },
+    "addField": "添加自定义字段",
+    "editField": "编辑自定义字段",
+    "fieldDialogDesc": "此类型任务需要记录的字段。",
+    "fieldLabelPlaceholder": "例如 Severity、Story points、Linked PR",
+    "fieldTypeLabel": "类型",
+    "issueTypesFieldOptions": "选项（逗号分隔）",
+    "fieldDefaultValue": "默认值（可选）",
+    "fieldMultiDefaultPlaceholder": "多个默认值用逗号分隔",
+    "fieldDescLabel": "描述（可选）",
+    "fieldDescPlaceholder": "说明此字段的用途和使用场景。",
+    "issueTypesFieldKeyDup": "字段 key 与现有字段重复",
+    "issueTypesFieldNeedOptions": "select/multiselect 至少需要一个选项",
+    "issueTypesFieldTypesBoolean": "布尔值",
+    "issueTypesFieldTypesMember": "成员选择器",
+    "issueTypesFieldTypesUrl": "URL",
+    "statusGroupsHint": "设置该工作空间可用的状态；状态按分组聚合展示。",
+    "addStatus": "添加状态",
+    "addStatusDesc": "新增状态将对该空间所有任务类型生效。",
+    "statusName": "名称",
+    "statusKey": "键（小写 slug）",
+    "statusGroupLabel": "所属分组",
+    "statusFinalLabel": "终态（表示工作已完成或关闭）",
+    "statusFinalBadge": "终态",
+    "statusKeyDup": "状态键已存在",
+    "statusGroup": {
+      "triage": "待分拣",
+      "triageDesc": "等审核的新进工作，确认后再进入常规任务视图。",
+      "backlog": "待规划",
+      "backlogDesc": "进入主动规划前的想法和暂缓工作。",
+      "unstarted": "未开始",
+      "unstartedDesc": "已准备好但尚未开始的工作。",
+      "started": "进行中",
+      "startedDesc": "当前正在推进的工作。",
+      "completed": "已完成",
+      "completedDesc": "已经完成的工作。",
+      "canceled": "已取消",
+      "canceledDesc": "已关闭且不会继续推进的工作。"
+    },
     "checklists": "完备性清单",
     "checklistsTitle": "完备性清单",
     "checklistsDesc": "完整性审计的检查清单：系统预置只读，团队自定义可创建与维护；审计时按项目类型与技术栈匹配。",
@@ -3122,6 +3303,11 @@
     "menu": {
       "settings": "仓库设置"
     },
+    "pulls": {
+      "empty": "暂无 Pull Request",
+      "emptyHint": "该仓库还没有 PR 记录，集成同步后将出现在这里",
+      "loadFailed": "Pull Request 加载失败"
+    },
     "toast": {
       "refreshed": "仓库状态已刷新",
       "refreshFailed": "刷新失败"
@@ -3432,6 +3618,9 @@
     "pipeline": "研发生命周期",
     "collaboration": "协同与底座",
     "stageDiscovery": "需求调研",
+    "stageIntake": "需求承接",
+    "stageDispatch": "派发执行",
+    "stageDelivery": "交付发布",
     "stagePlanning": "规划拆解",
     "stageExecution": "研发执行",
     "stageAcceptance": "质量验收",
@@ -3485,7 +3674,11 @@
     "hintClose": "关闭"
   },
   "search": {
-    "placeholder": "搜索一切..."
+    "placeholder": "搜索一切...",
+    "placeholderTitle": "搜索一切",
+    "searching": "搜索中…",
+    "noResults": "未找到匹配结果",
+    "noResultsHint": "换个关键词试试，或清除类型过滤"
   },
   "filterPanel": {
     "activeFilters": "已筛选条件",

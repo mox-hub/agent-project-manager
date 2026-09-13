@@ -1,6 +1,10 @@
 {
   "common": {
     "noProject": "No Project",
+    "more": "More",
+    "reorder": "Drag to reorder",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
     "confirm": "Confirm",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -32,6 +36,7 @@
     "unknown": "Unknown",
     "retry": "Retry",
     "retryLoad": "Retry loading",
+    "loadFailed": "Failed to load",
     "filters": "Filters",
     "filterOpIs": "is",
     "filterOpIsNot": "is not",
@@ -221,6 +226,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "intake": "Intake",
     "projects": "Projects",
     "tasks": "Tasks",
     "settings": "Settings",
@@ -250,11 +256,33 @@
     "delivery": "Delivery",
     "releases": "Releases"
   },
+  "intake": {
+    "title": "Requirement Intake",
+    "heroTitle": "State a requirement, let your AI colleague take it",
+    "heroDesc": "Start from one sentence: your AI colleague asks follow-up questions to clarify the goal, interviews you for details, generates tasks and acceptance criteria, and files them once you confirm.",
+    "cta": "New Requirement",
+    "pipelineTitle": "Intake Pipeline",
+    "step1Title": "Clarify",
+    "step1Desc": "The AI colleague asks follow-ups to clarify the raw requirement and goal",
+    "step2Title": "Interview",
+    "step2Desc": "A structured interview fills in background, boundaries and acceptance expectations",
+    "step3Title": "Generate & Confirm",
+    "step3Desc": "AI generates task families and acceptance criteria; batch card confirmation files them",
+    "step4Title": "Audit",
+    "step4Desc": "Completeness audit checks acceptance criteria and flags gaps",
+    "docsTitle": "Requirement Notes",
+    "docsDesc": "Clarification notes and interview artifacts (requirement documents)",
+    "docsEmpty": "No requirement notes yet",
+    "docsEmptyDesc": "After you file the first requirement, clarification notes and interview artifacts appear here"
+  },
   "release": {
     "title": "Releases",
     "filter": {
       "project": "Select project",
-      "pickProject": "Pick a project…"
+      "pickProject": "Pick a project…",
+      "searchPlaceholder": "Search version/name/tag…",
+      "projectGroup": "Project",
+      "statusGroup": "Status"
     },
     "table": {
       "version": "Version",
@@ -267,7 +295,10 @@
       "pickProject": "Pick a project first",
       "pickProjectDesc": "Releases are organized per project — pick one to view its history",
       "none": "No releases in this project",
-      "noneDesc": "Create a draft: scope → gate → approval → publish"
+      "noneDesc": "Create a draft: scope → gate → approval → publish",
+      "createAction": "Create release",
+      "filtered": "No releases match your filters",
+      "filteredDesc": "Try adjusting your search or clearing the filters"
     },
     "status": {
       "draft": "Draft",
@@ -276,6 +307,28 @@
       "publishing": "Publishing",
       "released": "Released",
       "failed": "Failed"
+    },
+    "trace": {
+      "title": "Release scope & trace",
+      "summary": "{{issues}} issues · acceptance {{passed}}/{{total}} passed · {{runs}} runs · {{cost}}",
+      "editScope": "Edit scope",
+      "closeEditor": "Close",
+      "emptyTitle": "No scope defined",
+      "emptyDraftDesc": "Pick the issues included in this release; the gate checks scope ownership, acceptance and execution evidence",
+      "emptyFixedDesc": "This release was created without a scoped issue list",
+      "noAcceptance": "No acceptance",
+      "acceptanceRatio": "{{passed}}/{{total}} accepted",
+      "runCount": "{{count}} runs",
+      "acceptanceSection": "Acceptances",
+      "runSection": "Execution runs",
+      "noAcceptanceDesc": "No acceptance contracts for this issue",
+      "noRunsDesc": "No execution runs for this issue",
+      "openIssue": "Open issue",
+      "unnamedAcceptance": "Untitled acceptance",
+      "scopeEditorTitle": "Scope editor (pick issues)",
+      "noProjectTasks": "No issues in this project",
+      "selectedCount": "{{count}} selected",
+      "scopeSaved": "Release scope saved"
     },
     "create": {
       "open": "New release",
@@ -411,6 +464,7 @@
       "httpDesc": "Call an external HTTP API"
     },
     "empty": "No workflow definitions yet",
+    "emptyHint": "Create your first workflow definition from requirement intake or the canvas",
     "noDescription": "No description",
     "run": "Run",
     "runDialogTitle": "Run \"{{name}}\"",
@@ -675,6 +729,23 @@
     }
   },
   "execution": {
+    "stats": {
+      "toggle": "Quick stats"
+    },
+    "agentConsole": "Agent Console",
+    "filter": {
+      "searchPlaceholder": "Search runs or issues…",
+      "statusGroup": "Status",
+      "agentGroup": "Agent",
+      "projectGroup": "Project"
+    },
+    "empty": {
+      "none": "No executions yet",
+      "noneDesc": "Dispatch an AI run from a task and it will show up here",
+      "goTasks": "Go to tasks",
+      "filtered": "No executions match your filters",
+      "filteredDesc": "Try adjusting your search or clearing the filters"
+    },
     "kpi": {
       "total": "Total Runs",
       "totalSub": "all time",
@@ -692,7 +763,9 @@
       "issue": "Issue",
       "started": "Started",
       "tokens": "Tokens",
-      "cost": "Cost"
+      "cost": "Cost",
+      "viewAcceptance": "View acceptance",
+      "cancel": "Cancel run"
     }
   },
   "decision": {
@@ -1193,6 +1266,16 @@
     }
   },
   "project": {
+    "empty": {
+      "none": "No projects yet",
+      "noneDesc": "Create your first project to get started",
+      "create": "New project"
+    },
+    "sprint": {
+      "empty": "No sprints",
+      "emptyDesc": "Create the first sprint to start the agile flow",
+      "create": "Create sprint"
+    },
     "init": {
       "grilled": {
         "title": "AI requirement clarification done",
@@ -1701,6 +1784,10 @@
   },
   "settings": {
     "title": "Settings",
+    "integration": {
+      "emptyFiltered": "No integrations match your search",
+      "emptyFilteredHint": "Try adjusting your search or clearing the filters"
+    },
     "general": "General",
     "groupAccount": "Account",
     "profile": "Profile",
@@ -2128,6 +2215,100 @@
     "storageNoFiles": "No files synced yet",
     "memory": "Memory",
     "issueTypes": "Issue Types",
+    "issueTypesPageDesc": "Manage all task types in this space.",
+    "addIssueType": "Add Type",
+    "issueTypesListTitle": "Task Types",
+    "issueTypesListDesc": "Task types and their statuses are configured per space.",
+    "issueTypesEmpty": "No task types yet",
+    "issueTypesStats": "{{status}} statuses · {{fields}} custom fields · {{tasks}} issues",
+    "defaultType": "Default",
+    "builtinTypeNoDelete": "Built-in types cannot be deleted",
+    "typeDisabled": "Disabled",
+    "enabled": "Enabled",
+    "enabledHint": "Disabled types are hidden from creation forms; existing issues keep their type",
+    "defaultTypeAlwaysOn": "The default type cannot be disabled",
+    "openTypeDetail": "Open type detail",
+    "issueTypesCreateTitle": "Create Task Type",
+    "issueTypesCreateDesc": "Add a new task type to this space; configure fields and statuses in its detail page.",
+    "issueTypeKeyLabel": "Key (lowercase slug)",
+    "issueTypeNameLabel": "Name",
+    "issueTypeDescLabel": "Description",
+    "issueTypeDescPlaceholder": "One line describing what work this type tracks",
+    "issueTypeIcon": "Icon",
+    "issueTypeColor": "Color",
+    "issueTypeDetail": "Task Type Detail",
+    "issueTypeNotFound": "Type not found or deleted",
+    "issueTypeNoDesc": "No description yet",
+    "basicsTab": "Basics",
+    "fieldsTab": "Custom Fields",
+    "statusTab": "Statuses",
+    "recommended": "Recommended",
+    "recommendedDesc": "Popular task types, one click to add.",
+    "added": "Added",
+    "addOne": "Add",
+    "typeCategory": {
+      "engineering": "Engineering & Product",
+      "pmo": "PMO",
+      "support": "Support",
+      "design": "Creative & Design",
+      "finance": "Finance & Accounting",
+      "marketing": "Marketing",
+      "ops": "Operations",
+      "professional": "Professional Services",
+      "hr": "HR & Recruiting",
+      "personal": "Personal",
+      "other": "Other"
+    },
+    "recommendedTypes": {
+      "requirement": { "name": "Requirement", "desc": "Track product requirements and specs" },
+      "story": { "name": "User Story", "desc": "Describe requirements from the end user's perspective" },
+      "request": { "name": "Request", "desc": "Handle requests or tasks from customers or teammates" },
+      "asset": { "name": "Asset", "desc": "Track and manage physical or digital assets" },
+      "campaign": { "name": "Campaign", "desc": "Plan and monitor marketing or promotion campaigns" },
+      "content": { "name": "Content", "desc": "Manage content creation and publishing" },
+      "deal": { "name": "Deal", "desc": "Track the progress of business deals and negotiations" },
+      "client": { "name": "Client", "desc": "Manage client account details and interactions" },
+      "plan": { "name": "Plan", "desc": "Organize work toward larger business goals" },
+      "goal": { "name": "Goal", "desc": "Track strategic goals and progress" }
+    },
+    "addField": "Add Custom Field",
+    "editField": "Edit Custom Field",
+    "fieldDialogDesc": "Fields that issues of this type need to record.",
+    "fieldLabelPlaceholder": "e.g. Severity, Story points, Linked PR",
+    "fieldTypeLabel": "Type",
+    "issueTypesFieldOptions": "Options (comma separated)",
+    "fieldDefaultValue": "Default value (optional)",
+    "fieldMultiDefaultPlaceholder": "Separate multiple defaults with commas",
+    "fieldDescLabel": "Description (optional)",
+    "fieldDescPlaceholder": "Explain what this field is for and when to use it.",
+    "issueTypesFieldKeyDup": "Field key duplicates an existing field",
+    "issueTypesFieldNeedOptions": "select/multiselect requires at least one option",
+    "issueTypesFieldTypesBoolean": "Boolean",
+    "issueTypesFieldTypesMember": "Member picker",
+    "issueTypesFieldTypesUrl": "URL",
+    "statusGroupsHint": "Set the statuses available in this space; statuses are grouped for display.",
+    "addStatus": "Add Status",
+    "addStatusDesc": "New statuses apply to all task types in this space.",
+    "statusName": "Name",
+    "statusKey": "Key (lowercase slug)",
+    "statusGroupLabel": "Group",
+    "statusFinalLabel": "Final state (work is completed or closed)",
+    "statusFinalBadge": "Final",
+    "statusKeyDup": "Status key already exists",
+    "statusGroup": {
+      "triage": "Triage",
+      "triageDesc": "New work awaiting review; moves into regular views once confirmed.",
+      "backlog": "Backlog",
+      "backlogDesc": "Ideas and deferred work before active planning.",
+      "unstarted": "Unstarted",
+      "unstartedDesc": "Work that is ready but has not started.",
+      "started": "In Progress",
+      "startedDesc": "Work currently being pushed forward.",
+      "completed": "Completed",
+      "completedDesc": "Work that has been completed.",
+      "canceled": "Canceled",
+      "canceledDesc": "Work that was closed and will not continue."
+    },
     "checklists": "Completeness Checklists",
     "checklistsTitle": "Completeness Checklists",
     "checklistsDesc": "Checklists for completeness audits: system presets are read-only while team checklists can be created and maintained. Matched by project type and tech stack during audits.",
@@ -3122,6 +3303,11 @@
     "menu": {
       "settings": "Repository Settings"
     },
+    "pulls": {
+      "empty": "No pull requests",
+      "emptyHint": "No PRs in this repository yet — they will appear here after integration sync",
+      "loadFailed": "Failed to load pull requests"
+    },
     "toast": {
       "refreshed": "Repository status refreshed",
       "refreshFailed": "Failed to refresh repository"
@@ -3432,6 +3618,9 @@
     "pipeline": "Lifecycle Pipeline",
     "collaboration": "Collaboration & Assets",
     "stageDiscovery": "Discovery",
+    "stageIntake": "Intake",
+    "stageDispatch": "Execute",
+    "stageDelivery": "Deliver",
     "stagePlanning": "Planning",
     "stageExecution": "Execution",
     "stageAcceptance": "Acceptance",
@@ -3485,7 +3674,11 @@
     "hintClose": "Close"
   },
   "search": {
-    "placeholder": "Search everything..."
+    "placeholder": "Search everything...",
+    "placeholderTitle": "Search everything",
+    "searching": "Searching…",
+    "noResults": "No results found",
+    "noResultsHint": "Try a different keyword or clear the type filters"
   },
   "filterPanel": {
     "activeFilters": "Active filters",
