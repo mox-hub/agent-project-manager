@@ -20,6 +20,7 @@ interface DocumentFormProps {
 
 const categories: { value: DocumentCategory; label: string; icon: string }[] = [
   { value: 'requirement', label: '需求', icon: '📋' },
+  { value: 'analysis', label: '分析报告', icon: '🔍' },
   { value: 'design', label: '设计', icon: '🎨' },
   { value: 'api', label: 'API', icon: '🔌' },
   { value: 'testing', label: '测试', icon: '🧪' },

@@ -6543,7 +6543,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 发版列表（按项目过滤） */
+        /** 发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水） */
         get: operations["ReleaseController_list"];
         put?: never;
         /** 创建发版草案（版本号须合法 semver、项目内唯一、大于基线） */
@@ -11391,7 +11391,7 @@ export interface components {
              * @default custom
              * @enum {string}
              */
-            category: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
+            category: "requirement" | "analysis" | "design" | "api" | "testing" | "guide" | "custom";
             /** @description Folder ID for organization */
             folderId?: string;
             /** @description Associated project ID */
@@ -11438,7 +11438,7 @@ export interface components {
              * @description 文档分类
              * @enum {string}
              */
-            category: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
+            category: "requirement" | "analysis" | "design" | "api" | "testing" | "guide" | "custom";
             /**
              * @description 文档状态
              * @enum {string}
@@ -11495,7 +11495,7 @@ export interface components {
              * @description 文档分类
              * @enum {string}
              */
-            category: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
+            category: "requirement" | "analysis" | "design" | "api" | "testing" | "guide" | "custom";
             /**
              * @description 文档状态
              * @enum {string}
@@ -11613,7 +11613,7 @@ export interface components {
              * @description 文档分类
              * @enum {string}
              */
-            category: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
+            category: "requirement" | "analysis" | "design" | "api" | "testing" | "guide" | "custom";
             /**
              * @description 文档状态
              * @enum {string}
@@ -11666,7 +11666,7 @@ export interface components {
              * @description Document category
              * @enum {string}
              */
-            category?: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
+            category?: "requirement" | "analysis" | "design" | "api" | "testing" | "guide" | "custom";
             /**
              * @description Document status
              * @enum {string}
@@ -14694,6 +14694,8 @@ export interface components {
             notes?: string;
             /** @description 发布范围（纳入本版本的工单 ID 列表） */
             scopeIssueIds?: string[];
+            /** @description 所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除） */
+            milestoneId?: Record<string, never> | null;
         };
         VersionRecommendRequestDto: {
             /** @description 项目 ID */
@@ -14708,6 +14710,8 @@ export interface components {
             notes?: string;
             /** @description 发布范围（纳入本版本的工单 ID 列表） */
             scopeIssueIds?: string[];
+            /** @description 所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除） */
+            milestoneId?: Record<string, never> | null;
         };
         ApprovalProposalRequestDto: {
             /** @description 预留：附言 */
@@ -31172,7 +31176,7 @@ export interface operations {
                 /** @description Search query for title/summary */
                 q?: string;
                 /** @description Filter by category */
-                category?: "requirement" | "design" | "api" | "testing" | "guide" | "custom" | "all";
+                category?: "requirement" | "analysis" | "design" | "api" | "testing" | "guide" | "custom" | "all";
                 /** @description Filter by status */
                 status?: "draft" | "reviewing" | "published" | "rejected" | "all";
                 /** @description Filter by folder ID */
@@ -45848,9 +45852,9 @@ export interface operations {
     };
     ReleaseController_list: {
         parameters: {
-            query: {
+            query?: {
                 /** @description 项目 ID */
-                projectId: string;
+                projectId?: string;
             };
             header?: never;
             path?: never;

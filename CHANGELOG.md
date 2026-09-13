@@ -21,6 +21,16 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 主线四项开工落地——管道项目聚焦 / 里程碑与发布轴 / 分析阶段补足 / 仪表盘去重（feat/mainline-four-initiatives，2026-09-13）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **CAP-A-15 管道项目聚焦**：侧边栏 pipeline 六站分组头部新增项目聚焦筛选器（「全部项目/某项目」，NativeSelect，折叠态隐藏）——新建 `shared/layout/pipeline-focus.ts`（zustand 不持久化 + `usePipelineProjectFilter()`：URL `?project=` 优先、store 兜底、setProjectId 双写 store+searchParams 保留他参；URL→store 写回用边沿检测防路由传播窗口旧参灌回）；六站统一口径消费：intake/acceptance 查询携带 projectId（服务端过滤）、issues/repositories 以聚焦值预置页内筛选初值、executions projectFilter 初值对齐、releases 统一 `?project` 参数名并**移除「未选项目=空列表」**（无参返回全部，useReleases 解除 enabled 门禁）；**明确不引入全局当前项目**（与项目详情页 ProjectContextBar 上下文不打架） | CAP-A-15 追加切片 | pipeline-focus.test 6 条 + intake 页 2 条 + acceptance-list 2 条 + release-pages 参数改写；全量 98 文件 504 用例绿 | 能力清单 CAP-A-15、GAP-T-27 |
+| server | **①后端三端点可选 projectId**：documents/acceptances 列表过滤参数补齐服务端实现（query 定义已有、service where 补过滤，缺省行为不变）、releases 列表 projectId 改可选（缺省=全部项目跨项目流水） | CAP-A-15 / CAP-A-16 | document e2e +32 行用例、acceptance e2e +25 行用例（过滤断言） | — |
+| server · frontend | **CAP-A-16 里程碑与发布：计划-交付轴整合**：语义裁决 Iteration=时间盒 / Milestone=计划轴节点 / Release=交付物——schema `Release +milestoneId`（SetNull 级联，迁移 20260913160000 已应用 dev.db+template.db）；release 创建/编辑携带里程碑（跨项目 400 守卫）、列表详情 include milestone 投影；milestone.service 列表聚合关联 releases；前端项目详情 milestones tab 升级**「里程碑与发布」时间轴**（迭代区间条+里程碑五态节点+关联发布标记+未计划区，i18n 更名）；release 表单加可选「所属里程碑」下拉、列表/详情显示归属；**sprint 死代码清理**（sprint-page/sprint-list/use-sprints/sprint-api 四文件删除，调用后端不存在的端点且路由未注册） | CAP-A-16（新卡 doing） | release-service spec 扩至 11 条（里程碑关联/跨项目 400/SetNull）+ milestone.service spec 2 条 + project-milestones-page.test 4 条 + release-pages 里程碑用例 | 能力清单 CAP-A-16 新卡、GAP-T-28；Prisma schema 注释 |
+| server · frontend | **CAP-P-01 四期分析阶段补足**（「调研→分析→设计→拆解」中「分析」的结构性空档收口）：①requirement-pipeline 剧本插 `analysis` 阶段（clarify→**analysis**→breakdown，三访谈问题：可行性/影响面/风险，工件 category=analysis）；②Document category 扩 `analysis` 枚举（六处 DTO @IsEnum/@ApiProperty + openapi 五 schema 一 query，表单加「分析报告」选项）；③静默场景 `analysis-draft`——读调研/澄清工件 + **按项目契约绑定做影响面 grounding**（K 线咬合：ContractFileBinding 是文件级影响面权威来源），AI 代写结构化分析（可行性判定 go/conditional/no-go + 影响面 + 依赖 + 风险 + 验收预清单），前端对话框预览→人确认→组装 markdown 落 analysis 文档（「代写→人确认」主轴语法）；④intake 页升级：管道四步说明扩五步（插「分析评估」）、「AI 生成分析报告」入口、分析报告独立列表区；⑤intake-composite 组合件扩 `analysisDocumentId` 工件（拆解以分析报告为 grounding：acceptancePreview 供 criteria、high 风险注入任务描述⚠提示） | CAP-P-01 四期 | silent spec 36 条（+3：analysis-draft 正常流含绑定注入/缺工件 400/grounding 断言 + intake-composite 三工件）+ playbook e2e 7 条（五阶段流转 + analysis 工件 category 断言）+ 前端 hook 4 + dialog 4 + intake 页 15 条 | 能力清单 CAP-P-01 四期、GAP-T-29；§2.2 管道② |
+| frontend | **CAP-C-06 仪表盘与分析页定位分工去重**：Analytics Overview 移除与 Dashboard 同源双份渲染的五项（活跃任务/平均健康分/AI 周用量 StatCard、项目健康表、风险聚焦卡），保留独有回顾性内容（项目总数 + 档案健康 + 剧本健康）；四个 mock Tab（Cost/Quality/Risk/Team，无后端支撑）降 **DEV-only**（`getAvailableAnalyticsTabs(isDev)` 纯函数过滤，生产构建不出现，默认选首可用 Tab）；页标题硬编码 "Analytics" 改走 i18n（`analytics.title`=「分析」）；后续真有报表场景再扩 dashboard 端点做实（不另起 analytics 后端） | CAP-C-06 追加 | analytics-page.test 重写 4 条（生产仅 overview/DEV 四 tab/去重断言/标题 i18n）；全量绿 | 能力清单 CAP-C-06、GAP-T-30 |
+
 ### 页面风格统一（执行记录/发版交付）+ 发版前因后果关联 + 全系统空态专题（2026-09-13）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

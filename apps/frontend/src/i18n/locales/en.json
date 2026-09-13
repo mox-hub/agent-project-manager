@@ -256,16 +256,21 @@
     "delivery": "Delivery",
     "releases": "Releases"
   },
+  "analytics": {
+    "title": "Analytics"
+  },
   "intake": {
     "title": "Requirement Intake",
     "heroTitle": "State a requirement, let your AI colleague take it",
-    "heroDesc": "Start from one sentence: your AI colleague asks follow-up questions to clarify the goal, interviews you for details, generates tasks and acceptance criteria, and files them once you confirm.",
+    "heroDesc": "Start from one sentence: your AI colleague asks follow-up questions to clarify the goal, interviews you for details, analyzes feasibility and impact, generates tasks and acceptance criteria, and files them once you confirm.",
     "cta": "New Requirement",
     "pipelineTitle": "Intake Pipeline",
     "step1Title": "Clarify",
     "step1Desc": "The AI colleague asks follow-ups to clarify the raw requirement and goal",
     "step2Title": "Interview",
     "step2Desc": "A structured interview fills in background, boundaries and acceptance expectations",
+    "step25Title": "Analyze",
+    "step25Desc": "AI drafts feasibility, impact, dependencies and risks; you confirm before filing",
     "step3Title": "Generate & Confirm",
     "step3Desc": "AI generates task families and acceptance criteria; batch card confirmation files them",
     "step4Title": "Audit",
@@ -273,7 +278,27 @@
     "docsTitle": "Requirement Notes",
     "docsDesc": "Clarification notes and interview artifacts (requirement documents)",
     "docsEmpty": "No requirement notes yet",
-    "docsEmptyDesc": "After you file the first requirement, clarification notes and interview artifacts appear here"
+    "docsEmptyDesc": "After you file the first requirement, clarification notes and interview artifacts appear here",
+    "analysisCta": "AI Analysis Report",
+    "analysisTitle": "AI-generated Requirement Analysis",
+    "analysisDesc": "The AI colleague reads research/clarification notes plus project contract bindings, then drafts feasibility, impact, dependencies, risks and acceptance preview; confirm to file as an analysis report (draft).",
+    "analysisResearch": "Research note (pick at least one source)",
+    "analysisSelectDoc": "Select a document",
+    "analysisClarify": "Clarification note (optional, adds boundaries and constraints)",
+    "analysisSelectOptional": "Not specified",
+    "analysisFailed": "Generation failed, please retry",
+    "analysisFeasibility": "Feasibility",
+    "analysisImpact": "Impact",
+    "analysisDependencies": "Dependencies",
+    "analysisRisks": "Risks",
+    "analysisAcceptancePreview": "Acceptance preview",
+    "analysisGenerate": "Generate analysis report",
+    "analysisRegenerate": "Regenerate",
+    "analysisConfirmSave": "Confirm and file as analysis report",
+    "analysisDocsTitle": "Analysis Reports",
+    "analysisDocsDesc": "Feasibility/impact/risk analyses drafted by AI and confirmed by humans (analysis documents)",
+    "analysisDocsEmpty": "No analysis reports yet",
+    "analysisDocsEmptyDesc": "Analysis reports generated from the requirement notes above are filed here for breakdown and acceptance to reference"
   },
   "release": {
     "title": "Releases",
@@ -288,6 +313,7 @@
       "version": "Version",
       "name": "Name",
       "status": "Status",
+      "milestone": "Milestone",
       "tag": "Git Tag",
       "releasedAt": "Released"
     },
@@ -345,6 +371,8 @@
         "patch": "patch"
       },
       "nameLabel": "Release name (optional)",
+      "milestoneLabel": "Milestone (optional)",
+      "milestoneNone": "No milestone",
       "submit": "Create draft",
       "created": "Release draft created"
     },
@@ -375,6 +403,7 @@
       "noNotes": "No notes yet — try AI draft and refine manually",
       "tag": "Git Tag",
       "tagPending": "created on publish",
+      "milestone": "Milestone",
       "github": "GitHub Release",
       "yes": "Created",
       "no": "Not created",
@@ -1520,7 +1549,7 @@
       "dashboard": "Dashboard",
       "overview": "Overview",
       "board": "Board",
-      "milestones": "Milestones",
+      "milestones": "Milestones & Releases",
       "profile": "Profile",
       "team": "Team & Roles",
       "settings": "Settings",
@@ -1635,10 +1664,16 @@
       "notSet": "Not set",
       "targetDate": "Target date: ",
       "taskCount": "{{count}} tasks",
+      "unscheduled": "Unscheduled",
+      "unscheduledDesc": "Milestones without a target date, pending scheduling.",
       "status": {
         "completed": "Completed",
         "inProgress": "In Progress",
-        "upcoming": "Upcoming"
+        "upcoming": "Upcoming",
+        "planned": "Planned",
+        "reached": "Reached",
+        "missed": "Missed",
+        "cancelled": "Cancelled"
       }
     },
     "visibility": {
@@ -3661,6 +3696,11 @@
     "groupWorkflow": "Workflow & Governance",
     "groupCollaboration": "Collaboration & Tools",
     "noTabsOpen": "No tabs open",
+    "pipelineFocus": {
+      "label": "Project focus",
+      "allProjects": "All projects",
+      "selectPlaceholder": "Select project"
+    },
     "appName": "AgentPM"
   },
   "commandPalette": {

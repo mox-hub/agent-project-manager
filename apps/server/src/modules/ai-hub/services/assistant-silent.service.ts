@@ -186,10 +186,11 @@ ${JSON.stringify(questions)}
       const ids = [
         context.breakdownDocumentId,
         context.acceptanceDocumentId,
+        context.analysisDocumentId,
       ].filter((v): v is string => typeof v === 'string' && !!v);
       if (ids.length === 0) {
         throw new BadRequestException(
-          '组合件生成缺少工件：breakdownDocumentId / acceptanceDocumentId 至少一项',
+          '组合件生成缺少工件：breakdownDocumentId / acceptanceDocumentId / analysisDocumentId 至少一项',
         );
       }
       const docs = await prisma.document.findMany({
@@ -206,15 +207,72 @@ ${JSON.stringify(questions)}
       if (docs.length === 0) {
         throw new BadRequestException('组合件生成缺少工件文档');
       }
-      return `你是项目管理系统的需求拆解助手。下面是需求承接访谈产出的工件（任务拆解 / 验收草案），请把它们转成一份「任务族 + 验收清单」组合件提案 payload，供人在决策收件箱一次批卡落库。
+      return `你是项目管理系统的需求拆解助手。下面是需求承接访谈产出的工件（任务拆解 / 验收草案 / 需求分析报告），请把它们转成一份「任务族 + 验收清单」组合件提案 payload，供人在决策收件箱一次批卡落库。
 工件：
 ${JSON.stringify(docs)}
 
 要求：
 - tasks：把拆解清单的每一块转成一个任务；title 短句动词开头；description 一句话补充；estimate 是小时数（拿不准给 8）。
-- 每个任务带 acceptance.criteria（1~4 条），从验收草案中挑选与该任务相关的可检查标准；草案不足以支撑的任务给空 criteria 数组，绝不编造。
+- 每个任务带 acceptance.criteria（1~4 条），从验收草案与需求分析报告的 acceptancePreview 中挑选与该任务相关的可检查标准；两处都不足以支撑的任务给空 criteria 数组，绝不编造。
+- 需求分析报告 risks 中与某任务直接相关的风险（severity=high），在该任务 description 末尾追加「⚠ 风险：…」一句提示。
 - 宁缺毋假：工件里没有的信息留空，不要发明需求。
 只输出 JSON：{"tasks": [{"title": "...", "description": "...", "estimate": 8, "acceptance": {"criteria": [{"criteriaType": "functional", "content": "...", "category": "..."}]}}]}`;
+    },
+  },
+  'analysis-draft': {
+    description:
+      '需求分析代写（CAP-P-01 四期）：读调研/澄清工件与项目契约绑定（影响面 grounding），AI 代写结构化分析报告（可行性/影响面/依赖/风险/验收预清单），人确认后落 analysis 文档',
+    prepareContext: async (context, { prisma }) => {
+      const ids = [
+        context.researchDocumentId,
+        context.clarifyDocumentId,
+      ].filter((v): v is string => typeof v === 'string' && !!v);
+      if (ids.length === 0) {
+        throw new BadRequestException(
+          '分析生成缺少工件：researchDocumentId / clarifyDocumentId 至少一项',
+        );
+      }
+      const docs = await prisma.document.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, title: true, content: true, projectId: true },
+      });
+      if (docs.length === 0) {
+        throw new BadRequestException('工件文档不存在');
+      }
+      // K 线咬合：契约绑定是文件级影响面的权威来源，注入供 AI 影响面段落引用
+      const projectId = String(context.projectId ?? docs[0]?.projectId ?? '');
+      const contractBindings = projectId
+        ? await prisma.contractFileBinding.findMany({
+            where: { projectId },
+            select: {
+              fileType: true,
+              filePath: true,
+              syncMode: true,
+              conflictState: true,
+            },
+          })
+        : [];
+      return { ...context, documents: docs, contractBindings };
+    },
+    buildInstructions: (context) => {
+      const docs = Array.isArray(context.documents) ? context.documents : [];
+      if (docs.length === 0) {
+        throw new BadRequestException('分析生成缺少工件文档');
+      }
+      const bindings = Array.isArray(context.contractBindings)
+        ? context.contractBindings
+        : [];
+      return `你是项目管理系统的需求分析助手。下面是需求承接访谈产出的工件（调研纪要 / 澄清纪要），请代写一份结构化需求分析报告，供人确认后归档。读者是不熟悉工程的新手，结论要说人话。
+工件：
+${JSON.stringify(docs)}
+${bindings.length ? `项目已有的契约绑定文件（影响面的权威素材，评估「会牵连谁」时必须对照）：\n${JSON.stringify(bindings)}\n` : ''}要求：
+- feasibility：verdict 只能是 go / conditional / no-go；rationale 2~3 句；conditions 是放行条件（无则空数组）。
+- impact：summary 一句话；affectedAreas 逐条列出会被牵连的功能/系统/文档（有契约绑定时必须逐个对照说明是否受影响）。
+- dependencies：外部依赖（接口、权限、第三方、人工配合），每条带 note 说明卡点。
+- risks：最多 5 条，severity 只能是 high / medium / low，每条配 mitigation 应对办法；工件里没有线索的风险不要发明。
+- acceptancePreview：3~6 条可检查的验收要点草案（后续拆解阶段会展开成正式标准）。
+- 宁缺毋假：工件与绑定清单里没有的信息留空或写「待确认」，绝不编造。
+只输出 JSON：{"feasibility": {"verdict": "go", "rationale": "...", "conditions": ["..."]}, "impact": {"summary": "...", "affectedAreas": ["..."]}, "dependencies": [{"item": "...", "note": "..."}], "risks": [{"risk": "...", "severity": "high", "mitigation": "..."}], "acceptancePreview": [{"content": "...", "criteriaType": "functional"}]}`;
     },
   },
   'interview-dynamic': {

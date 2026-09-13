@@ -256,16 +256,21 @@
     "delivery": "交付视图",
     "releases": "发版交付"
   },
+  "analytics": {
+    "title": "分析"
+  },
   "intake": {
     "title": "需求承接",
     "heroTitle": "提出一句需求，AI 同事接手",
-    "heroDesc": "从一句原始需求开始：AI 同事连续追问澄清目标，访谈补全细节，生成任务族与验收清单，确认后落库进工单。",
+    "heroDesc": "从一句原始需求开始：AI 同事连续追问澄清目标，访谈补全细节，分析评估可行性与影响面，生成任务族与验收清单，确认后落库进工单。",
     "cta": "提出需求",
     "pipelineTitle": "承接管道",
     "step1Title": "需求澄清",
     "step1Desc": "AI 同事连续追问，澄清原始需求与目标",
     "step2Title": "访谈补全",
     "step2Desc": "结构化访谈补全背景、边界与验收期望",
+    "step25Title": "分析评估",
+    "step25Desc": "AI 代写可行性、影响面、依赖与风险，人确认归档",
     "step3Title": "生成与确认",
     "step3Desc": "AI 生成任务族与验收清单，批卡确认后落库",
     "step4Title": "审计把关",
@@ -273,7 +278,27 @@
     "docsTitle": "需求纪要",
     "docsDesc": "澄清纪要与访谈产物（需求类文档）",
     "docsEmpty": "尚无需求纪要",
-    "docsEmptyDesc": "提出第一条需求后，澄清纪要与访谈产物会出现在这里"
+    "docsEmptyDesc": "提出第一条需求后，澄清纪要与访谈产物会出现在这里",
+    "analysisCta": "AI 生成分析报告",
+    "analysisTitle": "AI 生成需求分析报告",
+    "analysisDesc": "AI 同事读取调研/澄清纪要与项目契约绑定，代写可行性、影响面、依赖、风险与验收预清单；确认后归档为分析报告（草稿）。",
+    "analysisResearch": "调研纪要（必选一项来源）",
+    "analysisSelectDoc": "选择文档",
+    "analysisClarify": "澄清纪要（可选，补充边界与约束）",
+    "analysisSelectOptional": "不指定",
+    "analysisFailed": "生成失败，请重试",
+    "analysisFeasibility": "可行性",
+    "analysisImpact": "影响面",
+    "analysisDependencies": "依赖",
+    "analysisRisks": "风险",
+    "analysisAcceptancePreview": "验收要点（预清单）",
+    "analysisGenerate": "生成分析报告",
+    "analysisRegenerate": "重新生成",
+    "analysisConfirmSave": "确认归档为分析报告",
+    "analysisDocsTitle": "分析报告",
+    "analysisDocsDesc": "AI 代写、人确认归档的可行性/影响面/风险分析（分析类文档）",
+    "analysisDocsEmpty": "尚无分析报告",
+    "analysisDocsEmptyDesc": "从上方需求纪要生成分析报告后，会归档在这里供拆解与验收引用"
   },
   "release": {
     "title": "发版交付",
@@ -288,6 +313,7 @@
       "version": "版本",
       "name": "名称",
       "status": "状态",
+      "milestone": "里程碑",
       "tag": "Git Tag",
       "releasedAt": "发布时间"
     },
@@ -345,6 +371,8 @@
         "patch": "修订号"
       },
       "nameLabel": "发版名称（可选）",
+      "milestoneLabel": "所属里程碑（可选）",
+      "milestoneNone": "不关联里程碑",
       "submit": "创建草案",
       "created": "发版草案已创建"
     },
@@ -375,6 +403,7 @@
       "noNotes": "暂无发版说明——可用 AI 起草后人工修订",
       "tag": "Git Tag",
       "tagPending": "发布时创建",
+      "milestone": "所属里程碑",
       "github": "GitHub Release",
       "yes": "已创建",
       "no": "未创建",
@@ -1520,7 +1549,7 @@
       "overview": "概览",
       "playbook": "流程",
       "board": "看板",
-      "milestones": "里程碑",
+      "milestones": "里程碑与发布",
       "profile": "档案",
       "team": "团队与角色",
       "settings": "设置",
@@ -1635,10 +1664,16 @@
       "notSet": "未设置",
       "targetDate": "目标日期：",
       "taskCount": "{{count}} 个任务",
+      "unscheduled": "未计划",
+      "unscheduledDesc": "未设置目标日期的里程碑，待排期。",
       "status": {
         "completed": "已完成",
         "inProgress": "进行中",
-        "upcoming": "待启动"
+        "upcoming": "待启动",
+        "planned": "待启动",
+        "reached": "已达成",
+        "missed": "已错过",
+        "cancelled": "已取消"
       }
     },
     "visibility": {
@@ -3661,6 +3696,11 @@
     "groupWorkflow": "工作流与治理",
     "groupCollaboration": "协作与工具",
     "noTabsOpen": "暂无打开的标签页",
+    "pipelineFocus": {
+      "label": "项目聚焦",
+      "allProjects": "全部项目",
+      "selectPlaceholder": "选择项目"
+    },
     "appName": "AgentPM"
   },
   "commandPalette": {

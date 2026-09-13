@@ -4,6 +4,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 const CATEGORY_ENUM = [
   'requirement',
+  'analysis',
   'design',
   'api',
   'testing',

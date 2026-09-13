@@ -51,8 +51,15 @@ export interface PlaybookStage {
   interview: PlaybookInterviewQuestion[];
   document: {
     titleTemplate: string;
-    /** 与 Document.category 对齐（requirement/design/api/testing/guide/custom） */
-    category: 'requirement' | 'design' | 'api' | 'testing' | 'guide' | 'custom';
+    /** 与 Document.category 对齐（requirement/analysis/design/api/testing/guide/custom） */
+    category:
+      | 'requirement'
+      | 'analysis'
+      | 'design'
+      | 'api'
+      | 'testing'
+      | 'guide'
+      | 'custom';
     intro: string;
     /** 需求类文档对功能项做 FR-N 编号 */
     numbered?: boolean;
@@ -412,7 +419,7 @@ const REQUIREMENT_PIPELINE: PlaybookTemplate = {
   key: 'requirement-pipeline',
   name: '需求承接',
   description:
-    '从一句原始需求到可开工的工程任务与验收清单：调研 → 澄清 → 拆解 → 验收草案。',
+    '从一句原始需求到可开工的工程任务与验收清单：调研 → 澄清 → 分析 → 拆解 → 验收草案。',
   audience: 'novice',
   stages: [
     {
@@ -490,12 +497,63 @@ const REQUIREMENT_PIPELINE: PlaybookTemplate = {
         intro: '澄清纪要划定本期范围、非目标与约束，是拆解的输入。',
       },
       gate: {
-        title: '需求已澄清，确认进入任务拆解？',
+        title: '需求已澄清，确认进入需求分析？',
         detail: '确认后本期范围与边界就定下来了，改动需要走变更。',
         consequences: [
           '澄清纪要归档为项目文档',
-          '游标推进到「拆解」阶段',
+          '游标推进到「分析」阶段',
           '若驳回：范围或约束有变，修订后重新提交',
+        ],
+      },
+    },
+    {
+      key: 'analysis',
+      name: '分析',
+      purpose:
+        '开工前先判断「值不值、能不能、会牵连谁」——可行性、影响面、依赖与风险在这一步定调，拆解和验收都以它为依据。',
+      domain: 'technical',
+      interview: [
+        {
+          id: 'feasibility',
+          question:
+            '以现有的人手、时间和技术，这件事做得成吗？最大的障碍是什么？',
+          hint: '例如：做得成，但消息推送要找 IT 帮忙对接，周期不可控',
+          term: '可行性判断',
+          termNote:
+            '可行性 = 能力、时间、技术三方面都过得去；任何一项存疑都要写出来，不能默认没问题。',
+        },
+        {
+          id: 'impact',
+          question: '这件事会牵连到哪些已有的东西？（功能、系统、文档都算）',
+          hint: '例如：登录、消息推送，还有使用手册要更新',
+          term: '影响面',
+          termNote:
+            '影响面 = 直接改动 + 间接波及；漏判间接波及是回归事故的主因，AI 可结合契约绑定文件清单补充。',
+        },
+        {
+          id: 'risks',
+          question: '最可能让这件事失败或延期的三件事是什么？',
+          hint: '例如：推送接口没权限、需求又变了、没人验收',
+          term: '风险清单',
+          termNote:
+            '每条风险要配应对办法；没有应对办法的风险应在开工前先决策，而不是执行中救火。',
+        },
+      ],
+      document: {
+        titleTemplate: '需求分析报告 · {project}',
+        category: 'analysis',
+        numbered: true,
+        intro:
+          '分析报告评估可行性、影响面、依赖与风险，并预拟验收要点；确认后作为拆解与验收的依据。',
+      },
+      gate: {
+        title: '分析报告已产出，确认进入任务拆解？',
+        detail:
+          '分析报告把「能不能做、会牵连谁、哪里会翻车」写成了可对照的清单。确认后进入拆解阶段。',
+        consequences: [
+          '分析报告归档为项目文档，拆解与验收以它为依据',
+          '游标推进到「拆解」阶段',
+          '若驳回：可行性或影响面判断有变，修订后重新提交',
         ],
       },
     },
