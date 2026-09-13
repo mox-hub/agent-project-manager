@@ -541,6 +541,8 @@ export class GitHubClient {
     additions?: number;
     deletions?: number;
     changed_files?: number;
+    draft?: boolean;
+    labels?: Array<{ name?: string }>;
   }): GitHubPullRequest {
     return {
       id: p.id,
@@ -582,6 +584,8 @@ export class GitHubClient {
       additions: p.additions,
       deletions: p.deletions,
       changedFiles: p.changed_files,
+      draft: p.draft,
+      labels: p.labels?.map((l) => l.name).filter((n): n is string => !!n),
     };
   }
 

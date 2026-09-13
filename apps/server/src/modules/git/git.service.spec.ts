@@ -5,6 +5,7 @@ import { PrismaService } from '../../core/database/prisma.service';
 import { LoggerService } from '../../core/logger/logger.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { ProjectWorkspaceService } from './project-workspace.service';
+import { GitHubSDKService } from '../integration/providers/github/github-sdk.service';
 
 describe('GitService', () => {
   let service: GitService;
@@ -30,6 +31,9 @@ describe('GitService', () => {
     pullRequestReview: {
       create: vi.fn(),
     },
+    integrationConfig: {
+      findMany: vi.fn(),
+    },
   };
 
   const mockMessageBusService = {
@@ -47,6 +51,10 @@ describe('GitService', () => {
     getWorkspacePath: vi.fn(),
   };
 
+  const mockGitHubSdkService = {
+    getClientForIntegration: vi.fn(),
+  };
+
   beforeEach(async () => {
     vi.clearAllMocks();
 
@@ -57,6 +65,7 @@ describe('GitService', () => {
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: MessageBusService, useValue: mockMessageBusService },
         { provide: ProjectWorkspaceService, useValue: mockWorkspaceService },
+        { provide: GitHubSDKService, useValue: mockGitHubSdkService },
       ],
     }).compile();
 
@@ -184,15 +193,233 @@ describe('GitService', () => {
   });
 
   describe('getPullRequests', () => {
-    it('should return PRs for a repository', async () => {
-      mockPrismaService.repository.findFirst.mockResolvedValue({
-        id: 'repo-1',
-      });
+    const githubRepo = {
+      id: 'repo-1',
+      projectId: 'proj-1',
+      remoteUrl: 'https://github.com/owner/repo.git',
+      provider: null,
+    };
+
+    const livePulls = [
+      {
+        id: 101,
+        number: 1,
+        title: 'Open PR',
+        body: 'body-1',
+        state: 'open',
+        merged: false,
+        draft: false,
+        labels: ['feat', 'ui'],
+        user: { login: 'alice' },
+        head: { ref: 'feat-a', sha: 'sha-a' },
+        base: { ref: 'main', sha: 'sha-0' },
+        createdAt: '2026-09-10T00:00:00Z',
+        updatedAt: '2026-09-11T00:00:00Z',
+        mergedAt: null,
+        htmlUrl: 'https://github.com/owner/repo/pull/1',
+      },
+      {
+        id: 102,
+        number: 2,
+        title: 'Merged PR',
+        body: null,
+        state: 'closed',
+        merged: true,
+        draft: false,
+        labels: [],
+        user: { login: 'bob' },
+        head: { ref: 'feat-b', sha: 'sha-b' },
+        base: { ref: 'main', sha: 'sha-0' },
+        createdAt: '2026-09-09T00:00:00Z',
+        updatedAt: '2026-09-10T00:00:00Z',
+        mergedAt: '2026-09-10T12:00:00Z',
+        htmlUrl: 'https://github.com/owner/repo/pull/2',
+      },
+      {
+        id: 103,
+        number: 3,
+        title: 'Draft PR',
+        body: null,
+        state: 'open',
+        merged: false,
+        draft: true,
+        user: { login: 'carol' },
+        head: { ref: 'feat-c', sha: 'sha-c' },
+        base: { ref: 'main', sha: 'sha-0' },
+        createdAt: '2026-09-12T00:00:00Z',
+        updatedAt: '2026-09-12T00:00:00Z',
+        mergedAt: null,
+        htmlUrl: 'https://github.com/owner/repo/pull/3',
+      },
+    ];
+
+    function mockIntegrationCandidates(ids: string[]) {
+      mockPrismaService.integrationConfig.findMany.mockResolvedValue(
+        ids.map((id) => ({ id, scope: 'global' })),
+      );
+    }
+
+    function mockLiveClient() {
+      const client = { listPullRequests: vi.fn().mockResolvedValue(livePulls) };
+      mockIntegrationCandidates(['int-1']);
+      mockGitHubSdkService.getClientForIntegration.mockResolvedValue(client);
+      return client;
+    }
+
+    it('should return local PRs without live fallback when local data exists', async () => {
+      mockPrismaService.repository.findFirst.mockResolvedValue(githubRepo);
       const prs = [{ id: 'pr-1', title: 'Fix bug', reviews: [] }];
       mockPrismaService.pullRequest.findMany.mockResolvedValue(prs);
 
       const result = await service.getPullRequests('repo-1', {}, 'user-1');
       expect(result).toEqual(prs);
+      expect(
+        mockGitHubSdkService.getClientForIntegration,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to live GitHub pulls when local table is empty', async () => {
+      mockPrismaService.repository.findFirst.mockResolvedValue(githubRepo);
+      mockPrismaService.pullRequest.findMany.mockResolvedValue([]);
+      const client = mockLiveClient();
+
+      const result = await service.getPullRequests('repo-1', {}, 'user-1');
+
+      expect(client.listPullRequests).toHaveBeenCalledWith(
+        'owner',
+        'repo',
+        'all',
+      );
+      expect(result).toHaveLength(3);
+      expect(result[0]).toMatchObject({
+        id: 'gh-live-101',
+        repoId: 'repo-1',
+        externalId: 'owner/repo#1',
+        title: 'Open PR',
+        author: 'alice',
+        sourceBranch: 'feat-a',
+        targetBranch: 'main',
+        status: 'open',
+        labels: ['feat', 'ui'],
+        metadata: {
+          source: 'github-live',
+          number: 1,
+          htmlUrl: 'https://github.com/owner/repo/pull/1',
+        },
+        reviews: [],
+      });
+      expect(result[1]).toMatchObject({ status: 'merged', author: 'bob' });
+      expect(result[2]).toMatchObject({ status: 'draft', author: 'carol' });
+    });
+
+    it('should pull all and filter locally for merged/draft status', async () => {
+      mockPrismaService.repository.findFirst.mockResolvedValue(githubRepo);
+      mockPrismaService.pullRequest.findMany.mockResolvedValue([]);
+      const client = mockLiveClient();
+
+      const result = await service.getPullRequests(
+        'repo-1',
+        { status: 'merged' },
+        'user-1',
+      );
+
+      expect(client.listPullRequests).toHaveBeenCalledWith(
+        'owner',
+        'repo',
+        'all',
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ status: 'merged', id: 'gh-live-102' });
+    });
+
+    it('should pass open/closed status through to GitHub state', async () => {
+      mockPrismaService.repository.findFirst.mockResolvedValue(githubRepo);
+      mockPrismaService.pullRequest.findMany.mockResolvedValue([]);
+      const client = mockLiveClient();
+
+      const result = await service.getPullRequests(
+        'repo-1',
+        { status: 'open' },
+        'user-1',
+      );
+
+      expect(client.listPullRequests).toHaveBeenCalledWith(
+        'owner',
+        'repo',
+        'open',
+      );
+      expect(result).toHaveLength(3);
+    });
+
+    it('should skip live fallback for non-GitHub remoteUrl', async () => {
+      mockPrismaService.repository.findFirst.mockResolvedValue({
+        ...githubRepo,
+        remoteUrl: 'https://gitlab.com/owner/repo.git',
+      });
+      mockPrismaService.pullRequest.findMany.mockResolvedValue([]);
+
+      const result = await service.getPullRequests('repo-1', {}, 'user-1');
+
+      expect(result).toEqual([]);
+      expect(
+        mockGitHubSdkService.getClientForIntegration,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should return empty array when no github integration is available', async () => {
+      mockPrismaService.repository.findFirst.mockResolvedValue({
+        ...githubRepo,
+        remoteUrl: 'git@github.com:owner/repo.git',
+      });
+      mockPrismaService.pullRequest.findMany.mockResolvedValue([]);
+      mockIntegrationCandidates([]);
+
+      const result = await service.getPullRequests('repo-1', {}, 'user-1');
+
+      expect(result).toEqual([]);
+      expect(
+        mockGitHubSdkService.getClientForIntegration,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should skip stale undecryptable integrations and use the next candidate', async () => {
+      mockPrismaService.repository.findFirst.mockResolvedValue(githubRepo);
+      mockPrismaService.pullRequest.findMany.mockResolvedValue([]);
+      mockIntegrationCandidates(['int-stale', 'int-current']);
+      const client = { listPullRequests: vi.fn().mockResolvedValue(livePulls) };
+      mockGitHubSdkService.getClientForIntegration
+        .mockRejectedValueOnce(new Error('Failed to decrypt token'))
+        .mockResolvedValueOnce(client);
+
+      const result = await service.getPullRequests('repo-1', {}, 'user-1');
+
+      expect(
+        mockGitHubSdkService.getClientForIntegration,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        mockGitHubSdkService.getClientForIntegration,
+      ).toHaveBeenNthCalledWith(1, 'int-stale');
+      expect(
+        mockGitHubSdkService.getClientForIntegration,
+      ).toHaveBeenNthCalledWith(2, 'int-current');
+      expect(result).toHaveLength(3);
+    });
+
+    it('should return empty array instead of throwing when GitHub API fails', async () => {
+      mockPrismaService.repository.findFirst.mockResolvedValue(githubRepo);
+      mockPrismaService.pullRequest.findMany.mockResolvedValue([]);
+      const client = {
+        listPullRequests: vi
+          .fn()
+          .mockRejectedValue(new Error('Bad credentials')),
+      };
+      mockIntegrationCandidates(['int-1']);
+      mockGitHubSdkService.getClientForIntegration.mockResolvedValue(client);
+
+      const result = await service.getPullRequests('repo-1', {}, 'user-1');
+
+      expect(result).toEqual([]);
+      expect(mockLoggerService.warn).toHaveBeenCalled();
     });
   });
 

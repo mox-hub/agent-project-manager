@@ -60,6 +60,10 @@ export interface GitHubPullRequest {
   additions?: number;
   deletions?: number;
   changedFiles?: number;
+  /** 草稿 PR（pulls.list 原生字段，归一化透传） */
+  draft?: boolean;
+  /** label 名列表（归一化时从 {name} 对象提取） */
+  labels?: string[];
   /** 与 APM 映射后的最终状态 */
   apmState?: string;
 }

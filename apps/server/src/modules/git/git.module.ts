@@ -4,8 +4,10 @@ import { GitService } from './git.service';
 import { GitToolService } from './git-tool.service';
 import { ProjectWorkspaceService } from './project-workspace.service';
 import { GitCommandService } from './git-command.service';
+import { GitHubModule } from '../integration/providers/github/github.module';
 
 @Module({
+  imports: [GitHubModule],
   controllers: [GitController],
   providers: [
     GitService,
