@@ -142,6 +142,8 @@ export const executionKeys = {
 export function useExecutionRuns(params?: {
   projectId?: string;
   status?: string;
+  /** 按任务过滤运行记录（后端 /execution/runs 已支持） */
+  issueId?: string;
   limit?: number;
   offset?: number;
 }) {

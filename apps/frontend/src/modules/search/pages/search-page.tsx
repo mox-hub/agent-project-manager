@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSearch } from '../hooks/use-search';
 import type { SearchResultType, SearchHit } from '../api/search-api';
@@ -174,18 +175,21 @@ export function SearchPage() {
       <div className="flex-1 overflow-auto">
         <div className="max-w-2xl mx-auto p-6">
           {query.length === 0 ? (
-            <div className="text-center py-16">
-              <SearchIcon className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
-              <p className="text-sm text-muted-foreground">{t('help.searchHint') || 'Search across tasks, bugs, documents, projects, milestones and acceptances'}</p>
-            </div>
+            <EmptyState
+              icon={SearchIcon}
+              title={t('search.placeholderTitle', '搜索一切')}
+              description={t('help.searchHint') || 'Search across tasks, bugs, documents, projects, milestones and acceptances'}
+            />
           ) : isFetching ? (
             <div className="text-center py-16">
-              <p className="text-sm text-muted-foreground">Searching…</p>
+              <p className="text-sm text-muted-foreground">{t('search.searching', 'Searching…')}</p>
             </div>
           ) : flatResults.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-sm text-muted-foreground">未找到匹配结果</p>
-            </div>
+            <EmptyState
+              icon={SearchIcon}
+              title={t('search.noResults', '未找到匹配结果')}
+              description={t('search.noResultsHint', '换个关键词试试，或清除类型过滤')}
+            />
           ) : (
             <div className="space-y-5">
               {TYPE_ORDER.map(type => {

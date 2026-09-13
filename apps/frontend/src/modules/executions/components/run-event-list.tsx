@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/empty-state';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MarkdownView } from '@/shared/components/markdown-view';
 import {
@@ -230,9 +231,7 @@ export function RunEventList({
       <div className="min-h-0 flex-1 overflow-hidden px-2 pb-2">
         <ScrollArea className="h-full w-full">
           {filtered.length === 0 ? (
-            <p className="py-10 text-center text-xs text-content-text-muted">
-              {t('runDetails.empty')}
-            </p>
+            <EmptyState title={t('runDetails.empty')} className="min-h-20" />
           ) : (
             <ul className="divide-y divide-border/60">
               {filtered.map((entry) => {

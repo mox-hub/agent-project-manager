@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ContextMenu, type MenuItem } from '@/components/ui/context-menu';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
 
@@ -52,7 +53,12 @@ export interface DataListProgress {
 export interface DataListProps<T extends DataListItem> {
   items: T[];
   loading?: boolean;
+  /** 空态文案（默认 i18n「暂无数据」）；渲染走 EmptyState 规范形态 */
   emptyMessage?: ReactNode;
+  /** 空态描述行（EmptyState description） */
+  emptyDescription?: ReactNode;
+  /** 空态图标（EmptyState muted 圆块形态） */
+  emptyIcon?: React.ComponentType<{ className?: string }>;
   className?: string;
   /** 总条数基数（默认使用 items.length） */
   totalCount?: number;
@@ -447,7 +453,7 @@ function SelectionBar<T extends DataListItem>({
 /** 骨架行标题条的宽度档位（交错宽度更接近真实数据的长短分布） */
 const ROW_TITLE_WIDTHS = ['w-1/4', 'w-2/5', 'w-1/3', 'w-1/2', 'w-1/5', 'w-1/3'];
 
-function DataListSkeleton({ grouping }: { grouping: boolean }) {
+export function DataListSkeleton({ grouping }: { grouping: boolean }) {
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-background" aria-busy="true">
       {grouping ? (
@@ -487,7 +493,9 @@ function DataListSkeleton({ grouping }: { grouping: boolean }) {
 export function DataList<T extends DataListItem>({
   items,
   loading,
-  emptyMessage = 'No items',
+  emptyMessage,
+  emptyDescription,
+  emptyIcon,
   className,
   totalCount,
   renderLeading,
@@ -504,6 +512,7 @@ export function DataList<T extends DataListItem>({
   onSelectionChange,
   selectionActions,
 }: DataListProps<T>) {
+  const { t } = useTranslation();
   // 多选状态：受控优先，否则内部维护
   const [internalSelected, setInternalSelected] = useState<Set<string>>(() => new Set());
   const selected = selectedIds ?? internalSelected;
@@ -604,9 +613,12 @@ export function DataList<T extends DataListItem>({
 
   if (items.length === 0) {
     return (
-      <div className={cn('rounded-lg border border-border bg-background py-16 text-center text-xs text-muted-foreground', className)}>
-        {emptyMessage}
-      </div>
+      <EmptyState
+        icon={emptyIcon}
+        title={emptyMessage ?? t('dataTable.empty', '暂无数据')}
+        description={emptyDescription}
+        className={className}
+      />
     );
   }
 

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Bot, DoorOpen } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { NativeSelect } from '@/components/ui/native-select';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -79,13 +80,11 @@ export function OfficePage() {
             ))}
           </div>
         ) : colleagues.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-16 text-center">
-            <Bot className="size-8 text-content-text-muted" />
-            <p className="text-sm font-medium text-content-text">{t('office.empty.title')}</p>
-            <p className="max-w-sm text-xs text-content-text-muted">
-              {t('office.empty.hint')}
-            </p>
-          </div>
+          <EmptyState
+            icon={Bot}
+            title={t('office.empty.title')}
+            description={t('office.empty.hint')}
+          />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {colleagues.map((colleague) => (

@@ -1,43 +1,43 @@
 /**
- * 执行中心页面 - AI Agent 执行运行管理
+ * 执行记录页 - AI Agent 执行运行管理（list-page 模板骨架）
  *
  * 数据源：GET /execution/runs（{runs,total}，projectId 缺省 = 用户为成员的全部项目）。
- * KPI 统计卡片、多维筛选（状态/Agent/项目）、可展开行卡 + 运行详情面板入口。
+ * 快捷统计卡（页头幽灵按钮切换）+ ToolbarRow 筛选（状态/Agent/项目收进下拉）+ DataList 行原语列表。
+ * 行点击 / Enter 打开 RunDetailsDialog；右键菜单承载总览、验收跳转与取消执行。
  */
 
-import { useState } from 'react';
-import { StatusPill } from '@/components/ui/status-pill';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageShell } from '@/components/ui/page-shell';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import { NativeSelect } from '@/components/ui/native-select';
 import {
   Activity,
+  Ban,
   Bot,
   CheckCircle2,
   XCircle,
   Clock,
-  AlertTriangle,
-  Search,
-  ChevronDown,
-  FolderKanban,
   DollarSign,
-  Target,
-  Ban,
-  Circle,
   ExternalLink,
   FileText,
+  FolderKanban,
+  List,
   Package,
+  SearchX,
   SquareTerminal,
+  Target,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { PageHeader } from '@/components/ui/page-header';
+import { PageShell } from '@/components/ui/page-shell';
+import { Button } from '@/components/ui/button';
+import { DataList, ListText } from '@/components/ui/data-list';
+import type { MenuItem } from '@/components/ui/context-menu';
+import { EmptyState } from '@/components/ui/empty-state';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
+import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
+import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import {
   isTerminalRunStatus,
   executionApi,
@@ -48,6 +48,11 @@ import {
 import { RunDetailsDialog } from '../components/run-details-dialog';
 import { RunOverviewCard } from '../components/run-overview-card';
 import {
+  RUN_STATUS_CONFIG,
+  RunStatusBadge,
+  formatRunDateTime,
+} from '../components/run-status';
+import {
   formatCost,
   formatRunDuration,
   formatTokens,
@@ -56,276 +61,13 @@ import { projectApi } from '@/modules/project/api/project-api';
 import { api } from '@/infrastructure/api-client';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
+import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
+
+const STATUS_KEYS = Object.keys(RUN_STATUS_CONFIG) as ExecutionRunStatus[];
 
 /**
- * 状态配置（服务端 8 状态全集）。
- * 与 status-visuals.TASK_STATUS_VISUALS 的关系：这里是「执行 run 状态」（ExecutionRunStatus，
- * 含 pending_approval / blocked / superseded 等执行专属态），非「任务状态」，故保留本地映射；
- * 共有态里 in_progress 用 Clock+pulse（执行=有耗时的运行）而非任务态的 Loader2（进行中的活儿），
- * 属执行专属口径。收编到 status-visuals 需先为其扩「执行 run 状态」映射表。
+ * 状态视觉映射见 components/run-status.tsx（执行 run 状态 ≠ 任务状态，独立口径）。
  */
-const STATUS_CONFIG: Record<
-  string,
-  { icon: typeof Clock; color: string; pulse?: boolean }
-> = {
-  draft: { icon: Circle, color: 'text-muted-foreground' },
-  planned: { icon: Circle, color: 'text-muted-foreground' },
-  in_progress: { icon: Clock, color: 'text-accent-blue', pulse: true },
-  pending_approval: { icon: AlertTriangle, color: 'text-accent-yellow' },
-  completed: { icon: CheckCircle2, color: 'text-accent-green' },
-  failed: { icon: XCircle, color: 'text-accent-red' },
-  blocked: { icon: Ban, color: 'text-accent-red' },
-  superseded: { icon: Circle, color: 'text-muted-foreground' },
-};
-
-const STATUS_PILL_TONE: Record<string, 'default' | 'success' | 'warning' | 'danger' | 'info'> = {
-  draft: 'default',
-  planned: 'default',
-  in_progress: 'info',
-  pending_approval: 'warning',
-  completed: 'success',
-  failed: 'danger',
-  blocked: 'danger',
-  superseded: 'default',
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
-  const Icon = cfg.icon;
-  return (
-    <StatusPill tone={STATUS_PILL_TONE[status] ?? 'default'} className="gap-1">
-      <Icon className={cn('size-3', cfg.pulse && 'animate-pulse')} />
-      {t(`runDetails.status.${status}`)}
-    </StatusPill>
-  );
-}
-
-function formatDateTime(iso?: string | null): string {
-  if (!iso) return '—';
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
-}
-
-// KPI 统计卡片
-function KPIStats({ runs }: { runs: ExecutionRunRecord[] }) {
-  const { t } = useTranslation();
-  const runningCount = runs.filter((r) => r.status === 'in_progress').length;
-  const completedCount = runs.filter((r) => r.status === 'completed').length;
-  const failedCount = runs.filter(
-    (r) => r.status === 'failed' || r.status === 'blocked',
-  ).length;
-  const totalCost = runs.reduce((sum, r) => sum + (r.totalCost ?? 0), 0);
-  const totalTokens = runs.reduce((sum, r) => sum + (r.totalTokens ?? 0), 0);
-  const successRate =
-    runs.length > 0
-      ? Math.round(
-          (completedCount / (completedCount + failedCount || 1)) * 100,
-        )
-      : 0;
-
-  const items = [
-    { label: t('execution.kpi.total'), value: runs.length, icon: Activity, color: 'text-foreground', sub: t('execution.kpi.totalSub') },
-    { label: t('execution.kpi.running'), value: runningCount, icon: Clock, color: 'text-accent-blue', sub: t('execution.kpi.runningSub') },
-    { label: t('execution.kpi.completed'), value: completedCount, icon: CheckCircle2, color: 'text-accent-green', sub: `${successRate}% ${t('execution.kpi.successRate')}` },
-    { label: t('execution.kpi.failed'), value: failedCount, icon: XCircle, color: 'text-accent-red', sub: t('execution.kpi.failedSub') },
-    { label: t('execution.kpi.cost'), value: `$${totalCost.toFixed(2)}`, icon: DollarSign, color: 'text-accent-purple', sub: `${formatTokens(totalTokens) ?? 0} tokens` },
-  ];
-
-  return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-      {items.map(({ label, value, icon: Icon, color, sub }) => (
-        <Card key={label}>
-          <CardContent className="p-4">
-            <div className="mb-1 flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">{label}</p>
-              <Icon className={cn('h-4 w-4', color)} />
-            </div>
-            <p className={cn('text-2xl font-semibold', color)}>{value}</p>
-            <p className="mt-0.5 text-11 text-muted-foreground">{sub}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-// 执行行组件
-function ExecutionRow({
-  run,
-  isExpanded,
-  onExpand,
-  onViewDetail,
-  onViewOverview,
-  onViewAcceptance,
-}: {
-  run: ExecutionRunRecord;
-  isExpanded: boolean;
-  onExpand: () => void;
-  onViewDetail: () => void;
-  onViewOverview: () => void;
-  onViewAcceptance: () => void;
-}) {
-  const { t } = useTranslation();
-  const cfg = STATUS_CONFIG[run.status] ?? STATUS_CONFIG.draft;
-  const StatusIcon = cfg.icon;
-  const duration = formatRunDuration(run);
-  const tokens = formatTokens(run.totalTokens);
-  const cost = formatCost(run.totalCost);
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      {/* 主行 */}
-      <div
-        className="flex cursor-pointer items-center gap-4 p-4 transition-colors hover:bg-accent/20"
-        onClick={onExpand}
-      >
-        <StatusIcon
-          className={cn(
-            'h-4 w-4 shrink-0',
-            cfg.color,
-            cfg.pulse && 'animate-pulse',
-          )}
-        />
-
-        <div className="min-w-0 flex-1">
-          <div className="mb-0.5 flex items-center gap-2">
-            <span className="truncate text-sm font-medium">{run.goal}</span>
-            <StatusBadge status={run.status} />
-          </div>
-          <div className="flex items-center gap-3 text-11 text-muted-foreground">
-            {run.subjectName && (
-              <span className="flex items-center gap-1">
-                <span className="flex h-3 w-3 items-center justify-center rounded-full bg-accent-purple">
-                  <Bot className="h-2 w-2 text-white" />
-                </span>
-                {run.subjectName}
-              </span>
-            )}
-            {run.project?.name && (
-              <span className="flex items-center gap-1">
-                <FolderKanban className="h-3 w-3" />
-                {run.project.name}
-              </span>
-            )}
-            {run.issue?.title && <span className="truncate">{run.issue.title}</span>}
-            <span>{formatDateTime(run.startedAt ?? run.createdAt)}</span>
-            {duration && <span>{duration}</span>}
-          </div>
-        </div>
-
-        {/* provider / 步骤 / 产出 / tokens / 成本 */}
-        <div className="hidden shrink-0 items-center justify-end gap-3 text-11 text-muted-foreground lg:flex">
-          {run.providerId ? (
-            <span className="rounded-full bg-muted/60 px-2 py-0.5 font-mono">
-              {run.providerId}
-            </span>
-          ) : null}
-          {run.stepsCount != null ? (
-            <span className="flex items-center gap-1">
-              <SquareTerminal className="h-3 w-3" />
-              {t('execution.row.steps', { count: run.stepsCount })}
-            </span>
-          ) : null}
-          {run.artifactsCount ? (
-            <span className="flex items-center gap-1">
-              <Package className="h-3 w-3" />
-              {t('execution.row.artifacts', { count: run.artifactsCount })}
-            </span>
-          ) : null}
-          {tokens ? <span>{tokens}</span> : null}
-          {cost ? (
-            <span className="flex items-center gap-1">
-              <DollarSign className="h-3 w-3" />
-              {cost.replace('$', '')}
-            </span>
-          ) : null}
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="shrink-0"
-          title={t('runDetails.viewDetail')}
-          onClick={(event) => {
-            event.stopPropagation();
-            onViewDetail();
-          }}
-        >
-          <FileText className="h-3 w-3" />
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="shrink-0"
-          title={t('runDetails.card.title')}
-          onClick={(event) => {
-            event.stopPropagation();
-            onViewOverview();
-          }}
-        >
-          <ExternalLink className="h-3 w-3" />
-        </Button>
-
-        <ChevronDown
-          className={cn(
-            'h-4 w-4 shrink-0 text-muted-foreground/40 transition-transform',
-            isExpanded && 'rotate-180',
-          )}
-        />
-      </div>
-
-      {/* 展开详情 */}
-      {isExpanded && (
-        <div className="space-y-3 border-t border-border bg-muted/20 p-4">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {[
-              { label: t('execution.row.issue'), value: run.issue?.title ?? '—' },
-              { label: t('execution.row.started'), value: formatDateTime(run.startedAt) },
-              { label: t('execution.row.tokens'), value: tokens ?? '—' },
-              { label: t('execution.row.cost'), value: cost ?? '—' },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <p className="mb-0.5 text-10 font-medium uppercase tracking-wider text-muted-foreground">
-                  {label}
-                </p>
-                <p className="truncate text-xs">{value}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={onViewDetail}>
-              {t('runDetails.viewDetail')}
-            </Button>
-            <Button variant="outline" size="sm" onClick={onViewOverview}>
-              {t('runDetails.card.title')}
-            </Button>
-            {!isTerminalRunStatus(run.status) ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  executionApi.cancel(run.id);
-                }}
-              >
-                {t('common.cancel')}
-              </Button>
-            ) : null}
-            {run.acceptanceId && (
-              <Button variant="outline" size="sm" onClick={onViewAcceptance}>
-                <Target className="mr-1.5 h-3 w-3" />
-                View acceptance
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // 主页面组件
 export function ExecutionsPage() {
@@ -337,9 +79,11 @@ export function ExecutionsPage() {
   const [statusFilter, setStatusFilter] = useState<ExecutionRunStatus | 'all'>('all');
   const [agentFilter, setAgentFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [detailRunId, setDetailRunId] = useState<string | null>(null);
   const [overviewRun, setOverviewRun] = useState<ExecutionRunRecord | null>(null);
+
+  // 快捷统计卡显隐（持久化）
+  const stats = usePersistentToggle('executions-page.stats');
 
   // 数据查询（服务端状态/项目过滤，缺省跨项目）
   const { data, isLoading } = useExecutionRuns({
@@ -366,7 +110,7 @@ export function ExecutionsPage() {
   });
   const agents = agentsData?.data ?? [];
 
-  const runs = data?.runs ?? [];
+  const runs = useMemo(() => data?.runs ?? [], [data]);
 
   // 客户端补充过滤（搜索 / agent）
   const filteredRuns = runs.filter((r) => {
@@ -385,16 +129,27 @@ export function ExecutionsPage() {
     return true;
   });
 
-  const handleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
-  const handleViewAcceptance = (acceptanceId: string) => {
-    navigate(`/app/acceptance/${acceptanceId}`);
-  };
-
-  const hasActiveFilters =
-    statusFilter !== 'all' || agentFilter !== 'all' || projectFilter !== 'all' || search;
+  // 快捷统计卡（KPI 派生自当前项目/状态口径下的 runs）
+  const statsItems = useMemo(() => {
+    const runningCount = runs.filter((r) => r.status === 'in_progress').length;
+    const completedCount = runs.filter((r) => r.status === 'completed').length;
+    const failedCount = runs.filter(
+      (r) => r.status === 'failed' || r.status === 'blocked',
+    ).length;
+    const totalCost = runs.reduce((sum, r) => sum + (r.totalCost ?? 0), 0);
+    const successRate =
+      runs.length > 0
+        ? Math.round((completedCount / (completedCount + failedCount || 1)) * 100)
+        : 0;
+    return [
+      { key: 'total', value: runs.length, label: t('execution.kpi.total'), icon: Activity, ...STATS_THEMES.default },
+      { key: 'running', value: runningCount, label: t('execution.kpi.running'), icon: Clock, ...STATS_THEMES.blue },
+      { key: 'completed', value: completedCount, label: t('execution.kpi.completed'), icon: CheckCircle2, ...STATS_THEMES.green },
+      { key: 'failed', value: failedCount, label: t('execution.kpi.failed'), icon: XCircle, ...STATS_THEMES.red },
+      { key: 'successRate', value: `${successRate}%`, label: t('execution.kpi.successRate'), icon: Target, ...STATS_THEMES.yellow },
+      { key: 'cost', value: `$${totalCost.toFixed(2)}`, label: t('execution.kpi.cost'), icon: DollarSign, ...STATS_THEMES.purple },
+    ];
+  }, [runs, t]);
 
   const clearFilters = () => {
     setSearch('');
@@ -403,123 +158,293 @@ export function ExecutionsPage() {
     setProjectFilter('all');
   };
 
+  // 已保存视图：快照记忆当前页全部筛选
+  const toolbar = useToolbarViews({
+    key: 'executions-page',
+    defaults: [
+      {
+        id: 'all',
+        name: t('common.all'),
+        icon: 'list',
+        builtIn: true,
+        snapshot: { search: '', status: 'all', agent: 'all', project: 'all' },
+      },
+    ],
+    onApply: (snapshot) => {
+      const snap = (snapshot ?? {}) as Partial<{
+        search: string;
+        status: ExecutionRunStatus | 'all';
+        agent: string;
+        project: string;
+      }>;
+      setSearch(snap.search ?? '');
+      setStatusFilter(snap.status ?? 'all');
+      setAgentFilter(snap.agent ?? 'all');
+      setProjectFilter(snap.project ?? 'all');
+    },
+  });
+  const { updateActiveSnapshot } = toolbar;
+
+  useEffect(() => {
+    updateActiveSnapshot({ search, status: statusFilter, agent: agentFilter, project: projectFilter });
+  }, [updateActiveSnapshot, search, statusFilter, agentFilter, projectFilter]);
+
+  const entity = getEntityIcon('execution');
+
+  const rowMenuItems = (run: ExecutionRunRecord): MenuItem[] => {
+    const items: MenuItem[] = [
+      { id: 'detail', label: t('runDetails.viewDetail'), icon: <FileText className="size-3.5" />, onClick: () => setDetailRunId(run.id) },
+      { id: 'overview', label: t('runDetails.card.title'), icon: <ExternalLink className="size-3.5" />, onClick: () => setOverviewRun(run) },
+    ];
+    if (run.acceptanceId) {
+      items.push({
+        id: 'acceptance',
+        label: t('execution.row.viewAcceptance'),
+        icon: <Target className="size-3.5" />,
+        onClick: () => navigate(`/app/acceptance/${run.acceptanceId}`),
+      });
+    }
+    if (!isTerminalRunStatus(run.status)) {
+      items.push({
+        id: 'cancel',
+        label: t('execution.row.cancel'),
+        icon: <Ban className="size-3.5" />,
+        destructive: true,
+        separatorAfter: true,
+        onClick: () => executionApi.cancel(run.id),
+      });
+    }
+    return items;
+  };
+
+  const renderLeading = (run: ExecutionRunRecord) => {
+    const cfg = RUN_STATUS_CONFIG[run.status] ?? RUN_STATUS_CONFIG.draft;
+    const StatusIcon = cfg.icon;
+    const duration = formatRunDuration(run);
+    return (
+      <>
+        <StatusIcon
+          className={cn('size-4 shrink-0', cfg.color, cfg.pulse && 'animate-pulse')}
+        />
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex min-w-0 items-center gap-2">
+            <ListText className="font-medium">{run.goal}</ListText>
+            <RunStatusBadge status={run.status} />
+          </div>
+          <div className="flex min-w-0 items-center gap-3 text-xs text-muted-foreground">
+            {run.subjectName ? (
+              <span className="flex items-center gap-1">
+                <Bot className="size-3" />
+                {run.subjectName}
+              </span>
+            ) : null}
+            {run.project?.name ? (
+              <span className="flex items-center gap-1">
+                <FolderKanban className="size-3" />
+                {run.project.name}
+              </span>
+            ) : null}
+            {run.issue?.title ? <span className="truncate">{run.issue.title}</span> : null}
+            <span className="shrink-0">{formatRunDateTime(run.startedAt ?? run.createdAt)}</span>
+            {duration ? <span className="shrink-0">{duration}</span> : null}
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  const renderTrailing = (run: ExecutionRunRecord) => {
+    const tokens = formatTokens(run.totalTokens);
+    const cost = formatCost(run.totalCost);
+    return (
+      <>
+        {run.providerId ? (
+          <span className="rounded-full bg-muted/60 px-2 py-0.5 font-mono text-11 text-muted-foreground">
+            {run.providerId}
+          </span>
+        ) : null}
+        {run.stepsCount != null ? (
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <SquareTerminal className="size-3" />
+            {t('execution.row.steps', { count: run.stepsCount })}
+          </span>
+        ) : null}
+        {run.artifactsCount ? (
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Package className="size-3" />
+            {t('execution.row.artifacts', { count: run.artifactsCount })}
+          </span>
+        ) : null}
+        {tokens ? <span className="text-xs text-muted-foreground">{tokens}</span> : null}
+        {cost ? (
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <DollarSign className="size-3" />
+            {cost.replace('$', '')}
+          </span>
+        ) : null}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="size-7 shrink-0 p-0"
+          title={t('runDetails.viewDetail')}
+          onClick={(event) => {
+            event.stopPropagation();
+            setDetailRunId(run.id);
+          }}
+        >
+          <FileText className="size-3.5" />
+        </Button>
+      </>
+    );
+  };
+
   return (
-    <PageShell>
+    <PageShell className="overflow-hidden" aiPage="executions.list">
       <PageHeader
-        title="Execution Center"
-        icon={getEntityIcon('execution').icon}
-        iconColor={TONE_TEXT_CLASS[getEntityIcon('execution').tone]}
+        aiId="executions.list"
+        title={t('nav.executions')}
+        icon={entity.icon}
+        iconColor={TONE_TEXT_CLASS[entity.tone]}
+        metrics={[{ id: 'total', label: t('nav.executions'), value: filteredRuns.length }]}
         actions={
-          <HeaderActionButton
-            variant="outline"
-            icon={Bot}
-            label="Agent Console"
-            onClick={() => navigate('/app/settings/ai')}
-          />
+          <>
+            <QuickCardsToggle
+              visible={stats.visible}
+              onToggle={stats.toggle}
+              label={t('execution.stats.toggle', '快捷统计')}
+              aiId="executions.list.stats-toggle"
+            />
+            <HeaderActionButton
+              variant="outline"
+              icon={Bot}
+              label={t('execution.agentConsole', 'Agent 控制台')}
+              onClick={() => navigate('/app/settings/ai')}
+            />
+          </>
         }
       />
 
-      <div className="mx-auto w-full max-w-screen-xl space-y-5 p-6">
-        {/* KPI 统计 */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-24" />
-            ))}
-          </div>
-        ) : (
-          <KPIStats runs={runs} />
-        )}
+      {/* 统计卡区（默认隐藏，页头幽灵按钮切换） */}
+      {stats.visible ? (
+        <div className="border-b border-border bg-background px-6 py-4">
+          <StatsCard items={statsItems} columns={6} />
+        </div>
+      ) : null}
 
-        {/* 筛选器 */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search executions…"
-              className="w-52 pl-8 text-xs"
+      <ToolbarRow
+        aiId="executions.list"
+        views={toolbar.views}
+        activeViewId={toolbar.activeViewId}
+        onSelectView={toolbar.selectView}
+        onCreateView={toolbar.createView}
+        onUpdateView={toolbar.updateView}
+        onDeleteView={toolbar.deleteView}
+        viewStyle={{
+          value: 'list',
+          onChange: () => {},
+          options: [{ value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List }],
+        }}
+        filterMenu={{
+          badge: [
+            statusFilter !== 'all',
+            agentFilter !== 'all',
+            projectFilter !== 'all',
+          ].filter(Boolean).length,
+          search: { value: search, onChange: setSearch, placeholder: t('execution.filter.searchPlaceholder') },
+          items: [
+            { type: 'label', label: t('execution.filter.statusGroup') },
+            {
+              id: 'status-all',
+              type: 'checkbox',
+              label: t('common.all'),
+              checked: statusFilter === 'all',
+              onSelect: () => setStatusFilter('all'),
+            },
+            ...STATUS_KEYS.map((status) => {
+              const cfg = RUN_STATUS_CONFIG[status];
+              return {
+                id: `status-${status}`,
+                type: 'checkbox' as const,
+                label: t(`runDetails.status.${status}`),
+                icon: cfg.icon,
+                checked: statusFilter === status,
+                onSelect: () =>
+                  setStatusFilter(statusFilter === status ? 'all' : status),
+              };
+            }),
+            { type: 'separator' },
+            { type: 'label', label: t('execution.filter.agentGroup') },
+            {
+              id: 'agent-all',
+              type: 'checkbox',
+              label: t('common.all'),
+              checked: agentFilter === 'all',
+              onSelect: () => setAgentFilter('all'),
+            },
+            ...agents.map((a) => ({
+              id: `agent-${a.id}`,
+              type: 'checkbox' as const,
+              label: a.displayName,
+              checked: agentFilter === a.id,
+              onSelect: () => setAgentFilter(agentFilter === a.id ? 'all' : a.id),
+            })),
+            { type: 'separator' },
+            { type: 'label', label: t('execution.filter.projectGroup') },
+            {
+              id: 'project-all',
+              type: 'checkbox',
+              label: t('common.all'),
+              checked: projectFilter === 'all',
+              onSelect: () => setProjectFilter('all'),
+            },
+            ...projects.map((p) => ({
+              id: `project-${p.id}`,
+              type: 'checkbox' as const,
+              label: p.name,
+              checked: projectFilter === p.id,
+              onSelect: () => setProjectFilter(projectFilter === p.id ? 'all' : p.id),
+            })),
+          ],
+        }}
+      />
+
+      {/* 内容区：DataList 行原语列表；空态由页面接管（区分「无记录」与「筛选无结果」） */}
+      <div className="flex-1 overflow-auto p-6">
+        {!isLoading && filteredRuns.length === 0 ? (
+          runs.length === 0 ? (
+            <EmptyState
+              icon={Activity}
+              title={t('execution.empty.none')}
+              description={t('execution.empty.noneDesc')}
+              action={
+                <Button variant="outline" size="sm" onClick={() => navigate('/app/tasks')}>
+                  {t('execution.empty.goTasks')}
+                </Button>
+              }
             />
-          </div>
-
-          <NativeSelect
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as ExecutionRunStatus | 'all')}
-            className="w-36 text-xs"
-          >
-            <option value="all">All Statuses</option>
-            {Object.keys(STATUS_CONFIG).map((status) => (
-              <option key={status} value={status}>
-                {t(`runDetails.status.${status}`)}
-              </option>
-            ))}
-          </NativeSelect>
-
-          <NativeSelect
-            value={agentFilter}
-            onChange={(e) => setAgentFilter(e.target.value)}
-            className="w-36 text-xs"
-          >
-            <option value="all">All Agents</option>
-            {agents.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.displayName}
-              </option>
-            ))}
-          </NativeSelect>
-
-          <NativeSelect
-            value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-            className="w-36 text-xs"
-          >
-            <option value="all">All Projects</option>
-            {projects?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </NativeSelect>
-
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
-              Clear filters
-            </Button>
-          )}
-
-          <span className="ml-auto text-xs text-muted-foreground">
-            {filteredRuns.length} executions
-          </span>
-        </div>
-
-        {/* 执行列表 */}
-        <div className="space-y-2">
-          {isLoading ? (
-            [...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)
-          ) : filteredRuns.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Activity className="mb-3 h-10 w-10 text-muted-foreground/30" />
-              <p className="text-sm text-muted-foreground">
-                No executions match your filters
-              </p>
-            </div>
           ) : (
-            filteredRuns.map((run) => (
-              <ExecutionRow
-                key={run.id}
-                run={run}
-                isExpanded={expandedId === run.id}
-                onExpand={() => handleExpand(run.id)}
-                onViewDetail={() => setDetailRunId(run.id)}
-                onViewOverview={() => setOverviewRun(run)}
-                onViewAcceptance={() =>
-                  run.acceptanceId && handleViewAcceptance(run.acceptanceId)
-                }
-              />
-            ))
-          )}
-        </div>
+            <EmptyState
+              icon={SearchX}
+              title={t('execution.empty.filtered')}
+              description={t('execution.empty.filteredDesc')}
+              action={
+                <Button variant="outline" size="sm" onClick={clearFilters}>
+                  {t('common.filterClear')}
+                </Button>
+              }
+            />
+          )
+        ) : (
+          <DataList
+            items={filteredRuns}
+            loading={isLoading}
+            className="w-full"
+            renderLeading={renderLeading}
+            renderTrailing={renderTrailing}
+            onItemClick={(run) => setDetailRunId(run.id)}
+            onItemContextMenu={rowMenuItems}
+          />
+        )}
       </div>
 
       <RunDetailsDialog

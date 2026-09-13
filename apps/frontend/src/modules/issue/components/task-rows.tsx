@@ -24,7 +24,8 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Spinner } from '@/components/ui/spinner';
+import { DataListSkeleton } from '@/components/ui/data-list';
+import { EmptyState } from '@/components/ui/empty-state';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import type { BugSeverity, Task } from '../api/issue-api';
 
@@ -401,21 +402,14 @@ export function TaskRowsList({
 
   if (loading) {
     return (
-      <div className={cn('rounded-lg border border-border overflow-hidden bg-background', className)}>
-        <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground text-sm">
-          <Spinner />
-          <span>Loading tasks...</span>
-        </div>
+      <div className={cn('overflow-hidden rounded-lg border border-border bg-background', className)}>
+        <DataListSkeleton grouping />
       </div>
     );
   }
 
   if (tasks.length === 0) {
-    return (
-      <div className={cn('rounded-lg border border-border overflow-hidden bg-background', className)}>
-        <div className="text-center py-16 text-muted-foreground text-sm">{emptyMessage}</div>
-      </div>
-    );
+    return <EmptyState title={emptyMessage} className={className} />;
   }
 
   const toggleGroup = (status: TaskStatus) => {

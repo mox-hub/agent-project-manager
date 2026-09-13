@@ -44,6 +44,8 @@ export interface IssueExecution {
   order?: number;
   metadata?: Record<string, unknown> | null;
   acceptanceId?: string | null;
+  /** 审计闸门黄牌提示（人工执行项 + 活契约审计 red 时返回） */
+  auditWarning?: string | null;
   startedAt?: string | null;
   completedAt?: string | null;
   createdAt: string;

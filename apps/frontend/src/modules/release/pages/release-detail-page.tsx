@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +35,7 @@ import {
   useReopenRelease,
   useUpdateRelease,
 } from '../hooks/use-releases';
+import { ReleaseTraceSection } from '../components/release-trace-section';
 import { RELEASE_STATUS_TONE, statusLabelKey } from './release-list-page';
 import type { ExecutionStep, GateCheck, ReleaseStatus } from '../api/release-api';
 import { cn } from '@/lib/utils';
@@ -81,9 +81,6 @@ export function ReleaseDetailPage() {
     }
   };
 
-  const scopeIds = release?.scope?.issueIds ?? [];
-  void scopeIds;
-
   return (
     <PageShell className="overflow-hidden" aiPage="releases.detail">
       <SubPageToolbar
@@ -113,19 +110,19 @@ export function ReleaseDetailPage() {
             <>
               {/* 状态机进度链 */}
               <Card>
-                <CardContent className="flex flex-wrap items-center gap-1.5 p-4">
+                <CardContent className="flex flex-wrap items-center justify-center gap-0 p-4">
                   {STATUS_FLOW.map((s, i) => {
                     const reached =
                       STATUS_FLOW.indexOf(release.status) >= i ||
                       (release.status === 'failed' && i === 0);
                     return (
-                      <div key={s} className="flex items-center gap-1.5">
+                      <div key={s} className="flex items-center">
                         {i > 0 ? (
-                          <span className="h-px w-4 bg-border" aria-hidden />
+                          <span className="mx-1.5 h-px w-5 bg-border" aria-hidden />
                         ) : null}
                         <span
                           className={cn(
-                            'flex items-center gap-1 rounded-full px-2 py-0.5 text-10',
+                            'flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-10',
                             reached
                               ? 'bg-accent-blue/10 text-accent-blue'
                               : 'text-content-text-muted',
@@ -142,7 +139,7 @@ export function ReleaseDetailPage() {
                     );
                   })}
                   {release.status === 'failed' ? (
-                    <Badge variant="secondary" className={cn('ml-1 text-10', RELEASE_STATUS_TONE.failed)}>
+                    <Badge variant="secondary" className={cn('ml-2 text-10', RELEASE_STATUS_TONE.failed)}>
                       {t(statusLabelKey('failed'))}
                     </Badge>
                   ) : null}
@@ -243,6 +240,9 @@ export function ReleaseDetailPage() {
                 </CardContent>
               </Card>
 
+              {/* 前因后果：圈定任务 → 实时验收 + 执行运行记录（draft 态可编辑范围） */}
+              <ReleaseTraceSection release={release} />
+
               {/* 门禁 */}
               <GateCard
                 releaseId={release.id}
@@ -334,12 +334,16 @@ function GateCard({
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="text-sm">{t('release.gate.title')}</CardTitle>
         {status === 'draft' ? (
-          <HeaderActionButton
-            icon={Check}
-            label={t('release.gate.submit')}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
             disabled={gatePending}
             onClick={onGate}
-          />
+          >
+            <Check className="mr-1 size-3" />
+            {t('release.gate.submit')}
+          </Button>
         ) : null}
       </CardHeader>
       <CardContent className="space-y-2">

@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -8,6 +9,7 @@ interface AsyncStateProps {
   error?: string | null;
   onRetry?: () => void;
   loadingFallback?: ReactNode;
+  emptyIcon?: ComponentType<{ className?: string }>;
   emptyTitle?: string;
   emptyDescription?: string;
   children: ReactNode;
@@ -19,15 +21,18 @@ export function AsyncState({
   error,
   onRetry,
   loadingFallback,
-  emptyTitle = "暂无数据",
+  emptyIcon,
+  emptyTitle,
   emptyDescription,
   children,
 }: AsyncStateProps) {
+  const { t } = useTranslation();
+
   if (isLoading) {
     return (
       loadingFallback ?? (
         <div className="flex min-h-45 items-center justify-center text-sm text-muted-foreground">
-          Loading...
+          {t("common.loading", "Loading...")}
         </div>
       )
     );
@@ -36,15 +41,21 @@ export function AsyncState({
   if (error) {
     return (
       <EmptyState
-        title="加载失败"
+        title={t("common.loadFailed", "加载失败")}
         description={error}
-        action={onRetry ? <Button onClick={onRetry}>重试</Button> : undefined}
+        action={onRetry ? <Button onClick={onRetry}>{t("common.retry", "重试")}</Button> : undefined}
       />
     );
   }
 
   if (isEmpty) {
-    return <EmptyState title={emptyTitle} description={emptyDescription} />;
+    return (
+      <EmptyState
+        icon={emptyIcon}
+        title={emptyTitle ?? t("common.noData", "暂无数据")}
+        description={emptyDescription}
+      />
+    );
   }
 
   return <>{children}</>;

@@ -8,13 +8,15 @@
  *   采用 refer 的静态示例数据并标记（仅展示形态）
  */
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowRight, ArrowUp, BarChart3, DollarSign, Activity, ShieldAlert, Users, Zap, AlertTriangle, XCircle, TrendingUp, TrendingDown, Target, Minus, CheckCircle2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, BarChart3, DollarSign, Activity, ShieldAlert, Users, Zap, AlertTriangle, XCircle, TrendingUp, TrendingDown, Target, Minus, CheckCircle2 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { StatusPill } from '@/components/ui/status-pill';
 import { Progress } from '@/components/ui/progress';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -25,6 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangleIcon, RefreshCwIcon } from 'lucide-react';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useAnalyticsOverview, usePlaybookHealth, useProfileHealth } from '../hooks/use-analytics-overview';
+import { useDashboardOverview } from '@/modules/project/hooks/use-dashboard-overview';
 import type { ProfileHealthItem } from '../api/analytics-api';
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
@@ -32,13 +35,7 @@ import {
 } from 'recharts';
 import { cn } from '@/lib/utils';
 
-function TrendArrow({ trend }: { trend: 'up' | 'down' | 'flat' }) {
-  if (trend === 'up') return <ArrowUp size={14} className="text-accent-green" />;
-  if (trend === 'down') return <ArrowDown size={14} className="text-accent-red" />;
-  return <ArrowRight size={14} className="text-muted-foreground" />;
-}
-
-// 数据：GET /analytics/overview（契约提案 v1）；mock 模式由 msw handler 提供演示数据
+// Overview 数据：GET /dashboard/overview（真实端点）；其余 Tab 形态数据走 msw mock（见 use-analytics-overview 注释）
 const TOOLTIP_STYLE = { fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' };
 
 
@@ -76,10 +73,24 @@ function StatCard({ label, value, sub, icon: Icon, color = 'text-foreground', tr
   );
 }
 
-// ── Overview（真实 API）─────────────────────────────────────────────────────────
+// ── Overview（真实 API：GET /dashboard/overview，七段聚合按真实字段映射）──────────
+
+/** 项目健康状态 → 徽标（on_track/at_risk/off_track） */
+const HEALTH_STATUS: Record<string, { tone: 'success' | 'warning' | 'danger'; label: string }> = {
+  on_track: { tone: 'success', label: '正常' },
+  at_risk: { tone: 'warning', label: '有风险' },
+  off_track: { tone: 'danger', label: '偏离' },
+};
+
+/** 风险等级 → 徽标（critical/high/medium） */
+const RISK_SEVERITY: Record<string, { tone: 'danger' | 'warning' | 'default'; label: string }> = {
+  critical: { tone: 'danger', label: '严重' },
+  high: { tone: 'warning', label: '高' },
+  medium: { tone: 'default', label: '中' },
+};
 
 function OverviewTab() {
-  const { data, isLoading, isError } = useAnalyticsOverview();
+  const { data, isLoading, isError, refetch } = useDashboardOverview();
 
   if (isLoading) {
     return (
@@ -96,14 +107,14 @@ function OverviewTab() {
 
   if (isError || !data) {
     return (
-      <div className="flex min-h-[40vh] w-full max-w-md flex-col items-center justify-center p-8 text-center mx-auto">
-        <Alert variant="destructive" className="text-left w-full">
+      <div className="mx-auto flex min-h-[40vh] w-full max-w-md flex-col items-center justify-center p-8 text-center">
+        <Alert variant="destructive" className="w-full text-left">
           <AlertTriangleIcon className="size-4" />
           <AlertTitle>加载失败</AlertTitle>
           <AlertDescription>无法加载分析数据，请稍后重试。</AlertDescription>
         </Alert>
-        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
-          <RefreshCwIcon className="size-3.5 mr-1.5" />重新加载
+        <Button variant="outline" className="mt-4" onClick={() => refetch()}>
+          <RefreshCwIcon className="mr-1.5 size-3.5" />重试
         </Button>
       </div>
     );
@@ -111,59 +122,79 @@ function OverviewTab() {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="项目总数" value={data.totalProjects} sub="all projects" icon={Target} color="text-accent-blue" />
-        <StatCard label="活跃 Agent" value={data.activeAgents} sub="agents working" icon={Zap} color="text-accent-purple" />
-        <StatCard label="交付率" value={`${data.deliveryRate}%`} sub="delivery rate" icon={CheckCircle2} color="text-accent-green" />
-        <StatCard label="质量评分" value={data.qualityScore} sub="quality score" icon={Activity} color="text-accent-yellow" />
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <StatCard label="项目总数" value={data.health.projects.length} sub="全部项目" icon={Target} color="text-accent-blue" />
+        <StatCard label="活跃任务" value={data.delivery.activeTasks} sub={`共 ${data.delivery.totalTasks} 项`} icon={Zap} color="text-accent-purple" />
+        <StatCard label="AI 周用量" value={data.ai.tokensUsed.toLocaleString()} sub={`对话 ${data.ai.conversations} 轮`} icon={CheckCircle2} color="text-accent-green" />
+        <StatCard label="平均健康分" value={data.health.avgScore} sub="项目健康 0-100" icon={Activity} color="text-accent-yellow" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">模块健康度</CardTitle>
+            <CardTitle className="text-sm font-medium">项目健康</CardTitle>
           </CardHeader>
           <CardContent className="px-2 pb-3">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>模块</TableHead>
-                  <TableHead>负责人</TableHead>
-                  <TableHead>评分</TableHead>
-                  <TableHead>趋势</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.moduleStatus.map((module) => (
-                  <TableRow key={module.id}>
-                    <TableCell className="font-medium">{module.name}</TableCell>
-                    <TableCell>{module.owner}</TableCell>
-                    <TableCell>{module.score}</TableCell>
-                    <TableCell><TrendArrow trend={module.trend} /></TableCell>
+            {data.health.projects.length === 0 ? (
+              <EmptyState title="暂无项目" className="min-h-20" />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>项目</TableHead>
+                    <TableHead>评分</TableHead>
+                    <TableHead>状态</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {data.health.projects.map((p) => {
+                    const st = HEALTH_STATUS[p.status] ?? HEALTH_STATUS.on_track;
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell className="font-medium">{p.name}</TableCell>
+                        <TableCell className="tabular-nums">{p.score}</TableCell>
+                        <TableCell>
+                          <StatusPill tone={st.tone}>{st.label}</StatusPill>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">风险聚焦</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              风险聚焦
+              {data.risks.items.length > 0 ? ` · 缓解率 ${data.risks.mitigationRatePct}%` : ''}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4 space-y-3">
-            {data.risks.map((risk) => (
-              <div key={risk.id} className="rounded-lg border border-border bg-muted/50 p-3">
-                <p className="text-sm font-medium text-foreground">{risk.project}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{risk.summary}</p>
-                <p className="mt-1 text-xs text-muted-foreground">建议: {risk.action}</p>
-              </div>
-            ))}
+          <CardContent className="space-y-3 px-4 pb-4">
+            {data.risks.items.length === 0 ? (
+              <EmptyState title="当前无风险项" description="识别到风险项目后将会聚到这里" className="min-h-20" />
+            ) : (
+              data.risks.items.map((risk) => {
+                const sev = RISK_SEVERITY[risk.severity] ?? RISK_SEVERITY.medium;
+                return (
+                  <div key={risk.id} className="rounded-lg border border-border bg-muted/50 p-3">
+                    <div className="flex items-center gap-2">
+                      <StatusPill tone={sev.tone}>{sev.label}</StatusPill>
+                      <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{risk.title}</p>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">{risk.impact}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">建议: {risk.mitigation}</p>
+                  </div>
+                );
+              })
+            )}
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ProfileHealthCard />
         <PlaybookHealthCard />
       </div>
@@ -186,7 +217,11 @@ function ProfileHealthCard() {
         {isLoading ? (
           <p className="text-xs text-muted-foreground">加载中…</p>
         ) : withData.length === 0 ? (
-          <p className="text-xs text-muted-foreground">暂无档案数据——在项目「档案」页触发考古或手动填充后这里会亮起来。</p>
+          <EmptyState
+            title="暂无档案数据"
+            description="在项目「档案」页触发考古或手动填充后这里会亮起来。"
+            className="min-h-20"
+          />
         ) : (
           withData.slice(0, 6).map((item) => <ProfileHealthRow key={item.projectId} item={item} />)
         )}
@@ -230,7 +265,11 @@ function PlaybookHealthCard() {
         {isLoading ? (
           <p className="text-xs text-muted-foreground">加载中…</p>
         ) : stages.length === 0 ? (
-          <p className="text-xs text-muted-foreground">暂无剧本运行数据——项目「流程」页挂载剧本并跑一个阶段后这里会出现跳过率与退回率。</p>
+          <EmptyState
+            title="暂无剧本运行数据"
+            description="项目「流程」页挂载剧本并跑一个阶段后，这里会出现跳过率与退回率。"
+            className="min-h-20"
+          />
         ) : (
           <Table>
             <TableHeader>
@@ -562,56 +601,25 @@ type AnalyticsTab = 'overview' | 'cost' | 'quality' | 'risk' | 'team';
 
 export function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('overview');
-  const { data: overviewData, refetch: refetchOverview } = useAnalyticsOverview();
+  const { data: overviewData, refetch: refetchOverview } = useDashboardOverview();
 
   const metrics = useMemo(() => {
     if (!overviewData) return [];
     return [
-      { id: 'projects', label: '项目总数', value: overviewData.totalProjects },
-      { id: 'agents', label: '活跃 Agent', value: overviewData.activeAgents },
-      { id: 'delivery', label: '交付率', value: `${overviewData.deliveryRate}%` },
-      { id: 'quality', label: '质量评分', value: overviewData.qualityScore },
+      { id: 'projects', label: '项目', value: overviewData.health.projects.length },
+      { id: 'tasks', label: '活跃任务', value: overviewData.delivery.activeTasks },
+      { id: 'health', label: '平均健康分', value: overviewData.health.avgScore },
     ];
   }, [overviewData]);
 
   const toolbar = useToolbarViews({
     key: 'analytics-page',
     defaults: [
-      {
-        id: 'overview',
-        name: '概览 Overview',
-        icon: 'target',
-        builtIn: true,
-        snapshot: { tab: 'overview' },
-      },
-      {
-        id: 'cost',
-        name: '成本 Cost',
-        icon: 'tag',
-        builtIn: true,
-        snapshot: { tab: 'cost' },
-      },
-      {
-        id: 'quality',
-        name: '质量 Quality',
-        icon: 'check',
-        builtIn: true,
-        snapshot: { tab: 'quality' },
-      },
-      {
-        id: 'risk',
-        name: '风险 Risk',
-        icon: 'bug',
-        builtIn: true,
-        snapshot: { tab: 'risk' },
-      },
-      {
-        id: 'team',
-        name: '团队 Team',
-        icon: 'user',
-        builtIn: true,
-        snapshot: { tab: 'team' },
-      },
+      { id: 'overview', name: '概览', icon: 'target', builtIn: true, snapshot: { tab: 'overview' } },
+      { id: 'cost', name: '成本', icon: 'tag', builtIn: true, snapshot: { tab: 'cost' } },
+      { id: 'quality', name: '质量', icon: 'check', builtIn: true, snapshot: { tab: 'quality' } },
+      { id: 'risk', name: '风险', icon: 'bug', builtIn: true, snapshot: { tab: 'risk' } },
+      { id: 'team', name: '团队', icon: 'user', builtIn: true, snapshot: { tab: 'team' } },
     ],
     onApply: (snapshot) => {
       const snap = (snapshot ?? {}) as Partial<{ tab: AnalyticsTab }>;
@@ -660,11 +668,11 @@ export function AnalyticsPage() {
           value: activeTab,
           onChange: (v) => setActiveTab(v as AnalyticsTab),
           options: [
-            { value: 'overview', label: 'Overview', icon: BarChart3 },
-            { value: 'cost', label: 'Cost', icon: DollarSign },
-            { value: 'quality', label: 'Quality', icon: Activity },
-            { value: 'risk', label: 'Risk', icon: ShieldAlert },
-            { value: 'team', label: 'Team Activity', icon: Users },
+            { value: 'overview', label: '概览', icon: BarChart3 },
+            { value: 'cost', label: '成本', icon: DollarSign },
+            { value: 'quality', label: '质量', icon: Activity },
+            { value: 'risk', label: '风险', icon: ShieldAlert },
+            { value: 'team', label: '团队', icon: Users },
           ],
         }}
         filterMenu={false}

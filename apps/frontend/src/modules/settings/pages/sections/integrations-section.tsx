@@ -4,6 +4,7 @@
  * 头部已改造为标准 PageHeader + SegmentedControl 工具栏
  */
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StatusPill } from '@/components/ui/status-pill';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -39,6 +40,7 @@ import { useIntegrations, useDeleteIntegration } from '@/modules/integration/hoo
 import type { IntegrationConfig } from '@/modules/integration/api/integration-api';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from '@/components/ui/toast';
+import { EmptyState } from '@/components/ui/empty-state';
 import { LinearConfigForm } from '@/modules/linear/components/linear-config-form';
 import { GithubConfigForm } from '@/modules/github/components/github-config-form';
 
@@ -522,6 +524,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function IntegrationsSettingsSection() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: integrationsData } = useIntegrations();
   const deleteIntegration = useDeleteIntegration();
@@ -720,19 +723,22 @@ export function IntegrationsSettingsSection() {
             ))}
 
             {filtered.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <Plug2 className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                <p className="text-sm text-muted-foreground">No integrations match your search</p>
-                <button
-                  onClick={() => {
-                    setSearch('');
-                    setActiveTab('all');
-                  }}
-                  className="mt-3 text-xs text-primary hover:underline"
-                >
-                  Clear filters
-                </button>
-              </div>
+              <EmptyState
+                icon={Plug2}
+                title={t('settings.integration.emptyFiltered', '没有符合条件的集成')}
+                description={t('settings.integration.emptyFilteredHint', '调整搜索关键词或清除筛选再试')}
+                action={
+                  <button
+                    onClick={() => {
+                      setSearch('');
+                      setActiveTab('all');
+                    }}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {t('common.filterClear')}
+                  </button>
+                }
+              />
             )}
 
             {/* Coming soon */}

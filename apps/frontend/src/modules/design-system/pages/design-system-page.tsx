@@ -4375,16 +4375,13 @@ export function DesignSystemPage() {
                 { Icon: FileText, title: 'No documents', desc: 'Start building your knowledge base with a new document.', action: 'New Document' },
                 { Icon: Search, title: 'No results found', desc: 'Try adjusting your search query or clearing the filters.', action: null },
               ].map(({ Icon, title, desc, action }) => (
-                <div key={title} className="flex flex-col items-center justify-center text-center p-6 rounded-xl border border-dashed border-border bg-muted/10 gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{title}</p>
-                    <p className="text-xs text-muted-foreground mt-1 max-w-45">{desc}</p>
-                  </div>
-                  {action && <Button size="sm"><Plus className="w-3 h-3" /> {action}</Button>}
-                </div>
+                <EmptyState
+                  key={title}
+                  icon={Icon}
+                  title={title}
+                  description={desc}
+                  action={action ? <Button size="sm"><Plus className="w-3 h-3" /> {action}</Button> : undefined}
+                />
               ))}
             </div>
           </SectionAnchor>
@@ -5404,6 +5401,7 @@ export function DesignSystemPage() {
               <div>
                 <SubLabel>EmptyState</SubLabel>
                 <EmptyState
+                  icon={FileText}
                   title="No documents found"
                   description="Start building your knowledge base"
                   action={<Button size="sm"><Plus /> New Document</Button>}
@@ -5413,6 +5411,7 @@ export function DesignSystemPage() {
                 <SubLabel>EmptyState (In-Card / Filter Results)</SubLabel>
                 <div className="rounded-lg border border-border/60 bg-card p-2">
                   <EmptyState
+                    icon={Search}
                     title="No matching items"
                     description="Try adjusting your search query or clearing the filters."
                     action={<Button size="sm" variant="outline">Clear filters</Button>}

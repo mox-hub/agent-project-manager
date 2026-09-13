@@ -120,7 +120,7 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | Table 套件 | ui/table.tsx | 原生 table 样式化套件（禁止业务代码裸写 `<table>`） | children |
 | DataTableShell | ui/data-table-shell.tsx | 表格外壳容器（圆角边框卡片） | children, className |
 | DataTable | ui/data-table.tsx | 通用数据表（coss p-table-8 形态：TanStack 排序表头/可选行选择列/客户端或 manual 服务端分页 + footer 区间翻页） | columns, data, getRowId, onRowClick, enableSelection, selectedIds, onSelectedIdsChange, manualPagination, pageSize, emptyContent |
-| DataList + 单元格（ListText/Chip/Date/Icon/Avatar/ActionButton） | ui/data-list.tsx | 通用列表（多选/分组手风琴/右键菜单/悬浮批量操作） | items, renderLeading, renderTrailing, groupBy, onItemContextMenu |
+| DataList + 单元格（ListText/Chip/Date/Icon/Avatar/ActionButton） | ui/data-list.tsx | 通用列表（多选/分组手风琴/右键菜单/悬浮批量操作；空态走 EmptyState 规范形态） | items, renderLeading, renderTrailing, groupBy, onItemContextMenu, emptyMessage, emptyIcon |
 | Card 套件 | ui/card.tsx | 卡片容器（支持 sm 尺寸与 CardAction 槽） | size(default/sm), children |
 | Item 套件 | ui/item.tsx | 通用行条目（cva variant/size） | variant(default/outline/muted), size, render |
 | Badge | ui/badge.tsx | 徽标（cva variant） | variant, children |
@@ -154,8 +154,8 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | ~~Toaster（sonner）~~ | — | 已删除（2026-08 coss toast 迁移，sonner 依赖一并移除） | — |
 | Spinner | ui/spinner.tsx | 旋转加载指示器 | size(sm/md/lg/xl), label |
 | Skeleton 套件（Text/Card/Avatar/List/Table/Chart） | ui/skeleton.tsx | 骨架屏占位全家桶 | Text: lines；Table: rows, columns |
-| AsyncState | ui/async-state.tsx | 加载/空/错误三态统一处理容器 | isLoading, isEmpty, error, onRetry, children |
-| EmptyState | ui/empty-state.tsx | 轻量空状态（标题/描述/操作） | title, description, action |
+| AsyncState | ui/async-state.tsx | 加载/空/错误三态统一处理容器（默认文案 i18n） | isLoading, isEmpty, error, onRetry, emptyIcon, emptyTitle, emptyDescription, children |
+| EmptyState | ui/empty-state.tsx | 轻量空状态（图标 muted 圆块 + 标题/描述/操作，design-system「Empty States」规范形态） | icon, title, description, action |
 | ~~Empty 套件~~ | — | 已删除（2026-09 收敛为 EmptyState） | — |
 | PageLoader + usePageLoader | ui/page-loader.tsx | 全屏页面加载遮罩 | message, className |
 | GlobalLoadingState | ui/global-loading-state.tsx | 监听 Query 缓存显示全局顶部加载条（main.tsx 挂载） | 无 props |

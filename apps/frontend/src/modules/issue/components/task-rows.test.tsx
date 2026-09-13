@@ -89,8 +89,9 @@ describe('TaskRowsList', () => {
   });
 
   it('shows loading and empty states', () => {
-    const { rerender } = render(<TaskRowsList tasks={[]} loading />);
-    expect(screen.getByText('Loading tasks...')).toBeTruthy();
+    const { container, rerender } = render(<TaskRowsList tasks={[]} loading />);
+    // loading 态渲染 DataListSkeleton 骨架（宪法 §9：加载用 Skeleton，无裸 spinner）
+    expect(container.querySelector('[data-slot="skeleton"]')).toBeTruthy();
 
     rerender(<TaskRowsList tasks={[]} emptyMessage="Nothing here" />);
     expect(screen.getByText('Nothing here')).toBeTruthy();

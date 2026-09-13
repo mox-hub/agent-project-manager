@@ -1,15 +1,16 @@
 /**
- * 发版列表页（CAP-K-03 驱动型发版）。
- * 按项目圈定查看发版记录与状态机阶段；创建草案走对话框（版本可 AI/机械推荐）。
- * 发布主链路（门禁→审批→执行）在详情页完成。
+ * 发版列表页（CAP-K-03 驱动型发版，list-page 模板骨架）。
+ * ToolbarRow 筛选（项目/状态收进下拉，项目真相源仍在 URL searchParams 深链友好）；
+ * 创建草案走对话框（版本可 AI/机械推荐），发布主链路（门禁→审批→执行）在详情页完成。
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Rocket, Sparkles } from 'lucide-react';
+import { FolderKanban, List, Rocket, Sparkles } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -26,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { SkeletonCard } from '@/components/ui/skeleton';
+import { SkeletonTable } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from '@/components/ui/toast';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
@@ -47,6 +48,8 @@ export const RELEASE_STATUS_TONE: Record<ReleaseStatus, string> = {
   failed: 'bg-accent-red-light text-accent-red',
 };
 
+export const RELEASE_STATUSES = Object.keys(RELEASE_STATUS_TONE) as ReleaseStatus[];
+
 export function statusLabelKey(status: ReleaseStatus): string {
   return `release.status.${status}`;
 }
@@ -57,6 +60,8 @@ export function ReleaseListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const projectId = searchParams.get('projectId') ?? '';
   const [createOpen, setCreateOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ReleaseStatus | 'all'>('all');
 
   const projectsQuery = useProjectList();
   const projects = projectsQuery.data?.items ?? [];
@@ -66,58 +71,176 @@ export function ReleaseListPage() {
     [releasesQuery.data],
   );
 
+  // 客户端过滤（搜索 version/name/tag + 状态）
+  const filtered = useMemo(
+    () =>
+      releases.filter((r) => {
+        if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+        if (search) {
+          const kw = search.toLowerCase();
+          const haystack = [`v${r.version}`, r.name ?? '', r.gitTag ?? '']
+            .join(' ')
+            .toLowerCase();
+          if (!haystack.includes(kw)) return false;
+        }
+        return true;
+      }),
+    [releases, statusFilter, search],
+  );
+
+  // 项目筛选的真相源在 URL（深链/详情页返回），工具栏快照 apply 时写回 URL
+  const setProjectFilter = (pid: string) => {
+    setSearchParams(pid ? { projectId: pid } : {});
+  };
+
+  const toolbar = useToolbarViews({
+    key: 'releases-page',
+    defaults: [
+      {
+        id: 'all',
+        name: t('common.all'),
+        icon: 'list',
+        builtIn: true,
+        snapshot: { search: '', status: 'all', projectId: '' },
+      },
+    ],
+    onApply: (snapshot) => {
+      const snap = (snapshot ?? {}) as Partial<{
+        search: string;
+        status: ReleaseStatus | 'all';
+        projectId: string;
+      }>;
+      setSearch(snap.search ?? '');
+      setStatusFilter(snap.status ?? 'all');
+      const nextPid = snap.projectId ?? '';
+      if (nextPid !== projectId) setProjectFilter(nextPid);
+    },
+  });
+  const { updateActiveSnapshot } = toolbar;
+
+  useEffect(() => {
+    updateActiveSnapshot({ search, status: statusFilter, projectId });
+  }, [updateActiveSnapshot, search, statusFilter, projectId]);
+
+  const hasActiveFilters = statusFilter !== 'all' || !!search || !!projectId;
+  const openCreate = () => {
+    if (!projectId) {
+      toast.error(t('release.create.needProject'));
+      return;
+    }
+    setCreateOpen(true);
+  };
+
   return (
-    <PageShell className="overflow-auto" aiPage="releases.list">
-      <div className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 lg:px-10">
-        <PageHeader
-          aiId="releases.list"
-          title={t('release.title')}
-          icon={Rocket}
-          iconColor="text-accent-green"
-          actions={
-            <HeaderActionButton
-              icon={Rocket}
-              label={t('release.create.open')}
-              onClick={() => {
-                if (!projectId) {
-                  toast.error(t('release.create.needProject'));
-                  return;
-                }
-                setCreateOpen(true);
-              }}
-            />
-          }
-        />
+    <PageShell className="overflow-hidden" aiPage="releases.list">
+      <PageHeader
+        aiId="releases.list"
+        title={t('release.title')}
+        icon={Rocket}
+        iconColor="text-accent-green"
+        metrics={[{ id: 'total', label: t('release.title'), value: filtered.length }]}
+        actions={
+          <HeaderActionButton
+            icon={Rocket}
+            label={t('release.create.open')}
+            onClick={openCreate}
+          />
+        }
+      />
 
-        <div className="mb-4 flex items-center gap-3">
-          <NativeSelect
-            value={projectId}
-            onChange={(e) => {
-              const next = e.target.value;
-              setSearchParams(next ? { projectId: next } : {});
-            }}
-            className="h-8 w-64 text-xs"
-            aria-label={t('release.filter.project')}
-          >
-            <option value="">{t('release.filter.pickProject')}</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </NativeSelect>
-        </div>
+      <ToolbarRow
+        aiId="releases.list"
+        views={toolbar.views}
+        activeViewId={toolbar.activeViewId}
+        onSelectView={toolbar.selectView}
+        onCreateView={toolbar.createView}
+        onUpdateView={toolbar.updateView}
+        onDeleteView={toolbar.deleteView}
+        viewStyle={{
+          value: 'list',
+          onChange: () => {},
+          options: [{ value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List }],
+        }}
+        filterMenu={{
+          badge: hasActiveFilters ? 1 : 0,
+          search: { value: search, onChange: setSearch, placeholder: t('release.filter.searchPlaceholder') },
+          items: [
+            { type: 'label', label: t('release.filter.projectGroup') },
+            {
+              id: 'project-all',
+              type: 'checkbox',
+              label: t('common.all'),
+              checked: !projectId,
+              onSelect: () => setProjectFilter(''),
+            },
+            ...projects.map((p) => ({
+              id: `project-${p.id}`,
+              type: 'checkbox' as const,
+              label: p.name,
+              checked: projectId === p.id,
+              onSelect: () => setProjectFilter(projectId === p.id ? '' : p.id),
+            })),
+            { type: 'separator' },
+            { type: 'label', label: t('release.filter.statusGroup') },
+            {
+              id: 'status-all',
+              type: 'checkbox',
+              label: t('common.all'),
+              checked: statusFilter === 'all',
+              onSelect: () => setStatusFilter('all'),
+            },
+            ...RELEASE_STATUSES.map((s) => ({
+              id: `status-${s}`,
+              type: 'checkbox' as const,
+              label: t(statusLabelKey(s)),
+              checked: statusFilter === s,
+              onSelect: () => setStatusFilter(statusFilter === s ? 'all' : s),
+            })),
+          ],
+        }}
+      />
 
+      {/* 内容区：状态分支 = 加载骨架 / 未选项目引导 / 空发版（带创建动作）/ 表格 */}
+      <div className="flex-1 overflow-auto p-6">
         {releasesQuery.isLoading ? (
-          <SkeletonCard className="h-40" />
+          <SkeletonTable rows={4} columns={5} />
         ) : !projectId ? (
           <EmptyState
+            icon={FolderKanban}
             title={t('release.empty.pickProject')}
             description={t('release.empty.pickProjectDesc')}
           />
-        ) : releases.length === 0 ? (
-          <EmptyState
-            title={t('release.empty.none')}
-            description={t('release.empty.noneDesc')}
-          />
+        ) : filtered.length === 0 ? (
+          releases.length === 0 ? (
+            <EmptyState
+              icon={Rocket}
+              title={t('release.empty.none')}
+              description={t('release.empty.noneDesc')}
+              action={
+                <Button size="sm" onClick={openCreate}>
+                  <Sparkles className="mr-1 size-3 text-accent-purple" />
+                  {t('release.empty.createAction')}
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              title={t('release.empty.filtered')}
+              description={t('release.empty.filteredDesc')}
+              action={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearch('');
+                    setStatusFilter('all');
+                  }}
+                >
+                  {t('common.filterClear')}
+                </Button>
+              }
+            />
+          )
         ) : (
           <Card>
             <CardContent className="p-0">
@@ -132,7 +255,7 @@ export function ReleaseListPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {releases.map((r) => (
+                  {filtered.map((r) => (
                     <TableRow
                       key={r.id}
                       className="cursor-pointer"
