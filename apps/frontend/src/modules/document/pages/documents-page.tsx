@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StatusPill } from '@/components/ui/status-pill';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -19,6 +20,7 @@ import {
   MoreVertical,
   Palette,
   Plus,
+  SearchX,
   TestTube2,
   Trash2,
   Eye,
@@ -43,21 +45,22 @@ type StatusFilter = DocumentStatus | 'all';
 type CategoryFilter = DocumentCategory | 'all';
 type ViewMode = 'grid' | 'list';
 
-const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; color: string; bg: string }> = {
-  requirement: { label: '需求文档', icon: FileText, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
-  design: { label: '设计文档', icon: Palette, color: 'text-accent-purple', bg: 'bg-accent-purple/10' },
-  api: { label: 'API文档', icon: Code2, color: 'text-accent-green', bg: 'bg-accent-green/10' },
-  testing: { label: '测试文档', icon: TestTube2, color: 'text-accent-yellow', bg: 'bg-accent-yellow/10' },
-  guide: { label: '用户指南', icon: BookOpen, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
-  custom: { label: '自定义', icon: FolderOpen, color: 'text-muted-foreground', bg: 'bg-muted/50' },
+// label 一律存 i18n 键（document.categories.* / document.*），渲染处经 t() 解析
+const CATEGORY_CONFIG: Record<string, { labelKey: string; icon: typeof FileText; color: string; bg: string }> = {
+  requirement: { labelKey: 'document.categories.requirement', icon: FileText, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
+  design: { labelKey: 'document.categories.design', icon: Palette, color: 'text-accent-purple', bg: 'bg-accent-purple/10' },
+  api: { labelKey: 'document.categories.api', icon: Code2, color: 'text-accent-green', bg: 'bg-accent-green/10' },
+  testing: { labelKey: 'document.categories.testing', icon: TestTube2, color: 'text-accent-yellow', bg: 'bg-accent-yellow/10' },
+  guide: { labelKey: 'document.categories.guide', icon: BookOpen, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
+  custom: { labelKey: 'document.categories.custom', icon: FolderOpen, color: 'text-muted-foreground', bg: 'bg-muted/50' },
 };
 
-const STATUS_CONFIG: Record<StatusFilter, { label: string }> = {
-  all: { label: '全部状态' },
-  draft: { label: '草稿' },
-  reviewing: { label: '审核中' },
-  published: { label: '已发布' },
-  rejected: { label: '已拒绝' },
+const STATUS_CONFIG: Record<StatusFilter, { labelKey: string }> = {
+  all: { labelKey: 'document.allStatus' },
+  draft: { labelKey: 'document.draft' },
+  reviewing: { labelKey: 'document.reviewing' },
+  published: { labelKey: 'document.published' },
+  rejected: { labelKey: 'document.rejected' },
 };
 
 const DOC_STATUS_TONE: Record<string, 'default' | 'warning' | 'success' | 'danger'> = {
@@ -138,7 +141,7 @@ export function DocumentsPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-8 text-sm text-muted-foreground">
-        正在加载文档...
+        {t('document.loading')}
       </div>
     );
   }
@@ -149,7 +152,7 @@ export function DocumentsPage() {
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-accent-red-light">
           <AlertCircle size={32} className="text-accent-red" />
         </div>
-        <h2 className="mb-2 text-xl font-semibold text-accent-red">文档加载失败</h2>
+        <h2 className="mb-2 text-xl font-semibold text-accent-red">{t('document.loadFailed')}</h2>
       </div>
     );
   }
@@ -159,14 +162,14 @@ export function DocumentsPage() {
       <div className="flex h-full flex-col">
         <PageHeader
           aiId="document.document-list"
-          title="文档管理"
+          title={t('document.title')}
           icon={getEntityIcon('document').icon}
           iconColor="text-accent-blue"
-          metrics={[{ id: 'total', label: '文档', value: stats.total }]}
+          metrics={[{ id: 'total', label: t('document.title'), value: stats.total }]}
           actions={(
             <HeaderActionButton
               icon={Plus}
-              label="新建文档"
+              label={t('document.newDocument')}
               data-ai-component="document.document-list.header.new"
               data-ai-role="nav"
               onClick={() => navigate('/app/documents/new')}
@@ -184,7 +187,7 @@ export function DocumentsPage() {
               <AlertTriangle size={16} className="mt-0.5 shrink-0 text-accent-yellow" />
               <div className="min-w-0 flex-1">
                 <div className="font-medium text-foreground">
-                  本地文件同步失败 ({syncWarnings.length})
+                  {t('document.syncBanner.title', { count: syncWarnings.length })}
                 </div>
                 <div className="mt-1 space-y-1 text-xs text-muted-foreground">
                   {syncWarnings.slice(0, 3).map((w) => {
@@ -192,20 +195,24 @@ export function DocumentsPage() {
                     return (
                       <div key={w.documentId} className="flex items-center justify-between gap-2">
                         <span className="truncate">
-                          {doc?.title ?? w.documentId} · 重试 {w.attempts} 次 · {w.lastError}
+                          {t('document.syncBanner.item', {
+                            title: doc?.title ?? w.documentId,
+                            attempts: w.attempts,
+                            error: w.lastError,
+                          })}
                         </span>
                         <button
                           type="button"
                           className="shrink-0 text-accent-blue hover:underline"
                           onClick={() => clearSyncWarning.mutate(w.documentId)}
                         >
-                          知道了
+                          {t('document.syncBanner.dismiss')}
                         </button>
                       </div>
                     );
                   })}
                   {syncWarnings.length > 3 ? (
-                    <div>...还有 {syncWarnings.length - 3} 个</div>
+                    <div>{t('document.syncBanner.more', { count: syncWarnings.length - 3 })}</div>
                   ) : null}
                 </div>
               </div>
@@ -213,7 +220,7 @@ export function DocumentsPage() {
                 type="button"
                 className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted"
                 onClick={() => setShowSyncBanner(false)}
-                aria-label="关闭预警"
+                aria-label={t('document.syncBanner.close')}
               >
                 <X size={14} />
               </button>
@@ -221,10 +228,10 @@ export function DocumentsPage() {
           ) : null}
           <StatsCard
             items={[
-              { key: 'total', value: stats.total, label: '总文档数' },
-              { key: 'published', value: stats.published, label: '已发布', icon: FileText, ...STATS_THEMES.green },
-              { key: 'reviewing', value: stats.reviewing, label: '审核中', icon: Clock, ...STATS_THEMES.yellow },
-              { key: 'draft', value: stats.draft, label: '草稿', icon: FileEdit, ...STATS_THEMES.blue },
+              { key: 'total', value: stats.total, label: t('document.totalDocuments') },
+              { key: 'published', value: stats.published, label: t('document.published'), icon: FileText, ...STATS_THEMES.green },
+              { key: 'reviewing', value: stats.reviewing, label: t('document.reviewing'), icon: Clock, ...STATS_THEMES.yellow },
+              { key: 'draft', value: stats.draft, label: t('document.draft'), icon: FileEdit, ...STATS_THEMES.blue },
             ]}
             columns={4}
             className="grid grid-cols-4 gap-3"
@@ -249,23 +256,23 @@ export function DocumentsPage() {
           }}
           filterMenu={{
             badge: [status !== 'all', category !== 'all'].filter(Boolean).length,
-            search: { value: query, onChange: setQuery, placeholder: '搜索文档...' },
+            search: { value: query, onChange: setQuery, placeholder: t('document.searchPlaceholder') },
             items: [
-              { type: 'label', label: '状态' },
+              { type: 'label', label: t('document.filter.status') },
               ...(['all', 'published', 'reviewing', 'draft'] as const).map((value) => ({
                 id: `status-${value}`,
                 type: 'checkbox' as const,
-                label: STATUS_CONFIG[value].label,
+                label: t(STATUS_CONFIG[value].labelKey),
                 checked: status === value,
                 onSelect: () => setStatus(value),
               })),
               { type: 'separator' },
-              { type: 'label', label: '分类' },
-              { id: 'category-all', type: 'checkbox', label: '全部分类', checked: category === 'all', onSelect: () => setCategory('all') },
+              { type: 'label', label: t('document.filter.category') },
+              { id: 'category-all', type: 'checkbox', label: t('document.allCategories'), checked: category === 'all', onSelect: () => setCategory('all') },
               ...categoryOptions.map((cat) => ({
                 id: `category-${cat}`,
                 type: 'checkbox' as const,
-                label: CATEGORY_CONFIG[cat]?.label ?? cat,
+                label: CATEGORY_CONFIG[cat] ? t(CATEGORY_CONFIG[cat].labelKey) : cat,
                 checked: category === cat,
                 onSelect: () => setCategory(cat as CategoryFilter),
               })),
@@ -283,10 +290,37 @@ export function DocumentsPage() {
 
         <div className="flex-1 overflow-auto p-6">
           {documents.length === 0 ? (
-            <EmptyState
-              title="暂无文档"
-              description={query ? '未找到匹配的文档' : '开始创建你的第一个文档'}
-            />
+            query || status !== 'all' || category !== 'all' ? (
+              <EmptyState
+                icon={SearchX}
+                title={t('document.noMatch')}
+                description={t('document.noMatchDesc')}
+                action={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setQuery('');
+                      setStatus('all');
+                      setCategory('all');
+                    }}
+                  >
+                    {t('common.clearFilters')}
+                  </Button>
+                }
+              />
+            ) : (
+              <EmptyState
+                variant="page"
+                visual={
+                  <IconStack aria-hidden="true" className="text-primary">
+                    <FileText className="size-4 text-primary" />
+                  </IconStack>
+                }
+                title={t('document.noDocuments')}
+                description={t('document.createFirst')}
+              />
+            )
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {documents.map((document) => (
@@ -336,6 +370,7 @@ function DocumentCard({
   onMenuToggle: (id: string | null) => void;
   onPreview: (document: DocumentListItem) => void;
 }) {
+  const { t, i18n } = useTranslation();
   const catConfig = resolveCategory(document.category);
   const CatIcon = catConfig.icon;
   const statusConfig = STATUS_CONFIG[document.status];
@@ -354,7 +389,7 @@ function DocumentCard({
           </div>
           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
             <StatusPill tone={DOC_STATUS_TONE[document.status]} className="text-11 px-1.5 py-0.5 rounded-md">
-              {statusConfig.label}
+              {t(statusConfig.labelKey)}
             </StatusPill>
             <div className="relative">
               <Button
@@ -381,7 +416,7 @@ function DocumentCard({
                     data-ai-action={`document.document-list.card.${document.id}.view.click`}
                     data-ai-role="jump"
                   >
-                    查看
+                    {t('document.actions.view')}
                   </Link>
                   <Link
                     to={`/app/documents/${document.id}/edit`}
@@ -391,7 +426,7 @@ function DocumentCard({
                     data-ai-action={`document.document-list.card.${document.id}.edit.click`}
                     data-ai-role="jump"
                   >
-                    编辑
+                    {t('document.actions.edit')}
                   </Link>
                   <button
                     type="button"
@@ -402,7 +437,7 @@ function DocumentCard({
                     data-ai-role="danger"
                   >
                     <Trash2 className="size-3.5" />
-                    删除
+                    {t('document.actions.delete')}
                   </button>
                 </div>
               )}
@@ -416,7 +451,7 @@ function DocumentCard({
             {document.title}
           </h3>
           <p className={cn('text-10 font-medium mt-1', catConfig.color)}>
-            {catConfig.label}
+            {t(catConfig.labelKey)}
           </p>
         </div>
 
@@ -438,10 +473,10 @@ function DocumentCard({
       {/* 底部信息栏 */}
       <div className="flex items-center justify-between text-10 text-muted-foreground pt-2 border-t border-border/50">
         <span className="truncate max-w-32">
-          {document.project?.name ?? '公共文档'}
+          {document.project?.name ?? t('document.publicDoc')}
         </span>
         <div className="flex items-center gap-2">
-          <span>{new Date(document.updatedAt).toLocaleDateString('zh-CN')}</span>
+          <span>{new Date(document.updatedAt).toLocaleDateString(i18n.language)}</span>
           <button
             type="button"
             onClick={(e) => {
@@ -451,7 +486,7 @@ function DocumentCard({
             className="flex items-center gap-0.5 text-accent-blue hover:underline"
           >
             <Eye className="size-3" />
-            <span>预览</span>
+            <span>{t('document.actions.preview')}</span>
           </button>
         </div>
       </div>
@@ -470,6 +505,7 @@ function DocumentListItem({
   onMenuToggle: (id: string | null) => void;
   onPreview: (document: DocumentListItem) => void;
 }) {
+  const { t, i18n } = useTranslation();
   const catConfig = resolveCategory(document.category);
   const CatIcon = catConfig.icon;
   const statusConfig = STATUS_CONFIG[document.status];
@@ -490,7 +526,7 @@ function DocumentListItem({
             {document.title}
           </h3>
           <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0 text-10 px-1.5 py-0.5 rounded">
-            {statusConfig.label}
+            {t(statusConfig.labelKey)}
           </StatusPill>
           {document.docRole && (
             <Badge variant="outline" className="shrink-0 font-normal text-10 px-1.5 py-0">
@@ -499,9 +535,9 @@ function DocumentListItem({
           )}
         </div>
         <div className="flex items-center gap-3 text-11 text-muted-foreground">
-          <span className={catConfig.color}>{catConfig.label}</span>
-          <span className="truncate max-w-36">{document.project?.name ?? '公共文档'}</span>
-          <span>{new Date(document.updatedAt).toLocaleDateString('zh-CN')}</span>
+          <span className={catConfig.color}>{t(catConfig.labelKey)}</span>
+          <span className="truncate max-w-36">{document.project?.name ?? t('document.publicDoc')}</span>
+          <span>{new Date(document.updatedAt).toLocaleDateString(i18n.language)}</span>
           {document.shortId && (
             <span className="font-mono text-10 text-muted-foreground/70">{document.shortId}</span>
           )}
@@ -516,7 +552,7 @@ function DocumentListItem({
           data-ai-action={`document.document-list.list-item.${document.id}.view.click`}
           data-ai-role="jump"
         >
-          查看
+          {t('document.actions.view')}
         </Link>
         <Link
           to={`/app/documents/${document.id}/edit`}
@@ -525,7 +561,7 @@ function DocumentListItem({
           data-ai-action={`document.document-list.list-item.${document.id}.edit.click`}
           data-ai-role="jump"
         >
-          编辑
+          {t('document.actions.edit')}
         </Link>
         <div className="relative">
           <Button
@@ -550,7 +586,7 @@ function DocumentListItem({
                 onClick={() => onMenuToggle(null)}
               >
                 <GitBranch className="size-3.5" />
-                版本历史
+                {t('document.actions.versionHistory')}
               </button>
               <button
                 type="button"
@@ -561,7 +597,7 @@ function DocumentListItem({
                 data-ai-role="danger"
               >
                 <Trash2 className="size-3.5" />
-                删除
+                {t('document.actions.delete')}
               </button>
             </div>
           )}
