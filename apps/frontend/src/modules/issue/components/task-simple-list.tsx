@@ -194,7 +194,7 @@ export interface TaskSimpleListProps {
 export function TaskSimpleList({
   tasks,
   loading,
-  emptyMessage = 'No tasks',
+  emptyMessage = '暂无任务',
   onTaskClick,
   groupBy = 'none',
   onGroupCreate,

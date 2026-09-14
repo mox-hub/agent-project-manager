@@ -1,6 +1,7 @@
 {
   "common": {
     "noProject": "No Project",
+    "clearFilters": "Clear filters",
     "more": "More",
     "reorder": "Drag to reorder",
     "moveUp": "Move up",
@@ -1124,6 +1125,12 @@
   },
   "task": {
     "title": "Tasks",
+    "empty": {
+      "none": "No tasks yet",
+      "noneDesc": "Create your first task, or break one down from the intake pipeline",
+      "filtered": "No matching tasks",
+      "filteredDesc": "Try a different keyword, or clear the filters"
+    },
     "descriptionAcrossProjects": "tasks across all projects",
     "dispatchToAi": "Dispatch to AI",
     "create": "Create Task",
@@ -1756,11 +1763,25 @@
       "noProjects": "No projects found",
       "loadError": "Failed to load projects",
       "projects": "projects",
+      "aiExecutingTooltip": "AI is currently taking over task execution",
+      "aiExecutingCount": "{{count}} tasks executing with AI",
+      "pageShowing": "Showing {{from}}–{{to}} of {{total}} projects",
       "columns": {
         "display": "Columns"
       },
       "viewSettings": "View Settings",
       "searchPlaceholder": "Search projects..."
+    },
+    "status": {
+      "active": "Active"
+    },
+    "export": {
+      "label": "Export"
+    },
+    "archive": {
+      "label": "Archive",
+      "confirmTitle": "Archive {{count}} selected projects?",
+      "confirmDescription": "Archived projects will be removed from the active list, but their data is preserved."
     },
     "filter": {
       "all": "All"
@@ -3800,16 +3821,21 @@
     "published": "Published",
     "reviewing": "Reviewing",
     "draft": "Draft",
+    "rejected": "Rejected",
     "allCategories": "All Categories",
     "allStatus": "All Status",
     "noDocuments": "No documents",
     "noMatch": "No matching documents found",
+    "noMatchDesc": "Try a different keyword, or clear the status / category filters",
+    "searchPlaceholder": "Search documents...",
+    "publicDoc": "Public document",
     "createFirst": "Start creating your first document",
     "categories": {
       "requirement": "Requirements",
       "design": "Design Documents",
       "api": "API Documents",
       "test": "Test Documents",
+      "testing": "Test Documents",
       "guide": "User Guides",
       "custom": "Custom"
     },
@@ -3830,7 +3856,19 @@
       "implements": "Implements"
     },
     "filter": {
-      "all": "All"
+      "all": "All",
+      "status": "Status",
+      "category": "Category"
+    },
+    "syncBanner": {
+      "title": "Local file sync failed ({{count}})",
+      "item": "{{title}} · {{attempts}} retries · {{error}}",
+      "dismiss": "Dismiss",
+      "more": "...and {{count}} more",
+      "close": "Close alerts"
+    },
+    "export": {
+      "label": "Export"
     },
     "view": {
       "list": "List",
@@ -4065,6 +4103,8 @@
     "results": "{{count}} results",
     "empty": "No acceptances yet",
     "emptyHint": "Auto-created on dispatch, or create one manually",
+    "emptyFiltered": "No matching acceptances",
+    "emptyFilteredHint": "Try a different keyword, or clear the filters",
     "searchPlaceholder": "Search acceptance or task…",
     "filter": {
       "status": "Status",

@@ -48,6 +48,6 @@ describe('ProjectGantt', () => {
       />,
     );
 
-    expect(screen.getByText('No projects with valid dates to display')).toBeTruthy();
+    expect(screen.getByText('暂无可排期的项目')).toBeTruthy();
   });
 });

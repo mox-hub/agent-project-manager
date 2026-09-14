@@ -1,6 +1,7 @@
 {
   "common": {
     "noProject": "无项目",
+    "clearFilters": "清除筛选",
     "more": "更多",
     "reorder": "拖拽排序",
     "moveUp": "上移",
@@ -1124,6 +1125,12 @@
   },
   "task": {
     "title": "任务",
+    "empty": {
+      "none": "暂无任务",
+      "noneDesc": "创建第一个任务，或从需求承接管道拆解生成",
+      "filtered": "未找到匹配的任务",
+      "filteredDesc": "换个关键词，或清除筛选条件再试"
+    },
     "descriptionAcrossProjects": "个跨项目任务",
     "dispatchToAi": "派发 AI",
     "create": "创建任务",
@@ -1756,11 +1763,25 @@
       "noProjects": "暂无项目",
       "loadError": "加载项目失败",
       "projects": "个项目",
+      "aiExecutingTooltip": "当前有 AI 正在接管执行任务",
+      "aiExecutingCount": "{{count}} 个任务 AI 执行中",
+      "pageShowing": "显示 {{from}}–{{to}} 项，共 {{total}} 个项目",
       "columns": {
         "display": "列显示"
       },
       "viewSettings": "视图设置",
       "searchPlaceholder": "搜索项目..."
+    },
+    "status": {
+      "active": "活跃"
+    },
+    "export": {
+      "label": "导出"
+    },
+    "archive": {
+      "label": "归档",
+      "confirmTitle": "归档选中的 {{count}} 个项目？",
+      "confirmDescription": "归档后项目将从活跃列表移除，但数据会被保留。"
     },
     "filter": {
       "all": "全部"
@@ -3800,16 +3821,21 @@
     "published": "已发布",
     "reviewing": "审核中",
     "draft": "草稿",
+    "rejected": "已拒绝",
     "allCategories": "全部分类",
     "allStatus": "全部状态",
     "noDocuments": "暂无文档",
     "noMatch": "未找到匹配的文档",
+    "noMatchDesc": "换个关键词，或清除状态 / 分类筛选再试",
+    "searchPlaceholder": "搜索文档...",
+    "publicDoc": "公共文档",
     "createFirst": "开始创建你的第一个文档",
     "categories": {
       "requirement": "需求文档",
       "design": "设计文档",
       "api": "API文档",
       "test": "测试文档",
+      "testing": "测试文档",
       "guide": "用户指南",
       "custom": "自定义"
     },
@@ -3830,7 +3856,19 @@
       "implements": "实现"
     },
     "filter": {
-      "all": "全部"
+      "all": "全部",
+      "status": "状态",
+      "category": "分类"
+    },
+    "syncBanner": {
+      "title": "本地文件同步失败 ({{count}})",
+      "item": "{{title}} · 重试 {{attempts}} 次 · {{error}}",
+      "dismiss": "知道了",
+      "more": "...还有 {{count}} 个",
+      "close": "关闭预警"
+    },
+    "export": {
+      "label": "导出"
     },
     "view": {
       "list": "列表",
@@ -4065,6 +4103,8 @@
     "results": "{{count}} 条结果",
     "empty": "暂无验收契约",
     "emptyHint": "派发任务时将自动创建，或手动新建",
+    "emptyFiltered": "未找到匹配的验收契约",
+    "emptyFilteredHint": "换个关键词，或清除筛选条件再试",
     "searchPlaceholder": "搜索验收标题或任务…",
     "filter": {
       "status": "状态",

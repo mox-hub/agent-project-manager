@@ -40,7 +40,10 @@ import {
   DollarSign,
   Eye,
   ArrowUpRight,
+  SearchX,
 } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { useAcceptanceList } from '../hooks/use-acceptance';
 import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { AcceptanceFormDialog } from '../components/acceptance-form-dialog';
@@ -379,6 +382,10 @@ export function AcceptanceListPage() {
     return true;
   });
 
+  // 空态接管判定：搜索 / 状态 / 风险任一生效时，空态提供「清除筛选」入口
+  const hasActiveFilters =
+    search.trim() !== '' || statusFilter !== 'all' || riskFilter !== 'all';
+
   const handleStatusChange = (value: AcceptanceStatus | 'all') => {
     setStatusFilter(value);
     setPage(1);
@@ -616,7 +623,53 @@ export function AcceptanceListPage() {
         downloadMenu={false}
       />
 
-      <div className="w-full space-y-4 px-6 py-4 sm:px-8 sm:py-5 lg:px-10">
+      {/* 主体：空态由页面统一接管（页面层级标准）——契约池为空走 A 类整页空态，
+          筛选后为空走 C 类紧凑空态；双视图不再各自维护空态形态。
+          EmptyState 必须直挂 flex-1 素块容器（本页走 shell ScrollArea fill，
+          中间套 flex-col 包装会使 h-full 解析失败回落 min-h-100） */}
+      {!isLoading && acceptances.length === 0 ? (
+        <div className="flex-1 overflow-auto px-6 py-4 sm:px-8 sm:py-5 lg:px-10">
+          {hasActiveFilters ? (
+            <EmptyState
+              icon={SearchX}
+              title={t('acceptance.emptyFiltered', '未找到匹配的验收契约')}
+              description={t('acceptance.emptyFilteredHint', '换个关键词，或清除筛选条件再试')}
+              action={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearch('');
+                    setStatusFilter('all');
+                    setRiskFilter('all');
+                    setPage(1);
+                  }}
+                >
+                  {t('common.clearFilters', '清除筛选')}
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-accent-green">
+                  <ShieldCheck className="size-4 text-accent-green" />
+                </IconStack>
+              }
+              title={t('acceptance.empty')}
+              description={t('acceptance.emptyHint')}
+              action={
+                <Button size="sm" onClick={() => setShowCreateDialog(true)}>
+                  <Plus className="size-4" />
+                  {t('acceptance.new')}
+                </Button>
+              }
+            />
+          )}
+        </div>
+      ) : (
+      <div className="flex-1 overflow-auto space-y-4 px-6 py-4 sm:px-8 sm:py-5 lg:px-10">
         {/* KPI + 概览卡（页头切换） */}
         {cardsVisible.visible ? (
           isLoading ? (
@@ -706,10 +759,12 @@ export function AcceptanceListPage() {
                   : undefined
               }
               emptyContent={
-                <div className="flex flex-col items-center py-8 text-center">
-                  <ShieldCheck className="mb-2 size-8 text-muted-foreground/30" />
-                  <p className="text-sm text-muted-foreground">{t('acceptance.empty')}</p>
-                </div>
+                <EmptyState
+                  icon={SearchX}
+                  title={t('acceptance.emptyFiltered', '未找到匹配的验收契约')}
+                  description={t('acceptance.emptyFilteredHint', '换个关键词，或清除筛选条件再试')}
+                  className="min-h-40"
+                />
               }
             />
           )
@@ -719,9 +774,9 @@ export function AcceptanceListPage() {
             loading={isLoading}
             selectable
             onItemClick={(ac) => navigate(`/app/acceptance/${ac.id}`)}
-            emptyMessage={t('acceptance.empty')}
-            emptyDescription={t('acceptance.emptyHint')}
-            emptyIcon={ShieldCheck}
+            emptyMessage={t('acceptance.emptyFiltered', '未找到匹配的验收契约')}
+            emptyDescription={t('acceptance.emptyFilteredHint', '换个关键词，或清除筛选条件再试')}
+            emptyIcon={SearchX}
             selectionActions={(selected, clear) => (
               <ListActionButton
                 onClick={() => handleBulkDelete(selected, clear)}
@@ -816,6 +871,7 @@ export function AcceptanceListPage() {
           />
         )}
       </div>
+      )}
     </PageShell>
   );
 }

@@ -96,7 +96,8 @@ export function ProjectGantt({
       onItemClick={handleClick}
       onItemDateChange={handleDateChange}
       leftColumnTitle="Project"
-      emptyMessage="No projects with valid dates to display"
+      emptyMessage="暂无可排期的项目"
+      emptyDescription="为项目设置开始 / 目标日期后即可在此排期"
     />
   );
 }
