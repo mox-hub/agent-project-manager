@@ -11,16 +11,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
+import {
+  Stepper,
+  StepperIndicator,
+  StepperItem,
+  StepperNav,
+  StepperSeparator,
+  StepperTitle,
+  StepperTrigger,
+} from '@/components/ui/stepper';
 import { invoke } from '@/shared/types/electron-api';
+import { IconStack } from '@/components/ui/icon-stack';
 import {
   Rocket,
   FolderPlus,
   GitBranch,
   Bot,
+  Check,
   CheckCircle,
   ChevronLeft,
   ChevronRight,
+  SkipForward,
   Sparkles,
   Users,
   Zap,
@@ -47,9 +58,9 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          <Rocket className="h-8 w-8 text-primary" />
-        </div>
+        <IconStack aria-hidden="true" className="mx-auto mb-4 text-primary">
+          <Rocket className="size-4 text-primary" />
+        </IconStack>
         <h2 className="text-2xl font-bold">欢迎使用 APM</h2>
         <p className="mt-2 text-muted-foreground">
           AI 驱动的项目管理平台，让团队协作更高效
@@ -391,9 +402,9 @@ function CompleteStep({ onFinish }: { onFinish: () => void }) {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-green/10">
-          <CheckCircle className="h-8 w-8 text-accent-green" />
-        </div>
+        <IconStack aria-hidden="true" className="mx-auto mb-4 text-accent-green">
+          <CheckCircle className="size-4 text-accent-green" />
+        </IconStack>
         <h2 className="text-2xl font-bold">设置完成！</h2>
         <p className="mt-2 text-muted-foreground">
           您已准备好开始使用 APM，祝您使用愉快
@@ -456,7 +467,6 @@ interface OnboardingWizardProps {
 export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizardProps) {
   const {
     state,
-    progress,
     currentStepData,
     isLastStep,
     nextStep,
@@ -464,6 +474,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
     skipStep,
     finishOnboarding,
     createProject,
+    goToStep,
   } = useOnboarding();
 
   const renderStepContent = () => {
@@ -503,15 +514,34 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-140">
-        <div className="mb-6">
-          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-            <span>
-              步骤 {state.currentStep + 1} / {state.steps.length}
-            </span>
-            <span>{currentStepData?.title}</span>
-          </div>
-          <Progress value={progress} className="h-1" />
-        </div>
+        {/* 步骤条（可点击回跳已走过的步骤；未来步骤禁用）——受控 value，导航走 goToStep */}
+        <Stepper value={state.currentStep + 1} className="mb-6">
+          <StepperNav>
+            {state.steps.map((step, i) => (
+              <StepperItem key={step.id} step={i + 1}>
+                <StepperTrigger
+                  onClick={() => goToStep(i)}
+                  disabled={i > state.currentStep}
+                  className="gap-1.5"
+                >
+                  <StepperIndicator className="size-5 text-10 font-medium">
+                    {step.status === 'completed' ? (
+                      <Check className="size-3" />
+                    ) : step.status === 'skipped' ? (
+                      <SkipForward className="size-3" />
+                    ) : (
+                      i + 1
+                    )}
+                  </StepperIndicator>
+                  <StepperTitle className="text-xs whitespace-nowrap">
+                    {step.title}
+                  </StepperTitle>
+                </StepperTrigger>
+                {i < state.steps.length - 1 && <StepperSeparator />}
+              </StepperItem>
+            ))}
+          </StepperNav>
+        </Stepper>
 
         <div className="min-h-100">{renderStepContent()}</div>
 

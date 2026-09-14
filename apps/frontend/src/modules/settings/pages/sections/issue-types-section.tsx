@@ -1,22 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  DndContext,
-  PointerSensor,
-  KeyboardSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+  Sortable,
+  SortableItem,
+  SortableItemHandle,
+} from '@/components/ui/sortable';
 import {
   ChevronRight,
   GripVertical,
@@ -105,20 +93,9 @@ function TypesListCard() {
   const statusCount = useTypeStats();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = types.findIndex((ty) => ty.id === active.id);
-    const newIndex = types.findIndex((ty) => ty.id === over.id);
-    if (oldIndex < 0 || newIndex < 0) return;
-    const next = arrayMove(types, oldIndex, newIndex);
+  // 落放一次性提交：order 以 10 步长重排，仅提交位置变化的项；真实顺序由服务端回读生效
+  const persistOrder = async (next: IssueTypeMeta[]) => {
     try {
-      // order 以 10 步长重排，仅提交位置变化的项
       await Promise.all(
         next
           .map((ty, index) => ({ id: ty.id, currentOrder: ty.order, order: (index + 1) * 10 }))
@@ -172,30 +149,27 @@ function TypesListCard() {
         isEmpty={!isLoading && types.length === 0}
         emptyTitle={t('settings.issueTypesEmpty', '暂无任务类型')}
       >
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={(event) => void handleDragEnd(event)}
+        <Sortable
+          value={types}
+          getItemValue={(ty) => ty.id}
+          onValueChange={() => {
+            // 受控源为 React Query：不做本地乐观重排，落放经 onValueCommit 持久化后回读生效
+          }}
+          onValueCommit={(next) => void persistOrder(next)}
+          render={<div className="divide-y divide-border rounded-lg border border-border" />}
         >
-          <SortableContext
-            items={types.map((ty) => ty.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="divide-y divide-border rounded-lg border border-border">
-              {types.map((type) => (
-                <SortableTypeRow
-                  key={type.id}
-                  type={type}
-                  statusCount={statusCount}
-                  isDefault={type.key === 'task'}
-                  onOpen={() => navigate(`/app/settings/issue-types/${type.key}`)}
-                  onEnabledChange={(enabled) => void handleEnabledChange(type, enabled)}
-                  onDelete={() => void handleDelete(type)}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+          {types.map((type) => (
+            <SortableTypeRow
+              key={type.id}
+              type={type}
+              statusCount={statusCount}
+              isDefault={type.key === 'task'}
+              onOpen={() => navigate(`/app/settings/issue-types/${type.key}`)}
+              onEnabledChange={(enabled) => void handleEnabledChange(type, enabled)}
+              onDelete={() => void handleDelete(type)}
+            />
+          ))}
+        </Sortable>
       </AsyncState>
       <CreateTypeDialog open={createOpen} onOpenChange={setCreateOpen} />
     </SectionCard>
@@ -218,27 +192,20 @@ function SortableTypeRow({
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: type.id,
-  });
 
   return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
+    <SortableItem
+      value={type.id}
       className={`flex items-center gap-3 bg-card px-3 py-2.5 motion-shift ${
-        isDragging ? 'z-10 opacity-80' : ''
-      } ${type.enabled ? '' : 'opacity-60'}`}
+        type.enabled ? '' : 'opacity-60'
+      }`}
     >
-      <button
-        type="button"
-        className="cursor-grab touch-none text-content-text-muted hover:text-content-text-secondary"
-        aria-label={t('common.reorder', '拖拽排序')}
-        {...attributes}
-        {...listeners}
+      <SortableItemHandle
+        render={<button type="button" aria-label={t('common.reorder', '拖拽排序')} />}
+        className="touch-none text-content-text-muted hover:text-content-text-secondary"
       >
         <GripVertical size={14} />
-      </button>
+      </SortableItemHandle>
       <IssueTypeIcon meta={type} />
       <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
         <div className="flex items-center gap-2">
@@ -298,7 +265,7 @@ function SortableTypeRow({
       >
         <ChevronRight size={14} />
       </button>
-    </div>
+    </SortableItem>
   );
 }
 
