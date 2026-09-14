@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useProjectList } from '../hooks/use-project-list';
 import { useUpdateProject } from '../hooks/use-project-mutations';
 import { useProjectFilterOptions } from '../hooks/use-project-filter-options';
-import { type ProjectListColumnKey } from '../components/project-list';
 import { ProjectSimpleList } from '../components/project-simple-list';
 import { ProjectBoard } from '../components/project-board';
 import { ProjectGantt } from '../components/project-gantt';
 import type { ProjectListParams, ProjectWorkflowStatus } from '../api/project-api';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { Button } from '@/components/ui/button';
+import { IconStack } from '@/components/ui/icon-stack';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PageShell } from '@/components/ui/page-shell';
@@ -57,6 +57,20 @@ const PROJECT_FILTER_KEYS = [
   'riskLevel',
   'ownerId',
 ] as const;
+
+/** 项目列表可显示列（原 ProjectList 列口径；列可见性经 app-store 持久化） */
+type ProjectListColumnKey =
+  | 'icon'
+  | 'name'
+  | 'health'
+  | 'priority'
+  | 'owner'
+  | 'members'
+  | 'start'
+  | 'target'
+  | 'progress'
+  | 'updated'
+  | 'status';
 
 const getColumnOptions = (t: (key: string) => string): { key: ProjectListColumnKey; label: string }[] => [
   { key: 'icon', label: t("project.columns.icon") },
@@ -236,10 +250,10 @@ export function ProjectListPage() {
           activeCount > 0 ? (
             <span
               className="inline-flex h-7 items-center gap-1.5 rounded-md bg-accent-purple/10 px-2 text-xs font-medium text-accent-purple"
-              title="当前有 AI 正在接管执行任务"
+              title={t('project.messages.aiExecutingTooltip')}
             >
               <Bot className="size-3.5" />
-              <span>{activeCount} 个任务 AI 执行中</span>
+              <span>{t('project.messages.aiExecutingCount', { count: activeCount })}</span>
             </span>
           ) : null
         }
@@ -258,7 +272,7 @@ export function ProjectListPage() {
           search: {
             value: filters.q ?? '',
             onChange: (value) => applyFilterState(currentFilterState, value),
-            placeholder: t('project.messages.searchPlaceholder') || 'Search projects...',
+            placeholder: t('project.messages.searchPlaceholder'),
           },
           items: projectFilterGroups.flatMap((group, groupIndex) => [
             ...(groupIndex > 0 ? [{ id: `sep-${group.id}`, type: 'separator' as const }] : []),
@@ -308,11 +322,11 @@ export function ProjectListPage() {
             <Alert variant="destructive" className="max-w-md">
               <AlertTriangle className="size-4" />
               <AlertDescription>
-                {error?.message ?? 'Failed to load projects. Please try again.'}
+                {error?.message ?? t('project.messages.loadError')}
               </AlertDescription>
               <div className="mt-3">
                 <Button size="sm" variant="destructive" onClick={() => refetch()}>
-                  重试
+                  {t('common.retry')}
                 </Button>
               </div>
             </Alert>
@@ -320,17 +334,17 @@ export function ProjectListPage() {
         ) : projects.length === 0 ? (
           <div className="flex flex-1 items-center justify-center">
             <div className="text-center">
-              <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
-                <PROJECT_ENTITY.icon size={20} className="text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground">No projects found</p>
+              <IconStack aria-hidden="true" className="mx-auto mb-3">
+                <PROJECT_ENTITY.icon className="size-4" />
+              </IconStack>
+              <p className="text-sm text-muted-foreground">{t('project.messages.noProjects')}</p>
               <Button
                 size="sm"
                 className="mt-3"
                 onClick={() => setShowUnifiedCreate(true)}
               >
                 <Plus size={14} />
-                New Project
+                {t('project.create')}
               </Button>
             </div>
           </div>
@@ -379,10 +393,10 @@ export function ProjectListPage() {
                   <ListActionButton
                     onClick={async () => {
                       const ok = await confirmAction({
-                        title: `归档选中的 ${selected.length} 个项目？`,
-                        description: '归档后项目将从活跃列表移除，但数据会被保留。',
-                        confirmText: '归档',
-                        cancelText: '取消',
+                        title: t('project.archive.confirmTitle', { count: selected.length }),
+                        description: t('project.archive.confirmDescription'),
+                        confirmText: t('project.archive.label'),
+                        cancelText: t('common.cancel'),
                       });
                       if (!ok) return;
                       await Promise.allSettled(
@@ -396,10 +410,10 @@ export function ProjectListPage() {
                       close();
                       refetch();
                     }}
-                    title="归档"
+                    title={t('project.archive.label')}
                     className="text-muted-foreground"
                   >
-                    <Archive className="size-4" /> 归档
+                    <Archive className="size-4" /> {t('project.archive.label')}
                   </ListActionButton>
                 )}
               />
@@ -411,7 +425,7 @@ export function ProjectListPage() {
         {total > 0 && (
           <div className="flex shrink-0 items-center justify-between gap-4 border-t border-border pt-2.5">
             <p className="text-11 text-muted-foreground">
-              Showing {from}–{to} of {total} projects
+              {t('project.messages.pageShowing', { from, to, total })}
             </p>
             {totalPages > 1 && (
               <Pagination className="mx-0 w-auto justify-end">

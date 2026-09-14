@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/table';
 import { PageShell } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -281,7 +282,16 @@ export function HelpPage() {
               </div>
             </div>
           ) : (
-            <EmptyState title={t('help.searchTitle')} description={t('help.searchHint')} />
+            <EmptyState
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-accent-blue">
+                  <Book className="size-4 text-accent-blue" />
+                </IconStack>
+              }
+              title={t('help.searchTitle')}
+              description={t('help.searchHint')}
+            />
           )}
 
           {/* Keyboard Shortcuts Section */}

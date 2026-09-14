@@ -30,6 +30,7 @@ export class MilestoneService {
     }
 
     // 获取里程碑及其关联的任务（通过 MilestoneTask 连接表）
+    // 与关联发布（CAP-A-16 计划-交付轴：里程碑下挂发版标记，供前端时间轴聚合）
     const milestones = await this.prisma.milestone.findMany({
       where: { projectId },
       orderBy: { targetDate: 'asc' },
@@ -45,6 +46,15 @@ export class MilestoneService {
               },
             },
           },
+        },
+        releases: {
+          select: {
+            id: true,
+            version: true,
+            status: true,
+            releasedAt: true,
+          },
+          orderBy: [{ releasedAt: 'desc' }, { createdAt: 'desc' }],
         },
       },
     });
@@ -62,6 +72,12 @@ export class MilestoneService {
         title: mt.issue.title,
         status: mt.issue.status,
         priority: mt.issue.priority,
+      })),
+      releases: milestone.releases.map((r) => ({
+        id: r.id,
+        version: r.version,
+        status: r.status,
+        releasedAt: r.releasedAt?.toISOString() || null,
       })),
     }));
   }

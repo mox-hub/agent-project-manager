@@ -1,6 +1,7 @@
 {
   "common": {
     "noProject": "无项目",
+    "clearFilters": "清除筛选",
     "more": "更多",
     "reorder": "拖拽排序",
     "moveUp": "上移",
@@ -256,16 +257,21 @@
     "delivery": "交付视图",
     "releases": "发版交付"
   },
+  "analytics": {
+    "title": "分析"
+  },
   "intake": {
     "title": "需求承接",
     "heroTitle": "提出一句需求，AI 同事接手",
-    "heroDesc": "从一句原始需求开始：AI 同事连续追问澄清目标，访谈补全细节，生成任务族与验收清单，确认后落库进工单。",
+    "heroDesc": "从一句原始需求开始：AI 同事连续追问澄清目标，访谈补全细节，分析评估可行性与影响面，生成任务族与验收清单，确认后落库进工单。",
     "cta": "提出需求",
     "pipelineTitle": "承接管道",
     "step1Title": "需求澄清",
     "step1Desc": "AI 同事连续追问，澄清原始需求与目标",
     "step2Title": "访谈补全",
     "step2Desc": "结构化访谈补全背景、边界与验收期望",
+    "step25Title": "分析评估",
+    "step25Desc": "AI 代写可行性、影响面、依赖与风险，人确认归档",
     "step3Title": "生成与确认",
     "step3Desc": "AI 生成任务族与验收清单，批卡确认后落库",
     "step4Title": "审计把关",
@@ -273,7 +279,27 @@
     "docsTitle": "需求纪要",
     "docsDesc": "澄清纪要与访谈产物（需求类文档）",
     "docsEmpty": "尚无需求纪要",
-    "docsEmptyDesc": "提出第一条需求后，澄清纪要与访谈产物会出现在这里"
+    "docsEmptyDesc": "提出第一条需求后，澄清纪要与访谈产物会出现在这里",
+    "analysisCta": "AI 生成分析报告",
+    "analysisTitle": "AI 生成需求分析报告",
+    "analysisDesc": "AI 同事读取调研/澄清纪要与项目契约绑定，代写可行性、影响面、依赖、风险与验收预清单；确认后归档为分析报告（草稿）。",
+    "analysisResearch": "调研纪要（必选一项来源）",
+    "analysisSelectDoc": "选择文档",
+    "analysisClarify": "澄清纪要（可选，补充边界与约束）",
+    "analysisSelectOptional": "不指定",
+    "analysisFailed": "生成失败，请重试",
+    "analysisFeasibility": "可行性",
+    "analysisImpact": "影响面",
+    "analysisDependencies": "依赖",
+    "analysisRisks": "风险",
+    "analysisAcceptancePreview": "验收要点（预清单）",
+    "analysisGenerate": "生成分析报告",
+    "analysisRegenerate": "重新生成",
+    "analysisConfirmSave": "确认归档为分析报告",
+    "analysisDocsTitle": "分析报告",
+    "analysisDocsDesc": "AI 代写、人确认归档的可行性/影响面/风险分析（分析类文档）",
+    "analysisDocsEmpty": "尚无分析报告",
+    "analysisDocsEmptyDesc": "从上方需求纪要生成分析报告后，会归档在这里供拆解与验收引用"
   },
   "release": {
     "title": "发版交付",
@@ -288,6 +314,7 @@
       "version": "版本",
       "name": "名称",
       "status": "状态",
+      "milestone": "里程碑",
       "tag": "Git Tag",
       "releasedAt": "发布时间"
     },
@@ -345,6 +372,8 @@
         "patch": "修订号"
       },
       "nameLabel": "发版名称（可选）",
+      "milestoneLabel": "所属里程碑（可选）",
+      "milestoneNone": "不关联里程碑",
       "submit": "创建草案",
       "created": "发版草案已创建"
     },
@@ -375,6 +404,7 @@
       "noNotes": "暂无发版说明——可用 AI 起草后人工修订",
       "tag": "Git Tag",
       "tagPending": "发布时创建",
+      "milestone": "所属里程碑",
       "github": "GitHub Release",
       "yes": "已创建",
       "no": "未创建",
@@ -777,6 +807,25 @@
     },
     "expiryIn": "{{time}} 截止",
     "riskHigh": "高危",
+    "review": {
+      "button": "卡片批阅",
+      "buttonCount": "卡片批阅 ({{count}})",
+      "modalTitle": "决策卡片集中批阅",
+      "progress": "第 {{current}} / {{total}} 项",
+      "allDoneTitle": "全部批阅完成！",
+      "allDoneHint": "当前收件箱没有新的待决决策，所有卡片均已过完。",
+      "backToInbox": "返回收件箱",
+      "flipFront": "翻回正面",
+      "flipBack": "翻面看证据",
+      "flipHint": "按 F 或点击翻面查看完整证据与推导",
+      "passStamp": "已通过",
+      "rejectStamp": "已驳回",
+      "nextCard": "下一张",
+      "prevCard": "上一张",
+      "quickPass": "勾选通过",
+      "quickReject": "驳回",
+      "shortcuts": "[1/Enter] 勾选通过 · [2] 驳回 · [F] 翻面 · [←/→] 翻页 · [Esc] 退出"
+    },
     "metrics": {
       "pending": "待决",
       "blocking": "阻断",
@@ -1076,6 +1125,12 @@
   },
   "task": {
     "title": "任务",
+    "empty": {
+      "none": "暂无任务",
+      "noneDesc": "创建第一个任务，或从需求承接管道拆解生成",
+      "filtered": "未找到匹配的任务",
+      "filteredDesc": "换个关键词，或清除筛选条件再试"
+    },
     "descriptionAcrossProjects": "个跨项目任务",
     "dispatchToAi": "派发 AI",
     "create": "创建任务",
@@ -1520,7 +1575,7 @@
       "overview": "概览",
       "playbook": "流程",
       "board": "看板",
-      "milestones": "里程碑",
+      "milestones": "里程碑与发布",
       "profile": "档案",
       "team": "团队与角色",
       "settings": "设置",
@@ -1635,10 +1690,16 @@
       "notSet": "未设置",
       "targetDate": "目标日期：",
       "taskCount": "{{count}} 个任务",
+      "unscheduled": "未计划",
+      "unscheduledDesc": "未设置目标日期的里程碑，待排期。",
       "status": {
         "completed": "已完成",
         "inProgress": "进行中",
-        "upcoming": "待启动"
+        "upcoming": "待启动",
+        "planned": "待启动",
+        "reached": "已达成",
+        "missed": "已错过",
+        "cancelled": "已取消"
       }
     },
     "visibility": {
@@ -1702,11 +1763,25 @@
       "noProjects": "暂无项目",
       "loadError": "加载项目失败",
       "projects": "个项目",
+      "aiExecutingTooltip": "当前有 AI 正在接管执行任务",
+      "aiExecutingCount": "{{count}} 个任务 AI 执行中",
+      "pageShowing": "显示 {{from}}–{{to}} 项，共 {{total}} 个项目",
       "columns": {
         "display": "列显示"
       },
       "viewSettings": "视图设置",
       "searchPlaceholder": "搜索项目..."
+    },
+    "status": {
+      "active": "活跃"
+    },
+    "export": {
+      "label": "导出"
+    },
+    "archive": {
+      "label": "归档",
+      "confirmTitle": "归档选中的 {{count}} 个项目？",
+      "confirmDescription": "归档后项目将从活跃列表移除，但数据会被保留。"
     },
     "filter": {
       "all": "全部"
@@ -3661,6 +3736,11 @@
     "groupWorkflow": "工作流与治理",
     "groupCollaboration": "协作与工具",
     "noTabsOpen": "暂无打开的标签页",
+    "pipelineFocus": {
+      "label": "项目聚焦",
+      "allProjects": "全部项目",
+      "selectPlaceholder": "选择项目"
+    },
     "appName": "AgentPM"
   },
   "commandPalette": {
@@ -3741,16 +3821,21 @@
     "published": "已发布",
     "reviewing": "审核中",
     "draft": "草稿",
+    "rejected": "已拒绝",
     "allCategories": "全部分类",
     "allStatus": "全部状态",
     "noDocuments": "暂无文档",
     "noMatch": "未找到匹配的文档",
+    "noMatchDesc": "换个关键词，或清除状态 / 分类筛选再试",
+    "searchPlaceholder": "搜索文档...",
+    "publicDoc": "公共文档",
     "createFirst": "开始创建你的第一个文档",
     "categories": {
       "requirement": "需求文档",
       "design": "设计文档",
       "api": "API文档",
       "test": "测试文档",
+      "testing": "测试文档",
       "guide": "用户指南",
       "custom": "自定义"
     },
@@ -3771,7 +3856,19 @@
       "implements": "实现"
     },
     "filter": {
-      "all": "全部"
+      "all": "全部",
+      "status": "状态",
+      "category": "分类"
+    },
+    "syncBanner": {
+      "title": "本地文件同步失败 ({{count}})",
+      "item": "{{title}} · 重试 {{attempts}} 次 · {{error}}",
+      "dismiss": "知道了",
+      "more": "...还有 {{count}} 个",
+      "close": "关闭预警"
+    },
+    "export": {
+      "label": "导出"
     },
     "view": {
       "list": "列表",
@@ -4006,6 +4103,8 @@
     "results": "{{count}} 条结果",
     "empty": "暂无验收契约",
     "emptyHint": "派发任务时将自动创建，或手动新建",
+    "emptyFiltered": "未找到匹配的验收契约",
+    "emptyFilteredHint": "换个关键词，或清除筛选条件再试",
     "searchPlaceholder": "搜索验收标题或任务…",
     "filter": {
       "status": "状态",

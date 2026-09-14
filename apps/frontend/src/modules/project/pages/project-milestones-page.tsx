@@ -1,26 +1,23 @@
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
+  AlertTriangle,
   CalendarDays,
+  CalendarRange,
   CheckCircle2,
   Circle,
-  Clock3,
+  Flag,
   ListTodo,
   Plus,
+  Rocket,
   TrendingUp,
+  XCircle,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { useTranslation } from 'react-i18next';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { SectionCard } from '@/components/ui/section-card';
 import { AsyncState } from '@/components/ui/async-state';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -28,74 +25,160 @@ import { cn } from '@/lib/utils';
 import { useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
-import { useProjectMilestones } from '@/modules/issue/hooks/use-project-tasks';
+import {
+  useProjectIterations,
+  useProjectMilestones,
+} from '@/modules/issue/hooks/use-project-tasks';
+import type {
+  IterationRef,
+  MilestoneRef,
+} from '@/modules/issue/api/issue-api';
 import { formatDate } from '@/shared/lib/date-format';
 
-function statusTone(status: string) {
+/**
+ * 里程碑五态（对齐后端 Milestone.status 字面量）：
+ * planned | in_progress | reached | missed | cancelled
+ */
+const MILESTONE_TONE: Record<
+  string,
+  { labelKey: string; icon: typeof Flag; iconClass: string; badgeClass: string }
+> = {
+  planned: {
+    labelKey: 'project.milestonesPage.status.planned',
+    icon: Circle,
+    iconClass: 'text-muted-foreground',
+    badgeClass: 'bg-muted text-muted-foreground border-border',
+  },
+  in_progress: {
+    labelKey: 'project.milestonesPage.status.inProgress',
+    icon: TrendingUp,
+    iconClass: 'text-accent-blue',
+    badgeClass: 'bg-accent-blue-light text-accent-blue border-accent-blue/30',
+  },
+  reached: {
+    labelKey: 'project.milestonesPage.status.reached',
+    icon: CheckCircle2,
+    iconClass: 'text-accent-green',
+    badgeClass: 'bg-accent-green-light text-accent-green border-accent-green/30',
+  },
+  missed: {
+    labelKey: 'project.milestonesPage.status.missed',
+    icon: AlertTriangle,
+    iconClass: 'text-accent-red',
+    badgeClass: 'bg-accent-red-light text-accent-red border-accent-red/30',
+  },
+  cancelled: {
+    labelKey: 'project.milestonesPage.status.cancelled',
+    icon: XCircle,
+    iconClass: 'text-muted-foreground',
+    badgeClass: 'bg-muted text-muted-foreground border-border',
+  },
+};
+
+function milestoneTone(status: string) {
+  return (
+    MILESTONE_TONE[status.toLowerCase()] ?? MILESTONE_TONE.planned
+  );
+}
+
+/** 发版状态徽标 tone（与 release 模块列表口径一致的语义色映射） */
+const RELEASE_TONE: Record<string, string> = {
+  draft: 'bg-muted/50 text-muted-foreground',
+  gated: 'bg-accent-yellow-light text-accent-yellow',
+  approved: 'bg-accent-blue-light text-accent-blue',
+  publishing: 'bg-accent-yellow-light text-accent-yellow',
+  released: 'bg-accent-green-light text-accent-green',
+  failed: 'bg-accent-red-light text-accent-red',
+};
+
+/** 迭代状态（进行中高亮，其余弱化） */
+function iterationTone(status: string) {
   const normalized = status.toLowerCase();
-  if (normalized.includes('done') || normalized.includes('complete')) {
-    return {
-      text: 'project.milestonesPage.status.completed',
-      icon: CheckCircle2,
-      iconClass: 'text-accent-green',
-      badgeClass: 'bg-accent-green-light text-accent-green border-accent-green/30',
-    };
-  }
   if (normalized.includes('progress') || normalized.includes('active')) {
     return {
-      text: 'project.milestonesPage.status.inProgress',
-      icon: TrendingUp,
-      iconClass: 'text-accent-blue',
+      labelKey: 'project.milestonesPage.status.inProgress',
       badgeClass: 'bg-accent-blue-light text-accent-blue border-accent-blue/30',
+      barClass: 'bg-accent-blue/15 border-accent-blue/30',
+    };
+  }
+  if (normalized.includes('done') || normalized.includes('complete')) {
+    return {
+      labelKey: 'project.milestonesPage.status.completed',
+      badgeClass: 'bg-accent-green-light text-accent-green border-accent-green/30',
+      barClass: 'bg-accent-green/10 border-accent-green/30',
     };
   }
   return {
-    text: 'project.milestonesPage.status.upcoming',
-    icon: Clock3,
-    iconClass: 'text-muted-foreground',
+    labelKey: 'project.milestonesPage.status.planned',
     badgeClass: 'bg-muted text-muted-foreground border-border',
+    barClass: 'bg-muted/30 border-border',
   };
 }
 
-/** 优先级圆点：沿用 task-simple-list SEVERITY_CONFIG 的 Record 色板先例，取语义 accent 色 */
-const PRIORITY_DOT: Record<string, string> = {
-  critical: 'bg-accent-red',
-  high: 'bg-accent-orange',
-  medium: 'bg-accent-yellow',
-  low: 'bg-accent-green',
-};
+type TimelineEntry =
+  | { kind: 'iteration'; at: string; iteration: IterationRef }
+  | { kind: 'milestone'; at: string; milestone: MilestoneRef };
 
 export function ProjectMilestonesPage() {
   const { t } = useTranslation();
   const { projectId } = useParams<{ projectId: string }>();
-  const { data: summary, isLoading: summaryLoading, isError, error } = useProjectDashboardSummary(projectId);
-  const { data: milestones, isLoading: milestonesLoading } = useProjectMilestones(projectId);
+  const {
+    data: summary,
+    isLoading: summaryLoading,
+    isError,
+    error,
+  } = useProjectDashboardSummary(projectId);
+  const {
+    data: milestones,
+    isLoading: milestonesLoading,
+  } = useProjectMilestones(projectId);
+  const {
+    data: iterations,
+    isLoading: iterationsLoading,
+  } = useProjectIterations(projectId);
   const [showUnifiedCreate, setShowUnifiedCreate] = useState(false);
 
-  const completedCount = useMemo(() => {
-    return (milestones ?? []).filter((milestone) =>
-      milestone.status.toLowerCase().includes('done') || milestone.status.toLowerCase().includes('complete'),
-    ).length;
-  }, [milestones]);
+  const completedCount = useMemo(
+    () =>
+      (milestones ?? []).filter(
+        (m) => m.status.toLowerCase() === 'reached',
+      ).length,
+    [milestones],
+  );
 
   const timelineCompletion = useMemo(() => {
     if (!milestones?.length) return 0;
     return Math.round((completedCount / milestones.length) * 100);
   }, [completedCount, milestones]);
 
-  // In-progress milestones expand by default; the accordion mounts after data load, so an uncontrolled defaultValue captures this.
-  const defaultOpenValues = useMemo(
-    () =>
-      (milestones ?? [])
-        .filter((milestone) => milestone.status.toLowerCase().includes('progress'))
-        .map((milestone) => milestone.id),
-    [milestones],
-  );
+  /** 时间轴：迭代（按 startDate）与里程碑（按 targetDate）合并，旧 → 新 */
+  const { scheduled, unscheduled } = useMemo(() => {
+    const entries: TimelineEntry[] = [];
+    for (const milestone of milestones ?? []) {
+      if (milestone.targetDate) {
+        entries.push({ kind: 'milestone', at: milestone.targetDate, milestone });
+      }
+    }
+    for (const iteration of iterations ?? []) {
+      if (iteration.startDate) {
+        entries.push({ kind: 'iteration', at: iteration.startDate, iteration });
+      }
+    }
+    entries.sort((a, b) => a.at.localeCompare(b.at));
+    return {
+      scheduled: entries,
+      unscheduled: (milestones ?? []).filter((m) => !m.targetDate),
+    };
+  }, [milestones, iterations]);
 
-  const isLoading = summaryLoading || milestonesLoading;
+  const isLoading = summaryLoading || milestonesLoading || iterationsLoading;
 
   if (!projectId) {
-    return <div className="p-6 text-sm text-muted-foreground">{t('project.detail.notFound')}</div>;
+    return (
+      <div className="p-6 text-sm text-muted-foreground">
+        {t('project.detail.notFound')}
+      </div>
+    );
   }
 
   return (
@@ -124,13 +207,23 @@ export function ProjectMilestonesPage() {
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <CalendarDays size={13} />
-              {formatDate(summary?.projectMeta.startDate, t('project.milestonesPage.notSet'))}
+              {formatDate(
+                summary?.projectMeta.startDate,
+                t('project.milestonesPage.notSet'),
+              )}
             </span>
-            <span>{formatDate(summary?.projectMeta.targetDate, t('project.milestonesPage.notSet'))}</span>
+            <span>
+              {formatDate(
+                summary?.projectMeta.targetDate,
+                t('project.milestonesPage.notSet'),
+              )}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Progress value={timelineCompletion} className="h-2 flex-1" />
-            <span className="text-xs font-medium text-foreground">{timelineCompletion}%</span>
+            <span className="text-xs font-medium text-foreground">
+              {timelineCompletion}%
+            </span>
           </div>
         </SectionCard>
       }
@@ -138,7 +231,9 @@ export function ProjectMilestonesPage() {
       <AsyncState
         isLoading={isLoading}
         error={isError ? error?.message || t('project.milestonesPage.loadFailed') : null}
-        isEmpty={!milestones || milestones.length === 0}
+        isEmpty={
+          scheduled.length === 0 && unscheduled.length === 0
+        }
         emptyTitle={t('project.milestonesPage.empty')}
         loadingFallback={
           <SectionCard className="py-0" contentClassName="px-4 py-4">
@@ -146,62 +241,60 @@ export function ProjectMilestonesPage() {
           </SectionCard>
         }
       >
-        <SectionCard className="py-0" contentClassName="p-0">
-          <Accordion multiple defaultValue={defaultOpenValues}>
-            {(milestones ?? []).map((milestone) => {
-              const tone = statusTone(milestone.status);
-              const Icon = tone.icon;
+        <div className="space-y-6">
+          {scheduled.length > 0 && (
+            <SectionCard className="py-0" contentClassName="px-4 py-4">
+              <div className="flex flex-col">
+                {scheduled.map((entry, index) =>
+                  entry.kind === 'iteration' ? (
+                    <TimelineIterationRow
+                      key={`iter-${entry.iteration.id}`}
+                      iteration={entry.iteration}
+                      isLast={index === scheduled.length - 1}
+                    />
+                  ) : (
+                    <TimelineMilestoneRow
+                      key={`ms-${entry.milestone.id}`}
+                      milestone={entry.milestone}
+                      dateLabel={formatDate(entry.at)}
+                      isLast={index === scheduled.length - 1}
+                    />
+                  ),
+                )}
+              </div>
+            </SectionCard>
+          )}
 
-              return (
-                <AccordionItem key={milestone.id} value={milestone.id}>
-                  <AccordionTrigger className="flex-wrap items-center gap-3 px-4 py-3 hover:bg-muted/30 hover:no-underline">
-                    <Icon size={15} className={cn('shrink-0', tone.iconClass)} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-semibold text-foreground">{milestone.name}</h3>
-                        <Badge className={tone.badgeClass}>{t(tone.text)}</Badge>
-                        {milestone.taskCount !== undefined && milestone.taskCount > 0 && (
-                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                            <ListTodo size={12} />
-                            {t('project.milestonesPage.taskCount', { count: milestone.taskCount })}
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {t('project.milestonesPage.targetDate')}
-                        {formatDate(milestone.targetDate, t('project.milestonesPage.notSet'))}
-                      </p>
+          {unscheduled.length > 0 && (
+            <SectionCard
+              title={t('project.milestonesPage.unscheduled')}
+              description={t('project.milestonesPage.unscheduledDesc')}
+              className="py-0"
+              contentClassName="px-4 py-3"
+            >
+              <div className="space-y-2">
+                {unscheduled.map((milestone) => {
+                  const tone = milestoneTone(milestone.status);
+                  const Icon = tone.icon;
+                  return (
+                    <div
+                      key={milestone.id}
+                      className="flex items-center gap-2 text-xs"
+                    >
+                      <Icon size={14} className={cn('shrink-0', tone.iconClass)} />
+                      <span className="min-w-0 flex-1 truncate text-foreground">
+                        {milestone.name}
+                      </span>
+                      <Badge className={tone.badgeClass}>
+                        {t(tone.labelKey)}
+                      </Badge>
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="border-t border-border bg-muted/20 px-4 pt-3 pb-3">
-                    <div className="space-y-2">
-                      {milestone.tasks && milestone.tasks.length > 0 ? (
-                        milestone.tasks.map((task) => (
-                          <div key={task.id} className="flex items-center gap-2 text-xs">
-                            {task.status.toLowerCase().includes('done') ? (
-                              <CheckCircle2 size={14} className="shrink-0 text-accent-green" />
-                            ) : (
-                              <Circle size={14} className="shrink-0 text-muted-foreground" />
-                            )}
-                            <span className={cn('size-1.5 shrink-0 rounded-full', PRIORITY_DOT[task.priority ?? 'low'])} />
-                            <span className="min-w-0 flex-1 truncate text-foreground">{task.title}</span>
-                            <span className="shrink-0 text-muted-foreground">{task.status}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-muted-foreground">{t('project.detail.noTasksInMilestone')}</p>
-                      )}
-                      <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-muted-foreground">
-                        <Plus size={12} />
-                        {t('project.detail.addTaskToMilestone')}
-                      </Button>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
-        </SectionCard>
+                  );
+                })}
+              </div>
+            </SectionCard>
+          )}
+        </div>
       </AsyncState>
 
       {/* Unified Create Dialog */}
@@ -212,5 +305,163 @@ export function ProjectMilestonesPage() {
         projectId={projectId}
       />
     </ProjectDetailFrame>
+  );
+}
+
+/** 时间轴行骨架：左日期标签 + 中竖线节点 + 右内容（高密区紧凑行） */
+function TimelineRow({
+  dateLabel,
+  icon,
+  iconClass,
+  isLast,
+  children,
+}: {
+  dateLabel: string;
+  icon: typeof Flag;
+  iconClass: string;
+  isLast: boolean;
+  children: React.ReactNode;
+}) {
+  const Icon = icon;
+  return (
+    <div className="flex gap-3">
+      <div className="w-24 shrink-0 pt-3 text-right text-11 text-muted-foreground">
+        {dateLabel}
+      </div>
+      <div className="relative flex w-4 shrink-0 flex-col items-center">
+        <span
+          className={cn(
+            'z-10 mt-3 flex size-4 items-center justify-center rounded-full border bg-card',
+            iconClass,
+          )}
+        >
+          <Icon size={10} />
+        </span>
+        {!isLast && <span className="w-px flex-1 bg-border" />}
+      </div>
+      <div className="min-w-0 flex-1 pb-5">{children}</div>
+    </div>
+  );
+}
+
+/** 迭代 = 时间盒区间条（名称 + 起止 + 容量） */
+function TimelineIterationRow({
+  iteration,
+  isLast,
+}: {
+  iteration: IterationRef;
+  isLast: boolean;
+}) {
+  const { t } = useTranslation();
+  const tone = iterationTone(iteration.status);
+  const capacity = iteration._count?.issues ?? 0;
+  return (
+    <TimelineRow
+      dateLabel={formatDate(
+        iteration.startDate,
+        t('project.milestonesPage.notSet'),
+      )}
+      icon={CalendarRange}
+      iconClass="text-accent-purple"
+      isLast={isLast}
+    >
+      <div
+        className={cn(
+          'flex flex-wrap items-center gap-2 rounded-md border px-3 py-2',
+          tone.barClass,
+        )}
+      >
+        <span className="text-sm font-medium text-foreground">
+          {iteration.name}
+        </span>
+        <Badge className={tone.badgeClass}>{t(tone.labelKey)}</Badge>
+        <span className="ml-auto inline-flex items-center gap-1.5 text-11 text-muted-foreground">
+          <CalendarRange size={11} />
+          {formatDate(iteration.startDate, '—')} →{' '}
+          {formatDate(iteration.endDate, '—')}
+          <span className="inline-flex items-center gap-0.5">
+            <ListTodo size={11} />
+            {t('project.milestonesPage.taskCount', { count: capacity })}
+          </span>
+        </span>
+      </div>
+    </TimelineRow>
+  );
+}
+
+/** 里程碑 = 计划轴节点（五态徽标 + 目标日期 + 描述 + 关联发布标记） */
+function TimelineMilestoneRow({
+  milestone,
+  dateLabel,
+  isLast,
+}: {
+  milestone: MilestoneRef;
+  dateLabel: string;
+  isLast: boolean;
+}) {
+  const { t } = useTranslation();
+  const tone = milestoneTone(milestone.status);
+  return (
+    <TimelineRow
+      dateLabel={dateLabel}
+      icon={Flag}
+      iconClass={tone.iconClass}
+      isLast={isLast}
+    >
+      <div className="rounded-md border bg-card px-3 py-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold text-foreground">
+            {milestone.name}
+          </span>
+          <Badge className={tone.badgeClass}>{t(tone.labelKey)}</Badge>
+          <span className="text-11 text-muted-foreground">
+            {t('project.milestonesPage.targetDate')}
+            {dateLabel}
+          </span>
+          {milestone.taskCount !== undefined && milestone.taskCount > 0 && (
+            <span className="ml-auto inline-flex items-center gap-1 text-11 text-muted-foreground">
+              <ListTodo size={11} />
+              {t('project.milestonesPage.taskCount', {
+                count: milestone.taskCount,
+              })}
+            </span>
+          )}
+        </div>
+        {milestone.description && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {milestone.description}
+          </p>
+        )}
+        {milestone.releases && milestone.releases.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {milestone.releases.map((release) => (
+              <span
+                key={release.id}
+                className="inline-flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-11"
+              >
+                <Rocket size={11} className="text-accent-green" />
+                <span className="font-mono font-medium text-foreground">
+                  v{release.version}
+                </span>
+                <Badge
+                  className={cn(
+                    'text-10',
+                    RELEASE_TONE[release.status] ??
+                      RELEASE_TONE.draft,
+                  )}
+                >
+                  {t(`release.status.${release.status}`)}
+                </Badge>
+                {release.releasedAt && (
+                  <span className="text-muted-foreground">
+                    {formatDate(release.releasedAt)}
+                  </span>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </TimelineRow>
   );
 }

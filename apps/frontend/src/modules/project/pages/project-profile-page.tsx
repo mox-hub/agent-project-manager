@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { SkeletonList } from '@/components/ui/skeleton';
-import { AsyncState } from '@/components/ui/async-state';
+import { EmptyState } from '@/components/ui/empty-state';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { isTerminalRunStatus, useExecutionRunDetail, useExecutionRunEvents } from '@/modules/executions/api/execution-api';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
@@ -194,14 +194,11 @@ export function ProjectProfilePage() {
       {isLoading ? (
         <SkeletonList count={5} />
       ) : isError || !profile ? (
-        <AsyncState isEmpty>
-          <div className="rounded-xl border bg-card p-6 text-sm">
-            <p className="font-medium">{t('project.profilePage.loadFailed')}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t('project.profilePage.loadFailedDesc')}
-            </p>
-          </div>
-        </AsyncState>
+        // isEmpty 误用修正：错误态直接给 EmptyState（原写法 children 永不渲染，恒显「暂无数据」）
+        <EmptyState
+          title={t('project.profilePage.loadFailed')}
+          description={t('project.profilePage.loadFailedDesc')}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           {profile.slots.map((group) => (

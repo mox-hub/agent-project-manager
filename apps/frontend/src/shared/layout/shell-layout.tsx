@@ -24,6 +24,7 @@ import { OnboardingGate } from '@/modules/onboarding/components/onboarding-gate'
 import { cn } from '@/lib/utils';
 import { StatusPill } from '@/components/ui/status-pill';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { NativeSelect } from '@/components/ui/native-select';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import {
   HelpCircle,
@@ -51,6 +52,7 @@ import {
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useTheme } from '@/shared/theme/theme-context';
 import { PIPELINE_STAGES } from '@/shared/layout/pipeline-stages';
+import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { FAVORITE_FALLBACK_ICON, PAGE_REGISTRY } from '@/shared/layout/page-registry';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
@@ -65,6 +67,7 @@ import {
   PROJECT_SIDEBAR_MAX_WIDTH,
 } from '@/modules/project/components/dashboard/project-sidebar-context';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
+import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
 import { AssistantFab } from '@/modules/assistant';
@@ -524,6 +527,9 @@ export function ShellLayout() {
                               aria-hidden="true"
                             />
                           )}
+                          {/* 管道「项目聚焦」筛选器（CAP-A-15）：?project 统一参数，六站联动过滤。
+                              折叠态（w-16）空间不足不渲染，展开后恢复 */}
+                          {group.isPipeline && !sidebarCollapsed && <PipelineFocusFilter />}
                           {group.items.map((item) => {
                             const { to, icon: Icon, label, color, capsule, count, favorite, stageNumber, hint } = item;
                             // Tooltip/预览触发器的 hover 状态会跨渲染存活：折叠后 TooltipContent
@@ -787,6 +793,38 @@ export function ShellLayout() {
       </TabsProvider>
       </ShellSidebarProvider>
     </CommandPaletteProvider>
+  );
+}
+
+/**
+ * 管道「项目聚焦」筛选器（CAP-A-15）：研发生命周期分组头下方的紧凑项目下拉。
+ * 值走 usePipelineProjectFilter（URL ?project 优先，store 兜底）；
+ * 「全部项目」= 清空聚焦（null）。仅展开态渲染（折叠 w-16 由调用方隐藏）。
+ */
+function PipelineFocusFilter() {
+  const { t } = useTranslation();
+  const { focusProjectId, setProjectId } = usePipelineProjectFilter();
+  const { data } = useProjectList({ pageSize: 100 });
+  const projects = data?.items ?? [];
+
+  return (
+    <div className="flex items-center gap-1.5 pb-1 pt-0.5">
+      <span className="shrink-0 text-10 font-medium text-sidebar-foreground/40">
+        {t('shell.pipelineFocus.label', '项目聚焦')}
+      </span>
+      <NativeSelect
+        aria-label={t('shell.pipelineFocus.label', '项目聚焦')}
+        value={focusProjectId ?? ''}
+        onChange={(e) => setProjectId(e.target.value || null)}
+        size="sm"
+        className="h-6 min-w-0 flex-1 text-10"
+      >
+        <option value="">{t('shell.pipelineFocus.allProjects', '全部项目')}</option>
+        {projects.map((p) => (
+          <option key={p.id} value={p.id}>{p.name}</option>
+        ))}
+      </NativeSelect>
+    </div>
   );
 }
 

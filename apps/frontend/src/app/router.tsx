@@ -454,6 +454,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'acceptance',
+        handle: { selfScroll: true },
         element: <AcceptanceListPage />,
         errorElement: <ErrorPage />,
       },

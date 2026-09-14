@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderGit2, ScanSearch } from 'lucide-react';
+import { Check, CircleAlert, FolderGit2, ScanSearch } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Stepper } from '@/components/ui/stepper';
+import {
+  Stepper,
+  StepperIndicator,
+  StepperItem,
+  StepperNav,
+  StepperSeparator,
+  StepperTitle,
+} from '@/components/ui/stepper';
 import { gitApi } from '@/modules/git/api/git-api';
 import { isTerminalRunStatus, useExecutionRunDetail, useExecutionRunEvents } from '@/modules/executions/api/execution-api';
 import { useIngestArchaeology, useStartArchaeology } from '../../hooks/use-profile';
@@ -134,11 +141,44 @@ export function ProjectEntryWizard({
           <DialogTitle>{t('project.importWizard.title')}</DialogTitle>
         </DialogHeader>
 
+        {/* 自动推进流程：纯展示步骤条（不放 Trigger），扫描步 loading、失败步红色指示器 */}
         <Stepper
-          steps={WIZARD_STEPS.map((s) => ({ id: s.id, label: t(`project.importWizard.${s.id}`) }))}
-          current={step}
+          value={step + 1}
           className="mb-4"
-        />
+          indicators={{
+            completed: <Check className="size-3.5" />,
+            loading: <Spinner size="sm" className="size-3.5 text-primary-foreground" />,
+          }}
+        >
+          <StepperNav>
+            {WIZARD_STEPS.map((s, i) => {
+              const scanFailed = step === 1 && i === 1 && runTerminal && !runCompleted;
+              return (
+                <StepperItem
+                  key={s.id}
+                  step={i + 1}
+                  loading={step === 1 && i === 1 && !runTerminal}
+                >
+                  <div className="flex items-center gap-2">
+                    <StepperIndicator
+                      className={
+                        scanFailed
+                          ? 'data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground'
+                          : undefined
+                      }
+                    >
+                      {scanFailed ? <CircleAlert className="size-3.5" /> : i + 1}
+                    </StepperIndicator>
+                    <StepperTitle className="text-xs">
+                      {t(`project.importWizard.${s.id}`)}
+                    </StepperTitle>
+                  </div>
+                  {i < WIZARD_STEPS.length - 1 && <StepperSeparator />}
+                </StepperItem>
+              );
+            })}
+          </StepperNav>
+        </Stepper>
 
         {step === 0 && (
           <div className="space-y-3">

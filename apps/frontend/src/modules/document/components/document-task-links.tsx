@@ -188,13 +188,11 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-border p-6 text-center">
-          <Icons.LinkIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
-          <EmptyState title="暂无任务关联" className="min-h-0 border-0 py-4" />
-          <p className="mt-1 text-xs text-muted-foreground">
-            将文档或章节与任务关联，便于追踪
-          </p>
-        </div>
+        <EmptyState
+          title="暂无任务关联"
+          description="将文档或章节与任务关联，便于追踪"
+          className="min-h-0 border-0 py-4"
+        />
       )}
 
       <TaskPickerDialog

@@ -1,5 +1,9 @@
+import './decision-card.css';
+
 export { DecisionCard, DecisionCardShell, KIND_ACTIONS } from './decision-card';
 export { DEFAULT_ACTIONS } from './decision-card-shell';
+export { DecisionDeckStack } from './decision-deck-stack';
+export type { DecisionDeckStackProps } from './decision-deck-stack';
 export type { DecisionCardProps } from './decision-card';
 export type {
   Decision,

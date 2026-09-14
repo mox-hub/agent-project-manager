@@ -16,6 +16,7 @@ class StubPrisma {
   releases: Record<string, unknown>[] = [];
   bindings: Record<string, unknown>[] = [];
   proposals: Record<string, unknown>[] = [];
+  milestones: Record<string, unknown>[] = [];
   publishedEvents: unknown[] = [];
   private idSeq = 0;
   repoRow: { workspacePath?: string; localPath?: string } | null = {
@@ -25,6 +26,12 @@ class StubPrisma {
   get release() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const svc = this;
+    const withMilestone = (row: Record<string, any>) => ({
+      ...row,
+      milestone: row.milestoneId
+        ? (svc.milestones.find((m) => m.id === row.milestoneId) ?? null)
+        : null,
+    });
     return {
       create: async ({ data }: any) => {
         const row = {
@@ -36,10 +43,12 @@ class StubPrisma {
           createdAt: new Date('2026-09-08T00:00:00Z'),
         };
         svc.releases.push(row);
-        return row;
+        return withMilestone(row);
       },
-      findUnique: async ({ where }: any) =>
-        svc.releases.find((r) => r.id === where.id) ?? null,
+      findUnique: async ({ where }: any) => {
+        const found = svc.releases.find((r) => r.id === where.id) ?? null;
+        return found ? withMilestone(found) : null;
+      },
       findFirst: async ({ where }: any) =>
         svc.releases.find((r: any) =>
           Object.entries(where ?? {}).every(
@@ -50,14 +59,28 @@ class StubPrisma {
         const found = svc.releases.find((r) => r.id === where.id);
         if (!found) throw new Error(`release ${where.id} not found`);
         Object.assign(found, data);
-        return found;
+        return withMilestone(found);
       },
-      findMany: async () =>
-        [...svc.releases].sort((a, b) => {
-          const da = (a.releasedAt ?? a.createdAt) as Date;
-          const db = (b.releasedAt ?? b.createdAt) as Date;
-          return db.getTime() - da.getTime();
-        }),
+      findMany: async ({ where }: any = {}) =>
+        [...svc.releases]
+          .filter((r) =>
+            where?.projectId ? r.projectId === where.projectId : true,
+          )
+          .sort((a, b) => {
+            const da = (a.releasedAt ?? a.createdAt) as Date;
+            const db = (b.releasedAt ?? b.createdAt) as Date;
+            return db.getTime() - da.getTime();
+          })
+          .map((r) => withMilestone(r as Record<string, any>)),
+    };
+  }
+
+  get milestone() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const svc = this;
+    return {
+      findUnique: async ({ where }: any) =>
+        svc.milestones.find((m) => m.id === where.id) ?? null,
     };
   }
 
@@ -254,6 +277,113 @@ describe('ReleaseService（1b：Release 实体 + CHANGELOG 单向导出）', () 
     await releases.publishRelease(r.id as string, 'v1.0.0');
     expect(bus.events).toHaveLength(1);
     expect(bus.events[0].type).toBe('release.created');
+  });
+
+  it('listReleases：按 projectId 过滤；缺省返回全部（CAP-A-15 跨项目发版流水）', async () => {
+    const { releases } = buildHarness();
+    await releases.createRelease({
+      projectId: 'proj-1',
+      version: '0.1.0',
+      createdBy: 'user-1',
+    });
+    await releases.createRelease({
+      projectId: 'proj-2',
+      version: '0.2.0',
+      createdBy: 'user-1',
+    });
+
+    const ofProj1 = await releases.listReleases('proj-1');
+    expect(ofProj1).toHaveLength(1);
+    expect(ofProj1[0].projectId).toBe('proj-1');
+    expect(ofProj1[0].version).toBe('0.1.0');
+
+    const all = await releases.listReleases();
+    expect(all).toHaveLength(2);
+    expect(new Set(all.map((r) => r.projectId))).toEqual(
+      new Set(['proj-1', 'proj-2']),
+    );
+  });
+
+  it('CAP-A-16：创建带合法 milestoneId 落库，列表带里程碑轻量投影', async () => {
+    const { releases, prisma } = buildHarness();
+    prisma.milestones.push({
+      id: 'ms-1',
+      projectId: 'proj-1',
+      name: 'MVP',
+      status: 'in_progress',
+    });
+
+    const created = await releases.createRelease({
+      projectId: 'proj-1',
+      version: '1.0.0',
+      createdBy: 'user-1',
+      milestoneId: 'ms-1',
+    });
+    expect(created.milestoneId).toBe('ms-1');
+    expect(created.milestone).toMatchObject({ id: 'ms-1', name: 'MVP' });
+
+    const list = await releases.listReleases('proj-1');
+    expect(list[0].milestone).toMatchObject({
+      id: 'ms-1',
+      status: 'in_progress',
+    });
+  });
+
+  it('CAP-A-16：跨项目 milestoneId → 400', async () => {
+    const { releases, prisma } = buildHarness();
+    prisma.milestones.push({
+      id: 'ms-other',
+      projectId: 'proj-2',
+      name: '他项目里程碑',
+      status: 'planned',
+    });
+    await expect(
+      releases.createRelease({
+        projectId: 'proj-1',
+        version: '1.0.0',
+        createdBy: 'user-1',
+        milestoneId: 'ms-other',
+      }),
+    ).rejects.toThrow('跨项目');
+  });
+
+  it('CAP-A-16：不存在的 milestoneId → 400', async () => {
+    const { releases } = buildHarness();
+    await expect(
+      releases.createRelease({
+        projectId: 'proj-1',
+        version: '1.0.0',
+        createdBy: 'user-1',
+        milestoneId: 'ms-ghost',
+      }),
+    ).rejects.toThrow('里程碑不存在');
+  });
+
+  it('CAP-A-16：updateDraft 透传 milestoneId；null 清除关联', async () => {
+    const { releases, prisma } = buildHarness();
+    prisma.milestones.push({
+      id: 'ms-1',
+      projectId: 'proj-1',
+      name: 'MVP',
+      status: 'in_progress',
+    });
+    const r = await releases.createRelease({
+      projectId: 'proj-1',
+      version: '1.0.0',
+      createdBy: 'user-1',
+    });
+
+    const linked = await releases.updateDraft(r.id as string, {
+      milestoneId: 'ms-1',
+    });
+    expect(linked.milestoneId).toBe('ms-1');
+    expect(linked.milestone).toMatchObject({ id: 'ms-1' });
+
+    const cleared = await releases.updateDraft(r.id as string, {
+      milestoneId: null,
+    });
+    expect(cleared.milestoneId).toBeNull();
+    expect(cleared.milestone).toBeNull();
   });
 
   it('exportChangelog：写入文件、登记 binding（managed/system）并记整文件指纹基线', async () => {

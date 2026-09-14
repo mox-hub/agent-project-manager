@@ -12,6 +12,10 @@ interface AsyncStateProps {
   emptyIcon?: ComponentType<{ className?: string }>;
   emptyTitle?: string;
   emptyDescription?: string;
+  /** 空态场景变体透传：page=整页主体空态（撑满内容区），card=分区内紧凑形态（默认） */
+  emptyVariant?: "page" | "card";
+  /** 空态自定义视觉块透传（page 变体配 IconStack 插画）；错误态恒为 card 简式 */
+  emptyVisual?: ReactNode;
   children: ReactNode;
 }
 
@@ -24,6 +28,8 @@ export function AsyncState({
   emptyIcon,
   emptyTitle,
   emptyDescription,
+  emptyVariant = "card",
+  emptyVisual,
   children,
 }: AsyncStateProps) {
   const { t } = useTranslation();
@@ -52,6 +58,8 @@ export function AsyncState({
     return (
       <EmptyState
         icon={emptyIcon}
+        visual={emptyVisual}
+        variant={emptyVariant}
         title={emptyTitle ?? t("common.noData", "暂无数据")}
         description={emptyDescription}
       />

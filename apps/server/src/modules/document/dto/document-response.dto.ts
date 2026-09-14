@@ -57,7 +57,15 @@ export class DocumentBaseDto {
 
   @ApiProperty({
     type: String,
-    enum: ['requirement', 'design', 'api', 'testing', 'guide', 'custom'],
+    enum: [
+      'requirement',
+      'analysis',
+      'design',
+      'api',
+      'testing',
+      'guide',
+      'custom',
+    ],
     description: '文档分类',
   })
   category: string;

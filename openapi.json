@@ -28980,6 +28980,7 @@
               "type": "string",
               "enum": [
                 "requirement",
+                "analysis",
                 "design",
                 "api",
                 "testing",
@@ -55317,7 +55318,7 @@
         "parameters": [
           {
             "name": "projectId",
-            "required": true,
+            "required": false,
             "in": "query",
             "description": "项目 ID",
             "schema": {
@@ -55437,7 +55438,7 @@
             "JWT-auth": []
           }
         ],
-        "summary": "发版列表（按项目过滤）",
+        "summary": "发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水）",
         "tags": [
           "Releases"
         ]
@@ -68750,6 +68751,7 @@
             "description": "Document category",
             "enum": [
               "requirement",
+              "analysis",
               "design",
               "api",
               "testing",
@@ -68872,6 +68874,7 @@
             "type": "string",
             "enum": [
               "requirement",
+              "analysis",
               "design",
               "api",
               "testing",
@@ -69025,6 +69028,7 @@
             "type": "string",
             "enum": [
               "requirement",
+              "analysis",
               "design",
               "api",
               "testing",
@@ -69346,6 +69350,7 @@
             "type": "string",
             "enum": [
               "requirement",
+              "analysis",
               "design",
               "api",
               "testing",
@@ -69496,6 +69501,7 @@
             "description": "Document category",
             "enum": [
               "requirement",
+              "analysis",
               "design",
               "api",
               "testing",
@@ -77312,6 +77318,11 @@
             "items": {
               "type": "string"
             }
+          },
+          "milestoneId": {
+            "type": "object",
+            "description": "所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除）",
+            "nullable": true
           }
         },
         "required": [
@@ -77352,6 +77363,11 @@
             "items": {
               "type": "string"
             }
+          },
+          "milestoneId": {
+            "type": "object",
+            "description": "所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除）",
+            "nullable": true
           }
         }
       },

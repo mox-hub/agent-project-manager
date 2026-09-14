@@ -6,8 +6,11 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, CalendarRange, TableProperties, Trash2, CircleDashed,
+  Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, CalendarRange, TableProperties, Trash2, CircleDashed, SearchX,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
@@ -29,6 +32,7 @@ import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useAllTasks, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
 import { useIssueTypes, useIssueTypeOf } from '../hooks/use-issue-types';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
+import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import type { Task } from '../api/issue-api';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import { useTranslation } from 'react-i18next';
@@ -74,11 +78,18 @@ const ISSUE_ENTITY = getEntityIcon('issue');
 export function TasksPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // 管道项目聚焦（CAP-A-15）：URL ?project 优先——作为项目筛选 chips 的受控初值
+  const { focusProjectId } = usePipelineProjectFilter();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
   const [search, setSearch] = useState('');
-  // 筛选条件条（Linear 形态）：字段 + 算子 + 值集，空数组 = 无筛选
-  const [conditions, setConditions] = useState<FilterCondition[]>([]);
+  // 筛选条件条（Linear 形态）：字段 + 算子 + 值集，空数组 = 无筛选；
+  // 聚焦项目时初值预置 project is <focusProjectId>（仅初值，用户可在页内再改）
+  const [conditions, setConditions] = useState<FilterCondition[]>(() =>
+    focusProjectId
+      ? [{ id: 'cond-pipeline-focus-project', fieldId: 'project', operator: 'is', values: [focusProjectId] }]
+      : [],
+  );
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [presetAssigneeId, setPresetAssigneeId] = useState<string | undefined>(undefined);
   const [dispatchTask, setDispatchTask] = useState<{ task: Task; projectId: string } | null>(null);
@@ -346,6 +357,10 @@ export function TasksPage() {
     return projects.find((p) => p.id === projectId)?.name || projectId;
   };
 
+  // 空态接管判定：搜索 / 条件条 / 完成度开关任一生效时，筛选空态提供「清除筛选」入口
+  const hasActiveFilters =
+    search.trim() !== '' || conditions.length > 0 || completedFilter !== 'all';
+
   const handleTaskClick = (task: Task) => {
     navigate(`/app/issues/${task.id}`);
   };
@@ -547,8 +562,48 @@ export function TasksPage() {
         />
       ) : null}
 
-      {/* Content */}
+      {/* Content：空态由页面统一接管（页面层级标准）——工单池为空走 A 类整页空态，
+          筛选后为空走 C 类紧凑空态；四视图不再各自维护空态形态 */}
       <div className="flex-1 overflow-auto px-6 py-4 sm:px-8 sm:py-5 lg:px-10">
+        {!isLoading && allTasks.length === 0 ? (
+          <EmptyState
+            variant="page"
+            visual={
+              <IconStack aria-hidden="true" className={TONE_TEXT_CLASS[ISSUE_ENTITY.tone]}>
+                <ISSUE_ENTITY.icon className={cn('size-4', TONE_TEXT_CLASS[ISSUE_ENTITY.tone])} />
+              </IconStack>
+            }
+            title={t('task.empty.none', '暂无任务')}
+            description={t('task.empty.noneDesc', '创建第一个任务，或从需求承接管道拆解生成')}
+            action={
+              <Button size="sm" onClick={() => setShowCreateDialog(true)}>
+                <Plus className="size-4" />
+                {t('task.create')}
+              </Button>
+            }
+          />
+        ) : !isLoading && filteredTasks.length === 0 ? (
+          <EmptyState
+            icon={SearchX}
+            title={t('task.empty.filtered', '未找到匹配的任务')}
+            description={t('task.empty.filteredDesc', '换个关键词，或清除筛选条件再试')}
+            action={
+              hasActiveFilters ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearch('');
+                    setConditions([]);
+                    setCompletedFilter('all');
+                  }}
+                >
+                  {t('common.clearFilters', '清除筛选')}
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : (
         <div className="w-full">
           {viewMode === 'list' ? (
             <TaskSimpleList
@@ -666,6 +721,7 @@ export function TasksPage() {
             />
           )}
         </div>
+        )}
       </div>
 
       </PageShell>

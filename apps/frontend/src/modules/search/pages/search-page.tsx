@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSearch } from '../hooks/use-search';
 import type { SearchResultType, SearchHit } from '../api/search-api';
@@ -176,7 +177,12 @@ export function SearchPage() {
         <div className="max-w-2xl mx-auto p-6">
           {query.length === 0 ? (
             <EmptyState
-              icon={SearchIcon}
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-primary">
+                  <SearchIcon className="size-4 text-primary" />
+                </IconStack>
+              }
               title={t('search.placeholderTitle', '搜索一切')}
               description={t('help.searchHint') || 'Search across tasks, bugs, documents, projects, milestones and acceptances'}
             />
@@ -189,6 +195,13 @@ export function SearchPage() {
               icon={SearchIcon}
               title={t('search.noResults', '未找到匹配结果')}
               description={t('search.noResultsHint', '换个关键词试试，或清除类型过滤')}
+              action={
+                typeFilter !== 'all' ? (
+                  <Button variant="outline" size="sm" onClick={() => setTypeFilter('all')}>
+                    {t('common.filterClear', '清除类型过滤')}
+                  </Button>
+                ) : undefined
+              }
             />
           ) : (
             <div className="space-y-5">

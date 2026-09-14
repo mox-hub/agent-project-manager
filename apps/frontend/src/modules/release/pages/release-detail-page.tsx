@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   CircleDashed,
   Clock,
+  Flag,
   Rocket,
   Sparkles,
   XCircle,
@@ -22,7 +23,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SkeletonCard } from '@/components/ui/skeleton';
+import {
+  Stepper,
+  StepperIndicator,
+  StepperItem,
+  StepperNav,
+  StepperSeparator,
+  StepperTitle,
+} from '@/components/ui/stepper';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
 import { assistantApi } from '@/modules/assistant/api/assistant-api';
@@ -108,38 +118,41 @@ export function ReleaseDetailPage() {
             <SkeletonCard className="h-64" />
           ) : (
             <>
-              {/* 状态机进度链 */}
+              {/* 状态机进度链（纯展示指示器式；publishing 步 loading，failed 不在链上另挂徽章） */}
               <Card>
-                <CardContent className="flex flex-wrap items-center justify-center gap-0 p-4">
-                  {STATUS_FLOW.map((s, i) => {
-                    const reached =
-                      STATUS_FLOW.indexOf(release.status) >= i ||
-                      (release.status === 'failed' && i === 0);
-                    return (
-                      <div key={s} className="flex items-center">
-                        {i > 0 ? (
-                          <span className="mx-1.5 h-px w-5 bg-border" aria-hidden />
-                        ) : null}
-                        <span
-                          className={cn(
-                            'flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-10',
-                            reached
-                              ? 'bg-accent-blue/10 text-accent-blue'
-                              : 'text-content-text-muted',
-                          )}
+                <CardContent className="flex items-center gap-2 p-4">
+                  <Stepper
+                    value={Math.max(STATUS_FLOW.indexOf(release.status) + 1, 1)}
+                    className="flex-1"
+                    indicators={{
+                      completed: <Check className="size-3" />,
+                      loading: (
+                        <Spinner size="sm" className="size-3.5 text-primary-foreground" />
+                      ),
+                    }}
+                  >
+                    <StepperNav>
+                      {STATUS_FLOW.map((s, i) => (
+                        <StepperItem
+                          key={s}
+                          step={i + 1}
+                          loading={release.status === 'publishing' && s === 'publishing'}
                         >
-                          {reached ? (
-                            <CheckCircle2 className="size-3" />
-                          ) : (
-                            <CircleDashed className="size-3" />
-                          )}
-                          {t(statusLabelKey(s))}
-                        </span>
-                      </div>
-                    );
-                  })}
+                          <div className="flex items-center gap-2">
+                            <StepperIndicator className="size-5 text-10 font-medium">
+                              {i + 1}
+                            </StepperIndicator>
+                            <StepperTitle className="text-xs whitespace-nowrap">
+                              {t(statusLabelKey(s))}
+                            </StepperTitle>
+                          </div>
+                          {i < STATUS_FLOW.length - 1 && <StepperSeparator />}
+                        </StepperItem>
+                      ))}
+                    </StepperNav>
+                  </Stepper>
                   {release.status === 'failed' ? (
-                    <Badge variant="secondary" className={cn('ml-2 text-10', RELEASE_STATUS_TONE.failed)}>
+                    <Badge variant="secondary" className={cn('shrink-0 text-10', RELEASE_STATUS_TONE.failed)}>
                       {t(statusLabelKey('failed'))}
                     </Badge>
                   ) : null}
@@ -230,6 +243,12 @@ export function ReleaseDetailPage() {
                       {t('release.detail.github')}:{' '}
                       {release.githubReleased ? t('release.detail.yes') : t('release.detail.no')}
                     </span>
+                    {release.milestone ? (
+                      <span className="flex items-center gap-1">
+                        <Flag className="size-3 text-accent-purple" />
+                        {t('release.detail.milestone')}: {release.milestone.name}
+                      </span>
+                    ) : null}
                     {release.releasedAt ? (
                       <span className="flex items-center gap-1">
                         <Clock className="size-3" />

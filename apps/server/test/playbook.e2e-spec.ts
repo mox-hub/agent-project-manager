@@ -192,7 +192,7 @@ describe('Playbook / expertise / dashboard health (e2e, local-only paths)', () =
     });
   });
 
-  it('需求承接剧本（CAP-P-01）：挂载→调研拍板→澄清拍板→拆解访谈 + interview-prefill 无模型可读失败', async () => {
+  it('需求承接剧本（CAP-P-01）：挂载→调研拍板→澄清拍板→分析拍板→拆解访谈 + interview-prefill 无模型可读失败', async () => {
     // 独立项目跑 requirement-pipeline，不污染上一个用例的 software-full-cycle 项目
     const proj = await ws.db.project.create({
       data: {
@@ -284,6 +284,29 @@ describe('Playbook / expertise / dashboard health (e2e, local-only paths)', () =
       .expect(201);
     await resolveGate(clarify.body.data.proposalId);
 
+    // 分析（CAP-P-01 四期）：澄清拍板推进 analysis；访谈产出分析报告工件（category=analysis）
+    const analysis = await wsHttp
+      .post(`/_api/projects/${pid}/playbook/stages/analysis/interview`)
+      .set(auth())
+      .send({
+        answers: [
+          {
+            questionId: 'feasibility',
+            answer: '做得成，推送要 IT 帮忙对接',
+          },
+          { questionId: 'impact', answer: '消息推送、使用手册' },
+          { questionId: 'risks', answer: '推送接口没权限、需求再变' },
+        ],
+      })
+      .expect(201);
+    expect(analysis.body.data.documentId).toBeTruthy();
+    const analysisDoc = await ws.db.document.findUnique({
+      where: { id: analysis.body.data.documentId },
+      select: { category: true },
+    });
+    expect(analysisDoc?.category).toBe('analysis');
+    await resolveGate(analysis.body.data.proposalId);
+
     // 拆解访谈提交（不拍板）：工件产出 + 闸门提案，游标停在 breakdown
     const breakdown = await wsHttp
       .post(`/_api/projects/${pid}/playbook/stages/breakdown/interview`)
@@ -309,6 +332,7 @@ describe('Playbook / expertise / dashboard health (e2e, local-only paths)', () =
     );
     expect(stages.research.status).toBe('done');
     expect(stages.clarify.status).toBe('done');
+    expect(stages.analysis.status).toBe('done');
     expect(stages.breakdown.status).toBe('active');
     expect(stages['acceptance-draft']).toMatchObject({ status: 'pending' });
   });

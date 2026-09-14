@@ -24,6 +24,11 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
 import { Spinner } from '@/components/ui/spinner';
+import {
+  Sortable,
+  SortableItem,
+  SortableItemHandle,
+} from '@/components/ui/sortable';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import {
@@ -152,18 +157,17 @@ export function TagManager() {
     }
   };
 
-  // 拖拽排序：本地重排后按新顺序回写 order
-  const handleDrop = async (dropIndex: number, dragIndex: number) => {
-    if (dragIndex === dropIndex) return;
-    const newTags = [...filteredTags];
-    const [removed] = newTags.splice(dragIndex, 1);
-    newTags.splice(dropIndex, 0, removed);
+  // 拖拽排序：落放一次性提交，仅并发回写 order 发生变化的项（对齐 issue-types-section 口径）
+  const handleReorder = async (next: Tag[]) => {
     try {
-      for (let i = 0; i < newTags.length; i++) {
-        if (newTags[i].order !== i) {
-          await updateTag.mutateAsync({ id: newTags[i].id, data: { ...newTags[i], order: i } });
-        }
-      }
+      await Promise.all(
+        next
+          .map((tag, index) => ({ tag, order: index }))
+          .filter(({ tag, order }) => tag.order !== order)
+          .map(({ tag, order }) =>
+            updateTag.mutateAsync({ id: tag.id, data: { ...tag, order } }),
+          ),
+      );
     } catch {
       toast.error(t('settings.saveFailed'));
     }
@@ -217,7 +221,7 @@ export function TagManager() {
                 onEdit={openEdit}
                 onArchive={handleArchive}
                 onDelete={handleDelete}
-                onReorder={handleDrop}
+                onReorder={handleReorder}
                 deleting={deleteTag.isPending}
                 archiving={updateTag.isPending}
               />
@@ -331,15 +335,14 @@ interface TagTableProps {
   onEdit: (tag: Tag) => void;
   onArchive: (tag: Tag) => void;
   onDelete: (tag: Tag) => void;
-  onReorder: (dropIndex: number, dragIndex: number) => void;
+  onReorder: (next: Tag[]) => void;
   deleting: boolean;
   archiving: boolean;
 }
 
+/** 标签表（Sort 语义 = 同列表重排）：tbody/tr 经 render 槽渲染为表格元素，把手承载拖拽（键盘可达） */
 function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, archiving }: TagTableProps) {
   const { t } = useTranslation();
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   return (
     <Table>
@@ -351,43 +354,29 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
           <TableHead className="w-28 text-right">{t('common.actions')}</TableHead>
         </TableRow>
       </TableHeader>
-      <TableBody>
-        {tags.map((tag, index) => (
-          <TableRow
-            key={tag.id}
-            draggable
-            onDragStart={() => setDragIndex(index)}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOverIndex(index);
-            }}
-            onDragLeave={() => setDragOverIndex(null)}
-            onDrop={(e) => {
-              e.preventDefault();
-              if (dragIndex !== null) onReorder(index, dragIndex);
-              setDragIndex(null);
-              setDragOverIndex(null);
-            }}
-            onDragEnd={() => {
-              setDragIndex(null);
-              setDragOverIndex(null);
-            }}
-            className={cn(
-              dragIndex === index && 'opacity-50',
-              dragOverIndex === index && dragIndex !== null && dragIndex !== index && 'bg-accent',
-            )}
-          >
+      <Sortable
+        value={tags}
+        getItemValue={(tag) => tag.id}
+        onValueChange={onReorder}
+        render={<TableBody />}
+      >
+        {tags.map((tag) => (
+          <SortableItem key={tag.id} value={tag.id} render={<TableRow />}>
             <TableCell className="px-2 py-1.5">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label={t('common.dragToSort')}
-                title={t('common.dragToSort')}
-                className="cursor-grab text-muted-foreground active:cursor-grabbing"
+              <SortableItemHandle
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={t('common.dragToSort')}
+                    title={t('common.dragToSort')}
+                  />
+                }
+                className="touch-none text-muted-foreground"
               >
                 <GripVertical />
-              </Button>
+              </SortableItemHandle>
             </TableCell>
             <TableCell className="py-1.5">
               <span
@@ -437,9 +426,9 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
                 </Button>
               </div>
             </TableCell>
-          </TableRow>
+          </SortableItem>
         ))}
-      </TableBody>
+      </Sortable>
     </Table>
   );
 }

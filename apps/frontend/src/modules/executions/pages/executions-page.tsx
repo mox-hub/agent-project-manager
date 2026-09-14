@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { DataList, ListText } from '@/components/ui/data-list';
 import type { MenuItem } from '@/components/ui/context-menu';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
@@ -62,6 +63,7 @@ import { api } from '@/infrastructure/api-client';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
+import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 
 const STATUS_KEYS = Object.keys(RUN_STATUS_CONFIG) as ExecutionRunStatus[];
 
@@ -74,11 +76,15 @@ export function ExecutionsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  // 管道项目聚焦（CAP-A-15）：URL ?project 作为 projectFilter 受控初值；
+  // 用户在页内改动仍写自身状态（不回写 URL）
+  const { focusProjectId } = usePipelineProjectFilter();
+
   // 筛选状态
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ExecutionRunStatus | 'all'>('all');
   const [agentFilter, setAgentFilter] = useState<string>('all');
-  const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [projectFilter, setProjectFilter] = useState<string>(focusProjectId ?? 'all');
   const [detailRunId, setDetailRunId] = useState<string | null>(null);
   const [overviewRun, setOverviewRun] = useState<ExecutionRunRecord | null>(null);
 
@@ -413,7 +419,12 @@ export function ExecutionsPage() {
         {!isLoading && filteredRuns.length === 0 ? (
           runs.length === 0 ? (
             <EmptyState
-              icon={Activity}
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-accent-blue">
+                  <Activity className="size-4 text-accent-blue" />
+                </IconStack>
+              }
               title={t('execution.empty.none')}
               description={t('execution.empty.noneDesc')}
               action={

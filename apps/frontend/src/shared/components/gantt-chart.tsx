@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { cn } from '@/lib/utils';
 
-import { Bot } from 'lucide-react';
+import { Bot, CalendarRange } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -31,7 +32,9 @@ export interface GanttChartProps {
   onItemDateChange?: (itemId: string, range: GanttDateRange) => Promise<void> | void;
   readonly?: boolean;
   className?: string;
+  /** 空态标题；空态走 EmptyState card 形态（分区内紧凑，无插画） */
   emptyMessage?: string;
+  emptyDescription?: string;
   leftColumnTitle?: string;
   scale?: GanttScale;
   onScaleChange?: (scale: GanttScale) => void;
@@ -86,7 +89,8 @@ export function GanttChart({
   onItemDateChange,
   readonly = false,
   className,
-  emptyMessage = 'No timeline data to display',
+  emptyMessage = '暂无时间线数据',
+  emptyDescription,
   leftColumnTitle = 'Item',
   scale = 'day',
   onScaleChange,
@@ -202,9 +206,12 @@ export function GanttChart({
 
   if (!timeline || normalizedItems.length === 0) {
     return (
-      <div className="rounded-md border border-border bg-muted/50 p-6 text-center text-muted-foreground">
-        {emptyMessage}
-      </div>
+      <EmptyState
+        icon={CalendarRange}
+        title={emptyMessage}
+        description={emptyDescription}
+        className="min-h-40"
+      />
     );
   }
 

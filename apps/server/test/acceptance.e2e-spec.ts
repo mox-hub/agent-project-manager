@@ -103,6 +103,31 @@ describe('Acceptance (e2e)', () => {
           expect(JSON.stringify(res.body.data)).toContain(acceptanceId);
         });
     });
+
+    it('should exclude acceptances of other projects (CAP-A-15)', async () => {
+      // 第二项目的任务 + 契约：过滤本项目时不应出现
+      const other = await createTaskFixture(wsHttp, ws, accessToken);
+      const otherRes = await wsHttp
+        .post('/_api/acceptance')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          issueId: other.issueId,
+          type: 'mixed',
+          priority: 'medium',
+          title: 'E2E 他项目验收',
+        });
+      expect(otherRes.status).toBe(201);
+      const otherAcceptanceId: string = otherRes.body.data.id;
+
+      const res = await wsHttp
+        .get(`/_api/acceptance?projectId=${projectId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+      const items: Array<{ id: string }> = res.body.data.data ?? [];
+      expect(items.length).toBeGreaterThan(0);
+      expect(items.some((a) => a.id === acceptanceId)).toBe(true);
+      expect(items.some((a) => a.id === otherAcceptanceId)).toBe(false);
+    });
   });
 
   describe('GET /_api/acceptance/:id', () => {

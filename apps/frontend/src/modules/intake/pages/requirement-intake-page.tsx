@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -5,10 +6,12 @@ import {
   Plus,
   MessagesSquare,
   ClipboardList,
+  SearchCheck,
   ListChecks,
   ShieldCheck,
   ArrowRight,
   FileText,
+  Sparkles,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -18,17 +21,54 @@ import { AsyncState } from '@/components/ui/async-state';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useDocuments } from '@/modules/document/hooks/use-documents';
+import type { DocumentListItem } from '@/modules/document/api/document-api';
+import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
+import { AnalysisDraftDialog } from '../components/analysis-draft-dialog';
 
 /**
  * 需求承接页（研发生命周期 01 位，CAP-A-15 / CAP-P-01 管道入口）：
  * 「提出需求」CTA 唤起统一创建面板（project AI 代理模式 → grill 澄清），
- * 下方展示承接管道四步说明与 category=requirement 的需求纪要列表。
+ * 下方展示承接管道五步说明、category=requirement 的需求纪要列表与
+ * category=analysis 的分析报告列表（AI 代写 → 人确认，CAP-P-01 四期）。
+ * 管道项目聚焦（CAP-A-15）：?project 联动过滤两份列表（服务端 projectId 过滤）。
  */
+function DocListRow({ doc, onOpen }: { doc: DocumentListItem; onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex w-full items-center gap-3 px-2 py-2 text-left motion-shift hover:bg-accent"
+    >
+      <FileText size={16} className="shrink-0 text-content-text-secondary" />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm text-foreground">{doc.title}</div>
+        <div className="mt-0.5 flex items-center gap-2 text-xs text-content-text-muted">
+          {doc.project?.name ? <span>{doc.project.name}</span> : null}
+          <span>{new Date(doc.updatedAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+      <Badge variant="secondary">{doc.status}</Badge>
+      <ArrowRight size={14} className="shrink-0 text-content-text-muted" />
+    </button>
+  );
+}
+
 export function RequirementIntakePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const openCreateDialog = useAppStore((s) => s.openCreateDialog);
-  const docsQuery = useDocuments({ category: 'requirement', pageSize: 20 });
+  const { focusProjectId } = usePipelineProjectFilter();
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const docsQuery = useDocuments({
+    category: 'requirement',
+    pageSize: 20,
+    projectId: focusProjectId ?? undefined,
+  });
+  const analysisQuery = useDocuments({
+    category: 'analysis',
+    pageSize: 20,
+    projectId: focusProjectId ?? undefined,
+  });
 
   const steps = [
     {
@@ -40,6 +80,11 @@ export function RequirementIntakePage() {
       icon: ClipboardList,
       title: t('intake.step2Title', '访谈补全'),
       desc: t('intake.step2Desc', '结构化访谈补全背景、边界与验收期望'),
+    },
+    {
+      icon: SearchCheck,
+      title: t('intake.step25Title', '分析评估'),
+      desc: t('intake.step25Desc', 'AI 代写可行性、影响面、依赖与风险，人确认归档'),
     },
     {
       icon: ListChecks,
@@ -54,6 +99,7 @@ export function RequirementIntakePage() {
   ];
 
   const docs = docsQuery.data ?? [];
+  const analysisDocs = analysisQuery.data ?? [];
 
   return (
     <PageShell
@@ -77,7 +123,7 @@ export function RequirementIntakePage() {
           {t('intake.heroTitle', '提出一句需求，AI 同事接手')}
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-content-text-secondary">
-          {t('intake.heroDesc', '从一句原始需求开始：AI 同事连续追问澄清目标，访谈补全细节，生成任务族与验收清单，确认后落库进工单。')}
+          {t('intake.heroDesc', '从一句原始需求开始：AI 同事连续追问澄清目标，访谈补全细节，分析评估可行性与影响面，生成任务族与验收清单，确认后落库进工单。')}
         </p>
         <div className="mt-5 flex justify-center">
           <Button size="lg" className="gap-1.5" onClick={() => openCreateDialog({ type: 'project' })}>
@@ -87,9 +133,9 @@ export function RequirementIntakePage() {
         </div>
       </div>
 
-      {/* 承接管道四步说明 */}
+      {/* 承接管道五步说明 */}
       <SectionCard title={t('intake.pipelineTitle', '承接管道')}>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {steps.map((step, index) => (
             <div key={step.title} className="rounded-lg border border-border bg-background p-4">
               <div className="flex items-center gap-2">
@@ -105,11 +151,23 @@ export function RequirementIntakePage() {
         </div>
       </SectionCard>
 
-      {/* 需求纪要列表（category=requirement） */}
+      {/* 需求纪要列表（category=requirement）+ AI 分析入口（CAP-P-01 四期） */}
       <SectionCard
         title={t('intake.docsTitle', '需求纪要')}
         description={t('intake.docsDesc', '澄清纪要与访谈产物（category=requirement）')}
       >
+        <div className="mb-2 flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setAnalysisOpen(true)}
+            disabled={docs.length === 0}
+          >
+            <Sparkles size={14} />
+            {t('intake.analysisCta', 'AI 生成分析报告')}
+          </Button>
+        </div>
         <AsyncState
           isLoading={docsQuery.isLoading}
           isEmpty={!docsQuery.isLoading && docs.length === 0}
@@ -118,27 +176,50 @@ export function RequirementIntakePage() {
         >
           <div className="divide-y divide-border">
             {docs.map((doc) => (
-              <button
+              <DocListRow
                 key={doc.id}
-                type="button"
-                onClick={() => navigate(`/app/documents/${doc.id}`)}
-                className="flex w-full items-center gap-3 px-2 py-2 text-left motion-shift hover:bg-accent"
-              >
-                <FileText size={16} className="shrink-0 text-content-text-secondary" />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm text-foreground">{doc.title}</div>
-                  <div className="mt-0.5 flex items-center gap-2 text-xs text-content-text-muted">
-                    {doc.project?.name ? <span>{doc.project.name}</span> : null}
-                    <span>{new Date(doc.updatedAt).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                <Badge variant="secondary">{doc.status}</Badge>
-                <ArrowRight size={14} className="shrink-0 text-content-text-muted" />
-              </button>
+                doc={doc}
+                onOpen={() => navigate(`/app/documents/${doc.id}`)}
+              />
             ))}
           </div>
         </AsyncState>
       </SectionCard>
+
+      {/* 分析报告列表（category=analysis，CAP-P-01 四期） */}
+      <SectionCard
+        title={t('intake.analysisDocsTitle', '分析报告')}
+        description={t('intake.analysisDocsDesc', 'AI 代写、人确认归档的可行性/影响面/风险分析（category=analysis）')}
+      >
+        <AsyncState
+          isLoading={analysisQuery.isLoading}
+          isEmpty={!analysisQuery.isLoading && analysisDocs.length === 0}
+          emptyTitle={t('intake.analysisDocsEmpty', '尚无分析报告')}
+          emptyDescription={t('intake.analysisDocsEmptyDesc', '从上方需求纪要生成分析报告后，会归档在这里供拆解与验收引用')}
+        >
+          <div className="divide-y divide-border">
+            {analysisDocs.map((doc) => (
+              <DocListRow
+                key={doc.id}
+                doc={doc}
+                onOpen={() => navigate(`/app/documents/${doc.id}`)}
+              />
+            ))}
+          </div>
+        </AsyncState>
+      </SectionCard>
+
+      <AnalysisDraftDialog
+        open={analysisOpen}
+        onOpenChange={setAnalysisOpen}
+        projectId={focusProjectId ?? undefined}
+        docs={docs.map((d) => ({
+          id: d.id,
+          title: d.title,
+          projectName: d.project?.name ?? null,
+        }))}
+        defaultResearchId={docs[0]?.id}
+      />
     </PageShell>
   );
 }

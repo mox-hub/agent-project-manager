@@ -37,6 +37,13 @@ export interface ReleaseScope {
   issueIds?: string[];
 }
 
+/** 所属里程碑轻量投影（CAP-A-16 计划-交付轴） */
+export interface ReleaseMilestoneSummary {
+  id: string;
+  name: string;
+  status: string;
+}
+
 export interface ReleaseRecord {
   id: string;
   projectId: string;
@@ -57,6 +64,8 @@ export interface ReleaseRecord {
   approvedAt?: string | null;
   tagPushed: boolean;
   githubReleased: boolean;
+  milestoneId?: string | null;
+  milestone?: ReleaseMilestoneSummary | null;
 }
 
 export interface VersionRecommendation {
@@ -72,6 +81,7 @@ export interface CreateReleaseRequest {
   name?: string;
   notes?: string;
   scopeIssueIds?: string[];
+  milestoneId?: string | null;
 }
 
 export interface UpdateReleaseRequest {
@@ -79,6 +89,7 @@ export interface UpdateReleaseRequest {
   notes?: string;
   version?: string;
   scopeIssueIds?: string[];
+  milestoneId?: string | null;
 }
 
 export interface ApprovalProposal {
@@ -89,8 +100,9 @@ export interface ApprovalProposal {
 }
 
 export const releaseApi = {
-  list: (projectId: string) =>
-    api.get<ReleaseRecord[]>('/releases', { projectId }),
+  // projectId 缺省 = 全部项目（CAP-A-15：未聚焦时列表页仍请求）
+  list: (projectId?: string) =>
+    api.get<ReleaseRecord[]>('/releases', projectId ? { projectId } : undefined),
   detail: (id: string) => api.get<ReleaseRecord>(`/releases/${id}`),
   create: (data: CreateReleaseRequest) =>
     api.post<ReleaseRecord>('/releases', data),

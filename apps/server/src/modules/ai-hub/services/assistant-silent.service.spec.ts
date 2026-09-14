@@ -107,6 +107,7 @@ describe('AssistantSilentService.run', () => {
       'grill-next',
       'interview-prefill',
       'intake-composite',
+      'analysis-draft',
       'interview-dynamic',
       'workflow-draft',
       'release-notes',
@@ -241,6 +242,128 @@ describe('AssistantSilentService.run', () => {
       ).rejects.toThrow(/工件文档不存在/);
       expect(missing.chat).not.toHaveBeenCalled();
       void prisma;
+    });
+
+    it('analysisDocumentId 纳入工件侦查（CAP-P-01 四期 grounding）', async () => {
+      const { service, prisma } = makeCompositeService([
+        ...DOCS,
+        {
+          id: 'd3',
+          title: '需求分析报告 · P',
+          content: '可行性 go；风险：推送到达率（high）',
+        },
+      ]);
+      await service.run(
+        'intake-composite',
+        {
+          breakdownDocumentId: 'd1',
+          acceptanceDocumentId: 'd2',
+          analysisDocumentId: 'd3',
+        },
+        'p1',
+        'u1',
+      );
+      expect(prisma.document.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: { in: ['d1', 'd2', 'd3'] } },
+        }),
+      );
+    });
+  });
+
+  describe('analysis-draft（CAP-P-01 四期）', () => {
+    const ANALYSIS_DOCS = [
+      {
+        id: 'r1',
+        title: '需求调研纪要 · P',
+        content: '问题：开完会记不清谁答应了什么',
+        projectId: 'p1',
+      },
+      {
+        id: 'c1',
+        title: '需求澄清纪要 · P',
+        content: '本期范围：手机登记会议决定；不做语音转写',
+        projectId: 'p1',
+      },
+    ];
+    const BINDINGS = [
+      {
+        fileType: 'spec',
+        filePath: 'docs/spec.md',
+        syncMode: 'managed',
+        conflictState: 'none',
+      },
+    ];
+    const PAYLOAD =
+      '{"feasibility": {"verdict": "go", "rationale": "范围小、无技术黑盒", "conditions": []}, "impact": {"summary": "新增模块为主", "affectedAreas": ["消息推送"]}, "dependencies": [{"item": "推送网关权限", "note": "需 IT 开通"}], "risks": [{"risk": "推送到达率", "severity": "high", "mitigation": "先做到达率验证任务"}], "acceptancePreview": [{"content": "会后 10 分钟内可查到决定", "criteriaType": "functional"}]}';
+
+    const makeAnalysisService = (
+      prismaDocs: unknown = ANALYSIS_DOCS,
+      chatContent = PAYLOAD,
+    ) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const prisma = {
+        aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+        document: { findMany: vi.fn().mockResolvedValue(prismaDocs) },
+        contractFileBinding: {
+          findMany: vi.fn().mockResolvedValue(BINDINGS),
+        },
+      };
+      const service = new AssistantSilentService(
+        prisma as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat, prisma };
+    };
+
+    it('侦查调研/澄清工件 + 按项目契约绑定做影响面 grounding → 输出结构化分析', async () => {
+      const { service, chat, prisma } = makeAnalysisService();
+      const result = await service.run(
+        'analysis-draft',
+        { researchDocumentId: 'r1', clarifyDocumentId: 'c1' },
+        'p1',
+        'u1',
+      );
+
+      // 从工件反查 projectId（select 含 projectId），再以它查契约绑定
+      expect(prisma.contractFileBinding.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { projectId: 'p1' } }),
+      );
+      expect(result.data).toHaveProperty('feasibility');
+      expect(result.data).toHaveProperty('acceptancePreview');
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('记不清谁答应了什么');
+      expect(instructions).toContain('不做语音转写');
+      // 契约绑定事实注入指令（影响面对照素材）
+      expect(instructions).toContain('docs/spec.md');
+    });
+
+    it('缺工件 id / 文档不存在 → 400（不触 LLM）', async () => {
+      const { service, chat } = makeAnalysisService();
+      await expect(
+        service.run('analysis-draft', {}, 'p1', 'u1'),
+      ).rejects.toThrow(/至少一项/);
+      expect(chat).not.toHaveBeenCalled();
+
+      const missing = makeAnalysisService([]);
+      await expect(
+        missing.service.run(
+          'analysis-draft',
+          { researchDocumentId: 'gone' },
+          'p1',
+          'u1',
+        ),
+      ).rejects.toThrow(/工件文档不存在/);
+      expect(missing.chat).not.toHaveBeenCalled();
     });
   });
 

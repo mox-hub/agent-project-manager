@@ -20,8 +20,8 @@ export const releaseKeys = {
 export function useReleases(projectId?: string) {
   return useQuery({
     queryKey: releaseKeys.list(projectId),
-    enabled: !!projectId,
-    queryFn: () => releaseApi.list(projectId!),
+    // CAP-A-15：无 projectId 时仍发起请求（后端返回全部项目），不再禁用查询
+    queryFn: () => releaseApi.list(projectId),
   });
 }
 

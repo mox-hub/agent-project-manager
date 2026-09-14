@@ -49,6 +49,6 @@ describe('TaskGantt', () => {
       />,
     );
 
-    expect(screen.getByText('No tasks with valid dates to display')).toBeTruthy();
+    expect(screen.getByText('暂无可排期的任务')).toBeTruthy();
   });
 });
