@@ -901,6 +901,13 @@ export class ExecutionRunResponseDto {
     description: '工单摘要（人工执行项路径返回）',
   })
   issue?: IssueParentSummaryDto;
+
+  @ApiPropertyOptional({
+    type: String,
+    description:
+      '审计闸门黄牌提示（人工执行项且活契约完整性审计 riskLevel=red 时返回，不阻断创建）',
+  })
+  auditWarning?: string;
 }
 
 /** AI 执行创建结果（{ execution, approvalRequest, contextPack }） */

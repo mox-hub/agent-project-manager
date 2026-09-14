@@ -3,7 +3,7 @@
  * 使用真实 API 获取任务数据
  */
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, CalendarRange, TableProperties, Trash2, CircleDashed,
@@ -27,6 +27,7 @@ import {
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useAllTasks, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
+import { useIssueTypes, useIssueTypeOf } from '../hooks/use-issue-types';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import type { Task } from '../api/issue-api';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
@@ -47,6 +48,7 @@ import {
   getSeverityColumns,
   getTaskStatusColumns,
   taskCardRow3,
+  taskCardRow1,
   taskCardModel,
 } from '../components/board-presets';
 
@@ -190,13 +192,34 @@ export function TasksPage() {
   const allTasks = useMemo(() => tasksData?.data ?? [], [tasksData]);
 
   // 筛选字段定义（级联菜单与条件条共用；hint 为各值计数）
+  const { types: issueTypeOptions, byKey: issueTypesByKey } = useIssueTypes();
+
+  // 类型筛选的口径：typeId 为事实源；遗留行 typeId 为空时按旧 type 字符串解析
+  const effectiveTypeId = useCallback(
+    (task: Task): string | undefined =>
+      task.typeId ?? issueTypesByKey.get(task.type ?? 'task')?.id,
+    [issueTypesByKey],
+  );
+
   const filterFields = useMemo<FilterFieldDef[]>(() => {
     const statusCounts = countBy(allTasks, (task) => task.status);
     const severityCounts = countBy(allTasks, severityOf);
     const projectCounts = countBy(allTasks, (task) => task.projectId);
+    const typeCounts = countBy(allTasks, (task) => effectiveTypeId(task) ?? 'unknown');
     const aiActiveCounts = allTasks.filter((t) => !!getIssueExecution(t)?.isExecuting).length;
 
     return [
+      {
+        id: 'type',
+        label: t('task.filter.typeGroup', '类型'),
+        icon: getEntityIcon('issue').icon,
+        operators: ['is', 'isNot'],
+        options: issueTypeOptions.map((ty) => ({
+          value: ty.id,
+          label: ty.name,
+          hint: typeCounts.get(ty.id)?.toString(),
+        })),
+      },
       {
         id: 'status',
         label: t('task.status.group', 'Status'),
@@ -251,7 +274,7 @@ export function TasksPage() {
         })),
       },
     ];
-  }, [t, projects, allTasks, getIssueExecution]);
+  }, [t, projects, allTasks, getIssueExecution, issueTypeOptions, effectiveTypeId]);
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -259,6 +282,7 @@ export function TasksPage() {
     const severitySets = filterConditionSets(conditions, 'severity');
     const projectSets = filterConditionSets(conditions, 'project');
     const aiSets = filterConditionSets(conditions, 'aiExecution');
+    const typeSets = filterConditionSets(conditions, 'type');
 
     const list = allTasks.filter((task) => {
       if (search && !task.title.toLowerCase().includes(search.toLowerCase()) &&
@@ -267,6 +291,12 @@ export function TasksPage() {
       }
       if (!matchesConditionSets(task.status, statusSets)) {
         return false;
+      }
+      // 类型筛选（typeId 事实源；命中 'unknown' 表示遗留行且类型键无法解析）
+      if (typeSets.include.length > 0 || typeSets.exclude.length > 0) {
+        if (!matchesConditionSets(effectiveTypeId(task) ?? 'unknown', typeSets)) {
+          return false;
+        }
       }
       // AI 执行状态筛选
       if (aiSets.include.includes('active') && !getIssueExecution(task)?.isExecuting) {
@@ -309,7 +339,7 @@ export function TasksPage() {
       return orderDirection === 'desc' ? -res : res;
     });
     return sorted;
-  }, [allTasks, search, conditions, getIssueExecution, completedFilter, orderBy, orderDirection]);
+  }, [allTasks, search, conditions, getIssueExecution, completedFilter, orderBy, orderDirection, effectiveTypeId]);
 
   const getProjectName = (projectId: string | null | undefined) => {
     if (!projectId) return t('common.noProject');
@@ -665,6 +695,8 @@ function TasksBoardView({
   const { t } = useTranslation();
   // list 与 kanban 共享右键菜单：与 TaskSimpleList 同源构建（useIssueRowMenu 默认 task 域）
   const onItemContextMenu = useIssueRowMenu();
+  // 类型图标解析（看板卡行1：统一工单视图下区分 task/bug/自定义类型）
+  const issueTypeOf = useIssueTypeOf();
 
   const columns = useMemo<BoardColumnDef[]>(() => {
     switch (groupBy) {
@@ -710,6 +742,7 @@ function TasksBoardView({
 
   const card = {
     ...taskCardModel,
+    row1: (task: Task) => taskCardRow1(task, t, issueTypeOf(task)),
     isAiExecuting: (task: Task) => !!getAiExecution?.(task)?.isExecuting,
     aiExecutionNode: (task: Task) => {
       const ai = getAiExecution?.(task);

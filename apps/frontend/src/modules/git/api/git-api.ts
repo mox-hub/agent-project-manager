@@ -94,6 +94,8 @@ export interface PullRequest {
   createdAt: string;
   updatedAt: string;
   mergedAt?: string;
+  /** GitHub 实时回源的行带 htmlUrl（点击外跳）；本地行无此字段 */
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface GitToolStatusData {

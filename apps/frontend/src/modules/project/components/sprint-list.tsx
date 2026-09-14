@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
@@ -185,6 +186,7 @@ export function SprintList({
   isCreating,
   isUpdating,
 }: SprintListProps) {
+  const { t } = useTranslation();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);
   const [, setDeletingSprint] = useState<Sprint | null>(null);
@@ -229,12 +231,12 @@ export function SprintList({
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <EmptyState
-          title="暂无 Sprint"
-          description="创建第一个 Sprint 来开始敏捷开发流程"
+          title={t('project.sprint.empty')}
+          description={t('project.sprint.emptyDesc')}
           action={
             <Button onClick={() => setShowCreateDialog(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              创建 Sprint
+              {t('project.sprint.create')}
             </Button>
           }
         />

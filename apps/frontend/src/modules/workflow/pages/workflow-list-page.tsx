@@ -13,6 +13,7 @@ import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import {
@@ -141,9 +142,11 @@ export function WorkflowListPage() {
             ))}
           </div>
         ) : filteredWorkflows.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center py-16">
-            <p className="text-sm text-muted-foreground">{t('workflow.empty')}</p>
-          </div>
+          <EmptyState
+            icon={WorkflowIcon}
+            title={t('workflow.empty')}
+            description={t('workflow.emptyHint')}
+          />
         ) : viewMode === 'list' ? (
           <div className="space-y-2">
             {filteredWorkflows.map((wf) => (

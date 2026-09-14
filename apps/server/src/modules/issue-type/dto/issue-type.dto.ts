@@ -23,7 +23,17 @@ export class FieldSchemaDefDto {
 
   @ApiProperty({
     description: '字段类型',
-    enum: ['text', 'textarea', 'select', 'multiselect', 'number', 'date'],
+    enum: [
+      'text',
+      'textarea',
+      'select',
+      'multiselect',
+      'number',
+      'date',
+      'boolean',
+      'member',
+      'url',
+    ],
   })
   @IsString()
   type: string;
@@ -41,6 +51,27 @@ export class FieldSchemaDefDto {
   @IsArray()
   @IsString({ each: true })
   options?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      '缺省值（字符串口径；boolean 存 true/false，渲染层按类型转换）',
+  })
+  @IsOptional()
+  @IsString()
+  defaultValue?: string;
+
+  @ApiPropertyOptional({ description: '字段用途描述' })
+  @IsOptional()
+  @IsString()
+  @Length(0, 200)
+  description?: string;
+
+  @ApiPropertyOptional({
+    description: '字段级启用开关（false = 不出现在工单表单，既有值保留）',
+  })
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
 
   @ApiPropertyOptional({ description: '排序权重' })
   @IsOptional()
@@ -64,6 +95,17 @@ export class CreateIssueTypeDto {
   @IsString()
   @Length(1, 50)
   name: string;
+
+  @ApiPropertyOptional({ description: '类型描述（一句话用途说明）' })
+  @IsOptional()
+  @IsString()
+  @Length(0, 200)
+  description?: string;
+
+  @ApiPropertyOptional({ description: '启用开关（默认 true）' })
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
 
   @ApiPropertyOptional({ description: 'lucide 图标名', example: 'FileCode' })
   @IsOptional()
@@ -100,6 +142,19 @@ export class UpdateIssueTypeDto {
   @IsString()
   @Length(1, 50)
   name?: string;
+
+  @ApiPropertyOptional({ description: '类型描述' })
+  @IsOptional()
+  @IsString()
+  @Length(0, 200)
+  description?: string;
+
+  @ApiPropertyOptional({
+    description: '启用开关（默认类型 task 不可禁用，服务端守卫）',
+  })
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
 
   @ApiPropertyOptional({ description: 'lucide 图标名' })
   @IsOptional()
@@ -153,6 +208,15 @@ export class IssueTypeResponseDto {
 
   @ApiProperty({ description: '类型名称', example: '缺陷' })
   name: string;
+
+  @ApiProperty({
+    description: '类型描述（未配置时为 null）',
+    nullable: true,
+  })
+  description: string | null;
+
+  @ApiProperty({ description: '启用开关（禁用类型不在创建入口可选）' })
+  enabled: boolean;
 
   @ApiProperty({ description: 'lucide 图标名', example: 'Circle' })
   icon: string;

@@ -19,6 +19,8 @@ import { ListAvatar, ListChip, ListDate, ListIcon, ListText, DataList } from '@/
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import type { Task } from '../api/issue-api';
+import { useIssueTypeOf } from '../hooks/use-issue-types';
+import { IssueTypeIcon } from '@/shared/components/issue-type-icon';
 import { cn } from '@/lib/utils';
 import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
@@ -233,6 +235,9 @@ export function TaskSimpleList({
   // —— 统一行右键菜单（list / kanban 共用 useIssueRowMenu，菜单内容一致） ——
   const onItemContextMenu = useIssueRowMenu();
 
+  // 类型图标（Linear 式行首标识）：统一工单视图下区分 task/bug/自定义类型
+  const issueTypeOf = useIssueTypeOf();
+
   return (
     <DataList
       items={tasks}
@@ -262,6 +267,7 @@ export function TaskSimpleList({
             {task.type === 'bug' ? (
               <span className={cn('h-6 w-1.5 shrink-0 rounded-full', SEVERITY_BAR[severityOf(task)])} />
             ) : null}
+            <IssueTypeIcon meta={issueTypeOf(task)} />
             {/* ID 完整展示，不截断 */}
             <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{idOf(task)}</span>
             <ListIcon icon={PRIORITY_CONFIG[priorityOf(task)].icon} className={PRIORITY_CONFIG[priorityOf(task)].color} />

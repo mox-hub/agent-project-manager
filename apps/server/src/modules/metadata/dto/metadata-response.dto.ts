@@ -53,6 +53,12 @@ export class StatusDefinitionDto {
   key: string;
   @ApiProperty({ type: String, description: '显示名' })
   name: string;
+  @ApiProperty({
+    type: String,
+    description:
+      '状态分组（triage/backlog/unstarted/started/completed/canceled），类型管理面按组聚合渲染',
+  })
+  group: string;
   @ApiProperty({ type: Number, description: '排序序号' })
   order: number;
   @ApiProperty({ type: Boolean, description: '是否终态' })

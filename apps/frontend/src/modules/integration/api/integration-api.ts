@@ -89,8 +89,9 @@ export interface CreateExternalIssueLinkRequest {
 }
 
 export const integrationApi = {
+  /** 契约真相：信封由 api-client 解包，此处拿到的是裸数组。 */
   getConfigs: (params?: IntegrationListParams) =>
-    api.get<{ data: IntegrationConfig[]; meta?: { page?: number; pageSize?: number; total?: number; } }>('/integrations', params) as unknown as Promise<IntegrationListResponse>,
+    api.get<IntegrationConfig[]>('/integrations', params),
 
   getConfig: (id: string) =>
     api.get<IntegrationConfig>(`/integrations/${id}`),

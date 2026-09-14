@@ -1,6 +1,10 @@
 import { GithubEvidenceSubscriber } from './github-evidence.subscriber';
 
-/** GitHub 事件 → 验收证据回流单测：PR 终态补 completionEvidence + check_run 落 CI 标准证据 */
+/**
+ * GitHub 事件 → 验收证据回流单测（CAP-B-08 一期 + 二期）：
+ * PR 全生命周期（中间态 open / 终态 merged/closed）补 completionEvidence +
+ * check_run 落 CI 标准证据（repo 校验）+ pr_review 证据回流。
+ */
 
 function buildPrisma() {
   return {
@@ -80,10 +84,52 @@ describe('GithubEvidenceSubscriber.onPullRequestUpdated', () => {
     ).toBe('https://manual.example/pr/7');
   });
 
-  it('非终态 / 无关联 / 非 pr 契约 / 已裁决 均跳过', async () => {
+  it('open 中间态回写 completionEvidence（过程可观测）', async () => {
     const { prisma, subscriber } = makeSubscriber();
+    prisma.remotePullRequest.findUnique.mockResolvedValue({
+      acceptanceId: 'acc1',
+      htmlUrl: 'https://github.com/o/r/pull/7',
+      number: 7,
+      repoFullName: 'o/r',
+    });
+    prisma.acceptance.findUnique.mockResolvedValue({
+      completionType: 'pr',
+      status: 'in_review',
+      completionEvidence: null,
+    });
 
     await subscriber.onPullRequestUpdated({ id: 'rpr1', state: 'open' });
+
+    expect(prisma.acceptance.update).toHaveBeenCalledTimes(1);
+    const arg = prisma.acceptance.update.mock.calls[0][0];
+    expect(arg.data.completionEvidence.state).toBe('open');
+    expect(arg.data.completionEvidence.prRepo).toBe('o/r');
+    expect(arg.data.completionEvidence.prSyncedAt).toBeTruthy();
+  });
+
+  it('乱序防御：终态已回写后，迟到的 open 中间态不覆盖', async () => {
+    const { prisma, subscriber } = makeSubscriber();
+    prisma.remotePullRequest.findUnique.mockResolvedValue({
+      acceptanceId: 'acc1',
+      htmlUrl: 'https://github.com/o/r/pull/7',
+      number: 7,
+      repoFullName: 'o/r',
+    });
+    prisma.acceptance.findUnique.mockResolvedValue({
+      completionType: 'pr',
+      status: 'in_review',
+      completionEvidence: { state: 'merged', prUrl: 'https://x' },
+    });
+
+    await subscriber.onPullRequestUpdated({ id: 'rpr1', state: 'open' });
+
+    expect(prisma.acceptance.update).not.toHaveBeenCalled();
+  });
+
+  it('未知状态 / 无关联 / 非 pr 契约 / 已裁决 均跳过', async () => {
+    const { prisma, subscriber } = makeSubscriber();
+
+    await subscriber.onPullRequestUpdated({ id: 'rpr1', state: 'weird' });
     expect(prisma.remotePullRequest.findUnique).not.toHaveBeenCalled();
 
     prisma.remotePullRequest.findUnique.mockResolvedValue({
@@ -145,7 +191,10 @@ describe('GithubEvidenceSubscriber.onCheckRunCompleted', () => {
 
     expect(prisma.remotePullRequest.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ headBranch: 'feat/x' }),
+        where: expect.objectContaining({
+          headBranch: 'feat/x',
+          repoFullName: 'o/r',
+        }),
       }),
     );
     expect(prisma.acceptanceEvidence.createMany).toHaveBeenCalledTimes(1);
@@ -193,6 +242,74 @@ describe('GithubEvidenceSubscriber.onCheckRunCompleted', () => {
       checkName: 'ci',
       conclusion: 'success',
       sha: 'abc',
+    });
+    expect(prisma.acceptanceEvidence.createMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('GithubEvidenceSubscriber.onPullRequestReviewSubmitted', () => {
+  const makeSubscriber = () => {
+    const prisma = buildPrisma();
+    return { prisma, subscriber: new GithubEvidenceSubscriber(prisma as any) };
+  };
+
+  it('review 落到 source=pr_review 的标准并按 reviewId 防重', async () => {
+    const { prisma, subscriber } = makeSubscriber();
+    prisma.remotePullRequest.findUnique.mockResolvedValue({
+      acceptanceId: 'acc1',
+      number: 7,
+    });
+    prisma.acceptanceCriteria.findMany.mockResolvedValue([{ id: 'c9' }]);
+    prisma.acceptanceEvidence.findFirst.mockResolvedValue(null);
+
+    await subscriber.onPullRequestReviewSubmitted({
+      pullRequestId: 'rpr1',
+      repo: 'o/r',
+      number: 7,
+      reviewId: 'rv1',
+      reviewState: 'CHANGES_REQUESTED',
+      reviewerLogin: 'alice',
+      submittedAt: '2026-09-13T00:00:00Z',
+    });
+
+    expect(prisma.acceptanceEvidence.createMany).toHaveBeenCalledTimes(1);
+    const arg = prisma.acceptanceEvidence.createMany.mock.calls[0][0];
+    expect(arg.data).toHaveLength(1);
+    expect(arg.data[0].criteriaId).toBe('c9');
+    expect(arg.data[0].evidenceType).toBe('pr_review');
+    expect(arg.data[0].submittedBy).toBe('system:github-review');
+    expect(arg.data[0].content).toBe('review:rv1:CHANGES_REQUESTED:alice');
+    expect(arg.data[0].metadata.reviewerLogin).toBe('alice');
+
+    // 同一 review 重复投递被防重拦截
+    prisma.acceptanceEvidence.findFirst.mockResolvedValue({ id: 'e9' });
+    await subscriber.onPullRequestReviewSubmitted({
+      pullRequestId: 'rpr1',
+      reviewId: 'rv1',
+      reviewState: 'CHANGES_REQUESTED',
+      reviewerLogin: 'alice',
+    });
+    expect(prisma.acceptanceEvidence.createMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('无 PR 关联 / 无 review 标准 均跳过', async () => {
+    const { prisma, subscriber } = makeSubscriber();
+
+    prisma.remotePullRequest.findUnique.mockResolvedValue(null);
+    await subscriber.onPullRequestReviewSubmitted({
+      pullRequestId: 'rpr404',
+      reviewState: 'APPROVED',
+    });
+    expect(prisma.acceptanceCriteria.findMany).not.toHaveBeenCalled();
+
+    prisma.remotePullRequest.findUnique.mockResolvedValue({
+      acceptanceId: 'acc1',
+      number: 1,
+    });
+    prisma.acceptanceCriteria.findMany.mockResolvedValue([]);
+    await subscriber.onPullRequestReviewSubmitted({
+      pullRequestId: 'rpr1',
+      reviewState: 'APPROVED',
     });
     expect(prisma.acceptanceEvidence.createMany).not.toHaveBeenCalled();
   });

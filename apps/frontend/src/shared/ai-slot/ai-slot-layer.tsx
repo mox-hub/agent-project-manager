@@ -100,9 +100,22 @@ export function AISlotLayer() {
   // 选择器，React 重渲染不会覆盖高亮态。
   useEffect(() => {
     let holdTimer: number | null = null;
+    // 高亮期间拦截 Ctrl/Cmd+滚轮缩放（裁决 2026-09-13）：页缩放会触发
+    // resize/scroll 误关已打开的解释卡，且同一手势在画布内外语义相反；
+    // capture 阶段拦下，普通滚轮不受影响。
+    const blockWheelZoom = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
     const enterDiscovery = () => {
       holdTimer = null;
       document.documentElement.classList.add('ai-slot-discovery');
+      document.addEventListener('wheel', blockWheelZoom, {
+        capture: true,
+        passive: false,
+      });
     };
     const exitDiscovery = () => {
       if (holdTimer !== null) {
@@ -110,6 +123,7 @@ export function AISlotLayer() {
         holdTimer = null;
       }
       document.documentElement.classList.remove('ai-slot-discovery');
+      document.removeEventListener('wheel', blockWheelZoom, { capture: true });
     };
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'Control' || e.key === 'Meta') && !e.repeat) {

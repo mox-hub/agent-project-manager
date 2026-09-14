@@ -43,6 +43,7 @@ import { PropsCard, PropertyRow } from '@/components/ui/property-panel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -396,7 +397,7 @@ export function AcceptanceDetailPage() {
           );
         })}
         {items.length === 0 && (
-          <p className="py-4 text-center text-sm text-muted-foreground">{emptyText}</p>
+          <EmptyState title={emptyText} className="min-h-20" />
         )}
       </div>
     </div>
@@ -708,25 +709,22 @@ export function AcceptanceDetailPage() {
                     loading={applySuggestionsMutation.isPending}
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <ShieldCheck className="mb-3 size-10 text-muted-foreground/30" />
-                    <p className="text-sm text-muted-foreground">
-                      {t('acceptanceDetail.audit.empty')}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t('acceptanceDetail.audit.emptyHint')}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-3"
-                      onClick={() => runAudit()}
-                      disabled={auditMutation.isPending}
-                    >
-                      <Sparkles className="mr-1.5 size-3.5 text-primary" />
-                      {t('acceptanceDetail.audit.run')}
-                    </Button>
-                  </div>
+                  <EmptyState
+                    icon={ShieldCheck}
+                    title={t('acceptanceDetail.audit.empty')}
+                    description={t('acceptanceDetail.audit.emptyHint')}
+                    action={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => runAudit()}
+                        disabled={auditMutation.isPending}
+                      >
+                        <Sparkles className="mr-1.5 size-3.5 text-primary" />
+                        {t('acceptanceDetail.audit.run')}
+                      </Button>
+                    }
+                  />
                 )}
               </TabsContent>
 
@@ -783,22 +781,20 @@ export function AcceptanceDetailPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Clock className="mb-3 size-10 text-muted-foreground/30" />
-                    <p className="text-sm text-muted-foreground">
-                      {t('acceptanceDetail.executions.empty')}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t('acceptanceDetail.executions.emptyHint')}
-                    </p>
-                    {acceptance.issueId && (
-                      <Link to={`/app/issues/${acceptance.issueId}`}>
-                        <Button variant="outline" size="sm" className="mt-3">
-                          {t('acceptanceDetail.actions.dispatchTask')}
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
+                  <EmptyState
+                    icon={Clock}
+                    title={t('acceptanceDetail.executions.empty')}
+                    description={t('acceptanceDetail.executions.emptyHint')}
+                    action={
+                      acceptance.issueId ? (
+                        <Link to={`/app/issues/${acceptance.issueId}`}>
+                          <Button variant="outline" size="sm">
+                            {t('acceptanceDetail.actions.dispatchTask')}
+                          </Button>
+                        </Link>
+                      ) : undefined
+                    }
+                  />
                 )}
               </TabsContent>
             </Tabs>
@@ -963,6 +959,7 @@ export function AcceptanceDetailPage() {
                           'text-10 py-0 shrink-0',
                           acceptance.completionEvidence.state === 'merged' && 'text-accent-green',
                           acceptance.completionEvidence.state === 'closed' && 'text-accent-red',
+                          acceptance.completionEvidence.state === 'open' && 'text-accent-blue',
                         )}
                       >
                         {acceptance.completionEvidence.state}

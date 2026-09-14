@@ -10,7 +10,7 @@ import { CreateIssueTypeDto, UpdateIssueTypeDto } from './dto/issue-type.dto';
 // 内置不可删类型：所有任务的缺省类型
 export const BUILTIN_LOCKED_TYPE_KEY = 'task';
 
-// fieldSchema 允许的字段类型（4d 二期适配引擎）
+// fieldSchema 允许的字段类型（4d 二期适配引擎；boolean/member/url 随类型管理面重设计扩展）
 export const FIELD_SCHEMA_TYPES = [
   'text',
   'textarea',
@@ -18,6 +18,9 @@ export const FIELD_SCHEMA_TYPES = [
   'multiselect',
   'number',
   'date',
+  'boolean',
+  'member',
+  'url',
 ] as const;
 
 export type FieldSchemaDef = {
@@ -26,6 +29,11 @@ export type FieldSchemaDef = {
   type: (typeof FIELD_SCHEMA_TYPES)[number];
   required?: boolean;
   options?: string[];
+  /** 缺省值：字符串口径存储（boolean 存 'true'/'false'，渲染层按类型转换） */
+  defaultValue?: string;
+  description?: string;
+  /** 字段级启用开关：禁用字段不再出现在工单表单（既有值保留） */
+  enabled?: boolean;
   order?: number;
 };
 
@@ -68,12 +76,26 @@ export function validateFieldSchema(
         `字段 ${def.key} 为 select/multiselect，必须提供 options`,
       );
     }
+    if (
+      typeof def.defaultValue === 'string' &&
+      (def.type === 'select' || def.type === 'multiselect') &&
+      !def.options?.includes(def.defaultValue)
+    ) {
+      throw new BadRequestException(`字段 ${def.key} 默认值必须在 options 内`);
+    }
     return {
       key: def.key,
       label: def.label,
       type: def.type as FieldSchemaDef['type'],
       ...(def.required ? { required: true } : {}),
       ...(Array.isArray(def.options) ? { options: def.options } : {}),
+      ...(typeof def.defaultValue === 'string' && def.defaultValue !== ''
+        ? { defaultValue: def.defaultValue }
+        : {}),
+      ...(typeof def.description === 'string' && def.description !== ''
+        ? { description: def.description }
+        : {}),
+      ...(def.enabled === false ? { enabled: false } : {}),
       ...(typeof def.order === 'number' ? { order: def.order } : {}),
     };
   });
@@ -135,7 +157,16 @@ export function validateCustomFields(
       if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) {
         throw new BadRequestException(`自定义字段 ${key} 必须是日期字符串`);
       }
+    } else if (def.type === 'boolean') {
+      if (typeof value !== 'boolean') {
+        throw new BadRequestException(`自定义字段 ${key} 必须是布尔值`);
+      }
+    } else if (def.type === 'url') {
+      if (typeof value !== 'string' || !/^https?:\/\/\S+$/.test(value)) {
+        throw new BadRequestException(`自定义字段 ${key} 必须是 http(s) URL`);
+      }
     } else if (typeof value !== 'string') {
+      // text/textarea/member：字符串口径
       throw new BadRequestException(`自定义字段 ${key} 必须是字符串`);
     }
     result[key] = value;
@@ -189,27 +220,33 @@ export class IssueTypeService {
       data: {
         key: dto.key,
         name: dto.name,
+        description: dto.description,
         icon: dto.icon ?? 'Circle',
         color: dto.color ?? '#5E6AD2',
         order: dto.order ?? 100,
+        enabled: dto.enabled ?? true,
         fieldSchema: validateFieldSchema(dto.fieldSchema) ?? undefined,
       },
     });
   }
 
   async update(id: string, dto: UpdateIssueTypeDto) {
-    await this.ensureExists(id);
+    const type = await this.ensureExists(id);
     const data: Record<string, unknown> = { ...dto };
     if ('fieldSchema' in dto) {
       data.fieldSchema = validateFieldSchema(dto.fieldSchema) ?? null;
+    }
+    if (type.key === BUILTIN_LOCKED_TYPE_KEY && dto.enabled === false) {
+      throw new BadRequestException('默认类型 task 不可禁用');
     }
     return this.prisma.issueType.update({ where: { id }, data });
   }
 
   async remove(id: string) {
     const type = await this.ensureExists(id);
-    if (type.key === BUILTIN_LOCKED_TYPE_KEY) {
-      throw new BadRequestException('内置类型 task 不可删除');
+    if (type.key === BUILTIN_LOCKED_TYPE_KEY || type.isSystem) {
+      // 内置类型（task/bug 及未来系统预置）承载存量数据的旧 type 字符串桥接，只可修改不可删除
+      throw new BadRequestException(`内置类型 ${type.key} 不可删除`);
     }
     const usage = await this.prisma.issue.count({ where: { typeId: id } });
     if (usage > 0) {

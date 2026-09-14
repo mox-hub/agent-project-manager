@@ -1,6 +1,9 @@
 import { useMemo, useState, useRef, useCallback, type MouseEvent, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '@/shared/lib/date-format';
+import { EmptyState } from '@/components/ui/empty-state';
+import { SkeletonList } from '@/components/ui/skeleton';
 import type {
   Project,
   ProjectHealthStatus,
@@ -219,6 +222,7 @@ export function ProjectList({
   visibleColumns,
 }: ProjectListProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [editing, setEditing] = useState<{
     projectId: string;
     field: EditableField;
@@ -311,37 +315,29 @@ export function ProjectList({
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-        Loading projects...
-      </div>
-    );
+    return <SkeletonList count={4} />;
   }
 
   if (projectList.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-6 py-16">
-        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted/50">
-          <FolderKanban size={28} className="text-muted-foreground" />
-        </div>
-        <div className="text-center">
-          <p className="text-base font-medium text-foreground">No projects yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Create your first project to get started.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onCreateClick}
-          className="inline-flex items-center gap-2 rounded-md bg-accent-blue px-4 py-2 text-sm font-medium text-white hover:bg-accent-blue/90"
-          data-ai-component="project.project-list.empty.create"
-          data-ai-action="project.project-list.empty.create.click"
-          data-ai-role="submit"
-        >
-          <Plus size={14} />
-          New project
-        </button>
-      </div>
+      <EmptyState
+        icon={FolderKanban}
+        title={t('project.empty.none', '暂无项目')}
+        description={t('project.empty.noneDesc', '创建第一个项目，开始管理你的工作')}
+        action={
+          <button
+            type="button"
+            onClick={onCreateClick}
+            className="inline-flex items-center gap-2 rounded-md bg-accent-blue px-4 py-2 text-sm font-medium text-white hover:bg-accent-blue/90"
+            data-ai-component="project.project-list.empty.create"
+            data-ai-action="project.project-list.empty.create.click"
+            data-ai-role="submit"
+          >
+            <Plus size={14} />
+            {t('project.empty.create', '新建项目')}
+          </button>
+        }
+      />
     );
   }
 

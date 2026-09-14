@@ -251,6 +251,17 @@ export class GitHubSyncService {
       },
     });
 
+    // CAP-B-08 二期：review 证据回流（acceptance 侧订阅者落 pr_review 证据）
+    this.messageBus.publish('github.pr_review.submitted', {
+      pullRequestId: stored.id,
+      repo: repository.full_name,
+      number: prNumber,
+      reviewId: String(reviewRaw.id),
+      reviewState: reviewRaw.state,
+      reviewerLogin: reviewRaw.user.login,
+      submittedAt: submittedAt.toISOString(),
+    });
+
     // CHANGES_REQUESTED → 同步扣 correctness
     if (reviewRaw.state === 'CHANGES_REQUESTED') {
       // 单独走一次 applyPrOutcome 用 -4 校正

@@ -284,6 +284,55 @@ ${JSON.stringify(actions)}
 ${description}`;
     },
   },
+
+  'release-notes': {
+    description:
+      '发布说明代写（CAP-K-03 驱动型发版）：按发版范围加载工单与验收事实，起草 Keep a Changelog 风格 markdown 发版说明',
+    prepareContext: async (context, { prisma }) => {
+      const releaseId = String(context.releaseId ?? '');
+      if (!releaseId) return { ...context, release: null };
+      const release = await prisma.release.findUnique({
+        where: { id: releaseId },
+      });
+      if (!release) return { ...context, release: null };
+      const scope =
+        (release.scope as { issueIds?: string[] } | null)?.issueIds ?? [];
+      const issues = scope.length
+        ? await prisma.issue.findMany({
+            where: { id: { in: scope } },
+            select: {
+              title: true,
+              type: true,
+              status: true,
+              acceptances: { select: { title: true, status: true } },
+            },
+          })
+        : [];
+      return {
+        version: release.version,
+        name: release.name,
+        issues,
+      };
+    },
+    buildInstructions: (context) => {
+      if (!context.version) {
+        return `发版不存在或未指定 releaseId，无法起草发布说明。只输出 JSON：{"notes": "", "error": "release not found"}`;
+      }
+      return `你是项目管理系统的 AI 同事「小周」。请为即将发布的版本起草发版说明（Keep a Changelog 风格 markdown）。
+
+版本：${String(context.version)}${context.name ? `「${String(context.name)}」` : ''}
+纳入本版本的工单与验收状态：
+${JSON.stringify(context.issues ?? [])}
+
+要求：
+- 以 ### Added / ### Fixed / ### Changed / ### Removed 分节（按实际内容取舍，空节省略）
+- 每条一句话描述用户可感知的变化，不要罗列内部字段或 ID
+- 语气面向使用团队，克制、具体、不夸大
+- 未验收（非 passed/waived）的工单不得写入说明
+
+只输出 JSON：{"notes": "markdown 文本"}`;
+    },
+  },
 };
 
 /**

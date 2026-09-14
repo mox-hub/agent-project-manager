@@ -24,6 +24,7 @@ import {
   UserRound,
   BarChart3,
   Sparkles,
+  Rocket,
   type LucideIcon,
 } from "lucide-react";
 import { getEntityIcon } from "@/shared/entity-icons/entity-icons";
@@ -46,6 +47,7 @@ export interface PageRegistryEntry {
  * 实体，保留 HardDrive。
  */
 export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
+  "/app/intake": { icon: getEntityIcon("document").icon, labelKey: "nav.intake", label: "需求承接", color: "#06B6D4" },
   "/app/ai-surface": { icon: Sparkles, labelKey: "nav.aiSurface", color: "#8B5CF6" },
   "/app/decisions": { icon: getEntityIcon("decision").icon, labelKey: "nav.decisions", color: "#F97316" },
   "/app/search": { icon: Search, labelKey: "nav.search", color: "#6366F1" },
@@ -54,6 +56,8 @@ export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
   "/app/projects": { icon: getEntityIcon("project").icon, labelKey: "nav.projects", color: "#8B5CF6" },
   "/app/issues": { icon: getEntityIcon("issue").icon, labelKey: "nav.tasks", color: "#3B82F6" },
   "/app/bugs": { icon: getEntityIcon("bug").icon, labelKey: "task.bug.title", color: "#EF4444" },
+  "/app/executions": { icon: getEntityIcon("execution").icon, labelKey: "nav.executions", label: "执行记录", color: "#3B82F6" },
+  "/app/workflows": { icon: getEntityIcon("workflow").icon, labelKey: "nav.workflow", color: "#8B5CF6" },
   "/app/acceptance": { icon: getEntityIcon("acceptance").icon, labelKey: "nav.acceptance", color: "#10B981" },
   "/app/documents": { icon: getEntityIcon("document").icon, labelKey: "document.title", color: "#06B6D4" },
   "/app/analytics": { icon: BarChart3, labelKey: "nav.analytics", color: "#8B5CF6" },
@@ -86,6 +90,8 @@ export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
   "/app/admin": { icon: UserCog, labelKey: "nav.admin", color: "#EF4444" },
   "/app/design-system": { icon: Palette, label: "Design System", color: "#8B5CF6" },
   "/app/delivery": { icon: ListTree, labelKey: "nav.delivery", label: "交付视图", color: "#10B981" },
+  "/app/releases": { icon: Rocket, labelKey: "nav.releases", label: "发版交付", color: "#22C55E" },
+  "/app/releases/:id": { icon: Rocket, labelKey: "nav.releases", label: "发版详情", color: "#22C55E" },
 };
 
 /** 收藏页面未命中注册表时的兜底图标 */

@@ -714,15 +714,9 @@ export function AcceptanceListPage() {
             loading={isLoading}
             selectable
             onItemClick={(ac) => navigate(`/app/acceptance/${ac.id}`)}
-            emptyMessage={
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <ShieldCheck className="mb-3 size-10 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">{t('acceptance.empty')}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {t('acceptance.emptyHint')}
-                </p>
-              </div>
-            }
+            emptyMessage={t('acceptance.empty')}
+            emptyDescription={t('acceptance.emptyHint')}
+            emptyIcon={ShieldCheck}
             selectionActions={(selected, clear) => (
               <ListActionButton
                 onClick={() => handleBulkDelete(selected, clear)}

@@ -220,4 +220,42 @@ describe('AISlotLayer', () => {
       vi.useRealTimers();
     }
   });
+
+  it('高亮期间 Ctrl/Cmd+滚轮被拦截，普通滚轮放行；退出后不再拦截', () => {
+    vi.useFakeTimers();
+    try {
+      renderFixture();
+      fireEvent.keyDown(window, { key: 'Control' });
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+      expect(
+        document.documentElement.classList.contains('ai-slot-discovery'),
+      ).toBe(true);
+
+      const zoom = new WheelEvent('wheel', { ctrlKey: true, cancelable: true });
+      const zoomPrevent = vi.spyOn(zoom, 'preventDefault');
+      const zoomStop = vi.spyOn(zoom, 'stopPropagation');
+      document.dispatchEvent(zoom);
+      expect(zoomPrevent).toHaveBeenCalledTimes(1);
+      expect(zoomStop).toHaveBeenCalledTimes(1);
+
+      const plain = new WheelEvent('wheel', { cancelable: true });
+      const plainPrevent = vi.spyOn(plain, 'preventDefault');
+      document.dispatchEvent(plain);
+      expect(plainPrevent).not.toHaveBeenCalled();
+
+      fireEvent.keyUp(window, { key: 'Control' });
+      expect(
+        document.documentElement.classList.contains('ai-slot-discovery'),
+      ).toBe(false);
+
+      const after = new WheelEvent('wheel', { ctrlKey: true, cancelable: true });
+      const afterPrevent = vi.spyOn(after, 'preventDefault');
+      document.dispatchEvent(after);
+      expect(afterPrevent).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

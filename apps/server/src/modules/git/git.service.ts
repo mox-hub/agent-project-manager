@@ -7,6 +7,8 @@ import { PrismaService } from '../../core/database/prisma.service';
 import { LoggerService } from '../../core/logger/logger.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { ProjectWorkspaceService } from './project-workspace.service';
+import { GitHubSDKService } from '../integration/providers/github/github-sdk.service';
+import type { GitHubPullRequest } from '../integration/providers/github/github.types';
 import { CreateRepositoryDto } from './dto/create-repository.dto';
 import {
   RepositoryQueryDto,
@@ -24,6 +26,7 @@ export class GitService {
     private readonly logger: LoggerService,
     private readonly messageBus: MessageBusService,
     private readonly workspace: ProjectWorkspaceService,
+    private readonly githubSdk: GitHubSDKService,
   ) {
     this.logger.setContext('GitService');
   }
@@ -438,7 +441,7 @@ export class GitService {
       where.author = query.author;
     }
 
-    return this.prisma.pullRequest.findMany({
+    const local = await this.prisma.pullRequest.findMany({
       where,
       include: {
         reviews: {
@@ -451,6 +454,142 @@ export class GitService {
         updatedAt: 'desc',
       },
     });
+
+    if (local.length > 0) {
+      return local;
+    }
+
+    // 本地表历史上零写入（恒空）——GitHub 远端回源实时拉取，只读展示不落库
+    const live = await this.fetchLivePullRequests(repository, query.status);
+    return live ?? local;
+  }
+
+  /**
+   * 本地 PR 表无数据时的 GitHub 实时回源（CAP-A-08 增强注记 2026-09-13）。
+   * 前置任一不满足或回源失败均返回 null（诚实回落本地空态，不抛 500）：
+   * - remoteUrl 缺失 / 非 GitHub 远端
+   * - 项目无可用 github 集成
+   * - GitHub API 调用失败
+   */
+  private async fetchLivePullRequests(
+    repository: {
+      id: string;
+      projectId: string;
+      remoteUrl: string | null;
+      provider: string | null;
+    },
+    status?: string,
+  ): Promise<Record<string, unknown>[] | null> {
+    if (repository.provider && repository.provider !== 'github') {
+      return null;
+    }
+    const slug = this.parseGitHubSlug(repository.remoteUrl);
+    if (!slug) {
+      return null;
+    }
+
+    // 集成候选：project 优先于 global，同 scope 取最新。findFirst 无排序会命中
+    // 最早插入的存量配置——其密文可能因密钥轮换已无法解密（实机踩过：08-10 的
+    // e2e 残留配置致回源恒空），故逐个尝试、解密失败的跳过。
+    const candidates = await this.prisma.integrationConfig.findMany({
+      where: {
+        provider: 'github',
+        enabled: true,
+        OR: [
+          { scope: 'global' },
+          { scope: 'project', projectId: repository.projectId },
+        ],
+      },
+      orderBy: [{ scope: 'desc' }, { createdAt: 'desc' }],
+    });
+
+    let client;
+    for (const config of candidates) {
+      try {
+        client = await this.githubSdk.getClientForIntegration(config.id);
+        break;
+      } catch {
+        // 解密失败/配置损坏的存量集成，尝试下一个候选
+      }
+    }
+    if (!client) {
+      this.logger.warn('PR 回源跳过：无可用 github 集成');
+      return null;
+    }
+
+    // GitHub API 只认 open|closed|all；merged/draft 拉全量后本地过滤
+    const githubState =
+      status === 'open' || status === 'closed' ? status : 'all';
+
+    try {
+      const pulls = await client.listPullRequests(
+        slug.owner,
+        slug.repo,
+        githubState,
+      );
+      const mapped = pulls.map((p) =>
+        this.mapLivePullRequest(repository.id, slug, p),
+      );
+      if (status === 'merged' || status === 'draft') {
+        return mapped.filter((p) => p.status === status);
+      }
+      return mapped;
+    } catch (err) {
+      this.logger.warn(`PR 回源失败，回落空态：${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  /** 从 remoteUrl 解析 GitHub owner/repo（支持 https 与 ssh 形式）；非 GitHub 返回 null */
+  private parseGitHubSlug(
+    remoteUrl: string | null | undefined,
+  ): { owner: string; repo: string } | null {
+    if (!remoteUrl) {
+      return null;
+    }
+    const https = remoteUrl.match(
+      /^https?:\/\/[^/]*github\.com[^/]*\/([^/]+)\/([^/?#]+?)(?:\.git)?\/?$/i,
+    );
+    if (https) {
+      return { owner: https[1], repo: https[2] };
+    }
+    const ssh = remoteUrl.match(
+      /^git@github\.com:([^/]+)\/([^/?#]+?)(?:\.git)?$/i,
+    );
+    if (ssh) {
+      return { owner: ssh[1], repo: ssh[2] };
+    }
+    return null;
+  }
+
+  private mapLivePullRequest(
+    repoId: string,
+    slug: { owner: string; repo: string },
+    p: GitHubPullRequest,
+  ) {
+    const status = p.draft ? 'draft' : p.merged ? 'merged' : p.state;
+    return {
+      id: `gh-live-${p.id}`,
+      repoId,
+      externalId: `${slug.owner}/${slug.repo}#${p.number}`,
+      title: p.title,
+      description: p.body,
+      author: p.user?.login ?? 'unknown',
+      sourceBranch: p.head.ref,
+      targetBranch: p.base.ref,
+      status,
+      labels: p.labels ?? null,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      mergedAt: p.mergedAt,
+      metadata: {
+        source: 'github-live',
+        number: p.number,
+        htmlUrl: p.htmlUrl,
+        headSha: p.head.sha,
+      },
+      reviews: [],
+    };
   }
 
   async getPullRequestById(prId: string, userId: string) {

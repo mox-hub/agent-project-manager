@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { projectApi } from '@/modules/project/api/project-api';
 import {
@@ -163,10 +164,7 @@ export function MemorySection() {
               {memory.isLoading ? (
                 <Skeleton className="h-40 rounded-lg" />
               ) : items.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-12 text-center">
-                  <Brain className="size-6 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">{t('memory.empty')}</p>
-                </div>
+                <EmptyState icon={Brain} title={t('memory.empty')} />
               ) : (
                 <div className="flex flex-col gap-2">
                   {items.map((atom) => (

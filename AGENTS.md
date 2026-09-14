@@ -116,7 +116,7 @@ pnpm test:ui        # Vitest UI
 
 > 前后端模块结构、真实目录与模块注册顺序见
 > `docs/02-架构设计/architecture/backend/modules.md`（40 目录 / 42 Module 类，v4.1.0）
-> 与 `frontend/modules.md`（37 模块目录）。下为高层地图。
+> 与 `frontend/modules.md`（38 模块目录，intake 为 2026-09-13 增量）。下为高层地图。
 
 **域分组（后端 = 前端对齐口径）**
 
@@ -125,7 +125,7 @@ pnpm test:ui        # Vitest UI
 | 身份与访问 | `auth`（+`access-token`）| `auth` |
 | 用户/团队/角色 | `user`·`team`·`role` | `team-member`·`project-role` |
 | 项目与工作区 | `project`·`workspace`·`metadata`·`config` | `project`·`workspace`·`config`·`core-config` |
-| 工单域（Task/Bug 统一）| `issue`·`issue-type`·`issue-template`·`iteration` | `issue`·`task-template` |
+| 工单域（Task/Bug 统一）| `issue`·`issue-type`·`issue-template`·`iteration` | `issue`·`task-template`·`intake` |
 | 文档与知识 | `document`（+`document-enhance`）·`activity`·`subscription` | `document`·`activity` |
 | AI 执行编排 | `ai-hub`·`execution`·`runtime`·`cli-dispatch`·`cli-provider`·`skills`·`context` | `ai-hub`·`assistant`·`execution`·`executions`·`runtime`·`skills` |
 | 治理与验收 | `acceptance`·`trust`·`decision` | `acceptance`·`decision` |
@@ -134,7 +134,7 @@ pnpm test:ui        # Vitest UI
 | 集成与能力 | `integration`·`git`·`mail`·`mcp-server`·`notification`·`plugins`·`admin` | `integration`·`github`·`linear`·`mcp-server`·`notification`·`git`·`admin` |
 | 系统/辅助 | — | `analytics`·`boot`·`search`·`settings`·`help`·`design-system` |
 
-> 后端共 **40 目录 / 42 业务 Module 类**（`auth` 拆 `access-token`、`document` 拆 `document-enhance`；`contract`/`release`/`profile`/`playbook` 为 2026-09 增量）；前端共 **37 模块目录**。能力级归类与供血关系见 `docs/01-需求/能力清单-v1.md`。
+> 后端共 **40 目录 / 42 业务 Module 类**（`auth` 拆 `access-token`、`document` 拆 `document-enhance`；`contract`/`release`/`profile`/`playbook` 为 2026-09 增量）；前端共 **38 模块目录**（`intake` 为 2026-09-13 增量）。能力级归类与供血关系见 `docs/01-需求/能力清单-v1.md`。
 
 **主线对象（数据模型）**
 

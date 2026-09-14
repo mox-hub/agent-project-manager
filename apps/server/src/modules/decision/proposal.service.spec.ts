@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { ProposalService } from './proposal.service';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 describe('ProposalService', () => {
   let service: ProposalService;
@@ -79,6 +80,7 @@ describe('ProposalService', () => {
           provide: PrismaService,
           useValue: { ...mockPrismaService, $transaction: mockTx },
         },
+        { provide: MessageBusService, useValue: { publish: vi.fn() } },
       ],
     }).compile();
 

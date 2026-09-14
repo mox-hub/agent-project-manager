@@ -16,10 +16,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from '@/components/ui/toast';
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageShell } from "@/components/ui/page-shell";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { AsyncState } from "@/components/ui/async-state";
-import { EmptyState } from "@/components/ui/empty-state";
 import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/infrastructure/store/app-store";
@@ -230,22 +230,20 @@ export function NotificationCenterPage() {
                 <AsyncState error={error instanceof Error ? error.message : String(error)} onRetry={() => refetch()}>{null}</AsyncState>
               </div>
             ) : listEmpty ? (
-              <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-                {filter === "assistant" ? (
-                  <Bot className="mb-3 h-10 w-10 text-muted-foreground/60" />
-                ) : (
-                  <Bell className="mb-3 h-10 w-10 text-muted-foreground/60" />
-                )}
-                <p className="text-sm font-medium text-foreground">
-                  {filter === "assistant"
-                    ? t("notification.assistant.empty")
-                    : "You're all caught up!"}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {filter === "assistant"
-                    ? t("notification.assistant.hint")
-                    : "No notifications yet"}
-                </p>
+              <div className="px-6 py-10">
+                <EmptyState
+                  icon={filter === "assistant" ? Bot : Bell}
+                  title={
+                    filter === "assistant"
+                      ? t("notification.assistant.empty")
+                      : t("notification.empty", "You're all caught up!")
+                  }
+                  description={
+                    filter === "assistant"
+                      ? t("notification.assistant.hint")
+                      : t("notification.emptyHint", "No notifications yet")
+                  }
+                />
               </div>
             ) : filter === "assistant" ? (
               <div>

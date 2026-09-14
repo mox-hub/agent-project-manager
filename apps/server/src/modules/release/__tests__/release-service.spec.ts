@@ -40,6 +40,12 @@ class StubPrisma {
       },
       findUnique: async ({ where }: any) =>
         svc.releases.find((r) => r.id === where.id) ?? null,
+      findFirst: async ({ where }: any) =>
+        svc.releases.find((r: any) =>
+          Object.entries(where ?? {}).every(
+            ([k, v]) => !k.startsWith('NOT') && r[k] === v,
+          ),
+        ) ?? null,
       update: async ({ where, data }: any) => {
         const found = svc.releases.find((r) => r.id === where.id);
         if (!found) throw new Error(`release ${where.id} not found`);
@@ -169,6 +175,19 @@ function buildHarness() {
     resolver,
     fs,
   );
+  // 驱动型发版子服务在本闭环测试中为透传桩（各自有独立 spec）
+  const gate = {
+    runGate: async () => ({ passed: true, ranAt: '', checks: [] }),
+  };
+  const version = {
+    assertVersionUsable: async () => {},
+    recommendVersion: async () => ({
+      recommended: '0.0.1',
+      base: '0.0.0',
+      releaseType: 'patch',
+      basis: 'stub',
+    }),
+  };
   const releases = new ReleaseService(
     prisma as never,
     bus as never,
@@ -176,6 +195,8 @@ function buildHarness() {
     bindings,
     resolver,
     fs,
+    gate as never,
+    version as never,
   );
   return { prisma, bus, fs, engine, resolver, bindings, releases };
 }

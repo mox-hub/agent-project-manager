@@ -21,6 +21,8 @@ export interface StatusDefinition {
   type: string;
   key: string;
   name: string;
+  /** 状态分组（triage/backlog/unstarted/started/completed/canceled），管理面按组聚合渲染 */
+  group?: string;
   order: number;
   isFinal: boolean;
   isBlockedState: boolean;

@@ -106,6 +106,62 @@ export const WORKFLOW_ACTIONS: Record<string, WorkflowActionDef> = {
       return { documentId: document.id, title: document.title };
     },
   },
+
+  'release.create': {
+    id: 'release.create',
+    title: '创建发版草案',
+    description:
+      '在指定项目下创建一条发版草案（status=draft，走门禁/审批后发布）',
+    requiredParams: ['projectId', 'version'],
+    inputHint: {
+      projectId: '目标项目 ID',
+      version: '版本号（semver，如 1.2.0）',
+      name: '发版名称（可选）',
+      notes: '发版说明 markdown（可选）',
+    },
+    execute: async (prisma, params) => {
+      const def = WORKFLOW_ACTIONS['release.create'];
+      requireParams(def, params);
+      const release = await prisma.release.create({
+        data: {
+          projectId: String(params.projectId),
+          version: String(params.version),
+          name: params.name !== undefined ? String(params.name) : undefined,
+          notes: params.notes !== undefined ? String(params.notes) : undefined,
+          createdBy: 'workflow-action',
+        },
+      });
+      return { releaseId: release.id, version: release.version };
+    },
+  },
+
+  'release.latest': {
+    id: 'release.latest',
+    title: '读取最新发版',
+    description: '读取指定项目最新一条发版（供下游步骤插值发布信息）',
+    requiredParams: ['projectId'],
+    inputHint: {
+      projectId: '目标项目 ID',
+    },
+    execute: async (prisma, params) => {
+      const def = WORKFLOW_ACTIONS['release.latest'];
+      requireParams(def, params);
+      const release = await prisma.release.findFirst({
+        where: { projectId: String(params.projectId) },
+        orderBy: [{ releasedAt: 'desc' }, { createdAt: 'desc' }],
+      });
+      if (!release) {
+        throw new BadRequestException(`项目 ${params.projectId} 尚无发版记录`);
+      }
+      return {
+        releaseId: release.id,
+        version: release.version,
+        status: release.status,
+        gitTag: release.gitTag,
+        releasedAt: release.releasedAt?.toISOString() ?? null,
+      };
+    },
+  },
 };
 
 /** 目录（GET /workflows/actions）：不含执行函数，供前端节点库与 AI 代写 */
