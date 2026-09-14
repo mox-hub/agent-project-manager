@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { DataList, ListText } from '@/components/ui/data-list';
 import type { MenuItem } from '@/components/ui/context-menu';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
@@ -418,7 +419,12 @@ export function ExecutionsPage() {
         {!isLoading && filteredRuns.length === 0 ? (
           runs.length === 0 ? (
             <EmptyState
-              icon={Activity}
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-accent-blue">
+                  <Activity className="size-4 text-accent-blue" />
+                </IconStack>
+              }
               title={t('execution.empty.none')}
               description={t('execution.empty.noneDesc')}
               action={

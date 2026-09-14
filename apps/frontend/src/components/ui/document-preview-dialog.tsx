@@ -19,7 +19,7 @@ import { MdxRenderer } from '@/modules/document/components/mdx-renderer';
 import { extractHeadings } from '@/shared/mdx/mdx-pipeline';
 import {
   FileText, BookOpen, Code2, Palette, TestTube2, FolderOpen,
-  Copy, Maximize2, X, Clock, ExternalLink, List, AlignLeft
+  Copy, Maximize2, X, Clock, ExternalLink, List
 } from 'lucide-react';
 
 export interface DocumentPreviewDialogProps {
@@ -186,10 +186,7 @@ export function DocumentPreviewDialog({
                     ))}
                   </nav>
                 ) : (
-                  <div className="text-11 text-muted-foreground text-center py-6">
-                    <AlignLeft size={18} className="mx-auto mb-1.5 opacity-40" />
-                    <EmptyState title="暂无目录" />
-                  </div>
+                  <EmptyState title="暂无目录" className="min-h-0 border-0 py-6" />
                 )}
               </div>
             </ScrollArea>

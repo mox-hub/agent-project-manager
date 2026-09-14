@@ -10,6 +10,7 @@ import {
   Globe,
   Plus,
   RefreshCw,
+  SearchX,
   Settings,
   Trash2,
   XCircle,
@@ -35,6 +36,7 @@ import {
 } from '@/components/ui/data-list';
 import { AsyncState } from '@/components/ui/async-state';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { Button } from '@/components/ui/button';
 import type { MenuItem } from '@/components/ui/context-menu';
 import { useConfirm } from '@/shared/confirm/use-confirm';
@@ -200,9 +202,18 @@ export function RepositoryListPage() {
     },
   ];
 
-  const emptyMessage =
+  // 空态由页面接管（页面层级标准）：仓库池为空走 A 类整页空态，筛选后为空走 C 类；
+  // EmptyState 必须直挂下方 flex-1 素块容器——经 DataList emptyMessage 渲染会被
+  // 其自动高度根元素隔断 h-full，整页空态回落 min-h-100 只占半屏
+  const emptyState =
     repositoryList.length === 0 ? (
       <EmptyState
+        variant="page"
+        visual={
+          <IconStack aria-hidden="true" className="text-accent-blue">
+            <FolderGit2 className="size-4 text-accent-blue" />
+          </IconStack>
+        }
         title={t('git.noRepositories')}
         description={t('git.noRepositoriesHint')}
         action={
@@ -214,8 +225,21 @@ export function RepositoryListPage() {
       />
     ) : (
       <EmptyState
+        icon={SearchX}
         title={t('git.filter.noMatch')}
         description={t('git.filter.noMatchHint')}
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearch('');
+              setProviders([]);
+            }}
+          >
+            {t('common.filterClear', '清除筛选')}
+          </Button>
+        }
       />
     );
 
@@ -314,8 +338,11 @@ export function RepositoryListPage() {
         ]}
       />
 
-      {/* 内容区：高密列表 */}
+      {/* 内容区：高密列表；空态由页面统一接管（见 emptyState 注释） */}
       <div className="flex-1 overflow-auto p-6">
+        {!isLoading && filteredRepositories.length === 0 ? (
+          emptyState
+        ) : (
         <div className="w-full">
           <AsyncState
             error={
@@ -330,7 +357,6 @@ export function RepositoryListPage() {
             <DataList
               items={filteredRepositories}
               loading={isLoading}
-              emptyMessage={emptyMessage}
               selectable
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
@@ -374,6 +400,7 @@ export function RepositoryListPage() {
             />
           </AsyncState>
         </div>
+        )}
       </div>
 
       {/* Bind Repository Dialog */}

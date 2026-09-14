@@ -10,6 +10,7 @@ import { PageShell } from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
 import { AsyncState } from '@/components/ui/async-state';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { SkeletonText } from '@/components/ui/skeleton';
 import { DecisionCard } from '@/shared/decision-card/decision-card';
 import type { Decision } from '@/shared/decision-card/types';
@@ -179,6 +180,12 @@ export function DecisionInboxPage() {
               }
               emptyTitle={t('decision.empty.title')}
               emptyDescription={t('decision.empty.description')}
+              emptyVariant="page"
+              emptyVisual={
+                <IconStack aria-hidden="true" className="text-accent-yellow">
+                  <Layers className="size-4 text-accent-yellow" />
+                </IconStack>
+              }
             >
               <div className="pt-1">
                 {renderGroup(blocking, 'blocking')}

@@ -10,6 +10,7 @@ import { Bot, DoorOpen } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { Skeleton } from '@/components/ui/skeleton';
 import { NativeSelect } from '@/components/ui/native-select';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -81,7 +82,12 @@ export function OfficePage() {
           </div>
         ) : colleagues.length === 0 ? (
           <EmptyState
-            icon={Bot}
+            variant="page"
+            visual={
+              <IconStack aria-hidden="true" className="text-accent-purple">
+                <Bot className="size-4 text-accent-purple" />
+              </IconStack>
+            }
             title={t('office.empty.title')}
             description={t('office.empty.hint')}
           />

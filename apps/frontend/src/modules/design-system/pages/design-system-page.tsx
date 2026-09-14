@@ -34,6 +34,8 @@ import {
   FlaskConical,
   FolderKanban,
   GitBranch,
+  GripVertical,
+  Inbox,
   GitPullRequest,
   GitCommit,
   Home,
@@ -182,6 +184,22 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { Spinner } from '@/components/ui/spinner'
+import {
+  Stepper,
+  StepperDescription,
+  StepperIndicator,
+  StepperItem,
+  StepperNav,
+  StepperSeparator,
+  StepperTitle,
+  StepperTrigger,
+} from '@/components/ui/stepper'
+import {
+  Sortable,
+  SortableItem,
+  SortableItemHandle,
+} from '@/components/ui/sortable'
+import { IconStack } from '@/components/ui/icon-stack'
 import { StatusPill } from '@/components/ui/status-pill'
 import { StatusIconFrame } from '@/shared/status/status-icon-frame'
 import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals'
@@ -325,6 +343,9 @@ const SECTIONS = [
   { id: 'alerts', label: 'Alerts', group: 'Primitives' },
   { id: 'toast', label: 'Toast', group: 'Primitives' },
   { id: 'progress', label: 'Progress', group: 'Primitives' },
+  { id: 'stepper', label: 'Stepper', group: 'Primitives' },
+  { id: 'sortable', label: 'Sortable', group: 'Primitives' },
+  { id: 'icon-stack', label: 'Icon Stack', group: 'Primitives' },
   { id: 'meter', label: 'Meter', group: 'Primitives' },
   { id: 'tabs', label: 'Tabs', group: 'Primitives' },
   { id: 'accordion', label: 'Accordion', group: 'Primitives' },
@@ -376,6 +397,53 @@ const SECTIONS = [
   { id: 'assembly-primitives', label: 'Assembly Primitives', group: 'App Components' },
   { id: 'ai-density-cards', label: 'AI High-Density Cards [AI]', group: 'AI Execution' },
 ]
+
+function SortableDemo() {
+  const [items, setItems] = useState(['连接仓库', '扫描考古', '校对入库', '归档完成'])
+  return (
+    <Sortable
+      value={items}
+      onValueChange={setItems}
+      getItemValue={(item) => item}
+      className="divide-y divide-border rounded-lg border border-border bg-card"
+    >
+      {items.map((item) => (
+        <SortableItem key={item} value={item} className="flex items-center gap-2 bg-card px-3 py-2">
+          <SortableItemHandle
+            render={<button type="button" aria-label="拖拽排序" />}
+            className="touch-none text-muted-foreground"
+          >
+            <GripVertical className="size-3.5" />
+          </SortableItemHandle>
+          <span className="text-sm">{item}</span>
+        </SortableItem>
+      ))}
+    </Sortable>
+  )
+}
+
+function SortableGridDemo() {
+  const [tiles, setTiles] = useState(['To Do', 'In Progress', 'In Review', 'Done', 'Blocked', 'Backlog'])
+  return (
+    <Sortable
+      value={tiles}
+      onValueChange={setTiles}
+      getItemValue={(tile) => tile}
+      strategy="grid"
+      className="grid grid-cols-3 gap-2"
+    >
+      {tiles.map((tile) => (
+        <SortableItem
+          key={tile}
+          value={tile}
+          className="rounded-md border border-border bg-card px-3 py-4 text-center text-xs font-medium"
+        >
+          {tile}
+        </SortableItem>
+      ))}
+    </Sortable>
+  )
+}
 
 const SECTION_GROUPS = ['Tokens', 'Primitives', 'App Components', 'AI Execution']
 
@@ -2221,6 +2289,145 @@ export function DesignSystemPage() {
                       </div>
                     )
                   })}
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="stepper">
+            <SectionTitle>Stepper</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">reui base-nova 配方（base-ui 复合式）——向导场景放 Trigger 可点击导航，状态机推进场景只放 Indicator + Title 纯展示；纵向变体用于清单/时间线。</p>
+            <div className="space-y-8">
+              <div>
+                <SubLabel>Navigable Wizard — Trigger 可点击 + 键盘导航</SubLabel>
+                <Stepper defaultValue={2}>
+                  <StepperNav>
+                    {['Account', 'Profile', 'Workspace', 'Done'].map((label, i, arr) => (
+                      <StepperItem key={label} step={i + 1}>
+                        <StepperTrigger className="gap-1.5">
+                          <StepperIndicator className="size-5 text-10 font-medium">{i + 1}</StepperIndicator>
+                          <StepperTitle className="text-xs whitespace-nowrap">{label}</StepperTitle>
+                        </StepperTrigger>
+                        {i < arr.length - 1 && <StepperSeparator />}
+                      </StepperItem>
+                    ))}
+                  </StepperNav>
+                </Stepper>
+              </div>
+              <div>
+                <SubLabel>Status Chain — 纯展示 + completed/loading 指示器</SubLabel>
+                <Stepper
+                  value={3}
+                  indicators={{
+                    completed: <Check className="size-3" />,
+                    loading: <Spinner size="sm" className="size-3.5 text-primary-foreground" />,
+                  }}
+                >
+                  <StepperNav>
+                    {['Draft', 'Gated', 'Approved', 'Publishing', 'Released'].map((label, i, arr) => (
+                      <StepperItem key={label} step={i + 1} loading={i === 3}>
+                        <div className="flex items-center gap-2">
+                          <StepperIndicator className="size-5 text-10 font-medium">{i + 1}</StepperIndicator>
+                          <StepperTitle className="text-xs whitespace-nowrap">{label}</StepperTitle>
+                        </div>
+                        {i < arr.length - 1 && <StepperSeparator />}
+                      </StepperItem>
+                    ))}
+                  </StepperNav>
+                </Stepper>
+              </div>
+              <div>
+                <SubLabel>Vertical — 纵向 + 标题/描述（连接线随状态点亮）</SubLabel>
+                <div className="max-w-80">
+                  <Stepper orientation="vertical" value={2}>
+                    <StepperNav>
+                      {[
+                        { title: '连接仓库', desc: '绑定本地路径与远端地址' },
+                        { title: '扫描考古', desc: '解析提交历史并生成档案草稿' },
+                        { title: '校对入库', desc: '人工确认后进入项目档案' },
+                      ].map((s, i, arr) => (
+                        <StepperItem key={s.title} step={i + 1} className="w-full">
+                          <div className="flex w-full items-start gap-3">
+                            <div className="flex flex-col items-center self-stretch">
+                              <StepperIndicator className="text-10 font-medium">{i + 1}</StepperIndicator>
+                              {i < arr.length - 1 && (
+                                <StepperSeparator className="m-0 w-0.5 flex-1 rounded-full" />
+                              )}
+                            </div>
+                            <div className={cn('min-w-0 flex-1', i < arr.length - 1 && 'pb-6')}>
+                              <StepperTitle>{s.title}</StepperTitle>
+                              <StepperDescription className="mt-1 text-xs">{s.desc}</StepperDescription>
+                            </div>
+                          </div>
+                        </StepperItem>
+                      ))}
+                    </StepperNav>
+                  </Stepper>
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="sortable">
+            <SectionTitle>Sortable</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">reui base-nova 配方（@dnd-kit）——同列表条目重排专用；看板跨列/画布节点继续用 dnd-kit 原语。落放一次性提交，onValueChange 即持久化缝，onValueCommit 附带回滚快照。</p>
+            <div className="space-y-8">
+              <div>
+                <SubLabel>Vertical — 把手拖拽（键盘可达：聚焦把手后 Space 拾起、方向键移动、Space 落放）</SubLabel>
+                <div className="max-w-sm">
+                  <SortableDemo />
+                </div>
+              </div>
+              <div>
+                <SubLabel>Grid — 网格策略（整卡可拖）</SubLabel>
+                <div className="max-w-sm">
+                  <SortableGridDemo />
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="icon-stack">
+            <SectionTitle>Icon Stack</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">reui base-nova 配方——等距层叠图标插画容器（装饰性，纯视觉请 aria-hidden）：空态/引导/完成时刻的深度感图标，尺寸经 className、语义色经 text-* 传入。</p>
+            <div className="space-y-8">
+              <div>
+                <SubLabel>Sizes & Colors</SubLabel>
+                <div className="flex flex-wrap items-end gap-8">
+                  {[
+                    { label: 'default / muted', cls: '', icon: <Inbox className="size-4" /> },
+                    { label: 'primary', cls: 'text-primary', icon: <Rocket className="size-4 text-primary" /> },
+                    { label: 'success', cls: 'text-accent-green', icon: <CheckCircle2 className="size-4 text-accent-green" /> },
+                    { label: 'lg', cls: 'h-28 w-25', icon: <FileText className="size-5" /> },
+                  ].map(({ label, cls, icon }) => (
+                    <div key={label} className="flex flex-col items-center gap-2">
+                      <IconStack aria-hidden="true" className={cls}>
+                        {icon}
+                      </IconStack>
+                      <span className="text-10 text-muted-foreground">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <SubLabel>Empty State — EmptyState variant=page + visual 插画（整页大空态）</SubLabel>
+                <div className="h-60 max-w-md">
+                  <EmptyState
+                    variant="page"
+                    visual={
+                      <IconStack aria-hidden="true" className="text-primary">
+                        <FileText className="size-4 text-primary" />
+                      </IconStack>
+                    }
+                    title="暂无文档"
+                    description="开始创建你的第一个文档"
+                  />
                 </div>
               </div>
             </div>
@@ -4369,20 +4576,44 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="empty">
             <SectionTitle>Empty States</SectionTitle>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { Icon: CheckSquare, title: 'No tasks yet', desc: "You're all caught up! Create a new task to get started.", action: 'New Task' },
-                { Icon: FileText, title: 'No documents', desc: 'Start building your knowledge base with a new document.', action: 'New Document' },
-                { Icon: Search, title: 'No results found', desc: 'Try adjusting your search query or clearing the filters.', action: null },
-              ].map(({ Icon, title, desc, action }) => (
-                <EmptyState
-                  key={title}
-                  icon={Icon}
-                  title={title}
-                  description={desc}
-                  action={action ? <Button size="sm"><Plus className="w-3 h-3" /> {action}</Button> : undefined}
-                />
-              ))}
+            <p className="text-xs text-muted-foreground mb-3">空态三分场景：Page（整页主体空态，variant="page" 撑满内容区 + IconStack 插画 + 首个功能入口）/ In-Card（卡片/分区内空态，默认 card + muted 圆块图标，不用插画）/ Filter Results（筛选无结果，card + SearchX + 清除筛选动作）。</p>
+            <div className="space-y-8">
+              <div>
+                <SubLabel>Page — 整页空态（h-full 撑满父容器 + min-h-100 兜底）</SubLabel>
+                <div className="h-100">
+                  <EmptyState
+                    variant="page"
+                    visual={
+                      <IconStack aria-hidden="true" className="text-primary">
+                        <FileText className="size-4 text-primary" />
+                      </IconStack>
+                    }
+                    title="暂无文档"
+                    description="开始创建你的第一个文档"
+                    action={<Button size="sm"><Plus className="w-3 h-3" /> New Document</Button>}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <SubLabel>In-Card — 分区/卡片空态（默认）</SubLabel>
+                  <EmptyState
+                    icon={CheckSquare}
+                    title="No tasks yet"
+                    description="You're all caught up! Create a new task to get started."
+                    action={<Button size="sm"><Plus className="w-3 h-3" /> New Task</Button>}
+                  />
+                </div>
+                <div>
+                  <SubLabel>Filter Results — 筛选无结果（+ 清除筛选）</SubLabel>
+                  <EmptyState
+                    icon={Search}
+                    title="No matching items"
+                    description="Try adjusting your search query or clearing the filters."
+                    action={<Button size="sm" variant="outline">Clear filters</Button>}
+                  />
+                </div>
+              </div>
             </div>
           </SectionAnchor>
 
@@ -5385,12 +5616,24 @@ export function DesignSystemPage() {
                 </div>
               </div>
               <div>
-                <SubLabel>AsyncState</SubLabel>
+                <SubLabel>AsyncState（emptyVariant / emptyVisual 透传：page 空态走插画）</SubLabel>
                 <div className="space-y-3">
                   <AsyncState isLoading>
                     <p className="text-sm text-muted-foreground">Loaded content</p>
                   </AsyncState>
                   <AsyncState isEmpty emptyTitle="No tasks yet" emptyDescription="Create a task to get started">
+                    <p className="text-sm text-muted-foreground">Loaded content</p>
+                  </AsyncState>
+                  <AsyncState
+                    isEmpty
+                    emptyVariant="page"
+                    emptyTitle="No documents"
+                    emptyVisual={
+                      <IconStack aria-hidden="true" className="text-primary">
+                        <FileText className="size-4 text-primary" />
+                      </IconStack>
+                    }
+                  >
                     <p className="text-sm text-muted-foreground">Loaded content</p>
                   </AsyncState>
                   <AsyncState error="Failed to load data" onRetry={() => {}}>
@@ -5399,7 +5642,7 @@ export function DesignSystemPage() {
                 </div>
               </div>
               <div>
-                <SubLabel>EmptyState</SubLabel>
+                <SubLabel>EmptyState — In-Card（默认 card）</SubLabel>
                 <EmptyState
                   icon={FileText}
                   title="No documents found"
@@ -5408,7 +5651,7 @@ export function DesignSystemPage() {
                 />
               </div>
               <div>
-                <SubLabel>EmptyState (In-Card / Filter Results)</SubLabel>
+                <SubLabel>EmptyState — Filter Results（筛选无结果 + 清筛选）</SubLabel>
                 <div className="rounded-lg border border-border/60 bg-card p-2">
                   <EmptyState
                     icon={Search}
