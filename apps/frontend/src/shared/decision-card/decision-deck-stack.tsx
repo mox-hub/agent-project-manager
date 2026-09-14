@@ -247,18 +247,18 @@ export function DecisionDeckStack({
         </Button>
 
         {/* 核心操作组 */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* 驳回 */}
           <Button
             variant="outline"
             onClick={() => handleReject()}
             disabled={isProcessing}
-            className="gap-1.5 rounded-full border-accent-red/40 px-4 text-xs font-medium text-accent-red hover:bg-accent-red-light hover:text-accent-red"
+            className="shrink-0 gap-1.5 rounded-full border-accent-red/40 px-4 text-xs font-medium text-accent-red whitespace-nowrap hover:bg-accent-red-light hover:text-accent-red"
             data-ai="deck-reject"
           >
-            <X className="size-4" />
-            <span>{t('decision.review.quickReject')}</span>
-            <span className="font-mono text-10 opacity-60">(2)</span>
+            <X className="size-4 shrink-0" />
+            <span className="whitespace-nowrap">{t('decision.review.quickReject')}</span>
+            <span className="font-mono text-10 opacity-60 whitespace-nowrap shrink-0">(2)</span>
           </Button>
 
           {/* 翻面详情 */}
@@ -266,12 +266,12 @@ export function DecisionDeckStack({
             variant="secondary"
             onClick={handleToggleFlip}
             disabled={isProcessing}
-            className="gap-1.5 rounded-full px-4 text-xs font-medium"
+            className="shrink-0 gap-1.5 rounded-full px-4 text-xs font-medium whitespace-nowrap"
             data-ai="deck-flip"
           >
-            <RotateCw className="size-4" />
-            <span>{isFlipped ? t('decision.review.flipFront') : t('decision.review.flipBack')}</span>
-            <span className="font-mono text-10 opacity-60">(F)</span>
+            <RotateCw className="size-4 shrink-0" />
+            <span className="whitespace-nowrap">{isFlipped ? t('decision.review.flipFront') : t('decision.review.flipBack')}</span>
+            <span className="font-mono text-10 opacity-60 whitespace-nowrap shrink-0">(F)</span>
           </Button>
 
           {/* 勾选通过（高亮大按钮） */}
@@ -279,12 +279,12 @@ export function DecisionDeckStack({
             variant="default"
             onClick={handlePass}
             disabled={isProcessing}
-            className="gap-2 rounded-full px-6 text-sm font-semibold shadow-sm"
+            className="shrink-0 gap-2 rounded-full px-6 text-sm font-semibold shadow-sm whitespace-nowrap"
             data-ai="deck-pass"
           >
-            <Check className="size-4" />
-            <span>{t('decision.review.quickPass')}</span>
-            <span className="font-mono text-10 opacity-80">(1/↵)</span>
+            <Check className="size-4 shrink-0" />
+            <span className="whitespace-nowrap">{t('decision.review.quickPass')}</span>
+            <span className="font-mono text-10 opacity-80 whitespace-nowrap shrink-0">(1/↵)</span>
           </Button>
         </div>
 

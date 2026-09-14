@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 决策卡片排版修复：编号移至第二行 / 标签与按钮禁止折行 / 标题自动宽度满行折行（feat/decision-card-review，2026-09-14）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **决策卡片头部排版与折行治理**：<br>① **卡片正面头部三行分层**：第 1 行左侧紧凑展示提案人 Avatar + 提案人 Pill + 紧迫度 Chip（阻断/排队）+ 高危 Chip，右侧展示 3D 翻面按钮；第 2 行展示决策编号（`#shortId`）及相对时间/过期时间，彻底杜绝长编号与标题抢占横向空间；第 3 行标题独立占据卡片 100% 宽度，自适应利用全部空间，仅在超过整整满一行后才自然折行（彻底解决窄宽度下 3-4 字被动切断折成竖排问题）；<br>② **全系统卡片按钮与标签禁止换行**：所有操作按钮（翻面、底部动作栏、批阅条快捷通过/驳回）、状态标签徽章（Pill/Chip/Reason Chip）全量配置 `shrink-0 whitespace-nowrap`，彻底防止在各断点与弹窗卡片堆内发生字词折断换行；<br>③ **背面档案标头同步两行化分层**：第 1 行展示档案标头与翻回正面按钮（`whitespace-nowrap`），第 2 行展示决策编号与翻回快捷键提示，整洁统一；<br>④ 补齐 `decision-card-shell.test.tsx` 单元测试，覆盖三行分层、无折行约束、标题样式与翻面交互。 | 决策卡片视觉排版修复 | `decision-card-shell.test.tsx` 4/4 绿，`decision` 域全量 5 测试文件 20 用例 100% 通过；`tsc -b && vite build` 产物打包通过；eslint 与语义检查 0 错误 0 警告 | `CHANGELOG.md` 登记 |
+
 ### 决策卡片实体质感重构 + 3D翻面/堆叠/滑走动效 + 全屏悬浮卡片堆批阅模式（feat/decision-card-review，2026-09-14）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
