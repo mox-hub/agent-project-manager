@@ -1,7 +1,7 @@
 /**
- * 决策卡壳 —— 卡片文法的五段式统一骨架。
- * ① 头部（提案者头像/名 pill + 紧迫度 chip + 陈述 + 时间/过期）
- * ② 主体槽位 ③ 影响行 ④ 证据抽屉（可强制展开 + 冷却联动）⑤ 动作栏（快捷键 + 驳回原因 chips）。
+ * 决策卡壳 —— 卡片文法的五段式统一骨架（现实实体卡片质感、3D 翻面、印章与滑出动效）。
+ * ① 头部（档案夹孔/装订饰条 + 提案者头像/名 pill + 紧迫度 chip + 陈述 + 3D 翻面角标）
+ * ② 主体槽位（自适应竖向优雅滚动）③ 影响行 ④ 3D 背面证据档案（支持一键翻转 + 冷却联动）⑤ 动作栏（快捷键 + 驳回原因 chips）。
  * 高代价动作路由策略见 decisionActionPolicy：证据强制 + 冷却后「接受」才可用。
  */
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
@@ -9,12 +9,12 @@ import { useTranslation } from 'react-i18next';
 import {
   Bot,
   Check,
-  ChevronDown,
-  ChevronUp,
   Edit2,
   Eye,
+  FileText,
   Inbox,
   RefreshCw,
+  RotateCw,
   Server,
   User,
   X,
@@ -213,6 +213,17 @@ export interface DecisionCardShellProps {
   ) => void;
   busy?: boolean;
   className?: string;
+
+  /** 是否处于 3D 翻转到背面（可控模式） */
+  isFlipped?: boolean;
+  /** 翻面状态变化回调 */
+  onFlipChange?: (flipped: boolean) => void;
+  /** 印章状态：通过 / 驳回 / 无 */
+  stamp?: 'passed' | 'rejected' | null;
+  /** 飞出滑走方向：向左 / 向右 / 向上 */
+  dismissDirection?: 'left' | 'right' | 'up' | null;
+  /** 布局形态变体：'auto'（默认）| 'vertical'（卡片堆竖立比例） */
+  variant?: 'auto' | 'vertical';
 }
 
 export function DecisionCardShell({
@@ -226,13 +237,18 @@ export function DecisionCardShell({
   onAction,
   busy = false,
   className,
+  isFlipped: controlledFlipped,
+  onFlipChange,
+  stamp = null,
+  dismissDirection = null,
+  variant = 'auto',
 }: DecisionCardShellProps) {
   const { t } = useTranslation();
+  const [internalFlipped, setInternalFlipped] = useState(false);
+  const isFlipped = controlledFlipped !== undefined ? controlledFlipped : internalFlipped;
+
   const [evidenceOpen, setEvidenceOpen] = useState(false);
-  // 原因 chips 行状态放在卡壳层：点击动作键与键盘快捷键共用同一入口
   const [reasonFor, setReasonFor] = useState<string | null>(null);
-  // 冷却：首次展开证据时由事件处理器设定截止时间与初始秒数，
-  // interval 内推导剩余秒数（Date.now 不进渲染期）
   const [cooldownDeadline, setCooldownDeadline] = useState<number | null>(null);
   const [cooldownLeft, setCooldownLeft] = useState(0);
 
@@ -246,6 +262,22 @@ export function DecisionCardShell({
     return () => clearInterval(id);
   }, [cooldownDeadline]);
 
+  const setFlippedState = (next: boolean) => {
+    if (controlledFlipped === undefined) {
+      setInternalFlipped(next);
+    }
+    onFlipChange?.(next);
+    if (next && cooldownSecs && cooldownSecs > 0 && cooldownDeadline === null) {
+      setCooldownDeadline(Date.now() + cooldownSecs * 1000);
+      setCooldownLeft(cooldownSecs);
+    }
+    setEvidenceOpen(next);
+  };
+
+  const toggleFlip = () => {
+    setFlippedState(!isFlipped);
+  };
+
   const toggleEvidence = () => {
     const next = !evidenceOpen;
     if (next && cooldownSecs && cooldownSecs > 0 && cooldownDeadline === null) {
@@ -253,6 +285,8 @@ export function DecisionCardShell({
       setCooldownLeft(cooldownSecs);
     }
     setEvidenceOpen(next);
+    // 联动翻面
+    setFlippedState(next);
   };
 
   const actionDefs =
@@ -264,6 +298,13 @@ export function DecisionCardShell({
     decision.proposer.name ?? t(`decision.proposer.${decision.proposer.type}`);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    // 快捷键 'f' / 'F' 触发 3D 翻面
+    if (event.key === 'f' || event.key === 'F') {
+      event.preventDefault();
+      toggleFlip();
+      return;
+    }
+
     if (actionDefs.length === 0) return;
     const index = ACTION_SHORTCUTS[event.key];
     const def = index === undefined ? undefined : actionDefs[index];
@@ -277,125 +318,245 @@ export function DecisionCardShell({
     onAction(def.action, decision);
   };
 
+  const shortId = decision.id.includes(':')
+    ? decision.id.split(':').slice(-1)[0]
+    : decision.id.slice(-6);
+
+  const dismissClass =
+    dismissDirection === 'right'
+      ? 'decision-card-dismiss-right'
+      : dismissDirection === 'left'
+        ? 'decision-card-dismiss-left'
+        : dismissDirection === 'up'
+          ? 'decision-card-dismiss-up'
+          : '';
+
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-xl border bg-card shadow-xs',
-        isBlocking ? 'border-accent-red/60' : 'border-border',
+        'decision-card-scene relative select-none',
+        variant === 'vertical' && 'w-full max-w-lg',
         className,
       )}
       onKeyDown={handleKeyDown}
+      tabIndex={0}
       data-decision-id={decision.id}
       data-decision-urgency={decision.urgency}
       data-ai-entity={`decision:${decision.id}`}
     >
-      {/* blocking 顶部警示条 */}
-      {isBlocking && (
-        <div className="h-0.5 bg-gradient-to-r from-accent-red via-accent-orange to-accent-red" />
-      )}
-
-      {/* ① 头部 */}
-      <div className="flex items-start gap-3 px-4 pb-2.5 pt-3">
+      {/* ── 印章动效（已通过 / 已驳回） ── */}
+      {stamp && (
         <div
           className={cn(
-            'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full',
-            meta.avatarCls,
+            'decision-stamp',
+            stamp === 'passed' ? 'decision-stamp-passed' : 'decision-stamp-rejected',
+            'decision-stamp-active',
           )}
         >
-          <ProposerIcon className="size-4" />
+          {stamp === 'passed' ? t('decision.review.passStamp') : t('decision.review.rejectStamp')}
         </div>
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
+      )}
+
+      {/* ── 3D 翻转主体 ── */}
+      <div
+        className={cn(
+          'decision-card-flipper',
+          isFlipped && 'is-flipped',
+          dismissClass,
+        )}
+      >
+        {/* ═════════════════════ 【正面 FRONT】 ═════════════════════ */}
+        <div
+          className={cn(
+            'decision-card-face decision-card-face-front decision-physical-card overflow-hidden rounded-2xl border bg-card text-card-foreground',
+            isBlocking ? 'border-accent-red/60' : 'border-border',
+          )}
+        >
+          {/* 拟物档案孔 */}
+          <div className="decision-card-punch-hole" aria-hidden="true" />
+
+          {/* blocking 顶部警示条 */}
+          {isBlocking && (
+            <div className="h-1 bg-gradient-to-r from-accent-red via-accent-orange to-accent-red" />
+          )}
+
+          {/* ① 头部 */}
+          <div className="flex items-start gap-3 px-5 pb-2.5 pt-4">
+            <div
               className={cn(
-                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+                'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full shadow-xs',
                 meta.avatarCls,
               )}
             >
-              <ProposerIcon className="size-3" />
-              {proposerName}
-            </span>
-            {isBlocking ? (
-              <span className="inline-flex items-center gap-1 rounded border border-accent-red/30 bg-accent-red-light px-1.5 py-0.5 text-xs font-medium text-accent-red">
-                <Zap className="size-3" />
-                {t('decision.urgency.blockingChip')}
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded border border-accent-yellow/30 bg-accent-yellow-light px-1.5 py-0.5 text-xs font-medium text-accent-yellow">
-                <Inbox className="size-3" />
-                {t('decision.urgency.advisoryChip')}
-              </span>
-            )}
-            {decision.riskLevel === 'high_risk' && (
-              <span className="rounded border border-accent-purple/30 bg-accent-purple-light px-1.5 py-0.5 text-xs font-medium text-accent-purple">
-                ★ {t('decision.riskHigh')}
-              </span>
-            )}
+              <ProposerIcon className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium',
+                    meta.avatarCls,
+                  )}
+                >
+                  <ProposerIcon className="size-3" />
+                  {proposerName}
+                </span>
+                {isBlocking ? (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-accent-red/30 bg-accent-red-light px-2 py-0.5 text-xs font-medium text-accent-red">
+                    <Zap className="size-3" />
+                    {t('decision.urgency.blockingChip')}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-accent-yellow/30 bg-accent-yellow-light px-2 py-0.5 text-xs font-medium text-accent-yellow">
+                    <Inbox className="size-3" />
+                    {t('decision.urgency.advisoryChip')}
+                  </span>
+                )}
+                {decision.riskLevel === 'high_risk' && (
+                  <span className="rounded-full border border-accent-purple/30 bg-accent-purple-light px-2 py-0.5 text-xs font-medium text-accent-purple">
+                    ★ {t('decision.riskHigh')}
+                  </span>
+                )}
+              </div>
+              <p className="text-base font-semibold leading-snug tracking-tight text-foreground">
+                {decision.title}
+              </p>
+            </div>
+
+            {/* 右侧：卡片印记 + 翻面按钮 */}
+            <div className="mt-0.5 flex shrink-0 flex-col items-end gap-1.5">
+              <div className="flex items-center gap-1">
+                <span className="font-mono text-10 font-bold uppercase tracking-wider text-muted-foreground/60">
+                  #{shortId}
+                </span>
+                <button
+                  type="button"
+                  onClick={toggleFlip}
+                  className="inline-flex items-center gap-1 rounded-md border border-border/80 bg-muted/40 px-1.5 py-0.5 text-10 font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  title={t('decision.review.flipHint')}
+                >
+                  <RotateCw className="size-3 text-muted-foreground" />
+                  <span>{t('decision.review.flipBack')}</span>
+                </button>
+              </div>
+              <p className="text-11 text-muted-foreground">
+                {formatI18nRelativeTime(decision.createdAt, t, DECISION_TIME_KEYS)}
+              </p>
+              {decision.expiresAt && (
+                <p className="text-11 text-accent-yellow">
+                  {t('decision.expiryIn', { time: new Date(decision.expiresAt).toLocaleString() })}
+                </p>
+              )}
+            </div>
           </div>
-          <p className="text-sm font-medium leading-snug text-content-text">
-            {decision.title}
-          </p>
+
+          {/* ② 主体 */}
+          {body ? (
+            <div className="max-h-80 overflow-y-auto px-5 pb-3">
+              {body}
+            </div>
+          ) : null}
+
+          {/* ③ 影响行 */}
+          <ImpactRow items={impact} />
+
+          {/* ④ 正面翻面与证据导引条 */}
+          <div className="flex items-center justify-between border-t border-border/40 bg-muted/20 px-4 py-2 text-xs">
+            <button
+              type="button"
+              onClick={toggleEvidence}
+              className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Eye className="size-3.5" />
+              <span>{t('decision.action.evidence')}</span>
+              {cooldownSecs && cooldownSecs > 0 ? (
+                <span className="rounded bg-accent-yellow-light px-1 text-10 text-accent-yellow">
+                  {cooldownSecs}s 冷却
+                </span>
+              ) : null}
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleFlip}
+              className="inline-flex items-center gap-1 font-medium text-primary transition-opacity hover:opacity-80"
+            >
+              <span>{t('decision.review.flipHint')}</span>
+              <RotateCw className="size-3" />
+            </button>
+          </div>
+
+          {/* ⑤ 动作栏 */}
+          {actionDefs.length > 0 ? (
+            <ActionBar
+              decision={decision}
+              actions={actionDefs}
+              busy={busy}
+              requireEvidence={requireEvidence ?? false}
+              cooldownLeft={cooldownLeft}
+              evidenceOpen={evidenceOpen || isFlipped}
+              reasonFor={reasonFor}
+              onOpenReason={setReasonFor}
+              onAction={onAction}
+            />
+          ) : null}
         </div>
-        <div className="mt-0.5 shrink-0 space-y-0.5 text-right">
-          <p className="text-11 text-content-text-muted">
-            {formatI18nRelativeTime(decision.createdAt, t, DECISION_TIME_KEYS)}
-          </p>
-          {decision.expiresAt && (
-            <p className="text-11 text-accent-yellow">{t('decision.expiryIn', { time: new Date(decision.expiresAt).toLocaleString() })}</p>
+
+        {/* ═════════════════════ 【背面 BACK】 ═════════════════════ */}
+        <div
+          className={cn(
+            'decision-card-face decision-card-face-back decision-physical-card flex flex-col overflow-hidden rounded-2xl border bg-card text-card-foreground',
+            isBlocking ? 'border-accent-red/60' : 'border-border',
           )}
+        >
+          {/* 背面顶部档案标头 */}
+          <div className="flex items-center justify-between border-b border-border/60 bg-muted/40 px-5 py-3">
+            <div className="flex items-center gap-2">
+              <FileText className="size-4 text-accent-blue" />
+              <span className="text-xs font-semibold tracking-wide text-foreground">
+                {t('decision.action.evidence')} · 溯源与推导档案
+              </span>
+              <span className="rounded border border-border px-1.5 py-0.5 font-mono text-10 text-muted-foreground">
+                #{shortId}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={toggleFlip}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground shadow-2xs transition-colors hover:bg-accent"
+            >
+              <RotateCw className="size-3" />
+              <span>{t('decision.review.flipFront')}</span>
+            </button>
+          </div>
+
+          {/* 背面主体：完整证据抽屉内容 */}
+          <div className="flex-1 overflow-y-auto p-5 text-xs text-secondary-foreground">
+            {evidence ?? (
+              <pre className="max-h-96 whitespace-pre-wrap break-all rounded-lg border border-border/60 bg-muted/30 p-3 font-mono text-11 text-foreground">
+                {JSON.stringify(decision.payload, null, 2)}
+              </pre>
+            )}
+            {cooldownSecs && cooldownSecs > 0 ? (
+              <p className="mt-3 text-accent-yellow">
+                {t('decision.evidence.cooldownHint', { n: cooldownSecs })}
+              </p>
+            ) : null}
+          </div>
+
+          {/* 背面底部操作条：一键翻回正面 */}
+          <div className="flex justify-end border-t border-border/40 bg-muted/20 px-4 py-2.5">
+            <button
+              type="button"
+              onClick={toggleFlip}
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              <RotateCw className="size-3" />
+              <span>{t('decision.review.flipFront')}</span>
+            </button>
+          </div>
         </div>
       </div>
-
-      {/* ② 主体 */}
-      {body ? <div className="px-4 pb-3">{body}</div> : null}
-
-      {/* ③ 影响行 */}
-      <ImpactRow items={impact} />
-
-      {/* ④ 证据抽屉：默认折叠，一键展开（证据与接受同价，防橡皮图章） */}
-      <button
-        onClick={toggleEvidence}
-        className="flex w-full items-center justify-between border-t border-border/40 px-4 py-2 text-xs text-content-text-muted transition-colors hover:bg-content-bg-secondary hover:text-content-text"
-      >
-        <span className="inline-flex items-center gap-1.5">
-          <Eye className="size-3" />
-          {evidenceOpen ? t('decision.action.hideEvidence') : t('decision.action.evidence')}
-        </span>
-        {evidenceOpen ? (
-          <ChevronUp className="size-3.5" />
-        ) : (
-          <ChevronDown className="size-3.5" />
-        )}
-      </button>
-      {evidenceOpen && (
-        <div className="space-y-1.5 border-t border-border/30 bg-content-bg-secondary/40 px-4 py-3 text-xs text-content-text-secondary">
-          {evidence ?? (
-            <pre className="whitespace-pre-wrap break-all font-mono text-11 text-content-text-secondary">
-              {JSON.stringify(decision.payload, null, 2)}
-            </pre>
-          )}
-          {cooldownSecs > 0 && (
-            <p className="pt-1 text-accent-yellow">
-              {t('decision.evidence.cooldownHint', { n: cooldownSecs })}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* ⑤ 动作栏（clarify 等交互体自管确认键时可为空） */}
-      {actionDefs.length > 0 ? (
-        <ActionBar
-          decision={decision}
-          actions={actionDefs}
-          busy={busy}
-          requireEvidence={requireEvidence ?? false}
-          cooldownLeft={cooldownLeft}
-          evidenceOpen={evidenceOpen}
-          reasonFor={reasonFor}
-          onOpenReason={setReasonFor}
-          onAction={onAction}
-        />
-      ) : null}
     </div>
   );
 }

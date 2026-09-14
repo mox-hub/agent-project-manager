@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clock, Inbox, RefreshCw, Zap } from 'lucide-react';
+import { Clock, Inbox, Layers, RefreshCw, Zap } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
 import { AsyncState } from '@/components/ui/async-state';
@@ -17,6 +17,7 @@ import {
   usePendingDecisions,
 } from '@/modules/decision/hooks/use-decisions';
 import { useDecisionActions } from '@/modules/decision/hooks/use-decision-actions';
+import { DecisionReviewModal } from '@/modules/decision/components/decision-review-modal';
 import { cn } from '@/lib/utils';
 
 function DecisionRowSkeleton() {
@@ -33,6 +34,7 @@ export function DecisionInboxPage() {
   const { data, isLoading, error, refetch } = usePendingDecisions();
   const { handleAction, busyId } = useDecisionActions();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const items = useMemo(() => data?.items ?? [], [data?.items]);
   const blocking = useMemo(() => items.filter((d) => d.urgency === 'blocking'), [items]);
@@ -125,16 +127,32 @@ export function DecisionInboxPage() {
               <h1 className="text-lg font-semibold text-foreground">
                 {t('decision.title')}
               </h1>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 rounded-full"
-                aria-label={t('common.refresh')}
-                title={t('common.refresh')}
-                onClick={() => refetch()}
-              >
-                <RefreshCw size={14} className="text-muted-foreground" />
-              </Button>
+              <div className="flex items-center gap-1.5">
+                {items.length > 0 && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-8 gap-1.5 rounded-full px-3 text-xs font-semibold shadow-2xs"
+                    onClick={() => setIsReviewOpen(true)}
+                  >
+                    <Layers className="size-3.5" />
+                    <span>{t('decision.review.button')}</span>
+                    <span className="rounded-full bg-primary-foreground/20 px-1.5 py-0.5 font-mono text-10 leading-none">
+                      {items.length}
+                    </span>
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 rounded-full"
+                  aria-label={t('common.refresh')}
+                  title={t('common.refresh')}
+                  onClick={() => refetch()}
+                >
+                  <RefreshCw size={14} className="text-muted-foreground" />
+                </Button>
+              </div>
             </div>
             <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
               <span>
@@ -178,14 +196,29 @@ export function DecisionInboxPage() {
           </div>
         </aside>
 
-        {/* ── 右栏：选中决策的完整卡片（动作栏可用） ── */}
-        <section className="flex min-w-0 flex-1 flex-col overflow-auto">
+        {/* ── 右栏：选中决策的完整现实卡片（动作栏可用） ── */}
+        <section className="flex min-w-0 flex-1 flex-col overflow-auto bg-muted/10">
           {selected ? (
-            <div className="mx-auto w-full max-w-2xl px-6 py-6">
+            <div className="mx-auto flex w-full max-w-xl flex-col items-center px-6 py-6">
+              <div className="mb-3 flex w-full items-center justify-between px-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {t('decision.title')} · 现实卡片视图
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsReviewOpen(true)}
+                  className="h-7 gap-1.5 text-xs text-primary hover:text-primary"
+                >
+                  <Layers className="size-3.5" />
+                  <span>{t('decision.review.modalTitle')}</span>
+                </Button>
+              </div>
               <DecisionCard
                 decision={selected}
                 busy={busyId === selected.id}
                 onAction={handleAction}
+                variant="vertical"
               />
             </div>
           ) : (
@@ -198,6 +231,14 @@ export function DecisionInboxPage() {
           )}
         </section>
       </div>
+
+      <DecisionReviewModal
+        open={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+        decisions={items}
+        busyId={busyId}
+        onAction={handleAction}
+      />
     </PageShell>
   );
 }

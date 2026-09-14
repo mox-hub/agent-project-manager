@@ -894,9 +894,24 @@ export interface DecisionCardProps {
   onAction: (action: string, decision: Decision, opts?: DecisionActionOptions) => void;
   busy?: boolean;
   className?: string;
+  isFlipped?: boolean;
+  onFlipChange?: (flipped: boolean) => void;
+  stamp?: 'passed' | 'rejected' | null;
+  dismissDirection?: 'left' | 'right' | 'up' | null;
+  variant?: 'auto' | 'vertical';
 }
 
-export function DecisionCard({ decision, onAction, busy, className }: DecisionCardProps) {
+export function DecisionCard({
+  decision,
+  onAction,
+  busy,
+  className,
+  isFlipped,
+  onFlipChange,
+  stamp,
+  dismissDirection,
+  variant,
+}: DecisionCardProps) {
   const { t } = useTranslation();
   const builder = SLOT_BUILDERS[decision.kind];
   const slots: DecisionSlots = builder
@@ -924,6 +939,11 @@ export function DecisionCard({ decision, onAction, busy, className }: DecisionCa
       onAction={onAction}
       busy={busy}
       className={className}
+      isFlipped={isFlipped}
+      onFlipChange={onFlipChange}
+      stamp={stamp}
+      dismissDirection={dismissDirection}
+      variant={variant}
     />
   );
 }
