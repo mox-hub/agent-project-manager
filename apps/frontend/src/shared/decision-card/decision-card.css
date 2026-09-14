@@ -219,3 +219,97 @@
 .dark .decision-deck-card-under-2 {
   filter: brightness(0.72);
 }
+
+/* ── 伴随式紧凑卡片堆（用于助手侧栏伴随悬浮） ── */
+.assistant-decision-wing {
+  width: 420px;
+}
+@media (min-width: 1280px) {
+  .assistant-decision-wing {
+    width: 440px;
+  }
+}
+
+.assistant-decision-loading {
+  height: 460px;
+}
+
+.decision-deck-actions-compact {
+  max-width: 400px;
+}
+
+.decision-deck-compact .decision-deck-stage,
+.decision-deck-stage-compact {
+  max-width: 400px;
+  height: 470px;
+}
+
+.decision-deck-compact .decision-card-vertical {
+  max-width: 400px;
+  height: 450px;
+}
+
+/* ── 收缩态立体手卡夹槽手柄（Tactile Collapsed Stack Dock） ── */
+.decision-deck-collapsed-tab {
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow:
+    -2px 4px 12px rgba(0, 0, 0, 0.08),
+    0 10px 24px -4px rgba(0, 0, 0, 0.12);
+}
+
+.dark .decision-deck-collapsed-tab {
+  box-shadow:
+    -2px 4px 16px rgba(0, 0, 0, 0.45),
+    0 12px 30px -4px rgba(0, 0, 0, 0.6);
+}
+
+/* 背后模拟叠放的底牌层叠边缘 */
+.decision-deck-collapsed-tab::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: -5px;
+  width: 6px;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  background-color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-right: none;
+  opacity: 0.85;
+  transform: rotate(-1deg);
+  z-index: -1;
+}
+
+.decision-deck-collapsed-tab::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: -9px;
+  width: 6px;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  background-color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-right: none;
+  opacity: 0.5;
+  transform: rotate(-2deg);
+  z-index: -2;
+}
+
+.decision-deck-collapsed-tab:hover {
+  transform: translateX(-3px) scale(1.02);
+  border-color: var(--color-accent-purple);
+  box-shadow:
+    -4px 6px 18px rgba(168, 85, 247, 0.2),
+    0 12px 28px -4px rgba(0, 0, 0, 0.16);
+}
+
+/* 纵向书写文字 */
+.vertical-writing-mode {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+

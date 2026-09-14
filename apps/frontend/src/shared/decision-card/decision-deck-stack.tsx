@@ -29,6 +29,8 @@ export interface DecisionDeckStackProps {
   onAllDone?: () => void;
   onIndexChange?: (index: number, total: number) => void;
   className?: string;
+  /** 伴随式紧凑尺寸（用于助手面板等受限视口伴随式呈现） */
+  compact?: boolean;
 }
 
 export function DecisionDeckStack({
@@ -38,6 +40,7 @@ export function DecisionDeckStack({
   onAllDone,
   onIndexChange,
   className,
+  compact = false,
 }: DecisionDeckStackProps) {
   const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -186,10 +189,19 @@ export function DecisionDeckStack({
   return (
     <div
       ref={containerRef}
-      className={cn('flex flex-col items-center justify-center', className)}
+      className={cn(
+        'flex flex-col items-center justify-center',
+        compact && 'decision-deck-compact',
+        className,
+      )}
     >
       {/* ── 核心卡片堆叠舞台（Card Deck Stage） ── */}
-      <div className="decision-deck-stage relative flex w-full max-w-lg items-center justify-center pt-2 pb-6">
+      <div
+        className={cn(
+          'decision-deck-stage relative flex w-full items-center justify-center',
+          compact ? 'decision-deck-stage-compact pt-1 pb-3' : 'max-w-lg pt-2 pb-6',
+        )}
+      >
         {visibleCards.map((decision, stackOffset) => {
           const isTop = stackOffset === 0;
           const stackClass =
@@ -231,19 +243,27 @@ export function DecisionDeckStack({
       </div>
 
       {/* ── 底部快捷操作条（大尺寸触控 / 快捷批阅） ── */}
-      <div className="mt-4 flex w-full max-w-lg items-center justify-between gap-3 px-2">
+      <div
+        className={cn(
+          'flex w-full items-center justify-between px-2',
+          compact ? 'mt-2 decision-deck-actions-compact gap-2' : 'mt-4 max-w-lg gap-3',
+        )}
+      >
         {/* 上一张 */}
         <Button
           variant="outline"
           size="icon"
           onClick={handlePrev}
           disabled={currentIndex <= 0 || isProcessing}
-          className="size-10 rounded-full border-border/80"
+          className={cn(
+            'rounded-full border-border/80 shrink-0',
+            compact ? 'size-8' : 'size-10',
+          )}
           title={t('decision.review.prevCard')}
           aria-label={t('decision.review.prevCard')}
           data-ai="deck-prev"
         >
-          <ChevronLeft className="size-5" />
+          <ChevronLeft className={compact ? 'size-4' : 'size-5'} />
         </Button>
 
         {/* 核心操作组 */}
@@ -253,7 +273,10 @@ export function DecisionDeckStack({
             variant="outline"
             onClick={() => handleReject()}
             disabled={isProcessing}
-            className="shrink-0 gap-1.5 rounded-full border-accent-red/40 px-4 text-xs font-medium text-accent-red whitespace-nowrap hover:bg-accent-red-light hover:text-accent-red"
+            className={cn(
+              'shrink-0 rounded-full border-accent-red/40 font-medium text-accent-red whitespace-nowrap hover:bg-accent-red-light hover:text-accent-red',
+              compact ? 'gap-1 px-3 text-xs' : 'gap-1.5 px-4 text-xs',
+            )}
             data-ai="deck-reject"
           >
             <X className="size-4 shrink-0" />
@@ -266,7 +289,10 @@ export function DecisionDeckStack({
             variant="secondary"
             onClick={handleToggleFlip}
             disabled={isProcessing}
-            className="shrink-0 gap-1.5 rounded-full px-4 text-xs font-medium whitespace-nowrap"
+            className={cn(
+              'shrink-0 rounded-full font-medium whitespace-nowrap',
+              compact ? 'gap-1 px-3 text-xs' : 'gap-1.5 px-4 text-xs',
+            )}
             data-ai="deck-flip"
           >
             <RotateCw className="size-4 shrink-0" />
@@ -279,7 +305,10 @@ export function DecisionDeckStack({
             variant="default"
             onClick={handlePass}
             disabled={isProcessing}
-            className="shrink-0 gap-2 rounded-full px-6 text-sm font-semibold shadow-sm whitespace-nowrap"
+            className={cn(
+              'shrink-0 rounded-full font-semibold shadow-sm whitespace-nowrap',
+              compact ? 'gap-1.5 px-4 text-xs' : 'gap-2 px-6 text-sm',
+            )}
             data-ai="deck-pass"
           >
             <Check className="size-4 shrink-0" />
@@ -294,12 +323,15 @@ export function DecisionDeckStack({
           size="icon"
           onClick={handleNext}
           disabled={currentIndex >= total - 1 || isProcessing}
-          className="size-10 rounded-full border-border/80"
+          className={cn(
+            'rounded-full border-border/80 shrink-0',
+            compact ? 'size-8' : 'size-10',
+          )}
           title={t('decision.review.nextCard')}
           aria-label={t('decision.review.nextCard')}
           data-ai="deck-next"
         >
-          <ChevronRight className="size-5" />
+          <ChevronRight className={compact ? 'size-4' : 'size-5'} />
         </Button>
       </div>
 

@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 助手伴随式待决卡片升级为实体卡片堆 + 全新立体手卡折叠态手柄（feat/decision-card-review，2026-09-14）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **AI 助手伴随式待决卡片堆叠与折叠态重构**：<br>① **左侧待决栏改为实体卡片堆展示**：将原先在狭窄侧栏垂直流式平铺排布（`items.map` 产生截断与多余滚动）彻底改造为 `DecisionDeckStack`（实体手卡卡片堆叠），支持多层卡片立体露角、3D 翻面、顺滑盖章飞出（PASSED/REJECTED）与翻页；宽度升级为 `assistant-decision-wing`（420px/440px），高度与小周主对话框齐平，整体保持毛玻璃悬浮与立体投影；<br>② **全新实体手卡折叠夹槽手柄（Tactile Collapsed Stack Dock）**：收起待办后，摒弃原有单薄小药丸，升级为极具实体便签夹与卡片堆隐喻的高质感手柄：外层多重立体阴影、侧边伪元素模拟 2 层底牌微倾斜边缘、层叠图标、待办数量徽章（含阻塞告警呼吸动效）、竖排「待决卡片」精致中文字及展开提示，悬浮在主面板左侧，Hover 外弹并高亮，点击顺滑展开；<br>③ 补齐 `assistant-decision-strip.test.tsx` 单元测试，覆盖 compact 紧凑卡片堆、加载骨架与空态。 | 伴随式决策卡片堆升级与折叠态重塑 | `assistant-decision-strip.test.tsx` 3/3 绿，`assistant` 全套 11 文件 43 用例 100% 通过；`tsc -b && vite build` 构建打包通过；eslint 0 error 0 warning | `CHANGELOG.md` 登记 |
+
 ### 决策卡片排版修复：编号移至第二行 / 标签与按钮禁止折行 / 标题自动宽度满行折行（feat/decision-card-review，2026-09-14）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
