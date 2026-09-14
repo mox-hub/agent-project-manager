@@ -1,9 +1,10 @@
 /**
- * 决策卡壳 —— 卡片文法的五段式统一骨架（现实实体卡片质感、3D 翻面、印章与滑出动效）。
- * ① 头部（档案夹孔/装订饰条 + 提案者头像/名 pill + 紧迫度 chip + 陈述 + 3D 翻面角标）
- * ② 主体槽位（自适应竖向优雅滚动）③ 影响行 ④ 3D 背面证据档案（支持一键翻转 + 冷却联动）⑤ 动作栏（快捷键 + 驳回原因 chips）。
+ * 决策卡壳 —— 卡片文法的五段式统一骨架（现实实体手卡质感、3D 翻面、印章与滑出动效）。
+ * ① 头部（实体夹槽 + 提案者头像/名 pill + 紧迫度 chip + 编号刻印 + 3D 翻面角标）
+ * ② 主体槽位（卡内平滑滚动）③ 影响行 ④ 3D 背面证据档案（支持一键翻转 + 冷却联动）⑤ 动作栏（快捷键 + 驳回原因 chips）。
  * 高代价动作路由策略见 decisionActionPolicy：证据强制 + 冷却后「接受」才可用。
  */
+import './decision-card.css';
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -74,7 +75,7 @@ const DECISION_TIME_KEYS = {
 function ImpactRow({ items }: { items?: DecisionImpactItem[] }) {
   if (!items || items.length === 0) return null;
   return (
-    <div className="flex flex-wrap gap-3 border-t border-border/40 bg-content-bg-secondary/40 px-4 py-2 text-xs">
+    <div className="flex shrink-0 flex-wrap gap-3 border-t border-border/40 bg-content-bg-secondary/40 px-4 py-2 text-xs">
       {items.map((it, i) => {
         const Icon = it.icon;
         return (
@@ -163,7 +164,7 @@ function ActionBar({
   }
 
   return (
-    <div className="flex border-t border-border/40">
+    <div className="flex shrink-0 border-t border-border/40">
       {actions.map((def, index) => {
         const Icon = def.icon;
         // 主动作（首键）受证据强制 + 冷却门禁；其余键不设防
@@ -222,7 +223,7 @@ export interface DecisionCardShellProps {
   stamp?: 'passed' | 'rejected' | null;
   /** 飞出滑走方向：向左 / 向右 / 向上 */
   dismissDirection?: 'left' | 'right' | 'up' | null;
-  /** 布局形态变体：'auto'（默认）| 'vertical'（卡片堆竖立比例） */
+  /** 布局形态变体：'auto'（自适应）| 'vertical'（卡片堆竖立黄金手卡比例） */
   variant?: 'auto' | 'vertical';
 }
 
@@ -331,11 +332,13 @@ export function DecisionCardShell({
           ? 'decision-card-dismiss-up'
           : '';
 
+  const isVertical = variant === 'vertical';
+
   return (
     <div
       className={cn(
         'decision-card-scene relative select-none',
-        variant === 'vertical' && 'w-full max-w-lg',
+        isVertical ? 'decision-card-vertical' : 'w-full max-w-xl',
         className,
       )}
       onKeyDown={handleKeyDown}
@@ -357,7 +360,7 @@ export function DecisionCardShell({
         </div>
       )}
 
-      {/* ── 3D 翻转主体 ── */}
+      {/* ── 3D 翻转本体 ── */}
       <div
         className={cn(
           'decision-card-flipper',
@@ -368,12 +371,14 @@ export function DecisionCardShell({
         {/* ═════════════════════ 【正面 FRONT】 ═════════════════════ */}
         <div
           className={cn(
-            'decision-card-face decision-card-face-front decision-physical-card overflow-hidden rounded-2xl border bg-card text-card-foreground',
+            'decision-card-face decision-card-face-front decision-physical-card flex flex-col overflow-hidden text-card-foreground',
             isBlocking ? 'border-accent-red/60' : 'border-border',
+            isVertical ? 'h-full' : 'decision-card-auto',
+            isFlipped && 'pointer-events-none',
           )}
         >
-          {/* 拟物档案孔 */}
-          <div className="decision-card-punch-hole" aria-hidden="true" />
+          {/* 实体夹槽饰边 */}
+          <div className="decision-card-clamp" aria-hidden="true" />
 
           {/* blocking 顶部警示条 */}
           {isBlocking && (
@@ -381,7 +386,7 @@ export function DecisionCardShell({
           )}
 
           {/* ① 头部 */}
-          <div className="flex items-start gap-3 px-5 pb-2.5 pt-4">
+          <div className="flex shrink-0 items-start gap-3 px-5 pb-2 pt-4">
             <div
               className={cn(
                 'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full shadow-xs',
@@ -423,19 +428,19 @@ export function DecisionCardShell({
               </p>
             </div>
 
-            {/* 右侧：卡片印记 + 翻面按钮 */}
+            {/* 右侧：卡片印记 + 3D 翻面按钮 */}
             <div className="mt-0.5 flex shrink-0 flex-col items-end gap-1.5">
-              <div className="flex items-center gap-1">
-                <span className="font-mono text-10 font-bold uppercase tracking-wider text-muted-foreground/60">
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono text-10 font-bold uppercase tracking-wider text-muted-foreground/70">
                   #{shortId}
                 </span>
                 <button
                   type="button"
                   onClick={toggleFlip}
-                  className="inline-flex items-center gap-1 rounded-md border border-border/80 bg-muted/40 px-1.5 py-0.5 text-10 font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  className="inline-flex items-center gap-1 rounded-md border border-border/80 bg-muted/40 px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                   title={t('decision.review.flipHint')}
                 >
-                  <RotateCw className="size-3 text-muted-foreground" />
+                  <RotateCw className="size-3.5 text-muted-foreground" />
                   <span>{t('decision.review.flipBack')}</span>
                 </button>
               </div>
@@ -450,18 +455,20 @@ export function DecisionCardShell({
             </div>
           </div>
 
-          {/* ② 主体 */}
+          {/* ② 主体：在卡片内部平滑滚动，绝不突破卡片高度 */}
           {body ? (
-            <div className="max-h-80 overflow-y-auto px-5 pb-3">
+            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-2.5">
               {body}
             </div>
-          ) : null}
+          ) : (
+            <div className="flex-1" />
+          )}
 
           {/* ③ 影响行 */}
           <ImpactRow items={impact} />
 
           {/* ④ 正面翻面与证据导引条 */}
-          <div className="flex items-center justify-between border-t border-border/40 bg-muted/20 px-4 py-2 text-xs">
+          <div className="flex shrink-0 items-center justify-between border-t border-border/40 bg-muted/20 px-4 py-2 text-xs">
             <button
               type="button"
               onClick={toggleEvidence}
@@ -503,14 +510,24 @@ export function DecisionCardShell({
         </div>
 
         {/* ═════════════════════ 【背面 BACK】 ═════════════════════ */}
+        {/* 背面必须绝对定位覆盖整个卡片区域，旋转180度，绝对不排在正面下方 */}
         <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+          }}
           className={cn(
-            'decision-card-face decision-card-face-back decision-physical-card flex flex-col overflow-hidden rounded-2xl border bg-card text-card-foreground',
+            'decision-card-face decision-card-face-back decision-physical-card flex flex-col overflow-hidden text-card-foreground',
             isBlocking ? 'border-accent-red/60' : 'border-border',
+            !isFlipped && 'pointer-events-none',
           )}
         >
           {/* 背面顶部档案标头 */}
-          <div className="flex items-center justify-between border-b border-border/60 bg-muted/40 px-5 py-3">
+          <div className="flex shrink-0 items-center justify-between border-b border-border/60 bg-muted/40 px-5 py-3">
             <div className="flex items-center gap-2">
               <FileText className="size-4 text-accent-blue" />
               <span className="text-xs font-semibold tracking-wide text-foreground">
@@ -523,7 +540,7 @@ export function DecisionCardShell({
             <button
               type="button"
               onClick={toggleFlip}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground shadow-2xs transition-colors hover:bg-accent"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-foreground shadow-2xs transition-colors hover:bg-accent"
             >
               <RotateCw className="size-3" />
               <span>{t('decision.review.flipFront')}</span>
@@ -531,9 +548,9 @@ export function DecisionCardShell({
           </div>
 
           {/* 背面主体：完整证据抽屉内容 */}
-          <div className="flex-1 overflow-y-auto p-5 text-xs text-secondary-foreground">
+          <div className="flex-1 min-h-0 overflow-y-auto p-5 text-xs text-secondary-foreground">
             {evidence ?? (
-              <pre className="max-h-96 whitespace-pre-wrap break-all rounded-lg border border-border/60 bg-muted/30 p-3 font-mono text-11 text-foreground">
+              <pre className="whitespace-pre-wrap break-all rounded-lg border border-border/60 bg-muted/30 p-3 font-mono text-11 text-foreground">
                 {JSON.stringify(decision.payload, null, 2)}
               </pre>
             )}
@@ -544,12 +561,12 @@ export function DecisionCardShell({
             ) : null}
           </div>
 
-          {/* 背面底部操作条：一键翻回正面 */}
-          <div className="flex justify-end border-t border-border/40 bg-muted/20 px-4 py-2.5">
+          {/* 背面底部操作条：一键翻回正面继续批阅 */}
+          <div className="flex shrink-0 justify-end border-t border-border/40 bg-muted/20 px-4 py-2.5">
             <button
               type="button"
               onClick={toggleFlip}
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
             >
               <RotateCw className="size-3" />
               <span>{t('decision.review.flipFront')}</span>

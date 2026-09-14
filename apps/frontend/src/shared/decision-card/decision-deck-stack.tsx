@@ -2,6 +2,7 @@
  * 决策卡片堆叠与集中批阅组件（Card Deck Stack）
  * 实现实体卡片堆叠（Deck Stacking）、3D 翻面（Card Flip）、印章落下与顺滑滑走（Dismiss Animation）、卡片翻页。
  */
+import './decision-card.css';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -195,14 +196,14 @@ export function DecisionDeckStack({
             stackOffset === 0
               ? 'decision-deck-card-top relative z-30'
               : stackOffset === 1
-                ? 'decision-deck-card-under-1 absolute top-2 inset-x-0 z-20 pointer-events-none'
-                : 'decision-deck-card-under-2 absolute top-4 inset-x-0 z-10 pointer-events-none';
+                ? 'decision-deck-card-under-1'
+                : 'decision-deck-card-under-2';
 
           return (
             <div
               key={decision.id}
               className={cn(
-                'w-full transition-all duration-300',
+                'w-full transition-all duration-300 flex justify-center',
                 stackClass,
               )}
             >
