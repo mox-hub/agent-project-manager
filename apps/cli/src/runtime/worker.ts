@@ -154,11 +154,16 @@ export function startWorker(
     const prompt = dispatch.prompt;
     const workspaceRoot = dispatch.workspaceRoot;
     if (!providerId || !prompt || !workspaceRoot) {
+      const missing = [
+        !providerId && 'providerId',
+        !prompt && 'prompt',
+        !workspaceRoot && 'workspaceRoot',
+      ].filter(Boolean);
       await reportResult(
         executionRunId,
         'failed',
-        '执行载荷缺失（providerId/prompt/workspaceRoot）',
-        { message: '执行载荷缺失' },
+        `执行载荷缺失：${missing.join('、')}`,
+        { message: `执行载荷缺失（${missing.join('/')}）` },
       );
       return;
     }
