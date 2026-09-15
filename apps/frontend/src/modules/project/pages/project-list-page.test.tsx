@@ -91,7 +91,7 @@ vi.mock('@/shared/ui/filter-panel', () => ({
   FilterPanel: () => <div data-testid="filter-panel" />,
 }));
 
-vi.mock('@/components/ui/unified-create-dialog', () => ({
+vi.mock('@/shared/components/create-dialog', () => ({
   UnifiedCreateDialog: () => null,
 }));
 

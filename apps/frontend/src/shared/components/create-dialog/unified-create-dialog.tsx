@@ -1,6 +1,10 @@
 /**
- * UnifiedCreateDialog - 统一创建对话框
- * 参考设计见 create-dialog.html (Linear 风格, 属性胶囊右侧栏)
+ * UnifiedCreateDialog - 统一创建对话框（CAP-A-18）
+ *
+ * 位置演进：原 components/ui/unified-create-dialog（2026-09-15 迁出 ui 原子层——
+ * 本组件是跨模块业务复合件，反向依赖 issue/project/document/assistant 等模块 hooks，
+ * 违反「components/ui 只放 UI 原子」的放置规范；grill 引用为 shared→module 既有惯例方向，
+ * 保留一条并在此注明）。
  *
  * 结构:
  * ┌─────────────────────────────────────────────────────────┐
@@ -17,8 +21,8 @@
  * │  📎    [Create more ⬜]                [Cancel] [Create]│  Footer
  * └─────────────────────────────────────────────────────────┘
  *
- * 胶囊 (Capsule) 是右侧栏每个属性值的 pill 控件,
- * 点击触发 Popover (status / priority / assignee / project / milestone / label / date)
+ * 胶囊 (Capsule) 等原子一律取自 components/ui/property-panel（单一来源，
+ * 与详情页属性面板共版，禁止在本文件重写原子）；AI 建议卡为业务组件见 ./suggestions-card。
  */
 import * as React from 'react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -35,7 +39,18 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { DateCapsuleField } from '@/components/ui/property-panel';
+import {
+  Capsule,
+  CapsuleSelect,
+  AutoSizeTextarea,
+  PropertyRow,
+  PropsCard,
+  SubTaskCard,
+  DateCapsuleField,
+  PropertyPanelIcons,
+} from '@/components/ui/property-panel';
+import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Popover,
   PopoverContent,
@@ -65,7 +80,8 @@ import type {
   ProjectType,
   ProjectVisibility,
 } from '@/modules/project/api/project-api';
-import type { DocumentCategory as DocCategory } from '@/modules/document/api/document-api';import {
+import type { DocumentCategory as DocCategory } from '@/modules/document/api/document-api';
+import {
   CheckSquare,
   Bug,
   X,
@@ -85,11 +101,11 @@ import type { DocumentCategory as DocCategory } from '@/modules/document/api/doc
   Maximize2,
   Minimize2,
   Sparkles,
-  ListTodo,
   AlertCircle,
   FolderPlus,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { SuggestionsCard } from './suggestions-card';
 
 // ============================================================================
 // Types
@@ -143,15 +159,6 @@ const FileTextIcon = React.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElemen
   ),
 );
 FileTextIcon.displayName = 'FileTextIcon';
-
-const Circle = React.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement> & { className?: string }>(
-  (props, ref) => (
-    <svg ref={ref} {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" />
-    </svg>
-  ),
-);
-Circle.displayName = 'Circle';
 
 const TYPE_META: Record<CreateType, TypeMeta> = {
   task: {
@@ -225,7 +232,7 @@ const SEVERITY_OPTIONS: { value: BugSeverity; label: string; color: string }[] =
 ];
 
 const TASK_STATUS_OPTIONS: { value: string; label: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { className?: string }>; color: string }[] = [
-  { value: 'todo', label: 'Todo', icon: Circle, color: '#8993a4' },
+  { value: 'todo', label: 'Todo', icon: PropertyPanelIcons.Circle, color: '#8993a4' },
   { value: 'in_progress', label: 'In Progress', icon: Loader2, color: '#3b82f6' },
   { value: 'in_review', label: 'In Review', icon: AlertCircle, color: '#8b5cf6' },
   { value: 'done', label: 'Done', icon: Check, color: '#10b981' },
@@ -315,195 +322,6 @@ const DEFAULT_PROJECT: ProjectFormValues = {
 const DEFAULT_MILESTONE: MilestoneFormValues = {
   name: '', description: '', projectId: '', status: 'planned', dueDate: '',
 };
-
-// ============================================================================
-// Atoms
-// ============================================================================
-
-/**
- * Capsule - 右侧属性栏的 pill 控件
- * Linear 风格: 圆角胶囊 + icon + label + chevron
- */
-function Capsule({
-  active,
-  onClick,
-  children,
-  className,
-}: {
-  active?: boolean;
-  onClick?: () => void;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
-        active && 'bg-accent border-border text-foreground',
-        className,
-      )}
-    >
-      <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">{children}</span>
-      <ChevronDown className="size-3 opacity-50 shrink-0" />
-    </button>
-  );
-}
-
-function CapsuleSelect({
-  value,
-  options,
-  onChange,
-  active,
-  placeholder = 'None',
-}: {
-  value: string;
-  options: { value: string; label: string; icon?: React.ReactNode; color?: string }[];
-  onChange: (v: string) => void;
-  active?: boolean;
-  placeholder?: string;
-}) {
-  const current = options.find((o) => o.value === value);
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={
-        <button
-          type="button"
-          className={cn(
-            'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
-            active && 'bg-accent border-border text-foreground',
-          )}
-        >
-          {current?.icon}
-          <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">
-            {current?.label ?? placeholder}
-          </span>
-          <ChevronDown className="size-3 opacity-50 shrink-0" />
-        </button>
-      }>
-      </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        sideOffset={4}
-        className="w-50 p-1 max-h-65 overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex flex-col">
-          <button
-            type="button"
-            onClick={() => { onChange(''); setOpen(false); }}
-            className={cn(
-              'flex items-center gap-2 px-2 py-1.5 rounded-md text-xs hover:bg-accent transition-colors',
-              !value && 'bg-accent',
-            )}
-          >
-            <span className="text-muted-foreground italic">{placeholder}</span>
-          </button>
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={cn(
-                'flex items-center gap-2 px-2 py-1.5 rounded-md text-xs hover:bg-accent transition-colors',
-                value === opt.value && 'bg-accent',
-              )}
-            >
-              {opt.icon}
-              <span className="flex-1 text-left">{opt.label}</span>
-              {value === opt.value && <Check className="size-3.5 text-primary" />}
-            </button>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-/**
- * PropertyRow - 右侧属性栏的一行 (icon + label + value)
- */
-function PropertyRow({ icon, label, children }: { icon?: React.ReactNode; label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg min-h-8 hover:bg-muted/40 transition-colors">
-      {icon && <span className="text-muted-foreground shrink-0">{icon}</span>}
-      <span className="text-xs text-muted-foreground flex-1 min-w-0 truncate">{label}</span>
-      <div className="shrink-0">{children}</div>
-    </div>
-  );
-}
-
-/**
- * PropsCard - 右侧属性面板卡 (可折叠为胶囊)
- */
-function PropsCard({
-  title,
-  collapsed,
-  onToggleCollapse,
-  children,
-}: {
-  title: string;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className={cn(
-      'rounded-xl border border-border bg-card overflow-hidden transition-all',
-      collapsed && 'rounded-full',
-    )}>
-      <div className={cn(
-        'flex items-center justify-between px-3 py-2 bg-muted/30',
-        collapsed && 'border-b-0',
-      )}>
-        <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          title={collapsed ? '展开' : '收起'}
-        >
-          {collapsed ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
-        </button>
-      </div>
-      {!collapsed && <div className="p-1.5 flex flex-col gap-0.5">{children}</div>}
-    </div>
-  );
-}
-
-/**
- * AutoSizeTextarea - 自适应高度 textarea
- */
-function AutoSizeTextarea({
-  rows = 1,
-  className,
-  ...props
-}: React.ComponentProps<'textarea'> & { rows?: number }) {
-  return (
-    <Textarea
-      rows={rows}
-      className={cn(
-        'field-sizing-content bg-transparent dark:bg-transparent [background-color:transparent] !border-0 shadow-none px-0.5 py-0 rounded-none focus-visible:ring-0 focus-visible:border-transparent min-h-0 resize-none',
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
-function FillTextarea(props: React.ComponentProps<'textarea'>) {
-  return (
-    <Textarea
-      {...props}
-      className={cn(
-        'field-sizing-fixed h-full bg-transparent dark:bg-transparent [background-color:transparent] !border-0 shadow-none px-2.5 py-2 rounded-md focus-visible:ring-0 focus-visible:border-transparent resize',
-        props.className,
-      )}
-    />
-  );
-}
 
 // ============================================================================
 // Main component
@@ -922,7 +740,7 @@ export function UnifiedCreateDialog({
       const dueVal: string = taskForm.watch('dueDate');
       const labelsVal: string[] = taskForm.watch('labels') ?? [];
       const statusOpt = TASK_STATUS_OPTIONS.find((s) => s.value === statusVal);
-      const StatusIcon = statusOpt?.icon ?? Circle;
+      const StatusIcon = statusOpt?.icon ?? PropertyPanelIcons.Circle;
       const memberOptions = members.map((m) => ({ value: m.id, label: m.displayName }));
       const projectOptions = projectList.map((p) => ({ value: p.id, label: p.name }));
       return (
@@ -996,7 +814,7 @@ export function UnifiedCreateDialog({
       const dueVal: string = bugForm.watch('dueDate');
       const labelsVal: string[] = bugForm.watch('labels') ?? [];
       const statusOpt = TASK_STATUS_OPTIONS.find((s) => s.value === statusVal);
-      const StatusIcon = statusOpt?.icon ?? Circle;
+      const StatusIcon = statusOpt?.icon ?? PropertyPanelIcons.Circle;
       const memberOptions = members.map((m) => ({ value: m.id, label: m.displayName }));
       const projectOptions = projectList.map((p) => ({ value: p.id, label: p.name }));
       return (
@@ -1186,10 +1004,10 @@ export function UnifiedCreateDialog({
           <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
             <div className="p-4 pb-2 flex flex-col gap-3 flex-1 min-h-0">
               {error && (
-                <div role="alert" className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                <Alert variant="destructive" className="py-2 text-xs">
                   <AlertCircle className="size-3.5 shrink-0" />
-                  {error}
-                </div>
+                  <AlertDescription className="text-xs">{error}</AlertDescription>
+                </Alert>
               )}
 
               {/* AI 创建：自然语言描述面板（替代标题/描述/属性表单） */}
@@ -1256,15 +1074,17 @@ export function UnifiedCreateDialog({
 
             {/* Sub-task block (matches reference: collapsible card at bottom of main) */}
             {(activeType === 'task') && (
-              <SubTaskCard
-                open={subOpen}
-                onOpen={() => setSubOpen(true)}
-                onClose={() => { setSubOpen(false); setSubTitle(''); setSubDesc(''); }}
-                title={subTitle}
-                desc={subDesc}
-                onTitleChange={setSubTitle}
-                onDescChange={setSubDesc}
-              />
+              <div className="mt-auto">
+                <SubTaskCard
+                  open={subOpen}
+                  onOpen={() => setSubOpen(true)}
+                  onClose={() => { setSubOpen(false); setSubTitle(''); setSubDesc(''); }}
+                  title={subTitle}
+                  desc={subDesc}
+                  onTitleChange={setSubTitle}
+                  onDescChange={setSubDesc}
+                />
+              </div>
             )}
           </div>
 
@@ -1301,14 +1121,10 @@ export function UnifiedCreateDialog({
             <Paperclip className="size-3.5" />
           </button>
           <div className="flex-1" />
-          <button
-            type="button"
-            onClick={() => setCreateMore((v) => !v)}
-            className="flex items-center gap-2 cursor-pointer select-none"
-          >
+          <div className="flex items-center gap-2 cursor-pointer select-none">
             <span className="text-xs text-muted-foreground hover:text-foreground transition-colors">Create more</span>
             <Switch checked={createMore} onCheckedChange={setCreateMore} />
-          </button>
+          </div>
           <Button variant="ghost" size="sm" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
@@ -1364,41 +1180,6 @@ function IconBtn({
     >
       {children}
     </button>
-  );
-}
-
-function Switch({
-  checked,
-  onCheckedChange,
-}: {
-  checked: boolean;
-  onCheckedChange: (v: boolean) => void;
-}) {
-  return (
-    <span
-      role="switch"
-      aria-checked={checked}
-      tabIndex={0}
-      onClick={() => onCheckedChange(!checked)}
-      onKeyDown={(e) => {
-        if (e.key === ' ' || e.key === 'Enter') {
-          e.preventDefault();
-          onCheckedChange(!checked);
-        }
-      }}
-      className={cn(
-        'relative inline-flex items-center w-8 h-4.5 rounded-full border cursor-pointer transition-colors',
-        checked ? 'bg-primary border-primary' : 'border-border bg-transparent',
-      )}
-    >
-      <span
-        className={cn(
-          'absolute top-0.5 size-3 rounded-full bg-white transition-all shadow',
-          checked ? 'left-4' : 'left-1',
-          !checked && 'bg-muted-foreground/70',
-        )}
-      />
-    </span>
   );
 }
 
@@ -1485,6 +1266,18 @@ function DescriptionField(props: {
     default: textarea = null;
   }
   return <div className="flex-1 min-h-30 flex flex-col">{textarea}</div>;
+}
+
+function FillTextarea(props: React.ComponentProps<'textarea'>) {
+  return (
+    <Textarea
+      {...props}
+      className={cn(
+        'field-sizing-fixed h-full bg-transparent dark:bg-transparent [background-color:transparent] !border-0 shadow-none px-2.5 py-2 rounded-md focus-visible:ring-0 focus-visible:border-transparent resize',
+        props.className,
+      )}
+    />
+  );
 }
 
 function ExtraFields({
@@ -1594,210 +1387,3 @@ function ExtraFields({
   }
   return null;
 }
-
-function SuggestionsCard({
-  collapsed,
-  onToggle,
-  onFetch,
-  onApply,
-}: {
-  collapsed: boolean;
-  onToggle: () => void;
-  /** 调静默 AI 场景 create-suggestions，返回可回填建议；失败抛错由卡片展示 */
-  onFetch: () => Promise<CreateSuggestion[]>;
-  /** 点击建议 chip 回填表单 */
-  onApply: (s: CreateSuggestion) => void;
-}) {
-  const [aiItems, setAiItems] = useState<CreateSuggestion[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [appliedLabels, setAppliedLabels] = useState<string[]>([]);
-
-  const items = aiItems ?? [
-    { label: 'High priority', icon: AlertCircle, color: 'text-accent-orange' },
-    { label: 'Tag: frontend', icon: Tag, color: 'text-accent-blue' },
-    { label: 'Assign me', icon: User, color: 'text-accent-purple' },
-    { label: 'Today', icon: CalendarIcon, color: 'text-accent-green' },
-  ];
-  const fromAi = aiItems !== null;
-
-  const fetchAi = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const parsed = await onFetch();
-      setAiItems(parsed);
-      setAppliedLabels([]);
-    } catch (e) {
-      setAiItems(null);
-      setError(e instanceof Error ? e.message : 'AI 建议暂不可用');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className={cn(
-      'rounded-xl border border-border bg-card overflow-hidden transition-all',
-      collapsed && 'rounded-full',
-    )}>
-      <div className={cn(
-        'flex items-center gap-1.5 px-3 py-2 bg-muted/30',
-        collapsed && 'border-b-0',
-      )}>
-        <Sparkles className="size-3 text-accent-purple" />
-        <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">Suggestions</span>
-        {!collapsed ? (
-          <button
-            type="button"
-            onClick={fetchAi}
-            disabled={loading}
-            className="ml-auto flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-10 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-            data-ai-action="create-dialog.suggestions.fetch"
-          >
-            <Sparkles className="size-2.5 text-accent-purple" />
-            {loading ? '生成中…' : fromAi ? '再生成' : 'AI 建议'}
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={onToggle}
-          className={cn(
-            'size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors',
-            !collapsed && 'ml-1',
-          )}
-        >
-          {collapsed ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
-        </button>
-      </div>
-      {!collapsed && (
-        <div className="p-1.5 flex flex-col gap-0.5">
-          {error ? (
-            <p className="px-2 py-1 text-10 text-accent-red">{error}</p>
-          ) : null}
-          {items.map((it) => {
-            const isAiChip = fromAi && 'field' in it;
-            const applied = appliedLabels.includes(it.label);
-            const Icon = isAiChip ? Sparkles : (it as { icon: typeof Tag }).icon;
-            return (
-              <button
-                key={it.label}
-                type="button"
-                disabled={!isAiChip || applied}
-                onClick={() => {
-                  if (isAiChip) {
-                    onApply(it);
-                    setAppliedLabels((prev) => [...prev, it.label]);
-                    toast.success(`已应用：${it.label}`);
-                  }
-                }}
-                className={cn(
-                  'flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground transition-colors',
-                  isAiChip
-                    ? applied
-                      ? 'opacity-50'
-                      : 'hover:bg-accent hover:text-foreground'
-                    : 'cursor-default',
-                )}
-              >
-                <Icon className={cn('size-3.5', isAiChip ? 'text-accent-purple' : (it as { color?: string }).color)} />
-                <span className="flex-1 text-left">{it.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SubTaskCard({
-  open,
-  onOpen,
-  onClose,
-  title,
-  desc,
-  onTitleChange,
-  onDescChange,
-}: {
-  open: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-  title: string;
-  desc: string;
-  onTitleChange: (v: string) => void;
-  onDescChange: (v: string) => void;
-}) {
-  if (!open) {
-    return (
-      <div className="mt-auto px-4 py-3 border-t border-border/40 bg-card/80 backdrop-blur-sm">
-        <button
-          type="button"
-          onClick={onOpen}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors w-full px-1 py-1"
-        >
-          <Plus className="size-3.5" />
-          <span>Add sub-task</span>
-        </button>
-      </div>
-    );
-  }
-  return (
-    <div className="mt-auto px-4 py-3 border-t border-border/40 bg-card/80 backdrop-blur-sm">
-      <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border/40 bg-muted/30">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <ListTodo className="size-3.5" />
-            <span>Sub-task</span>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            title="关闭"
-          >
-            <X className="size-3" />
-          </button>
-        </div>
-        <div className="p-3 flex flex-col gap-2">
-          <AutoSizeTextarea
-            autoFocus
-            rows={1}
-            placeholder="Sub-task title"
-            value={title}
-            onChange={(e) => onTitleChange(e.target.value)}
-            className="w-full text-sm font-semibold placeholder:text-muted-foreground/50 focus-visible:ring-0"
-          />
-          <AutoSizeTextarea
-            rows={1}
-            placeholder="Add description…"
-            value={desc}
-            onChange={(e) => onDescChange(e.target.value)}
-            className="w-full text-xs font-normal placeholder:text-muted-foreground/50 focus-visible:ring-0"
-          />
-        </div>
-        <div className="px-4 pb-3 flex flex-wrap gap-1.5">
-          <SmallCaps icon={Circle} label="Todo" />
-          <SmallCaps icon={User} label="Assignee" />
-          <SmallCaps icon={AlertCircle} label="Priority" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SmallCaps({ icon: Icon, label }: { icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { className?: string }>; label: string }) {
-  return (
-    <button
-      type="button"
-      className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-full border border-border bg-transparent text-11 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-    >
-      <Icon className="size-3" />
-      <span>{label}</span>
-    </button>
-  );
-}
-
-
-
-

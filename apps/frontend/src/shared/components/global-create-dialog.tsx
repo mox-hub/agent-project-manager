@@ -10,7 +10,7 @@
  * 常挂载会让每个页面都付这份代价；base-ui Dialog 在 open=true 首次渲染时
  * 仍会走入场过渡，视觉不受影响。
  */
-import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
+import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { useAppStore } from '@/infrastructure/store/app-store';
 
 export function GlobalCreateDialog() {

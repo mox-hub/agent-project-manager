@@ -73,7 +73,7 @@ vi.mock('../components/dashboard/project-detail-frame', () => ({
   ),
 }));
 
-vi.mock('@/components/ui/unified-create-dialog', () => ({
+vi.mock('@/shared/components/create-dialog', () => ({
   UnifiedCreateDialog: () => <div data-testid="unified-create-dialog" />,
 }));
 

@@ -109,7 +109,7 @@ vi.mock('@/shared/ui/filter-toolbar', () => ({
   FilterToolbar: () => <div data-testid="task-filter-toolbar" />,
 }));
 
-vi.mock('@/components/ui/unified-create-dialog', () => ({
+vi.mock('@/shared/components/create-dialog', () => ({
   UnifiedCreateDialog: () => null,
 }));
 

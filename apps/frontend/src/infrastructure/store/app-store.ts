@@ -37,7 +37,7 @@ export type ViewingEntityType =
   | 'project';
 
 /**
- * 统一创建面板可创建的类型（与 `components/ui/unified-create-dialog` 的 `CreateType` 结构一致）。
+ * 统一创建面板可创建的类型（与 `shared/components/create-dialog` 的 `CreateType` 结构一致）。
  * 定义在本处是为了让 store 不反向依赖 UI 层（ui → infrastructure 单向）。
  */
 export type CreateDialogType =
