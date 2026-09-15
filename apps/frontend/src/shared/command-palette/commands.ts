@@ -50,8 +50,10 @@ export type CommandEntry = {
   /** 双向条目（主题切换）：当前为深色模式时改用该 key */
   darkModeLabelKey?: string;
   keywords?: string[];
-  /** 仅展示不绑定；只保留真实存在的快捷键绑定（如 Alt A），假 chord 一律不写 */
+  /** 仅展示不绑定；只保留真实存在的快捷键绑定，假 chord 一律不写 */
   shortcut?: string;
+  /** 关联全局快捷键注册表动作 id（CAP-A-17）：显示键随用户自定义实时解析，优先于 shortcut */
+  hotkeyId?: string;
   group: CommandGroupId;
   /** 路由跳转目标（与 action 二选一） */
   to?: string;
@@ -118,8 +120,8 @@ export const commandEntries: CommandEntry[] = [
     id: 'cmd-ask-ai',
     labelKey: 'assistant.palette.ask',
     group: 'actions',
-    // Alt+A 为真实存在的全局快捷键（shell-layout 绑定主 AI 面板开合），仅展示
-    shortcut: 'Alt A',
+    // 显示键走快捷键注册表（缺省 Alt+A），随用户在设置 · 快捷键中的改键实时反映
+    hotkeyId: 'ai-assistant',
     icon: MessagesSquare,
     keywords: ['ai', 'assistant', 'ask', 'chat', '提问'],
     action: 'openAiPanel',

@@ -24,6 +24,9 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { IconStack } from '@/components/ui/icon-stack';
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
 import { useTranslation } from '@/hooks/useTranslation';
+import { EDITABLE_HOTKEYS } from '@/shared/hotkeys/hotkey-definitions';
+import { getEffectiveCombo } from '@/shared/hotkeys/hotkey-store';
+import { formatComboForDisplay } from '@/shared/hotkeys/hotkey-utils';
 
 interface HelpSection {
   id: string;
@@ -40,16 +43,20 @@ interface HelpArticle {
   content: string;
 }
 
+/**
+ * 快捷键表（CAP-A-17 注册表驱动）：全局组从 hotkey 注册表取当前生效键
+ * （含用户自定义），场景组为真实存在的上下文键。历史上宣传过但从未实现的
+ * 键位（Ctrl+N/P/B、Ctrl+Shift+A、Ctrl+/）已删除——help 不说谎。
+ */
 function getKeyboardShortcuts(t: ReturnType<typeof useTranslation>['t']) {
+  const globalRows = EDITABLE_HOTKEYS.map((def) => ({
+    keys: formatComboForDisplay(getEffectiveCombo(def.id) ?? def.defaultKeys),
+    action: t(def.labelKey),
+  }));
   return [
-    { keys: ['Ctrl', 'K'], action: t('help.shortcuts.commandPalette') },
-    { keys: ['Ctrl', 'N'], action: t('help.shortcuts.newTask') },
-    { keys: ['Ctrl', 'P'], action: t('help.shortcuts.projectSwitch') },
-    { keys: ['Ctrl', '/'], action: t('help.shortcuts.showHelp') },
-    { keys: ['Ctrl', 'B'], action: t('help.shortcuts.toggleSidebar') },
-    { keys: ['Ctrl', 'Shift', 'A'], action: t('help.shortcuts.aiAssistant') },
+    ...globalRows,
     { keys: ['Esc'], action: t('help.shortcuts.closeDialog') },
-    { keys: ['Ctrl', 'S'], action: t('help.shortcuts.saveChanges') },
+    { keys: formatComboForDisplay('mod+s'), action: t('help.shortcuts.saveChanges') },
   ];
 }
 

@@ -11,9 +11,11 @@ import { useNavigate } from "react-router-dom"
 import type { LucideIcon } from "lucide-react"
 import { CommandDialog, CommandEmpty, CommandFooter, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command"
 import { useTranslation } from "@/hooks/useTranslation"
+import { useGlobalHotkey } from "@/shared/hotkeys/use-global-hotkey"
+import { OPEN_COMMAND_PALETTE_EVENT } from "./open-command-palette-event"
 
-/** 外部入口（如 TabBar「+」按钮）请求打开命令面板的 CustomEvent 名 */
-export const OPEN_COMMAND_PALETTE_EVENT = "open-command-palette"
+// 兼容既有消费方（TabBar 等）从 provider 模块取事件名
+export { OPEN_COMMAND_PALETTE_EVENT }
 
 export type CommandPaletteItem = {
   id: string
@@ -67,18 +69,9 @@ export function CommandPaletteProvider({
     }
   }, [])
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Ctrl+K 或 Ctrl+/ 打开命令面板
-      if ((event.metaKey || event.ctrlKey) && (event.key.toLowerCase() === 'k' || event.key === '/')) {
-        event.preventDefault()
-        setOpen((prev) => !prev)
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [])
+  // 全局快捷键走注册表（CAP-A-17）：缺省 mod+k，用户可在设置 · 快捷键改键；
+  // 旧 Ctrl+/ 双键随收编移除（help 页本就误写、单一键位足够）
+  useGlobalHotkey('command-palette', () => setOpen((prev) => !prev))
 
   // TabBar「+」等外部入口通过 CustomEvent 请求打开面板（此前派发无监听者，按钮点击无效）
   useEffect(() => {
