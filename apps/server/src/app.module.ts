@@ -66,9 +66,12 @@ import {
   CsrfConfig,
 } from './common';
 import { throttlerConfig } from './common/throttler/throttler.config';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    // 兜底改造批 2：执行悬挂对账 cron（ExecutionReconcileService @Interval）
+    ScheduleModule.forRoot(),
     ConfigModule,
     CryptoModule,
     LoggerModule,
