@@ -1037,7 +1037,7 @@ export function UnifiedCreateDialog({
     >
       <DialogContent
         className={cn(
-          'overflow-hidden p-0 gap-0 border border-border/70 bg-card/95 backdrop-blur-xl shadow-2xl transition-[width,height] duration-300',
+          'overflow-hidden p-0 gap-0 border border-border/70 bg-card/95 backdrop-blur-xl shadow-2xl transition-all duration-300',
           maximized ? 'w-dialog h-dialog-screen' : widthClass,
         )}
         keepDefaultWidth={false}

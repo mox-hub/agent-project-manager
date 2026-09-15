@@ -53,6 +53,16 @@ field 只能是：title、priority(low|medium|high|critical)、labels(逗号分�
   'create-draft': {
     description:
       '统一创建面板 AI 代理草稿（CAP-A-18）：一句话自然语言解析为实体创建草稿（type + fields），前端草稿卡人确认后复用手动提交流落库',
+    prepareContext: async (context) => {
+      const prompt =
+        typeof context.prompt === 'string' ? context.prompt.trim() : '';
+      if (!prompt) {
+        throw new BadRequestException(
+          'create-draft 缺少 prompt：请描述要创建的内容',
+        );
+      }
+      return context;
+    },
     buildInstructions: (context) => {
       const typeHint =
         typeof context.typeHint === 'string' ? context.typeHint : '';
