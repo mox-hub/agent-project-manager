@@ -8,6 +8,7 @@ import {
 } from './command-palette-provider';
 import { commandEntries, COMMAND_GROUP_LABEL_KEYS } from './commands';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
+import { useHotkeyStore } from '@/shared/hotkeys/hotkey-store';
 
 // vitest 环境无 i18next 实例：t() 直通返回 key（与现有组件测试做法一致）
 vi.mock('@/hooks/useTranslation', () => ({
@@ -79,11 +80,15 @@ describe('command palette registry (commands.ts)', () => {
     expect(ids).toContain('cmd-ai');
   });
 
-  it('假 chord 快捷键已全部移除，仅保留真实存在的 Alt A（仅展示不绑定）', () => {
+  it('假 chord 快捷键已全部移除；真实快捷键走 hotkeyId 注册表声明（CAP-A-17）', () => {
     const shortcuts = commandEntries
       .map((entry) => entry.shortcut)
       .filter((shortcut): shortcut is string => Boolean(shortcut));
-    expect(shortcuts).toEqual(['Alt A']);
+    expect(shortcuts).toEqual([]);
+    const hotkeyIds = commandEntries
+      .map((entry) => entry.hotkeyId)
+      .filter((id): id is string => Boolean(id));
+    expect(hotkeyIds).toEqual(['ai-assistant']);
   });
 
   it('每个条目都有 labelKey 与合法分组，图标二选一（entity 或 icon）已填充', () => {
@@ -144,5 +149,56 @@ describe('CommandPaletteProvider', () => {
     await waitFor(() =>
       expect(screen.getByPlaceholderText('commandPalette.placeholder')).toBeTruthy(),
     );
+  });
+});
+
+describe('CommandPaletteProvider 快捷键收编（CAP-A-17 注册表）', () => {
+  it('缺省 Ctrl+K 切换面板，旧 Ctrl+/ 双键已随收编移除', async () => {
+    renderProvider();
+
+    expect(screen.getByTestId('palette-open').textContent).toBe('false');
+    act(() => {
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }),
+      );
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId('palette-open').textContent).toBe('true'),
+    );
+
+    act(() => {
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: '/', ctrlKey: true, bubbles: true }),
+      );
+    });
+    // Ctrl+/ 不再有监听：面板保持开启不被切换
+    expect(screen.getByTestId('palette-open').textContent).toBe('true');
+  });
+
+  it('用户自定义改键后：旧键失效、新键生效（注册表 override 驱动监听）', async () => {
+    useHotkeyStore.getState().setOverride('command-palette', 'mod+j');
+    try {
+      renderProvider();
+
+      act(() => {
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }),
+        );
+      });
+      expect(screen.getByTestId('palette-open').textContent).toBe('false');
+
+      act(() => {
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'j', ctrlKey: true, bubbles: true }),
+        );
+      });
+      await waitFor(() =>
+        expect(screen.getByTestId('palette-open').textContent).toBe('true'),
+      );
+    } finally {
+      act(() => {
+        useHotkeyStore.getState().resetAll();
+      });
+    }
   });
 });

@@ -13,6 +13,9 @@ import { DOCK_ROOT_ATTR, isWithinAiCollabSurface } from '@/shared/lib/floating-l
 import { useTheme } from '@/shared/theme/theme-context';
 import { useUnreadNotificationsCount } from '@/modules/notification/hooks/use-notifications';
 import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
+import { OPEN_COMMAND_PALETTE_EVENT } from '@/shared/command-palette/open-command-palette-event';
+import { formatComboForDisplay } from '@/shared/hotkeys/hotkey-utils';
+import { getEffectiveCombo } from '@/shared/hotkeys/hotkey-store';
 
 export type { DockAiColleague };
 
@@ -26,8 +29,6 @@ export interface BottomDockProps {
 
 export function BottomDock({ preview = false }: BottomDockProps = {}) {
   const { t } = useTranslation();
-  const isMac =
-    typeof navigator !== 'undefined' && navigator.platform.toUpperCase().includes('MAC');
   const navigate = useNavigate();
   const { mode, toggleTheme } = useTheme();
   const openAssistantWithDraft = useAppStore((s) => s.openAssistantWithDraft);
@@ -166,16 +167,10 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
     handleClosePrompt(false);
   };
 
-  // 全局命令面板快捷触发
+  // 全局命令面板快捷触发：走命令式 CustomEvent（不伪造键位事件，
+  // 天然兼容用户在设置 · 快捷键中的自定义改键）
   const handleOpenSearch = () => {
-    const event = new KeyboardEvent('keydown', {
-      key: 'k',
-      code: 'KeyK',
-      ctrlKey: !isMac,
-      metaKey: isMac,
-      bubbles: true,
-    });
-    window.dispatchEvent(event);
+    window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
   };
 
   /**
@@ -199,7 +194,7 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
       onClick: () => openCreateDialog({ type: 'task' }),
     },
     search: {
-      label: `${t('dock.search')} (${isMac ? '⌘K' : 'Ctrl+K'})`,
+      label: `${t('dock.search')} (${formatComboForDisplay(getEffectiveCombo('command-palette') ?? 'mod+k').join(' ')})`,
       node: <Search className="size-4" />,
       onClick: handleOpenSearch,
     },
