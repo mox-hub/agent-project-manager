@@ -21,6 +21,16 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-A-19 执行侧兜底改造：失败感知+悬挂对账+验收供给侧四批（2026-09-15 夜航）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| server+cli | **助手 CLI 派发载荷修复（预热）**：sendViaRuntime/dispatchExecution 两处派发补齐 providerId（用户定向或守护进程首个 CLI 通道）与 workspaceRoot（守护进程注册根缺失时回退项目工作区三级配置 ProjectWorkspace→git.workspaceRoot→Repository）；字段缺失时 server 侧抛可读 400 指引；worker 报错精确化只列缺失字段 | CAP-A-19 | assistant 单测 24 用例（新增 3）+ assistant-cli-chat e2e 3 用例 + worker 4 用例全绿 | `docs/roadmap/execution-fallback-plan.md` |
+| server+frontend | **批1 失败感知与一键重试**：notification-event-subscriber 订阅 execution.run.updated（failed/blocked 定向通知发起人+负责人，NOTIFY_EXECUTION_AUDIENCE=project 可切全员）与 approval.requested；受众排除订阅枢纽已覆盖用户防双条；网关转发两事件至前端（死订阅根因治愈）；execution-items-panel 改监听真实事件；useExecutionRuns/useIssueExecutions/run 详情非终态轮询兜底；执行中心 failed/blocked 行「重新派发」+ 助手失败卡「重试」；通知点击跳转工单/项目；未读数 60s 轮询兜底；新增全局断线横幅 ConnectionBanner | CAP-A-19 | notification subscriber 16 用例（新增 5：订阅断言/受众去重/completed 不发/审批通知/project 模式）+ 前端 assistant/notification 50 用例全绿 | 契约：apm-shared domain-events 补 ApprovalRequested 常量与两事件 payload schema |
+| server | **批2 悬挂对账 watchdog**：AppModule 挂 @nestjs/schedule；新增 ExecutionReconcileService（2min 周期）——①pending 派发超 TTL（24h，EXEC_PENDING_TTL_MS 可配）置 expired+关联 run 收敛 failed；②AI 来源 in_progress 超阈值（5min，EXEC_STALL_THRESHOLD_MS 可配，裁决缩短默认超时）且守护进程心跳离线 → 收敛 failed（在线不误杀、人工执行项豁免）；③WorkflowService reconcileStalledRuns（5min 自挂调度，running 超 24h 置 failed）；收敛统一出口 publish runtime.execution.result 复用既有结果链路（failExecution+助手占位原位替换+失败通知）。取消语义修正：cancelExecution 由 blocked 改 superseded 终态；越权修复：runs 写端点五处补 getExecutionRun 归属校验；updateExecutionRun 加 force 内部选项（DTO 不可达） | CAP-A-19 | execution/workflow/cli-dispatch 8 套件 75 用例全绿（新增对账 4：TTL 过期/离线收敛/在线不误杀/人工豁免） | 裁决记录见方案文档 §六 |
+| server+frontend | **批3 验收标准供给侧**：assistant-silent 新增 acceptance-draft 场景（issueId 侦查/创建面板草稿双模式，3~6 条可检查标准，绝不编造）；POST /acceptance/issue/:issueId/apply-criteria 人确认落库（找/建活契约增量写入同文去重）；派发前验收门禁 assertDispatchGate——无活契约或 0 条标准均 400 阻断（裁决先按严格要求）；CreateIssueDto 加 acceptanceCriteria 创建即落契约；创建面板 task/bug 加验收标准编辑区+AI 生成；任务详情验收卡空契约区加 AI 代写主入口+AcceptanceDraftDialog（生成→勾选→确认三步） | CAP-A-19（兑付 CAP-B-01/B-02 供给侧） | server acceptance/issue/cli-dispatch 96 用例全绿；前端 assistant 46 用例全绿 | 契约：openapi.json 重导出+双端类型再生，contract:check 零漂移 |
+| frontend+server | **批4 一致性清理**：摘除老 execution 前端模块死 API（retry/escalate/adjustParams 等指向不存在路由）与 execution-recovery-dialog/use-execution-recovery/execution-run-panel 死组件及 approvals 死 hooks；决策收件箱过滤过期提案+resolve 拒绝过期决议；proposal.create 发布 decision.proposal.created→网关转发→shell 失效 decisions 查询（收件箱/徽标实时刷新）；cli-executor 的 ai.stream 补 userId（惰性解析 run 属主）实现进程内执行前端可见 | CAP-A-19 | server decision/cli-dispatch 37 用例 + 前端 issue/execution 45 用例全绿 | — |
+
 ### CAP-A-17 快捷键体系：全局键位注册表 + 设置页自定义 + 散落监听收编（2026-09-15）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

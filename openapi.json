@@ -24314,6 +24314,152 @@
         ]
       }
     },
+    "/_api/acceptance/issue/{issueId}/apply-criteria": {
+      "post": {
+        "operationId": "AcceptanceController_applyCriteriaForIssue",
+        "parameters": [
+          {
+            "name": "issueId",
+            "required": true,
+            "in": "path",
+            "description": "任务 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "落库结果：契约 id + 新增/去重条数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "acceptanceId": "xxx",
+                    "added": 4,
+                    "skipped": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "AI 代写验收标准落库（人确认后调用，增量写入同文去重）",
+        "tags": [
+          "Acceptance"
+        ]
+      }
+    },
     "/_api/acceptance/{id}/validate-completion": {
       "post": {
         "operationId": "AcceptanceController_validateCompletion",
@@ -60805,6 +60951,20 @@
       "CreateIssueDto": {
         "type": "object",
         "properties": {
+          "acceptanceCriteria": {
+            "description": "验收标准（兜底改造批 3）：传入即创建时同步落验收契约+标准，进入门禁体系",
+            "example": [
+              {
+                "content": "登录成功后跳转到工作台",
+                "criteriaType": "functional",
+                "severity": "high"
+              }
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "projectId": {
             "type": "string",
             "description": "Project ID (optional, can be bound later)",

@@ -2790,6 +2790,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/acceptance/issue/{issueId}/apply-criteria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** AI 代写验收标准落库（人确认后调用，增量写入同文去重） */
+        post: operations["AcceptanceController_applyCriteriaForIssue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/acceptance/{id}/validate-completion": {
         parameters: {
             query?: never;
@@ -8107,6 +8124,17 @@ export interface components {
             order: number;
         };
         CreateIssueDto: {
+            /**
+             * @description 验收标准（兜底改造批 3）：传入即创建时同步落验收契约+标准，进入门禁体系
+             * @example [
+             *       {
+             *         "content": "登录成功后跳转到工作台",
+             *         "criteriaType": "functional",
+             *         "severity": "high"
+             *       }
+             *     ]
+             */
+            acceptanceCriteria?: string[];
             /**
              * @description Project ID (optional, can be bound later)
              * @example project-123
@@ -28598,6 +28626,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AcceptanceResponseDto"][];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AcceptanceController_applyCriteriaForIssue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 任务 ID */
+                issueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 落库结果：契约 id + 新增/去重条数 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description 请求参数错误 */
