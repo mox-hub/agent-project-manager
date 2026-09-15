@@ -6,6 +6,7 @@
  * CAP-A-18 批4：移除原四条不可点的静态假建议（死可供性），未生成时渲染 EmptyState 引导。
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
@@ -25,10 +26,11 @@ export function SuggestionsCard({
   /** 点击建议 chip 回填表单 */
   onApply: (s: CreateSuggestion) => void;
 }) {
+  const { t } = useTranslation();
   const [aiItems, setAiItems] = useState<CreateSuggestion[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [appliedLabels, setAppliedLabels] = useState<string[]>([]);
+  const [appliedKeys, setAppliedKeys] = useState<string[]>([]);
 
   const items = aiItems ?? [];
 
@@ -38,10 +40,10 @@ export function SuggestionsCard({
     try {
       const parsed = await onFetch();
       setAiItems(parsed);
-      setAppliedLabels([]);
+      setAppliedKeys([]);
     } catch (e) {
       setAiItems(null);
-      setError(e instanceof Error ? e.message : 'AI 建议暂不可用');
+      setError(e instanceof Error ? e.message : t('unifiedCreate.error.suggestionFailed'));
     } finally {
       setLoading(false);
     }
@@ -57,7 +59,9 @@ export function SuggestionsCard({
         collapsed && 'border-b-0',
       )}>
         <Sparkles className="size-3 text-accent-purple" />
-        <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">Suggestions</span>
+        <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">
+          {t('unifiedCreate.suggestions.title')}
+        </span>
         {!collapsed ? (
           <button
             type="button"
@@ -67,7 +71,7 @@ export function SuggestionsCard({
             data-ai-action="create-dialog.suggestions.fetch"
           >
             <Sparkles className="size-2.5 text-accent-purple" />
-            {loading ? '生成中…' : 'AI 建议'}
+            {loading ? t('unifiedCreate.suggestions.generating') : t('unifiedCreate.aiSuggestions')}
           </button>
         ) : null}
         <button
@@ -89,13 +93,13 @@ export function SuggestionsCard({
           {items.length === 0 ? (
             <EmptyState
               variant="card"
-              title="暂无建议"
-              description="点上方「AI 建议」，按已填内容生成补全"
+              title={t('unifiedCreate.suggestions.empty')}
+              description={t('unifiedCreate.suggestions.emptyHint')}
               className="min-h-0 border-0 p-1"
             />
           ) : (
             items.map((it, idx) => {
-              const applied = appliedLabels.includes(`${it.field}:${it.value}`);
+              const applied = appliedKeys.includes(`${it.field}:${it.value}`);
               return (
                 <button
                   key={`${it.field}-${it.label}-${idx}`}
@@ -103,8 +107,8 @@ export function SuggestionsCard({
                   disabled={applied}
                   onClick={() => {
                     onApply(it);
-                    setAppliedLabels((prev) => [...prev, `${it.field}:${it.value}`]);
-                    toast.success(`已应用：${it.label}`);
+                    setAppliedKeys((prev) => [...prev, `${it.field}:${it.value}`]);
+                    toast.success(t('unifiedCreate.suggestions.appliedToast', { label: it.label }));
                   }}
                   className={cn(
                     'flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground transition-colors',

@@ -143,74 +143,34 @@ export interface UnifiedCreateDialogProps {
 const TYPE_ORDER: CreateType[] = ['task', 'bug', 'doc', 'project', 'milestone'];
 
 interface TypeMeta {
-  label: string;
-  shortcut: string;
-  /** 实体类型走 entity-icons 注册表（图标+tone 语义色，禁本地枚举/原始色）；null = 非实体 */
+  /** 实体类型走 entity-icons 注册表（图标+tone 语义色）；文案一律走 unifiedCreate.* i18n */
   kind: EntityKind | null;
-  placeholder: string;
-  descriptionHint: string;
-  createLabel: string;
 }
 
 const TYPE_META: Record<CreateType, TypeMeta> = {
-  task: {
-    label: 'Task',
-    shortcut: '1',
-    kind: 'issue',
-    placeholder: 'Task title',
-    descriptionHint: 'Add a description…',
-    createLabel: 'Create task',
-  },
-  bug: {
-    label: 'Bug',
-    shortcut: '2',
-    kind: 'bug',
-    placeholder: 'Bug title',
-    descriptionHint: 'Steps to reproduce, expected vs actual…',
-    createLabel: 'Report bug',
-  },
-  doc: {
-    label: 'Document',
-    shortcut: '3',
-    kind: 'document',
-    placeholder: 'Document title',
-    descriptionHint: 'Add a summary or initial content…',
-    createLabel: 'Create document',
-  },
-  project: {
-    label: 'Project',
-    shortcut: '4',
-    kind: 'project',
-    placeholder: 'Project name',
-    descriptionHint: 'Goals, scope and success criteria…',
-    createLabel: 'Create project',
-  },
-  milestone: {
-    label: 'Milestone',
-    shortcut: '5',
-    kind: 'milestone',
-    placeholder: 'Milestone name',
-    descriptionHint: 'Key deliverables…',
-    createLabel: 'Create milestone',
-  },
+  task: { kind: 'issue' },
+  bug: { kind: 'bug' },
+  doc: { kind: 'document' },
+  project: { kind: 'project' },
+  milestone: { kind: 'milestone' },
 };
 
 /** Bug 严重度 S0–S3（status-visuals 无 severity 映射，本地维护；色用 accent token 禁原始 hex） */
-const SEVERITY_OPTIONS: { value: BugSeverity; label: string; dotClass: string }[] = [
-  { value: 'critical', label: 'S0 致命', dotClass: 'bg-accent-red' },
-  { value: 'high', label: 'S1 严重', dotClass: 'bg-accent-orange' },
-  { value: 'medium', label: 'S2 一般', dotClass: 'bg-accent-yellow' },
-  { value: 'low', label: 'S3 轻微', dotClass: 'bg-accent-green' },
+const SEVERITY_OPTIONS: { value: BugSeverity; dotClass: string }[] = [
+  { value: 'critical', dotClass: 'bg-accent-red' },
+  { value: 'high', dotClass: 'bg-accent-orange' },
+  { value: 'medium', dotClass: 'bg-accent-yellow' },
+  { value: 'low', dotClass: 'bg-accent-green' },
 ];
 
-/** 文档类目 chips = 后端 DocumentCategory 真实枚举（原 spec/meeting_notes 等假值已废） */
-const DOC_CATEGORY_OPTIONS: { value: DocCategory; label: string }[] = [
-  { value: 'requirement', label: '需求' },
-  { value: 'analysis', label: '分析' },
-  { value: 'design', label: '设计' },
-  { value: 'api', label: 'API' },
-  { value: 'testing', label: '测试' },
-  { value: 'guide', label: '指南' },
+/** 文档类目 chips = 后端 DocumentCategory 真实枚举（原 spec/meeting_notes 等假值已废；label 走 i18n） */
+const DOC_CATEGORY_OPTIONS: { value: DocCategory }[] = [
+  { value: 'requirement' },
+  { value: 'analysis' },
+  { value: 'design' },
+  { value: 'api' },
+  { value: 'testing' },
+  { value: 'guide' },
 ];
 
 /** 优先级选项展示序（取 PRIORITY_VISUALS 四档；urgent 为项目侧叫法不入创建面板） */
@@ -457,7 +417,7 @@ export function UnifiedCreateDialog({
 
   const handleSuccess = (type: CreateType, id: string) => {
     onSuccess?.(type, id);
-    toast.success(`${TYPE_META[type].label} 创建成功`);
+    toast.success(t('unifiedCreate.success', { type: t(`unifiedCreate.labels.${type}`) }));
     if (createMore) {
       reset();
       // 连续创建补完（CAP-A-18 批4）：重置后重套唤起预置、来源状态复位、焦点回归标题
@@ -487,7 +447,7 @@ export function UnifiedCreateDialog({
 
   const submitTask = async () => {
     const values = taskForm.getValues();
-    if (!values.title.trim()) { setError('请输入任务标题'); return; }
+    if (!values.title.trim()) { setError(t('unifiedCreate.error.taskTitle')); return; }
     const pid = values.projectId || projectId;
     const moduleCode = resolveModuleCode(pid);
     setError(null);
@@ -510,13 +470,13 @@ export function UnifiedCreateDialog({
       });
       if (resp?.id) handleSuccess('task', resp.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建失败');
+      setError(err instanceof Error ? err.message : t('unifiedCreate.error.createFailed'));
     }
   };
 
   const submitBug = async () => {
     const values = bugForm.getValues();
-    if (!values.title.trim()) { setError('请输入 Bug 标题'); return; }
+    if (!values.title.trim()) { setError(t('unifiedCreate.error.bugTitle')); return; }
     const pid = values.projectId || projectId;
     const moduleCode = resolveModuleCode(pid, 'BUG');
     setError(null);
@@ -536,13 +496,13 @@ export function UnifiedCreateDialog({
       });
       if (resp?.id) handleSuccess('bug', resp.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建失败');
+      setError(err instanceof Error ? err.message : t('unifiedCreate.error.createFailed'));
     }
   };
 
   const submitDoc = async () => {
     const values = docForm.getValues();
-    if (!values.title.trim()) { setError('请输入文档标题'); return; }
+    if (!values.title.trim()) { setError(t('unifiedCreate.error.docTitle')); return; }
     setError(null);
     try {
       const resp = await createDocument.mutateAsync({
@@ -555,13 +515,13 @@ export function UnifiedCreateDialog({
       });
       if (resp?.id) handleSuccess('doc', resp.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建失败');
+      setError(err instanceof Error ? err.message : t('unifiedCreate.error.createFailed'));
     }
   };
 
   const submitProject = async () => {
     const values = projectForm.getValues();
-    if (!values.name.trim()) { setError('请输入项目名称'); return; }
+    if (!values.name.trim()) { setError(t('unifiedCreate.error.projectName')); return; }
     setError(null);
     try {
       const payload: CreateProjectRequest = {
@@ -579,7 +539,7 @@ export function UnifiedCreateDialog({
         navigate(`/app/projects/${resp.id}/init`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建失败');
+      setError(err instanceof Error ? err.message : t('unifiedCreate.error.createFailed'));
     }
   };
 
@@ -612,15 +572,15 @@ export function UnifiedCreateDialog({
         });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建失败');
+      setError(err instanceof Error ? err.message : t('unifiedCreate.error.createFailed'));
     }
   };
 
   const submitMilestone = async () => {
     const values = milestoneForm.getValues();
-    if (!values.name.trim()) { setError('请输入里程碑名称'); return; }
+    if (!values.name.trim()) { setError(t('unifiedCreate.error.milestoneName')); return; }
     const pid = values.projectId || projectId;
-    if (!pid) { setError('请选择所属项目'); return; }
+    if (!pid) { setError(t('unifiedCreate.error.projectRequired')); return; }
     setError(null);
     try {
       const payload: CreateMilestoneRequest = {
@@ -632,18 +592,18 @@ export function UnifiedCreateDialog({
       const resp = await createMilestone.mutateAsync(payload);
       if (resp?.id) handleSuccess('milestone', resp.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建失败');
+      setError(err instanceof Error ? err.message : t('unifiedCreate.error.createFailed'));
     }
   };
 
   /** AI 创建兜底：把描述预填进小助理输入框，由用户确认发送（LLM 不可用时的降级路径） */
   const submitViaAssistant = () => {
     const text = aiPrompt.trim();
-    if (!text) { setError('请描述要创建的内容'); return; }
+    if (!text) { setError(t('unifiedCreate.error.prompt')); return; }
     setError(null);
     openAssistantWithDraft(`请帮我创建：${text}`);
     handleClose();
-    toast.success('已转给小周，在右下角对话里发送即可');
+    toast.success(t('unifiedCreate.aiPanel.forwardedToast'));
   };
 
   // ── AI 代理草稿流（CAP-A-18 双界面）──
@@ -651,7 +611,7 @@ export function UnifiedCreateDialog({
 
   const generateDraft = async () => {
     const text = aiPrompt.trim();
-    if (!text) { setError('请描述要创建的内容'); return; }
+    if (!text) { setError(t('unifiedCreate.error.prompt')); return; }
     setError(null);
     setDraft(null);
     try {
@@ -661,10 +621,10 @@ export function UnifiedCreateDialog({
         projectId: activeProjectId || undefined,
       });
       const parsed = parseCreateDraft(res.data);
-      if (!parsed) throw new Error('AI 没有解析出可用的创建草稿，试试补充类型或关键词');
+      if (!parsed) throw new Error(t('unifiedCreate.error.noDraft'));
       setDraft(parsed);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'AI 生成失败');
+      setError(err instanceof Error ? err.message : t('unifiedCreate.error.aiFailed'));
     }
   };
 
@@ -750,7 +710,7 @@ export function UnifiedCreateDialog({
       projectId: activeProjectId || undefined,
     });
     const parsed = parseCreateSuggestions(res.data);
-    if (parsed.length === 0) throw new Error('AI 没有给出可用建议');
+    if (parsed.length === 0) throw new Error(t('unifiedCreate.error.suggestionFailed'));
     return parsed;
   };
 
@@ -847,8 +807,6 @@ export function UnifiedCreateDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, activeType, createMore, mode, draft]);
 
-  const currentMeta = TYPE_META[activeType];
-
   // ── Width classes for dialog（最大化：宽高同步放大至 95vw × 95vh 语义档）
   const widthClass = maximized
     ? ''
@@ -873,7 +831,7 @@ export function UnifiedCreateDialog({
       const projectOptions = projectList.map((p) => ({ value: p.id, label: p.name }));
       return (
         <>
-          <PropertyRow icon={<StatusIcon className={cn('size-3.5', statusOpt?.toneClass, statusOpt?.spin && 'animate-spin')} />} label="Status">
+          <PropertyRow icon={<StatusIcon className={cn('size-3.5', statusOpt?.toneClass, statusOpt?.spin && 'animate-spin')} />} label={t('unifiedCreate.field.status')}>
             <CapsuleSelect
               value={statusVal}
               options={statusOptions.map((s) => ({
@@ -885,7 +843,7 @@ export function UnifiedCreateDialog({
               active
             />
           </PropertyRow>
-          <PropertyRow icon={<AlertCircle className="size-3.5" />} label="Priority">
+          <PropertyRow icon={<AlertCircle className="size-3.5" />} label={t('unifiedCreate.field.priority')}>
             <CapsuleSelect
               value={priorityVal ?? ''}
               options={priorityOptions.map((p) => ({
@@ -897,28 +855,30 @@ export function UnifiedCreateDialog({
               active={!!priorityVal}
             />
           </PropertyRow>
-          <PropertyRow icon={<User className="size-3.5" />} label="Assignee">
+          <PropertyRow icon={<User className="size-3.5" />} label={t('unifiedCreate.field.assignee')}>
             <CapsuleSelect
               value={assigneeVal ?? ''}
               options={memberOptions}
               onChange={(v) => taskForm.setValue('assigneeId', v)}
               active={!!assigneeVal}
-              placeholder="Unassigned"
+              placeholder={t('unifiedCreate.linear.unassigned')}
             />
           </PropertyRow>
-          <PropertyRow icon={<Flag className="size-3.5" />} label="Project">
+          <PropertyRow icon={<Flag className="size-3.5" />} label={t('unifiedCreate.field.project')}>
             <CapsuleSelect
               value={projectVal}
               options={projectOptions}
               onChange={(v) => taskForm.setValue('projectId', v)}
               active={!!projectVal}
-              placeholder="No Project"
+              placeholder={t('unifiedCreate.linear.noProject')}
             />
           </PropertyRow>
-          <PropertyRow icon={<CalendarIcon className="size-3.5" />} label="Due date">
+          <PropertyRow icon={<CalendarIcon className="size-3.5" />} label={t('unifiedCreate.field.dueDate')}>
             <DateCapsuleField
               value={dueVal}
               onChange={(v) => taskForm.setValue('dueDate', v)}
+              placeholder={t('unifiedCreate.field.none')}
+              clearLabel={t('unifiedCreate.field.clearDueDate')}
             />
           </PropertyRow>
         </>
@@ -938,7 +898,7 @@ export function UnifiedCreateDialog({
       const projectOptions = projectList.map((p) => ({ value: p.id, label: p.name }));
       return (
         <>
-          <PropertyRow icon={<StatusIcon className={cn('size-3.5', statusOpt?.toneClass, statusOpt?.spin && 'animate-spin')} />} label="Status">
+          <PropertyRow icon={<StatusIcon className={cn('size-3.5', statusOpt?.toneClass, statusOpt?.spin && 'animate-spin')} />} label={t('unifiedCreate.field.status')}>
             <CapsuleSelect
               value={statusVal}
               options={statusOptions.map((s) => ({
@@ -950,19 +910,19 @@ export function UnifiedCreateDialog({
               active
             />
           </PropertyRow>
-          <PropertyRow icon={<AlertCircle className="size-3.5" />} label="Severity">
+          <PropertyRow icon={<AlertCircle className="size-3.5" />} label={t('unifiedCreate.field.severity')}>
             <CapsuleSelect
               value={severityVal}
               options={SEVERITY_OPTIONS.map((s) => ({
                 value: s.value,
-                label: s.label,
+                label: t(`unifiedCreate.severity.${s.value}`),
                 icon: <span className={cn('inline-block size-2.5 rounded-full', s.dotClass)} />,
               }))}
               onChange={(v) => bugForm.setValue('severity', (v || 'medium') as BugSeverity)}
               active={!!severityVal}
             />
           </PropertyRow>
-          <PropertyRow icon={<AlertCircle className="size-3.5" />} label="Priority">
+          <PropertyRow icon={<AlertCircle className="size-3.5" />} label={t('unifiedCreate.field.priority')}>
             <CapsuleSelect
               value={priorityVal ?? ''}
               options={priorityOptions.map((p) => ({
@@ -974,26 +934,26 @@ export function UnifiedCreateDialog({
               active={!!priorityVal}
             />
           </PropertyRow>
-          <PropertyRow icon={<User className="size-3.5" />} label="Assignee">
+          <PropertyRow icon={<User className="size-3.5" />} label={t('unifiedCreate.field.assignee')}>
             <CapsuleSelect
               value={assigneeVal ?? ''}
               options={memberOptions}
               onChange={(v) => bugForm.setValue('assigneeId', v)}
               active={!!assigneeVal}
-              placeholder="Unassigned"
+              placeholder={t('unifiedCreate.linear.unassigned')}
             />
           </PropertyRow>
-          <PropertyRow icon={<Flag className="size-3.5" />} label="Project">
+          <PropertyRow icon={<Flag className="size-3.5" />} label={t('unifiedCreate.field.project')}>
             <CapsuleSelect
               value={projectVal}
               options={projectOptions}
               onChange={(v) => bugForm.setValue('projectId', v)}
               active={!!projectVal}
-              placeholder="No Project"
+              placeholder={t('unifiedCreate.linear.noProject')}
             />
           </PropertyRow>
-          <PropertyRow icon={<CalendarIcon className="size-3.5" />} label="Due date">
-            <DateCapsuleField value={dueVal} onChange={(v) => bugForm.setValue('dueDate', v)} />
+          <PropertyRow icon={<CalendarIcon className="size-3.5" />} label={t('unifiedCreate.field.dueDate')}>
+            <DateCapsuleField value={dueVal} onChange={(v) => bugForm.setValue('dueDate', v)} placeholder={t('unifiedCreate.field.none')} clearLabel={t('unifiedCreate.field.clearDueDate')} />
           </PropertyRow>
         </>
       );
@@ -1004,16 +964,16 @@ export function UnifiedCreateDialog({
       const projectOptions = projectList.map((p) => ({ value: p.id, label: p.name }));
       return (
         <>
-          <PropertyRow icon={<User className="size-3.5" />} label="Author">
-            <Capsule>Me</Capsule>
+          <PropertyRow icon={<User className="size-3.5" />} label={t('unifiedCreate.field.author')}>
+            <Capsule>{t('unifiedCreate.field.me')}</Capsule>
           </PropertyRow>
-          <PropertyRow icon={<Flag className="size-3.5" />} label="Project">
+          <PropertyRow icon={<Flag className="size-3.5" />} label={t('unifiedCreate.field.project')}>
             <CapsuleSelect
               value={projectVal}
               options={projectOptions}
               onChange={(v) => docForm.setValue('projectId', v)}
               active={!!projectVal}
-              placeholder="No Project"
+              placeholder={t('unifiedCreate.linear.noProject')}
             />
           </PropertyRow>
         </>
@@ -1023,7 +983,7 @@ export function UnifiedCreateDialog({
     if (activeType === 'project') {
       const priorityVal = projectForm.watch('priority') ?? 'medium';
       return (
-        <PropertyRow icon={<AlertCircle className="size-3.5" />} label="Priority">
+        <PropertyRow icon={<AlertCircle className="size-3.5" />} label={t('unifiedCreate.field.priority')}>
           <CapsuleSelect
             value={priorityVal}
             options={priorityOptions.map((p) => ({
@@ -1042,7 +1002,7 @@ export function UnifiedCreateDialog({
     const milestoneProjectOptions = projectList.map((p) => ({ value: p.id, label: p.name }));
     return (
       <>
-        <PropertyRow icon={<Flag className="size-3.5" />} label="Project">
+        <PropertyRow icon={<Flag className="size-3.5" />} label={t('unifiedCreate.field.project')}>
           <CapsuleSelect
             value={currentProjectId}
             options={milestoneProjectOptions}
@@ -1050,13 +1010,15 @@ export function UnifiedCreateDialog({
               milestoneForm.setValue('projectId', v);
             }}
             active={!!currentProjectId}
-            placeholder="Select project"
+            placeholder={t('unifiedCreate.linear.selectProject')}
           />
         </PropertyRow>
-        <PropertyRow icon={<CalendarIcon className="size-3.5" />} label="Target date">
+        <PropertyRow icon={<CalendarIcon className="size-3.5" />} label={t('unifiedCreate.field.targetDate')}>
           <DateCapsuleField
             value={milestoneForm.watch('dueDate') ?? ''}
             onChange={(v) => milestoneForm.setValue('dueDate', v)}
+            placeholder={t('unifiedCreate.field.none')}
+            clearLabel={t('unifiedCreate.field.clearDueDate')}
           />
         </PropertyRow>
       </>
@@ -1083,9 +1045,11 @@ export function UnifiedCreateDialog({
         style={maximized ? undefined : { maxHeight: 'calc(100vh - 48px)' }}
       >
         <DialogTitle className="sr-only">
-          {mode === 'ai' ? 'AI agent' : currentMeta.label} creation dialog
+          {mode === 'ai' ? t('unifiedCreate.mode.ai') : t(`unifiedCreate.title.${activeType}`)}
         </DialogTitle>
-        <DialogDescription className="sr-only">{currentMeta.descriptionHint}</DialogDescription>
+        <DialogDescription className="sr-only">
+          {t(`unifiedCreate.descHint.${activeType}`)}
+        </DialogDescription>
 
         {/* ──────────── Header ──────────── */}
         <div className="flex items-center justify-between px-4 h-11 shrink-0 border-b border-border/50 bg-muted/20">
@@ -1101,26 +1065,26 @@ export function UnifiedCreateDialog({
             value={mode}
             onChange={(m) => { setMode(m); if (m === 'manual') setDraft(null); }}
             options={[
-              { value: 'manual', label: '手动创建' },
-              { value: 'ai', label: 'AI 代理', tone: 'purple' },
+              { value: 'manual', label: t('unifiedCreate.mode.manual') },
+              { value: 'ai', label: t('unifiedCreate.mode.ai'), tone: 'purple' },
             ]}
           />
           <div className="flex items-center gap-0.5">
             <IconBtn
               active={showProps}
               onClick={() => setShowProps((v) => !v)}
-              title={showProps ? '隐藏属性面板' : '显示属性面板'}
+              title={showProps ? t('unifiedCreate.iconTips.hideProps') : t('unifiedCreate.iconTips.showProps')}
             >
               {showProps ? <PanelRightClose className="size-3.5" /> : <PanelRight className="size-3.5" />}
             </IconBtn>
             <IconBtn
               active={maximized}
               onClick={() => setMaximized((v) => !v)}
-              title={maximized ? '还原' : '展开'}
+              title={maximized ? t('unifiedCreate.iconTips.restore') : t('unifiedCreate.iconTips.maximize')}
             >
               {maximized ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
             </IconBtn>
-            <IconBtn onClick={requestClose} title="关闭">
+            <IconBtn onClick={requestClose} title={t('unifiedCreate.iconTips.close')}>
               <X className="size-3.5" />
             </IconBtn>
           </div>
@@ -1143,17 +1107,14 @@ export function UnifiedCreateDialog({
                 <div className="flex flex-1 flex-col gap-3">
                   <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
                     <Sparkles className="mt-0.5 size-3.5 shrink-0 text-accent-purple" />
-                    <span>
-                      用一句话描述你想创建的内容，AI 代理解析为结构化草稿；确认后直接创建。
-                      可先用上方类型切换指定目标（默认按描述自动判断）。
-                    </span>
+                    <span>{t('unifiedCreate.aiPanel.hint')}</span>
                   </div>
                   <Textarea
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
                     rows={5}
                     autoFocus
-                    placeholder="例如：建一个任务「登录页改版」，本周五截止，优先级高，打上 frontend 标签"
+                    placeholder={t('unifiedCreate.aiPanel.inputPlaceholder')}
                     className="flex-1 resize-none rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus-visible:ring-0 focus-visible:border-primary/50"
                   />
                   {draft && (
@@ -1164,7 +1125,7 @@ export function UnifiedCreateDialog({
                       <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b border-border/40">
                         <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                           <EntityIcon entity={DRAFT_ENTITY_KIND[draft.type]} size="sm" />
-                          草稿 · {TYPE_META[draft.type].label}
+                          {t('unifiedCreate.aiPanel.draftBadge', { type: t(`unifiedCreate.labels.${draft.type}`) })}
                         </span>
                         <button
                           type="button"
@@ -1172,35 +1133,35 @@ export function UnifiedCreateDialog({
                           disabled={silentCreateDraft.isPending}
                           className="text-10 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                         >
-                          重新生成
+                          {t('unifiedCreate.aiPanel.regen')}
                         </button>
                       </div>
                       <div className="p-3 flex flex-col gap-1.5 text-xs">
                         <div>
-                          <span className="text-muted-foreground">标题：</span>
+                          <span className="text-muted-foreground">{t('unifiedCreate.aiPanel.fieldTitle')}：</span>
                           <span className="font-medium text-foreground">{draft.fields.title}</span>
                         </div>
                         {draft.fields.description && (
                           <div>
-                            <span className="text-muted-foreground">描述：</span>
+                            <span className="text-muted-foreground">{t('unifiedCreate.aiPanel.fieldDesc')}：</span>
                             <span className="text-foreground/80">{draft.fields.description}</span>
                           </div>
                         )}
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
-                          {draft.fields.priority && <span>优先级 {draft.fields.priority}</span>}
-                          {draft.fields.severity && <span>严重度 {draft.fields.severity}</span>}
-                          {draft.fields.dueDate && <span>截止 {draft.fields.dueDate}</span>}
-                          {draft.fields.category && <span>类目 {draft.fields.category}</span>}
-                          {draft.fields.labels?.length ? <span>标签 {draft.fields.labels.join('、')}</span> : null}
+                          {draft.fields.priority && <span>{t('unifiedCreate.aiPanel.fieldPriority')} {draft.fields.priority}</span>}
+                          {draft.fields.severity && <span>{t('unifiedCreate.aiPanel.fieldSeverity')} {draft.fields.severity}</span>}
+                          {draft.fields.dueDate && <span>{t('unifiedCreate.aiPanel.fieldDue')} {draft.fields.dueDate}</span>}
+                          {draft.fields.category && <span>{t('unifiedCreate.aiPanel.fieldCategory')} {draft.fields.category}</span>}
+                          {draft.fields.labels?.length ? <span>{t('unifiedCreate.aiPanel.fieldLabels')} {draft.fields.labels.join('、')}</span> : null}
                         </div>
                       </div>
                       <div className="px-3 pb-3 flex gap-2">
                         <Button size="sm" onClick={confirmCreateDraft} disabled={isSubmitting}>
                           <Check className="size-3" />
-                          确认创建
+                          {t('unifiedCreate.aiPanel.confirm')}
                         </Button>
                         <Button size="sm" variant="ghost" onClick={editDraftManually} disabled={isSubmitting}>
-                          回手动编辑
+                          {t('unifiedCreate.aiPanel.editManually')}
                         </Button>
                       </div>
                     </div>
@@ -1223,7 +1184,6 @@ export function UnifiedCreateDialog({
                 docForm={docForm}
                 projectForm={projectForm}
                 milestoneForm={milestoneForm}
-                currentMeta={currentMeta}
               />
 
               {/* Description */}
@@ -1234,7 +1194,6 @@ export function UnifiedCreateDialog({
                 docForm={docForm}
                 projectForm={projectForm}
                 milestoneForm={milestoneForm}
-                currentMeta={currentMeta}
               />
 
               {/* Extra fields: doc category / project source */}
@@ -1268,7 +1227,7 @@ export function UnifiedCreateDialog({
           {showProps && mode === 'manual' && (
             <aside className="w-52.5 shrink-0 px-3 pb-3 pt-1 overflow-y-auto bg-transparent">
               <PropsCard
-                title="Properties"
+                title={t('unifiedCreate.properties')}
                 collapsed={propsCollapsed}
                 onToggleCollapse={() => setPropsCollapsed((v) => !v)}
               >
@@ -1291,15 +1250,15 @@ export function UnifiedCreateDialog({
         <div className="flex items-center gap-3 px-4 h-13 shrink-0 border-t border-border/50 bg-muted/15">
           <div className="flex-1" />
           <div className="flex items-center gap-2 cursor-pointer select-none">
-            <span className="text-xs text-muted-foreground hover:text-foreground transition-colors">Create more</span>
+            <span className="text-xs text-muted-foreground hover:text-foreground transition-colors">{t('unifiedCreate.createMore')}</span>
             <Switch checked={createMore} onCheckedChange={setCreateMore} />
           </div>
           <Button variant="ghost" size="sm" onClick={requestClose} disabled={isSubmitting}>
-            Cancel
+            {t('unifiedCreate.cancel')}
           </Button>
           {mode === 'manual' && activeType === 'project' && projectSource === 'ai' ? (
             <span className="text-xs text-muted-foreground">
-              在上面的对话里确认摘要后即可创建
+              {t('unifiedCreate.projectSource.grillHint')}
             </span>
           ) : mode === 'ai' ? (
             <>
@@ -1308,9 +1267,9 @@ export function UnifiedCreateDialog({
                 size="sm"
                 onClick={submitViaAssistant}
                 disabled={isSubmitting || silentCreateDraft.isPending}
-                title="AI 代理解析失败时的兜底：转小助理对话创建"
+                title={t('unifiedCreate.aiPanel.fallbackTitle')}
               >
-                转小助理
+                {t('unifiedCreate.aiPanel.fallback')}
               </Button>
               <Button
                 size="sm"
@@ -1320,17 +1279,17 @@ export function UnifiedCreateDialog({
                 {silentCreateDraft.isPending ? (
                   <>
                     <Spinner className="size-3 text-inherit" />
-                    解析中…
+                    {t('unifiedCreate.aiPanel.parsing')}
                   </>
                 ) : draft ? (
                   <>
                     <Check className="size-3" />
-                    确认创建
+                    {t('unifiedCreate.aiPanel.confirm')}
                   </>
                 ) : (
                   <>
                     <Sparkles className="size-3" />
-                    生成草稿
+                    {t('unifiedCreate.aiPanel.generate')}
                   </>
                 )}
               </Button>
@@ -1344,12 +1303,12 @@ export function UnifiedCreateDialog({
               {isSubmitting ? (
                 <>
                   <Spinner className="size-3 text-inherit" />
-                  创建中…
+                  {t('unifiedCreate.creating')}
                 </>
               ) : (
                 <>
                   <Plus className="size-3" />
-                  {currentMeta.createLabel}
+                  {t(`unifiedCreate.title.${activeType}`)}
                 </>
               )}
             </Button>
@@ -1360,19 +1319,19 @@ export function UnifiedCreateDialog({
       {/* 脏表单退出确认（批4：防 Esc/遮罩误触丢草稿） */}
       <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
         <AlertDialogContent>
-          <AlertDialogTitle>放弃未保存内容？</AlertDialogTitle>
+          <AlertDialogTitle>{t('unifiedCreate.discard.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            面板里有未提交的输入，关闭后将丢失。
+            {t('unifiedCreate.discard.desc')}
           </AlertDialogDescription>
           <AlertDialogFooter>
-            <AlertDialogCancel>继续编辑</AlertDialogCancel>
+            <AlertDialogCancel>{t('unifiedCreate.discard.keep')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 setConfirmDiscard(false);
                 handleClose();
               }}
             >
-              放弃并关闭
+              {t('unifiedCreate.discard.discard')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1406,6 +1365,7 @@ function IconBtn({
 }
 
 function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChange: (t: CreateType) => void }) {
+  const { t } = useTranslation();
   const meta = TYPE_META[activeType];
   return (
     <Popover>
@@ -1417,28 +1377,28 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
         {meta.kind
           ? <EntityIcon entity={meta.kind} size="sm" />
           : <Sparkles className="size-3.5 text-accent-purple" />}
-        <span>{meta.label}</span>
+        <span>{t(`unifiedCreate.labels.${activeType}`)}</span>
         <ChevronDown className="size-3 opacity-50" />
       </PopoverTrigger>
       <PopoverContent align="start" className="p-1 w-44">
         <div className="flex flex-col gap-0.5">
-          {TYPE_ORDER.map((t, i) => {
-            const M = TYPE_META[t];
+          {TYPE_ORDER.map((ty, i) => {
+            const M = TYPE_META[ty];
             return (
               <button
-                key={t}
+                key={ty}
                 type="button"
-                onClick={() => onChange(t)}
+                onClick={() => onChange(ty)}
                 className={cn(
                   'flex items-center gap-2 px-2 py-1.5 text-xs rounded-md transition-colors text-left',
-                  activeType === t ? 'bg-accent text-accent-foreground' : 'hover:bg-muted',
+                  activeType === ty ? 'bg-accent text-accent-foreground' : 'hover:bg-muted',
                 )}
               >
                 {M.kind
                   ? <EntityIcon entity={M.kind} size="sm" />
                   : <Sparkles className="size-3.5 text-accent-purple" />}
-                <span className="font-medium flex-1">{M.label}</span>
-                {activeType === t && <Check className="size-3 text-primary" />}
+                <span className="font-medium flex-1">{t(`unifiedCreate.labels.${ty}`)}</span>
+                {activeType === ty && <Check className="size-3 text-primary" />}
                 <span className="text-10 text-muted-foreground">{i + 1}</span>
               </button>
             );
@@ -1456,15 +1416,16 @@ function TitleField(props: {
   docForm: UseFormReturn<DocFormValues>;
   projectForm: UseFormReturn<ProjectFormValues>;
   milestoneForm: UseFormReturn<MilestoneFormValues>;
-  currentMeta: TypeMeta;
 }) {
+  const { t } = useTranslation();
   const cls = 'w-full text-2xl font-semibold placeholder:text-muted-foreground/50 resize-none leading-tight focus-visible:ring-0';
+  const placeholder = t(`unifiedCreate.placeholder.${props.activeType}`);
   switch (props.activeType) {
-    case 'task': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.taskForm.register('title')} />;
-    case 'bug': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.bugForm.register('title')} />;
-    case 'doc': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.docForm.register('title')} />;
-    case 'project': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.projectForm.register('name')} />;
-    case 'milestone': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.milestoneForm.register('name')} />;
+    case 'task': return <AutoSizeTextarea autoFocus rows={1} placeholder={placeholder} className={cls} {...props.taskForm.register('title')} />;
+    case 'bug': return <AutoSizeTextarea autoFocus rows={1} placeholder={placeholder} className={cls} {...props.bugForm.register('title')} />;
+    case 'doc': return <AutoSizeTextarea autoFocus rows={1} placeholder={placeholder} className={cls} {...props.docForm.register('title')} />;
+    case 'project': return <AutoSizeTextarea autoFocus rows={1} placeholder={placeholder} className={cls} {...props.projectForm.register('name')} />;
+    case 'milestone': return <AutoSizeTextarea autoFocus rows={1} placeholder={placeholder} className={cls} {...props.milestoneForm.register('name')} />;
   }
 }
 
@@ -1475,10 +1436,10 @@ function DescriptionField(props: {
   docForm: UseFormReturn<DocFormValues>;
   projectForm: UseFormReturn<ProjectFormValues>;
   milestoneForm: UseFormReturn<MilestoneFormValues>;
-  currentMeta: TypeMeta;
 }) {
+  const { t } = useTranslation();
   const cls = 'w-full text-xs font-normal leading-relaxed text-foreground/80 placeholder:text-muted-foreground/50 focus-visible:ring-0';
-  const ph = props.currentMeta.descriptionHint;
+  const ph = t(`unifiedCreate.descHint.${props.activeType}`);
   const taCls = cn(cls, 'flex-1 min-h-30 resize-none');
   let textarea: React.ReactNode;
   switch (props.activeType) {
@@ -1515,16 +1476,19 @@ function ExtraFields({
   projectSource: 'scratch' | 'existing' | 'ai';
   onProjectSourceChange: (v: 'scratch' | 'existing' | 'ai') => void;
 }) {
+  const { t } = useTranslation();
   if (activeType === 'project') {
-    const SOURCE_OPTIONS: Array<{ value: 'scratch' | 'existing' | 'ai'; label: string }> = [
-      { value: 'scratch', label: '从零开始' },
-      { value: 'existing', label: '导入已有项目' },
-      { value: 'ai', label: 'AI 代理 · 对话创建' },
+    const SOURCE_OPTIONS: Array<{ value: 'scratch' | 'existing' | 'ai' }> = [
+      { value: 'scratch' },
+      { value: 'existing' },
+      { value: 'ai' },
     ];
     return (
       <div className="flex flex-col gap-3 pt-1">
         <div>
-          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">项目来源</p>
+          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            {t('unifiedCreate.projectSource.label')}
+          </p>
           <div className="flex flex-wrap gap-1.5">
             {SOURCE_OPTIONS.map((opt) => (
               <button
@@ -1538,13 +1502,13 @@ function ExtraFields({
                     : 'border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground',
                 )}
               >
-                {opt.label}
+                {t(`unifiedCreate.projectSource.${opt.value}`)}
               </button>
             ))}
           </div>
           {projectSource === 'existing' && (
             <p className="mt-1.5 text-11 leading-relaxed text-muted-foreground">
-              项目已在进行中？创建后自动进入接入向导：AI 只读扫描仓库，生成项目档案草稿供你校对。
+              {t('unifiedCreate.projectSource.existingHint')}
             </p>
           )}
         </div>
@@ -1556,7 +1520,9 @@ function ExtraFields({
     return (
       <div className="flex flex-col gap-3 pt-1">
         <div>
-          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">Type</p>
+          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            {t('unifiedCreate.field.type')}
+          </p>
           <div className="flex flex-wrap gap-1.5">
             {DOC_CATEGORY_OPTIONS.map((opt) => (
               <button
@@ -1570,7 +1536,7 @@ function ExtraFields({
                     : 'border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground',
                 )}
               >
-                {opt.label}
+                {t(`unifiedCreate.docCategory.${opt.value}`)}
               </button>
             ))}
           </div>
