@@ -157,6 +157,14 @@ export function useExecutionRuns(params?: {
       }>('/execution/runs', params);
       return { runs: data?.runs ?? [], total: data?.total ?? 0 };
     },
+    // 存在非终态 run 时 10s 轮询兜底（socket 失效为主），避免列表/KPI 静止
+    refetchInterval: (query) => {
+      const runs = (query.state.data?.runs ?? []) as Array<{ status?: string }>;
+      const hasActive = runs.some(
+        (r) => r.status && !RUN_TERMINAL_STATUSES.includes(r.status as never),
+      );
+      return hasActive ? 10_000 : false;
+    },
   });
 }
 

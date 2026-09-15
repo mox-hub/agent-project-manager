@@ -110,7 +110,7 @@ function AssistantChatFooter({
         }
       />
       {(runEntries ?? []).map((entry) => (
-        <AssistantRunLine key={entry.runId} entry={entry} />
+        <AssistantRunLine key={entry.runId} entry={entry} projectId={projectId} />
       ))}
       <div className="flex items-center gap-2 text-11 text-content-text-muted">
         <Clock className="size-3 shrink-0" />

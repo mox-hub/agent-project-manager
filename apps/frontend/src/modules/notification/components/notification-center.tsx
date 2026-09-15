@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNotifications, useMarkNotificationsRead, useUnreadNotificationsCount } from '../hooks/use-notifications';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,6 +26,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
   const { data: unreadCount } = useUnreadNotificationsCount();
   const markRead = useMarkNotificationsRead();
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const notifications = data?.data || [];
   const unreadNotifications = notifications.filter((n) => n.status === 'unread');
@@ -34,6 +36,16 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
       markRead.mutate([notification.id], {
         onError: () => toast.error(t("notification.messages.markReadFailed")),
       });
+    }
+  };
+
+  // 点击通知 = 标记已读 + 跳转到关联实体（工单详情/项目概览，兜底改造批 1）
+  const handleNotificationClick = (notification: Notification) => {
+    handleMarkAsRead(notification);
+    if (notification.issueId) {
+      navigate(`/app/issues/${notification.issueId}`);
+    } else if (notification.projectId) {
+      navigate(`/app/projects/${notification.projectId}`);
     }
   };
 
@@ -130,7 +142,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                onClick={() => handleMarkAsRead(notification)}
+                onClick={() => handleNotificationClick(notification)}
                 className={`p-3 rounded-lg cursor-pointer transition-all ${
                   notification.status === 'unread'
                     ? 'border border-border bg-muted/50'

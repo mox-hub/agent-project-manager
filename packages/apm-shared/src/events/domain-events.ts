@@ -46,6 +46,7 @@ export const DomainEventTypes = {
   // 执行
   ExecutionRunUpdated: 'execution.run.updated',
   ExecutionTerminal: 'execution.terminal',
+  ApprovalRequested: 'approval.requested',
 
   // 实时流
   AiStream: 'ai.stream',
@@ -101,4 +102,26 @@ export const NotificationCreatedPayloadSchema = z.object({
 });
 export type NotificationCreatedPayload = z.infer<
   typeof NotificationCreatedPayloadSchema
+>;
+
+/** execution.run.updated：execution.service.updateExecutionRun 发布，通知/订阅/推送三方消费 */
+export const ExecutionRunUpdatedPayloadSchema = z.object({
+  executionRunId: z.string(),
+  previousStatus: z.string(),
+  newStatus: z.string(),
+});
+export type ExecutionRunUpdatedPayload = z.infer<
+  typeof ExecutionRunUpdatedPayloadSchema
+>;
+
+/** approval.requested：approval.service.create 发布，执行挂起等待人工审批 */
+export const ApprovalRequestedPayloadSchema = z.object({
+  approvalRequestId: z.string(),
+  executionRunId: z.string(),
+  projectId: z.string(),
+  riskLevel: z.string(),
+  requestedAction: z.string(),
+});
+export type ApprovalRequestedPayload = z.infer<
+  typeof ApprovalRequestedPayloadSchema
 >;

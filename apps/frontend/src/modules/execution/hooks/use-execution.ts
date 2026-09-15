@@ -75,12 +75,19 @@ export function useRetryExecutionRun() {
 
 // ─── 4d: Issue 统一执行项（人工/AI 共用） ──────────────────────────
 
-/** issue 执行项列表（含待审批） */
+/** issue 执行项列表（含待审批）；存在非终态执行项时 5s 轮询兜底（socket 失效为主） */
 export function useIssueExecutions(issueId: string | undefined) {
   return useQuery({
     queryKey: executionKeys.issueExecutions(issueId ?? ''),
     queryFn: () => executionApi.listIssueExecutions(issueId!),
     enabled: !!issueId,
+    refetchInterval: (query) => {
+      const items = (query.state.data ?? []) as Array<{ status?: string }>;
+      const hasActive = items.some(
+        (it) => it.status && !['completed', 'failed', 'blocked', 'superseded', 'cancelled'].includes(it.status),
+      );
+      return hasActive ? 5000 : false;
+    },
   });
 }
 

@@ -613,7 +613,8 @@
       "running": "Running",
       "completed": "Completed",
       "failed": "Failed",
-      "viewDetail": "Open execution center"
+      "viewDetail": "Open execution center",
+      "retry": "Retry"
     },
     "history": {
       "open": "History",
@@ -795,7 +796,10 @@
       "tokens": "Tokens",
       "cost": "Cost",
       "viewAcceptance": "View acceptance",
-      "cancel": "Cancel run"
+      "cancel": "Cancel run",
+      "redispatch": "Re-dispatch",
+      "redispatchSuccess": "Re-dispatched to CLI execution",
+      "redispatchError": "Re-dispatch failed"
     }
   },
   "decision": {
@@ -3694,6 +3698,7 @@
   },
   "shell": {
     "mainNav": "Main",
+    "connectionLost": "Realtime connection lost, reconnecting… page data may be stale",
     "main": "Main",
     "workbench": "Workbench",
     "pipeline": "Lifecycle Pipeline",

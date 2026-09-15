@@ -214,16 +214,14 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
   const createExecution = useCreateIssueExecution();
   const updateExecution = useUpdateExecution();
 
-  // WS 实时刷新：AI 派发/CLI 执行的状态变化不经前端 mutation，需订阅事件失效缓存
+  // WS 实时刷新：AI 派发/CLI 执行的状态变化不经前端 mutation，需订阅事件失效缓存。
+  // 服务端网关转发 execution.run.updated（兜底改造批 1）——此前监听的
+  // execution.completed/run.created 从未被服务端发出，属死订阅。
   useEffect(() => {
     const invalidate = () =>
       qc.invalidateQueries({ queryKey: ['execution', 'issueExecutions', issueId] });
-    eventClient.on('execution.completed', invalidate);
-    eventClient.on('execution.run.created', invalidate);
     eventClient.on('execution.run.updated', invalidate);
     return () => {
-      eventClient.off('execution.completed', invalidate);
-      eventClient.off('execution.run.created', invalidate);
       eventClient.off('execution.run.updated', invalidate);
     };
   }, [issueId, qc]);

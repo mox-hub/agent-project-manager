@@ -19,6 +19,8 @@ describe('NotificationEventSubscriber', () => {
     acceptance: { findUnique: vi.fn() },
     project: { findUnique: vi.fn() },
     member: { findMany: vi.fn().mockResolvedValue([]) },
+    execution: { findUnique: vi.fn() },
+    subscription: { findMany: vi.fn().mockResolvedValue([]) },
   };
 
   beforeEach(async () => {
@@ -167,5 +169,110 @@ describe('NotificationEventSubscriber', () => {
     await expect(
       handlers.get('task.deleted')!({ issueId: 't1', projectId: 'p1' }),
     ).resolves.toBeUndefined();
+  });
+
+  // ─── 执行失败感知 / 审批挂起（兜底改造批 1）─────────────────
+
+  const runRow = {
+    id: 'run-1',
+    goal: '修复登录 bug',
+    projectId: 'p1',
+    issueId: 'i1',
+    createdBy: 'u-owner',
+  };
+
+  it('订阅执行状态变更与审批请求事件', () => {
+    expect(handlers.has('execution.run.updated')).toBe(true);
+    expect(handlers.has('approval.requested')).toBe(true);
+  });
+
+  it('execution.run.updated failed 通知发起人+负责人，排除已订阅用户', async () => {
+    prismaMock.execution.findUnique.mockResolvedValue(runRow);
+    prismaMock.issue.findUnique.mockResolvedValue({
+      assignee: { id: 'u-assignee' },
+    });
+    // 订阅链路已覆盖 u-assignee（task 维度）→ 应被排除
+    prismaMock.subscription.findMany.mockResolvedValue([
+      { memberId: 'm-1' },
+      { memberId: 'm-2' },
+    ]);
+    prismaMock.member.findMany.mockResolvedValue([
+      { userId: 'u-assignee' },
+      { userId: 'u-other' },
+    ]);
+
+    await handlers.get('execution.run.updated')!({
+      executionRunId: 'run-1',
+      previousStatus: 'in_progress',
+      newStatus: 'failed',
+    });
+
+    expect(createFromEvent).toHaveBeenCalledWith(
+      'execution.terminal',
+      expect.objectContaining({ executionRunId: 'run-1', status: 'failed' }),
+      ['u-owner'],
+    );
+  });
+
+  it('completed 状态不发失败通知（完成态归订阅枢纽按订阅关系处理）', async () => {
+    await handlers.get('execution.run.updated')!({
+      executionRunId: 'run-1',
+      previousStatus: 'in_progress',
+      newStatus: 'completed',
+    });
+    expect(createFromEvent).not.toHaveBeenCalled();
+  });
+
+  it('approval.requested 通知发起人与负责人（执行事实性暂停）', async () => {
+    prismaMock.execution.findUnique.mockResolvedValue(runRow);
+    prismaMock.issue.findUnique.mockResolvedValue({
+      assignee: { id: 'u-assignee' },
+    });
+    prismaMock.subscription.findMany.mockResolvedValue([]);
+
+    await handlers.get('approval.requested')!({
+      approvalRequestId: 'ap-1',
+      executionRunId: 'run-1',
+      projectId: 'p1',
+      riskLevel: 'high_risk',
+      requestedAction: 'git push',
+    });
+
+    expect(createFromEvent).toHaveBeenCalledWith(
+      'approval.requested',
+      expect.objectContaining({
+        approvalRequestId: 'ap-1',
+        riskLevel: 'high_risk',
+      }),
+      ['u-owner', 'u-assignee'],
+    );
+  });
+
+  it('NOTIFY_EXECUTION_AUDIENCE=project 时通知项目全员', async () => {
+    const prev = process.env.NOTIFY_EXECUTION_AUDIENCE;
+    process.env.NOTIFY_EXECUTION_AUDIENCE = 'project';
+    try {
+      prismaMock.execution.findUnique.mockResolvedValue(runRow);
+      prismaMock.project.findUnique.mockResolvedValue({
+        id: 'p1',
+        members: [{ userId: 'u1' }, { userId: 'u2' }],
+      });
+      prismaMock.subscription.findMany.mockResolvedValue([]);
+
+      await handlers.get('execution.run.updated')!({
+        executionRunId: 'run-1',
+        previousStatus: 'in_progress',
+        newStatus: 'failed',
+      });
+
+      expect(createFromEvent).toHaveBeenCalledWith(
+        'execution.terminal',
+        expect.anything(),
+        ['u1', 'u2'],
+      );
+    } finally {
+      if (prev === undefined) delete process.env.NOTIFY_EXECUTION_AUDIENCE;
+      else process.env.NOTIFY_EXECUTION_AUDIENCE = prev;
+    }
   });
 });

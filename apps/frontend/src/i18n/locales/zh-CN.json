@@ -613,7 +613,8 @@
       "running": "正在执行",
       "completed": "执行完成",
       "failed": "执行失败",
-      "viewDetail": "前往执行中心"
+      "viewDetail": "前往执行中心",
+      "retry": "重试"
     },
     "history": {
       "open": "历史对话",
@@ -795,7 +796,10 @@
       "tokens": "Tokens",
       "cost": "费用",
       "viewAcceptance": "查看验收",
-      "cancel": "取消执行"
+      "cancel": "取消执行",
+      "redispatch": "重新派发",
+      "redispatchSuccess": "已重新派发 CLI 执行",
+      "redispatchError": "重新派发失败"
     }
   },
   "decision": {
@@ -3694,6 +3698,7 @@
   },
   "shell": {
     "mainNav": "主导航",
+    "connectionLost": "实时连接已断开，正在重试…页面数据可能不是最新",
     "main": "主导航",
     "workbench": "工作台",
     "pipeline": "研发生命周期",

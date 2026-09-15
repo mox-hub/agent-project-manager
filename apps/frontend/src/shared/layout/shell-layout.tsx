@@ -71,6 +71,7 @@ import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
 import { AssistantFab } from '@/modules/assistant';
+import { ConnectionBanner } from '@/shared/components/connection-banner';
 import { useGlobalHotkey } from '@/shared/hotkeys/use-global-hotkey';
 import { getEffectiveCombo } from '@/shared/hotkeys/hotkey-store';
 import { formatComboForDisplay } from '@/shared/hotkeys/hotkey-utils';
@@ -367,6 +368,8 @@ export function ShellLayout() {
       <ShellSidebarProvider>
         <TabsProvider>
         <div className="flex h-screen overflow-hidden bg-sidebar text-foreground" data-ai-component="layout.shell" data-ai-role="content">
+          {/* 实时连接断线横幅（兜底改造批 1）：断线期间数据陈旧，需全局可见 */}
+          <ConnectionBanner />
           {/* Mobile sidebar backdrop */}
           {mobileSidebarOpen ? (
             <button

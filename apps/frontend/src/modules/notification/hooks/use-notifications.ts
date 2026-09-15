@@ -20,6 +20,9 @@ export function useUnreadNotificationsCount() {
       const data = await notificationApi.getUnreadCount();
       return data?.count ?? 0;
     },
+    // 60s 轮询兜底：主通道是 socket notification.created 失效，
+    // 断线期间徽标不至于永远冻结
+    refetchInterval: 60_000,
   });
 }
 

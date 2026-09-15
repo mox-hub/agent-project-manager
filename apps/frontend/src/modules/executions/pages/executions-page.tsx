@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   Activity,
@@ -23,6 +23,7 @@ import {
   FolderKanban,
   List,
   Package,
+  RotateCcw,
   SearchX,
   SquareTerminal,
   Target,
@@ -39,6 +40,7 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { toast } from '@/components/ui/toast';
 import {
   isTerminalRunStatus,
   executionApi,
@@ -59,6 +61,7 @@ import {
   formatTokens,
 } from '../components/run-details-format';
 import { projectApi } from '@/modules/project/api/project-api';
+import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
 import { api } from '@/infrastructure/api-client';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
@@ -96,6 +99,25 @@ export function ExecutionsPage() {
     projectId: projectFilter !== 'all' ? projectFilter : undefined,
     status: statusFilter !== 'all' ? statusFilter : undefined,
     limit: 100,
+  });
+
+  const qc = useQueryClient();
+  // 失败/阻塞执行一键重派（兜底改造批 1）：绑定既有执行项重新发起 CLI 派发，
+  // 与任务详情执行项面板的「派发 CLI」同一条后端通路
+  const redispatch = useMutation({
+    mutationFn: (run: ExecutionRunRecord) =>
+      aiHubApi.dispatchTaskToCli(run.issueId!, { executionId: run.id }),
+    onSuccess: () => {
+      toast.success(t('execution.row.redispatchSuccess'));
+      qc.invalidateQueries({ queryKey: ['executions'] });
+    },
+    onError: (err) => {
+      toast.error(
+        t('execution.row.redispatchError') +
+          ': ' +
+          (err instanceof Error ? err.message : String(err)),
+      );
+    },
   });
 
   // 获取项目列表
@@ -208,6 +230,14 @@ export function ExecutionsPage() {
         label: t('execution.row.viewAcceptance'),
         icon: <Target className="size-3.5" />,
         onClick: () => navigate(`/app/acceptance/${run.acceptanceId}`),
+      });
+    }
+    if ((run.status === 'failed' || run.status === 'blocked') && run.issueId) {
+      items.push({
+        id: 'redispatch',
+        label: t('execution.row.redispatch'),
+        icon: <RotateCcw className="size-3.5" />,
+        onClick: () => redispatch.mutate(run),
       });
     }
     if (!isTerminalRunStatus(run.status)) {
