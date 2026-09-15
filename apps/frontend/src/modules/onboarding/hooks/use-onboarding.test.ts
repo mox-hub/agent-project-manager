@@ -105,6 +105,37 @@ describe('finishOnboarding（进入 APM 回归）', () => {
   });
 });
 
+describe('watchReplayThenStart（S6：向导完成 → 先看回放）', () => {
+  it('★ 先落完成标记、再跳回放页：不落标记会在回放页上重弹向导', () => {
+    const { result } = renderHook(() => useOnboarding(), { wrapper: createWrapper() });
+
+    act(() => {
+      result.current.watchReplayThenStart();
+    });
+
+    expect(setOnboardingCompletedMock).toHaveBeenCalledWith(true);
+    expect(persistOnboardingMock).toHaveBeenCalledWith(true);
+    expect(navigateMock).toHaveBeenCalledWith('/app/ai-surface/replay');
+    // 同样零网络：完成标记是前端/壳侧状态，回放页更是一个请求都不发
+    expect(postMock).not.toHaveBeenCalled();
+  });
+
+  it('★ 与「直接进入 APM」是两条不同的去向（次序不可颠倒的那一半）', () => {
+    const { result } = renderHook(() => useOnboarding(), { wrapper: createWrapper() });
+
+    act(() => {
+      result.current.watchReplayThenStart();
+    });
+    expect(navigateMock).toHaveBeenCalledWith('/app/ai-surface/replay');
+
+    navigateMock.mockClear();
+    act(() => {
+      result.current.finishOnboarding.mutate();
+    });
+    expect(navigateMock).toHaveBeenCalledWith('/app');
+  });
+});
+
 describe('onboardingApi.createProject（建项目走真实契约端点）', () => {
   it('POST /projects 并补齐契约必填默认值（type/visibility）', async () => {
     postMock.mockResolvedValue({ id: 'p-1', name: '我的项目' });

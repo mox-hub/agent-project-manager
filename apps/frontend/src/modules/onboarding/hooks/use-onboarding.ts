@@ -201,6 +201,23 @@ export function useOnboarding() {
     navigate('/app');
   }, [completeOnboarding, navigate]);
 
+  /**
+   * 向导完成 → 先看回放（S6，设计纪要 §3.4）。
+   *
+   * **先回放、后实况的次序不可颠倒**：刚装好的机器上，用户可能一步都没配
+   * （模型没配、runtime 没起），此时带他去看实况，看到的会是"什么都没发生"——
+   * 第一印象就此毁掉，而且他会合理地认为这东西坏了。回放不需要 runtime、不需要
+   * API key，**在任何机器上都放得完**，是唯一能在第一分钟就说清"这东西能干什么"
+   * 的东西。看完再落回真实项目，那时该配的也都配了。
+   *
+   * 与 `finishOnboarding` 一样先落完成标记：不落的话引导门控会在回放页上
+   * 再弹一次向导，用户刚点的按钮看起来就没生效。
+   */
+  const watchReplayThenStart = useCallback(() => {
+    completeOnboarding();
+    navigate('/app/ai-surface/replay');
+  }, [completeOnboarding, navigate]);
+
   const resetOnboarding = useCallback(() => {
     setState({
       currentStep: 0,
@@ -252,5 +269,6 @@ export function useOnboarding() {
       isPending: false,
       error: null,
     },
+    watchReplayThenStart,
   };
 }
