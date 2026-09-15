@@ -2,29 +2,15 @@
  * 创建面板 · AI 建议卡（业务组件）
  *
  * 与 components/ui/property-panel 的只读版 SuggestionsCard 分工：
- * 本卡承载静默 AI 场景 create-suggestions 的拉取与应用（点击 chip 回填表单），
- * 默认四条为静态引导项（不可点）；AI 生成后切换为可应用的建议 chips。
+ * 本卡承载静默 AI 场景 create-suggestions 的拉取与应用（点击 chip 回填表单）。
+ * CAP-A-18 批4：移除原四条不可点的静态假建议（死可供性），未生成时渲染 EmptyState 引导。
  */
 import { useState } from 'react';
-import {
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
-  Tag,
-  User,
-  Calendar as CalendarIcon,
-  AlertCircle,
-} from 'lucide-react';
+import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { CreateSuggestion } from '@/modules/assistant/hooks/use-silent-ai';
-
-const STATIC_SUGGESTIONS = [
-  { label: 'High priority', icon: AlertCircle, color: 'text-accent-orange' },
-  { label: 'Tag: frontend', icon: Tag, color: 'text-accent-blue' },
-  { label: 'Assign me', icon: User, color: 'text-accent-purple' },
-  { label: 'Today', icon: CalendarIcon, color: 'text-accent-green' },
-];
 
 export function SuggestionsCard({
   collapsed,
@@ -44,8 +30,7 @@ export function SuggestionsCard({
   const [error, setError] = useState<string | null>(null);
   const [appliedLabels, setAppliedLabels] = useState<string[]>([]);
 
-  const items = aiItems ?? STATIC_SUGGESTIONS;
-  const fromAi = aiItems !== null;
+  const items = aiItems ?? [];
 
   const fetchAi = async () => {
     setLoading(true);
@@ -82,7 +67,7 @@ export function SuggestionsCard({
             data-ai-action="create-dialog.suggestions.fetch"
           >
             <Sparkles className="size-2.5 text-accent-purple" />
-            {loading ? '生成中…' : fromAi ? '再生成' : 'AI 建议'}
+            {loading ? '生成中…' : 'AI 建议'}
           </button>
         ) : null}
         <button
@@ -101,36 +86,37 @@ export function SuggestionsCard({
           {error ? (
             <p className="px-2 py-1 text-10 text-accent-red">{error}</p>
           ) : null}
-          {items.map((it) => {
-            const isAiChip = fromAi && 'field' in it;
-            const applied = appliedLabels.includes(it.label);
-            const Icon = isAiChip ? Sparkles : (it as { icon: typeof Tag }).icon;
-            return (
-              <button
-                key={it.label}
-                type="button"
-                disabled={!isAiChip || applied}
-                onClick={() => {
-                  if (isAiChip) {
+          {items.length === 0 ? (
+            <EmptyState
+              variant="card"
+              title="暂无建议"
+              description="点上方「AI 建议」，按已填内容生成补全"
+              className="min-h-0 border-0 p-1"
+            />
+          ) : (
+            items.map((it, idx) => {
+              const applied = appliedLabels.includes(`${it.field}:${it.value}`);
+              return (
+                <button
+                  key={`${it.field}-${it.label}-${idx}`}
+                  type="button"
+                  disabled={applied}
+                  onClick={() => {
                     onApply(it);
-                    setAppliedLabels((prev) => [...prev, it.label]);
+                    setAppliedLabels((prev) => [...prev, `${it.field}:${it.value}`]);
                     toast.success(`已应用：${it.label}`);
-                  }
-                }}
-                className={cn(
-                  'flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground transition-colors',
-                  isAiChip
-                    ? applied
-                      ? 'opacity-50'
-                      : 'hover:bg-accent hover:text-foreground'
-                    : 'cursor-default',
-                )}
-              >
-                <Icon className={cn('size-3.5', isAiChip ? 'text-accent-purple' : (it as { color?: string }).color)} />
-                <span className="flex-1 text-left">{it.label}</span>
-              </button>
-            );
-          })}
+                  }}
+                  className={cn(
+                    'flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground transition-colors',
+                    applied ? 'opacity-50' : 'hover:bg-accent hover:text-foreground',
+                  )}
+                >
+                  <Sparkles className="size-3.5 text-accent-purple" />
+                  <span className="flex-1 text-left">{it.label}</span>
+                </button>
+              );
+            })
+          )}
         </div>
       )}
     </div>

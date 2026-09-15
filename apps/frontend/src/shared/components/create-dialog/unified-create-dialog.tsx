@@ -25,7 +25,7 @@
  * 与详情页属性面板共版，禁止在本文件重写原子）；AI 建议卡为业务组件见 ./suggestions-card。
  */
 import * as React from 'react';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, useWatch, type UseFormReturn } from 'react-hook-form';
@@ -52,6 +52,15 @@ import {
 } from '@/components/ui/property-panel';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import {
   Popover,
@@ -313,7 +322,11 @@ export function UnifiedCreateDialog({
   // 顶级双界面（CAP-A-18）：manual=结构化表单 / ai=自然语言草稿，平级切换
   const [mode, setMode] = useState<'manual' | 'ai'>('manual');
   const [draft, setDraft] = useState<CreateDraft | null>(null);
+  // Esc/关闭时的脏表单保护
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const openAssistantWithDraft = useAppStore((s) => s.openAssistantWithDraft);
+  // 连续创建：重置后焦点回归标题输入框
+  const mainColRef = useRef<HTMLDivElement>(null);
 
   // forms
   const taskForm = useForm<TaskFormValues>({ defaultValues: DEFAULT_TASK });
@@ -415,11 +428,50 @@ export function UnifiedCreateDialog({
     setTimeout(reset, 150);
   };
 
+  /** 是否有未提交输入（Esc/关闭守卫用；事件回调内调用，非渲染期） */
+  const hasUnsavedInput = () => {
+    if (mode === 'ai') return Boolean(aiPrompt.trim() || draft);
+    return Boolean(
+      taskForm.getValues('title').trim()
+      || bugForm.getValues('title').trim()
+      || docForm.getValues('title').trim()
+      || projectForm.getValues('name').trim()
+      || milestoneForm.getValues('name').trim()
+      || taskForm.getValues('description').trim()
+      || bugForm.getValues('description').trim()
+      || docForm.getValues('description').trim()
+      || projectForm.getValues('description').trim()
+      || milestoneForm.getValues('description').trim()
+      || (subOpen && subTitle.trim()),
+    );
+  };
+
+  /** 关闭请求：有未提交输入先弹确认，防误触丢草稿 */
+  const requestClose = () => {
+    if (hasUnsavedInput()) {
+      setConfirmDiscard(true);
+      return;
+    }
+    handleClose();
+  };
+
   const handleSuccess = (type: CreateType, id: string) => {
     onSuccess?.(type, id);
     toast.success(`${TYPE_META[type].label} 创建成功`);
     if (createMore) {
       reset();
+      // 连续创建补完（CAP-A-18 批4）：重置后重套唤起预置、来源状态复位、焦点回归标题
+      if (projectId) {
+        taskForm.setValue('projectId', projectId);
+        bugForm.setValue('projectId', projectId);
+        docForm.setValue('projectId', projectId);
+        milestoneForm.setValue('projectId', projectId);
+      }
+      if (defaultAssigneeId) taskForm.setValue('assigneeId', defaultAssigneeId);
+      setProjectSource('scratch');
+      requestAnimationFrame(() => {
+        mainColRef.current?.querySelector('textarea')?.focus();
+      });
     } else {
       handleClose();
     }
@@ -781,7 +833,7 @@ export function UnifiedCreateDialog({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); handleClose(); return; }
+      if (e.key === 'Escape') { e.preventDefault(); requestClose(); return; }
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); handleSubmit(); return; }
       if ((e.ctrlKey || e.metaKey) && /^[1-9]$/.test(e.key)) {
         e.preventDefault();
@@ -793,13 +845,13 @@ export function UnifiedCreateDialog({
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, activeType, createMore]);
+  }, [open, activeType, createMore, mode, draft]);
 
   const currentMeta = TYPE_META[activeType];
 
-  // ── Width classes for dialog
+  // ── Width classes for dialog（最大化：宽高同步放大至 95vw × 95vh 语义档）
   const widthClass = maximized
-    ? (showProps ? 'w-[min(96vw,1000px)]' : 'w-[min(96vw,780px)]')
+    ? ''
     : (showProps ? 'w-[min(96vw,720px)]' : 'w-[min(96vw,520px)]');
 
   // ── Render helpers ───────────────────────────────────────
@@ -1014,17 +1066,21 @@ export function UnifiedCreateDialog({
   // ── Render ─────────────────────────────────────────────
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        // base-ui 自身 Esc/遮罩关闭也走脏检查守卫
+        if (!o) requestClose();
+      }}
+    >
       <DialogContent
         className={cn(
-          'overflow-hidden p-0 gap-0 border border-border/70 bg-card/95 backdrop-blur-xl shadow-2xl',
-          widthClass,
+          'overflow-hidden p-0 gap-0 border border-border/70 bg-card/95 backdrop-blur-xl shadow-2xl transition-[width,height] duration-300',
+          maximized ? 'w-dialog h-dialog-screen' : widthClass,
         )}
         keepDefaultWidth={false}
         showCloseButton={false}
-        style={{
-          maxHeight: 'calc(100vh - 48px)',
-        }}
+        style={maximized ? undefined : { maxHeight: 'calc(100vh - 48px)' }}
       >
         <DialogTitle className="sr-only">
           {mode === 'ai' ? 'AI agent' : currentMeta.label} creation dialog
@@ -1064,7 +1120,7 @@ export function UnifiedCreateDialog({
             >
               {maximized ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
             </IconBtn>
-            <IconBtn onClick={handleClose} title="关闭">
+            <IconBtn onClick={requestClose} title="关闭">
               <X className="size-3.5" />
             </IconBtn>
           </div>
@@ -1073,7 +1129,7 @@ export function UnifiedCreateDialog({
         {/* ──────────── Body ──────────── */}
         <div className="flex overflow-hidden flex-1 min-h-0" style={{ minHeight: 320 }}>
           {/* ── Main ── */}
-          <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
+          <div ref={mainColRef} className="flex-1 min-w-0 overflow-y-auto flex flex-col">
             <div className="p-4 pb-2 flex flex-col gap-3 flex-1 min-h-0">
               {error && (
                 <Alert variant="destructive" className="py-2 text-xs">
@@ -1238,7 +1294,7 @@ export function UnifiedCreateDialog({
             <span className="text-xs text-muted-foreground hover:text-foreground transition-colors">Create more</span>
             <Switch checked={createMore} onCheckedChange={setCreateMore} />
           </div>
-          <Button variant="ghost" size="sm" onClick={handleClose} disabled={isSubmitting}>
+          <Button variant="ghost" size="sm" onClick={requestClose} disabled={isSubmitting}>
             Cancel
           </Button>
           {mode === 'manual' && activeType === 'project' && projectSource === 'ai' ? (
@@ -1300,6 +1356,27 @@ export function UnifiedCreateDialog({
           )}
         </div>
       </DialogContent>
+
+      {/* 脏表单退出确认（批4：防 Esc/遮罩误触丢草稿） */}
+      <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
+        <AlertDialogContent>
+          <AlertDialogTitle>放弃未保存内容？</AlertDialogTitle>
+          <AlertDialogDescription>
+            面板里有未提交的输入，关闭后将丢失。
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>继续编辑</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmDiscard(false);
+                handleClose();
+              }}
+            >
+              放弃并关闭
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
