@@ -177,6 +177,10 @@ export class CliDispatchService {
 
     const projectId = task.projectId;
 
+    // 2. 验收门禁（兜底改造批 3，2026-09-15 裁决先按严格要求）：
+    // 无活契约或契约 0 条标准均阻断派发——先有标准再干活
+    await this.acceptanceService.assertDispatchGate(issueId);
+
     // 2. Get workspace root
     const workspaceRoot = await this.getWorkspaceRoot(projectId);
     if (!workspaceRoot) {

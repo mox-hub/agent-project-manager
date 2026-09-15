@@ -56,6 +56,8 @@ import {
   useSilentCreateSuggestions,
   parseCreateSuggestions,
   type CreateSuggestion,
+  useSilentAcceptanceDraft,
+  parseAcceptanceDraft,
 } from '@/modules/assistant/hooks/use-silent-ai';
 import type { BugSeverity, TaskPriority } from '@/modules/issue/api/issue-api';
 import type {
@@ -604,6 +606,7 @@ export function UnifiedCreateDialog({
     setSubTitle('');
     setSubDesc('');
     setAiPrompt('');
+    setAcceptanceText('');
     setError(null);
   }, [taskForm, bugForm, docForm, projectForm, milestoneForm]);
 
@@ -652,6 +655,9 @@ export function UnifiedCreateDialog({
         tags: values.labels,
         type: 'task',
         todoItems,
+        acceptanceCriteria: buildAcceptanceCriteria().length
+          ? buildAcceptanceCriteria()
+          : undefined,
       });
       if (resp?.id) handleSuccess('task', resp.id);
     } catch (err) {
@@ -678,6 +684,9 @@ export function UnifiedCreateDialog({
         tags: values.labels,
         type: 'bug',
         severity: values.severity,
+        acceptanceCriteria: buildAcceptanceCriteria().length
+          ? buildAcceptanceCriteria()
+          : undefined,
       });
       if (resp?.id) handleSuccess('bug', resp.id);
     } catch (err) {
@@ -793,6 +802,39 @@ export function UnifiedCreateDialog({
 
   // ── 静默 AI 建议卡（创建面板场景 create-suggestions）──
   const silentSuggestions = useSilentCreateSuggestions();
+
+  // ── 验收标准（兜底改造批 3）：每行一条，提交即落验收契约+标准进门禁体系 ──
+  const [acceptanceText, setAcceptanceText] = useState('');
+  const acceptanceDraft = useSilentAcceptanceDraft();
+
+  const handleGenerateAcceptance = async () => {
+    const values = activeType === 'bug' ? bugForm.getValues() : taskForm.getValues();
+    if (!values.title?.trim()) { setError('请先填写标题，再让 AI 生成验收标准'); return; }
+    try {
+      const res = await acceptanceDraft.mutateAsync({
+        title: values.title,
+        description: values.description || undefined,
+        type: activeType === 'bug' ? 'bug' : 'task',
+        projectId: values.projectId || projectId,
+      });
+      const items = parseAcceptanceDraft(res.data);
+      if (items.length === 0) {
+        setError('AI 没能生成有效的验收标准，请手动填写');
+        return;
+      }
+      setAcceptanceText(items.map((i) => i.content).join('\n'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'AI 生成验收标准失败');
+    }
+  };
+
+  /** 文本框每行一条 → acceptanceCriteria payload */
+  const buildAcceptanceCriteria = () =>
+    acceptanceText
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((content) => ({ content, source: 'manual' }));
 
   const fetchSuggestions = async (): Promise<CreateSuggestion[]> => {
     const type = activeType === 'ai' ? 'task' : activeType;
@@ -1254,8 +1296,34 @@ export function UnifiedCreateDialog({
               )}
             </div>
 
-            {/* Sub-task block (matches reference: collapsible card at bottom of main) */}
-            {(activeType === 'task') && (
+          {/* 验收标准（兜底改造批 3）：task/bug 创建即落契约，AI 可代写 */}
+          {(activeType === 'task' || activeType === 'bug') && (
+            <div className="px-3 pb-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-11 font-medium text-muted-foreground">
+                  验收标准 · 每行一条，进入验收门禁
+                </span>
+                <button
+                  type="button"
+                  disabled={acceptanceDraft.isPending}
+                  onClick={() => void handleGenerateAcceptance()}
+                  className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-11 text-accent-purple transition-colors hover:bg-accent-purple-light disabled:opacity-50"
+                >
+                  {acceptanceDraft.isPending ? '生成中…' : 'AI 生成'}
+                </button>
+              </div>
+              <Textarea
+                rows={2}
+                value={acceptanceText}
+                onChange={(e) => setAcceptanceText(e.target.value)}
+                placeholder={'每行一条验收标准，如：登录成功后跳转到工作台'}
+                className="min-h-12 text-xs resize-none"
+              />
+            </div>
+          )}
+
+          {/* Sub-task block (matches reference: collapsible card at bottom of main) */}
+          {(activeType === 'task') && (
               <SubTaskCard
                 open={subOpen}
                 onOpen={() => setSubOpen(true)}

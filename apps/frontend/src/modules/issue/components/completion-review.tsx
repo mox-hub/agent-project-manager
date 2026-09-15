@@ -19,6 +19,7 @@ import {
   AlertCircle,
   Clock,
   Plus,
+  Sparkles,
   ExternalLink,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
@@ -32,6 +33,7 @@ import { toast } from '@/components/ui/toast';
 import { acceptanceApi, isActiveAcceptance, extractFailures, type Acceptance, type CompletionType, type AcceptanceFailure } from '@/modules/acceptance/api/acceptance-api';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { AcceptanceFormDialog } from '@/modules/acceptance/components/acceptance-form-dialog';
+import { AcceptanceDraftDialog } from '@/modules/acceptance/components/acceptance-draft-dialog';
 
 interface CompletionReviewProps {
   issueId: string;
@@ -337,6 +339,7 @@ export function CompletionReview({ issueId, acceptances }: CompletionReviewProps
   });
 
   const hasActive = acceptances.some(isActiveAcceptance);
+  const [showDraft, setShowDraft] = useState(false);
 
   if (acceptances.length === 0) {
     return (
@@ -346,11 +349,29 @@ export function CompletionReview({ issueId, acceptances }: CompletionReviewProps
             <Clock size={12} />
             {t('acceptance.empty')}
           </span>
-          <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowCreate(true)}>
-            <Plus size={12} className="mr-1" />
-            {t('acceptance.new')}
-          </Button>
+          {/* 兜底改造批 3：AI 代写直入——先有标准再干活（派发前门禁会拦空契约） */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs text-accent-purple hover:text-accent-purple"
+              onClick={() => setShowDraft(true)}
+            >
+              <Sparkles size={12} className="mr-1" />
+              {t('acceptance.draft.button', { defaultValue: 'AI 代写验收标准' })}
+            </Button>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowCreate(true)}>
+              <Plus size={12} className="mr-1" />
+              {t('acceptance.new')}
+            </Button>
+          </div>
         </div>
+        <AcceptanceDraftDialog
+          issueId={issueId}
+          open={showDraft}
+          onOpenChange={setShowDraft}
+          onSuccess={refresh}
+        />
         <AcceptanceFormDialog
           open={showCreate}
           onOpenChange={setShowCreate}

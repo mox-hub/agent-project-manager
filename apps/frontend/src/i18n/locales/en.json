@@ -3084,7 +3084,16 @@
       "projects": "Projects"
     },
     "acceptance": {
-      "task": "Task"
+    "draft": {
+      "title": "AI-draft acceptance criteria",
+      "description": "AI drafts checkable acceptance criteria from the issue. Review and confirm to apply (existing criteria are never overwritten)",
+      "generating": "AI is drafting acceptance criteria…",
+      "button": "AI-draft acceptance criteria",
+      "apply": "Apply",
+      "functional": "Functional",
+      "technical": "Technical",
+      "applied": "Applied {{added}} criteria{{skipped}}"
+    },      "task": "Task"
     },
     "generic": {
       "hint": "Hover to preview pages; entity details show for projects, tasks, bugs, documents and more."

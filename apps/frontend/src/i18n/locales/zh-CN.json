@@ -3084,7 +3084,16 @@
       "projects": "项目数"
     },
     "acceptance": {
-      "task": "关联任务"
+    "draft": {
+      "title": "AI 代写验收标准",
+      "description": "AI 按工单内容起草可检查的验收标准，勾选确认后落入验收契约（已有标准不会被覆盖）",
+      "generating": "AI 正在起草验收标准…",
+      "button": "AI 代写验收标准",
+      "apply": "确认落库",
+      "functional": "功能",
+      "technical": "技术",
+      "applied": "已落库 {{added}} 条验收标准{{skipped}}"
+    },      "task": "关联任务"
     },
     "generic": {
       "hint": "悬停预览页面信息；项目、任务、Bug、文档等详情页会展示实体数据。"
