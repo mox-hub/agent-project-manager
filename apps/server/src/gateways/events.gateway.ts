@@ -176,6 +176,12 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Terminal事件订阅已废弃 - Terminal模块已并入Runtime模块
     // 以下事件现在由Runtime模块的terminal capability处理
     // 如需恢复，请参考 Runtime模块的terminal capability实现
+    //
+    // ⚠️ 事实澄清（2026-09-14 全仓核验）：`terminal.output` 目前**全仓无任何发布方**
+    // （message-bus 内仅存于日志降噪名单），此处转发亦在注释块内——即「chunk 级流式」
+    // 这条通道**从未在线**。盯盘面的粒度天花板因此不是 chunk 级，而是事件级
+    // （runtime.execution.event 的 summary / detail，经 runtime.dispatch.changed 转发）。
+    // 若日后要恢复 chunk 级日志尾巴，须先补发布方 + 恢复本转发，不得据旧注释认为它"仍在发"。
     /*
     // 订阅终端输出事件
     this.messageBus.subscribe('terminal.output', (payload: any) => {
@@ -211,6 +217,37 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
           source: evt,
           payload,
         });
+      });
+    });
+
+    // ── 治理族（执行/审批/验收/发版）转发 ───────────────────
+    // 2026-09-14 补遗：此前网关只转发 8 族事件（ai.stream / ai.workflow.update /
+    // task.* / project.* / notification.* / runtime.dispatch.changed / linear.*），
+    // `execution.*` / `approval.*` / `acceptance.*` / `release.*` 一条都没出网关——
+    // 前端盯盘因此只能靠 React Query 轮询，这是「实时盯盘」的真实瓶颈所在。
+    //
+    // 逐事件显式转发（不做聚合）：线上事件名与领域事件名一致，前端订什么就收到什么。
+    // 注意与 runtime.dispatch.changed 的分工：runtime.execution.event 等 **同时**走
+    // 该聚合通道，两处并行不冲突（聚合通道服务 use-assistant-status，本通道服务盯盘投影）。
+    const governanceEvents = [
+      DomainEventTypes.ExecutionRunCreated,
+      DomainEventTypes.ExecutionRunUpdated,
+      DomainEventTypes.ExecutionCompleted,
+      DomainEventTypes.ExecutionStepCreated,
+      DomainEventTypes.ExecutionStepUpdated,
+      DomainEventTypes.ExecutionApprovalNeeded,
+      DomainEventTypes.ApprovalRequestCreated,
+      DomainEventTypes.ApprovalResolved,
+      DomainEventTypes.ApprovalCancelled,
+      DomainEventTypes.AcceptanceCreated,
+      DomainEventTypes.AcceptanceResolved,
+      DomainEventTypes.AcceptanceDeleted,
+      DomainEventTypes.ReleaseCreated,
+      DomainEventTypes.ReleaseApproved,
+    ] as const;
+    governanceEvents.forEach((evt) => {
+      this.messageBus.subscribe(evt, (payload: unknown) => {
+        this.server.emit(evt, payload);
       });
     });
 
