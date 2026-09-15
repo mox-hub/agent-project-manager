@@ -68,19 +68,6 @@ export function SquadCapsuleOrbit({
     }
   };
 
-  const getStatusGlow = (status: AgentPersona['status']) => {
-    switch (status) {
-      case 'reasoning':
-        return 'rgba(168, 85, 247, 0.45)';
-      case 'executing':
-        return 'rgba(16, 185, 129, 0.45)';
-      case 'auditing':
-        return 'rgba(245, 158, 11, 0.45)';
-      case 'idle':
-        return 'rgba(148, 163, 184, 0.25)';
-    }
-  };
-
   return (
     <div className="relative select-none flex items-center" style={{ width: 340, height: 600 }}>
       {/* 1. 手表外侧弧形刻度导轨 SVG (Watch-Dial Outer Bezel Track) */}
@@ -92,7 +79,7 @@ export function SquadCapsuleOrbit({
         <path
           d="M 50 40 A 540 540 0 0 1 50 560"
           fill="none"
-          stroke={isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(99, 102, 241, 0.25)'}
+          stroke={isDark ? 'hsl(var(--accent-purple) / 0.25)' : 'hsl(var(--accent-purple) / 0.25)'}
           strokeWidth="2"
           strokeDasharray="4 8"
         />
@@ -100,7 +87,7 @@ export function SquadCapsuleOrbit({
         <path
           d="M 70 70 A 500 500 0 0 1 70 530"
           fill="none"
-          stroke={isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.1)'}
+          stroke={isDark ? 'hsl(var(--foreground) / 0.1)' : 'hsl(var(--foreground) / 0.1)'}
           strokeWidth="1"
         />
         {/* 表盘刻度点 (Watch Ticks) */}
@@ -114,7 +101,7 @@ export function SquadCapsuleOrbit({
               cx={cx}
               cy={cy}
               r={angle === 0 ? 3 : 2}
-              fill={isDark ? '#A78BFA' : '#6366F1'}
+              fill={isDark ? 'hsl(var(--accent-purple))' : 'hsl(var(--accent-purple))'}
               opacity={angle === 0 ? 0.9 : 0.4}
             />
           );
@@ -142,7 +129,6 @@ export function SquadCapsuleOrbit({
           const isSelected = selectedAgentId === agent.id;
           const isHovered = hoveredAgentId === agent.id;
           const RoleIcon = getRoleIcon(agent.role);
-          const glowColor = getStatusGlow(agent.status);
           const activeAgentBubbles = bubbles.filter((b) => b.agentId === agent.id);
 
           return (
@@ -158,7 +144,7 @@ export function SquadCapsuleOrbit({
               {/* 弧形外接刻度标线 */}
               <div
                 className="absolute -left-4 top-1/2 -translate-y-1/2 w-3 h-0.5 pointer-events-none opacity-40"
-                style={{ background: isDark ? '#A855F7' : '#6366F1' }}
+                style={{ background: isDark ? 'hsl(var(--accent-purple))' : 'hsl(var(--accent-purple))' }}
               />
 
               {/* 胶囊卡片 */}
@@ -168,51 +154,43 @@ export function SquadCapsuleOrbit({
                 onMouseEnter={() => setHoveredAgentId(agent.id)}
                 onMouseLeave={() => setHoveredAgentId(null)}
                 className={cn(
-                  'relative w-64 text-left rounded-2xl p-3 transition-all duration-300 ease-out backdrop-blur-2xl cursor-pointer',
-                  isSelected ? 'shadow-xl scale-105' : 'hover:translate-x-1',
+                  'relative w-64 text-left rounded-2xl p-3 transition-all duration-300 ease-out backdrop-blur-2xl shadow-xs cursor-pointer',
+                  isSelected ? 'scale-105' : 'hover:translate-x-1',
                 )}
                 style={{
                   background: isDark
                     ? isSelected
-                      ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%)'
-                      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%)'
+                      ? 'linear-gradient(135deg, hsl(var(--foreground) / 0.14) 0%, hsl(var(--foreground) / 0.05) 100%)'
+                      : 'linear-gradient(135deg, hsl(var(--foreground) / 0.07) 0%, hsl(var(--foreground) / 0.02) 100%)'
                     : isSelected
-                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 244, 255, 0.90) 100%)'
-                    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(248, 250, 252, 0.75) 100%)',
-                  boxShadow: isDark
-                    ? isSelected
-                      ? `0 14px 34px -4px ${glowColor}, inset 0 1px 0 rgba(255, 255, 255, 0.25)`
-                      : '0 8px 24px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
-                    : isSelected
-                    ? '0 16px 36px -6px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255, 255, 255, 1)'
-                    : '0 10px 24px -6px rgba(30, 41, 59, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-                  color: isDark ? '#FFFFFF' : '#0F172A',
+                    ? 'linear-gradient(135deg, hsl(var(--background) / 0.95) 0%, hsl(var(--background) / 0.9) 100%)'
+                    : 'linear-gradient(135deg, hsl(var(--background) / 0.82) 0%, hsl(var(--background) / 0.75) 100%)',
+                  color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
                 }}
               >
                 {/* 顶部行：角色头像、呼吸状态灯、信度刻度 */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <div
-                      className="relative flex items-center justify-center size-8 rounded-xl shrink-0 text-white"
+                      className="relative flex items-center justify-center size-8 rounded-xl shrink-0 text-primary-foreground"
                       style={{
-                        background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
-                        boxShadow: `0 0 14px ${glowColor}`,
+                        background:
+                          'linear-gradient(135deg, hsl(var(--accent-purple)) 0%, hsl(var(--accent-purple)) 100%)',
                       }}
                     >
-                      <RoleIcon className="size-4 text-white" />
+                      <RoleIcon className="size-4 text-primary-foreground" />
                       {/* 呼吸状态小光球 */}
                       <span
                         className="absolute -top-0.5 -right-0.5 size-2 rounded-full"
                         style={{
                           backgroundColor:
                             agent.status === 'executing'
-                              ? '#10B981'
+                              ? 'hsl(var(--accent-green))'
                               : agent.status === 'reasoning'
-                              ? '#A855F7'
+                              ? 'hsl(var(--accent-purple))'
                               : agent.status === 'auditing'
-                              ? '#F59E0B'
-                              : '#64748B',
-                          boxShadow: `0 0 6px ${glowColor}`,
+                              ? 'hsl(var(--accent-yellow))'
+                              : 'hsl(var(--muted-foreground))',
                         }}
                       />
                     </div>
@@ -226,8 +204,9 @@ export function SquadCapsuleOrbit({
                           className="px-1 py-0.2 rounded font-mono"
                           style={{
                             fontSize: 9,
-                            background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                            color: isDark ? '#E2E8F0' : '#4F46E5',
+                            background:
+                              isDark ? 'hsl(var(--foreground) / 0.1)' : 'hsl(var(--accent-purple) / 0.1)',
+                            color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--accent-purple))',
                           }}
                         >
                           {agent.role.toUpperCase()}
@@ -237,7 +216,7 @@ export function SquadCapsuleOrbit({
                         className="truncate"
                         style={{
                           fontSize: 10,
-                          color: isDark ? 'rgba(255, 255, 255, 0.55)' : 'rgba(15, 23, 42, 0.6)',
+                          color: isDark ? 'hsl(var(--foreground) / 0.55)' : 'hsl(var(--foreground) / 0.6)',
                         }}
                       >
                         {agent.roleTitle}
@@ -247,14 +226,14 @@ export function SquadCapsuleOrbit({
 
                   {/* 表盘刻度数值 */}
                   <div className="text-right shrink-0">
-                    <span className="font-mono font-bold" style={{ fontSize: 11, color: '#10B981' }}>
+                    <span className="font-mono font-bold" style={{ fontSize: 11, color: 'hsl(var(--accent-green))' }}>
                       {agent.trustScore}%
                     </span>
                     <p
                       className="font-mono"
                       style={{
                         fontSize: 9,
-                        color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.45)',
+                        color: isDark ? 'hsl(var(--foreground) / 0.4)' : 'hsl(var(--foreground) / 0.45)',
                       }}
                     >
                       信度
@@ -267,7 +246,7 @@ export function SquadCapsuleOrbit({
                   className="mt-1.5 line-clamp-1 leading-snug"
                   style={{
                     fontSize: 10,
-                    color: isDark ? 'rgba(255, 255, 255, 0.75)' : 'rgba(15, 23, 42, 0.75)',
+                    color: isDark ? 'hsl(var(--foreground) / 0.75)' : 'hsl(var(--foreground) / 0.75)',
                   }}
                 >
                   {agent.statusText}
@@ -282,8 +261,8 @@ export function SquadCapsuleOrbit({
                         className="px-1.5 py-0.2 rounded"
                         style={{
                           fontSize: 9,
-                          background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.06)',
-                          color: isDark ? '#CBD5E1' : '#334155',
+                          background: isDark ? 'hsl(var(--foreground) / 0.08)' : 'hsl(var(--foreground) / 0.06)',
+                          color: isDark ? 'hsl(var(--muted-foreground))' : 'hsl(var(--muted-foreground))',
                         }}
                       >
                         #{spec}
@@ -297,15 +276,16 @@ export function SquadCapsuleOrbit({
               {activeAgentBubbles.map((bubble) => (
                 <div
                   key={bubble.id}
-                  className="pointer-events-none absolute top-1 z-40 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white whitespace-nowrap shadow-xl backdrop-blur-md"
+                  className="pointer-events-none absolute top-1 z-40 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-primary-foreground whitespace-nowrap shadow-xs backdrop-blur-md"
                   style={{
                     left: '100%',
                     fontSize: 10,
-                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%)',
+                    background:
+                      'linear-gradient(135deg, hsl(var(--accent-purple) / 0.9) 0%, hsl(var(--accent-purple) / 0.9) 100%)',
                     animation: 'bubbleFloat 4.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
                   }}
                 >
-                  <Sparkles className="size-3 animate-spin" style={{ color: '#FCD34D', animationDuration: '3s' }} />
+                  <Sparkles className="size-3 animate-spin" style={{ color: 'hsl(var(--accent-yellow))', animationDuration: '3s' }} />
                   <span className="font-medium">{bubble.text}</span>
                 </div>
               ))}

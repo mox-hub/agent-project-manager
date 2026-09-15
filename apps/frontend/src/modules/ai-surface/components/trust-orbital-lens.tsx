@@ -1,9 +1,13 @@
 import { useState } from 'react';
-import type { TrustDimension, MemoryAtom } from '../types';
+import type { MemoryAtom } from '../types';
 import { Sparkles, Database, Award, Info, ShieldCheck } from 'lucide-react';
 
+/**
+ * ⚠️ 本组件当前**全仓零引用**（S2-e 复核：`grep -rn TrustOrbitalLens src` 只命中自身）。
+ * 保留而不删是等产品裁决（是否后续接线），故此处只做**不改变行为**的最小维护：
+ * 随 `TrustDimension` 类型一并摘除已无人供数的 `dimensions` 入参。
+ */
 interface TrustOrbitalLensProps {
-  dimensions: TrustDimension[];
   memoryAtoms: MemoryAtom[];
   overallScore: number;
   isDark?: boolean;
@@ -27,7 +31,7 @@ export function TrustOrbitalLens({
         <path
           d="M 290 40 A 540 540 0 0 0 290 560"
           fill="none"
-          stroke={isDark ? 'rgba(52, 211, 153, 0.25)' : 'rgba(16, 185, 129, 0.25)'}
+          stroke={isDark ? 'hsl(var(--accent-green) / 0.25)' : 'hsl(var(--accent-green) / 0.25)'}
           strokeWidth="2"
           strokeDasharray="4 8"
         />
@@ -35,7 +39,7 @@ export function TrustOrbitalLens({
         <path
           d="M 270 70 A 500 500 0 0 0 270 530"
           fill="none"
-          stroke={isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.1)'}
+          stroke={isDark ? 'hsl(var(--foreground) / 0.1)' : 'hsl(var(--foreground) / 0.1)'}
           strokeWidth="1"
         />
         {/* 表盘刻度点 */}
@@ -49,7 +53,7 @@ export function TrustOrbitalLens({
               cx={cx}
               cy={cy}
               r={angle === 0 ? 3 : 2}
-              fill={isDark ? '#34D399' : '#10B981'}
+              fill={isDark ? 'hsl(var(--accent-green))' : 'hsl(var(--accent-green))'}
               opacity={angle === 0 ? 0.9 : 0.4}
             />
           );
@@ -78,15 +82,12 @@ export function TrustOrbitalLens({
           }}
         >
           <div
-            className="w-64 rounded-2xl p-3 backdrop-blur-2xl transition-all"
+            className="w-64 rounded-2xl p-3 shadow-xs backdrop-blur-2xl transition-all"
             style={{
               background: isDark
-                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)'
-                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 250, 252, 0.8) 100%)',
-              boxShadow: isDark
-                ? '0 10px 28px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
-                : '0 10px 24px -6px rgba(30, 41, 59, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-              color: isDark ? '#FFFFFF' : '#0F172A',
+                ? 'linear-gradient(135deg, hsl(var(--foreground) / 0.08) 0%, hsl(var(--foreground) / 0.02) 100%)'
+                : 'linear-gradient(135deg, hsl(var(--card) / 0.88) 0%, hsl(var(--card) / 0.8) 100%)',
+              color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
             }}
           >
             <div className="flex items-center justify-between">
@@ -98,7 +99,11 @@ export function TrustOrbitalLens({
                       cy="20"
                       r="16"
                       fill="none"
-                      stroke={isDark ? 'rgba(139, 92, 246, 0.3)' : 'rgba(99, 102, 241, 0.2)'}
+                      stroke={
+                        isDark
+                          ? 'hsl(var(--accent-purple) / 0.3)'
+                          : 'hsl(var(--accent-purple) / 0.2)'
+                      }
                       strokeWidth="2"
                       strokeDasharray="2 3"
                     />
@@ -107,7 +112,7 @@ export function TrustOrbitalLens({
                       cy="20"
                       r="12"
                       fill="none"
-                      stroke="#34D399"
+                      stroke="hsl(var(--accent-green))"
                       strokeWidth="2"
                       strokeDasharray="16 30"
                       className="animate-spin"
@@ -119,21 +124,24 @@ export function TrustOrbitalLens({
                 <div>
                   <div className="flex items-center gap-1">
                     <span className="text-xs font-semibold">项目信度总分</span>
-                    <ShieldCheck className="size-3" style={{ color: '#34D399' }} />
+                    <ShieldCheck className="size-3" style={{ color: 'hsl(var(--accent-green))' }} />
                   </div>
                   <span
                     className="px-1.5 py-0.2 rounded font-mono"
                     style={{
                       fontSize: 9,
-                      background: 'rgba(52, 211, 153, 0.15)',
-                      color: '#10B981',
+                      background: 'hsl(var(--accent-green) / 0.15)',
+                      color: 'hsl(var(--accent-green))',
                     }}
                   >
                     LEVEL 3 准自主
                   </span>
                 </div>
               </div>
-              <span className="font-mono font-extrabold text-sm" style={{ color: '#10B981' }}>
+              <span
+                className="font-mono font-extrabold text-sm"
+                style={{ color: 'hsl(var(--accent-green))' }}
+              >
                 {overallScore}%
               </span>
             </div>
@@ -151,37 +159,47 @@ export function TrustOrbitalLens({
           }}
         >
           <div
-            className="w-64 rounded-2xl p-3 backdrop-blur-2xl"
+            className="w-64 rounded-2xl p-3 shadow-xs backdrop-blur-2xl"
             style={{
               background: isDark
-                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%)'
-                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 250, 252, 0.8) 100%)',
-              boxShadow: isDark
-                ? '0 8px 24px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
-                : '0 10px 24px -6px rgba(30, 41, 59, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-              color: isDark ? '#FFFFFF' : '#0F172A',
+                ? 'linear-gradient(135deg, hsl(var(--foreground) / 0.07) 0%, hsl(var(--foreground) / 0.02) 100%)'
+                : 'linear-gradient(135deg, hsl(var(--card) / 0.88) 0%, hsl(var(--card) / 0.8) 100%)',
+              color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
             }}
           >
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="font-medium">契约合规率 (OpenAPI)</span>
-              <span className="font-mono font-bold" style={{ color: '#10B981', fontSize: 11 }}>
+              <span
+                className="font-mono font-bold"
+                style={{ color: 'hsl(var(--accent-green))', fontSize: 11 }}
+              >
                 99.2%
               </span>
             </div>
             <div
               className="h-1.5 w-full rounded-full overflow-hidden"
-              style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)' }}
+              style={{
+                background: isDark
+                  ? 'hsl(var(--foreground) / 0.08)'
+                  : 'hsl(var(--foreground) / 0.08)',
+              }}
             >
               <div
                 className="h-full rounded-full"
-                style={{ width: '99.2%', background: 'linear-gradient(90deg, #10B981, #34D399)' }}
+                style={{
+                  width: '99.2%',
+                  background:
+                    'linear-gradient(90deg, hsl(var(--accent-green)), hsl(var(--accent-green)))',
+                }}
               />
             </div>
             <p
               className="mt-1 font-mono truncate"
               style={{
                 fontSize: 9,
-                color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 23, 42, 0.55)',
+                color: isDark
+                  ? 'hsl(var(--foreground) / 0.5)'
+                  : 'hsl(var(--foreground) / 0.55)',
               }}
             >
               ZERO DRIFT · 单库隔离路由完全生效
@@ -200,15 +218,12 @@ export function TrustOrbitalLens({
           }}
         >
           <div
-            className="w-64 rounded-2xl p-3 backdrop-blur-2xl"
+            className="w-64 rounded-2xl p-3 shadow-xs backdrop-blur-2xl"
             style={{
               background: isDark
-                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%)'
-                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 250, 252, 0.8) 100%)',
-              boxShadow: isDark
-                ? '0 8px 24px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
-                : '0 10px 24px -6px rgba(30, 41, 59, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-              color: isDark ? '#FFFFFF' : '#0F172A',
+                ? 'linear-gradient(135deg, hsl(var(--foreground) / 0.07) 0%, hsl(var(--foreground) / 0.02) 100%)'
+                : 'linear-gradient(135deg, hsl(var(--card) / 0.88) 0%, hsl(var(--card) / 0.8) 100%)',
+              color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
             }}
           >
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -217,7 +232,9 @@ export function TrustOrbitalLens({
                   className="block font-mono"
                   style={{
                     fontSize: 9,
-                    color: isDark ? 'rgba(255, 255, 255, 0.55)' : 'rgba(15, 23, 42, 0.55)',
+                    color: isDark
+                      ? 'hsl(var(--foreground) / 0.55)'
+                      : 'hsl(var(--foreground) / 0.55)',
                   }}
                 >
                   逻辑完备度
@@ -231,18 +248,23 @@ export function TrustOrbitalLens({
                   className="block font-mono"
                   style={{
                     fontSize: 9,
-                    color: isDark ? 'rgba(255, 255, 255, 0.55)' : 'rgba(15, 23, 42, 0.55)',
+                    color: isDark
+                      ? 'hsl(var(--foreground) / 0.55)'
+                      : 'hsl(var(--foreground) / 0.55)',
                   }}
                 >
                   Token ROI
                 </span>
-                <span className="font-mono font-bold" style={{ fontSize: 11, color: '#8B5CF6' }}>
+                <span
+                  className="font-mono font-bold"
+                  style={{ fontSize: 11, color: 'hsl(var(--accent-purple))' }}
+                >
                   92.8%
                 </span>
               </div>
             </div>
             <div className="mt-1.5 flex items-center gap-1 text-muted-foreground/80">
-              <Sparkles className="size-3" style={{ color: '#FCD34D' }} />
+              <Sparkles className="size-3" style={{ color: 'hsl(var(--accent-yellow))' }} />
               <span style={{ fontSize: 9 }}>无幻觉风险 · 代码契约高信度</span>
             </div>
           </div>
@@ -259,15 +281,12 @@ export function TrustOrbitalLens({
           }}
         >
           <div
-            className="w-64 rounded-2xl p-2.5 backdrop-blur-2xl"
+            className="w-64 rounded-2xl p-2.5 shadow-xs backdrop-blur-2xl"
             style={{
               background: isDark
-                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.015) 100%)'
-                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(248, 250, 252, 0.75) 100%)',
-              boxShadow: isDark
-                ? '0 8px 24px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
-                : '0 10px 24px -6px rgba(30, 41, 59, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-              color: isDark ? '#FFFFFF' : '#0F172A',
+                ? 'linear-gradient(135deg, hsl(var(--foreground) / 0.06) 0%, hsl(var(--foreground) / 0.015) 100%)'
+                : 'linear-gradient(135deg, hsl(var(--card) / 0.85) 0%, hsl(var(--card) / 0.75) 100%)',
+              color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
             }}
           >
             <div className="flex items-center justify-between gap-1 mb-1.5 px-0.5">
@@ -281,7 +300,9 @@ export function TrustOrbitalLens({
                 className="font-mono"
                 style={{
                   fontSize: 9,
-                  color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.45)',
+                  color: isDark
+                    ? 'hsl(var(--foreground) / 0.4)'
+                    : 'hsl(var(--foreground) / 0.45)',
                 }}
               >
                 {memoryAtoms.length} ATOMS
@@ -297,18 +318,22 @@ export function TrustOrbitalLens({
                   className="px-1.5 py-0.2 rounded font-mono transition-colors text-left cursor-pointer"
                   style={{
                     fontSize: 9,
+                    // 原为「紫→靛」双色渐变。靛蓝不在设计系统五色域内，按设计纪要
+                    // §4.4-5 两端同归 --accent-purple；两端同值即退化，故直接落纯色
+                    // （DESIGN.md 要求 AI 标识无渐变）。原色值字面量见 CHANGELOG，
+                    // 本文件不保留 hex——门禁连注释一并扫描。
                     background:
                       activeMemory?.id === atom.id
-                        ? 'linear-gradient(135deg, #8B5CF6, #6366F1)'
+                        ? 'hsl(var(--accent-purple))'
                         : isDark
-                        ? 'rgba(255, 255, 255, 0.08)'
-                        : 'rgba(99, 102, 241, 0.08)',
+                        ? 'hsl(var(--foreground) / 0.08)'
+                        : 'hsl(var(--accent-purple) / 0.08)',
                     color:
                       activeMemory?.id === atom.id
-                        ? '#FFFFFF'
+                        ? 'hsl(var(--primary-foreground))'
                         : isDark
-                        ? '#CBD5E1'
-                        : '#4338CA',
+                        ? 'hsl(var(--muted-foreground))'
+                        : 'hsl(var(--accent-purple))',
                   }}
                 >
                   #{atom.key}
@@ -321,12 +346,16 @@ export function TrustOrbitalLens({
                 className="mt-1.5 p-1.5 rounded-lg leading-relaxed border border-current/10 animate-in fade-in duration-150"
                 style={{
                   fontSize: 9,
-                  background: isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.9)',
+                  background: isDark
+                    ? 'hsl(var(--background) / 0.5)'
+                    : 'hsl(var(--card) / 0.9)',
                 }}
               >
                 <div className="flex items-center gap-1 text-accent-purple font-mono mb-0.5">
                   <Info className="size-2.5" />
-                  <span>权重 {(activeMemory.weight * 100).toFixed(0)}%</span>
+                  {/* 原此处读 `activeMemory.weight` 渲染「权重 98%」——编造的精度，
+                      随 S2-e 一并摘除（见 `mock-data.ts` MEMORY_ATOMS 注释） */}
+                  <span>{activeMemory.category}</span>
                 </div>
                 {activeMemory.summary}
               </div>

@@ -90,6 +90,11 @@ const ALLOWED_TOKENS = new Set([
   "tracking-[-0.01em]",
   "tracking-[0.03em]",
   "z-[-1]",
+  // ai-surface 驾驶舱网格（2026-09 S1/S2 登记批）：内容宽度是**页面级**布局常量，
+  // 刻意窄于其他页面的 max-w-7xl（驾驶舱要聚焦），故不升格为全局 --container-* token；
+  // 2fr:1fr 是 fr 比例模板，Tailwind 无对应 token 化写法（同表内其他 grid-cols-[...] 先例）。
+  "max-w-[1100px]",
+  "grid-cols-[2fr_1fr]",
   // ── shadcn 官方组件自带的运行时复杂值（vaul drawer / navigation-menu 动效），随官方升级保留 ──
   "opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))]",
   "ease-[cubic-bezier(0.32,0.72,0,1)]",
