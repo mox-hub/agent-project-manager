@@ -94,10 +94,14 @@ export type AssistantSilentOptions = Omit<
   'scenario'
 >;
 
-export interface AssistantSilentResult {
-  scenario: string;
-  data: Record<string, unknown>;
-}
+/**
+ * 静默调用回执。**契约单源**（`@ApiOkResponse(AssistantSilentResponseDto)` 已声明），
+ * 不再手抄——`usage` 是叙述层「自己花多少 token 也要可见」的承载字段（§3.3 约束②）。
+ */
+export type AssistantSilentResult = ApiSchemas['AssistantSilentResponseDto'];
+
+/** 一次静默调用的自身开销（契约单源；`costUsd: null` = 估价口径不可用 ≠ 0） */
+export type AssistantSilentUsage = ApiSchemas['AssistantSilentUsageDto'];
 
 export const assistantApi = {
   /** 当前会话（conversationId 缺省跟随 updatedAt 最新；传入即切换历史会话） */
