@@ -27,6 +27,7 @@
 import * as React from 'react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useForm, useWatch, type UseFormReturn } from 'react-hook-form';
 import { GrillInterview } from '@/modules/project/components/grill/grill-interview';
 import { buildGrillMinutes } from '@/modules/project/components/grill/grill-minutes';
@@ -67,6 +68,12 @@ import type { Member } from '@/modules/team-member/types';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
 import { useAppStore } from '@/infrastructure/store/app-store';
+import { EntityIcon, type EntityKind } from '@/shared/entity-icons/entity-icons';
+import {
+  TASK_STATUS_VISUALS,
+  PRIORITY_VISUALS,
+  TONE_TEXT_CLASS,
+} from '@/shared/status/status-visuals';
 import {
   useSilentCreateSuggestions,
   parseCreateSuggestions,
@@ -82,27 +89,20 @@ import type {
 } from '@/modules/project/api/project-api';
 import type { DocumentCategory as DocCategory } from '@/modules/document/api/document-api';
 import {
-  CheckSquare,
-  Bug,
   X,
   Plus,
   Calendar as CalendarIcon,
   Check,
   ChevronDown,
-  ChevronUp,
   ChevronRight,
-  Loader2,
   Flag,
-  Tag,
   User,
-  Paperclip,
   PanelRightClose,
   PanelRight,
   Maximize2,
   Minimize2,
   Sparkles,
   AlertCircle,
-  FolderPlus,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { SuggestionsCard } from './suggestions-card';
@@ -132,40 +132,18 @@ const TYPE_ORDER: CreateType[] = ['task', 'bug', 'doc', 'project', 'milestone', 
 interface TypeMeta {
   label: string;
   shortcut: string;
-  Icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { className?: string; style?: React.CSSProperties }>;
-  color: string;
+  /** 实体类型走 entity-icons 注册表（图标+tone 语义色，禁本地枚举/原始色）；null = 非实体（ai→Sparkles） */
+  kind: EntityKind | null;
   placeholder: string;
   descriptionHint: string;
   createLabel: string;
 }
 
-const FileTextIcon = React.forwardRef<SVGSVGElement, React.SVGProps<SVGSVGElement> & { className?: string }>(
-  (props, ref) => (
-    <svg
-      ref={ref}
-      {...props}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-    </svg>
-  ),
-);
-FileTextIcon.displayName = 'FileTextIcon';
-
 const TYPE_META: Record<CreateType, TypeMeta> = {
   task: {
     label: 'Task',
     shortcut: '1',
-    Icon: CheckSquare,
-    color: '#5e6ad2',
+    kind: 'issue',
     placeholder: 'Task title',
     descriptionHint: 'Add a description…',
     createLabel: 'Create task',
@@ -173,8 +151,7 @@ const TYPE_META: Record<CreateType, TypeMeta> = {
   bug: {
     label: 'Bug',
     shortcut: '2',
-    Icon: Bug,
-    color: '#eb5757',
+    kind: 'bug',
     placeholder: 'Bug title',
     descriptionHint: 'Steps to reproduce, expected vs actual…',
     createLabel: 'Report bug',
@@ -182,8 +159,7 @@ const TYPE_META: Record<CreateType, TypeMeta> = {
   doc: {
     label: 'Document',
     shortcut: '3',
-    Icon: FileTextIcon,
-    color: '#bb87fc',
+    kind: 'document',
     placeholder: 'Document title',
     descriptionHint: 'Add a summary or initial content…',
     createLabel: 'Create document',
@@ -191,8 +167,7 @@ const TYPE_META: Record<CreateType, TypeMeta> = {
   project: {
     label: 'Project',
     shortcut: '4',
-    Icon: FolderPlus,
-    color: '#4cb782',
+    kind: 'project',
     placeholder: 'Project name',
     descriptionHint: 'Goals, scope and success criteria…',
     createLabel: 'Create project',
@@ -200,8 +175,7 @@ const TYPE_META: Record<CreateType, TypeMeta> = {
   milestone: {
     label: 'Milestone',
     shortcut: '5',
-    Icon: Flag,
-    color: '#f2c94c',
+    kind: 'milestone',
     placeholder: 'Milestone name',
     descriptionHint: 'Key deliverables…',
     createLabel: 'Create milestone',
@@ -209,51 +183,33 @@ const TYPE_META: Record<CreateType, TypeMeta> = {
   ai: {
     label: 'AI 助手',
     shortcut: '6',
-    Icon: Sparkles,
-    color: '#8b5cf6',
+    kind: null,
     placeholder: '描述要创建的内容',
     descriptionHint: '用自然语言描述，小周帮你创建',
     createLabel: '让小周创建',
   },
 };
 
-const PRIORITY_OPTIONS: { value: TaskPriority; label: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { className?: string }>; color: string }[] = [
-  { value: 'critical', label: 'Urgent', icon: AlertCircle, color: '#ef4444' },
-  { value: 'high', label: 'High', icon: ChevronUp, color: '#f97316' },
-  { value: 'medium', label: 'Medium', icon: ChevronDown, color: '#eab308' },
-  { value: 'low', label: 'Low', icon: ChevronDown, color: '#8b93a4' },
+/** Bug 严重度 S0–S3（status-visuals 无 severity 映射，本地维护；色用 accent token 禁原始 hex） */
+const SEVERITY_OPTIONS: { value: BugSeverity; label: string; dotClass: string }[] = [
+  { value: 'critical', label: 'S0 致命', dotClass: 'bg-accent-red' },
+  { value: 'high', label: 'S1 严重', dotClass: 'bg-accent-orange' },
+  { value: 'medium', label: 'S2 一般', dotClass: 'bg-accent-yellow' },
+  { value: 'low', label: 'S3 轻微', dotClass: 'bg-accent-green' },
 ];
 
-const SEVERITY_OPTIONS: { value: BugSeverity; label: string; color: string }[] = [
-  { value: 'critical', label: 'S0 致命', color: '#ef4444' },
-  { value: 'high', label: 'S1 严重', color: '#f97316' },
-  { value: 'medium', label: 'S2 一般', color: '#eab308' },
-  { value: 'low', label: 'S3 轻微', color: '#10b981' },
+/** 文档类目 chips = 后端 DocumentCategory 真实枚举（原 spec/meeting_notes 等假值已废） */
+const DOC_CATEGORY_OPTIONS: { value: DocCategory; label: string }[] = [
+  { value: 'requirement', label: '需求' },
+  { value: 'analysis', label: '分析' },
+  { value: 'design', label: '设计' },
+  { value: 'api', label: 'API' },
+  { value: 'testing', label: '测试' },
+  { value: 'guide', label: '指南' },
 ];
 
-const TASK_STATUS_OPTIONS: { value: string; label: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { className?: string }>; color: string }[] = [
-  { value: 'todo', label: 'Todo', icon: PropertyPanelIcons.Circle, color: '#8993a4' },
-  { value: 'in_progress', label: 'In Progress', icon: Loader2, color: '#3b82f6' },
-  { value: 'in_review', label: 'In Review', icon: AlertCircle, color: '#8b5cf6' },
-  { value: 'done', label: 'Done', icon: Check, color: '#10b981' },
-  { value: 'canceled', label: 'Canceled', icon: X, color: '#b0b8c4' },
-];
-
-const DOC_TYPE_OPTIONS = [
-  { value: 'spec', label: 'Specification' },
-  { value: 'guide', label: 'Guide' },
-  { value: 'api', label: 'API Reference' },
-  { value: 'meeting_notes', label: 'Meeting Notes' },
-  { value: 'retrospective', label: 'Retrospective' },
-  { value: 'other', label: 'Other' },
-];
-
-const PROJECT_TEMPLATES = [
-  { value: 'blank', label: 'Blank' },
-  { value: 'software', label: 'Software' },
-  { value: 'design', label: 'Design' },
-  { value: 'marketing', label: 'Marketing' },
-];
+/** 优先级选项展示序（取 PRIORITY_VISUALS 四档；urgent 为项目侧叫法不入创建面板） */
+const PRIORITY_ORDER: TaskPriority[] = ['critical', 'high', 'medium', 'low'];
 
 // ============================================================================
 // Form values
@@ -275,24 +231,26 @@ interface BugFormValues {
   description: string;
   status: string;
   severity: BugSeverity;
+  priority: TaskPriority;
   projectId: string;
   assigneeId: string;
   dueDate: string;
+  /** 无手动入口，仅 AI 建议（create-suggestions）回填 */
   labels: string[];
 }
 
 interface DocFormValues {
   title: string;
   description: string;
-  type: string;
+  category: DocCategory;
   projectId: string;
+  /** 无手动入口，仅 AI 建议（create-suggestions）回填 */
   labels: string[];
 }
 
 interface ProjectFormValues {
   name: string;
   description: string;
-  template: string;
   visibility: ProjectVisibility;
   priority: ProjectPriority;
 }
@@ -310,14 +268,14 @@ const DEFAULT_TASK: TaskFormValues = {
   assigneeId: '', dueDate: '', projectId: '', labels: [],
 };
 const DEFAULT_BUG: BugFormValues = {
-  title: '', description: '', status: 'todo', severity: 'medium',
+  title: '', description: '', status: 'todo', severity: 'medium', priority: 'high',
   projectId: '', assigneeId: '', dueDate: '', labels: [],
 };
 const DEFAULT_DOC: DocFormValues = {
-  title: '', description: '', type: 'spec', projectId: '', labels: [],
+  title: '', description: '', category: 'custom', projectId: '', labels: [],
 };
 const DEFAULT_PROJECT: ProjectFormValues = {
-  name: '', description: '', template: 'blank', visibility: 'internal', priority: 'medium',
+  name: '', description: '', visibility: 'internal', priority: 'medium',
 };
 const DEFAULT_MILESTONE: MilestoneFormValues = {
   name: '', description: '', projectId: '', status: 'planned', dueDate: '',
@@ -361,8 +319,25 @@ export function UnifiedCreateDialog({
   const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const createTask = useCreateTask();
   const createProject = useCreateProject();
-  const createMilestone = useCreateProjectMilestone(projectId);
+
+  // 里程碑创建绑定表单所选项目（原绑死 projectId prop——Dock 全局入口无 prop 时提交必炸）
+  const milestoneProjectId = milestoneForm.watch('projectId') || projectId || '';
+  const createMilestone = useCreateProjectMilestone(milestoneProjectId || undefined);
   const createDocument = useCreateDocument();
+
+  const { t } = useTranslation();
+  // 状态/优先级选项派生自 status-visuals 注册表（批2：禁本地枚举与原始色，label 走 i18n）
+  const statusOptions = useMemo(() => Object.entries(TASK_STATUS_VISUALS).map(([value, v]) => ({
+    value,
+    label: t(v.labelKey),
+    icon: v.icon,
+    toneClass: TONE_TEXT_CLASS[v.tone],
+    spin: value === 'in_progress',
+  })), [t]);
+  const priorityOptions = useMemo(() => PRIORITY_ORDER.map((value) => {
+    const v = PRIORITY_VISUALS[value];
+    return { value, label: t(v.labelKey), icon: v.icon, toneClass: TONE_TEXT_CLASS[v.tone] };
+  }), [t]);
 
   // 项目来源分流（v2 纪要切片 1）：导入已有项目 → 创建后进档案页接入向导考古
   // CAP-P-01：ai = AI 代理模式，grill 连续追问澄清需求后确认创建
@@ -456,7 +431,7 @@ export function UnifiedCreateDialog({
     setError(null);
     try {
       const todoItems = subOpen && subTitle.trim()
-        ? [{ id: `local-${Date.now()}`, content: subTitle.trim(), completed: !!subDesc, order: 0 }]
+        ? [{ id: `local-${Date.now()}`, content: subTitle.trim(), completed: false, order: 0 }]
         : undefined;
       const resp = await createTask.mutateAsync({
         projectId: pid || undefined,
@@ -489,7 +464,7 @@ export function UnifiedCreateDialog({
         ...(moduleCode ? { moduleCode } : {}),
         title: values.title,
         description: values.description || undefined,
-        priority: 'high',
+        priority: values.priority,
         status: values.status,
         assigneeId: values.assigneeId || undefined,
         dueDate: values.dueDate || undefined,
@@ -512,7 +487,7 @@ export function UnifiedCreateDialog({
         title: values.title,
         summary: values.description || undefined,
         content: '',
-        category: 'custom' as DocCategory,
+        category: values.category,
         projectId: values.projectId || projectId || undefined,
         tags: values.labels,
       });
@@ -738,20 +713,19 @@ export function UnifiedCreateDialog({
       const assigneeVal: string = taskForm.watch('assigneeId');
       const projectVal: string = taskForm.watch('projectId') || projectId || '';
       const dueVal: string = taskForm.watch('dueDate');
-      const labelsVal: string[] = taskForm.watch('labels') ?? [];
-      const statusOpt = TASK_STATUS_OPTIONS.find((s) => s.value === statusVal);
+      const statusOpt = statusOptions.find((s) => s.value === statusVal);
       const StatusIcon = statusOpt?.icon ?? PropertyPanelIcons.Circle;
       const memberOptions = members.map((m) => ({ value: m.id, label: m.displayName }));
       const projectOptions = projectList.map((p) => ({ value: p.id, label: p.name }));
       return (
         <>
-          <PropertyRow icon={<StatusIcon className="size-3.5" style={{ color: statusOpt?.color }} />} label="Status">
+          <PropertyRow icon={<StatusIcon className={cn('size-3.5', statusOpt?.toneClass, statusOpt?.spin && 'animate-spin')} />} label="Status">
             <CapsuleSelect
               value={statusVal}
-              options={TASK_STATUS_OPTIONS.map((s) => ({
+              options={statusOptions.map((s) => ({
                 value: s.value,
                 label: s.label,
-                icon: <s.icon className="size-3.5" style={{ color: s.color }} />,
+                icon: <s.icon className={cn('size-3.5', s.toneClass, s.spin && 'animate-spin')} />,
               }))}
               onChange={(v) => taskForm.setValue('status', v || 'todo')}
               active
@@ -760,10 +734,10 @@ export function UnifiedCreateDialog({
           <PropertyRow icon={<AlertCircle className="size-3.5" />} label="Priority">
             <CapsuleSelect
               value={priorityVal ?? ''}
-              options={PRIORITY_OPTIONS.map((p) => ({
+              options={priorityOptions.map((p) => ({
                 value: p.value,
                 label: p.label,
-                icon: <p.icon className="size-3.5" style={{ color: p.color }} />,
+                icon: <p.icon className={cn('size-3.5', p.toneClass)} />,
               }))}
               onChange={(v) => taskForm.setValue('priority', (v || 'medium') as TaskPriority)}
               active={!!priorityVal}
@@ -787,15 +761,6 @@ export function UnifiedCreateDialog({
               placeholder="No Project"
             />
           </PropertyRow>
-          <PropertyRow icon={<Tag className="size-3.5" />} label="Labels">
-            <CapsuleSelect
-              value=""
-              options={[]}
-              onChange={() => {}}
-              active={labelsVal.length > 0}
-              placeholder={labelsVal.length > 0 ? `${labelsVal[0]}${labelsVal.length > 1 ? ` +${labelsVal.length - 1}` : ''}` : 'None'}
-            />
-          </PropertyRow>
           <PropertyRow icon={<CalendarIcon className="size-3.5" />} label="Due date">
             <DateCapsuleField
               value={dueVal}
@@ -809,23 +774,23 @@ export function UnifiedCreateDialog({
     if (activeType === 'bug') {
       const statusVal: string = bugForm.watch('status') ?? 'todo';
       const severityVal: string = bugForm.watch('severity') ?? 'medium';
+      const priorityVal = bugForm.watch('priority');
       const assigneeVal: string = bugForm.watch('assigneeId');
       const projectVal: string = bugForm.watch('projectId') || projectId || '';
       const dueVal: string = bugForm.watch('dueDate');
-      const labelsVal: string[] = bugForm.watch('labels') ?? [];
-      const statusOpt = TASK_STATUS_OPTIONS.find((s) => s.value === statusVal);
+      const statusOpt = statusOptions.find((s) => s.value === statusVal);
       const StatusIcon = statusOpt?.icon ?? PropertyPanelIcons.Circle;
       const memberOptions = members.map((m) => ({ value: m.id, label: m.displayName }));
       const projectOptions = projectList.map((p) => ({ value: p.id, label: p.name }));
       return (
         <>
-          <PropertyRow icon={<StatusIcon className="size-3.5" style={{ color: statusOpt?.color }} />} label="Status">
+          <PropertyRow icon={<StatusIcon className={cn('size-3.5', statusOpt?.toneClass, statusOpt?.spin && 'animate-spin')} />} label="Status">
             <CapsuleSelect
               value={statusVal}
-              options={TASK_STATUS_OPTIONS.map((s) => ({
+              options={statusOptions.map((s) => ({
                 value: s.value,
                 label: s.label,
-                icon: <s.icon className="size-3.5" style={{ color: s.color }} />,
+                icon: <s.icon className={cn('size-3.5', s.toneClass, s.spin && 'animate-spin')} />,
               }))}
               onChange={(v) => bugForm.setValue('status', v || 'todo')}
               active
@@ -837,10 +802,22 @@ export function UnifiedCreateDialog({
               options={SEVERITY_OPTIONS.map((s) => ({
                 value: s.value,
                 label: s.label,
-                icon: <span className="inline-block size-2.5 rounded-full" style={{ backgroundColor: s.color }} />,
+                icon: <span className={cn('inline-block size-2.5 rounded-full', s.dotClass)} />,
               }))}
               onChange={(v) => bugForm.setValue('severity', (v || 'medium') as BugSeverity)}
               active={!!severityVal}
+            />
+          </PropertyRow>
+          <PropertyRow icon={<AlertCircle className="size-3.5" />} label="Priority">
+            <CapsuleSelect
+              value={priorityVal ?? ''}
+              options={priorityOptions.map((p) => ({
+                value: p.value,
+                label: p.label,
+                icon: <p.icon className={cn('size-3.5', p.toneClass)} />,
+              }))}
+              onChange={(v) => bugForm.setValue('priority', (v || 'high') as TaskPriority)}
+              active={!!priorityVal}
             />
           </PropertyRow>
           <PropertyRow icon={<User className="size-3.5" />} label="Assignee">
@@ -859,15 +836,6 @@ export function UnifiedCreateDialog({
               onChange={(v) => bugForm.setValue('projectId', v)}
               active={!!projectVal}
               placeholder="No Project"
-            />
-          </PropertyRow>
-          <PropertyRow icon={<Tag className="size-3.5" />} label="Labels">
-            <CapsuleSelect
-              value=""
-              options={[]}
-              onChange={() => {}}
-              active={labelsVal.length > 0}
-              placeholder={labelsVal.length > 0 ? `${labelsVal[0]}${labelsVal.length > 1 ? ` +${labelsVal.length - 1}` : ''}` : 'None'}
             />
           </PropertyRow>
           <PropertyRow icon={<CalendarIcon className="size-3.5" />} label="Due date">
@@ -894,9 +862,6 @@ export function UnifiedCreateDialog({
               placeholder="No Project"
             />
           </PropertyRow>
-          <PropertyRow icon={<Tag className="size-3.5" />} label="Labels">
-            <CapsuleSelect value="" options={[]} onChange={() => {}} placeholder="None" />
-          </PropertyRow>
         </>
       );
     }
@@ -904,27 +869,18 @@ export function UnifiedCreateDialog({
     if (activeType === 'project') {
       const priorityVal = projectForm.watch('priority') ?? 'medium';
       return (
-        <>
-          <PropertyRow icon={<User className="size-3.5" />} label="Lead">
-            <Capsule>Unassigned</Capsule>
-          </PropertyRow>
-          <PropertyRow icon={<Flag className="size-3.5" />} label="Priority">
-            <CapsuleSelect
-              value={priorityVal}
-              options={[
-                { value: 'critical', label: 'Critical' },
-                { value: 'high', label: 'High' },
-                { value: 'medium', label: 'Medium' },
-                { value: 'low', label: 'Low' },
-              ]}
-              onChange={(v) => projectForm.setValue('priority', v as ProjectPriority)}
-              active
-            />
-          </PropertyRow>
-          <PropertyRow icon={<CalendarIcon className="size-3.5" />} label="Target">
-            <Capsule>None</Capsule>
-          </PropertyRow>
-        </>
+        <PropertyRow icon={<AlertCircle className="size-3.5" />} label="Priority">
+          <CapsuleSelect
+            value={priorityVal}
+            options={priorityOptions.map((p) => ({
+              value: p.value,
+              label: p.label,
+              icon: <p.icon className={cn('size-3.5', p.toneClass)} />,
+            }))}
+            onChange={(v) => projectForm.setValue('priority', (v || 'medium') as ProjectPriority)}
+            active
+          />
+        </PropertyRow>
       );
     }
 
@@ -944,7 +900,10 @@ export function UnifiedCreateDialog({
           />
         </PropertyRow>
         <PropertyRow icon={<CalendarIcon className="size-3.5" />} label="Target date">
-          <Capsule>None</Capsule>
+          <DateCapsuleField
+            value={milestoneForm.watch('dueDate') ?? ''}
+            onChange={(v) => milestoneForm.setValue('dueDate', v)}
+          />
         </PropertyRow>
       </>
     );
@@ -1060,10 +1019,9 @@ export function UnifiedCreateDialog({
                 currentMeta={currentMeta}
               />
 
-              {/* Extra fields: doc type / project source / project template / identifier hint */}
+              {/* Extra fields: doc category / project source */}
               <ExtraFields
                 activeType={activeType}
-                projectForm={projectForm}
                 docForm={docForm}
                 projectSource={projectSource}
                 onProjectSourceChange={setProjectSource}
@@ -1113,13 +1071,6 @@ export function UnifiedCreateDialog({
 
         {/* ──────────── Footer ──────────── */}
         <div className="flex items-center gap-3 px-4 h-13 shrink-0 border-t border-border/50 bg-muted/15">
-          <button
-            type="button"
-            className="size-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            title="添加附件"
-          >
-            <Paperclip className="size-3.5" />
-          </button>
           <div className="flex-1" />
           <div className="flex items-center gap-2 cursor-pointer select-none">
             <span className="text-xs text-muted-foreground hover:text-foreground transition-colors">Create more</span>
@@ -1137,8 +1088,6 @@ export function UnifiedCreateDialog({
               size="sm"
               onClick={handleSubmit}
               disabled={isSubmitting || (activeType === 'ai' ? !aiPrompt.trim() : !currentTitle.trim())}
-              className="text-white"
-              style={{ backgroundColor: (activeType === 'ai' ? aiPrompt.trim() : currentTitle.trim()) ? currentMeta.color : undefined }}
             >
               {isSubmitting ? (
                 <>
@@ -1185,7 +1134,6 @@ function IconBtn({
 
 function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChange: (t: CreateType) => void }) {
   const meta = TYPE_META[activeType];
-  const Icon = meta.Icon;
   return (
     <Popover>
       <PopoverTrigger
@@ -1193,7 +1141,9 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
           <button className="inline-flex items-center gap-1.5 px-1.5 py-1 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" />
         }
       >
-        <Icon className="size-3.5" style={{ color: meta.color }} />
+        {meta.kind
+          ? <EntityIcon entity={meta.kind} size="sm" />
+          : <Sparkles className="size-3.5 text-accent-purple" />}
         <span>{meta.label}</span>
         <ChevronDown className="size-3 opacity-50" />
       </PopoverTrigger>
@@ -1201,7 +1151,6 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
         <div className="flex flex-col gap-0.5">
           {TYPE_ORDER.map((t, i) => {
             const M = TYPE_META[t];
-            const I = M.Icon;
             return (
               <button
                 key={t}
@@ -1212,7 +1161,9 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
                   activeType === t ? 'bg-accent text-accent-foreground' : 'hover:bg-muted',
                 )}
               >
-                <I className="size-3.5" style={{ color: M.color }} />
+                {M.kind
+                  ? <EntityIcon entity={M.kind} size="sm" />
+                  : <Sparkles className="size-3.5 text-accent-purple" />}
                 <span className="font-medium flex-1">{M.label}</span>
                 {activeType === t && <Check className="size-3 text-primary" />}
                 <span className="text-10 text-muted-foreground">{i + 1}</span>
@@ -1282,21 +1233,16 @@ function FillTextarea(props: React.ComponentProps<'textarea'>) {
 
 function ExtraFields({
   activeType,
-  projectForm,
   docForm,
   projectSource,
   onProjectSourceChange,
 }: {
   activeType: CreateType;
-  projectForm: UseFormReturn<ProjectFormValues>;
   docForm: UseFormReturn<DocFormValues>;
   projectSource: 'scratch' | 'existing' | 'ai';
   onProjectSourceChange: (v: 'scratch' | 'existing' | 'ai') => void;
 }) {
   if (activeType === 'project') {
-    const name: string = projectForm.watch('name') ?? '';
-    const key = name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
-    const template = projectForm.watch('template');
     const SOURCE_OPTIONS: Array<{ value: 'scratch' | 'existing' | 'ai'; label: string }> = [
       { value: 'scratch', label: '从零开始' },
       { value: 'existing', label: '导入已有项目' },
@@ -1329,50 +1275,24 @@ function ExtraFields({
             </p>
           )}
         </div>
-        {key && (
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className="font-mono text-muted-foreground/80">#</span>
-            Identifier: <code className="font-mono text-foreground/80">{key}-1, {key}-2…</code>
-          </p>
-        )}
-        <div>
-          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">Template</p>
-          <div className="flex flex-wrap gap-1.5">
-            {PROJECT_TEMPLATES.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => projectForm.setValue('template', t.value)}
-                className={cn(
-                  'h-7 px-2.5 rounded-full text-xs border transition-colors',
-                  template === t.value
-                    ? 'bg-primary/10 border-primary/40 text-primary'
-                    : 'border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground',
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     );
   }
   if (activeType === 'doc') {
-    const t = docForm.watch('type');
+    const category = docForm.watch('category');
     return (
       <div className="flex flex-col gap-3 pt-1">
         <div>
           <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">Type</p>
           <div className="flex flex-wrap gap-1.5">
-            {DOC_TYPE_OPTIONS.map((opt) => (
+            {DOC_CATEGORY_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => docForm.setValue('type', opt.value)}
+                onClick={() => docForm.setValue('category', opt.value)}
                 className={cn(
                   'h-7 px-2.5 rounded-full text-xs border transition-colors',
-                  t === opt.value
+                  category === opt.value
                     ? 'bg-primary/10 border-primary/40 text-primary'
                     : 'border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground',
                 )}
