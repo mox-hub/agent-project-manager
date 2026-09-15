@@ -231,6 +231,14 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       },
     );
 
+    // ── 决策提案创建 → 收件箱/侧栏徽标实时失效（兜底改造批 4）──
+    this.messageBus.subscribe(
+      'decision.proposal.created',
+      (payload: unknown) => {
+        this.server.emit('decision.proposal.created', payload);
+      },
+    );
+
     // ── Linear sync events ─────────────────────────────────
     this.messageBus.subscribe('linear.sync.progress', (payload: any) => {
       const { projectId } = payload ?? {};

@@ -90,6 +90,8 @@ class EventClient {
       // 执行状态变更 / 审批请求（执行面板实时失效 + 全局失败感知）
       DomainEventTypes.ExecutionRunUpdated,
       DomainEventTypes.ApprovalRequested,
+      // 决策提案创建（收件箱/侧栏徽标实时失效）
+      'decision.proposal.created',
     ] as const;
 
     this.socket.emit('subscribe', { eventTypes });

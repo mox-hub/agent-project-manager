@@ -7,6 +7,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { spawn, ChildProcess } from 'child_process';
 import * as readline from 'readline';
 import { CliProviderRegistry } from './cli-provider.registry';
+import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
 import { ApprovalService } from '@/modules/execution/approval.service';
@@ -44,6 +45,7 @@ export class CliExecutorService {
     private readonly messageBus: MessageBusService,
     private readonly executionService: ExecutionService,
     private readonly approvalService: ApprovalService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async execute(
@@ -318,14 +320,31 @@ export class CliExecutorService {
   ): StreamEmitter {
     const { executionRunId, conversationId } = context;
 
+    // 兜底改造批 4：ai.stream 需带 userId 才能被网关定向推送（此前被丢弃，
+    // 进程内执行路径前端看不到实时输出）。惰性解析一次 run 属主并缓存。
+    let ownerIdPromise: Promise<string | null> | null = null;
+    const resolveOwnerId = () => {
+      ownerIdPromise ??= this.prisma.execution
+        .findUnique({
+          where: { id: executionRunId },
+          select: { createdBy: true },
+        })
+        .then((r) => r?.createdBy ?? null)
+        .catch(() => null);
+      return ownerIdPromise;
+    };
+
     return {
       token: (delta: string) => {
         // Publish token stream
-        this.messageBus.publish('ai.stream', {
-          conversationId,
-          executionRunId,
-          token: delta,
-          done: false,
+        void resolveOwnerId().then((ownerId) => {
+          this.messageBus.publish('ai.stream', {
+            conversationId,
+            executionRunId,
+            userId: ownerId ?? undefined,
+            token: delta,
+            done: false,
+          });
         });
         options.onToken?.(delta);
       },

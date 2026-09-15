@@ -101,6 +101,17 @@ export class ProposalService {
       },
     });
     this.logger.log(`Proposal created: ${proposal.kind} ${proposal.id}`);
+
+    // 兜底改造批 4：提案创建广播——此前零发布，决策收件箱与侧栏徽标
+    // 不自动刷新，用户不知道「AI 已把建议放进收件箱」
+    this.messageBus.publish('decision.proposal.created', {
+      proposalId: proposal.id,
+      kind: proposal.kind,
+      title: proposal.title,
+      projectId: proposal.projectId,
+      issueId: proposal.issueId,
+    });
+
     return proposal;
   }
 
@@ -120,6 +131,10 @@ export class ProposalService {
     if (!proposal) throw new NotFoundException(`Proposal ${id} not found`);
     if (proposal.status !== 'pending') {
       throw new BadRequestException(`Proposal already ${proposal.status}`);
+    }
+    // 兜底改造批 4：过期提案不可再决议（与收件箱过滤同口径）
+    if (proposal.expiresAt && proposal.expiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('提案已过期失效');
     }
     if (dto.action === 'reject' && !dto.reason?.trim()) {
       throw new BadRequestException('reject reason is required');

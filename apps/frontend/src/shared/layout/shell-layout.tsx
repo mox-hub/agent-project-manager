@@ -137,6 +137,10 @@ export function ShellLayout() {
   useEventSubscription('notification.read', () => {
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
   });
+  // 兜底改造批 4：提案创建实时失效——此前靠用户恰好在收件箱页/助手面板
+  useEventSubscription('decision.proposal.created', () => {
+    queryClient.invalidateQueries({ queryKey: ['decisions'] });
+  });
 
   // 统一读取某导航分组的折叠态
   const navCollapsed = (id: NavGroupId) => Boolean(navGroupsCollapsed[id]);
