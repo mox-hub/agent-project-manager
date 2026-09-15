@@ -3231,6 +3231,22 @@
   "manual": "手动创建",
   "ai": "AI 代理"
  },
+ "quickPrompt": "智能填单",
+ "quickPromptPlaceholder": "输入一句话描述（如：建一个登录页重构任务，周五截止，高优先级），Enter 自动提取填单…",
+ "quickPromptApplied": "已根据描述自动解析并填充表单",
+ "acceptanceCriteria": "验收标准",
+ "addCriterion": "添加验收要点",
+ "aiGenerateCriteria": "AI 智能生成验收要点",
+ "criteriaPlaceholder": "输入可验证的完成标准（如：支持快捷键提交，断网展示重试...）",
+ "completenessHint": "完备性治理建议：确保覆盖正常流交付验证、异常边界与自动化测试要求",
+ "quickChips": {
+  "decompose": "⚡ 快速拆解需求",
+  "bug": "🐞 提取报错日志",
+  "testcase": "📋 补全验收用例"
+ },
+ "edit": "编辑",
+ "preview": "预览",
+ "previewEmpty": "暂无描述内容，切换至编辑模式即可书写 Markdown。",
  "aiPanel": {
   "hint": "用一句话描述你想创建的内容，AI 代理解析为结构化草稿；确认后直接创建。可先用上方类型切换指定目标（默认按描述自动判断）。",
   "inputPlaceholder": "例如：建一个任务「登录页改版」，本周五截止，优先级高，打上 frontend 标签",
@@ -3251,6 +3267,34 @@
   "fallbackTitle": "AI 代理解析失败时的兜底：转小助理对话创建",
   "forwardedToast": "已转给小周，在右下角对话里发送即可"
  },
+    "agentPresence": {
+      "immediate": "创建后 {{agent}} 会立即开始工作。",
+      "approval": "创建后需经审批，通过后 {{agent}} 才会工作。",
+      "manual": "仅创建待办工单，保留给 {{agent}} 等待手动派发。",
+      "bugImmediate": "创建后 {{agent}} 将调取日志并自动尝试复现。",
+      "bugApproval": "创建后需经审批，{{agent}} 方可介入排查。",
+      "bugManual": "缺陷将录入待办，保留给 {{agent}} 后续排查。"
+    },
+    "dispatchStrategy": {
+      "immediate": "立即执行",
+      "approval": "需审批",
+      "manual": "仅建待办"
+    },
+    "shuttle": {
+      "toAi": "切换到智能体",
+      "toManual": "返回手动编辑"
+    },
+    "bug": {
+      "injectTemplate": "填入标准缺陷排查模板"
+    },
+    "category": {
+      "requirement": "需求 PRD",
+      "analysis": "分析报告",
+      "design": "架构设计",
+      "api": "接口契约",
+      "testing": "测试方案",
+      "guide": "操作指南"
+    },
  "discard": {
   "title": "放弃未保存内容？",
   "desc": "面板里有未提交的输入，关闭后将丢失。",

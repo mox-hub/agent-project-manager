@@ -3222,16 +3222,32 @@
   "milestoneName": "Please enter a milestone name",
   "projectRequired": "Please select a project",
   "prompt": "Please describe what to create",
-  "createFailed": "Failed to create",
-  "noDraft": "AI could not produce a usable draft — try adding the type or more keywords",
-  "aiFailed": "AI generation failed",
-  "suggestionFailed": "AI suggestions unavailable"
- },
- "mode": {
-  "manual": "Manual",
-  "ai": "AI agent"
- },
- "aiPanel": {
+      "createFailed": "Failed to create",
+      "noDraft": "AI could not produce a usable draft — try adding the type or more keywords",
+      "aiFailed": "AI generation failed",
+      "suggestionFailed": "AI suggestions unavailable"
+    },
+    "mode": {
+      "manual": "Manual",
+      "ai": "AI agent"
+    },
+    "quickPrompt": "Smart Auto-fill",
+    "quickPromptPlaceholder": "Describe in one sentence (e.g. Redesign login page, due Friday, high priority), press Enter to fill…",
+    "quickPromptApplied": "Form automatically populated based on your description",
+    "acceptanceCriteria": "Acceptance Criteria",
+    "addCriterion": "Add criterion",
+    "aiGenerateCriteria": "AI Generate Criteria",
+    "criteriaPlaceholder": "Enter verifiable acceptance criterion...",
+    "completenessHint": "Completeness Governance: Ensure coverage of happy path, edge cases, and automated test requirements.",
+    "quickChips": {
+      "decompose": "⚡ Decompose requirement",
+      "bug": "🐞 Extract error logs",
+      "testcase": "📋 Complete test cases"
+    },
+    "edit": "Edit",
+    "preview": "Preview",
+    "previewEmpty": "No description yet. Switch to edit mode to write Markdown.",
+    "aiPanel": {
   "hint": "Describe what you want to create in one sentence; the AI agent turns it into a structured draft. Confirm to create. Switch the type above to pin the target (auto-detected by default).",
   "inputPlaceholder": "e.g. Create a task \"Login page redesign\", due Friday, high priority, tag frontend",
   "generate": "Generate draft",

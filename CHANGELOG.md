@@ -21,6 +21,15 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-A-18 统一创建面板设计升级：Linear 沉浸流式 + 实体精准定制 + AI 在场感知与功能去重（2026-09-15）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **极简沉浸流式与放大无位移**：彻底纠正原 `max-w-3xl mx-auto` 居中缩进导致的放大位移与左右各 136px 巨大空边距，统一为全宽自然延伸流式排版；取消面板头部 AI 切换 tab 与常驻微型智能填单提示（消除功能重复），将视觉信噪比降至极致；取消文档类型和项目来源重复冗余模块（统一收口至对应页面模板入口）。 | CAP-A-18 | `unified-create-dialog.test.tsx` 更新并通过；无缝宽高自适应 | `CHANGELOG.md` 登记 |
+| frontend | **底部布局重构与智能体呼吸穿梭**：Footer 左侧将附件入口与「连续创建」开关并列排布；右侧新增 `ModeShuttleButton`，采用系统默认 AI 紫色系（`accent-purple`），内置 `animate-ping` 呼吸光标，实现手动精准录入与智能体自然语言拆解的双向平滑穿梭。 | CAP-A-18 | `mode-shuttle-button.tsx` 单元测试与面板集成测试全绿 | — |
+| frontend | **AI 在场感知与执行策略控制**：实现 `AgentPresenceBanner`，当指派人为 AI Agent 时自动感知激活并提供执行策略下拉选项（立即执行 / 需审批 / 仅建待办），协同任务与缺陷的验收标准治理闭环（CAP-B-01/B-02）。 | CAP-A-18 | `agent-presence-banner.test.tsx` 5 条用例全绿 | — |
+| frontend | **实体模版与横向属性胶囊**：实现 `PropertyPillsBar` 单行横向属性栏与 `BugTemplateHelper` 标准排查模板，优化不同实体的表单体验与状态/优先级/指派人快速切换。 | CAP-A-18 | `entity-templates.test.tsx` 6 条用例全绿；tsc -b / eslint 0 警告 0 错误 | — |
+
 ### CAP-A-18 统一创建面板双界面：手动 × AI 代理平行 + 注册表对齐 + 行为修正（2026-09-15）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

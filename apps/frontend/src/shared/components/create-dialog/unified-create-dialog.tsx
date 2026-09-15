@@ -61,7 +61,6 @@ import {
   AlertDialogFooter,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { SegmentedControl } from '@/components/ui/segmented-control';
 import {
   Popover,
   PopoverContent,
@@ -116,9 +115,17 @@ import {
   Minimize2,
   Sparkles,
   AlertCircle,
+  Eye,
+  Edit3,
+  Paperclip,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { SuggestionsCard } from './suggestions-card';
+import { AcceptanceCriteriaField, type CriterionItem } from './acceptance-criteria-field';
+import { MarkdownView } from '@/shared/components/markdown-view';
+import { AgentPresenceBanner, type DispatchStrategy } from './agent-presence-banner';
+import { ModeShuttleButton } from './mode-shuttle-button';
+import { PropertyPillsBar } from './property-pills-bar';
 
 // ============================================================================
 // Types
@@ -266,16 +273,23 @@ export function UnifiedCreateDialog({
   const [error, setError] = useState<string | null>(null);
 
   // layout state
-  const [showProps, setShowProps] = useState(true);
+  const [showProps, setShowProps] = useState(false);
   const [propsCollapsed, setPropsCollapsed] = useState(false);
   const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const [createMore, setCreateMore] = useState(false);
+  // AI 调度策略：immediate | approval | manual_dispatch
+  const [dispatchStrategy, setDispatchStrategy] = useState<DispatchStrategy>('immediate');
 
   // subtask state (single sub-task per creation, matches reference)
   const [subOpen, setSubOpen] = useState(false);
   const [subTitle, setSubTitle] = useState('');
   const [subDesc, setSubDesc] = useState('');
+
+  // 🎯 验收标准列表状态（CAP-B-01/B-02 治理闭环）
+  const [criteria, setCriteria] = useState<CriterionItem[]>([]);
+  // 放大态：描述 Markdown 预览模式切换
+  const [descPreview, setDescPreview] = useState(false);
 
   // AI 代理：自然语言描述 → create-draft 草稿 → 人确认后落库
   const [aiPrompt, setAiPrompt] = useState('');
@@ -380,6 +394,8 @@ export function UnifiedCreateDialog({
     setAiPrompt('');
     setDraft(null);
     setError(null);
+    setCriteria([]);
+    setDescPreview(false);
   }, [taskForm, bugForm, docForm, projectForm, milestoneForm]);
 
   const handleClose = () => {
@@ -402,7 +418,8 @@ export function UnifiedCreateDialog({
       || docForm.getValues('description').trim()
       || projectForm.getValues('description').trim()
       || milestoneForm.getValues('description').trim()
-      || (subOpen && subTitle.trim()),
+      || (subOpen && subTitle.trim())
+      || criteria.some((c) => c.text.trim().length > 0),
     );
   };
 
@@ -429,6 +446,8 @@ export function UnifiedCreateDialog({
       }
       if (defaultAssigneeId) taskForm.setValue('assigneeId', defaultAssigneeId);
       setProjectSource('scratch');
+      setCriteria([]);
+      setDescPreview(false);
       requestAnimationFrame(() => {
         mainColRef.current?.querySelector('textarea')?.focus();
       });
@@ -452,9 +471,20 @@ export function UnifiedCreateDialog({
     const moduleCode = resolveModuleCode(pid);
     setError(null);
     try {
-      const todoItems = subOpen && subTitle.trim()
-        ? [{ id: `local-${Date.now()}`, content: subTitle.trim(), completed: false, order: 0 }]
-        : undefined;
+      const criteriaItems = criteria
+        .filter((c) => c.text.trim().length > 0)
+        .map((c, idx) => ({
+          id: c.id,
+          content: c.text.trim(),
+          completed: c.completed,
+          order: idx,
+        }));
+      const legacySubTask = subOpen && subTitle.trim()
+        ? [{ id: `local-${Date.now()}`, content: subTitle.trim(), completed: false, order: criteriaItems.length }]
+        : [];
+      const combinedTodo = [...criteriaItems, ...legacySubTask];
+      const todoItems = combinedTodo.length > 0 ? combinedTodo : undefined;
+
       const resp = await createTask.mutateAsync({
         projectId: pid || undefined,
         ...(moduleCode ? { moduleCode } : {}),
@@ -481,6 +511,16 @@ export function UnifiedCreateDialog({
     const moduleCode = resolveModuleCode(pid, 'BUG');
     setError(null);
     try {
+      const criteriaItems = criteria
+        .filter((c) => c.text.trim().length > 0)
+        .map((c, idx) => ({
+          id: c.id,
+          content: c.text.trim(),
+          completed: c.completed,
+          order: idx,
+        }));
+      const todoItems = criteriaItems.length > 0 ? criteriaItems : undefined;
+
       const resp = await createTask.mutateAsync({
         projectId: pid || undefined,
         ...(moduleCode ? { moduleCode } : {}),
@@ -493,6 +533,7 @@ export function UnifiedCreateDialog({
         tags: values.labels,
         type: 'bug',
         severity: values.severity,
+        todoItems,
       });
       if (resp?.id) handleSuccess('bug', resp.id);
     } catch (err) {
@@ -807,10 +848,10 @@ export function UnifiedCreateDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, activeType, createMore, mode, draft]);
 
-  // ── Width classes for dialog（最大化：宽高同步放大至 95vw × 95vh 语义档）
-  const widthClass = maximized
-    ? ''
-    : (showProps ? 'w-[min(96vw,720px)]' : 'w-[min(96vw,520px)]');
+  // ── Sizing classes: 普通态 720px，放大态适度 1040px × 760px（白名单规范）
+  const dialogSizeClass = maximized
+    ? 'w-[min(96vw,1040px)] h-[min(84vh,760px)]'
+    : (showProps ? 'w-[min(96vw,720px)]' : 'w-[min(96vw,720px)]');
 
   // ── Render helpers ───────────────────────────────────────
 
@@ -1038,7 +1079,7 @@ export function UnifiedCreateDialog({
       <DialogContent
         className={cn(
           'overflow-hidden p-0 gap-0 border border-border/70 bg-card/95 backdrop-blur-xl shadow-2xl transition-all duration-300',
-          maximized ? 'w-dialog h-dialog-screen' : widthClass,
+          dialogSizeClass,
         )}
         keepDefaultWidth={false}
         showCloseButton={false}
@@ -1053,23 +1094,24 @@ export function UnifiedCreateDialog({
 
         {/* ──────────── Header ──────────── */}
         <div className="flex items-center justify-between px-4 h-11 shrink-0 border-b border-border/50 bg-muted/20">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <span className="px-1 rounded-sm hover:bg-accent hover:text-foreground transition-colors cursor-pointer">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
+            <span className="px-1 rounded-sm hover:bg-accent hover:text-foreground transition-colors cursor-pointer shrink-0">
               AgentPM
             </span>
-            <ChevronRight className="size-3 opacity-40" />
+            <ChevronRight className="size-3 opacity-40 shrink-0" />
+            <ProjectBreadcrumbSelector
+              projectId={activeProjectId}
+              projectList={projectList}
+              onSelect={(pid) => {
+                taskForm.setValue('projectId', pid);
+                bugForm.setValue('projectId', pid);
+                docForm.setValue('projectId', pid);
+                milestoneForm.setValue('projectId', pid);
+              }}
+            />
             <TypeSelector activeType={activeType} onChange={setActiveType} />
           </div>
-          {/* 顶级双界面（CAP-A-18）：手动 / AI 代理平级切换 */}
-          <SegmentedControl<'manual' | 'ai'>
-            value={mode}
-            onChange={(m) => { setMode(m); if (m === 'manual') setDraft(null); }}
-            options={[
-              { value: 'manual', label: t('unifiedCreate.mode.manual') },
-              { value: 'ai', label: t('unifiedCreate.mode.ai'), tone: 'purple' },
-            ]}
-          />
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5 shrink-0">
             <IconBtn
               active={showProps}
               onClick={() => setShowProps((v) => !v)}
@@ -1094,7 +1136,7 @@ export function UnifiedCreateDialog({
         <div className="flex overflow-hidden flex-1 min-h-0" style={{ minHeight: 320 }}>
           {/* ── Main ── */}
           <div ref={mainColRef} className="flex-1 min-w-0 overflow-y-auto flex flex-col">
-            <div className="p-4 pb-2 flex flex-col gap-3 flex-1 min-h-0">
+            <div className="p-5 pb-3 flex flex-col gap-3.5 flex-1 min-h-0 w-full transition-all">
               {error && (
                 <Alert variant="destructive" className="py-2 text-xs">
                   <AlertCircle className="size-3.5 shrink-0" />
@@ -1176,33 +1218,109 @@ export function UnifiedCreateDialog({
                 />
               ) : (
                 <>
-              {/* Title */}
-              <TitleField
-                activeType={activeType}
-                taskForm={taskForm}
-                bugForm={bugForm}
-                docForm={docForm}
-                projectForm={projectForm}
-                milestoneForm={milestoneForm}
-              />
+                  {/* Title */}
+                  <TitleField
+                    activeType={activeType}
+                    taskForm={taskForm}
+                    bugForm={bugForm}
+                    docForm={docForm}
+                    projectForm={projectForm}
+                    milestoneForm={milestoneForm}
+                  />
 
-              {/* Description */}
-              <DescriptionField
-                activeType={activeType}
-                taskForm={taskForm}
-                bugForm={bugForm}
-                docForm={docForm}
-                projectForm={projectForm}
-                milestoneForm={milestoneForm}
-              />
+                  {/* Description */}
+                  <DescriptionField
+                    activeType={activeType}
+                    taskForm={taskForm}
+                    bugForm={bugForm}
+                    docForm={docForm}
+                    projectForm={projectForm}
+                    milestoneForm={milestoneForm}
+                    maximized={maximized}
+                    descPreview={descPreview}
+                    onTogglePreview={() => setDescPreview((v) => !v)}
+                  />
 
-              {/* Extra fields: doc category / project source */}
-              <ExtraFields
-                activeType={activeType}
-                docForm={docForm}
-                projectSource={projectSource}
-                onProjectSourceChange={setProjectSource}
-              />
+                  {/* 🎯 验收标准与完备性清单 (针对任务与缺陷，打通 CAP-B-01/B-02 治理闭环) */}
+                  {(activeType === 'task' || activeType === 'bug') && (
+                    <AcceptanceCriteriaField
+                      criteria={criteria}
+                      onChange={setCriteria}
+                      titleValue={currentTitle}
+                      descValue={activeType === 'task' ? taskForm.watch('description') : bugForm.watch('description')}
+                      maximized={maximized}
+                    />
+                  )}
+
+                  {/* AI 智能体在场感知条与策略控制（检测到经办人为 AI Agent 时激活） */}
+                  <AgentPresenceBanner
+                    assigneeId={activeType === 'task' ? taskForm.watch('assigneeId') : activeType === 'bug' ? bugForm.watch('assigneeId') : ''}
+                    members={members}
+                    activeType={activeType}
+                    strategy={dispatchStrategy}
+                    onStrategyChange={setDispatchStrategy}
+                  />
+
+                  {/* 横向属性胶囊栏（下沉单行极简药丸，随实体动态组合） */}
+                  <PropertyPillsBar
+                    activeType={activeType}
+                    projectId={activeProjectId}
+                    projectList={projectList}
+                    onProjectChange={(pid) => {
+                      taskForm.setValue('projectId', pid);
+                      bugForm.setValue('projectId', pid);
+                      docForm.setValue('projectId', pid);
+                      milestoneForm.setValue('projectId', pid);
+                    }}
+                    status={activeType === 'task' ? taskForm.watch('status') : activeType === 'bug' ? bugForm.watch('status') : undefined}
+                    onStatusChange={(st) => {
+                      if (activeType === 'task') taskForm.setValue('status', st);
+                      if (activeType === 'bug') bugForm.setValue('status', st);
+                    }}
+                    statusOptions={statusOptions}
+                    priority={activeType === 'task' ? taskForm.watch('priority') : activeType === 'bug' ? bugForm.watch('priority') : undefined}
+                    onPriorityChange={(pr) => {
+                      if (activeType === 'task') taskForm.setValue('priority', pr);
+                      if (activeType === 'bug') bugForm.setValue('priority', pr);
+                    }}
+                    priorityOptions={priorityOptions}
+                    assigneeId={activeType === 'task' ? taskForm.watch('assigneeId') : activeType === 'bug' ? bugForm.watch('assigneeId') : undefined}
+                    onAssigneeChange={(aid) => {
+                      if (activeType === 'task') taskForm.setValue('assigneeId', aid);
+                      if (activeType === 'bug') bugForm.setValue('assigneeId', aid);
+                    }}
+                    members={members}
+                    dueDate={activeType === 'task' ? taskForm.watch('dueDate') : activeType === 'bug' ? bugForm.watch('dueDate') : activeType === 'milestone' ? milestoneForm.watch('dueDate') : undefined}
+                    onDueDateChange={(dd) => {
+                      if (activeType === 'task') taskForm.setValue('dueDate', dd);
+                      if (activeType === 'bug') bugForm.setValue('dueDate', dd);
+                      if (activeType === 'milestone') milestoneForm.setValue('dueDate', dd);
+                    }}
+                    severity={activeType === 'bug' ? bugForm.watch('severity') : undefined}
+                    onSeverityChange={(sv) => {
+                      if (activeType === 'bug') bugForm.setValue('severity', sv);
+                    }}
+                    severityOptions={SEVERITY_OPTIONS}
+                    docCategory={activeType === 'doc' ? docForm.watch('category') : undefined}
+                    onDocCategoryChange={(cat) => {
+                      if (activeType === 'doc') docForm.setValue('category', cat);
+                    }}
+                    docCategoryOptions={DOC_CATEGORY_OPTIONS}
+                    projectPriority={activeType === 'project' ? projectForm.watch('priority') : undefined}
+                    onProjectPriorityChange={(pp) => {
+                      if (activeType === 'project') projectForm.setValue('priority', pp as ProjectPriority);
+                    }}
+                    milestoneStatus={activeType === 'milestone' ? milestoneForm.watch('status') : undefined}
+                    onMilestoneStatusChange={(ms) => {
+                      if (activeType === 'milestone') milestoneForm.setValue('status', ms);
+                    }}
+                    onOpenAcceptance={() => {
+                      if (criteria.length === 0) {
+                        setCriteria([{ id: `crit-${Date.now()}`, text: '', completed: false }]);
+                      }
+                    }}
+                    acceptanceCount={criteria.length}
+                  />
                 </>
               )}
             </div>
@@ -1225,7 +1343,10 @@ export function UnifiedCreateDialog({
 
           {/* ── Properties panel ── */}
           {showProps && mode === 'manual' && (
-            <aside className="w-52.5 shrink-0 px-3 pb-3 pt-1 overflow-y-auto bg-transparent">
+            <aside className={cn(
+              "shrink-0 px-3 pb-3 pt-1 overflow-y-auto border-l border-border/30 transition-all",
+              maximized ? "w-72 bg-muted/10 px-4" : "w-52.5 bg-transparent"
+            )}>
               <PropsCard
                 title={t('unifiedCreate.properties')}
                 collapsed={propsCollapsed}
@@ -1247,72 +1368,107 @@ export function UnifiedCreateDialog({
         </div>
 
         {/* ──────────── Footer ──────────── */}
-        <div className="flex items-center gap-3 px-4 h-13 shrink-0 border-t border-border/50 bg-muted/15">
-          <div className="flex-1" />
-          <div className="flex items-center gap-2 cursor-pointer select-none">
-            <span className="text-xs text-muted-foreground hover:text-foreground transition-colors">{t('unifiedCreate.createMore')}</span>
-            <Switch checked={createMore} onCheckedChange={setCreateMore} />
-          </div>
-          <Button variant="ghost" size="sm" onClick={requestClose} disabled={isSubmitting}>
-            {t('unifiedCreate.cancel')}
-          </Button>
-          {mode === 'manual' && activeType === 'project' && projectSource === 'ai' ? (
-            <span className="text-xs text-muted-foreground">
-              {t('unifiedCreate.projectSource.grillHint')}
-            </span>
-          ) : mode === 'ai' ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={submitViaAssistant}
-                disabled={isSubmitting || silentCreateDraft.isPending}
-                title={t('unifiedCreate.aiPanel.fallbackTitle')}
+        <div className="flex items-center justify-between gap-3 px-5 h-13 shrink-0 border-t border-border/50 bg-muted/15">
+          {/* 左侧：附件入口 + 连续创建（并列） */}
+          <div className="flex items-center gap-3">
+            {activeType !== 'project' && (
+              <button
+                type="button"
+                className="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors shrink-0"
+                title="添加附件"
               >
-                {t('unifiedCreate.aiPanel.fallback')}
-              </Button>
+                <Paperclip className="size-4 opacity-70 hover:opacity-100" />
+              </button>
+            )}
+            <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-muted-foreground hover:text-foreground transition-colors">
+              <span>{t('unifiedCreate.createMore')}</span>
+              <Switch checked={createMore} onCheckedChange={setCreateMore} />
+            </label>
+          </div>
+
+          {/* 右侧：模式穿梭、取消与提交主按钮 */}
+          <div className="flex items-center gap-2.5">
+            {/* 智能体穿梭模式按钮（采用系统默认 AI 紫色配色与呼吸感） */}
+            <ModeShuttleButton
+              mode={mode}
+              onToggle={() => {
+                const next = mode === 'manual' ? 'ai' : 'manual';
+                setMode(next);
+                if (next === 'manual') setDraft(null);
+              }}
+              disabled={isSubmitting}
+            />
+
+            <Button variant="ghost" size="sm" onClick={requestClose} disabled={isSubmitting}>
+              {t('unifiedCreate.cancel')}
+            </Button>
+
+            {mode === 'manual' && activeType === 'project' && projectSource === 'ai' ? (
+              <span className="text-xs text-muted-foreground">
+                {t('unifiedCreate.projectSource.grillHint')}
+              </span>
+            ) : mode === 'ai' ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={submitViaAssistant}
+                  disabled={isSubmitting || silentCreateDraft.isPending}
+                  title={t('unifiedCreate.aiPanel.fallbackTitle')}
+                >
+                  {t('unifiedCreate.aiPanel.fallback')}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || silentCreateDraft.isPending || !aiPrompt.trim()}
+                >
+                  {silentCreateDraft.isPending ? (
+                    <>
+                      <Spinner className="size-3 text-inherit" />
+                      {t('unifiedCreate.aiPanel.parsing')}
+                    </>
+                  ) : draft ? (
+                    <>
+                      <Check className="size-3" />
+                      {t('unifiedCreate.aiPanel.confirm')}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="size-3" />
+                      {t('unifiedCreate.aiPanel.generate')}
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
               <Button
                 size="sm"
                 onClick={handleSubmit}
-                disabled={isSubmitting || silentCreateDraft.isPending || !aiPrompt.trim()}
+                disabled={isSubmitting || !currentTitle.trim()}
+                aria-label={t(`unifiedCreate.title.${activeType}`)}
+                className="gap-1.5 font-medium"
               >
-                {silentCreateDraft.isPending ? (
+                {isSubmitting ? (
                   <>
                     <Spinner className="size-3 text-inherit" />
-                    {t('unifiedCreate.aiPanel.parsing')}
-                  </>
-                ) : draft ? (
-                  <>
-                    <Check className="size-3" />
-                    {t('unifiedCreate.aiPanel.confirm')}
+                    {t('unifiedCreate.creating')}
                   </>
                 ) : (
                   <>
-                    <Sparkles className="size-3" />
-                    {t('unifiedCreate.aiPanel.generate')}
+                    <Plus className="size-3" />
+                    <span>{t(`unifiedCreate.title.${activeType}`)}</span>
+                    <kbd
+                      aria-hidden="true"
+                      className="inline-flex items-center px-1 py-0.5 rounded bg-primary-foreground/20 text-10 font-mono opacity-80 ml-0.5"
+                    >
+                      Ctrl ↵
+                    </kbd>
                   </>
                 )}
               </Button>
-            </>
-          ) : (
-            <Button
-              size="sm"
-              onClick={handleSubmit}
-              disabled={isSubmitting || !currentTitle.trim()}
-            >
-              {isSubmitting ? (
-                <>
-                  <Spinner className="size-3 text-inherit" />
-                  {t('unifiedCreate.creating')}
-                </>
-              ) : (
-                <>
-                  <Plus className="size-3" />
-                  {t(`unifiedCreate.title.${activeType}`)}
-                </>
-              )}
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </DialogContent>
 
@@ -1429,6 +1585,53 @@ function TitleField(props: {
   }
 }
 
+function ProjectBreadcrumbSelector({
+  projectId,
+  projectList,
+  onSelect,
+}: {
+  projectId: string;
+  projectList: Array<{ id: string; name: string }>;
+  onSelect: (pid: string) => void;
+}) {
+  const current = projectList.find((p) => p.id === projectId);
+  if (projectList.length === 0) return null;
+  return (
+    <>
+      <Popover>
+        <PopoverTrigger
+          render={
+            <button className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors max-w-36 truncate" />
+          }
+        >
+          <Flag className="size-3 text-muted-foreground shrink-0" />
+          <span className="truncate">{current?.name || '选择项目'}</span>
+          <ChevronDown className="size-2.5 opacity-50 shrink-0" />
+        </PopoverTrigger>
+        <PopoverContent align="start" className="p-1 w-52 max-h-60 overflow-y-auto">
+          <div className="flex flex-col gap-0.5">
+            {projectList.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => onSelect(p.id)}
+                className={cn(
+                  'flex items-center justify-between px-2 py-1.5 text-xs rounded-md transition-colors text-left',
+                  projectId === p.id ? 'bg-accent text-accent-foreground font-medium' : 'hover:bg-muted',
+                )}
+              >
+                <span className="truncate flex-1">{p.name}</span>
+                {projectId === p.id && <Check className="size-3 text-primary ml-1 shrink-0" />}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+      <ChevronRight className="size-3 opacity-40 shrink-0" />
+    </>
+  );
+}
+
 function DescriptionField(props: {
   activeType: CreateType;
   taskForm: UseFormReturn<TaskFormValues>;
@@ -1436,11 +1639,22 @@ function DescriptionField(props: {
   docForm: UseFormReturn<DocFormValues>;
   projectForm: UseFormReturn<ProjectFormValues>;
   milestoneForm: UseFormReturn<MilestoneFormValues>;
+  maximized?: boolean;
+  descPreview?: boolean;
+  onTogglePreview?: () => void;
 }) {
   const { t } = useTranslation();
   const cls = 'w-full text-xs font-normal leading-relaxed text-foreground/80 placeholder:text-muted-foreground/50 focus-visible:ring-0';
   const ph = t(`unifiedCreate.descHint.${props.activeType}`);
-  const taCls = cn(cls, 'flex-1 min-h-30 resize-none');
+  const taCls = cn(cls, 'flex-1 min-h-24 resize-none');
+
+  const currentDesc =
+    props.activeType === 'task' ? props.taskForm.watch('description')
+    : props.activeType === 'bug' ? props.bugForm.watch('description')
+    : props.activeType === 'doc' ? props.docForm.watch('description')
+    : props.activeType === 'project' ? props.projectForm.watch('description')
+    : props.milestoneForm.watch('description');
+
   let textarea: React.ReactNode;
   switch (props.activeType) {
     case 'task': textarea = <FillTextarea placeholder={ph} className={taCls} {...props.taskForm.register('description')} />; break;
@@ -1450,7 +1664,46 @@ function DescriptionField(props: {
     case 'milestone': textarea = <FillTextarea placeholder={ph} className={taCls} {...props.milestoneForm.register('description')} />; break;
     default: textarea = null;
   }
-  return <div className="flex-1 min-h-30 flex flex-col">{textarea}</div>;
+
+  return (
+    <div className="flex-1 min-h-24 flex flex-col gap-1.5">
+      {props.maximized && (
+        <div className="flex items-center justify-between text-xs text-muted-foreground border-b border-border/30 pb-1">
+          <span className="font-medium text-foreground/70">
+            {t('unifiedCreate.linear.description')} (Markdown)
+          </span>
+          <button
+            type="button"
+            onClick={props.onTogglePreview}
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-11 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            {props.descPreview ? (
+              <>
+                <Edit3 className="size-3" />
+                <span>{t('unifiedCreate.edit')}</span>
+              </>
+            ) : (
+              <>
+                <Eye className="size-3" />
+                <span>{t('unifiedCreate.preview')}</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+      {props.maximized && props.descPreview ? (
+        <div className="flex-1 min-h-28 rounded-lg border border-border/40 bg-muted/10 p-3 overflow-y-auto text-xs">
+          {currentDesc?.trim() ? (
+            <MarkdownView content={currentDesc} />
+          ) : (
+            <span className="text-muted-foreground/50">{t('unifiedCreate.previewEmpty')}</span>
+          )}
+        </div>
+      ) : (
+        textarea
+      )}
+    </div>
+  );
 }
 
 function FillTextarea(props: React.ComponentProps<'textarea'>) {
@@ -1465,84 +1718,3 @@ function FillTextarea(props: React.ComponentProps<'textarea'>) {
   );
 }
 
-function ExtraFields({
-  activeType,
-  docForm,
-  projectSource,
-  onProjectSourceChange,
-}: {
-  activeType: CreateType;
-  docForm: UseFormReturn<DocFormValues>;
-  projectSource: 'scratch' | 'existing' | 'ai';
-  onProjectSourceChange: (v: 'scratch' | 'existing' | 'ai') => void;
-}) {
-  const { t } = useTranslation();
-  if (activeType === 'project') {
-    const SOURCE_OPTIONS: Array<{ value: 'scratch' | 'existing' | 'ai' }> = [
-      { value: 'scratch' },
-      { value: 'existing' },
-      { value: 'ai' },
-    ];
-    return (
-      <div className="flex flex-col gap-3 pt-1">
-        <div>
-          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-            {t('unifiedCreate.projectSource.label')}
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {SOURCE_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => onProjectSourceChange(opt.value)}
-                className={cn(
-                  'h-7 px-2.5 rounded-full text-xs border transition-colors',
-                  projectSource === opt.value
-                    ? 'bg-primary/10 border-primary/40 text-primary'
-                    : 'border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground',
-                )}
-              >
-                {t(`unifiedCreate.projectSource.${opt.value}`)}
-              </button>
-            ))}
-          </div>
-          {projectSource === 'existing' && (
-            <p className="mt-1.5 text-11 leading-relaxed text-muted-foreground">
-              {t('unifiedCreate.projectSource.existingHint')}
-            </p>
-          )}
-        </div>
-      </div>
-    );
-  }
-  if (activeType === 'doc') {
-    const category = docForm.watch('category');
-    return (
-      <div className="flex flex-col gap-3 pt-1">
-        <div>
-          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-            {t('unifiedCreate.field.type')}
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {DOC_CATEGORY_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => docForm.setValue('category', opt.value)}
-                className={cn(
-                  'h-7 px-2.5 rounded-full text-xs border transition-colors',
-                  category === opt.value
-                    ? 'bg-primary/10 border-primary/40 text-primary'
-                    : 'border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground',
-                )}
-              >
-                {t(`unifiedCreate.docCategory.${opt.value}`)}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-  return null;
-}

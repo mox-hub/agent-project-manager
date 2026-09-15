@@ -132,13 +132,14 @@ describe('UnifiedCreateDialog 双界面（CAP-A-18）', () => {
     }
   });
 
-  it('手动 ↔ AI 代理切换互不串：AI 输入在回手动后清空草稿态', () => {
+  it('手动 ↔ AI 代理切换互不串：通过底部智能体穿梭按钮切换，AI 输入在回手动后清空草稿态', () => {
     setup();
-    fireEvent.click(screen.getByText('unifiedCreate.mode.ai'));
+    const shuttleBtn = screen.getByTestId('mode-shuttle-button');
+    fireEvent.click(shuttleBtn);
     expect(screen.getByPlaceholderText('unifiedCreate.aiPanel.inputPlaceholder')).toBeInTheDocument();
     // 手动面板的标题输入不在 AI 界面
     expect(screen.queryByPlaceholderText('unifiedCreate.placeholder.task')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByText('unifiedCreate.mode.manual'));
+    fireEvent.click(shuttleBtn);
     expect(screen.getByPlaceholderText('unifiedCreate.placeholder.task')).toBeInTheDocument();
     expect(screen.queryByPlaceholderText('unifiedCreate.aiPanel.inputPlaceholder')).not.toBeInTheDocument();
   });
@@ -146,7 +147,7 @@ describe('UnifiedCreateDialog 双界面（CAP-A-18）', () => {
   it('AI 草稿流：生成 → 草稿卡预览 → 确认创建复用手动提交流落库', async () => {
     draftMutate.mockResolvedValue(DRAFT_RESPONSE);
     setup();
-    fireEvent.click(screen.getByText('unifiedCreate.mode.ai'));
+    fireEvent.click(screen.getByTestId('mode-shuttle-button'));
     fireEvent.change(screen.getByPlaceholderText('unifiedCreate.aiPanel.inputPlaceholder'), {
       target: { value: '建一个任务「登录页改版」，本周五截止，优先级高' },
     });
@@ -166,7 +167,7 @@ describe('UnifiedCreateDialog 双界面（CAP-A-18）', () => {
   it('AI 解析失败：显示错误并保留「转小助理」降级按钮', async () => {
     draftMutate.mockRejectedValue(new Error('LLM 不可用'));
     setup();
-    fireEvent.click(screen.getByText('unifiedCreate.mode.ai'));
+    fireEvent.click(screen.getByTestId('mode-shuttle-button'));
     fireEvent.change(screen.getByPlaceholderText('unifiedCreate.aiPanel.inputPlaceholder'), {
       target: { value: '建一个任务' },
     });
@@ -196,13 +197,39 @@ describe('UnifiedCreateDialog 双界面（CAP-A-18）', () => {
     expect(screen.queryByText('unifiedCreate.discard.title')).not.toBeInTheDocument();
   });
 
-  it('最大化宽高同步放大（w-dialog × h-dialog-screen 语义档）', () => {
+  it('适度放大宽高适配（拒绝全屏，居中呼吸档 1040px × 760px）', () => {
     setup();
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
-    expect(dialog.className).not.toContain('w-dialog');
+    expect(dialog.className).not.toContain('w-[min(96vw,1040px)]');
     fireEvent.click(screen.getByTitle('unifiedCreate.iconTips.maximize'));
-    expect(dialog.className).toContain('w-dialog');
-    expect(dialog.className).toContain('h-dialog-screen');
+    expect(dialog.className).toContain('w-[min(96vw,1040px)]');
+    expect(dialog.className).toContain('h-[min(84vh,760px)]');
+    // 明确断言不使用 95vw / 95vh 粗暴全屏类
+    expect(dialog.className).not.toContain('w-dialog');
+    expect(dialog.className).not.toContain('h-dialog-screen');
+  });
+
+  it('验收标准（Acceptance Criteria）添加与作为 todoItems 提交', async () => {
+    setup();
+    fireEvent.change(screen.getByPlaceholderText('unifiedCreate.placeholder.task'), {
+      target: { value: '带验收标准的工单' },
+    });
+    // 点击添加验收要点
+    fireEvent.click(screen.getByText('unifiedCreate.addCriterion'));
+    const critInput = screen.getByPlaceholderText('unifiedCreate.criteriaPlaceholder');
+    fireEvent.change(critInput, { target: { value: '核心功能通过验收并覆盖单测' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'unifiedCreate.title.task' }));
+    await waitFor(() => {
+      expect(createTaskMutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: '带验收标准的工单',
+          todoItems: expect.arrayContaining([
+            expect.objectContaining({ content: '核心功能通过验收并覆盖单测', completed: false }),
+          ]),
+        }),
+      );
+    });
   });
 
   it('里程碑提交绑定表单所选项目（P0：原绑死 prop 全局入口必炸）', async () => {
@@ -226,5 +253,17 @@ describe('UnifiedCreateDialog 双界面（CAP-A-18）', () => {
     // 项目属性面板只剩优先级行（Lead/Target 死胶囊已移除）
     expect(screen.getByText('unifiedCreate.field.priority')).toBeInTheDocument();
     expect(screen.queryByText('unifiedCreate.field.author')).not.toBeInTheDocument();
+  });
+
+  it('底部布局：左侧附件与连续创建开关并列，右侧智能体穿梭按钮', () => {
+    setup({ defaultType: 'task' });
+    // 左侧附件
+    expect(document.querySelector('[title="添加附件"]')).toBeInTheDocument();
+    // 左侧连续创建
+    expect(screen.getByText('unifiedCreate.createMore')).toBeInTheDocument();
+    // 右侧模式穿梭按钮
+    const shuttleBtn = screen.getByTestId('mode-shuttle-button');
+    expect(shuttleBtn).toBeInTheDocument();
+    expect(shuttleBtn.className).toContain('text-accent-purple');
   });
 });
