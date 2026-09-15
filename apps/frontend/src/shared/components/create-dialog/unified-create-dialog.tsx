@@ -52,6 +52,7 @@ import {
 } from '@/components/ui/property-panel';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import {
   Popover,
   PopoverContent,
@@ -77,6 +78,9 @@ import {
 import {
   useSilentCreateSuggestions,
   parseCreateSuggestions,
+  useSilentCreateDraft,
+  parseCreateDraft,
+  type CreateDraft,
   type CreateSuggestion,
 } from '@/modules/assistant/hooks/use-silent-ai';
 import type { BugSeverity, TaskPriority } from '@/modules/issue/api/issue-api';
@@ -111,7 +115,7 @@ import { SuggestionsCard } from './suggestions-card';
 // Types
 // ============================================================================
 
-export type CreateType = 'task' | 'bug' | 'doc' | 'project' | 'milestone' | 'ai';
+export type CreateType = 'task' | 'bug' | 'doc' | 'project' | 'milestone';
 
 export interface UnifiedCreateDialogProps {
   open: boolean;
@@ -127,12 +131,12 @@ export interface UnifiedCreateDialogProps {
 // Config
 // ============================================================================
 
-const TYPE_ORDER: CreateType[] = ['task', 'bug', 'doc', 'project', 'milestone', 'ai'];
+const TYPE_ORDER: CreateType[] = ['task', 'bug', 'doc', 'project', 'milestone'];
 
 interface TypeMeta {
   label: string;
   shortcut: string;
-  /** 实体类型走 entity-icons 注册表（图标+tone 语义色，禁本地枚举/原始色）；null = 非实体（ai→Sparkles） */
+  /** 实体类型走 entity-icons 注册表（图标+tone 语义色，禁本地枚举/原始色）；null = 非实体 */
   kind: EntityKind | null;
   placeholder: string;
   descriptionHint: string;
@@ -180,14 +184,6 @@ const TYPE_META: Record<CreateType, TypeMeta> = {
     descriptionHint: 'Key deliverables…',
     createLabel: 'Create milestone',
   },
-  ai: {
-    label: 'AI 助手',
-    shortcut: '6',
-    kind: null,
-    placeholder: '描述要创建的内容',
-    descriptionHint: '用自然语言描述，小周帮你创建',
-    createLabel: '让小周创建',
-  },
 };
 
 /** Bug 严重度 S0–S3（status-visuals 无 severity 映射，本地维护；色用 accent token 禁原始 hex） */
@@ -210,6 +206,15 @@ const DOC_CATEGORY_OPTIONS: { value: DocCategory; label: string }[] = [
 
 /** 优先级选项展示序（取 PRIORITY_VISUALS 四档；urgent 为项目侧叫法不入创建面板） */
 const PRIORITY_ORDER: TaskPriority[] = ['critical', 'high', 'medium', 'low'];
+
+/** 草稿类型 → entity-icons 实体（task/doc 与注册表 kind 名不同） */
+const DRAFT_ENTITY_KIND: Record<CreateDraft['type'], EntityKind> = {
+  task: 'issue',
+  bug: 'bug',
+  doc: 'document',
+  project: 'project',
+  milestone: 'milestone',
+};
 
 // ============================================================================
 // Form values
@@ -303,8 +308,11 @@ export function UnifiedCreateDialog({
   const [subTitle, setSubTitle] = useState('');
   const [subDesc, setSubDesc] = useState('');
 
-  // AI 创建：自然语言描述 → 转给小助理对话
+  // AI 代理：自然语言描述 → create-draft 草稿 → 人确认后落库
   const [aiPrompt, setAiPrompt] = useState('');
+  // 顶级双界面（CAP-A-18）：manual=结构化表单 / ai=自然语言草稿，平级切换
+  const [mode, setMode] = useState<'manual' | 'ai'>('manual');
+  const [draft, setDraft] = useState<CreateDraft | null>(null);
   const openAssistantWithDraft = useAppStore((s) => s.openAssistantWithDraft);
 
   // forms
@@ -397,11 +405,13 @@ export function UnifiedCreateDialog({
     setSubTitle('');
     setSubDesc('');
     setAiPrompt('');
+    setDraft(null);
     setError(null);
   }, [taskForm, bugForm, docForm, projectForm, milestoneForm]);
 
   const handleClose = () => {
     onOpenChange(false);
+    setMode('manual');
     setTimeout(reset, 150);
   };
 
@@ -574,7 +584,7 @@ export function UnifiedCreateDialog({
     }
   };
 
-  /** AI 创建：把描述预填进小助理输入框，由用户确认发送（工具执行后实体卡回显） */
+  /** AI 创建兜底：把描述预填进小助理输入框，由用户确认发送（LLM 不可用时的降级路径） */
   const submitViaAssistant = () => {
     const text = aiPrompt.trim();
     if (!text) { setError('请描述要创建的内容'); return; }
@@ -584,11 +594,98 @@ export function UnifiedCreateDialog({
     toast.success('已转给小周，在右下角对话里发送即可');
   };
 
+  // ── AI 代理草稿流（CAP-A-18 双界面）──
+  const silentCreateDraft = useSilentCreateDraft();
+
+  const generateDraft = async () => {
+    const text = aiPrompt.trim();
+    if (!text) { setError('请描述要创建的内容'); return; }
+    setError(null);
+    setDraft(null);
+    try {
+      const res = await silentCreateDraft.mutateAsync({
+        prompt: text,
+        typeHint: activeType,
+        projectId: activeProjectId || undefined,
+      });
+      const parsed = parseCreateDraft(res.data);
+      if (!parsed) throw new Error('AI 没有解析出可用的创建草稿，试试补充类型或关键词');
+      setDraft(parsed);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'AI 生成失败');
+    }
+  };
+
+  /** 草稿字段回填对应表单（非法枚举值忽略，保持表单缺省） */
+  const applyDraftToForm = (d: CreateDraft): void => {
+    const f = d.fields;
+    const okPriority = f.priority && (PRIORITY_ORDER as string[]).includes(f.priority);
+    const okStatus = f.status && Object.prototype.hasOwnProperty.call(TASK_STATUS_VISUALS, f.status);
+    const okSeverity = f.severity && ['critical', 'high', 'medium', 'low'].includes(f.severity);
+    switch (d.type) {
+      case 'task':
+        taskForm.setValue('title', f.title);
+        if (f.description) taskForm.setValue('description', f.description);
+        if (okPriority) taskForm.setValue('priority', f.priority as TaskPriority);
+        if (okStatus) taskForm.setValue('status', f.status);
+        if (f.dueDate) taskForm.setValue('dueDate', f.dueDate);
+        if (f.labels?.length) taskForm.setValue('labels', f.labels);
+        break;
+      case 'bug':
+        bugForm.setValue('title', f.title);
+        if (f.description) bugForm.setValue('description', f.description);
+        if (okSeverity) bugForm.setValue('severity', f.severity as BugSeverity);
+        if (okPriority) bugForm.setValue('priority', f.priority as TaskPriority);
+        if (okStatus) bugForm.setValue('status', f.status);
+        if (f.dueDate) bugForm.setValue('dueDate', f.dueDate);
+        if (f.labels?.length) bugForm.setValue('labels', f.labels);
+        break;
+      case 'doc':
+        docForm.setValue('title', f.title);
+        if (f.description) docForm.setValue('description', f.description);
+        if (f.category) docForm.setValue('category', f.category as DocCategory);
+        break;
+      case 'project':
+        projectForm.setValue('name', f.title);
+        if (f.description) projectForm.setValue('description', f.description);
+        break;
+      case 'milestone':
+        milestoneForm.setValue('name', f.title);
+        if (f.description) milestoneForm.setValue('description', f.description);
+        if (f.dueDate) milestoneForm.setValue('dueDate', f.dueDate);
+        break;
+    }
+  };
+
+  /** 确认草稿：回填后复用手动提交流（同一校验、同一成功链路） */
+  const confirmCreateDraft = () => {
+    if (!draft) return;
+    applyDraftToForm(draft);
+    setActiveType(draft.type);
+    setMode('manual');
+    switch (draft.type) {
+      case 'task': void submitTask(); break;
+      case 'bug': void submitBug(); break;
+      case 'doc': void submitDoc(); break;
+      case 'project': void submitProject(); break;
+      case 'milestone': void submitMilestone(); break;
+    }
+  };
+
+  /** 草稿回填手动表单继续精修（不落库） */
+  const editDraftManually = () => {
+    if (!draft) return;
+    applyDraftToForm(draft);
+    setActiveType(draft.type);
+    setDraft(null);
+    setMode('manual');
+  };
+
   // ── 静默 AI 建议卡（创建面板场景 create-suggestions）──
   const silentSuggestions = useSilentCreateSuggestions();
 
   const fetchSuggestions = async (): Promise<CreateSuggestion[]> => {
-    const type = activeType === 'ai' ? 'task' : activeType;
+    const type = activeType;
     const fields =
       type === 'task' ? taskForm.getValues()
       : type === 'bug' ? bugForm.getValues()
@@ -645,6 +742,12 @@ export function UnifiedCreateDialog({
   };
 
   const handleSubmit = () => {
+    if (mode === 'ai') {
+      // AI 代理界面：有草稿 → 确认创建；无草稿 → 生成草稿
+      if (draft) { confirmCreateDraft(); return; }
+      void generateDraft();
+      return;
+    }
     switch (activeType) {
       case 'task': return submitTask();
       case 'bug': return submitBug();
@@ -654,7 +757,6 @@ export function UnifiedCreateDialog({
         if (projectSource === 'ai') return;
         return submitProject();
       case 'milestone': return submitMilestone();
-      case 'ai': return submitViaAssistant();
     }
   };
 
@@ -924,7 +1026,9 @@ export function UnifiedCreateDialog({
           maxHeight: 'calc(100vh - 48px)',
         }}
       >
-        <DialogTitle className="sr-only">{currentMeta.label} creation dialog</DialogTitle>
+        <DialogTitle className="sr-only">
+          {mode === 'ai' ? 'AI agent' : currentMeta.label} creation dialog
+        </DialogTitle>
         <DialogDescription className="sr-only">{currentMeta.descriptionHint}</DialogDescription>
 
         {/* ──────────── Header ──────────── */}
@@ -936,6 +1040,15 @@ export function UnifiedCreateDialog({
             <ChevronRight className="size-3 opacity-40" />
             <TypeSelector activeType={activeType} onChange={setActiveType} />
           </div>
+          {/* 顶级双界面（CAP-A-18）：手动 / AI 代理平级切换 */}
+          <SegmentedControl<'manual' | 'ai'>
+            value={mode}
+            onChange={(m) => { setMode(m); if (m === 'manual') setDraft(null); }}
+            options={[
+              { value: 'manual', label: '手动创建' },
+              { value: 'ai', label: 'AI 代理', tone: 'purple' },
+            ]}
+          />
           <div className="flex items-center gap-0.5">
             <IconBtn
               active={showProps}
@@ -969,26 +1082,75 @@ export function UnifiedCreateDialog({
                 </Alert>
               )}
 
-              {/* AI 创建：自然语言描述面板（替代标题/描述/属性表单） */}
-              {activeType === 'ai' ? (
+              {/* AI 代理界面：自然语言 → 草稿确认卡（CAP-A-18 顶级双界面） */}
+              {mode === 'ai' ? (
                 <div className="flex flex-1 flex-col gap-3">
-                  <div className="flex items-start gap-2 rounded-lg border border-border bg-content-bg-secondary/40 px-3 py-2.5 text-xs text-muted-foreground">
+                  <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
                     <Sparkles className="mt-0.5 size-3.5 shrink-0 text-accent-purple" />
                     <span>
-                      用一句话描述你想创建的内容，小周会调用系统工具直接建好，
-                      并在对话里回显结果卡片。发送前可先确认草稿。
+                      用一句话描述你想创建的内容，AI 代理解析为结构化草稿；确认后直接创建。
+                      可先用上方类型切换指定目标（默认按描述自动判断）。
                     </span>
                   </div>
                   <Textarea
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
-                    rows={6}
+                    rows={5}
                     autoFocus
                     placeholder="例如：建一个任务「登录页改版」，本周五截止，优先级高，打上 frontend 标签"
                     className="flex-1 resize-none rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus-visible:ring-0 focus-visible:border-primary/50"
                   />
+                  {draft && (
+                    <div
+                      className="rounded-lg border border-border overflow-hidden"
+                      data-testid="create-draft-card"
+                    >
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b border-border/40">
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                          <EntityIcon entity={DRAFT_ENTITY_KIND[draft.type]} size="sm" />
+                          草稿 · {TYPE_META[draft.type].label}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void generateDraft()}
+                          disabled={silentCreateDraft.isPending}
+                          className="text-10 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                        >
+                          重新生成
+                        </button>
+                      </div>
+                      <div className="p-3 flex flex-col gap-1.5 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">标题：</span>
+                          <span className="font-medium text-foreground">{draft.fields.title}</span>
+                        </div>
+                        {draft.fields.description && (
+                          <div>
+                            <span className="text-muted-foreground">描述：</span>
+                            <span className="text-foreground/80">{draft.fields.description}</span>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
+                          {draft.fields.priority && <span>优先级 {draft.fields.priority}</span>}
+                          {draft.fields.severity && <span>严重度 {draft.fields.severity}</span>}
+                          {draft.fields.dueDate && <span>截止 {draft.fields.dueDate}</span>}
+                          {draft.fields.category && <span>类目 {draft.fields.category}</span>}
+                          {draft.fields.labels?.length ? <span>标签 {draft.fields.labels.join('、')}</span> : null}
+                        </div>
+                      </div>
+                      <div className="px-3 pb-3 flex gap-2">
+                        <Button size="sm" onClick={confirmCreateDraft} disabled={isSubmitting}>
+                          <Check className="size-3" />
+                          确认创建
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={editDraftManually} disabled={isSubmitting}>
+                          回手动编辑
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ) : activeType === 'project' && projectSource === 'ai' ? (
+              ) : mode === 'manual' && activeType === 'project' && projectSource === 'ai' ? (
                 /* CAP-P-01：AI 代理模式——grill 连续追问澄清需求后确认创建 */
                 <GrillInterview
                   onConfirm={submitProjectFromGrill}
@@ -1031,7 +1193,7 @@ export function UnifiedCreateDialog({
             </div>
 
             {/* Sub-task block (matches reference: collapsible card at bottom of main) */}
-            {(activeType === 'task') && (
+            {(mode === 'manual' && activeType === 'task') && (
               <div className="mt-auto">
                 <SubTaskCard
                   open={subOpen}
@@ -1047,7 +1209,7 @@ export function UnifiedCreateDialog({
           </div>
 
           {/* ── Properties panel ── */}
-          {showProps && activeType !== 'ai' && (
+          {showProps && mode === 'manual' && (
             <aside className="w-52.5 shrink-0 px-3 pb-3 pt-1 overflow-y-auto bg-transparent">
               <PropsCard
                 title="Properties"
@@ -1079,15 +1241,49 @@ export function UnifiedCreateDialog({
           <Button variant="ghost" size="sm" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          {activeType === 'project' && projectSource === 'ai' ? (
+          {mode === 'manual' && activeType === 'project' && projectSource === 'ai' ? (
             <span className="text-xs text-muted-foreground">
               在上面的对话里确认摘要后即可创建
             </span>
+          ) : mode === 'ai' ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={submitViaAssistant}
+                disabled={isSubmitting || silentCreateDraft.isPending}
+                title="AI 代理解析失败时的兜底：转小助理对话创建"
+              >
+                转小助理
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSubmit}
+                disabled={isSubmitting || silentCreateDraft.isPending || !aiPrompt.trim()}
+              >
+                {silentCreateDraft.isPending ? (
+                  <>
+                    <Spinner className="size-3 text-inherit" />
+                    解析中…
+                  </>
+                ) : draft ? (
+                  <>
+                    <Check className="size-3" />
+                    确认创建
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="size-3" />
+                    生成草稿
+                  </>
+                )}
+              </Button>
+            </>
           ) : (
             <Button
               size="sm"
               onClick={handleSubmit}
-              disabled={isSubmitting || (activeType === 'ai' ? !aiPrompt.trim() : !currentTitle.trim())}
+              disabled={isSubmitting || !currentTitle.trim()}
             >
               {isSubmitting ? (
                 <>
@@ -1096,7 +1292,7 @@ export function UnifiedCreateDialog({
                 </>
               ) : (
                 <>
-                  {activeType === 'ai' ? <Sparkles className="size-3" /> : <Plus className="size-3" />}
+                  <Plus className="size-3" />
                   {currentMeta.createLabel}
                 </>
               )}

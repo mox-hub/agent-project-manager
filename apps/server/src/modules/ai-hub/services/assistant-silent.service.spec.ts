@@ -100,6 +100,7 @@ describe('AssistantSilentService.run', () => {
     expect(scenarios.map((s) => s.scenario)).toEqual([
       'quick-prompts',
       'create-suggestions',
+      'create-draft',
       'project-score',
       'anchor-qa',
       'card-explain',

@@ -3759,7 +3759,9 @@
     "decisionReview": "决策卡批阅",
     "decisionReviewDesc": "决策卡批阅模式：Enter/1 通过 · 2 驳回 · F 翻面 · ←/→ 翻页",
     "createPanelSwitch": "创建面板切换类型",
-    "createPanelSwitchDesc": "统一创建面板内 Ctrl+1..6 在任务/缺陷/文档等类型间切换"
+    "createPanelSwitchDesc": "统一创建面板内 Ctrl+1..5 在任务/缺陷/文档等项目/里程碑间切换",
+    "createPanelSubmit": "创建面板提交",
+    "createPanelSubmitDesc": "统一创建面板内 Ctrl+Enter 提交（AI 代理模式为生成/确认草稿）"
   },
   "commandPalette": {
     "title": "命令面板",

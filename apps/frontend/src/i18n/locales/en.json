@@ -3759,7 +3759,9 @@
     "decisionReview": "Decision card review",
     "decisionReviewDesc": "In review mode: Enter/1 approve · 2 reject · F flip · ←/→ navigate",
     "createPanelSwitch": "Switch create panel type",
-    "createPanelSwitchDesc": "Inside the unified create dialog: Ctrl+1..6 switches between task/bug/document etc."
+    "createPanelSwitchDesc": "Inside the unified create dialog: Ctrl+1..5 switches between task/bug/document/project/milestone",
+    "createPanelSubmit": "Submit create panel",
+    "createPanelSubmitDesc": "Inside the unified create dialog: Ctrl+Enter submits (AI agent mode generates/confirms the draft)"
   },
   "commandPalette": {
     "title": "Command Palette",
