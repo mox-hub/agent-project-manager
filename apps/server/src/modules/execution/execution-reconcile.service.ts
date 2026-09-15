@@ -22,8 +22,6 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { LoggerService } from '@/core/logger/logger.service';
-import { RuntimeService } from '@/modules/runtime/runtime.service';
-import { WorkflowService } from '@/modules/workflow/workflow.service';
 
 const DEFAULT_STALL_THRESHOLD_MS = 5 * 60_000;
 const DEFAULT_PENDING_TTL_MS = 24 * 60 * 60_000;
@@ -47,8 +45,6 @@ export class ExecutionReconcileService {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
     private readonly logger: LoggerService,
-    private readonly runtimeService: RuntimeService,
-    private readonly workflowService: WorkflowService,
   ) {
     this.logger.setContext('ExecutionReconcile');
   }
@@ -71,17 +67,38 @@ export class ExecutionReconcileService {
         err instanceof Error ? err.stack : String(err),
       );
     }
-    try {
-      const workflowFixed = await this.workflowService.reconcileStalledRuns();
-      if (workflowFixed > 0) {
-        this.logger.warn(`Workflow stalled runs reconciled: ${workflowFixed}`);
-      }
-    } catch (err) {
-      this.logger.error(
-        'workflow reconcile failed',
-        err instanceof Error ? err.stack : String(err),
+    // workflow 悬挂对账在 WorkflowService 内自挂调度（避免模块环依赖）
+  }
+
+  /**
+   * 在线守护进程 id 集合：直读 runtime.registration 配置并按心跳判活
+   * （口径与 RuntimeService.computeLiveness 一致：2×心跳间隔、下限 30s）。
+   * 不注入 RuntimeService——execution→runtime→ai-hub→cli-dispatch→execution
+   * 会构成模块环，对账服务必须保持依赖最小面。
+   */
+  private async listOnlineRuntimeIds(): Promise<Set<string>> {
+    const records = await this.prisma.appConfig.findMany({
+      where: { scope: 'runtime.registration' },
+    });
+    const online = new Set<string>();
+    for (const record of records) {
+      const v = record.value as {
+        runtimeId?: string;
+        status?: string;
+        lastHeartbeatAt?: string;
+        heartbeatIntervalSeconds?: number;
+      };
+      if (!v.runtimeId || v.status !== 'online') continue;
+      const intervalMs = Math.max(
+        (v.heartbeatIntervalSeconds ?? 30) * 1000,
+        30_000,
       );
+      const last = Date.parse(v.lastHeartbeatAt ?? '');
+      if (!Number.isNaN(last) && Date.now() - last <= intervalMs * 2) {
+        online.add(v.runtimeId);
+      }
     }
+    return online;
   }
 
   /** 扫描派发记录（key = runtime:dispatch:<runtimeId>:<executionRunId>） */
@@ -141,12 +158,7 @@ export class ExecutionReconcileService {
     });
     if (stalled.length === 0) return;
 
-    const registrations = await this.runtimeService.listRegistrations();
-    const onlineRuntimeIds = new Set(
-      registrations
-        .filter((r) => r.status === 'online')
-        .map((r) => r.runtimeId),
-    );
+    const onlineRuntimeIds = await this.listOnlineRuntimeIds();
     const metas = await this.listDispatchMetas();
     const runtimeIdByRun = new Map<
       string,

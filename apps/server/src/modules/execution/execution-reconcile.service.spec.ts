@@ -3,8 +3,6 @@ import { ExecutionReconcileService } from './execution-reconcile.service';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { LoggerService } from '@/core/logger/logger.service';
-import { RuntimeService } from '@/modules/runtime/runtime.service';
-import { WorkflowService } from '@/modules/workflow/workflow.service';
 
 describe('ExecutionReconcileService', () => {
   let service: ExecutionReconcileService;
@@ -49,14 +47,6 @@ describe('ExecutionReconcileService', () => {
             warn: vi.fn(),
             error: vi.fn(),
           },
-        },
-        {
-          provide: RuntimeService,
-          useValue: { listRegistrations: vi.fn().mockResolvedValue([]) },
-        },
-        {
-          provide: WorkflowService,
-          useValue: { reconcileStalledRuns: vi.fn().mockResolvedValue(0) },
         },
       ],
     }).compile();
@@ -110,22 +100,32 @@ describe('ExecutionReconcileService', () => {
     prismaMock.execution.findMany.mockResolvedValue([
       { id: 'run-9', goal: '修 bug' },
     ]);
-    prismaMock.appConfig.findMany.mockResolvedValue([
-      {
-        id: 'cfg-9',
-        key: 'runtime:dispatch:rt-off:run-9',
-        value: {
-          executionRunId: 'run-9',
-          status: 'pending',
-          createdAt: stale.toISOString(),
+    prismaMock.appConfig.findMany.mockImplementation(async (args: any) => {
+      if (args?.where?.scope === 'runtime.registration') {
+        // 心跳 10 分钟前 → 按 2×30s 口径判离线
+        return [
+          {
+            value: {
+              runtimeId: 'rt-off',
+              status: 'online',
+              lastHeartbeatAt: new Date(Date.now() - 10 * 60_000).toISOString(),
+              heartbeatIntervalSeconds: 30,
+            },
+          },
+        ];
+      }
+      return [
+        {
+          id: 'cfg-9',
+          key: 'runtime:dispatch:rt-off:run-9',
+          value: {
+            executionRunId: 'run-9',
+            status: 'pending',
+            createdAt: stale.toISOString(),
+          },
         },
-      },
-    ]);
-    const runtimeMock = (service as never as { runtimeService: RuntimeService })
-      .runtimeService;
-    (
-      runtimeMock.listRegistrations as ReturnType<typeof vi.fn>
-    ).mockResolvedValue([{ runtimeId: 'rt-off', status: 'offline' }]);
+      ];
+    });
 
     await service.reconcile();
 
@@ -138,18 +138,27 @@ describe('ExecutionReconcileService', () => {
     prismaMock.execution.findMany.mockResolvedValue([
       { id: 'run-10', goal: '长任务' },
     ]);
-    prismaMock.appConfig.findMany.mockResolvedValue([
-      {
-        id: 'cfg-10',
-        key: 'runtime:dispatch:rt-on:run-10',
-        value: { executionRunId: 'run-10', status: 'pending' },
-      },
-    ]);
-    const runtimeMock = (service as never as { runtimeService: RuntimeService })
-      .runtimeService;
-    (
-      runtimeMock.listRegistrations as ReturnType<typeof vi.fn>
-    ).mockResolvedValue([{ runtimeId: 'rt-on', status: 'online' }]);
+    prismaMock.appConfig.findMany.mockImplementation(async (args: any) => {
+      if (args?.where?.scope === 'runtime.registration') {
+        return [
+          {
+            value: {
+              runtimeId: 'rt-on',
+              status: 'online',
+              lastHeartbeatAt: new Date().toISOString(),
+              heartbeatIntervalSeconds: 30,
+            },
+          },
+        ];
+      }
+      return [
+        {
+          id: 'cfg-10',
+          key: 'runtime:dispatch:rt-on:run-10',
+          value: { executionRunId: 'run-10', status: 'pending' },
+        },
+      ];
+    });
 
     await service.reconcile();
 

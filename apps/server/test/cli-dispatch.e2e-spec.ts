@@ -130,6 +130,23 @@ describe('CLI Dispatch (e2e)', () => {
     await ws.db.projectWorkspace.create({
       data: { projectId, localPath: ws.root },
     });
+    // 兜底改造批 3：派发前验收门禁（严格模式）要求活契约至少 1 条标准
+    const acceptance = await ws.db.acceptance.create({
+      data: {
+        issueId,
+        type: 'mixed',
+        title: '验收 - e2e',
+        completionType: 'artifact',
+        status: 'draft',
+      },
+    });
+    await ws.db.acceptanceCriteria.create({
+      data: {
+        acceptanceId: acceptance.id,
+        content: '执行完成后输出结果摘要',
+        criteriaType: 'functional',
+      },
+    });
     return { issueId };
   }
 
@@ -201,7 +218,7 @@ describe('CLI Dispatch (e2e)', () => {
     expect(status).toBe('completed');
   }, 30_000);
 
-  it('POST /ai/execution-runs/:id/cancel 置为 blocked 终态（含取消原因）', async () => {
+  it('POST /ai/execution-runs/:id/cancel 置为 superseded 终态（含取消原因）', async () => {
     const { issueId } = await createDispatchFixture();
     const executionRunId = await dispatchTask(issueId);
 
@@ -212,8 +229,8 @@ describe('CLI Dispatch (e2e)', () => {
       .expect(201);
 
     const status = await waitForTerminalStatus(wsHttp, token, executionRunId);
-    // server 既定语义：取消置 blocked（metadata.cancellationReason 记录原因）
-    expect(status).toBe('blocked');
+    // 兜底改造批 2 语义变更：取消置 superseded 终态（与失败/人工阻塞可区分）
+    expect(status).toBe('superseded');
   }, 30_000);
 
   it('dispatch 不存在的任务返回 404', async () => {
