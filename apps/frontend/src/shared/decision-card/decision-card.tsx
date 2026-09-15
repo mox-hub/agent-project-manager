@@ -4,7 +4,7 @@
  * 后续 Clarify/Plan 等新决策类型 → 扩展 DecisionKind + 在此注册构建器。
  */
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -20,6 +20,7 @@ import {
   ListChecks,
   Minus,
   Plus,
+  Rocket,
   ScrollText,
   ShieldCheck,
   TrendingUp,
@@ -171,6 +172,12 @@ export const KIND_ACTIONS: Record<DecisionKind, DecisionActionDef[]> = {
   ],
   workflow_def: [
     { action: 'accept', label: 'decision.action.applyWorkflow', icon: Check },
+    { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
+  ],
+  // 发布审批（ReleaseService.createApprovalProposal 投递）：accept = gated → approved
+  // 并触发事件驱动发布；reject = 打回草案（服务端仅 gated/approved 可打回）。
+  release: [
+    { action: 'accept', label: 'decision.action.approveRelease', icon: Check },
     { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
   ],
 };
@@ -876,6 +883,91 @@ function buildWorkflowDefSlots(decision: Decision, t: TFunc): DecisionSlots {
   };
 }
 
+/**
+ * release 槽位：发布审批（`ReleaseService.createApprovalProposal` 投递）。
+ *
+ * payload 就是投递方原样写的那四个键 `{ releaseId, version, scopeCount, gateResult }`，
+ * 此处**只搬运不解释**：门禁没跑过（`gateResult` 为空）就明说"未跑门禁"，
+ * 不显示"0 项未过"这种把"没查"读成"全过"的写法。
+ */
+function buildReleaseSlots(decision: Decision, t: TFunc): DecisionSlots {
+  const p = (decision.payload ?? {}) as {
+    version?: string;
+    scopeCount?: number;
+    gateResult?: { passed?: boolean; checks?: Array<{ key: string; label: string; passed: boolean; detail?: string }> } | null;
+  };
+  const checks = p.gateResult?.checks ?? [];
+  const failed = checks.filter((c) => !c.passed);
+
+  return {
+    body: (
+      <div className="space-y-2">
+        {/* 标题由卡壳 ① 头部渲染，此处不重复；主体只放**标题之外**的发布事实 */}
+        <div className="rounded-md bg-content-bg-secondary px-3 py-2 text-xs">
+          {decision.detail ? (
+            <p className="leading-relaxed text-content-text-secondary">{decision.detail}</p>
+          ) : (
+            <p className="text-content-text-muted">{t('decision.release.noNotes')}</p>
+          )}
+        </div>
+        {checks.length > 0 ? (
+          <ul className="space-y-1">
+            {checks.map((c) => (
+              <li key={c.key} className="flex items-start gap-1.5 text-11">
+                {c.passed ? (
+                  <CheckCircle2 className="mt-0.5 size-3 shrink-0 text-accent-green" />
+                ) : (
+                  <XCircle className="mt-0.5 size-3 shrink-0 text-accent-red" />
+                )}
+                <span className="min-w-0">
+                  <span className="font-medium text-content-text">{c.label}</span>
+                  {c.detail ? (
+                    <span className="ml-1 text-content-text-secondary">{c.detail}</span>
+                  ) : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-11 text-content-text-muted">{t('decision.release.noGate')}</p>
+        )}
+      </div>
+    ),
+    impact: [
+      ...(p.version
+        ? [
+            {
+              label: t('decision.release.impactVersion'),
+              value: p.version,
+              icon: Rocket,
+            },
+          ]
+        : []),
+      {
+        label: t('decision.release.impactScope'),
+        value:
+          typeof p.scopeCount === 'number'
+            ? t('decision.release.scopeCount', { n: p.scopeCount })
+            : t('decision.release.scopeUnknown'),
+        icon: ListChecks,
+      },
+      ...(p.gateResult
+        ? [
+            {
+              label: t('decision.release.impactGate'),
+              value: p.gateResult.passed
+                ? t('decision.release.gatePassed')
+                : t('decision.release.gateFailed', { n: failed.length }),
+              icon: p.gateResult.passed ? CheckCircle2 : XCircle,
+              tone: (p.gateResult.passed ? 'green' : 'red') as DecisionImpactItem['tone'],
+            },
+          ]
+        : []),
+    ],
+    evidence: decision.detail ? <p>{decision.detail}</p> : undefined,
+  };
+}
+
 type TFunc = (k: string, o?: Record<string, unknown>) => string;
 
 const SLOT_BUILDERS: Partial<Record<DecisionKind, (d: Decision, t: TFunc) => DecisionSlots>> = {
@@ -887,6 +979,7 @@ const SLOT_BUILDERS: Partial<Record<DecisionKind, (d: Decision, t: TFunc) => Dec
   spend: buildSpendSlots,
   gate: buildGateSlots,
   workflow_def: buildWorkflowDefSlots,
+  release: buildReleaseSlots,
 };
 
 export interface DecisionCardProps {
@@ -894,17 +987,29 @@ export interface DecisionCardProps {
   onAction: (action: string, decision: Decision, opts?: DecisionActionOptions) => void;
   busy?: boolean;
   className?: string;
+  /** 只读预览（回放/演示）：整条动作栏与快捷键都不生效，见 `DecisionCardShellProps.readOnly` */
+  readOnly?: boolean;
+  readOnlyNote?: ReactNode;
 }
 
-export function DecisionCard({ decision, onAction, busy, className }: DecisionCardProps) {
+export function DecisionCard({
+  decision,
+  onAction,
+  busy,
+  className,
+  readOnly = false,
+  readOnlyNote,
+}: DecisionCardProps) {
   const { t } = useTranslation();
   const builder = SLOT_BUILDERS[decision.kind];
   const slots: DecisionSlots = builder
     ? builder(decision, t as TFunc)
     : { body: <PlaceholderBody decision={decision} />, impact: [] };
-  // clarify 的主体是交互式选择体（自管选中态并直接发起决议）
+  // clarify 的主体是交互式选择体（自管选中态并直接发起决议，**不经动作栏**）——
+  // 故只读时必须连它一起挡掉：否则"动作栏已隐藏"而选项仍可点，是个更隐蔽的假入口。
+  // 挡掉后 clarify 退回 payload 预览（SLOT_BUILDERS 未注册 clarify 时的默认体）。
   const body =
-    decision.kind === 'clarify' ? (
+    decision.kind === 'clarify' && !readOnly ? (
       <ClarifyBody decision={decision} busy={busy} onAction={onAction} />
     ) : (
       slots.body
@@ -921,6 +1026,8 @@ export function DecisionCard({ decision, onAction, busy, className }: DecisionCa
       actions={actions}
       requireEvidence={policy.requireEvidence}
       cooldownSecs={policy.cooldownSecs}
+      readOnly={readOnly}
+      readOnlyNote={readOnlyNote}
       onAction={onAction}
       busy={busy}
       className={className}

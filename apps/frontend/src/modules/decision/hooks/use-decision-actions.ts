@@ -37,6 +37,13 @@ function resolveToastKey(kind: Decision['kind'], action: string): string | null 
     if (action === 'accept') return 'decision.toast.gatePassed';
     if (action === 'reject') return 'decision.toast.gateRejected';
   }
+  if (kind === 'workflow_def' && action === 'accept') return 'decision.toast.workflowApplied';
+  if (kind === 'release') {
+    if (action === 'accept') return 'decision.toast.releaseApproved';
+    if (action === 'reject') return 'decision.toast.releaseRejected';
+  }
+  // 兜底 null = 该 (kind, action) 组合没有成功提示文案。
+  // 注意：null 只意味着"不说成功话术"，不代表静默——失败仍由下方 catch 统一 toast.error。
   return null;
 }
 

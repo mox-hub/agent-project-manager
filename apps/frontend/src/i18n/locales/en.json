@@ -856,7 +856,19 @@
       "markCancelled": "Mark cancelled",
       "approveBudget": "Approve budget",
       "passGate": "Pass gate",
-      "applyWorkflow": "Save & activate"
+      "applyWorkflow": "Save & activate",
+      "approveRelease": "Approve release"
+    },
+    "release": {
+      "noGate": "Gate has not run yet — confirm the gate was submitted before approving",
+      "noNotes": "No release notes",
+      "impactVersion": "Version",
+      "impactScope": "Scope",
+      "impactGate": "Gate",
+      "scopeCount": "{{n}} issues",
+      "scopeUnknown": "Scope not set",
+      "gatePassed": "passing",
+      "gateFailed": "{{n}} failing"
     },
     "workflow": {
       "impactMode": "Change",
@@ -962,7 +974,10 @@
       "budgetUpdated": "Budget updated",
       "clarified": "Answer recorded, AI can proceed",
       "gatePassed": "Gate passed, playbook advanced to the next stage",
-      "gateRejected": "Gate rejected — on record, you can redo the interview"
+      "gateRejected": "Gate rejected — on record, you can redo the interview",
+      "workflowApplied": "Workflow saved and activated",
+      "releaseApproved": "Release approved — publishing starting",
+      "releaseRejected": "Release sent back to draft"
     },
     "body": {
       "placeholder": "Rich body renderer for this decision type lands with the type itself (placeholder frame)"

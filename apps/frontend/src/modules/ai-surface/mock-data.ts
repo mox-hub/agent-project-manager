@@ -1,10 +1,4 @@
-import type {
-  AgentPersona,
-  ArtifactItem,
-  CognitiveMessage,
-  TrustDimension,
-  MemoryAtom,
-} from './types';
+import type { AgentPersona, ArtifactItem, CognitiveMessage, MemoryAtom } from './types';
 
 export const INITIAL_AGENTS: AgentPersona[] = [
   {
@@ -200,17 +194,17 @@ export const INITIAL_MESSAGES: CognitiveMessage[] = [
   },
 ];
 
-export const TRUST_DIMENSIONS: TrustDimension[] = [
-  { id: 'dim-contract', label: '契约合规率', score: 99.2, maxScore: 100, description: '严格遵从 OpenAPI 规范与 SQLite 单库路由', status: 'optimal' },
-  { id: 'dim-logic', label: '逻辑完备度', score: 94.5, maxScore: 100, description: 'PRD 边界条件覆盖与异常处理分支推演', status: 'good' },
-  { id: 'dim-grounded', label: '幻觉抑制率', score: 97.0, maxScore: 100, description: '代码与实体引用真实度检查，无虚构接口', status: 'optimal' },
-  { id: 'dim-roi', label: 'Token 投入产出比', score: 92.8, maxScore: 100, description: '有效代码行数 / 上下文开销，极佳经济性', status: 'good' },
-];
-
+/**
+ * 治理记忆原子：**示例条目**（就地带「示例」标注；真记忆原子见「设置 · 记忆」，走 /memory 既有服务）。
+ *
+ * 原先每条还带一个 `weight`（0.98 / 0.95 / 0.96 / 0.92 / 0.94）并在卡片上渲染成「权重 98%」——
+ * 那是**编造的精度**：服务端的记忆原子没有这样被前端读的权重，也不该由前端拍一个数。
+ * S2-e 连字段一并删除，不留"没人看但摆在那儿像真数据"的残留。
+ */
 export const MEMORY_ATOMS: MemoryAtom[] = [
-  { id: 'mem-1', key: 'SQLite-Per-Workspace', category: 'architecture', weight: 0.98, summary: '每个工作区独立 SQLite 数据库文件路由' },
-  { id: 'mem-2', key: 'OpenAPI-Zero-Drift', category: 'governance', weight: 0.95, summary: '全仓契约以 openapi.json 为唯一真相源' },
-  { id: 'mem-3', key: 'Dual-Surface-V4', category: 'architecture', weight: 0.96, summary: '人类控制面与 AI 协同执行面双轨融合' },
-  { id: 'mem-4', key: 'Zero-Raw-Palette', category: 'governance', weight: 0.92, summary: '全端禁止原生未定义色板类，使用语义 Token' },
-  { id: 'mem-5', key: 'Acceptance-Gate', category: 'preference', weight: 0.94, summary: '工单流转必须挂载自动化验收准则与证据' },
+  { id: 'mem-1', key: 'SQLite-Per-Workspace', category: 'architecture', summary: '每个工作区独立 SQLite 数据库文件路由' },
+  { id: 'mem-2', key: 'OpenAPI-Zero-Drift', category: 'governance', summary: '全仓契约以 openapi.json 为唯一真相源' },
+  { id: 'mem-3', key: 'Dual-Surface-V4', category: 'architecture', summary: '人类控制面与 AI 协同执行面双轨融合' },
+  { id: 'mem-4', key: 'Zero-Raw-Palette', category: 'governance', summary: '全端禁止原生未定义色板类，使用语义 Token' },
+  { id: 'mem-5', key: 'Acceptance-Gate', category: 'preference', summary: '工单流转必须挂载自动化验收准则与证据' },
 ];
