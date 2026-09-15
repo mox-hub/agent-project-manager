@@ -7,7 +7,12 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { DecisionService } from './decision.service';
-import { DecisionListDto, DecisionSummaryDto } from './dto/decision.dto';
+import {
+  DECISION_KIND_VALUES,
+  DecisionListDto,
+  DecisionSummaryDto,
+  type DecisionKindValue,
+} from './dto/decision.dto';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Decisions')
@@ -26,13 +31,13 @@ export class DecisionController {
     type: DecisionListDto,
   })
   @ApiQuery({ name: 'projectId', required: false, description: '按项目过滤' })
-  @ApiQuery({ name: 'kind', required: false, enum: ['approval', 'acceptance'] })
+  @ApiQuery({ name: 'kind', required: false, enum: DECISION_KIND_VALUES })
   @ApiQuery({ name: 'limit', required: false, description: '默认 50' })
   @ApiQuery({ name: 'offset', required: false, description: '默认 0' })
   @ApiStandardErrors()
   async listPending(
     @Query('projectId') projectId?: string,
-    @Query('kind') kind?: 'approval' | 'acceptance',
+    @Query('kind') kind?: DecisionKindValue,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {

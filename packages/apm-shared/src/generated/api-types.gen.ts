@@ -9050,7 +9050,7 @@ export interface components {
              * @description 决策来源类型
              * @enum {string}
              */
-            kind: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate";
+            kind: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release";
             /** @description 原始实体 ID */
             sourceId: string;
             /** @description 原始状态（pending / in_review / …） */
@@ -11359,7 +11359,7 @@ export interface components {
             status: string;
         };
         AssistantSilentDto: {
-            /** @description Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score | anchor-qa) */
+            /** @description Silent scenario name registered on the server（真相源 = assistant-silent.service.ts 的 SILENT_SCENARIOS 注册表；此处不复列，避免清单随注册表漂移）。未知场景返回 400 并列出全部可用名 */
             scenario: string;
             /** @description Project scope for the request */
             projectId?: string;
@@ -11368,6 +11368,20 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        AssistantSilentUsageDto: {
+            /** @description 输入 token */
+            promptTokens: number;
+            /** @description 输出 token */
+            completionTokens: number;
+            /** @description 总 token */
+            totalTokens: number;
+            /** @description 预估费用（USD）；null = 估价口径不可用（≠ 0） */
+            costUsd?: number | null;
+            /** @description 实际使用的模型 */
+            model?: string;
+            /** @description 本次静默调用耗时（毫秒） */
+            durationMs: number;
+        };
         AssistantSilentResponseDto: {
             /** @description 场景名 */
             scenario: string;
@@ -11375,6 +11389,8 @@ export interface components {
             data: {
                 [key: string]: unknown;
             };
+            /** @description 本次调用的 token/成本/耗时。**provider 未上报 token 时整个字段缺席**（不补 0——「没上报」与「没花钱」不是一回事） */
+            usage?: components["schemas"]["AssistantSilentUsageDto"];
         };
         CreateDocumentDto: {
             /**
@@ -21277,11 +21293,11 @@ export interface operations {
             query?: {
                 /** @description 按项目过滤 */
                 projectId?: string;
-                kind?: "approval" | "acceptance";
                 /** @description 默认 50 */
                 limit?: string;
                 /** @description 默认 0 */
                 offset?: string;
+                kind?: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release";
             };
             header?: never;
             path?: never;
