@@ -21,6 +21,14 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-A-17 快捷键体系：全局键位注册表 + 设置页自定义 + 散落监听收编（2026-09-15）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **快捷键基建 `shared/hotkeys/` 四件**：①`hotkey-definitions.ts` 注册表单一真相源——global 组两动作（command-palette mod+k / ai-assistant alt+a）+ readonly 上下文参考条目（文档保存 mod+s / 决策卡批阅 / 创建面板 Ctrl+1..6）；②`hotkey-store.ts` zustand persist（`hotkey-storage`，仅存 overrides）——getEffectiveCombo（override 优先回落缺省）/ findConflictingActionId 单点冲突检测 / getKeyConflicts 全量兜底；③`hotkey-utils.ts` 纯函数——eventToCombo 归一化（ctrl/meta→mod、修饰序固定、单修饰键与纯 Shift+字母不算录制完成）、formatComboForDisplay（isMac 符号化 ⌘/⌥/⇧）、isEditableTarget（含 attribute 兜底，jsdom 不实现 getter）；④`use-global-hotkey.ts` 模块级单例监听器 + handler 注册表——带 mod/alt 修饰不做输入框抑制（浏览器级语义）、无修饰单键让位输入态 | CAP-A-17 | hotkey-utils 12 条 + hotkey-store 8 条 | — |
+| frontend | **设置 · 快捷键分区**（`/app/settings/shortcuts`，groupGeneral 组）：全局动作行内「修改」进入录制态（capture 拦截全局、Esc 取消、单修饰键继续等待）→ 组合键归一化后与其他动作生效键冲突检测——撞车行内红字不落库；改动即时写 store 即时切键；单项重置 + 全部恢复默认 + 「已自定义」标记；上下文参考条目只读展示（Kbd/KbdGroup 平台感知渲染） | CAP-A-17 | shortcuts-section.test 6 条（渲染/录制落库/Esc 取消与单修饰/冲突红字不落库/单项重置/全部重置） | — |
+| frontend | **三处散落监听收编 + 三面脱钩治愈**：①command-palette-provider 手写 Ctrl+K/Ctrl+/ 监听 → `useGlobalHotkey('command-palette')`（**Ctrl+/ 双键随收编移除**，help 本就误写、单一键位足够）；②shell-layout Alt+A 手写监听 → `useGlobalHotkey('ai-assistant')`；③bottom-dock 伪造 Ctrl+K KeyboardEvent hack → 改 dispatch 既有 OPEN_COMMAND_PALETTE_EVENT（事件常量拆独立文件 `open-command-palette-event.ts` 防测试链拉进 i18n 实例，provider re-export 兼容 TabBar），Dock 搜索按钮 label 键位改注册表动态解析；④help 页快捷键表从注册表生成（随用户自定义实时反映），**删除 4+1 条从未实现的假键**（Ctrl+N/P/B、Ctrl+Shift+A、Ctrl+/）；⑤命令面板 cmd-ask-ai 硬编码 'Alt A' → `hotkeyId` 声明式字段（shell-layout 消费时解析） | CAP-A-17（help 假键治愈） | command-palette.test 更新 1 条 + 新增收编回归 2 条（缺省 Ctrl+K 切换且 Ctrl+/ 不再响应 / 自定义 mod+j 后旧键失效新键生效）；bottom-dock.test 修复 import 链后 42 条绿 | `docs/01-需求/能力清单-v1.md`（CAP-A-17 卡）、`测试映射矩阵-v1.md`（GAP-T-31） |
+
 ### 项目列表页 / 文档列表页 i18n 补齐（2026-09-15）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
