@@ -52,7 +52,7 @@ export function LinearProjectsTable({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent keepDefaultWidth={false} className="max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <LinearIcon size={20} /> Choose a Linear project
