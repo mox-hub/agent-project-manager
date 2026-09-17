@@ -45,6 +45,7 @@ import { parseFrontmatter } from '../services/mdx-frontmatter';
 import { useMetadataSync } from '../services/metadata-sync.service';
 import { VersionHistoryPanel } from '../components/version-history-panel';
 import { DocumentPropertiesPanel } from '../components/document-properties-panel';
+import { RevisionImpactBanner } from '../components/revision-impact-banner';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useSubmitForReview } from '../hooks/use-approval';
@@ -517,6 +518,10 @@ export function DocumentViewPage() {
             )}
             <div ref={scrollContainerRef} className="min-w-0 flex-1 overflow-auto">
               <article ref={articleRef} className="mx-auto w-full max-w-240 px-6 py-10">
+              <RevisionImpactBanner
+                documentId={documentId}
+                category={document.category}
+              />
               {frontmatter.summary ? (
                 <p className="mb-6 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
                   {frontmatter.summary}

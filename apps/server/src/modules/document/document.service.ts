@@ -293,9 +293,12 @@ export class DocumentService {
       },
     });
 
-    // Publish event
+    // Publish event（contentChanged 供需求修订影响链路判定实质修订，CAP-P-01）
     this.messageBus.publish('document.updated', {
       documentId: id,
+      contentChanged:
+        updateDocumentDto.content !== undefined &&
+        updateDocumentDto.content !== document.content,
     });
 
     // T0 物化提升（契约与文档知识层 v2 纪要 §11）：开始被消费那刻物化摘要
