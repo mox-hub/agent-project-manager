@@ -21,6 +21,16 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-P-01 需求修订影响链路最小闭环（feat/revision-impact-chain，2026-09-18）
+
+> 补齐 CAP-P-01 修订侧缺口：需求类文档修订 → 自动影响分析 → 「需求修订影响」决策卡供人确认 → 确认后受影响验收标准标记待复核。复用既有承载（决策收件箱 clarify 批阅流 + DocumentTaskLink 引用关系），零 migration。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **修订影响分析服务（document 域新增 `revision-impact.service` + subscriber + controller）**：订阅 `document.updated`（事件补 `contentChanged` 标记，document.service 最小侵入一行）；需求类文档（category = requirement \| analysis）content 实质修订时，经 `DocumentTaskLink` 既有引用关系扫描关联任务与其活跃验收标准（draft/pending/in_review，passed/failed/waived 不上报不误报），生成结构化影响清单并调用 decision 模块**既有** `ProposalService.create` 生成决策卡（kind=clarify：选项交互承载「标记待复核 / 知悉不处理」，收件箱原生渲染与批阅流零改动）；新增 `GET /documents/:id/revision-impact`（状态查询，读取即幂等收敛确认后动作）与 `POST /documents/:id/revision-impact/analyze`（手动触发）两端点入契约 | CAP-P-01 | `revision-impact.service.spec` 18/18 绿（触发→清单→建卡→确认→置 pending 全链 + 边界：非需求类/无关联/全非活跃/重复卡跳过/reject 留痕/旁路降级）；`contract:export` + `contract:generate` + `contract:check` 三件套零漂移 | 能力清单 CAP-P-01 卡（修订侧闭环） |
+| server | **确认后动作（跨模块约定内直写）**：人确认（accept 选「标记待复核」）后，在本域内经 PrismaService 直写 `acceptanceCriteria.updateMany({ where: { id: { in: [...] }, status: { in: [draft, in_review] } }, data: { status: 'pending' } })`——只拉回活跃态标准，已 passed/failed/waived 不回退；**已知余留**：直改不触发标准版本化机制（B-01 分支实现），两级传播完整性待后续切片统一 | CAP-P-01 | 单测断言 updateMany 的 where/data 形状；dismiss/reject 路径断言不动标准 | 决策日志待补（clarify kind 复用裁决） |
+| frontend | **文档详情修订影响提示条（最小挂点）**：`revision-impact-banner` 新组件 + view-page 一处挂载——待确认（黄，跳转决策收件箱）/已确认（绿，N 条已标记待复核）/已不处理（中性弱提示）三态；决策卡本体 UI 零改动；i18n `document.revisionImpact` 双语键齐备 | CAP-P-01 | frontend `tsc -b` 零错误 | — |
+
 ## [0.7.0] - 2026-09-17
 
 ### v0.7.0 发版总览——AI 表面实时化 + 统一创建面板双界面 + 执行侧兜底闭环 + 决策卡实体手卡
