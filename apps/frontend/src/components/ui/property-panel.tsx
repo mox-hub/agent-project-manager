@@ -6,7 +6,6 @@
  * - Capsule / CapsuleSelect / DateCapsuleField (Linear 风格下拉胶囊)
  * - AutoSizeTextarea (自适应高度 textarea)
  * - PropertyRow / PropsCard (属性行 + 折叠卡片)
- * - SuggestionsCard (建议面板)
  * - MemberAvatar (成员头像)
  * - SubTaskCard (子任务输入卡片 + SmallCaps 内部组件)
  */
@@ -27,7 +26,6 @@ import {
   User as UserIcon,
   ListTodo,
   Sparkles,
-  type LucideProps,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
@@ -303,16 +301,32 @@ export function PropertyRow({
   icon,
   label,
   children,
+  className,
+  labelClassName,
+  childrenClassName,
 }: {
   icon?: React.ReactNode;
   label: string;
   children: React.ReactNode;
+  /** 行根元素附加类（如 group/prop，供行内 hover 显隐动作） */
+  className?: string;
+  /** 键名附加类（如固定键列宽 w-30，默认 flex-1 弹性占满） */
+  labelClassName?: string;
+  /** 值容器附加类（默认 shrink-0 靠右，可传 min-w-0 flex-1 让值占满剩余宽度） */
+  childrenClassName?: string;
 }) {
   return (
-    <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg min-h-8 hover:bg-muted/40 transition-colors">
+    <div
+      className={cn(
+        'flex items-center gap-2 px-2 py-1.5 rounded-lg min-h-8 hover:bg-muted/40 transition-colors',
+        className,
+      )}
+    >
       {icon && <span className="text-muted-foreground shrink-0">{icon}</span>}
-      <span className="text-xs text-muted-foreground flex-1 min-w-0 truncate">{label}</span>
-      <div className="shrink-0">{children}</div>
+      <span className={cn('text-xs text-muted-foreground flex-1 min-w-0 truncate', labelClassName)}>
+        {label}
+      </span>
+      <div className={cn('shrink-0', childrenClassName)}>{children}</div>
     </div>
   );
 }
@@ -323,74 +337,30 @@ export function PropertyRow({
 
 export function PropsCard({
   title,
+  icon,
+  iconClassName,
   collapsed,
   onToggleCollapse,
   children,
 }: {
   title: string;
+  /** 标题区图标（透传 SidebarPanel） */
+  icon?: React.ReactNode;
+  /** 图标颜色类，如 "text-accent-purple" */
+  iconClassName?: string;
   collapsed: boolean;
   onToggleCollapse: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <SidebarPanel title={title} collapsed={collapsed} onToggle={onToggleCollapse}>
-      {children}
-    </SidebarPanel>
-  );
-}
-
-// ============================================================================
-// SuggestionsCard
-// ============================================================================
-
-export interface SuggestionsItem {
-  label: string;
-  icon: ComponentType<LucideProps>;
-  color: string;
-}
-
-const DEFAULT_SUGGESTIONS: SuggestionsItem[] = [
-  { label: 'High priority', icon: AlertCircleIcon, color: 'text-accent-orange' },
-  { label: 'Tag: frontend', icon: TagIcon, color: 'text-accent-blue' },
-  { label: 'Assign me', icon: UserIcon, color: 'text-accent-purple' },
-  { label: 'Today', icon: CalendarIcon, color: 'text-accent-green' },
-];
-
-export function SuggestionsCard({
-  collapsed,
-  onToggle,
-  items = DEFAULT_SUGGESTIONS,
-  title = 'Suggestions',
-}: {
-  collapsed: boolean;
-  onToggle: () => void;
-  items?: SuggestionsItem[];
-  /** 面板标题（调用方传 i18n，默认英文 Suggestions） */
-  title?: string;
-}) {
-  return (
     <SidebarPanel
       title={title}
-      icon={<Sparkles className="size-3" />}
-      iconClassName="text-accent-purple"
+      icon={icon}
+      iconClassName={iconClassName}
       collapsed={collapsed}
-      onToggle={onToggle}
+      onToggle={onToggleCollapse}
     >
-      <div className="flex flex-col gap-0.5">
-        {items.map((it) => {
-          const Icon = it.icon;
-          return (
-            <button
-              key={it.label}
-              type="button"
-              className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            >
-              <Icon className={cn('size-3.5', it.color)} />
-              <span className="flex-1 text-left">{it.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {children}
     </SidebarPanel>
   );
 }

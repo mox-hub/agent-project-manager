@@ -8,6 +8,8 @@
     "moveDown": "下移",
     "confirm": "确认",
     "cancel": "取消",
+    "expand": "展开",
+    "collapse": "收起",
     "delete": "删除",
     "deleteConfirm": "确定要删除吗？此操作无法撤销。",
     "save": "保存",
@@ -2600,12 +2602,7 @@
     "labelsLabel": "标签",
     "dueDateLabel": "截止日期",
     "propertiesLabel": "属性",
-    "suggestionsLabel": "建议",
     "clearDueDate": "清除截止日期",
-    "sugCriticalSeverity": "严重级别",
-    "sugTagBug": "标签：bug",
-    "sugAssignMe": "指派给我",
-    "sugToday": "今天",
     "parentTaskLabel": "父任务"
   },
   "taskDetail": {
@@ -2649,14 +2646,9 @@
     "labelsLabel": "标签",
     "dueDateLabel": "截止日期",
     "propertiesLabel": "属性",
-    "suggestionsLabel": "建议",
     "externalSection": "外部集成",
     "executionSection": "执行",
     "clearDueDate": "清除截止日期",
-    "sugHighPriority": "高优先级",
-    "sugTagFrontend": "标签：frontend",
-    "sugAssignMe": "指派给我",
-    "sugToday": "今天",
     "execPending": "等待中",
     "execRunning": "执行中",
     "execCompleted": "已完成",
@@ -3825,6 +3817,20 @@
       "saveRequired": "Personal Access Token 为必填项",
       "saved": "GitHub 集成已保存",
       "saveFailed": "保存集成失败"
+    },
+    "panel": {
+      "repoPlaceholder": "例如 owner/repo",
+      "refresh": "刷新",
+      "newPr": "新建 PR",
+      "prTitleLabel": "PR 标题",
+      "headBranch": "Head 分支",
+      "baseBranch": "Base 分支",
+      "descOptional": "描述（可选）",
+      "descPlaceholder": "关联任务：...",
+      "submit": "提交",
+      "error": "无法连接到 GitHub，请检查仓库名与集成凭据",
+      "loading": "加载 PR 列表…",
+      "empty": "当前没有 Open PR"
     }
   },
   "integration": {

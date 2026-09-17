@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Bot, ListChecks, MoreHorizontal, Plus, ScrollText, UserRound } from 'lucide-react';
+import { Bot, ChevronDown, ListChecks, MoreHorizontal, Plus, ScrollText, UserRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -228,6 +228,8 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
 
   // 添加执行项小表单（标题必填 + 描述 + 执行人 + 预估工时）
   const [formOpen, setFormOpen] = useState(false);
+  // 分区收缩（与子任务/自定义字段分区同手势）
+  const [collapsed, setCollapsed] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [subjectId, setSubjectId] = useState('');
@@ -309,21 +311,45 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
             <span className="text-10 font-normal">({executions.length})</span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => setFormOpen((v) => !v)}
-          className={cn(
-            'inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
-            formOpen && 'text-accent-blue',
-          )}
-          title={formOpen ? t('common.cancel') : t('taskDetail.execItemsAdd')}
-        >
-          <Plus className={cn('size-3.5 transition-transform', formOpen && 'rotate-45')} />
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            className="inline-flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={collapsed ? t('common.expand') : t('common.collapse')}
+            aria-expanded={!collapsed}
+          >
+            <ChevronDown
+              className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCollapsed(false);
+              setFormOpen((v) => !v);
+            }}
+            className={cn(
+              'inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+              formOpen && 'text-accent-blue',
+            )}
+            title={formOpen ? t('common.cancel') : t('taskDetail.execItemsAdd')}
+          >
+            <Plus className={cn('size-3.5 transition-transform', formOpen && 'rotate-45')} />
+          </button>
+        </div>
       </div>
 
-      {/* 添加人工执行项表单 */}
-      {formOpen && (
+      {/* 分区内容：添加表单 + 执行项列表（grid-rows 动画展开 / 收起） */}
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows] duration-300 ease-out',
+          collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
+        )}
+      >
+        <div className="overflow-hidden">
+          {/* 添加人工执行项表单 */}
+          {formOpen && (
         <div className="mx-6 mb-2 flex flex-col gap-1.5 rounded-lg border border-border bg-muted/20 p-2">
           <Input
             autoFocus
@@ -377,32 +403,34 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
         </div>
       )}
 
-      {isLoading ? (
-        <div className="px-6 py-1.5 text-xs text-muted-foreground">
-          <Spinner className="mr-2 inline size-3 text-inherit" />
-          {t('taskDetail.execItemsLoading')}
+          {isLoading ? (
+            <div className="px-6 py-1.5 text-xs text-muted-foreground">
+              <Spinner className="mr-2 inline size-3 text-inherit" />
+              {t('taskDetail.execItemsLoading')}
+            </div>
+          ) : executions.length === 0 ? (
+            <div className="px-6 pb-2 text-xs text-muted-foreground">
+              {t('taskDetail.execItemsEmpty')}
+            </div>
+          ) : (
+            <div className="px-6 pb-3 flex flex-col gap-1">
+              {executions.map((execution) => (
+                <ExecutionItemRow
+                  key={execution.id}
+                  execution={execution}
+                  subjectName={
+                    execution.subjectId ? memberNameById.get(execution.subjectId) : undefined
+                  }
+                  disabled={busy || dispatchCli.isPending}
+                  onTransition={handleTransition}
+                  onDispatchCli={(execution) => dispatchCli.mutate(execution)}
+                  onViewLog={(execution) => setLogRunId(execution.id)}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      ) : executions.length === 0 ? (
-        <div className="px-6 pb-2 text-xs text-muted-foreground">
-          {t('taskDetail.execItemsEmpty')}
-        </div>
-      ) : (
-        <div className="px-6 pb-3 flex flex-col gap-1">
-          {executions.map((execution) => (
-            <ExecutionItemRow
-              key={execution.id}
-              execution={execution}
-              subjectName={
-                execution.subjectId ? memberNameById.get(execution.subjectId) : undefined
-              }
-              disabled={busy || dispatchCli.isPending}
-              onTransition={handleTransition}
-              onDispatchCli={(execution) => dispatchCli.mutate(execution)}
-              onViewLog={(execution) => setLogRunId(execution.id)}
-            />
-          ))}
-        </div>
-      )}
+      </div>
 
       {/* 执行记录弹窗：状态/派发详情/时间线/事件日志（复用执行中心 RunDetailsDialog） */}
       <RunDetailsDialog

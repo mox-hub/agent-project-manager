@@ -4,7 +4,7 @@
  * - Header: SubPageToolbar（面包屑 + prev/next 导航 + 收藏 + 侧栏开关）
  * - Main: 底框状态图标 + 标题(热编辑) + 元信息 + 描述(markdown 查看/热编辑)
  *         + Bug 专属信息 + 关联文档 + Activity 动态(评论/表情)
- * - Right (320px): 操作条(删除) + Properties(含 Severity) + Suggestions
+ * - Right (320px): 操作条(删除) + Properties(含 Severity) + 关联文档
  */
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
@@ -17,6 +17,7 @@ import {
   Flag,
   ListChecks,
   Pencil,
+  SlidersHorizontal,
   Tag,
   Trash2,
   User as UserIcon,
@@ -36,7 +37,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   CapsuleSelect, DateCapsuleField, AutoSizeTextarea,
-  PropertyRow, PropsCard, SuggestionsCard, MemberAvatar,
+  PropertyRow, PropsCard, MemberAvatar,
 } from '@/components/ui/property-panel';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
@@ -88,7 +89,6 @@ export function BugDetailPage() {
   const { t } = useTranslation();
 
   const [propsCollapsed, setPropsCollapsed] = useState(false);
-  const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [asideHidden, setAsideHidden] = useState(false);
@@ -446,6 +446,7 @@ export function BugDetailPage() {
 
           <PropsCard
             title={t('bugDetail.propertiesLabel')}
+            icon={<SlidersHorizontal className="size-3" />}
             collapsed={propsCollapsed}
             onToggleCollapse={() => setPropsCollapsed((v) => !v)}
           >
@@ -553,19 +554,7 @@ export function BugDetailPage() {
             </PropertyRow>
           </PropsCard>
 
-          <SuggestionsCard
-            title={t('bugDetail.suggestionsLabel')}
-            collapsed={suggestionsCollapsed}
-            onToggle={() => setSuggestionsCollapsed((v) => !v)}
-            items={[
-              { label: t('bugDetail.sugCriticalSeverity'), icon: Flag, color: 'text-accent-red' },
-              { label: t('bugDetail.sugTagBug'), icon: Tag, color: 'text-accent-red' },
-              { label: t('bugDetail.sugAssignMe'), icon: UserIcon, color: 'text-accent-purple' },
-              { label: t('bugDetail.sugToday'), icon: CalendarIcon, color: 'text-accent-green' },
-            ]}
-          />
-
-          {/* Linked documents（与 Properties/Suggestions 同一套 SidebarPanel 形态） */}
+          {/* Linked documents（与 Properties 同一套 SidebarPanel 形态） */}
           <LinkedDocsPanel issueId={bugId} />
         </RightSidebar>
       </div>

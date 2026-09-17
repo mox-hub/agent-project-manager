@@ -8,6 +8,8 @@
     "moveDown": "Move down",
     "confirm": "Confirm",
     "cancel": "Cancel",
+    "expand": "Expand",
+    "collapse": "Collapse",
     "delete": "Delete",
     "deleteConfirm": "Are you sure you want to delete? This action cannot be undone.",
     "save": "Save",
@@ -2600,12 +2602,7 @@
     "labelsLabel": "Labels",
     "dueDateLabel": "Due date",
     "propertiesLabel": "Properties",
-    "suggestionsLabel": "Suggestions",
     "clearDueDate": "Clear due date",
-    "sugCriticalSeverity": "Critical severity",
-    "sugTagBug": "Tag: bug",
-    "sugAssignMe": "Assign me",
-    "sugToday": "Today",
     "parentTaskLabel": "Parent task"
   },
   "taskDetail": {
@@ -2649,14 +2646,9 @@
     "labelsLabel": "Labels",
     "dueDateLabel": "Due date",
     "propertiesLabel": "Properties",
-    "suggestionsLabel": "Suggestions",
     "externalSection": "External",
     "executionSection": "Execution",
     "clearDueDate": "Clear due date",
-    "sugHighPriority": "High priority",
-    "sugTagFrontend": "Tag: frontend",
-    "sugAssignMe": "Assign me",
-    "sugToday": "Today",
     "execPending": "Pending",
     "execRunning": "Running",
     "execCompleted": "Completed",
@@ -3825,6 +3817,20 @@
       "saveRequired": "Personal Access Token is required",
       "saved": "GitHub integration saved",
       "saveFailed": "Failed to save integration"
+    },
+    "panel": {
+      "repoPlaceholder": "e.g. owner/repo",
+      "refresh": "Refresh",
+      "newPr": "New PR",
+      "prTitleLabel": "PR title",
+      "headBranch": "Head branch",
+      "baseBranch": "Base branch",
+      "descOptional": "Description (optional)",
+      "descPlaceholder": "Related issue: ...",
+      "submit": "Submit",
+      "error": "Cannot reach GitHub, please check the repo name and integration credentials",
+      "loading": "Loading pull requests…",
+      "empty": "No open pull requests"
     }
   },
   "integration": {
