@@ -61,6 +61,9 @@ export function useResolveDecision() {
           action: action === 'waive' ? 'reject' : action,
           reason,
           answer,
+          // CAP-C-04：回传决议者所见内容的指纹，服务端校验「所见即所批」——
+          // 决议期间内容被实质变更时服务端 409，禁止沿用旧印象的决议。
+          expectedFingerprint: decision.contentFingerprint,
         });
       }
       if (decision.kind === 'approval') {

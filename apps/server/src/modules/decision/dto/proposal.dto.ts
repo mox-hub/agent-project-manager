@@ -84,6 +84,15 @@ export class ResolveProposalDto {
   action: 'accept' | 'reject' | 'cancel';
 
   @ApiPropertyOptional({
+    description:
+      '决议者所见内容的指纹（列表/详情接口下发的 contentFingerprint）。' +
+      '携带时服务端与当前内容指纹强校验，不匹配即 409——内容在决议期间被实质变更，需刷新后重新决议（CAP-C-04）',
+  })
+  @IsOptional()
+  @IsString()
+  expectedFingerprint?: string;
+
+  @ApiPropertyOptional({
     description: '原因（reject 必填，留痕 resolutionNote）',
   })
   @IsOptional()
@@ -400,6 +409,18 @@ export class ProposalResponseDto {
     nullable: true,
   })
   expiresAt: string | null;
+
+  @ApiProperty({
+    description:
+      '当前实质内容指纹（sha256 hex，CAP-C-04）——决议时作为 expectedFingerprint 回传以校验所见即所批',
+  })
+  contentFingerprint: string;
+
+  @ApiProperty({
+    description:
+      '批准是否已过期（accepted 且当前内容指纹 ≠ 批准时指纹 approvedFingerprint 即 true，CAP-C-04）',
+  })
+  approvalStale: boolean;
 
   @ApiProperty({ description: '创建时间（ISO）' })
   createdAt: string;

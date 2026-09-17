@@ -835,6 +835,8 @@
     },
     "expiryIn": "Due {{time}}",
     "riskHigh": "High risk",
+    "approvalStaleChip": "Content changed · approval based on an old version",
+    "approvalStaleHint": "This decision card's content changed substantively after approval; the original approval is no longer trustworthy. Please re-confirm or re-propose.",
     "review": {
       "button": "Card Review",
       "buttonCount": "Card Review ({{count}})",

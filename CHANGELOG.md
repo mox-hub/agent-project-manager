@@ -35,6 +35,13 @@ tags: "changelog,release"
 | server | **审计结论绑定标准版本（CAP-B-02）**：`CompletenessAuditReport` 新增 `criteriaRevisions` 快照（审计时各标准 revision）；`evaluateAuditStaleness` 纯函数判定过期（修订/新增标准 → 过期，存量无快照不标过期）；审计门禁（audit-gate）对过期结论拦截要求重审；audit-report 接口与契约详情附带 `stale`/`staleCriteriaIds` | CAP-B-02 | `completeness-audit.service.spec.ts` 新增 8 用例（快照落库/过期判定/门禁拦截）；契约三件套 `contract:check` 零漂移 | 能力清单 CAP-B-02 卡 |
 | frontend | **修订/过期可见性**：标准行显示版本号（v2 起）与「标准已修订，证据待复核」黄色徽标；审计面板与详情页显示「审计结论已过期」徽标与重审入口横幅；i18n zh-CN/en 双语键同步 | CAP-B-01 / B-02 | 前端 acceptance 模块 Vitest 绿；`tsc -b` 零错误；i18n 键一致性校验通过 | — |
 
+### CAP-C-04 决策卡批准绑定内容指纹——实质变更后旧批准标记过期（feat/decision-approval-fingerprint，2026-09-18）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **决策提案批准绑定内容版本（CAP-C-04，批一 P0）**：`DecisionProposal` 新增 `approvedFingerprint`（批准 accept 时对实质内容 kind/title/detail/payload/projectId/issueId 做规范化序列化后 sha256 留痕）+ migration `20260918000000_add_decision_approved_fingerprint`；`resolve` 支持可选 `expectedFingerprint` 强校验（决议者所见指纹 ≠ 当前内容指纹即 409，拒绝沿用旧印象的决议，防 TOCTOU）；`GET /decisions/proposals/:id` 与收件箱投影下发 `contentFingerprint` + `approvalStale`（accepted 且当前指纹 ≠ 批准时指纹 → true；存量无指纹行不误报） | CAP-C-04 | decision 模块 Vitest 39 用例绿（指纹规范化稳定性 13 + proposal 21 + decision 5）；契约三件套零漂移 | 能力清单 CAP-C-04 卡（批一 P0） |
+| frontend | **过期批准徽标 + 决议指纹回传（CAP-C-04）**：决策卡壳 `approvalStale` 时头部渲染橙色醒目徽标「内容已变更 · 批准基于旧版本，请重新确认」（AlertTriangle + title 完整提示，双语 i18n 键 `decision.approvalStaleChip`/`decision.approvalStaleHint`）；建议类提案决议统一回传 `expectedFingerprint`（所见即所批） | CAP-C-04 | decision-card + decision 模块 Vitest 30 用例绿（含 stale 徽标渲染断言） | 能力清单 CAP-C-04 卡（批一 P0） |
+
 ### Fixed
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
