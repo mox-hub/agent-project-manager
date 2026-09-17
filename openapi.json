@@ -32622,6 +32622,290 @@
         ]
       }
     },
+    "/_api/documents/{documentId}/revision-impact": {
+      "get": {
+        "operationId": "RevisionImpactController_getStatus",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "description": "文档 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "修订影响状态",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevisionImpactStatusResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "文档不存在\n\n资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "需求修订影响状态（卡待决则返回 pending_decision；已确认则幂等应用待复核标记后返回 applied）",
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/_api/documents/{documentId}/revision-impact/analyze": {
+      "post": {
+        "operationId": "RevisionImpactController_analyze",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "description": "文档 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "分析结果（是否生成决策卡）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevisionImpactAnalyzeResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "文档不存在\n\n资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "手动触发一次需求修订影响分析（正常由文档更新事件自动触发；已有待决卡时跳过）",
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
     "/_api/documents/{documentId}/sections": {
       "get": {
         "operationId": "DocumentSectionController_getSections",
@@ -70406,6 +70690,81 @@
         "required": [
           "documentTaskLinkId",
           "memberId"
+        ]
+      },
+      "RevisionImpactStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "修订影响状态",
+            "enum": [
+              "none",
+              "pending_decision",
+              "applied",
+              "dismissed"
+            ]
+          },
+          "proposalId": {
+            "type": "string",
+            "description": "关联决策卡（提案）ID"
+          },
+          "issueCount": {
+            "type": "number",
+            "description": "受影响任务数"
+          },
+          "criteriaCount": {
+            "type": "number",
+            "description": "受影响验收标准数"
+          },
+          "analyzedAt": {
+            "type": "string",
+            "description": "影响分析时间（ISO）"
+          },
+          "appliedCount": {
+            "type": "number",
+            "description": "本次读取收敛时实际置为待复核的标准条数（仅 applied）"
+          },
+          "detail": {
+            "type": "string",
+            "description": "补充说明"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "RevisionImpactAnalyzeResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "分析结果",
+            "enum": [
+              "created",
+              "skipped",
+              "not_applicable"
+            ]
+          },
+          "proposalId": {
+            "type": "string",
+            "description": "决策卡（提案）ID（created/skipped 时）"
+          },
+          "issueCount": {
+            "type": "number",
+            "description": "受影响任务数"
+          },
+          "criteriaCount": {
+            "type": "number",
+            "description": "受影响验收标准数"
+          },
+          "reason": {
+            "type": "string",
+            "description": "未创建原因（not_applicable/skipped）"
+          }
+        },
+        "required": [
+          "status"
         ]
       },
       "DocumentSectionTreeNodeDto": {

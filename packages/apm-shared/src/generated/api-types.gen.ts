@@ -3839,6 +3839,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/documents/{documentId}/revision-impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 需求修订影响状态（卡待决则返回 pending_decision；已确认则幂等应用待复核标记后返回 applied） */
+        get: operations["RevisionImpactController_getStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/{documentId}/revision-impact/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 手动触发一次需求修订影响分析（正常由文档更新事件自动触发；已有待决卡时跳过） */
+        post: operations["RevisionImpactController_analyze"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/documents/{documentId}/sections": {
         parameters: {
             query?: never;
@@ -11954,6 +11988,40 @@ export interface components {
             memberId: string;
             /** @enum {string} */
             role?: "owner" | "contributor";
+        };
+        RevisionImpactStatusResponseDto: {
+            /**
+             * @description 修订影响状态
+             * @enum {string}
+             */
+            status: "none" | "pending_decision" | "applied" | "dismissed";
+            /** @description 关联决策卡（提案）ID */
+            proposalId?: string;
+            /** @description 受影响任务数 */
+            issueCount?: number;
+            /** @description 受影响验收标准数 */
+            criteriaCount?: number;
+            /** @description 影响分析时间（ISO） */
+            analyzedAt?: string;
+            /** @description 本次读取收敛时实际置为待复核的标准条数（仅 applied） */
+            appliedCount?: number;
+            /** @description 补充说明 */
+            detail?: string;
+        };
+        RevisionImpactAnalyzeResponseDto: {
+            /**
+             * @description 分析结果
+             * @enum {string}
+             */
+            status: "created" | "skipped" | "not_applicable";
+            /** @description 决策卡（提案）ID（created/skipped 时） */
+            proposalId?: string;
+            /** @description 受影响任务数 */
+            issueCount?: number;
+            /** @description 受影响验收标准数 */
+            criteriaCount?: number;
+            /** @description 未创建原因（not_applicable/skipped） */
+            reason?: string;
         };
         DocumentSectionTreeNodeDto: {
             /** @description 章节 ID */
@@ -33320,6 +33388,170 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    RevisionImpactController_getStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 文档 ID */
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 修订影响状态 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevisionImpactStatusResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /**
+             * @description 文档不存在
+             *
+             *     资源不存在
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    RevisionImpactController_analyze: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 文档 ID */
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 分析结果（是否生成决策卡） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevisionImpactAnalyzeResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /**
+             * @description 文档不存在
+             *
+             *     资源不存在
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
             };
         };
     };
