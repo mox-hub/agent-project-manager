@@ -156,3 +156,6 @@ scripts/check_icon_tools.py
 
 # 本地 AI 协作目录（不进版本库）
 .agents/
+.openbitfun/
+.worktrees/
+apps/frontend/node_modules/
