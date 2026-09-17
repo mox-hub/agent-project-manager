@@ -10366,6 +10366,10 @@ export interface components {
             order: number;
             /** @description 通过时间（ISO） */
             passedAt?: string | null;
+            /** @description 标准版本号：实质内容（content）修订时 +1，证据按此快照判定有效性 */
+            revision: number;
+            /** @description 最近一次实质修订时间（ISO） */
+            revisedAt?: string | null;
             /** @description 附加元数据 */
             metadata?: {
                 [key: string]: unknown;
@@ -10489,6 +10493,8 @@ export interface components {
             storageRef?: string | null;
             /** @description 提交者 ID */
             submittedBy: string;
+            /** @description 创建时快照的标准版本号（criteria.revision）；存量数据为 null，按 1（初版）处理 */
+            criteriaRevision?: number | null;
             /** @description 附加元数据 */
             metadata?: {
                 [key: string]: unknown;
@@ -10518,6 +10524,10 @@ export interface components {
             order: number;
             /** @description 通过时间（ISO） */
             passedAt?: string | null;
+            /** @description 标准版本号：实质内容（content）修订时 +1，证据按此快照判定有效性 */
+            revision: number;
+            /** @description 最近一次实质修订时间（ISO） */
+            revisedAt?: string | null;
             /** @description 附加元数据 */
             metadata?: {
                 [key: string]: unknown;
@@ -10565,6 +10575,10 @@ export interface components {
             suggestedItems: components["schemas"]["AuditItemDto"][];
             /** @description 已通过项列表 */
             passedItems: components["schemas"]["AuditItemDto"][];
+            /** @description 审计时各验收标准的 revision 快照（{ [criteriaId]: revision }）；CAP-B-02 结论绑定依据。存量报告为 null */
+            criteriaRevisions?: {
+                [key: string]: number;
+            } | null;
             /** @description 审计摘要 */
             summary?: string | null;
             /** @description 审计时间（ISO） */
@@ -10605,6 +10619,10 @@ export interface components {
             suggestedItems: components["schemas"]["AuditItemDto"][];
             /** @description 已通过项列表 */
             passedItems: components["schemas"]["AuditItemDto"][];
+            /** @description 审计时各验收标准的 revision 快照（{ [criteriaId]: revision }）；CAP-B-02 结论绑定依据。存量报告为 null */
+            criteriaRevisions?: {
+                [key: string]: number;
+            } | null;
             /** @description 审计摘要 */
             summary?: string | null;
             /** @description 审计时间（ISO） */
@@ -10617,6 +10635,10 @@ export interface components {
             checklist?: {
                 [key: string]: unknown;
             } | null;
+            /** @description CAP-B-02 审计是否过期：任一标准当前 revision ≠ 审计快照或审计后新增标准即为 true（存量报告无快照恒 false） */
+            stale: boolean;
+            /** @description 过期的标准 ID 列表（修订或审计后新增） */
+            staleCriteriaIds: string[];
         };
         ChecklistDto: {
             id: string;

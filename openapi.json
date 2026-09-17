@@ -66453,6 +66453,15 @@
             "nullable": true,
             "description": "通过时间（ISO）"
           },
+          "revision": {
+            "type": "number",
+            "description": "标准版本号：实质内容（content）修订时 +1，证据按此快照判定有效性"
+          },
+          "revisedAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "最近一次实质修订时间（ISO）"
+          },
           "metadata": {
             "type": "object",
             "description": "附加元数据",
@@ -66478,6 +66487,7 @@
           "status",
           "severity",
           "order",
+          "revision",
           "createdAt",
           "updatedAt"
         ]
@@ -66756,6 +66766,11 @@
             "type": "string",
             "description": "提交者 ID"
           },
+          "criteriaRevision": {
+            "type": "number",
+            "nullable": true,
+            "description": "创建时快照的标准版本号（criteria.revision）；存量数据为 null，按 1（初版）处理"
+          },
           "metadata": {
             "type": "object",
             "description": "附加元数据",
@@ -66823,6 +66838,15 @@
             "nullable": true,
             "description": "通过时间（ISO）"
           },
+          "revision": {
+            "type": "number",
+            "description": "标准版本号：实质内容（content）修订时 +1，证据按此快照判定有效性"
+          },
+          "revisedAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "最近一次实质修订时间（ISO）"
+          },
           "metadata": {
             "type": "object",
             "description": "附加元数据",
@@ -66855,6 +66879,7 @@
           "status",
           "severity",
           "order",
+          "revision",
           "createdAt",
           "updatedAt"
         ]
@@ -66950,6 +66975,14 @@
             "items": {
               "$ref": "#/components/schemas/AuditItemDto"
             }
+          },
+          "criteriaRevisions": {
+            "type": "object",
+            "description": "审计时各验收标准的 revision 快照（{ [criteriaId]: revision }）；CAP-B-02 结论绑定依据。存量报告为 null",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "nullable": true
           },
           "summary": {
             "type": "string",
@@ -67082,6 +67115,14 @@
               "$ref": "#/components/schemas/AuditItemDto"
             }
           },
+          "criteriaRevisions": {
+            "type": "object",
+            "description": "审计时各验收标准的 revision 快照（{ [criteriaId]: revision }）；CAP-B-02 结论绑定依据。存量报告为 null",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "nullable": true
+          },
           "summary": {
             "type": "string",
             "nullable": true,
@@ -67102,6 +67143,17 @@
             "description": "关联清单摘要 { id, name, techStack }",
             "additionalProperties": true,
             "nullable": true
+          },
+          "stale": {
+            "type": "boolean",
+            "description": "CAP-B-02 审计是否过期：任一标准当前 revision ≠ 审计快照或审计后新增标准即为 true（存量报告无快照恒 false）"
+          },
+          "staleCriteriaIds": {
+            "description": "过期的标准 ID 列表（修订或审计后新增）",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -67111,7 +67163,9 @@
           "blockedItems",
           "suggestedItems",
           "passedItems",
-          "auditDate"
+          "auditDate",
+          "stale",
+          "staleCriteriaIds"
         ]
       },
       "ChecklistDto": {
