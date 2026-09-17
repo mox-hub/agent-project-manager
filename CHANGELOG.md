@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### Added
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **执行前约束包·切片 1+2（批一 P0，需求重审 G4/G5 部分）**：①**依赖约束进派发门禁**——`assertDispatchGate` 后新增依赖校验（裁决 A：仅 `type='blocks'` 参与拦截；依赖达成 = 依赖工单状态 `StatusDefinition.isFinal` 终态口径，不硬编码状态名；定义缺失 fail-open 同关单守卫口径），阻断信息列出全部未完成依赖；建依赖补**环检测**（BFS 沿 dependsOn 边，自环/直环/间接环均拒绝）——「B 依赖 A 仍可先执行 B」的提示语义升级为约束语义；②**单活跃执行互斥**（裁决 B：同一 issue 已有活跃执行时拒绝新建并引导走「重新执行」血缘重试，活跃词表 `planned/in_progress/pending_approval/blocked` 与关单守卫一致，落 `createExecutionRun` 单一漏斗）。**范围说明**：执行级 cwd 难以无合入机制单独隔离（工作区根=用户真实项目目录，隔离目录会搁浅交付物——裁决 C 的后半句「成果合入另立」实锤），G5 隔离+成果合入归后续设计切片 | CAP-A-04 / CAP-B-03 / CAP-A-19 批 6 | issue/execution/cli-dispatch 三模块 spec 53 条绿（新增环检测 3 + 依赖门禁 5 + 互斥 3）；波及 spec（assistant 24 条）回归绿；type-check 0 错 | 能力清单 A-04/B-03/A-19 重审注记；测试映射矩阵 GAP-T-35 |
+
 ### CAP-C-04 决策卡批准绑定内容指纹——实质变更后旧批准标记过期（feat/decision-approval-fingerprint，2026-09-18）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
@@ -32,6 +38,7 @@ tags: "changelog,release"
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
 | --- | --- | --- | --- | --- |
+| frontend | **delivery 页路由补 DEV 门禁（需求重审 R5）**：mock 还原页（`data-mock`，自述 DEV ONLY）原在 `router.tsx` 无条件注册，生产构建可直达 `/app/delivery`，违反 frontend AGENTS.md §6.7 dev-only 页面规范（侧栏入口此前已 DEV 门禁，本次补齐路由侧） | 需求重审 R5 | tsc -b 0 错 + eslint 0 + pipeline-stages 回归 4 条绿 | 需求重审总纲 §八-5 裁决落地；能力清单重审注记 |
 | server | **验收证据守卫口径修复（需求重审 G2 / CAP-B-08 批一先行）**：`github-evidence.subscriber` 的 PR 事件守卫曾用旧状态名 `accepted/abandoned`，对 schema 现词表（`draft\|pending\|in_review\|passed\|failed\|waived`）永不命中——已裁决（终态 `passed/failed/waived`）验收的 `completionEvidence` 仍被迟到的 merged/closed 事件改写（「通过后证据被改写」，可信度硬伤）。守卫改为终态集合拦截，活跃三态不误伤 | CAP-B-08 | subscriber 单测 15 条绿（含终态三元组拦截回归 + 活跃态不误伤各 3 条）；type-check（build 配置）0 错 | 能力清单 CAP-B-08 重审注记；测试映射矩阵 GAP-T-34 |
 
 ## [0.7.0] - 2026-09-17
