@@ -352,10 +352,15 @@ export const aiHubApi = {
 
   /**
    * 重新执行失败/阻塞执行（兜底批 5）：服务端克隆新建一条执行
-   * （retryOfId 血缘指回原执行）并走同一派发链，原执行终态留痕不动
+   * （retryOfId 血缘指回原执行）并走同一派发链，原执行终态留痕不动。
+   * payload.diagnosis（批一 P0 切片 3，裁决 D）：「按诊断重试」时把失败
+   * 诊断结论随血缘写入新执行的 retryContext
    */
-  retryExecution: (executionRunId: string) =>
-    api.post<DispatchToCliResponse>(`/ai/execution-runs/${executionRunId}/retry`),
+  retryExecution: (executionRunId: string, payload?: { diagnosis?: string }) =>
+    api.post<DispatchToCliResponse>(
+      `/ai/execution-runs/${executionRunId}/retry`,
+      payload,
+    ),
 
   cancelExecution: (executionRunId: string) =>
     api.post<{ success: boolean }>(`/ai/execution-runs/${executionRunId}/cancel`),
