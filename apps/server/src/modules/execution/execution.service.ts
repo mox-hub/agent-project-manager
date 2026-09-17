@@ -113,6 +113,26 @@ export class ExecutionService {
       );
     }
 
+    // 单活跃约束（需求重审 G5，2026-09-17 裁决 B）：同一 issue 仅允许一个
+    // 活跃执行——已有则拒绝新建并引导走「重新执行」（批 5 血缘重试）或先
+    // 取消旧执行。活跃词表与 issue.service 关单守卫一致。
+    if (dto.issueId) {
+      const active = await this.prisma.execution.findFirst({
+        where: {
+          issueId: dto.issueId,
+          status: {
+            in: ['planned', 'in_progress', 'pending_approval', 'blocked'],
+          },
+        },
+        select: { id: true, title: true, status: true },
+      });
+      if (active) {
+        throw new BadRequestException(
+          `该工单已有活跃执行（${active.title ?? active.id}，状态：${active.status}），暂不可新建：请等待其完成，或取消后使用「重新执行」（保留失败现场与血缘）`,
+        );
+      }
+    }
+
     const run = await this.prisma.execution.create({
       data: {
         projectId: dto.projectId,
