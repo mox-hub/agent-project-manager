@@ -165,6 +165,7 @@ export class CliDispatchService {
   async retryExecution(
     executionRunId: string,
     userId: string,
+    diagnosis?: string,
   ): Promise<DispatchResult> {
     const original = await this.prisma.execution.findUnique({
       where: { id: executionRunId },
@@ -198,6 +199,9 @@ export class CliDispatchService {
       originalStatus: original.status,
       originalError: original.errorDetail ?? null,
       originalDispatchError: originalInput.dispatchError ?? null,
+      // 失败诊断结论随血缘带入新执行（批一 P0 切片 3，裁决 D）：
+      // 「按诊断重试」时由前端传入，供下次派发上下文参考
+      ...(diagnosis ? { diagnosis } : {}),
       retriedAt: new Date().toISOString(),
       retriedBy: userId,
     };

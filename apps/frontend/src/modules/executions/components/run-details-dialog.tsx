@@ -38,6 +38,7 @@ import {
   type TriggerSource,
 } from './run-details-format';
 import { RunEventList } from './run-event-list';
+import { RunDiagnosisSection } from './run-diagnosis-section';
 import { RunInfoPanel } from './run-info-panel';
 import { RunTimeline } from './run-timeline';
 import { StepDetailPanel } from './step-detail-panel';
@@ -280,6 +281,14 @@ export function RunDetailsDialog({
                 </p>
               </div>
             ) : null}
+
+            {/* 失败诊断区（批一 P0 切片 3）：机械归类 + 按需 AI 诊断 + 按诊断重试 */}
+            <RunDiagnosisSection
+              runId={data.id}
+              status={data.status}
+              classification={data.failureClassification ?? null}
+              projectId={data.projectId ?? null}
+            />
 
             {hasTimeline && windowStart && windowEnd ? (
               <div className="shrink-0 border-b px-4 py-3">

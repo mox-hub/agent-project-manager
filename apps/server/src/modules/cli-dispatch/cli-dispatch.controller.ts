@@ -30,6 +30,7 @@ import {
   DetectedCliProvidersResponseDto,
   ExecutionStatusResponseDto,
 } from './dto/cli-provider-response.dto';
+import { RetryExecutionDto } from './dto/retry-execution.dto';
 
 class DispatchCliDto {
   @IsOptional()
@@ -168,8 +169,13 @@ export class CliDispatchController {
   async retryExecution(
     @Param('id') executionRunId: string,
     @CurrentUser() user: any,
+    @Body() dto?: RetryExecutionDto,
   ) {
-    return this.dispatchService.retryExecution(executionRunId, user.id);
+    return this.dispatchService.retryExecution(
+      executionRunId,
+      user.id,
+      dto?.diagnosis,
+    );
   }
 
   @Get('execution-runs/:id/status')
