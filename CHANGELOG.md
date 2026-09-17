@@ -21,6 +21,14 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-B-01 验收标准版本化 + CAP-B-02 审计结论绑定标准版本（feat/acceptance-criteria-revision，2026-09-18）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **验收标准版本化（CAP-B-01）**：`AcceptanceCriteria` 新增 `revision`/`revisedAt`，实质内容（content）修订即 revision+1、status 重置 pending、passedAt 清空；`AcceptanceEvidence` 新增 `criteriaRevision` 创建时快照（存量 null 按 1 处理），证据有效性判定 `isEvidenceCurrent` 单一口径；接收聚合校验（accept-completion）新增 criteriaEvidence 门禁——每条标准至少一条同版本有效证据，修订后旧证据转「待复核」 | CAP-B-01 | `acceptance-criteria.service.spec.ts` + `acceptance.service.spec.ts` 共 10 用例；acceptance 域 Vitest 62/62 绿 | 能力清单 CAP-B-01 卡 |
+| server | **审计结论绑定标准版本（CAP-B-02）**：`CompletenessAuditReport` 新增 `criteriaRevisions` 快照（审计时各标准 revision）；`evaluateAuditStaleness` 纯函数判定过期（修订/新增标准 → 过期，存量无快照不标过期）；审计门禁（audit-gate）对过期结论拦截要求重审；audit-report 接口与契约详情附带 `stale`/`staleCriteriaIds` | CAP-B-02 | `completeness-audit.service.spec.ts` 新增 8 用例（快照落库/过期判定/门禁拦截）；契约三件套 `contract:check` 零漂移 | 能力清单 CAP-B-02 卡 |
+| frontend | **修订/过期可见性**：标准行显示版本号（v2 起）与「标准已修订，证据待复核」黄色徽标；审计面板与详情页显示「审计结论已过期」徽标与重审入口横幅；i18n zh-CN/en 双语键同步 | CAP-B-01 / B-02 | 前端 acceptance 模块 Vitest 绿；`tsc -b` 零错误；i18n 键一致性校验通过 | — |
+
 ## [0.7.0] - 2026-09-17
 
 ### v0.7.0 发版总览——AI 表面实时化 + 统一创建面板双界面 + 执行侧兜底闭环 + 决策卡实体手卡
