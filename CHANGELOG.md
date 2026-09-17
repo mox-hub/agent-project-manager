@@ -21,6 +21,22 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-17
+
+### v0.7.0 发版总览——AI 表面实时化 + 统一创建面板双界面 + 执行侧兜底闭环 + 决策卡实体手卡
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend · server | **AI 表面实时化六切片（CAP-C-08）**：事件链三层收口（单源注册表+面级投影+治理族转发）→ 工位卡/泳道/待办全接真数据 → 顶栏叙述层（模型只翻译不算数）→ 代理态就地收敛（看到卡住→就地问→就地拍板）→ 回放演示（剧本快照驱动，决策卡只读预览语义）→ 实况演示次序收口 | CAP-C-08 | 各切片 Vitest 全绿；事件名单源治理脚本化 | 能力清单 CAP-C-08 卡 |
+| frontend | **统一创建面板双界面（CAP-A-18 七批）**：手动 × AI 代理平级切换 + Linear 沉浸流式 + 模式穿梭 + AI 在场感知 + 实体模板（task/bug/doc/project）+ i18n 全量清偿 + GAP-T-32 面板回归清偿；面板迁位 shared 收编 property-panel 原子 | CAP-A-18 | create-dialog 回归 9 条 + create-draft 后端 3 条 + 页面测试全绿 | 能力清单 CAP-A-18 卡（done 候实机验收） |
+| server · frontend | **执行侧兜底改造（CAP-A-19 四批+批 5）**：失败感知通知 + 悬挂对账 watchdog（TTL/阈值 env 可配）+ 验收标准供给侧（AI 代写→人确认→派发门禁阻断）+ 一致性清理 + **失败执行重试语义升级**（`POST /ai/execution-runs/:id/retry` 克隆新建执行 + `retryOfId` 血缘，失败现场留痕不丢） | CAP-A-19 | cli-dispatch e2e 7/7（含 retry 3 用例）+ 8 套件 75 用例 + 49 前端用例绿；契约三件套同步 | 能力清单 CAP-A-19 卡 + 方案文档 |
+| frontend | **快捷键体系（CAP-A-17）**：全局键位注册表单一真相源 + 设置页录制自定义 + 冲突检测 + 四处散落监听收编 + help 假键清除 | CAP-A-17 | hotkey-utils 12 条 + store 8 条 + shortcuts-section 6 条 | 测试映射矩阵 GAP-T-31 清偿 |
+| frontend | **决策卡片实体手卡**：实体质感重构 + 3D 翻面/卡片堆叠/滑走动效 + 全屏悬浮卡片堆批阅模式 + 排版禁折行修复 | 决策卡文法 | 全量 Vitest 绿（含批阅回归） | 决策卡片系统册 |
+| frontend | **文档详情面**：frontmatter 属性面板 Obsidian 化重建（行内编辑/属性增删/标签双向镜像，绕过 gray-matter 4.0.3 状态 bug）+ Chapter Scrubber 正文左缘刻度导航 + 目录客户端同源提取修复恒空 | CAP-A-06 增强 | mdx-frontmatter +10 条 / tag-mirror 5 条 / properties-panel 9 条 | GAP-T-33 清偿 |
+| frontend | **导航与类型管理**：研发生命周期九站改六站 + 管道项目聚焦联动（CAP-A-15）+ 类型管理面重设计与内置类型落地（CAP-A-04）+ 驱动型发版三期（CAP-K-03 Release 升级交付执行器）+ 证据回流二期收口（CAP-B-08） | CAP-A-15 / A-04 / K-03 / B-08 | 各批次门禁全绿 | 能力清单各卡 |
+| frontend | **UI 基建三件**：颜色/头像选择器自建收编（ColorPicker 新建 + AvatarPickerField Popover 化 + 消费方全替换）+ 空态三分场景系统（EmptyState page/card + 13 页落地）+ reui Stepper/Sortable/IconStack 导入 | UI 组件基建 | 治理脚本全绿 + 相关单测绿 | COMPONENTS.md 各行 |
+| desktop | 桌面壳（CAP-A-14）v0.6.1/v0.6.2 已随后单独发版（Electron 正式路径 ADR-014），本版归档其 CHANGELOG 账目 | CAP-A-14 | CI 三轮打包验证 | ADR-014 |
+
 ### CAP-C-08 AI 表面 S1：事件链三层收口 + 设计契约换血（feat/ai-surface-realtime，2026-09-14）
 
 > 真实瓶颈勘定（本卡最重的一条发现）：**前端白名单不是瓶颈，WS 网关才是**。`gateways/events.gateway.ts` 此前只转发 8 族事件（`ai.stream` / `ai.workflow.update` / `task.*` / `project.*` / `notification.*` / `runtime.dispatch.changed` / `linear.*`），`execution.*` / `approval.*` / `acceptance.*` / `release.*` **一条都没出网关**——故「加白名单即可开会话」的方案会得到静默失效的订阅。已在网关注释就地澄清，避免后人重犯。
@@ -327,6 +343,8 @@ tags: "changelog,release"
 | server | **AIUsageLog 接 workflow llm 步骤（CAP-A-11 余留）**：compiler buildLlmStep 捕获 Mastra execute 的 runId（=AIWorkflowRun.id，零结构改动）归因 AIUsageLog.workflowRunId；generateText usage → promptTokens/completionTokens/totalTokens，UsagePricingService 估价 estimatedCost，responseMetadata 记 {kind:'workflow', stepId}；记账失败仅 warn 不阻断执行；注入 UsagePricingService（AiHubModule 已导出，模块装配零变更） | CAP-A-11 / 双轨成本 | workflow-compiler spec 9 用例全绿（记账载荷/失败不阻断） | — |
 | server · frontend | **GAP-T-14 workflow 画布测试赤字清偿**：编辑回写（saveEditing definition 组装 + server updateDefinition 校验/version 自增）、产品动作节点文法（parseWorkflowDefinition action 分支 + workflow-actions requireParams）、模板库 upsert（onModuleInit 遍历断言）四块补回归 | CAP-A-12 / GAP-T-14 | 新增 spec 全绿（详见提交） | 测试映射矩阵 GAP-T-14 状态更新 |
 
+## [0.6.2] - 2026-09-12
+
 ### v0.6.2——桌面壳安装包三调整 + 分发与生命周期强化（CAP-A-14，feat/desktop-electron-spike）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
@@ -337,6 +355,8 @@ tags: "changelog,release"
 | desktop · frontend | **P2 打磨**：应用菜单（Alt 唤出，关于/检查更新/重载/缩放/日志目录）；日志轮转（5MB×3 份）；优雅关闭（utility postMessage `apm:shutdown` → server/cli parentPort 桥接 shutdown 钩子，3s 宽限强杀兜底；dev/手动 CLI 无 parentPort 不挂载）；电源事件（唤醒探活失败自动重启服务组；会话结束兜底清理）；系统通知桥（`notification.created` 桌面模式转发主进程原生通知，web 保持浏览器横幅）；深链 `apm://<内部路径>`（协议注册 + second-instance/冷启动转发 + preload 桥 + DesktopGate 消费） | CAP-A-14 / ADR-015 | desktop/cli tsc、server lint、frontend 22 测试全绿；e2e 复跑 ALL PASS | README 生命周期契约表扩 P2 行 |
 | desktop | **包体瘦身 242MB → 188MB（-22%）**：bundle 路线证伪弃用；定向剪除 Prisma CLI(58MB)+engines(77MB)（实测剪后 server 启动/健康/DB 读写全正常）；**封死数据泄露**——整目录拷 prisma/ 曾把开发者 dev.db+wal+bak（22MB）打进安装包，改白名单拷贝；打包时预生成 `default-template.db`（首启拷贝建库 40s→秒级，壳侧 `restoreDefaultDbIfNeeded`，dev 回退 db push）；strip 挪至 generate 后覆盖生成产物 | CAP-A-14 / ADR-015 补记 2 | 真包 `desktop:pack` 全链跑通 188MB；新管线产物启动冒烟（health 200/注册 201/JWT 签发）全过 | 决策日志 ADR-015 补记 2；README 建库契约更新 |
 | ci | **发布管线接线（取代 Tauri 版 release.yml）**：`desktop-release.yml`——tag `v*` 触发 windows 构建（质量前置 type-check/lint/单测 → pack:resources → electron-builder `--publish always`）→ GitHub Release **draft**（exe + blockmap + latest.yml）→ 人工确认 Publish 防误发 → 已装用户 electron-updater 静默拉取；workflow_dispatch dry_run 仅构建留档 | CAP-A-14 / ADR-015 | 管线设计经 188MB 真包全链本地验证；CI 侧待首 tag 实跑 | 本条目；ADR-015 补记（发布端闭环） |
+
+## [0.6.1] - 2026-09-12
 
 ### CAP-A-14 桌面体验五切片——初始化向导/登录缓存/启动屏/守护进程托管/调试模式（v0.6.1）
 
