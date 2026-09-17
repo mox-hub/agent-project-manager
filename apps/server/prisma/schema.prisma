@@ -2248,6 +2248,10 @@ model DecisionProposal {
   resolution   Json?
   resolvedBy   String?
   resolvedAt   DateTime?
+  /// 批准（accept）时的实质内容指纹（sha256 hex，CAP-C-04）：
+  /// 当前内容指纹 ≠ 本字段 → 批准过期（内容已实质变更，旧批准不再可信）。
+  /// 存量已决议行（本列新增前批准）为 null，无法判定版本，视为不适用（不误报过期）。
+  approvedFingerprint String?
   expiresAt    DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

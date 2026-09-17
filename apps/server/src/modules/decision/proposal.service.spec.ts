@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { ProposalService } from './proposal.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { computeProposalFingerprint } from './decision-fingerprint';
 
 describe('ProposalService', () => {
   let service: ProposalService;
@@ -490,6 +491,149 @@ describe('ProposalService', () => {
       expect(
         mockPrismaService.aIWorkflowDefinition.update,
       ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('CAP-C-04：批准绑定内容指纹', () => {
+    const fingerprintProposal = {
+      id: 'pr-fp-1',
+      kind: 'spend',
+      status: 'pending',
+      projectId: 'p1',
+      issueId: null,
+      title: '追加预算？',
+      detail: null,
+      payload: { budgetType: 'tokens', newValue: 1000 },
+    };
+
+    it('accept 落库 approvedFingerprint = 批准时内容指纹；reject 不落', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        fingerprintProposal,
+      );
+      mockPrismaService.project.findUnique.mockResolvedValue({
+        id: 'p1',
+        config: {},
+      });
+      mockPrismaService.project.update.mockResolvedValue({ id: 'p1' });
+      mockPrismaService.decisionProposal.update.mockImplementation(
+        (args: { where: { id: string }; data: Record<string, unknown> }) =>
+          Promise.resolve({ id: args.where.id, ...args.data }),
+      );
+
+      await service.resolve('pr-fp-1', { action: 'accept' }, 'u-1');
+
+      const acceptData = mockPrismaService.decisionProposal.update.mock
+        .calls[0][0].data as Record<string, unknown>;
+      expect(acceptData.approvedFingerprint).toBe(
+        computeProposalFingerprint(fingerprintProposal),
+      );
+
+      mockPrismaService.decisionProposal.update.mockClear();
+      await service.resolve(
+        'pr-fp-1',
+        { action: 'reject', reason: '不批' },
+        'u-1',
+      );
+      const rejectData = mockPrismaService.decisionProposal.update.mock
+        .calls[0][0].data as Record<string, unknown>;
+      expect(rejectData.approvedFingerprint).toBeUndefined();
+    });
+
+    it('expectedFingerprint 与当前内容失配 → 409，不执行 applier 不落决议', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        fingerprintProposal,
+      );
+
+      await expect(
+        service.resolve(
+          'pr-fp-1',
+          { action: 'accept', expectedFingerprint: '0'.repeat(64) },
+          'u-1',
+        ),
+      ).rejects.toThrow(ConflictException);
+      // 副作用与决议均未发生：批准没有被沿用到已变更的内容上
+      expect(mockPrismaService.project.update).not.toHaveBeenCalled();
+      expect(mockPrismaService.decisionProposal.update).not.toHaveBeenCalled();
+    });
+
+    it('expectedFingerprint 与当前内容一致 → 正常决议', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        fingerprintProposal,
+      );
+      mockPrismaService.project.findUnique.mockResolvedValue({
+        id: 'p1',
+        config: {},
+      });
+      mockPrismaService.project.update.mockResolvedValue({ id: 'p1' });
+      mockPrismaService.decisionProposal.update.mockResolvedValue({
+        ...fingerprintProposal,
+        status: 'accepted',
+      });
+
+      await expect(
+        service.resolve(
+          'pr-fp-1',
+          {
+            action: 'accept',
+            expectedFingerprint:
+              computeProposalFingerprint(fingerprintProposal),
+          },
+          'u-1',
+        ),
+      ).resolves.toMatchObject({ status: 'accepted' });
+    });
+  });
+
+  describe('get（CAP-C-04：内容指纹与批准过期态）', () => {
+    const proposal = {
+      id: 'pr-get-1',
+      kind: 'spend',
+      status: 'pending',
+      projectId: 'p1',
+      issueId: null,
+      title: '追加预算？',
+      detail: null,
+      payload: { budgetType: 'tokens', newValue: 1000 },
+      approvedFingerprint: null,
+      resolution: null,
+    };
+
+    it('pending 提案：contentFingerprint 实时计算，approvalStale=false', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(proposal);
+
+      const result = await service.get('pr-get-1');
+
+      expect(result.contentFingerprint).toBe(
+        computeProposalFingerprint(proposal),
+      );
+      expect(result.approvalStale).toBe(false);
+    });
+
+    it('accepted 且内容已变更：approvalStale=true（旧批准不再可信）', async () => {
+      const accepted = {
+        ...proposal,
+        status: 'accepted',
+        approvedFingerprint: computeProposalFingerprint(proposal),
+      };
+      // 模拟批准后内容被实质变更：当前 title 与批准时不同
+      const mutated = { ...accepted, title: '追加预算（改）？' };
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(mutated);
+
+      const result = await service.get('pr-get-1');
+
+      expect(result.approvalStale).toBe(true);
+    });
+
+    it('存量已决议行（approvedFingerprint=null）不误报过期', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue({
+        ...proposal,
+        status: 'accepted',
+        title: '批准后被改过的标题',
+      });
+
+      const result = await service.get('pr-get-1');
+
+      expect(result.approvalStale).toBe(false);
     });
   });
 });

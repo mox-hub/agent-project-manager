@@ -17,6 +17,11 @@ import {
   WorkflowDefinitionError,
 } from '@/modules/workflow/workflow.definition';
 import { CreateProposalDto, ResolveProposalDto } from './dto/proposal.dto';
+import {
+  assertFingerprintMatch,
+  computeProposalFingerprint,
+  isApprovalStale,
+} from './decision-fingerprint';
 
 /**
  * 建议类决策卡（DecisionProposal）闭环：
@@ -115,13 +120,18 @@ export class ProposalService {
     return proposal;
   }
 
-  /** 提案方（AI 工具）轮询取回决议与答案 */
+  /** 提案方（AI 工具）轮询取回决议与答案（附内容指纹与批准过期态，CAP-C-04） */
   async get(id: string) {
     const proposal = await this.prisma.decisionProposal.findUnique({
       where: { id },
     });
     if (!proposal) throw new NotFoundException(`Proposal ${id} not found`);
-    return proposal;
+    const contentFingerprint = computeProposalFingerprint(proposal);
+    return {
+      ...proposal,
+      contentFingerprint,
+      approvalStale: isApprovalStale(proposal, contentFingerprint),
+    };
   }
 
   async resolve(id: string, dto: ResolveProposalDto, userId: string) {
@@ -139,6 +149,11 @@ export class ProposalService {
     if (dto.action === 'reject' && !dto.reason?.trim()) {
       throw new BadRequestException('reject reason is required');
     }
+    // CAP-C-04：决议者携带了其所见内容的指纹时强校验——内容在决议期间被
+    // 实质变更（决议者看到的是旧版本）即 409，禁止沿用旧印象的决议。
+    // 未携带（旧客户端 / AI 工具直连）不拦截，由批准留痕 + stale 判定兜底。
+    const currentFingerprint = computeProposalFingerprint(proposal);
+    assertFingerprintMatch(dto.expectedFingerprint, currentFingerprint);
 
     const resolution: Record<string, unknown> = {
       action: dto.action,
@@ -165,6 +180,11 @@ export class ProposalService {
         resolution: resolution as Prisma.InputJsonValue,
         resolvedBy: userId,
         resolvedAt: new Date(),
+        // CAP-C-04：accept 是批准动作——留痕批准时的内容指纹，
+        // 内容此后实质变更即由 isApprovalStale 判定「批准过期」。
+        ...(dto.action === 'accept'
+          ? { approvedFingerprint: currentFingerprint }
+          : {}),
       },
     });
     // gate 驳回留痕（退回率口径；旁路失败不影响决议主流程）
