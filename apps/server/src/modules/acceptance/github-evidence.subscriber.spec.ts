@@ -126,7 +126,7 @@ describe('GithubEvidenceSubscriber.onPullRequestUpdated', () => {
     expect(prisma.acceptance.update).not.toHaveBeenCalled();
   });
 
-  it('未知状态 / 无关联 / 非 pr 契约 / 已裁决 均跳过', async () => {
+  it('未知状态 / 无关联 / 非 pr 契约 均跳过', async () => {
     const { prisma, subscriber } = makeSubscriber();
 
     await subscriber.onPullRequestUpdated({ id: 'rpr1', state: 'weird' });
@@ -151,15 +151,56 @@ describe('GithubEvidenceSubscriber.onPullRequestUpdated', () => {
     });
     await subscriber.onPullRequestUpdated({ id: 'rpr1', state: 'merged' });
     expect(prisma.acceptance.update).not.toHaveBeenCalled();
-
-    prisma.acceptance.findUnique.mockResolvedValue({
-      completionType: 'pr',
-      status: 'accepted',
-      completionEvidence: null,
-    });
-    await subscriber.onPullRequestUpdated({ id: 'rpr1', state: 'merged' });
-    expect(prisma.acceptance.update).not.toHaveBeenCalled();
   });
+
+  // 回归（需求重审 G2，2026-09-17）：守卫曾用旧状态名 accepted/abandoned，
+  // 对 schema 现词表（passed/failed/waived）永不命中——已裁决验收的
+  // completionEvidence 仍被迟到的 PR 终态事件改写。守卫口径必须与
+  // schema 状态词表一致（终态三元组逐一拦截）。
+  it.each(['passed', 'failed', 'waived'])(
+    '已裁决（%s）验收不回写 completionEvidence——终态守卫回归',
+    async (status) => {
+      const { prisma, subscriber } = makeSubscriber();
+      prisma.remotePullRequest.findUnique.mockResolvedValue({
+        acceptanceId: 'acc1',
+        htmlUrl: 'https://github.com/o/r/pull/7',
+        number: 7,
+        repoFullName: 'o/r',
+      });
+      prisma.acceptance.findUnique.mockResolvedValue({
+        completionType: 'pr',
+        status,
+        completionEvidence: { state: 'open', prUrl: 'https://x' },
+      });
+
+      await subscriber.onPullRequestUpdated({ id: 'rpr1', state: 'merged' });
+
+      expect(prisma.acceptance.update).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['draft', 'pending', 'in_review'])(
+    '活跃态（%s）验收仍正常回写（守卫不误伤）',
+    async (status) => {
+      const { prisma, subscriber } = makeSubscriber();
+      prisma.remotePullRequest.findUnique.mockResolvedValue({
+        acceptanceId: 'acc1',
+        htmlUrl: 'https://github.com/o/r/pull/7',
+        number: 7,
+        repoFullName: 'o/r',
+      });
+      prisma.acceptance.findUnique.mockResolvedValue({
+        completionType: 'pr',
+        status,
+        completionEvidence: null,
+      });
+
+      await subscriber.onPullRequestUpdated({ id: 'rpr1', state: 'merged' });
+
+      expect(prisma.acceptance.update).toHaveBeenCalledTimes(1);
+      expect(prisma.acceptance.update.mock.calls[0][0].where.id).toBe('acc1');
+    },
+  );
 });
 
 describe('GithubEvidenceSubscriber.onCheckRunCompleted', () => {
