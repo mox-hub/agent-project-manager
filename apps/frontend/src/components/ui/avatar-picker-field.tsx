@@ -1,8 +1,26 @@
+"use client"
+
 import * as React from "react"
 import Avvvatars from "avvvatars-react"
+import { PlusIcon, RefreshCwIcon } from "lucide-react"
 import NiceAvatar, { genConfig } from "react-nice-avatar"
 
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+
+/*
+ * Avatar Picker Field —— 照 coss DatePicker 组合范式升级的弹层头像选择组合件
+ * （触发器显示当前头像；弹层 = 内置网格 + 随机生成 + 自定义 URL 预览 + 清除）。
+ * 内置头像按双表面分工：人类同事 react-nice-avatar 插画肖像；AI 同事 avvvatars 算法几何。
+ * `nice-avatar:` / `avvvatars:` 前缀 url 对任意种子字符串确定性出图，「随机生成」
+ * 依赖该性质落库随机种子（无需枚举清单）。
+ */
 
 /** 内置头像清单（人类同事: react-nice-avatar 插画肖像；AI 同事: avvvatars 算法几何） */
 export const BUILT_IN_AVATARS: Array<{
@@ -28,6 +46,42 @@ export const BUILT_IN_AVATARS: Array<{
   { key: "av-guardian", url: "avvvatars:guardian", label: "AI: 安全审计 (@guardian)", kind: "ai" },
 ]
 
+/** 按协议前缀渲染单枚头像（内置清单与随机种子共用） */
+function AvatarGlyph({ url, label }: { url: string; label?: string }) {
+  if (url.startsWith("nice-avatar:")) {
+    return (
+      <div
+        role="img"
+        aria-label={label}
+        className="size-full overflow-hidden flex items-center justify-center"
+      >
+        <NiceAvatar
+          style={{ width: "100%", height: "100%" }}
+          shape="circle"
+          {...genConfig(url.replace("nice-avatar:", ""))}
+        />
+      </div>
+    )
+  }
+  if (url.startsWith("avvvatars:")) {
+    return (
+      <div
+        role="img"
+        aria-label={label}
+        className="size-full overflow-hidden flex items-center justify-center"
+      >
+        <Avvvatars
+          value={url.replace("avvvatars:", "")}
+          size={36}
+          style={url.includes("character") ? "character" : "shape"}
+          shadow={false}
+        />
+      </div>
+    )
+  }
+  return <img src={url} alt={label ?? ""} className="size-full object-cover" />
+}
+
 function AvatarPickerField({
   value,
   onValueChange,
@@ -41,82 +95,130 @@ function AvatarPickerField({
   className?: string
   disabled?: boolean
 }) {
+  const [open, setOpen] = React.useState(false)
+  const [urlDraft, setUrlDraft] = React.useState("")
+
+  React.useEffect(() => {
+    setUrlDraft("")
+  }, [open, value])
+
   const options = BUILT_IN_AVATARS.filter(
     (a) => memberType === "all" || a.kind === memberType,
   )
   const isBuiltIn = Boolean(value && BUILT_IN_AVATARS.some((a) => a.url === value))
+  const selectedLabel = BUILT_IN_AVATARS.find((a) => a.url === value)?.label
+
+  const rollRandom = () => {
+    const seed = Math.random().toString(36).slice(2, 8)
+    onValueChange(
+      memberType === "ai" ? `avvvatars:gen-${seed}` : `nice-avatar:gen-${seed}`,
+    )
+  }
 
   return (
-    <div data-slot="avatar-picker-field" className={cn("space-y-2", className)}>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((avatar) => {
-          const selected = value === avatar.url
-          return (
-            <button
-              key={avatar.key}
+    <div data-slot="avatar-picker-field" className={cn("flex items-center gap-2", className)}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger
+          render={
+            <Button
               type="button"
-              title={avatar.label}
+              variant="outline"
               disabled={disabled}
-              onClick={() => onValueChange(selected ? null : avatar.url)}
+              title={selectedLabel ?? (value || "选择头像")}
+              data-slot="avatar-picker-trigger"
               className={cn(
-                "size-10 overflow-hidden rounded-full border border-border transition-colors",
-                "hover:border-accent-blue/60 hover:bg-accent-blue/5",
-                selected && "border-accent-blue bg-accent-blue/10 ring-2 ring-accent-blue/30",
-                disabled && "pointer-events-none opacity-50",
+                "size-10 shrink-0 overflow-hidden rounded-full p-0",
+                !value && "border-dashed text-muted-foreground",
               )}
-            >
-              {avatar.url.startsWith("nice-avatar:") ? (
-                <div className="size-full flex items-center justify-center overflow-hidden">
-                  <NiceAvatar
-                    style={{ width: "100%", height: "100%" }}
-                    shape="circle"
-                    {...genConfig(avatar.url.replace("nice-avatar:", ""))}
-                  />
-                </div>
-              ) : avatar.url.startsWith("avvvatars:") ? (
-                <div className="size-full flex items-center justify-center overflow-hidden">
-                  <Avvvatars
-                    value={avatar.url.replace("avvvatars:", "") || avatar.key}
-                    size={36}
-                    style={avatar.url.includes("character") ? "character" : "shape"}
-                    shadow={false}
-                  />
-                </div>
-              ) : (
-                <img src={avatar.url} alt={avatar.label} className="size-full object-cover" />
-              )}
-            </button>
-          )
-        })}
-        <button
-          type="button"
-          title="清空头衔图像"
-          disabled={disabled}
-          onClick={() => onValueChange(null)}
-          className={cn(
-            "size-10 rounded-full border border-dashed border-border text-sm text-muted-foreground transition-colors",
-            "hover:border-accent-red/60 hover:text-accent-red",
-            !value && "border-accent-red/60 text-accent-red",
-            disabled && "pointer-events-none opacity-50",
-          )}
+            />
+          }
         >
-          无
-        </button>
-      </div>
-      <input
-        type="url"
-        placeholder="或粘贴自定义头像 URL…"
-        disabled={disabled}
-        value={isBuiltIn || value === null || value === undefined ? "" : value}
-        onChange={(e) => onValueChange(e.target.value || null)}
-        className={cn(
-          "h-8 w-full rounded-md border border-border bg-background px-2 text-sm",
-          "placeholder:text-muted-foreground focus-visible:border-accent-blue focus-visible:outline-hidden",
-          disabled && "opacity-50",
-        )}
-      />
+          {value ? (
+            <AvatarGlyph url={value} label={selectedLabel} />
+          ) : (
+            <PlusIcon className="size-4" />
+          )}
+        </PopoverTrigger>
+        <PopoverContent align="start" sideOffset={4} className="w-64 gap-2 p-3">
+          <div className="grid grid-cols-6 gap-1.5">
+            {options.map((avatar) => {
+              const selected = value === avatar.url
+              return (
+                <button
+                  key={avatar.key}
+                  type="button"
+                  title={avatar.label}
+                  disabled={disabled}
+                  onClick={() => {
+                    onValueChange(selected ? null : avatar.url)
+                    setOpen(false)
+                  }}
+                  className={cn(
+                    "size-10 overflow-hidden rounded-full border border-border transition-colors",
+                    "hover:border-accent-blue/60 hover:bg-accent-blue/5",
+                    selected && "border-accent-blue bg-accent-blue/10 ring-2 ring-accent-blue/30",
+                    disabled && "pointer-events-none opacity-50",
+                  )}
+                >
+                  <AvatarGlyph url={avatar.url} label={avatar.label} />
+                </button>
+              )
+            })}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button
+              type="button"
+              variant="secondary"
+              size="xs"
+              disabled={disabled}
+              onClick={rollRandom}
+            >
+              <RefreshCwIcon data-icon="inline-start" />
+              随机生成
+            </Button>
+            {value ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                disabled={disabled}
+                onClick={() => {
+                  onValueChange(null)
+                  setOpen(false)
+                }}
+                className="text-accent-red hover:text-accent-red"
+              >
+                清除
+              </Button>
+            ) : null}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Input
+              type="url"
+              placeholder="或粘贴自定义头像 URL…"
+              disabled={disabled}
+              value={urlDraft}
+              onChange={(e) => {
+                setUrlDraft(e.target.value)
+                onValueChange(e.target.value || null)
+              }}
+              className="h-8 flex-1 text-xs"
+            />
+            {urlDraft && !isBuiltIn ? (
+              <span className="size-8 shrink-0 overflow-hidden rounded-full border border-border">
+                <AvatarGlyph url={urlDraft} />
+              </span>
+            ) : null}
+          </div>
+        </PopoverContent>
+      </Popover>
+      {value && !isBuiltIn ? (
+        <span className="truncate font-mono text-xs text-muted-foreground" title={value}>
+          {value}
+        </span>
+      ) : null}
     </div>
   )
 }
 
-export { AvatarPickerField }
+export { AvatarPickerField, AvatarGlyph }
