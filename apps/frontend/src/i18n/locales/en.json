@@ -3267,6 +3267,34 @@
   "fallbackTitle": "Fallback when the AI agent fails: forward to the assistant chat",
   "forwardedToast": "Forwarded to Xiao Zhou — send it in the chat at the bottom right"
  },
+    "agentPresence": {
+      "immediate": "After creation, {{agent}} starts working immediately.",
+      "approval": "After creation, {{agent}} starts once the request is approved.",
+      "manual": "Creates a backlog ticket only, reserved for {{agent}} to dispatch manually.",
+      "bugImmediate": "After creation, {{agent}} will pull logs and attempt to reproduce automatically.",
+      "bugApproval": "After creation, {{agent}} steps in for investigation once approved.",
+      "bugManual": "The bug will be logged to the backlog, reserved for {{agent}} to investigate later."
+    },
+    "dispatchStrategy": {
+      "immediate": "Execute immediately",
+      "approval": "Requires approval",
+      "manual": "Backlog only"
+    },
+    "shuttle": {
+      "toAi": "Switch to AI agent",
+      "toManual": "Back to manual editing"
+    },
+    "bug": {
+      "injectTemplate": "Fill in the standard bug triage template"
+    },
+    "category": {
+      "requirement": "Requirement PRD",
+      "analysis": "Analysis report",
+      "design": "Architecture design",
+      "api": "API contract",
+      "testing": "Test plan",
+      "guide": "How-to guide"
+    },
  "discard": {
   "title": "Discard unsaved input?",
   "desc": "The panel has unsubmitted input that will be lost when closed.",
