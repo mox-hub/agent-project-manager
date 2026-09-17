@@ -16,6 +16,7 @@ import { ErrorPage } from '@/shared/pages/error-page';
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
 import { AppearanceSettingsSection } from '@/modules/settings/pages/sections/appearance-section';
 import { DockSettingsSection } from '@/modules/settings/pages/sections/dock-section';
+import { ShortcutsSettingsSection } from '@/modules/settings/pages/sections/shortcuts-section';
 import { ProfileSettingsSection } from '@/modules/settings/pages/sections/profile-section';
 import { GitSettingsSection } from '@/modules/settings/pages/sections/git-section';
 import { TerminalSettingsSection } from '@/modules/settings/pages/sections/terminal-section';
@@ -474,6 +475,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'acceptance',
+        handle: { selfScroll: true },
         element: <AcceptanceListPage />,
         errorElement: <ErrorPage />,
       },
@@ -645,6 +647,7 @@ export const router = createBrowserRouter([
       { path: 'profile', element: <ProfileSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'appearance', element: <AppearanceSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'dock', element: <DockSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'shortcuts', element: <ShortcutsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'git', element: <GitSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'terminal', element: <TerminalSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'labels', element: <LabelsSettingsSection />, errorElement: <ErrorPage /> },

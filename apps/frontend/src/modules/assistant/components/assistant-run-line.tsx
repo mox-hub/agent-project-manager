@@ -1,17 +1,21 @@
 /**
  * 执行行卡片 —— 「转执行」后的运行条目：轮询 run 状态（5s，终态停轮），
- * 终态时失效 decisions 缓存让建议卡回流；运行详情面板直开 + 执行中心入口。
+ * 终态时失效 decisions 缓存让建议卡回流；运行详情面板直开 + 执行中心入口；
+ * 失败/阻塞卡提供一键重试（同内容重新派发 CLI）。
  */
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bot, CheckCircle2, ExternalLink, FileText, XCircle } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Bot, CheckCircle2, ExternalLink, FileText, RotateCcw, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { toast } from '@/components/ui/toast';
+import { eventClient } from '@/infrastructure/event-client';
 import { RunDetailsDialog } from '@/modules/executions';
 import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
+import { assistantApi } from '../api/assistant-api';
 import { decisionKeys } from '@/modules/decision/hooks/use-decisions';
 import type { AssistantRunEntry } from '../hooks/use-assistant-dispatch';
 
@@ -19,7 +23,13 @@ const TERMINAL_STATUSES = ['completed', 'failed', 'blocked', 'superseded', 'canc
 
 type RunStatus = string | undefined;
 
-export function AssistantRunLine({ entry }: { entry: AssistantRunEntry }) {
+export function AssistantRunLine({
+  entry,
+  projectId,
+}: {
+  entry: AssistantRunEntry;
+  projectId?: string | null;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -37,6 +47,40 @@ export function AssistantRunLine({ entry }: { entry: AssistantRunEntry }) {
   const status = data?.status as RunStatus;
   const isTerminal = !!status && TERMINAL_STATUSES.includes(status);
   const isFailed = status === 'failed' || status === 'blocked' || status === 'cancelled';
+
+  // 服务端 execution.run.updated 事件驱动失效（兜底改造批 1），轮询仅兜底
+  useEffect(() => {
+    const invalidate = (payload: unknown) => {
+      const p = payload as { executionRunId?: string };
+      if (p?.executionRunId === entry.runId) {
+        qc.invalidateQueries({ queryKey: ['assistant', 'run-status', entry.runId] });
+      }
+    };
+    eventClient.on('execution.run.updated', invalidate);
+    return () => {
+      eventClient.off('execution.run.updated', invalidate);
+    };
+  }, [entry.runId, qc]);
+
+  // 失败重试：同内容重新派发 CLI 执行（新 run 新行，本行保留失败现场）
+  const retry = useMutation({
+    mutationFn: () => {
+      if (!projectId) {
+        return Promise.reject(new Error('execution requires a project scope'));
+      }
+      return assistantApi.dispatch(entry.content, projectId);
+    },
+    onSuccess: () => {
+      toast.success(t('assistant.run.dispatched'));
+    },
+    onError: (error) => {
+      toast.error(
+        t('assistant.run.dispatchFailed', {
+          message: error instanceof Error ? error.message : String(error),
+        }),
+      );
+    },
+  });
 
   // 终态回流：失效待决缓存，CLI 回写的建议卡出现在「待你决定」区
   useEffect(() => {
@@ -97,6 +141,22 @@ export function AssistantRunLine({ entry }: { entry: AssistantRunEntry }) {
             <ExternalLink className="size-3" />
             {t('assistant.run.viewDetail')}
           </Button>
+          {isFailed && projectId ? (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={retry.isPending}
+              onClick={() => retry.mutate()}
+              className="ml-auto h-5 gap-1 px-1 text-11 underline-offset-2 hover:underline"
+            >
+              {retry.isPending ? (
+                <Spinner size="sm" className="size-3" />
+              ) : (
+                <RotateCcw className="size-3" />
+              )}
+              {t('assistant.run.retry')}
+            </Button>
+          ) : null}
         </div>
       </div>
 

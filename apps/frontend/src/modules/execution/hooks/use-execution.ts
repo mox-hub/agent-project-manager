@@ -26,61 +26,21 @@ export const executionKeys = {
   auditLogs: (traceId: string) => [...executionKeys.all, 'audit', traceId] as const,
 };
 
-// Hooks for Execution Runs
-export function useExecutionRuns() {
-  return useQuery({
-    queryKey: executionKeys.runs(),
-    queryFn: () => executionApi.listRuns(),
-    refetchInterval: 5000, // Auto-refresh every 5s for running executions
-  });
-}
-
-export function useExecutionRun(id: string) {
-  return useQuery({
-    queryKey: executionKeys.run(id),
-    queryFn: () => executionApi.getRun(id),
-    enabled: !!id,
-  });
-}
-
-export function useExecutionRunsByTask(issueId: string) {
-  return useQuery({
-    queryKey: executionKeys.runsByTask(issueId),
-    queryFn: () => executionApi.getRunByTask(issueId),
-    enabled: !!issueId,
-  });
-}
-
-export function useCancelExecutionRun() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (id: string) => executionApi.cancelRun(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: executionKeys.runs() });
-    },
-  });
-}
-
-export function useRetryExecutionRun() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (id: string) => executionApi.retryRun(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: executionKeys.runs() });
-    },
-  });
-}
-
 // ─── 4d: Issue 统一执行项（人工/AI 共用） ──────────────────────────
 
-/** issue 执行项列表（含待审批） */
+/** issue 执行项列表（含待审批）；存在非终态执行项时 5s 轮询兜底（socket 失效为主） */
 export function useIssueExecutions(issueId: string | undefined) {
   return useQuery({
     queryKey: executionKeys.issueExecutions(issueId ?? ''),
     queryFn: () => executionApi.listIssueExecutions(issueId!),
     enabled: !!issueId,
+    refetchInterval: (query) => {
+      const items = (query.state.data ?? []) as Array<{ status?: string }>;
+      const hasActive = items.some(
+        (it) => it.status && !['completed', 'failed', 'blocked', 'superseded', 'cancelled'].includes(it.status),
+      );
+      return hasActive ? 5000 : false;
+    },
   });
 }
 
@@ -127,46 +87,6 @@ export function useUpdateExecution() {
   });
 }
 
-// Hooks for Approval Requests
-export function useApprovalRequests(status?: string) {
-  return useQuery({
-    queryKey: executionKeys.approvals(status),
-    queryFn: () => executionApi.listApprovals(status),
-    refetchInterval: 10000, // Auto-refresh every 10s
-  });
-}
-
-export function useApprovalRequest(id: string) {
-  return useQuery({
-    queryKey: executionKeys.approval(id),
-    queryFn: () => executionApi.getApproval(id),
-    enabled: !!id,
-  });
-}
-
-export function useResolveApproval() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ id, action }: { id: string; action: ApprovalAction }) =>
-      executionApi.resolveApproval(id, action),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: executionKeys.approvals() });
-    },
-  });
-}
-
-export function useBatchResolveApprovals() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ ids, approve }: { ids: string[]; approve: boolean }) =>
-      executionApi.batchResolveApprovals(ids, approve),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: executionKeys.approvals() });
-    },
-  });
-}
 
 // Hooks for Audit Logs
 export function useExecutionAuditLogs(traceId: string) {

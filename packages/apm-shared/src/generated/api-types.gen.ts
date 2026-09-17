@@ -2511,6 +2511,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/ai/execution-runs/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-execute a failed/blocked execution as a new execution (clone + lineage + same dispatch flow) */
+        post: operations["CliDispatchController_retryExecution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/ai/execution-runs/{id}/status": {
         parameters: {
             query?: never;
@@ -2784,6 +2801,23 @@ export interface paths {
         get: operations["AcceptanceController_getByTask"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/acceptance/issue/{issueId}/apply-criteria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** AI 代写验收标准落库（人确认后调用，增量写入同文去重） */
+        post: operations["AcceptanceController_applyCriteriaForIssue"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8107,6 +8141,17 @@ export interface components {
             order: number;
         };
         CreateIssueDto: {
+            /**
+             * @description 验收标准（兜底改造批 3）：传入即创建时同步落验收契约+标准，进入门禁体系
+             * @example [
+             *       {
+             *         "content": "登录成功后跳转到工作台",
+             *         "criteriaType": "functional",
+             *         "severity": "high"
+             *       }
+             *     ]
+             */
+            acceptanceCriteria?: string[];
             /**
              * @description Project ID (optional, can be bound later)
              * @example project-123
@@ -26966,6 +27011,48 @@ export interface operations {
             };
         };
     };
+    CliDispatchController_retryExecution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 原执行 ID（须为 failed/blocked） */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 新执行已创建并派发（retryOfId 血缘指回原执行） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 不可重新执行：状态非 failed/blocked，或未关联有效工单；派发被门禁阻断时新执行落 blocked */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Execution not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     CliDispatchController_getExecutionStatus: {
         parameters: {
             query?: never;
@@ -28614,6 +28701,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AcceptanceResponseDto"][];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AcceptanceController_applyCriteriaForIssue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 任务 ID */
+                issueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 落库结果：契约 id + 新增/去重条数 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description 请求参数错误 */

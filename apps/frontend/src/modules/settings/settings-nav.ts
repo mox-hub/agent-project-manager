@@ -21,6 +21,7 @@ import {
   Plug,
   Github,
   LayoutList,
+  Keyboard,
 } from 'lucide-react';
 
 export interface SettingsNavItem {
@@ -51,6 +52,7 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
     items: [
       { to: '/app/settings/appearance', labelKey: 'settings.appearance', icon: Palette },
       { to: '/app/settings/dock', labelKey: 'settings.dock', icon: LayoutList },
+      { to: '/app/settings/shortcuts', labelKey: 'settings.shortcuts', icon: Keyboard },
     ],
   },
   {

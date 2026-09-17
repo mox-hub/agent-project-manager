@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Archive, CheckCircle2, LayoutGrid, List, Plus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -213,7 +214,15 @@ export default function TeamsPage() {
           isLoading ? (
             <div className="py-12 text-center text-muted-foreground">{t('common.loading', '加载中…')}</div>
           ) : teams.length === 0 ? (
-            <EmptyState title={t('teams.empty', '暂无团队，点击右上角创建第一个团队。')} />
+            <EmptyState
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-accent-purple">
+                  <Users className="size-4 text-accent-purple" />
+                </IconStack>
+              }
+              title={t('teams.empty', '暂无团队，点击右上角创建第一个团队。')}
+            />
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {teams.map((team) => (

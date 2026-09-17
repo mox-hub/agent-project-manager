@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { GitBranch, LayoutGrid, List, Play, Plus, Sparkles, Workflow as WorkflowIcon } from 'lucide-react';
+import { GitBranch, LayoutGrid, List, Play, Plus, SearchX, Sparkles, Workflow as WorkflowIcon } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { PageShell } from '@/components/ui/page-shell';
@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import {
@@ -142,11 +143,29 @@ export function WorkflowListPage() {
             ))}
           </div>
         ) : filteredWorkflows.length === 0 ? (
-          <EmptyState
-            icon={WorkflowIcon}
-            title={t('workflow.empty')}
-            description={t('workflow.emptyHint')}
-          />
+          search.trim() ? (
+            <EmptyState
+              icon={SearchX}
+              title={t('workflow.empty')}
+              description={t('workflow.emptyHint')}
+              action={
+                <Button variant="outline" size="sm" onClick={() => setSearch('')}>
+                  {t('common.filterClear', '清除筛选')}
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-accent-purple">
+                  <WorkflowIcon className="size-4 text-accent-purple" />
+                </IconStack>
+              }
+              title={t('workflow.empty')}
+              description={t('workflow.emptyHint')}
+            />
+          )
         ) : viewMode === 'list' ? (
           <div className="space-y-2">
             {filteredWorkflows.map((wf) => (

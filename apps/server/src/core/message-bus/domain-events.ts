@@ -80,6 +80,8 @@ export const DomainEventTypes = {
   LinearTaskPushed: 'linear.task.pushed',
   LinearTaskConflict: 'linear.task.conflict',
   LinearTaskResolved: 'linear.task.resolved',
+  /** approval.service.create 发布（CAP-A-19 批 4，执行挂起等待人工审批） */
+  ApprovalRequested: 'approval.requested',
 
   // 实时流
   AiStream: 'ai.stream',

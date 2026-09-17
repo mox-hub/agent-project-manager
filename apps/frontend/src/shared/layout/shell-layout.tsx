@@ -71,6 +71,10 @@ import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
 import { AssistantFab } from '@/modules/assistant';
+import { ConnectionBanner } from '@/shared/components/connection-banner';
+import { useGlobalHotkey } from '@/shared/hotkeys/use-global-hotkey';
+import { getEffectiveCombo } from '@/shared/hotkeys/hotkey-store';
+import { formatComboForDisplay } from '@/shared/hotkeys/hotkey-utils';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /** 侧栏导航项（收藏分区的项带 favorite 标记，渲染时挂 hover 预览卡） */
@@ -132,6 +136,10 @@ export function ShellLayout() {
   });
   useEventSubscription('notification.read', () => {
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  });
+  // 兜底改造批 4：提案创建实时失效——此前靠用户恰好在收件箱页/助手面板
+  useEventSubscription('decision.proposal.created', () => {
+    queryClient.invalidateQueries({ queryKey: ['decisions'] });
   });
 
   // 统一读取某导航分组的折叠态
@@ -255,23 +263,12 @@ export function ShellLayout() {
     }
   }, []);
 
-  // 全局快捷键 Alt+A 开合主 AI 助手面板（Ctrl/Cmd+J 与浏览器下载/DevTools 冲突，弃用）
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.altKey &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        (event.key === 'a' || event.key === 'A')
-      ) {
-        event.preventDefault();
-        const { aiPanelOpen, setAiPanelOpen: setOpen } = useAppStore.getState();
-        setOpen(!aiPanelOpen);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  // 全局快捷键走注册表（CAP-A-17）：Alt+A 开合主 AI 助手面板，用户可在设置 · 快捷键改键
+  // （历史备注：Ctrl/Cmd+J 与浏览器下载/DevTools 冲突，弃用）
+  useGlobalHotkey('ai-assistant', () => {
+    const { aiPanelOpen, setAiPanelOpen: setOpen } = useAppStore.getState();
+    setOpen(!aiPanelOpen);
+  });
 
   useEffect(() => {
     if (!mobileSidebarOpen) return;
@@ -355,7 +352,10 @@ export function ShellLayout() {
               : entry.labelKey,
           ),
           keywords: entry.keywords,
-          shortcut: entry.shortcut,
+          // hotkeyId 优先：从快捷键注册表解析当前生效键（含用户自定义）
+          shortcut: entry.hotkeyId
+            ? formatComboForDisplay(getEffectiveCombo(entry.hotkeyId) ?? '').join(' ').trim() || undefined
+            : entry.shortcut,
           group: t(COMMAND_GROUP_LABEL_KEYS[entry.group]),
           to: entry.to,
           // 实体命令经 entity-icons 注册表解析（单一图标真相源），动作命令用自带 lucide 图标
@@ -372,6 +372,8 @@ export function ShellLayout() {
       <ShellSidebarProvider>
         <TabsProvider>
         <div className="flex h-screen overflow-hidden bg-sidebar text-foreground" data-ai-component="layout.shell" data-ai-role="content">
+          {/* 实时连接断线横幅（兜底改造批 1）：断线期间数据陈旧，需全局可见 */}
+          <ConnectionBanner />
           {/* Mobile sidebar backdrop */}
           {mobileSidebarOpen ? (
             <button

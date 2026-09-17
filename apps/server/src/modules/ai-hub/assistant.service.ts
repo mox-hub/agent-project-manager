@@ -470,6 +470,21 @@ export class AssistantService {
       );
     }
 
+    // 守护进程 worker 要求执行载荷三字段（providerId/prompt/workspaceRoot）齐备：
+    // providerId 取用户定向模型或守护进程首个 CLI 通道；workspaceRoot 优先守护
+    // 进程注册根，缺省回退项目工作区配置（与 cli-dispatch 派发同源）
+    const providerId = provider ?? target.cliProviders?.[0];
+    const workspaceRoot =
+      target.workspaceRoots?.[0] ??
+      (await this.resolveProjectWorkspaceRoot(projectId));
+    if (!providerId || !workspaceRoot) {
+      throw new BadRequestException(
+        !providerId
+          ? '执行通道未注册任何 CLI provider：请检查守护进程配置并重启（apm daemon start）'
+          : '无法确定执行工作区：守护进程未配置 runtime.workspaceRoots，且项目未配置工作区根目录（项目设置 → Git 与终端 → 工作区）',
+      );
+    }
+
     await this.prisma.aIMessage.create({
       data: { conversationId: conversation.id, role: 'user', content },
     });
@@ -544,8 +559,9 @@ export class AssistantService {
       projectId,
       subjectType: 'platform_ai_member',
       subjectId: await this.resolveAssistantSubjectId(),
+      providerId,
       prompt,
-      workspaceRoot: target.workspaceRoots?.[0],
+      workspaceRoot,
       timeout: DISPATCH_TIMEOUT_MS,
       status: 'pending',
     });
@@ -669,6 +685,18 @@ export class AssistantService {
         '没有在线的 CLI 执行通道：请先在本机启动守护进程（apm daemon start）',
       );
     }
+    // 先解析执行载荷再建 ExecutionRun，避免校验失败留下孤儿 run
+    const providerId = online.cliProviders?.[0];
+    const workspaceRoot =
+      online.workspaceRoots?.[0] ??
+      (await this.resolveProjectWorkspaceRoot(projectId));
+    if (!providerId || !workspaceRoot) {
+      throw new BadRequestException(
+        !providerId
+          ? '执行通道未注册任何 CLI provider：请检查守护进程配置并重启（apm daemon start）'
+          : '无法确定执行工作区：守护进程未配置 runtime.workspaceRoots，且项目未配置工作区根目录（项目设置 → Git 与终端 → 工作区）',
+      );
+    }
 
     const run = await this.executionService.createExecutionRun({
       projectId,
@@ -700,8 +728,9 @@ export class AssistantService {
       projectId,
       subjectType: 'platform_ai_member',
       subjectId: await this.resolveAssistantSubjectId(),
+      providerId,
       prompt,
-      workspaceRoot: online.workspaceRoots?.[0],
+      workspaceRoot,
       timeout: DISPATCH_TIMEOUT_MS,
       status: 'pending',
     });
@@ -711,5 +740,24 @@ export class AssistantService {
       runtimeId: online.runtimeId,
       status: 'pending' as const,
     };
+  }
+
+  /** 项目工作区根目录三级回退：ProjectWorkspace → git.workspaceRoot 配置 → Repository（与 cli-dispatch 派发同源） */
+  private async resolveProjectWorkspaceRoot(
+    projectId: string,
+  ): Promise<string | null> {
+    const workspace = await this.prisma.projectWorkspace.findUnique({
+      where: { projectId },
+    });
+    if (workspace?.localPath) return workspace.localPath;
+    const config = await this.prisma.appConfig.findFirst({
+      where: { scope: 'project', projectId, key: 'git.workspaceRoot' },
+    });
+    const configured = (config?.value as { path?: string } | undefined)?.path;
+    if (configured) return configured;
+    const repo = await this.prisma.repository.findFirst({
+      where: { projectId },
+    });
+    return repo?.localPath ?? null;
   }
 }

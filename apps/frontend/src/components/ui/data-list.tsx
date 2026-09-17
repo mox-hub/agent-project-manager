@@ -13,7 +13,7 @@
  * 所有信息均为页面传入的内嵌节点，另附几个常见格式的单元格组件：ListText / ListChip / ListDate / ListIcon / ListAvatar。
  */
 
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { isValidElement, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Check,
@@ -612,6 +612,10 @@ export function DataList<T extends DataListItem>({
   }
 
   if (items.length === 0) {
+    // emptyMessage 传完整空态元素（如带 IconStack 的 page 变体）时直接渲染，避免套成「EmptyState 套 EmptyState」
+    if (isValidElement(emptyMessage)) {
+      return <>{emptyMessage}</>;
+    }
     return (
       <EmptyState
         icon={emptyIcon}

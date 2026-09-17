@@ -1,12 +1,15 @@
 {
   "common": {
     "noProject": "无项目",
+    "clearFilters": "清除筛选",
     "more": "更多",
     "reorder": "拖拽排序",
     "moveUp": "上移",
     "moveDown": "下移",
     "confirm": "确认",
     "cancel": "取消",
+    "expand": "展开",
+    "collapse": "收起",
     "delete": "删除",
     "deleteConfirm": "确定要删除吗？此操作无法撤销。",
     "save": "保存",
@@ -612,7 +615,8 @@
       "running": "正在执行",
       "completed": "执行完成",
       "failed": "执行失败",
-      "viewDetail": "前往执行中心"
+      "viewDetail": "前往执行中心",
+      "retry": "重试"
     },
     "history": {
       "open": "历史对话",
@@ -794,7 +798,11 @@
       "tokens": "Tokens",
       "cost": "费用",
       "viewAcceptance": "查看验收",
-      "cancel": "取消执行"
+      "cancel": "取消执行",
+      "retry": "重新执行",
+      "retrySuccess": "已创建新执行并重新派发",
+      "retryError": "重新执行失败",
+      "retryOf": "重试自"
     }
   },
   "decision": {
@@ -806,6 +814,25 @@
     },
     "expiryIn": "{{time}} 截止",
     "riskHigh": "高危",
+    "review": {
+      "button": "卡片批阅",
+      "buttonCount": "卡片批阅 ({{count}})",
+      "modalTitle": "决策卡片集中批阅",
+      "progress": "第 {{current}} / {{total}} 项",
+      "allDoneTitle": "全部批阅完成！",
+      "allDoneHint": "当前收件箱没有新的待决决策，所有卡片均已过完。",
+      "backToInbox": "返回收件箱",
+      "flipFront": "翻回正面",
+      "flipBack": "翻面看证据",
+      "flipHint": "按 F 或点击翻面查看完整证据与推导",
+      "passStamp": "已通过",
+      "rejectStamp": "已驳回",
+      "nextCard": "下一张",
+      "prevCard": "上一张",
+      "quickPass": "勾选通过",
+      "quickReject": "驳回",
+      "shortcuts": "[1/Enter] 勾选通过 · [2] 驳回 · [F] 翻面 · [←/→] 翻页 · [Esc] 退出"
+    },
     "metrics": {
       "pending": "待决",
       "blocking": "阻断",
@@ -1120,6 +1147,12 @@
   },
   "task": {
     "title": "任务",
+    "empty": {
+      "none": "暂无任务",
+      "noneDesc": "创建第一个任务，或从需求承接管道拆解生成",
+      "filtered": "未找到匹配的任务",
+      "filteredDesc": "换个关键词，或清除筛选条件再试"
+    },
     "descriptionAcrossProjects": "个跨项目任务",
     "dispatchToAi": "派发 AI",
     "create": "创建任务",
@@ -1752,11 +1785,25 @@
       "noProjects": "暂无项目",
       "loadError": "加载项目失败",
       "projects": "个项目",
+      "aiExecutingTooltip": "当前有 AI 正在接管执行任务",
+      "aiExecutingCount": "{{count}} 个任务 AI 执行中",
+      "pageShowing": "显示 {{from}}–{{to}} 项，共 {{total}} 个项目",
       "columns": {
         "display": "列显示"
       },
       "viewSettings": "视图设置",
       "searchPlaceholder": "搜索项目..."
+    },
+    "status": {
+      "active": "活跃"
+    },
+    "export": {
+      "label": "导出"
+    },
+    "archive": {
+      "label": "归档",
+      "confirmTitle": "归档选中的 {{count}} 个项目？",
+      "confirmDescription": "归档后项目将从活跃列表移除，但数据会被保留。"
     },
     "filter": {
       "all": "全部"
@@ -1864,6 +1911,18 @@
     "profilePasswordTooShort": "新密码至少 8 位",
     "appearance": "外观",
     "dock": "Dock 栏",
+    "shortcuts": "快捷键",
+    "shortcutsGlobalTitle": "全局快捷键",
+    "shortcutsGlobalDesc": "在任何页面都生效的快捷键。点击「修改」后按下新的组合键完成录制；与现有快捷键冲突时会提示且不会保存。",
+    "shortcutsContextTitle": "场景快捷键参考",
+    "shortcutsContextDesc": "以下键位只在对应页面或弹窗内生效，随场景固定，暂不支持自定义。",
+    "shortcutsModify": "修改",
+    "shortcutsReset": "重置",
+    "shortcutsResetAll": "全部恢复默认",
+    "shortcutsCancel": "取消",
+    "shortcutsRecordingHint": "请按下新的组合键…（Esc 取消）",
+    "shortcutsModified": "已自定义",
+    "shortcutsConflict": "与「{{action}}」的快捷键冲突，请换一组组合键",
     "dockActionsTitle": "功能按钮",
     "dockActionsDesc": "勾选要显示在 Dock 栏的功能，并用箭头调整它们的排列顺序。",
     "dockVisible": "显示",
@@ -2559,12 +2618,7 @@
     "labelsLabel": "标签",
     "dueDateLabel": "截止日期",
     "propertiesLabel": "属性",
-    "suggestionsLabel": "建议",
     "clearDueDate": "清除截止日期",
-    "sugCriticalSeverity": "严重级别",
-    "sugTagBug": "标签：bug",
-    "sugAssignMe": "指派给我",
-    "sugToday": "今天",
     "parentTaskLabel": "父任务"
   },
   "taskDetail": {
@@ -2608,14 +2662,9 @@
     "labelsLabel": "标签",
     "dueDateLabel": "截止日期",
     "propertiesLabel": "属性",
-    "suggestionsLabel": "建议",
     "externalSection": "外部集成",
     "executionSection": "执行",
     "clearDueDate": "清除截止日期",
-    "sugHighPriority": "高优先级",
-    "sugTagFrontend": "标签：frontend",
-    "sugAssignMe": "指派给我",
-    "sugToday": "今天",
     "execPending": "等待中",
     "execRunning": "执行中",
     "execCompleted": "已完成",
@@ -2660,8 +2709,12 @@
     "execActionApprove": "验收通过",
     "execActionAbandon": "废弃",
     "execActionDispatchCli": "派发 CLI 执行",
+    "execActionRetryCli": "重新执行（新建执行）",
     "execDispatchCliSuccess": "CLI 派发成功，执行项已进入执行中",
     "execDispatchCliError": "CLI 派发失败",
+    "execRetryCliSuccess": "已创建新执行并重新派发",
+    "execRetryCliError": "重新执行失败",
+    "execRetryOf": "重试自",
     "execActionViewLog": "查看执行日志",
     "execActionMore": "更多操作",
     "parentTaskLabel": "父任务",
@@ -3043,7 +3096,16 @@
       "projects": "项目数"
     },
     "acceptance": {
-      "task": "关联任务"
+    "draft": {
+      "title": "AI 代写验收标准",
+      "description": "AI 按工单内容起草可检查的验收标准，勾选确认后落入验收契约（已有标准不会被覆盖）",
+      "generating": "AI 正在起草验收标准…",
+      "button": "AI 代写验收标准",
+      "apply": "确认落库",
+      "functional": "功能",
+      "technical": "技术",
+      "applied": "已落库 {{added}} 条验收标准{{skipped}}"
+    },      "task": "关联任务"
     },
     "generic": {
       "hint": "悬停预览页面信息；项目、任务、Bug、文档等详情页会展示实体数据。"
@@ -3289,12 +3351,6 @@
       "title": "键盘快捷键",
       "shortcut": "快捷键",
       "action": "操作",
-      "commandPalette": "打开命令面板",
-      "newTask": "新建任务",
-      "projectSwitch": "快速切换项目",
-      "showHelp": "显示帮助",
-      "toggleSidebar": "切换侧边栏",
-      "aiAssistant": "AI 助手",
       "closeDialog": "关闭对话框/面板",
       "saveChanges": "保存更改"
     },
@@ -3663,6 +3719,7 @@
   },
   "shell": {
     "mainNav": "主导航",
+    "connectionLost": "实时连接已断开，正在重试…页面数据可能不是最新",
     "main": "主导航",
     "workbench": "工作台",
     "pipeline": "研发生命周期",
@@ -3718,6 +3775,18 @@
     },
     "appName": "AgentPM"
   },
+  "hotkeys": {
+    "commandPalette": "打开命令面板",
+    "commandPaletteDesc": "搜索并执行任意命令、跳转页面",
+    "aiAssistant": "开合 AI 助手面板",
+    "aiAssistantDesc": "打开或收起主 AI 助手侧栏",
+    "documentSave": "保存文档",
+    "documentSaveDesc": "文档编辑页内保存并创建版本快照",
+    "decisionReview": "决策卡批阅",
+    "decisionReviewDesc": "决策卡批阅模式：Enter/1 通过 · 2 驳回 · F 翻面 · ←/→ 翻页",
+    "createPanelSwitch": "创建面板切换类型",
+    "createPanelSwitchDesc": "统一创建面板内 Ctrl+1..6 在任务/缺陷/文档等类型间切换"
+  },
   "commandPalette": {
     "title": "命令面板",
     "description": "搜索并跳转到任意页面或动作",
@@ -3768,6 +3837,20 @@
       "saveRequired": "Personal Access Token 为必填项",
       "saved": "GitHub 集成已保存",
       "saveFailed": "保存集成失败"
+    },
+    "panel": {
+      "repoPlaceholder": "例如 owner/repo",
+      "refresh": "刷新",
+      "newPr": "新建 PR",
+      "prTitleLabel": "PR 标题",
+      "headBranch": "Head 分支",
+      "baseBranch": "Base 分支",
+      "descOptional": "描述（可选）",
+      "descPlaceholder": "关联任务：...",
+      "submit": "提交",
+      "error": "无法连接到 GitHub，请检查仓库名与集成凭据",
+      "loading": "加载 PR 列表…",
+      "empty": "当前没有 Open PR"
     }
   },
   "integration": {
@@ -3796,16 +3879,21 @@
     "published": "已发布",
     "reviewing": "审核中",
     "draft": "草稿",
+    "rejected": "已拒绝",
     "allCategories": "全部分类",
     "allStatus": "全部状态",
     "noDocuments": "暂无文档",
     "noMatch": "未找到匹配的文档",
+    "noMatchDesc": "换个关键词，或清除状态 / 分类筛选再试",
+    "searchPlaceholder": "搜索文档...",
+    "publicDoc": "公共文档",
     "createFirst": "开始创建你的第一个文档",
     "categories": {
       "requirement": "需求文档",
       "design": "设计文档",
       "api": "API文档",
       "test": "测试文档",
+      "testing": "测试文档",
       "guide": "用户指南",
       "custom": "自定义"
     },
@@ -3826,7 +3914,19 @@
       "implements": "实现"
     },
     "filter": {
-      "all": "全部"
+      "all": "全部",
+      "status": "状态",
+      "category": "分类"
+    },
+    "syncBanner": {
+      "title": "本地文件同步失败 ({{count}})",
+      "item": "{{title}} · 重试 {{attempts}} 次 · {{error}}",
+      "dismiss": "知道了",
+      "more": "...还有 {{count}} 个",
+      "close": "关闭预警"
+    },
+    "export": {
+      "label": "导出"
     },
     "view": {
       "list": "列表",
@@ -4061,6 +4161,8 @@
     "results": "{{count}} 条结果",
     "empty": "暂无验收契约",
     "emptyHint": "派发任务时将自动创建，或手动新建",
+    "emptyFiltered": "未找到匹配的验收契约",
+    "emptyFilteredHint": "换个关键词，或清除筛选条件再试",
     "searchPlaceholder": "搜索验收标题或任务…",
     "filter": {
       "status": "状态",

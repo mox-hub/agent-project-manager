@@ -84,7 +84,7 @@ describe('AI Assistant CLI chat bridge (e2e, local-only paths)', () => {
       hostPlatform: process.platform,
       runtimeVersion: '0.1.0',
       protocolVersion: '1.0.0',
-      workspaceRoots: [],
+      workspaceRoots: ['E:/apm-e2e-ws'],
       availableProviders: ['file', 'git'],
       cliProviders: ['claude-code'],
     });
@@ -123,11 +123,16 @@ describe('AI Assistant CLI chat bridge (e2e, local-only paths)', () => {
     const dispatches = pollRes.body.data as Array<{
       executionRunId: string;
       prompt?: string;
+      providerId?: string;
+      workspaceRoot?: string;
     }>;
     const dispatch = dispatches.find(
       (d) => d.executionRunId === executionRunId,
     );
     expect(dispatch).toBeTruthy();
+    // 执行载荷三字段齐备（worker 侧强校验，缺一即 failed）
+    expect(dispatch!.providerId).toBe('claude-code');
+    expect(dispatch!.workspaceRoot).toBe('E:/apm-e2e-ws');
     expect(dispatch!.prompt).toContain('对话记录');
     expect(dispatch!.prompt).toContain('propose_decision');
     expect(dispatch!.prompt).toContain('帮我梳理一下风险');

@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Bot, Clock, DoorOpen, Maximize2, Minimize2, X, Inbox, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Bot, Clock, DoorOpen, Maximize2, Minimize2, X, Inbox, PanelLeftClose, PanelLeftOpen, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -110,7 +110,7 @@ function AssistantChatFooter({
         }
       />
       {(runEntries ?? []).map((entry) => (
-        <AssistantRunLine key={entry.runId} entry={entry} />
+        <AssistantRunLine key={entry.runId} entry={entry} projectId={projectId} />
       ))}
       <div className="flex items-center gap-2 text-11 text-content-text-muted">
         <Clock className="size-3 shrink-0" />
@@ -188,60 +188,112 @@ export function AssistantPanel() {
     ...items.filter((d) => d.urgency === 'advisory'),
   ];
   const hasDecisions = stripItems.length > 0;
+  const hasBlocking = stripItems.some((d) => d.urgency === 'blocking');
   const personaName = t('assistant.personaName');
+
+  const [deckProgress, setDeckProgress] = useState({ current: 1, total: stripItems.length });
+  const handleDeckIndexChange = (current: number, totalCount: number) => {
+    setDeckProgress({ current, total: totalCount });
+  };
 
   return (
     <div
       className="flex h-full w-full items-stretch justify-center gap-3 select-none"
       data-ai-component="assistant.panel-wrapper"
     >
-      {/* 侧边堆叠决策卡片栏：不占用主对话空间，伴随式呈现 */}
+      {/* 侧边堆叠决策卡片栏：不占用主对话空间，伴随式实体手卡卡片堆（保持高质感毛玻璃悬浮） */}
       {hasDecisions && showDecisionSide && (
         <div
-          className="flex w-72 lg:w-80 flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-2xl backdrop-blur-xl shrink-0 animate-in fade-in-0 slide-in-from-right-2 duration-150"
+          className="assistant-decision-wing flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-2xl backdrop-blur-xl shrink-0 animate-in fade-in-0 slide-in-from-right-2 duration-150"
           data-ai-component="assistant.decision-wing"
         >
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-border/60 px-3.5 bg-muted/20">
-            <div className="flex items-center gap-2">
-              <Inbox className="size-4 text-accent-purple" />
-              <span className="text-xs font-semibold text-foreground">待决议卡片</span>
-              <span className="rounded-full bg-accent-purple-light text-accent-purple px-1.5 py-0.2 text-10 font-bold tabular-nums">
+          {/* 卡片堆顶部导航条 */}
+          <div className="flex h-12 shrink-0 items-center justify-between border-b border-border/60 px-4 bg-muted/20">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-accent-purple-light text-accent-purple shadow-2xs">
+                <Layers className="size-3.5" />
+              </span>
+              <span className="text-xs font-semibold text-foreground truncate">
+                待决议卡片堆
+              </span>
+              <span
+                className={cn(
+                  'rounded-full px-1.5 py-0.2 text-10 font-bold tabular-nums shrink-0',
+                  hasBlocking
+                    ? 'bg-accent-red text-primary-foreground animate-pulse'
+                    : 'bg-accent-purple-light text-accent-purple',
+                )}
+              >
                 {stripItems.length}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowDecisionSide(false)}
-              className="text-content-text-muted hover:text-foreground rounded-md p-1 hover:bg-accent transition-colors"
-              title="收起决策侧栏"
-              data-ai-action="assistant.decision.collapse.click"
-            >
-              <PanelLeftClose className="size-3.5" />
-            </button>
-          </div>
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="p-3">
-              <AssistantDecisionStrip items={stripItems} loading={isLoading} />
+
+            <div className="flex items-center gap-2">
+              <span className="text-10 text-muted-foreground font-mono tabular-nums">
+                {deckProgress.current} / {stripItems.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowDecisionSide(false)}
+                className="text-muted-foreground hover:text-foreground rounded-md p-1 hover:bg-accent transition-colors"
+                title="收起卡片堆侧栏"
+                data-ai-action="assistant.decision.collapse.click"
+              >
+                <PanelLeftClose className="size-3.5" />
+              </button>
             </div>
-          </ScrollArea>
+          </div>
+
+          {/* 卡片堆核心舞台区：居中展示实体手卡，无需滚屏 */}
+          <div className="flex-1 min-h-0 flex flex-col justify-center px-2 py-2">
+            <AssistantDecisionStrip
+              items={stripItems}
+              loading={isLoading}
+              onAllDone={() => setShowDecisionSide(false)}
+              onIndexChange={handleDeckIndexChange}
+            />
+          </div>
         </div>
       )}
 
-      {/* 当存在决策且侧栏收起时，独立胶囊展开拉手（平级放置，绝不被 overflow-hidden 截断） */}
+      {/* 当存在决策且侧栏收起时：高质感现实实体手卡折叠夹槽手柄（伴随左侧悬浮） */}
       {hasDecisions && !showDecisionSide && (
-        <div className="flex flex-col justify-center shrink-0">
+        <div className="flex flex-col justify-center shrink-0 z-20">
           <button
             type="button"
             onClick={() => setShowDecisionSide(true)}
-            className="group flex flex-col items-center justify-center gap-2 w-9 py-3 rounded-2xl border border-border/80 bg-background/95 shadow-xl backdrop-blur-xl text-accent-purple hover:bg-accent hover:border-accent-purple/40 transition-all active:scale-95"
-            title="展开待办决策侧栏"
+            className="decision-deck-collapsed-tab group flex flex-col items-center justify-between w-11 py-3.5 rounded-2xl border border-border/80 bg-background/95 backdrop-blur-xl text-foreground cursor-pointer transition-all active:scale-95"
+            title={`展开待决卡片堆（共 ${stripItems.length} 项${hasBlocking ? '，含紧急阻断' : ''}）`}
             data-ai-action="assistant.decision.expand.click"
           >
-            <Inbox className="size-4 group-hover:scale-110 transition-transform" />
-            <span className="flex size-4 items-center justify-center rounded-full bg-accent-purple text-10 text-primary-foreground font-bold tabular-nums">
-              {stripItems.length}
-            </span>
-            <PanelLeftOpen className="size-3.5 text-content-text-muted group-hover:text-accent-purple transition-colors" />
+            {/* 顶部：立体层叠卡片图标 */}
+            <div className="flex size-7 items-center justify-center rounded-lg bg-accent-purple-light text-accent-purple shadow-2xs group-hover:scale-110 transition-transform">
+              <Layers className="size-4" />
+            </div>
+
+            {/* 中间：数量角标与竖排文字 */}
+            <div className="my-2.5 flex flex-col items-center gap-2">
+              <span
+                className={cn(
+                  'flex size-5 items-center justify-center rounded-full text-10 font-bold tabular-nums shadow-xs',
+                  hasBlocking
+                    ? 'bg-accent-red text-primary-foreground animate-pulse'
+                    : 'bg-accent-purple text-primary-foreground',
+                )}
+              >
+                {stripItems.length}
+              </span>
+
+              {/* 竖排精致文字：「待 决 卡 片」 */}
+              <span className="vertical-writing-mode text-11 font-medium tracking-widest text-muted-foreground group-hover:text-foreground transition-colors select-none py-1">
+                待决卡片
+              </span>
+            </div>
+
+            {/* 底部：向右微动展开提示 */}
+            <div className="mt-1 flex items-center justify-center text-muted-foreground group-hover:text-accent-purple group-hover:translate-x-0.5 transition-all">
+              <PanelLeftOpen className="size-3.5" />
+            </div>
           </button>
         </div>
       )}
@@ -252,9 +304,7 @@ export function AssistantPanel() {
           'relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-2xl backdrop-blur-xl',
           assistantExpanded
             ? 'flex-1 min-w-0'
-            : hasDecisions && showDecisionSide
-              ? 'flex-1 min-w-0'
-              : 'w-120 max-w-[calc(100vw-2rem)]',
+            : 'w-120 max-w-[calc(100vw-2rem)]',
         )}
         data-ai-component="assistant.panel"
       >

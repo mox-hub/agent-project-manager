@@ -4,6 +4,7 @@
 @import '@fontsource-variable/noto-sans-sc';
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import './shared/decision-card/decision-card.css';
 
 /* 暗色模式保持 class 驱动（v4 默认是媒体查询） */
 @custom-variant dark (&:where(.dark, .dark *));

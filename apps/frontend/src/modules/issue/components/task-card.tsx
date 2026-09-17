@@ -28,10 +28,9 @@ export interface TaskCardProps {
   task: Task;
   onClick?: () => void;
   onStatusChange?: (status: string) => void;
-  draggable?: boolean;
 }
 
-export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
+export function TaskCard({ task, onClick }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const priority = (task.priority as TaskPriority) || 'medium';
 
@@ -47,7 +46,6 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
 
   return (
     <div
-      draggable={draggable}
       onClick={onClick}
       data-ai-entity={`task:${task.id}`}
       className={cn(

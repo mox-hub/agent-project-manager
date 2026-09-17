@@ -89,7 +89,13 @@ export class ExecutionController {
   @ApiOperation({ summary: '更新执行运行' })
   @ApiParam({ name: 'id', description: '执行运行 ID' })
   @ApiResponse({ status: 200, description: '更新成功' })
-  async updateRun(@Param('id') id: string, @Body() dto: any) {
+  async updateRun(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @Request() req: { user: { id: string } },
+  ) {
+    // 兜底改造批 2：写操作先过项目成员/创建者校验（此前无归属检查）
+    await this.executionService.getExecutionRun(id, req.user.id);
     return this.executionService.updateExecutionRun(id, dto);
   }
 
@@ -97,7 +103,11 @@ export class ExecutionController {
   @ApiOperation({ summary: '启动执行运行' })
   @ApiParam({ name: 'id', description: '执行运行 ID' })
   @ApiResponse({ status: 200, description: '已启动' })
-  async startRun(@Param('id') id: string) {
+  async startRun(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    await this.executionService.getExecutionRun(id, req.user.id);
     return this.executionService.startExecution(id);
   }
 
@@ -116,7 +126,9 @@ export class ExecutionController {
         content?: string;
       }>;
     },
+    @Request() req: { user: { id: string } },
   ) {
+    await this.executionService.getExecutionRun(id, req.user.id);
     return this.executionService.completeExecution(
       id,
       body.output ?? {},
@@ -131,7 +143,9 @@ export class ExecutionController {
   async failRun(
     @Param('id') id: string,
     @Body() body: { errorDetail: Record<string, unknown> },
+    @Request() req: { user: { id: string } },
   ) {
+    await this.executionService.getExecutionRun(id, req.user.id);
     return this.executionService.failExecution(id, body.errorDetail);
   }
 
@@ -139,7 +153,12 @@ export class ExecutionController {
   @ApiOperation({ summary: '取消执行运行' })
   @ApiParam({ name: 'id', description: '执行运行 ID' })
   @ApiResponse({ status: 200, description: '已取消' })
-  async cancelRun(@Param('id') id: string, @Body() body: { reason?: string }) {
+  async cancelRun(
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+    @Request() req: { user: { id: string } },
+  ) {
+    await this.executionService.getExecutionRun(id, req.user.id);
     return this.executionService.cancelExecution(id, body.reason);
   }
 

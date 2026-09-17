@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { toast } from '@/components/ui/toast';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useProjectMilestones } from '@/modules/issue/hooks/use-project-tasks';
@@ -219,7 +220,12 @@ export function ReleaseListPage() {
         ) : filtered.length === 0 ? (
           releases.length === 0 ? (
             <EmptyState
-              icon={Rocket}
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-accent-purple">
+                  <Rocket className="size-4 text-accent-purple" />
+                </IconStack>
+              }
               title={t('release.empty.none')}
               description={t('release.empty.noneDesc')}
               action={

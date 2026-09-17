@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bot, LayoutGrid, List, Plus, User, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -211,7 +212,15 @@ export default function MembersPage() {
           isLoading ? (
             <div className="py-12 text-center text-muted-foreground">{t('common.loading', '加载中…')}</div>
           ) : members.length === 0 ? (
-            <EmptyState title={t('members.empty', '暂无成员')} />
+            <EmptyState
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-accent-blue">
+                  <Users className="size-4 text-accent-blue" />
+                </IconStack>
+              }
+              title={t('members.empty', '暂无成员')}
+            />
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {members.map((m) => (

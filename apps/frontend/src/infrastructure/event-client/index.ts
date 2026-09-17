@@ -40,6 +40,7 @@ const SUBSCRIBED_EVENT_TYPES = [
 
   // 治理族：审批 / 验收 / 发版
   DomainEventTypes.ApprovalRequestCreated,
+  DomainEventTypes.ApprovalRequested,
   DomainEventTypes.ApprovalResolved,
   DomainEventTypes.ApprovalCancelled,
   DomainEventTypes.AcceptanceCreated,
@@ -47,6 +48,9 @@ const SUBSCRIBED_EVENT_TYPES = [
   DomainEventTypes.AcceptanceDeleted,
   DomainEventTypes.ReleaseCreated,
   DomainEventTypes.ReleaseApproved,
+
+  // 决策提案创建（收件箱/侧栏徽标实时失效，兜底改造批 4；暂无注册表键）
+  'decision.proposal.created',
 
   // 运行时（本地执行节点）：含聚合通道，覆盖 heartbeat / execution.event 等
   DomainEventTypes.RuntimeConnected,

@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Bot, ListChecks, MoreHorizontal, Plus, ScrollText, UserRound } from 'lucide-react';
+import { Bot, ChevronDown, ListChecks, MoreHorizontal, Plus, RotateCcw, ScrollText, UserRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -114,6 +114,8 @@ function ExecutionStatusBadge({ status }: { status: ExecutionStatus }) {
 
 /** 允许绑定派发的执行项状态（与后端 dispatch.service DISPATCHABLE_STATUSES 对齐） */
 const DISPATCHABLE_STATUSES: ExecutionStatus[] = ['draft', 'planned', 'failed', 'blocked'];
+/** 兜底批 5：failed/blocked 走「重新执行」（克隆新建），draft/planned 仍是首次派发 */
+const RETRYABLE_STATUSES: ExecutionStatus[] = ['failed', 'blocked'];
 
 interface ExecutionItemRowProps {
   execution: IssueExecution;
@@ -121,10 +123,12 @@ interface ExecutionItemRowProps {
   disabled?: boolean;
   onTransition: (execution: IssueExecution, next: ExecutionStatus) => void;
   onDispatchCli?: (execution: IssueExecution) => void;
+  onRetryCli?: (execution: IssueExecution) => void;
   onViewLog?: (execution: IssueExecution) => void;
+  onViewRunById?: (runId: string) => void;
 }
 
-function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDispatchCli, onViewLog }: ExecutionItemRowProps) {
+function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDispatchCli, onRetryCli, onViewLog, onViewRunById }: ExecutionItemRowProps) {
   const { t } = useTranslation();
   const isHuman = execution.subjectType === 'human';
   const SubjectIcon = isHuman ? UserRound : Bot;
@@ -133,6 +137,8 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
   const secondary = allowed.filter((s) => s !== primary);
   const canDispatchCli =
     !isHuman && !!onDispatchCli && DISPATCHABLE_STATUSES.includes(execution.status);
+  const canRetryCli =
+    !isHuman && !!onRetryCli && RETRYABLE_STATUSES.includes(execution.status);
   const estimate = formatMinutes(execution.estimate);
   const actual = formatMinutes(execution.actualSpent);
 
@@ -155,7 +161,7 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
             <ScrollText className="size-3.5" />
           </button>
         )}
-        {(secondary.length > 0 || canDispatchCli) && (
+        {(secondary.length > 0 || canDispatchCli || canRetryCli) && (
           <DropdownMenu>
             <DropdownMenuTrigger
               className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
@@ -175,6 +181,11 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
                   {t('taskDetail.execActionDispatchCli')}
                 </DropdownMenuItem>
               )}
+              {canRetryCli && (
+                <DropdownMenuItem onClick={() => onRetryCli?.(execution)}>
+                  {t('taskDetail.execActionRetryCli')}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -184,6 +195,18 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
         {subjectName && (estimate || actual) && <span className="opacity-50">·</span>}
         {estimate && <span className="shrink-0">{t('taskDetail.execItemsEstimateShort', { value: estimate })}</span>}
         {actual && <span className="shrink-0">{t('taskDetail.execItemsActualShort', { value: actual })}</span>}
+        {execution.retryOfId && (
+          <button
+            type="button"
+            className="inline-flex shrink-0 items-center gap-0.5 transition-colors hover:text-foreground"
+            title={t('taskDetail.execRetryOf')}
+            disabled={disabled}
+            onClick={() => onViewRunById?.(execution.retryOfId!)}
+          >
+            <RotateCcw className="size-2.5" />
+            {t('taskDetail.execRetryOf')}
+          </button>
+        )}
         <span className="flex-1" />
         {primary && (
           <Button
@@ -214,22 +237,22 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
   const createExecution = useCreateIssueExecution();
   const updateExecution = useUpdateExecution();
 
-  // WS 实时刷新：AI 派发/CLI 执行的状态变化不经前端 mutation，需订阅事件失效缓存
+  // WS 实时刷新：AI 派发/CLI 执行的状态变化不经前端 mutation，需订阅事件失效缓存。
+  // 服务端网关转发 execution.run.updated（兜底改造批 1）——此前监听的
+  // execution.completed/run.created 从未被服务端发出，属死订阅。
   useEffect(() => {
     const invalidate = () =>
       qc.invalidateQueries({ queryKey: ['execution', 'issueExecutions', issueId] });
-    eventClient.on('execution.completed', invalidate);
-    eventClient.on('execution.run.created', invalidate);
     eventClient.on('execution.run.updated', invalidate);
     return () => {
-      eventClient.off('execution.completed', invalidate);
-      eventClient.off('execution.run.created', invalidate);
       eventClient.off('execution.run.updated', invalidate);
     };
   }, [issueId, qc]);
 
   // 添加执行项小表单（标题必填 + 描述 + 执行人 + 预估工时）
   const [formOpen, setFormOpen] = useState(false);
+  // 分区收缩（与子任务/自定义字段分区同手势）
+  const [collapsed, setCollapsed] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [subjectId, setSubjectId] = useState('');
@@ -255,6 +278,24 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
     onError: (err) => {
       toast.error(
         t('taskDetail.execDispatchCliError') +
+          ': ' +
+          (err instanceof Error ? err.message : String(err)),
+      );
+    },
+  });
+
+  // 兜底批 5：失败/阻塞执行项「重新执行」——服务端克隆新建执行
+  //（retryOfId 血缘指回原执行）并走同一派发链，原执行终态留痕不丢
+  const retryCli = useMutation({
+    mutationFn: (execution: IssueExecution) => aiHubApi.retryExecution(execution.id),
+    onSuccess: () => {
+      toast.success(t('taskDetail.execRetryCliSuccess'));
+      qc.invalidateQueries({ queryKey: ['execution', 'issueExecutions', issueId] });
+      qc.invalidateQueries({ queryKey: ['executionRuns'] });
+    },
+    onError: (err) => {
+      toast.error(
+        t('taskDetail.execRetryCliError') +
           ': ' +
           (err instanceof Error ? err.message : String(err)),
       );
@@ -311,21 +352,45 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
             <span className="text-10 font-normal">({executions.length})</span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => setFormOpen((v) => !v)}
-          className={cn(
-            'inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
-            formOpen && 'text-accent-blue',
-          )}
-          title={formOpen ? t('common.cancel') : t('taskDetail.execItemsAdd')}
-        >
-          <Plus className={cn('size-3.5 transition-transform', formOpen && 'rotate-45')} />
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            className="inline-flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={collapsed ? t('common.expand') : t('common.collapse')}
+            aria-expanded={!collapsed}
+          >
+            <ChevronDown
+              className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCollapsed(false);
+              setFormOpen((v) => !v);
+            }}
+            className={cn(
+              'inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+              formOpen && 'text-accent-blue',
+            )}
+            title={formOpen ? t('common.cancel') : t('taskDetail.execItemsAdd')}
+          >
+            <Plus className={cn('size-3.5 transition-transform', formOpen && 'rotate-45')} />
+          </button>
+        </div>
       </div>
 
-      {/* 添加人工执行项表单 */}
-      {formOpen && (
+      {/* 分区内容：添加表单 + 执行项列表（grid-rows 动画展开 / 收起） */}
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows] duration-300 ease-out',
+          collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
+        )}
+      >
+        <div className="overflow-hidden">
+          {/* 添加人工执行项表单 */}
+          {formOpen && (
         <div className="mx-6 mb-2 flex flex-col gap-1.5 rounded-lg border border-border bg-muted/20 p-2">
           <Input
             autoFocus
@@ -379,32 +444,36 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
         </div>
       )}
 
-      {isLoading ? (
-        <div className="px-6 py-1.5 text-xs text-muted-foreground">
-          <Spinner className="mr-2 inline size-3 text-inherit" />
-          {t('taskDetail.execItemsLoading')}
+          {isLoading ? (
+            <div className="px-6 py-1.5 text-xs text-muted-foreground">
+              <Spinner className="mr-2 inline size-3 text-inherit" />
+              {t('taskDetail.execItemsLoading')}
+            </div>
+          ) : executions.length === 0 ? (
+            <div className="px-6 pb-2 text-xs text-muted-foreground">
+              {t('taskDetail.execItemsEmpty')}
+            </div>
+          ) : (
+            <div className="px-6 pb-3 flex flex-col gap-1">
+              {executions.map((execution) => (
+                <ExecutionItemRow
+                  key={execution.id}
+                  execution={execution}
+                  subjectName={
+                    execution.subjectId ? memberNameById.get(execution.subjectId) : undefined
+                  }
+                  disabled={busy || dispatchCli.isPending || retryCli.isPending}
+                  onTransition={handleTransition}
+                  onDispatchCli={(execution) => dispatchCli.mutate(execution)}
+                  onRetryCli={(execution) => retryCli.mutate(execution)}
+                  onViewLog={(execution) => setLogRunId(execution.id)}
+                  onViewRunById={(runId) => setLogRunId(runId)}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      ) : executions.length === 0 ? (
-        <div className="px-6 pb-2 text-xs text-muted-foreground">
-          {t('taskDetail.execItemsEmpty')}
-        </div>
-      ) : (
-        <div className="px-6 pb-3 flex flex-col gap-1">
-          {executions.map((execution) => (
-            <ExecutionItemRow
-              key={execution.id}
-              execution={execution}
-              subjectName={
-                execution.subjectId ? memberNameById.get(execution.subjectId) : undefined
-              }
-              disabled={busy || dispatchCli.isPending}
-              onTransition={handleTransition}
-              onDispatchCli={(execution) => dispatchCli.mutate(execution)}
-              onViewLog={(execution) => setLogRunId(execution.id)}
-            />
-          ))}
-        </div>
-      )}
+      </div>
 
       {/* 执行记录弹窗：状态/派发详情/时间线/事件日志（复用执行中心 RunDetailsDialog） */}
       <RunDetailsDialog

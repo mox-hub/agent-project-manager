@@ -115,7 +115,7 @@ export function GithubConfigForm({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-xl border-border">
+      <DialogContent keepDefaultWidth={false} className="max-w-xl border-border">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Github className="h-5 w-5" />

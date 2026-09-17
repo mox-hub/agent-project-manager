@@ -54,6 +54,8 @@ export const DomainEventTypes = {
 
   // 审批门槛
   ApprovalRequestCreated: 'approval.request.created',
+  /** approval.service.create 发布（CAP-A-19 批 4，执行挂起等待人工审批） */
+  ApprovalRequested: 'approval.requested',
   ApprovalResolved: 'approval.resolved',
   ApprovalCancelled: 'approval.cancelled',
 
@@ -158,10 +160,10 @@ export type ExecutionRunCreatedPayload = z.infer<
   typeof ExecutionRunCreatedPayloadSchema
 >;
 
-/** execution.run.updated：execution.service.updateExecutionRun 发布 */
+/** execution.run.updated：execution.service.updateExecutionRun 发布，通知/订阅/推送三方消费 */
 export const ExecutionRunUpdatedPayloadSchema = z.object({
   executionRunId: z.string(),
-  previousStatus: z.string().nullable().optional(),
+  previousStatus: z.string(),
   newStatus: z.string(),
 });
 export type ExecutionRunUpdatedPayload = z.infer<
@@ -423,4 +425,16 @@ export const AiWorkflowUpdatePayloadSchema = z.object({
 });
 export type AiWorkflowUpdatePayload = z.infer<
   typeof AiWorkflowUpdatePayloadSchema
+>;
+
+/** approval.requested：approval.service.create 发布，执行挂起等待人工审批 */
+export const ApprovalRequestedPayloadSchema = z.object({
+  approvalRequestId: z.string(),
+  executionRunId: z.string(),
+  projectId: z.string(),
+  riskLevel: z.string(),
+  requestedAction: z.string(),
+});
+export type ApprovalRequestedPayload = z.infer<
+  typeof ApprovalRequestedPayloadSchema
 >;

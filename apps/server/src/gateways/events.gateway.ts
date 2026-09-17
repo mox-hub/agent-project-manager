@@ -229,6 +229,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // 逐事件显式转发（不做聚合）：线上事件名与领域事件名一致，前端订什么就收到什么。
     // 注意与 runtime.dispatch.changed 的分工：runtime.execution.event 等 **同时**走
     // 该聚合通道，两处并行不冲突（聚合通道服务 use-assistant-status，本通道服务盯盘投影）。
+    // 合并注记：ApprovalRequested（approval.requested）来自兜底改造批 4 的显式订阅，归并入本列表。
     const governanceEvents = [
       DomainEventTypes.ExecutionRunCreated,
       DomainEventTypes.ExecutionRunUpdated,
@@ -237,6 +238,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       DomainEventTypes.ExecutionStepUpdated,
       DomainEventTypes.ExecutionApprovalNeeded,
       DomainEventTypes.ApprovalRequestCreated,
+      DomainEventTypes.ApprovalRequested,
       DomainEventTypes.ApprovalResolved,
       DomainEventTypes.ApprovalCancelled,
       DomainEventTypes.AcceptanceCreated,
@@ -250,6 +252,14 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server.emit(evt, payload);
       });
     });
+
+    // ── 决策提案创建 → 收件箱/侧栏徽标实时失效（兜底改造批 4）──
+    this.messageBus.subscribe(
+      'decision.proposal.created',
+      (payload: unknown) => {
+        this.server.emit('decision.proposal.created', payload);
+      },
+    );
 
     // ── Linear sync events ─────────────────────────────────
     this.messageBus.subscribe('linear.sync.progress', (payload: any) => {

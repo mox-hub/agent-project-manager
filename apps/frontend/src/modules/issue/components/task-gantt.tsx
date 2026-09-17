@@ -96,7 +96,8 @@ export function TaskGantt({
       onItemClick={handleItemClick}
       onItemDateChange={handleDateChange}
       leftColumnTitle="Task"
-      emptyMessage="No tasks with valid dates to display"
+      emptyMessage="暂无可排期的任务"
+      emptyDescription="甘特视图依赖日期字段，为任务设置截止日期后即可在此排期"
       scale={scale}
       onScaleChange={onScaleChange}
     />

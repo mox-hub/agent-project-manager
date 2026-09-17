@@ -17,6 +17,10 @@
 > `https://coss.com/ui/r/<name>.json`），与 base-ui 唯一基线同源。已引入：toast（替换 sonner）、menu、
 > date-picker（组合件）、number-field、autocomplete、meter、checkbox-group、checkbox（换 coss 配方）、
 > scroll-area（升级 coss 配方）+ hooks/use-copy-to-clipboard.ts。其余组件沿用官方 shadcn 配方，勿重复引入。
+> **reui 组件（2026-09 起）**：[reui.io](https://reui.io) 同为 base-ui 同源注册表（`https://reui.io/r/base-nova/<name>.json`）。
+> 已引入：stepper（复合式步骤条，替换自研简版；展示/导航双形态，消费方：onboarding 向导、release 状态链、boot 自检清单、项目接入向导）、
+> sortable（复合式拖拽排序列表，@dnd-kit；消费方：settings 标签管理、任务类型管理；看板跨列拖拽不在此语义内）、
+> icon-stack（等距层叠图标插画，装饰性；消费方：EmptyState visual 槽、onboarding 双 hero、项目列表空态）。
 
 ## 页面骨架速查（搭页面先看这里）
 
@@ -87,6 +91,7 @@
 | Slider | ui/slider.tsx | 滑块（base-ui 官方配方） | value, onChange, min, max |
 | Calendar / CalendarDayButton | ui/calendar.tsx | 日历选择器（react-day-picker 封装） | selected, onSelect, locale, showOutsideDays |
 | DatePicker | ui/date-picker.tsx | 日期选择组合件（coss 组合模式：Popover+Calendar+Button；支持自定义胶囊触发器 trigger、presets、footer 清除） | value, onValueChange, trigger, presets, footer, closeOnSelect |
+| ColorPicker | ui/color-picker.tsx | 颜色选择组合件（Popover+react-colorful+预设色板；DEFAULT_SWATCHES=原 TAG_COLORS 15 色用户数据色（宪法 §5 豁免）；allowCustom=false 退化为纯预设选择） | value, onValueChange, swatches, allowCustom, closeOnSwatch |
 | NumberField 套件 | ui/number-field.tsx | 数字输入（coss 配方：步进按钮/键盘/滚轮，task-form 估时在用） | value, onValueChange, min, max, step, size |
 | Autocomplete 套件 | ui/autocomplete.tsx | 自由输入 + 建议过滤（coss 配方，useAutocompleteFilter.contains 手动过滤） | value, onValueChange, AutocompleteInput(showClear), AutocompleteList/Item |
 | useCopyToClipboard | hooks/use-copy-to-clipboard.ts | 复制到剪贴板 + 临时已复制状态（coss hook） | timeout, onCopy → { copyToClipboard, isCopied } |
@@ -97,9 +102,9 @@
 | InputGroup 套件 | ui/input-group.tsx | 带前后缀的输入组容器 | align(Addon), variant, size |
 | FilterChipsRow + FilterCascadeMenu + FilterFieldMenuList | ui/filter-chips.tsx | Linear 风格筛选：条件条（工具栏下单开一行，[字段｜算子｜值｜×] 拼接 chip + 追加 + Clear/Save 视图菜单）与漏斗二级级联菜单（字段搜索 + 值子菜单带计数直接勾选，FilterCascadeMenu 经 ToolbarMenuSlot.render 挂漏斗位）；FilterCondition[] 模型，filterConditionSets/matchesConditionSets/countBy 谓词辅助 | fields(FilterFieldDef[]), conditions(FilterCondition[]), onChange, onSaveToView, onSaveAsNewView, badge, search |
 | SegmentedControl | ui/segmented-control.tsx | 分段切换（pill/rect 滑块，语义色调） | value, options, onChange, variant(pill/rect), tone |
-| Stepper | ui/stepper.tsx | 受控步骤条（向导/分步流程，状态派生自 current） | steps({id,label}), current |
-| AvatarPickerField | ui/avatar-picker-field.tsx | 内置头像选择表单字段 | value, onValueChange, memberType(human/ai/all) |
-| PropertyPanel 套件（CapsuleSelect/DateCapsuleField/AutoSizeTextarea/PropertyRow/PropsCard/SuggestionsCard 等） | ui/property-panel.tsx | 详情页属性面板（Linear 风格可编辑胶囊+属性行+折叠卡） | CapsuleSelect: value, options, onChange, active；PropsCard: title, collapsed；SuggestionsCard: title, items；DateCapsuleField: placeholder, clearLabel |
+| Stepper 套件 | ui/stepper.tsx | 复合式步骤条（reui base-nova 移植：向导可点击导航 / 状态机纯展示 / 纵向清单三形态；inactive=muted、标题随状态变色、指示器 motion-shift） | Stepper: value, defaultValue, onValueChange, orientation, indicators({active/completed/inactive/loading})；StepperItem: step, completed, disabled, loading；Trigger/Indicator/Separator/Title/Description/Nav/Panel/Content |
+| AvatarPickerField | ui/avatar-picker-field.tsx | 头像选择组合件（Popover 弹层：内置 12 头像网格 + 随机生成种子 + 自定义 URL 预览 + 清除；触发器显示当前头像；`nice-avatar:`/`avvvatars:` 前缀对任意种子确定性出图） | value, onValueChange, memberType(human/ai/all) |
+| PropertyPanel 套件（CapsuleSelect/DateCapsuleField/AutoSizeTextarea/PropertyRow/PropsCard 等） | ui/property-panel.tsx | 详情页属性面板（Linear 风格可编辑胶囊+属性行+折叠卡） | CapsuleSelect: value, options, onChange, active；PropsCard: title, icon, collapsed；DateCapsuleField: placeholder, clearLabel |
 
 #### Select label 契约（2026-09-11 定案，写下拉框前必读）
 
@@ -120,7 +125,7 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | Table 套件 | ui/table.tsx | 原生 table 样式化套件（禁止业务代码裸写 `<table>`） | children |
 | DataTableShell | ui/data-table-shell.tsx | 表格外壳容器（圆角边框卡片） | children, className |
 | DataTable | ui/data-table.tsx | 通用数据表（coss p-table-8 形态：TanStack 排序表头/可选行选择列/客户端或 manual 服务端分页 + footer 区间翻页） | columns, data, getRowId, onRowClick, enableSelection, selectedIds, onSelectedIdsChange, manualPagination, pageSize, emptyContent |
-| DataList + 单元格（ListText/Chip/Date/Icon/Avatar/ActionButton） | ui/data-list.tsx | 通用列表（多选/分组手风琴/右键菜单/悬浮批量操作；空态走 EmptyState 规范形态） | items, renderLeading, renderTrailing, groupBy, onItemContextMenu, emptyMessage, emptyIcon |
+| DataList + 单元格（ListText/Chip/Date/Icon/Avatar/ActionButton） | ui/data-list.tsx | 通用列表（多选/分组手风琴/右键菜单/悬浮批量操作；空态走 EmptyState 规范形态；emptyMessage 传完整空态元素时直接渲染不套壳，可带 page 变体） | items, renderLeading, renderTrailing, groupBy, onItemContextMenu, emptyMessage, emptyIcon |
 | Card 套件 | ui/card.tsx | 卡片容器（支持 sm 尺寸与 CardAction 槽） | size(default/sm), children |
 | Item 套件 | ui/item.tsx | 通用行条目（cva variant/size） | variant(default/outline/muted), size, render |
 | Badge | ui/badge.tsx | 徽标（cva variant） | variant, children |
@@ -135,6 +140,8 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | ActivityHeatmap | ui/activity-heatmap.tsx | 活动热力图（GitHub 式日格计数） | data(日序列), days, emptyLabel |
 | Chart 套件 + ChartConfig | ui/chart.tsx | recharts 图表封装（主题色注入） | config, children |
 | Carousel 套件 | ui/carousel.tsx | 轮播（embla 封装） | opts, orientation, plugins, setApi |
+| Sortable 套件 | ui/sortable.tsx | 复合式拖拽排序列表（reui base-nova 移植，@dnd-kit；**语义=同列表条目重排**，看板跨列/画布节点/文件投放仍用 dnd-kit 原语；落放一次性提交，含拖拽 overlay 与键盘可达） | Sortable: value, onValueChange(持久化缝), getItemValue, strategy(vertical/horizontal/grid), onValueCommit(next+previousValue 回滚快照), onMove, render(容器元素)；SortableItem: value, disabled, render；SortableItemHandle: cursor, render |
+| IconStack | ui/icon-stack.tsx | 等距层叠图标插画容器（reui 移植；空态/引导/完成时刻的装饰性深度图标，纯视觉场景须 aria-hidden） | className(尺寸默认 h-20 w-18、语义色 text-*)，children(居中图标) |
 | AttentionRail | ui/attention-rail.tsx | 「需要关注」侧栏（通知/逾期任务/风险项目聚合） | projectId, notifications, overdueTasks, atRiskProjects |
 
 ### 反馈 overlay
@@ -154,8 +161,8 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | ~~Toaster（sonner）~~ | — | 已删除（2026-08 coss toast 迁移，sonner 依赖一并移除） | — |
 | Spinner | ui/spinner.tsx | 旋转加载指示器 | size(sm/md/lg/xl), label |
 | Skeleton 套件（Text/Card/Avatar/List/Table/Chart） | ui/skeleton.tsx | 骨架屏占位全家桶 | Text: lines；Table: rows, columns |
-| AsyncState | ui/async-state.tsx | 加载/空/错误三态统一处理容器（默认文案 i18n） | isLoading, isEmpty, error, onRetry, emptyIcon, emptyTitle, emptyDescription, children |
-| EmptyState | ui/empty-state.tsx | 轻量空状态（图标 muted 圆块 + 标题/描述/操作，design-system「Empty States」规范形态） | icon, title, description, action |
+| AsyncState | ui/async-state.tsx | 加载/空/错误三态统一处理容器（默认文案 i18n）；空态支持 emptyVariant/emptyVisual 透传（page 整页空态走 IconStack 插画），错误态恒为 card 简式 | isLoading, isEmpty, error, onRetry, emptyVariant, emptyVisual, emptyIcon, emptyTitle, emptyDescription, children |
+| EmptyState | ui/empty-state.tsx | 轻量空状态三分场景：**page**=整页主体空态（h-full 撑满内容区 + min-h-100，配 visual 插画与首个功能入口）/ **card**=分区内/筛选无结果紧凑形态（默认，muted 圆块图标，不用插画） | icon, visual, variant(page/card), title, description, action, className |
 | ~~Empty 套件~~ | — | 已删除（2026-09 收敛为 EmptyState） | — |
 | PageLoader + usePageLoader | ui/page-loader.tsx | 全屏页面加载遮罩 | message, className |
 | GlobalLoadingState | ui/global-loading-state.tsx | 监听 Query 缓存显示全局顶部加载条（main.tsx 挂载） | 无 props |
@@ -181,7 +188,7 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | Menubar 套件 | ui/menubar.tsx | 顶部菜单栏（base-ui 官方配方） | children |
 | NavigationMenu 套件 | ui/navigation-menu.tsx | 横向导航菜单（base-ui 官方配方） | children, href |
 | TabBar | ui/tab-bar.tsx | 浏览器式多标签栏（读 tabs-context，右键菜单） | className |
-| ChapterScrubber | ui/chapter-scrubber.tsx | 章节刻度导航轨（motion/react：hover 余弦放大波 + 预览卡贴边换向，listbox 键盘可达） | chapters(Chapter[]), currentIndex, side, peakLength/restLength/rowHeight/radius, onActiveChange, onSelect, label |
+| ChapterScrubber | ui/chapter-scrubber.tsx | 章节刻度导航轨（motion/react：hover 余弦放大波 + 预览卡贴边换向，listbox 键盘可达；Chapter.level 1-6 静息长度递减 + 预览卡 H{n} 角标，文档详情正文左缘作文章内导航） | chapters(Chapter[]: id/title/description?/meta?/level?), currentIndex, side, peakLength/restLength/rowHeight/radius, onActiveChange, onSelect, label |
 | FloatingDock | ui/floating-dock.tsx | 浮动 Dock（motion/react：桌面 hover 磁性放大 + tooltip，移动端纵向展开按钮） | items(DockItem: title/icon/href), desktopClassName, mobileClassName |
 
 ### 基础原语 / 主题工具

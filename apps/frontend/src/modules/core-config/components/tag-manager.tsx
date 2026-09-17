@@ -24,6 +24,12 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
 import { Spinner } from '@/components/ui/spinner';
+import {
+  Sortable,
+  SortableItem,
+  SortableItemHandle,
+} from '@/components/ui/sortable';
+import { ColorPicker, DEFAULT_SWATCHES } from '@/components/ui/color-picker';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import {
@@ -33,17 +39,12 @@ import {
   useDeleteTag,
   type Tag,
 } from '../hooks/use-metadata';
-import { cn } from '@/lib/utils';
-
-// 用户自选色板：存库的用户数据色值，非 UI 语义色（宪法 §5 豁免，见 PRINCIPLES 附录登记）
-const TAG_COLORS = [
-  '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e',
-  '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6',
-  '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#6b7280',
-];
 
 type ResourceType = 'project' | 'task' | 'bug' | 'document';
 type TagFilter = ResourceType;
+
+// 标签色板 = ColorPicker 全局缺省 DEFAULT_SWATCHES（用户自选数据色，宪法 §5 豁免登记随组件迁移）
+const TAG_DEFAULT_COLOR = DEFAULT_SWATCHES[0];
 
 const TAG_FILTERS: ResourceType[] = ['project', 'task', 'bug', 'document'];
 
@@ -80,7 +81,7 @@ export function TagManager() {
 
   const [filter, setFilter] = useState<TagFilter>('project');
   const tagForm = useForm<TagFormData>({
-    defaultValues: { name: '', color: TAG_COLORS[0], description: '', resourceType: filter },
+    defaultValues: { name: '', color: TAG_DEFAULT_COLOR, description: '', resourceType: filter },
   });
   const [editing, setEditing] = useState<Tag | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -88,7 +89,7 @@ export function TagManager() {
   const filteredTags = tags.filter((tag) => tag.resourceType === filter);
 
   const openCreate = () => {
-    tagForm.reset({ name: '', color: TAG_COLORS[0], description: '', resourceType: filter });
+    tagForm.reset({ name: '', color: TAG_DEFAULT_COLOR, description: '', resourceType: filter });
     setEditing(null);
     setIsFormOpen(true);
   };
@@ -96,7 +97,7 @@ export function TagManager() {
   const openEdit = (tag: Tag) => {
     tagForm.reset({
       name: tag.name,
-      color: tag.color || TAG_COLORS[0],
+      color: tag.color || TAG_DEFAULT_COLOR,
       description: tag.description || '',
       resourceType: tag.resourceType || filter,
     });
@@ -105,7 +106,7 @@ export function TagManager() {
   };
 
   const closeForm = () => {
-    tagForm.reset({ name: '', color: TAG_COLORS[0], description: '', resourceType: filter });
+    tagForm.reset({ name: '', color: TAG_DEFAULT_COLOR, description: '', resourceType: filter });
     setEditing(null);
     setIsFormOpen(false);
   };
@@ -152,18 +153,17 @@ export function TagManager() {
     }
   };
 
-  // 拖拽排序：本地重排后按新顺序回写 order
-  const handleDrop = async (dropIndex: number, dragIndex: number) => {
-    if (dragIndex === dropIndex) return;
-    const newTags = [...filteredTags];
-    const [removed] = newTags.splice(dragIndex, 1);
-    newTags.splice(dropIndex, 0, removed);
+  // 拖拽排序：落放一次性提交，仅并发回写 order 发生变化的项（对齐 issue-types-section 口径）
+  const handleReorder = async (next: Tag[]) => {
     try {
-      for (let i = 0; i < newTags.length; i++) {
-        if (newTags[i].order !== i) {
-          await updateTag.mutateAsync({ id: newTags[i].id, data: { ...newTags[i], order: i } });
-        }
-      }
+      await Promise.all(
+        next
+          .map((tag, index) => ({ tag, order: index }))
+          .filter(({ tag, order }) => tag.order !== order)
+          .map(({ tag, order }) =>
+            updateTag.mutateAsync({ id: tag.id, data: { ...tag, order } }),
+          ),
+      );
     } catch {
       toast.error(t('settings.saveFailed'));
     }
@@ -217,7 +217,7 @@ export function TagManager() {
                 onEdit={openEdit}
                 onArchive={handleArchive}
                 onDelete={handleDelete}
-                onReorder={handleDrop}
+                onReorder={handleReorder}
                 deleting={deleteTag.isPending}
                 archiving={updateTag.isPending}
               />
@@ -273,25 +273,12 @@ export function TagManager() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('settings.labelColor')}</FormLabel>
-                    <div className="flex flex-wrap gap-1.5">
-                      {TAG_COLORS.map((color) => (
-                        <Button
-                          key={color}
-                          type="button"
-                          variant="outline"
-                          size="xs"
-                          aria-pressed={field.value === color}
-                          aria-label={color}
-                          onClick={() => field.onChange(color)}
-                          className={cn(
-                            'size-6 rounded-full p-0',
-                            field.value === color &&
-                              'ring-2 ring-ring ring-offset-2 ring-offset-background',
-                          )}
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
+                    <ColorPicker
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      allowCustom={false}
+                      placeholder={t('settings.labelColor')}
+                    />
                   </FormItem>
                 )}
               />
@@ -331,15 +318,14 @@ interface TagTableProps {
   onEdit: (tag: Tag) => void;
   onArchive: (tag: Tag) => void;
   onDelete: (tag: Tag) => void;
-  onReorder: (dropIndex: number, dragIndex: number) => void;
+  onReorder: (next: Tag[]) => void;
   deleting: boolean;
   archiving: boolean;
 }
 
+/** 标签表（Sort 语义 = 同列表重排）：tbody/tr 经 render 槽渲染为表格元素，把手承载拖拽（键盘可达） */
 function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, archiving }: TagTableProps) {
   const { t } = useTranslation();
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   return (
     <Table>
@@ -351,43 +337,29 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
           <TableHead className="w-28 text-right">{t('common.actions')}</TableHead>
         </TableRow>
       </TableHeader>
-      <TableBody>
-        {tags.map((tag, index) => (
-          <TableRow
-            key={tag.id}
-            draggable
-            onDragStart={() => setDragIndex(index)}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOverIndex(index);
-            }}
-            onDragLeave={() => setDragOverIndex(null)}
-            onDrop={(e) => {
-              e.preventDefault();
-              if (dragIndex !== null) onReorder(index, dragIndex);
-              setDragIndex(null);
-              setDragOverIndex(null);
-            }}
-            onDragEnd={() => {
-              setDragIndex(null);
-              setDragOverIndex(null);
-            }}
-            className={cn(
-              dragIndex === index && 'opacity-50',
-              dragOverIndex === index && dragIndex !== null && dragIndex !== index && 'bg-accent',
-            )}
-          >
+      <Sortable
+        value={tags}
+        getItemValue={(tag) => tag.id}
+        onValueChange={onReorder}
+        render={<TableBody />}
+      >
+        {tags.map((tag) => (
+          <SortableItem key={tag.id} value={tag.id} render={<TableRow />}>
             <TableCell className="px-2 py-1.5">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label={t('common.dragToSort')}
-                title={t('common.dragToSort')}
-                className="cursor-grab text-muted-foreground active:cursor-grabbing"
+              <SortableItemHandle
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={t('common.dragToSort')}
+                    title={t('common.dragToSort')}
+                  />
+                }
+                className="touch-none text-muted-foreground"
               >
                 <GripVertical />
-              </Button>
+              </SortableItemHandle>
             </TableCell>
             <TableCell className="py-1.5">
               <span
@@ -437,9 +409,9 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
                 </Button>
               </div>
             </TableCell>
-          </TableRow>
+          </SortableItem>
         ))}
-      </TableBody>
+      </Sortable>
     </Table>
   );
 }

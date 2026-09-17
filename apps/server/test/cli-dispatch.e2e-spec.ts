@@ -125,12 +125,32 @@ describe('CLI Dispatch (e2e)', () => {
   }
 
   /** 每个用例自建全套夹具：任务 + ProjectWorkspace（workspaceRoot 一级回退） */
-  async function createDispatchFixture(): Promise<{ issueId: string }> {
+  async function createDispatchFixture(): Promise<{
+    projectId: string;
+    issueId: string;
+  }> {
     const { projectId, issueId } = await createTaskFixture(wsHttp, ws, token);
     await ws.db.projectWorkspace.create({
       data: { projectId, localPath: ws.root },
     });
-    return { issueId };
+    // 兜底改造批 3：派发前验收门禁（严格模式）要求活契约至少 1 条标准
+    const acceptance = await ws.db.acceptance.create({
+      data: {
+        issueId,
+        type: 'mixed',
+        title: '验收 - e2e',
+        completionType: 'artifact',
+        status: 'draft',
+      },
+    });
+    await ws.db.acceptanceCriteria.create({
+      data: {
+        acceptanceId: acceptance.id,
+        content: '执行完成后输出结果摘要',
+        criteriaType: 'functional',
+      },
+    });
+    return { projectId, issueId };
   }
 
   async function dispatchTask(issueId: string): Promise<string> {
@@ -201,7 +221,7 @@ describe('CLI Dispatch (e2e)', () => {
     expect(status).toBe('completed');
   }, 30_000);
 
-  it('POST /ai/execution-runs/:id/cancel 置为 blocked 终态（含取消原因）', async () => {
+  it('POST /ai/execution-runs/:id/cancel 置为 superseded 终态（含取消原因）', async () => {
     const { issueId } = await createDispatchFixture();
     const executionRunId = await dispatchTask(issueId);
 
@@ -212,8 +232,8 @@ describe('CLI Dispatch (e2e)', () => {
       .expect(201);
 
     const status = await waitForTerminalStatus(wsHttp, token, executionRunId);
-    // server 既定语义：取消置 blocked（metadata.cancellationReason 记录原因）
-    expect(status).toBe('blocked');
+    // 兜底改造批 2 语义变更：取消置 superseded 终态（与失败/人工阻塞可区分）
+    expect(status).toBe('superseded');
   }, 30_000);
 
   it('dispatch 不存在的任务返回 404', async () => {
@@ -223,4 +243,153 @@ describe('CLI Dispatch (e2e)', () => {
       .send({})
       .expect(404);
   });
+
+  /**
+   * 兜底批 5 夹具：直接落一条终态原执行（不经派发链，聚焦重试语义）。
+   * 复用 createDispatchFixture 保证门禁所需活契约+标准在场。
+   */
+  async function createRetryFixture(originalStatus: string) {
+    const { projectId, issueId } = await createDispatchFixture();
+    const acceptance = await ws.db.acceptance.findFirst({
+      where: { issueId },
+      select: { id: true },
+    });
+    const original = await ws.db.execution.create({
+      data: {
+        projectId,
+        issueId,
+        subjectType: 'external_agent',
+        subjectId: 'e2e-retrier',
+        identitySource: 'cli',
+        goal: 'E2E retry original',
+        status: originalStatus,
+        input: { task: { id: issueId }, stale: true },
+        errorDetail: { reason: 'CLI_EXIT_NONZERO', message: 'boom' },
+      },
+    });
+    return { projectId, issueId, original, acceptanceId: acceptance?.id };
+  }
+
+  it('retry 失败执行：克隆新建执行（retryOfId 血缘+retryContext）并走同一 runtime 派发链', async () => {
+    const { original, acceptanceId } = await createRetryFixture('failed');
+
+    const res: Response = await wsHttp
+      .post(`/_api/ai/execution-runs/${original.id}/retry`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
+      .expect(201);
+    const newId = res.body.data.executionRunId as string;
+    expect(newId).toBeTruthy();
+    expect(newId).not.toBe(original.id);
+    expect(res.body.data.status).toBe('dispatched');
+
+    // 血缘与内容自动关联：retryOfId 指回原执行、原 input 保留、
+    // retryContext 携带原失败原因、验收契约对齐活契约
+    const cloned = await ws.db.execution.findUnique({
+      where: { id: newId },
+    });
+    expect(cloned).toBeTruthy();
+    expect(cloned!.retryOfId).toBe(original.id);
+    expect((cloned!.input as Record<string, unknown>)['stale']).toBe(true);
+    const retryContext = (cloned!.input as Record<string, unknown>)[
+      'retryContext'
+    ] as Record<string, unknown>;
+    expect(retryContext['retryOfId']).toBe(original.id);
+    expect(retryContext['originalStatus']).toBe('failed');
+    expect(
+      (retryContext['originalError'] as Record<string, unknown>)['message'],
+    ).toBe('boom');
+    expect(cloned!.acceptanceId).toBe(acceptanceId ?? null);
+
+    // 原执行保持 failed 终态留痕，不被复用/覆盖
+    const after = await ws.db.execution.findUnique({
+      where: { id: original.id },
+    });
+    expect(after!.status).toBe('failed');
+    expect(after!.retryOfId).toBeNull();
+
+    // 走相同执行流程：runtime 派发队列应包含新执行，回桥后到 completed
+    const pollRes: Response = await runtimeAuth(
+      wsHttp.get(`/_api/runtime/${RUNTIME_ID}/dispatches`),
+    )
+      .query({ status: 'pending', limit: 20 })
+      .expect(200);
+    const dispatches = pollRes.body.data as Array<{ executionRunId: string }>;
+    expect(dispatches.some((d) => d.executionRunId === newId)).toBe(true);
+
+    await runtimeAuth(wsHttp.post(`/_api/runtime/executions/${newId}/events`))
+      .send({
+        eventType: 'execution.started',
+        runtimeId: RUNTIME_ID,
+        status: 'running',
+      })
+      .expect(201);
+    await runtimeAuth(wsHttp.post(`/_api/runtime/executions/${newId}/result`))
+      .send({
+        status: 'completed',
+        summary: 'retry done',
+        artifacts: [],
+        error: null,
+      })
+      .expect(201);
+
+    const status = await waitForTerminalStatus(wsHttp, token, newId);
+    expect(status).toBe('completed');
+  }, 30_000);
+
+  it('retry 非 failed/blocked 执行返回 400；不存在的执行返回 404', async () => {
+    const { original } = await createRetryFixture('in_progress');
+    await wsHttp
+      .post(`/_api/ai/execution-runs/${original.id}/retry`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
+      .expect(400);
+
+    await wsHttp
+      .post('/_api/ai/execution-runs/nonexistent/retry')
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
+      .expect(404);
+  });
+
+  it('retry 派发被验收门禁阻断：新执行落 blocked 留痕，原执行不受影响', async () => {
+    // 无活契约标准 → assertDispatchGate 阻断 → 新执行落 blocked
+    const { projectId, issueId } = await createTaskFixture(wsHttp, ws, token);
+    await ws.db.projectWorkspace.create({
+      data: { projectId, localPath: ws.root },
+    });
+    const original = await ws.db.execution.create({
+      data: {
+        projectId,
+        issueId,
+        subjectType: 'external_agent',
+        subjectId: 'e2e-retrier',
+        identitySource: 'cli',
+        goal: 'E2E retry gate-blocked',
+        status: 'failed',
+      },
+    });
+
+    const res: Response = await wsHttp
+      .post(`/_api/ai/execution-runs/${original.id}/retry`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
+      .expect(400);
+
+    // 兜底批 5 语义：克隆体已创建但派发被门禁拦下 → blocked 留痕可观测
+    const retried = await ws.db.execution.findMany({
+      where: { retryOfId: original.id },
+    });
+    expect(res.body.data?.error ?? res.body.error).toBeTruthy();
+    expect(retried).toHaveLength(1);
+    expect(retried[0].status).toBe('blocked');
+    expect((retried[0].errorDetail as Record<string, unknown>)['reason']).toBe(
+      'RETRY_DISPATCH_FAILED',
+    );
+
+    const after = await ws.db.execution.findUnique({
+      where: { id: original.id },
+    });
+    expect(after!.status).toBe('failed');
+  }, 30_000);
 });

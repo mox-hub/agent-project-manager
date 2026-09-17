@@ -990,6 +990,11 @@ export interface DecisionCardProps {
   /** 只读预览（回放/演示）：整条动作栏与快捷键都不生效，见 `DecisionCardShellProps.readOnly` */
   readOnly?: boolean;
   readOnlyNote?: ReactNode;
+  isFlipped?: boolean;
+  onFlipChange?: (flipped: boolean) => void;
+  stamp?: 'passed' | 'rejected' | null;
+  dismissDirection?: 'left' | 'right' | 'up' | null;
+  variant?: 'auto' | 'vertical';
 }
 
 export function DecisionCard({
@@ -999,6 +1004,11 @@ export function DecisionCard({
   className,
   readOnly = false,
   readOnlyNote,
+  isFlipped,
+  onFlipChange,
+  stamp,
+  dismissDirection,
+  variant,
 }: DecisionCardProps) {
   const { t } = useTranslation();
   const builder = SLOT_BUILDERS[decision.kind];
@@ -1031,6 +1041,11 @@ export function DecisionCard({
       onAction={onAction}
       busy={busy}
       className={className}
+      isFlipped={isFlipped}
+      onFlipChange={onFlipChange}
+      stamp={stamp}
+      dismissDirection={dismissDirection}
+      variant={variant}
     />
   );
 }

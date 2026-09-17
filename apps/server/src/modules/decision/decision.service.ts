@@ -130,6 +130,8 @@ export class DecisionService {
         ? this.prisma.decisionProposal.findMany({
             where: {
               status: 'pending',
+              // 兜底改造批 4：过期提案不再进收件箱（此前永久滞留）
+              OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
               ...(filter.projectId ? { projectId: filter.projectId } : {}),
               ...(filter.kind && PROPOSAL_KINDS.includes(filter.kind)
                 ? { kind: filter.kind }

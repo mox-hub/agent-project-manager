@@ -1,12 +1,15 @@
 {
   "common": {
     "noProject": "No Project",
+    "clearFilters": "Clear filters",
     "more": "More",
     "reorder": "Drag to reorder",
     "moveUp": "Move up",
     "moveDown": "Move down",
     "confirm": "Confirm",
     "cancel": "Cancel",
+    "expand": "Expand",
+    "collapse": "Collapse",
     "delete": "Delete",
     "deleteConfirm": "Are you sure you want to delete? This action cannot be undone.",
     "save": "Save",
@@ -612,7 +615,8 @@
       "running": "Running",
       "completed": "Completed",
       "failed": "Failed",
-      "viewDetail": "Open execution center"
+      "viewDetail": "Open execution center",
+      "retry": "Retry"
     },
     "history": {
       "open": "History",
@@ -794,7 +798,11 @@
       "tokens": "Tokens",
       "cost": "Cost",
       "viewAcceptance": "View acceptance",
-      "cancel": "Cancel run"
+      "cancel": "Cancel run",
+      "retry": "Re-execute",
+      "retrySuccess": "New execution created and dispatched",
+      "retryError": "Re-execute failed",
+      "retryOf": "Retried from"
     }
   },
   "decision": {
@@ -806,6 +814,25 @@
     },
     "expiryIn": "Due {{time}}",
     "riskHigh": "High risk",
+    "review": {
+      "button": "Card Review",
+      "buttonCount": "Card Review ({{count}})",
+      "modalTitle": "Decision Card Review",
+      "progress": "Item {{current}} of {{total}}",
+      "allDoneTitle": "All decisions reviewed!",
+      "allDoneHint": "There are no pending decisions awaiting action right now.",
+      "backToInbox": "Back to Inbox",
+      "flipFront": "Flip to Front",
+      "flipBack": "Flip for Evidence",
+      "flipHint": "Press F or click to flip and review evidence",
+      "passStamp": "PASSED",
+      "rejectStamp": "REJECTED",
+      "nextCard": "Next Card",
+      "prevCard": "Previous Card",
+      "quickPass": "Approve",
+      "quickReject": "Reject",
+      "shortcuts": "[1/Enter] Approve · [2] Reject · [F] Flip · [←/→] Page · [Esc] Close"
+    },
     "metrics": {
       "pending": "Pending",
       "blocking": "Blocking",
@@ -1120,6 +1147,12 @@
   },
   "task": {
     "title": "Tasks",
+    "empty": {
+      "none": "No tasks yet",
+      "noneDesc": "Create your first task, or break one down from the intake pipeline",
+      "filtered": "No matching tasks",
+      "filteredDesc": "Try a different keyword, or clear the filters"
+    },
     "descriptionAcrossProjects": "tasks across all projects",
     "dispatchToAi": "Dispatch to AI",
     "create": "Create Task",
@@ -1752,11 +1785,25 @@
       "noProjects": "No projects found",
       "loadError": "Failed to load projects",
       "projects": "projects",
+      "aiExecutingTooltip": "AI is currently taking over task execution",
+      "aiExecutingCount": "{{count}} tasks executing with AI",
+      "pageShowing": "Showing {{from}}–{{to}} of {{total}} projects",
       "columns": {
         "display": "Columns"
       },
       "viewSettings": "View Settings",
       "searchPlaceholder": "Search projects..."
+    },
+    "status": {
+      "active": "Active"
+    },
+    "export": {
+      "label": "Export"
+    },
+    "archive": {
+      "label": "Archive",
+      "confirmTitle": "Archive {{count}} selected projects?",
+      "confirmDescription": "Archived projects will be removed from the active list, but their data is preserved."
     },
     "filter": {
       "all": "All"
@@ -1864,6 +1911,18 @@
     "profilePasswordTooShort": "New password must be at least 8 characters",
     "appearance": "Appearance",
     "dock": "Dock",
+    "shortcuts": "Shortcuts",
+    "shortcutsGlobalTitle": "Global shortcuts",
+    "shortcutsGlobalDesc": "Work on every page. Click \"Modify\", then press a new key combination to record it. Conflicts with existing shortcuts are rejected.",
+    "shortcutsContextTitle": "Contextual shortcuts",
+    "shortcutsContextDesc": "These keys only apply inside their page or dialog. They are fixed for now and cannot be customized.",
+    "shortcutsModify": "Modify",
+    "shortcutsReset": "Reset",
+    "shortcutsResetAll": "Reset all to default",
+    "shortcutsCancel": "Cancel",
+    "shortcutsRecordingHint": "Press a new key combination… (Esc to cancel)",
+    "shortcutsModified": "Customized",
+    "shortcutsConflict": "Conflicts with \"{{action}}\" — pick a different combination",
     "dockActionsTitle": "Action buttons",
     "dockActionsDesc": "Choose which actions appear in the Dock, and reorder them with the arrows.",
     "dockVisible": "Visible",
@@ -2559,12 +2618,7 @@
     "labelsLabel": "Labels",
     "dueDateLabel": "Due date",
     "propertiesLabel": "Properties",
-    "suggestionsLabel": "Suggestions",
     "clearDueDate": "Clear due date",
-    "sugCriticalSeverity": "Critical severity",
-    "sugTagBug": "Tag: bug",
-    "sugAssignMe": "Assign me",
-    "sugToday": "Today",
     "parentTaskLabel": "Parent task"
   },
   "taskDetail": {
@@ -2608,14 +2662,9 @@
     "labelsLabel": "Labels",
     "dueDateLabel": "Due date",
     "propertiesLabel": "Properties",
-    "suggestionsLabel": "Suggestions",
     "externalSection": "External",
     "executionSection": "Execution",
     "clearDueDate": "Clear due date",
-    "sugHighPriority": "High priority",
-    "sugTagFrontend": "Tag: frontend",
-    "sugAssignMe": "Assign me",
-    "sugToday": "Today",
     "execPending": "Pending",
     "execRunning": "Running",
     "execCompleted": "Completed",
@@ -2660,8 +2709,12 @@
     "execActionApprove": "Approve & complete",
     "execActionAbandon": "Supersede",
     "execActionDispatchCli": "Dispatch CLI",
+    "execActionRetryCli": "Re-execute (new execution)",
     "execDispatchCliSuccess": "CLI dispatch started, execution item is now in progress",
     "execDispatchCliError": "CLI dispatch failed",
+    "execRetryCliSuccess": "New execution created and dispatched",
+    "execRetryCliError": "Re-execute failed",
+    "execRetryOf": "Retried from",
     "execActionViewLog": "View execution log",
     "execActionMore": "More actions",
     "parentTaskLabel": "Parent task",
@@ -3043,7 +3096,16 @@
       "projects": "Projects"
     },
     "acceptance": {
-      "task": "Task"
+    "draft": {
+      "title": "AI-draft acceptance criteria",
+      "description": "AI drafts checkable acceptance criteria from the issue. Review and confirm to apply (existing criteria are never overwritten)",
+      "generating": "AI is drafting acceptance criteria…",
+      "button": "AI-draft acceptance criteria",
+      "apply": "Apply",
+      "functional": "Functional",
+      "technical": "Technical",
+      "applied": "Applied {{added}} criteria{{skipped}}"
+    },      "task": "Task"
     },
     "generic": {
       "hint": "Hover to preview pages; entity details show for projects, tasks, bugs, documents and more."
@@ -3289,12 +3351,6 @@
       "title": "Keyboard Shortcuts",
       "shortcut": "Shortcut",
       "action": "Action",
-      "commandPalette": "Open Command Palette",
-      "newTask": "New Task",
-      "projectSwitch": "Quick Project Switch",
-      "showHelp": "Show Help",
-      "toggleSidebar": "Toggle Sidebar",
-      "aiAssistant": "AI Assistant",
       "closeDialog": "Close Dialog/Panel",
       "saveChanges": "Save Changes"
     },
@@ -3663,6 +3719,7 @@
   },
   "shell": {
     "mainNav": "Main",
+    "connectionLost": "Realtime connection lost, reconnecting… page data may be stale",
     "main": "Main",
     "workbench": "Workbench",
     "pipeline": "Lifecycle Pipeline",
@@ -3718,6 +3775,18 @@
     },
     "appName": "AgentPM"
   },
+  "hotkeys": {
+    "commandPalette": "Open command palette",
+    "commandPaletteDesc": "Search and run any command or jump to a page",
+    "aiAssistant": "Toggle AI assistant panel",
+    "aiAssistantDesc": "Open or collapse the main AI assistant sidebar",
+    "documentSave": "Save document",
+    "documentSaveDesc": "Save and create a version snapshot on the document edit page",
+    "decisionReview": "Decision card review",
+    "decisionReviewDesc": "In review mode: Enter/1 approve · 2 reject · F flip · ←/→ navigate",
+    "createPanelSwitch": "Switch create panel type",
+    "createPanelSwitchDesc": "Inside the unified create dialog: Ctrl+1..6 switches between task/bug/document etc."
+  },
   "commandPalette": {
     "title": "Command Palette",
     "description": "Search for a command to run...",
@@ -3768,6 +3837,20 @@
       "saveRequired": "Personal Access Token is required",
       "saved": "GitHub integration saved",
       "saveFailed": "Failed to save integration"
+    },
+    "panel": {
+      "repoPlaceholder": "e.g. owner/repo",
+      "refresh": "Refresh",
+      "newPr": "New PR",
+      "prTitleLabel": "PR title",
+      "headBranch": "Head branch",
+      "baseBranch": "Base branch",
+      "descOptional": "Description (optional)",
+      "descPlaceholder": "Related issue: ...",
+      "submit": "Submit",
+      "error": "Cannot reach GitHub, please check the repo name and integration credentials",
+      "loading": "Loading pull requests…",
+      "empty": "No open pull requests"
     }
   },
   "integration": {
@@ -3796,16 +3879,21 @@
     "published": "Published",
     "reviewing": "Reviewing",
     "draft": "Draft",
+    "rejected": "Rejected",
     "allCategories": "All Categories",
     "allStatus": "All Status",
     "noDocuments": "No documents",
     "noMatch": "No matching documents found",
+    "noMatchDesc": "Try a different keyword, or clear the status / category filters",
+    "searchPlaceholder": "Search documents...",
+    "publicDoc": "Public document",
     "createFirst": "Start creating your first document",
     "categories": {
       "requirement": "Requirements",
       "design": "Design Documents",
       "api": "API Documents",
       "test": "Test Documents",
+      "testing": "Test Documents",
       "guide": "User Guides",
       "custom": "Custom"
     },
@@ -3826,7 +3914,19 @@
       "implements": "Implements"
     },
     "filter": {
-      "all": "All"
+      "all": "All",
+      "status": "Status",
+      "category": "Category"
+    },
+    "syncBanner": {
+      "title": "Local file sync failed ({{count}})",
+      "item": "{{title}} · {{attempts}} retries · {{error}}",
+      "dismiss": "Dismiss",
+      "more": "...and {{count}} more",
+      "close": "Close alerts"
+    },
+    "export": {
+      "label": "Export"
     },
     "view": {
       "list": "List",
@@ -4061,6 +4161,8 @@
     "results": "{{count}} results",
     "empty": "No acceptances yet",
     "emptyHint": "Auto-created on dispatch, or create one manually",
+    "emptyFiltered": "No matching acceptances",
+    "emptyFilteredHint": "Try a different keyword, or clear the filters",
     "searchPlaceholder": "Search acceptance or task…",
     "filter": {
       "status": "Status",

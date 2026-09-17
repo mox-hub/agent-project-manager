@@ -168,12 +168,7 @@ export function ReferenceList({
   onSelect: (ref: { documentId: string; anchor?: string }) => void;
 }) {
   if (references.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed border-border p-4 text-center">
-        <Icons.FileText className="mx-auto h-6 w-6 text-muted-foreground/50" />
-        <EmptyState title="暂无引用" className="min-h-0 border-0 py-4" />
-      </div>
-    );
+    return <EmptyState title="暂无引用" className="min-h-0 border-0 py-4" />;
   }
 
   return (

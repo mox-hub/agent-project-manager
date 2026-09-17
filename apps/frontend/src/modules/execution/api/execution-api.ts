@@ -44,6 +44,8 @@ export interface IssueExecution {
   order?: number;
   metadata?: Record<string, unknown> | null;
   acceptanceId?: string | null;
+  /** 兜底批 5：重试血缘——本执行由哪个失败/阻塞执行重新执行而来 */
+  retryOfId?: string | null;
   /** 审计闸门黄牌提示（人工执行项 + 活契约审计 red 时返回） */
   auditWarning?: string | null;
   startedAt?: string | null;
@@ -102,115 +104,9 @@ export interface RecoveryOptions {
 const API_BASE = '/_api/execution';
 
 export const executionApi = {
-  // Execution Runs
-  async listRuns(): Promise<ExecutionRun[]> {
-    const res = await fetch(`${API_BASE}/runs`);
-    if (!res.ok) throw new Error('Failed to fetch execution runs');
-    const data: { data: ExecutionRun[] } = await res.json();
-    return data.data || [];
-  },
-
-  async getRun(id: string): Promise<ExecutionRun> {
-    const res = await fetch(`${API_BASE}/runs/${id}`);
-    if (!res.ok) throw new Error('Failed to fetch execution run');
-    const data = await res.json();
-    return data.data;
-  },
-
-  async getRunByTask(issueId: string): Promise<ExecutionRun[]> {
-    const res = await fetch(`${API_BASE}/runs/task/${issueId}`);
-    if (!res.ok) throw new Error('Failed to fetch execution runs by task');
-    const data: { data: ExecutionRun[] } = await res.json();
-    return data.data || [];
-  },
-
-  async cancelRun(id: string): Promise<void> {
-    const res = await fetch(`${API_BASE}/runs/${id}/cancel`, { method: 'POST' });
-    if (!res.ok) throw new Error('Failed to cancel execution run');
-  },
-
-  async retryRun(id: string): Promise<ExecutionRun> {
-    const res = await fetch(`${API_BASE}/runs/${id}/retry`, { method: 'POST' });
-    if (!res.ok) throw new Error('Failed to retry execution run');
-    const data = await res.json();
-    return data.data;
-  },
-
-  /**
-   * 获取执行可用步骤（恢复流程用）
-   */
-  async getAvailableSteps(id: string): Promise<ExecutionStep[]> {
-    const res = await fetch(`${API_BASE}/runs/${id}/steps`);
-    if (!res.ok) throw new Error('Failed to fetch execution steps');
-    const data = await res.json();
-    return data.data || [];
-  },
-
-  /**
-   * 重新执行（恢复流程用）
-   */
-  async retry(id: string): Promise<ExecutionRun> {
-    return this.retryRun(id);
-  },
-
-  /**
-   * 重试指定步骤（恢复流程用）
-   */
-  async retryStep(id: string, stepId: string): Promise<ExecutionRun> {
-    const res = await fetch(`${API_BASE}/runs/${id}/retry`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stepId }),
-    });
-    if (!res.ok) throw new Error('Failed to retry execution step');
-    const data = await res.json();
-    return data.data;
-  },
-
-  /**
-   * 调整执行参数后重试（恢复流程用）
-   */
-  async adjustParams(
-    id: string,
-    params: Record<string, unknown>,
-  ): Promise<ExecutionRun> {
-    const res = await fetch(`${API_BASE}/runs/${id}/retry`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ params }),
-    });
-    if (!res.ok) throw new Error('Failed to adjust execution params');
-    const data = await res.json();
-    return data.data;
-  },
-
-  /**
-   * 转交人工（恢复流程用）
-   */
-  async escalate(
-    id: string,
-    escalateTo: string,
-    reason?: string,
-  ): Promise<void> {
-    const res = await fetch(`${API_BASE}/runs/${id}/escalate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ escalateTo, reason }),
-    });
-    if (!res.ok) throw new Error('Failed to escalate execution');
-  },
-
-  /**
-   * 放弃执行（恢复流程用）
-   */
-  async abort(id: string, reason?: string): Promise<void> {
-    const res = await fetch(`${API_BASE}/runs/${id}/cancel`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason }),
-    });
-    if (!res.ok) throw new Error('Failed to abort execution');
-  },
+  // 兜底改造批 4：老 fetch 版 run 方法（listRuns/getRun/retry/escalate 等）
+  // 指向后端不存在或无鉴权的路由，已删除；重试走 ai-hub dispatchTaskToCli
+  // 绑定执行项通路，run 查询走 modules/executions 的 /execution/runs hooks。
 
   // ─── 4d: Issue 统一执行项 ──────────────────────────────────────
 
@@ -260,14 +156,6 @@ export const executionApi = {
     if (!res.ok) throw new Error('Failed to resolve approval');
   },
 
-  async batchResolveApprovals(ids: string[], approve: boolean): Promise<void> {
-    const res = await fetch(`${API_BASE}/approvals/batch-resolve`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids, approve }),
-    });
-    if (!res.ok) throw new Error('Failed to batch resolve approvals');
-  },
 
   // Audit Logs (by traceId)
   async getAuditLogsByTrace(traceId: string): Promise<unknown[]> {

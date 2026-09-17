@@ -208,7 +208,7 @@ export function TaskTableView({
         maxHeight={maxHeight}
         emptyContent={
           <div className="p-8 text-center text-sm text-muted-foreground">
-            {loading ? 'Loading tasks...' : 'No tasks to display'}
+            {loading ? '任务加载中…' : '暂无任务'}
           </div>
         }
       />

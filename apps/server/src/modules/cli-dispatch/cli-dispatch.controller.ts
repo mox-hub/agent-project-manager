@@ -148,6 +148,30 @@ export class CliDispatchController {
     return { success: cancelled };
   }
 
+  @Post('execution-runs/:id/retry')
+  @ApiOperation({
+    summary:
+      'Re-execute a failed/blocked execution as a new execution (clone + lineage + same dispatch flow)',
+  })
+  @ApiParam({ name: 'id', description: '原执行 ID（须为 failed/blocked）' })
+  @ApiResponse({
+    status: 200,
+    description: '新执行已创建并派发（retryOfId 血缘指回原执行）',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      '不可重新执行：状态非 failed/blocked，或未关联有效工单；派发被门禁阻断时新执行落 blocked',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Execution not found' })
+  async retryExecution(
+    @Param('id') executionRunId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.dispatchService.retryExecution(executionRunId, user.id);
+  }
+
   @Get('execution-runs/:id/status')
   @ApiOperation({ summary: 'Get CLI execution status' })
   @ApiParam({ name: 'id', description: 'Execution Run ID' })

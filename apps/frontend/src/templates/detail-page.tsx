@@ -239,7 +239,7 @@ export function XxxDetailPage() {
             </PropertyRow>
           </PropsCard>
 
-          {/* TODO: 其余右栏面板（SuggestionsCard / 外部集成 / 执行记录），按需保留 */}
+          {/* TODO: 其余右栏面板（外部集成 / 执行记录），按需保留 */}
         </RightSidebar>
       </div>
 

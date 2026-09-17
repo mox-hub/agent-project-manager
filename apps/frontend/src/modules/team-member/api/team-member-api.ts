@@ -354,7 +354,7 @@ export async function unbindMemberProject(memberId: string, projectId: string) {
 // ========== Task Assignees ==========
 
 export async function listTaskAssignees(issueId: string): Promise<TaskAssignee[]> {
-  const res = await api.get<TaskAssignee[]>(`/issue-assignees/task/${issueId}`);
+  const res = await api.get<TaskAssignee[]>(`/issue-assignees/issue/${issueId}`);
   return res;
 }
 
@@ -369,12 +369,12 @@ export async function bulkSetTaskAssignees(data: RequestBodyOf<'IssueAssigneeCon
 }
 
 export async function removeTaskAssignee(issueId: string, memberId: string, role: string) {
-  const res = await api.delete(`/issue-assignees/task/${issueId}/member/${memberId}/role/${role}`);
+  const res = await api.delete(`/issue-assignees/issue/${issueId}/member/${memberId}/role/${role}`);
   return res;
 }
 
 export async function listTaskWatchers(issueId: string): Promise<TaskWatcher[]> {
-  const res = await api.get<TaskWatcher[]>(`/issue-assignees/task/${issueId}/watchers`);
+  const res = await api.get<TaskWatcher[]>(`/issue-assignees/issue/${issueId}/watchers`);
   return res;
 }
 
@@ -384,7 +384,7 @@ export async function addTaskWatcher(data: RequestBodyOf<'IssueAssigneeControlle
 }
 
 export async function removeTaskWatcher(issueId: string, memberId: string) {
-  const res = await api.delete(`/issue-assignees/task/${issueId}/watchers/${memberId}`);
+  const res = await api.delete(`/issue-assignees/issue/${issueId}/watchers/${memberId}`);
   return res;
 }
 
