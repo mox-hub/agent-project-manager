@@ -67,7 +67,10 @@ function buildService(
     buildTaskExecutionContext: vi.fn().mockResolvedValue({ summary: 'ctx' }),
   };
   const trustService = { evaluateExecution: vi.fn() };
-  const acceptanceService = {};
+  const acceptanceService = {
+    // 兜底改造批 3：派发前验收门禁（默认放行，个别用例覆盖为阻断）
+    assertDispatchGate: vi.fn().mockResolvedValue('acc-mock'),
+  };
   const runtimeService = { createDispatch: vi.fn() };
   const messageBus = { publish: vi.fn() };
 

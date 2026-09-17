@@ -72,6 +72,53 @@ export function useSilentCreateSuggestions() {
   });
 }
 
+/** 验收标准代写（兜底改造批 3）：按工单 id 或创建面板草稿字段生成草案 */
+export interface AcceptanceCriteriaDraft {
+  content: string;
+  criteriaType?: string;
+  severity?: string;
+  category?: string;
+}
+
+export function useSilentAcceptanceDraft() {
+  return useMutation({
+    mutationFn: (input: {
+      issueId?: string;
+      title?: string;
+      description?: string;
+      type?: string;
+      projectId?: string;
+    }) =>
+      assistantApi.silent('acceptance-draft', {
+        projectId: input.projectId,
+        context: {
+          ...(input.issueId ? { issueId: input.issueId } : {}),
+          title: input.title,
+          description: input.description,
+          type: input.type,
+        },
+      }),
+    retry: false,
+  });
+}
+
+/** 解析 acceptance-draft 响应为标准草案列表 */
+export function parseAcceptanceDraft(
+  data: Record<string, unknown> | undefined,
+): AcceptanceCriteriaDraft[] {
+  const arr = data?.criteria;
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((raw) => raw as Record<string, unknown>)
+    .filter((c) => typeof c.content === 'string' && c.content.trim())
+    .map((c) => ({
+      content: String(c.content),
+      criteriaType: typeof c.criteriaType === 'string' ? c.criteriaType : 'functional',
+      severity: typeof c.severity === 'string' ? c.severity : 'medium',
+      category: typeof c.category === 'string' ? c.category : undefined,
+    }));
+}
+
 /** 解析 create-suggestions 响应为可渲染/可回填的建议列表 */
 export function parseCreateSuggestions(
   data: Record<string, unknown> | undefined,

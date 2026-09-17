@@ -3,8 +3,9 @@
  *
  * - Header: SubPageToolbar（面包屑 + prev/next 导航 + 收藏 + 侧栏开关）
  * - Main: 底框状态图标 + 标题(热编辑) + 元信息 + 描述(markdown 查看/热编辑)
- *         + 子任务行(底框图标/标签/优先级/负责人) + 关联文档 + Activity 动态(评论/表情)
- * - Right (320px): 操作条(指派AI/删除) + Properties + Suggestions + Linear/Github/执行/验收
+ *         + 自定义字段(正文分区，fieldSchema 驱动) + 执行项/子任务/动态(均可收缩)
+ *         + Activity 动态(评论/表情)
+ * - Right (320px): 操作条(指派AI/删除) + Properties + 关联文档 + 外部集成(Linear/GitHub)/执行/验收
  *
  * 动态与评论走 modules/activity（markdown + 表情回应），操作记录由服务端自动落库。
  */
@@ -14,11 +15,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/toast';
 import { useConfirm } from '@/shared/confirm/confirm-provider';
 import {
-  AlertCircle as AlertCircleIcon,
   AlignLeft,
+  Blocks,
   Bot as BotIcon,
   CalendarIcon,
   CheckCircle2,
+  ChevronDown,
   Diamond as DiamondIcon,
   FileText,
   Flag,
@@ -26,6 +28,7 @@ import {
   ListTree,
   Pencil,
   Plus,
+  SlidersHorizontal,
   Tag,
   Trash2,
   User as UserIcon,
@@ -50,7 +53,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   CapsuleSelect, DateCapsuleField, AutoSizeTextarea,
-  PropertyRow, PropsCard, SuggestionsCard, MemberAvatar,
+  PropertyRow, PropsCard, MemberAvatar,
 } from '@/components/ui/property-panel';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
@@ -90,7 +93,7 @@ import { TaskLinearPanel } from '@/modules/linear/components/task-linear-panel';
 import { LinearConflictResolver } from '@/modules/linear/components/linear-conflict-resolver';
 import { LinearExternalRefBadge, LinearSyncStatusBadge } from '@/modules/linear/components/linear-status-badge';
 import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
-import { GithubPanel } from '@/modules/github/components/github-panel';
+import { GithubPanelEmbedded } from '@/modules/github/components/github-panel';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
 import { ActivityFeed } from '@/modules/activity';
 import type { ActivityEntityType } from '@/modules/activity';
@@ -143,20 +146,6 @@ function usePriorityOptions() {
   );
 }
 
-/** 右栏建议项（i18n 文案 + 语义色图标） */
-function useTaskSuggestions() {
-  const { t } = useTranslation();
-  return useMemo(
-    () => [
-      { label: t('taskDetail.sugHighPriority'), icon: AlertCircleIcon, color: 'text-accent-orange' },
-      { label: t('taskDetail.sugTagFrontend'), icon: Tag, color: 'text-accent-blue' },
-      { label: t('taskDetail.sugAssignMe'), icon: UserIcon, color: 'text-accent-purple' },
-      { label: t('taskDetail.sugToday'), icon: CalendarIcon, color: 'text-accent-green' },
-    ],
-    [t],
-  );
-}
-
 export function TaskDetailPage() {
   const navigate = useNavigate();
   const { issueId } = useParams<{ issueId: string }>();
@@ -164,7 +153,6 @@ export function TaskDetailPage() {
   const { t } = useTranslation();
 
   const [propsCollapsed, setPropsCollapsed] = useState(false);
-  const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAiAssignDialog, setShowAiAssignDialog] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -203,7 +191,6 @@ export function TaskDetailPage() {
 
   const statusOptions = useTaskStatusOptions();
   const priorityOptions = usePriorityOptions();
-  const suggestions = useTaskSuggestions();
 
   // ── prev/next 导航 (项目内)
   const nav = useEntityNavigation(task?.projectId ?? null, issueId, 'task');
@@ -522,6 +509,15 @@ export function TaskDetailPage() {
             )}
           </div>
 
+          {/* 自定义字段（IssueType fieldSchema 驱动，key 挂任务 id 避免切换任务残留草稿；
+              正文区描述下方，与执行项/子任务同层级） */}
+          <CustomFieldsPanel
+            key={task.id}
+            issueId={task.id}
+            typeId={task.typeId}
+            customFields={task.customFields}
+          />
+
           {/* Execution items（4d：统一执行单位，主栏与子任务同级，置于其上方） */}
           <ExecutionItemsPanel issueId={task.id} projectId={task.projectId} />
 
@@ -591,6 +587,7 @@ export function TaskDetailPage() {
           {/* Properties */}
           <PropsCard
             title={t('taskDetail.propertiesLabel')}
+            icon={<SlidersHorizontal className="size-3" />}
             collapsed={propsCollapsed}
             onToggleCollapse={() => setPropsCollapsed((v) => !v)}
           >
@@ -719,26 +716,14 @@ export function TaskDetailPage() {
             </PropertyRow>
           </PropsCard>
 
-          {/* 自定义字段（IssueType fieldSchema 驱动，key 挂任务 id 避免切换任务残留草稿） */}
-          <CustomFieldsPanel
-            key={task.id}
-            issueId={task.id}
-            typeId={task.typeId}
-            customFields={task.customFields}
-          />
-
-          <SuggestionsCard
-            title={t('taskDetail.suggestionsLabel')}
-            items={suggestions}
-            collapsed={suggestionsCollapsed}
-            onToggle={() => setSuggestionsCollapsed((v) => !v)}
-          />
-
-          {/* Linked documents（与 Properties/Suggestions 同一套 SidebarPanel 形态） */}
+          {/* Linked documents（与 Properties 同一套 SidebarPanel 形态） */}
           <LinkedDocsPanel issueId={task.id} />
 
           {task.projectId ? (
-            <SidebarPanel title={t('taskDetail.externalSection')}>
+            <SidebarPanel
+              title={t('taskDetail.externalSection')}
+              icon={<Blocks className="size-3" />}
+            >
               <TaskLinearPanel
                 issueId={task.id}
                 projectId={task.projectId}
@@ -754,16 +739,15 @@ export function TaskDetailPage() {
               {task.syncStatus === 'conflict' ? (
                 <LinearConflictResolver issueId={task.id} />
               ) : null}
+              {/* GitHub PR 跟踪以嵌入子卡归入外部集成（配置存在时显示） */}
+              {githubIntegration && (
+                <GithubPanelEmbedded
+                  integrationId={githubIntegration.id}
+                  repoFullName={(project as unknown as { repositoryFullName?: string } | null)?.repositoryFullName}
+                />
+              )}
             </SidebarPanel>
           ) : null}
-
-          {/* ─── Execution ─── */}
-          {githubIntegration && (
-            <GithubPanel
-              integrationId={githubIntegration.id}
-              repoFullName={(project as unknown as { repositoryFullName?: string } | null)?.repositoryFullName}
-            />
-          )}
 
           {/* ─── 验收契约 ─── */}
           <SidebarPanel
@@ -828,6 +812,7 @@ function SubTaskSection({
   const { t } = useTranslation();
   const { data: subIssues = [], isLoading } = useSubTasks(parentIssueId);
   const createSubTask = useCreateSubTask();
+  const [collapsed, setCollapsed] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
   const [subTitle, setSubTitle] = useState('');
   const [subDesc, setSubDesc] = useState('');
@@ -859,7 +844,7 @@ function SubTaskSection({
 
   return (
     <div className="shrink-0">
-      {/* Section header: 标题 + 完成进度 */}
+      {/* Section header: 标题 + 完成进度 + 收缩/新增 */}
       <div className="px-6 py-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <ListChecks className="size-3.5" />
@@ -870,108 +855,134 @@ function SubTaskSection({
             </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => setSubOpen((v) => !v)}
-          className="size-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          title={subOpen ? t('taskDetail.collapse') : t('taskDetail.addSubtask')}
-        >
-          {subOpen ? <Plus className="size-3.5 rotate-45" /> : <Plus className="size-3.5" />}
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            className="inline-flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={collapsed ? t('common.expand') : t('common.collapse')}
+            aria-expanded={!collapsed}
+          >
+            <ChevronDown
+              className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCollapsed(false);
+              setSubOpen((v) => !v);
+            }}
+            className="size-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            title={subOpen ? t('taskDetail.collapse') : t('taskDetail.addSubtask')}
+          >
+            {subOpen ? <Plus className="size-3.5 rotate-45" /> : <Plus className="size-3.5" />}
+          </button>
+        </div>
       </div>
 
-      {/* Sub-task list */}
-      {isLoading ? (
-        <div className="px-6 pb-2 text-xs text-muted-foreground">{t('common.loading')}</div>
-      ) : subIssues.length > 0 ? (
-        <div className="px-6 pb-1 flex flex-col gap-0.5">
-          {subIssues.map((st) => {
-            const visual = TASK_STATUS_VISUALS[st.status] ?? TASK_STATUS_VISUALS.todo;
-            const priorityVisual = PRIORITY_VISUALS[st.priority] ?? null;
-            const firstTag = st.issueTags?.[0]?.tag;
-            return (
-              <Link
-                key={st.id}
-                to={`/app/issues/${st.id}`}
-                className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-muted/40 transition-colors group"
-              >
-                <StatusIconFrame
-                  icon={visual.icon}
-                  tone={visual.tone}
-                  size="sm"
-                  spin={visual.icon === TASK_STATUS_VISUALS.in_progress.icon}
-                />
-                <span className="flex-1 text-sm truncate group-hover:text-primary transition-colors">
-                  {st.title}
-                </span>
-                {firstTag && (
-                  <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-11 text-muted-foreground shrink-0">
-                    {firstTag.color && (
-                      <span className="size-1.5 rounded-full" style={{ backgroundColor: firstTag.color }} />
+      {/* 分区内容：子任务列表 + 新增表单（grid-rows 动画展开 / 收起） */}
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows] duration-300 ease-out',
+          collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
+        )}
+      >
+        <div className="overflow-hidden">
+          {/* Sub-task list */}
+          {isLoading ? (
+            <div className="px-6 pb-2 text-xs text-muted-foreground">{t('common.loading')}</div>
+          ) : subIssues.length > 0 ? (
+            <div className="px-6 pb-1 flex flex-col gap-0.5">
+              {subIssues.map((st) => {
+                const visual = TASK_STATUS_VISUALS[st.status] ?? TASK_STATUS_VISUALS.todo;
+                const priorityVisual = PRIORITY_VISUALS[st.priority] ?? null;
+                const firstTag = st.issueTags?.[0]?.tag;
+                return (
+                  <Link
+                    key={st.id}
+                    to={`/app/issues/${st.id}`}
+                    className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-muted/40 transition-colors group"
+                  >
+                    <StatusIconFrame
+                      icon={visual.icon}
+                      tone={visual.tone}
+                      size="sm"
+                      spin={visual.icon === TASK_STATUS_VISUALS.in_progress.icon}
+                    />
+                    <span className="flex-1 text-sm truncate group-hover:text-primary transition-colors">
+                      {st.title}
+                    </span>
+                    {firstTag && (
+                      <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-11 text-muted-foreground shrink-0">
+                        {firstTag.color && (
+                          <span className="size-1.5 rounded-full" style={{ backgroundColor: firstTag.color }} />
+                        )}
+                        {firstTag.name}
+                      </span>
                     )}
-                    {firstTag.name}
-                  </span>
-                )}
-                {priorityVisual && (
-                  <priorityVisual.icon className={cn('size-3.5 shrink-0', TONE_TEXT_CLASS[priorityVisual.tone])} />
-                )}
-                {st.dueDate && (
-                  <span className="text-10 text-muted-foreground shrink-0">
-                    {new Date(st.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </span>
-                )}
-                {st.assignee && (
-                  <MemberAvatar
-                    name={st.assignee.displayName || st.assignee.username}
-                    avatarUrl={st.assignee.avatarUrl}
-                  />
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      ) : null}
+                    {priorityVisual && (
+                      <priorityVisual.icon className={cn('size-3.5 shrink-0', TONE_TEXT_CLASS[priorityVisual.tone])} />
+                    )}
+                    {st.dueDate && (
+                      <span className="text-10 text-muted-foreground shrink-0">
+                        {new Date(st.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
+                    {st.assignee && (
+                      <MemberAvatar
+                        name={st.assignee.displayName || st.assignee.username}
+                        avatarUrl={st.assignee.avatarUrl}
+                      />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ) : null}
 
-      {/* Create sub-task form（图1 创建卡形态） */}
-      {subOpen && (
-        <div className="px-6 pb-4">
-          <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
-            <div className="p-3 flex flex-col gap-2">
-              <AutoSizeTextarea
-                autoFocus
-                rows={1}
-                placeholder={t('taskDetail.subtaskTitle')}
-                value={subTitle}
-                onChange={(e) => setSubTitle(e.target.value)}
-                className="w-full text-sm font-semibold placeholder:text-muted-foreground/50 focus-visible:ring-0"
-              />
-              <AutoSizeTextarea
-                rows={1}
-                placeholder={t('taskDetail.addDescription')}
-                value={subDesc}
-                onChange={(e) => setSubDesc(e.target.value)}
-                className="w-full text-xs font-normal placeholder:text-muted-foreground/50 focus-visible:ring-0"
-              />
+          {/* Create sub-task form（图1 创建卡形态） */}
+          {subOpen && (
+            <div className="px-6 pb-4">
+              <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
+                <div className="p-3 flex flex-col gap-2">
+                  <AutoSizeTextarea
+                    autoFocus
+                    rows={1}
+                    placeholder={t('taskDetail.subtaskTitle')}
+                    value={subTitle}
+                    onChange={(e) => setSubTitle(e.target.value)}
+                    className="w-full text-sm font-semibold placeholder:text-muted-foreground/50 focus-visible:ring-0"
+                  />
+                  <AutoSizeTextarea
+                    rows={1}
+                    placeholder={t('taskDetail.addDescription')}
+                    value={subDesc}
+                    onChange={(e) => setSubDesc(e.target.value)}
+                    className="w-full text-xs font-normal placeholder:text-muted-foreground/50 focus-visible:ring-0"
+                  />
+                </div>
+                {mutationError && (
+                  <div className="mx-3 mb-2 text-xs text-destructive">{mutationError}</div>
+                )}
+                <div className="px-3 pb-3 flex justify-end gap-2">
+                  <Button variant="ghost" size="xs" onClick={() => { setSubOpen(false); setSubTitle(''); setSubDesc(''); }}>
+                    {t('common.cancel')}
+                  </Button>
+                  <Button size="xs" onClick={handleSave} disabled={!subTitle.trim() || createSubTask.isPending}>
+                    {createSubTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('taskDetail.saveSubtask')}
+                  </Button>
+                </div>
+              </div>
             </div>
-            {mutationError && (
-              <div className="mx-3 mb-2 text-xs text-destructive">{mutationError}</div>
-            )}
-            <div className="px-3 pb-3 flex justify-end gap-2">
-              <Button variant="ghost" size="xs" onClick={() => { setSubOpen(false); setSubTitle(''); setSubDesc(''); }}>
-                {t('common.cancel')}
-              </Button>
-              <Button size="xs" onClick={handleSave} disabled={!subTitle.trim() || createSubTask.isPending}>
-                {createSubTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('taskDetail.saveSubtask')}
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// ===== Custom Fields（右侧栏面板：IssueType fieldSchema 驱动的自定义字段查看 / 编辑） =====
+// ===== Custom Fields（正文分区：IssueType fieldSchema 驱动的自定义字段查看 / 编辑） =====
 
 function CustomFieldsPanel({
   issueId,
@@ -986,6 +997,7 @@ function CustomFieldsPanel({
   // 类型 fieldSchema 定义（byId 取自 issue-types 查询缓存）
   const { byId } = useIssueTypes();
   const updateTask = useUpdateTask();
+  const [collapsed, setCollapsed] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, unknown>>({});
   const schema = useMemo(
@@ -1005,6 +1017,7 @@ function CustomFieldsPanel({
       Object.fromEntries(schema.map((field) => [field.key, customFields?.[field.key] ?? null])),
     );
     setEditing(true);
+    setCollapsed(false);
   };
 
   const handleSave = async () => {
@@ -1017,50 +1030,79 @@ function CustomFieldsPanel({
   };
 
   return (
-    <SidebarPanel
-      title={t('taskDetail.customFields')}
-      icon={<ListTree className="size-3" />}
-      action={
-        editing ? undefined : (
-          <Button variant="ghost" size="icon-xs" title={t('common.edit')} onClick={startEdit}>
-            <Pencil className="size-3" />
-          </Button>
-        )
-      }
-    >
-      {editing ? (
-        <div className="space-y-3 p-1">
-          <CustomFieldsSection
-            fields={schema}
-            values={draft}
-            onChange={(key, value) => setDraft((prev) => ({ ...prev, [key]: value }))}
-          />
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="xs" onClick={() => setEditing(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button size="xs" onClick={() => void handleSave()} disabled={updateTask.isPending}>
-              {updateTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.save')}
-            </Button>
-          </div>
+    <div className="shrink-0">
+      {/* Section header：与执行项/子任务分区同形态 */}
+      <div className="px-6 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <ListTree className="size-3" />
+          {t('taskDetail.customFields')}
+          <span className="text-10 font-normal">({schema.length})</span>
         </div>
-      ) : (
-        <div className="flex flex-col gap-0.5">
-          {schema.map((field) => {
-            const text = formatCustomFieldValue(customFields?.[field.key]);
-            return (
-              <div
-                key={field.key}
-                className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs"
-              >
-                <span className="shrink-0 text-muted-foreground">{field.label}</span>
-                <span className="min-w-0 truncate text-right text-foreground">{text || '-'}</span>
+        <div className="flex items-center gap-0.5">
+          {!editing && (
+            <Button variant="ghost" size="icon-xs" title={t('common.edit')} onClick={startEdit}>
+              <Pencil className="size-3" />
+            </Button>
+          )}
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={collapsed ? t('common.expand') : t('common.collapse')}
+            aria-expanded={!collapsed}
+          >
+            <ChevronDown
+              className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* 分区内容：grid-rows 动画展开 / 收起（与 SidebarPanel 同一手势） */}
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows] duration-300 ease-out',
+          collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
+        )}
+      >
+        <div className="overflow-hidden">
+          {editing ? (
+            <div className="px-6 pb-3 space-y-3">
+              <CustomFieldsSection
+                fields={schema}
+                values={draft}
+                onChange={(key, value) => setDraft((prev) => ({ ...prev, [key]: value }))}
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" size="xs" onClick={() => setEditing(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button size="xs" onClick={() => void handleSave()} disabled={updateTask.isPending}>
+                  {updateTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.save')}
+                </Button>
               </div>
-            );
-          })}
+            </div>
+          ) : (
+            <div className="px-6 pb-2 flex flex-col">
+              {schema.map((field) => {
+                const text = formatCustomFieldValue(customFields?.[field.key]);
+                return (
+                  <div
+                    key={field.key}
+                    className="flex items-start justify-between gap-3 px-2 py-1.5 text-xs"
+                  >
+                    <span className="shrink-0 text-muted-foreground">{field.label}</span>
+                    <span className="min-w-0 flex-1 break-words text-right text-foreground">
+                      {text || '-'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
-    </SidebarPanel>
+      </div>
+    </div>
   );
 }
 

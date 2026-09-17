@@ -19,6 +19,7 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { SectionCard } from '@/components/ui/section-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -354,11 +355,9 @@ function CreateTypeDialog({
           </div>
           <div className="space-y-1.5">
             <label className="text-xs text-content-text-secondary">{t('settings.issueTypeColor', '颜色')}</label>
-            <Input
-              type="color"
+            <ColorPicker
               value={draft.color}
-              onChange={(e) => setDraft({ ...draft, color: e.target.value })}
-              className="h-9 w-20 cursor-pointer p-1"
+              onValueChange={(color) => setDraft({ ...draft, color })}
             />
           </div>
         </div>

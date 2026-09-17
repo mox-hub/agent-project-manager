@@ -95,7 +95,14 @@ export function RunDetailsDialog({
     on: false,
   });
   const [panel, setPanel] = useState<PanelView>(NO_PANEL);
-  const detail = useExecutionRunDetail(open ? runId : null);
+  // 非终态 5s 轮询兜底（socket 失效为主）：此前 detail 不轮询，弹窗内 run 到
+  // 终态时状态徽章永远停在 in_progress，只有事件流在滚动
+  const detail = useExecutionRunDetail(open ? runId : null, {
+    refetchInterval: (query) => {
+      const d = query.state.data;
+      return !d || !isTerminalRunStatus(d.status) ? 5000 : false;
+    },
+  });
   const run = detail.data;
   const stillActive = !run || !isTerminalRunStatus(run.status);
   const events = useExecutionRunEvents(runId, open && stillActive);

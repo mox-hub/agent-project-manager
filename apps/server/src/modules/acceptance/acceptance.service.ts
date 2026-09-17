@@ -608,4 +608,107 @@ export class AcceptanceService {
     });
     return updated;
   }
+
+  // ─── 验收标准供给侧（兜底改造批 3，2026-09-15 裁决：先按严格要求）───
+
+  /**
+   * 派发前验收门禁：无活契约或活契约 0 条标准均阻断派发。
+   * 翻转原「无契约不拦（派发时自动建空契约）」的宽松口径——杜绝
+   * 「执行完才发现没标准」的最大返工场景。返回活契约 id。
+   */
+  async assertDispatchGate(issueId: string): Promise<string> {
+    const acceptance = await this.prisma.acceptance.findFirst({
+      where: { issueId, status: { notIn: ['passed', 'failed', 'waived'] } },
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { criteria: true } } },
+    });
+    if (!acceptance) {
+      throw new BadRequestException(
+        '该工单还没有验收契约，暂不可派发执行：请先补全验收标准（可在任务详情页用 AI 代写后确认），再重新派发',
+      );
+    }
+    if (acceptance._count.criteria === 0) {
+      throw new BadRequestException(
+        '该工单的验收契约还没有任何验收标准，暂不可派发执行：请补全验收标准（可 AI 代写）后重试',
+      );
+    }
+    return acceptance.id;
+  }
+
+  /**
+   * AI 代写标准落库（人确认后调用）：找/建活契约 → 增量写入。
+   * 同 content 去重，绝不覆盖已有标准；source=ai-generated 供审计溯源。
+   */
+  async applyCriteriaForIssue(
+    issueId: string,
+    items: Array<{
+      content: string;
+      criteriaType?: string;
+      severity?: string;
+      category?: string;
+    }>,
+    userId?: string,
+  ): Promise<{ acceptanceId: string; added: number; skipped: number }> {
+    const task = await this.prisma.issue.findUnique({
+      where: { id: issueId },
+      select: { id: true, title: true, projectId: true },
+    });
+    if (!task) {
+      throw new NotFoundException(`Task ${issueId} not found`);
+    }
+
+    let acceptance = await this.prisma.acceptance.findFirst({
+      where: { issueId, status: { notIn: ['passed', 'failed', 'waived'] } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!acceptance) {
+      acceptance = await this.create({ issueId }, userId);
+    }
+
+    const existing = await this.prisma.acceptanceCriteria.findMany({
+      where: { acceptanceId: acceptance.id },
+      select: { content: true },
+    });
+    const seen = new Set(existing.map((e) => e.content.trim()));
+    const toAdd = items.filter(
+      (i) =>
+        typeof i.content === 'string' &&
+        i.content.trim() &&
+        !seen.has(i.content.trim()),
+    );
+    if (toAdd.length === 0) {
+      return { acceptanceId: acceptance.id, added: 0, skipped: items.length };
+    }
+
+    await this.prisma.acceptanceCriteria.createMany({
+      data: toAdd.map((item, idx) => ({
+        acceptanceId: acceptance.id,
+        content: item.content.trim(),
+        criteriaType:
+          item.criteriaType === 'technical' ? 'technical' : 'functional',
+        severity: ['critical', 'high', 'medium', 'low'].includes(
+          item.severity ?? '',
+        )
+          ? (item.severity as string)
+          : 'medium',
+        category: item.category || null,
+        source: 'ai-generated',
+        order: existing.length + idx,
+      })),
+    });
+
+    this.messageBus.publish('acceptance.updated', {
+      acceptanceId: acceptance.id,
+      issueId,
+      added: toAdd.length,
+      source: 'ai-generated',
+      userId,
+    });
+
+    return {
+      acceptanceId: acceptance.id,
+      added: toAdd.length,
+      skipped: items.length - toAdd.length,
+    };
+  }
 }

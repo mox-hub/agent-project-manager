@@ -212,6 +212,14 @@ export interface CreateTaskRequest {
   /** Phase 4: 模块代码, 2-4 位大写字母（两段式 shortID 后不再参与编号） */
   moduleCode?: string;
   todoItems?: TodoItem[];
+  /** 兜底改造批 3：验收标准（创建即落契约+标准，进门禁体系） */
+  acceptanceCriteria?: Array<{
+    content: string;
+    criteriaType?: string;
+    severity?: string;
+    category?: string;
+    source?: string;
+  }>;
   bugReproducibility?: string;
   bugStepsToReproduce?: string;
   bugEnvironment?: string;

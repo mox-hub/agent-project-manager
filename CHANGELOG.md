@@ -41,6 +41,74 @@ tags: "changelog,release"
 | frontend | **i18n 清偿（批5）**：面板全部硬编码文案入 unifiedCreate.* 双语键（类型 label/placeholder/descHint/字段行/占位/错误/toast/模式切换/AI 草稿卡/脏退出弹窗/文档类目/项目来源/严重度/图标 title；新增 15 组键，复用既有 labels/title/linear.*/success 等）；suggestions-card 同步清偿 | CAP-A-18 | 双语 JSON 合法 + 键对称；zh/en 0 漂移 | — |
 | server | **静默场景 create-draft**：SILENT_SCENARIOS 新增（prompt+typeHint → {type, fields} 结构化草稿；prepareContext 空 prompt 400 守卫；宁缺毋假指令约束；开放对象协议契约零改动）；前端 useSilentCreateDraft/parseCreateDraft 容错解析 | CAP-A-18 | assistant-silent.service.spec 39 条（+3：正常流含指令断言/code fence 容错/空 prompt 400 不触 LLM） | — |
 | frontend | **GAP-T-32 回归测试**：新增 `create-dialog/__tests__/unified-create-dialog.test.tsx` 9 条——双界面切换互不串/AI 草稿流全链（生成→预览→确认落库）/失败降级转小助理/Esc 脏保护两态/最大化语义档断言/里程碑绑定所选项目/死装饰不渲染 | CAP-A-18 | 前端全量 110 文件 571 用例绿；server 73 套件 661 用例绿；契约零漂移 | `docs/01-需求/测试映射矩阵-v1.md`（GAP-T-32 清偿回填） |
+### feat：执行兜底批 5——失败执行重新执行（克隆新建执行+血缘关联，替代原地重派）（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| server+frontend | **失败执行重新执行语义升级**：①schema `Execution.retryOfId` 自关联字段（迁移 20260917100000，dev.db+template.db 均应用并登记，SQLite 不做 DB 级外键、完整性由 schema 声明+应用层校验维护）；②cli-dispatch 新增 `POST /ai/execution-runs/:id/retry`（retryExecution）：校验 failed/blocked 可重试（superseded 人工取消不放开）→ 克隆新建执行（沿用 goal/标题/角色/主体/工时/验收契约关联，原 input 保留并附 `retryContext`=原状态/原 errorDetail/原派发错误，`dispatchError` 留痕字段归档不进新载荷）→ 走既有派发链（platform_ai_member 主体沿用原成员）→ 派发被门禁阻断时新执行落 blocked（RETRY_DISPATCH_FAILED）留痕、原执行不受影响；与批 1.4 原地重派的语义差异：原执行保持终态，失败现场（步骤/产物/错误详情）不丢；③前端执行中心 failed/blocked 行菜单与任务详情执行项面板改调新端点（draft/planned 仍为首次派发 CLI 原地语义）；执行中心行与执行项面板新增「重试自」血缘徽标（点击直达原执行详情）；④i18n 双语键（retry/retrySuccess/retryError/retryOf、execActionRetryCli/execRetryCli*/execRetryOf），移除 redispatch 旧键 | CAP-A-19 批 5 | cli-dispatch e2e 7/7 绿（新增 3 用例：retry 正常流=克隆+血缘+retryContext+契约对齐+原执行不动+runtime 链路到 completed；非 failed/blocked 400+404；门禁阻断=新执行 blocked 留痕原执行不受影响）；server type-check 零错；前端 tsc -b 零错；execution/issue 相关 49 用例绿；契约三件套已同步（openapi +39 行） | `docs/01-需求/能力清单-v1.md`（CAP-A-19 卡批 5 增强行+§七变更记录）· `docs/roadmap/execution-fallback-plan.md`（批 5 小节） |
+
+### feat：文档详情 frontmatter 属性面板 Obsidian 化重建（行内编辑+属性增删+标签双向同步）（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **CAP-A-06 增强：以 Obsidian 笔记属性（Properties）范式重建 frontmatter 交互（全量系统组件实现）**：①新增 `document-properties-panel`（文档详情页头部替换原「标签以 frontmatter 为准」只读提示 DocumentTagManager，组件删除）——面板壳走系统 `SidebarPanel`（折叠动画/action 槽计数），行走 `PropertyRow`（原语扩展三个可选槽位：className/labelClassName/childrenClassName，向后兼容，本卡用固定键列 w-30 + 值列 flex-1）；类型化值编辑器：text/number 行内 `Button ghost` 点击进入 `Input` 编辑（Enter/失焦提交、Esc 取消、number 回型防引号降级）、list 型 `Badge secondary` chip 化增删（逗号批量）、boolean 型系统 `Checkbox`、date 型本地化显示；行尾 hover 删除属性；`+ 添加属性` 行——键名走系统 `Combobox`（可检索建议+自由输入自定义键、已存在键过滤）替代原生 datalist，值编辑器按所选键类型切换（list=逗号分隔 Input/date=系统 `DatePicker`/boolean=Checkbox/text=Input，`getPropertyKeyType` 键→类型推断）；系统镜像键（title/status/project/module/short_id）只读防审批流绕行；仅作者可编辑，访客只读；畸形 YAML 降级警示禁写回；②`mdx-frontmatter` 新增 `parseFrontmatterProperties`（有序全量+类型推断+Date 识别）与 `setFrontmatterProperties`（顶层键增删改写回，null/空串/空数组=删键），修 `mergeFrontmatter` 未知键嵌套 `custom:` 回写漂移为顶层扁平回写；**发现并绕过 gray-matter 4.0.3（js-yaml 3）状态 bug**：进程内首次解析抛错后对畸形 YAML 静默降级（data={}原文当 body），以自提边界块+空数据回退签名确定性闸门防护（畸形时拒绝写回防残块吞入正文）；③`metadata-sync` 标签 DB 镜像升级全量跟随——frontmatter 唯一真相，差集计算抽纯函数 `tag-mirror.computeTagMirror`（toCreate/toAttach/toDetach），detach 补齐（原 attach-only 半同步），同步 toast 改 ±N 口径；④视图页接 `useUpdateDocument` 仅写 content，保存后既有 syncMetadata 副作用自动跟随标签镜像 | CAP-A-06（文档基础面增强）· 支线 UX | 前端全量 111 文件 586 用例绿；新增 `mdx-frontmatter.test` +10 条（类型推断/只读键/扁平回写/增删改写回/畸形闸门/首次建块）、`tag-mirror.test` 5 条（建挂摘差集/空目标全摘/复挂）、`document-properties-panel.test` 9 条（渲染/chip 删改/行内编辑/布尔切换/属性新增/镜像键只读/畸形降级/非作者隐藏/空只读不渲染）；tsc -b 零错；eslint 0/0（余 ApprovalAction 存量警告）；lint 六件套过（lint:tokens 正则形状误报以 \s 改写规避） | `docs/01-需求/能力清单-v1.md`（CAP-A-06 增强行）· `docs/01-需求/测试映射矩阵-v1.md`（GAP-T-33） |
+
+### feat：文档详情接入 Chapter Scrubber 正文左缘刻度导航（H1-H6 区分）（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **ChapterScrubber 升级 + 文档详情集成**：①ui 原语扩展 `Chapter.level`（1-6 可选）——刻线静息长度按层级递减（H1 满长→H6 35%，hover 波峰长度统一），预览卡自动加 H{n} 角标，aria-label 带层级，向后兼容；②document-view-page 正文滚动区左缘挂刻度轨（≥lg 视口且 ≥2 标题渲染），数据与目录同源（useTocSections/extractHeadings H1-H6），rAF 节流 scroll 监听驱动 currentIndex（阅读线=视口顶下 96px，取最后越线标题），点击按 DOM 标题序号平滑跳转 + 同步 hash 与目录高亮；行距随章节数自适应（最高约 560px 防长文档溢出） | CAP-D-03（文档知识）· 支线 UX | `tsc -b` 零错；eslint 0/0；lint:tokens/palette/spacing/icons 过；document+mdx 25 用例绿 | `COMPONENTS.md`（ChapterScrubber 条目补 level props） |
+
+### fix：文档详情页目录恒空（章节索引无写入方，目录改客户端同源提取）（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **document-view-page 目录数据源切换**：目录原读服务端 DocumentSection 索引（`useDocumentSections`），但该索引仅 `POST /sections/refresh` 一个写入口且前端从未有任何调用方（useRefreshSections 自创建即零消费）——常规创建/保存的文档章节恒空，目录恒显「暂无章节」（正文标题/任务角标走 MdxRenderer 即时提取不受影响，故仅目录坏）。改为新增 `useTocSections`：用与渲染器同源的 `extractHeadings(stripFrontmatter(content))` 客户端提取（同一 toSlug 锚点），目录与正文标题/高亮锚点天然一致；服务端索引与 refresh 接口保留（章节级关联等后续消费方可用）。注：段落级任务关联（SectionTaskLinksList）依赖章节索引，索引空时该能力本就退化，属既有缺口未在本批扩修 | CAP-D-03（文档知识） | `tsc -b` 零错；eslint 0/0；document+mdx 模块 25 用例绿 | — |
+
+### fix：AI 分析报告弹窗过窄（DialogContent 基类宽度覆盖）+ 同类三处（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **四枚被压窄的弹窗补 `keepDefaultWidth={false}`**：DialogContent 基类默认附加 `sm:max-w-md`，Tailwind 响应式变体在样式表中排于基础工具类之后，消费方裸写的 `max-w-2xl/3xl/xl` 在 ≥sm 视口全被覆盖回 448px——AI 生成需求分析报告弹窗（intake/analysis-draft-dialog，恢复作者意图 672px）、GitHub 集成配置（576px）、Linear 集成配置（576px）、Linear 项目表（768px）四处同理批修，沿用 run-details-dialog 等既有 `keepDefaultWidth={false}` 惯例 | CAP-P-01（需求分析代写） | `tsc -b` 零错；eslint 0/0；lint:tokens 过；intake 模块 15 用例绿 | — |
+
+### UX：详情正文自定义字段分区下沉 + 执行项/子任务/动态/评论可收缩（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **正文分区治理（用户实测裁决）**：①**自定义字段下沉正文**——CustomFieldsPanel 从右栏 SidebarPanel 卡改为正文分区（描述下方、执行项之前），形态对齐执行项/子任务分区（px-6 分区头 + ListTree 图标 + 计数 + 编辑铅笔 + 收缩箭头），行值由 truncate 改 break-words 右对齐（长文本如复现步骤不再截断），编辑态/保存链路不变，无 fieldSchema 类型整块不渲染；②**正文四分区可收缩**——执行项（ExecutionItemsPanel）与子任务（SubTaskSection）头部加收缩箭头（+ 新增时自动展开分区），动态+评论（ActivityFeed，task/bug 两页共用）头部右置收缩箭头、时间线与评论输入整段折叠；收缩动画统一 grid-rows 0fr/1fr 手势（对齐 SidebarPanel 既有口径）；③新增 `common.expand`/`common.collapse` 双语键 | 支线 UX 手感统一（详情正文治理） | `tsc -b` 零错；eslint 0/0；lint:tokens/semantic/palette/spacing/icons 全过；activity+issue 模块 28 用例绿；zh/en 键对称 0/0 | — |
+
+### fix：任务详情负责人加载/指派全链失效（core-model 改名漏网路径）（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **team-member-api 四处手写路径跟随 issue 改名**：`/issue-assignees/task/...` → `/issue-assignees/issue/...`（GET 指派列表 / DELETE 移除指派 / GET watcher 列表 / DELETE 移除 watcher）——fix/core-model-refactor 服务端路由改名时前端手写路径未同步，导致任务详情右栏负责人不回显（列表 404 → primary 恒空）、指派看似不保存（POST 本就正确、静默落库，但回查列表 404 UI 永不刷新）、换人时旧负责人不移除；watcher 链路同批修复。教训：手写前端路径不参与契约校验，改名批次需全仓扫 `api.(get\|post\|delete)` 字面量 | CAP-A-05（V3 身份统一收口善后） | `tsc -b` 零错；eslint 0/0；与 openapi.json 九条 issue-assignees 路径逐一核对一致 | — |
+
+### UX：issue 详情右栏折叠统一 + 建议栏移除 + GitHub 集成归位外部集成（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **详情右栏三分改造（用户实测裁决）**：①全分区可收缩达成——唯一不可收缩的 GitHub 集成独立 Card 从右栏摘除；②标题图标补齐——`PropsCard` 增 `icon`/`iconClassName` 透传（属性区补 SlidersHorizontal，task/bug 两页同），外部集成区补 Blocks 图标（关联文档/自定义字段/验收契约原有图标不动）；③**建议栏整体取消**——task/bug 详情页静态 SuggestionsCard 摘除（纯展示假建议，无交互价值），property-panel 死导出一并清除（unified-create-dialog 的 AI 建议卡为本地实现不受影响），孤儿 i18n 键 10 枚双语对称清理；④**GitHub 集成嵌入外部集成**——github-panel 拆出 `GithubPanelEmbedded` 子卡（形态对齐 TaskLinearPanel，纵向单列：repo 输入+刷新/新建 PR 行内表单/紧凑 PR 行），Card 完整版保留给集成页与设置页，嵌入版文案新增 `github.panel.*` 双语 12 键（Card 版硬编码存量不动）。行为注记：GitHub 子卡随外部集成区挂 `task.projectId` 之下，无项目收件箱任务不再显示（原独立卡显示，属集成区项目域语义修正） | 支线 UX 手感统一（详情右栏治理） | `tsc -b` 零错；eslint 0 错 1 存量警告（use-execution 未触碰文件）；lint:tokens/semantic/palette/spacing/icons/ui-governance 全过；issue 模块回归 10 用例绿；zh/en 键集合对称 0/0 差异 | `COMPONENTS.md`（PropertyPanel 套件条目更新） |
+
+### fix：发版详情「圈定发版范围」清单溢出压底栏 + 不可滚（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **release-trace-section ScopeEditor 滚动约束修正**：`max-h-64` 原挂在 ScrollArea 根容器上，但 base-ui 配方根容器高度不定时 Viewport 的 `h-full` 百分比失效——viewport 被全量任务列表撑高溢出根容器下缘（根无 overflow-hidden），导致清单与「已选 N/取消/保存」底栏重叠、底栏无法点击、viewport 自身无溢出滚动失效；改为任意变体 `[&_[data-slot=scroll-area-viewport]]:max-h-64` 把高度约束直接落在 viewport 上（仓库已有 project-team-page 先例口径），短列表仍自适应高度 | CAP-K-03（发版前因后果区） | `tsc -b` 零错；eslint 0/0；release-pages.test 6 用例绿 | — |
+
+### CAP-A-19 执行侧兜底改造：失败感知+悬挂对账+验收供给侧四批（2026-09-15 夜航）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| server+cli | **助手 CLI 派发载荷修复（预热）**：sendViaRuntime/dispatchExecution 两处派发补齐 providerId（用户定向或守护进程首个 CLI 通道）与 workspaceRoot（守护进程注册根缺失时回退项目工作区三级配置 ProjectWorkspace→git.workspaceRoot→Repository）；字段缺失时 server 侧抛可读 400 指引；worker 报错精确化只列缺失字段 | CAP-A-19 | assistant 单测 24 用例（新增 3）+ assistant-cli-chat e2e 3 用例 + worker 4 用例全绿 | `docs/roadmap/execution-fallback-plan.md` |
+| server+frontend | **批1 失败感知与一键重试**：notification-event-subscriber 订阅 execution.run.updated（failed/blocked 定向通知发起人+负责人，NOTIFY_EXECUTION_AUDIENCE=project 可切全员）与 approval.requested；受众排除订阅枢纽已覆盖用户防双条；网关转发两事件至前端（死订阅根因治愈）；execution-items-panel 改监听真实事件；useExecutionRuns/useIssueExecutions/run 详情非终态轮询兜底；执行中心 failed/blocked 行「重新派发」+ 助手失败卡「重试」；通知点击跳转工单/项目；未读数 60s 轮询兜底；新增全局断线横幅 ConnectionBanner | CAP-A-19 | notification subscriber 16 用例（新增 5：订阅断言/受众去重/completed 不发/审批通知/project 模式）+ 前端 assistant/notification 50 用例全绿 | 契约：apm-shared domain-events 补 ApprovalRequested 常量与两事件 payload schema |
+| server | **批2 悬挂对账 watchdog**：AppModule 挂 @nestjs/schedule；新增 ExecutionReconcileService（2min 周期）——①pending 派发超 TTL（24h，EXEC_PENDING_TTL_MS 可配）置 expired+关联 run 收敛 failed；②AI 来源 in_progress 超阈值（5min，EXEC_STALL_THRESHOLD_MS 可配，裁决缩短默认超时）且守护进程心跳离线 → 收敛 failed（在线不误杀、人工执行项豁免）；③WorkflowService reconcileStalledRuns（5min 自挂调度，running 超 24h 置 failed）；收敛统一出口 publish runtime.execution.result 复用既有结果链路（failExecution+助手占位原位替换+失败通知）。取消语义修正：cancelExecution 由 blocked 改 superseded 终态；越权修复：runs 写端点五处补 getExecutionRun 归属校验；updateExecutionRun 加 force 内部选项（DTO 不可达） | CAP-A-19 | execution/workflow/cli-dispatch 8 套件 75 用例全绿（新增对账 4：TTL 过期/离线收敛/在线不误杀/人工豁免） | 裁决记录见方案文档 §六 |
+| server+frontend | **批3 验收标准供给侧**：assistant-silent 新增 acceptance-draft 场景（issueId 侦查/创建面板草稿双模式，3~6 条可检查标准，绝不编造）；POST /acceptance/issue/:issueId/apply-criteria 人确认落库（找/建活契约增量写入同文去重）；派发前验收门禁 assertDispatchGate——无活契约或 0 条标准均 400 阻断（裁决先按严格要求）；CreateIssueDto 加 acceptanceCriteria 创建即落契约；创建面板 task/bug 加验收标准编辑区+AI 生成；任务详情验收卡空契约区加 AI 代写主入口+AcceptanceDraftDialog（生成→勾选→确认三步） | CAP-A-19（兑付 CAP-B-01/B-02 供给侧） | server acceptance/issue/cli-dispatch 96 用例全绿；前端 assistant 46 用例全绿 | 契约：openapi.json 重导出+双端类型再生，contract:check 零漂移 |
+| frontend+server | **批4 一致性清理**：摘除老 execution 前端模块死 API（retry/escalate/adjustParams 等指向不存在路由）与 execution-recovery-dialog/use-execution-recovery/execution-run-panel 死组件及 approvals 死 hooks；决策收件箱过滤过期提案+resolve 拒绝过期决议；proposal.create 发布 decision.proposal.created→网关转发→shell 失效 decisions 查询（收件箱/徽标实时刷新）；cli-executor 的 ai.stream 补 userId（惰性解析 run 属主）实现进程内执行前端可见 | CAP-A-19 | server decision/cli-dispatch 37 用例 + 前端 issue/execution 45 用例全绿 | — |
+### feat：颜色/头像选择器自建组件——ColorPicker 新建+AvatarPickerField Popover 化+消费方全替换（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **两个选择器自建收编**（shadcn base-vega/coss/reui 三库均无现成品，reui color-picker 付费墙，React Aria 与 base-ui 唯一基线冲突，故自建）：①新建 `ui/color-picker.tsx`——照 coss DatePicker 组合范式（Popover+受控组合件），react-colorful（新依赖，2KB）+ 预设色板 + Hex 输入（非法回滚），`allowCustom=false` 退化为纯预设选择；`DEFAULT_SWATCHES`=原 tag-manager TAG_COLORS 15 色用户数据色（宪法 §5 豁免注释随迁）；②`ui/avatar-picker-field.tsx` 改造为 Popover 组合件——触发器圆钮，弹层=内置 12 头像网格+随机生成种子+自定义 URL 预览+清除，`nice-avatar:`/`avvvatars:` 前缀对任意种子字符串确定性出图（随机生成直接落库种子），导出 `AvatarGlyph` 复用；③消费方替换：颜色 2 处（issue-types-section 原 `<input type="color">`、tag-manager 自绘网格，均 `allowCustom=false`），头像 4 处 API 兼容零改动（profile/member-create/member-detail/design-system） | UI 组件基建（2026-09-16 拍板） | tsc -b 零错；eslint 5 文件零错；palette·tokens·ui-governance·registry 治理脚本全绿；issue-types 相关单测 5/5 | `COMPONENTS.md` ColorPicker 新增行 + AvatarPickerField 行更新；design-system 页 Forms 区新增 ColorPickerShowcase |
 
 ### CAP-A-17 快捷键体系：全局键位注册表 + 设置页自定义 + 散落监听收编（2026-09-15）
 

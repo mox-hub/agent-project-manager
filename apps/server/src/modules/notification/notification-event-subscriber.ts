@@ -114,6 +114,18 @@ export class NotificationEventSubscriber implements OnModuleInit {
       this.handleAIWorkflowCompleted.bind(this),
     );
 
+    // 执行状态变更（失败感知：failed/blocked 定向通知发起人与负责人）
+    this.messageBus.subscribe(
+      DomainEventTypes.ExecutionRunUpdated,
+      this.handleExecutionRunUpdated.bind(this),
+    );
+
+    // 审批请求（执行事实性暂停，等待人工裁决）
+    this.messageBus.subscribe(
+      DomainEventTypes.ApprovalRequested,
+      this.handleApprovalRequested.bind(this),
+    );
+
     // 提及事件（mention.service.parseAndCreate 发布，直发被 @ 用户）
     this.messageBus.subscribe(
       DomainEventTypes.MentionCreated,
@@ -687,6 +699,148 @@ export class NotificationEventSubscriber implements OnModuleInit {
     } catch (error) {
       this.logger.error(
         'Error handling mention.created event',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  // ─── 执行失败感知 / 审批挂起（兜底改造批 1，2026-09-15 裁决）───
+
+  /**
+   * 执行事件通知受众：默认执行发起人（createdBy）+ 工单负责人（human），
+   * 去重；排除已订阅 task/project 的用户——订阅枢纽（subscription-event
+   * subscriber）已向订阅者发 execution.terminal，避免同人双条。
+   * 受众模式可用环境变量 NOTIFY_EXECUTION_AUDIENCE 覆盖：
+   * party（默认，发起人+负责人）| project（项目全员）。
+   */
+  private async resolveExecutionAudience(
+    projectId: string,
+    issueId: string | null,
+    createdBy: string | null,
+  ): Promise<string[]> {
+    const mode = process.env.NOTIFY_EXECUTION_AUDIENCE ?? 'party';
+
+    let userIds: string[];
+    if (mode === 'project') {
+      userIds = await this.projectMemberIds(projectId);
+    } else {
+      const ids = new Set<string>();
+      if (createdBy) ids.add(createdBy);
+      if (issueId) {
+        // Issue.assignee 是 User 关系（assigneeId → User.id），即通知 userId 口径
+        const issue = await this.prisma.issue.findUnique({
+          where: { id: issueId },
+          select: { assignee: { select: { id: true } } },
+        });
+        if (issue?.assignee?.id) ids.add(issue.assignee.id);
+      }
+      userIds = [...ids];
+    }
+
+    // 排除订阅链路已覆盖的用户
+    const scopes = [
+      ...(issueId ? [{ entityType: 'task', entityId: issueId }] : []),
+      { entityType: 'project', entityId: projectId },
+    ];
+    const subs = await this.prisma.subscription.findMany({
+      where: { OR: scopes },
+      select: { memberId: true },
+    });
+    if (subs.length > 0) {
+      const memberIds = [...new Set(subs.map((s) => s.memberId))];
+      const members = await this.prisma.member.findMany({
+        where: { id: { in: memberIds }, userId: { not: null } },
+        select: { userId: true },
+      });
+      const subscribed = new Set(
+        members.map((m) => m.userId as string).filter(Boolean),
+      );
+      userIds = userIds.filter((id) => !subscribed.has(id));
+    }
+    return userIds;
+  }
+
+  private async handleExecutionRunUpdated(payload: any) {
+    try {
+      const status = String(payload.newStatus ?? '');
+      // 仅失败类终态需要主动唤醒；completed 由订阅枢纽按订阅关系通知
+      if (!['failed', 'blocked'].includes(status)) return;
+
+      const run = await this.prisma.execution.findUnique({
+        where: { id: payload.executionRunId },
+        select: {
+          id: true,
+          goal: true,
+          projectId: true,
+          issueId: true,
+          createdBy: true,
+        },
+      });
+      if (!run) return;
+
+      const userIds = await this.resolveExecutionAudience(
+        run.projectId,
+        run.issueId,
+        run.createdBy,
+      );
+      if (userIds.length === 0) return;
+
+      await this.notificationService.createNotificationFromEvent(
+        DomainEventTypes.ExecutionTerminal,
+        {
+          executionRunId: run.id,
+          goal: run.goal,
+          status,
+          projectId: run.projectId,
+          issueId: run.issueId,
+        },
+        userIds,
+      );
+    } catch (error) {
+      this.logger.error(
+        'Error handling execution.run.updated event',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  private async handleApprovalRequested(payload: any) {
+    try {
+      const run = await this.prisma.execution.findUnique({
+        where: { id: payload.executionRunId },
+        select: {
+          id: true,
+          goal: true,
+          projectId: true,
+          issueId: true,
+          createdBy: true,
+        },
+      });
+      if (!run) return;
+
+      const userIds = await this.resolveExecutionAudience(
+        run.projectId,
+        run.issueId,
+        run.createdBy,
+      );
+      if (userIds.length === 0) return;
+
+      await this.notificationService.createNotificationFromEvent(
+        DomainEventTypes.ApprovalRequested,
+        {
+          approvalRequestId: payload.approvalRequestId,
+          executionRunId: run.id,
+          goal: run.goal,
+          requestedAction: payload.requestedAction,
+          riskLevel: payload.riskLevel,
+          projectId: run.projectId,
+          issueId: run.issueId,
+        },
+        userIds,
+      );
+    } catch (error) {
+      this.logger.error(
+        'Error handling approval.requested event',
         error instanceof Error ? error.stack : String(error),
       );
     }

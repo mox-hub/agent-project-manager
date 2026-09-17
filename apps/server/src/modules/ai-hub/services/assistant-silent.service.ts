@@ -249,6 +249,76 @@ ${JSON.stringify(docs)}
 只输出 JSON：{"tasks": [{"title": "...", "description": "...", "estimate": 8, "acceptance": {"criteria": [{"criteriaType": "functional", "content": "...", "category": "..."}]}}]}`;
     },
   },
+  'acceptance-draft': {
+    description:
+      '验收标准代写（兜底改造批 3）：按工单标题/描述/待办与项目上下文产出 3~6 条可检查的验收标准草案，人确认后经 /acceptance/issue/:id/apply-criteria 落契约',
+    prepareContext: async (context, { prisma }) => {
+      // 两种模式：issueId 存在 = 按已建工单侦查（权威事实）；缺失 = 创建面板
+      // 按表单草稿字段（title/description/type/projectName）生成
+      const issueId = String(context.issueId ?? '');
+      if (!issueId) {
+        const title = String(context.title ?? '').trim();
+        if (!title) {
+          throw new BadRequestException(
+            '验收标准代写缺少上下文：issueId 或 title 至少一项',
+          );
+        }
+        return context;
+      }
+      const issue = await prisma.issue.findUnique({
+        where: { id: issueId },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          todoItems: true,
+          type: true,
+          project: { select: { name: true } },
+        },
+      });
+      if (!issue) {
+        throw new BadRequestException(`工单不存在：${issueId}`);
+      }
+      return { ...context, issue };
+    },
+    buildInstructions: (context) => {
+      const issue = (context.issue as
+        | {
+            title: string;
+            description: string | null;
+            todoItems: unknown;
+            type: string;
+            project: { name: string } | null;
+          }
+        | undefined) ?? {
+        // 创建面板草稿模式：直接取表单字段
+        title: String(context.title ?? ''),
+        description: context.description ? String(context.description) : null,
+        todoItems: null,
+        type: String(context.type ?? 'task'),
+        project: context.projectName
+          ? { name: String(context.projectName) }
+          : null,
+      };
+      if (!issue.title.trim()) {
+        throw new BadRequestException('验收标准代写缺少工单标题');
+      }
+      return `你是项目管理系统的验收标准助手。请为下面这张工单代写 3~6 条「可检查」的验收标准草案，供人确认后落入验收契约。读者是不熟悉工程的新手，每条标准都要说人话、可主观判定通过与否。
+
+工单类型：${issue.type === 'bug' ? '缺陷' : '任务'}
+标题：${issue.title}
+描述：${issue.description || '（无）'}
+${issue.todoItems ? `待办清单：${JSON.stringify(issue.todoItems)}` : ''}
+${issue.project ? `所属项目：${issue.project.name}` : ''}
+
+要求：
+- 每条标准描述一个可独立验证的完成迹象（行为/产物/效果），避免「做好」「完善」这类不可判定的措辞。
+- criteriaType 只能是 functional（功能行为）或 technical（技术约束：性能/安全/日志/兼容）。
+- severity 只能是 critical / high / medium / low：缺失即不达标的写 critical，其余按影响面评估。
+- 有明确依据的才写；工单信息不足的条目写「待确认：…」并在 category 标注 assumptions。
+只输出 JSON：{"criteria": [{"content": "...", "criteriaType": "functional", "severity": "medium", "category": ""}]}`;
+    },
+  },
   'analysis-draft': {
     description:
       '需求分析代写（CAP-P-01 四期）：读调研/澄清工件与项目契约绑定（影响面 grounding），AI 代写结构化分析报告（可行性/影响面/依赖/风险/验收预清单），人确认后落 analysis 文档',

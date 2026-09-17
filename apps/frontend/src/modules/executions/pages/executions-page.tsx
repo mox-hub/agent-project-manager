@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   Activity,
@@ -23,6 +23,7 @@ import {
   FolderKanban,
   List,
   Package,
+  RotateCcw,
   SearchX,
   SquareTerminal,
   Target,
@@ -39,6 +40,7 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { toast } from '@/components/ui/toast';
 import {
   isTerminalRunStatus,
   executionApi,
@@ -59,6 +61,7 @@ import {
   formatTokens,
 } from '../components/run-details-format';
 import { projectApi } from '@/modules/project/api/project-api';
+import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
 import { api } from '@/infrastructure/api-client';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
@@ -96,6 +99,24 @@ export function ExecutionsPage() {
     projectId: projectFilter !== 'all' ? projectFilter : undefined,
     status: statusFilter !== 'all' ? statusFilter : undefined,
     limit: 100,
+  });
+
+  const qc = useQueryClient();
+  // 失败/阻塞执行一键重新执行（兜底改造批 5）：服务端克隆新建执行
+  //（retryOfId 血缘指回原执行）并走同一派发链，原执行终态留痕不丢
+  const redispatch = useMutation({
+    mutationFn: (run: ExecutionRunRecord) => aiHubApi.retryExecution(run.id),
+    onSuccess: () => {
+      toast.success(t('execution.row.retrySuccess'));
+      qc.invalidateQueries({ queryKey: ['executions'] });
+    },
+    onError: (err) => {
+      toast.error(
+        t('execution.row.retryError') +
+          ': ' +
+          (err instanceof Error ? err.message : String(err)),
+      );
+    },
   });
 
   // 获取项目列表
@@ -210,6 +231,14 @@ export function ExecutionsPage() {
         onClick: () => navigate(`/app/acceptance/${run.acceptanceId}`),
       });
     }
+    if ((run.status === 'failed' || run.status === 'blocked') && run.issueId) {
+      items.push({
+        id: 'redispatch',
+        label: t('execution.row.retry'),
+        icon: <RotateCcw className="size-3.5" />,
+        onClick: () => redispatch.mutate(run),
+      });
+    }
     if (!isTerminalRunStatus(run.status)) {
       items.push({
         id: 'cancel',
@@ -251,6 +280,17 @@ export function ExecutionsPage() {
               </span>
             ) : null}
             {run.issue?.title ? <span className="truncate">{run.issue.title}</span> : null}
+            {run.retryOfId ? (
+              <button
+                type="button"
+                className="inline-flex shrink-0 items-center gap-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                title={t('execution.row.retryOf')}
+                onClick={() => setDetailRunId(run.retryOfId!)}
+              >
+                <RotateCcw className="size-3" />
+                {t('execution.row.retryOf')}
+              </button>
+            ) : null}
             <span className="shrink-0">{formatRunDateTime(run.startedAt ?? run.createdAt)}</span>
             {duration ? <span className="shrink-0">{duration}</span> : null}
           </div>

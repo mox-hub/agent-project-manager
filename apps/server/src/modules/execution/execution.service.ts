@@ -34,6 +34,8 @@ export interface CreateExecutionRunDto {
   // V3: 扩展字段
   metadata?: Record<string, unknown>;
   acceptanceId?: string;
+  // 兜底批 5：重试血缘——由哪个失败/阻塞执行重新执行而来
+  retryOfId?: string;
 }
 
 export interface UpdateExecutionRunDto {
@@ -131,6 +133,7 @@ export class ExecutionService {
         createdBy: dto.createdBy,
         metadata: dto.metadata as Prisma.InputJsonValue | undefined,
         acceptanceId,
+        retryOfId: dto.retryOfId,
       },
       include: {
         project: { select: { id: true, name: true } },
@@ -434,14 +437,18 @@ export class ExecutionService {
     };
   }
 
-  async updateExecutionRun(id: string, dto: UpdateExecutionRunDto) {
+  async updateExecutionRun(
+    id: string,
+    dto: UpdateExecutionRunDto,
+    opts?: { force?: boolean },
+  ) {
     const run = await this.prisma.execution.findUnique({ where: { id } });
     if (!run) {
       throw new NotFoundException('ExecutionRun not found');
     }
 
-    // 状态机校验：禁止跳步
-    if (dto.status && dto.status !== run.status) {
+    // 状态机校验：禁止跳步（force 仅限系统内部对账兜底，DTO 入口不可达）
+    if (dto.status && dto.status !== run.status && !opts?.force) {
       const allowed = EXECUTION_TRANSITIONS[run.status] ?? [];
       if (!allowed.includes(dto.status)) {
         throw new BadRequestException(
@@ -639,12 +646,20 @@ export class ExecutionService {
     });
   }
 
-  async failExecution(id: string, errorDetail: Record<string, unknown>) {
-    return this.updateExecutionRun(id, {
-      status: 'failed',
-      errorDetail,
-      completedAt: new Date(),
-    });
+  async failExecution(
+    id: string,
+    errorDetail: Record<string, unknown>,
+    opts?: { force?: boolean },
+  ) {
+    return this.updateExecutionRun(
+      id,
+      {
+        status: 'failed',
+        errorDetail,
+        completedAt: new Date(),
+      },
+      opts,
+    );
   }
 
   async addExecutionStep(executionRunId: string, dto: AddExecutionStepDto) {
@@ -739,8 +754,10 @@ export class ExecutionService {
   }
 
   async cancelExecution(id: string, reason?: string) {
+    // 兜底改造批 2：blocked 是非终态（可回流 in_progress），取消语义应为终态
+    // superseded——用户可区分「失败」「人工阻塞」「已取消」三种情况
     return this.updateExecutionRun(id, {
-      status: 'blocked',
+      status: 'superseded',
       terminatedAt: new Date(),
       metadata: { cancellationReason: reason },
     });

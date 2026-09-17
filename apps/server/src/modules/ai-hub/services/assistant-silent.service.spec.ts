@@ -108,6 +108,7 @@ describe('AssistantSilentService.run', () => {
       'grill-next',
       'interview-prefill',
       'intake-composite',
+      'acceptance-draft',
       'analysis-draft',
       'interview-dynamic',
       'workflow-draft',

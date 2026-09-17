@@ -442,8 +442,16 @@ export class NotificationService {
         title:
           p.status === 'failed'
             ? `智能体任务失败：${p.goal || '未知目标'}`
-            : `智能体任务完成：${p.goal || '未知目标'}`,
+            : p.status === 'blocked'
+              ? `智能体任务被阻塞：${p.goal || '未知目标'}`
+              : `智能体任务完成：${p.goal || '未知目标'}`,
         body: null,
+      }),
+      'approval.requested': (p) => ({
+        title: `智能体执行等待审批：${p.goal || p.requestedAction || '未知操作'}`,
+        body: p.requestedAction
+          ? String(p.requestedAction).slice(0, 100)
+          : null,
       }),
       'mention.created': (p) => ({
         title: '有人提到了你',

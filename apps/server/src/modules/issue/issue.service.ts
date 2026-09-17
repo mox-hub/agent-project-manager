@@ -553,6 +553,40 @@ export class IssueService {
       );
     }
 
+    // 兜底改造批 3：创建即落验收契约——acceptanceCriteria 直建契约+标准，
+    // 创建面板的验收标准从此进门禁体系（todoItems 保持待办语义不再承载）
+    const draftCriteria = (createIssueDto.acceptanceCriteria ?? []).filter(
+      (c) => typeof c?.content === 'string' && c.content.trim(),
+    );
+    if (draftCriteria.length > 0 && projectId) {
+      const acceptance = await this.prisma.acceptance.create({
+        data: {
+          issueId: task.id,
+          type: 'mixed',
+          priority: createIssueDto.priority || 'medium',
+          title: `验收 - ${task.title}`,
+          completionType: 'artifact',
+          createdBy: userId,
+          status: 'draft',
+        },
+      });
+      await this.prisma.acceptanceCriteria.createMany({
+        data: draftCriteria.map((item, idx) => ({
+          acceptanceId: acceptance.id,
+          content: item.content.trim(),
+          criteriaType:
+            item.criteriaType === 'technical' ? 'technical' : 'functional',
+          severity: ['critical', 'high', 'medium', 'low'].includes(
+            item.severity ?? '',
+          )
+            ? (item.severity as string)
+            : 'medium',
+          source: item.source === 'ai-generated' ? 'ai-generated' : 'manual',
+          order: idx,
+        })),
+      });
+    }
+
     // Create activity record (无项目时 projectId 为 null)
     await this.recordTaskActivity(task, {
       actorId: userId,

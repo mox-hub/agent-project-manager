@@ -1828,6 +1828,11 @@ model Execution {
   acceptanceId String?
   acceptance   Acceptance? @relation(fields: [acceptanceId], references: [id], onDelete: SetNull)
 
+  // 兜底批 5：重试血缘——本执行由哪个失败/阻塞执行重新执行而来
+  retryOfId String?
+  retryOf   Execution?          @relation("ExecutionRetryLineage", fields: [retryOfId], references: [id], onDelete: SetNull)
+  retries   Execution[]         @relation("ExecutionRetryLineage")
+
   // V3: 成本归因反向关系
   usageLogs AIUsageLog[]
 
@@ -1837,6 +1842,7 @@ model Execution {
   @@index([status], name: "idx_execution_runs_status")
   @@index([createdAt], name: "idx_execution_runs_created_at")
   @@index([acceptanceId], name: "idx_execution_runs_acceptance_id")
+  @@index([retryOfId], name: "idx_execution_runs_retry_of_id")
 }
 
 // ==================== V3 Acceptance 验收契约 ====================
