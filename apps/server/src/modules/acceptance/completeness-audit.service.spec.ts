@@ -57,6 +57,7 @@ function buildPrisma() {
     reports: [] as Array<Record<string, any>>,
     checklists: [] as Array<Record<string, any>>,
     createdCriteria: [] as Array<Record<string, any>>,
+    criteriaRows: [] as Array<Record<string, any>>,
     existingCriteriaMaxOrder: -1 as number,
   };
 
@@ -144,6 +145,17 @@ function buildPrisma() {
       aggregate: vi.fn(async () => ({
         _max: { order: state.existingCriteriaMaxOrder },
       })),
+      findMany: vi.fn(
+        async ({
+          where,
+        }: {
+          where: { acceptanceId: string };
+          select?: unknown;
+        }) =>
+          state.criteriaRows.filter(
+            (c) => c.acceptanceId === where.acceptanceId,
+          ),
+      ),
       create: vi.fn(async ({ data }: { data: Record<string, any> }) => {
         const row = {
           id: `crit-${state.createdCriteria.length + 1}`,
@@ -519,5 +531,159 @@ describe('CompletenessAuditService.getAuditReport / enforceAuditBeforeExecution'
     const gate = await service.enforceAuditBeforeExecution('iss1');
     expect(gate.allowed).toBe(true);
     expect(gate.report.riskLevel).toBe('yellow');
+  });
+});
+
+describe('CompletenessAuditService 审计结论绑定标准版本（CAP-B-02）', () => {
+  it('auditAcceptance：upsert 快照各 criteria 当前 revision', async () => {
+    const { prisma, state } = buildPrisma();
+    state.acceptances.push(
+      makeAcceptance({
+        criteria: [
+          {
+            id: 'c1',
+            revision: 2,
+            content: 'a',
+            status: 'pending',
+            severity: 'medium',
+            source: 'manual',
+            category: null,
+          },
+          {
+            id: 'c2',
+            revision: 1,
+            content: 'b',
+            status: 'pending',
+            severity: 'medium',
+            source: 'manual',
+            category: null,
+          },
+        ],
+      }),
+    );
+    state.criteriaRows.push(
+      { id: 'c1', acceptanceId: 'acc1', revision: 2 },
+      { id: 'c2', acceptanceId: 'acc1', revision: 1 },
+    );
+    const service = buildService(prisma);
+
+    const { report } = await service.auditAcceptance('acc1');
+
+    expect(report.criteriaRevisions).toEqual({ c1: 2, c2: 1 });
+  });
+
+  it('computeAuditStaleness：标准修订后快照落后 → stale 且给出过期标准 ID', async () => {
+    const { prisma, state } = buildPrisma();
+    state.acceptances.push(makeAcceptance());
+    state.criteriaRows.push(
+      { id: 'c1', acceptanceId: 'acc1', revision: 3 },
+      { id: 'c2', acceptanceId: 'acc1', revision: 1 },
+    );
+    const service = buildService(prisma);
+
+    const staleness = await service.computeAuditStaleness({
+      id: 'rpt1',
+      acceptanceId: 'acc1',
+      criteriaRevisions: { c1: 2, c2: 1 },
+    });
+
+    expect(staleness).toEqual({ stale: true, staleCriteriaIds: ['c1'] });
+  });
+
+  it('computeAuditStaleness：审计后新增标准（快照无此 ID）→ stale', async () => {
+    const { prisma, state } = buildPrisma();
+    state.acceptances.push(makeAcceptance());
+    state.criteriaRows.push(
+      { id: 'c1', acceptanceId: 'acc1', revision: 1 },
+      { id: 'c-new', acceptanceId: 'acc1', revision: 1 },
+    );
+    const service = buildService(prisma);
+
+    const staleness = await service.computeAuditStaleness({
+      id: 'rpt1',
+      acceptanceId: 'acc1',
+      criteriaRevisions: { c1: 1 },
+    });
+
+    expect(staleness).toEqual({ stale: true, staleCriteriaIds: ['c-new'] });
+  });
+
+  it('computeAuditStaleness：存量报告无快照（null）→ 不标过期（兼容口径）', async () => {
+    const { prisma, state } = buildPrisma();
+    state.acceptances.push(makeAcceptance());
+    state.criteriaRows.push({ id: 'c1', acceptanceId: 'acc1', revision: 5 });
+    const service = buildService(prisma);
+
+    const staleness = await service.computeAuditStaleness({
+      id: 'rpt1',
+      acceptanceId: 'acc1',
+      criteriaRevisions: null,
+    });
+
+    expect(staleness).toEqual({ stale: false, staleCriteriaIds: [] });
+  });
+
+  it('getAuditReport：附加 stale / staleCriteriaIds 计算字段', async () => {
+    const { prisma, state } = buildPrisma();
+    state.acceptances.push(makeAcceptance());
+    state.criteriaRows.push({ id: 'c1', acceptanceId: 'acc1', revision: 2 });
+    state.reports.push({
+      id: 'rpt1',
+      acceptanceId: 'acc1',
+      riskLevel: 'green',
+      blockedItems: [],
+      suggestedItems: [],
+      passedItems: [],
+      criteriaRevisions: { c1: 1 },
+    });
+    const service = buildService(prisma);
+
+    const report = await service.getAuditReport('acc1');
+
+    expect(report.stale).toBe(true);
+    expect(report.staleCriteriaIds).toEqual(['c1']);
+  });
+
+  it('enforceAuditBeforeExecution：green 报告但标准修订后结论过期 → 阻断并要求重审', async () => {
+    const { prisma, state } = buildPrisma();
+    state.acceptances.push(
+      makeAcceptance({
+        auditReport: {
+          acceptanceId: 'acc1',
+          riskLevel: 'green',
+          blockedItems: [],
+          suggestedItems: [],
+          criteriaRevisions: { c1: 1 },
+        },
+      }),
+    );
+    state.criteriaRows.push({ id: 'c1', acceptanceId: 'acc1', revision: 2 });
+    const service = buildService(prisma);
+
+    const gate = await service.enforceAuditBeforeExecution('iss1');
+
+    expect(gate.allowed).toBe(false);
+    expect(gate.message).toContain('审计结论过期');
+  });
+
+  it('enforceAuditBeforeExecution：快照与当前 revision 一致 → 正常放行', async () => {
+    const { prisma, state } = buildPrisma();
+    state.acceptances.push(
+      makeAcceptance({
+        auditReport: {
+          acceptanceId: 'acc1',
+          riskLevel: 'green',
+          blockedItems: [],
+          suggestedItems: [],
+          criteriaRevisions: { c1: 2 },
+        },
+      }),
+    );
+    state.criteriaRows.push({ id: 'c1', acceptanceId: 'acc1', revision: 2 });
+    const service = buildService(prisma);
+
+    const gate = await service.enforceAuditBeforeExecution('iss1');
+
+    expect(gate.allowed).toBe(true);
   });
 });

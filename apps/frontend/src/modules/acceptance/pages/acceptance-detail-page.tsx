@@ -79,6 +79,7 @@ import {
   isActiveAcceptance,
   type AcceptanceFailure,
   type AcceptanceStatus,
+  type AcceptanceCriterion,
   type CompletionType,
   type CriterionStatus,
 } from '../api/acceptance-api';
@@ -118,6 +119,21 @@ function nextCriterionStatus(s: CriterionStatus): CriterionStatus {
   if (s === 'pending' || s === 'blocked') return 'passed';
   if (s === 'passed') return 'failed';
   return 'pending';
+}
+
+/**
+ * CAP-B-01 证据有效性（与服务端 isEvidenceCurrent 同口径）：
+ * 证据快照 revision 与标准当前 revision 一致即有效；无快照（null）按 1（初版）处理。
+ */
+function hasCurrentEvidence(c: AcceptanceCriterion): boolean {
+  return (c.evidences ?? []).some(
+    (ev) => (ev.criteriaRevision ?? 1) === (c.revision ?? 1),
+  );
+}
+
+/** 待复核：已有证据但全部落后于当前标准版本（标准修订后未重新提交证据） */
+function hasStaleEvidenceOnly(c: AcceptanceCriterion): boolean {
+  return (c.evidences ?? []).length > 0 && !hasCurrentEvidence(c);
 }
 
 export function AcceptanceDetailPage() {
@@ -342,6 +358,21 @@ export function AcceptanceDetailPage() {
                       {t(`acceptance.severity.${c.severity}`, c.severity)}
                     </Badge>
                     <span>{t(`acceptance.criterionStatus.${c.status}`, c.status)}</span>
+                    {typeof c.revision === 'number' && c.revision > 1 && (
+                      <Badge
+                        variant="outline"
+                        className="text-10 py-0"
+                        title={c.revisedAt ? new Date(c.revisedAt).toLocaleString() : undefined}
+                      >
+                        v{c.revision}
+                      </Badge>
+                    )}
+                    {hasStaleEvidenceOnly(c) && (
+                      <Badge className="border-accent-yellow/50 bg-accent-yellow/15 py-0 text-10 text-accent-yellow">
+                        <AlertTriangle className="mr-0.5 size-2.5" />
+                        {t('acceptanceDetail.criteria.evidenceStale')}
+                      </Badge>
+                    )}
                     {c.evidences && c.evidences.length > 0 && (
                       <button
                         className="flex items-center gap-0.5 hover:text-foreground"
@@ -543,6 +574,27 @@ export function AcceptanceDetailPage() {
                   ? t('acceptanceDetail.audit.bannerBlocked', { count: blockedCount })
                   : t('acceptanceDetail.audit.bannerWarn', { count: suggestedCount })}
               </p>
+            </div>
+          )}
+          {/* CAP-B-02：审计后标准修订/新增 → 审计结论过期待重审 */}
+          {auditReport?.stale && (
+            <div className="mx-6 mt-3 flex items-center gap-3 rounded-lg border border-accent-yellow/40 bg-accent-yellow/10 p-3">
+              <AlertTriangle className="size-4 shrink-0 text-accent-yellow" />
+              <p className="flex-1 text-sm">
+                {t('acceptanceDetail.audit.staleBanner', {
+                  count: auditReport.staleCriteriaIds?.length ?? 0,
+                })}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 text-xs"
+                onClick={() => runAudit()}
+                disabled={auditMutation.isPending}
+              >
+                <Sparkles className="mr-1.5 size-3.5 text-primary" />
+                {t('acceptanceDetail.audit.rerun')}
+              </Button>
             </div>
           )}
           {/* 接收门禁提示：critical/high 标准未通过 */}

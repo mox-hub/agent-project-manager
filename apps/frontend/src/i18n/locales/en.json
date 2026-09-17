@@ -4439,6 +4439,7 @@
       "emptyTechnical": "No technical criteria (apply a checklist in audit report)",
       "toggleHint": "Click icon to cycle: pending → passed → failed",
       "deleteConfirm": "Delete this criterion?",
+      "evidenceStale": "Criterion revised, evidence needs re-review",
       "severityBlocked": "Acceptance gate: all critical/high criteria must pass"
     },
     "audit": {
@@ -4461,7 +4462,9 @@
       "systemChecklists": "System Presets",
       "teamChecklists": "Team Checklists",
       "bannerBlocked": "{{count}} blocking audit issues — acceptance will be blocked",
-      "bannerWarn": "{{count}} audit suggestions — review recommended"
+      "bannerWarn": "{{count}} audit suggestions — review recommended",
+      "staleBadge": "Audit result stale",
+      "staleBanner": "Criteria were revised after the last audit ({{count}}); the audit result is stale — re-run the audit"
     },
     "actions": {
       "approve": "Approve",
