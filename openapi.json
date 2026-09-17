@@ -10958,18 +10958,6 @@
             }
           },
           {
-            "name": "kind",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "enum": [
-                "approval",
-                "acceptance"
-              ],
-              "type": "string"
-            }
-          },
-          {
             "name": "limit",
             "required": false,
             "in": "query",
@@ -10984,6 +10972,26 @@
             "in": "query",
             "description": "默认 0",
             "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "approval",
+                "acceptance",
+                "plan",
+                "assignment",
+                "resolution",
+                "spend",
+                "clarify",
+                "gate",
+                "workflow_def",
+                "release"
+              ],
               "type": "string"
             }
           }
@@ -62927,7 +62935,9 @@
               "resolution",
               "spend",
               "clarify",
-              "gate"
+              "gate",
+              "workflow_def",
+              "release"
             ]
           },
           "sourceId": {
@@ -68895,7 +68905,7 @@
         "properties": {
           "scenario": {
             "type": "string",
-            "description": "Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score | anchor-qa)"
+            "description": "Silent scenario name registered on the server（真相源 = assistant-silent.service.ts 的 SILENT_SCENARIOS 注册表；此处不复列，避免清单随注册表漂移）。未知场景返回 400 并列出全部可用名"
           },
           "projectId": {
             "type": "string",
@@ -68911,6 +68921,42 @@
           "scenario"
         ]
       },
+      "AssistantSilentUsageDto": {
+        "type": "object",
+        "properties": {
+          "promptTokens": {
+            "type": "number",
+            "description": "输入 token"
+          },
+          "completionTokens": {
+            "type": "number",
+            "description": "输出 token"
+          },
+          "totalTokens": {
+            "type": "number",
+            "description": "总 token"
+          },
+          "costUsd": {
+            "type": "number",
+            "nullable": true,
+            "description": "预估费用（USD）；null = 估价口径不可用（≠ 0）"
+          },
+          "model": {
+            "type": "string",
+            "description": "实际使用的模型"
+          },
+          "durationMs": {
+            "type": "number",
+            "description": "本次静默调用耗时（毫秒）"
+          }
+        },
+        "required": [
+          "promptTokens",
+          "completionTokens",
+          "totalTokens",
+          "durationMs"
+        ]
+      },
       "AssistantSilentResponseDto": {
         "type": "object",
         "properties": {
@@ -68922,6 +68968,14 @@
             "type": "object",
             "description": "场景结构化 JSON 结果（按 scenario 各自 schema）",
             "additionalProperties": true
+          },
+          "usage": {
+            "description": "本次调用的 token/成本/耗时。**provider 未上报 token 时整个字段缺席**（不补 0——「没上报」与「没花钱」不是一回事）",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssistantSilentUsageDto"
+              }
+            ]
           }
         },
         "required": [

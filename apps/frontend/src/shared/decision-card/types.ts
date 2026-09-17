@@ -7,20 +7,18 @@
 import type { ComponentType, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
-/** 建议（DecisionProposal）来源的建议类 kind 与实体 kind 的全集 */
-export type DecisionKind =
-  | 'approval'
-  | 'acceptance'
-  | 'plan'
-  | 'assignment'
-  | 'resolution'
-  | 'spend'
-  | 'clarify'
-  | 'gate'
-  | 'workflow_def';
-
-/** 建议类提案 kind（对应服务端 DecisionProposal.kind） */
-export const PROPOSAL_KINDS: readonly DecisionKind[] = [
+/**
+ * 建议类提案 kind（对应服务端 `DecisionProposal.kind`）。
+ *
+ * **唯一**取值源：与 `useResolveDecision` 的决议路由、`KIND_ACTIONS` 的动作表
+ * 同源；前端任何地方都不得再抄一份字面量（曾有两份漂移副本：本文件漏 `release`、
+ * `use-decisions` 另抄的副本连 `workflow_def` 也漏 → 这两类提案会被误路由到
+ * **验收端点** `acceptCompletion`，即「批准发版」被当成「验收通过」）。
+ *
+ * 服务端侧的对应清单：`apps/server/src/modules/decision/dto/decision.dto.ts`
+ * 的 `PROPOSAL_KIND_VALUES`（与 `ProposalService.apply()` 的分发 switch 对齐）。
+ */
+export const PROPOSAL_KINDS = [
   'plan',
   'assignment',
   'resolution',
@@ -28,7 +26,22 @@ export const PROPOSAL_KINDS: readonly DecisionKind[] = [
   'clarify',
   'gate',
   'workflow_def',
-];
+  'release',
+] as const;
+
+/** 建议（DecisionProposal）来源的建议类 kind 与实体 kind 的全集 */
+export type DecisionKind = 'approval' | 'acceptance' | (typeof PROPOSAL_KINDS)[number];
+
+/**
+ * 该 kind 是否走 `DecisionProposal` 表（→ `/decisions/proposals/:id/resolve`）。
+ *
+ * 决议路由的**判定入口**：`useResolveDecision` 据此选端点，`KIND_ACTIONS` 据此选动作表。
+ * 不要在各处直接写 `PROPOSAL_KINDS.includes(...)`——元组是全字面量类型，
+ * 传宽联合类型会被 TS 拒收，各写各的强转迟早又会漂移。
+ */
+export function isProposalKind(kind: DecisionKind): boolean {
+  return (PROPOSAL_KINDS as readonly string[]).includes(kind);
+}
 
 export type DecisionUrgency = 'blocking' | 'advisory';
 

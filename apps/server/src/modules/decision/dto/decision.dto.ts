@@ -7,6 +7,37 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
  * 服务端只负责事实与路由策略（urgency）。
  */
 
+/**
+ * 建议类提案 kind 的**唯一**取值源（DecisionProposal.kind）。
+ *
+ * 与此对齐的三处必须同步：`ProposalService.apply()` 的分发 switch、
+ * `ReleaseService.createApprovalProposal` 等实际投递方、以及前端
+ * `shared/decision-card/types.ts` 的 `DecisionKind`。
+ *
+ * 历史缺陷：本清单曾漏 `release`（而 apply() 与投递方都在用它），
+ * 导致 `?kind=release` 过滤落空、前端把发布审批误路由到验收端点。
+ */
+export const PROPOSAL_KIND_VALUES = [
+  'plan',
+  'assignment',
+  'resolution',
+  'spend',
+  'clarify',
+  'gate',
+  'workflow_def',
+  'release',
+] as const;
+
+/** 决策来源 kind 全集 = 两条实体来源 + 建议类提案 */
+export const DECISION_KIND_VALUES = [
+  'approval',
+  'acceptance',
+  ...PROPOSAL_KIND_VALUES,
+] as const;
+
+export type ProposalKindValue = (typeof PROPOSAL_KIND_VALUES)[number];
+export type DecisionKindValue = (typeof DECISION_KIND_VALUES)[number];
+
 export class DecisionProposerDto {
   @ApiProperty({
     description: '提案者类型',
@@ -27,26 +58,9 @@ export class DecisionDto {
 
   @ApiProperty({
     description: '决策来源类型',
-    enum: [
-      'approval',
-      'acceptance',
-      'plan',
-      'assignment',
-      'resolution',
-      'spend',
-      'clarify',
-      'gate',
-    ],
+    enum: DECISION_KIND_VALUES,
   })
-  kind:
-    | 'approval'
-    | 'acceptance'
-    | 'plan'
-    | 'assignment'
-    | 'resolution'
-    | 'spend'
-    | 'clarify'
-    | 'gate';
+  kind: DecisionKindValue;
 
   @ApiProperty({ description: '原始实体 ID' })
   sourceId: string;

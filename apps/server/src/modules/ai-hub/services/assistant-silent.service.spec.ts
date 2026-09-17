@@ -113,6 +113,7 @@ describe('AssistantSilentService.run', () => {
       'interview-dynamic',
       'workflow-draft',
       'release-notes',
+      'surface-narration',
     ]);
   });
 
@@ -1178,5 +1179,160 @@ describe('AssistantSilentService.run · card-explain', () => {
       ),
     ).rejects.toThrow(/卡片实体不存在/);
     expect(chat).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * 盯盘叙述（ARCH-AISURFACE-001 §3.3）。
+ *
+ * 本场景与其余 13 个的**结构差异**是它没有 `prepareContext`——事实由前端组装好的
+ * 快照传入（理由见 service 内该场景的注释：在 ai-hub 重查聚合就等于长出第二套口径）。
+ * 因此这里守的是：没有快照必须 400、指令里必须同时带上事实与四条禁算/禁造条款。
+ */
+describe('surface-narration', () => {
+  const SNAPSHOT = {
+    projectName: 'Apollo',
+    colleagues: { total: 3, working: 2, needYou: 1, idle: 0 },
+    runs: { active: 2, blocked: 1 },
+    needsYou: {
+      total: 2,
+      blocking: 1,
+      top: [{ id: 'dp-1', title: '合并登录页分支', urgency: 'blocking' }],
+    },
+    gaps: ['执行记录只有窗口内计数（1/240）'],
+  };
+
+  const makeService = (chatContent: string) => {
+    const chat = vi.fn().mockResolvedValue({
+      content: chatContent,
+      model: 'test-model',
+      tokens: { prompt: 120, completion: 30, total: 150 },
+    });
+    const service = new AssistantSilentService(
+      { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
+      {
+        listAdapters: () => [{ provider: 'glm', model: 'm' }],
+        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+      } as never,
+      { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+    );
+    return { service, chat };
+  };
+
+  it('指令带全事实，并明确禁止算数/发明/拿别的数据顶空', async () => {
+    const { service, chat } = makeService(
+      '{"headline": "2 个人在干活，1 件事卡着你", "highlights": [], "blockers": [], "needsYou": [], "honestGaps": []}',
+    );
+
+    const result = await service.run(
+      'surface-narration',
+      { snapshot: SNAPSHOT },
+      'p1',
+      'u1',
+    );
+
+    expect(result.scenario).toBe('surface-narration');
+    expect(result.data.headline).toBe('2 个人在干活，1 件事卡着你');
+
+    const [, options] = chat.mock.calls[0];
+    const instructions = (options as { instructions: string }).instructions;
+    // 事实整体注入（模型只做翻译，不存在"自己算"的余地）
+    expect(instructions).toContain('Apollo');
+    expect(instructions).toContain('"blocking":1');
+    expect(instructions).toContain('dp-1');
+    // 四条硬规则必须逐条在场——少一条模型就会开始"合理发挥"
+    expect(instructions).toContain('只翻译，不算数');
+    expect(instructions).toContain('不发明');
+    expect(instructions).toContain('空就是空');
+  });
+
+  it('缺快照 / 快照非对象 → 400（不触 LLM）', async () => {
+    const { service, chat } = makeService('{}');
+
+    await expect(
+      service.run('surface-narration', {}, 'p1', 'u1'),
+    ).rejects.toThrow(/缺少事实快照/);
+    await expect(
+      service.run('surface-narration', { snapshot: ['x'] }, 'p1', 'u1'),
+    ).rejects.toThrow(/缺少事实快照/);
+    expect(chat).not.toHaveBeenCalled();
+  });
+
+  it('回执带上本次叙述自身开销，且 costUsd 口径不可用时是 null 而非 0', async () => {
+    const { service } = makeService(
+      '{"headline": "一切正常", "highlights": [], "blockers": [], "needsYou": [], "honestGaps": []}',
+    );
+
+    const result = await service.run(
+      'surface-narration',
+      { snapshot: SNAPSHOT },
+      'p1',
+      'u1',
+    );
+
+    expect(result.usage).toMatchObject({
+      promptTokens: 120,
+      completionTokens: 30,
+      totalTokens: 150,
+      model: 'test-model',
+    });
+    // 估价桩返回 null（价目表缺失）→ 不能落成 0，否则读者会以为这次叙述免费
+    expect(result.usage?.costUsd).toBeNull();
+    expect(typeof result.usage?.durationMs).toBe('number');
+  });
+
+  it('provider 未上报 token 时 usage 整个缺席——不补 0', async () => {
+    const chat = vi.fn().mockResolvedValue({
+      content:
+        '{"headline": "一切正常", "highlights": [], "blockers": [], "needsYou": [], "honestGaps": []}',
+      model: 'test-model',
+      // 无 tokens 字段：provider 没报
+    });
+    const service = new AssistantSilentService(
+      { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
+      {
+        listAdapters: () => [{ provider: 'glm', model: 'm' }],
+        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+      } as never,
+      { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+    );
+
+    const result = await service.run(
+      'surface-narration',
+      { snapshot: SNAPSHOT },
+      'p1',
+      'u1',
+    );
+
+    expect(result.usage).toBeUndefined();
+    expect(result.data.headline).toBe('一切正常');
+  });
+
+  it('估价抛错不阻断叙述——usage 仍在，只是 costUsd 为 null', async () => {
+    const chat = vi.fn().mockResolvedValue({
+      content: '{"headline": "一切正常"}',
+      model: 'm',
+      tokens: { prompt: 1, completion: 1, total: 2 },
+    });
+    const service = new AssistantSilentService(
+      { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
+      {
+        listAdapters: () => [{ provider: 'glm', model: 'm' }],
+        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+      } as never,
+      {
+        estimateCostUsd: vi.fn().mockRejectedValue(new Error('no price table')),
+      } as never,
+    );
+
+    const result = await service.run(
+      'surface-narration',
+      { snapshot: SNAPSHOT },
+      'p1',
+      'u1',
+    );
+
+    expect(result.usage?.costUsd).toBeNull();
+    expect(result.data.headline).toBe('一切正常');
   });
 });

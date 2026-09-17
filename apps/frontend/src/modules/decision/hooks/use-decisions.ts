@@ -6,7 +6,7 @@ import { acceptanceApi } from '@/modules/acceptance/api/acceptance-api';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { api } from '@/infrastructure/api-client';
 import { decisionApi, type DecisionListParams } from '@/modules/decision/api/decision-api';
-import type { Decision } from '@/shared/decision-card/types';
+import { isProposalKind, type Decision } from '@/shared/decision-card/types';
 
 export const decisionKeys = {
   all: ['decisions'] as const,
@@ -33,9 +33,6 @@ export function useDecisionSummary(projectId?: string) {
 
 export type DecisionResolutionAction = 'accept' | 'reject' | 'waive' | 'cancel';
 
-/** 建议类提案 kind（对应服务端 DecisionProposal） */
-const PROPOSAL_KINDS = ['plan', 'assignment', 'resolution', 'spend', 'clarify', 'gate'];
-
 /**
  * 决议闭环：卡片动作 → 各来源既有端点（不新增第二写路径）。
  * - approval   → POST /execution/approvals/:id/resolve（approved / rejected，reason 入 resolutionNote）
@@ -59,7 +56,7 @@ export function useResolveDecision() {
       reason?: string;
       answer?: string;
     }) => {
-      if (PROPOSAL_KINDS.includes(decision.kind)) {
+      if (isProposalKind(decision.kind)) {
         return api.post(`/decisions/proposals/${decision.sourceId}/resolve`, {
           action: action === 'waive' ? 'reject' : action,
           reason,

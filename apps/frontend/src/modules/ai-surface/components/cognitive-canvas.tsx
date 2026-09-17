@@ -69,10 +69,9 @@ export function CognitiveCanvas({
               {/* 发言者角色全息条目 */}
               <div className="flex items-center gap-3 mb-2 px-1">
                 <div
-                  className="flex items-center justify-center size-6 rounded-lg text-xs font-semibold text-white shrink-0"
+                  className="flex items-center justify-center size-6 rounded-lg text-xs font-semibold text-foreground shrink-0"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.05) 100%)',
-                    boxShadow: '0 0 12px rgba(139, 92, 246, 0.3)',
+                    background: 'linear-gradient(135deg, hsl(var(--foreground) / 0.18) 0%, hsl(var(--foreground) / 0.05) 100%)',
                   }}
                 >
                   {msg.avatar}
@@ -87,10 +86,9 @@ export function CognitiveCanvas({
 
               {/* 对话内容：无死板气泡，通透深空悬浮片 */}
               <div
-                className="relative rounded-2xl p-4 transition-all duration-300 backdrop-blur-xl"
+                className="relative rounded-2xl p-4 transition-all duration-300 backdrop-blur-xl shadow-xs"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 100%)',
-                  boxShadow: '0 12px 30px -8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
+                  background: 'linear-gradient(135deg, hsl(var(--foreground) / 0.05) 0%, hsl(var(--foreground) / 0.015) 100%)',
                 }}
               >
                 <p className="text-sm text-foreground/90 leading-relaxed font-normal">
@@ -99,7 +97,7 @@ export function CognitiveCanvas({
 
                 {/* 思维链伸缩面板 (Chain of Thought) */}
                 {msg.thoughts && msg.thoughts.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-white/5">
+                  <div className="mt-3 pt-3 border-t border-foreground/5">
                     <button
                       type="button"
                       onClick={() => toggleThoughts(msg.id)}
@@ -116,7 +114,7 @@ export function CognitiveCanvas({
                     </button>
 
                     {isThoughtsOpen && (
-                      <div className="mt-2.5 flex flex-col gap-2 pl-2 border-l border-white/10 animate-in fade-in duration-200">
+                      <div className="mt-2.5 flex flex-col gap-2 pl-2 border-l border-foreground/10 animate-in fade-in duration-200">
                         {msg.thoughts.map((step) => (
                           <div key={step.id} className="text-xs">
                             <div className="flex items-center gap-2">
@@ -141,21 +139,19 @@ export function CognitiveCanvas({
               {/* 动态挂载的悬浮工件 (Artifact Sheet) */}
               {artifact && (
                 <div
-                  className="mt-3.5 rounded-2xl p-4 transition-all duration-300 backdrop-blur-2xl"
+                  className="mt-3.5 rounded-2xl p-4 transition-all duration-300 backdrop-blur-2xl shadow-xs"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
-                    boxShadow: '0 16px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12)',
+                    background: 'linear-gradient(135deg, hsl(var(--foreground) / 0.08) 0%, hsl(var(--foreground) / 0.03) 100%)',
                   }}
                   id={`artifact-node-${artifact.id}`}
                 >
                   {/* 工件头部 */}
-                  <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/5">
+                  <div className="flex items-center justify-between gap-3 pb-3 border-b border-foreground/5">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
-                        className="flex items-center justify-center size-7 rounded-lg shrink-0 text-white"
+                        className="flex items-center justify-center size-7 rounded-lg shrink-0 text-primary-foreground"
                         style={{
-                          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.6) 0%, rgba(139, 92, 246, 0.6) 100%)',
-                          boxShadow: '0 0 12px rgba(99, 102, 241, 0.4)',
+                          background: 'linear-gradient(135deg, hsl(var(--accent-purple) / 0.6) 0%, hsl(var(--accent-purple) / 0.6) 100%)',
                         }}
                       >
                         {artifact.type === 'architecture' && <Layers className="size-3.5" />}
@@ -178,11 +174,11 @@ export function CognitiveCanvas({
                         <button
                           type="button"
                           onClick={() => handleCopyCode(artifact.id, artifact.payload.codeSnippet!)}
-                          className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                          className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg hover:bg-foreground/10 text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {copiedArtifactId === artifact.id ? (
                             <>
-                              <Check className="size-3" style={{ color: '#34D399' }} />
+                              <Check className="size-3" style={{ color: 'hsl(var(--accent-green))' }} />
                               <span style={{ fontSize: 11 }}>已复制</span>
                             </>
                           ) : (
@@ -209,7 +205,7 @@ export function CognitiveCanvas({
                   {/* 工件载荷展示：架构规范 */}
                   {artifact.type === 'architecture' && artifact.payload.diagramSpec && (
                     <div className="mt-3 p-3 rounded-xl font-mono text-xs text-foreground/90 space-y-1.5"
-                      style={{ background: 'rgba(0, 0, 0, 0.3)' }}
+                      style={{ background: 'hsl(var(--background) / 0.3)' }}
                     >
                       {artifact.payload.diagramSpec.map((line, idx) => (
                         <div key={idx} className="leading-relaxed flex items-center gap-2">
@@ -223,9 +219,9 @@ export function CognitiveCanvas({
                   {/* 工件载荷展示：代码 Diff */}
                   {artifact.type === 'code-diff' && artifact.payload.codeSnippet && (
                     <div className="mt-3 rounded-xl overflow-hidden font-mono text-xs"
-                      style={{ background: 'rgba(0, 0, 0, 0.45)' }}
+                      style={{ background: 'hsl(var(--background) / 0.45)' }}
                     >
-                      <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/5 text-muted-foreground" style={{ fontSize: 10 }}>
+                      <div className="flex items-center justify-between px-3 py-1.5 border-b border-foreground/5 text-muted-foreground" style={{ fontSize: 10 }}>
                         <div className="flex items-center gap-1.5">
                           <Code2 className="size-3" />
                           <span>prisma/schema.prisma</span>
@@ -244,8 +240,8 @@ export function CognitiveCanvas({
                                   isPlus && 'font-medium',
                                 )}
                                 style={{
-                                  backgroundColor: isPlus ? 'rgba(16, 185, 129, 0.15)' : 'transparent',
-                                  color: isPlus ? '#34D399' : 'inherit',
+                                  backgroundColor: isPlus ? 'hsl(var(--accent-green) / 0.15)' : 'transparent',
+                                  color: isPlus ? 'hsl(var(--accent-green))' : 'inherit',
                                 }}
                               >
                                 {line}
@@ -264,10 +260,10 @@ export function CognitiveCanvas({
                         <div
                           key={cIdx}
                           className="flex items-start gap-2.5 p-2 rounded-xl text-xs"
-                          style={{ background: 'rgba(255, 255, 255, 0.03)' }}
+                          style={{ background: 'hsl(var(--foreground) / 0.03)' }}
                         >
                           {crit.done ? (
-                            <CheckCircle2 className="size-4 shrink-0 mt-0.5" style={{ color: '#34D399' }} />
+                            <CheckCircle2 className="size-4 shrink-0 mt-0.5" style={{ color: 'hsl(var(--accent-green))' }} />
                           ) : (
                             <Circle className="size-4 shrink-0 mt-0.5 text-muted-foreground/60" />
                           )}
@@ -277,7 +273,7 @@ export function CognitiveCanvas({
                             </span>
                             {crit.required && (
                               <span className="ml-2 px-1.5 py-0.2 rounded font-mono"
-                                style={{ fontSize: 10, background: 'rgba(239, 68, 68, 0.15)', color: '#F87171' }}
+                                style={{ fontSize: 10, background: 'hsl(var(--accent-red) / 0.15)', color: 'hsl(var(--accent-red))' }}
                               >
                                 必测
                               </span>

@@ -115,7 +115,7 @@ export class AssistantDispatchDto {
 export class AssistantSilentDto {
   @ApiProperty({
     description:
-      'Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score | anchor-qa)',
+      'Silent scenario name registered on the server（真相源 = assistant-silent.service.ts 的 SILENT_SCENARIOS 注册表；此处不复列，避免清单随注册表漂移）。未知场景返回 400 并列出全部可用名',
   })
   @IsString()
   @IsNotEmpty()

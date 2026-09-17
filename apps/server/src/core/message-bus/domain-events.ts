@@ -38,6 +38,49 @@ export const DomainEventTypes = {
   // 执行
   ExecutionRunUpdated: 'execution.run.updated',
   ExecutionTerminal: 'execution.terminal',
+  ExecutionRunCreated: 'execution.run.created',
+  ExecutionCompleted: 'execution.completed',
+  ExecutionStepCreated: 'execution.step.created',
+  ExecutionStepUpdated: 'execution.step.updated',
+  ExecutionApprovalNeeded: 'execution.approval_needed',
+
+  // 审批门槛
+  ApprovalRequestCreated: 'approval.request.created',
+  ApprovalResolved: 'approval.resolved',
+  ApprovalCancelled: 'approval.cancelled',
+
+  // 验收门禁
+  AcceptanceCreated: 'acceptance.created',
+  AcceptanceResolved: 'acceptance.resolved',
+  AcceptanceDeleted: 'acceptance.deleted',
+
+  // 发版门禁
+  ReleaseCreated: 'release.created',
+  ReleaseApproved: 'release.approved',
+
+  // 运行时（本地执行节点）
+  RuntimeConnected: 'runtime.connected',
+  RuntimeHeartbeat: 'runtime.heartbeat',
+  RuntimeExecutionEvent: 'runtime.execution.event',
+  RuntimeExecutionResult: 'runtime.execution.result',
+  RuntimeExecutionCancelled: 'runtime.execution.cancelled',
+  RuntimeDispatchCreated: 'runtime.dispatch.created',
+  /** 网关聚合事件：上述 6 个 runtime 族事件统一裹成 { source, payload } 转发 */
+  RuntimeDispatchChanged: 'runtime.dispatch.changed',
+  RuntimeApprovalRequested: 'runtime.approval.requested',
+  RuntimeApprovalResolved: 'runtime.approval.resolved',
+
+  // 工作流
+  AiWorkflowUpdate: 'ai.workflow.update',
+
+  // 外部同步（Linear）
+  LinearSyncProgress: 'linear.sync.progress',
+  LinearSyncCompleted: 'linear.sync.completed',
+  LinearTaskPulled: 'linear.task.pulled',
+  LinearTaskPushed: 'linear.task.pushed',
+  LinearTaskConflict: 'linear.task.conflict',
+  LinearTaskResolved: 'linear.task.resolved',
+  /** approval.service.create 发布（CAP-A-19 批 4，执行挂起等待人工审批） */
   ApprovalRequested: 'approval.requested',
 
   // 实时流

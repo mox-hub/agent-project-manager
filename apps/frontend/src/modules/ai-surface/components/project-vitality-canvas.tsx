@@ -55,25 +55,21 @@ export function ProjectVitalityCanvas({
     >
       {/* 1. 项目全息脉搏中枢 (Project Vitality Core) */}
       <div
-        className="relative rounded-3xl p-4 transition-all duration-300 backdrop-blur-2xl"
+        className="relative rounded-3xl p-4 transition-all duration-300 backdrop-blur-2xl shadow-xs"
         style={{
           background: isDark
-            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(245, 248, 255, 0.85) 100%)',
-          boxShadow: isDark
-            ? '0 16px 40px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
-            : '0 16px 36px -10px rgba(30, 41, 59, 0.1), inset 0 1px 0 rgba(255, 255, 255, 1)',
-          color: isDark ? '#FFFFFF' : '#0F172A',
+            ? 'linear-gradient(135deg, hsl(var(--foreground) / 0.08) 0%, hsl(var(--foreground) / 0.02) 100%)'
+            : 'linear-gradient(135deg, hsl(var(--card) / 0.92) 0%, hsl(var(--card) / 0.85) 100%)',
+          color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
         }}
       >
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-current/10">
           <div className="flex items-center gap-3">
             {/* 项目脉搏指示器 */}
             <div
-              className="relative flex items-center justify-center size-10 rounded-2xl text-white shrink-0"
+              className="relative flex items-center justify-center size-10 rounded-2xl text-primary-foreground shrink-0"
               style={{
-                background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
-                boxShadow: '0 0 18px rgba(139, 92, 246, 0.5)',
+                background: 'linear-gradient(135deg, hsl(var(--accent-purple)) 0%, hsl(var(--accent-purple)) 100%)',
               }}
             >
               <Activity className="size-5 animate-pulse" />
@@ -87,8 +83,8 @@ export function ProjectVitalityCanvas({
                   className="px-2 py-0.5 rounded-full font-mono font-semibold"
                   style={{
                     fontSize: 10,
-                    background: isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(99, 102, 241, 0.15)',
-                    color: isDark ? '#DDD6FE' : '#4F46E5',
+                    background: isDark ? 'hsl(var(--accent-purple) / 0.25)' : 'hsl(var(--accent-purple) / 0.15)',
+                    color: isDark ? 'hsl(var(--accent-purple))' : 'hsl(var(--accent-purple))',
                   }}
                 >
                   主线: CAP-P-01
@@ -98,7 +94,7 @@ export function ProjectVitalityCanvas({
                 className="mt-0.5"
                 style={{
                   fontSize: 11,
-                  color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(15, 23, 42, 0.6)',
+                  color: isDark ? 'hsl(var(--foreground) / 0.6)' : 'hsl(var(--foreground) / 0.6)',
                 }}
               >
                 工作区路由：独立 SQLite 库 (dev.db) · 全仓唯一真相：openapi.json
@@ -109,7 +105,7 @@ export function ProjectVitalityCanvas({
           {/* 快速视角切换 */}
           <div
             className="flex items-center gap-1 p-1 rounded-xl"
-            style={{ background: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(15, 23, 42, 0.05)' }}
+            style={{ background: isDark ? 'hsl(var(--background) / 0.3)' : 'hsl(var(--foreground) / 0.05)' }}
           >
             {[
               { id: 'overview', label: '项目态势' },
@@ -122,15 +118,14 @@ export function ProjectVitalityCanvas({
                 onClick={() => setActiveTab(tab.id as 'overview' | 'contract' | 'acceptance')}
                 className={cn(
                   'px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer',
+                  // 同 central-watch-dial：纯白底在明眸主题与 --background 同色 → 隐形
                   activeTab === tab.id
-                    ? isDark
-                      ? 'bg-white/15 text-white shadow-sm'
-                      : 'bg-white shadow-sm font-semibold'
+                    ? 'bg-muted font-semibold text-foreground'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
                 style={{
                   fontSize: 11,
-                  color: !isDark && activeTab === tab.id ? '#4F46E5' : undefined,
+                  color: !isDark && activeTab === tab.id ? 'hsl(var(--accent-blue))' : undefined,
                 }}
               >
                 {tab.label}
@@ -143,17 +138,17 @@ export function ProjectVitalityCanvas({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3">
           <div
             className="p-2.5 rounded-xl flex items-center gap-2.5"
-            style={{ background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.03)' }}
+            style={{ background: isDark ? 'hsl(var(--foreground) / 0.04)' : 'hsl(var(--foreground) / 0.03)' }}
           >
-            <Zap className="size-4 shrink-0" style={{ color: '#F59E0B' }} />
+            <Zap className="size-4 shrink-0" style={{ color: 'hsl(var(--accent-yellow))' }} />
             <div>
-              <span className="block font-mono font-bold" style={{ fontSize: 13, color: '#10B981' }}>
+              <span className="block font-mono font-bold" style={{ fontSize: 13, color: 'hsl(var(--accent-green))' }}>
                 96.4%
               </span>
               <span
                 style={{
                   fontSize: 10,
-                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 23, 42, 0.55)',
+                  color: isDark ? 'hsl(var(--foreground) / 0.5)' : 'hsl(var(--foreground) / 0.55)',
                 }}
               >
                 健康活力指数
@@ -163,17 +158,17 @@ export function ProjectVitalityCanvas({
 
           <div
             className="p-2.5 rounded-xl flex items-center gap-2.5"
-            style={{ background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.03)' }}
+            style={{ background: isDark ? 'hsl(var(--foreground) / 0.04)' : 'hsl(var(--foreground) / 0.03)' }}
           >
-            <ShieldCheck className="size-4 shrink-0" style={{ color: '#10B981' }} />
+            <ShieldCheck className="size-4 shrink-0" style={{ color: 'hsl(var(--accent-green))' }} />
             <div>
-              <span className="block font-mono font-bold" style={{ fontSize: 13, color: '#34D399' }}>
+              <span className="block font-mono font-bold" style={{ fontSize: 13, color: 'hsl(var(--accent-green))' }}>
                 零漂移
               </span>
               <span
                 style={{
                   fontSize: 10,
-                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 23, 42, 0.55)',
+                  color: isDark ? 'hsl(var(--foreground) / 0.5)' : 'hsl(var(--foreground) / 0.55)',
                 }}
               >
                 OpenAPI 契约
@@ -183,7 +178,7 @@ export function ProjectVitalityCanvas({
 
           <div
             className="p-2.5 rounded-xl flex items-center gap-2.5"
-            style={{ background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.03)' }}
+            style={{ background: isDark ? 'hsl(var(--foreground) / 0.04)' : 'hsl(var(--foreground) / 0.03)' }}
           >
             <GitPullRequest className="size-4 shrink-0 text-accent-purple" />
             <div>
@@ -193,7 +188,7 @@ export function ProjectVitalityCanvas({
               <span
                 style={{
                   fontSize: 10,
-                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 23, 42, 0.55)',
+                  color: isDark ? 'hsl(var(--foreground) / 0.5)' : 'hsl(var(--foreground) / 0.55)',
                 }}
               >
                 Issue 自动化拆解
@@ -203,9 +198,9 @@ export function ProjectVitalityCanvas({
 
           <div
             className="p-2.5 rounded-xl flex items-center gap-2.5"
-            style={{ background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.03)' }}
+            style={{ background: isDark ? 'hsl(var(--foreground) / 0.04)' : 'hsl(var(--foreground) / 0.03)' }}
           >
-            <CheckCircle2 className="size-4 shrink-0" style={{ color: '#06B6D4' }} />
+            <CheckCircle2 className="size-4 shrink-0" style={{ color: 'hsl(var(--accent-blue))' }} />
             <div>
               <span className="block font-mono font-bold" style={{ fontSize: 13 }}>
                 4 项就绪
@@ -213,7 +208,7 @@ export function ProjectVitalityCanvas({
               <span
                 style={{
                   fontSize: 10,
-                  color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 23, 42, 0.55)',
+                  color: isDark ? 'hsl(var(--foreground) / 0.5)' : 'hsl(var(--foreground) / 0.55)',
                 }}
               >
                 验收准则闭环
@@ -230,15 +225,12 @@ export function ProjectVitalityCanvas({
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
           {/* 左侧：CAP-P-01 任务原子拆解流 (占 7 列) */}
           <div
-            className="md:col-span-7 rounded-3xl p-4 backdrop-blur-2xl transition-all"
+            className="md:col-span-7 rounded-3xl p-4 backdrop-blur-2xl transition-all shadow-xs"
             style={{
               background: isDark
-                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%)'
-                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%)',
-              boxShadow: isDark
-                ? '0 12px 30px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                : '0 12px 28px -8px rgba(30, 41, 59, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-              color: isDark ? '#FFFFFF' : '#0F172A',
+                ? 'linear-gradient(135deg, hsl(var(--foreground) / 0.07) 0%, hsl(var(--foreground) / 0.02) 100%)'
+                : 'linear-gradient(135deg, hsl(var(--card) / 0.9) 0%, hsl(var(--card) / 0.8) 100%)',
+              color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
             }}
           >
             <div className="flex items-center justify-between pb-2 mb-3 border-b border-current/10">
@@ -250,7 +242,7 @@ export function ProjectVitalityCanvas({
                 className="font-mono px-1.5 py-0.2 rounded"
                 style={{
                   fontSize: 9,
-                  background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.06)',
+                  background: isDark ? 'hsl(var(--foreground) / 0.08)' : 'hsl(var(--foreground) / 0.06)',
                 }}
               >
                 ACTIVE SPRINT
@@ -263,13 +255,13 @@ export function ProjectVitalityCanvas({
               <div
                 className="p-2.5 rounded-2xl flex items-center justify-between gap-3 border border-current/5"
                 style={{
-                  background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.7)',
+                  background: isDark ? 'hsl(var(--foreground) / 0.04)' : 'hsl(var(--card) / 0.7)',
                 }}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div
                     className="flex items-center justify-center size-6 rounded-lg font-mono font-bold text-xs shrink-0"
-                    style={{ color: '#10B981', background: 'rgba(16, 185, 129, 0.12)' }}
+                    style={{ color: 'hsl(var(--accent-green))', background: 'hsl(var(--accent-green) / 0.12)' }}
                   >
                     ✓
                   </div>
@@ -285,7 +277,7 @@ export function ProjectVitalityCanvas({
                     <span
                       style={{
                         fontSize: 10,
-                        color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 23, 42, 0.5)',
+                        color: isDark ? 'hsl(var(--foreground) / 0.5)' : 'hsl(var(--foreground) / 0.5)',
                       }}
                     >
                       负责人: Aria (PM) · 验收通过
@@ -294,7 +286,7 @@ export function ProjectVitalityCanvas({
                 </div>
                 <span
                   className="px-2 py-0.5 rounded-full font-mono shrink-0"
-                  style={{ fontSize: 9, background: 'rgba(16, 185, 129, 0.15)', color: '#10B981' }}
+                  style={{ fontSize: 9, background: 'hsl(var(--accent-green) / 0.15)', color: 'hsl(var(--accent-green))' }}
                 >
                   DONE
                 </span>
@@ -309,13 +301,13 @@ export function ProjectVitalityCanvas({
               <div
                 className="p-2.5 rounded-2xl flex items-center justify-between gap-3 border border-current/5"
                 style={{
-                  background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.7)',
+                  background: isDark ? 'hsl(var(--foreground) / 0.04)' : 'hsl(var(--card) / 0.7)',
                 }}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div
                     className="flex items-center justify-center size-6 rounded-lg font-mono font-bold text-xs shrink-0"
-                    style={{ color: '#A855F7', background: 'rgba(168, 85, 247, 0.12)' }}
+                    style={{ color: 'hsl(var(--accent-purple))', background: 'hsl(var(--accent-purple) / 0.12)' }}
                   >
                     ⚡
                   </div>
@@ -331,7 +323,7 @@ export function ProjectVitalityCanvas({
                     <span
                       style={{
                         fontSize: 10,
-                        color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 23, 42, 0.5)',
+                        color: isDark ? 'hsl(var(--foreground) / 0.5)' : 'hsl(var(--foreground) / 0.5)',
                       }}
                     >
                       负责人: DaVinci (Arch) · 执行中
@@ -340,7 +332,7 @@ export function ProjectVitalityCanvas({
                 </div>
                 <span
                   className="px-2 py-0.5 rounded-full font-mono shrink-0"
-                  style={{ fontSize: 9, background: 'rgba(139, 92, 246, 0.15)', color: '#8B5CF6' }}
+                  style={{ fontSize: 9, background: 'hsl(var(--accent-purple) / 0.15)', color: 'hsl(var(--accent-purple))' }}
                 >
                   RUNNING
                 </span>
@@ -355,16 +347,16 @@ export function ProjectVitalityCanvas({
               <div
                 className="p-2.5 rounded-2xl flex items-center justify-between gap-3 border"
                 style={{
-                  borderColor: isDark ? 'rgba(139, 92, 246, 0.3)' : 'rgba(99, 102, 241, 0.25)',
+                  borderColor: isDark ? 'hsl(var(--accent-purple) / 0.3)' : 'hsl(var(--accent-purple) / 0.25)',
                   background: isDark
-                    ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%)'
-                    : 'linear-gradient(135deg, rgba(238, 242, 255, 0.9) 0%, rgba(245, 243, 255, 0.8) 100%)',
+                    ? 'linear-gradient(135deg, hsl(var(--accent-purple) / 0.1) 0%, hsl(var(--accent-purple) / 0.05) 100%)'
+                    : 'linear-gradient(135deg, hsl(var(--card) / 0.9) 0%, hsl(var(--card) / 0.8) 100%)',
                 }}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div
                     className="flex items-center justify-center size-6 rounded-lg font-mono font-bold text-xs shrink-0"
-                    style={{ color: '#F59E0B', background: 'rgba(245, 158, 11, 0.12)' }}
+                    style={{ color: 'hsl(var(--accent-yellow))', background: 'hsl(var(--accent-yellow) / 0.12)' }}
                   >
                     ⏸
                   </div>
@@ -380,7 +372,7 @@ export function ProjectVitalityCanvas({
                     <span
                       style={{
                         fontSize: 10,
-                        color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 23, 42, 0.5)',
+                        color: isDark ? 'hsl(var(--foreground) / 0.5)' : 'hsl(var(--foreground) / 0.5)',
                       }}
                     >
                       负责人: Nexus (Coder) · 等待指挥官确认
@@ -396,12 +388,12 @@ export function ProjectVitalityCanvas({
                     'px-2.5 py-1 rounded-xl font-medium transition-all text-xs shrink-0 cursor-pointer flex items-center gap-1',
                     approvedIssue === 'APM-103'
                       ? 'font-semibold'
-                      : 'bg-accent-purple text-white hover:opacity-90 shadow-md',
+                      : 'bg-accent-purple text-primary-foreground hover:opacity-90 shadow-xs',
                   )}
                   style={{
                     fontSize: 10,
-                    background: approvedIssue === 'APM-103' ? 'rgba(16, 185, 129, 0.15)' : undefined,
-                    color: approvedIssue === 'APM-103' ? '#10B981' : undefined,
+                    background: approvedIssue === 'APM-103' ? 'hsl(var(--accent-green) / 0.15)' : undefined,
+                    color: approvedIssue === 'APM-103' ? 'hsl(var(--accent-green))' : undefined,
                   }}
                 >
                   {approvedIssue === 'APM-103' ? (
@@ -419,20 +411,17 @@ export function ProjectVitalityCanvas({
 
           {/* 右侧：代码契约与 Diff 审查浮岛 (占 5 列) */}
           <div
-            className="md:col-span-5 rounded-3xl p-4 backdrop-blur-2xl transition-all"
+            className="md:col-span-5 rounded-3xl p-4 backdrop-blur-2xl transition-all shadow-xs"
             style={{
               background: isDark
-                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%)'
-                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%)',
-              boxShadow: isDark
-                ? '0 12px 30px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                : '0 12px 28px -8px rgba(30, 41, 59, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-              color: isDark ? '#FFFFFF' : '#0F172A',
+                ? 'linear-gradient(135deg, hsl(var(--foreground) / 0.07) 0%, hsl(var(--foreground) / 0.02) 100%)'
+                : 'linear-gradient(135deg, hsl(var(--card) / 0.9) 0%, hsl(var(--card) / 0.8) 100%)',
+              color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
             }}
           >
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-current/10">
               <div className="flex items-center gap-2">
-                <FileCode className="size-4" style={{ color: '#10B981' }} />
+                <FileCode className="size-4" style={{ color: 'hsl(var(--accent-green))' }} />
                 <h3 className="font-semibold text-xs">Prisma / OpenAPI 契约 Diff</h3>
               </div>
               {codeArtifact?.payload.codeSnippet && (
@@ -440,7 +429,7 @@ export function ProjectVitalityCanvas({
                   type="button"
                   onClick={() => handleCopy(codeArtifact.payload.codeSnippet!)}
                   className="px-2 py-0.5 rounded text-muted-foreground hover:text-foreground font-mono transition-colors cursor-pointer"
-                  style={{ fontSize: 9, background: 'rgba(255, 255, 255, 0.08)' }}
+                  style={{ fontSize: 9, background: 'hsl(var(--foreground) / 0.08)' }}
                 >
                   {copiedDiff ? 'COPIED ✓' : 'COPY'}
                 </button>
@@ -452,13 +441,13 @@ export function ProjectVitalityCanvas({
                 className="rounded-xl overflow-hidden font-mono"
                 style={{
                   fontSize: 10,
-                  background: isDark ? 'rgba(0, 0, 0, 0.55)' : 'rgba(15, 23, 42, 0.05)',
+                  background: isDark ? 'hsl(var(--background) / 0.55)' : 'hsl(var(--foreground) / 0.05)',
                   maxHeight: 180,
                   overflowY: 'auto',
                 }}
               >
                 <div
-                  className="px-2.5 py-1 text-muted-foreground/60 border-b border-white/5 flex items-center justify-between"
+                  className="px-2.5 py-1 text-muted-foreground/60 border-b border-foreground/5 flex items-center justify-between"
                   style={{ fontSize: 9 }}
                 >
                   <span>schema.prisma (+4 lines)</span>
@@ -473,8 +462,8 @@ export function ProjectVitalityCanvas({
                           key={idx}
                           className="px-1 rounded"
                           style={{
-                            backgroundColor: isPlus ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                            color: isPlus ? '#34D399' : 'inherit',
+                            backgroundColor: isPlus ? 'hsl(var(--accent-green) / 0.2)' : 'transparent',
+                            color: isPlus ? 'hsl(var(--accent-green))' : 'inherit',
                           }}
                         >
                           {line}
@@ -510,8 +499,8 @@ export function ProjectVitalityCanvas({
                   className="mt-1.5 leading-relaxed p-2 rounded-xl"
                   style={{
                     fontSize: 10,
-                    background: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(15, 23, 42, 0.04)',
-                    color: isDark ? '#CBD5E1' : '#334155',
+                    background: isDark ? 'hsl(var(--background) / 0.3)' : 'hsl(var(--foreground) / 0.04)',
+                    color: isDark ? 'hsl(var(--muted-foreground))' : 'hsl(var(--muted-foreground))',
                   }}
                 >
                   已在测试库完成 SQLite 外键与 ALS 路由隔离仿真验证，零数据踩踏风险。符合全仓 V4
@@ -526,28 +515,25 @@ export function ProjectVitalityCanvas({
       {/* 视角 B: 自动化验收准则 Checklist 浮岛 */}
       {(activeTab === 'overview' || activeTab === 'acceptance') && qaArtifact?.payload.criteriaList && (
         <div
-          className="rounded-3xl p-4 backdrop-blur-2xl transition-all"
+          className="rounded-3xl p-4 backdrop-blur-2xl transition-all shadow-xs"
           style={{
             background: isDark
-              ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.015) 100%)'
-              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%)',
-            boxShadow: isDark
-              ? '0 12px 30px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-              : '0 12px 28px -8px rgba(30, 41, 59, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-            color: isDark ? '#FFFFFF' : '#0F172A',
+              ? 'linear-gradient(135deg, hsl(var(--foreground) / 0.06) 0%, hsl(var(--foreground) / 0.015) 100%)'
+              : 'linear-gradient(135deg, hsl(var(--card) / 0.9) 0%, hsl(var(--card) / 0.8) 100%)',
+            color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
           }}
         >
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-current/10">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="size-4" style={{ color: '#10B981' }} />
+              <CheckCircle2 className="size-4" style={{ color: 'hsl(var(--accent-green))' }} />
               <h3 className="font-semibold text-xs">自动化验收准则与门禁审计 (Sentinel)</h3>
             </div>
             <span
               className="font-mono px-2 py-0.5 rounded-full"
               style={{
                 fontSize: 9,
-                background: 'rgba(52, 211, 153, 0.15)',
-                color: '#10B981',
+                background: 'hsl(var(--accent-green) / 0.15)',
+                color: 'hsl(var(--accent-green))',
               }}
             >
               4 / 5 已闭环
@@ -560,11 +546,11 @@ export function ProjectVitalityCanvas({
                 key={idx}
                 className="flex items-start gap-2 p-2 rounded-xl border border-current/5"
                 style={{
-                  background: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.65)',
+                  background: isDark ? 'hsl(var(--foreground) / 0.03)' : 'hsl(var(--card) / 0.65)',
                 }}
               >
                 {crit.done ? (
-                  <CheckCircle2 className="size-3.5 shrink-0 mt-0.5" style={{ color: '#10B981' }} />
+                  <CheckCircle2 className="size-3.5 shrink-0 mt-0.5" style={{ color: 'hsl(var(--accent-green))' }} />
                 ) : (
                   <Circle className="size-3.5 shrink-0 mt-0.5 text-muted-foreground/60" />
                 )}
@@ -581,8 +567,8 @@ export function ProjectVitalityCanvas({
                     className="px-1 rounded font-mono shrink-0"
                     style={{
                       fontSize: 8,
-                      background: 'rgba(239, 68, 68, 0.15)',
-                      color: '#EF4444',
+                      background: 'hsl(var(--accent-red) / 0.15)',
+                      color: 'hsl(var(--accent-red))',
                     }}
                   >
                     必测
@@ -596,15 +582,12 @@ export function ProjectVitalityCanvas({
 
       {/* 4. 指挥官协同与认知流回响 (Cognitive Synergy River) */}
       <div
-        className="rounded-3xl p-4 backdrop-blur-2xl transition-all"
+        className="rounded-3xl p-4 backdrop-blur-2xl transition-all shadow-xs"
         style={{
           background: isDark
-            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.015) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%)',
-          boxShadow: isDark
-            ? '0 12px 30px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-            : '0 12px 28px -8px rgba(30, 41, 59, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-          color: isDark ? '#FFFFFF' : '#0F172A',
+            ? 'linear-gradient(135deg, hsl(var(--foreground) / 0.06) 0%, hsl(var(--foreground) / 0.015) 100%)'
+            : 'linear-gradient(135deg, hsl(var(--card) / 0.9) 0%, hsl(var(--card) / 0.8) 100%)',
+          color: isDark ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
         }}
       >
         <div className="flex items-center justify-between pb-2 mb-3 border-b border-current/10">
@@ -616,8 +599,8 @@ export function ProjectVitalityCanvas({
             className="font-mono px-2 py-0.5 rounded-full"
             style={{
               fontSize: 9,
-              background: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(99, 102, 241, 0.12)',
-              color: isDark ? '#DDD6FE' : '#4F46E5',
+              background: isDark ? 'hsl(var(--accent-purple) / 0.2)' : 'hsl(var(--accent-purple) / 0.12)',
+              color: isDark ? 'hsl(var(--accent-purple))' : 'hsl(var(--accent-purple))',
             }}
           >
             {messages.length} 条认知共鸣
@@ -633,11 +616,11 @@ export function ProjectVitalityCanvas({
                 background:
                   msg.senderId === 'user-human'
                     ? isDark
-                      ? 'rgba(139, 92, 246, 0.12)'
-                      : 'rgba(99, 102, 241, 0.08)'
+                      ? 'hsl(var(--accent-purple) / 0.12)'
+                      : 'hsl(var(--accent-purple) / 0.08)'
                     : isDark
-                    ? 'rgba(255, 255, 255, 0.03)'
-                    : 'rgba(255, 255, 255, 0.7)',
+                    ? 'hsl(var(--foreground) / 0.03)'
+                    : 'hsl(var(--card) / 0.7)',
               }}
             >
               <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -653,7 +636,7 @@ export function ProjectVitalityCanvas({
                 className="leading-relaxed"
                 style={{
                   fontSize: 11,
-                  color: isDark ? 'rgba(255, 255, 255, 0.85)' : 'rgba(15, 23, 42, 0.85)',
+                  color: isDark ? 'hsl(var(--foreground) / 0.85)' : 'hsl(var(--foreground) / 0.85)',
                 }}
               >
                 {msg.content}
@@ -663,8 +646,8 @@ export function ProjectVitalityCanvas({
                   className="mt-2 p-2 rounded-xl border border-current/5 font-mono"
                   style={{
                     fontSize: 10,
-                    background: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(15, 23, 42, 0.04)',
-                    color: isDark ? '#C4B5FD' : '#6366F1',
+                    background: isDark ? 'hsl(var(--background) / 0.3)' : 'hsl(var(--foreground) / 0.04)',
+                    color: isDark ? 'hsl(var(--accent-purple))' : 'hsl(var(--accent-purple))',
                   }}
                 >
                   <div className="flex items-center gap-1.5">

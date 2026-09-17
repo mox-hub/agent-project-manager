@@ -77,27 +77,35 @@ export function OmniDock({
       {/* 顶部悬浮快捷建议条与切换返回提示 */}
       <div className="flex items-center justify-between w-full px-4 text-xs">
         <div className="flex items-center gap-2">
+          {/*
+            徽章写的必须是**真的会发生的事**。原文案「定向协同: @小码」承诺了两件
+            都没发生的事：①消息并没有定向给小码（`dispatch` 是把内容交给 CLI 执行，
+            不指定执行者）；②小码的状态当时根本没进派发内容（AI 不知道"它"是谁）。
+            现在只承诺切实做到的那一件：发送时把这位同事的当前状态**附带**上去。
+          */}
           {activeAgentName ? (
             <span
               className="px-2 py-0.5 rounded-full font-mono flex items-center gap-1"
+              title={`发送时会把这名同事的当前状态（在做哪张单、执行状态、最近进展、待决数）一并交给 AI；消息本身仍走既有派发，不指定具体执行者`}
               style={{
                 fontSize: 11,
-                background: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(99, 102, 241, 0.12)',
-                color: isDark ? '#C4B5FD' : '#4F46E5',
+                background: isDark ? 'hsl(var(--accent-purple) / 0.2)' : 'hsl(var(--accent-purple) / 0.12)',
+                color: isDark ? 'hsl(var(--accent-purple))' : 'hsl(var(--accent-purple))',
               }}
             >
               <Bot className="size-3" />
-              <span>定向协同: @{activeAgentName}</span>
+              <span>附带上下文: @{activeAgentName}</span>
             </span>
           ) : (
             <span
               className="font-mono"
               style={{
                 fontSize: 11,
-                color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(15, 23, 42, 0.6)',
+                color: isDark ? 'hsl(var(--foreground) / 0.6)' : 'hsl(var(--foreground) / 0.6)',
               }}
+              title="未选中同事，消息不带盯盘上下文"
             >
-              全域 Agent 编队待命
+              未选中同事 · 发送不带上下文
             </span>
           )}
 
@@ -109,7 +117,7 @@ export function OmniDock({
               className="px-2 py-0.5 rounded-md hover:opacity-80 text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
               style={{
                 fontSize: 11,
-                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.05)',
+                background: isDark ? 'hsl(var(--foreground) / 0.05)' : 'hsl(var(--foreground) / 0.05)',
               }}
             >
               /plan 任务拆解
@@ -120,7 +128,7 @@ export function OmniDock({
               className="px-2 py-0.5 rounded-md hover:opacity-80 text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
               style={{
                 fontSize: 11,
-                background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.05)',
+                background: isDark ? 'hsl(var(--foreground) / 0.05)' : 'hsl(var(--foreground) / 0.05)',
               }}
             >
               /verify 门禁审计
@@ -137,14 +145,14 @@ export function OmniDock({
               className="flex items-center gap-1 px-2.5 py-1 rounded-full text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
               style={{
                 fontSize: 11,
-                background: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.06)',
+                background: isDark ? 'hsl(var(--foreground) / 0.06)' : 'hsl(var(--foreground) / 0.06)',
               }}
               title={isDark ? '切换至日间模式' : '切换至夜间模式'}
             >
               {isDark ? (
-                <Sun className="size-3" style={{ color: '#FBBF24' }} />
+                <Sun className="size-3" style={{ color: 'hsl(var(--accent-yellow))' }} />
               ) : (
-                <Moon className="size-3" style={{ color: '#6366F1' }} />
+                <Moon className="size-3" style={{ color: 'hsl(var(--accent-blue))' }} />
               )}
               <span>{isDark ? '深空' : '明眸'}</span>
             </button>
@@ -157,7 +165,7 @@ export function OmniDock({
               className="flex items-center gap-1 px-2.5 py-1 rounded-full text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
               style={{
                 fontSize: 11,
-                background: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.06)',
+                background: isDark ? 'hsl(var(--foreground) / 0.06)' : 'hsl(var(--foreground) / 0.06)',
               }}
               title="返回人类控制面 (Esc)"
             >
@@ -167,7 +175,7 @@ export function OmniDock({
                 className="px-1 py-0.2 rounded font-mono"
                 style={{
                   fontSize: 9,
-                  background: isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(15, 23, 42, 0.08)',
+                  background: isDark ? 'hsl(var(--background) / 0.5)' : 'hsl(var(--foreground) / 0.08)',
                 }}
               >
                 ESC
@@ -182,19 +190,13 @@ export function OmniDock({
         onSubmit={handleSubmit}
         className={cn(
           'relative w-full rounded-2xl p-2 flex items-center gap-2 transition-all duration-300 backdrop-blur-2xl border',
+          !pulseActive && 'shadow-xs',
         )}
         style={{
-          borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(99, 102, 241, 0.18)',
+          borderColor: isDark ? 'hsl(var(--foreground) / 0.08)' : 'hsl(var(--accent-purple) / 0.18)',
           background: isDark
-            ? 'linear-gradient(135deg, rgba(20, 24, 36, 0.92) 0%, rgba(10, 12, 18, 0.96) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 248, 255, 0.92) 100%)',
-          boxShadow: pulseActive
-            ? isDark
-              ? '0 0 40px rgba(139, 92, 246, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-              : '0 0 40px rgba(99, 102, 241, 0.5), inset 0 1px 0 rgba(255, 255, 255, 1)'
-            : isDark
-            ? '0 20px 50px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
-            : '0 20px 50px -10px rgba(30, 41, 59, 0.15), inset 0 1px 0 rgba(255, 255, 255, 1)',
+            ? 'linear-gradient(135deg, hsl(var(--background) / 0.92) 0%, hsl(var(--background) / 0.96) 100%)'
+            : 'linear-gradient(135deg, hsl(var(--card) / 0.95) 0%, hsl(var(--card) / 0.92) 100%)',
         }}
       >
         {/* 模型切换胶囊 */}
@@ -204,7 +206,7 @@ export function OmniDock({
             onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-foreground transition-colors cursor-pointer"
             style={{
-              background: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(99, 102, 241, 0.08)',
+              background: isDark ? 'hsl(var(--foreground) / 0.06)' : 'hsl(var(--accent-purple) / 0.08)',
             }}
           >
             <Sparkles className="size-3.5 text-accent-purple" />
@@ -222,13 +224,10 @@ export function OmniDock({
           {/* 模型弹出列表 */}
           {modelDropdownOpen && (
             <div
-              className="absolute bottom-full left-0 mb-2 w-56 rounded-2xl p-1.5 backdrop-blur-2xl shadow-2xl flex flex-col gap-1 border animate-in fade-in zoom-in-95 duration-150 z-50"
+              className="absolute bottom-full left-0 mb-2 w-56 rounded-2xl p-1.5 backdrop-blur-2xl shadow-xs flex flex-col gap-1 border animate-in fade-in zoom-in-95 duration-150 z-50"
               style={{
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(99, 102, 241, 0.15)',
-                background: isDark ? 'rgba(15, 18, 28, 0.96)' : 'rgba(255, 255, 255, 0.98)',
-                boxShadow: isDark
-                  ? '0 20px 40px -10px rgba(0, 0, 0, 0.8)'
-                  : '0 20px 40px -10px rgba(30, 41, 59, 0.15)',
+                borderColor: isDark ? 'hsl(var(--foreground) / 0.1)' : 'hsl(var(--accent-purple) / 0.15)',
+                background: isDark ? 'hsl(var(--background) / 0.96)' : 'hsl(var(--card) / 0.98)',
               }}
             >
               {AVAILABLE_MODELS.map((model) => (
@@ -249,8 +248,8 @@ export function OmniDock({
                     background:
                       selectedModel === model.id
                         ? isDark
-                          ? 'rgba(255, 255, 255, 0.12)'
-                          : 'rgba(99, 102, 241, 0.12)'
+                          ? 'hsl(var(--foreground) / 0.12)'
+                          : 'hsl(var(--accent-purple) / 0.12)'
                         : undefined,
                   }}
                 >
@@ -259,7 +258,7 @@ export function OmniDock({
                     className="px-1.5 py-0.2 rounded font-mono"
                     style={{
                       fontSize: 10,
-                      background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(99, 102, 241, 0.08)',
+                      background: isDark ? 'hsl(var(--foreground) / 0.08)' : 'hsl(var(--accent-purple) / 0.08)',
                     }}
                   >
                     {model.badge}
@@ -287,18 +286,20 @@ export function OmniDock({
           type="submit"
           disabled={!input.trim()}
           className={cn(
-            'flex items-center justify-center size-9 rounded-xl transition-all duration-200 shrink-0 text-white',
+            'flex items-center justify-center size-9 rounded-xl transition-all duration-200 shrink-0',
+            // 文字色随底走：可用态底是 accent-purple 渐变（→ primary-foreground），
+            // 禁用态底是 foreground/0.1 中性微叠层（→ muted-foreground，用 primary
+            // 反而会在明眸主题变成近白字叠浅灰底 → 不可见）
             input.trim()
-              ? 'scale-100 hover:scale-105 shadow-lg cursor-pointer'
-              : 'opacity-40 cursor-not-allowed scale-95',
+              ? 'scale-100 hover:scale-105 shadow-xs cursor-pointer text-primary-foreground'
+              : 'opacity-40 cursor-not-allowed scale-95 text-muted-foreground',
           )}
           style={{
             background: input.trim()
-              ? 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
+              ? 'linear-gradient(135deg, hsl(var(--accent-purple)) 0%, hsl(var(--accent-purple)) 100%)'
               : isDark
-              ? 'rgba(255, 255, 255, 0.1)'
-              : 'rgba(15, 23, 42, 0.1)',
-            boxShadow: input.trim() ? '0 0 16px rgba(139, 92, 246, 0.5)' : 'none',
+              ? 'hsl(var(--foreground) / 0.1)'
+              : 'hsl(var(--foreground) / 0.1)',
           }}
         >
           <Send className="size-4" />

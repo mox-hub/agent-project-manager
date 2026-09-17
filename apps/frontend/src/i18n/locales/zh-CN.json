@@ -883,7 +883,19 @@
       "markCancelled": "标记取消",
       "approveBudget": "批准追加",
       "passGate": "通过闸门",
-      "applyWorkflow": "落库生效"
+      "applyWorkflow": "落库生效",
+      "approveRelease": "批准发布"
+    },
+    "release": {
+      "noGate": "尚未跑门禁——批准前请确认门禁已提交",
+      "noNotes": "无发版说明",
+      "impactVersion": "版本",
+      "impactScope": "范围",
+      "impactGate": "门禁",
+      "scopeCount": "{{n}} 个任务",
+      "scopeUnknown": "范围未圈定",
+      "gatePassed": "已通过",
+      "gateFailed": "{{n}} 项未过"
     },
     "workflow": {
       "impactMode": "变更",
@@ -989,7 +1001,10 @@
       "budgetUpdated": "预算已更新",
       "clarified": "已答复，AI 可继续推进",
       "gatePassed": "闸门通过，剧本已进入下一阶段",
-      "gateRejected": "闸门驳回，已留痕可回到访谈修改"
+      "gateRejected": "闸门驳回，已留痕可回到访谈修改",
+      "workflowApplied": "工作流已落库生效",
+      "releaseApproved": "已批准发布，进入发布执行",
+      "releaseRejected": "发布已打回草案"
     },
     "body": {
       "placeholder": "该决策类型的主体渲染器待类型落地（当前为占位框架）"

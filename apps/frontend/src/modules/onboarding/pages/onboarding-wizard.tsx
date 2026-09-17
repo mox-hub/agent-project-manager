@@ -389,7 +389,14 @@ function ConfigureAiStep({ onNext, onSkip }: StepContentProps) {
   );
 }
 
-function CompleteStep({ onFinish }: { onFinish: () => void }) {
+function CompleteStep({
+  onFinish,
+  onWatchReplay,
+}: {
+  onFinish: () => void;
+  /** 向导完成 → 先看回放（S6）。次序见 `use-onboarding.watchReplayThenStart` */
+  onWatchReplay: () => void;
+}) {
 
   const handleFinish = () => {
     onFinish();
@@ -406,8 +413,11 @@ function CompleteStep({ onFinish }: { onFinish: () => void }) {
           <CheckCircle className="size-4 text-accent-green" />
         </IconStack>
         <h2 className="text-2xl font-bold">设置完成！</h2>
+        {/* 原来这里写的是「您已准备好开始使用 APM」——一句没有依据的断言：
+            上一步「配置 AI」是**可跳过**的，跳过之后这条链路一步也跑不起来。
+            改为说清"现在能做什么、还差什么"，而"还差什么"由下方那张卡自己去说 */}
         <p className="mt-2 text-muted-foreground">
-          您已准备好开始使用 APM，祝您使用愉快
+          工作区已经建好了。下一步建议先花 90 秒看一遍这条管道怎么干活
         </p>
       </div>
 
@@ -447,11 +457,20 @@ function CompleteStep({ onFinish }: { onFinish: () => void }) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Button onClick={handleFinish} size="lg" className="w-full">
-          <Rocket className="mr-2 h-4 w-4" />
-          进入 APM
+        {/* 主键给"看一遍"，不给"进入 APM"（S6，设计纪要 §3.4「先回放、后实况」）：
+            刚装好的机器上模型多半还没配、runtime 还没起，此时进真实项目看到的是一片空，
+            用户会合理地认为这东西坏了。回放不需要 runtime、不需要 API key，
+            在任何机器上都放得完——它是唯一能在第一分钟就说清"这东西能干什么"的东西。
+            按钮文案承担全部说明责任（含"不需要配置"），避免主键变成一个语焉不详的跳转 */}
+        <Button onClick={onWatchReplay} size="lg" className="w-full">
+          <Sparkles className="mr-2 h-4 w-4" />
+          先看一遍它怎么干活（90 秒 · 不需要配置模型）
         </Button>
-        <Button variant="outline" onClick={handleGoToDocs} className="w-full">
+        <Button variant="outline" onClick={handleFinish} className="w-full">
+          <Rocket className="mr-2 h-4 w-4" />
+          直接进入 APM
+        </Button>
+        <Button variant="ghost" onClick={handleGoToDocs} className="w-full">
           查看文档
         </Button>
       </div>
@@ -473,6 +492,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
     prevStep,
     skipStep,
     finishOnboarding,
+    watchReplayThenStart,
     createProject,
     goToStep,
   } = useOnboarding();
@@ -504,6 +524,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
         return (
           <CompleteStep
             onFinish={() => finishOnboarding.mutate()}
+            onWatchReplay={watchReplayThenStart}
           />
         );
       default:

@@ -5,6 +5,7 @@ import {
   DecisionDto,
   DecisionListDto,
   DecisionSummaryDto,
+  PROPOSAL_KIND_VALUES,
 } from './dto/decision.dto';
 
 type ApprovalWithRefs = Prisma.ApprovalRequestGetPayload<{
@@ -46,15 +47,11 @@ type AcceptanceWithRefs = Prisma.AcceptanceGetPayload<{
 
 const MAX_PULL = 200;
 
-/** 建议类提案 kind（与 DecisionProposal.kind 对齐） */
-const PROPOSAL_KINDS = [
-  'plan',
-  'assignment',
-  'resolution',
-  'spend',
-  'clarify',
-  'workflow_def',
-];
+/**
+ * 建议类提案 kind —— 取自 DTO 单一来源，不在此另抄一份。
+ * 曾漏 `release`：`?kind=release` 过滤落空（真实存在该 kind 的待决提案）。
+ */
+const PROPOSAL_KINDS: readonly string[] = PROPOSAL_KIND_VALUES;
 
 export interface DecisionFilter {
   projectId?: string;

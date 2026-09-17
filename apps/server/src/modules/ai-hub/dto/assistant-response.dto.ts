@@ -125,6 +125,39 @@ export class AssistantDispatchResponseDto {
   status: string;
 }
 
+/**
+ * 一次静默场景调用的自身开销。
+ *
+ * 存在意义是**双轨成本纪律**（ARCH-AISURFACE-001 §3.3 约束②）：叙述「自己花多少
+ * token」必须和它叙述的对象一样可见——否则会形成一个自我豁免的成本黑洞。
+ *
+ * `costUsd` 为 `null` 表示**估价口径不可用**（未配价目表），与 0 不是一回事，
+ * 消费端据此不渲染金额而不是渲染 `$0.00`。
+ */
+export class AssistantSilentUsageDto {
+  @ApiProperty({ type: Number, description: '输入 token' })
+  promptTokens: number;
+
+  @ApiProperty({ type: Number, description: '输出 token' })
+  completionTokens: number;
+
+  @ApiProperty({ type: Number, description: '总 token' })
+  totalTokens: number;
+
+  @ApiPropertyOptional({
+    type: Number,
+    nullable: true,
+    description: '预估费用（USD）；null = 估价口径不可用（≠ 0）',
+  })
+  costUsd?: number | null;
+
+  @ApiPropertyOptional({ type: String, description: '实际使用的模型' })
+  model?: string;
+
+  @ApiProperty({ type: Number, description: '本次静默调用耗时（毫秒）' })
+  durationMs: number;
+}
+
 /** POST /ai/assistant/silent 返回（assistant-silent.service SilentRunResult） */
 export class AssistantSilentResponseDto {
   @ApiProperty({ type: String, description: '场景名' })
@@ -136,4 +169,12 @@ export class AssistantSilentResponseDto {
     additionalProperties: true,
   })
   data: Record<string, unknown>;
+
+  @ApiPropertyOptional({
+    type: AssistantSilentUsageDto,
+    description:
+      '本次调用的 token/成本/耗时。**provider 未上报 token 时整个字段缺席**（不补 0——' +
+      '「没上报」与「没花钱」不是一回事）',
+  })
+  usage?: AssistantSilentUsageDto;
 }

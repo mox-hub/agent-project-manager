@@ -491,6 +491,60 @@ ${JSON.stringify(context.issues ?? [])}
 只输出 JSON：{"notes": "markdown 文本"}`;
     },
   },
+
+  /**
+   * 盯盘叙述（ARCH-AISURFACE-001 §3.3 态三）。
+   *
+   * ## 为什么这个场景**没有** `prepareContext`
+   *
+   * 其余需要「先侦查再开口」的场景，前端只传指针，事实一律回数据库取。本场景反过来：
+   * 事实由**前端组装好的快照**（`context.snapshot`）传入。理由是 §4.7 的「不造第二套
+   * 数据口径」——盯盘面上已经由 `office` / `executions` / `decision` 等**既有服务**取到
+   * 了这些事实，若此处再写一遍聚合查询，就等于在 ai-hub 里长出第二份口径，两份迟早会打架。
+   * 传同一份事实还有个额外好处：**叙述不可能与同屏渲染的数字矛盾**（它们本来就是同一个数）。
+   *
+   * ## 四条硬约束的落点
+   *
+   * ① 事实与叙事分离 → 下面第 1~3 条规则：数字是快照里算好的，模型只翻译。
+   * ② 成本纪律 → 由调用方（前端 hook）以 TTL + 可见性触发保证，绝不逐事件调用；
+   *    本场景的自身开销经 `usage` 回执出去，供 UI 呈现。
+   * ③ 确定性降级 → **不在服务端**：模型不可用/超时/解析失败时，前端回落同源模板叙述。
+   *    服务端不做降级，是因为降级内容也必须建立在这份快照上，而快照只在前端手里。
+   * ④ 不主动弹窗 → 纯返回，是否展示由前端决定。
+   */
+  'surface-narration': {
+    description:
+      '盯盘叙述（CAP-C-08 态三）：读前端组装的盯盘事实快照，翻译成小白读得懂的一句话总述 + 动态 + 阻塞 + 待拍板 + 诚实缺口（只翻译不算数、不发明）',
+    buildInstructions: (context) => {
+      const snapshot = context.snapshot;
+      if (
+        !snapshot ||
+        typeof snapshot !== 'object' ||
+        Array.isArray(snapshot)
+      ) {
+        throw new BadRequestException('盯盘叙述缺少事实快照（snapshot）');
+      }
+      return `你是项目管理系统的 AI 同事「小周」。用户在盯盘面上看着项目，需要你用大白话告诉他此刻的实际状态。
+读者是对工程与项目管理完全不了解的新手，不要甩术语。
+
+事实快照（**唯一依据**：来自系统的既有查询，数字已经算好，字段为 null 表示该口径取不到）：
+${JSON.stringify(snapshot)}
+
+硬规则（违反即视为输出失败）：
+1. **只翻译，不算数**：快照里的数字原样引用。不做加减乘除、不推算百分比、不做"大约/接近"式的改口。
+2. **不发明**：快照里没有的人名、工单名、数字、时间、原因一律不得出现。拿不准就不写。
+3. **空就是空**：某类事实为 null 或为空数组时，明说"暂无"，绝不拿别的数据顶上。
+4. 说人话，句子短，不堆形容词。
+
+输出：
+- headline：一句话总述此刻状态，不超过 40 字。
+- highlights：0~3 条值得一说的动态，每条不超过 30 字。
+- blockers：卡住的事，每条 {what 卡了什么, who 谁在处理或卡在谁那, since 从什么时候（**用快照里的时间原文**）, why 为什么, whatYouCanDo 用户能做什么}；没有就给空数组。
+- needsYou：等用户拍板的事，每条 {decisionId **必须原样取自**快照 needsYou.top[].id, oneLineWhy 一句话说明为什么要你, urgency 原样取自同一项的 urgency}；没有就给空数组。
+- honestGaps：0~3 条**这份快照本身的数据缺口**（取自快照 gaps 字段，原样或改写成大白话），说清"哪件事现在看不到"；没有就给空数组。
+只输出 JSON：{"headline": "...", "highlights": ["..."], "blockers": [{"what": "...", "who": "...", "since": "...", "why": "...", "whatYouCanDo": "..."}], "needsYou": [{"decisionId": "...", "oneLineWhy": "...", "urgency": "blocking"}], "honestGaps": ["..."]}`;
+    },
+  },
 };
 
 /**
@@ -803,9 +857,25 @@ async function loadCardEntityFacts(
   );
 }
 
+/** 一次静默调用的自身开销（契约镜像 `AssistantSilentUsageDto`） */
+export interface SilentRunUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  /** null = 估价口径不可用（≠ 0） */
+  costUsd: number | null;
+  model?: string;
+  durationMs: number;
+}
+
 export interface SilentRunResult {
   scenario: string;
   data: Record<string, unknown>;
+  /**
+   * provider **未上报 token** 时整个字段缺席——不补 0。
+   * 「没上报」与「没花钱」不是一回事，补 0 会让读者以为这次调用免费。
+   */
+  usage?: SilentRunUsage;
 }
 
 /** 从模型输出中提取 JSON（容忍 markdown code fence 与前后杂文） */
@@ -880,32 +950,50 @@ export class AssistantSilentService {
       : rawContext;
 
     const instructions = def.buildInstructions(effectiveContext);
+    const startedAt = Date.now();
     const result = await adapter.chat(
       [{ role: 'user', content: '请按系统指令输出 JSON。' }],
       { instructions, temperature: 0.4 },
     );
+    const durationMs = Date.now() - startedAt;
 
     const data = extractJsonObject(result.content ?? '');
 
+    const modelName = result.model ?? adapters[0].model;
+    const promptTokens = result.tokens?.prompt ?? 0;
+    const completionTokens = result.tokens?.completion ?? 0;
+    const totalTokens = result.tokens?.total ?? 0;
+
+    // 估价：口径不可用（未配价目表等）时保持 null，**不**落成 0
+    let estimatedCost: number | null = null;
+    if (result.tokens) {
+      try {
+        estimatedCost = await this.usagePricing.estimateCostUsd({
+          modelName,
+          provider: adapter.getProvider(),
+          promptTokens,
+          completionTokens,
+        });
+      } catch (err) {
+        this.logger.warn(
+          `Failed to estimate silent AI cost: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }
+
     // 用量记账（复用 AIUsageLog；静默调用无会话/消息实体）
     try {
-      const estimatedCost = await this.usagePricing.estimateCostUsd({
-        modelName: result.model ?? adapters[0].model,
-        provider: adapter.getProvider(),
-        promptTokens: result.tokens?.prompt ?? 0,
-        completionTokens: result.tokens?.completion ?? 0,
-      });
       await this.prisma.aIUsageLog.create({
         data: {
           userId,
           projectId: projectId ?? null,
           issueId: null,
           conversationId: null,
-          modelName: result.model ?? adapters[0].model,
+          modelName,
           provider: adapter.getProvider(),
-          promptTokens: result.tokens?.prompt ?? 0,
-          completionTokens: result.tokens?.completion ?? 0,
-          totalTokens: result.tokens?.total ?? 0,
+          promptTokens,
+          completionTokens,
+          totalTokens,
           estimatedCost,
           responseMetadata: { kind: 'silent', scenario },
         },
@@ -916,6 +1004,18 @@ export class AssistantSilentService {
       );
     }
 
-    return { scenario, data };
+    // 回执里的自身开销：provider 没报 token 就整个缺席（不补 0）
+    const usage: SilentRunUsage | undefined = result.tokens
+      ? {
+          promptTokens,
+          completionTokens,
+          totalTokens,
+          costUsd: estimatedCost,
+          model: modelName,
+          durationMs,
+        }
+      : undefined;
+
+    return { scenario, data, ...(usage ? { usage } : {}) };
   }
 }

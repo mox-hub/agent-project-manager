@@ -140,7 +140,10 @@ function ActionBar({
 
   if (reasonDef) {
     return (
-      <div className="space-y-2 border-t border-border/40 px-4 py-3">
+      // `data-decision-actions` 是写路径区域的**稳定标记**：只读预览（回放）时整条动作栏
+      // 不渲染，而"不渲染"与"渲染了但按钮是灰的"在视觉上不容易分辨、在测试里更不好断言。
+      // 标出来之后，「只读态绝不出现写路径」就是一条能钉死的断言，而不是一句注释。
+      <div className="space-y-2 border-t border-border/40 px-4 py-3" data-decision-actions="">
         <p className="text-xs text-content-text-muted">
           {t('decision.action.reasonPrompt', { action: t(reasonDef.label) })}
         </p>
@@ -164,7 +167,7 @@ function ActionBar({
   }
 
   return (
-    <div className="flex shrink-0 border-t border-border/40">
+    <div className="flex shrink-0 border-t border-border/40" data-decision-actions="">
       {actions.map((def, index) => {
         const Icon = def.icon;
         // 主动作（首键）受证据强制 + 冷却门禁；其余键不设防
@@ -216,6 +219,17 @@ export interface DecisionCardShellProps {
   ) => void;
   busy?: boolean;
   className?: string;
+  /**
+   * 只读预览：**整条动作栏不渲染**，并以 `readOnlyNote` 就地说明为什么。
+   *
+   * 用途是回放/演示（数据来自剧本快照，其中的决策 `id` 在服务端并不存在）。
+   * **不做成"按钮点了没反应"**——那正是本项目反复在治的那类错误：一个按下去
+   * 看起来生效、实际什么都没落的键（S2-e 删除的假「准入」按钮同此）。
+   * 缺省 false，对既有调用方零影响。
+   */
+  readOnly?: boolean;
+  /** 只读时在原动作栏位置显示的说明（文案由调用方给，避免此共享件耦合一门语言） */
+  readOnlyNote?: ReactNode;
 
   /** 是否处于 3D 翻转到背面（可控模式） */
   isFlipped?: boolean;
@@ -240,6 +254,8 @@ export function DecisionCardShell({
   onAction,
   busy = false,
   className,
+  readOnly = false,
+  readOnlyNote,
   isFlipped: controlledFlipped,
   onFlipChange,
   stamp = null,
@@ -301,6 +317,8 @@ export function DecisionCardShell({
     decision.proposer.name ?? t(`decision.proposer.${decision.proposer.type}`);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    // 只读预览同样拦快捷键：拦了动作栏却留下数字键/翻面键，等于留了一条隐形的拍板路径
+    if (readOnly) return;
     // 快捷键 'f' / 'F' 触发 3D 翻面
     if (event.key === 'f' || event.key === 'F') {
       event.preventDefault();
@@ -509,8 +527,13 @@ export function DecisionCardShell({
             </button>
           </div>
 
-          {/* ⑤ 动作栏 */}
-          {actionDefs.length > 0 ? (
+          {/* ⑤ 动作栏（clarify 等交互体自管确认键时可为空）。
+              只读预览优先：**不放动作键，也不做"按了没反应"的灰键**——说清楚为什么不能按 */}
+          {readOnly ? (
+            <div className="border-t border-border px-4 py-2.5 text-11 text-muted-foreground">
+              {readOnlyNote}
+            </div>
+          ) : actionDefs.length > 0 ? (
             <ActionBar
               decision={decision}
               actions={actionDefs}

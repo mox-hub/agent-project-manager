@@ -170,6 +170,14 @@ const AiSurfacePage = lazy(() =>
   })),
 );
 
+// 回放态（S5）：与盯盘面同一个模块，但**不是**同一个页面——它必须永远能开
+// （无 runtime、无 API key），故与盯盘页各自的 chunk 分开按需加载
+const AiSurfaceReplayPage = lazy(() =>
+  import('@/modules/ai-surface/pages/ai-surface-replay-page').then((m) => ({
+    default: m.AiSurfaceReplayPage,
+  })),
+);
+
 const RequirementIntakePage = lazy(() =>
   import('@/modules/intake/pages/requirement-intake-page').then((m) => ({
     default: m.RequirementIntakePage,
@@ -400,6 +408,18 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={null}>
             <AiSurfacePage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        // 回放演示（S5）。独立路由而非盯盘面的一个"模式开关"：回放页不连 WS、
+        // 不取任何数、也不会因为断线而变样——把它塞进盯盘面的状态机里，
+        // 反而会让"回放为什么不需要连接"这件事说不清楚
+        path: 'ai-surface/replay',
+        element: (
+          <Suspense fallback={null}>
+            <AiSurfaceReplayPage />
           </Suspense>
         ),
         errorElement: <ErrorPage />,

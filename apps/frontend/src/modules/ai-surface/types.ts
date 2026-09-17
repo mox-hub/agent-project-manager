@@ -68,19 +68,9 @@ export interface CognitiveMessage {
   artifactId?: string;
 }
 
-export interface TrustDimension {
-  id: string;
-  label: string;
-  score: number;
-  maxScore: number;
-  description: string;
-  status: 'optimal' | 'good' | 'warning';
-}
-
 export interface MemoryAtom {
   id: string;
   key: string;
   category: 'architecture' | 'governance' | 'preference';
-  weight: number;
   summary: string;
 }
