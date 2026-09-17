@@ -4063,6 +4063,12 @@
     },
     "loading": "Loading documents...",
     "loadFailed": "Failed to load documents",
+    "revisionImpact": {
+      "pending": "Requirement revised: {{issues}} linked tasks with {{criteria}} acceptance criteria awaiting confirmation",
+      "goInbox": "Review in decision inbox",
+      "applied": "Revision impact confirmed: {{count}} acceptance criteria marked for re-check",
+      "dismissed": "This revision impact was confirmed as no action needed"
+    },
     "linkType": {
       "references": "References",
       "blocks": "Blocks",

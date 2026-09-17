@@ -4063,6 +4063,12 @@
     },
     "loading": "正在加载文档...",
     "loadFailed": "文档加载失败",
+    "revisionImpact": {
+      "pending": "需求已修订：{{issues}} 个关联任务、{{criteria}} 条验收标准待确认处理",
+      "goInbox": "去决策收件箱批阅",
+      "applied": "修订影响已确认：{{count}} 条验收标准已标记为待复核",
+      "dismissed": "本次需求修订影响已确认不处理"
+    },
     "linkType": {
       "references": "引用",
       "blocks": "阻塞",
