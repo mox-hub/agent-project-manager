@@ -2128,6 +2128,20 @@ export class IssueService {
 
     const type: 'blocks' | 'relates' = dto.type || 'blocks';
 
+    // 环检测（需求重审 G4，2026-09-17）：沿「dependsOn」方向从目标工单出发
+    // 若能回到当前工单则成环——拒绝建立，防「B 依赖 A」与「A 依赖 B」并存
+    if (
+      await this.wouldCreateDependencyCycle(
+        task.projectId,
+        issueId,
+        dto.dependsOnIssueId,
+      )
+    ) {
+      throw new BadRequestException(
+        `不能建立该依赖：会形成循环依赖（「${dependsOnIssue.title}」已直接或间接依赖当前工单）`,
+      );
+    }
+
     const dependency = await this.prisma.issueDependency.create({
       data: {
         projectId: task.projectId,
@@ -2162,6 +2176,41 @@ export class IssueService {
     });
 
     return dependency;
+  }
+
+  /**
+   * 判断新增依赖 issueId dependsOn targetId 是否成环：沿既有 dependsOn 边
+   * 从 targetId 出发 BFS，能回到 issueId 即成环。同项目依赖边一次取齐。
+   */
+  private async wouldCreateDependencyCycle(
+    projectId: string | null,
+    issueId: string,
+    targetId: string,
+  ): Promise<boolean> {
+    const edges = await this.prisma.issueDependency.findMany({
+      where: { projectId },
+      select: { issueId: true, dependsOnIssueId: true },
+    });
+    const adjacency = new Map<string, string[]>();
+    for (const edge of edges) {
+      adjacency.set(edge.issueId, [
+        ...(adjacency.get(edge.issueId) ?? []),
+        edge.dependsOnIssueId,
+      ]);
+    }
+    const visited = new Set<string>([targetId]);
+    const queue: string[] = [targetId];
+    while (queue.length > 0) {
+      const current = queue.shift() as string;
+      if (current === issueId) return true;
+      for (const next of adjacency.get(current) ?? []) {
+        if (!visited.has(next)) {
+          visited.add(next);
+          queue.push(next);
+        }
+      }
+    }
+    return false;
   }
 
   async removeDependency(
