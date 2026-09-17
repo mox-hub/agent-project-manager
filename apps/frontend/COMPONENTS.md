@@ -91,6 +91,7 @@
 | Slider | ui/slider.tsx | 滑块（base-ui 官方配方） | value, onChange, min, max |
 | Calendar / CalendarDayButton | ui/calendar.tsx | 日历选择器（react-day-picker 封装） | selected, onSelect, locale, showOutsideDays |
 | DatePicker | ui/date-picker.tsx | 日期选择组合件（coss 组合模式：Popover+Calendar+Button；支持自定义胶囊触发器 trigger、presets、footer 清除） | value, onValueChange, trigger, presets, footer, closeOnSelect |
+| ColorPicker | ui/color-picker.tsx | 颜色选择组合件（Popover+react-colorful+预设色板；DEFAULT_SWATCHES=原 TAG_COLORS 15 色用户数据色（宪法 §5 豁免）；allowCustom=false 退化为纯预设选择） | value, onValueChange, swatches, allowCustom, closeOnSwatch |
 | NumberField 套件 | ui/number-field.tsx | 数字输入（coss 配方：步进按钮/键盘/滚轮，task-form 估时在用） | value, onValueChange, min, max, step, size |
 | Autocomplete 套件 | ui/autocomplete.tsx | 自由输入 + 建议过滤（coss 配方，useAutocompleteFilter.contains 手动过滤） | value, onValueChange, AutocompleteInput(showClear), AutocompleteList/Item |
 | useCopyToClipboard | hooks/use-copy-to-clipboard.ts | 复制到剪贴板 + 临时已复制状态（coss hook） | timeout, onCopy → { copyToClipboard, isCopied } |
@@ -102,7 +103,7 @@
 | FilterChipsRow + FilterCascadeMenu + FilterFieldMenuList | ui/filter-chips.tsx | Linear 风格筛选：条件条（工具栏下单开一行，[字段｜算子｜值｜×] 拼接 chip + 追加 + Clear/Save 视图菜单）与漏斗二级级联菜单（字段搜索 + 值子菜单带计数直接勾选，FilterCascadeMenu 经 ToolbarMenuSlot.render 挂漏斗位）；FilterCondition[] 模型，filterConditionSets/matchesConditionSets/countBy 谓词辅助 | fields(FilterFieldDef[]), conditions(FilterCondition[]), onChange, onSaveToView, onSaveAsNewView, badge, search |
 | SegmentedControl | ui/segmented-control.tsx | 分段切换（pill/rect 滑块，语义色调） | value, options, onChange, variant(pill/rect), tone |
 | Stepper 套件 | ui/stepper.tsx | 复合式步骤条（reui base-nova 移植：向导可点击导航 / 状态机纯展示 / 纵向清单三形态；inactive=muted、标题随状态变色、指示器 motion-shift） | Stepper: value, defaultValue, onValueChange, orientation, indicators({active/completed/inactive/loading})；StepperItem: step, completed, disabled, loading；Trigger/Indicator/Separator/Title/Description/Nav/Panel/Content |
-| AvatarPickerField | ui/avatar-picker-field.tsx | 内置头像选择表单字段 | value, onValueChange, memberType(human/ai/all) |
+| AvatarPickerField | ui/avatar-picker-field.tsx | 头像选择组合件（Popover 弹层：内置 12 头像网格 + 随机生成种子 + 自定义 URL 预览 + 清除；触发器显示当前头像；`nice-avatar:`/`avvvatars:` 前缀对任意种子确定性出图） | value, onValueChange, memberType(human/ai/all) |
 | PropertyPanel 套件（CapsuleSelect/DateCapsuleField/AutoSizeTextarea/PropertyRow/PropsCard/SuggestionsCard 等） | ui/property-panel.tsx | 详情页属性面板（Linear 风格可编辑胶囊+属性行+折叠卡） | CapsuleSelect: value, options, onChange, active；PropsCard: title, collapsed；SuggestionsCard: title, items；DateCapsuleField: placeholder, clearLabel |
 
 #### Select label 契约（2026-09-11 定案，写下拉框前必读）

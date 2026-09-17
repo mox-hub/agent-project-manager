@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### feat：颜色/头像选择器自建组件——ColorPicker 新建+AvatarPickerField Popover 化+消费方全替换（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **两个选择器自建收编**（shadcn base-vega/coss/reui 三库均无现成品，reui color-picker 付费墙，React Aria 与 base-ui 唯一基线冲突，故自建）：①新建 `ui/color-picker.tsx`——照 coss DatePicker 组合范式（Popover+受控组合件），react-colorful（新依赖，2KB）+ 预设色板 + Hex 输入（非法回滚），`allowCustom=false` 退化为纯预设选择；`DEFAULT_SWATCHES`=原 tag-manager TAG_COLORS 15 色用户数据色（宪法 §5 豁免注释随迁）；②`ui/avatar-picker-field.tsx` 改造为 Popover 组合件——触发器圆钮，弹层=内置 12 头像网格+随机生成种子+自定义 URL 预览+清除，`nice-avatar:`/`avvvatars:` 前缀对任意种子字符串确定性出图（随机生成直接落库种子），导出 `AvatarGlyph` 复用；③消费方替换：颜色 2 处（issue-types-section 原 `<input type="color">`、tag-manager 自绘网格，均 `allowCustom=false`），头像 4 处 API 兼容零改动（profile/member-create/member-detail/design-system） | UI 组件基建（2026-09-16 拍板） | tsc -b 零错；eslint 5 文件零错；palette·tokens·ui-governance·registry 治理脚本全绿；issue-types 相关单测 5/5 | `COMPONENTS.md` ColorPicker 新增行 + AvatarPickerField 行更新；design-system 页 Forms 区新增 ColorPickerShowcase |
+
 ### CAP-A-17 快捷键体系：全局键位注册表 + 设置页自定义 + 散落监听收编（2026-09-15）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

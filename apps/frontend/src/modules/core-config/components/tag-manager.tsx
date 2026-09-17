@@ -29,6 +29,7 @@ import {
   SortableItem,
   SortableItemHandle,
 } from '@/components/ui/sortable';
+import { ColorPicker, DEFAULT_SWATCHES } from '@/components/ui/color-picker';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import {
@@ -38,17 +39,12 @@ import {
   useDeleteTag,
   type Tag,
 } from '../hooks/use-metadata';
-import { cn } from '@/lib/utils';
-
-// 用户自选色板：存库的用户数据色值，非 UI 语义色（宪法 §5 豁免，见 PRINCIPLES 附录登记）
-const TAG_COLORS = [
-  '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e',
-  '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6',
-  '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#6b7280',
-];
 
 type ResourceType = 'project' | 'task' | 'bug' | 'document';
 type TagFilter = ResourceType;
+
+// 标签色板 = ColorPicker 全局缺省 DEFAULT_SWATCHES（用户自选数据色，宪法 §5 豁免登记随组件迁移）
+const TAG_DEFAULT_COLOR = DEFAULT_SWATCHES[0];
 
 const TAG_FILTERS: ResourceType[] = ['project', 'task', 'bug', 'document'];
 
@@ -85,7 +81,7 @@ export function TagManager() {
 
   const [filter, setFilter] = useState<TagFilter>('project');
   const tagForm = useForm<TagFormData>({
-    defaultValues: { name: '', color: TAG_COLORS[0], description: '', resourceType: filter },
+    defaultValues: { name: '', color: TAG_DEFAULT_COLOR, description: '', resourceType: filter },
   });
   const [editing, setEditing] = useState<Tag | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -93,7 +89,7 @@ export function TagManager() {
   const filteredTags = tags.filter((tag) => tag.resourceType === filter);
 
   const openCreate = () => {
-    tagForm.reset({ name: '', color: TAG_COLORS[0], description: '', resourceType: filter });
+    tagForm.reset({ name: '', color: TAG_DEFAULT_COLOR, description: '', resourceType: filter });
     setEditing(null);
     setIsFormOpen(true);
   };
@@ -101,7 +97,7 @@ export function TagManager() {
   const openEdit = (tag: Tag) => {
     tagForm.reset({
       name: tag.name,
-      color: tag.color || TAG_COLORS[0],
+      color: tag.color || TAG_DEFAULT_COLOR,
       description: tag.description || '',
       resourceType: tag.resourceType || filter,
     });
@@ -110,7 +106,7 @@ export function TagManager() {
   };
 
   const closeForm = () => {
-    tagForm.reset({ name: '', color: TAG_COLORS[0], description: '', resourceType: filter });
+    tagForm.reset({ name: '', color: TAG_DEFAULT_COLOR, description: '', resourceType: filter });
     setEditing(null);
     setIsFormOpen(false);
   };
@@ -277,25 +273,12 @@ export function TagManager() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('settings.labelColor')}</FormLabel>
-                    <div className="flex flex-wrap gap-1.5">
-                      {TAG_COLORS.map((color) => (
-                        <Button
-                          key={color}
-                          type="button"
-                          variant="outline"
-                          size="xs"
-                          aria-pressed={field.value === color}
-                          aria-label={color}
-                          onClick={() => field.onChange(color)}
-                          className={cn(
-                            'size-6 rounded-full p-0',
-                            field.value === color &&
-                              'ring-2 ring-ring ring-offset-2 ring-offset-background',
-                          )}
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
+                    <ColorPicker
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      allowCustom={false}
+                      placeholder={t('settings.labelColor')}
+                    />
                   </FormItem>
                 )}
               />
