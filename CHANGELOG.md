@@ -29,6 +29,12 @@ tags: "changelog,release"
 | server | **审计结论绑定标准版本（CAP-B-02）**：`CompletenessAuditReport` 新增 `criteriaRevisions` 快照（审计时各标准 revision）；`evaluateAuditStaleness` 纯函数判定过期（修订/新增标准 → 过期，存量无快照不标过期）；审计门禁（audit-gate）对过期结论拦截要求重审；audit-report 接口与契约详情附带 `stale`/`staleCriteriaIds` | CAP-B-02 | `completeness-audit.service.spec.ts` 新增 8 用例（快照落库/过期判定/门禁拦截）；契约三件套 `contract:check` 零漂移 | 能力清单 CAP-B-02 卡 |
 | frontend | **修订/过期可见性**：标准行显示版本号（v2 起）与「标准已修订，证据待复核」黄色徽标；审计面板与详情页显示「审计结论已过期」徽标与重审入口横幅；i18n zh-CN/en 双语键同步 | CAP-B-01 / B-02 | 前端 acceptance 模块 Vitest 绿；`tsc -b` 零错误；i18n 键一致性校验通过 | — |
 
+### Fixed
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **验收证据守卫口径修复（需求重审 G2 / CAP-B-08 批一先行）**：`github-evidence.subscriber` 的 PR 事件守卫曾用旧状态名 `accepted/abandoned`，对 schema 现词表（`draft\|pending\|in_review\|passed\|failed\|waived`）永不命中——已裁决（终态 `passed/failed/waived`）验收的 `completionEvidence` 仍被迟到的 merged/closed 事件改写（「通过后证据被改写」，可信度硬伤）。守卫改为终态集合拦截，活跃三态不误伤 | CAP-B-08 | subscriber 单测 15 条绿（含终态三元组拦截回归 + 活跃态不误伤各 3 条）；type-check（build 配置）0 错 | 能力清单 CAP-B-08 重审注记；测试映射矩阵 GAP-T-34 |
+
 ## [0.7.0] - 2026-09-17
 
 ### v0.7.0 发版总览——AI 表面实时化 + 统一创建面板双界面 + 执行侧兜底闭环 + 决策卡实体手卡

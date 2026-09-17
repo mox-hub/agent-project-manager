@@ -10322,6 +10322,10 @@ export interface components {
         DetectedCliProvidersResponseDto: {
             providers: components["schemas"]["DetectedCliProviderDto"][];
         };
+        RetryExecutionDto: {
+            /** @description 失败诊断结论摘要（failure-diagnosis 场景的 recommendation） */
+            diagnosis?: string;
+        };
         ExecutionStatusResponseDto: {
             executionRunId: string;
             status: string;
@@ -27043,7 +27047,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetryExecutionDto"];
+            };
+        };
         responses: {
             /** @description 新执行已创建并派发（retryOfId 血缘指回原执行） */
             200: {

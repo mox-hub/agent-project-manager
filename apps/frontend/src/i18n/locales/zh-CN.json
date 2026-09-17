@@ -666,6 +666,27 @@
   },
   "runDetails": {
     "title": "运行详情",
+    "diagnosis": {
+      "title": "失败诊断",
+      "mechanicalLabel": "初步判断",
+      "aiButton": "AI 诊断",
+      "aiRunning": "诊断中…",
+      "aiFailed": "AI 诊断暂不可用",
+      "reasonLabel": "原因分析",
+      "recommendationLabel": "建议下一步",
+      "missingInfoLabel": "还缺这些信息：",
+      "actionContinue": "原样重试大概率能过",
+      "actionRetryAdjusted": "先调整输入或环境再重试",
+      "actionEscalate": "需要人来处理，自助重试无意义",
+      "retryWithDiagnosis": "按诊断重试",
+      "retrySuccess": "已按诊断创建新执行",
+      "category": {
+        "environment": "环境问题",
+        "input": "输入问题",
+        "dependency": "依赖问题",
+        "unknown": "原因待查"
+      }
+    },
     "viewDetail": "运行详情",
     "loadFailed": "运行详情加载失败或无权限",
     "duration": "用时",
