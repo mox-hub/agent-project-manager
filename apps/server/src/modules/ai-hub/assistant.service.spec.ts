@@ -30,6 +30,10 @@ describe('AssistantService', () => {
       create: vi.fn(),
       update: vi.fn(),
     },
+    // 执行工作区三级回退（ProjectWorkspace → git.workspaceRoot → Repository）
+    projectWorkspace: { findUnique: vi.fn().mockResolvedValue(null) },
+    appConfig: { findFirst: vi.fn().mockResolvedValue(null) },
+    repository: { findFirst: vi.fn().mockResolvedValue(null) },
   };
   const mockAiHub = {
     chat: vi.fn(),
@@ -344,12 +348,14 @@ describe('AssistantService', () => {
           }),
         }),
       );
-      // prompt 带 transcript 与回写指引
+      // prompt 带 transcript 与回写指引；执行载荷三字段齐备（worker 侧强校验）
       expect(mockRuntime.createDispatch).toHaveBeenCalledWith(
         'rt-1',
         expect.objectContaining({
           executionRunId: 'run-77',
           prompt: expect.stringContaining('对话记录'),
+          providerId: 'claude-code',
+          workspaceRoot: 'E:/demo',
           timeout: 300_000,
         }),
       );
@@ -565,6 +571,7 @@ describe('AssistantService', () => {
           runtimeId: 'rt-1',
           status: 'online',
           workspaceRoots: ['E:/demo'],
+          cliProviders: ['claude-code'],
         },
       ]);
       mockExecution.createExecutionRun.mockResolvedValue({ id: 'run-1' });
@@ -593,11 +600,69 @@ describe('AssistantService', () => {
           executionRunId: 'run-1',
           projectId: 'p1',
           prompt: expect.stringContaining('小周'),
+          providerId: 'claude-code',
           workspaceRoot: 'E:/demo',
           timeout: 300_000,
           status: 'pending',
         }),
       );
+    });
+
+    it('执行通道未注册 cliProviders 时 400，不建 ExecutionRun', async () => {
+      mockRuntime.listRegistrations.mockResolvedValue([
+        {
+          runtimeId: 'rt-1',
+          status: 'online',
+          workspaceRoots: ['E:/demo'],
+          cliProviders: [],
+        },
+      ]);
+
+      await expect(
+        service.dispatchExecution('排一下本周', 'p1', 'u1'),
+      ).rejects.toThrow(/CLI provider/);
+      expect(mockExecution.createExecutionRun).not.toHaveBeenCalled();
+    });
+
+    it('守护进程无 workspaceRoots 时回退项目工作区配置', async () => {
+      mockRuntime.listRegistrations.mockResolvedValue([
+        {
+          runtimeId: 'rt-1',
+          status: 'online',
+          workspaceRoots: [],
+          cliProviders: ['claude-code'],
+        },
+      ]);
+      mockPrisma.projectWorkspace.findUnique.mockResolvedValue({
+        localPath: 'E:/proj-ws',
+      });
+      mockExecution.createExecutionRun.mockResolvedValue({ id: 'run-2' });
+
+      await service.dispatchExecution('排一下本周', 'p1', 'u1');
+
+      expect(mockRuntime.createDispatch).toHaveBeenCalledWith(
+        'rt-1',
+        expect.objectContaining({ workspaceRoot: 'E:/proj-ws' }),
+      );
+    });
+
+    it('守护进程与项目均无工作区配置时 400，不建 ExecutionRun', async () => {
+      mockRuntime.listRegistrations.mockResolvedValue([
+        {
+          runtimeId: 'rt-1',
+          status: 'online',
+          workspaceRoots: [],
+          cliProviders: ['claude-code'],
+        },
+      ]);
+      mockPrisma.projectWorkspace.findUnique.mockResolvedValue(null);
+      mockPrisma.appConfig.findFirst.mockResolvedValue(null);
+      mockPrisma.repository.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.dispatchExecution('排一下本周', 'p1', 'u1'),
+      ).rejects.toThrow(/工作区/);
+      expect(mockExecution.createExecutionRun).not.toHaveBeenCalled();
     });
   });
 });

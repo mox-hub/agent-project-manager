@@ -14,6 +14,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
+import type { CreateExecutionRunDto } from '@/modules/execution/execution.service';
 import { RuntimeService } from '@/modules/runtime/runtime.service';
 import { CliExecutorService } from './cli-executor.service';
 import { CliProviderRegistry } from './cli-provider.registry';
@@ -154,6 +155,111 @@ export class CliDispatchService {
     }
   }
 
+  /**
+   * 兜底批 5：失败执行的重新执行——克隆新建一条执行并走既有派发链。
+   * 与绑定派发（options.executionId 原地复用）的语义差异：原执行保持
+   * failed/blocked 终态留痕（步骤/产物/错误详情不丢），新执行携带
+   * retryOfId 血缘与 retryContext（原状态/失败原因），同 issue 的活契约
+   * 关联由 createExecutionRun 自动对齐。
+   */
+  async retryExecution(
+    executionRunId: string,
+    userId: string,
+  ): Promise<DispatchResult> {
+    const original = await this.prisma.execution.findUnique({
+      where: { id: executionRunId },
+      include: {
+        issue: { select: { id: true, projectId: true, aiAgentId: true } },
+      },
+    });
+    if (!original) {
+      throw new NotFoundException(`Execution ${executionRunId} not found`);
+    }
+    // superseded（人工取消）不放开：重新执行只面向失败/阻塞的执行
+    const RETRYABLE_STATUSES = ['failed', 'blocked'];
+    if (!RETRYABLE_STATUSES.includes(original.status)) {
+      throw new BadRequestException(
+        `执行 ${original.id} 当前状态为 ${original.status}，仅 failed/blocked 可重新执行`,
+      );
+    }
+    const issueId = original.issueId;
+    if (!issueId || !original.issue) {
+      throw new BadRequestException(
+        `执行 ${original.id} 未关联有效工单，无法重新执行`,
+      );
+    }
+
+    const originalInput = (original.input as Record<string, unknown>) ?? {};
+    const retryInput: Record<string, unknown> = { ...originalInput };
+    // dispatchError 是原执行的派发留痕，归档到 retryContext，不进新执行主载荷
+    delete retryInput.dispatchError;
+    retryInput.retryContext = {
+      retryOfId: original.id,
+      originalStatus: original.status,
+      originalError: original.errorDetail ?? null,
+      originalDispatchError: originalInput.dispatchError ?? null,
+      retriedAt: new Date().toISOString(),
+      retriedBy: userId,
+    };
+
+    const cloned = await this.executionService.createExecutionRun({
+      projectId: original.projectId,
+      issueId,
+      subjectType: original.subjectType as CreateExecutionRunDto['subjectType'],
+      subjectId: original.subjectId,
+      identitySource:
+        original.identitySource as CreateExecutionRunDto['identitySource'],
+      goal: original.goal,
+      title: original.title ?? undefined,
+      description: original.description ?? undefined,
+      role: original.role ?? undefined,
+      level: original.level ?? undefined,
+      estimate: original.estimate ?? undefined,
+      order: original.order,
+      input: retryInput,
+      status: 'planned',
+      createdBy: userId,
+      metadata: { retriedFrom: original.id },
+      // 优先沿用原执行的验收契约关联；原执行未挂契约时由
+      // createExecutionRun 自动对齐 issue 活契约（无则创建）
+      acceptanceId: original.acceptanceId ?? undefined,
+      retryOfId: original.id,
+    });
+    this.logger.log(
+      `Retry execution created: ${cloned.id} (retryOf=${original.id}) for task ${issueId}`,
+    );
+
+    try {
+      return await this.dispatchTaskToCli(issueId, userId, {
+        executionId: cloned.id,
+        // 原执行主体是项目 AI 成员时沿用它；external/human 主体走
+        // dispatch 既有回落（issue.aiAgentId 或发起人）
+        memberId:
+          original.subjectType === 'platform_ai_member'
+            ? original.subjectId
+            : undefined,
+      });
+    } catch (err) {
+      // 派发未成（验收门禁阻断/provider 不可用等）：新执行落 blocked 留痕
+      //（与 recordDispatchFailure 同口径的可观测终态），原执行不受影响。
+      try {
+        await this.executionService.updateExecutionRun(cloned.id, {
+          status: 'blocked',
+          errorDetail: {
+            reason: 'RETRY_DISPATCH_FAILED',
+            message: (err as Error).message,
+          },
+          metadata: { dispatchFailed: true, retriedFrom: original.id },
+        });
+      } catch (e) {
+        this.logger.warn(
+          `Failed to mark retry execution ${cloned.id} as blocked: ${(e as Error).message}`,
+        );
+      }
+      throw err;
+    }
+  }
+
   private async runDispatch(
     issueId: string,
     userId: string,
@@ -176,6 +282,10 @@ export class CliDispatchService {
     }
 
     const projectId = task.projectId;
+
+    // 2. 验收门禁（兜底改造批 3，2026-09-15 裁决先按严格要求）：
+    // 无活契约或契约 0 条标准均阻断派发——先有标准再干活
+    await this.acceptanceService.assertDispatchGate(issueId);
 
     // 2. Get workspace root
     const workspaceRoot = await this.getWorkspaceRoot(projectId);

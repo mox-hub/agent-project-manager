@@ -8,6 +8,8 @@
     "moveDown": "下移",
     "confirm": "确认",
     "cancel": "取消",
+    "expand": "展开",
+    "collapse": "收起",
     "delete": "删除",
     "deleteConfirm": "确定要删除吗？此操作无法撤销。",
     "save": "保存",
@@ -613,7 +615,8 @@
       "running": "正在执行",
       "completed": "执行完成",
       "failed": "执行失败",
-      "viewDetail": "前往执行中心"
+      "viewDetail": "前往执行中心",
+      "retry": "重试"
     },
     "history": {
       "open": "历史对话",
@@ -795,7 +798,11 @@
       "tokens": "Tokens",
       "cost": "费用",
       "viewAcceptance": "查看验收",
-      "cancel": "取消执行"
+      "cancel": "取消执行",
+      "retry": "重新执行",
+      "retrySuccess": "已创建新执行并重新派发",
+      "retryError": "重新执行失败",
+      "retryOf": "重试自"
     }
   },
   "decision": {
@@ -2596,12 +2603,7 @@
     "labelsLabel": "标签",
     "dueDateLabel": "截止日期",
     "propertiesLabel": "属性",
-    "suggestionsLabel": "建议",
     "clearDueDate": "清除截止日期",
-    "sugCriticalSeverity": "严重级别",
-    "sugTagBug": "标签：bug",
-    "sugAssignMe": "指派给我",
-    "sugToday": "今天",
     "parentTaskLabel": "父任务"
   },
   "taskDetail": {
@@ -2645,14 +2647,9 @@
     "labelsLabel": "标签",
     "dueDateLabel": "截止日期",
     "propertiesLabel": "属性",
-    "suggestionsLabel": "建议",
     "externalSection": "外部集成",
     "executionSection": "执行",
     "clearDueDate": "清除截止日期",
-    "sugHighPriority": "高优先级",
-    "sugTagFrontend": "标签：frontend",
-    "sugAssignMe": "指派给我",
-    "sugToday": "今天",
     "execPending": "等待中",
     "execRunning": "执行中",
     "execCompleted": "已完成",
@@ -2697,8 +2694,12 @@
     "execActionApprove": "验收通过",
     "execActionAbandon": "废弃",
     "execActionDispatchCli": "派发 CLI 执行",
+    "execActionRetryCli": "重新执行（新建执行）",
     "execDispatchCliSuccess": "CLI 派发成功，执行项已进入执行中",
     "execDispatchCliError": "CLI 派发失败",
+    "execRetryCliSuccess": "已创建新执行并重新派发",
+    "execRetryCliError": "重新执行失败",
+    "execRetryOf": "重试自",
     "execActionViewLog": "查看执行日志",
     "execActionMore": "更多操作",
     "parentTaskLabel": "父任务",
@@ -3080,7 +3081,16 @@
       "projects": "项目数"
     },
     "acceptance": {
-      "task": "关联任务"
+    "draft": {
+      "title": "AI 代写验收标准",
+      "description": "AI 按工单内容起草可检查的验收标准，勾选确认后落入验收契约（已有标准不会被覆盖）",
+      "generating": "AI 正在起草验收标准…",
+      "button": "AI 代写验收标准",
+      "apply": "确认落库",
+      "functional": "功能",
+      "technical": "技术",
+      "applied": "已落库 {{added}} 条验收标准{{skipped}}"
+    },      "task": "关联任务"
     },
     "generic": {
       "hint": "悬停预览页面信息；项目、任务、Bug、文档等详情页会展示实体数据。"
@@ -3694,6 +3704,7 @@
   },
   "shell": {
     "mainNav": "主导航",
+    "connectionLost": "实时连接已断开，正在重试…页面数据可能不是最新",
     "main": "主导航",
     "workbench": "工作台",
     "pipeline": "研发生命周期",
@@ -3811,6 +3822,20 @@
       "saveRequired": "Personal Access Token 为必填项",
       "saved": "GitHub 集成已保存",
       "saveFailed": "保存集成失败"
+    },
+    "panel": {
+      "repoPlaceholder": "例如 owner/repo",
+      "refresh": "刷新",
+      "newPr": "新建 PR",
+      "prTitleLabel": "PR 标题",
+      "headBranch": "Head 分支",
+      "baseBranch": "Base 分支",
+      "descOptional": "描述（可选）",
+      "descPlaceholder": "关联任务：...",
+      "submit": "提交",
+      "error": "无法连接到 GitHub，请检查仓库名与集成凭据",
+      "loading": "加载 PR 列表…",
+      "empty": "当前没有 Open PR"
     }
   },
   "integration": {

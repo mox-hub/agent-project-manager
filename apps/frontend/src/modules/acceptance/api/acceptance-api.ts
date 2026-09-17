@@ -235,6 +235,24 @@ export const acceptanceApi = {
     return (await api.get<Acceptance>(`/acceptance/${id}`)) as Acceptance;
   },
 
+  /**
+   * AI 代写标准落库（兜底改造批 3）：人确认后调用，服务端找/建活契约
+   * 增量写入（同文去重），source=ai-generated 供审计溯源
+   */
+  async applyCriteriaForIssue(
+    issueId: string,
+    criteria: Array<{
+      content: string;
+      criteriaType?: string;
+      severity?: string;
+      category?: string;
+    }>,
+  ): Promise<{ acceptanceId: string; added: number; skipped: number }> {
+    return (await api.post(`/acceptance/issue/${issueId}/apply-criteria`, {
+      criteria,
+    })) as { acceptanceId: string; added: number; skipped: number };
+  },
+
   /** 列表查询（分页） */
   async list(params: {
     status?: string;

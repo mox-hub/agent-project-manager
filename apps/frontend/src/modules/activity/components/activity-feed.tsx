@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { History } from 'lucide-react';
+import { ChevronDown, History } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import type { StatusTone } from '@/shared/status/status-visuals';
@@ -26,6 +26,7 @@ import {
 } from '../activity-display';
 import { ActivityComment } from './activity-comment';
 import { CommentInput } from './comment-input';
+import { cn } from '@/lib/utils';
 
 export function ActivityFeed({
   entityType,
@@ -39,41 +40,66 @@ export function ActivityFeed({
   const { t } = useTranslation();
   const { data: activities = [] } = useActivities(entityType, entityId);
   const [replyTo, setReplyTo] = useState<string | null>(null);
+  // 分区收缩（与详情页执行项/子任务分区同手势；动态与评论同段折叠）
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div className={className}>
-      <div className="mb-1 flex items-center gap-2">
-        <History className="size-3.5 text-muted-foreground" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t('activity.title')}
-        </span>
-        {activities.length > 0 && (
-          <span className="text-10 text-muted-foreground/60">({activities.length})</span>
-        )}
+      <div className="mb-1 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <History className="size-3.5 text-muted-foreground" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t('activity.title')}
+          </span>
+          {activities.length > 0 && (
+            <span className="text-10 text-muted-foreground/60">({activities.length})</span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setCollapsed((v) => !v)}
+          className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          aria-label={collapsed ? t('common.expand') : t('common.collapse')}
+          aria-expanded={!collapsed}
+        >
+          <ChevronDown
+            className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
+          />
+        </button>
       </div>
 
-      <div className="flex flex-col">
-        {activities.map((activity) =>
-          isCommentActivity(activity) ? (
-            <ActivityComment
-              key={activity.id}
-              activity={activity}
-              entityId={entityId}
-              onReply={(authorName) => setReplyTo(authorName)}
-            />
-          ) : (
-            <ActivityEventRow key={activity.id} activity={activity} />
-          ),
+      {/* 动态时间线 + 评论输入（grid-rows 动画展开 / 收起） */}
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows] duration-300 ease-out',
+          collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
         )}
-      </div>
+      >
+        <div className="overflow-hidden">
+          <div className="flex flex-col">
+            {activities.map((activity) =>
+              isCommentActivity(activity) ? (
+                <ActivityComment
+                  key={activity.id}
+                  activity={activity}
+                  entityId={entityId}
+                  onReply={(authorName) => setReplyTo(authorName)}
+                />
+              ) : (
+                <ActivityEventRow key={activity.id} activity={activity} />
+              ),
+            )}
+          </div>
 
-      <CommentInput
-        entityType={entityType}
-        entityId={entityId}
-        replyTo={replyTo}
-        onReplyConsumed={() => setReplyTo(null)}
-        placeholder={t('activity.comment.placeholder')}
-      />
+          <CommentInput
+            entityType={entityType}
+            entityId={entityId}
+            replyTo={replyTo}
+            onReplyConsumed={() => setReplyTo(null)}
+            placeholder={t('activity.comment.placeholder')}
+          />
+        </div>
+      </div>
     </div>
   );
 }

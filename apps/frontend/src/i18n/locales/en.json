@@ -8,6 +8,8 @@
     "moveDown": "Move down",
     "confirm": "Confirm",
     "cancel": "Cancel",
+    "expand": "Expand",
+    "collapse": "Collapse",
     "delete": "Delete",
     "deleteConfirm": "Are you sure you want to delete? This action cannot be undone.",
     "save": "Save",
@@ -613,7 +615,8 @@
       "running": "Running",
       "completed": "Completed",
       "failed": "Failed",
-      "viewDetail": "Open execution center"
+      "viewDetail": "Open execution center",
+      "retry": "Retry"
     },
     "history": {
       "open": "History",
@@ -795,7 +798,11 @@
       "tokens": "Tokens",
       "cost": "Cost",
       "viewAcceptance": "View acceptance",
-      "cancel": "Cancel run"
+      "cancel": "Cancel run",
+      "retry": "Re-execute",
+      "retrySuccess": "New execution created and dispatched",
+      "retryError": "Re-execute failed",
+      "retryOf": "Retried from"
     }
   },
   "decision": {
@@ -2596,12 +2603,7 @@
     "labelsLabel": "Labels",
     "dueDateLabel": "Due date",
     "propertiesLabel": "Properties",
-    "suggestionsLabel": "Suggestions",
     "clearDueDate": "Clear due date",
-    "sugCriticalSeverity": "Critical severity",
-    "sugTagBug": "Tag: bug",
-    "sugAssignMe": "Assign me",
-    "sugToday": "Today",
     "parentTaskLabel": "Parent task"
   },
   "taskDetail": {
@@ -2645,14 +2647,9 @@
     "labelsLabel": "Labels",
     "dueDateLabel": "Due date",
     "propertiesLabel": "Properties",
-    "suggestionsLabel": "Suggestions",
     "externalSection": "External",
     "executionSection": "Execution",
     "clearDueDate": "Clear due date",
-    "sugHighPriority": "High priority",
-    "sugTagFrontend": "Tag: frontend",
-    "sugAssignMe": "Assign me",
-    "sugToday": "Today",
     "execPending": "Pending",
     "execRunning": "Running",
     "execCompleted": "Completed",
@@ -2697,8 +2694,12 @@
     "execActionApprove": "Approve & complete",
     "execActionAbandon": "Supersede",
     "execActionDispatchCli": "Dispatch CLI",
+    "execActionRetryCli": "Re-execute (new execution)",
     "execDispatchCliSuccess": "CLI dispatch started, execution item is now in progress",
     "execDispatchCliError": "CLI dispatch failed",
+    "execRetryCliSuccess": "New execution created and dispatched",
+    "execRetryCliError": "Re-execute failed",
+    "execRetryOf": "Retried from",
     "execActionViewLog": "View execution log",
     "execActionMore": "More actions",
     "parentTaskLabel": "Parent task",
@@ -3080,7 +3081,16 @@
       "projects": "Projects"
     },
     "acceptance": {
-      "task": "Task"
+    "draft": {
+      "title": "AI-draft acceptance criteria",
+      "description": "AI drafts checkable acceptance criteria from the issue. Review and confirm to apply (existing criteria are never overwritten)",
+      "generating": "AI is drafting acceptance criteria…",
+      "button": "AI-draft acceptance criteria",
+      "apply": "Apply",
+      "functional": "Functional",
+      "technical": "Technical",
+      "applied": "Applied {{added}} criteria{{skipped}}"
+    },      "task": "Task"
     },
     "generic": {
       "hint": "Hover to preview pages; entity details show for projects, tasks, bugs, documents and more."
@@ -3694,6 +3704,7 @@
   },
   "shell": {
     "mainNav": "Main",
+    "connectionLost": "Realtime connection lost, reconnecting… page data may be stale",
     "main": "Main",
     "workbench": "Workbench",
     "pipeline": "Lifecycle Pipeline",
@@ -3811,6 +3822,20 @@
       "saveRequired": "Personal Access Token is required",
       "saved": "GitHub integration saved",
       "saveFailed": "Failed to save integration"
+    },
+    "panel": {
+      "repoPlaceholder": "e.g. owner/repo",
+      "refresh": "Refresh",
+      "newPr": "New PR",
+      "prTitleLabel": "PR title",
+      "headBranch": "Head branch",
+      "baseBranch": "Base branch",
+      "descOptional": "Description (optional)",
+      "descPlaceholder": "Related issue: ...",
+      "submit": "Submit",
+      "error": "Cannot reach GitHub, please check the repo name and integration credentials",
+      "loading": "Loading pull requests…",
+      "empty": "No open pull requests"
     }
   },
   "integration": {

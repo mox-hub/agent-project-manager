@@ -34,6 +34,29 @@ export class TodoItemDto {
 
 export class CreateIssueDto {
   @ApiProperty({
+    description:
+      '验收标准（兜底改造批 3）：传入即创建时同步落验收契约+标准，进入门禁体系',
+    required: false,
+    type: Array,
+    example: [
+      {
+        content: '登录成功后跳转到工作台',
+        criteriaType: 'functional',
+        severity: 'high',
+      },
+    ],
+  })
+  @IsOptional()
+  @IsArray()
+  acceptanceCriteria?: Array<{
+    content: string;
+    criteriaType?: string;
+    severity?: string;
+    category?: string;
+    source?: string;
+  }>;
+
+  @ApiProperty({
     description: 'Project ID (optional, can be bound later)',
     example: 'project-123',
     required: false,

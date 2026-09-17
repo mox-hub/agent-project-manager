@@ -104,7 +104,7 @@
 | SegmentedControl | ui/segmented-control.tsx | 分段切换（pill/rect 滑块，语义色调） | value, options, onChange, variant(pill/rect), tone |
 | Stepper 套件 | ui/stepper.tsx | 复合式步骤条（reui base-nova 移植：向导可点击导航 / 状态机纯展示 / 纵向清单三形态；inactive=muted、标题随状态变色、指示器 motion-shift） | Stepper: value, defaultValue, onValueChange, orientation, indicators({active/completed/inactive/loading})；StepperItem: step, completed, disabled, loading；Trigger/Indicator/Separator/Title/Description/Nav/Panel/Content |
 | AvatarPickerField | ui/avatar-picker-field.tsx | 头像选择组合件（Popover 弹层：内置 12 头像网格 + 随机生成种子 + 自定义 URL 预览 + 清除；触发器显示当前头像；`nice-avatar:`/`avvvatars:` 前缀对任意种子确定性出图） | value, onValueChange, memberType(human/ai/all) |
-| PropertyPanel 套件（CapsuleSelect/DateCapsuleField/AutoSizeTextarea/PropertyRow/PropsCard/SuggestionsCard 等） | ui/property-panel.tsx | 详情页属性面板（Linear 风格可编辑胶囊+属性行+折叠卡） | CapsuleSelect: value, options, onChange, active；PropsCard: title, collapsed；SuggestionsCard: title, items；DateCapsuleField: placeholder, clearLabel |
+| PropertyPanel 套件（CapsuleSelect/DateCapsuleField/AutoSizeTextarea/PropertyRow/PropsCard 等） | ui/property-panel.tsx | 详情页属性面板（Linear 风格可编辑胶囊+属性行+折叠卡） | CapsuleSelect: value, options, onChange, active；PropsCard: title, icon, collapsed；DateCapsuleField: placeholder, clearLabel |
 
 #### Select label 契约（2026-09-11 定案，写下拉框前必读）
 
@@ -188,7 +188,7 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | Menubar 套件 | ui/menubar.tsx | 顶部菜单栏（base-ui 官方配方） | children |
 | NavigationMenu 套件 | ui/navigation-menu.tsx | 横向导航菜单（base-ui 官方配方） | children, href |
 | TabBar | ui/tab-bar.tsx | 浏览器式多标签栏（读 tabs-context，右键菜单） | className |
-| ChapterScrubber | ui/chapter-scrubber.tsx | 章节刻度导航轨（motion/react：hover 余弦放大波 + 预览卡贴边换向，listbox 键盘可达） | chapters(Chapter[]), currentIndex, side, peakLength/restLength/rowHeight/radius, onActiveChange, onSelect, label |
+| ChapterScrubber | ui/chapter-scrubber.tsx | 章节刻度导航轨（motion/react：hover 余弦放大波 + 预览卡贴边换向，listbox 键盘可达；Chapter.level 1-6 静息长度递减 + 预览卡 H{n} 角标，文档详情正文左缘作文章内导航） | chapters(Chapter[]: id/title/description?/meta?/level?), currentIndex, side, peakLength/restLength/rowHeight/radius, onActiveChange, onSelect, label |
 | FloatingDock | ui/floating-dock.tsx | 浮动 Dock（motion/react：桌面 hover 磁性放大 + tooltip，移动端纵向展开按钮） | items(DockItem: title/icon/href), desktopClassName, mobileClassName |
 
 ### 基础原语 / 主题工具

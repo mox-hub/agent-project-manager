@@ -214,6 +214,31 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     });
 
+    // ── 执行状态变更 / 审批请求 → 前端实时失效 ──
+    // 兜底改造批 1：此前 execution.run.updated 与 approval.request.created
+    // 只在 message-bus 进程内流转，网关从不向客户端转发——任务详情执行区
+    // 的死订阅与执行中心静止刷新的根因。全局广播（载荷不含敏感大字段）。
+    this.messageBus.subscribe(
+      DomainEventTypes.ExecutionRunUpdated,
+      (payload: unknown) => {
+        this.server.emit(DomainEventTypes.ExecutionRunUpdated, payload);
+      },
+    );
+    this.messageBus.subscribe(
+      DomainEventTypes.ApprovalRequested,
+      (payload: unknown) => {
+        this.server.emit(DomainEventTypes.ApprovalRequested, payload);
+      },
+    );
+
+    // ── 决策提案创建 → 收件箱/侧栏徽标实时失效（兜底改造批 4）──
+    this.messageBus.subscribe(
+      'decision.proposal.created',
+      (payload: unknown) => {
+        this.server.emit('decision.proposal.created', payload);
+      },
+    );
+
     // ── Linear sync events ─────────────────────────────────
     this.messageBus.subscribe('linear.sync.progress', (payload: any) => {
       const { projectId } = payload ?? {};

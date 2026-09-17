@@ -6,6 +6,7 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
 import { mkdirSync } from 'fs';
 import { join } from 'path';
 import { Prisma } from '@prisma/client';
@@ -480,6 +481,40 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     this.activeRuns.delete(runId);
     this.publishUpdate(runId, 'failed', message);
     this.logger.warn(`Workflow run ${runId} failed: ${message}`);
+  }
+
+  /**
+   * 兜底改造批 2：running 超时对账——引擎悬挂/服务崩溃遗留的 run 收敛为
+   * failed（跨重启恢复基座暂不支持，见类头注释；上限默认 24h 可传参覆盖）。
+   * 返回收敛数量，供执行对账 job 周期调用。
+   */
+  /** 每 5 分钟自挂对账（兜底改造批 2；与执行对账解耦避免模块环依赖） */
+  @Interval(5 * 60_000)
+  async reconcileStalledTick(): Promise<void> {
+    try {
+      const fixed = await this.reconcileStalledRuns();
+      if (fixed > 0)
+        this.logger.warn(`Workflow stalled runs reconciled: ${fixed}`);
+    } catch (err) {
+      this.logger.warn(
+        `Workflow reconcile failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  async reconcileStalledRuns(maxAgeMs = 24 * 60 * 60_000): Promise<number> {
+    const cutoff = new Date(Date.now() - maxAgeMs);
+    const stalled = await this.prisma.aIWorkflowRun.findMany({
+      where: { status: 'running', updatedAt: { lt: cutoff } },
+      select: { id: true },
+    });
+    for (const run of stalled) {
+      await this.failRun(
+        run.id,
+        new Error('WORKFLOW_STALLED: 工作流运行超时未收敛，系统已自动标记失败'),
+      );
+    }
+    return stalled.length;
   }
 
   private readStepsState(raw: unknown): Record<string, unknown> {

@@ -38,6 +38,7 @@ export const DomainEventTypes = {
   // 执行
   ExecutionRunUpdated: 'execution.run.updated',
   ExecutionTerminal: 'execution.terminal',
+  ApprovalRequested: 'approval.requested',
 
   // 实时流
   AiStream: 'ai.stream',

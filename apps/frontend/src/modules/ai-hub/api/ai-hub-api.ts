@@ -350,6 +350,13 @@ export const aiHubApi = {
   dispatchTaskToCli: (issueId: string, data: DispatchToCliRequest) =>
     api.post<DispatchToCliResponse>(`/ai/issues/${issueId}/dispatch-cli`, data),
 
+  /**
+   * 重新执行失败/阻塞执行（兜底批 5）：服务端克隆新建一条执行
+   * （retryOfId 血缘指回原执行）并走同一派发链，原执行终态留痕不动
+   */
+  retryExecution: (executionRunId: string) =>
+    api.post<DispatchToCliResponse>(`/ai/execution-runs/${executionRunId}/retry`),
+
   cancelExecution: (executionRunId: string) =>
     api.post<{ success: boolean }>(`/ai/execution-runs/${executionRunId}/cancel`),
 

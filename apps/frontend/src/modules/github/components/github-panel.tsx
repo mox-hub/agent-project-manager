@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,10 @@ import { cn } from '@/lib/utils';
  * - 显示已有 PR 列表
  * - 允许手动触发创建 PR（高级）
  * - 状态徽章 + 链接跳转
+ *
+ * 两种形态：
+ * - `GithubPanel`：Card 完整版（集成页 / 设置页）
+ * - `GithubPanelEmbedded`：侧栏嵌入子卡（详情页「外部集成」内，形态对齐 TaskLinearPanel）
  */
 export function GithubPanel({
   integrationId,
@@ -280,6 +285,214 @@ function PrRow({ pr }: { pr: Pr }) {
         )}
         <ExternalLink className="h-3 w-3 text-muted-foreground" />
       </div>
+    </a>
+  );
+}
+
+// ============================================================================
+// GithubPanelEmbedded - 侧栏嵌入子卡（详情页「外部集成」）
+// 形态对齐 TaskLinearPanel（rounded-md 子卡）；功能与 Card 版一致（repo 设置 /
+// 刷新 / 行内新建 PR / PR 列表），布局压缩为纵向单列，文案接 github.panel.* i18n。
+// ============================================================================
+
+export function GithubPanelEmbedded({
+  integrationId,
+  repoFullName,
+}: {
+  integrationId: string;
+  repoFullName?: string; // owner/repo
+}) {
+  const { t } = useTranslation();
+  const [repo, setRepo] = useState(repoFullName || '');
+  const [showCreate, setShowCreate] = useState(false);
+  const [createInput, setCreateInput] = useState({
+    title: '',
+    head: '',
+    base: 'main',
+    body: '',
+  });
+
+  // 与 Card 版一致：repoFullName 变为非空且本地 repo 为空时补齐（渲染期间调整）
+  const [prevRepoFullName, setPrevRepoFullName] = useState(repoFullName);
+  if (prevRepoFullName !== repoFullName) {
+    setPrevRepoFullName(repoFullName);
+    if (repoFullName && !repo) setRepo(repoFullName);
+  }
+
+  const { data: pulls, isLoading, isError, refetch } = useGithubPulls(
+    repoFullName ? integrationId : undefined,
+    repo || undefined,
+    'open',
+  );
+
+  const createMut = useCreatePull(integrationId);
+
+  return (
+    <div className="rounded-md border border-border bg-card px-3 py-2 space-y-2">
+      {/* repo 行：图标 + 仓库输入 + 刷新 */}
+      <div className="flex items-center gap-1.5">
+        <GitBranch className="size-3.5 shrink-0 text-muted-foreground" />
+        <Input
+          value={repo}
+          onChange={(e) => setRepo(e.target.value.trim())}
+          placeholder={t('github.panel.repoPlaceholder')}
+          aria-label={t('github.panel.repoPlaceholder')}
+          className="h-6 flex-1 px-2 text-xs"
+        />
+        <button
+          type="button"
+          onClick={() => refetch()}
+          disabled={!repo || isLoading}
+          aria-label={t('github.panel.refresh')}
+          title={t('github.panel.refresh')}
+          className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+        >
+          {isLoading ? (
+            <Spinner className="size-3 text-inherit" />
+          ) : (
+            <RefreshCcw className="size-3" />
+          )}
+        </button>
+      </div>
+
+      {/* 新建 PR 开关 */}
+      <Button
+        variant="ghost"
+        size="xs"
+        className="h-6 px-2"
+        onClick={() => setShowCreate((v) => !v)}
+        disabled={!repo}
+      >
+        {showCreate ? <X className="mr-1 size-3" /> : <GitPullRequest className="mr-1 size-3" />}
+        {showCreate ? t('common.cancel') : t('github.panel.newPr')}
+      </Button>
+
+      {showCreate && (
+        <div className="space-y-1.5 rounded-md border bg-muted/30 p-2">
+          <div className="space-y-0.5">
+            <Label className="text-xs">{t('github.panel.prTitleLabel')}</Label>
+            <Input
+              value={createInput.title}
+              onChange={(e) => setCreateInput((s) => ({ ...s, title: e.target.value }))}
+              placeholder="feat(scope): ..."
+              className="h-6 px-2 text-xs"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="space-y-0.5">
+              <Label className="text-xs">{t('github.panel.headBranch')}</Label>
+              <Input
+                value={createInput.head}
+                onChange={(e) => setCreateInput((s) => ({ ...s, head: e.target.value }))}
+                placeholder="feat/xxx"
+                className="h-6 px-2 text-xs"
+              />
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-xs">{t('github.panel.baseBranch')}</Label>
+              <Input
+                value={createInput.base}
+                onChange={(e) => setCreateInput((s) => ({ ...s, base: e.target.value }))}
+                placeholder="main"
+                className="h-6 px-2 text-xs"
+              />
+            </div>
+          </div>
+          <div className="space-y-0.5">
+            <Label className="text-xs">{t('github.panel.descOptional')}</Label>
+            <Input
+              value={createInput.body}
+              onChange={(e) => setCreateInput((s) => ({ ...s, body: e.target.value }))}
+              placeholder={t('github.panel.descPlaceholder')}
+              className="h-6 px-2 text-xs"
+            />
+          </div>
+          <div className="flex items-center justify-end pt-0.5">
+            <Button
+              size="xs"
+              className="h-6 px-2"
+              onClick={async () => {
+                const [owner, repoName] = repo.split('/');
+                await createMut.mutateAsync({
+                  owner,
+                  repo: repoName,
+                  title: createInput.title,
+                  head: createInput.head,
+                  base: createInput.base,
+                  body: createInput.body || undefined,
+                });
+                setShowCreate(false);
+                refetch();
+              }}
+              disabled={
+                createMut.isPending ||
+                !createInput.title ||
+                !createInput.head ||
+                !createInput.base
+              }
+            >
+              {createMut.isPending ? (
+                <Spinner className="mr-1 size-3 text-inherit" />
+              ) : (
+                <GitPullRequest className="mr-1 size-3" />
+              )}
+              {t('github.panel.submit')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isError && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <AlertCircle className="size-3 shrink-0" />
+          {t('github.panel.error')}
+        </div>
+      )}
+
+      {isLoading && !isError && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-inherit" />
+          {t('github.panel.loading')}
+        </div>
+      )}
+
+      {!isLoading && (pulls?.length ?? 0) === 0 && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <CircleDashed className="size-3 shrink-0" />
+          {t('github.panel.empty')}
+        </div>
+      )}
+
+      {(pulls ?? []).length > 0 && (
+        <div className="flex flex-col gap-0.5">
+          {(pulls ?? []).slice(0, 10).map((p: Pr) => (
+            <EmbeddedPrRow key={p.id} pr={p} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** 侧栏紧凑 PR 行：状态图标 + 标题 + #编号 + 外链（徽标列放不下，状态由图标色承载） */
+function EmbeddedPrRow({ pr }: { pr: Pr }) {
+  return (
+    <a
+      href={pr.htmlUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs transition-colors hover:bg-accent"
+    >
+      {pr.merged ? (
+        <GitMerge className="size-3.5 shrink-0 text-accent-purple" />
+      ) : pr.state === 'closed' ? (
+        <X className="size-3.5 shrink-0 text-destructive" />
+      ) : (
+        <GitPullRequest className="size-3.5 shrink-0 text-accent-green" />
+      )}
+      <span className="min-w-0 flex-1 truncate">{pr.title}</span>
+      <span className="shrink-0 font-mono text-10 text-muted-foreground">#{pr.number}</span>
+      <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
     </a>
   );
 }

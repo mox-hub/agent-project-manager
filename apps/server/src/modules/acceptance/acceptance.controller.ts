@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   BadRequestException,
+  Request,
 } from '@nestjs/common';
 import {
   ApiExtraModels,
@@ -406,6 +407,42 @@ export class AcceptanceController {
   @ApiStandardErrors()
   async getByTask(@Param('issueId') issueId: string) {
     return this.acceptanceService.findByTask(issueId);
+  }
+
+  @Post('issue/:issueId/apply-criteria')
+  @ApiOperation({
+    summary: 'AI 代写验收标准落库（人确认后调用，增量写入同文去重）',
+  })
+  @ApiParam({ name: 'issueId', description: '任务 ID' })
+  @ApiOkResponse({
+    schema: {
+      example: { acceptanceId: 'xxx', added: 4, skipped: 1 },
+    },
+    description: '落库结果：契约 id + 新增/去重条数',
+  })
+  @ApiStandardErrors()
+  async applyCriteriaForIssue(
+    @Param('issueId') issueId: string,
+    @Body()
+    body: {
+      criteria?: Array<{
+        content: string;
+        criteriaType?: string;
+        severity?: string;
+        category?: string;
+      }>;
+    },
+    @Request() req: { user: { id: string } },
+  ) {
+    const items = Array.isArray(body?.criteria) ? body.criteria : [];
+    if (items.length === 0) {
+      throw new BadRequestException('criteria 不能为空');
+    }
+    return this.acceptanceService.applyCriteriaForIssue(
+      issueId,
+      items,
+      req.user.id,
+    );
   }
 
   // ─── V3 阶段1：完成契约 + 接收驳回 ──────────────────────────

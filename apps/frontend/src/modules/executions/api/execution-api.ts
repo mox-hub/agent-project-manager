@@ -54,6 +54,8 @@ export interface ExecutionRunRecord {
   } | null;
   metadata?: Record<string, unknown> | null;
   acceptanceId?: string | null;
+  /** 兜底批 5：重试血缘——本执行由哪个失败/阻塞执行重新执行而来 */
+  retryOfId?: string | null;
   project?: { id: string; name: string };
   issue?: { id: string; title: string } | null;
   /** 列表接口附带：步骤/产出计数与首个 CLI 绑定（daemon 路径运行才有） */
@@ -156,6 +158,14 @@ export function useExecutionRuns(params?: {
         total?: number;
       }>('/execution/runs', params);
       return { runs: data?.runs ?? [], total: data?.total ?? 0 };
+    },
+    // 存在非终态 run 时 10s 轮询兜底（socket 失效为主），避免列表/KPI 静止
+    refetchInterval: (query) => {
+      const runs = (query.state.data?.runs ?? []) as Array<{ status?: string }>;
+      const hasActive = runs.some(
+        (r) => r.status && !RUN_TERMINAL_STATUSES.includes(r.status as never),
+      );
+      return hasActive ? 10_000 : false;
     },
   });
 }
