@@ -11,6 +11,7 @@ import { ProposalService } from '@/modules/decision/proposal.service';
 import { ApprovalService } from './approval.service';
 import { Prisma } from '@prisma/client';
 import { inferCompletionType } from '@/modules/cli-dispatch/adapters/test-report.schema';
+import { classifyExecutionFailure } from './failure-classifier';
 
 export interface CreateExecutionRunDto {
   projectId: string;
@@ -229,7 +230,15 @@ export class ExecutionService {
       throw new ForbiddenException('Access denied');
     }
 
-    return this.attachSubjectNames([run]).then((rows) => rows[0]);
+    const withNames = await this.attachSubjectNames([run]).then(
+      (rows) => rows[0],
+    );
+    // 失败诊断·机械归类（批一 P0 切片 3，裁决 D 零 token 半）：仅在失败类
+    // 终态计算，纯函数零成本，前端直接渲染不复制规则
+    const failureClassification = ['failed', 'blocked'].includes(run.status)
+      ? classifyExecutionFailure(run)
+      : null;
+    return { ...withNames, failureClassification };
   }
 
   /**

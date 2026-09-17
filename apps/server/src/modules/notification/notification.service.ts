@@ -445,7 +445,12 @@ export class NotificationService {
             : p.status === 'blocked'
               ? `智能体任务被阻塞：${p.goal || '未知目标'}`
               : `智能体任务完成：${p.goal || '未知目标'}`,
-        body: null,
+        // 失败诊断·机械归类（批一 P0 切片 3，裁决 D 零 token 半）：先给
+        // 一层「为什么」，深入分析归执行详情的「AI 诊断」按需触发
+        body:
+          (p.status === 'failed' || p.status === 'blocked') && p.failureHint
+            ? `初步判断：${p.failureHint}`
+            : null,
       }),
       'approval.requested': (p) => ({
         title: `智能体执行等待审批：${p.goal || p.requestedAction || '未知操作'}`,
