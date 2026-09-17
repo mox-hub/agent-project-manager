@@ -8,6 +8,7 @@ import './decision-card.css';
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  AlertTriangle,
   Bot,
   Check,
   Edit2,
@@ -448,6 +449,19 @@ export function DecisionCardShell({
                 {decision.riskLevel === 'high_risk' && (
                   <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-accent-purple/30 bg-accent-purple-light px-2 py-0.5 text-xs font-medium text-accent-purple whitespace-nowrap">
                     ★ <span className="whitespace-nowrap">{t('decision.riskHigh')}</span>
+                  </span>
+                )}
+
+                {/* 批准过期徽标（CAP-C-04，禁止换行）：内容实质变更后旧批准不再可信，
+                    醒目提示「批准基于旧版本」，用户需重新确认——绝不静默沿用旧批准 */}
+                {decision.approvalStale && (
+                  <span
+                    data-decision-approval-stale=""
+                    title={t('decision.approvalStaleHint')}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-accent-orange/40 bg-accent-orange-light px-2 py-0.5 text-xs font-semibold text-accent-orange whitespace-nowrap"
+                  >
+                    <AlertTriangle className="size-3 shrink-0" />
+                    <span className="whitespace-nowrap">{t('decision.approvalStaleChip')}</span>
                   </span>
                 )}
               </div>

@@ -117,4 +117,28 @@ describe('DecisionCardShell 排版与无换行规范', () => {
     fireEvent.keyDown(scene, { key: 'f' });
     expect(onFlipChange).toHaveBeenCalledWith(true);
   });
+
+  it('CAP-C-04：approvalStale 时头部渲染醒目「批准基于旧版本」徽标；否则不渲染', () => {
+    const onAction = vi.fn();
+    const { container } = render(
+      <DecisionCardShell
+        decision={{ ...testDecision, approvalStale: true }}
+        onAction={onAction}
+      />,
+    );
+
+    const badge = container.querySelector('[data-decision-approval-stale]') as HTMLElement;
+    expect(badge).toBeTruthy();
+    // 徽标文案（zh-CN）与防折行约束
+    expect(badge.textContent).toContain('内容已变更');
+    expect(badge.textContent).toContain('批准基于旧版本');
+    expect(badge.className).toContain('whitespace-nowrap');
+    // 无过期 → 不渲染徽标（不出现空标记）
+    const clean = render(
+      <DecisionCardShell decision={testDecision} onAction={onAction} />,
+    );
+    expect(
+      clean.container.querySelector('[data-decision-approval-stale]'),
+    ).toBeNull();
+  });
 });

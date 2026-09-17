@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DecisionService } from './decision.service';
 import { PrismaService } from '../../core/database/prisma.service';
+import { computeProposalFingerprint } from './decision-fingerprint';
 
 describe('DecisionService', () => {
   let service: DecisionService;
@@ -162,6 +163,18 @@ describe('DecisionService', () => {
         name: 'agent-backend',
       });
       expect(card.contextPath).toBe('/app/tasks/t-9');
+      // CAP-C-04：建议类提案下发当前内容指纹 + 批准过期态（待决恒 false）
+      expect(card.contentFingerprint).toBe(
+        computeProposalFingerprint({
+          kind: 'plan',
+          title: '拆解任务？',
+          detail: null,
+          payload: { issueId: 't-9', added: [{ title: '子任务' }] },
+          projectId: 'p1',
+          issueId: 't-9',
+        }),
+      );
+      expect(card.approvalStale).toBe(false);
     });
   });
 

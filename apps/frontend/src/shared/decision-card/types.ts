@@ -71,6 +71,16 @@ export interface Decision {
   proposer: DecisionProposer;
   /** 来源原始数据（证据抽屉渲染用） */
   payload: Record<string, unknown>;
+  /**
+   * 当前实质内容指纹（建议类提案下发，CAP-C-04）。
+   * 决议（resolve）时作为 expectedFingerprint 回传，服务端校验「所见即所批」。
+   */
+  contentFingerprint?: string;
+  /**
+   * 批准是否已过期：内容实质变更后旧批准不再可信（CAP-C-04）。
+   * true 时卡壳显示醒目徽标提示重新确认；待决列表中恒为 false。
+   */
+  approvalStale?: boolean;
   createdAt: string;
   expiresAt?: string;
   /** 上下文内嵌投影的前端路由 */

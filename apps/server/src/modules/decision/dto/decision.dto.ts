@@ -114,6 +114,18 @@ export class DecisionDto {
   })
   payload: Record<string, unknown>;
 
+  @ApiPropertyOptional({
+    description:
+      '当前实质内容指纹（建议类提案下发，sha256 hex，CAP-C-04）——决议时作为 expectedFingerprint 回传校验所见即所批',
+  })
+  contentFingerprint?: string;
+
+  @ApiPropertyOptional({
+    description:
+      '批准是否已过期（内容实质变更后旧批准不再可信，CAP-C-04；待决列表恒为 false）',
+  })
+  approvalStale?: boolean;
+
   @ApiProperty({ description: '决策发起时间（ISO）' })
   createdAt: string;
 

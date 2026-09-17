@@ -7,6 +7,10 @@ import {
   DecisionSummaryDto,
   PROPOSAL_KIND_VALUES,
 } from './dto/decision.dto';
+import {
+  computeProposalFingerprint,
+  isApprovalStale,
+} from './decision-fingerprint';
 
 type ApprovalWithRefs = Prisma.ApprovalRequestGetPayload<{
   include: {
@@ -276,10 +280,15 @@ export class DecisionService {
     };
   }
 
-  /** 建议类提案 → 中性 Decision（统一 advisory：不影响其他工作推进的判断题） */
+  /**
+   * 建议类提案 → 中性 Decision（统一 advisory：不影响其他工作推进的判断题）。
+   * CAP-C-04：下发当前内容指纹（决议时回传校验「所见即所批」）与批准过期态
+   * （待决列表里恒为 false——还没批准谈不上过期，字段为卡壳统一契约而存在）。
+   */
   private mapProposal(
     p: Prisma.DecisionProposalGetPayload<Record<string, never>>,
   ): DecisionDto {
+    const contentFingerprint = computeProposalFingerprint(p);
     return {
       id: `${p.kind}:${p.id}`,
       kind: p.kind as DecisionDto['kind'],
@@ -295,6 +304,8 @@ export class DecisionService {
         id: p.proposerId ?? undefined,
       },
       payload: (p.payload as Record<string, unknown>) ?? {},
+      contentFingerprint,
+      approvalStale: isApprovalStale(p, contentFingerprint),
       createdAt: p.createdAt.toISOString(),
       expiresAt: p.expiresAt?.toISOString(),
       contextPath: p.issueId
