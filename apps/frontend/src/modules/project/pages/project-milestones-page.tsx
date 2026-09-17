@@ -24,7 +24,7 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
 import { useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
-import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
+import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import {
   useProjectIterations,
   useProjectMilestones,

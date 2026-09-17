@@ -32,7 +32,7 @@ import { AsyncState } from '@/components/ui/async-state';
 import { useAllBugs, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import type { Task } from '../api/issue-api';
-import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
+import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { ListActionButton } from '@/components/ui/data-list';
 import { BugSimpleList } from '../components/bug-simple-list';
 import { TaskTableView } from '../components/task-table-view';

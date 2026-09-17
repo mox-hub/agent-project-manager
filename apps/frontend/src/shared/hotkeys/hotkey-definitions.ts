@@ -63,6 +63,14 @@ export const HOTKEY_DEFINITIONS: HotkeyDefinition[] = [
     descKey: 'hotkeys.createPanelSwitchDesc',
     readonly: true,
   },
+  {
+    id: 'create-panel-submit',
+    group: 'create',
+    defaultKeys: 'mod+enter',
+    labelKey: 'hotkeys.createPanelSubmit',
+    descKey: 'hotkeys.createPanelSubmitDesc',
+    readonly: true,
+  },
 ];
 
 export const EDITABLE_HOTKEYS = HOTKEY_DEFINITIONS.filter((d) => !d.readonly);

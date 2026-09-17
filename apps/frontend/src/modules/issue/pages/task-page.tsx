@@ -31,7 +31,7 @@ import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/f
 import type { FilterState } from '@/shared/filters/types';
 import { ProjectDetailNav } from '@/modules/project/components/dashboard/project-detail-nav';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
+import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 
 type ViewMode = 'board' | 'list' | 'gantt' | 'table';

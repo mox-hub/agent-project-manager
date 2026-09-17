@@ -61,6 +61,9 @@ const ALLOWED_TOKENS = new Set([
   "w-[min(96vw,780px)]",
   "w-[min(96vw,720px)]",
   "w-[min(96vw,520px)]",
+  // 统一创建面板适度放大（1040px x 760px 居中呼吸档，拒绝全屏；2026-09 unified-create 登记批）
+  "w-[min(96vw,1040px)]",
+  "h-[min(84vh,760px)]",
   // 助理浮窗面板尺寸（视口相关响应式表达式，无法 token 化；2026-09 assistant-fab 登记批）
   "h-[min(50vh,calc(100vh-6rem))]",
   "w-[min(50vw,42rem)]",

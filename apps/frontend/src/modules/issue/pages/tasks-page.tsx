@@ -34,7 +34,7 @@ import { useIssueTypes, useIssueTypeOf } from '../hooks/use-issue-types';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import type { Task } from '../api/issue-api';
-import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
+import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { useTranslation } from 'react-i18next';
 import { AiAssignDialog } from '../components/ai-assign-dialog';
 import { TaskSimpleList } from '../components/task-simple-list';

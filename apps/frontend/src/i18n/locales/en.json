@@ -3184,18 +3184,172 @@
     "remainingTokens": "Remaining Tokens",
     "bugsThisWeek": "Bugs This Week",
     "askAi": "Ask AI...",
-    "shortcuts": {
-      "close": "Close",
-      "switchType": "Switch Type",
-      "submit": "Submit"
-    },
-    "cancel": "Cancel",
-    "aiDraft": "AI Draft",
+ "shortcuts": {
+  "close": "Close",
+  "switchType": "Switch Type",
+  "submit": "Submit"
+ },
+ "cancel": "Cancel",
+ "createMore": "Create more",
+ "properties": "Properties",
+ "severity": {
+  "critical": "S0 Critical",
+  "high": "S1 Major",
+  "medium": "S2 Normal",
+  "low": "S3 Minor"
+ },
+ "iconTips": {
+  "hideProps": "Hide properties panel",
+  "showProps": "Show properties panel",
+  "maximize": "Maximize",
+  "restore": "Restore",
+  "close": "Close"
+ },
+ "aiDraft": "AI Draft",
     "aiDraftComing": "AI Draft feature coming soon",
     "creating": "Creating...",
     "create": "Create",
-    "applied": "Suggestion applied",
-    "success": "{{type}} created successfully",
+ "applied": "Suggestion applied",
+ "success": "{{type}} created successfully",
+ "placeholder": {
+  "task": "Task title",
+  "bug": "Bug title",
+  "doc": "Document title",
+  "project": "Project name",
+  "milestone": "Milestone name"
+ },
+ "descHint": {
+  "task": "Add a description…",
+  "bug": "Steps to reproduce, expected vs actual…",
+  "doc": "Add a summary or initial content…",
+  "project": "Goals, scope and success criteria…",
+  "milestone": "Key deliverables…"
+ },
+ "field": {
+  "status": "Status",
+  "priority": "Priority",
+  "severity": "Severity",
+  "assignee": "Assignee",
+  "project": "Project",
+  "author": "Author",
+  "dueDate": "Due date",
+  "targetDate": "Target date",
+  "type": "Type",
+  "me": "Me",
+  "none": "None",
+  "clearDueDate": "Clear due date"
+ },
+ "error": {
+  "taskTitle": "Please enter a task title",
+  "bugTitle": "Please enter a bug title",
+  "docTitle": "Please enter a document title",
+  "projectName": "Please enter a project name",
+  "milestoneName": "Please enter a milestone name",
+  "projectRequired": "Please select a project",
+  "prompt": "Please describe what to create",
+      "createFailed": "Failed to create",
+      "noDraft": "AI could not produce a usable draft — try adding the type or more keywords",
+      "aiFailed": "AI generation failed",
+      "suggestionFailed": "AI suggestions unavailable"
+    },
+    "mode": {
+      "manual": "Manual",
+      "ai": "AI agent"
+    },
+    "quickPrompt": "Smart Auto-fill",
+    "quickPromptPlaceholder": "Describe in one sentence (e.g. Redesign login page, due Friday, high priority), press Enter to fill…",
+    "quickPromptApplied": "Form automatically populated based on your description",
+    "acceptanceCriteria": "Acceptance Criteria",
+    "addCriterion": "Add criterion",
+    "aiGenerateCriteria": "AI Generate Criteria",
+    "criteriaPlaceholder": "Enter verifiable acceptance criterion...",
+    "completenessHint": "Completeness Governance: Ensure coverage of happy path, edge cases, and automated test requirements.",
+    "quickChips": {
+      "decompose": "⚡ Decompose requirement",
+      "bug": "🐞 Extract error logs",
+      "testcase": "📋 Complete test cases"
+    },
+    "edit": "Edit",
+    "preview": "Preview",
+    "previewEmpty": "No description yet. Switch to edit mode to write Markdown.",
+    "aiPanel": {
+  "hint": "Describe what you want to create in one sentence; the AI agent turns it into a structured draft. Confirm to create. Switch the type above to pin the target (auto-detected by default).",
+  "inputPlaceholder": "e.g. Create a task \"Login page redesign\", due Friday, high priority, tag frontend",
+  "generate": "Generate draft",
+  "parsing": "Parsing…",
+  "regen": "Regenerate",
+  "draftBadge": "Draft · {{type}}",
+  "fieldTitle": "Title",
+  "fieldDesc": "Description",
+  "fieldPriority": "Priority",
+  "fieldSeverity": "Severity",
+  "fieldDue": "Due",
+  "fieldCategory": "Category",
+  "fieldLabels": "Labels",
+  "confirm": "Confirm & create",
+  "editManually": "Edit manually",
+  "fallback": "Ask assistant",
+  "fallbackTitle": "Fallback when the AI agent fails: forward to the assistant chat",
+  "forwardedToast": "Forwarded to Xiao Zhou — send it in the chat at the bottom right"
+ },
+    "agentPresence": {
+      "immediate": "After creation, {{agent}} starts working immediately.",
+      "approval": "After creation, {{agent}} starts once the request is approved.",
+      "manual": "Creates a backlog ticket only, reserved for {{agent}} to dispatch manually.",
+      "bugImmediate": "After creation, {{agent}} will pull logs and attempt to reproduce automatically.",
+      "bugApproval": "After creation, {{agent}} steps in for investigation once approved.",
+      "bugManual": "The bug will be logged to the backlog, reserved for {{agent}} to investigate later."
+    },
+    "dispatchStrategy": {
+      "immediate": "Execute immediately",
+      "approval": "Requires approval",
+      "manual": "Backlog only"
+    },
+    "shuttle": {
+      "toAi": "Switch to AI agent",
+      "toManual": "Back to manual editing"
+    },
+    "bug": {
+      "injectTemplate": "Fill in the standard bug triage template"
+    },
+    "category": {
+      "requirement": "Requirement PRD",
+      "analysis": "Analysis report",
+      "design": "Architecture design",
+      "api": "API contract",
+      "testing": "Test plan",
+      "guide": "How-to guide"
+    },
+ "discard": {
+  "title": "Discard unsaved input?",
+  "desc": "The panel has unsubmitted input that will be lost when closed.",
+  "keep": "Keep editing",
+  "discard": "Discard & close"
+ },
+ "docCategory": {
+  "requirement": "Requirement",
+  "analysis": "Analysis",
+  "design": "Design",
+  "api": "API",
+  "testing": "Testing",
+  "guide": "Guide"
+ },
+ "projectSource": {
+  "label": "Project source",
+  "scratch": "Start from scratch",
+  "existing": "Import existing project",
+  "ai": "AI agent · conversational",
+  "existingHint": "Project already in progress? After creation you'll enter the onboarding wizard: AI scans the repo read-only and drafts a project profile for you to review.",
+  "grillHint": "Confirm the summary in the conversation above to create"
+ },
+ "suggestions": {
+  "title": "Suggestions",
+  "generating": "Generating…",
+  "regen": "Regenerate",
+  "empty": "No suggestions yet",
+  "emptyHint": "Tap \"AI suggestions\" above to generate completions from what you've filled in",
+  "appliedToast": "Applied: {{label}}"
+ },
     "linear": {
       "new": "New",
       "description": "Description",
@@ -3785,7 +3939,9 @@
     "decisionReview": "Decision card review",
     "decisionReviewDesc": "In review mode: Enter/1 approve · 2 reject · F flip · ←/→ navigate",
     "createPanelSwitch": "Switch create panel type",
-    "createPanelSwitchDesc": "Inside the unified create dialog: Ctrl+1..6 switches between task/bug/document etc."
+    "createPanelSwitchDesc": "Inside the unified create dialog: Ctrl+1..5 switches between task/bug/document/project/milestone",
+    "createPanelSubmit": "Submit create panel",
+    "createPanelSubmitDesc": "Inside the unified create dialog: Ctrl+Enter submits (AI agent mode generates/confirms the draft)"
   },
   "commandPalette": {
     "title": "Command Palette",

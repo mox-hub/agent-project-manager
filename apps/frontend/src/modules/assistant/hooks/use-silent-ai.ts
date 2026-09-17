@@ -3,6 +3,7 @@
  * 场景名与响应 JSON 约定见 server assistant-silent.service.ts 的 SCENARIOS 注册表：
  * - quick-prompts      → { prompts: string[] }            助理输入框快捷问法
  * - create-suggestions → { suggestions: [{label,field,value}] } 创建面板建议 chips
+ * - create-draft       → { type, fields } 创建面板 AI 代理草稿（CAP-A-18 双界面）
  * - project-score      → { score, summary, risks[], suggestions[] } 项目 AI 洞察
  * 全部场景：无 provider/解析失败 → 可读 400，调用方自行回落静态兜底。
  */
@@ -142,6 +143,85 @@ export function parseCreateSuggestions(
       value: it.value as string,
     }))
     .slice(0, 5);
+}
+
+/** 创建面板 AI 代理草稿（CAP-A-18）：type + 可回填字段集 */
+export interface CreateDraft {
+  type: 'task' | 'bug' | 'doc' | 'project' | 'milestone';
+  fields: {
+    title: string;
+    description?: string;
+    priority?: string;
+    severity?: string;
+    status?: string;
+    dueDate?: string;
+    labels?: string[];
+    category?: string;
+  };
+}
+
+const CREATE_DRAFT_TYPES: CreateDraft['type'][] = [
+  'task',
+  'bug',
+  'doc',
+  'project',
+  'milestone',
+];
+
+/** 创建面板 AI 代理：一句话自然语言 → 结构化草稿（人确认后复用手动提交流落库） */
+export function useSilentCreateDraft() {
+  return useMutation({
+    mutationFn: (input: {
+      prompt: string;
+      typeHint?: CreateDraft['type'];
+      projectId?: string;
+    }) =>
+      assistantApi.silent('create-draft', {
+        projectId: input.projectId,
+        context: { prompt: input.prompt, typeHint: input.typeHint },
+      }),
+    retry: false,
+  });
+}
+
+/** 解析 create-draft 响应；type 非法或缺标题返回 null（由调用方降级） */
+export function parseCreateDraft(
+  data: Record<string, unknown> | undefined,
+): CreateDraft | null {
+  const type = data?.type;
+  const fields = data?.fields;
+  if (
+    typeof type !== 'string' ||
+    !(CREATE_DRAFT_TYPES as string[]).includes(type) ||
+    !fields ||
+    typeof fields !== 'object' ||
+    Array.isArray(fields)
+  ) {
+    return null;
+  }
+  const f = fields as Record<string, unknown>;
+  const title =
+    typeof f.title === 'string' && f.title.trim()
+      ? f.title.trim()
+      : typeof f.name === 'string' && f.name.trim()
+        ? f.name.trim()
+        : '';
+  if (!title) return null;
+  return {
+    type: type as CreateDraft['type'],
+    fields: {
+      title,
+      description: typeof f.description === 'string' ? f.description : undefined,
+      priority: typeof f.priority === 'string' ? f.priority : undefined,
+      severity: typeof f.severity === 'string' ? f.severity : undefined,
+      status: typeof f.status === 'string' ? f.status : undefined,
+      dueDate: typeof f.dueDate === 'string' ? f.dueDate : undefined,
+      labels: Array.isArray(f.labels)
+        ? f.labels.filter((x): x is string => typeof x === 'string' && x.length > 0)
+        : undefined,
+      category: typeof f.category === 'string' ? f.category : undefined,
+    },
+  };
 }
 
 /** 项目 AI 洞察：在规则健康分之上叠加一次静默分析 */

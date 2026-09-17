@@ -50,6 +50,36 @@ ${JSON.stringify(context.fields ?? {})}
 field 只能是：title、priority(low|medium|high|critical)、labels(逗号分隔字符串)、dueDate(YYYY-MM-DD)。
 只输出 JSON：{"suggestions": [{"label": "展示文案", "field": "priority", "value": "high"}]}`,
   },
+  'create-draft': {
+    description:
+      '统一创建面板 AI 代理草稿（CAP-A-18）：一句话自然语言解析为实体创建草稿（type + fields），前端草稿卡人确认后复用手动提交流落库',
+    prepareContext: async (context) => {
+      const prompt =
+        typeof context.prompt === 'string' ? context.prompt.trim() : '';
+      if (!prompt) {
+        throw new BadRequestException(
+          'create-draft 缺少 prompt：请描述要创建的内容',
+        );
+      }
+      return context;
+    },
+    buildInstructions: (context) => {
+      const typeHint =
+        typeof context.typeHint === 'string' ? context.typeHint : '';
+      return `你是项目管理系统的创建代理。用户会用一句自然语言描述想创建的内容，请解析为结构化创建草稿，供人确认后落库。
+${typeHint ? `用户已把面板类型切到「${typeHint}」，type 必须用它。` : '请从描述自行判断最合适的目标类型。'}
+用户描述：${JSON.stringify(String(context.prompt ?? ''))}
+${context.projectName ? `当前项目：${String(context.projectName)}（projectId=${String(context.projectId ?? '')}）。` : '当前处于工作区全局视图。'}
+type 只能是：task / bug / doc / project / milestone。
+字段约定：
+- title 必填（project/milestone 同样放 title）；description 一两句补充。
+- task/bug：priority(low|medium|high|critical)、status(todo|in_progress|in_review|done|canceled)、dueDate(YYYY-MM-DD)、labels(字符串数组)；bug 另有 severity(critical|high|medium|low)。
+- doc：category(requirement|analysis|design|api|testing|guide|custom)。
+- project：只解析 title/description，其余字段留给人填。
+- 宁缺毋假：描述里没有的信息置 null，绝不编造日期、人名或标签。
+只输出 JSON：{"type": "task", "fields": {"title": "...", "description": "...", "priority": "high", "severity": null, "status": null, "dueDate": null, "labels": null, "category": null}}`;
+    },
+  },
   'project-score': {
     description: '项目 AI 洞察：在规则健康分之上给出评分与文字分析',
     buildInstructions: (
