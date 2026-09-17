@@ -434,7 +434,9 @@ function ScopeEditor({
       <p className="border-b border-border px-3 py-2 text-xs font-medium text-content-text">
         {t('release.trace.scopeEditorTitle')}
       </p>
-      <ScrollArea className="max-h-64">
+      {/* max-h 必须落在 viewport 上：根容器高度不定时 h-full 百分比失效，
+          viewport 会被内容撑高溢出根容器，压住底栏且无从滚动 */}
+      <ScrollArea className="[&_[data-slot=scroll-area-viewport]]:max-h-64">
         {isLoading ? (
           <div className="space-y-2 p-3">
             {[...Array(4)].map((_, i) => (
