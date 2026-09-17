@@ -799,9 +799,10 @@
       "cost": "Cost",
       "viewAcceptance": "View acceptance",
       "cancel": "Cancel run",
-      "redispatch": "Re-dispatch",
-      "redispatchSuccess": "Re-dispatched to CLI execution",
-      "redispatchError": "Re-dispatch failed"
+      "retry": "Re-execute",
+      "retrySuccess": "New execution created and dispatched",
+      "retryError": "Re-execute failed",
+      "retryOf": "Retried from"
     }
   },
   "decision": {
@@ -2693,8 +2694,12 @@
     "execActionApprove": "Approve & complete",
     "execActionAbandon": "Supersede",
     "execActionDispatchCli": "Dispatch CLI",
+    "execActionRetryCli": "Re-execute (new execution)",
     "execDispatchCliSuccess": "CLI dispatch started, execution item is now in progress",
     "execDispatchCliError": "CLI dispatch failed",
+    "execRetryCliSuccess": "New execution created and dispatched",
+    "execRetryCliError": "Re-execute failed",
+    "execRetryOf": "Retried from",
     "execActionViewLog": "View execution log",
     "execActionMore": "More actions",
     "parentTaskLabel": "Parent task",

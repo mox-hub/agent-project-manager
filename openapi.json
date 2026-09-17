@@ -21190,6 +21190,45 @@
         ]
       }
     },
+    "/_api/ai/execution-runs/{id}/retry": {
+      "post": {
+        "operationId": "CliDispatchController_retryExecution",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "原执行 ID（须为 failed/blocked）",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "新执行已创建并派发（retryOfId 血缘指回原执行）"
+          },
+          "400": {
+            "description": "不可重新执行：状态非 failed/blocked，或未关联有效工单；派发被门禁阻断时新执行落 blocked"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Execution not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Re-execute a failed/blocked execution as a new execution (clone + lineage + same dispatch flow)",
+        "tags": [
+          "CLI Dispatch"
+        ]
+      }
+    },
     "/_api/ai/execution-runs/{id}/status": {
       "get": {
         "operationId": "CliDispatchController_getExecutionStatus",

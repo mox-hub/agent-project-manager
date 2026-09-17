@@ -102,18 +102,17 @@ export function ExecutionsPage() {
   });
 
   const qc = useQueryClient();
-  // 失败/阻塞执行一键重派（兜底改造批 1）：绑定既有执行项重新发起 CLI 派发，
-  // 与任务详情执行项面板的「派发 CLI」同一条后端通路
+  // 失败/阻塞执行一键重新执行（兜底改造批 5）：服务端克隆新建执行
+  //（retryOfId 血缘指回原执行）并走同一派发链，原执行终态留痕不丢
   const redispatch = useMutation({
-    mutationFn: (run: ExecutionRunRecord) =>
-      aiHubApi.dispatchTaskToCli(run.issueId!, { executionId: run.id }),
+    mutationFn: (run: ExecutionRunRecord) => aiHubApi.retryExecution(run.id),
     onSuccess: () => {
-      toast.success(t('execution.row.redispatchSuccess'));
+      toast.success(t('execution.row.retrySuccess'));
       qc.invalidateQueries({ queryKey: ['executions'] });
     },
     onError: (err) => {
       toast.error(
-        t('execution.row.redispatchError') +
+        t('execution.row.retryError') +
           ': ' +
           (err instanceof Error ? err.message : String(err)),
       );
@@ -235,7 +234,7 @@ export function ExecutionsPage() {
     if ((run.status === 'failed' || run.status === 'blocked') && run.issueId) {
       items.push({
         id: 'redispatch',
-        label: t('execution.row.redispatch'),
+        label: t('execution.row.retry'),
         icon: <RotateCcw className="size-3.5" />,
         onClick: () => redispatch.mutate(run),
       });
@@ -281,6 +280,17 @@ export function ExecutionsPage() {
               </span>
             ) : null}
             {run.issue?.title ? <span className="truncate">{run.issue.title}</span> : null}
+            {run.retryOfId ? (
+              <button
+                type="button"
+                className="inline-flex shrink-0 items-center gap-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                title={t('execution.row.retryOf')}
+                onClick={() => setDetailRunId(run.retryOfId!)}
+              >
+                <RotateCcw className="size-3" />
+                {t('execution.row.retryOf')}
+              </button>
+            ) : null}
             <span className="shrink-0">{formatRunDateTime(run.startedAt ?? run.createdAt)}</span>
             {duration ? <span className="shrink-0">{duration}</span> : null}
           </div>

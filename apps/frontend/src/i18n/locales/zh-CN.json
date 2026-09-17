@@ -799,9 +799,10 @@
       "cost": "费用",
       "viewAcceptance": "查看验收",
       "cancel": "取消执行",
-      "redispatch": "重新派发",
-      "redispatchSuccess": "已重新派发 CLI 执行",
-      "redispatchError": "重新派发失败"
+      "retry": "重新执行",
+      "retrySuccess": "已创建新执行并重新派发",
+      "retryError": "重新执行失败",
+      "retryOf": "重试自"
     }
   },
   "decision": {
@@ -2693,8 +2694,12 @@
     "execActionApprove": "验收通过",
     "execActionAbandon": "废弃",
     "execActionDispatchCli": "派发 CLI 执行",
+    "execActionRetryCli": "重新执行（新建执行）",
     "execDispatchCliSuccess": "CLI 派发成功，执行项已进入执行中",
     "execDispatchCliError": "CLI 派发失败",
+    "execRetryCliSuccess": "已创建新执行并重新派发",
+    "execRetryCliError": "重新执行失败",
+    "execRetryOf": "重试自",
     "execActionViewLog": "查看执行日志",
     "execActionMore": "更多操作",
     "parentTaskLabel": "父任务",

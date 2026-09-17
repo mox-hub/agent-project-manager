@@ -44,6 +44,8 @@ export interface IssueExecution {
   order?: number;
   metadata?: Record<string, unknown> | null;
   acceptanceId?: string | null;
+  /** 兜底批 5：重试血缘——本执行由哪个失败/阻塞执行重新执行而来 */
+  retryOfId?: string | null;
   /** 审计闸门黄牌提示（人工执行项 + 活契约审计 red 时返回） */
   auditWarning?: string | null;
   startedAt?: string | null;

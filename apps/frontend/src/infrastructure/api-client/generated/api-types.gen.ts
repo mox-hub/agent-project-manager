@@ -2511,6 +2511,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/ai/execution-runs/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-execute a failed/blocked execution as a new execution (clone + lineage + same dispatch flow) */
+        post: operations["CliDispatchController_retryExecution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/ai/execution-runs/{id}/status": {
         parameters: {
             query?: never;
@@ -26957,6 +26974,48 @@ export interface operations {
         responses: {
             /** @description Execution cancelled */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Execution not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CliDispatchController_retryExecution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 原执行 ID（须为 failed/blocked） */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 新执行已创建并派发（retryOfId 血缘指回原执行） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 不可重新执行：状态非 failed/blocked，或未关联有效工单；派发被门禁阻断时新执行落 blocked */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

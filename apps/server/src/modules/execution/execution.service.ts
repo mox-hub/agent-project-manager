@@ -34,6 +34,8 @@ export interface CreateExecutionRunDto {
   // V3: 扩展字段
   metadata?: Record<string, unknown>;
   acceptanceId?: string;
+  // 兜底批 5：重试血缘——由哪个失败/阻塞执行重新执行而来
+  retryOfId?: string;
 }
 
 export interface UpdateExecutionRunDto {
@@ -131,6 +133,7 @@ export class ExecutionService {
         createdBy: dto.createdBy,
         metadata: dto.metadata as Prisma.InputJsonValue | undefined,
         acceptanceId,
+        retryOfId: dto.retryOfId,
       },
       include: {
         project: { select: { id: true, name: true } },

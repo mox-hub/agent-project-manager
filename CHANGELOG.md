@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### feat：执行兜底批 5——失败执行重新执行（克隆新建执行+血缘关联，替代原地重派）（2026-09-17）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| server+frontend | **失败执行重新执行语义升级**：①schema `Execution.retryOfId` 自关联字段（迁移 20260917100000，dev.db+template.db 均应用并登记，SQLite 不做 DB 级外键、完整性由 schema 声明+应用层校验维护）；②cli-dispatch 新增 `POST /ai/execution-runs/:id/retry`（retryExecution）：校验 failed/blocked 可重试（superseded 人工取消不放开）→ 克隆新建执行（沿用 goal/标题/角色/主体/工时/验收契约关联，原 input 保留并附 `retryContext`=原状态/原 errorDetail/原派发错误，`dispatchError` 留痕字段归档不进新载荷）→ 走既有派发链（platform_ai_member 主体沿用原成员）→ 派发被门禁阻断时新执行落 blocked（RETRY_DISPATCH_FAILED）留痕、原执行不受影响；与批 1.4 原地重派的语义差异：原执行保持终态，失败现场（步骤/产物/错误详情）不丢；③前端执行中心 failed/blocked 行菜单与任务详情执行项面板改调新端点（draft/planned 仍为首次派发 CLI 原地语义）；执行中心行与执行项面板新增「重试自」血缘徽标（点击直达原执行详情）；④i18n 双语键（retry/retrySuccess/retryError/retryOf、execActionRetryCli/execRetryCli*/execRetryOf），移除 redispatch 旧键 | CAP-A-19 批 5 | cli-dispatch e2e 7/7 绿（新增 3 用例：retry 正常流=克隆+血缘+retryContext+契约对齐+原执行不动+runtime 链路到 completed；非 failed/blocked 400+404；门禁阻断=新执行 blocked 留痕原执行不受影响）；server type-check 零错；前端 tsc -b 零错；execution/issue 相关 49 用例绿；契约三件套已同步（openapi +39 行） | `docs/01-需求/能力清单-v1.md`（CAP-A-19 卡批 5 增强行+§七变更记录）· `docs/roadmap/execution-fallback-plan.md`（批 5 小节） |
+
 ### feat：文档详情 frontmatter 属性面板 Obsidian 化重建（行内编辑+属性增删+标签双向同步）（2026-09-17）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

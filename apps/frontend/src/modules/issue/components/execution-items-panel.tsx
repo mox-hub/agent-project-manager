@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Bot, ChevronDown, ListChecks, MoreHorizontal, Plus, ScrollText, UserRound } from 'lucide-react';
+import { Bot, ChevronDown, ListChecks, MoreHorizontal, Plus, RotateCcw, ScrollText, UserRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -114,6 +114,8 @@ function ExecutionStatusBadge({ status }: { status: ExecutionStatus }) {
 
 /** 允许绑定派发的执行项状态（与后端 dispatch.service DISPATCHABLE_STATUSES 对齐） */
 const DISPATCHABLE_STATUSES: ExecutionStatus[] = ['draft', 'planned', 'failed', 'blocked'];
+/** 兜底批 5：failed/blocked 走「重新执行」（克隆新建），draft/planned 仍是首次派发 */
+const RETRYABLE_STATUSES: ExecutionStatus[] = ['failed', 'blocked'];
 
 interface ExecutionItemRowProps {
   execution: IssueExecution;
@@ -121,10 +123,12 @@ interface ExecutionItemRowProps {
   disabled?: boolean;
   onTransition: (execution: IssueExecution, next: ExecutionStatus) => void;
   onDispatchCli?: (execution: IssueExecution) => void;
+  onRetryCli?: (execution: IssueExecution) => void;
   onViewLog?: (execution: IssueExecution) => void;
+  onViewRunById?: (runId: string) => void;
 }
 
-function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDispatchCli, onViewLog }: ExecutionItemRowProps) {
+function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDispatchCli, onRetryCli, onViewLog, onViewRunById }: ExecutionItemRowProps) {
   const { t } = useTranslation();
   const isHuman = execution.subjectType === 'human';
   const SubjectIcon = isHuman ? UserRound : Bot;
@@ -133,6 +137,8 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
   const secondary = allowed.filter((s) => s !== primary);
   const canDispatchCli =
     !isHuman && !!onDispatchCli && DISPATCHABLE_STATUSES.includes(execution.status);
+  const canRetryCli =
+    !isHuman && !!onRetryCli && RETRYABLE_STATUSES.includes(execution.status);
   const estimate = formatMinutes(execution.estimate);
   const actual = formatMinutes(execution.actualSpent);
 
@@ -155,7 +161,7 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
             <ScrollText className="size-3.5" />
           </button>
         )}
-        {(secondary.length > 0 || canDispatchCli) && (
+        {(secondary.length > 0 || canDispatchCli || canRetryCli) && (
           <DropdownMenu>
             <DropdownMenuTrigger
               className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
@@ -175,6 +181,11 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
                   {t('taskDetail.execActionDispatchCli')}
                 </DropdownMenuItem>
               )}
+              {canRetryCli && (
+                <DropdownMenuItem onClick={() => onRetryCli?.(execution)}>
+                  {t('taskDetail.execActionRetryCli')}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -184,6 +195,18 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
         {subjectName && (estimate || actual) && <span className="opacity-50">·</span>}
         {estimate && <span className="shrink-0">{t('taskDetail.execItemsEstimateShort', { value: estimate })}</span>}
         {actual && <span className="shrink-0">{t('taskDetail.execItemsActualShort', { value: actual })}</span>}
+        {execution.retryOfId && (
+          <button
+            type="button"
+            className="inline-flex shrink-0 items-center gap-0.5 transition-colors hover:text-foreground"
+            title={t('taskDetail.execRetryOf')}
+            disabled={disabled}
+            onClick={() => onViewRunById?.(execution.retryOfId!)}
+          >
+            <RotateCcw className="size-2.5" />
+            {t('taskDetail.execRetryOf')}
+          </button>
+        )}
         <span className="flex-1" />
         {primary && (
           <Button
@@ -255,6 +278,24 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
     onError: (err) => {
       toast.error(
         t('taskDetail.execDispatchCliError') +
+          ': ' +
+          (err instanceof Error ? err.message : String(err)),
+      );
+    },
+  });
+
+  // 兜底批 5：失败/阻塞执行项「重新执行」——服务端克隆新建执行
+  //（retryOfId 血缘指回原执行）并走同一派发链，原执行终态留痕不丢
+  const retryCli = useMutation({
+    mutationFn: (execution: IssueExecution) => aiHubApi.retryExecution(execution.id),
+    onSuccess: () => {
+      toast.success(t('taskDetail.execRetryCliSuccess'));
+      qc.invalidateQueries({ queryKey: ['execution', 'issueExecutions', issueId] });
+      qc.invalidateQueries({ queryKey: ['executionRuns'] });
+    },
+    onError: (err) => {
+      toast.error(
+        t('taskDetail.execRetryCliError') +
           ': ' +
           (err instanceof Error ? err.message : String(err)),
       );
@@ -421,10 +462,12 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
                   subjectName={
                     execution.subjectId ? memberNameById.get(execution.subjectId) : undefined
                   }
-                  disabled={busy || dispatchCli.isPending}
+                  disabled={busy || dispatchCli.isPending || retryCli.isPending}
                   onTransition={handleTransition}
                   onDispatchCli={(execution) => dispatchCli.mutate(execution)}
+                  onRetryCli={(execution) => retryCli.mutate(execution)}
                   onViewLog={(execution) => setLogRunId(execution.id)}
+                  onViewRunById={(runId) => setLogRunId(runId)}
                 />
               ))}
             </div>
