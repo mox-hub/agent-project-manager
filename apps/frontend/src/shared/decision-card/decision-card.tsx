@@ -964,7 +964,8 @@ function buildReleaseSlots(decision: Decision, t: TFunc): DecisionSlots {
           ]
         : []),
     ],
-    evidence: decision.detail ? <p>{decision.detail}</p> : undefined,
+    // 发布说明只在正面 body 出现一次；背面档案回落 payload JSON（原始提案即溯源）
+    evidence: undefined,
   };
 }
 
