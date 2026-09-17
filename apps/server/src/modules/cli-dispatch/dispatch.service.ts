@@ -287,6 +287,10 @@ export class CliDispatchService {
     // 无活契约或契约 0 条标准均阻断派发——先有标准再干活
     await this.acceptanceService.assertDispatchGate(issueId);
 
+    // 2.5 依赖门禁（需求重审 G4，2026-09-17 裁决 A）：blocks 依赖未达终态
+    // 阻断派发——「B 依赖 A」须先完成 A 才可执行 B（此前仅为提示语义）
+    await this.assertDependenciesSatisfied(issueId);
+
     // 2. Get workspace root
     const workspaceRoot = await this.getWorkspaceRoot(projectId);
     if (!workspaceRoot) {
@@ -877,6 +881,46 @@ export class CliDispatchService {
     } catch (e) {
       this.logger.warn(
         `onRuntimeExecutionResult failed for ${executionRunId}: ${(e as Error).message}`,
+      );
+    }
+  }
+
+  /**
+   * 依赖门禁（需求重审 G4，2026-09-17 裁决 A）：仅 type='blocks' 的依赖参与
+   * 派发拦截；依赖达成 = 依赖工单状态为终态（StatusDefinition.isFinal，与
+   * issue.service 关单守卫同一口径，不硬编码状态名；定义缺失时无法断言
+   * 未达终态，放行）。relates 型依赖仅进上下文提示，不拦执行。
+   */
+  private async assertDependenciesSatisfied(issueId: string): Promise<void> {
+    const deps = await this.prisma.issueDependency.findMany({
+      where: { issueId, type: 'blocks' },
+      select: {
+        dependsOnIssue: {
+          select: { id: true, title: true, status: true, projectId: true },
+        },
+      },
+    });
+    if (deps.length === 0) return;
+
+    const blockers: string[] = [];
+    for (const dep of deps) {
+      const depIssue = dep.dependsOnIssue;
+      if (!depIssue) continue;
+      const statusDef = await this.prisma.statusDefinition.findFirst({
+        where: {
+          type: 'task',
+          key: depIssue.status,
+          OR: [{ projectId: depIssue.projectId }, { projectId: null }],
+        },
+        select: { isFinal: true },
+      });
+      if (statusDef && !statusDef.isFinal) {
+        blockers.push(`「${depIssue.title}」（状态：${depIssue.status}）`);
+      }
+    }
+    if (blockers.length > 0) {
+      throw new BadRequestException(
+        `该工单存在未完成的 blocks 依赖，暂不可派发执行：${blockers.join('、')}。请先完成依赖工单，或调整依赖关系后再派发`,
       );
     }
   }
