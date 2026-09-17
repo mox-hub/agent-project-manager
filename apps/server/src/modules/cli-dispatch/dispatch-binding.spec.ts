@@ -30,6 +30,8 @@ function buildService(
       findFirst: vi.fn().mockResolvedValue({ localPath: 'E:\\repo' }),
     },
     member: { findUnique: vi.fn().mockResolvedValue(null) },
+    // 依赖门禁（需求重审 G4）：默认无 blocks 依赖 → 放行
+    issueDependency: { findMany: vi.fn().mockResolvedValue([]) },
     execution: {
       findUnique: vi
         .fn()

@@ -485,16 +485,21 @@ export const router = createBrowserRouter([
         handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
-      {
-        path: 'delivery',
-        element: (
-          <Suspense fallback={null}>
-            <DeliveryPage />
-          </Suspense>
-        ),
-        handle: { selfScroll: true },
-        errorElement: <ErrorPage />,
-      },
+      // 交付视图：mock 还原页（data-mock），仅 DEV 注册（dev-only 页面规范 §6.7；需求重审 R5）
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: 'delivery',
+              element: (
+                <Suspense fallback={null}>
+                  <DeliveryPage />
+                </Suspense>
+              ),
+              handle: { selfScroll: true },
+              errorElement: <ErrorPage />,
+            },
+          ]
+        : []),
       {
         path: 'help',
         handle: { selfScroll: true },

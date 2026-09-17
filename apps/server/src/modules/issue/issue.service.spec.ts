@@ -62,6 +62,7 @@ describe('IssueService', () => {
     issueDependency: {
       findFirst: vi.fn(),
       findUnique: vi.fn(),
+      findMany: vi.fn(),
       create: vi.fn(),
       delete: vi.fn(),
     },
@@ -394,6 +395,7 @@ describe('IssueService', () => {
         .mockResolvedValueOnce(mockTask)
         .mockResolvedValueOnce(mockDependsOnTask);
       mockPrismaService.issueDependency.findFirst.mockResolvedValue(null);
+      mockPrismaService.issueDependency.findMany.mockResolvedValue([]);
       mockPrismaService.issueDependency.create.mockResolvedValue(
         mockDependency,
       );
@@ -416,6 +418,82 @@ describe('IssueService', () => {
           'user-1',
         ),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    // 环检测回归（需求重审 G4，2026-09-17）
+    it('should reject direct two-node cycle（B 已依赖 A 时再建 A 依赖 B）', async () => {
+      mockPrismaService.issue.findFirst
+        .mockResolvedValueOnce({ id: 'task-1', projectId: 'project-1' })
+        .mockResolvedValueOnce({
+          id: 'task-2',
+          title: 'Task B',
+          projectId: 'project-1',
+        });
+      mockPrismaService.issueDependency.findFirst.mockResolvedValue(null);
+      mockPrismaService.issueDependency.findMany.mockResolvedValue([
+        { issueId: 'task-2', dependsOnIssueId: 'task-1' },
+      ]);
+
+      await expect(
+        service.addDependency(
+          'task-1',
+          { dependsOnIssueId: 'task-2' },
+          'user-1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.issueDependency.create).not.toHaveBeenCalled();
+    });
+
+    it('should reject indirect cycle（A→B→C 已存在时建 C→A）', async () => {
+      mockPrismaService.issue.findFirst
+        .mockResolvedValueOnce({ id: 'task-c', projectId: 'project-1' })
+        .mockResolvedValueOnce({
+          id: 'task-a',
+          title: 'Task A',
+          projectId: 'project-1',
+        });
+      mockPrismaService.issueDependency.findFirst.mockResolvedValue(null);
+      mockPrismaService.issueDependency.findMany.mockResolvedValue([
+        { issueId: 'task-a', dependsOnIssueId: 'task-b' },
+        { issueId: 'task-b', dependsOnIssueId: 'task-c' },
+      ]);
+
+      await expect(
+        service.addDependency(
+          'task-c',
+          { dependsOnIssueId: 'task-a' },
+          'user-1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.issueDependency.create).not.toHaveBeenCalled();
+    });
+
+    it('should allow legal chain（无回边不成环）', async () => {
+      mockPrismaService.issue.findFirst
+        .mockResolvedValueOnce({ id: 'task-a', projectId: 'project-1' })
+        .mockResolvedValueOnce({
+          id: 'task-b',
+          title: 'Task B',
+          projectId: 'project-1',
+        });
+      mockPrismaService.issueDependency.findFirst.mockResolvedValue(null);
+      // 已有 task-b dependsOn task-c：从 task-b 出发回不到 task-a，允许
+      mockPrismaService.issueDependency.findMany.mockResolvedValue([
+        { issueId: 'task-b', dependsOnIssueId: 'task-c' },
+      ]);
+      mockPrismaService.issueDependency.create.mockResolvedValue({
+        id: 'dep-2',
+      });
+      mockPrismaService.issueActivity.create.mockResolvedValue({});
+
+      await expect(
+        service.addDependency(
+          'task-a',
+          { dependsOnIssueId: 'task-b' },
+          'user-1',
+        ),
+      ).resolves.toEqual({ id: 'dep-2' });
+      expect(mockPrismaService.issueDependency.create).toHaveBeenCalledTimes(1);
     });
   });
 
