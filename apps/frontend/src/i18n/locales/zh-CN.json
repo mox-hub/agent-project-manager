@@ -4416,6 +4416,7 @@
       "emptyTechnical": "暂无技术标准（可在审计报告中应用工程清单）",
       "toggleHint": "点击图标切换判定：待判定 → 已通过 → 未通过",
       "deleteConfirm": "删除该验收标准？",
+      "evidenceStale": "标准已修订，证据待复核",
       "severityBlocked": "接收门禁：critical/high 级标准须全部通过"
     },
     "audit": {
@@ -4438,7 +4439,9 @@
       "systemChecklists": "系统预置清单",
       "teamChecklists": "团队自定义清单",
       "bannerBlocked": "{{count}} 个审计阻断项 — 接收将被红牌拦截",
-      "bannerWarn": "{{count}} 个审计建议项 — 建议补全后接收"
+      "bannerWarn": "{{count}} 个审计建议项 — 建议补全后接收",
+      "staleBadge": "审计结论已过期",
+      "staleBanner": "验收标准在审计后已修订（{{count}} 条），审计结论已过期，请重新审计"
     },
     "actions": {
       "approve": "接收",

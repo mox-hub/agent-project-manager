@@ -68,6 +68,8 @@ export interface CriterionEvidence {
   content?: string | null;
   storageRef?: string | null;
   submittedBy: string;
+  /** 创建时快照的标准版本号（CAP-B-01）；存量无快照为 null，按 1（初版）处理 */
+  criteriaRevision?: number | null;
   createdAt: string;
   metadata?: Record<string, unknown> | null;
 }
@@ -84,6 +86,9 @@ export interface AcceptanceCriterion {
   weight?: number;
   order: number;
   passedAt?: string | null;
+  /** 实质内容修订版本号（CAP-B-01）：content 修订时 +1，初版为 1 */
+  revision?: number;
+  revisedAt?: string | null;
   evidences?: CriterionEvidence[];
 }
 
@@ -108,6 +113,11 @@ export interface AuditReport {
   summary?: string | null;
   auditDate: string;
   checklist?: { id: string; name: string; techStack?: string } | null;
+  /** 审计时各标准的 revision 快照（CAP-B-02）；存量报告为 null */
+  criteriaRevisions?: Record<string, number> | null;
+  /** 审计是否过期：任一标准当前 revision ≠ 快照或审计后新增标准（CAP-B-02） */
+  stale?: boolean;
+  staleCriteriaIds?: string[];
 }
 
 export interface AcceptanceExecution {
