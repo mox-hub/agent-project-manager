@@ -1909,6 +1909,9 @@ model AcceptanceCriteria {
   // critical | high | medium | low
   order        Int       @default(0) // 排序
   passedAt     DateTime?
+  // B-01：实质内容（content）被修订时的版本号，+1 递增；证据以此快照判定有效性
+  revision     Int       @default(1)
+  revisedAt    DateTime? // 最近一次实质修订时间
   metadata     Json?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -1929,6 +1932,8 @@ model AcceptanceEvidence {
   content      String? // 证据内容（短文本）
   storageRef   String? // 存储引用（文件路径/URL/截图ID）
   submittedBy  String // 提交者 ID
+  // B-01：创建时快照当时所属标准的 revision；存量数据为 null 按 1（当版）处理
+  criteriaRevision Int?
   metadata     Json? // 额外元数据（CI job ID, PR number 等）
   createdAt    DateTime @default(now())
 
@@ -1970,6 +1975,10 @@ model CompletenessAuditReport {
   blockedItems   Json // 强阻断项列表 [{ type, content, severity, source }]
   suggestedItems Json // 提议补全项列表 [{ type, content, severity, suggestion, autoFixable }]
   passedItems    Json // 已通过的检查项
+  // B-02：审计时各验收标准的 revision 快照（{ [criteriaId]: revision }）；
+  // 任一 criteria 当前 revision ≠ 快照值或新增标准未覆盖 → 审计过期待重审。
+  // 存量报告为 null，按「无法判定、不标过期」处理。
+  criteriaRevisions Json?
   summary        String? // 审计摘要
   auditDate      DateTime @default(now())
 

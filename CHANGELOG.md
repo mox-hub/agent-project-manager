@@ -27,6 +27,14 @@ tags: "changelog,release"
 | --- | --- | --- | --- | --- |
 | server | **执行前约束包·切片 1+2（批一 P0，需求重审 G4/G5 部分）**：①**依赖约束进派发门禁**——`assertDispatchGate` 后新增依赖校验（裁决 A：仅 `type='blocks'` 参与拦截；依赖达成 = 依赖工单状态 `StatusDefinition.isFinal` 终态口径，不硬编码状态名；定义缺失 fail-open 同关单守卫口径），阻断信息列出全部未完成依赖；建依赖补**环检测**（BFS 沿 dependsOn 边，自环/直环/间接环均拒绝）——「B 依赖 A 仍可先执行 B」的提示语义升级为约束语义；②**单活跃执行互斥**（裁决 B：同一 issue 已有活跃执行时拒绝新建并引导走「重新执行」血缘重试，活跃词表 `planned/in_progress/pending_approval/blocked` 与关单守卫一致，落 `createExecutionRun` 单一漏斗）。**范围说明**：执行级 cwd 难以无合入机制单独隔离（工作区根=用户真实项目目录，隔离目录会搁浅交付物——裁决 C 的后半句「成果合入另立」实锤），G5 隔离+成果合入归后续设计切片 | CAP-A-04 / CAP-B-03 / CAP-A-19 批 6 | issue/execution/cli-dispatch 三模块 spec 53 条绿（新增环检测 3 + 依赖门禁 5 + 互斥 3）；波及 spec（assistant 24 条）回归绿；type-check 0 错 | 能力清单 A-04/B-03/A-19 重审注记；测试映射矩阵 GAP-T-35 |
 
+### CAP-B-01 验收标准版本化 + CAP-B-02 审计结论绑定标准版本（feat/acceptance-criteria-revision，2026-09-18）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **验收标准版本化（CAP-B-01）**：`AcceptanceCriteria` 新增 `revision`/`revisedAt`，实质内容（content）修订即 revision+1、status 重置 pending、passedAt 清空；`AcceptanceEvidence` 新增 `criteriaRevision` 创建时快照（存量 null 按 1 处理），证据有效性判定 `isEvidenceCurrent` 单一口径；接收聚合校验（accept-completion）新增 criteriaEvidence 门禁——每条标准至少一条同版本有效证据，修订后旧证据转「待复核」 | CAP-B-01 | `acceptance-criteria.service.spec.ts` + `acceptance.service.spec.ts` 共 10 用例；acceptance 域 Vitest 62/62 绿 | 能力清单 CAP-B-01 卡 |
+| server | **审计结论绑定标准版本（CAP-B-02）**：`CompletenessAuditReport` 新增 `criteriaRevisions` 快照（审计时各标准 revision）；`evaluateAuditStaleness` 纯函数判定过期（修订/新增标准 → 过期，存量无快照不标过期）；审计门禁（audit-gate）对过期结论拦截要求重审；audit-report 接口与契约详情附带 `stale`/`staleCriteriaIds` | CAP-B-02 | `completeness-audit.service.spec.ts` 新增 8 用例（快照落库/过期判定/门禁拦截）；契约三件套 `contract:check` 零漂移 | 能力清单 CAP-B-02 卡 |
+| frontend | **修订/过期可见性**：标准行显示版本号（v2 起）与「标准已修订，证据待复核」黄色徽标；审计面板与详情页显示「审计结论已过期」徽标与重审入口横幅；i18n zh-CN/en 双语键同步 | CAP-B-01 / B-02 | 前端 acceptance 模块 Vitest 绿；`tsc -b` 零错误；i18n 键一致性校验通过 | — |
+
 ### CAP-P-01 需求修订影响链路最小闭环（feat/revision-impact-chain，2026-09-18）
 
 > 补齐 CAP-P-01 修订侧缺口：需求类文档修订 → 自动影响分析 → 「需求修订影响」决策卡供人确认 → 确认后受影响验收标准标记待复核。复用既有承载（决策收件箱 clarify 批阅流 + DocumentTaskLink 引用关系），零 migration。

@@ -9,6 +9,8 @@ import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
 import { ProposalService } from '@/modules/decision/proposal.service';
 import { CreateAcceptanceDto, UpdateAcceptanceDto } from './dto/acceptance.dto';
+import { isEvidenceCurrent } from './acceptance-criteria.service';
+import { evaluateAuditStaleness } from './completeness-audit.service';
 import {
   CompletionType,
   TestReportPayload,
@@ -159,6 +161,18 @@ export class AcceptanceService {
 
     if (!acceptance) {
       throw new NotFoundException(`Acceptance ${id} not found`);
+    }
+
+    // CAP-B-02：详情接口的审计报告附带过期判定（标准修订/新增后 stale=true）
+    if (acceptance.auditReport) {
+      const staleness = evaluateAuditStaleness(
+        (acceptance.auditReport as any).criteriaRevisions,
+        acceptance.criteria.map((c) => ({ id: c.id, revision: c.revision })),
+      );
+      return {
+        ...acceptance,
+        auditReport: { ...acceptance.auditReport, ...staleness },
+      };
     }
 
     return acceptance;
@@ -443,7 +457,10 @@ export class AcceptanceService {
   ) {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id: acceptanceId },
-      include: { criteria: true, auditReport: true },
+      include: {
+        criteria: { include: { evidences: true } },
+        auditReport: true,
+      },
     });
     if (!acceptance)
       throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
@@ -488,6 +505,24 @@ export class AcceptanceService {
         check: 'criteria',
         reason: `[${c.severity}] ${c.content}`,
       });
+    }
+
+    // 3.1 CAP-B-01 证据版本门禁：每条标准至少一条「有效」证据
+    // （证据快照 revision = 标准当前 revision；null 快照按初版 1 处理）。
+    // 标准修订后旧证据转「待复核」，必须按新版本标准重新提交证据才能接收。
+    for (const c of acceptance.criteria) {
+      const hasCurrent = (c.evidences ?? []).some((e) =>
+        isEvidenceCurrent(e, c.revision),
+      );
+      if (!hasCurrent) {
+        failures.push({
+          check: 'criteriaEvidence',
+          reason:
+            c.revision > 1
+              ? `标准已修订至 v${c.revision}，原证据待复核：${c.content}`
+              : `标准缺少有效验收证据：${c.content}`,
+        });
+      }
     }
 
     // 4. 审计红牌：存在强阻断项不得接收
