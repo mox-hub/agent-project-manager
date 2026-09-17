@@ -97,6 +97,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Slider } from '@/components/ui/slider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field'
+import { ColorPicker } from '@/components/ui/color-picker'
 import Avvvatars from 'avvvatars-react'
 import NiceAvatar, { genConfig } from 'react-nice-avatar'
 import { MemberAvatar } from '@/modules/team-member/components/member-avatar'
@@ -1088,6 +1089,29 @@ function AvatarPickerShowcase() {
             {value ?? '（未选择）'}
           </code>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function ColorPickerShowcase() {
+  const [value, setValue] = useState<string>('#5E6AD2')
+  const [presetOnly, setPresetOnly] = useState<string>('#22c55e')
+  return (
+    <div className="space-y-3 max-w-xl">
+      <div className="rounded-lg border border-border/70 p-3.5 bg-muted/10 space-y-2">
+        <p className="text-xs font-medium text-foreground">预设色板 + react-colorful 色域 + Hex 输入（allowCustom）</p>
+        <div className="flex items-center gap-3">
+          <ColorPicker value={value} onValueChange={setValue} />
+          <span className="text-xs text-muted-foreground">当前值:</span>
+          <code className="font-mono text-11 px-1.5 py-0.5 rounded bg-muted text-foreground">
+            {value}
+          </code>
+        </div>
+      </div>
+      <div className="rounded-lg border border-border/70 p-3.5 bg-muted/10 space-y-2">
+        <p className="text-xs font-medium text-foreground">纯预设模式（allowCustom=false，标签色等受约束场景）</p>
+        <ColorPicker value={presetOnly} onValueChange={setPresetOnly} allowCustom={false} />
       </div>
     </div>
   )
@@ -2142,6 +2166,10 @@ export function DesignSystemPage() {
                       <SelectItem value="c">Option Gamma</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-3">
+                  <SubLabel>ColorPicker（Popover + 预设色板 + react-colorful）</SubLabel>
+                  <ColorPickerShowcase />
                 </div>
               </div>
               <div className="space-y-6">
