@@ -4,6 +4,7 @@
  * 建议/阻断项支持采纳（onApplySuggestions 回调，由页面接 mutation）。
  */
 import { useTranslation } from 'react-i18next';
+import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { AuditReport, AuditItem } from '../api/acceptance-api';
@@ -41,6 +42,16 @@ export function AuditReportPanel({ report, onApplySuggestions, loading }: Props)
         <Badge variant="outline" className={`px-3 py-1 ${RISK_STYLE[report.riskLevel] ?? ''}`}>
           {riskLabel}
         </Badge>
+        {/* CAP-B-02：审计后标准修订/新增 → 结论过期待重审 */}
+        {report.stale && (
+          <Badge
+            variant="outline"
+            className="border-accent-yellow/50 bg-accent-yellow/15 px-3 py-1 text-accent-yellow"
+          >
+            <AlertTriangle className="mr-1 size-3" />
+            {t('acceptanceDetail.audit.staleBadge')}
+          </Badge>
+        )}
         {report.checklist && (
           <span className="text-sm text-muted-foreground">
             {t('acceptanceDetail.audit.checklist')}: {report.checklist.name}

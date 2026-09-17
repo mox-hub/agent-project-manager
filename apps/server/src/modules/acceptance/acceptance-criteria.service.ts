@@ -2,6 +2,18 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { CreateCriteriaDto } from './dto/acceptance.dto';
 
+/**
+ * 证据有效性判定（CAP-B-01 口径，唯一真相）：
+ * 证据创建时快照当时所属标准的 revision（criteriaRevision），
+ * 与标准当前 revision 一致即有效；存量证据无快照（null）按 1（初版）处理。
+ */
+export function isEvidenceCurrent(
+  evidence: { criteriaRevision?: number | null },
+  criteriaRevision: number,
+): boolean {
+  return (evidence.criteriaRevision ?? 1) === criteriaRevision;
+}
+
 @Injectable()
 export class AcceptanceCriteriaService {
   constructor(private readonly prisma: PrismaService) {}
@@ -79,6 +91,12 @@ export class AcceptanceCriteriaService {
 
   /**
    * 更新标准。状态判定时自动落一条 human_approval 证据（userId 存在时）。
+   *
+   * CAP-B-01 修订即失效：实质内容字段（content）被修改时
+   * revision+1、revisedAt 落时间、status 重置回 pending、passedAt 清空——
+   * 既有证据不删除，但有效性按 isEvidenceCurrent 判定，旧版证据转为「待复核」。
+   * 同一请求若同时携带 content 与 status，以修订失效优先（status 传入被忽略），
+   * 避免用旧证据给新版本标准背书。
    */
   async update(
     criteriaId: string,
@@ -98,8 +116,19 @@ export class AcceptanceCriteriaService {
       throw new NotFoundException(`Criteria ${criteriaId} not found`);
     }
 
+    // 实质修订判定：仅 content（标准判定性内容本体）触发修订；
+    // severity/order/status 属元属性或流转态，变更不构成「标准改写」
+    const isSubstantiveRevision =
+      data.content !== undefined && data.content !== criteria.content;
+
     const updateData: any = { ...data };
-    if (data.status === 'passed') {
+    if (isSubstantiveRevision) {
+      delete updateData.status; // 修订失效优先，忽略同请求的状态直写
+      updateData.revision = criteria.revision + 1;
+      updateData.revisedAt = new Date();
+      updateData.status = 'pending';
+      updateData.passedAt = null;
+    } else if (data.status === 'passed') {
       updateData.passedAt = new Date();
     }
 
@@ -108,13 +137,14 @@ export class AcceptanceCriteriaService {
       data: updateData,
     });
 
-    if (data.status && userId) {
+    if (!isSubstantiveRevision && data.status && userId) {
       await this.prisma.acceptanceEvidence.create({
         data: {
           criteriaId,
           evidenceType: 'human_approval',
           content: `人工判定为 ${data.status}`,
           submittedBy: userId,
+          criteriaRevision: updated.revision,
         },
       });
     }
@@ -149,6 +179,8 @@ export class AcceptanceCriteriaService {
         content: dto.content,
         storageRef: dto.storageRef,
         submittedBy: userId,
+        // CAP-B-01：证据创建时快照当前标准版本，修订后旧证据自动转「待复核」
+        criteriaRevision: criteria.revision,
         metadata: dto.metadata as any,
       },
     });
