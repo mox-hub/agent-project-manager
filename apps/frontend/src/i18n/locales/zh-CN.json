@@ -814,6 +814,8 @@
     },
     "expiryIn": "{{time}} 截止",
     "riskHigh": "高危",
+    "approvalStaleChip": "内容已变更 · 批准基于旧版本",
+    "approvalStaleHint": "该决策卡内容在批准后发生了实质变更，原批准不再可信；请重新确认或重新发起提案",
     "review": {
       "button": "卡片批阅",
       "buttonCount": "卡片批阅 ({{count}})",
