@@ -21212,6 +21212,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetryExecutionDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "新执行已创建并派发（retryOfId 血缘指回原执行）"
@@ -66367,6 +66377,16 @@
         "required": [
           "providers"
         ]
+      },
+      "RetryExecutionDto": {
+        "type": "object",
+        "properties": {
+          "diagnosis": {
+            "type": "string",
+            "description": "失败诊断结论摘要（failure-diagnosis 场景的 recommendation）",
+            "maxLength": 500
+          }
+        }
       },
       "ExecutionStatusResponseDto": {
         "type": "object",

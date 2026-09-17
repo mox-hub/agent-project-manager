@@ -56,6 +56,11 @@ export interface ExecutionRunRecord {
   acceptanceId?: string | null;
   /** 兜底批 5：重试血缘——本执行由哪个失败/阻塞执行重新执行而来 */
   retryOfId?: string | null;
+  /** 失败诊断·机械归类（批一 P0 切片 3，裁决 D）：仅 failed/blocked 详情返回，服务端算好 */
+  failureClassification?: {
+    category: 'environment' | 'input' | 'dependency' | 'unknown';
+    hint: string;
+  } | null;
   project?: { id: string; name: string };
   issue?: { id: string; title: string } | null;
   /** 列表接口附带：步骤/产出计数与首个 CLI 绑定（daemon 路径运行才有） */
