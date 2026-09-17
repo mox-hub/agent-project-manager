@@ -375,6 +375,77 @@ ${bindings.length ? `项目已有的契约绑定文件（影响面的权威素�
 只输出 JSON：{"feasibility": {"verdict": "go", "rationale": "...", "conditions": ["..."]}, "impact": {"summary": "...", "affectedAreas": ["..."]}, "dependencies": [{"item": "...", "note": "..."}], "risks": [{"risk": "...", "severity": "high", "mitigation": "..."}], "acceptancePreview": [{"content": "...", "criteriaType": "functional"}]}`;
     },
   },
+  'failure-diagnosis': {
+    description:
+      '执行失败诊断（批一 P0 切片 3，2026-09-17 裁决 D 的按需 LLM 半）：读失败/阻塞执行现场（错误留痕/血缘/验收契约），输出结构化诊断（归类/原因/建议/下一步动作/缺失信息）；执行详情「AI 诊断」按钮按需触发，AIUsageLog 记账；零 token 的机械归类见 execution/failure-classifier',
+    prepareContext: async (context, { prisma }) => {
+      const executionRunId =
+        typeof context.executionRunId === 'string'
+          ? context.executionRunId.trim()
+          : '';
+      if (!executionRunId) {
+        throw new BadRequestException('失败诊断缺少 executionRunId');
+      }
+      const run = await prisma.execution.findUnique({
+        where: { id: executionRunId },
+        select: {
+          id: true,
+          goal: true,
+          title: true,
+          status: true,
+          errorDetail: true,
+          input: true,
+          issue: { select: { title: true, description: true } },
+          acceptance: {
+            select: { criteria: { select: { content: true }, take: 5 } },
+          },
+        },
+      });
+      if (!run) {
+        throw new BadRequestException('执行不存在');
+      }
+      if (!['failed', 'blocked'].includes(run.status)) {
+        throw new BadRequestException('仅失败/阻塞的执行支持诊断');
+      }
+      // 现场瘦身：input 只保留错误相关留痕，别把整包上下文塞给模型
+      const input = (run.input ?? null) as Record<string, unknown> | null;
+      const errorFacts = input
+        ? {
+            dispatchError: input.dispatchError ?? null,
+            retryContext: input.retryContext ?? null,
+          }
+        : null;
+      return {
+        ...context,
+        execution: {
+          goal: run.goal,
+          title: run.title,
+          status: run.status,
+          errorDetail: run.errorDetail ?? null,
+          errorFacts,
+          issue: run.issue,
+          acceptanceCriteria:
+            run.acceptance?.criteria.map((c) => c.content) ?? [],
+        },
+      };
+    },
+    buildInstructions: (context) => {
+      const run = context.execution as Record<string, unknown> | undefined;
+      if (!run) {
+        throw new BadRequestException('失败诊断缺少执行现场');
+      }
+      return `你是项目管理系统里的执行诊断助手。一个智能体执行任务失败了，下面是它的现场（目标、状态、错误留痕、所属任务与验收标准）。请给不懂工程的新手做一份诊断：说清楚「为什么失败、现在最该做什么」。宁缺毋假——现场里没有的线索不要编造，信息不足就明说缺什么。
+现场：
+${JSON.stringify(run)}
+要求：
+- category 只能是 environment（环境问题：命令/文件不存在、权限、网络端口）/ input（输入问题：描述不清、格式不对、信息缺失）/ dependency（依赖问题：前置任务未完成、外部服务未就绪）/ unknown（现场不足以判断）。
+- reason：2~3 句解释最可能的原因，用「现场里有/没有」作为依据。
+- recommendation：一句话给出最该做的下一步，具体可操作（例如「检查 xx 是否安装」而不是「检查环境」）。
+- action 只能是 continue（原样重试大概率能过）/ retry_adjusted（要先调整输入或环境再重试）/ escalate（需要人来处理，AI 自助重试无意义）。
+- missingInfo：判断所缺的关键信息清单，没有就空数组。
+只输出 JSON：{"category": "environment", "reason": "...", "recommendation": "...", "action": "retry_adjusted", "missingInfo": ["..."]}`;
+    },
+  },
   'interview-dynamic': {
     description:
       '剧本访谈动态追问（CAP-P-01 三期）：无状态多轮——基于当前阶段问题组、已答历史与阶段工件深挖澄清（每轮一问 + 猜测选项），收敛时一次性给出问题组完整答案集，人审改后走既有 submitInterview',

@@ -31,6 +31,12 @@ tags: "changelog,release"
 | server | **确认后动作（跨模块约定内直写）**：人确认（accept 选「标记待复核」）后，在本域内经 PrismaService 直写 `acceptanceCriteria.updateMany({ where: { id: { in: [...] }, status: { in: [draft, in_review] } }, data: { status: 'pending' } })`——只拉回活跃态标准，已 passed/failed/waived 不回退；**已知余留**：直改不触发标准版本化机制（B-01 分支实现），两级传播完整性待后续切片统一 | CAP-P-01 | 单测断言 updateMany 的 where/data 形状；dismiss/reject 路径断言不动标准 | 决策日志待补（clarify kind 复用裁决） |
 | frontend | **文档详情修订影响提示条（最小挂点）**：`revision-impact-banner` 新组件 + view-page 一处挂载——待确认（黄，跳转决策收件箱）/已确认（绿，N 条已标记待复核）/已不处理（中性弱提示）三态；决策卡本体 UI 零改动；i18n `document.revisionImpact` 双语键齐备 | CAP-P-01 | frontend `tsc -b` 零错误 | — |
 
+### Fixed
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **验收证据守卫口径修复（需求重审 G2 / CAP-B-08 批一先行）**：`github-evidence.subscriber` 的 PR 事件守卫曾用旧状态名 `accepted/abandoned`，对 schema 现词表（`draft\|pending\|in_review\|passed\|failed\|waived`）永不命中——已裁决（终态 `passed/failed/waived`）验收的 `completionEvidence` 仍被迟到的 merged/closed 事件改写（「通过后证据被改写」，可信度硬伤）。守卫改为终态集合拦截，活跃三态不误伤 | CAP-B-08 | subscriber 单测 15 条绿（含终态三元组拦截回归 + 活跃态不误伤各 3 条）；type-check（build 配置）0 错 | 能力清单 CAP-B-08 重审注记；测试映射矩阵 GAP-T-34 |
+
 ## [0.7.0] - 2026-09-17
 
 ### v0.7.0 发版总览——AI 表面实时化 + 统一创建面板双界面 + 执行侧兜底闭环 + 决策卡实体手卡

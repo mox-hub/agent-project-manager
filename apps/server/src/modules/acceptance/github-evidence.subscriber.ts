@@ -7,6 +7,17 @@ const SYSTEM_SUBMITTER = 'system:github-checks';
 const REVIEW_SUBMITTER = 'system:github-review';
 
 /**
+ * 验收终态词表（schema：draft|pending|in_review|passed|failed|waived）。
+ * 已裁决（终态）的验收不再被系统回写 completionEvidence——守卫口径必须
+ * 与 schema 状态词表一致，否则守卫形同虚设（「通过后证据被改写」）。
+ */
+const ACCEPTANCE_TERMINAL_STATUSES: ReadonlySet<string> = new Set([
+  'passed',
+  'failed',
+  'waived',
+]);
+
+/**
  * GitHub 事件 → 验收证据回流（CAP-B-08 一期 + 二期）。
  *
  * 口径：只落证据，不改验收判定（与 dispatch persistCompletionEvidence 的
@@ -15,6 +26,7 @@ const REVIEW_SUBMITTER = 'system:github-review';
  *   含 opened/reopened/synchronize）让质量把关「过程可观测」，终态
  *   （merged/closed）打通 accept-completion 对 pr 契约「仅 merged 可接收」
  *   的前置校验，消除人工手填 PR 链接；终态后到达的乱序中间态事件被忽略。
+ *   验收已裁决（终态 passed/failed/waived）后不回写，防「通过后证据被改写」。
  * - check_run 终态（CI 结论）→ 落到 source='ci' 的标准的证据列表（repo 与
  *   PR 归属库一致才回流，防多仓库误配）。
  * - PR review（submitted）→ 落到 source='pr_review' 的标准的证据列表。
@@ -65,10 +77,10 @@ export class GithubEvidenceSubscriber {
         },
       });
       if (!acceptance) return;
-      // 仅 pr 契约消费 PR 事件；已裁决（accepted/abandoned）不回写
+      // 仅 pr 契约消费 PR 事件；已裁决（终态 passed/failed/waived）不回写，
+      // 防「通过后证据被改写」
       if (acceptance.completionType !== 'pr') return;
-      if (acceptance.status === 'accepted' || acceptance.status === 'abandoned')
-        return;
+      if (ACCEPTANCE_TERMINAL_STATUSES.has(acceptance.status)) return;
 
       const existing = (acceptance.completionEvidence ?? {}) as Record<
         string,

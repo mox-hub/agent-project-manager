@@ -110,6 +110,7 @@ describe('AssistantSilentService.run', () => {
       'intake-composite',
       'acceptance-draft',
       'analysis-draft',
+      'failure-diagnosis',
       'interview-dynamic',
       'workflow-draft',
       'release-notes',
@@ -1334,5 +1335,98 @@ describe('surface-narration', () => {
 
     expect(result.usage?.costUsd).toBeNull();
     expect(result.data.headline).toBe('一切正常');
+  });
+});
+
+describe('AssistantSilentService.run failure-diagnosis（批一 P0 切片 3，裁决 D）', () => {
+  const makeDiagnosisService = (run: Record<string, unknown> | null) => {
+    const chat = vi.fn().mockResolvedValue({
+      content:
+        '{"category":"environment","reason":"r","recommendation":"检查 claude-code 是否已安装","action":"retry_adjusted","missingInfo":[]}',
+      model: 'test-model',
+      tokens: { prompt: 10, completion: 5, total: 15 },
+    });
+    const usageCreate = vi.fn().mockResolvedValue({});
+    const service = new AssistantSilentService(
+      {
+        aIUsageLog: { create: usageCreate },
+        execution: { findUnique: vi.fn().mockResolvedValue(run) },
+      } as never,
+      {
+        listAdapters: () => [{ provider: 'glm', model: 'm' }],
+        getAdapter: () => ({
+          getProvider: () => 'glm',
+          chat,
+        }),
+      } as never,
+      { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+    );
+    return { service, chat, usageCreate };
+  };
+
+  const failedRun = {
+    id: 'exec-1',
+    goal: '修复登录页',
+    title: '修复登录页',
+    status: 'failed',
+    errorDetail: 'spawn claude ENOENT',
+    input: {
+      dispatchError: 'spawn claude ENOENT',
+      bulkyField: 'SHOULD_NOT_LEAK',
+    },
+    issue: { title: '登录页', description: null },
+    acceptance: { criteria: [{ content: '登录成功跳转首页' }] },
+  };
+
+  it('缺 executionRunId 400 不触 LLM', async () => {
+    const { service, chat } = makeDiagnosisService(failedRun);
+    await expect(
+      service.run('failure-diagnosis', {}, 'p1', 'u1'),
+    ).rejects.toThrow(BadRequestException);
+    expect(chat).not.toHaveBeenCalled();
+  });
+
+  it('执行不存在 400', async () => {
+    const { service } = makeDiagnosisService(null);
+    await expect(
+      service.run('failure-diagnosis', { executionRunId: 'nope' }, 'p1', 'u1'),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('非 failed/blocked 状态 400（仅失败执行可诊断）', async () => {
+    const { service } = makeDiagnosisService({
+      ...failedRun,
+      status: 'completed',
+    });
+    await expect(
+      service.run(
+        'failure-diagnosis',
+        { executionRunId: 'exec-1' },
+        'p1',
+        'u1',
+      ),
+    ).rejects.toThrow(/失败\/阻塞/);
+  });
+
+  it('正常流：现场瘦身注入、结论透传、AIUsageLog 记账', async () => {
+    const { service, chat, usageCreate } = makeDiagnosisService(failedRun);
+    const res = await service.run(
+      'failure-diagnosis',
+      { executionRunId: 'exec-1' },
+      'p1',
+      'u1',
+    );
+    expect(res.data).toMatchObject({
+      category: 'environment',
+      action: 'retry_adjusted',
+    });
+    const instructions = (chat.mock.calls[0] as unknown[])[1] as {
+      instructions: string;
+    };
+    // 瘦身注入：错误留痕与验收要点在场，input 整包大字段不泄漏
+    expect(instructions.instructions).toContain('spawn claude ENOENT');
+    expect(instructions.instructions).toContain('登录成功跳转首页');
+    expect(instructions.instructions).not.toContain('SHOULD_NOT_LEAK');
+    expect(usageCreate).toHaveBeenCalledTimes(1);
   });
 });
