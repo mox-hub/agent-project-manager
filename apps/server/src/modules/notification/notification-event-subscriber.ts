@@ -4,6 +4,7 @@ import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { NotificationService } from './notification.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { LoggerService } from '../../core/logger/logger.service';
+import { classifyExecutionFailure } from '../execution/failure-classifier';
 
 /**
  * 领域事件 → 通知 的统一枢纽。
@@ -774,6 +775,9 @@ export class NotificationEventSubscriber implements OnModuleInit {
           projectId: true,
           issueId: true,
           createdBy: true,
+          // 失败诊断·机械归类素材（裁决 D 零 token 半）：错误留痕随通知直达
+          errorDetail: true,
+          input: true,
         },
       });
       if (!run) return;
@@ -785,6 +789,8 @@ export class NotificationEventSubscriber implements OnModuleInit {
       );
       if (userIds.length === 0) return;
 
+      const classification = classifyExecutionFailure(run);
+
       await this.notificationService.createNotificationFromEvent(
         DomainEventTypes.ExecutionTerminal,
         {
@@ -793,6 +799,8 @@ export class NotificationEventSubscriber implements OnModuleInit {
           status,
           projectId: run.projectId,
           issueId: run.issueId,
+          failureCategory: classification?.category,
+          failureHint: classification?.hint,
         },
         userIds,
       );

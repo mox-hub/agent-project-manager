@@ -666,6 +666,27 @@
   },
   "runDetails": {
     "title": "Run details",
+    "diagnosis": {
+      "title": "Failure diagnosis",
+      "mechanicalLabel": "Initial read",
+      "aiButton": "AI diagnosis",
+      "aiRunning": "Diagnosing…",
+      "aiFailed": "AI diagnosis unavailable",
+      "reasonLabel": "Likely cause",
+      "recommendationLabel": "Recommended next step",
+      "missingInfoLabel": "Missing information: ",
+      "actionContinue": "A plain retry will likely pass",
+      "actionRetryAdjusted": "Adjust input or environment before retrying",
+      "actionEscalate": "Needs a human; self-serve retry won't help",
+      "retryWithDiagnosis": "Retry with diagnosis",
+      "retrySuccess": "New execution created with diagnosis",
+      "category": {
+        "environment": "Environment",
+        "input": "Input",
+        "dependency": "Dependency",
+        "unknown": "Unclassified"
+      }
+    },
     "viewDetail": "Run details",
     "loadFailed": "Failed to load run details or access denied",
     "duration": "Took",
