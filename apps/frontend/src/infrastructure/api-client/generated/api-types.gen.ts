@@ -9127,6 +9127,10 @@ export interface components {
             payload: {
                 [key: string]: unknown;
             };
+            /** @description 当前实质内容指纹（建议类提案下发，sha256 hex，CAP-C-04）——决议时作为 expectedFingerprint 回传校验所见即所批 */
+            contentFingerprint?: string;
+            /** @description 批准是否已过期（内容实质变更后旧批准不再可信，CAP-C-04；待决列表恒为 false） */
+            approvalStale?: boolean;
             /** @description 决策发起时间（ISO） */
             createdAt: string;
             /** @description 过期时间（ISO，超时升级不静默通过） */
@@ -9222,6 +9226,10 @@ export interface components {
             resolvedAt?: string | null;
             /** @description 过期时间（ISO，未设置为 null） */
             expiresAt?: string | null;
+            /** @description 当前实质内容指纹（sha256 hex，CAP-C-04）——决议时作为 expectedFingerprint 回传以校验所见即所批 */
+            contentFingerprint: string;
+            /** @description 批准是否已过期（accepted 且当前内容指纹 ≠ 批准时指纹 approvedFingerprint 即 true，CAP-C-04） */
+            approvalStale: boolean;
             /** @description 创建时间（ISO） */
             createdAt: string;
             /** @description 更新时间（ISO） */
@@ -9233,6 +9241,8 @@ export interface components {
              * @enum {string}
              */
             action: "accept" | "reject" | "cancel";
+            /** @description 决议者所见内容的指纹（列表/详情接口下发的 contentFingerprint）。携带时服务端与当前内容指纹强校验，不匹配即 409——内容在决议期间被实质变更，需刷新后重新决议（CAP-C-04） */
+            expectedFingerprint?: string;
             /** @description 原因（reject 必填，留痕 resolutionNote） */
             reason?: string;
             /** @description 答案（clarify：所选选项，供提案方轮询取回） */

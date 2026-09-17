@@ -21,6 +21,13 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-C-04 决策卡批准绑定内容指纹——实质变更后旧批准标记过期（feat/decision-approval-fingerprint，2026-09-18）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **决策提案批准绑定内容版本（CAP-C-04，批一 P0）**：`DecisionProposal` 新增 `approvedFingerprint`（批准 accept 时对实质内容 kind/title/detail/payload/projectId/issueId 做规范化序列化后 sha256 留痕）+ migration `20260918000000_add_decision_approved_fingerprint`；`resolve` 支持可选 `expectedFingerprint` 强校验（决议者所见指纹 ≠ 当前内容指纹即 409，拒绝沿用旧印象的决议，防 TOCTOU）；`GET /decisions/proposals/:id` 与收件箱投影下发 `contentFingerprint` + `approvalStale`（accepted 且当前指纹 ≠ 批准时指纹 → true；存量无指纹行不误报） | CAP-C-04 | decision 模块 Vitest 39 用例绿（指纹规范化稳定性 13 + proposal 21 + decision 5）；契约三件套零漂移 | 能力清单 CAP-C-04 卡（批一 P0） |
+| frontend | **过期批准徽标 + 决议指纹回传（CAP-C-04）**：决策卡壳 `approvalStale` 时头部渲染橙色醒目徽标「内容已变更 · 批准基于旧版本，请重新确认」（AlertTriangle + title 完整提示，双语 i18n 键 `decision.approvalStaleChip`/`decision.approvalStaleHint`）；建议类提案决议统一回传 `expectedFingerprint`（所见即所批） | CAP-C-04 | decision-card + decision 模块 Vitest 30 用例绿（含 stale 徽标渲染断言） | 能力清单 CAP-C-04 卡（批一 P0） |
+
 ## [0.7.0] - 2026-09-17
 
 ### v0.7.0 发版总览——AI 表面实时化 + 统一创建面板双界面 + 执行侧兜底闭环 + 决策卡实体手卡
