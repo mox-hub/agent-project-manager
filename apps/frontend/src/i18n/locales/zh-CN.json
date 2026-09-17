@@ -3169,18 +3169,172 @@
     "remainingTokens": "剩余 Token",
     "bugsThisWeek": "本周 Bug",
     "askAi": "追问 AI…",
-    "shortcuts": {
-      "close": "关闭",
-      "switchType": "切换类型",
-      "submit": "提交"
-    },
-    "cancel": "取消",
-    "aiDraft": "AI 起草",
+ "shortcuts": {
+  "close": "关闭",
+  "switchType": "切换类型",
+  "submit": "提交"
+ },
+ "cancel": "取消",
+ "createMore": "连续创建",
+ "properties": "属性",
+ "severity": {
+  "critical": "S0 致命",
+  "high": "S1 严重",
+  "medium": "S2 一般",
+  "low": "S3 轻微"
+ },
+ "iconTips": {
+  "hideProps": "隐藏属性面板",
+  "showProps": "显示属性面板",
+  "maximize": "展开",
+  "restore": "还原",
+  "close": "关闭"
+ },
+ "aiDraft": "AI 起草",
     "aiDraftComing": "AI 起草功能开发中",
     "creating": "创建中…",
     "create": "创建",
-    "applied": "已应用建议",
-    "success": "{{type}} 创建成功",
+ "applied": "已应用建议",
+ "success": "{{type}} 创建成功",
+ "placeholder": {
+  "task": "任务标题",
+  "bug": "Bug 标题",
+  "doc": "文档标题",
+  "project": "项目名称",
+  "milestone": "里程碑名称"
+ },
+ "descHint": {
+  "task": "补充描述…",
+  "bug": "复现步骤、预期与实际表现…",
+  "doc": "摘要或初始内容…",
+  "project": "目标、范围与成功标准…",
+  "milestone": "关键交付物…"
+ },
+ "field": {
+  "status": "状态",
+  "priority": "优先级",
+  "severity": "严重度",
+  "assignee": "负责人",
+  "project": "项目",
+  "author": "作者",
+  "dueDate": "截止日期",
+  "targetDate": "目标日期",
+  "type": "类型",
+  "me": "我",
+  "none": "无",
+  "clearDueDate": "清除截止日期"
+ },
+ "error": {
+  "taskTitle": "请输入任务标题",
+  "bugTitle": "请输入 Bug 标题",
+  "docTitle": "请输入文档标题",
+  "projectName": "请输入项目名称",
+  "milestoneName": "请输入里程碑名称",
+  "projectRequired": "请选择所属项目",
+  "prompt": "请描述要创建的内容",
+  "createFailed": "创建失败",
+  "noDraft": "AI 没有解析出可用的创建草稿，试试补充类型或关键词",
+  "aiFailed": "AI 生成失败",
+  "suggestionFailed": "AI 建议暂不可用"
+ },
+ "mode": {
+  "manual": "手动创建",
+  "ai": "AI 代理"
+ },
+ "quickPrompt": "智能填单",
+ "quickPromptPlaceholder": "输入一句话描述（如：建一个登录页重构任务，周五截止，高优先级），Enter 自动提取填单…",
+ "quickPromptApplied": "已根据描述自动解析并填充表单",
+ "acceptanceCriteria": "验收标准",
+ "addCriterion": "添加验收要点",
+ "aiGenerateCriteria": "AI 智能生成验收要点",
+ "criteriaPlaceholder": "输入可验证的完成标准（如：支持快捷键提交，断网展示重试...）",
+ "completenessHint": "完备性治理建议：确保覆盖正常流交付验证、异常边界与自动化测试要求",
+ "quickChips": {
+  "decompose": "⚡ 快速拆解需求",
+  "bug": "🐞 提取报错日志",
+  "testcase": "📋 补全验收用例"
+ },
+ "edit": "编辑",
+ "preview": "预览",
+ "previewEmpty": "暂无描述内容，切换至编辑模式即可书写 Markdown。",
+ "aiPanel": {
+  "hint": "用一句话描述你想创建的内容，AI 代理解析为结构化草稿；确认后直接创建。可先用上方类型切换指定目标（默认按描述自动判断）。",
+  "inputPlaceholder": "例如：建一个任务「登录页改版」，本周五截止，优先级高，打上 frontend 标签",
+  "generate": "生成草稿",
+  "parsing": "解析中…",
+  "regen": "重新生成",
+  "draftBadge": "草稿 · {{type}}",
+  "fieldTitle": "标题",
+  "fieldDesc": "描述",
+  "fieldPriority": "优先级",
+  "fieldSeverity": "严重度",
+  "fieldDue": "截止",
+  "fieldCategory": "类目",
+  "fieldLabels": "标签",
+  "confirm": "确认创建",
+  "editManually": "回手动编辑",
+  "fallback": "转小助理",
+  "fallbackTitle": "AI 代理解析失败时的兜底：转小助理对话创建",
+  "forwardedToast": "已转给小周，在右下角对话里发送即可"
+ },
+    "agentPresence": {
+      "immediate": "创建后 {{agent}} 会立即开始工作。",
+      "approval": "创建后需经审批，通过后 {{agent}} 才会工作。",
+      "manual": "仅创建待办工单，保留给 {{agent}} 等待手动派发。",
+      "bugImmediate": "创建后 {{agent}} 将调取日志并自动尝试复现。",
+      "bugApproval": "创建后需经审批，{{agent}} 方可介入排查。",
+      "bugManual": "缺陷将录入待办，保留给 {{agent}} 后续排查。"
+    },
+    "dispatchStrategy": {
+      "immediate": "立即执行",
+      "approval": "需审批",
+      "manual": "仅建待办"
+    },
+    "shuttle": {
+      "toAi": "切换到智能体",
+      "toManual": "返回手动编辑"
+    },
+    "bug": {
+      "injectTemplate": "填入标准缺陷排查模板"
+    },
+    "category": {
+      "requirement": "需求 PRD",
+      "analysis": "分析报告",
+      "design": "架构设计",
+      "api": "接口契约",
+      "testing": "测试方案",
+      "guide": "操作指南"
+    },
+ "discard": {
+  "title": "放弃未保存内容？",
+  "desc": "面板里有未提交的输入，关闭后将丢失。",
+  "keep": "继续编辑",
+  "discard": "放弃并关闭"
+ },
+ "docCategory": {
+  "requirement": "需求",
+  "analysis": "分析",
+  "design": "设计",
+  "api": "API",
+  "testing": "测试",
+  "guide": "指南"
+ },
+ "projectSource": {
+  "label": "项目来源",
+  "scratch": "从零开始",
+  "existing": "导入已有项目",
+  "ai": "AI 代理 · 对话创建",
+  "existingHint": "项目已在进行中？创建后自动进入接入向导：AI 只读扫描仓库，生成项目档案草稿供你校对。",
+  "grillHint": "在上面的对话里确认摘要后即可创建"
+ },
+ "suggestions": {
+  "title": "智能建议",
+  "generating": "生成中…",
+  "regen": "再生成",
+  "empty": "暂无建议",
+  "emptyHint": "点上方「AI 建议」，按已填内容生成补全",
+  "appliedToast": "已应用：{{label}}"
+ },
     "linear": {
       "new": "新建",
       "description": "描述",
@@ -3770,7 +3924,9 @@
     "decisionReview": "决策卡批阅",
     "decisionReviewDesc": "决策卡批阅模式：Enter/1 通过 · 2 驳回 · F 翻面 · ←/→ 翻页",
     "createPanelSwitch": "创建面板切换类型",
-    "createPanelSwitchDesc": "统一创建面板内 Ctrl+1..6 在任务/缺陷/文档等类型间切换"
+    "createPanelSwitchDesc": "统一创建面板内 Ctrl+1..5 在任务/缺陷/文档等项目/里程碑间切换",
+    "createPanelSubmit": "创建面板提交",
+    "createPanelSubmitDesc": "统一创建面板内 Ctrl+Enter 提交（AI 代理模式为生成/确认草稿）"
   },
   "commandPalette": {
     "title": "命令面板",

@@ -51,6 +51,7 @@ import {
   CheckSquare,
   Database,
   FileText,
+  Flag,
   FolderKanban,
   GitBranch,
   Play,
@@ -70,6 +71,7 @@ export type EntityKind =
   | 'issue' // 工单（Task，Issue 域统一模型）
   | 'bug' // Bug（Issue 域，与 issue 分色）
   | 'project' // 项目
+  | 'milestone' // 里程碑（计划轴节点；CAP-A-18 统一创建面板增量登记）
   | 'workflow' // 项目工作流
   | 'execution' // 执行（Execution，原 ExecutionRun）
   | 'acceptance' // 验收（Acceptance 门禁）
@@ -95,6 +97,8 @@ export interface EntityIconEntry {
  *   status-visuals 的 in_review / at_risk 状态语义（lucide 新名 CircleAlert）。
  * - project=FolderKanban：page-registry /app/projects、route-preview 多数派；
  *   FolderOpen（project-list-page 旧用，与「打开」动作混淆）已于第二批收敛为本口径。
+ * - milestone=Flag：里程碑计划轴节点语义唯一（CAP-A-16 时间轴 / 创建面板共用）；
+ *   PRIORITY_VISUALS.high 用 ArrowUp、 Flame 归 critical/urgent，均不撞车。
  * - workflow=Workflow：shell-layout nav.workflow 已用，流程节点语义。
  * - execution=Play：page-registry settings/ai/executions 已用，「运行」语义。
  * - acceptance=ShieldCheck：acceptance-list-page 已用，门禁语义；
@@ -112,6 +116,7 @@ export const ENTITY_ICONS: Record<EntityKind, EntityIconEntry> = {
   issue: { icon: CheckSquare, tone: 'info' },
   bug: { icon: Bug, tone: 'danger' },
   project: { icon: FolderKanban, tone: 'info' },
+  milestone: { icon: Flag, tone: 'warning' },
   workflow: { icon: Workflow, tone: 'info' },
   execution: { icon: Play, tone: 'info' },
   acceptance: { icon: ShieldCheck, tone: 'success' },

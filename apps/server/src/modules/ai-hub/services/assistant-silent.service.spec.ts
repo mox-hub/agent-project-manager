@@ -100,6 +100,7 @@ describe('AssistantSilentService.run', () => {
     expect(scenarios.map((s) => s.scenario)).toEqual([
       'quick-prompts',
       'create-suggestions',
+      'create-draft',
       'project-score',
       'anchor-qa',
       'card-explain',
@@ -365,6 +366,75 @@ describe('AssistantSilentService.run', () => {
         ),
       ).rejects.toThrow(/工件文档不存在/);
       expect(missing.chat).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('create-draft（CAP-A-18 创建面板 AI 代理）', () => {
+    const PAYLOAD =
+      '{"type": "task", "fields": {"title": "登录页改版", "description": "本周五截止", "priority": "high", "severity": null, "status": null, "dueDate": "2026-09-18", "labels": ["frontend"], "category": null}}';
+
+    const makeDraftService = (chatContent = PAYLOAD) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const prisma = {
+        aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+      };
+      const service = new AssistantSilentService(
+        prisma as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat };
+    };
+
+    it('自然语言 → 结构化草稿：指令含用户描述与 typeHint 约束，data 透传', async () => {
+      const { service, chat } = makeDraftService();
+      const result = await service.run(
+        'create-draft',
+        {
+          prompt: '建一个任务「登录页改版」，本周五截止，优先级高',
+          typeHint: 'task',
+        },
+        undefined,
+        'u1',
+      );
+      expect(result.scenario).toBe('create-draft');
+      expect(result.data).toHaveProperty('type', 'task');
+      expect(result.data).toHaveProperty('fields');
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('登录页改版');
+      expect(instructions).toContain('task');
+      expect(instructions).toContain('宁缺毋假');
+    });
+
+    it('code fence 包裹的 JSON 也能解析（解析容错）', async () => {
+      const fenced = '```json\n' + PAYLOAD + '\n```';
+      const { service } = makeDraftService(fenced);
+      const result = await service.run(
+        'create-draft',
+        { prompt: '建一个任务「登录页改版」' },
+        undefined,
+        'u1',
+      );
+      expect(result.data).toHaveProperty('fields');
+    });
+
+    it('空/缺 prompt → 400（不触 LLM）', async () => {
+      const { service, chat } = makeDraftService();
+      await expect(
+        service.run('create-draft', {}, undefined, 'u1'),
+      ).rejects.toThrow(/缺少 prompt/);
+      await expect(
+        service.run('create-draft', { prompt: '   ' }, undefined, 'u1'),
+      ).rejects.toThrow(/缺少 prompt/);
+      expect(chat).not.toHaveBeenCalled();
     });
   });
 

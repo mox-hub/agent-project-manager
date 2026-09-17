@@ -37,16 +37,16 @@ export type ViewingEntityType =
   | 'project';
 
 /**
- * 统一创建面板可创建的类型（与 `components/ui/unified-create-dialog` 的 `CreateType` 结构一致）。
+ * 统一创建面板可创建的类型（与 `shared/components/create-dialog` 的 `CreateType` 结构一致）。
  * 定义在本处是为了让 store 不反向依赖 UI 层（ui → infrastructure 单向）。
+ * CAP-A-18：'ai' 已不是类型——AI 代理是面板顶级 mode，不再从 store 传入。
  */
 export type CreateDialogType =
   | 'task'
   | 'bug'
   | 'doc'
   | 'project'
-  | 'milestone'
-  | 'ai';
+  | 'milestone';
 
 /** 全局统一创建面板的唤起参数 */
 export interface CreateDialogState {

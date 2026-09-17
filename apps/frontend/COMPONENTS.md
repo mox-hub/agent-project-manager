@@ -169,7 +169,7 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | MockBadge | ui/mock-badge.tsx | mock 模式全局角标（宪法 §9.3；仅 dev+VITE_API_MOCK=on 显示，main.tsx 挂载） | 无 props |
 | LoadingOverlay / ErrorOverlay / LoadingProvider + useLoading | ui/loading-overlay.tsx | 加载遮罩三模式（bar/overlay/inline）+错误遮罩+全局 Provider | visible, message, mode |
 | NotificationPopover | ui/notification-popover.tsx | 通知弹窗（未读/警报 Tab 过滤） | notifications, onMarkAsRead, onMarkAllAsRead |
-| UnifiedCreateDialog | ui/unified-create-dialog.tsx | 统一创建弹窗（task/bug/doc/project/milestone 五类型，属性胶囊右栏） | open, onOpenChange, defaultType, projectId, defaultAssigneeId, onSuccess |
+| UnifiedCreateDialog | shared/components/create-dialog/unified-create-dialog.tsx | 统一创建面板·手动×AI 代理双界面（task/bug/doc/project/milestone 五类型，属性胶囊右栏；AI 代理=create-draft 草稿确认流） | open, onOpenChange, defaultType, projectId, defaultAssigneeId, onSuccess |
 | TaskFormDialog | ui/task-form-dialog.tsx | 任务创建/编辑弹窗 | open, onOpenChange, mode, projectId, initialData, onSuccess |
 | BugReportDialog | ui/bug-report-dialog.tsx | 全局 Bug 报告创建弹窗（含严重度/优先级表单） | open, onOpenChange, projectId, initialData, onSuccess |
 | DocumentPreviewDialog | ui/document-preview-dialog.tsx | 文档预览弹窗（左目录右内容） | open, onOpenChange, document |

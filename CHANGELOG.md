@@ -21,6 +21,26 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-A-18 统一创建面板设计升级：Linear 沉浸流式 + 实体精准定制 + AI 在场感知与功能去重（2026-09-15）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **极简沉浸流式与放大无位移**：彻底纠正原 `max-w-3xl mx-auto` 居中缩进导致的放大位移与左右各 136px 巨大空边距，统一为全宽自然延伸流式排版；取消面板头部 AI 切换 tab 与常驻微型智能填单提示（消除功能重复），将视觉信噪比降至极致；取消文档类型和项目来源重复冗余模块（统一收口至对应页面模板入口）。 | CAP-A-18 | `unified-create-dialog.test.tsx` 更新并通过；无缝宽高自适应 | `CHANGELOG.md` 登记 |
+| frontend | **底部布局重构与智能体呼吸穿梭**：Footer 左侧将附件入口与「连续创建」开关并列排布；右侧新增 `ModeShuttleButton`，采用系统默认 AI 紫色系（`accent-purple`），内置 `animate-ping` 呼吸光标，实现手动精准录入与智能体自然语言拆解的双向平滑穿梭。 | CAP-A-18 | `mode-shuttle-button.tsx` 单元测试与面板集成测试全绿 | — |
+| frontend | **AI 在场感知与执行策略控制**：实现 `AgentPresenceBanner`，当指派人为 AI Agent 时自动感知激活并提供执行策略下拉选项（立即执行 / 需审批 / 仅建待办），协同任务与缺陷的验收标准治理闭环（CAP-B-01/B-02）。 | CAP-A-18 | `agent-presence-banner.test.tsx` 5 条用例全绿 | — |
+| frontend | **实体模版与横向属性胶囊**：实现 `PropertyPillsBar` 单行横向属性栏与 `BugTemplateHelper` 标准排查模板，优化不同实体的表单体验与状态/优先级/指派人快速切换。 | CAP-A-18 | `entity-templates.test.tsx` 6 条用例全绿；tsc -b / eslint 0 警告 0 错误 | — |
+
+### CAP-A-18 统一创建面板双界面：手动 × AI 代理平行 + 注册表对齐 + 行为修正（2026-09-15）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+|------|------|-----------|---------------|------------|
+| frontend | **迁位 + 原子收编（批1）**：`components/ui/unified-create-dialog` → `shared/components/create-dialog/`（业务复合件退出 ui 原子层，消除对 issue/project/document/assistant 五模块反向依赖的层级违例；grill 引用为 shared→module 既有惯例方向并注释注明）；删除本地重复原子 Capsule/CapsuleSelect/PropertyRow/PropsCard/AutoSizeTextarea/SubTaskCard/SmallCaps/Switch，统一改引 `components/ui/property-panel` 与 base-ui Switch（胶囊观感以详情页共版归一，SubTask 死装饰 SmallCaps 随收编消失）；错误条换标准 Alert；AI 建议卡拆 `suggestions-card.tsx`；12 处消费方导入 + 3 处测试 mock 同步 | CAP-A-18 | tsc -b 0 错；eslint 0；受影响 3 测试文件 6 用例绿 | `COMPONENTS.md` 注册表路径同步 |
+| frontend | **注册表对齐 + 死装饰清理 + P0 修复（批2）**：entity-icons 登记 `milestone=Flag/warning`（第 14 实体）；TYPE_META 五类型图标改走 EntityIcon（tone 语义色），删手绘 FileTextIcon SVG 与全部内联 hex；状态/优先级选项派生自 status-visuals TASK_STATUS_VISUALS/PRIORITY_VISUALS（label 走 status.* i18n，in_progress 加 animate-spin）；CTA 主色恒定 bg-primary；死装饰移除（附件按钮/死 Labels 行/Template chips/Identifier 提示/Lead/Target 死胶囊）；doc Type chips 接真实 DocumentCategory 枚举并接线 submitDoc（原硬编码 custom）；**P0 三修**：里程碑 mutation 改绑表单所选项目（原绑死 prop，Dock 全局入口提交必炸 projectId is required）、里程碑 Target date 接 DateCapsuleField、子任务 completed 语义修正（原 !!subDesc 误标完成）；bug 面板补优先级行 | CAP-A-18 | entity-icons 7 用例绿；面板零原始色残留 grep 校验 | `docs/01-需求/能力清单-v1.md`（CAP-A-18 卡）、`测试映射矩阵-v1.md`（GAP-T-32） |
+| frontend | **顶级双界面（批3）**：面板级 mode(manual\|ai) Header SegmentedControl 平级切换；'ai' 退出 CreateType/TYPE_ORDER（store CreateDialogType 同步收窄）；AI 代理界面=自然语言→create-draft 草稿确认卡（字段预览/重新生成/确认创建/回手动编辑），确认后回填表单复用手动提交流；降级保留「转小助理」；project 类型 grill 深访流程原样保留（仅手动模式）；快捷键注册表 create 组补 create-panel-submit(mod+enter) 登记同步 | CAP-A-18（口径扩展 [[#CAP-P-01]] ADR-011：project 专属 AI 双模式 → 面板级全类型） | hotkeys+store 47 用例绿 | `docs/01-需求/能力清单-v1.md` 变更记录 |
+| frontend | **行为修正（批4）**：最大化改语义档 w-dialog × h-dialog-screen（95vw×95vh 宽高同步放大，原仅宽度）+ transition-all 平滑；连续创建补完（成功后重套 projectId/assigneeId 预置、projectSource 复位、焦点回归标题）；Esc/遮罩/X/Cancel 统一走 requestClose 脏检查（有未提交输入先弹 AlertDialog 确认防丢草稿）；SuggestionsCard 删四条不可点静态假建议（死可供性），未生成时渲染 EmptyState 引导 | CAP-A-18 | 消费方 3 测试文件回归绿 | — |
+| frontend | **i18n 清偿（批5）**：面板全部硬编码文案入 unifiedCreate.* 双语键（类型 label/placeholder/descHint/字段行/占位/错误/toast/模式切换/AI 草稿卡/脏退出弹窗/文档类目/项目来源/严重度/图标 title；新增 15 组键，复用既有 labels/title/linear.*/success 等）；suggestions-card 同步清偿 | CAP-A-18 | 双语 JSON 合法 + 键对称；zh/en 0 漂移 | — |
+| server | **静默场景 create-draft**：SILENT_SCENARIOS 新增（prompt+typeHint → {type, fields} 结构化草稿；prepareContext 空 prompt 400 守卫；宁缺毋假指令约束；开放对象协议契约零改动）；前端 useSilentCreateDraft/parseCreateDraft 容错解析 | CAP-A-18 | assistant-silent.service.spec 39 条（+3：正常流含指令断言/code fence 容错/空 prompt 400 不触 LLM） | — |
+| frontend | **GAP-T-32 回归测试**：新增 `create-dialog/__tests__/unified-create-dialog.test.tsx` 9 条——双界面切换互不串/AI 草稿流全链（生成→预览→确认落库）/失败降级转小助理/Esc 脏保护两态/最大化语义档断言/里程碑绑定所选项目/死装饰不渲染 | CAP-A-18 | 前端全量 110 文件 571 用例绿；server 73 套件 661 用例绿；契约零漂移 | `docs/01-需求/测试映射矩阵-v1.md`（GAP-T-32 清偿回填） |
 ### feat：执行兜底批 5——失败执行重新执行（克隆新建执行+血缘关联，替代原地重派）（2026-09-17）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

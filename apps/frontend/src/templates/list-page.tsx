@@ -16,7 +16,7 @@ import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle'
 import { PageShell } from '@/components/ui/page-shell'
 import { StatsCard } from '@/components/ui/stats-card'
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row'
-import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog'
+import { UnifiedCreateDialog } from '@/shared/components/create-dialog'
 // TODO: 引入 usePersistentToggle（@/shared/hooks/use-persistent-toggle）持久化统计卡开关
 // TODO: 引入本模块列表组件（基于 DataList 封装）与看板 BoardView（@/shared/components）
 

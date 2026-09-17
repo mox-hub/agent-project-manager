@@ -29,7 +29,7 @@ import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/f
 import type { FilterState } from '@/shared/filters/types';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
+import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { useActiveExecutionsMap } from '@/modules/execution/hooks/use-active-executions-map';
 import {
   Plus,
