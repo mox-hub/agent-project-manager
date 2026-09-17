@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### Fixed
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **delivery 页路由补 DEV 门禁（需求重审 R5）**：mock 还原页（`data-mock`，自述 DEV ONLY）原在 `router.tsx` 无条件注册，生产构建可直达 `/app/delivery`，违反 frontend AGENTS.md §6.7 dev-only 页面规范（侧栏入口此前已 DEV 门禁，本次补齐路由侧） | 需求重审 R5 | tsc -b 0 错 + eslint 0 + pipeline-stages 回归 4 条绿 | 需求重审总纲 §八-5 裁决落地；能力清单重审注记 |
+
 ## [0.7.0] - 2026-09-17
 
 ### v0.7.0 发版总览——AI 表面实时化 + 统一创建面板双界面 + 执行侧兜底闭环 + 决策卡实体手卡
