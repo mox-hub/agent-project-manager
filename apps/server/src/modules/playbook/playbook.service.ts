@@ -398,7 +398,9 @@ export class PlaybookService {
     }
     const stage = getStage(template.key, stageKey);
     if (!stage)
-      throw new NotFoundException(`项目步骤 ${template.key} 无阶段 ${stageKey}`);
+      throw new NotFoundException(
+        `项目步骤 ${template.key} 无阶段 ${stageKey}`,
+      );
     if (project.lifecycleStage !== stageKey) {
       throw new BadRequestException(
         `当前游标在「${project.lifecycleStage}」，只能操作当前阶段`,
@@ -441,7 +443,8 @@ const PLAYBOOK_EVENT_SUMMARY: Record<
   (typeof PLAYBOOK_EVENT_TYPES)[number],
   (meta: Record<string, unknown>) => string
 > = {
-  playbook_mounted: (m) => `挂载项目步骤「${m.templateKey}」，游标拨到 ${m.stage}`,
+  playbook_mounted: (m) =>
+    `挂载项目步骤「${m.templateKey}」，游标拨到 ${m.stage}`,
   playbook_stage_completed: (m) => `阶段「${m.stage}」通过闸门`,
   playbook_stage_skipped: (m) =>
     `跳过阶段「${m.stage}」${m.reason ? `：${m.reason}` : ''}`,
