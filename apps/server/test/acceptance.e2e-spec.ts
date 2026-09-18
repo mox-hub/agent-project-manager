@@ -355,26 +355,29 @@ describe('Acceptance (e2e)', () => {
 
   describe('POST /_api/acceptance/:id/accept-completion', () => {
     it('should 400 when a criterion has no valid evidence (CAP-B-01 gate)', () => {
-      return wsHttp
-        .post(`/_api/acceptance/${acceptanceId}/accept-completion`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'admin-e2e' })
-        // artifact 契约证据本身合法，但「e2e 技术标准 2」从无证据 →
-        // criteriaEvidence 门禁拦截（批一 CAP-B-01 修订即失效闭环）
-        .send({
-          evidence: {
-            summary: 'e2e 最终验收',
-            artifacts: [{ name: 'e2e-artifact.md', path: 'docs/e2e.md' }],
-          },
-        })
-        .expect(400)
-        .expect((res: Response) => {
-          expect(res.body.code).toBe('ACCEPT_BLOCKED');
-          const failures = res.body.failures ?? [];
-          expect(
-            failures.some((f: { check: string }) => f.check === 'criteriaEvidence'),
-          ).toBe(true);
-        });
+      return (
+        wsHttp
+          .post(`/_api/acceptance/${acceptanceId}/accept-completion`)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .query({ userId: 'admin-e2e' })
+          // artifact 契约证据本身合法，但「e2e 技术标准 2」从无证据 →
+          // criteriaEvidence 门禁拦截（批一 CAP-B-01 修订即失效闭环）
+          .send({
+            evidence: {
+              summary: 'e2e 最终验收',
+              artifacts: [{ name: 'e2e-artifact.md', path: 'docs/e2e.md' }],
+            },
+          })
+          .expect(400)
+          .expect((res: Response) => {
+            expect(res.body.error?.code).toBe('ACCEPT_BLOCKED');
+            const failures: Array<{ check: string }> =
+              res.body.error?.details ?? [];
+            expect(failures.some((f) => f.check === 'criteriaEvidence')).toBe(
+              true,
+            );
+          })
+      );
     });
 
     it('should accept completion after every criterion has current-revision evidence', async () => {
@@ -382,24 +385,29 @@ describe('Acceptance (e2e)', () => {
         .post(`/_api/acceptance/criteria/${secondCriteriaId}/evidence`)
         .set('Authorization', `Bearer ${accessToken}`)
         .query({ userId: 'admin-e2e' })
-        .send({ evidenceType: 'test_report', content: 'e2e 技术标准证据（当前版本）' });
+        .send({
+          evidenceType: 'test_report',
+          content: 'e2e 技术标准证据（当前版本）',
+        });
       expect(ev.status).toBe(201);
 
-      return wsHttp
-        .post(`/_api/acceptance/${acceptanceId}/accept-completion`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'admin-e2e' })
-        // artifact 契约：evidence 需含 artifactId 或 artifacts 数组
-        .send({
-          evidence: {
-            summary: 'e2e 最终验收',
-            artifacts: [{ name: 'e2e-artifact.md', path: 'docs/e2e.md' }],
-          },
-        })
-        .expect((res: Response) => {
-          expect([200, 201]).toContain(res.status);
-          expect(res.body.data.status).toBe('passed');
-        });
+      return (
+        wsHttp
+          .post(`/_api/acceptance/${acceptanceId}/accept-completion`)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .query({ userId: 'admin-e2e' })
+          // artifact 契约：evidence 需含 artifactId 或 artifacts 数组
+          .send({
+            evidence: {
+              summary: 'e2e 最终验收',
+              artifacts: [{ name: 'e2e-artifact.md', path: 'docs/e2e.md' }],
+            },
+          })
+          .expect((res: Response) => {
+            expect([200, 201]).toContain(res.status);
+            expect(res.body.data.status).toBe('passed');
+          })
+      );
     });
   });
 
