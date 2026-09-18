@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Request,
 } from '@nestjs/common';
@@ -25,6 +26,7 @@ import {
   GateResultDto,
   RejectReleaseDto,
   ReleaseDto,
+  UpdateReleaseDeliverablesDto,
   UpdateReleaseDto,
   VersionRecommendRequestDto,
 } from './dto/release.dto';
@@ -121,6 +123,20 @@ export class ReleaseController {
   @ApiStandardErrors()
   async update(@Param('id') id: string, @Body() dto: UpdateReleaseDto) {
     return this.releases.updateDraft(id, dto);
+  }
+
+  @Put(':id/deliverables')
+  @ApiOperation({
+    summary:
+      '更新交付成果清单（全量替换；任意状态可改，released 后仍可补录；记录操作人）',
+  })
+  @ApiStandardErrors()
+  async updateDeliverables(
+    @Param('id') id: string,
+    @Body() dto: UpdateReleaseDeliverablesDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.releases.updateDeliverables(id, dto.deliverables, req.user.id);
   }
 
   @Post(':id/gate')

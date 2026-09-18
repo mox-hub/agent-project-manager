@@ -6658,6 +6658,23 @@ export interface paths {
         patch: operations["ReleaseController_update"];
         trace?: never;
     };
+    "/_api/releases/{id}/deliverables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 更新交付成果清单（全量替换；任意状态可改，released 后仍可补录；记录操作人） */
+        put: operations["ReleaseController_updateDeliverables"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/releases/{id}/gate": {
         parameters: {
             query?: never;
@@ -14877,6 +14894,22 @@ export interface components {
             scopeIssueIds?: string[];
             /** @description 所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除） */
             milestoneId?: Record<string, never> | null;
+        };
+        ReleaseDeliverableItemDto: {
+            /** @description 成果名称（交付了什么） */
+            name: string;
+            /** @description 获取位置（在哪拿：包地址/镜像/仓库链接等） */
+            location: string;
+            /** @description 验证方式（怎么验证可用） */
+            howToVerify: string;
+            /** @description 限制或已知问题 */
+            limitations?: string;
+            /** @description 接收人（由谁接收） */
+            receiver?: string;
+        };
+        UpdateReleaseDeliverablesDto: {
+            /** @description 交付成果清单（全量替换；元素必填 name/location/howToVerify） */
+            deliverables: components["schemas"]["ReleaseDeliverableItemDto"][];
         };
         ApprovalProposalRequestDto: {
             /** @description 预留：附言 */
@@ -46662,6 +46695,78 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UpdateReleaseDto"];
+            };
+        };
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_updateDeliverables: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReleaseDeliverablesDto"];
             };
         };
         responses: {

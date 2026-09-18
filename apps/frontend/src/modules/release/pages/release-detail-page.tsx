@@ -46,6 +46,7 @@ import {
   useUpdateRelease,
 } from '../hooks/use-releases';
 import { ReleaseTraceSection } from '../components/release-trace-section';
+import { ReleaseDeliverablesCard } from '../components/release-deliverables-card';
 import { RELEASE_STATUS_TONE, statusLabelKey } from './release-list-page';
 import type { ExecutionStep, GateCheck, ReleaseStatus } from '../api/release-api';
 import { cn } from '@/lib/utils';
@@ -258,6 +259,9 @@ export function ReleaseDetailPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* 交付成果清单（CAP-K-03 批二）：交付了什么/在哪拿/怎么验证/限制/接收人 */}
+              <ReleaseDeliverablesCard release={release} />
 
               {/* 前因后果：圈定任务 → 实时验收 + 执行运行记录（draft 态可编辑范围） */}
               <ReleaseTraceSection release={release} />

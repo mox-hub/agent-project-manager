@@ -23,9 +23,36 @@ import {
 } from './release-gate.service';
 import { ReleaseVersionService } from './release-version.service';
 import { assertReleaseTransition } from './release-status';
+import {
+  ReleaseDeliverableItemDto,
+  ReleaseDeliverablesDto,
+} from './dto/release.dto';
 import type { Release as ReleaseModel, Prisma } from '@prisma/client';
 
 export const CHANGELOG_FILE_PATH = 'CHANGELOG.md';
+
+/**
+ * 交付成果清单元素必填口径（CAP-K-03 批二）：
+ * name（交付了什么）/ location（在哪拿）/ howToVerify（怎么验证可用）trim 后非空；
+ * limitations（限制或已知问题）/ receiver（接收人）可选。空数组 = 清空清单，合法。
+ */
+export function assertDeliverableItems(items: unknown): void {
+  if (!Array.isArray(items)) {
+    throw new BadRequestException('交付成果清单须为数组');
+  }
+  const required = ['name', 'location', 'howToVerify'] as const;
+  items.forEach((item, index) => {
+    const row = item as Record<string, unknown> | null;
+    for (const field of required) {
+      const value = row?.[field];
+      if (typeof value !== 'string' || value.trim() === '') {
+        throw new BadRequestException(
+          `交付成果第 ${index + 1} 项缺少必填字段「${field}」`,
+        );
+      }
+    }
+  });
+}
 
 /** Release 关联轻量投影（CAP-A-16）：列表/详情带所属里程碑摘要 */
 const RELEASE_MILESTONE_INCLUDE = {
@@ -105,6 +132,30 @@ export class ReleaseService {
     });
     if (!release) throw new NotFoundException(`发版不存在: ${releaseId}`);
     return release;
+  }
+
+  /**
+   * 更新交付成果清单（CAP-K-03 批二切片）：交付了什么/在哪拿/怎么验证/限制/接收人。
+   * 全状态可改（released 后仍可补录交付信息），全量替换并记录操作人与时间。
+   * 存储 = 单个 deliverables Json 列：{ items, updatedBy, updatedAt }，不建子表。
+   */
+  async updateDeliverables(
+    releaseId: string,
+    items: ReleaseDeliverableItemDto[],
+    userId: string,
+  ): Promise<ReleaseModel> {
+    await this.getRelease(releaseId);
+    assertDeliverableItems(items);
+    const deliverables: ReleaseDeliverablesDto = {
+      items,
+      updatedBy: userId,
+      updatedAt: new Date().toISOString(),
+    };
+    return this.prisma.release.update({
+      where: { id: releaseId },
+      data: { deliverables: deliverables as unknown as Prisma.InputJsonValue },
+      include: RELEASE_MILESTONE_INCLUDE,
+    });
   }
 
   /** 里程碑关联校验（CAP-A-16）：存在 + 同项目（跨项目 400） */

@@ -58,6 +58,15 @@ tags: "changelog,release"
 | --- | --- | --- | --- | --- |
 | server | **上下文时效性诚实化（批二 P1）**：`context.service.ts` 的 `buildContextPack` 曾恒写 `freshness: 'realtime'`（与数据实际年龄无关，用户与 AI 均会误判上下文为当前）。改为按各层数据源实际更新时间（`updatedAt`/`timestamp` 既有字段）与判定时刻的差值映射档位，词表 `fresh \| recent \| stale \| unknown`（<1h fresh、<24h recent、更旧 stale；阈值可经 `CONTEXT_FRESH_MAX_AGE_MS`/`CONTEXT_RECENT_MAX_AGE_MS` 覆盖）；层基准 = 层内数据源最新更新时间（system=project、project=max(工单,活动)、session=max(会话,最新消息)、runtime=workspace）；无可信时间戳（空层/源不存在/非法日期/超容差未来时间戳）一律 `unknown`，绝不回落 realtime。透出 `layerFreshness`（每层档位）+ `freshness`（整体最低档，存在 unknown 层时整体上限压到 recent）+ `freshnessCheckedAt`。旧词表 `realtime` 经 `normalizeContextFreshness` 映射为 `fresh` 仅供读取兼容，输出不再出现。零 migration（freshness 为响应字段，无 DB 列无 REST 契约约束）；该服务已 deprecated 且当前无 REST 出口（openapi 无 context/pack 端点），响应 shape 追加字段不破坏既有键 | CAP-B-06 | context 模块 Vitest 22/22 绿（纯函数实龄映射/阈值边界/诚实降级 16 条 + buildContextPack 分层透出/整体聚合/全 unknown 不谎报 6 条，时钟注入）；`tsc -p tsconfig.build.json --noEmit` 零错误；改动域 eslint 零错误；server 全量 791 用例仅 workflow 套件 1 条并发池环境性 flaky（单跑 9/9 过，与本改动无 import 关联） | 能力清单 CAP-B-06 卡；余留：ai-hub `ContextBuilderService`（当前主路径）不输出 freshness 字段，后续随 deprecated 服务并仓统一补齐；前端 ContextPreviewDialog 依赖的 `/_api/context/snapshot` 端点后端尚不存在（孤儿前端），freshness 展示位待该端点落地时一并接入 |
 
+### CAP-K-03 交付成果清单——发布交付了什么/在哪拿/怎么验证/限制/接收人（feat/release-deliverables，2026-09-18）
+
+> 批二 P1 切片：发布 ≠ 部署——`released` 终态后用户拿不到「这个版本交付了什么、在哪拿、怎么验证可用、有什么限制、由谁接收」的信号。本切片给 Release 补交付成果清单承载；**边界**：不自建部署平台，部署状态仍从外部 CI/CD 回流；非部署类项目可留空清单不强行加步骤。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **Release 交付成果清单承载**：schema `Release` 新增 `deliverables Json?`（单字段承载 `{ items: [{name, location, howToVerify, limitations?, receiver?}], updatedBy, updatedAt }`，不建子表避免发布实体膨胀）+ migration；`ReleaseDto` 下发 `deliverables`（查看随详情端点免费获得）；新增 `PUT /releases/:id/deliverables` 全量替换端点（任意状态可改，released 后仍可补录交付信息；记录操作人 updatedBy/updatedAt）；`assertDeliverableItems` 必填口径服务层兜底（name/location/howToVerify trim 非空；limitations/receiver 可选；空数组=清空合法）+ DTO `@ValidateNested` 管道校验双保险 | CAP-K-03 | `release-deliverables.spec` 7 用例绿（必填口径 4 + 存取 roundtrip/全量替换与操作人/404 与兜底不落库 3）；release 域 31 用例回归绿；契约三件套 `contract:export`/`generate`/`check` 零漂移（openapi +186 行纯新增，双端 api-types.gen.ts 同步 +105 行） | 能力清单 CAP-K-03 卡（交付成果清单切片） |
+| frontend | **交付成果清单卡片**：release 详情页新增 `ReleaseDeliverablesCard`（展示态：名称/在哪拿/怎么验证/限制/接收人逐项卡片；编辑态：行级增删改 + 客户端必填先行提示与服务端同口径，保存走 PUT 全量替换）；`useUpdateDeliverables` hook + `releaseApi.updateDeliverables`；i18n `release.deliverables` 双语 12 键齐备（zh-CN/en 键集合一致） | CAP-K-03 | `release-pages.test` 8 用例绿（新增清单五字段渲染 + 空态 2 条）；frontend `tsc -b` 零错误 | — |
+
 ### Fixed
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

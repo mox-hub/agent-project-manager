@@ -56471,6 +56471,147 @@
         ]
       }
     },
+    "/_api/releases/{id}/deliverables": {
+      "put": {
+        "operationId": "ReleaseController_updateDeliverables",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReleaseDeliverablesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "更新交付成果清单（全量替换；任意状态可改，released 后仍可补录；记录操作人）",
+        "tags": [
+          "Releases"
+        ]
+      }
+    },
     "/_api/releases/{id}/gate": {
       "post": {
         "operationId": "ReleaseController_gate",
@@ -78078,6 +78219,51 @@
             "nullable": true
           }
         }
+      },
+      "ReleaseDeliverableItemDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "成果名称（交付了什么）"
+          },
+          "location": {
+            "type": "string",
+            "description": "获取位置（在哪拿：包地址/镜像/仓库链接等）"
+          },
+          "howToVerify": {
+            "type": "string",
+            "description": "验证方式（怎么验证可用）"
+          },
+          "limitations": {
+            "type": "string",
+            "description": "限制或已知问题"
+          },
+          "receiver": {
+            "type": "string",
+            "description": "接收人（由谁接收）"
+          }
+        },
+        "required": [
+          "name",
+          "location",
+          "howToVerify"
+        ]
+      },
+      "UpdateReleaseDeliverablesDto": {
+        "type": "object",
+        "properties": {
+          "deliverables": {
+            "description": "交付成果清单（全量替换；元素必填 name/location/howToVerify）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReleaseDeliverableItemDto"
+            }
+          }
+        },
+        "required": [
+          "deliverables"
+        ]
       },
       "ApprovalProposalRequestDto": {
         "type": "object",

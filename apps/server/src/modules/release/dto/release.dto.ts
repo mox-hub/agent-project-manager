@@ -11,7 +11,9 @@ import {
   IsString,
   MaxLength,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateReleaseDto {
   @ApiProperty({ description: '项目 ID' })
@@ -57,6 +59,65 @@ export class CreateReleaseDto {
 export class UpdateReleaseDto extends PartialType(
   OmitType(CreateReleaseDto, ['projectId'] as const),
 ) {}
+
+/**
+ * 交付成果清单元素（CAP-K-03 批二切片）：
+ * 交付了什么（name）/ 在哪拿（location）/ 怎么验证可用（howToVerify）为必填；
+ * 限制或已知问题（limitations）/ 接收人（receiver）可选。
+ */
+export class ReleaseDeliverableItemDto {
+  @ApiProperty({ description: '成果名称（交付了什么）' })
+  @IsString()
+  @MinLength(1)
+  name!: string;
+
+  @ApiProperty({ description: '获取位置（在哪拿：包地址/镜像/仓库链接等）' })
+  @IsString()
+  @MinLength(1)
+  location!: string;
+
+  @ApiProperty({ description: '验证方式（怎么验证可用）' })
+  @IsString()
+  @MinLength(1)
+  howToVerify!: string;
+
+  @ApiPropertyOptional({ description: '限制或已知问题' })
+  @IsOptional()
+  @IsString()
+  limitations?: string;
+
+  @ApiPropertyOptional({ description: '接收人（由谁接收）' })
+  @IsOptional()
+  @IsString()
+  receiver?: string;
+}
+
+/** 交付成果清单（Release.deliverables Json 列的存储形状：items + 最后更新溯源） */
+export class ReleaseDeliverablesDto {
+  @ApiProperty({
+    description: '交付成果列表（可传空数组清空清单）',
+    type: [ReleaseDeliverableItemDto],
+  })
+  items!: ReleaseDeliverableItemDto[];
+
+  @ApiPropertyOptional({ description: '最后更新人 ID' })
+  updatedBy?: string;
+
+  @ApiPropertyOptional({ description: '最后更新时间（ISO）' })
+  updatedAt?: string;
+}
+
+/** PUT /releases/:id/deliverables 请求体：全量替换交付成果清单 */
+export class UpdateReleaseDeliverablesDto {
+  @ApiProperty({
+    description: '交付成果清单（全量替换；元素必填 name/location/howToVerify）',
+    type: [ReleaseDeliverableItemDto],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ReleaseDeliverableItemDto)
+  deliverables!: ReleaseDeliverableItemDto[];
+}
 
 export class RejectReleaseDto {
   @ApiPropertyOptional({ description: '打回原因' })
@@ -165,6 +226,14 @@ export class ReleaseDto {
     type: [ExecutionStepDto],
   })
   executionLog?: ExecutionStepDto[] | null;
+
+  @ApiPropertyOptional({
+    description:
+      '交付成果清单（CAP-K-03 批二：交付了什么/在哪拿/怎么验证/限制/接收人）',
+    type: ReleaseDeliverablesDto,
+    nullable: true,
+  })
+  deliverables?: ReleaseDeliverablesDto | null;
 
   @ApiPropertyOptional({ description: '失败原因' })
   failureReason?: string | null;
