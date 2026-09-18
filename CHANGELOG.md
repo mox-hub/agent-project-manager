@@ -74,6 +74,15 @@ tags: "changelog,release"
 | server | **Release 交付成果清单承载**：schema `Release` 新增 `deliverables Json?`（单字段承载 `{ items: [{name, location, howToVerify, limitations?, receiver?}], updatedBy, updatedAt }`，不建子表避免发布实体膨胀）+ migration；`ReleaseDto` 下发 `deliverables`（查看随详情端点免费获得）；新增 `PUT /releases/:id/deliverables` 全量替换端点（任意状态可改，released 后仍可补录交付信息；记录操作人 updatedBy/updatedAt）；`assertDeliverableItems` 必填口径服务层兜底（name/location/howToVerify trim 非空；limitations/receiver 可选；空数组=清空合法）+ DTO `@ValidateNested` 管道校验双保险 | CAP-K-03 | `release-deliverables.spec` 7 用例绿（必填口径 4 + 存取 roundtrip/全量替换与操作人/404 与兜底不落库 3）；release 域 31 用例回归绿；契约三件套 `contract:export`/`generate`/`check` 零漂移（openapi +186 行纯新增，双端 api-types.gen.ts 同步 +105 行） | 能力清单 CAP-K-03 卡（交付成果清单切片） |
 | frontend | **交付成果清单卡片**：release 详情页新增 `ReleaseDeliverablesCard`（展示态：名称/在哪拿/怎么验证/限制/接收人逐项卡片；编辑态：行级增删改 + 客户端必填先行提示与服务端同口径，保存走 PUT 全量替换）；`useUpdateDeliverables` hook + `releaseApi.updateDeliverables`；i18n `release.deliverables` 双语 12 键齐备（zh-CN/en 键集合一致） | CAP-K-03 | `release-pages.test` 8 用例绿（新增清单五字段渲染 + 空态 2 条）；frontend `tsc -b` 零错误 | — |
 
+### CAP-B-07 信任从抽象评分改为可理解的三级分级授权（feat/trust-tiered-delegation，2026-09-18）
+
+> 批二 P1 切片（PRD §12 原则 4「渐进放权」）：非专业用户需要的是可理解的分级授权，不是抽象分数。三级口径 **1=观察者 / 2=协助者 / 3=受托者**，复用既有 `trustLevel` Int 列（零 schema/migration/DTO 变更）；等级名/图标/放权清单文案由前端静态映射（i18n），server 只下发数值等级。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **`scoreToLevel` 三级映射**：阈值由 `>=90=3 / >=70=2 / 其余=1` 改为 **<40=1（观察者）/ 40–69=2（协助者）/ >=70=3（受托者）**；值域恒为 1-3 整数，存量数据无需迁移（旧 L2/L3 档语义向前归并）。`trustScore` 内部计算与 Member 列同步逻辑全部保留（内部数据，留给未来门禁联动）；acceptance/execution/cli-dispatch 授权判断零改动 | CAP-B-07 | 静态自查：spec 断言已同步三级口径（新增 <40 观察者边界用例；58→协助者/70→受托者/100→受托者断言更新；初始档案 trustLevel 与 50 分映射一致性修正），改动仅 trust.service.ts + spec 两文件、无其他 import 依赖。本地测试未跑（worktree 环境受限），以 CI 与合并后主仓统一验证为准 | 能力清单 CAP-B-07 卡；后续切片登记：自动升降级引擎（执行评估驱动）/ 门禁联动（acceptance/execution/cli-dispatch 授权按等级生效） |
+| frontend | **三级等级卡 + 撤下分数**：信任管理面板改三级卡片形态（观察者/协助者/受托者各卡：图标 + 等级名 + 一句话定位 + 「该等级 AI 可自动做什么」放权清单；红线说明条：发布/删除/花钱/成员与权限变更任何等级永远须人确认——静态展示，无门禁联动）；「调整信任」入口改为选等级 Dialog（写 `Member.trustLevel`，零门禁联动）；`TrustLevelBadge` 改三级语义色与图标（Eye/Shield/ShieldCheck）、撤下 `score` prop 与数字显示（兼容旧 0-4 存量归一：0/越界→未评估、4→受托者）；成员列表/成员卡 popover/办公室同事卡徽标撤分数；成员详情页与创建对话框信任选项三级化；route-preview 成员预览、决策卡指派行、AI 管理卡（`TrustLevelCard` 撤 75% 进度条）分数全部撤下，按 `trustLevelFromScore`（与 server 阈值对齐）折算等级展示；`MEMBER_TRUST_LEVEL_LABELS`（L0-L4）退役为 `MEMBER_TRUST_TIERS`；i18n `trust.*` 双语 29 键齐备；ai-surface 演示舱「信度」表盘为独立口径不在本切片范围 | CAP-B-07 | 静态自查：全仓 grep 确认 `MEMBER_TRUST_LEVEL_LABELS` 零残留、UI 层 trustScore 数字仅剩 ai-surface 演示口径（登记余留）；zh-CN/en 两 locale JSON 合法且键集合一致（3990 键逐键 diff 为空）；被删徽标 `score` prop 的 3 个调用点全部同步；@deprecated ai-management-page.tsx（路由已摘除）未动。本地测试未跑（worktree 环境受限），以 CI 与合并后主仓统一验证为准；openapi.json 未动（零契约扰动） | — |
+
 ### Fixed
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

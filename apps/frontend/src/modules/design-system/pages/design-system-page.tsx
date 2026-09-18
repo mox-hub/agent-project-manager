@@ -2051,11 +2051,11 @@ export function DesignSystemPage() {
                 <AvatarModernizationShowcase />
               </div>
               <div>
-                <SubLabel>TrustLevelBadge（信任等级 L0-L4）</SubLabel>
+                <SubLabel>TrustLevelBadge（信任三级：观察者/协助者/受托者）</SubLabel>
                 <div className="flex items-center gap-2 flex-wrap">
                   <TrustLevelBadge level={null} />
-                  {[0, 1, 2, 3, 4].map((level) => (
-                    <TrustLevelBadge key={level} level={level} score={40 + level * 15} />
+                  {[1, 2, 3].map((level) => (
+                    <TrustLevelBadge key={level} level={level} />
                   ))}
                 </div>
               </div>

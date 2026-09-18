@@ -87,13 +87,13 @@ const defaultProfileValue = (agentId: string, projectId?: string) => ({
 });
 
 describe('TrustService.getOrCreateProfile', () => {
-  it('首次获取：创建默认档案（50 分 / level 1 / 四维 50）', async () => {
+  it('首次获取：创建默认档案（50 分 / level 2 协助者 / 四维 50）', async () => {
     const { service, state } = buildService();
 
     const profile = (await service.getOrCreateProfile('agent-1', 'p1')) as any;
 
     expect(profile.trustScore).toBe(50);
-    expect(profile.trustLevel).toBe(1);
+    expect(profile.trustLevel).toBe(2);
     expect(profile.totalEvaluations).toBe(0);
     expect(profile.averageScores.correctness).toBe(50);
     expect(state.appConfigs).toHaveLength(1);
@@ -117,7 +117,7 @@ describe('TrustService.getOrCreateProfile', () => {
     expect(args.where.id).toBe('agent-1');
     // onlyIfNull：仅当 Member 列为空才回填
     expect(args.where.OR).toEqual([{ trustScore: null }, { trustLevel: null }]);
-    expect(args.data).toEqual({ trustScore: 50, trustLevel: 1 });
+    expect(args.data).toEqual({ trustScore: 50, trustLevel: 2 });
   });
 });
 
@@ -241,10 +241,10 @@ describe('TrustService.getRoleBasedCriteria', () => {
 });
 
 describe('TrustService.calculateTrustScore', () => {
-  it('无评估历史：返回档案当前分与等级', async () => {
+  it('无评估历史：返回档案当前分与等级（50 分 = 协助者）', async () => {
     const { service } = buildService();
     const result = await service.calculateTrustScore('agent-1', 'p1');
-    expect(result).toEqual({ score: 50, level: 1 });
+    expect(result).toEqual({ score: 50, level: 2 });
   });
 
   it('有评估历史：最近 10 条按 1.0→0.1 递减加权，新评估权重最高', async () => {
@@ -261,7 +261,22 @@ describe('TrustService.calculateTrustScore', () => {
 
     const expected = Math.round((90 * 1.0 + 50 * 0.9) / 1.9);
     expect(result.score).toBe(expected);
-    expect(result.level).toBe(2); // >= 70
+    expect(result.level).toBe(3); // 三级口径：>= 70 = 受托者
+  });
+
+  it('加权分低于 40：降为观察者（level 1）', async () => {
+    const { service, state } = buildService();
+    await service.getOrCreateProfile('agent-1', 'p1');
+    const stored = state.appConfigs[0];
+    stored.value = {
+      ...defaultProfileValue('agent-1', 'p1'),
+      recentEvaluations: [{ total: 30 }],
+    };
+
+    const result = await service.calculateTrustScore('agent-1', 'p1');
+
+    expect(result.score).toBe(30);
+    expect(result.level).toBe(1); // 三级口径：< 40 = 观察者
   });
 });
 
@@ -341,7 +356,7 @@ describe('TrustService.applyPrOutcome', () => {
 
     expect(result.ok).toBe(true);
     expect(result.newTrustScore).toBe(58);
-    expect(result.newLevel).toBe(1);
+    expect(result.newLevel).toBe(2); // 三级口径：40-69 = 协助者
 
     const stored = state.appConfigs[0].value as any;
     expect(stored.averageScores.correctness).toBe(58);
@@ -377,7 +392,7 @@ describe('TrustService.applyPrOutcome', () => {
     });
 
     expect(result.newTrustScore).toBe(100);
-    expect((stored.value as any).trustLevel).toBe(3); // >= 90
+    expect((stored.value as any).trustLevel).toBe(3); // 三级口径：>= 70 = 受托者
     expect((stored.value as any).averageScores.correctness).toBe(100);
   });
 });

@@ -31,6 +31,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  MEMBER_TRUST_TIERS,
+  trustLevelFromScore,
+} from '@/shared/member/types';
 import { useExpertise } from '@/modules/decision/hooks/use-expertise';
 import type {
   Decision,
@@ -487,16 +491,20 @@ function buildAssignmentSlots(decision: Decision, t: TFunc): DecisionSlots {
             {a.taskTitle ?? a.issueId}
           </span>
           <span className="shrink-0 text-content-text-secondary">{a.memberName ?? a.memberId}</span>
+          {/* CAP-B-07：只显信任等级不显分数（分数→等级映射与 server scoreToLevel 对齐） */}
           {a.trustScore != null ? (
             <span
               className={cn(
                 'shrink-0 rounded px-1.5 py-0.5 text-10',
-                a.trustScore >= 85
+                a.trustScore >= 70
                   ? 'bg-accent-green-light text-accent-green'
-                  : 'bg-accent-yellow-light text-accent-yellow',
+                  : a.trustScore >= 40
+                    ? 'bg-accent-blue-light text-accent-blue'
+                    : 'bg-accent-yellow-light text-accent-yellow',
               )}
             >
-              {t('decision.impactLabels.trust')} {a.trustScore}
+              {t('decision.impactLabels.trust')}{' '}
+              {t(MEMBER_TRUST_TIERS[trustLevelFromScore(a.trustScore) - 1].labelKey)}
             </span>
           ) : null}
         </div>

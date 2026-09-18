@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { toast } from '@/components/ui/toast';
 import { useCreateMember, useUpdateMember } from '../hooks';
-import { MEMBER_THINKING_LEVELS, MEMBER_TRUST_LEVEL_LABELS, type Member, type ThinkingLevel } from '../types';
+import { MEMBER_THINKING_LEVELS, MEMBER_TRUST_TIERS, type Member, type ThinkingLevel } from '../types';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
 import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
@@ -42,6 +43,7 @@ export function MemberCreateDialog({
   defaultProjectId,
   member = null,
 }: MemberCreateDialogProps) {
+  const { t } = useTranslation();
   const isEdit = Boolean(member);
   const [type, setType] = useState<'human' | 'ai_agent'>(defaultType);
   const [displayName, setDisplayName] = useState('');
@@ -267,10 +269,10 @@ export function MemberCreateDialog({
                 value={trustLevel}
                 onChange={(e) => setTrustLevel(e.target.value)}
               >
-                <option value="">未评估</option>
-                {MEMBER_TRUST_LEVEL_LABELS.map((label, level) => (
-                  <option key={level} value={level}>
-                    {label}
+                <option value="">{t('trust.unrated', '未评估')}</option>
+                {MEMBER_TRUST_TIERS.map((tier) => (
+                  <option key={tier.level} value={tier.level}>
+                    {t(tier.labelKey)}
                   </option>
                 ))}
               </select>

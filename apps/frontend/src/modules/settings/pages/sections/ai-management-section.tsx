@@ -20,6 +20,10 @@ import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Input, PasswordInput } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
+import {
+  MEMBER_TRUST_TIERS,
+  normalizeTrustLevel,
+} from '@/shared/member/types';
 import { useAiProviders, useUpdateProvider, useTestProvider } from '@/modules/ai-hub/hooks/use-ai-providers';
 import { useQueryClient } from '@tanstack/react-query';
 import { providerKeys } from '@/modules/ai-hub/hooks/use-ai-providers';
@@ -156,7 +160,7 @@ export function AiManagementSection() {
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
   const [selectedProviderId, setSelectedProviderId] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('');
-  const [trustLevel] = useState(75);
+  const [trustLevel] = useState(2); // CAP-B-07 三级口径演示值：2=协助者
   const [skills, setSkills] = useState<Record<string, boolean>>(
     SKILLS.reduce((acc, skill) => ({ ...acc, [skill.id]: skill.enabled }), {})
   );
@@ -1257,9 +1261,11 @@ function StatusBadge({ status }: { status: 'connected' | 'disconnected' | 'error
   );
 }
 
-// 主题适配的 StatCard
+// 主题适配的 StatCard —— CAP-B-07：只显等级不显分数
 function TrustLevelCard({ level }: { level: number }) {
   const { t } = useTranslation();
+  const tier = normalizeTrustLevel(level);
+  const def = tier !== null ? MEMBER_TRUST_TIERS[tier - 1] : null;
   return (
     <div className="rounded-lg border border-border bg-card p-3">
       <div className="mb-2 flex items-center justify-between">
@@ -1267,10 +1273,13 @@ function TrustLevelCard({ level }: { level: number }) {
           <ShieldCheck size={16} className="text-accent-green" />
           {t('aiHub.trustLevel')}
         </p>
-        <span className="text-sm font-semibold">{level}%</span>
+        <span className="text-sm font-semibold">
+          {def ? t(def.labelKey) : t('trust.unrated')}
+        </span>
       </div>
-      <Progress value={level} className="mb-1 h-1.5" />
-      <p className="text-xs text-muted-foreground">{t('aiHub.aiAutonomyLevel')}</p>
+      <p className="text-xs text-muted-foreground">
+        {def ? t(def.descKey) : t('trust.unratedDesc')}
+      </p>
     </div>
   );
 }

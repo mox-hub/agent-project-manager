@@ -39,7 +39,8 @@ export class TrustService {
             agentId,
             projectId,
             trustScore: 50,
-            trustLevel: 1,
+            // 初始等级与 trustScore 50 按三级映射一致（50 = 协助者）
+            trustLevel: this.scoreToLevel(50),
             totalEvaluations: 0,
             successfulEvaluations: 0,
             averageScores: {
@@ -83,7 +84,8 @@ export class TrustService {
         },
         data: {
           trustScore: profile.trustScore ?? 50,
-          trustLevel: profile.trustLevel ?? 1,
+          // 等级缺失时按分数三级映射兜底（旧档案缺 trustLevel 字段的边界）
+          trustLevel: profile.trustLevel ?? this.scoreToLevel(profile.trustScore ?? 50),
         },
       });
     } catch (e) {
@@ -243,7 +245,8 @@ export class TrustService {
     if (recentScores.length === 0) {
       return {
         score: profile.trustScore || 50,
-        level: profile.trustLevel || 1,
+        // 等级缺失时按分数三级映射兜底
+        level: profile.trustLevel || this.scoreToLevel(profile.trustScore || 50),
       };
     }
 
@@ -533,9 +536,18 @@ export class TrustService {
     };
   }
 
+  /**
+   * CAP-B-07：信任三级口径（可理解的分级授权，PRD §12 原则 4「渐进放权」）。
+   * 1=观察者（<40）仅可读上下文，写操作均须人确认；
+   * 2=协助者（40-69）可自动执行常规变更，结果须人验收；
+   * 3=受托者（>=70）可自动执行常规变更并自行重试。
+   * 红线（发布 / 删除 / 花钱 / 成员与权限变更）任何等级都永远须人确认（本期为展示口径，
+   * 门禁联动为后续切片）。与前端 shared/member/trustLevelFromScore 展示映射保持一致。
+   * 注意：trustLevel 值域恒为 1-3 整数，仅语义阈值变化，存量数据无需迁移。
+   */
   private scoreToLevel(score: number): number {
-    if (score >= 90) return 3;
-    if (score >= 70) return 2;
+    if (score >= 70) return 3;
+    if (score >= 40) return 2;
     return 1;
   }
 }

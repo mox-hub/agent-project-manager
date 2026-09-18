@@ -2609,7 +2609,6 @@
       "replayEmpty": "No completed executions",
       "replaySelectHint": "Select an execution to inspect",
       "trustEmpty": "No agent trust profiles",
-      "trustScore": "Trust score",
       "recentEvaluations": "Recent evaluations",
       "adjustTrust": "Adjust trust"
     }
@@ -4731,5 +4730,42 @@
       "cancelFilterTooltipBug": "Click to clear AI bug filter",
       "filterTooltipBug": "Click to filter AI executing bugs"
     }
+  },
+  "trust": {
+    "unrated": "Unrated",
+    "unratedDesc": "No trust tier assigned yet",
+    "tier1": {
+      "name": "Observer",
+      "desc": "Can only read context and suggest; every write needs human confirmation",
+      "allow1": "Read project context and documents",
+      "allow2": "Draft plans and suggestions without changing code",
+      "allow3": "Ask for human confirmation before each change"
+    },
+    "tier2": {
+      "name": "Assistant",
+      "desc": "Can run routine changes automatically; results need human acceptance",
+      "allow1": "Run routine code and document changes automatically",
+      "allow2": "Run tests and checks automatically and report results",
+      "allow3": "Changes need human acceptance before merging"
+    },
+    "tier3": {
+      "name": "Trustee",
+      "desc": "Entrusted with routine changes and retries; key results reviewed by human",
+      "allow1": "Run routine changes and retry failed steps automatically",
+      "allow2": "Commit code and open pull requests automatically",
+      "allow3": "Key results are still reviewed by human"
+    },
+    "delegationTitle": "What AI can do automatically at this tier",
+    "redlineTitle": "Red lines: always require human confirmation at any tier",
+    "redlinePublish": "Publishing / releases",
+    "redlineDelete": "Deleting data",
+    "redlineSpending": "Spending money (subscriptions / API billing)",
+    "redlineMembers": "Member and permission changes",
+    "redlineNote": "Red-line actions always require human confirmation at any tier; tiers only govern delegation for routine work.",
+    "currentTier": "Current tier",
+    "adjustTitle": "Adjust trust — {{name}}",
+    "adjustDesc": "Choose a trust tier for this AI member; the tier governs what it may do automatically.",
+    "adjustSaved": "Trust tier updated",
+    "adjustFailed": "Failed to update trust tier"
   }
 }

@@ -91,7 +91,7 @@ export function MemberList({
           ) : (
             <UserIcon className="size-4 shrink-0 text-accent-blue" />
           )}
-          <TrustLevelBadge level={member.trustLevel} score={member.trustScore} />
+          <TrustLevelBadge level={member.trustLevel} />
           <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
             <span
               className={cn(
