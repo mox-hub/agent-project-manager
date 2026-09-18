@@ -210,7 +210,7 @@ describe('AiSurfaceReplayPage · 与实况同源（同一批组件）', () => {
     expect(lanes.length).toBeGreaterThan(0);
     for (const lane of Array.from(lanes)) {
       const title = lane.getAttribute('title') ?? '';
-      expect(title).toMatch(/回放剧本/);
+      expect(title).toMatch(/回放演示/);
       expect(title).not.toMatch(/GET |POST /);
     }
   });

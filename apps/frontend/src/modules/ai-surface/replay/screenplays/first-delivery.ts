@@ -653,7 +653,7 @@ const frames: ScreenplayFrame[] = [
       blockers: [],
       needsYou: [],
       honestGaps: [
-        '这是**回放**：数据来自预置剧本，不是现场跑出来的。真实项目里 AI 会犯错、会卡住、会要你做更多决定',
+        '这是**回放**：数据来自预置演示，不是现场跑出来的。真实项目里 AI 会犯错、会卡住、会要你做更多决定',
       ],
       source: 'ai',
     },
@@ -714,7 +714,7 @@ export const FIRST_DELIVERY_SCREENPLAY: Screenplay = {
   id: 'first-delivery',
   title: '从一句话需求到交付',
   about:
-    '这是一段**回放**：一支预置的交付剧本，用来看清这条管道每一步在干什么、你本人会在哪一步被叫到。它不需要连执行节点，也不需要模型。',
+    '这是一段**回放**：一支预置的交付演示，用来看清这条管道每一步在干什么、你本人会在哪一步被叫到。它不需要连执行节点，也不需要模型。',
   project: { id: PROJECT_ID, name: PROJECT_NAME },
   storyAt: STORY_AT,
   frames,

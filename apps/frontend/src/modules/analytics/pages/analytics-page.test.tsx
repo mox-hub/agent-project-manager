@@ -75,7 +75,7 @@ describe('AnalyticsPage', () => {
 
     // analytics 独有的回顾性内容仍在
     expect(await screen.findByText('项目档案健康')).toBeTruthy();
-    expect(screen.getByText(/剧本健康/)).toBeTruthy();
+    expect(screen.getByText(/项目步骤健康/)).toBeTruthy();
     expect(screen.getByText('项目总数')).toBeTruthy();
     // 与 Dashboard 同源的五项内容移除（真相源 = /app/projects/dashboard）
     expect(screen.queryByText('活跃任务')).toBeNull();

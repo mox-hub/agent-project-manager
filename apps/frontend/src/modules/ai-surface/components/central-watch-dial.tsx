@@ -287,7 +287,7 @@ export function CentralWatchDial({
                 <Activity className="size-3" />
               </div>
               <span className="font-bold text-xs tracking-tight">中央视界</span>
-              <SampleTag title="表盘内四张卡片（拆解链 / 契约 Diff / 验收清单 / 认知共鸣）为示例剧本，尚未接入真实数据源" />
+              <SampleTag title="表盘内四张卡片（拆解链 / 契约 Diff / 验收清单 / 认知共鸣）为示例演示，尚未接入真实数据源" />
             </div>
           </div>
 
