@@ -2322,6 +2322,11 @@ model Release {
   tagPushed      Boolean @default(false)
   githubReleased Boolean @default(false)
 
+  // ── 交付成果清单（CAP-K-03 批二切片）：交付了什么/在哪拿/怎么验证/限制/接收人 ──
+  // 单字段承载：{ items: [{name, location, howToVerify, limitations?, receiver?}], updatedBy?, updatedAt? }
+  // 不建子表（避免发布实体膨胀）；部署状态从外部 CI/CD 回流，本清单只记录交付物与验证口径
+  deliverables   Json?
+
   // ── 里程碑关联（CAP-A-16 计划-交付轴整合）：Release 挂可选里程碑 ──
   milestoneId String?
   milestone   Milestone? @relation("MilestoneReleases", fields: [milestoneId], references: [id], onDelete: SetNull)
