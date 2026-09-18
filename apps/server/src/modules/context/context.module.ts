@@ -12,10 +12,16 @@
  */
 
 import { Module } from '@nestjs/common';
-import { ContextService } from './context.service';
+import { ContextService, CONTEXT_CLOCK } from './context.service';
+
+/** 判龄时钟的生产实现：系统时间（测试可覆盖为固定时钟） */
+export const CONTEXT_CLOCK_PROVIDER = {
+  provide: CONTEXT_CLOCK,
+  useValue: (): Date => new Date(),
+};
 
 @Module({
-  providers: [ContextService],
+  providers: [CONTEXT_CLOCK_PROVIDER, ContextService],
   exports: [ContextService],
 })
 export class ContextModule {}
