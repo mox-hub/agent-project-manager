@@ -52,6 +52,12 @@ tags: "changelog,release"
 | server | **确认后动作（跨模块约定内直写）**：人确认（accept 选「标记待复核」）后，在本域内经 PrismaService 直写 `acceptanceCriteria.updateMany({ where: { id: { in: [...] }, status: { in: [draft, in_review] } }, data: { status: 'pending' } })`——只拉回活跃态标准，已 passed/failed/waived 不回退；**已知余留**：直改不触发标准版本化机制（B-01 分支实现），两级传播完整性待后续切片统一 | CAP-P-01 | 单测断言 updateMany 的 where/data 形状；dismiss/reject 路径断言不动标准 | 决策日志待补（clarify kind 复用裁决） |
 | frontend | **文档详情修订影响提示条（最小挂点）**：`revision-impact-banner` 新组件 + view-page 一处挂载——待确认（黄，跳转决策收件箱）/已确认（绿，N 条已标记待复核）/已不处理（中性弱提示）三态；决策卡本体 UI 零改动；i18n `document.revisionImpact` 双语键齐备 | CAP-P-01 | frontend `tsc -b` 零错误 | — |
 
+### CAP-B-06 ContextPack freshness 按数据源实龄计算——不可信即诚实降级（feat/context-freshness-honesty，2026-09-18）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **上下文时效性诚实化（批二 P1）**：`context.service.ts` 的 `buildContextPack` 曾恒写 `freshness: 'realtime'`（与数据实际年龄无关，用户与 AI 均会误判上下文为当前）。改为按各层数据源实际更新时间（`updatedAt`/`timestamp` 既有字段）与判定时刻的差值映射档位，词表 `fresh \| recent \| stale \| unknown`（<1h fresh、<24h recent、更旧 stale；阈值可经 `CONTEXT_FRESH_MAX_AGE_MS`/`CONTEXT_RECENT_MAX_AGE_MS` 覆盖）；层基准 = 层内数据源最新更新时间（system=project、project=max(工单,活动)、session=max(会话,最新消息)、runtime=workspace）；无可信时间戳（空层/源不存在/非法日期/超容差未来时间戳）一律 `unknown`，绝不回落 realtime。透出 `layerFreshness`（每层档位）+ `freshness`（整体最低档，存在 unknown 层时整体上限压到 recent）+ `freshnessCheckedAt`。旧词表 `realtime` 经 `normalizeContextFreshness` 映射为 `fresh` 仅供读取兼容，输出不再出现。零 migration（freshness 为响应字段，无 DB 列无 REST 契约约束）；该服务已 deprecated 且当前无 REST 出口（openapi 无 context/pack 端点），响应 shape 追加字段不破坏既有键 | CAP-B-06 | context 模块 Vitest 22/22 绿（纯函数实龄映射/阈值边界/诚实降级 16 条 + buildContextPack 分层透出/整体聚合/全 unknown 不谎报 6 条，时钟注入）；`tsc -p tsconfig.build.json --noEmit` 零错误；改动域 eslint 零错误；server 全量 791 用例仅 workflow 套件 1 条并发池环境性 flaky（单跑 9/9 过，与本改动无 import 关联） | 能力清单 CAP-B-06 卡；余留：ai-hub `ContextBuilderService`（当前主路径）不输出 freshness 字段，后续随 deprecated 服务并仓统一补齐；前端 ContextPreviewDialog 依赖的 `/_api/context/snapshot` 端点后端尚不存在（孤儿前端），freshness 展示位待该端点落地时一并接入 |
+
 ### CAP-K-03 交付成果清单——发布交付了什么/在哪拿/怎么验证/限制/接收人（feat/release-deliverables，2026-09-18）
 
 > 批二 P1 切片：发布 ≠ 部署——`released` 终态后用户拿不到「这个版本交付了什么、在哪拿、怎么验证可用、有什么限制、由谁接收」的信号。本切片给 Release 补交付成果清单承载；**边界**：不自建部署平台，部署状态仍从外部 CI/CD 回流；非部署类项目可留空清单不强行加步骤。
