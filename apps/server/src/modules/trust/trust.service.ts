@@ -85,7 +85,8 @@ export class TrustService {
         data: {
           trustScore: profile.trustScore ?? 50,
           // 等级缺失时按分数三级映射兜底（旧档案缺 trustLevel 字段的边界）
-          trustLevel: profile.trustLevel ?? this.scoreToLevel(profile.trustScore ?? 50),
+          trustLevel:
+            profile.trustLevel ?? this.scoreToLevel(profile.trustScore ?? 50),
         },
       });
     } catch (e) {
@@ -246,7 +247,8 @@ export class TrustService {
       return {
         score: profile.trustScore || 50,
         // 等级缺失时按分数三级映射兜底
-        level: profile.trustLevel || this.scoreToLevel(profile.trustScore || 50),
+        level:
+          profile.trustLevel || this.scoreToLevel(profile.trustScore || 50),
       };
     }
 
