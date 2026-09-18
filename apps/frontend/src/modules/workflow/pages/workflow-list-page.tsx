@@ -33,7 +33,7 @@ import {
   useWorkflowEvents,
   useWorkflows,
 } from '../hooks/use-workflows';
-import { useWorkflowDraft } from '@/modules/assistant/hooks/use-workflow-draft';
+import { useWorkflowDraft } from '../hooks/use-workflow-draft';
 import type { WorkflowSummary } from '../api/workflow-api';
 
 type WorkflowViewMode = 'grid' | 'list';
