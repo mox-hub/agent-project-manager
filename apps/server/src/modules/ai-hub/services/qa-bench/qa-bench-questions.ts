@@ -96,7 +96,11 @@ export const QA_BENCH_ENTRIES: readonly QaBenchEntry[] = [
     entityType: 'decision',
     questionStyle: 'field-query',
     question: '这个提案批了没有？',
-    expectation: { mustMentionAny: [['pending', '待审', '待批', '未批', '还没批', '等待审批']] },
+    expectation: {
+      mustMentionAny: [
+        ['pending', '待审', '待批', '未批', '还没批', '等待审批'],
+      ],
+    },
     note: '决策卡状态溯源（pending）',
   },
   {

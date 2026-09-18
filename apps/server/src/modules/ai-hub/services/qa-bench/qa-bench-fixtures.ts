@@ -34,7 +34,11 @@ interface QaEntityFixture {
   boundaryGapPointer: string;
 }
 
-const QA_MEMBER_XIAOMA = { id: 'qa-member-1', displayName: '小码', type: 'ai_agent' };
+const QA_MEMBER_XIAOMA = {
+  id: 'qa-member-1',
+  displayName: '小码',
+  type: 'ai_agent',
+};
 
 const TASK_ROW = {
   id: 'qa-task-1',

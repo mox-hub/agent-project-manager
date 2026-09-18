@@ -178,7 +178,9 @@ export function scoreQaAnswer(
     answerText.includes(s),
   );
   const dates = [...answerText.matchAll(DATE_PATTERN)].map((m) => m[0]);
-  const fabricatedDates = [...new Set(dates.filter((d) => !factsText.includes(d)))];
+  const fabricatedDates = [
+    ...new Set(dates.filter((d) => !factsText.includes(d))),
+  ];
   if (expectation.boundaryExpected) {
     honest = {
       score: hitBoundarySignals.length > 0 ? 1 : 0,

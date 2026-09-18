@@ -41,13 +41,19 @@ import {
 /** 八类实体 × 字段查询题的合格样本（grounded+actionable+honest 全过） */
 const FIELD_QUERY_GOOD_ANSWERS: Record<QaEntityType, string> = {
   task: '{"title":"登录页迁移新网关","summary":"这是一张进行中的任务卡，属于「Apollo 网关迁移」项目。","details":[{"label":"状态","text":"in_progress，进行中"},{"label":"负责人","text":"小码（AI 同事）"}],"nextStep":"建议盯住旧网关下线时间，验收契约还没建，可以先起草验收标准"}',
-  decision: '{"title":"登录页迁移拆解提案","summary":"这是一张还没批的决策卡，处于待审状态。","details":[{"label":"状态","text":"pending，等待审批"},{"label":"提案人","text":"小码"}],"nextStep":"建议到决策收件箱批阅这张卡，批过后会按提案建子任务"}',
-  member: '{"title":"小周","summary":"这是系统内置的 AI 助理成员，当前可用。","details":[{"label":"信任分","text":"80（等级 2）"},{"label":"状态","text":"active"}],"nextStep":"建议可以直接给小周派执行任务，先从低风险任务开始观察信任分变化"}',
-  acceptance: '{"title":"登录页迁移验收","summary":"这个验收还没通过，审计给了红色风险：有关键标准未达标。","details":[{"label":"审计风险","text":"red，有强阻断项不能交付"},{"label":"卡点","text":"「新网关登录成功并跳转首页」还未验收"}],"nextStep":"建议先让执行方补齐登录链路的验证证据，再重新提交验收"}',
-  project: '{"title":"Apollo 网关迁移","summary":"这个项目健康度告警：当前有风险，风险等级高。","details":[{"label":"健康状态","text":"at_risk"},{"label":"负责人","text":"老王"}],"nextStep":"建议先盯风险最高的登录切换项，确认回滚预案是否就绪"}',
+  decision:
+    '{"title":"登录页迁移拆解提案","summary":"这是一张还没批的决策卡，处于待审状态。","details":[{"label":"状态","text":"pending，等待审批"},{"label":"提案人","text":"小码"}],"nextStep":"建议到决策收件箱批阅这张卡，批过后会按提案建子任务"}',
+  member:
+    '{"title":"小周","summary":"这是系统内置的 AI 助理成员，当前可用。","details":[{"label":"信任分","text":"80（等级 2）"},{"label":"状态","text":"active"}],"nextStep":"建议可以直接给小周派执行任务，先从低风险任务开始观察信任分变化"}',
+  acceptance:
+    '{"title":"登录页迁移验收","summary":"这个验收还没通过，审计给了红色风险：有关键标准未达标。","details":[{"label":"审计风险","text":"red，有强阻断项不能交付"},{"label":"卡点","text":"「新网关登录成功并跳转首页」还未验收"}],"nextStep":"建议先让执行方补齐登录链路的验证证据，再重新提交验收"}',
+  project:
+    '{"title":"Apollo 网关迁移","summary":"这个项目健康度告警：当前有风险，风险等级高。","details":[{"label":"健康状态","text":"at_risk"},{"label":"负责人","text":"老王"}],"nextStep":"建议先盯风险最高的登录切换项，确认回滚预案是否就绪"}',
   team: '{"title":"后端突击队","summary":"这是一个团队卡，协作规则是提交前必须跑质量门禁。","details":[{"label":"协作规则","text":"提交前必须跑质量门禁"},{"label":"状态","text":"active"}],"nextStep":"建议新成员先读团队规则，把门禁脚本在本地配置好再提第一批提交"}',
-  'contract-binding': '{"title":"AGENTS.md 契约绑定","summary":"这个绑定现在是冲突态：文件在 Git 里被手改了，系统侧没跟上。","details":[{"label":"绑定模式","text":"synced，观察文件手改"},{"label":"冲突态","text":"conflicted，需要人裁决"}],"nextStep":"建议打开契约详情对比两侧差异，人工确认后解决冲突"}',
-  document: '{"title":"网关迁移需求澄清纪要","summary":"这份文档已经发布，当前是 v3 版。","details":[{"label":"状态","text":"published，已发布"},{"label":"来源","text":"authored，人工撰写"}],"nextStep":"建议把这份纪要作为网关切换验收的对照材料，评审后归档"}',
+  'contract-binding':
+    '{"title":"AGENTS.md 契约绑定","summary":"这个绑定现在是冲突态：文件在 Git 里被手改了，系统侧没跟上。","details":[{"label":"绑定模式","text":"synced，观察文件手改"},{"label":"冲突态","text":"conflicted，需要人裁决"}],"nextStep":"建议打开契约详情对比两侧差异，人工确认后解决冲突"}',
+  document:
+    '{"title":"网关迁移需求澄清纪要","summary":"这份文档已经发布，当前是 v3 版。","details":[{"label":"状态","text":"published，已发布"},{"label":"来源","text":"authored，人工撰写"}],"nextStep":"建议把这份纪要作为网关切换验收的对照材料，评审后归档"}',
 };
 
 /** task 行动题合格样本（能行动：给事实缺口指下一步） */
@@ -84,7 +90,9 @@ function makeBenchService(
 ): { service: AssistantSilentService; chat: Mock } {
   const resolved = stubs.map((stub) => {
     const key = `${stub.model}.${stub.method}`;
-    return key in stubOverrides ? { ...stub, resolves: stubOverrides[key] } : stub;
+    return key in stubOverrides
+      ? { ...stub, resolves: stubOverrides[key] }
+      : stub;
   });
   const chat = vi.fn().mockResolvedValue({
     content: chatContent,
@@ -103,7 +111,10 @@ function makeBenchService(
 }
 
 /** 按实体+问法取问题集条目（id 约定 = `${entityType}-${questionStyle}`） */
-function entryOf(entityType: QaEntityType, style: QaQuestionStyle): QaBenchEntry {
+function entryOf(
+  entityType: QaEntityType,
+  style: QaQuestionStyle,
+): QaBenchEntry {
   return findQaEntry(`${entityType}-${style}`);
 }
 
@@ -152,7 +163,9 @@ describe('CAP-C-07 问答质量基线 · 问题集完备性', () => {
 
   it('八类实体全覆盖，每类三种问法各至少一条', () => {
     for (const entityType of QA_ENTITY_TYPES) {
-      const entries = QA_BENCH_ENTRIES.filter((e) => e.entityType === entityType);
+      const entries = QA_BENCH_ENTRIES.filter(
+        (e) => e.entityType === entityType,
+      );
       expect(entries.length, `${entityType} 条目数`).toBeGreaterThanOrEqual(3);
       for (const style of QA_QUESTION_STYLES) {
         expect(
@@ -209,7 +222,10 @@ describe('CAP-C-07 问答质量基线 · 问题集完备性', () => {
           `${entityType} grounding 探针「${probe}」不在夹具事实中`,
         ).toBe(true);
       }
-      const gap = getByPointer(fixture.expectedFacts, fixture.boundaryGapPointer);
+      const gap = getByPointer(
+        fixture.expectedFacts,
+        fixture.boundaryGapPointer,
+      );
       expect(
         gap ?? null,
         `${entityType} 边界缺口 ${fixture.boundaryGapPointer} 应为 null/缺失`,
@@ -245,11 +261,23 @@ describe('CAP-C-07 问答质量基线 · 三要素评分器', () => {
   });
 
   it('「有依据」：组内任一子串命中即算命中（枚举原值或中文译法）', () => {
-    const byEnum = scoreQaAnswer('状态是 in_progress，可以放心。', taskField, taskFactsText);
-    const byChinese = scoreQaAnswer('任务正在推进中，状态是「进行中」。', taskField, taskFactsText);
+    const byEnum = scoreQaAnswer(
+      '状态是 in_progress，可以放心。',
+      taskField,
+      taskFactsText,
+    );
+    const byChinese = scoreQaAnswer(
+      '任务正在推进中，状态是「进行中」。',
+      taskField,
+      taskFactsText,
+    );
     expect(byEnum.grounded.score).toBe(1);
     expect(byChinese.grounded.score).toBe(1);
-    const missed = scoreQaAnswer('这张卡看起来状态良好。', taskField, taskFactsText);
+    const missed = scoreQaAnswer(
+      '这张卡看起来状态良好。',
+      taskField,
+      taskFactsText,
+    );
     expect(missed.grounded.score).toBe(0);
     expect(missed.missedMentionGroups).toHaveLength(1);
   });
@@ -378,7 +406,11 @@ describe('CAP-C-07 问答质量基线 · 夹具链路（card-explain）', () => 
     );
     expect(goodScore.passed).toBe(true);
 
-    const parrot = await runCardExplain('task', TASK_ACTION_PARROT, 'next-action');
+    const parrot = await runCardExplain(
+      'task',
+      TASK_ACTION_PARROT,
+      'next-action',
+    );
     const parrotScore = scoreQaAnswer(
       cardExplainAnswerToText(parrot.data),
       entry,
@@ -392,7 +424,11 @@ describe('CAP-C-07 问答质量基线 · 夹具链路（card-explain）', () => 
     const fixture = QA_ENTITY_FIXTURES.task;
     const factsText = JSON.stringify(fixture.expectedFacts);
 
-    const honest = await runCardExplain('task', TASK_BOUNDARY_HONEST, 'boundary-probe');
+    const honest = await runCardExplain(
+      'task',
+      TASK_BOUNDARY_HONEST,
+      'boundary-probe',
+    );
     const honestScore = scoreQaAnswer(
       cardExplainAnswerToText(honest.data),
       entry,
@@ -400,7 +436,11 @@ describe('CAP-C-07 问答质量基线 · 夹具链路（card-explain）', () => 
     );
     expect(honestScore.passed).toBe(true);
 
-    const fabricate = await runCardExplain('task', TASK_BOUNDARY_FABRICATE, 'boundary-probe');
+    const fabricate = await runCardExplain(
+      'task',
+      TASK_BOUNDARY_FABRICATE,
+      'boundary-probe',
+    );
     const fabricateScore = scoreQaAnswer(
       cardExplainAnswerToText(fabricate.data),
       entry,
@@ -414,7 +454,9 @@ describe('CAP-C-07 问答质量基线 · 夹具链路（card-explain）', () => 
       (e) => e.questionStyle === 'boundary-probe',
     )) {
       const fixture = QA_ENTITY_FIXTURES[entry.entityType];
-      expect(getByPointer(fixture.expectedFacts, fixture.boundaryGapPointer)).toBeFalsy();
+      expect(
+        getByPointer(fixture.expectedFacts, fixture.boundaryGapPointer),
+      ).toBeFalsy();
     }
   });
 
