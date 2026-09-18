@@ -11,9 +11,16 @@
  * @deprecated 使用 AiHubModule 中的 ContextBuilderService
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
+
+/**
+ * 判龄时钟注入 token。函数类型参数若依赖 Nest 的反射类型元数据会被当作
+ * `Function` token 解析而炸掉 AppModule 启动——必须经 @Inject 显式 token +
+ * ContextModule providers 注册（见 CONTEXT_CLOCK_PROVIDER）。
+ */
+export const CONTEXT_CLOCK = 'CONTEXT_CLOCK';
 
 /**
  * ContextPack freshness 档位词表（由新到旧：fresh > recent > stale）。
@@ -161,7 +168,7 @@ export class ContextService {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
     /** 判龄时钟（可注入以便测试；生产为系统时间） */
-    private readonly clock: () => Date = () => new Date(),
+    @Inject(CONTEXT_CLOCK) private readonly clock: () => Date,
   ) {}
 
   async buildContextPack(projectId: string, issueId?: string) {
