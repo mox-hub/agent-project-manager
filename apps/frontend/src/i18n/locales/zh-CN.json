@@ -2609,7 +2609,6 @@
       "replayEmpty": "暂无已完成的执行",
       "replaySelectHint": "选择一个执行以查看回放",
       "trustEmpty": "暂无智能体信任档案",
-      "trustScore": "信任分",
       "recentEvaluations": "最近评估",
       "adjustTrust": "调整信任"
     }
@@ -4731,5 +4730,42 @@
       "cancelFilterTooltipBug": "点击取消筛选 AI 执行 Bug",
       "filterTooltipBug": "点击一键筛选正在 AI 执行的 Bug"
     }
+  },
+  "trust": {
+    "unrated": "未评估",
+    "unratedDesc": "尚未设定信任等级",
+    "tier1": {
+      "name": "观察者",
+      "desc": "只能读取上下文、给出建议，所有写操作都须人确认后执行",
+      "allow1": "读取项目上下文与文档",
+      "allow2": "起草方案与建议，不直接改动代码",
+      "allow3": "执行任何变更前逐一请求人确认"
+    },
+    "tier2": {
+      "name": "协助者",
+      "desc": "可自动执行常规变更，结果须人验收",
+      "allow1": "自动执行常规代码与文档变更",
+      "allow2": "自动运行测试与检查并反馈结果",
+      "allow3": "变更结果须人验收后才能合入"
+    },
+    "tier3": {
+      "name": "受托者",
+      "desc": "受托执行常规变更并可自行重试，关键结果人审",
+      "allow1": "自动执行常规变更并自行重试失败步骤",
+      "allow2": "自动提交代码与创建 Pull Request",
+      "allow3": "关键结果仍由人审查把关"
+    },
+    "delegationTitle": "该等级 AI 可自动做什么",
+    "redlineTitle": "红线：任何等级都必须由人确认",
+    "redlinePublish": "发布 / 发版",
+    "redlineDelete": "删除数据",
+    "redlineSpending": "花钱（订阅 / API 计费）",
+    "redlineMembers": "成员与权限变更",
+    "redlineNote": "红线操作在任何等级都永远须人确认，等级只决定常规工作的放权范围。",
+    "currentTier": "当前等级",
+    "adjustTitle": "调整信任——{{name}}",
+    "adjustDesc": "选择该 AI 成员的信任等级；等级决定其可自动执行的范围。",
+    "adjustSaved": "信任等级已更新",
+    "adjustFailed": "信任等级更新失败"
   }
 }

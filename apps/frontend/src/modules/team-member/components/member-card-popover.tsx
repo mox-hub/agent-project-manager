@@ -176,7 +176,7 @@ export function MemberCardPopover({
 
           {/* Trust + shortId */}
           <div className="flex items-center justify-between gap-2">
-            <TrustLevelBadge level={card.trustLevel} score={card.trustScore} />
+            <TrustLevelBadge level={card.trustLevel} />
             <button
               type="button"
               onClick={copyShortId}

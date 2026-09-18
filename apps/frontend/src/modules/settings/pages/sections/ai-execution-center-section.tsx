@@ -4,7 +4,7 @@
  * Execution Queue / Approval Center / Replay / Trust Management（保留 ?tab= 深链）
  */
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -25,15 +25,28 @@ import {
 import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
+import { TrustLevelBadge } from '@/modules/team-member/components/trust-level-badge';
+import {
+  MEMBER_TRUST_TIERS,
+  normalizeTrustLevel,
+  trustLevelFromScore,
+  type MemberTrustTierDef,
+} from '@/shared/member/types';
 import {
   Activity,
+  AlertTriangle,
   Bot,
   CheckCircle,
+  CheckCircle2,
   Clock,
+  Eye,
   Play,
   RefreshCw,
   Settings2,
+  Shield,
+  ShieldCheck,
   ThumbsDown,
   ThumbsUp,
   XCircle,
@@ -82,8 +95,8 @@ interface ApprovalRequest {
 interface AgentTrustProfile {
   agentId: string;
   agentName: string;
-  trustLevel: 0 | 1 | 2 | 3;
-  trustScore: number;
+  /** 三级口径：1=观察者 2=协助者 3=受托者（CAP-B-07） */
+  trustLevel: number;
   recentEvaluations: EvaluationRecord[];
 }
 
@@ -185,20 +198,6 @@ function RiskBadge({ level }: { level: ApprovalRequest['riskLevel'] }) {
   return (
     <Badge variant="outline" className={cn('text-xs', conf.className)}>
       {t(conf.label)}
-    </Badge>
-  );
-}
-
-function TrustLevelBadge({ level }: { level: number }) {
-  const config: Record<number, string> = {
-    0: 'bg-accent-red-light text-accent-red',
-    1: 'bg-accent-yellow-light text-accent-yellow',
-    2: 'bg-accent-green-light text-accent-green',
-    3: 'bg-accent-blue-light text-accent-blue',
-  };
-  return (
-    <Badge variant="outline" className={cn('text-xs font-medium', config[level] || config[0])}>
-      L{level}
     </Badge>
   );
 }
@@ -679,7 +678,219 @@ function ExecutionReplayTab() {
   );
 }
 
-// Trust Management Tab
+// ==================== Trust Management Tab（CAP-B-07 三级分级授权） ====================
+
+/** 三级等级视觉：观察者=黄 / 协助者=蓝 / 受托者=绿（与 TrustLevelBadge 口径一致） */
+const TIER_ICON: Record<number, typeof ShieldCheck> = { 1: Eye, 2: Shield, 3: ShieldCheck };
+const TIER_ICON_COLOR: Record<number, string> = {
+  1: 'text-accent-yellow',
+  2: 'text-accent-blue',
+  3: 'text-accent-green',
+};
+
+/** 等级定义卡：等级名 + 一句话定位 + 该级放权清单（静态展示，无门禁联动） */
+function TrustTierCard({ tier }: { tier: MemberTrustTierDef }) {
+  const { t } = useTranslation();
+  const Icon = TIER_ICON[tier.level];
+  return (
+    <Card className="border-border shadow-none">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Icon size={16} className={TIER_ICON_COLOR[tier.level]} />
+          {t(tier.labelKey)}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-xs text-muted-foreground">{t(tier.descKey)}</p>
+        <div className="mt-3 space-y-1.5">
+          <h4 className="text-10 font-medium uppercase tracking-wider text-muted-foreground">
+            {t('trust.delegationTitle')}
+          </h4>
+          {tier.allowKeys.map((key) => (
+            <div key={key} className="flex items-start gap-1.5 text-xs">
+              <CheckCircle2 className="mt-0.5 size-3 shrink-0 text-accent-green" />
+              <span className="text-foreground">{t(key)}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** 红线说明条：任何等级都永远须人确认（本期静态展示，不做门禁联动） */
+function TrustRedlineNote() {
+  const { t } = useTranslation();
+  const redlines = [
+    'trust.redlinePublish',
+    'trust.redlineDelete',
+    'trust.redlineSpending',
+    'trust.redlineMembers',
+  ];
+  return (
+    <div className="rounded-lg border border-accent-red/30 bg-accent-red/5 p-4">
+      <p className="flex items-center gap-2 text-sm font-medium text-accent-red">
+        <AlertTriangle className="size-4 shrink-0" />
+        {t('trust.redlineTitle')}
+      </p>
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        {redlines.map((key) => (
+          <span key={key}>· {t(key)}</span>
+        ))}
+      </div>
+      <p className="mt-2 text-10 text-muted-foreground/80">{t('trust.redlineNote')}</p>
+    </div>
+  );
+}
+
+/** 调整信任：人工选三级等级（保存写 Member.trustLevel，零门禁联动） */
+function AdjustTrustDialog({
+  profile,
+  open,
+  onOpenChange,
+}: {
+  profile: AgentTrustProfile;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [selected, setSelected] = useState<number>(profile.trustLevel);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.patch(`/members/${profile.agentId}`, { trustLevel: selected });
+      toast.success(t('trust.adjustSaved'));
+      queryClient.invalidateQueries({ queryKey: ['agentTrustProfiles'] });
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      onOpenChange(false);
+    } catch {
+      toast.error(t('trust.adjustFailed'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('trust.adjustTitle', { name: profile.agentName })}</DialogTitle>
+          <DialogDescription>{t('trust.adjustDesc')}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          {MEMBER_TRUST_TIERS.map((tier) => {
+            const Icon = TIER_ICON[tier.level];
+            return (
+              <button
+                key={tier.level}
+                type="button"
+                onClick={() => setSelected(tier.level)}
+                className={cn(
+                  'flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors',
+                  selected === tier.level
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:bg-accent/40',
+                )}
+              >
+                <Icon className={cn('mt-0.5 size-4 shrink-0', TIER_ICON_COLOR[tier.level])} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-foreground">
+                    {t(tier.labelKey)}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {t(tier.descKey)}
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    'mt-0.5 size-3.5 shrink-0 rounded-full border',
+                    selected === tier.level
+                      ? 'border-primary bg-primary'
+                      : 'border-muted-foreground/40',
+                  )}
+                />
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-10 text-muted-foreground">{t('trust.redlineNote')}</p>
+        <DialogFooter>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button onClick={save} disabled={saving}>
+            {t('common.save')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** AI 成员档案卡：等级徽标 + 当前等级说明 + 最近评估 + 调整信任入口（不显分数） */
+function AgentTrustCard({ profile }: { profile: AgentTrustProfile }) {
+  const { t } = useTranslation();
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const tier = normalizeTrustLevel(profile.trustLevel);
+  const def = tier !== null ? MEMBER_TRUST_TIERS[tier - 1] : null;
+
+  return (
+    <Card className="border-border shadow-none">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Bot size={16} className="text-accent-purple" />
+            {profile.agentName}
+          </CardTitle>
+          <TrustLevelBadge level={profile.trustLevel} />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-4">
+          <p className="text-10 font-medium uppercase tracking-wider text-muted-foreground">
+            {t('trust.currentTier')}
+          </p>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            {def ? t(def.labelKey) : t('trust.unrated')}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {def ? t(def.descKey) : t('trust.unratedDesc')}
+          </p>
+        </div>
+
+        {profile.recentEvaluations.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-xs font-medium text-muted-foreground">
+              {t('settings.aiExecutionCenter.recentEvaluations')}
+            </h4>
+            {profile.recentEvaluations.slice(0, 3).map((eval_) => {
+              // 评估分数按三级口径折算为等级展示（不显原始分数）
+              const evalTierKey =
+                MEMBER_TRUST_TIERS[trustLevelFromScore(eval_.score) - 1].labelKey;
+              return (
+                <div key={eval_.id} className="flex items-center justify-between text-xs">
+                  <span className="truncate text-foreground">{eval_.taskTitle}</span>
+                  <span className="shrink-0 text-muted-foreground">{t(evalTierKey)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => setAdjustOpen(true)}>
+          <Settings2 className="mr-1 size-3" />
+          {t('settings.aiExecutionCenter.adjustTrust')}
+        </Button>
+
+        <AdjustTrustDialog profile={profile} open={adjustOpen} onOpenChange={setAdjustOpen} />
+      </CardContent>
+    </Card>
+  );
+}
+
 function TrustManagementTab() {
   const { t } = useTranslation();
   const { data: profiles, isLoading } = useAgentTrustProfiles();
@@ -694,52 +905,30 @@ function TrustManagementTab() {
     );
   }
 
-  if (!profiles || profiles.length === 0) {
-    return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-        {t('settings.aiExecutionCenter.trustEmpty')}
-      </div>
-    );
-  }
-
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {profiles.map((profile) => (
-        <Card key={profile.agentId} className="border-border shadow-none">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Bot size={16} className="text-accent-purple" />
-                {profile.agentName}
-              </CardTitle>
-              <TrustLevelBadge level={profile.trustLevel} />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-4">
-              <div className="text-2xl font-bold text-foreground">{profile.trustScore}</div>
-              <p className="text-xs text-muted-foreground">{t('settings.aiExecutionCenter.trustScore')}</p>
-            </div>
+    <div className="space-y-6">
+      {/* 三级等级定义卡：该等级 AI 可自动做什么 */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {MEMBER_TRUST_TIERS.map((tier) => (
+          <TrustTierCard key={tier.level} tier={tier} />
+        ))}
+      </div>
 
-            <div className="space-y-2">
-              <h4 className="text-xs font-medium text-muted-foreground">
-                {t('settings.aiExecutionCenter.recentEvaluations')}
-              </h4>
-              {profile.recentEvaluations.slice(0, 3).map((eval_) => (
-                <div key={eval_.id} className="flex items-center justify-between text-xs">
-                  <span className="truncate text-foreground">{eval_.taskTitle}</span>
-                  <span className="text-muted-foreground">{eval_.score}</span>
-                </div>
-              ))}
-            </div>
+      {/* 红线：任何等级都永远须人确认 */}
+      <TrustRedlineNote />
 
-            <Button variant="outline" size="sm" className="mt-4 w-full">
-              <Settings2 className="mr-1 size-3" />
-              {t('settings.aiExecutionCenter.adjustTrust')}
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
+      {/* AI 成员信任档案 */}
+      {!profiles || profiles.length === 0 ? (
+        <div className="flex h-40 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
+          {t('settings.aiExecutionCenter.trustEmpty')}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {profiles.map((profile) => (
+            <AgentTrustCard key={profile.agentId} profile={profile} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

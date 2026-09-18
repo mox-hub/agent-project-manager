@@ -2051,11 +2051,11 @@ export function DesignSystemPage() {
                 <AvatarModernizationShowcase />
               </div>
               <div>
-                <SubLabel>TrustLevelBadge（信任等级 L0-L4）</SubLabel>
+                <SubLabel>TrustLevelBadge（信任三级：观察者/协助者/受托者）</SubLabel>
                 <div className="flex items-center gap-2 flex-wrap">
                   <TrustLevelBadge level={null} />
-                  {[0, 1, 2, 3, 4].map((level) => (
-                    <TrustLevelBadge key={level} level={level} score={40 + level * 15} />
+                  {[1, 2, 3].map((level) => (
+                    <TrustLevelBadge key={level} level={level} />
                   ))}
                 </div>
               </div>
@@ -3544,7 +3544,7 @@ export function DesignSystemPage() {
                               </div>
                               <p className="text-11 text-muted-foreground truncate">资深全栈架构师 · @alex</p>
                               <div className="flex items-center gap-1.5 mt-1">
-                                <TrustLevelBadge level={2} score={88} />
+                                <TrustLevelBadge level={2} />
                                 <Badge variant="outline" className="text-10 py-0">PR 评审 / 生产发布</Badge>
                               </div>
                             </div>
@@ -3619,7 +3619,7 @@ export function DesignSystemPage() {
                               </div>
                               <p className="text-11 text-muted-foreground truncate">全栈执行 Agent · Claude 3.7 Sonnet</p>
                               <div className="flex items-center gap-1.5 mt-1">
-                                <TrustLevelBadge level={3} score={92} />
+                                <TrustLevelBadge level={3} />
                                 <Badge variant="outline" className="text-10 py-0">自主编码权限</Badge>
                               </div>
                             </div>
@@ -3688,7 +3688,7 @@ export function DesignSystemPage() {
                             </div>
                             <p className="text-11 text-muted-foreground truncate">资深全栈架构师 · @alex</p>
                             <div className="flex items-center gap-1.5 mt-1">
-                              <TrustLevelBadge level={2} score={88} />
+                              <TrustLevelBadge level={2} />
                               <Badge variant="outline" className="text-10 py-0">PR 评审 / 生产发布</Badge>
                             </div>
                           </div>
@@ -3747,7 +3747,7 @@ export function DesignSystemPage() {
                             </div>
                             <p className="text-11 text-muted-foreground truncate">全栈执行 Agent · Claude 3.7 Sonnet</p>
                             <div className="flex items-center gap-1.5 mt-1">
-                              <TrustLevelBadge level={3} score={92} />
+                              <TrustLevelBadge level={3} />
                               <Badge variant="outline" className="text-10 py-0">自主编码权限</Badge>
                             </div>
                           </div>
