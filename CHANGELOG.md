@@ -52,6 +52,14 @@ tags: "changelog,release"
 | server | **确认后动作（跨模块约定内直写）**：人确认（accept 选「标记待复核」）后，在本域内经 PrismaService 直写 `acceptanceCriteria.updateMany({ where: { id: { in: [...] }, status: { in: [draft, in_review] } }, data: { status: 'pending' } })`——只拉回活跃态标准，已 passed/failed/waived 不回退；**已知余留**：直改不触发标准版本化机制（B-01 分支实现），两级传播完整性待后续切片统一 | CAP-P-01 | 单测断言 updateMany 的 where/data 形状；dismiss/reject 路径断言不动标准 | 决策日志待补（clarify kind 复用裁决） |
 | frontend | **文档详情修订影响提示条（最小挂点）**：`revision-impact-banner` 新组件 + view-page 一处挂载——待确认（黄，跳转决策收件箱）/已确认（绿，N 条已标记待复核）/已不处理（中性弱提示）三态；决策卡本体 UI 零改动；i18n `document.revisionImpact` 双语键齐备 | CAP-P-01 | frontend `tsc -b` 零错误 | — |
 
+### CAP-C-01 assistant 领域 hook 归还各域——会话壳只留会话与静默协议（feat/assistant-hook-return，2026-09-18）
+
+> 纯架构整理、零行为变更：`modules/assistant/hooks/` 曾承载属其他域的语义 hook（god module 风险），本次按「消费方所在域」归还，assistant 仅保留会话壳与静默协议。全部改动为文件移动（git mv 保历史）+ import 路径更新，hook 逻辑零改动，无 facade 转发文件。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **领域 hook 归还（5 个）**：`use-workflow-draft` → `modules/workflow/hooks/`（workflow 域）；`use-grill`（含测试）→ `modules/project/hooks/`（grill 组件消费方所在域）；`use-interview-dynamic` / `use-interview-prefill` / `use-intake-composite` → `modules/project/hooks/`（playbook 组件与 playbook 页消费方所在域；前端无独立 playbook 目录，按消费方所在域判定，与既有 `use-playbook.ts` 同域聚合）。**留存 assistant（6 个）**：会话壳 `use-assistant-chat` / `use-assistant-session`、执行桥 `use-assistant-dispatch`、状态推导 `use-assistant-status`、静默协议 `use-silent-ai` / `use-anchor-qa`。消费方 8 文件 import 同步更新 | CAP-C-01 | 受影响模块 vitest 21 文件 101 用例全绿（project/assistant hooks + grill/playbook 组件 + intake 回归 14 文件 57 用例；workflow + create-dialog 消费方 7 文件 44 用例）；`tsc -b` 零错误；涉事文件 eslint 零告警 | — |
+
 ### Fixed
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
