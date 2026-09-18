@@ -20,8 +20,8 @@ import type {
 } from '../../api/playbook-api';
 import { useSubmitInterview } from '../../hooks/use-playbook';
 import { InterviewChat } from './interview-chat';
-import { useInterviewPrefill } from '@/modules/assistant/hooks/use-interview-prefill';
-import type { InterviewPrefillAnswer } from '@/modules/assistant/hooks/use-interview-prefill';
+import { useInterviewPrefill } from '../../hooks/use-interview-prefill';
+import type { InterviewPrefillAnswer } from '../../hooks/use-interview-prefill';
 
 interface InterviewDialogProps {
   projectId: string;

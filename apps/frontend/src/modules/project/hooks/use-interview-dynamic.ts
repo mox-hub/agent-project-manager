@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { assistantApi } from '../api/assistant-api';
+import { assistantApi } from '@/modules/assistant/api/assistant-api';
 import {
   parseInterviewPrefill,
   type InterviewPrefillAnswer,

@@ -10,7 +10,7 @@ import { GrillInterview } from './grill-interview';
 const mockMutate = vi.hoisted(() => vi.fn());
 const mockReset = vi.hoisted(() => vi.fn());
 
-vi.mock('@/modules/assistant/hooks/use-grill', () => ({
+vi.mock('../../hooks/use-grill', () => ({
   useGrill: vi.fn(() => ({
     mutate: mockMutate,
     reset: mockReset,

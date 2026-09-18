@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { useGrill, type GrillChoice, type GrillSummary, type GrillTurn } from '@/modules/assistant/hooks/use-grill';
+import { useGrill, type GrillChoice, type GrillSummary, type GrillTurn } from '../../hooks/use-grill';
 
 interface GrillInterviewProps {
   /** 摘要确认后交给宿主（创建项目 + 跳转） */

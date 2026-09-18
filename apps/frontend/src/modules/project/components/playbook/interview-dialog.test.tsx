@@ -68,7 +68,7 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
   /** 默认形态为 AI 会话：切到「直接填写」并 mock 好动态访谈 hook */
   async function setupInFormMode() {
     const user = userEvent.setup();
-    const dynamicModule = await import('@/modules/assistant/hooks/use-interview-dynamic');
+    const dynamicModule = await import('../../hooks/use-interview-dynamic');
     vi.spyOn(dynamicModule, 'useInterviewDynamic').mockReturnValue({
       mutate: vi.fn(),
       reset: vi.fn(),
@@ -83,7 +83,7 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
 
   it('默认进入 AI 会话形态并自动出第一问；choices 点击即作为回答触发下一轮', async () => {
     const user = userEvent.setup();
-    const dynamicModule = await import('@/modules/assistant/hooks/use-interview-dynamic');
+    const dynamicModule = await import('../../hooks/use-interview-dynamic');
     const dynamicMutate = vi.fn(
       (_input: unknown, opts?: { onSuccess?: (v: unknown) => void }) => {
         opts?.onSuccess?.({ kind: 'question', question: '记录的决定谁来查？', choices: ['行政', '全员'] });
@@ -116,7 +116,7 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
   });
 
   it('AI 收敛：答案集只填空回填表单并自动切换形态，已手填字段不覆盖', async () => {
-    const dynamicModule = await import('@/modules/assistant/hooks/use-interview-dynamic');
+    const dynamicModule = await import('../../hooks/use-interview-dynamic');
     const dynamicMutate = vi.fn(
       (_input: unknown, opts?: { onSuccess?: (v: unknown) => void }) => {
         opts?.onSuccess?.({
@@ -192,7 +192,7 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
       error: null,
     } as never);
 
-    const dynamicModule = await import('@/modules/assistant/hooks/use-interview-dynamic');
+    const dynamicModule = await import('../../hooks/use-interview-dynamic');
     vi.spyOn(dynamicModule, 'useInterviewDynamic').mockReturnValue({
       mutate: vi.fn(),
       reset: vi.fn(),
@@ -247,7 +247,7 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
       ]);
     });
     const prefillReset = vi.fn();
-    const prefillModule = await import('@/modules/assistant/hooks/use-interview-prefill');
+    const prefillModule = await import('../../hooks/use-interview-prefill');
     vi.spyOn(prefillModule, 'useInterviewPrefill').mockReturnValue({
       mutate: prefillMutate,
       reset: prefillReset,

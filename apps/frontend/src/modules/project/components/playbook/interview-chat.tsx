@@ -6,11 +6,11 @@ import { cn } from '@/lib/utils';
 import {
   useInterviewDynamic,
   type DynamicInterviewTurn,
-} from '@/modules/assistant/hooks/use-interview-dynamic';
+} from '../../hooks/use-interview-dynamic';
 import type {
   InterviewPrefillAnswer,
   InterviewPrefillQuestion,
-} from '@/modules/assistant/hooks/use-interview-prefill';
+} from '../../hooks/use-interview-prefill';
 
 interface InterviewChatProps {
   projectId: string;
