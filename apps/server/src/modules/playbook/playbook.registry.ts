@@ -84,7 +84,7 @@ const SOFTWARE_FULL_CYCLE: PlaybookTemplate = {
   key: 'software-full-cycle',
   name: '软件项目全流程',
   description:
-    '从调研到验收的托管剧本：每阶段访谈收集信息、产出正式工件、闸门由你拍板。',
+    '从调研到验收的托管型项目步骤：每阶段访谈收集信息、产出正式工件、闸门由你拍板。',
   audience: 'novice',
   stages: [
     {
@@ -320,7 +320,7 @@ const SOFTWARE_FULL_CYCLE: PlaybookTemplate = {
 
 const MAINTENANCE_LIGHT: PlaybookTemplate = {
   key: 'maintenance-light',
-  name: '维护型轻剧本',
+  name: '维护轻量项目步骤',
   description:
     '半途接入项目的日常维护循环：变更受理 → 影响分析 → 审批 → 执行 → 验收。',
   audience: 'maintenance',
@@ -631,10 +631,10 @@ const REQUIREMENT_PIPELINE: PlaybookTemplate = {
       },
       gate: {
         title: '验收草案已产出，确认完成需求承接？',
-        detail: '确认后本剧本走完：需求已带着验收标准进入执行管道。',
+        detail: '确认后本流程走完：需求已带着验收标准进入执行管道。',
         consequences: [
           '验收草案归档为项目文档，供验收阶段比对',
-          '剧本游标走完，工程任务按拆解清单跟踪',
+          '项目步骤游标走完，工程任务按拆解清单跟踪',
           '若驳回：验收标准不可检查，修订后重新提交',
         ],
       },

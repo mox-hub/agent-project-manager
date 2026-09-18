@@ -229,7 +229,7 @@ export class PlaybookService {
   ): Promise<PlaybookStatusResponseDto> {
     const template = getPlaybookTemplate(dto.playbookRef);
     if (!template) {
-      throw new NotFoundException(`未知剧本模板：${dto.playbookRef}`);
+      throw new NotFoundException(`未知项目步骤模板：${dto.playbookRef}`);
     }
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
@@ -394,11 +394,13 @@ export class PlaybookService {
       ? getPlaybookTemplate(project.playbookRef)
       : null;
     if (!template || !project.lifecycleStage) {
-      throw new BadRequestException('项目未挂载剧本，请先在流程页选择剧本');
+      throw new BadRequestException('项目未挂载项目步骤，请先在流程页选择');
     }
     const stage = getStage(template.key, stageKey);
     if (!stage)
-      throw new NotFoundException(`剧本 ${template.key} 无阶段 ${stageKey}`);
+      throw new NotFoundException(
+        `项目步骤 ${template.key} 无阶段 ${stageKey}`,
+      );
     if (project.lifecycleStage !== stageKey) {
       throw new BadRequestException(
         `当前游标在「${project.lifecycleStage}」，只能操作当前阶段`,
@@ -441,7 +443,8 @@ const PLAYBOOK_EVENT_SUMMARY: Record<
   (typeof PLAYBOOK_EVENT_TYPES)[number],
   (meta: Record<string, unknown>) => string
 > = {
-  playbook_mounted: (m) => `挂载剧本「${m.templateKey}」，游标拨到 ${m.stage}`,
+  playbook_mounted: (m) =>
+    `挂载项目步骤「${m.templateKey}」，游标拨到 ${m.stage}`,
   playbook_stage_completed: (m) => `阶段「${m.stage}」通过闸门`,
   playbook_stage_skipped: (m) =>
     `跳过阶段「${m.stage}」${m.reason ? `：${m.reason}` : ''}`,
