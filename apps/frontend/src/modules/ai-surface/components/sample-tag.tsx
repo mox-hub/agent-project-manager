@@ -26,7 +26,7 @@ export function SampleTag({ className, title }: { className?: string; title?: st
         'shrink-0 rounded-full bg-accent-yellow/15 px-1.5 py-0.5 font-mono text-10 font-medium text-accent-yellow',
         className,
       )}
-      title={title ?? '本区域内容为示例剧本，尚未接入真实数据源'}
+      title={title ?? '本区域内容为示例演示，尚未接入真实数据源'}
     >
       示例
     </span>

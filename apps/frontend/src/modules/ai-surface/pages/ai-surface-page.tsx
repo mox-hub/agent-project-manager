@@ -222,7 +222,7 @@ export function AiSurfacePage() {
             type="button"
             onClick={() => navigate('/app/ai-surface/replay')}
             className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-11 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            title="回放一段预置剧本：从一句需求到交付，不需要 runtime、不需要 API key"
+            title="回放一段预置演示：从一句需求到交付，不需要 runtime、不需要 API key"
             data-ai-action="ai-surface.replay.enter"
           >
             <Rewind className="size-3.5" />

@@ -1039,7 +1039,7 @@
       "cancelled": "Marked cancelled",
       "budgetUpdated": "Budget updated",
       "clarified": "Answer recorded, AI can proceed",
-      "gatePassed": "Gate passed, playbook advanced to the next stage",
+      "gatePassed": "Gate passed, moved on to the next stage",
       "gateRejected": "Gate rejected — on record, you can redo the interview",
       "workflowApplied": "Workflow saved and activated",
       "releaseApproved": "Release approved — publishing starting",
@@ -1395,11 +1395,11 @@
     "init": {
       "grilled": {
         "title": "AI requirement clarification done",
-        "desc": "A clarification brief was generated from your conversation, and the Requirement Intake playbook was mounted automatically — continue the interview to turn the requirement into tasks and acceptance criteria.",
+        "desc": "A clarification brief was generated from your conversation, and the Requirement Intake project steps were mounted automatically — continue the interview to turn the requirement into tasks and acceptance criteria.",
         "scope": "In scope",
         "nonGoals": "Out of scope",
         "acceptance": "How done is defined",
-        "gotoPlaybook": "Finish the playbook interview (AI prefill supported)"
+        "gotoPlaybook": "Finish the intake interview (AI prefill supported)"
       },
       "workspace": {
         "title": "Bind workspace directory",
@@ -1413,10 +1413,10 @@
         "title": "Next steps",
         "desc": "Your project is ready — keep configuring or jump straight in",
         "playbook": {
-          "title": "Enter playbook flow",
-          "desc": "Interview-style project intake that generates a full playbook",
-          "titleGrilled": "Finish the playbook interview",
-          "descGrilled": "The Requirement Intake playbook is mounted; AI prefill drafts answers from the brief"
+          "title": "Enter project steps",
+          "desc": "Interview-style project intake that generates the full project steps",
+          "titleGrilled": "Finish the intake interview",
+          "descGrilled": "The Requirement Intake project steps are mounted; AI prefill drafts answers from the brief"
         },
         "profile": {
           "title": "Import existing repository",
@@ -1552,13 +1552,13 @@
       "staleHint": "These slots haven't been refreshed in a while while the area changed recently — consider re-running archaeology"
     },
     "playbookPage": {
-      "title": "Playbook",
-      "description": "Mount a playbook and AI advances stage by stage: plain-language interviews, formal artifacts, gates decided by you. Stages can be skipped — skips stay on record.",
-      "loadFailed": "Failed to load playbook",
-      "pickHint": "Pick a playbook to mount on this project (adjustable anytime):",
+      "title": "Project steps",
+      "description": "Mount the project steps and AI advances stage by stage: plain-language interviews, formal artifacts, gates decided by you. Stages can be skipped — skips stay on record.",
+      "loadFailed": "Failed to load project steps",
+      "pickHint": "Pick a project steps template to mount on this project (adjustable anytime):",
       "audienceNovice": "Guided",
       "audienceMaintenance": "Maintenance",
-      "mount": "Mount playbook",
+      "mount": "Mount project steps",
       "statusDone": "Passed",
       "statusActive": "In progress",
       "statusSkipped": "Skipped",
@@ -1630,7 +1630,7 @@
     "detail": {
       "loading": "Loading project...",
       "loadFailed": "Failed to load project",
-      "playbook": "Playbook",
+      "playbook": "Project steps",
       "loadFailedDesc": "The project could not be loaded. It may not exist or you may not have permission to view it.",
       "backToProjects": "Back to Projects",
       "dashboard": "Dashboard",

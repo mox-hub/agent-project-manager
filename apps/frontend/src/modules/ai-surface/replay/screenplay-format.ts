@@ -42,7 +42,7 @@ export const SCREENPLAY_FORMAT_VERSION = 1;
  * 剧本帧里的计数**不是**从任何端点取的，若沿用实况的 `source`（如「GET /documents/stats」）
  * 就等于让悬停提示说一句假话——而这正是本页反复在治的那类错误。故回放态一律改标此值。
  */
-export const REPLAY_SOURCE_LABEL = '回放剧本（预置快照，非实时取数）';
+export const REPLAY_SOURCE_LABEL = '回放演示（预置快照，非实时取数）';
 
 /** 单站某时刻的事实。`null` = 该帧对此站没有口径（**不是 0**） */
 export interface ScreenplayLaneFacts {
