@@ -415,6 +415,22 @@
       "rejected": "Rejected back to draft",
       "reopened": "Draft reopened",
       "logTitle": "Publish execution log"
+    },
+    "deliverables": {
+      "title": "Deliverables checklist",
+      "edit": "Edit checklist",
+      "empty": "No deliverables recorded yet — document what was delivered, where to get it and how to verify it, so receivers don't have to ask around",
+      "addItem": "Add item",
+      "remove": "Remove item",
+      "saved": "Deliverables checklist saved",
+      "requiredMissing": "Item {{index}} is missing required fields: what was delivered / where to get it / how to verify it",
+      "field": {
+        "name": "What was delivered",
+        "location": "Where to get it",
+        "howToVerify": "How to verify",
+        "limitations": "Limitations / known issues (optional)",
+        "receiver": "Receiver (optional)"
+      }
     }
   },
   "workflow": {

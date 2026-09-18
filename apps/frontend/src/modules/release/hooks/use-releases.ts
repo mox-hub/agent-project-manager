@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   releaseApi,
   type CreateReleaseRequest,
+  type ReleaseDeliverableItem,
   type ReleaseStatus,
   type UpdateReleaseRequest,
 } from '../api/release-api';
@@ -61,6 +62,16 @@ export function useUpdateRelease(releaseId: string) {
   const invalidate = useInvalidateReleases();
   return useMutation({
     mutationFn: (data: UpdateReleaseRequest) => releaseApi.update(releaseId, data),
+    onSuccess: () => invalidate(releaseId),
+  });
+}
+
+/** 更新交付成果清单（CAP-K-03 批二）：全量替换，任意状态可改 */
+export function useUpdateDeliverables(releaseId: string) {
+  const invalidate = useInvalidateReleases();
+  return useMutation({
+    mutationFn: (deliverables: ReleaseDeliverableItem[]) =>
+      releaseApi.updateDeliverables(releaseId, deliverables),
     onSuccess: () => invalidate(releaseId),
   });
 }

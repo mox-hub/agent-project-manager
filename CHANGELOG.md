@@ -52,6 +52,15 @@ tags: "changelog,release"
 | server | **确认后动作（跨模块约定内直写）**：人确认（accept 选「标记待复核」）后，在本域内经 PrismaService 直写 `acceptanceCriteria.updateMany({ where: { id: { in: [...] }, status: { in: [draft, in_review] } }, data: { status: 'pending' } })`——只拉回活跃态标准，已 passed/failed/waived 不回退；**已知余留**：直改不触发标准版本化机制（B-01 分支实现），两级传播完整性待后续切片统一 | CAP-P-01 | 单测断言 updateMany 的 where/data 形状；dismiss/reject 路径断言不动标准 | 决策日志待补（clarify kind 复用裁决） |
 | frontend | **文档详情修订影响提示条（最小挂点）**：`revision-impact-banner` 新组件 + view-page 一处挂载——待确认（黄，跳转决策收件箱）/已确认（绿，N 条已标记待复核）/已不处理（中性弱提示）三态；决策卡本体 UI 零改动；i18n `document.revisionImpact` 双语键齐备 | CAP-P-01 | frontend `tsc -b` 零错误 | — |
 
+### CAP-K-03 交付成果清单——发布交付了什么/在哪拿/怎么验证/限制/接收人（feat/release-deliverables，2026-09-18）
+
+> 批二 P1 切片：发布 ≠ 部署——`released` 终态后用户拿不到「这个版本交付了什么、在哪拿、怎么验证可用、有什么限制、由谁接收」的信号。本切片给 Release 补交付成果清单承载；**边界**：不自建部署平台，部署状态仍从外部 CI/CD 回流；非部署类项目可留空清单不强行加步骤。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **Release 交付成果清单承载**：schema `Release` 新增 `deliverables Json?`（单字段承载 `{ items: [{name, location, howToVerify, limitations?, receiver?}], updatedBy, updatedAt }`，不建子表避免发布实体膨胀）+ migration；`ReleaseDto` 下发 `deliverables`（查看随详情端点免费获得）；新增 `PUT /releases/:id/deliverables` 全量替换端点（任意状态可改，released 后仍可补录交付信息；记录操作人 updatedBy/updatedAt）；`assertDeliverableItems` 必填口径服务层兜底（name/location/howToVerify trim 非空；limitations/receiver 可选；空数组=清空合法）+ DTO `@ValidateNested` 管道校验双保险 | CAP-K-03 | `release-deliverables.spec` 7 用例绿（必填口径 4 + 存取 roundtrip/全量替换与操作人/404 与兜底不落库 3）；release 域 31 用例回归绿；契约三件套 `contract:export`/`generate`/`check` 零漂移（openapi +186 行纯新增，双端 api-types.gen.ts 同步 +105 行） | 能力清单 CAP-K-03 卡（交付成果清单切片） |
+| frontend | **交付成果清单卡片**：release 详情页新增 `ReleaseDeliverablesCard`（展示态：名称/在哪拿/怎么验证/限制/接收人逐项卡片；编辑态：行级增删改 + 客户端必填先行提示与服务端同口径，保存走 PUT 全量替换）；`useUpdateDeliverables` hook + `releaseApi.updateDeliverables`；i18n `release.deliverables` 双语 12 键齐备（zh-CN/en 键集合一致） | CAP-K-03 | `release-pages.test` 8 用例绿（新增清单五字段渲染 + 空态 2 条）；frontend `tsc -b` 零错误 | — |
+
 ### Fixed
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

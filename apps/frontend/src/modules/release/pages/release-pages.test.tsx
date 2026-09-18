@@ -25,6 +25,9 @@ vi.mock('react-i18next', () => ({
         'release.action.title': '审批与发布',
         'release.detail.logTitle': '发布执行日志',
         'release.detail.loading': '发版详情',
+        'release.deliverables.title': '交付成果清单',
+        'release.deliverables.edit': '编辑清单',
+        'release.deliverables.empty': '尚未登记交付成果',
         'release.create.basis': '基线 {{base}}',
         'release.create.open': '创建发版',
         'release.create.milestoneLabel': '所属里程碑（可选）',
@@ -95,6 +98,7 @@ vi.mock('../hooks/use-releases', () => ({
   useRejectRelease: () => ({ mutate: vi.fn(), isPending: false }),
   useReopenRelease: () => ({ mutate: vi.fn(), isPending: false }),
   useRecommendVersion: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateDeliverables: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 function renderWithRouter(ui: React.ReactElement, route = '/') {
@@ -196,5 +200,54 @@ describe('ReleaseDetailPage', () => {
     renderWithRouter(<ReleaseDetailPage />, '/r-1');
     expect(screen.getByText('release.action.requestApproval')).toBeTruthy();
     expect(screen.getByText('release.action.reject')).toBeTruthy();
+  });
+
+  it('渲染交付成果清单：名称/在哪拿/怎么验证/限制/接收人（CAP-K-03 批二）', () => {
+    detailState.release = {
+      id: 'r-1',
+      projectId: 'p-1',
+      version: '1.2.0',
+      status: 'released',
+      tagPushed: true,
+      githubReleased: false,
+      deliverables: {
+        items: [
+          {
+            name: '桌面安装包 v1.2.0',
+            location: 'github.com/mox-hub/apm/releases/tag/v1.2.0',
+            howToVerify: '安装后登录成功，验收单全绿',
+            limitations: '仅支持 x64',
+            receiver: '运维值班',
+          },
+        ],
+        updatedBy: 'user-1',
+        updatedAt: '2026-09-17T00:00:00Z',
+      },
+    };
+    renderWithRouter(<ReleaseDetailPage />, '/r-1');
+    expect(screen.getByText('交付成果清单')).toBeTruthy();
+    expect(screen.getByText('桌面安装包 v1.2.0')).toBeTruthy();
+    expect(
+      screen.getByText(/github\.com\/mox-hub\/apm\/releases\/tag\/v1\.2\.0/),
+    ).toBeTruthy();
+    expect(screen.getByText(/安装后登录成功/)).toBeTruthy();
+    expect(screen.getByText(/仅支持 x64/)).toBeTruthy();
+    expect(screen.getByText(/运维值班/)).toBeTruthy();
+    expect(screen.getByText('编辑清单')).toBeTruthy();
+  });
+
+  it('交付成果清单空态文案（尚未登记时不渲染编辑行）', () => {
+    detailState.release = {
+      id: 'r-1',
+      projectId: 'p-1',
+      version: '1.2.0',
+      status: 'released',
+      tagPushed: true,
+      githubReleased: false,
+      deliverables: null,
+    };
+    renderWithRouter(<ReleaseDetailPage />, '/r-1');
+    expect(screen.getByText('交付成果清单')).toBeTruthy();
+    expect(screen.getByText('尚未登记交付成果')).toBeTruthy();
   });
 });

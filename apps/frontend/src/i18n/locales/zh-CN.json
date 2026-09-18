@@ -415,6 +415,22 @@
       "rejected": "已打回草案",
       "reopened": "已重开草案",
       "logTitle": "发布执行日志"
+    },
+    "deliverables": {
+      "title": "交付成果清单",
+      "edit": "编辑清单",
+      "empty": "尚未登记交付成果——写清交付了什么、在哪拿、怎么验证可用，接收人才不用到处问",
+      "addItem": "添加一项",
+      "remove": "移除该项",
+      "saved": "交付成果清单已保存",
+      "requiredMissing": "第 {{index}} 项必填未填全：交付了什么 / 在哪拿 / 怎么验证可用",
+      "field": {
+        "name": "交付了什么",
+        "location": "在哪拿",
+        "howToVerify": "怎么验证可用",
+        "limitations": "限制/已知问题（可选）",
+        "receiver": "接收人（可选）"
+      }
     }
   },
   "workflow": {
