@@ -165,7 +165,7 @@ describe('PlaybookService', () => {
       lifecycleStage: 'research',
     };
 
-    it('未挂载剧本拒绝', async () => {
+    it('未挂载项目步骤拒绝', async () => {
       const { service } = buildHarness({ project: {} });
       await expect(
         service.submitInterview('p1', 'research', { answers: [] }, user.id),
