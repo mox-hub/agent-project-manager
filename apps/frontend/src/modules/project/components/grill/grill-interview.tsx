@@ -97,7 +97,7 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
         <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 text-xs text-muted-foreground">
           <Sparkles className="mt-0.5 size-3.5 shrink-0 text-accent-purple" />
           <span>
-            需求已经拷问清楚啦。确认或修改下面的摘要，创建后它会被存为「需求澄清纪要」，并自动挂上需求承接剧本。
+            需求已经拷问清楚啦。确认或修改下面的摘要，创建后它会被存为「需求澄清纪要」，并自动挂上「需求承接」项目步骤。
           </span>
         </div>
         <div className="space-y-3 rounded-lg border border-border bg-content-bg-secondary/30 p-3">

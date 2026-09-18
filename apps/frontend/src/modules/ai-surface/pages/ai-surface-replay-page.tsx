@@ -61,12 +61,12 @@ export function AiSurfaceReplayPage() {
   if (!screenplay || !frame || !facts) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-content-bg p-8 text-center text-foreground">
-        <p className="text-sm font-semibold">回放剧本读不出来，无法播放</p>
+        <p className="text-sm font-semibold">回放演示读不出来，无法播放</p>
         <ul className="max-w-lg space-y-1 text-11 text-muted-foreground">
           {PARSED.drops.map((drop) => (
             <li key={`${drop.where}:${drop.why}`}>{`${drop.where}：${drop.why}`}</li>
           ))}
-          {PARSED.drops.length === 0 && <li>剧本里没有任何一帧可用</li>}
+          {PARSED.drops.length === 0 && <li>演示数据里没有任何一帧可用</li>}
         </ul>
         <button
           type="button"
@@ -103,7 +103,7 @@ export function AiSurfaceReplayPage() {
             {/* 回放是这一屏**最主要**的事实，故用与实时徽标同级的位置与权重标注 */}
             <span
               className="ml-1 rounded-full bg-accent-purple/15 px-2 py-0.5 font-mono text-10 font-medium text-accent-purple"
-              title="这是预置剧本的回放，不是现场执行；每一格数字都标了来源"
+              title="这是预置演示的回放，不是现场执行；每一格数字都标了来源"
             >
               回放
             </span>
@@ -170,8 +170,8 @@ export function AiSurfaceReplayPage() {
       <div className="relative z-10 mx-auto grid w-full max-w-[1100px] gap-4 px-6 pb-2 pt-2 lg:grid-cols-[2fr_1fr]">
         <PipelineLaneStripView
           lanes={facts.lanes}
-          scopeNote="回放剧本"
-          statusNote="来自预置剧本，非实时取数（悬停看逐格溯源）"
+          scopeNote="回放演示"
+          statusNote="来自预置演示，非实时取数（悬停看逐格溯源）"
           onOpenStage={() => {
             // 跳站在控制条里（那是回放真的能做的事）。此处**不**跳页：
             // 剧本里的计数不对应任何真实记录，跳过去只会看到一个不相干的空列表。
@@ -181,7 +181,7 @@ export function AiSurfaceReplayPage() {
           queue={facts.queue}
           isPending={false}
           isError={false}
-          sourceNote="来自预置剧本，非收件箱实时数据"
+          sourceNote="来自预置演示，非收件箱实时数据"
           onAction={() => {
             // 只读：动作栏已被 readOnly 整条隐藏，此回调不可达。
             // 留一个空实现而非 `undefined`，是因为 DecisionCard 的签名要求它；
@@ -189,7 +189,7 @@ export function AiSurfaceReplayPage() {
           }}
           busyId={null}
           readOnly
-          readOnlyNote="回放中的数据是预置剧本，这里不能拍板。真实拍板请在盯盘面的「该你了」，或去决策收件箱。"
+          readOnlyNote="回放中的数据是预置演示，这里不能拍板。真实拍板请在盯盘面的「该你了」，或去决策收件箱。"
           // 等待时长按**剧本时钟**算，否则一条刚出现的待办会显示"等了 4 天"（与全屏每一处都矛盾）
           waitingNowMs={storyAtMs + frame.atMs}
         />

@@ -179,7 +179,7 @@ function PlaybookHealthCard() {
     <Card>
       <CardHeader className="pb-2 pt-4 px-4">
         <CardTitle className="text-sm font-medium">
-          剧本健康{data && data.mountedProjects > 0 ? ` · ${data.mountedProjects} 个项目挂载` : ''}
+          项目步骤健康{data && data.mountedProjects > 0 ? ` · ${data.mountedProjects} 个项目挂载` : ''}
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4">
@@ -187,8 +187,8 @@ function PlaybookHealthCard() {
           <p className="text-xs text-muted-foreground">加载中…</p>
         ) : stages.length === 0 ? (
           <EmptyState
-            title="暂无剧本运行数据"
-            description="项目「流程」页挂载剧本并跑一个阶段后，这里会出现跳过率与退回率。"
+            title="暂无项目步骤运行数据"
+            description="项目「流程」页挂载项目步骤并跑一个阶段后，这里会出现跳过率与退回率。"
             className="min-h-20"
           />
         ) : (
