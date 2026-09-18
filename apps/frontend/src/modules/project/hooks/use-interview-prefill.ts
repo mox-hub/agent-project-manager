@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { assistantApi } from '../api/assistant-api';
+import { assistantApi } from '@/modules/assistant/api/assistant-api';
 
 /**
  * 剧本访谈预填（CAP-P-01 一期）：按一句话需求（或 grill 摘要）为当前阶段

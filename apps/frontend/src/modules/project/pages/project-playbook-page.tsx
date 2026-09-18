@@ -32,7 +32,7 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 import { InterviewDialog } from '../components/playbook/interview-dialog';
-import { useIntakeComposite } from '@/modules/assistant/hooks/use-intake-composite';
+import { useIntakeComposite } from '../hooks/use-intake-composite';
 import { decisionApi } from '@/modules/decision';
 import {
   useMountPlaybook,

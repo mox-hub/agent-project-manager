@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { assistantApi } from '../api/assistant-api';
+import { assistantApi } from '@/modules/assistant/api/assistant-api';
 
 /**
  * grill 需求拷问（创建面板 AI 代理模式）：无状态多轮——

@@ -31,7 +31,7 @@ import { useTranslation } from 'react-i18next';
 import { useForm, useWatch, type UseFormReturn } from 'react-hook-form';
 import { GrillInterview } from '@/modules/project/components/grill/grill-interview';
 import { buildGrillMinutes } from '@/modules/project/components/grill/grill-minutes';
-import type { GrillSummary } from '@/modules/assistant/hooks/use-grill';
+import type { GrillSummary } from '@/modules/project/hooks/use-grill';
 import {
   Dialog,
   DialogContent,

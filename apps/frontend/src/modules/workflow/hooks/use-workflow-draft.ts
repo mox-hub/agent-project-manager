@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { assistantApi } from '../api/assistant-api';
+import { assistantApi } from '@/modules/assistant/api/assistant-api';
 
 /**
  * 工作流草拟（CAP-A-12 切片④）：自然语言描述 → workflow-draft 静默场景

@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { assistantApi } from '../api/assistant-api';
+import { assistantApi } from '@/modules/assistant/api/assistant-api';
 
 /**
  * 组合件提案生成（CAP-P-01 二期）：读需求承接剧本的「任务拆解」「验收草案」
