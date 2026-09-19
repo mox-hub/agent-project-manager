@@ -73,6 +73,7 @@ export function CliDispatchPanel({ issueId, taskTitle, onDispatchSuccess }: CliD
     'claude-code': 'Claude Code',
     'codex': 'OpenAI Codex',
     'zcode': 'ZCode',
+    'opencode': 'OpenCode',
   };
 
   const selectedProviderInfo = providersData?.providers?.find(

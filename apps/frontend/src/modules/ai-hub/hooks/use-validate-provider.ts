@@ -82,12 +82,19 @@ export function useProviderValidation(
     },
   });
 
-  const validate = (provider: string, apiKeyValue: string, baseUrl?: string) => {
+  const validate = (
+    provider: string,
+    apiKeyValue: string,
+    baseUrl?: string,
+    /** 已保存配置记录 ID：校验通过时后端同步该记录在线状态为 connected */
+    providerConfigId?: string,
+  ) => {
     setApiKey(apiKeyValue);
     mutation.mutate({
       provider,
       apiKey: apiKeyValue,
       baseUrl,
+      providerConfigId,
     });
   };
 

@@ -16,7 +16,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Bell,
-  Bot,
   Building2,
   ChartColumn,
   CircleHelp,
@@ -102,8 +101,7 @@ export const commandEntries: CommandEntry[] = [
   // —— 系统 ——
   { id: 'cmd-settings', labelKey: 'shell.openSettings', to: '/app/settings', group: 'system', icon: Settings, keywords: ['settings', '设置'] },
   { id: 'cmd-profile', labelKey: 'shell.openProfile', to: '/app/settings/profile', group: 'system', icon: CircleUserRound, keywords: ['profile', '个人资料', '账户', 'account'] },
-  { id: 'cmd-ai', labelKey: 'shell.openAiSpace', to: '/app/settings/ai', group: 'system', icon: Sparkles, keywords: ['ai', 'assistant', '助手'] },
-  { id: 'cmd-agents', labelKey: 'shell.openAgents', to: '/app/settings/ai/agents', group: 'system', icon: Bot, keywords: ['agent', 'agents', 'mcp', '智能体'] },
+  { id: 'cmd-ai', labelKey: 'shell.openAiSpace', to: '/app/settings/ai', group: 'system', icon: Sparkles, keywords: ['ai', 'assistant', 'agent', 'mcp', '助手', '智能体'] },
   { id: 'cmd-admin', labelKey: 'nav.admin', to: '/app/admin', group: 'system', adminOnly: true, icon: UserCog, keywords: ['admin', 'accounts', 'invites', '管理'] },
   { id: 'cmd-help', labelKey: 'shell.openHelp', to: '/app/help', group: 'system', icon: CircleHelp, keywords: ['help', 'docs', '帮助'] },
   // —— 操作 ——

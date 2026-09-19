@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
+import { ModelsDevService } from './models-dev.service';
 
 export interface UsageCostInput {
   modelName: string;
@@ -10,7 +11,8 @@ export interface UsageCostInput {
 
 /**
  * AI 用量成本估算 —— AIUsageLog.estimatedCost 的唯一计算口径。
- * 优先级：AIModelConfig.costPer1kTokens（按名/提供方匹配，混合价）→
+ * 优先级：AIModelConfig.costPer1kTokens（按名/提供方匹配，混合价，用户显式覆盖）→
+ * models.dev 分项参考价（USD/百万：prompt×input + completion×output，CAP-A-21）→
  * 内置常见模型单价表（USD / 1k tokens，混合）→ 无法估价返回 null。
  */
 @Injectable()
@@ -35,21 +37,40 @@ export class UsagePricingService {
     { match: ['claude-opus'], price: 0.045 },
   ];
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly modelsDev: ModelsDevService,
+  ) {}
 
   async estimateCostUsd(input: UsageCostInput): Promise<number | null> {
-    const totalTokens = Math.max(
-      0,
-      (input.promptTokens || 0) + (input.completionTokens || 0),
-    );
+    const promptTokens = Math.max(0, input.promptTokens || 0);
+    const completionTokens = Math.max(0, input.completionTokens || 0);
+    const totalTokens = promptTokens + completionTokens;
     if (totalTokens === 0) return null;
 
-    const per1k = await this.resolveUsdPer1kTokens(input);
-    if (per1k == null) return null;
-    return Number(((totalTokens / 1000) * per1k).toFixed(6));
+    const configured = await this.resolveConfiguredPer1kTokens(input);
+    if (configured != null) return blendedCost(totalTokens, configured);
+
+    // models.dev 分项参考价：prompt/completion 分别计价（cache token 暂并入 prompt 价）
+    const ref = this.modelsDev.resolveItemizedPrice(
+      input.provider,
+      input.modelName,
+    );
+    if (ref) {
+      return Number(
+        (
+          (promptTokens * ref.inputPerM + completionTokens * ref.outputPerM) /
+          1_000_000
+        ).toFixed(6),
+      );
+    }
+
+    const builtIn = this.resolveBuiltInPer1kTokens(input.modelName);
+    if (builtIn != null) return blendedCost(totalTokens, builtIn);
+    return null;
   }
 
-  private async resolveUsdPer1kTokens(
+  private async resolveConfiguredPer1kTokens(
     input: UsageCostInput,
   ): Promise<number | null> {
     try {
@@ -84,11 +105,18 @@ export class UsagePricingService {
         `AIModelConfig pricing lookup failed: ${(e as Error).message}`,
       );
     }
+    return null;
+  }
 
-    const lowered = input.modelName.toLowerCase();
+  private resolveBuiltInPer1kTokens(modelName: string): number | null {
+    const lowered = modelName.toLowerCase();
     for (const rule of UsagePricingService.BUILT_IN_USD_PER_1K) {
       if (rule.match.some((m) => lowered.includes(m))) return rule.price;
     }
     return null;
   }
+}
+
+function blendedCost(totalTokens: number, per1k: number): number {
+  return Number(((totalTokens / 1000) * per1k).toFixed(6));
 }

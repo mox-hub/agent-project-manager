@@ -3,20 +3,26 @@
  *
  * 定位分工：运行态实时指标（活跃任务/平均健康分/AI 用量/项目健康表/风险聚焦）
  * 的唯一消费面 = Dashboard（/app/projects/dashboard，useDashboardOverview）；
- * analytics 保留回顾性内容：项目总数 + 项目档案健康 + 剧本健康。
- * Cost / Quality / Risk / Team Activity 四个 Tab 暂无真实数据源（mock），
- * 仅 DEV 可见（import.meta.env.DEV 过滤，生产构建不出现，代码保留）。
+ * analytics 保留回顾性内容：项目总数 + 项目档案健康 + 剧本健康 + 成本（AI 用量）。
+ * Cost Tab 为真实数据（GET /ai/usage，2026-09-19 自设置「AI 用量」页迁入做实）；
+ * Quality / Risk / Team 三个 Tab 仍无真实数据源（mock），仅 DEV 可见
+ * （import.meta.env.DEV 过滤，生产构建不出现，代码保留）。
  */
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, BarChart3, DollarSign, Activity, ShieldAlert, Users, Zap, AlertTriangle, XCircle, TrendingUp, TrendingDown, Target, Minus, type LucideIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { ArrowDown, ArrowUp, BarChart3, DollarSign, Activity, ShieldAlert, Users, Zap, AlertTriangle, XCircle, TrendingUp, TrendingDown, Target, Minus, Coins, MessageSquare, Bot, Terminal, type LucideIcon } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { ToolbarRow } from '@/components/ui/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
+import { StatsCard } from '@/components/ui/stats-card';
+import { ActivityHeatmap } from '@/components/ui/activity-heatmap';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -26,10 +32,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangleIcon, RefreshCwIcon } from 'lucide-react';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useAnalyticsOverview, usePlaybookHealth, useProfileHealth } from '../hooks/use-analytics-overview';
+import { useAiUsage, AI_USAGE_RANGE_OPTIONS, type AiUsageRange } from '../hooks/use-ai-usage';
 import { useDashboardOverview } from '@/modules/project/hooks/use-dashboard-overview';
 import type { ProfileHealthItem } from '../api/analytics-api';
 import {
-  BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
+  BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { cn } from '@/lib/utils';
@@ -227,97 +234,237 @@ function formatDuration(ms: number): string {
   return `${(ms / 86_400_000).toFixed(1)}d`;
 }
 
-// ── Tab: Cost（mock）───────────────────────────────────────────────────────────
+// ── Tab: Cost（真实数据：GET /ai/usage，2026-09-19 自设置「AI 用量」页迁入做实）──
+
+function formatCost(cost: number): string {
+  if (cost > 0 && cost < 0.01) return '<$0.01';
+  return `$${cost.toFixed(2)}`;
+}
+
+function formatTokensCompact(tokens: number): string {
+  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M`;
+  if (tokens >= 1_000) return `${(tokens / 1_000).toFixed(1)}k`;
+  return String(tokens);
+}
 
 function CostTab() {
-  const { data: ov } = useAnalyticsOverview();
-  const totalCost = (ov?.costTrend ?? []).reduce((s, d) => s + d.cost, 0);
-  const thisMonthCost = 187;
-  const thisMonthBudget = 300;
-  const roiAcceptances = 24;
-  const costPerAcceptance = (totalCost / roiAcceptances).toFixed(1);
+  const { t } = useTranslation();
+  const [range, setRange] = useState<AiUsageRange>('30d');
+  const { data: usage, isLoading } = useAiUsage(range);
+  // 热力图恒为近一年总览：独立全量查询，与上方范围选择解耦（range=all 时同 key 自动去重）
+  const { data: usageAll } = useAiUsage('all');
+
+  const byDay = useMemo(() => usage?.byDay ?? [], [usage]);
+  const sortedByModel = useMemo(
+    () => [...(usage?.byModel ?? [])].sort((a, b) => b.totalTokens - a.totalTokens),
+    [usage],
+  );
+  const heatmapData = useMemo(
+    () => (usageAll?.byDay ?? []).map((d) => ({ date: d.day, count: d.totalTokens })),
+    [usageAll],
+  );
+
+  // 柱状图粒度：7d/30d 按日；all 按月聚合（否则柱数不可读）
+  const isMonthly = range === 'all';
+  const costBars = useMemo(() => {
+    const acc = new Map<string, number>();
+    for (const row of byDay) {
+      const key = isMonthly ? row.day.slice(0, 7) : row.day.slice(5);
+      acc.set(key, (acc.get(key) ?? 0) + (row.totalCost ?? 0));
+    }
+    return [...acc.entries()].map(([label, cost]) => ({ label, cost }));
+  }, [byDay, isMonthly]);
+
+  const barConfig = {
+    cost: { label: t('analytics.cost.totalCost'), color: 'hsl(var(--chart-1))' },
+  } satisfies ChartConfig;
+
+  // 范围选择常驻（空态/加载态也保留，否则空范围内用户无法切回有数据的范围）
+  const rangeRow = (
+    <div className="flex items-center justify-end">
+      <NativeSelect
+        value={range}
+        onChange={(e) => setRange(e.target.value as AiUsageRange)}
+        className="w-36 text-xs"
+        aria-label={t('analytics.cost.range')}
+      >
+        {AI_USAGE_RANGE_OPTIONS.map((option) => (
+          <NativeSelectOption key={option.id} value={option.id}>
+            {t(
+              option.id === '7d'
+                ? 'analytics.cost.range7d'
+                : option.id === '30d'
+                  ? 'analytics.cost.range30d'
+                  : 'analytics.cost.rangeAll',
+            )}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {rangeRow}
+        <SkeletonCard />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <SkeletonChart /><SkeletonChart />
+        </div>
+      </div>
+    );
+  }
+
+  if (!usage || usage.totalTokens === 0) {
+    return (
+      <div className="space-y-4">
+        {rangeRow}
+        <EmptyState
+          title={t('analytics.cost.emptyTitle')}
+          description={t('analytics.cost.emptyHint')}
+          className="min-h-60"
+        />
+      </div>
+    );
+  }
+
+  const totalModelCost = sortedByModel.reduce((s, m) => s + (m.totalCost ?? 0), 0);
 
   return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total Cost (6mo)" value={`$${totalCost}`} sub="AI execution spend" icon={DollarSign} color="text-accent-purple" />
-        <StatCard label="This Month" value={`$${thisMonthCost}`} sub={`${Math.round((thisMonthCost / thisMonthBudget) * 100)}% of budget`} icon={BarChart3} color="text-accent-blue" />
-        <StatCard label="Cost per Acceptance" value={`$${costPerAcceptance}`} sub={`${roiAcceptances} acceptances`} icon={Target} color="text-accent-green" />
-        <StatCard label="ROI Score" value="4.2×" sub="value vs. manual review" icon={TrendingUp} color="text-accent-yellow" />
-      </div>
+    <div className="space-y-4">
+      {rangeRow}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <StatsCard
+        columns={6}
+        className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
+        items={[
+          {
+            key: 'tokens',
+            label: t('analytics.cost.totalTokens'),
+            value: usage.totalTokens.toLocaleString(),
+            icon: Zap,
+            colorClass: 'text-accent-blue',
+          },
+          {
+            key: 'cost',
+            label: t('analytics.cost.totalCost'),
+            value: formatCost(usage.totalCost ?? 0),
+            icon: Coins,
+            colorClass: 'text-accent-green',
+          },
+          {
+            key: 'totalCalls',
+            label: t('analytics.cost.totalCalls'),
+            value: (usage.totalCalls ?? 0).toLocaleString(),
+            icon: Activity,
+            colorClass: 'text-accent-purple',
+          },
+          {
+            key: 'conversationCalls',
+            label: t('analytics.cost.conversationCalls'),
+            value: (usage.conversationCalls ?? 0).toLocaleString(),
+            icon: MessageSquare,
+            colorClass: 'text-accent-blue',
+          },
+          {
+            key: 'silentCalls',
+            label: t('analytics.cost.silentCalls'),
+            value: (usage.silentCalls ?? 0).toLocaleString(),
+            icon: Bot,
+            colorClass: 'text-accent-yellow',
+          },
+          {
+            key: 'executionCalls',
+            label: t('analytics.cost.executionCalls'),
+            value: (usage.executionCalls ?? 0).toLocaleString(),
+            icon: Terminal,
+            colorClass: 'text-accent-orange',
+          },
+        ]}
+      />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">Monthly Cost vs Budget</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t(isMonthly ? 'analytics.cost.monthlyCost' : 'analytics.cost.dailyCost')}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="px-2 pb-3">
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={ov?.costTrend ?? []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} unit="$" />
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
-                <Legend wrapperStyle={{ fontSize: 10 }} />
-                <Area type="monotone" dataKey="budget" stroke="#e2e8f0" fill="#f1f5f9" name="Budget" strokeDasharray="4 2" />
-                <Area type="monotone" dataKey="cost" stroke="#7c3aed" fill="rgba(124,58,237,0.15)" name="Cost" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
+          <CardContent className="px-2 pb-2">
+            <ChartContainer config={barConfig} className="h-40 w-full">
+              <BarChart data={costBars}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  width={36}
+                  tickFormatter={(v: number) => `$${v}`}
+                />
+                <ChartTooltip
+                  content={<ChartTooltipContent formatter={(value) => formatCost(Number(value))} />}
+                />
+                <Bar dataKey="cost" fill="var(--color-cost)" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">Cost by Project</CardTitle>
+            <CardTitle className="flex items-center justify-between text-sm font-medium">
+              {t('analytics.cost.heatmap')}
+              <span className="text-xs font-normal text-muted-foreground">
+                {t('analytics.cost.heatmapRange')}
+              </span>
+            </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4 space-y-3">
-            {(ov?.costByProject ?? []).map(p => (
-              <div key={p.name}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs truncate flex-1 mr-2">{p.name}</span>
-                  <span className="text-xs font-medium shrink-0">${p.cost}</span>
-                </div>
-                <div className="flex gap-1 items-center">
-                  <div className="h-1.5 rounded-full bg-accent-purple" style={{ width: `${(p.cost / 80) * 100}%`, maxWidth: '70%' }} />
-                  <div className="h-1.5 rounded-full bg-accent-purple/30" style={{ width: `${(p.acceptanceCost / 80) * 100}%`, maxWidth: '30%' }} />
-                </div>
-              </div>
-            ))}
-            <div className="flex items-center gap-4 pt-1">
-              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-accent-purple" />Execution</span>
-              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-accent-purple/30" />Acceptance</span>
-            </div>
+          <CardContent className="px-4 pb-4">
+            <ActivityHeatmap
+              data={heatmapData}
+              days={365}
+              formatTip={(count) => `${formatTokensCompact(count)} tokens`}
+              emptyLabel={t('analytics.cost.noDaily')}
+            />
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="text-sm font-medium">Cost by Model</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('analytics.cost.byModel')}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
-          <div className="flex items-center gap-8">
-            <ResponsiveContainer width={160} height={160}>
-              <PieChart>
-                <Pie data={ov?.costByModel ?? []} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" paddingAngle={2}>
-                  {(ov?.costByModel ?? []).map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                </Pie>
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-2">
-              {(ov?.costByModel ?? []).map(m => (
-                <div key={m.name} className="flex items-center gap-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: m.color }} />
-                  <span className="text-xs w-24">{m.name}</span>
-                  <span className="text-xs font-medium">${m.value}</span>
-                  <span className="text-10 text-muted-foreground">
-                    {Math.round((m.value / (ov?.costByModel ?? []).reduce((s, x) => s + x.value, 0)) * 100)}%
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <Table className="w-full text-sm">
+            <TableHeader className="text-xs text-muted-foreground">
+              <TableRow>
+                <TableHead className="p-2 text-left">{t('analytics.cost.model')}</TableHead>
+                <TableHead className="w-32 p-2 text-right">{t('analytics.cost.tokens')}</TableHead>
+                <TableHead className="w-28 p-2 text-right">{t('analytics.cost.cost')}</TableHead>
+                <TableHead className="w-40 p-2 text-right">{t('analytics.cost.share')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedByModel.map((row) => {
+                const sharePct = totalModelCost > 0
+                  ? Math.round((row.totalCost / totalModelCost) * 100)
+                  : 0;
+                return (
+                  <TableRow key={row.modelName}>
+                    <TableCell className="p-2 font-medium">{row.modelName}</TableCell>
+                    <TableCell className="p-2 text-right tabular-nums">{row.totalTokens.toLocaleString()}</TableCell>
+                    <TableCell className="p-2 text-right tabular-nums">{formatCost(row.totalCost ?? 0)}</TableCell>
+                    <TableCell className="p-2">
+                      <div className="flex items-center justify-end gap-2">
+                        <Progress value={sharePct} className="h-1.5 w-24" />
+                        <span className="w-8 text-right text-xs text-muted-foreground tabular-nums">{sharePct}%</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
@@ -520,22 +667,20 @@ function TeamActivityTab() {
 
 type AnalyticsTab = 'overview' | 'cost' | 'quality' | 'risk' | 'team';
 
-/** Tab 定义：overview 为真实数据回顾面；其余四项无后端（mock 形态），devOnly */
+/** Tab 定义：overview / cost 为真实数据回顾面（cost=AI 用量迁移做实）；quality/risk/team 为 mock 形态，devOnly */
 interface AnalyticsTabDef {
   value: AnalyticsTab;
   label: string;
   icon: LucideIcon;
-  /** useToolbarViews 默认视图图标名（ToolbarRow 视图下拉消费字符串图标名） */
-  viewIcon: string;
   devOnly: boolean;
 }
 
 const ANALYTICS_TAB_DEFS: AnalyticsTabDef[] = [
-  { value: 'overview', label: '概览', icon: BarChart3, viewIcon: 'target', devOnly: false },
-  { value: 'cost', label: '成本', icon: DollarSign, viewIcon: 'tag', devOnly: true },
-  { value: 'quality', label: '质量', icon: Activity, viewIcon: 'check', devOnly: true },
-  { value: 'risk', label: '风险', icon: ShieldAlert, viewIcon: 'bug', devOnly: true },
-  { value: 'team', label: '团队', icon: Users, viewIcon: 'user', devOnly: true },
+  { value: 'overview', label: '概览', icon: BarChart3, devOnly: false },
+  { value: 'cost', label: '成本', icon: DollarSign, devOnly: false },
+  { value: 'quality', label: '质量', icon: Activity, devOnly: true },
+  { value: 'risk', label: '风险', icon: ShieldAlert, devOnly: true },
+  { value: 'team', label: '团队', icon: Users, devOnly: true },
 ];
 
 /** 可用 Tab 计算（纯函数，测试消费）：mock 形态 Tab 仅 DEV 可见（CAP-C-06） */
@@ -553,9 +698,21 @@ const ANALYTICS_TAB_CONTENT: Record<AnalyticsTab, React.ComponentType> = {
 
 export function AnalyticsPage() {
   const { t } = useTranslation();
-  // 四个 mock Tab 仅 DEV 可见（生产构建不出现）；默认选中第一个可用 Tab（= overview）
+  const [searchParams, setSearchParams] = useSearchParams();
+  // mock Tab 仅 DEV 可见（生产构建不出现）；默认选中第一个可用 Tab（= overview）
   const availableTabs = useMemo(() => getAvailableAnalyticsTabs(import.meta.env.DEV), []);
-  const [activeTab, setActiveTab] = useState<AnalyticsTab>(availableTabs[0]?.value ?? 'overview');
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>(() => {
+    const fromUrl = searchParams.get('tab');
+    return availableTabs.some((def) => def.value === fromUrl)
+      ? (fromUrl as AnalyticsTab)
+      : availableTabs[0]?.value ?? 'overview';
+  });
+
+  // ?tab= 双向同步：URL 可定位 Tab（设置「AI 用量」重定向 / 分享链接），overview 默认态清参
+  const changeTab = (tab: AnalyticsTab) => {
+    setActiveTab(tab);
+    setSearchParams(tab === 'overview' ? {} : { tab }, { replace: true });
+  };
   const { data: overviewData, refetch: refetchOverview } = useDashboardOverview();
 
   // CAP-C-06 消费面去重：页头指标只留项目总数（活跃任务/平均健康分真相源在 Dashboard）
@@ -565,29 +722,6 @@ export function AnalyticsPage() {
       { id: 'projects', label: '项目', value: overviewData.health.projects.length },
     ];
   }, [overviewData]);
-
-  const toolbar = useToolbarViews({
-    key: 'analytics-page',
-    defaults: availableTabs.map((def) => ({
-      id: def.value,
-      name: def.label,
-      icon: def.viewIcon,
-      builtIn: true,
-      snapshot: { tab: def.value },
-    })),
-    onApply: (snapshot) => {
-      const snap = (snapshot ?? {}) as Partial<{ tab: AnalyticsTab }>;
-      // 生产模式下 mock Tab 不可用：快照指向已下线 Tab 时忽略，保持当前 Tab
-      if (snap.tab && availableTabs.some((def) => def.value === snap.tab)) {
-        setActiveTab(snap.tab);
-      }
-    },
-  });
-  const { updateActiveSnapshot } = toolbar;
-
-  useEffect(() => {
-    updateActiveSnapshot({ tab: activeTab });
-  }, [updateActiveSnapshot, activeTab]);
 
   return (
     <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.analytics}>
@@ -610,20 +744,13 @@ export function AnalyticsPage() {
         }
       />
 
+      {/* 纯样式切换页：不传 views（视图管理整体隐藏），仅居中 Tab 切换 */}
       <ToolbarRow
         aiId="analytics.overview"
-        views={toolbar.views}
-        activeViewId={toolbar.activeViewId}
-        onSelectView={toolbar.selectView}
-        onCreateView={toolbar.createView}
-        onUpdateView={toolbar.updateView}
-        onDeleteView={toolbar.deleteView}
-        isDirty={toolbar.isDirty}
-        onSaveCurrentView={toolbar.saveCurrentToActive}
         viewStyle={{
           layout: 'centered',
           value: activeTab,
-          onChange: (v) => setActiveTab(v as AnalyticsTab),
+          onChange: (v) => changeTab(v as AnalyticsTab),
           options: availableTabs.map(({ value, label, icon }) => ({ value, label, icon })),
         }}
         filterMenu={false}
@@ -631,8 +758,8 @@ export function AnalyticsPage() {
         downloadMenu={false}
       />
 
-      <div className="flex w-full min-w-0 flex-1 flex-col overflow-y-auto px-6 py-4 sm:px-8 sm:py-5 lg:px-10 space-y-5">
-        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as AnalyticsTab)} className="w-full">
+      <div className="flex w-full min-w-0 flex-1 flex-col overflow-y-auto px-6 py-4 sm:px-8 sm:py-5 lg:px-10 space-y-4">
+        <Tabs value={activeTab} onValueChange={(val) => changeTab(val as AnalyticsTab)} className="w-full">
           {availableTabs.map((def) => {
             const Content = ANALYTICS_TAB_CONTENT[def.value];
             return (

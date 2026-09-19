@@ -69,7 +69,8 @@ export class CliProviderRegistry implements OnModuleInit {
       this.overrides.clear();
       for (const cfg of configs) {
         const pid = cfg.providerId as ProviderId;
-        if (!['claude-code', 'codex', 'zcode'].includes(pid)) continue;
+        if (!['claude-code', 'codex', 'zcode', 'opencode'].includes(pid))
+          continue;
         this.overrides.set(pid, {
           commandPath: cfg.commandPath ?? undefined,
           model: cfg.model ?? undefined,

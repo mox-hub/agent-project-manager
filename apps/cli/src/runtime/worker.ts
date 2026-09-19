@@ -14,6 +14,7 @@ import {
   EXECUTION_EVENT_TYPES,
   ExecutionStepUpdate,
   killProcessTree,
+  OpenCodeAdapter,
   ProviderId,
   runCliProcess,
   RuntimeDispatch,
@@ -25,6 +26,7 @@ const ADAPTERS: Record<string, CliAdapter> = {
   'claude-code': new ClaudeCodeAdapter(),
   codex: new CodexAdapter(),
   zcode: new ZCodeAdapter(),
+  opencode: new OpenCodeAdapter(),
 };
 
 /** 写文件族工具归一为文件变更事件 */

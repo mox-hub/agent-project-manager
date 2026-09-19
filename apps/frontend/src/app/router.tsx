@@ -32,8 +32,6 @@ import { IssueTypesSettingsSection } from '@/modules/settings/pages/sections/iss
 import { IssueTypeDetailSection } from '@/modules/settings/pages/sections/issue-type-detail-section';
 import { ChecklistsSettingsSection } from '@/modules/settings/pages/sections/checklists-section';
 import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
-import { AiAgentsSection } from '@/modules/settings/pages/sections/ai-agents-section';
-import { AiUsageSection } from '@/modules/settings/pages/sections/ai-usage-section';
 import { MemorySection } from '@/modules/settings/pages/sections/memory-section';
 import { RuntimeSettingsSection } from '@/modules/settings/pages/sections/runtime-section';
 import { RuntimeMachineDetailSection } from '@/modules/settings/pages/sections/runtime-machine-detail-section';
@@ -321,8 +319,9 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        // Agent 管理已并入 AI 管理页签（2026-09-19 合并），旧路径落概览页签
         path: 'ai/agents',
-        element: <RedirectToSettings to="/app/settings/ai/agents" />,
+        element: <RedirectToSettings to="/app/settings/ai" />,
         errorElement: <ErrorPage />,
       },
       {
@@ -669,9 +668,11 @@ export const router = createBrowserRouter([
       { path: 'short-id', element: <ShortIdSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'storage', element: <StorageSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'ai', element: <AiManagementSection />, errorElement: <ErrorPage /> },
-      { path: 'ai/agents', element: <AiAgentsSection />, errorElement: <ErrorPage /> },
+      // 「Agent 管理」已并入本页页签（2026-09-19 合并）：旧路径重定向保书签，?tab=overview 贴近原页落地
+      { path: 'ai/agents', element: <Navigate to="/app/settings/ai?tab=overview" replace /> },
       { path: 'ai/executions', element: <AiExecutionCenterSection />, errorElement: <ErrorPage /> },
-      { path: 'ai/usage', element: <AiUsageSection />, errorElement: <ErrorPage /> },
+      // 设置「AI 用量」页已迁入 /app/analytics 成本 Tab（CAP-C-06，2026-09-19）；旧路径重定向保书签
+      { path: 'ai/usage', element: <Navigate to="/app/analytics?tab=cost" replace /> },
       { path: 'memory', element: <MemorySection />, errorElement: <ErrorPage /> },
       { path: 'runtime', element: <RuntimeSettingsSection />, errorElement: <ErrorPage /> },
       {

@@ -3,7 +3,7 @@
  * 严格对齐设计文档 CLI适配器模型-v1.md §7 的 7 方法
  */
 
-export type ProviderId = 'claude-code' | 'codex' | 'zcode';
+export type ProviderId = 'claude-code' | 'codex' | 'zcode' | 'opencode';
 
 export interface Artifact {
   type: string;

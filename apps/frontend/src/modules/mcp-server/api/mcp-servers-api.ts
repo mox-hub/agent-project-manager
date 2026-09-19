@@ -12,7 +12,7 @@ import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
  * create/update 共用；env/headers 现为 string 值的开放键值对象）。
  */
 
-export const CLI_PROVIDER_IDS = ['claude-code', 'codex', 'zcode'] as const;
+export const CLI_PROVIDER_IDS = ['claude-code', 'codex', 'zcode', 'opencode'] as const;
 export type CliProviderId = (typeof CLI_PROVIDER_IDS)[number];
 
 export interface CliProviderStatus {
@@ -131,10 +131,12 @@ export const PROVIDER_DISPLAY_NAMES: Record<CliProviderId, string> = {
   'claude-code': 'Claude Code',
   codex: 'Codex',
   zcode: 'ZCode',
+  opencode: 'OpenCode',
 };
 
 export const PROVIDER_DESCRIPTIONS: Record<CliProviderId, string> = {
   'claude-code': 'Anthropic Claude Code CLI',
   codex: 'OpenAI Codex CLI',
   zcode: 'ZCode Local Agent',
+  opencode: 'OpenCode Coding Agent (anomalyco)',
 };

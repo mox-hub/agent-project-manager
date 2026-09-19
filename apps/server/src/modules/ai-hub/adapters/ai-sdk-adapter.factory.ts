@@ -65,6 +65,8 @@ export class AiSdkAdapterFactory {
       gemini: 'gemini-1.5-flash',
       deepseek: 'deepseek-chat',
       glm: 'glm-4',
+      opencode: 'claude-sonnet-4-6',
+      'opencode-go': 'qwen3.7-max',
     };
     return defaults[provider] || 'gpt-4o';
   }

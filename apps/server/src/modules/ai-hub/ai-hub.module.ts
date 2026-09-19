@@ -13,6 +13,7 @@ import { AssistantToolsService } from './services/assistant-tools.service';
 import { AssistantSilentService } from './services/assistant-silent.service';
 import { AssistantMemoryDigestService } from './services/assistant-memory-digest.service';
 import { UsagePricingService } from './services/usage-pricing.service';
+import { ModelsDevService } from './services/models-dev.service';
 import { MemoryModule } from '../memory/memory.module';
 import { CollaborationModule } from '../collaboration/collaboration.module';
 import { ProfileModule } from '@/modules/profile/profile.module';
@@ -55,6 +56,7 @@ import { AcceptanceModule } from '../acceptance/acceptance.module';
     AiSdkAdapterFactory,
     AiWorkerCoordinatorService,
     UsagePricingService,
+    ModelsDevService,
   ],
   exports: [
     AiHubService,
@@ -64,6 +66,7 @@ import { AcceptanceModule } from '../acceptance/acceptance.module';
     AdapterRegistryService,
     ProviderConfigService,
     UsagePricingService,
+    ModelsDevService,
   ],
 })
 export class AiHubModule {}

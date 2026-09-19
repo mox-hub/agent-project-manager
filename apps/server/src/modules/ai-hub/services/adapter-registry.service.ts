@@ -16,6 +16,9 @@ export class AdapterRegistryService implements OnModuleInit {
   // 适配器注册表
   private readonly adapters = new Map<string, ModelAdapter>();
 
+  // provider::model 专属适配器缓存（内置模型/显式模型选择时按需构建）
+  private readonly modelAdapters = new Map<string, ModelAdapter>();
+
   // provider -> 模型列表映射
   private readonly providerDefaultModels = new Map<string, string>();
 
@@ -37,6 +40,7 @@ export class AdapterRegistryService implements OnModuleInit {
    */
   async loadAdapters(): Promise<void> {
     this.adapters.clear();
+    this.modelAdapters.clear();
     this.providerDefaultModels.clear();
 
     const providers = await this.prisma.aIProviderConfig.findMany({
@@ -88,10 +92,13 @@ export class AdapterRegistryService implements OnModuleInit {
    */
   async reload(provider?: string): Promise<void> {
     if (provider) {
-      // 重新加载单个 provider
+      // 重新加载单个 provider（该厂家的 model 专属缓存一并失效）
       const existing = this.adapters.get(provider);
       if (existing) {
         this.adapters.delete(provider);
+      }
+      for (const key of this.modelAdapters.keys()) {
+        if (key.startsWith(`${provider}::`)) this.modelAdapters.delete(key);
       }
 
       const config = await this.prisma.aIProviderConfig.findUnique({
@@ -122,6 +129,47 @@ export class AdapterRegistryService implements OnModuleInit {
    */
   getAdapter(provider: string, _model?: string): ModelAdapter | null {
     return this.adapters.get(provider) || null;
+  }
+
+  /**
+   * 按显式模型解析适配器（内置模型消费口）：
+   * 默认适配器模型一致或缓存命中时零 IO 返回，否则读 DB 惰性构建并缓存
+   */
+  async resolveAdapter(
+    provider: string,
+    model: string,
+  ): Promise<ModelAdapter | null> {
+    const base = this.adapters.get(provider);
+    if (base) {
+      if (base.getModelName() === model) return base;
+    }
+    const cacheKey = `${provider}::${model}`;
+    const cached = this.modelAdapters.get(cacheKey);
+    if (cached) return cached;
+
+    const config = await this.prisma.aIProviderConfig.findUnique({
+      where: { provider },
+    });
+    if (!config?.enabled || !config.apiKeyEnc) return null;
+
+    try {
+      const apiKey = this.encryptionService.decrypt(config.apiKeyEnc);
+      const adapter = this.adapterFactory.createFromConfig({
+        provider: config.provider,
+        sdkType: config.sdkType,
+        apiKey,
+        baseUrl: config.baseUrl,
+        organizationId: config.organizationId,
+        defaultModel: model,
+      });
+      this.modelAdapters.set(cacheKey, adapter);
+      return adapter;
+    } catch (error) {
+      this.logger.error(
+        `Failed to build adapter for ${provider}/${model}: ${error.message}`,
+      );
+      return null;
+    }
   }
 
   /**
