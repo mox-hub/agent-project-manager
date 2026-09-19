@@ -51,6 +51,8 @@ tags: "changelog,release"
 | frontend | **前端 vitest 串行裁决落地**：threads 池 16 worker 下内存膨胀假死（100% CPU / 73% 内存后启动阶段卡死），forks 并行又与抢核互相放大——改 `pool: 'forks'` + `fileParallelism: false`（等价 jest --runInBand，与 server e2e 同款串行先例）；coverage `all: true` 移除（每文件全量报告无消费且拖慢） | — | 迁移后前端全量 884/885，唯一失败 design-system-page 5s 超时系机器慢非断言错 | — |
 | server | **server vitest 稳定性加固**：`hookTimeout: 30_000`（防与前端并行跑时 CPU 饱和致 Nest DI 编译超默认 10s 的误报，对齐 e2e 配置先例）；pool 注释更新（threads 快 2.4 倍但 Mastra/workflow 套件 worker_threads 下非确定性挂起的实证结论） | — | 迁移后 server 全量 791 用例绿（workflow 套件 1 条环境性 flaky 单跑即过） | — |
 | frontend | **design-system-page 测试超时放宽至 30s**：全量并行时机器慢，该页渲染整套组件库，5s 默认超时不够（纯机器性能问题非用例缺陷） | — | 30s 下全量绿 | — |
+| frontend | **vitest 5 类型适配两处**：①`src/test/setup.ts` 手动 `expect.extend(matchers)` 改官方入口 `import '@testing-library/jest-dom/vitest'`——vitest 5 的 Assertion 与 chai 解耦，手动挂载只挂运行时不挂类型（323 个 matcher 类型错误）；②`tsconfig.app.json` types 补 `"node"`——vitest 5 不再经类型入口传递 @types/node，生产代码 `process`/`events` 引用裸奔 | — | `tsc -b --force` 重建 0 错误；frontend 137 文件 891 用例全绿 | — |
+| 工具链 | **迁盘 tsbuildinfo 残留坑清偿**：migrate-to-d.ps1 排除 dist 但未排除包根 `tsconfig.tsbuildinfo`，增量缓存声称「产物最新」而 dist 实体缺失/陈旧，tsc 静默跳过 emit 甚至报幽灵错误（frontend 334 错假象）——shared 删 tsbuildinfo 重建 + frontend `tsc -b --force` 全量重建后恢复真实状态 | — | type-check 6/6 绿；`pnpm build` 4/4 绿 | — |
 
 ### Added
 

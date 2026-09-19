@@ -1,13 +1,13 @@
-import { expect, afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import * as matchers from '@testing-library/jest-dom/matchers';
+// vitest 5 的 Assertion 与 chai 解耦：手动 extend(matchers) 只挂运行时不挂类型，
+// 必须用官方 vitest 入口（运行时 + 类型扩充一体）
+import '@testing-library/jest-dom/vitest';
 import { setupServer } from 'msw/node';
 import { allHandlers } from '@/test-utils/mock-handlers';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { resetEventClientMock } from '@/__mocks__/event-client';
 
-// Extend Vitest's expect with jest-dom matchers
-expect.extend(matchers);
 
 // jsdom 无真实布局：为 recharts 的 ResponsiveContainer 提供可测量的容器尺寸，
 // 消除 "The width(0) and height(0) of chart" 警告。
