@@ -6,7 +6,7 @@
  * prompt 传递缺陷。
  */
 
-export type ProviderId = 'claude-code' | 'codex' | 'zcode';
+export type ProviderId = 'claude-code' | 'codex' | 'zcode' | 'opencode';
 
 export interface Artifact {
   type: string;

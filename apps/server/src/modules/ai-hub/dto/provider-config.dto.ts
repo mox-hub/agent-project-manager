@@ -17,6 +17,10 @@ export enum AIProviderType {
   GEMINI = 'gemini',
   DEEPSEEK = 'deepseek',
   GLM = 'glm',
+  /** OpenCode Zen 订阅网关（openai 兼容，https://opencode.ai/zen/v1） */
+  OPENCODE = 'opencode',
+  /** OpenCode Go 订阅网关（openai 兼容，https://opencode.ai/zen/go/v1） */
+  OPENCODE_GO = 'opencode-go',
 }
 
 /**

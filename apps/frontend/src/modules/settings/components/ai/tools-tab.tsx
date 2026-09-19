@@ -29,6 +29,7 @@ const INSTALL_HINTS: Record<CliProviderId, string> = {
   'claude-code': 'npm install -g @anthropic-ai/claude-code',
   codex: 'npm install -g @openai/codex',
   zcode: 'zcode',
+  opencode: 'npm install -g opencode-ai  # 或 curl -fsSL https://opencode.ai/install | bash',
 };
 
 function cliProviderStatus(p: CliProviderStatus): 'online' | 'offline' | 'disabled' {

@@ -52,6 +52,8 @@ export class ProviderConfigService {
     gemini: 'https://generativelanguage.googleapis.com',
     deepseek: 'https://api.deepseek.com/v1',
     glm: 'https://open.bigmodel.cn/api/paas/v4',
+    opencode: 'https://opencode.ai/zen/v1',
+    'opencode-go': 'https://opencode.ai/zen/go/v1',
   };
 
   constructor(
@@ -965,6 +967,8 @@ export class ProviderConfigService {
       gemini: 'Google Gemini',
       deepseek: 'DeepSeek',
       glm: 'GLM (Zhipu)',
+      opencode: 'OpenCode Zen',
+      'opencode-go': 'OpenCode Go',
     };
     return names[provider] || provider;
   }
@@ -979,6 +983,8 @@ export class ProviderConfigService {
       gemini: 'google',
       deepseek: 'openai',
       glm: 'openai',
+      opencode: 'openai',
+      'opencode-go': 'openai',
     };
     return sdkTypes[provider] || 'openai';
   }
@@ -1001,6 +1007,8 @@ export class ProviderConfigService {
       gemini: 'gemini-1.5-flash',
       deepseek: 'deepseek-chat',
       glm: 'glm-4',
+      opencode: 'claude-sonnet-4-6',
+      'opencode-go': 'qwen3.7-max',
     };
     return defaults[provider] || 'gpt-4o';
   }

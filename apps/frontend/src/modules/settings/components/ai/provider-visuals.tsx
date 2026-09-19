@@ -5,7 +5,7 @@
  * 模型服务 / CLI 工具 / 概览各 Tab 共用。
  */
 import { Bot } from 'lucide-react';
-import { OpenAI, Claude, Gemini, DeepSeek, Zhipu } from '@lobehub/icons';
+import { OpenAI, Claude, Gemini, DeepSeek, Zhipu, OpenCode } from '@lobehub/icons';
 import { getProviderMeta } from '@/shared/ai-providers/provider-meta';
 import type { CliProviderId } from '@/modules/mcp-server';
 
@@ -18,6 +18,8 @@ export const PROVIDER_ICONS: Record<string, { Icon: LobeIcon; Color?: LobeIcon }
   gemini: { Icon: Gemini, Color: Gemini.Color },
   deepseek: { Icon: DeepSeek, Color: DeepSeek.Color },
   glm: { Icon: Zhipu, Color: Zhipu.Color },
+  opencode: { Icon: OpenCode },
+  'opencode-go': { Icon: OpenCode },
 };
 
 /** 厂家展示名（品牌/产品名词保留原文） */
@@ -27,6 +29,8 @@ export const PROVIDER_INFO: Record<string, { name: string }> = {
   gemini: { name: 'Google Gemini' },
   deepseek: { name: 'Deepseek' },
   glm: { name: 'GLM (Zhipu)' },
+  opencode: { name: 'OpenCode Zen' },
+  'opencode-go': { name: 'OpenCode Go' },
 };
 
 /** 各厂家默认 Base URL（未配置时的展示与重置目标） */
@@ -36,6 +40,8 @@ export const PROVIDER_DEFAULT_BASE_URL: Record<string, string> = {
   gemini: 'https://generativelanguage.googleapis.com',
   deepseek: 'https://api.deepseek.com/v1',
   glm: 'https://open.bigmodel.cn/api/paas/v4',
+  opencode: 'https://opencode.ai/zen/v1',
+  'opencode-go': 'https://opencode.ai/zen/go/v1',
 };
 
 /** 内置模型清单（后端 availableModels 为空时的兜底展示） */
@@ -45,6 +51,8 @@ export const PROVIDER_MODELS: Record<string, string[]> = {
   gemini: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash-exp'],
   deepseek: ['deepseek-v4-flash', 'deepseek-v4-pro'],
   glm: ['glm-4', 'glm-4-flash', 'glm-4-plus', 'glm-3-turbo'],
+  opencode: ['claude-sonnet-4-6', 'gpt-5.1-codex', 'glm-4.7', 'qwen3.6-plus'],
+  'opencode-go': ['qwen3.7-max', 'glm-5.2', 'kimi-k2.6', 'grok-4.5'],
 };
 
 /** 模型服务厂家品牌图标（Color 品牌色优先，无映射回退 Bot） */

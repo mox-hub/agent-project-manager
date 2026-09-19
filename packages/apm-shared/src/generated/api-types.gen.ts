@@ -10003,7 +10003,7 @@ export interface components {
              * @description AI 员工级默认 CLI Provider（覆盖项目级角色）
              * @enum {string}
              */
-            defaultCliProviderId?: "claude-code" | "codex" | "zcode";
+            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode";
             /**
              * @description AI 员工默认执行角色
              * @enum {string}
@@ -10139,7 +10139,7 @@ export interface components {
             costRatePerDay?: number;
             aiModelConfigId?: string;
             /** @enum {string} */
-            defaultCliProviderId?: "claude-code" | "codex" | "zcode";
+            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode";
             /** @enum {string} */
             defaultExecutionRole?: "coder" | "reviewer" | "pm" | "qa" | "general";
             metadata?: {
@@ -10405,7 +10405,7 @@ export interface components {
              * @description 默认 Provider（claude-code/codex 均不可用时为 null）
              * @enum {string|null}
              */
-            defaultProvider: "claude-code" | "codex" | "zcode" | null;
+            defaultProvider: "claude-code" | "codex" | "zcode" | "opencode" | null;
         };
         DetectedCliProviderDto: {
             providerId: string;
@@ -11288,7 +11288,7 @@ export interface components {
              * @description Provider 类型
              * @enum {string}
              */
-            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm";
+            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go";
             /** @description 显示名称 */
             displayName: string;
             /**
@@ -11335,7 +11335,7 @@ export interface components {
              * @example openai
              * @enum {string}
              */
-            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm";
+            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go";
             /**
              * @description 显示名称
              * @example OpenAI
@@ -11398,7 +11398,7 @@ export interface components {
              * @example openai
              * @enum {string}
              */
-            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm";
+            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go";
             /**
              * @description API Key
              * @example sk-...
@@ -11493,7 +11493,7 @@ export interface components {
              * @example deepseek
              * @enum {string|null}
              */
-            provider?: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | null;
+            provider?: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go" | null;
             /**
              * @description 模型名（未设置时为 null）
              * @example deepseek-chat
@@ -11506,7 +11506,7 @@ export interface components {
              * @example deepseek
              * @enum {string}
              */
-            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm";
+            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go";
             /**
              * @description 模型名（不做白名单校验，允许自填新模型）
              * @example deepseek-chat
@@ -14431,7 +14431,7 @@ export interface components {
              * @description Provider ID
              * @enum {string}
              */
-            providerId: "claude-code" | "codex" | "zcode";
+            providerId: "claude-code" | "codex" | "zcode" | "opencode";
             /** @description 二进制是否可用（且未被禁用） */
             available: boolean;
             /** @description 探测到的版本号 */
@@ -14468,7 +14468,7 @@ export interface components {
              * @description Provider ID (must match path param :id)
              * @enum {string}
              */
-            providerId: "claude-code" | "codex" | "zcode";
+            providerId: "claude-code" | "codex" | "zcode" | "opencode";
             /** @description Display name override */
             displayName?: string;
             /** @description Custom command path; if empty, fall back to PATH lookup */
@@ -45073,7 +45073,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode";
+                id: "claude-code" | "codex" | "zcode" | "opencode";
             };
             cookie?: never;
         };
@@ -45154,7 +45154,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode";
+                id: "claude-code" | "codex" | "zcode" | "opencode";
             };
             cookie?: never;
         };
@@ -45239,7 +45239,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode";
+                id: "claude-code" | "codex" | "zcode" | "opencode";
             };
             cookie?: never;
         };

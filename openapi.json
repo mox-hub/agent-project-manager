@@ -53173,7 +53173,8 @@
               "enum": [
                 "claude-code",
                 "codex",
-                "zcode"
+                "zcode",
+                "opencode"
               ],
               "type": "string"
             }
@@ -53319,7 +53320,8 @@
               "enum": [
                 "claude-code",
                 "codex",
-                "zcode"
+                "zcode",
+                "opencode"
               ],
               "type": "string"
             }
@@ -53473,7 +53475,8 @@
               "enum": [
                 "claude-code",
                 "codex",
-                "zcode"
+                "zcode",
+                "opencode"
               ],
               "type": "string"
             }
@@ -65947,7 +65950,8 @@
             "enum": [
               "claude-code",
               "codex",
-              "zcode"
+              "zcode",
+              "opencode"
             ],
             "description": "AI 员工级默认 CLI Provider（覆盖项目级角色）"
           },
@@ -66367,7 +66371,8 @@
             "enum": [
               "claude-code",
               "codex",
-              "zcode"
+              "zcode",
+              "opencode"
             ]
           },
           "defaultExecutionRole": {
@@ -67164,7 +67169,8 @@
             "enum": [
               "claude-code",
               "codex",
-              "zcode"
+              "zcode",
+              "opencode"
             ]
           }
         },
@@ -69324,7 +69330,9 @@
               "anthropic",
               "gemini",
               "deepseek",
-              "glm"
+              "glm",
+              "opencode",
+              "opencode-go"
             ]
           },
           "displayName": {
@@ -69411,7 +69419,9 @@
               "anthropic",
               "gemini",
               "deepseek",
-              "glm"
+              "glm",
+              "opencode",
+              "opencode-go"
             ],
             "example": "openai"
           },
@@ -69505,7 +69515,9 @@
               "anthropic",
               "gemini",
               "deepseek",
-              "glm"
+              "glm",
+              "opencode",
+              "opencode-go"
             ],
             "example": "openai"
           },
@@ -69681,7 +69693,9 @@
               "anthropic",
               "gemini",
               "deepseek",
-              "glm"
+              "glm",
+              "opencode",
+              "opencode-go"
             ],
             "nullable": true,
             "example": "deepseek"
@@ -69705,7 +69719,9 @@
               "anthropic",
               "gemini",
               "deepseek",
-              "glm"
+              "glm",
+              "opencode",
+              "opencode-go"
             ],
             "example": "deepseek"
           },
@@ -77154,7 +77170,8 @@
             "enum": [
               "claude-code",
               "codex",
-              "zcode"
+              "zcode",
+              "opencode"
             ]
           },
           "available": {
@@ -77240,7 +77257,8 @@
             "enum": [
               "claude-code",
               "codex",
-              "zcode"
+              "zcode",
+              "opencode"
             ]
           },
           "displayName": {

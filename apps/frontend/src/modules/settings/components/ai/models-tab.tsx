@@ -159,7 +159,7 @@ function ProviderBalanceCard({
           <span className="text-muted-foreground">
             {t('aiHub.balanceRemainingLabel')}
             {data.isAvailable === false && (
-              <Badge variant="destructive" className="ml-2 h-4 px-1.5 text-[10px]">
+              <Badge variant="destructive" className="ml-2 h-4 px-1.5 text-10">
                 {t('aiHub.balanceUnavailable')}
               </Badge>
             )}

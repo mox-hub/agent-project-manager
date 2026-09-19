@@ -119,6 +119,59 @@ describe('ProviderConfigService（模型查询 + 内置模型）', () => {
       );
     });
 
+    it('opencode-go：显式 baseUrl 走 openai 兼容 {base}/models + Bearer，覆盖式落库', async () => {
+      mockPrisma.aIProviderConfig.findUnique.mockResolvedValue({
+        ...deepseekProvider,
+        id: 'p-oc-go',
+        provider: 'opencode-go',
+        displayName: 'OpenCode Go',
+        baseUrl: 'https://opencode.ai/zen/go/v1',
+      });
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        jsonResponse({
+          data: [{ id: 'qwen3.7-max' }, { id: 'kimi-k2.6' }],
+        }),
+      );
+
+      const result = await service.detectModels('p-oc-go');
+
+      expect(result).toEqual({
+        models: ['kimi-k2.6', 'qwen3.7-max'],
+        synced: true,
+      });
+      const [url, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(url).toBe('https://opencode.ai/zen/go/v1/models');
+      expect((init as RequestInit).headers).toMatchObject({
+        Authorization: 'Bearer sk-test',
+      });
+      expect(mockPrisma.aIModelConfig.deleteMany).toHaveBeenCalledWith({
+        where: {
+          provider: 'opencode-go',
+          name: { notIn: ['kimi-k2.6', 'qwen3.7-max'] },
+        },
+      });
+    });
+
+    it('opencode（Zen）：未配 baseUrl 时按内置默认端点派生（zen/v1）', async () => {
+      mockPrisma.aIProviderConfig.findUnique.mockResolvedValue({
+        ...deepseekProvider,
+        id: 'p-oc',
+        provider: 'opencode',
+        displayName: 'OpenCode Zen',
+        baseUrl: null,
+      });
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        jsonResponse({ data: [{ id: 'claude-sonnet-4-6' }] }),
+      );
+
+      const result = await service.detectModels('p-oc');
+
+      expect(result).toEqual({ models: ['claude-sonnet-4-6'], synced: true });
+      expect((fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(
+        'https://opencode.ai/zen/v1/models',
+      );
+    });
+
     it('metadata.modelsEndpoint 显式覆盖默认端点（如 https://api.deepseek.com/models）', async () => {
       mockPrisma.aIProviderConfig.findUnique.mockResolvedValue({
         ...deepseekProvider,
