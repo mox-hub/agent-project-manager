@@ -89,7 +89,10 @@ export class CreateDispatchDto {
   @IsString()
   prompt?: string;
 
-  @ApiPropertyOptional({ example: 'E:\\repo', description: '执行工作目录' })
+  @ApiPropertyOptional({
+    example: 'C:\\Users\\me\\workspaces\\demo-project',
+    description: '执行工作目录',
+  })
   @IsOptional()
   @IsString()
   workspaceRoot?: string;

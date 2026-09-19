@@ -10805,7 +10805,7 @@ export interface components {
             protocolVersion: string;
             /**
              * @example [
-             *       "E:\\Project\\agent-project-manager"
+             *       "C:\\Users\\me\\workspaces\\demo-project"
              *     ]
              */
             workspaceRoots: string[];
@@ -10843,7 +10843,7 @@ export interface components {
         RuntimeCapabilitiesDto: {
             /**
              * @example [
-             *       "E:\\Project\\agent-project-manager"
+             *       "C:\\Users\\me\\workspaces\\demo-project"
              *     ]
              */
             workspaceRoots: string[];
@@ -10998,7 +10998,7 @@ export interface components {
             prompt?: string;
             /**
              * @description 执行工作目录
-             * @example E:\repo
+             * @example C:\Users\me\workspaces\demo-project
              */
             workspaceRoot?: string;
             /**

@@ -67899,7 +67899,7 @@
           },
           "workspaceRoots": {
             "example": [
-              "E:\\Project\\agent-project-manager"
+              "C:\\Users\\me\\workspaces\\demo-project"
             ],
             "type": "array",
             "items": {
@@ -67973,7 +67973,7 @@
         "properties": {
           "workspaceRoots": {
             "example": [
-              "E:\\Project\\agent-project-manager"
+              "C:\\Users\\me\\workspaces\\demo-project"
             ],
             "type": "array",
             "items": {
@@ -68338,7 +68338,7 @@
           },
           "workspaceRoot": {
             "type": "string",
-            "example": "E:\\repo",
+            "example": "C:\\Users\\me\\workspaces\\demo-project",
             "description": "执行工作目录"
           },
           "providerId": {

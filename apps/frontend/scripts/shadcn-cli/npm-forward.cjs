@@ -2,10 +2,12 @@
 // 把它的 npm install/add 调用安全转发给 pnpm（限定前端 workspace 目录）
 const { spawnSync } = require("child_process");
 const { appendFileSync } = require("fs");
+const path = require("path");
 
 const args = process.argv.slice(2);
 appendFileSync(__dirname + "/shim-calls.log", `CALLED: ${JSON.stringify(args)}\n`);
-const FE_DIR = "C:/Users/life_/orca/workspaces/agent-project-manager/manatee/apps/frontend";
+// 前端 workspace 根（垫片位于 apps/frontend/scripts/shadcn-cli/，向上两级）
+const FE_DIR = path.resolve(__dirname, "..", "..");
 
 let cmdArgs;
 if (args[0] === "install" || args[0] === "i" || args[0] === "add") {

@@ -35,7 +35,7 @@ export class RuntimeRegisterDto {
 
   @ApiProperty({
     type: [String],
-    example: ['E:\\Project\\agent-project-manager'],
+    example: ['C:\\Users\\me\\workspaces\\demo-project'],
   })
   @IsArray()
   @IsString({ each: true })
