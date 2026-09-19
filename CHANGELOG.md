@@ -21,6 +21,37 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| desktop · frontend | **Tauri 遗产整体剔除（ADR-014 E④ 收口，桌面技术栈 Electron 单轨）**：删除 `apps/desktop/src-tauri/`（Rust 壳全量）与 `@tauri-apps/cli`、`tauri:*`/`desktop:tauri:*` 脚本、tauri gitignore 行、`scripts/build-desktop.ps1`；壳桥契约更名 `window.__TAURI__.core.invoke` → `window.__APM_DESKTOP__.invoke`（扁平化；preload/electron-api 与 boot·desktop·onboarding·notification 模块及 CDP 脚本全量同步）；移除前端 `@tauri-apps/plugin-log` 依赖与 console 转发链（Electron 壳无 `__TAURI_INTERNALS__`，转发自 Electron 切换起即静默失效，行为无变化）；打包资源 staging `src-tauri/target/desktop-pack` → `build/desktop-pack`（pack.mjs/electron-builder.yml 同步）；AppInfo 载荷字段 `tauri`/`rust` → `shell`/`runtime`；check-doc-sync 桌面文档闸门反转为「Tauri 文档不得进主路径」 | CAP-A-14（ADR-014） | desktop type-check/lint + frontend tsc -b + desktop·boot·onboarding·shared 定向单测 + check-doc-sync | AGENTS.md / architecture.md / README / DESIGN.md / desktop README / frontend modules.md / 技术架构总览 / 能力清单 / 决策日志 ADR-014 补记 同步改口；Tauri 计划档案移 docs/archive |
+| 工具链 · server | **硬编码路径遗留清偿**：shadcn npm 转发垫片 `npm-forward.cjs` 的 FE_DIR 由 orca/manatee 时代个人绝对路径（三代目录变迁前）改为 `__dirname` 相对解析；`runtime.e2e-spec.ts` workspaceRoots 单反斜杠转义修复（`\t` 被解析为 TAB，与注册值不一致的潜伏错误）；runtime 契约示例值去项目化（`E:\Project\agent-project-manager`、`E:\repo` → `C:\Users\me\workspaces\demo-project`，与既有 `C:/Users/me/APM/docs` 示例风格统一） | — | contract:export + contract:generate + contract:check 契约三件套零漂移全绿（openapi 与双端 gen 各 3 处示例、9 行等量替换） | — |
+| server | **APM 研发流程内置模板入库（workflow）**：把仓库自身已验证的四条研发工作流经文法 v1 注册为内置模板（`onModuleInit` upsert 进 `AIWorkflowDefinition`，画布即流程图，APM 用自己管自己）——需求承接六步流（AI 初筛+六问起草→人工裁决闸门→归档→开工登记，对齐 requirement-intake skill）、功能开发主线走查（清单闸门→契约先行→分支实现→quality:gate→文档变更账→PR 合入）、发版管道走查（CHANGELOG 归版→全量门禁→release PR→tag→发版草案落库→人工 Publish）、夜航巡检走查（跑满门禁→机械自修→失败定位→报告起草落库）；message 内沉淀各站 SOP 与已知坑 | CAP-A-11 / CAP-A-12（内置模板通道） | workflow 模块 Vitest 47 用例全绿（upsert 断言覆盖 6 模板）+ server tsc 零错 + 本地 dev.db 落库核对 6 行 | 无（复用既有能力与文法，未动 API 契约） |
+
+### 测试链路提速与 Worktree 环境治理（chore/test-gate-speedup，2026-09-18）
+
+> 动因：仓库与 pnpm store 同处 `E:` SATA HDD（实测冷文件打开 55–85 ms/个，D: NVMe 为 0.17 ms），叠加 PR 门禁全量无增量、worktree 依赖策略缺失，导致「本地改完跑不动、PR 前必须全量、每棵新树环境装不上」。本批为**开发链路治理**，不改任何产品行为与对外契约。**Vitest 版本统一由独立切片负责，不在本条范围内。**
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| 工具链 | **PR 增量门禁**：新增 `scripts/gate.mjs`（按 frontend/server/cli/shared/contract/docs 分桶；`apps/server/src/modules/<m>/**` 改动映射到同名 e2e 套件；命中构建面 `package.json`/`pnpm-lock.yaml`/`pnpm-workspace.yaml`/`turbo.json`/`tsconfig*/scripts/` 或映射不确定时**一律回退全量**），根脚本新增 `gate:quick`（增量）与 `gate:full`（= 原 `quality:gate`，口径未动） | — | 脚本 `--dry`（打印执行计划）与 `--e2e-specs`（供 CI 取套件名）两种只读模式已本机实跑验证；`--dry` 在当前树（lock/workspace 有改动）正确回退全量。**端到端 `pnpm gate:quick` 未实跑** | — |
+| CI | **`quality-gate.yml` 改增量**：新增 `changes` 分类器 job（`fetch-depth: 0`，输出 full/sources/frontend/server/workspace/contract/docs）；各 job 加 `needs` + `if` 闸门；前端/后端单测非全量时走 `vitest run --changed origin/<base>`；`e2e-backend` 在 PR 上只跑受影响套件。**合并到 `pre-prod`/`main` 的 PR 强制全量**；工具链改动同样强制全量。已逐项比对原 workflow，**检查项零删减** | — | 声明式 workflow，**未在 GitHub 实跑**（推送后由真实 PR 验证）；分类逻辑与 `gate.mjs` 同口径 | — |
+| CI | **`nightly-full-gate.yml` 新增**：`schedule`（UTC 19:17 = 北京 03:17）+ `workflow_dispatch`，全量跑 type-check/lint/四包单测/契约/API 覆盖率/server e2e/文档三项——**比原 PR 门禁更严**（原 PR 门禁不含 `api:audit`）。**已知缺口**：前端 Playwright e2e（117 用例）未纳入——其后端需预先启动且前端 dev server 依赖未入库的 `.env.development`，接线固化前硬写只会稳定失败 | — | 未实跑；可经 `workflow_dispatch` 手动触发验证 | — |
+| CI | **补盲区**：新增 `test-workspace` job，`packages/apm-shared` 与 `apps/cli` 的单测此前在 CI 中从未被执行过 | — | 同上 | — |
+| 工具链 | **worktree 依赖共享**：新增 `scripts/worktree-deps.mjs` + 根脚本 `wt:check`（只读巡检：软链状态 + 依赖声明漂移）/ `wt:link`（建 junction，Windows 无需管理员）；`.claude/settings.json` 落 `worktree.symlinkDirectories`（6 个 node_modules 目录）；`.worktreeinclude` 从 `.worktrees/c03-project-steps/` 归位到仓库根（原先放错位置从未生效）；`.worktrees/` 加入 `.gitignore`。**半装残骸识别**：pnpm 完整安装必写 `.modules.yaml`，故「有 `.pnpm/` 却无 `.modules.yaml`」判定为 linking 被中断的中间态——`check` 单列 `[半装残骸]` 告警，`link` 默认跳过，`link --clean` 才清理（破坏性，需显式开关）。**边界**：依赖声明（lock/各 package.json）与主仓逐字节一致才可共享，漂移时 `check` 告警、`link` 拒绝 | — | `check` 已本机实跑：正确识别 `.worktrees/inbox` 的半装残骸，并对 inbox 与外部 worktree 的声明漂移告警。`link`/`--clean` **未实跑**；`.worktreeinclude` 归位后新建 worktree 的带入效果未验证 | — |
+| 工具链 | **迁盘脚本** `scripts/migrate-to-d.ps1`（`E:` HDD → `D:\workspace`，store → `D:\dev\pnpm-store`，两者须同卷否则 pnpm 退化为主硬链接丢失）：robocopy 整目录复制（**不用 `git clone`**——`docs/` 228 个文档与 `apps/server/.env*`/`prisma/dev.db` 等未入库），排除 `node_modules`/`.turbo`/`dist`/`target`（跨卷复制会破坏 pnpm 硬链接身份），默认干跑、`-Execute` 才真复制，**只复制不删源**，附复制后校验（HEAD / `docs/` 文件数 / 未跟踪 `.env` 与 `dev.db`）与人工修复清单 | — | PowerShell `Parser::ParseFile` 语法校验零错误；干跑预检已实跑。**`-Execute` 真实迁移未执行** | 迁移后需改的绝对路径清单见脚本输出（`apps/desktop/src-tauri/src/frontend.rs:19`、`apps/server/.env.local:5` 等） |
+
+### 测试运行时统一 Vitest 5.0.0（chore/vitest5-catalog，2026-09-19）
+
+> 四包（server / frontend / cli / apm-shared）测试运行时统一 **Vitest 5.0.0 经 pnpm catalog 锚定精确版本**（`vitest`/`@vitest/coverage-v8`/`@vitest/ui` 三项 specifier 均为 `5.0.0`，不带 `^`——防止后续 install 漂移到 5.0.x；版本策略裁决：**暂不追 5.0.1**）。零产品行为变更。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| 工具链 | **四包 vitest 统一挂 catalog**：server / frontend / cli / apm-shared 的 `vitest` devDependency 全部改 `catalog:` 引用，版本唯一真相源收敛到 `pnpm-workspace.yaml` catalog（精确 `5.0.0`）；`@vitest/coverage-v8`、`@vitest/ui` 同步入 catalog；lockfile 重锁后全树 `vitest@5.0.0`/`@vitest/*@5.0.0` 零漂移 | — | `pnpm install` 全绿（supply-chain 校验 2085 条通过）；lockfile grep 核对无 5.0.0 之外版本 | — |
+| 工具链 | **根级测试脚本族补齐**：根 `package.json` 新增 `test`（turbo run test）/ `test:watch`（server+frontend 并行 watch）/ `test:coverage` / `test:ui` / `test:e2e`（server）——此前根级只能进子包跑测试；四包各自 `test` 脚本统一为 `vitest run` | — | 同上 | — |
+| frontend | **前端 vitest 串行裁决落地**：threads 池 16 worker 下内存膨胀假死（100% CPU / 73% 内存后启动阶段卡死），forks 并行又与抢核互相放大——改 `pool: 'forks'` + `fileParallelism: false`（等价 jest --runInBand，与 server e2e 同款串行先例）；coverage `all: true` 移除（每文件全量报告无消费且拖慢） | — | 迁移后前端全量 884/885，唯一失败 design-system-page 5s 超时系机器慢非断言错 | — |
+| server | **server vitest 稳定性加固**：`hookTimeout: 30_000`（防与前端并行跑时 CPU 饱和致 Nest DI 编译超默认 10s 的误报，对齐 e2e 配置先例）；pool 注释更新（threads 快 2.4 倍但 Mastra/workflow 套件 worker_threads 下非确定性挂起的实证结论） | — | 迁移后 server 全量 791 用例绿（workflow 套件 1 条环境性 flaky 单跑即过） | — |
+| frontend | **design-system-page 测试超时放宽至 30s**：全量并行时机器慢，该页渲染整套组件库，5s 默认超时不够（纯机器性能问题非用例缺陷） | — | 30s 下全量绿 | — |
+
 ### Added
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
