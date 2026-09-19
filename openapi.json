@@ -27614,7 +27614,7 @@
         ],
         "responses": {
           "200": {
-            "description": "探测到的模型列表 { models: string[] }",
+            "description": "查询到的模型列表 { models, synced }（覆盖式同步：以查询结果为准；结果为空时 synced=false 不覆盖；metadata.modelsEndpoint 可覆盖默认链接）",
             "content": {
               "application/json": {
                 "schema": {
@@ -27734,7 +27734,421 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Auto-detect available models for provider",
+        "summary": "Query provider model list from its /models endpoint (persists to AIModelConfig)",
+        "tags": [
+          "AI Hub"
+        ]
+      }
+    },
+    "/_api/ai/providers/{id}/balance": {
+      "get": {
+        "operationId": "AiHubController_getProviderBalance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Provider ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "归一化余额 { type, balance?, currency?, windows[] }——充值型（如 DeepSeek /user/balance）单余额；套餐型（5h/周/月限额窗口）多进度；metadata.balanceEndpoint 可覆盖默认链接",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderBalanceResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在\n\nProvider not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Query provider balance (proxied, normalized; prepaid vs subscription)",
+        "tags": [
+          "AI Hub"
+        ]
+      }
+    },
+    "/_api/ai/default-model": {
+      "get": {
+        "operationId": "AiHubController_getDefaultModel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "内置模型 { provider, model }（未设置时两者为 null）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get workspace default AI model (内置模型)",
+        "tags": [
+          "AI Hub"
+        ]
+      },
+      "put": {
+        "operationId": "AiHubController_setDefaultModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDefaultModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "保存后的内置模型 { provider, model }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在\n\nProvider not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Set workspace default AI model (内置模型)",
         "tags": [
           "AI Hub"
         ]
@@ -68813,6 +69227,22 @@
             "type": "number",
             "description": "估算总成本（USD）"
           },
+          "totalCalls": {
+            "type": "number",
+            "description": "调用总次数"
+          },
+          "conversationCalls": {
+            "type": "number",
+            "description": "对话调用次数（挂 conversationId）"
+          },
+          "executionCalls": {
+            "type": "number",
+            "description": "执行链调用次数（挂 executionRunId/workflowRunId）"
+          },
+          "silentCalls": {
+            "type": "number",
+            "description": "静默场景调用次数（系统自动，无对话/执行关联）"
+          },
           "byModel": {
             "description": "按模型聚合",
             "type": "array",
@@ -68821,7 +69251,7 @@
             }
           },
           "byDay": {
-            "description": "按日聚合（近 30 天）",
+            "description": "按日聚合（最多 370 天，倒序）",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UsageByDayDto"
@@ -68831,6 +69261,10 @@
         "required": [
           "totalTokens",
           "totalCost",
+          "totalCalls",
+          "conversationCalls",
+          "executionCalls",
+          "silentCalls",
           "byModel",
           "byDay"
         ]
@@ -68944,6 +69378,17 @@
             "type": "object",
             "description": "附加配置",
             "additionalProperties": true
+          },
+          "availableModels": {
+            "description": "该厂家已启用的模型清单（AIModelConfig，模型查询结果）",
+            "example": [
+              "deepseek-chat",
+              "deepseek-reasoner"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -69075,7 +69520,11 @@
           },
           "organizationId": {
             "type": "string",
-            "description": "OpenAI Organization ID"
+            "description": "自定义端点"
+          },
+          "providerConfigId": {
+            "type": "string",
+            "description": "已保存配置记录 ID——校验通过时同步该记录在线状态为 connected"
           }
         },
         "required": [
@@ -69120,10 +69569,155 @@
             "items": {
               "type": "string"
             }
+          },
+          "synced": {
+            "type": "boolean",
+            "description": "是否已覆盖同步到 AIModelConfig（查询结果为空时 false）"
           }
         },
         "required": [
-          "models"
+          "models",
+          "synced"
+        ]
+      },
+      "ProviderBalanceWindowDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "description": "周期（归一化：5h / day / week / month）",
+            "example": "5h"
+          },
+          "used": {
+            "type": "object",
+            "description": "已用量（token 数或金额，视厂家返回而定）",
+            "nullable": true,
+            "example": 1200000
+          },
+          "limit": {
+            "type": "object",
+            "description": "限额（token 数或金额）",
+            "nullable": true,
+            "example": 5000000
+          },
+          "remaining": {
+            "type": "object",
+            "description": "剩余额度",
+            "nullable": true
+          },
+          "resetsAt": {
+            "type": "object",
+            "description": "窗口重置时间（厂家原样返回）",
+            "nullable": true
+          }
+        },
+        "required": [
+          "period"
+        ]
+      },
+      "ProviderBalanceResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "余额类型：prepaid=充值型（单余额）/ subscription=套餐型（限额窗口）/ unknown",
+            "enum": [
+              "prepaid",
+              "subscription",
+              "unknown"
+            ],
+            "example": "prepaid"
+          },
+          "currency": {
+            "type": "object",
+            "description": "币种（充值型，如 CNY）",
+            "nullable": true,
+            "example": "CNY"
+          },
+          "balance": {
+            "type": "object",
+            "description": "剩余余额（充值型）",
+            "nullable": true,
+            "example": 110
+          },
+          "grantedBalance": {
+            "type": "object",
+            "description": "赠送余额累计（充值型，可作进度条分母）",
+            "nullable": true,
+            "example": 10
+          },
+          "toppedUpBalance": {
+            "type": "object",
+            "description": "充值余额累计（充值型，可作进度条分母）",
+            "nullable": true,
+            "example": 100.55
+          },
+          "isAvailable": {
+            "type": "object",
+            "description": "账户是否可用（DeepSeek is_available）",
+            "nullable": true
+          },
+          "windows": {
+            "description": "限额窗口（套餐型：5h/周/月等；充值型为空数组）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProviderBalanceWindowDto"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "windows"
+        ]
+      },
+      "DefaultModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider 类型（未设置时为 null）",
+            "enum": [
+              "openai",
+              "anthropic",
+              "gemini",
+              "deepseek",
+              "glm"
+            ],
+            "nullable": true,
+            "example": "deepseek"
+          },
+          "model": {
+            "type": "object",
+            "description": "模型名（未设置时为 null）",
+            "nullable": true,
+            "example": "deepseek-chat"
+          }
+        }
+      },
+      "SetDefaultModelDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider 类型（须为已配置且启用的厂家）",
+            "enum": [
+              "openai",
+              "anthropic",
+              "gemini",
+              "deepseek",
+              "glm"
+            ],
+            "example": "deepseek"
+          },
+          "model": {
+            "type": "string",
+            "description": "模型名（不做白名单校验，允许自填新模型）",
+            "example": "deepseek-chat"
+          }
+        },
+        "required": [
+          "provider",
+          "model"
         ]
       },
       "AssignIssueResponseDto": {

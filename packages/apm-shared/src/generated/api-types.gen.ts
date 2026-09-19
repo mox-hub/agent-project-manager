@@ -3329,8 +3329,43 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Auto-detect available models for provider */
+        /** Query provider model list from its /models endpoint (persists to AIModelConfig) */
         post: operations["AiHubController_detectModels"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/providers/{id}/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Query provider balance (proxied, normalized; prepaid vs subscription) */
+        get: operations["AiHubController_getProviderBalance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/default-model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get workspace default AI model (内置模型) */
+        get: operations["AiHubController_getDefaultModel"];
+        /** Set workspace default AI model (内置模型) */
+        put: operations["AiHubController_setDefaultModel"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11219,9 +11254,17 @@ export interface components {
             totalTokens: number;
             /** @description 估算总成本（USD） */
             totalCost: number;
+            /** @description 调用总次数 */
+            totalCalls: number;
+            /** @description 对话调用次数（挂 conversationId） */
+            conversationCalls: number;
+            /** @description 执行链调用次数（挂 executionRunId/workflowRunId） */
+            executionCalls: number;
+            /** @description 静默场景调用次数（系统自动，无对话/执行关联） */
+            silentCalls: number;
             /** @description 按模型聚合 */
             byModel: components["schemas"]["UsageByModelDto"][];
-            /** @description 按日聚合（近 30 天） */
+            /** @description 按日聚合（最多 370 天，倒序） */
             byDay: components["schemas"]["UsageByDayDto"][];
         };
         AIModelDto: {
@@ -11277,6 +11320,14 @@ export interface components {
             metadata?: {
                 [key: string]: unknown;
             };
+            /**
+             * @description 该厂家已启用的模型清单（AIModelConfig，模型查询结果）
+             * @example [
+             *       "deepseek-chat",
+             *       "deepseek-reasoner"
+             *     ]
+             */
+            availableModels?: string[];
         };
         CreateProviderConfigDto: {
             /**
@@ -11355,8 +11406,10 @@ export interface components {
             apiKey: string;
             /** @description 自定义端点 */
             baseUrl?: string;
-            /** @description OpenAI Organization ID */
+            /** @description 自定义端点 */
             organizationId?: string;
+            /** @description 已保存配置记录 ID——校验通过时同步该记录在线状态为 connected */
+            providerConfigId?: string;
         };
         ValidateProviderResponseDto: {
             /** @description 是否有效 */
@@ -11378,6 +11431,87 @@ export interface components {
         DetectModelsResponseDto: {
             /** @description 探测到的模型名列表 */
             models: string[];
+            /** @description 是否已覆盖同步到 AIModelConfig（查询结果为空时 false） */
+            synced: boolean;
+        };
+        ProviderBalanceWindowDto: {
+            /**
+             * @description 周期（归一化：5h / day / week / month）
+             * @example 5h
+             */
+            period: string;
+            /**
+             * @description 已用量（token 数或金额，视厂家返回而定）
+             * @example 1200000
+             */
+            used?: Record<string, never> | null;
+            /**
+             * @description 限额（token 数或金额）
+             * @example 5000000
+             */
+            limit?: Record<string, never> | null;
+            /** @description 剩余额度 */
+            remaining?: Record<string, never> | null;
+            /** @description 窗口重置时间（厂家原样返回） */
+            resetsAt?: Record<string, never> | null;
+        };
+        ProviderBalanceResponseDto: {
+            /**
+             * @description 余额类型：prepaid=充值型（单余额）/ subscription=套餐型（限额窗口）/ unknown
+             * @example prepaid
+             * @enum {string}
+             */
+            type: "prepaid" | "subscription" | "unknown";
+            /**
+             * @description 币种（充值型，如 CNY）
+             * @example CNY
+             */
+            currency?: Record<string, never> | null;
+            /**
+             * @description 剩余余额（充值型）
+             * @example 110
+             */
+            balance?: Record<string, never> | null;
+            /**
+             * @description 赠送余额累计（充值型，可作进度条分母）
+             * @example 10
+             */
+            grantedBalance?: Record<string, never> | null;
+            /**
+             * @description 充值余额累计（充值型，可作进度条分母）
+             * @example 100.55
+             */
+            toppedUpBalance?: Record<string, never> | null;
+            /** @description 账户是否可用（DeepSeek is_available） */
+            isAvailable?: Record<string, never> | null;
+            /** @description 限额窗口（套餐型：5h/周/月等；充值型为空数组） */
+            windows: components["schemas"]["ProviderBalanceWindowDto"][];
+        };
+        DefaultModelResponseDto: {
+            /**
+             * @description Provider 类型（未设置时为 null）
+             * @example deepseek
+             * @enum {string|null}
+             */
+            provider?: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | null;
+            /**
+             * @description 模型名（未设置时为 null）
+             * @example deepseek-chat
+             */
+            model?: Record<string, never> | null;
+        };
+        SetDefaultModelDto: {
+            /**
+             * @description Provider 类型（须为已配置且启用的厂家）
+             * @example deepseek
+             * @enum {string}
+             */
+            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm";
+            /**
+             * @description 模型名（不做白名单校验，允许自填新模型）
+             * @example deepseek-chat
+             */
+            model: string;
         };
         AssignIssueResponseDto: {
             /** @description 任务 ID */
@@ -30710,13 +30844,253 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 探测到的模型列表 { models: string[] } */
+            /** @description 查询到的模型列表 { models, synced }（覆盖式同步：以查询结果为准；结果为空时 synced=false 不覆盖；metadata.modelsEndpoint 可覆盖默认链接） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["DetectModelsResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /**
+             * @description 资源不存在
+             *
+             *     Provider not found
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_getProviderBalance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Provider ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 归一化余额 { type, balance?, currency?, windows[] }——充值型（如 DeepSeek /user/balance）单余额；套餐型（5h/周/月限额窗口）多进度；metadata.balanceEndpoint 可覆盖默认链接 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBalanceResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /**
+             * @description 资源不存在
+             *
+             *     Provider not found
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_getDefaultModel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 内置模型 { provider, model }（未设置时两者为 null） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefaultModelResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_setDefaultModel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetDefaultModelDto"];
+            };
+        };
+        responses: {
+            /** @description 保存后的内置模型 { provider, model } */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefaultModelResponseDto"];
                 };
             };
             /** @description 请求参数错误 */

@@ -27,6 +27,7 @@ import {
 import { ChatRequestDto } from './dto/chat.dto';
 import { ConversationQueryDto } from './dto/conversation-query.dto';
 import { UsageQueryDto } from './dto/usage-query.dto';
+import { AI_DEFAULT_MODEL_CONFIG_KEY } from './services/provider-config.service';
 
 @Injectable()
 export class AiHubService {
@@ -41,7 +42,7 @@ export class AiHubService {
     private readonly usagePricing: UsagePricingService,
   ) {}
 
-  private getAdapter(modelPreference?: string): ModelAdapter {
+  private async getAdapter(modelPreference?: string): Promise<ModelAdapter> {
     if (modelPreference) {
       // Try to find by model name first
       const adapter = this.adapterRegistry.getAdapterByModel(modelPreference);
@@ -52,6 +53,24 @@ export class AiHubService {
       const byProvider = this.adapterRegistry.getAdapter(modelPreference);
       if (byProvider) {
         return byProvider;
+      }
+    }
+
+    // 无显式偏好：消费工作区内置模型配置（AppConfig ai.defaultModel）
+    const defaultRow = await this.prisma.appConfig.findFirst({
+      where: { key: AI_DEFAULT_MODEL_CONFIG_KEY, scope: 'global' },
+    });
+    const defaultModel = defaultRow?.value as {
+      provider?: string;
+      model?: string;
+    } | null;
+    if (defaultModel?.provider && defaultModel?.model) {
+      const resolved = await this.adapterRegistry.resolveAdapter(
+        defaultModel.provider,
+        defaultModel.model,
+      );
+      if (resolved) {
+        return resolved;
       }
     }
 
@@ -160,7 +179,7 @@ export class AiHubService {
       .filter((m) => m.content.length > 0);
 
     // Get adapter
-    const adapter = this.getAdapter(modelPreference);
+    const adapter = await this.getAdapter(modelPreference);
     const modelName = adapter.getModelName();
     const languageModel = adapter.getModel() as LanguageModel | null;
     if (!languageModel) {
@@ -573,7 +592,7 @@ export class AiHubService {
       >,
     );
 
-    // 按日聚合（近 30 天有用量记录的日期）
+    // 按日聚合（最多 370 天：成本页全年活跃热力图消费）
     const byDayMap = new Map<string, { tokens: number; cost: number }>();
     for (const log of logs) {
       const created = new Date(log.createdAt);
@@ -587,11 +606,25 @@ export class AiHubService {
     const byDay = [...byDayMap.entries()]
       .map(([day, v]) => ({ day, totalTokens: v.tokens, totalCost: v.cost }))
       .sort((a, b) => b.day.localeCompare(a.day))
-      .slice(0, 30);
+      .slice(0, 370);
+
+    // 调用来源分类计数：conversation=对话调用；execution/workflow=执行链调用；其余=静默场景（系统自动）
+    let conversationCalls = 0;
+    let executionCalls = 0;
+    let silentCalls = 0;
+    for (const log of logs) {
+      if (log.conversationId) conversationCalls += 1;
+      else if (log.executionRunId || log.workflowRunId) executionCalls += 1;
+      else silentCalls += 1;
+    }
 
     return {
       totalTokens,
       totalCost,
+      totalCalls: logs.length,
+      conversationCalls,
+      executionCalls,
+      silentCalls,
       byModel: Object.values(byModel),
       byDay,
     };

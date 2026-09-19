@@ -115,6 +115,82 @@ describe('AI Hub (e2e, local-only paths)', () => {
     });
   });
 
+  // ─── 内置模型（CAP-A-20：工作区默认 AI 模型）───
+
+  describe('GET /_api/ai/default-model', () => {
+    it('should return null default model when unset', () => {
+      return wsHttp
+        .get('/_api/ai/default-model')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          expect(res.body.data.provider).toBeNull();
+          expect(res.body.data.model).toBeNull();
+        });
+    });
+  });
+
+  describe('PUT /_api/ai/default-model', () => {
+    it('should reject unknown provider with 404', () => {
+      return wsHttp
+        .put('/_api/ai/default-model')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ provider: 'deepseek', model: 'deepseek-chat' })
+        .expect(404);
+    });
+
+    it('should set and read back default model', async () => {
+      await wsHttp
+        .put('/_api/ai/default-model')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ provider: 'openai', model: 'gpt-4o-mini' })
+        .expect(200)
+        .expect((res: Response) => {
+          expect(res.body.data.provider).toBe('openai');
+          expect(res.body.data.model).toBe('gpt-4o-mini');
+        });
+
+      return wsHttp
+        .get('/_api/ai/default-model')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          expect(res.body.data.provider).toBe('openai');
+          expect(res.body.data.model).toBe('gpt-4o-mini');
+        });
+    });
+  });
+
+  // ─── 余额查询（CAP-A-20 切片二：充值型/套餐型归一化）───
+
+  describe('GET /_api/ai/providers/:id/balance', () => {
+    it('should return 404 for unknown provider', () => {
+      return wsHttp
+        .get('/_api/ai/providers/non-existent/balance')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404);
+    });
+
+    it('should surface unreachable balance endpoint as 400 (offline-safe)', async () => {
+      // .invalid 保留 TLD 不经 DNS 解析：离线环境同样确定性失败
+      await wsHttp
+        .patch(`/_api/ai/providers/${providerId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          metadata: { balanceEndpoint: 'http://balance.invalid/user/balance' },
+        })
+        .expect(200);
+
+      return wsHttp
+        .get(`/_api/ai/providers/${providerId}/balance`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(400)
+        .expect((res: Response) => {
+          expect(JSON.stringify(res.body)).toContain('unreachable');
+        });
+    });
+  });
+
   describe('DELETE /_api/ai/providers/:id (second provider)', () => {
     it('should delete a fresh provider', async () => {
       const created = await wsHttp

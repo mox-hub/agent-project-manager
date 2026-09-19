@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Patch,
+  Put,
   Delete,
   Body,
   Param,
@@ -34,6 +35,9 @@ import {
   ValidateProviderDto,
   ProviderConfigResponseDto,
   ValidateProviderResponseDto,
+  SetDefaultModelDto,
+  DefaultModelResponseDto,
+  ProviderBalanceResponseDto,
 } from './dto/provider-config.dto';
 import {
   AIModelDto,
@@ -220,17 +224,67 @@ export class AiHubController {
   }
 
   @Post('providers/:id/detect-models')
-  @ApiOperation({ summary: 'Auto-detect available models for provider' })
+  @ApiOperation({
+    summary:
+      'Query provider model list from its /models endpoint (persists to AIModelConfig)',
+  })
   @ApiParam({ name: 'id', description: 'Provider ID' })
   @ApiOkResponse({
     type: DetectModelsResponseDto,
-    description: '探测到的模型列表 { models: string[] }',
+    description:
+      '查询到的模型列表 { models, synced }（覆盖式同步：以查询结果为准；结果为空时 synced=false 不覆盖；metadata.modelsEndpoint 可覆盖默认链接）',
   })
   @ApiResponse({ status: 404, description: 'Provider not found' })
   @ApiStandardErrors()
   async detectModels(@Param('id') id: string) {
-    const models = await this.providerConfigService.detectModels(id);
-    return { models };
+    return this.providerConfigService.detectModels(id);
+  }
+
+  @Get('providers/:id/balance')
+  @ApiOperation({
+    summary:
+      'Query provider balance (proxied, normalized; prepaid vs subscription)',
+  })
+  @ApiParam({ name: 'id', description: 'Provider ID' })
+  @ApiOkResponse({
+    type: ProviderBalanceResponseDto,
+    description:
+      '归一化余额 { type, balance?, currency?, windows[] }——充值型（如 DeepSeek /user/balance）单余额；套餐型（5h/周/月限额窗口）多进度；metadata.balanceEndpoint 可覆盖默认链接',
+  })
+  @ApiResponse({ status: 404, description: 'Provider not found' })
+  @ApiStandardErrors()
+  async getProviderBalance(@Param('id') id: string) {
+    return this.providerConfigService.getProviderBalance(id);
+  }
+
+  // ─── Workspace Default Model（内置模型）Endpoints ─────────────
+
+  @Get('default-model')
+  @ApiOperation({ summary: 'Get workspace default AI model (内置模型)' })
+  @ApiOkResponse({
+    type: DefaultModelResponseDto,
+    description: '内置模型 { provider, model }（未设置时两者为 null）',
+  })
+  @ApiStandardErrors()
+  async getDefaultModel() {
+    return (
+      (await this.providerConfigService.getDefaultModel()) ?? {
+        provider: null,
+        model: null,
+      }
+    );
+  }
+
+  @Put('default-model')
+  @ApiOperation({ summary: 'Set workspace default AI model (内置模型)' })
+  @ApiOkResponse({
+    type: DefaultModelResponseDto,
+    description: '保存后的内置模型 { provider, model }',
+  })
+  @ApiResponse({ status: 404, description: 'Provider not found' })
+  @ApiStandardErrors()
+  async setDefaultModel(@Body() dto: SetDefaultModelDto) {
+    return this.providerConfigService.setDefaultModel(dto.provider, dto.model);
   }
 
   // ─── AI Worker Endpoints ──────────────────────────────────────────

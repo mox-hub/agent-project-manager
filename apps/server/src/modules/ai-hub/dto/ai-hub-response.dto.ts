@@ -191,10 +191,34 @@ export class UsageResponseDto {
   @ApiProperty({ type: Number, description: '估算总成本（USD）' })
   totalCost: number;
 
+  @ApiProperty({ type: Number, description: '调用总次数' })
+  totalCalls: number;
+
+  @ApiProperty({
+    type: Number,
+    description: '对话调用次数（挂 conversationId）',
+  })
+  conversationCalls: number;
+
+  @ApiProperty({
+    type: Number,
+    description: '执行链调用次数（挂 executionRunId/workflowRunId）',
+  })
+  executionCalls: number;
+
+  @ApiProperty({
+    type: Number,
+    description: '静默场景调用次数（系统自动，无对话/执行关联）',
+  })
+  silentCalls: number;
+
   @ApiProperty({ type: [UsageByModelDto], description: '按模型聚合' })
   byModel: UsageByModelDto[];
 
-  @ApiProperty({ type: [UsageByDayDto], description: '按日聚合（近 30 天）' })
+  @ApiProperty({
+    type: [UsageByDayDto],
+    description: '按日聚合（最多 370 天，倒序）',
+  })
   byDay: UsageByDayDto[];
 }
 
@@ -229,6 +253,12 @@ export class AIModelDto {
 export class DetectModelsResponseDto {
   @ApiProperty({ type: [String], description: '探测到的模型名列表' })
   models: string[];
+
+  @ApiProperty({
+    type: Boolean,
+    description: '是否已覆盖同步到 AIModelConfig（查询结果为空时 false）',
+  })
+  synced: boolean;
 }
 
 /** DELETE /ai/providers/:id 返回 */
