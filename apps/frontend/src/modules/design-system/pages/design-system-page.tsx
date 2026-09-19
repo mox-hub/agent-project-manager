@@ -1387,7 +1387,7 @@ function AvatarModernizationShowcase() {
           <span>架构裁决：已舍弃其余非标方案，确立人类 (react-nice-avatar) 与 AI (avvvatars) 唯一标准</span>
         </div>
         <p className="text-11 text-muted-foreground leading-relaxed">
-          全仓统一由 <code>MemberAvatar</code> 组件自动承接：人类成员根据名称或标识确定性生成精美人物肖像；AI 智能体自动渲染极具未来感的算法几何符号。无需配置外部图片或 CDN，在离线与 Tauri 桌面端具备 100% 稳定性与极致性能。
+          全仓统一由 <code>MemberAvatar</code> 组件自动承接：人类成员根据名称或标识确定性生成精美人物肖像；AI 智能体自动渲染极具未来感的算法几何符号。无需配置外部图片或 CDN，在离线与 Electron 桌面端具备 100% 稳定性与极致性能。
         </p>
       </div>
     </div>
@@ -3240,7 +3240,7 @@ export function DesignSystemPage() {
                           <PreviewSection title="发版资产与元数据">
                             <PreviewRow label="变更真相源">CHANGELOG.md (单向再生完成)</PreviewRow>
                             <PreviewRow label="归档工单">28 项工单 · 6 项治理验收闭环</PreviewRow>
-                            <PreviewRow label="多端分发">Web (Vite) / Desktop (Tauri) / CLI</PreviewRow>
+                            <PreviewRow label="多端分发">Web (Vite) / Desktop (Electron) / CLI</PreviewRow>
                           </PreviewSection>
                           <PreviewFooterMeta>
                             <span>签发人: @alex (双签审计)</span>
@@ -3874,7 +3874,7 @@ export function DesignSystemPage() {
                             </div>
                           </div>
                           <PreviewSection title="团队范畴与负荷">
-                            <PreviewRow label="核心职责">Web · Tauri 桌面壳 · UI 规范</PreviewRow>
+                            <PreviewRow label="核心职责">Web · Electron 桌面壳 · UI 规范</PreviewRow>
                             <PreviewRow label="活跃负荷">14 个工单在跑 · 3 个分支</PreviewRow>
                             <PreviewRow label="交付效能">本周 22 PR 合入 · 零缺陷</PreviewRow>
                           </PreviewSection>
