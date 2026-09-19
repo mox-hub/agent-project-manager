@@ -1,0 +1,109 @@
+name: nightly-full-gate
+
+# 全量门禁兜底：PR 走的是增量（quality-gate.yml），这里按全量口径每天跑一遍，
+# 保证「增量没覆盖到的组合」最多一天之内会被发现。
+#
+# 触发：
+#   - 定时：UTC 19:17 = 北京时间 03:17（避开整点，减少与其它仓库抢 runner）
+#   - 手动：workflow_dispatch
+#
+# 已知缺口（有意未纳入，待补）：
+#   前端 Playwright e2e（apps/frontend/e2e，117 个用例）。它的 webServer 只托管前端，
+#   后端必须预先启动，且前端 dev server 依赖未入库的 .env.development 接线后端地址。
+#   在把这些接线固化进 CI 之前，硬写一个 job 只会稳定失败——留作后续切片。
+
+on:
+  schedule:
+    - cron: '17 19 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-full-gate
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  full-static:
+    name: type-check + lint + 全量单测（含 cli / apm-shared）
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter "./apps/server" run prisma:generate
+      - run: pnpm type-check
+      - run: pnpm lint
+      # turbo run test 会覆盖 apps/frontend、apps/server、apps/cli、packages/apm-shared
+      - run: pnpm exec turbo run test
+
+  contract:
+    name: API 契约零漂移 + 覆盖率
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter "./apps/server" run prisma:generate
+      - env:
+          DATABASE_URL: file:${{ github.workspace }}/apps/server/prisma/ci-contract.db
+          JWT_SECRET: ci-contract-secret
+          INTEGRATION_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef
+        run: pnpm contract:check
+      - run: pnpm check:contract-convention
+      - run: pnpm api:audit --min=95
+
+  e2e-backend:
+    name: server e2e（全量）
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter "./apps/server" run prisma:generate
+      - name: 准备 CI 数据库（默认库 schema + 工作区模板库）
+        working-directory: apps/server
+        run: |
+          DATABASE_URL="file:${{ github.workspace }}/apps/server/prisma/ci-dev.db" \
+            pnpm exec prisma db push --skip-generate --accept-data-loss
+          pnpm run build:template-db
+      - name: Run e2e
+        working-directory: apps/server
+        env:
+          DATABASE_URL: file:${{ github.workspace }}/apps/server/prisma/ci-dev.db
+          JWT_SECRET: ci-e2e-secret
+          INTEGRATION_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef
+        run: pnpm run test:e2e
+
+  docs:
+    name: 文档契约
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:docs-sync
+      - run: pnpm check:doc-coverage
+      - run: pnpm check:i18n-sync

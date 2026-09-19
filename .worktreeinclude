@@ -1,0 +1,77 @@
+# ============================================================================
+# .worktreeinclude — Claude Code 新建 worktree 时自动带入的「本地文件」清单
+# ============================================================================
+#
+# 解决：worktree 是从 git 签出的，所有被 .gitignore 排除的本地环境文件（env、
+# SQLite 库…）都不会出现，导致新 worktree 里服务器起不来、前端连不上后端。
+#
+# 【语义】采用 .gitignore 语法，但匹配是「双重条件」——一个文件被复制，必须同时：
+#   1. git 判定它已被忽略（.gitignore / apps/*/.gitignore 等）；
+#   2. 它在下方最终匹配为「包含」（可用 ! 取反）。
+# 因此：对**已跟踪**文件写模式是空操作（既不复制也不覆盖）；主 checkout 里不存在
+# 的文件也无从复制。
+#
+# 【已确认的行为】符号链接被跳过；目标路径已存在时跳过而非覆盖；仅在
+# Claude Code 自己创建 worktree 时触发（claude -w / EnterWorktree /
+# subagent isolation: worktree）；手工 git worktree add 不会触发。
+#
+# 【坑】不要用前导 **/（如 **/.env）——已知会静默匹配不到且无任何告警，
+# 一律改用显式路径。
+#
+# 【不要往这里塞 node_modules】大依赖树请走 settings.json 的
+# worktree.symlinkDirectories，或让 worktree 自己 pnpm install。
+# ============================================================================
+
+
+# ---------------------------------------------------------------------------
+# 后端运行必需
+# ---------------------------------------------------------------------------
+apps/server/.env
+
+# 刻意【不】带 apps/server/.env.local。
+# 该文件里的 DATABASE_URL 是硬编码绝对路径
+# （file:D:/workspace/agent-project-manager/apps/server/prisma/dev.db），
+# 而 nestjs/config 的 envFilePath 顺序让 .env.local 覆盖 .env
+# （见 apps/server/src/core/config/config.module.ts:12-17），
+# 一旦带入就会把所有 worktree 的服务器指回主 checkout 的库，
+# 破坏下面「每棵树一份独立 DB」的隔离。
+# 若将来把 .env.local 改成相对路径，再把它加进来。
+
+
+# ---------------------------------------------------------------------------
+# 前端本地覆盖
+# ---------------------------------------------------------------------------
+apps/frontend/.env.local
+apps/frontend/.env.development
+
+
+# ---------------------------------------------------------------------------
+# 默认工作区的 SQLite 库 —— 每棵 worktree 一份独立副本
+# ---------------------------------------------------------------------------
+# 说明：apps/server/prisma/ 下只有 template.db 是入库的（新工作区由它复制初始
+# 化）；默认工作区的库就是 DATABASE_URL 指向的 dev.db，缺了它服务器查询会报表
+# 不存在，且没有任何自动创建逻辑。
+#
+# ⚠️ 这是「活动 SQLite 文件的快照」：创建 worktree 时若主 checkout 的服务器正在
+#    运行，副本可能拿到不完整的最新事务。需要精确快照时先停服，或改用
+#    `pnpm --filter ./apps/server exec sqlite3 prisma/dev.db "VACUUM INTO '...'"`。
+# ⚠️ 副本自创建时刻起与主库分叉；在 worktree 里跑 prisma migrate 只影响本棵树，
+#    这正是隔离的目的，但也意味着 schema 变更不会自动回流主 checkout。
+apps/server/prisma/dev.db
+apps/server/prisma/dev.db-wal
+
+# dev.db-shm 刻意不带：它是可重建的共享内存索引，带一份陈旧的反而添乱。
+
+
+# ---------------------------------------------------------------------------
+# 可选 —— 按需取消注释
+# ---------------------------------------------------------------------------
+# 默认工作区之外的其它工作区注册表。不带也能跑（workspaces.json 缺失时
+# workspace-registry.util.ts 会重建出默认工作区），只有当你确实创建过额外
+# 工作区、想让 worktree 也看得见时才需要。
+# apps/server/workspaces.json
+
+# 本地文档真相源（PRD / 能力清单 / 架构设计，共 228 个文件）。
+# AGENTS.md 要求会话启动必读，但 docs/ 未被 git 跟踪（.gitignore:140），
+# 带入后 worktree 里的改动不会回流主 checkout —— 想清楚再开。
+# docs/
