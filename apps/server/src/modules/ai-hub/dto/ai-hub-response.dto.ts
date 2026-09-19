@@ -267,6 +267,46 @@ export class DeleteProviderResponseDto {
   success: boolean;
 }
 
+// ============ Pricing Source（models.dev 价目参考源，CAP-A-21）============
+
+/** GET/POST /ai/pricing-source 返回 */
+export class PricingSourceStatusDto {
+  @ApiProperty({
+    type: Boolean,
+    description: '价目数据是否可用（至少成功拉取过一次）',
+  })
+  available: boolean;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: '上次成功拉取时间（ISO，未拉取为 null）',
+    nullable: true,
+  })
+  fetchedAt?: string | null;
+
+  @ApiProperty({
+    type: Boolean,
+    description: '缓存是否过期（超过 TTL 24h 或从未加载）',
+  })
+  stale: boolean;
+
+  @ApiProperty({ type: Number, description: '覆盖厂家数' })
+  providerCount: number;
+
+  @ApiProperty({ type: Number, description: '覆盖模型数' })
+  modelCount: number;
+
+  @ApiProperty({ type: String, description: '数据源地址' })
+  source: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: '最近一次拉取失败原因（成功后清空）',
+    nullable: true,
+  })
+  error?: string | null;
+}
+
 // ============ AI Worker ============
 
 /** POST /ai/assign-issue 返回（coordinator.assignTaskToAI） */

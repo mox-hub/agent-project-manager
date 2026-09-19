@@ -7,7 +7,7 @@
  * 可配置查询链接（metadata.modelsEndpoint）。
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Brain, Check, CircleCheck, CircleX, Key, Link2, RefreshCw, RotateCcw, Save, Search, Sparkles, Trash2, Wallet, Zap, Cpu } from 'lucide-react';
+import { Brain, Check, CircleCheck, CircleX, Coins, Key, Link2, RefreshCw, RotateCcw, Save, Search, Sparkles, Trash2, Wallet, Zap, Cpu } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
@@ -22,6 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAiProviders, useUpdateProvider, useTestProvider, useDetectModels, useProviderBalance, providerKeys } from '@/modules/ai-hub/hooks/use-ai-providers';
+import { usePricingSource, useRefreshPricingSource } from '@/modules/ai-hub/hooks/use-pricing-source';
 import { useProviderValidation } from '@/modules/ai-hub/hooks/use-validate-provider';
 import type { AIProviderConfig } from '@/modules/ai-hub/api/ai-hub-api';
 import { useDefaultModelForm } from './use-default-model-form';
@@ -239,9 +240,94 @@ function ProviderBalanceCard({
   );
 }
 
-type ProviderStatusTone = 'connected' | 'disconnected' | 'error';
+/**
+ * 参考价源状态卡（CAP-A-21）：models.dev 目录加载状态 + 手动强刷。
+ * 只读状态查询不触发网络；模型清单仍以供应商 /models 为权威，此处仅展示价目参考源健康度。
+ */
+function PricingSourceCard() {
+  const { t } = useTranslation();
+  const { data, isLoading } = usePricingSource();
+  const refreshMutation = useRefreshPricingSource();
 
-function normalizeProviderStatus(status: AIProviderConfig['status']): ProviderStatusTone {
+  const handleRefresh = () => {
+    refreshMutation.mutate(undefined, {
+      onSuccess: (res) => {
+        if (res.available) {
+          toast.success(t('aiHub.pricingSourceRefreshed'));
+        } else {
+          toast.error(
+            t('aiHub.pricingSourceRefreshFailed', { message: res.error || t('common.unknown') }),
+          );
+        }
+      },
+      onError: (err: { message?: string }) =>
+        toast.error(
+          t('aiHub.pricingSourceRefreshFailed', { message: err?.message || t('common.unknown') }),
+        ),
+    });
+  };
+
+  return (
+    <Card className="border-border shadow-none">
+      <CardContent className="space-y-1 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Coins className="size-4 shrink-0 text-accent-yellow" />
+            <div className="min-w-0 text-xs">
+              <p className="font-medium text-foreground">{t('aiHub.pricingSourceTitle')}</p>
+              {isLoading ? (
+                <Skeleton className="mt-0.5 h-3 w-48" />
+              ) : (
+                <p className="truncate text-muted-foreground">
+                  {data?.available ? (
+                    <>
+                      <span className="mr-2 inline-flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-accent-green" />
+                        {t('aiHub.pricingSourceOnline')}
+                      </span>
+                      {t('aiHub.pricingSourceCoverage', {
+                        providers: data.providerCount,
+                        models: data.modelCount,
+                      })}
+                      {data.fetchedAt ? ` · ${new Date(data.fetchedAt).toLocaleString()}` : ''}
+                    </>
+                  ) : (
+                    t('aiHub.pricingSourceNever')
+                  )}
+                  {data?.error ? ` · ${data.error}` : ''}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {data?.stale && (
+              <Badge variant="outline" className="h-5 px-1.5 text-10">
+                {t('aiHub.pricingSourceStale')}
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0"
+              onClick={handleRefresh}
+              disabled={refreshMutation.isPending}
+              title={t('aiHub.pricingSourceRefresh')}
+            >
+              {refreshMutation.isPending ? (
+                <Spinner className="size-3 text-inherit" />
+              ) : (
+                <RefreshCw className="size-3" />
+              )}
+            </Button>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">{t('aiHub.pricingSourceHint')}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+type ProviderStatusTone = 'connected' | 'disconnected' | 'error';function normalizeProviderStatus(status: AIProviderConfig['status']): ProviderStatusTone {
   if (status === 'connected' || status === 'active') return 'connected';
   if (status === 'error') return 'error';
   return 'disconnected';
@@ -765,6 +851,9 @@ export function ModelsTab() {
           <p className="mt-2 text-xs text-muted-foreground">{t('aiHub.defaultModelHint')}</p>
         </CardContent>
       </Card>
+
+      {/* Pricing Source（参考价源 models.dev：加载状态 + 强刷，CAP-A-21） */}
+      <PricingSourceCard />
 
       {/* Provider Cards Grid */}
       <div>

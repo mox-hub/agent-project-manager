@@ -12,7 +12,8 @@ import { AiManagementSection } from './ai-management-section';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: string) => fallback ?? key,
+    // 对象插值（t(key, opts)）回键名渲染，避免把 options 对象当 React 子节点
+    t: (key: string, opts?: unknown) => (typeof opts === 'string' ? opts : key),
     i18n: { language: 'zh-CN' },
   }),
   initReactI18next: { type: '3rdParty', init: () => {} },
@@ -109,6 +110,23 @@ vi.mock('@/modules/ai-hub/hooks/use-validate-provider', () => ({
   useProviderValidation: () => ({ status: 'idle', validate: vi.fn(), reset: vi.fn() }),
 }));
 
+// 参考价源（CAP-A-21）：models.dev 价目目录状态（在线 + 覆盖规模）
+vi.mock('@/modules/ai-hub/hooks/use-pricing-source', () => ({
+  usePricingSource: () => ({
+    data: {
+      available: true,
+      fetchedAt: '2026-09-19T08:00:00.000Z',
+      stale: false,
+      providerCount: 222,
+      modelCount: 7860,
+      source: 'https://models.dev/api.json',
+      error: null,
+    },
+    isLoading: false,
+  }),
+  useRefreshPricingSource: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 // CLI / MCP 数据源（settings 合并页消费面全量 mock）
 vi.mock('@/modules/mcp-server', () => ({
   MCP_TRANSPORTS: ['stdio', 'http', 'sse'],
@@ -202,6 +220,17 @@ describe('AiManagementSection（合并页）', () => {
     expect(screen.getByText(/110\.55/)).toBeInTheDocument();
     // 查询失败引导与进度条节点存在（进度指示器 data-slot）
     expect(document.querySelector('[data-slot="progress-indicator"]')).not.toBeNull();
+  });
+
+  it('?tab=models 参考价源卡（CAP-A-21）：在线状态、覆盖规模行与刷新入口渲染', () => {
+    renderSection('/app/settings/ai?tab=models');
+    // 标题 + 在线状态点文案 + 规模行（插值回键名）+ 图标刷新按钮（title 提供可访问名）
+    expect(screen.getByText('aiHub.pricingSourceTitle')).toBeInTheDocument();
+    expect(screen.getByText('aiHub.pricingSourceOnline')).toBeInTheDocument();
+    expect(screen.getByText(/aiHub\.pricingSourceCoverage/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'aiHub.pricingSourceRefresh' })).toBeInTheDocument();
+    // 缓存未过期 → 无「已过期」徽章
+    expect(screen.queryByText('aiHub.pricingSourceStale')).not.toBeInTheDocument();
   });
 
   it('?tab=tools 初始化：CLI 工具卡渲染且品牌图标为厂家 logo（替换原 emoji/Bot 通用图标）', () => {

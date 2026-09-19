@@ -10,6 +10,8 @@ import {
   Query,
   UseGuards,
   Request,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiCreatedResponse,
@@ -25,6 +27,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 import { AiHubService } from './ai-hub.service';
 import { ProviderConfigService } from './services/provider-config.service';
+import { ModelsDevService } from './services/models-dev.service';
 import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.service';
 import { ChatRequestDto } from './dto/chat.dto';
 import { UsageQueryDto } from './dto/usage-query.dto';
@@ -47,6 +50,7 @@ import {
   ConversationListResponseDto,
   DeleteProviderResponseDto,
   DetectModelsResponseDto,
+  PricingSourceStatusDto,
   UsageResponseDto,
 } from './dto/ai-hub-response.dto';
 
@@ -58,6 +62,7 @@ export class AiHubController {
   constructor(
     private readonly aiHubService: AiHubService,
     private readonly providerConfigService: ProviderConfigService,
+    private readonly modelsDevService: ModelsDevService,
     private readonly coordinator: AiWorkerCoordinatorService,
   ) {}
 
@@ -255,6 +260,33 @@ export class AiHubController {
   @ApiStandardErrors()
   async getProviderBalance(@Param('id') id: string) {
     return this.providerConfigService.getProviderBalance(id);
+  }
+
+  // ─── Pricing Source（models.dev 价目参考源）Endpoints ──────────
+
+  @Get('pricing-source')
+  @ApiOperation({ summary: 'Get models.dev pricing source status' })
+  @ApiOkResponse({
+    type: PricingSourceStatusDto,
+    description:
+      'models.dev 价目参考源状态 { available, fetchedAt, stale, providerCount, modelCount, source, error? }（只读，不触发网络）',
+  })
+  @ApiStandardErrors()
+  async getPricingSourceStatus() {
+    return this.modelsDevService.getStatus();
+  }
+
+  @Post('pricing-source/refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Force refresh models.dev pricing catalog' })
+  @ApiOkResponse({
+    type: PricingSourceStatusDto,
+    description:
+      '强制重新拉取 models.dev 价目目录；失败保留旧缓存并在 error 透出原因（不抛错）',
+  })
+  @ApiStandardErrors()
+  async refreshPricingSource() {
+    return this.modelsDevService.refresh();
   }
 
   // ─── Workspace Default Model（内置模型）Endpoints ─────────────

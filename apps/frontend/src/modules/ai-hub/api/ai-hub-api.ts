@@ -206,6 +206,17 @@ export interface AiProviderBalance {
   windows: AiBalanceWindow[];
 }
 
+/** models.dev 价目参考源状态（CAP-A-21：估价链的分项参考价外部源） */
+export interface AiPricingSourceStatus {
+  available: boolean;
+  fetchedAt?: string | null;
+  stale: boolean;
+  providerCount: number;
+  modelCount: number;
+  source: string;
+  error?: string | null;
+}
+
 export interface CreateProviderRequest {
   providerId: string;
   displayName: string;
@@ -381,6 +392,14 @@ export const aiHubApi = {
   /** 查询厂家余额（归一化：充值型单余额 / 套餐型限额窗口） */
   getProviderBalance: (id: string) =>
     api.get<AiProviderBalance>(`/ai/providers/${id}/balance`),
+
+  /** models.dev 价目参考源状态（只读，不触发网络） */
+  getPricingSourceStatus: () =>
+    api.get<AiPricingSourceStatus>('/ai/pricing-source'),
+
+  /** 强制刷新 models.dev 价目目录（失败保留旧缓存并在 error 透出，不抛错） */
+  refreshPricingSource: () =>
+    api.post<AiPricingSourceStatus>('/ai/pricing-source/refresh'),
 
   getDefaultModel: () => api.get<AiDefaultModel>('/ai/default-model'),
 

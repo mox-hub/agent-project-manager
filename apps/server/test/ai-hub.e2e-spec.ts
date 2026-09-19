@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi } from 'vitest';
 import type { Response } from 'supertest';
 import { AppModule } from '../src/app.module';
 import {
@@ -187,6 +188,81 @@ describe('AI Hub (e2e, local-only paths)', () => {
         .expect(400)
         .expect((res: Response) => {
           expect(JSON.stringify(res.body)).toContain('unreachable');
+        });
+    });
+  });
+
+  // ─── 价目参考源（CAP-A-21：models.dev 状态/刷新）───
+
+  describe('GET /_api/ai/pricing-source', () => {
+    it('should return pricing source status shape (network-agnostic)', () => {
+      return wsHttp
+        .get('/_api/ai/pricing-source')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          const s = res.body.data;
+          expect(typeof s.available).toBe('boolean');
+          expect(typeof s.stale).toBe('boolean');
+          expect(typeof s.providerCount).toBe('number');
+          expect(typeof s.modelCount).toBe('number');
+          expect(s.providerCount).toBeGreaterThanOrEqual(0);
+          expect(s.modelCount).toBeGreaterThanOrEqual(0);
+          expect(s.source).toBe('https://models.dev/api.json');
+        });
+    });
+  });
+
+  describe('POST /_api/ai/pricing-source/refresh', () => {
+    it('should refresh catalog from stubbed models.dev and never throw on failure', async () => {
+      const fixture = {
+        deepseek: {
+          models: {
+            'deepseek-v4-flash': {
+              name: 'DeepSeek V4 Flash',
+              cost: { input: 0.15, output: 0.6 },
+            },
+          },
+        },
+        zhipuai: {
+          models: {
+            'glm-4.7': { name: 'GLM-4.7', cost: { input: 0.6, output: 2.2 } },
+          },
+        },
+      };
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => fixture,
+        } as unknown as Response),
+      );
+      try {
+        await wsHttp
+          .post('/_api/ai/pricing-source/refresh')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .expect(200)
+          .expect((res: Response) => {
+            const s = res.body.data;
+            expect(s.available).toBe(true);
+            expect(s.stale).toBe(false);
+            expect(s.providerCount).toBe(2);
+            expect(s.modelCount).toBe(2);
+            expect(s.error).toBeNull();
+          });
+      } finally {
+        vi.unstubAllGlobals();
+      }
+
+      // 桩移除后强刷一次（真实网络或离线均确定性返回状态形状，不抛 500）
+      return wsHttp
+        .post('/_api/ai/pricing-source/refresh')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          expect(typeof res.body.data.available).toBe('boolean');
+          expect(res.body.data.source).toBe('https://models.dev/api.json');
         });
     });
   });
