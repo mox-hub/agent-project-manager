@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "0.0.1",
+  "version": "0.6.2",
   "description": "",
   "author": "",
   "private": true,
@@ -23,6 +23,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.config.e2e.ts",
     "build:template-db": "pnpm exec tsx prisma/build-template.ts",
     "contract:export": "cross-env OPENAPI_EXPORT=1 vitest run --config vitest.config.e2e.ts contract-export"
@@ -95,7 +96,7 @@
     "@types/passport-local": "^1.0.38",
     "@types/semver": "^7.8.0",
     "@types/supertest": "^6.0.0",
-    "@vitest/coverage-v8": "^5.0.0",
+    "@vitest/coverage-v8": "catalog:",
     "cross-env": "^10.1.0",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
@@ -109,6 +110,6 @@
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "unplugin-swc": "^1.6.0",
-    "vitest": "^5.0.0"
+    "vitest": "catalog:"
   }
 }

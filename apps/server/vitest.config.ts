@@ -30,8 +30,12 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.spec.ts'],
-    // AppModule 全量启动内存重：forks 池按文件回收进程，避免 jest 式常驻累积
+    // forks 池为稳定性兜底：threads 池实测快 2.4 倍，但 Mastra/workflow 套件在
+    // worker_threads 下非确定性挂起（2026-09-18 实证：同配置一次绿一次 43s 无声
+    // 死亡 exit 5），进程级强隔离 + 强杀更可靠。勿在未复验前改 pool。
     pool: 'forks',
+    // 防与 frontend 并行跑时 CPU 饱和，Nest DI 编译超默认 10s 的误报（对齐 e2e 配置先例）
+    hookTimeout: 30_000,
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],

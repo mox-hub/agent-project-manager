@@ -1,10 +1,12 @@
 packages:
   - "apps/*"
   - "packages/*"
-# 禁用脚本运行前的依赖自检自动安装：NODE_ENV=production 下（如 tauri beforeBuildCommand）
+# 禁用脚本运行前的依赖自检自动安装：NODE_ENV=production 场景（如桌面壳打包链 pack.mjs）
 # 会触发根目录 `pnpm install --prod` 并要求清空 node_modules，破坏开发环境
 verifyDepsBeforeRun: false
 catalog:
+  '@vitest/coverage-v8': 5.0.0
+  '@vitest/ui': 5.0.0
   eslint: ^9.39.5
   eslint-config-prettier: ^9.1.2
   eslint-plugin-prettier: ^5.5.6
@@ -12,6 +14,7 @@ catalog:
   prettier: ^3.9.6
   typescript: ^5.9.3
   typescript-eslint: ^8.68.0
+  vitest: 5.0.0
 allowBuilds:
   '@nestjs/core': true
   '@prisma/client': true

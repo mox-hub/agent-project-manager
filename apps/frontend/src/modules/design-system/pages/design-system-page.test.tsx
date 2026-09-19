@@ -49,5 +49,6 @@ describe('DesignSystemPage', () => {
     expect(screen.getByText(/双轨成本与执行微徽章 \(DualTrackMetricPill\)/)).toBeInTheDocument();
 
     consoleError.mockRestore();
-  });
+    // 全量并行时机器慢，设计系统页渲染整套组件库，5s 默认超时不够
+  }, 30000);
 });

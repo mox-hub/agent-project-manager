@@ -5,6 +5,11 @@ import { MemoryRouter } from 'react-router-dom';
 import { stepsToFlow, WorkflowCanvas, CANVAS_TERMINAL_START, CANVAS_TERMINAL_END } from './workflow-canvas';
 import type { CanvasStep } from './workflow-canvas';
 
+// react-i18next：vi.mock 会被提升到文件最前执行，必须位于模块顶层作用域
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 // base-ui/xyflow 依赖 ResizeObserver（jsdom 缺失）
 beforeAll(() => {
   if (typeof (globalThis as { ResizeObserver?: unknown }).ResizeObserver === 'undefined') {
@@ -14,9 +19,6 @@ beforeAll(() => {
       disconnect() {}
     };
   }
-  vi.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key: string) => key }),
-  }));
 });
 
 const STEPS: CanvasStep[] = [
