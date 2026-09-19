@@ -1,6 +1,5 @@
 import {
   Bell,
-  Bot,
   Brain,
   ClipboardCheck,
   GitBranch,
@@ -69,7 +68,6 @@ export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
   "/app/settings/profile": { icon: UserRound, labelKey: "settings.profile", color: "#3B82F6" },
   // 设置子路由（AI / 集成迁入设置页后的新路径，供收藏分区解析）
   "/app/settings/ai": { icon: Brain, labelKey: "settings.aiManagement", color: "#F59E0B" },
-  "/app/settings/ai/agents": { icon: Bot, labelKey: "settings.aiAgents", color: "#6366F1" },
   "/app/settings/ai/executions": { icon: getEntityIcon("execution").icon, labelKey: "settings.aiExecutions", color: "#3B82F6" },
   "/app/settings/integrations": { icon: Plug, labelKey: "settings.integrations", color: "#06B6D4" },
   // 设置其余子页（均有 PageHeader 可收藏，此前未登记会退化为 Star 兜底）

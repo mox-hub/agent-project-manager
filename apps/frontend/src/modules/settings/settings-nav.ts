@@ -1,5 +1,4 @@
 import type { LucideIcon } from 'lucide-react';
-import { BarChart3 } from 'lucide-react';
 import {
   Palette,
   Shapes,
@@ -16,7 +15,6 @@ import {
   FolderOpen,
   Hash,
   Brain,
-  Bot,
   Play,
   Plug,
   Github,
@@ -77,10 +75,9 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
   {
     labelKey: 'settings.groupAi',
     items: [
+      // 「Agent 管理」已并入「AI 管理」页签（2026-09-19 合并），独立入口移除
       { to: '/app/settings/ai', labelKey: 'settings.aiManagement', icon: Brain },
-      { to: '/app/settings/ai/agents', labelKey: 'settings.aiAgents', icon: Bot },
       { to: '/app/settings/ai/executions', labelKey: 'settings.aiExecutions', icon: Play },
-      { to: '/app/settings/ai/usage', labelKey: 'settings.aiUsage', icon: BarChart3 },
       { to: '/app/settings/memory', labelKey: 'settings.memory', icon: Brain },
       { to: '/app/settings/runtime', labelKey: 'settings.runtime', icon: Server },
     ],

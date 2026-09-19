@@ -104,6 +104,11 @@ export interface AIModel {
 export interface UsageStats {
   totalTokens: number;
   totalCost: number;
+  /** 调用总次数与来源分类计数（conversation=对话 / execution·workflow=执行链 / silent=系统自动静默） */
+  totalCalls?: number;
+  conversationCalls?: number;
+  executionCalls?: number;
+  silentCalls?: number;
   byModel: Array<{
     modelName: string;
     totalTokens: number;
@@ -159,13 +164,46 @@ export interface AIProviderConfig {
   apiKeyMasked?: string;
   baseUrl?: string | null;
   defaultModel?: string | null;
+  /** 该厂家已启用模型清单（AIModelConfig：模型查询结果落库） */
   availableModels?: string[] | null;
+  /** 非敏感附加配置（含 modelsEndpoint 模型查询链接覆盖） */
+  metadata?: Record<string, unknown> | null;
   capabilities?: Record<string, unknown> | null;
   error?: string | null;
   errorMessage?: string | null;
   lastValidatedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/** 工作区内置模型（无显式偏好时 AI 调用链的默认 provider+model；未设置两者为 null） */
+export interface AiDefaultModel {
+  provider?: string | null;
+  model?: string | null;
+}
+
+/** 套餐型限额窗口（如编程套餐的 5 小时/周/月限额；token 数或金额视厂家而定） */
+export interface AiBalanceWindow {
+  period: '5h' | 'day' | 'week' | 'month' | (string & {});
+  used?: number | null;
+  limit?: number | null;
+  remaining?: number | null;
+  resetsAt?: string | null;
+}
+
+/**
+ * Provider 余额（归一化）：prepaid=充值型（单余额，如 DeepSeek /user/balance）/
+ * subscription=套餐型（5h/周/月等限额窗口）/ unknown=无法识别的返回形状
+ */
+export interface AiProviderBalance {
+  type: 'prepaid' | 'subscription' | 'unknown';
+  currency?: string | null;
+  balance?: number | null;
+  /** 充值型可选：赠送/充值累计（可作进度条分母） */
+  grantedBalance?: number | null;
+  toppedUpBalance?: number | null;
+  isAvailable?: boolean | null;
+  windows: AiBalanceWindow[];
 }
 
 export interface CreateProviderRequest {
@@ -183,6 +221,8 @@ export interface UpdateProviderRequest {
   baseUrl?: string;
   defaultModel?: string;
   enabled?: boolean;
+  /** 非敏感附加配置（整体替换，调用方负责与既有 metadata 合并） */
+  metadata?: Record<string, unknown>;
 }
 
 export interface ValidateProviderRequest {
@@ -190,6 +230,8 @@ export interface ValidateProviderRequest {
   providerId?: string;
   apiKey?: string;
   baseUrl?: string;
+  /** 已保存配置记录 ID——校验通过时后端同步该记录在线状态为 connected */
+  providerConfigId?: string;
 }
 
 export interface ValidateProviderResponse {
@@ -332,7 +374,18 @@ export const aiHubApi = {
     api.post<ValidateProviderResponse>(`/ai/providers/${id}/test`),
 
   detectModels: (id: string) =>
-    api.post<{ models: string[] }>(`/ai/providers/${id}/detect-models`),
+    api.post<{ models: string[]; synced: boolean }>(
+      `/ai/providers/${id}/detect-models`,
+    ),
+
+  /** 查询厂家余额（归一化：充值型单余额 / 套餐型限额窗口） */
+  getProviderBalance: (id: string) =>
+    api.get<AiProviderBalance>(`/ai/providers/${id}/balance`),
+
+  getDefaultModel: () => api.get<AiDefaultModel>('/ai/default-model'),
+
+  setDefaultModel: (data: { provider: string; model: string }) =>
+    api.put<AiDefaultModel>('/ai/default-model', data),
 
   // ─── AI Worker APIs ───────────────────────────────────────────
 

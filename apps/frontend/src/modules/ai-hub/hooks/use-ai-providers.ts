@@ -6,6 +6,10 @@ export const providerKeys = {
   detail: (id: string) => ['providers', id] as const,
 };
 
+export const defaultModelKeys = {
+  all: ['ai-default-model'] as const,
+};
+
 /**
  * 获取所有 AI Provider 配置
  */
@@ -100,6 +104,58 @@ export function useProviderModels(providerId: string) {
     queryKey: ['provider-models', providerId],
     queryFn: () => aiHubApi.detectModels(providerId),
     enabled: !!providerId,
+  });
+}
+
+/**
+ * 真实查询供应商模型清单（/models 端点，覆盖式落 AIModelConfig 并回流 availableModels）
+ */
+export function useDetectModels() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => aiHubApi.detectModels(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: providerKeys.all });
+    },
+  });
+}
+
+/**
+ * 查询厂家余额（归一化：充值型单余额 / 套餐型限额窗口；已配置 API key 才启用）
+ */
+export function useProviderBalance(id: string, hasApiKey: boolean) {
+  return useQuery({
+    queryKey: ['provider-balance', id],
+    queryFn: () => aiHubApi.getProviderBalance(id),
+    enabled: !!id && hasApiKey,
+    staleTime: 60_000,
+    retry: 1,
+  });
+}
+
+/**
+ * 读取工作区内置模型（未设置时 provider/model 为 null）
+ */
+export function useDefaultModel() {
+  return useQuery({
+    queryKey: defaultModelKeys.all,
+    queryFn: () => aiHubApi.getDefaultModel(),
+  });
+}
+
+/**
+ * 设置工作区内置模型
+ */
+export function useSetDefaultModel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { provider: string; model: string }) =>
+      aiHubApi.setDefaultModel(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: defaultModelKeys.all });
+    },
   });
 }
 

@@ -1,8 +1,7 @@
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@testing-library/react';
 import { createTestQueryClient } from '@/test-utils/providers';
 import { AnalyticsPage, getAvailableAnalyticsTabs } from './analytics-page';
 
@@ -46,24 +45,55 @@ vi.mock('../hooks/use-analytics-overview', () => ({
   usePlaybookHealth: () => ({ data: { stages: [], mountedProjects: 0 }, isLoading: false }),
 }));
 
-function renderPage() {
+// 成本 Tab 数据源（GET /ai/usage，CAP-C-06 迁移做实）：可变注入（正常流=固定数据，空态流置空）
+const usageMock = vi.hoisted(() => ({
+  data: {
+    totalTokens: 123456,
+    totalCost: 1.23,
+    byModel: [
+      { modelName: 'gpt-test', totalTokens: 100000, totalCost: 1.0 },
+      { modelName: 'claude-test', totalTokens: 23456, totalCost: 0.23 },
+    ],
+    byDay: [
+      { day: '2026-09-18', totalTokens: 100000, totalCost: 1.0 },
+      { day: '2026-09-19', totalTokens: 23456, totalCost: 0.23 },
+    ],
+  } as
+    | {
+        totalTokens: number;
+        totalCost: number;
+        byModel: Array<{ modelName: string; totalTokens: number; totalCost: number }>;
+        byDay: Array<{ day: string; totalTokens: number; totalCost: number }>;
+      }
+    | undefined,
+}));
+vi.mock('../hooks/use-ai-usage', () => ({
+  useAiUsage: () => ({ data: usageMock.data, isLoading: false }),
+  AI_USAGE_RANGE_OPTIONS: [
+    { id: '7d', days: 7 },
+    { id: '30d', days: 30 },
+    { id: 'all' },
+  ],
+}));
+
+function renderPage(initialEntry = '/app/analytics') {
   const queryClient = createTestQueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <AnalyticsPage />
       </MemoryRouter>
     </QueryClientProvider>,
   );
 }
 
-describe('AnalyticsPage 可用 Tab 计算（CAP-C-06 消费面去重）', () => {
-  it('生产模式仅保留 overview，四个 mock Tab 不出现', () => {
+describe('AnalyticsPage 可用 Tab 计算（CAP-C-06 消费面去重 + 成本做实）', () => {
+  it('生产模式保留 overview + cost（cost 迁入真实数据升正式 Tab），三个 mock Tab 不出现', () => {
     const prod = getAvailableAnalyticsTabs(false);
-    expect(prod.map((d) => d.value)).toEqual(['overview']);
+    expect(prod.map((d) => d.value)).toEqual(['overview', 'cost']);
   });
 
-  it('DEV 模式四个 mock Tab（cost/quality/risk/team）存在', () => {
+  it('DEV 模式三个 mock Tab（quality/risk/team）仍在', () => {
     const dev = getAvailableAnalyticsTabs(true);
     expect(dev.map((d) => d.value)).toEqual(['overview', 'cost', 'quality', 'risk', 'team']);
   });
@@ -86,14 +116,49 @@ describe('AnalyticsPage', () => {
     expect(screen.queryByText('示例项目')).toBeNull();
   });
 
-  it('标题走 i18n（analytics.title）；DEV 测试环境四个 mock Tab 仍在工具栏', async () => {
+  it('标题走 i18n（analytics.title）；DEV 测试环境三个 mock Tab 仍在工具栏', async () => {
     renderPage();
 
     expect(await screen.findByRole('heading', { name: '分析' })).toBeTruthy();
-    // vitest 运行在 DEV 模式（import.meta.env.DEV = true），mock Tab 标签仍在
+    // vitest 运行在 DEV 模式（import.meta.env.DEV = true），mock Tab 标签仍在（cost 已升正式 Tab）
     expect(screen.getAllByText('成本').length).toBeGreaterThan(0);
     expect(screen.getAllByText('质量').length).toBeGreaterThan(0);
     expect(screen.getAllByText('风险').length).toBeGreaterThan(0);
     expect(screen.getAllByText('团队').length).toBeGreaterThan(0);
+  });
+});
+
+describe('AnalyticsPage 成本 Tab（AI 用量迁移做实，?tab=cost 定位）', () => {
+  it('正常流：渲染汇总卡/按日成本柱状图/AI 活跃热力图/按模型表', async () => {
+    renderPage('/app/analytics?tab=cost');
+
+    // ?tab=cost 定位生效 + 汇总卡（i18n mock 返回键名）：token/成本 + 调用来源四计数
+    expect(await screen.findByText('analytics.cost.totalTokens')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.totalCost')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.totalCalls')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.conversationCalls')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.silentCalls')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.executionCalls')).toBeTruthy();
+    // 柱状图卡 + 热力图卡 + 按模型表
+    expect(screen.getByText('analytics.cost.dailyCost')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.heatmap')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.byModel')).toBeTruthy();
+    // 模型行与 Token 数值（按 totalTokens 降序）
+    expect(screen.getByText('gpt-test')).toBeTruthy();
+    expect(screen.getByText('claude-test')).toBeTruthy();
+    expect(screen.getByText('100,000')).toBeTruthy();
+    // 旧设置页独有内容已并入：不再出现空态
+    expect(screen.queryByText('analytics.cost.emptyTitle')).toBeNull();
+  });
+
+  it('空态流：范围内无用量记录时展示空态，范围选择器仍保留（不被困在空范围）', async () => {
+    usageMock.data = { totalTokens: 0, totalCost: 0, byModel: [], byDay: [] };
+    renderPage('/app/analytics?tab=cost');
+
+    expect(await screen.findByText('analytics.cost.emptyTitle')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.emptyHint')).toBeTruthy();
+    // NativeSelect 为 base-ui 组合件，jsdom 无法 fireEvent 驱动弹层；空态下以 aria-label 断言其仍挂载
+    expect(screen.getByLabelText('analytics.cost.range')).toBeTruthy();
+    usageMock.data = undefined; // 还原，避免影响后续用例
   });
 });

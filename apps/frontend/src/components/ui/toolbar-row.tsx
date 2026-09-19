@@ -137,13 +137,13 @@ export interface ToolbarActionDescriptor {
 export interface ToolbarRowProps {
   aiId?: string;
   className?: string;
-  /* 视图管理（左） */
-  views: ToolbarViewEntry[];
-  activeViewId: string;
-  onSelectView: (id: string) => void;
-  onCreateView: (name: string, icon?: string) => void;
-  onUpdateView: (id: string, patch: Partial<Pick<ToolbarViewEntry, "name" | "icon">>) => void;
-  onDeleteView: (id: string) => void;
+  /* 视图管理（左）：整体不传（undefined）即隐藏视图胶囊与新增按钮——纯样式切换页（analytics / 类型详情）用 */
+  views?: ToolbarViewEntry[];
+  activeViewId?: string;
+  onSelectView?: (id: string) => void;
+  onCreateView?: (name: string, icon?: string) => void;
+  onUpdateView?: (id: string, patch: Partial<Pick<ToolbarViewEntry, "name" | "icon">>) => void;
+  onDeleteView?: (id: string) => void;
   /** 当前视图是否有未保存变动（指示脏状态） */
   isDirty?: boolean;
   /** 保存当前改动到当前激活视图 */
@@ -850,19 +850,23 @@ export function ToolbarRow({
       data-ai-role="filter"
     >
       <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto">
-        {views.map((view) => (
-          <ViewPill
-            key={view.id}
-            view={view}
-            active={view.id === activeViewId}
-            isDirty={view.id === activeViewId ? isDirty : false}
-            onSelect={onSelectView}
-            onUpdate={onUpdateView}
-            onDelete={onDeleteView}
-            onSaveCurrent={onSaveCurrentView}
-          />
-        ))}
-        <AddViewButton onCreate={onCreateView} />
+        {views && onSelectView && onUpdateView && onDeleteView ? (
+          <>
+            {views.map((view) => (
+              <ViewPill
+                key={view.id}
+                view={view}
+                active={view.id === activeViewId}
+                isDirty={view.id === activeViewId ? isDirty : false}
+                onSelect={onSelectView}
+                onUpdate={onUpdateView}
+                onDelete={onDeleteView}
+                onSaveCurrent={onSaveCurrentView}
+              />
+            ))}
+            {onCreateView ? <AddViewButton onCreate={onCreateView} /> : null}
+          </>
+        ) : null}
       </div>
 
       {viewStyle && styleLayout === "centered" ? (
