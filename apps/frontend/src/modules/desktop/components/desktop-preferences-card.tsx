@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Download, PackageOpen, Settings2 } from 'lucide-react';
 import {
   invoke,
-  isTauriAvailable,
+  isDesktopShellAvailable,
   type DesktopPersistentState,
   type DesktopUpdateStatus,
 } from '@/shared/types/electron-api';
@@ -35,7 +35,7 @@ export function DesktopPreferencesCard() {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    if (!isTauriAvailable()) {
+    if (!isDesktopShellAvailable()) {
       return;
     }
     void invoke<DesktopPersistentState>('get_desktop_state')
@@ -81,7 +81,7 @@ export function DesktopPreferencesCard() {
     }
   }, [t]);
 
-  if (!isTauriAvailable()) {
+  if (!isDesktopShellAvailable()) {
     return null;
   }
 

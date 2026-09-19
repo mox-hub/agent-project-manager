@@ -6,7 +6,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDown, Copy, ScrollText, Search, Trash2 } from 'lucide-react';
-import { isTauriAvailable } from '@/shared/types/electron-api';
+import { isDesktopShellAvailable } from '@/shared/types/electron-api';
 import { useDesktopLogs, type LogLevelFilter } from '../hooks/use-desktop-logs';
 import { SectionCard } from '@/components/ui/section-card';
 import { Button } from '@/components/ui/button';
@@ -49,7 +49,7 @@ export function DesktopLogCard() {
     }
   }, [snapshot, autoRefresh, levelFilter, search]);
 
-  if (!isTauriAvailable()) {
+  if (!isDesktopShellAvailable()) {
     return null;
   }
 

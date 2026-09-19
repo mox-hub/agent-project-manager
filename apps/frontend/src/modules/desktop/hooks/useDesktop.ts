@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   invoke,
-  isTauriAvailable,
+  isDesktopShellAvailable,
   type DesktopAppInfo,
   type BackendInfo,
   type BackendStatus,
@@ -44,7 +44,7 @@ export function useDesktop(): UseDesktopReturn {
   const [daemonStatus, setDaemonStatus] = useState<RuntimeDaemonStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const isDesktop = isTauriAvailable();
+  const isDesktop = isDesktopShellAvailable();
 
   const getBackendStatus = useCallback(async () => {
     if (!isDesktop) return;

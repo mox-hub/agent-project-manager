@@ -1,5 +1,5 @@
 /**
- * 桌面端初始化共享逻辑（翻译自 Tauri src-tauri/src/setup.rs）：
+ * 桌面端初始化共享逻辑（由旧 Tauri 壳 setup.rs）：
  * 目录创建、密钥持久化、Prisma 建库、Node 运行时解析。
  * Electron 侧差异：Prisma CLI 一律用 Electron 内置 Node（process.execPath +
  * ELECTRON_RUN_AS_NODE=1）执行，不再依赖随包 node.exe——仅路径 A（spawn node.exe
@@ -77,7 +77,7 @@ export function migrateLegacyUserData(config: AppConfig, legacyDir: string): voi
 }
 
 /**
- * 首启生成随机密钥并落盘 secrets.json，后续启动复用（32 字节 = 64 hex，与 Tauri 版一致）。
+ * 首启生成随机密钥并落盘 secrets.json，后续启动复用（32 字节 = 64 hex，与旧壳一致）。
  * 落盘格式（ADR-015 安全加固）：经 Electron safeStorage 加密（Windows = DPAPI，机器级绑
  * 定）；加密服务不可用时明文回退并标记 is_plaintext。旧版明文格式读入时原样生效（不强制
  * 重加密）。加密格式但解密失败（如整目录被拷到别的机器）时直接报错——绝不静默重新生成：

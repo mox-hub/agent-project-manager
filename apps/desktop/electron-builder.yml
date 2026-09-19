@@ -1,6 +1,6 @@
 # Electron 桌面壳打包配置（CAP-A-14 / ADR-014）
-# 资源准备：pnpm pack:resources → src-tauri/target/desktop-pack/{bin,server,frontend}
-# （壳无关的共享 staging，与 Tauri 打包链共用同一份产物）
+# 资源准备：pnpm pack:resources → build/desktop-pack/{bin,server,frontend}
+# （壳无关的共享 staging，由 pack.mjs 单独产出）
 appId: com.agentpm.desktop
 productName: Agent Project Manager
 # 直接用本地 electron 的已解压产物：跳过「下载 zip→解压到 release/*.tmp→rename」环节——
@@ -24,7 +24,7 @@ files:
 # server 运行时（dist + node_modules + prisma 预生成客户端）、前端产物、node.exe
 # 必须放 asar 外（native 引擎 dll 无法从 asar 加载）
 extraResources:
-  - from: src-tauri/target/desktop-pack
+  - from: build/desktop-pack
     to: .
 win:
   target:

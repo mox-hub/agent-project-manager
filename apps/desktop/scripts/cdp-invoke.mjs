@@ -35,7 +35,7 @@ const send = (method, params) =>
   });
 
 const result = await send('Runtime.evaluate', {
-  expression: `window.__TAURI__.core.invoke(${JSON.stringify(cmd)}, ${JSON.stringify(args)}).then(v => JSON.stringify(v)).catch(e => 'ERR: ' + (e.message ?? e))`,
+  expression: `window.__APM_DESKTOP__.invoke(${JSON.stringify(cmd)}, ${JSON.stringify(args)}).then(v => JSON.stringify(v)).catch(e => 'ERR: ' + (e.message ?? e))`,
   awaitPromise: true,
   returnByValue: true,
 });

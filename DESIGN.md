@@ -11,11 +11,11 @@ governance: "docs/design/PRINCIPLES.md 并入升级为本文件"
 
 # APM 全局设计系统规范与组件架构标准 (v2.0)
 
-> **本文件地位**：`apps/frontend` 与 `apps/desktop`（Tauri）界面设计与样式重构的**全仓唯一最高权威标准**。
+> **本文件地位**：`apps/frontend` 与 `apps/desktop`（Electron）界面设计与样式重构的**全仓唯一最高权威标准**。
 > 本规范由 `docs/design/PRINCIPLES.md` (v1.0) 升级演进而来，经多轮讨论深度沉淀，专门解决：
 > 1. **色彩克制**：摒弃纯黑白灰冷淡风与刺眼彩虹糖，建立**低饱和度多色域灰调色阶系统**。
 > 2. **空间承载**：推行**「外舒内紧」（Respiratory Outside, Compact Inside）卡片分割体系**，提高视口信息吞吐量。
-> 3. **多端字体**：建立适配 Web 与 Tauri 桌面壳（不同 DPI 缩放）的**双层字阶与动态密度模式**。
+> 3. **多端字体**：建立适配 Web 与 Electron 桌面壳（不同 DPI 缩放）的**双层字阶与动态密度模式**。
 > 4. **AI 多样化承载**：构建 **5 类高信息密度 AI 结构化卡片矩阵**，告别简单卡片。
 > 5. **系统化动效**：确立**微交互、状态展开、AI 思考脉冲与多层模态**的完整动效设计哲学与白名单。
 > 6. **双表面组件治理**：全量重新整理组件资产，**全面标识「人类控制面组件 [HUMAN]」与「AI 执行面组件 [AI]」**，并列出风格不统一组件的整改路线。
@@ -164,7 +164,7 @@ APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主�
 
 ### 3.5 应用壳层架构（Shell Architecture）与全局交互复合组件规范
 
-为确保全端（Web 浏览器 + Tauri 桌面端）在浅色与深色模式下均具备统一的 **Codex 级磨砂毛玻璃质感（Frosted Glass Glassmorphism）** 与呼吸手感，将全站底层外壳与全局交互组件规范化如下：
+为确保全端（Web 浏览器 + Electron 桌面端）在浅色与深色模式下均具备统一的 **Codex 级磨砂毛玻璃质感（Frosted Glass Glassmorphism）** 与呼吸手感，将全站底层外壳与全局交互组件规范化如下：
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -228,7 +228,7 @@ APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主�
 ## 四、多端自适应字体与排版主次
 
 ### 4.1 多端环境挑战与自适应机制
-本项目需同时跑在 **Web 浏览器** 与 **Tauri 桌面壳（Windows WebView2 / macOS WebKit）**。针对 Windows 笔记本多发的高 DPI 缩放（125% / 150%）问题：
+本项目需同时跑在 **Web 浏览器** 与 **Electron 桌面壳（Chromium 内核）**。针对 Windows 笔记本多发的高 DPI 缩放（125% / 150%）问题：
 1. **双层字阶分工**：
    * **长文本阅读正文**（文档、长描述、讨论评论）：**`14px`（`text-sm`）**，行高 `leading-relaxed`（1.6），保障长时间阅读舒适度。
    * **卡片高密数据区**（工单列表、属性键值、AI 工具流、表格行）：**`13px`（`text-13`）**，行高 `leading-snug`（1.375），兼顾极致密度与清晰度。
@@ -354,13 +354,13 @@ APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主�
 
 | 偏离组件 | 现状问题与风格冲突 | 明确整改动作 | 优先级 |
 |---|---|---|---|
-| **`PropertyPanel` 胶囊组**<br>([property-panel.tsx](file:///E:/Project/agent-project-manager/apps/frontend/src/components/ui/property-panel.tsx)) | 详情页右栏自创了 `CapsuleSelect`、`DateCapsuleField`，全走 `rounded-full` 大药丸圆角，与主表单 `rounded-md` 割裂。 | **全面矩形化**：将圆角统一收敛为 `rounded-md`（6px），与全局 Select / DatePicker 统一设计语言。 | P0 (阻断) |
-| **`DesignSystemPage` 内部 Mock**<br>([design-system-page.tsx](file:///E:/Project/agent-project-manager/apps/frontend/src/modules/design-system/pages/design-system-page.tsx)) | 存在 276 处非语义 Tailwind 裸色，且手写了 `StatusChip`、`PriorityIcon`、`SeverityBar` 等伪组件。 | **彻底清理**：移除手写伪组件，全面替换为正式的 `StatusPill`、`StatusIconFrame`，裸色全部收敛为语义 Token。 | P0 (阻断) |
-| **`StatsCard` 鲜艳彩底**<br>([stats-card.tsx](file:///E:/Project/agent-project-manager/apps/frontend/src/components/ui/stats-card.tsx)) | 采用了高饱和度的 `STATS_THEMES.blue / yellow` 大面积纯色彩底，视觉跳脱。 | **改用统一 `bg-card`**：背景统一为低调卡片底，仅数字与微图标采用低饱和点缀。 | P1 |
-| **`Empty` (官方) 双轨**<br>([empty.tsx](file:///E:/Project/agent-project-manager/apps/frontend/src/components/ui/empty.tsx)) | 官方 5 插槽虚线大框组件无生产页面消费，与自研轻量 `EmptyState` 形成双轨。 | **删除 `empty.tsx`**：全站彻底收敛为统一的 `EmptyState`。 | P1 |
-| **`FloatingDock` & `ChapterScrubber`**<br>([floating-dock.tsx](file:///E:/Project/agent-project-manager/apps/frontend/src/components/ui/floating-dock.tsx)) | 带有浓厚的 macOS 磁性放大动效与拟物阴影，与 Linear 极简工程风不符。 | 从生产组件目录剥离，不再作为标准件推荐。 | P2 |
+| **`PropertyPanel` 胶囊组**<br>([property-panel.tsx](file:///D:/workspace/agent-project-manager/apps/frontend/src/components/ui/property-panel.tsx)) | 详情页右栏自创了 `CapsuleSelect`、`DateCapsuleField`，全走 `rounded-full` 大药丸圆角，与主表单 `rounded-md` 割裂。 | **全面矩形化**：将圆角统一收敛为 `rounded-md`（6px），与全局 Select / DatePicker 统一设计语言。 | P0 (阻断) |
+| **`DesignSystemPage` 内部 Mock**<br>([design-system-page.tsx](file:///D:/workspace/agent-project-manager/apps/frontend/src/modules/design-system/pages/design-system-page.tsx)) | 存在 276 处非语义 Tailwind 裸色，且手写了 `StatusChip`、`PriorityIcon`、`SeverityBar` 等伪组件。 | **彻底清理**：移除手写伪组件，全面替换为正式的 `StatusPill`、`StatusIconFrame`，裸色全部收敛为语义 Token。 | P0 (阻断) |
+| **`StatsCard` 鲜艳彩底**<br>([stats-card.tsx](file:///D:/workspace/agent-project-manager/apps/frontend/src/components/ui/stats-card.tsx)) | 采用了高饱和度的 `STATS_THEMES.blue / yellow` 大面积纯色彩底，视觉跳脱。 | **改用统一 `bg-card`**：背景统一为低调卡片底，仅数字与微图标采用低饱和点缀。 | P1 |
+| **`Empty` (官方) 双轨**<br>([empty.tsx](file:///D:/workspace/agent-project-manager/apps/frontend/src/components/ui/empty.tsx)) | 官方 5 插槽虚线大框组件无生产页面消费，与自研轻量 `EmptyState` 形成双轨。 | **删除 `empty.tsx`**：全站彻底收敛为统一的 `EmptyState`。 | P1 |
+| **`FloatingDock` & `ChapterScrubber`**<br>([floating-dock.tsx](file:///D:/workspace/agent-project-manager/apps/frontend/src/components/ui/floating-dock.tsx)) | 带有浓厚的 macOS 磁性放大动效与拟物阴影，与 Linear 极简工程风不符。 | 从生产组件目录剥离，不再作为标准件推荐。 | P2 |
 | **错误页双轨**<br>(`error-page` vs `page-error-fallback`) | 路由级大插画错误页与局部轻量错误条视觉不一致。 | 二合一收敛为统一的轻量卡片式错误降级组件。 | P2 |
-| **`UnifiedCreateDialog` 内部样式**<br>([unified-create-dialog.tsx](file:///E:/Project/agent-project-manager/apps/frontend/src/components/ui/unified-create-dialog.tsx)) | 1730 行庞大单文件，内嵌了大量老旧边框与大间距。 | 内边距统一紧凑化至 `p-3.5`，后续按业务类型拆分下沉。 | P2 |
+| **`UnifiedCreateDialog` 内部样式**<br>([unified-create-dialog.tsx](file:///D:/workspace/agent-project-manager/apps/frontend/src/components/ui/unified-create-dialog.tsx)) | 1730 行庞大单文件，内嵌了大量老旧边框与大间距。 | 内边距统一紧凑化至 `p-3.5`，后续按业务类型拆分下沉。 | P2 |
 
 ---
 

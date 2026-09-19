@@ -1,15 +1,16 @@
 /**
  * 桌面端打包资源准备（CAP-A-14）——`pnpm desktop:pack` / `pnpm pack:resources` 触发。
  *
- * 产出到 src-tauri/target/desktop-pack/（electron-builder extraResources 原样拷进安装包 resources/）：
+ * 产出到 build/desktop-pack/（electron-builder extraResources 原样拷进安装包 resources/）：
  *   server/    自包含的 server 运行时（npm 平铺 node_modules + dist + prisma + 预生成客户端）
  *   frontend/  前端构建产物（server 静态托管用）
  *   cli/       apm-runtime 守护进程自包含运行时（@apm/shared 以 file: 引用随装；壳自动拉起）
  *   bin/node.exe  Node 运行时（server 承载路径 A 降级兜底用）
  *
- * 路径刻意放在 target/ 下（而非 src-tauri/resources/）：target 本就是构建产物区，
- * 且全新的稳定路径可避开历史产物上残留的文件锁（实测 Defender 扫描/进程 CWD 会锁住
- * 旧目录数分钟到数小时不等，删除重试无法根治，换新路径即绕开）。
+ * 路径放在 build/desktop-pack/（构建产物区，gitignore；旧 Tauri 壳时代曾落在
+ * src-tauri/target/ 下，ADR-014 定版 Electron 后迁出）：独立稳定路径可避开历史产物上
+ * 残留的文件锁（实测 Defender 扫描/进程 CWD 会锁住旧目录数分钟到数小时不等，
+ * 删除重试无法根治，换新路径即绕开）。
  */
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -22,7 +23,7 @@ process.env.CI = '1';
 
 const desktopRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = path.resolve(desktopRoot, '..', '..');
-const packRoot = path.join(desktopRoot, 'src-tauri', 'target', 'desktop-pack');
+const packRoot = path.join(desktopRoot, 'build', 'desktop-pack');
 const serverStaging = path.join(packRoot, 'server');
 const frontendStaging = path.join(packRoot, 'frontend');
 const binStaging = path.join(packRoot, 'bin');

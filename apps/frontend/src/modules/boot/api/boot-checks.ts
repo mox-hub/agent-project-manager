@@ -4,7 +4,7 @@ import { configApi } from '@/modules/config/api/config-api';
 import { eventClient } from '@/infrastructure/event-client';
 import {
   invoke,
-  isTauriAvailable,
+  isDesktopShellAvailable,
   setApiBaseUrl,
 } from '@/shared/types/electron-api';
 import type { DesktopAppInfo } from '@/shared/types/electron-api';
@@ -24,7 +24,7 @@ export function getWsBaseUrl(): string {
 
 export function buildBootContext(signal: AbortSignal): BootContext {
   return {
-    isTauri: isTauriAvailable(),
+    isDesktopShell: isDesktopShellAvailable(),
     hasToken: typeof window !== 'undefined' && !!localStorage.getItem(TOKEN_STORAGE_KEY),
     apiBaseUrl: getApiBaseUrl(),
     signal,
@@ -41,9 +41,9 @@ export const bootChecks: BootCheck[] = [
   {
     id: 'detect-runtime',
     title: '检测运行环境',
-    description: '读取 navigator / Tauri 标志判断当前运行环境',
+    description: '读取 navigator / 桌面壳标志判断当前运行环境',
     run: async () => {
-      const isTauri = isTauriAvailable();
+      const isDesktopShell = isDesktopShellAvailable();
       const nav = typeof navigator !== 'undefined' ? navigator : null;
       const ua = nav?.userAgent ?? 'unknown';
       const platform = nav?.platform ?? 'unknown';
@@ -57,7 +57,7 @@ export const bootChecks: BootCheck[] = [
       else if (/Firefox\//.test(ua)) engine = 'Firefox';
       else if (/Safari\//.test(ua)) engine = 'Safari';
 
-      const mode = isTauri ? 'Tauri 桌面' : `Web · ${engine}`;
+      const mode = isDesktopShell ? '桌面壳' : `Web · ${engine}`;
       const detail = `${mode} · ${platform} · ${screen}`;
       return { status: 'success', detail };
     },
@@ -65,8 +65,8 @@ export const bootChecks: BootCheck[] = [
   {
     id: 'fetch-app-info',
     title: '读取应用信息',
-    description: '从 Tauri 主机加载应用版本与数据路径（仅桌面）',
-    skipIf: (ctx) => !ctx.isTauri,
+    description: '从桌面壳加载应用版本与数据路径（仅桌面）',
+    skipIf: (ctx) => !ctx.isDesktopShell,
     run: async () => {
       const { result: info, ms } = await measure(() =>
         invoke<DesktopAppInfo>('get_app_info'),
@@ -85,7 +85,7 @@ export const bootChecks: BootCheck[] = [
     title: '连接后端服务',
     description: '桌面端拉起本地后端，浏览器端探测 /health 端点',
     async run(ctx) {
-      if (ctx.isTauri) {
+      if (ctx.isDesktopShell) {
         const status = await invoke<{
           running: boolean;
           info?: { port: number; apiBaseUrl: string };
@@ -118,7 +118,7 @@ export const bootChecks: BootCheck[] = [
     id: 'check-runtime-daemon',
     title: '检查 AI 执行运行时',
     description: '桌面端确认 apm-runtime 守护进程已自动拉起并注册本机（AI 同事的执行面）',
-    skipIf: (ctx) => !ctx.isTauri,
+    skipIf: (ctx) => !ctx.isDesktopShell,
     async run() {
       const status = await invoke<{
         running: boolean;
@@ -195,8 +195,8 @@ export const bootChecks: BootCheck[] = [
     async run(ctx) {
       const wsUrl = getWsBaseUrl();
       const alreadyConnected = eventClient.isConnected();
-      // 把 ctx 中的 isTauri 信息嵌入 detail，方便桌面模式用户看到
-      void ctx.isTauri;
+      // 把 ctx 中的 isDesktopShell 信息嵌入 detail，方便桌面模式用户看到
+      void ctx.isDesktopShell;
       if (!alreadyConnected) {
         const { result, ms } = await measure(
           () =>
@@ -246,8 +246,8 @@ export const bootChecks: BootCheck[] = [
         configApi.getConfig({ scope: 'global' }),
       );
       const keyCount = result ? Object.keys(result).length : 0;
-      const tauriFlag = ctx.isTauri ? 'tauri' : 'web';
-      return { status: 'success', detail: `${keyCount} 项 · ${ms}ms · ${tauriFlag}` };
+      const shellFlag = ctx.isDesktopShell ? 'desktop' : 'web';
+      return { status: 'success', detail: `${keyCount} 项 · ${ms}ms · ${shellFlag}` };
     },
   },
 ];

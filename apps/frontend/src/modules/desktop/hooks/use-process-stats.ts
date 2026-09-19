@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   invoke,
-  isTauriAvailable,
+  isDesktopShellAvailable,
   type DesktopProcessStat,
 } from '@/shared/types/electron-api';
 
@@ -16,7 +16,7 @@ export function useProcessStats(intervalMs = 5000) {
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!isTauriAvailable()) {
+    if (!isDesktopShellAvailable()) {
       setIsLoading(false);
       return;
     }
@@ -32,7 +32,7 @@ export function useProcessStats(intervalMs = 5000) {
   }, []);
 
   useEffect(() => {
-    if (!isTauriAvailable()) {
+    if (!isDesktopShellAvailable()) {
       setIsLoading(false);
       return;
     }

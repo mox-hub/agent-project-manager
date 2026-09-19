@@ -7,7 +7,7 @@
  * 关键变更点（登录/登出/401 清除/工作区切换/向导完成）镜像回壳。
  * Web 模式下全部为 no-op。
  */
-import { invoke, isTauriAvailable, type DesktopPersistentState } from '@/shared/types/electron-api';
+import { invoke, isDesktopShellAvailable, type DesktopPersistentState } from '@/shared/types/electron-api';
 
 const ZUSTAND_STORAGE_KEY = 'app-storage';
 
@@ -33,7 +33,7 @@ async function writeShellState(patch: DesktopPersistentState): Promise<void> {
  * - onboarding_completed：merge 进 zustand persist JSON（app-storage）
  */
 export async function restoreDesktopSession(): Promise<void> {
-  if (!isTauriAvailable()) {
+  if (!isDesktopShellAvailable()) {
     return;
   }
   const state = await readShellState();
@@ -59,21 +59,21 @@ export async function restoreDesktopSession(): Promise<void> {
 }
 
 export function persistTokenToShell(token: string | null): void {
-  if (!isTauriAvailable()) {
+  if (!isDesktopShellAvailable()) {
     return;
   }
   void writeShellState({ access_token: token ?? undefined });
 }
 
 export function persistWorkspaceToShell(workspaceId: string | null): void {
-  if (!isTauriAvailable()) {
+  if (!isDesktopShellAvailable()) {
     return;
   }
   void writeShellState({ 'apm-workspace-id': workspaceId ?? undefined });
 }
 
 export function persistOnboardingToShell(completed: boolean): void {
-  if (!isTauriAvailable()) {
+  if (!isDesktopShellAvailable()) {
     return;
   }
   void writeShellState({ onboarding_completed: completed ? true : undefined });

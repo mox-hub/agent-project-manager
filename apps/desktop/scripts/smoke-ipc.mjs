@@ -37,12 +37,12 @@ function send(method, params = {}) {
 
 await send('Runtime.enable');
 const expression = `(async () => {
-  const hasTauri = !!window.__TAURI__;
-  if (!hasTauri) return { hasTauri };
-  const appInfo = await window.__TAURI__.core.invoke('get_app_info');
-  const backend = await window.__TAURI__.core.invoke('get_backend_status');
-  const init = await window.__TAURI__.core.invoke('get_init_status');
-  return { hasTauri, appInfo, backend, init };
+  const hasDesktop = !!window.__APM_DESKTOP__;
+  if (!hasDesktop) return { hasDesktop };
+  const appInfo = await window.__APM_DESKTOP__.invoke('get_app_info');
+  const backend = await window.__APM_DESKTOP__.invoke('get_backend_status');
+  const init = await window.__APM_DESKTOP__.invoke('get_init_status');
+  return { hasDesktop, appInfo, backend, init };
 })()`;
 
 const result = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
@@ -50,7 +50,7 @@ const payload = result.result?.result?.value;
 console.log(JSON.stringify(payload, null, 2));
 
 const ok =
-  payload?.hasTauri === true &&
+  payload?.hasDesktop === true &&
   payload?.backend?.running === true &&
   typeof payload?.appInfo?.apiBaseUrl === 'string' &&
   payload?.appInfo?.apiBaseUrl.length > 0 &&

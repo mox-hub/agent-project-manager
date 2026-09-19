@@ -1,5 +1,5 @@
 /**
- * Electron 主进程入口（翻译自 Tauri src-tauri/src/lib.rs 的编排职责）。
+ * Electron 主进程入口（由旧 Tauri 壳 lib.rs 的编排职责）。
  * 启动顺序：目录/密钥（同步毫秒级）→ 窗口（品牌启动屏）→ 后台 db push →
  * 自动拉起 server → 健康检查通过 → 自动拉起 apm-runtime 守护进程 → 切换到正式页面。
  * 窗口加载源：dev 优先 vite（5173，HMR）；否则 server 静态托管的前端（同源免 CORS，

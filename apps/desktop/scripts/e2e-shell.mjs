@@ -42,7 +42,7 @@ try {
   /** 渲染进程经 preload 桥调用主进程命令面（与生产前端同一条链路） */
   const invoke = (cmd, args) =>
     win.evaluate(
-      ([cmd, args]) => window.__TAURI__.core.invoke(cmd, args),
+      ([cmd, args]) => window.__APM_DESKTOP__.invoke(cmd, args),
       [cmd, args],
     );
 

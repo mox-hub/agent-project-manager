@@ -35,8 +35,8 @@ tags: "docs,index,readme"
 
 ## 当前 Desktop 口径
 
-- 当前主路线：Tauri（`apps/desktop/src-tauri/`）
-- 历史基线：Electron（仅历史维护，不新增能力）
+- 当前主路线：Electron（`apps/desktop/electron/`，ADR-014；v0.6.2 起随安装包发布）
+- 历史基线：Tauri 2（已随 ADR-014 剔除，仅存 CHANGELOG 与 docs/archive 历史记录）
 
 ## AI 会话入口
 

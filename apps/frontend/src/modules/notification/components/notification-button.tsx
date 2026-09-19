@@ -9,7 +9,7 @@ import { useEventSubscription } from "@/infrastructure/hooks/use-event-subscript
 import { notificationApi } from "../api/notification-api";
 import {
   invoke,
-  isTauriAvailable,
+  isDesktopShellAvailable,
   type DesktopActionResult,
 } from "@/shared/types/electron-api";
 import { NotificationCenter } from "./notification-center";
@@ -54,7 +54,7 @@ export function NotificationButton() {
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
     const created = payload as NotificationCreatedPayload;
     // 桌面模式走壳侧原生通知（主进程 Notification，免网页授权）；web 回落浏览器横幅
-    if (isTauriAvailable()) {
+    if (isDesktopShellAvailable()) {
       void invoke<DesktopActionResult>("show_notification", {
         title: created.title ?? "Agent Project Manager",
         body: created.body ?? "",

@@ -61,7 +61,7 @@ export function BootErrorDrawer({ open, onOpenChange, errors, onCopy }: BootErro
                   <span className="text-foreground">[{err.stepId}]</span> {err.stepTitle}
                   {'\n'}  消息：{err.message}
                   {err.stack ? `\n  堆栈：\n${err.stack.split('\n').map((line) => `    ${line}`).join('\n')}` : ''}
-                  {'\n'}  上下文：platform={err.context.platform} mode={err.context.mode} url={err.context.url} tauri={err.context.isTauri}
+                  {'\n'}  上下文：platform={err.context.platform} mode={err.context.mode} url={err.context.url} desktop={err.context.isDesktopShell}
                 </span>
               ))}
             </pre>

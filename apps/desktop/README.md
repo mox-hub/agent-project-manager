@@ -19,7 +19,7 @@ tag 必须与 package.json version 一致（electron-builder 以 `v{version}` �
 
 对应能力卡：**CAP-A-14 桌面壳发布级打包与运作**（`docs/01-需求/能力清单-v1.md` §4.1）；壳选型变更（Tauri 2 → Electron）见决策日志 **ADR-014**；执行计划与验收清单见 `docs/roadmap/electron-desktop-v0.6.1-plan.md`。
 
-> 过渡期说明：分支上 `src-tauri/`（Tauri 旧壳）与 `scripts/pack.mjs`（资源准备，两壳共享）暂时共存，Electron 通过同等验收后删除 Tauri 侧。
+> Tauri 旧壳已随 ADR-014 收口整体剔除（v0.6.2 验收通过后）：`src-tauri/` 删除，壳桥更名 `window.__APM_DESKTOP__`，资源 staging 迁至 `build/desktop-pack/`；`scripts/pack.mjs` 保留为 Electron 唯一打包链。
 
 ## 架构一览
 
@@ -32,8 +32,8 @@ tag 必须与 package.json version 一致（electron-builder 以 `v{version}` �
 │  invoke → get_app_info → setApiBaseUrl      │
 │  → window.__DESKTOP_API_BASE_URL__ → api-client
 └──────────────┬──────────────────────────────┘
-               │ contextBridge: window.__TAURI__.core.invoke
-               │（前端 electron-api.ts 声明的壳桥契约，非 Tauri 官方 API）
+               │ contextBridge: window.__APM_DESKTOP__.invoke
+               │（前端 electron-api.ts 声明的壳桥契约；早期沿用 __TAURI__ 命名，已更名）
 ┌──────────────┴──────────────────────────────┐
 │ Electron main（TS，electron/src/）          │
 │  setup.ts   目录/密钥(safeStorage)/db push  │
@@ -179,7 +179,7 @@ pnpm desktop:pack
 # 产物：release/Agent Project Manager_0.6.1_x64-setup.exe
 ```
 
-资源准备落位 `src-tauri/target/desktop-pack/`（两壳共享 staging；放 target 下避 Defender 文件锁）。注意：
+资源准备落位 `build/desktop-pack/`（独立 staging，gitignore；独立稳定路径避 Defender 文件锁）。注意：
 
 - staging 的 `package.json` 刻意剥离 devDependencies——npm 解析阶段即校验全部依赖字段，devDeps 里的 pnpm `catalog:` 协议会让 `npm install` 直接 EUNSUPPORTEDPROTOCOL。
 - 用 npm 平铺布局而非 pnpm deploy：`.pnpm` 双跳结构会给深层路径加 ~70 字符，`@nestjs`/`@mastra` 等包会顶爆 Windows MAX_PATH(260) 使 makensis 打不开文件（实测多处 257–262 字符撞线）。

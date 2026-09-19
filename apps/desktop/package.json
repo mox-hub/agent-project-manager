@@ -11,13 +11,9 @@
     "desktop:dev": "tsup && electron .",
     "pack:resources": "node scripts/pack.mjs",
     "desktop:pack": "pnpm pack:resources && pnpm build:electron && electron-builder --win nsis",
-    "e2e:shell": "node scripts/e2e-shell.mjs",
-    "tauri:dev": "pnpm dlx @tauri-apps/cli@2 dev",
-    "tauri:build": "pnpm dlx @tauri-apps/cli@2 build",
-    "tauri:dist:win": "pnpm dlx @tauri-apps/cli@2 build --target x86_64-pc-windows-msvc"
+    "e2e:shell": "node scripts/e2e-shell.mjs"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "2",
     "@types/node": "^24.13.3",
     "electron": "^44.3.0",
     "electron-builder": "^26.15.3",

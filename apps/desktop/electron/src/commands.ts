@@ -1,6 +1,6 @@
 /**
- * desktop IPC 命令面（翻译自 Tauri src-tauri/src/commands/mod.rs，13 命令一比一）。
- * 命令名沿用 Tauri snake_case（前端 invoke('get_backend_status') 字面参数不变）；
+ * desktop IPC 命令面（由旧 Tauri 壳 commands/mod.rs，13 命令一比一）。
+ * 命令名沿用旧壳 snake_case（前端 invoke('get_backend_status') 字面参数不变）；
  * 返回数据字段名一律 camelCase（前端接口契约，见 state.ts 顶部说明）。
  */
 import { BrowserWindow, dialog, Notification, shell } from 'electron';
@@ -49,8 +49,8 @@ interface InitStatus {
 
 interface AppInfo {
   version: string;
-  tauri: string;
-  rust: string;
+  shell: string;
+  runtime: string;
   os: string;
   apiBaseUrl: string;
   frontendUrl: string;
@@ -195,8 +195,8 @@ export const commandHandlers = {
   async get_app_info(): Promise<AppInfo> {
     return {
       version: pkg.version,
-      tauri: `electron@${process.versions.electron}`,
-      rust: `node@${process.versions.node}`,
+      shell: `electron@${process.versions.electron}`,
+      runtime: `node@${process.versions.node}`,
       os: process.platform,
       apiBaseUrl: state.backend?.info.apiBaseUrl ?? '',
       frontendUrl: state.frontend?.info.url ?? '',
@@ -282,7 +282,7 @@ export const commandHandlers = {
   },
 
   async start_all_services(): Promise<ActionResult> {
-    // 开发模式下 vite 由开发者自行启动（pnpm dev），壳只托管 server——与 Tauri 版
+    // 开发模式下 vite 由开发者自行启动（pnpm dev），壳只托管 server——与旧 Tauri 壳
     // 「壳拉起 vite」不同，见 README dev 工作流说明。
     await startBackendInternal();
     return { ok: true };

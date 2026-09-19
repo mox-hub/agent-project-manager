@@ -6,15 +6,15 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-const { invokeMock, tauriAvailable, toastMock, writeTextMock } = vi.hoisted(() => ({
+const { invokeMock, shellAvailable, toastMock, writeTextMock } = vi.hoisted(() => ({
   invokeMock: vi.fn(),
-  tauriAvailable: { value: true },
+  shellAvailable: { value: true },
   toastMock: Object.assign(vi.fn(), { error: vi.fn() }),
   writeTextMock: vi.fn(),
 }));
 
 vi.mock('@/shared/types/electron-api', () => ({
-  isTauriAvailable: () => tauriAvailable.value,
+  isDesktopShellAvailable: () => shellAvailable.value,
   invoke: invokeMock,
 }));
 
@@ -43,7 +43,7 @@ beforeEach(() => {
     }
     return { ok: true };
   });
-  tauriAvailable.value = true;
+  shellAvailable.value = true;
   writeTextMock.mockReset();
   writeTextMock.mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'clipboard', {
@@ -115,7 +115,7 @@ describe('DesktopLogCard', () => {
   });
 
   it('web 模式不渲染', () => {
-    tauriAvailable.value = false;
+    shellAvailable.value = false;
     const { container } = render(<DesktopLogCard />);
     expect(container).toBeEmptyDOMElement();
   });

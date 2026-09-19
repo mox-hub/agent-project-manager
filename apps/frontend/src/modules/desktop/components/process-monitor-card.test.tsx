@@ -6,13 +6,13 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-const { invokeMock, tauriAvailable } = vi.hoisted(() => ({
+const { invokeMock, shellAvailable } = vi.hoisted(() => ({
   invokeMock: vi.fn(),
-  tauriAvailable: { value: true },
+  shellAvailable: { value: true },
 }));
 
 vi.mock('@/shared/types/electron-api', () => ({
-  isTauriAvailable: () => tauriAvailable.value,
+  isDesktopShellAvailable: () => shellAvailable.value,
   invoke: invokeMock,
 }));
 
@@ -26,7 +26,7 @@ const STATS = [
 beforeEach(() => {
   invokeMock.mockReset();
   invokeMock.mockResolvedValue({ processes: STATS });
-  tauriAvailable.value = true;
+  shellAvailable.value = true;
 });
 
 describe('ProcessMonitorCard', () => {
@@ -56,7 +56,7 @@ describe('ProcessMonitorCard', () => {
   });
 
   it('web 模式不渲染', () => {
-    tauriAvailable.value = false;
+    shellAvailable.value = false;
     const { container } = render(<ProcessMonitorCard />);
     expect(container).toBeEmptyDOMElement();
   });

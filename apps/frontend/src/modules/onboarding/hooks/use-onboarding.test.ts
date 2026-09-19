@@ -13,14 +13,14 @@ import { act, createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 
-const isTauriAvailableMock = vi.hoisted(() => vi.fn(() => false));
+const isDesktopShellAvailableMock = vi.hoisted(() => vi.fn(() => false));
 const postMock = vi.hoisted(() => vi.fn());
 const navigateMock = vi.hoisted(() => vi.fn());
 const setOnboardingCompletedMock = vi.hoisted(() => vi.fn());
 const persistOnboardingMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/shared/types/electron-api', () => ({
-  isTauriAvailable: () => isTauriAvailableMock(),
+  isDesktopShellAvailable: () => isDesktopShellAvailableMock(),
   invoke: vi.fn(),
 }));
 
@@ -63,7 +63,7 @@ beforeEach(() => {
 
 describe('buildSteps（初始化向导步骤序列）', () => {
   it('web 模式：5 步，无工作目录步骤', () => {
-    isTauriAvailableMock.mockReturnValue(false);
+    isDesktopShellAvailableMock.mockReturnValue(false);
     const steps = buildSteps(false);
     expect(steps.map((s) => s.id)).toEqual([
       'welcome',

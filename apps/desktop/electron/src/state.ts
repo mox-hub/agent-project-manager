@@ -1,8 +1,8 @@
 /**
- * 壳内运行时状态（对应 Tauri src-tauri/src/state.rs）。
+ * 壳内运行时状态（承接旧 Tauri 壳 state.rs）。
  * Electron main 为单线程事件循环，无需 Rust 侧的锁原语。
  * 注意：IPC 契约字段一律 camelCase（前端 shared/types/electron-api.ts 的接口形状）——
- * Tauri 版 Rust 结构体输出 snake_case，与前端类型错位（dev 下被 vite proxy 掩盖），
+ * 旧壳 Rust 结构体输出 snake_case，与前端类型错位（dev 下被 vite proxy 掩盖），
  * Electron 侧按前端契约正确返回。
  */
 import type { ServerHandle } from './backend';

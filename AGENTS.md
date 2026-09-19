@@ -4,9 +4,9 @@ description: 仓库统一 AI 指令入口（AGENTS.md 标准）——会话启�
 id: ROOT-001
 category: meta
 status: active
-version: 1.1.0
+version: 1.2.0
 created: "2026-09-07"
-modified: "2026-09-08"
+modified: "2026-09-19"
 scope: AI 会话（Claude Code / Codex / Cursor / opencode 等跨工具入口）
 ai-session-types: all
 ai-priority: critical
@@ -17,7 +17,7 @@ tags: "AI, governance, meta, entry, agents"
 
 # AGENTS.md — 跨工具 AI 会话入口
 
-> **本文件 = 仓库统一 AI 指令入口**（跨工具 `AGENTS.md` 标准，Claude Code / Codex / Cursor / opencode 均原生读取），取代原根 `CLAUDE.md`（已合并入库）。v1.0.0（2026-09-07）随核心模型重构落地：数据模型已物理改名（`Task` 族 → `Issue` 族、`ExecutionRun` → `Execution`）。v1.1.0（2026-09-08）随需求治理收口更新：模块口径 40 目录、术语基线分支已合入、补契约知识域与需求入口闸门。
+> **本文件 = 仓库统一 AI 指令入口**（跨工具 `AGENTS.md` 标准，Claude Code / Codex / Cursor / opencode 均原生读取），取代原根 `CLAUDE.md`（已合并入库）。v1.0.0（2026-09-07）随核心模型重构落地：数据模型已物理改名（`Task` 族 → `Issue` 族、`ExecutionRun` → `Execution`）。v1.1.0（2026-09-08）随需求治理收口更新：模块口径 40 目录、术语基线分支已合入、补契约知识域与需求入口闸门。v1.2.0（2026-09-17）随需求重审更新：能力卡口径 42 张、补重审三轴心与三批优先级指引。
 >
 > 三真相源：**代码实现** = 运行时真相；**docs/02-架构设计/** = 开发时真相；**PRD + 能力清单** = 需求真相。冲突时停止开发、人工裁决。
 >
@@ -28,7 +28,7 @@ tags: "AI, governance, meta, entry, agents"
 1. 读本文件 — 治理铁律 + 技术栈 + 模块地图
 2. 读根 `architecture.md` — 主架构文档（v4，双表面/系统分层/主线对象/契约）
 3. 读 `docs/01-需求/产品需求文档-v3.md` — 需求真相源（范式与愿景）
-4. 读 `docs/01-需求/能力清单-v1.md` — 功能点总账（四条工作线 + 28 能力卡 + 候补区；**新功能想法先走 `requirement-intake` skill**）
+4. 读 `docs/01-需求/能力清单-v1.md` — 功能点总账（四条工作线 + 42 能力卡 + 候补区 + 重审三批优先级 §3.1；**新功能想法先走 `requirement-intake` skill**，开工登记附六问评审标准）
 5. 涉及具体模块时读 `docs/02-架构设计/architecture/{backend,frontend}/modules.md`
 6. 确认工作目录与分支状态
 
@@ -36,7 +36,7 @@ tags: "AI, governance, meta, entry, agents"
 
 Agent Project Manager (APM) 是一个 **AI 驱动的项目管理工具**，采用**双表面架构**：
 
-- **人类控制面**：React Web（项目/工单/验收/审批/文档/AI 面板）+ Tauri 桌面壳
+- **人类控制面**：React Web（项目/工单/验收/审批/文档/AI 面板）+ Electron 桌面壳
 - **AI 执行面**：`apm-runtime` 守护进程 → CLI Adapters（`claude-code` / `codex` / `zcode`）执行代码、Git、终端命令
 
 | 用户角色 | 核心需求 |
@@ -48,6 +48,8 @@ Agent Project Manager (APM) 是一个 **AI 驱动的项目管理工具**，采�
 **差异化**：AI 原生双表面 · 双轨成本（Token + 工时）· 信任演进（执行评估驱动的 Agent 信任等级）；V4 加入 **Acceptance 验收门禁收口执行闭环** 与 **工作区多库路由**。
 
 **产品主轴（2026-09-08 裁决）**：**AI 同事是手段，工程治理是目的**——治理条件（验收标准/完备性清单/契约）由 AI 同事代写、人确认、完整性审计把关，让不了解工程各环节的小白团队也能交付靠谱软件。四条工作线：主线=需求承接与拆解管道（CAP-P-01）、副线=CI/PR 证据回流（CAP-B-08）、支线=UX 手感与 e2e 深化（固定比例并行）。详见 `docs/01-需求/能力清单-v1.md` §二/§三。
+
+**需求重审基线（2026-09-17 裁决）**：**工程化可信度是下一阶段主轴**（做的是对的、能证明做成了、变化后仍可信——主要由 B 治理线兑现）；**AI Native 内生于功能设计**（「人确认」不得成为责任转移）；**非专业用户是核心考虑对象**（渐进展开交互，不做两套产品）。三批优先级（批一 P0=工程可信闭环：B-01/B-02/B-08/C-04/A-04+B-03/P-01/A-19）与逐卡复审见 `docs/01-需求/需求重审-总纲-v1.md`、`docs/01-需求/需求重审-逐卡意见-v1.md`；PRD 前提已修订为双入口（独立使用 + 生态接入，PRD v3.1 §18/§23）。
 
 ## 三、治理铁律 [MUST]
 
@@ -67,7 +69,7 @@ agent-project-manager/
 │   ├── server/        # NestJS 10 + Prisma 6 (SQLite) —— 控制面 REST/WS + 执行核心 + 数据层
 │   ├── frontend/      # React 19 + Vite 7 + Tailwind 4 —— 人类控制面 (web)
 │   ├── cli/           # @apm/cli：瘦客户端(apm) + 常驻守护进程(apm-runtime)
-│   └── desktop/       # Tauri 2 桌面壳（托管前端 + 本地能力）
+│   └── desktop/       # Electron 桌面壳（托管前端 + 本地能力，ADR-014）
 ├── packages/
 │   └── apm-shared/    # @apm/shared：CLI/runtime 协议镜像、CLI adapters、HTTP 客户端、生成类型
 ├── openapi.json       # API 契约真相（供 contract:check / 双端类型生成）
@@ -88,8 +90,8 @@ agent-project-manager/
 | 编辑器/渲染 | CodeMirror 6 · MDX · react-markdown | 主线 |
 | AI | `ai` + `@ai-sdk/react`（前端）· AI SDK 适配（后端 ai-hub）| 主线 |
 | 实时 | socket.io（Server Gateway / 前端 event-client）| 主线 |
-| 桌面 | Tauri 2（`apps/desktop/src-tauri/`）| Electron 仅历史维护 |
-| 测试 | Jest+SWC（server）· Vitest+Testing Library（frontend）· Playwright（E2E）| 主线 |
+| 桌面 | Electron 44 + electron-builder（ADR-014；Tauri 遗产已剔除）| 主线 |
+| 测试 | Vitest 5（server / frontend / cli / shared 全仓）· Playwright（E2E）| 主线 |
 
 ## 五、常用命令
 
@@ -101,15 +103,17 @@ pnpm lint           # Lint 所有包
 pnpm quality:gate   # 全链路质量门禁（见 §七）
 pnpm check:docs-sync
 
+# 测试（Vitest 5 全仓：server / frontend / cli / shared）
+pnpm test           # 全仓单测（turbo run test）
+pnpm test:watch     # server + frontend watch 模式
+pnpm test:ui        # Vitest UI（frontend）
+pnpm test:coverage  # server + frontend 覆盖率
+pnpm test:e2e       # server E2E（vitest；前端 E2E 是 Playwright，在 apps/frontend）
+
 # Server (apps/server)
 pnpm dev:server     # nest start --watch
-pnpm test           # Jest 单元测试
 pnpm prisma:migrate:dev
 pnpm build:template-db   # 重建工作区模板库
-
-# Frontend (apps/frontend)
-pnpm test           # Vitest
-pnpm test:ui        # Vitest UI
 ```
 
 ## 六、模块地图（v4，术语一律用新口径）
@@ -161,7 +165,7 @@ pnpm test:ui        # Vitest UI
 | 需求契约（功能点总账）| `docs/01-需求/能力清单-v1.md`（配套 `测试映射矩阵-v1.md` / `需求入口流程-v1.md`）| `requirement-intake` skill 闸门：未进清单不得开工 |
 | 文档契约 | 本文件 + README + docs/ | `check:docs-sync`（**本文件为 CI 治理对象**）|
 
-**质量门禁（根 `quality:gate` 顺序）**：`type-check` → `lint` → `test`（server swc/jest + frontend vitest）→ `contract:check` → server `test:e2e` → `api:audit --min=95` → `check:docs-sync`。CI = `quality-gate.yml`（七并行 job + pnpm 缓存）。**文档不同步 / 验收证据缺失 / api 覆盖率不达标不得合并。**
+**质量门禁（根 `quality:gate` 顺序）**：`type-check` → `lint` → `test`（全仓 Vitest）→ `contract:check` → server `test:e2e` → `api:audit --min=95` → `check:docs-sync`。CI = `quality-gate.yml`（七并行 job + pnpm 缓存）。**文档不同步 / 验收证据缺失 / api 覆盖率不达标不得合并。**
 
 **后端关键机制**：全局前缀 `/_api`；`x-workspace-id` 头 → `workspaceALS`（AsyncLocalStorage）→ 数据层按工作区路由到对应 SQLite 库（`default` = `DATABASE_URL`，新库以 `prisma/template.db` 复制初始化）；JWT + PAT + RuntimeSession 认证；Helmet/Throttler/CSRF/CORS 白名单。
 

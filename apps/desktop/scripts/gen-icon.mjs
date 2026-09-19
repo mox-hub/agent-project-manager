@@ -1,7 +1,6 @@
 /**
  * 从项目内置 logo（apps/frontend/public/logo.svg）生成桌面壳全部品牌资源：
  *   - build/icon.ico                 应用/安装器/卸载器图标（16–256 七帧 PNG 压缩帧）
- *   - src-tauri/icons/icon.ico+png   与 Tauri 打包链共用同源图标（保持一致）
  *   - build/installerHeader.bmp      NSIS 向导顶部横幅（150x57）
  *   - build/installerSidebar.bmp     NSIS 向导欢迎页左侧竖图（164x314）
  * 渲染经 @playwright/test 的 chromium（前端 e2e 已装，无新依赖）；ICO/BMP 容器为手写编码。
@@ -125,8 +124,6 @@ try {
   });
   const ico = Buffer.concat([header, entries, ...frames.map((f) => f.png)]);
   fs.writeFileSync(path.join(desktopRoot, 'build', 'icon.ico'), ico);
-  fs.copyFileSync(path.join(desktopRoot, 'build', 'icon.ico'), path.join(desktopRoot, 'src-tauri', 'icons', 'icon.ico'));
-  fs.writeFileSync(path.join(desktopRoot, 'src-tauri', 'icons', 'icon.png'), png512);
   console.log(`icon.ico written: ${frames.length} frames, ${ico.length} bytes`);
 
   for (const [name, box] of [['installerHeader', HEADER_SIZE], ['installerSidebar', SIDEBAR_SIZE]]) {

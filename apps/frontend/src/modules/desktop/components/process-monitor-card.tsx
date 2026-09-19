@@ -5,7 +5,7 @@
  */
 import { useTranslation } from 'react-i18next';
 import { AppWindow, Bot, Cpu, Monitor, RefreshCw, Server } from 'lucide-react';
-import { isTauriAvailable, type DesktopProcessStat } from '@/shared/types/electron-api';
+import { isDesktopShellAvailable, type DesktopProcessStat } from '@/shared/types/electron-api';
 import { useProcessStats } from '../hooks/use-process-stats';
 import { SectionCard } from '@/components/ui/section-card';
 import { StatusPill } from '@/components/ui/status-pill';
@@ -39,7 +39,7 @@ export function ProcessMonitorCard() {
   const { t } = useTranslation();
   const { processes, isLoading, error, refresh } = useProcessStats();
 
-  if (!isTauriAvailable()) {
+  if (!isDesktopShellAvailable()) {
     return null;
   }
 

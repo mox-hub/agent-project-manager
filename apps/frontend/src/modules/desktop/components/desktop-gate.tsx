@@ -20,7 +20,7 @@ export function DesktopGate({ children }: { children: React.ReactNode }) {
     if (!isDesktop) {
       return undefined;
     }
-    const off = window.__TAURI__?.core.onDeepLink?.((url) => {
+    const off = window.__APM_DESKTOP__?.onDeepLink?.((url) => {
       // apm://issues/42 → /issues/42；拒绝协议相对（//host）与非法形态
       const target = `/${url.replace(/^apm:\/\//, '')}`;
       if (!target.startsWith('//') && target.length > 1) {

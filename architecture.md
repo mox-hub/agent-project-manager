@@ -39,7 +39,7 @@ agent-project-manager/
 │   ├── server/        # NestJS 10 + Prisma 6 (SQLite)——控制面 REST/WS + 执行核心 + 数据层
 │   ├── frontend/      # React 19 + Vite 7 + Tailwind 4——人类控制面 (web)
 │   ├── cli/           # @apm/cli：瘦客户端(apm) + 常驻守护进程(apm-runtime)
-│   └── desktop/       # Tauri 2 桌面壳（托管前端 + 本地能力）
+│   └── desktop/       # Electron 桌面壳（托管前端 + 本地能力，ADR-014）
 ├── packages/
 │   └── apm-shared/    # @apm/shared：CLI/runtime 协议镜像、CLI adapters、HTTP 客户端、生成类型
 ├── openapi.json       # API 契约真相（contract:check / 双端类型生成）
@@ -51,7 +51,7 @@ agent-project-manager/
 | `apps/server` | NestJS 10 + Prisma 6 (SQLite) | 控制面 REST + 实时 WS + 执行核心 + 数据层 |
 | `apps/frontend` | React 19 + Vite 7 + Tailwind 4 | 人类控制面（web） |
 | `apps/cli` | Node + commander + socket.io-client | Agent 侧入口：`apm` 命令 + `apm-runtime` 守护进程 |
-| `apps/desktop` | Tauri 2 | 桌面壳（shell），托管前端与本地能力 |
+| `apps/desktop` | Electron 44 + electron-builder | 桌面壳（shell），托管前端与本地能力（ADR-014） |
 | `packages/apm-shared` | 框架无关 TypeScript | 协议镜像、CLI adapters（codex/claude-code/zcode）、HTTP 客户端 |
 
 ## 3. 双表面架构
@@ -61,7 +61,7 @@ agent-project-manager/
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Human Surface   React Web（项目/工单/验收/审批/文档/AI 面板）  │
-│                  + Tauri 桌面壳（apps/desktop）               │
+│                  + Electron 桌面壳（apps/desktop）             │
 ├─────────────────────────────────────────────────────────────┤
 │  Agent Surface   @apm/cli（apm 命令）· MCP 接入 · apm-runtime  │
 └─────────────────────────────────────────────────────────────┘
@@ -114,7 +114,7 @@ apps/server/src/
 ```
 apps/frontend/src/
 ├── main.tsx                 # 唯一 web 入口 → Provider 栈 → RouterProvider
-├── App.tsx                  # 桌面端启动逻辑（Tauri 感知）
+├── App.tsx                  # 桌面端启动逻辑（壳桥感知）
 ├── app/router.tsx           # 路由真相源（createBrowserRouter + lazy）
 ├── modules/                 # 36 个业务模块目录（Feature-based）+ modules/AGENTS.md 规范
 ├── shared/                  # 23 个子目录跨模块共享层（components/hooks/layout/theme/mdx…）

@@ -6,7 +6,7 @@ export interface BootCheckResult {
 }
 
 export interface BootContext {
-  isTauri: boolean;
+  isDesktopShell: boolean;
   hasToken: boolean;
   apiBaseUrl: string;
   signal: AbortSignal;
@@ -42,7 +42,7 @@ export interface BootErrorEntry {
     mode: string;
     url: string;
     apiBaseUrl: string;
-    isTauri: boolean;
+    isDesktopShell: boolean;
   };
 }
 

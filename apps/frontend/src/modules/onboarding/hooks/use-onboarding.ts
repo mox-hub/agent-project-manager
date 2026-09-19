@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { onboardingApi, type OnboardingData, type CreateProjectData } from '../api/onboarding-api';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/infrastructure/store/app-store';
-import { isTauriAvailable } from '@/shared/types/electron-api';
+import { isDesktopShellAvailable } from '@/shared/types/electron-api';
 import { persistOnboardingToShell } from '@/shared/lib/desktop-session';
 
 export interface OnboardingStep {
@@ -79,7 +79,7 @@ export function buildSteps(isDesktop: boolean): OnboardingStep[] {
   return steps;
 }
 
-const isDesktopShell = isTauriAvailable();
+const isDesktopShell = isDesktopShellAvailable();
 
 export function useOnboarding() {
   const queryClient = useQueryClient();

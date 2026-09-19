@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   invoke,
-  isTauriAvailable,
+  isDesktopShellAvailable,
   type DesktopLogLine,
   type DesktopLogSnapshot,
 } from '@/shared/types/electron-api';
@@ -30,7 +30,7 @@ export function useDesktopLogs(intervalMs = 3000) {
   const [search, setSearch] = useState('');
 
   const refresh = useCallback(async () => {
-    if (!isTauriAvailable()) {
+    if (!isDesktopShellAvailable()) {
       return;
     }
     try {
@@ -45,7 +45,7 @@ export function useDesktopLogs(intervalMs = 3000) {
   }, []);
 
   useEffect(() => {
-    if (!isTauriAvailable()) {
+    if (!isDesktopShellAvailable()) {
       return;
     }
     // 首拉挂宏任务：effect 体内直接调 fetch 会触发同步级联渲染（react-hooks/set-state-in-effect）
@@ -85,7 +85,7 @@ export function useDesktopLogs(intervalMs = 3000) {
   }, [filteredLines]);
 
   const clearLogs = useCallback(async () => {
-    if (!isTauriAvailable()) {
+    if (!isDesktopShellAvailable()) {
       return;
     }
     await invoke('clear_desktop_logs');

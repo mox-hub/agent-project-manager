@@ -1,8 +1,8 @@
 /**
- * 后端进程编排（翻译自 Tauri src-tauri/src/backend.rs）。
+ * 后端进程编排（由旧 Tauri 壳 backend.rs）。
  * 承载双路径（ADR-014 E① 实验项）：
  *   'utility'（默认）— Electron utilityProcess 直接跑 server dist，复用内置 Node，省 ~75MB 随包 node.exe。
- *   'node' — spawn 随包 node.exe（与 Tauri 已冒烟路径同构，回退用）。
+ *   'node' — spawn 随包 node.exe（与旧壳已冒烟路径同构，回退用）。
  * 经环境变量 APM_SERVER_TRANSPORT=node 切换。
  */
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -59,7 +59,7 @@ export async function pickBackendPort(start: number, end: number): Promise<numbe
   throw new Error(`无法分配后端端口（范围 ${start}-${end}）`);
 }
 
-/** 轮询 /_api/health 直到通过或超时（30s / 500ms，与 Tauri 版一致）。 */
+/** 轮询 /_api/health 直到通过或超时（30s / 500ms，与旧壳一致）。 */
 export function waitForBackendHealth(apiBaseUrl: string): Promise<void> {
   const startedAt = Date.now();
   return new Promise((resolve, reject) => {

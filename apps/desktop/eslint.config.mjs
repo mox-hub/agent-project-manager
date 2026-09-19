@@ -2,7 +2,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['electron/dist/**', 'release/**', 'src-tauri/**', 'build/**', 'scripts/**'],
+    ignores: ['electron/dist/**', 'release/**', 'build/**', 'scripts/**'],
   },
   ...tseslint.configs.recommended.map((config) => ({
     ...config,

@@ -6,11 +6,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const invokeMock = vi.hoisted(() => vi.fn());
-const isTauriAvailableMock = vi.hoisted(() => vi.fn(() => true));
+const isDesktopShellAvailableMock = vi.hoisted(() => vi.fn(() => true));
 
 vi.mock('@/shared/types/electron-api', () => ({
   invoke: (...args: unknown[]) => invokeMock(...args),
-  isTauriAvailable: () => isTauriAvailableMock(),
+  isDesktopShellAvailable: () => isDesktopShellAvailableMock(),
 }));
 
 import {
@@ -34,7 +34,7 @@ function installMemoryStorage(): Map<string, string> {
 describe('restoreDesktopSession', () => {
   beforeEach(() => {
     invokeMock.mockReset();
-    isTauriAvailableMock.mockReturnValue(true);
+    isDesktopShellAvailableMock.mockReturnValue(true);
   });
 
   it('壳侧有 token 时恢复进 localStorage（origin 漂移后免重登）', async () => {
@@ -79,7 +79,7 @@ describe('restoreDesktopSession', () => {
 
   it('web 模式（壳桥不可用）为 no-op', async () => {
     const store = installMemoryStorage();
-    isTauriAvailableMock.mockReturnValue(false);
+    isDesktopShellAvailableMock.mockReturnValue(false);
 
     await restoreDesktopSession();
 
@@ -91,7 +91,7 @@ describe('restoreDesktopSession', () => {
 describe('persistTokenToShell', () => {
   beforeEach(() => {
     invokeMock.mockReset();
-    isTauriAvailableMock.mockReturnValue(true);
+    isDesktopShellAvailableMock.mockReturnValue(true);
   });
 
   it('登录成功镜像 token 到壳侧', () => {
@@ -114,7 +114,7 @@ describe('persistTokenToShell', () => {
 
   it('web 模式不调用壳桥', () => {
     installMemoryStorage();
-    isTauriAvailableMock.mockReturnValue(false);
+    isDesktopShellAvailableMock.mockReturnValue(false);
 
     persistTokenToShell('jwt-x');
 

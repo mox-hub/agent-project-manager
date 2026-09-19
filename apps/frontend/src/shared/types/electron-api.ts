@@ -1,7 +1,7 @@
 export interface DesktopAppInfo {
   version: string;
-  tauri: string;
-  rust: string;
+  shell: string;
+  runtime: string;
   os: string;
   apiBaseUrl: string;
   frontendUrl: string;
@@ -90,29 +90,13 @@ export interface DesktopLogSnapshot {
   filePath: string;
 }
 
-export interface TauriAPI {
-  getAppInfo: () => Promise<DesktopAppInfo>;
-  getBackendStatus: () => Promise<BackendStatus>;
-  startBackend: () => Promise<BackendInfo>;
-  stopBackend: () => Promise<DesktopActionResult>;
-  restartBackend: () => Promise<BackendInfo>;
-  openLogDir: () => Promise<DesktopActionResult>;
-  initApp: () => Promise<void>;
-}
-
-export interface DesktopAPI {
-  setApiBaseUrl: (url: string) => void;
-  getApiBaseUrl: () => string | null;
-}
-
 declare global {
   interface Window {
-    __TAURI__?: {
-      core: {
-        invoke: <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
-        /** apm:// 深链订阅（ADR-015 P2）；返回解绑函数。旧壳版本无此能力为可选 */
-        onDeepLink?: (callback: (url: string) => void) => () => void;
-      };
+    /** 桌面壳桥（Electron preload 注入，ADR-014）：invoke 走主进程 desktop:command 路由 */
+    __APM_DESKTOP__?: {
+      invoke: <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
+      /** apm:// 深链订阅（ADR-015 P2）；返回解绑函数。旧壳版本无此能力为可选 */
+      onDeepLink?: (callback: (url: string) => void) => () => void;
     };
     __DESKTOP_API_BASE_URL__?: string;
   }
@@ -120,8 +104,8 @@ declare global {
 
 let _apiBaseUrl: string | null = null;
 
-export function isTauriAvailable(): boolean {
-  return typeof window !== 'undefined' && !!window.__TAURI__;
+export function isDesktopShellAvailable(): boolean {
+  return typeof window !== 'undefined' && !!window.__APM_DESKTOP__;
 }
 
 export function setApiBaseUrl(url: string): void {
@@ -134,8 +118,8 @@ export function getApiBaseUrl(): string | null {
 }
 
 export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
-  if (!window.__TAURI__) {
-    throw new Error('Tauri API 不可用');
+  if (!window.__APM_DESKTOP__) {
+    throw new Error('桌面壳桥（__APM_DESKTOP__）不可用');
   }
-  return window.__TAURI__.core.invoke<T>(cmd, args);
+  return window.__APM_DESKTOP__.invoke<T>(cmd, args);
 }

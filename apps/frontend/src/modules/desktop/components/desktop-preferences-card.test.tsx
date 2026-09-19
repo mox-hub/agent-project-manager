@@ -22,14 +22,14 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-const { invokeMock, tauriAvailable, toastMock } = vi.hoisted(() => ({
+const { invokeMock, shellAvailable, toastMock } = vi.hoisted(() => ({
   invokeMock: vi.fn(),
-  tauriAvailable: { value: true },
+  shellAvailable: { value: true },
   toastMock: Object.assign(vi.fn(), { error: vi.fn() }),
 }));
 
 vi.mock('@/shared/types/electron-api', () => ({
-  isTauriAvailable: () => tauriAvailable.value,
+  isDesktopShellAvailable: () => shellAvailable.value,
   invoke: invokeMock,
 }));
 
@@ -37,7 +37,7 @@ vi.mock('@/components/ui/toast', () => ({ toast: toastMock }));
 
 beforeEach(() => {
   invokeMock.mockReset();
-  tauriAvailable.value = true;
+  shellAvailable.value = true;
   toastMock.mockClear();
   toastMock.error.mockClear();
 });
@@ -127,7 +127,7 @@ describe('DesktopPreferencesCard', () => {
   });
 
   it('web 模式不渲染', () => {
-    tauriAvailable.value = false;
+    shellAvailable.value = false;
     const { container } = render(<DesktopPreferencesCard />);
     expect(container).toBeEmptyDOMElement();
   });

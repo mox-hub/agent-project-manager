@@ -6,13 +6,13 @@
  * （动态端口漂移换 origin 后不重弹）。Web 模式不渲染。
  */
 import { useAppStore } from '@/infrastructure/store/app-store';
-import { isTauriAvailable } from '@/shared/types/electron-api';
+import { isDesktopShellAvailable } from '@/shared/types/electron-api';
 import { OnboardingWizard } from '../pages/onboarding-wizard';
 
 export function OnboardingGate() {
   const onboardingCompleted = useAppStore((state) => state.onboardingCompleted);
 
-  if (!isTauriAvailable() || onboardingCompleted) {
+  if (!isDesktopShellAvailable() || onboardingCompleted) {
     return null;
   }
 
