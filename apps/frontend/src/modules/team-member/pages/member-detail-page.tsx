@@ -59,7 +59,7 @@ import {
 } from '../hooks';
 import {
   MEMBER_THINKING_LEVELS,
-  MEMBER_TRUST_LEVEL_LABELS,
+  MEMBER_TRUST_TIERS,
   type Member,
 } from '@/shared/member/types';
 import { MemberAvatar } from '../components/member-avatar';
@@ -182,9 +182,10 @@ export default function MemberDetailPage() {
       : []),
   ];
 
-  const trustOptions = MEMBER_TRUST_LEVEL_LABELS.map((label, level) => ({
-    value: String(level),
-    label,
+  // CAP-B-07：人工调整入口=选三级等级（观察者/协助者/受托者）
+  const trustOptions = MEMBER_TRUST_TIERS.map((tier) => ({
+    value: String(tier.level),
+    label: t(tier.labelKey),
   }));
 
   return (

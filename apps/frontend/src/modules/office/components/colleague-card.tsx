@@ -75,7 +75,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
             <p className="truncate text-sm font-semibold text-content-text">
               {colleague.displayName}
             </p>
-            <TrustLevelBadge level={colleague.trustLevel} score={colleague.trustScore} />
+            <TrustLevelBadge level={colleague.trustLevel} />
           </div>
           <p className="flex items-center gap-1.5 truncate text-11 text-content-text-muted">
             <span className={cn('inline-block size-1.5 rounded-full', STATE_DOT[colleague.status])} />

@@ -20,5 +20,9 @@ export {
   type Mention,
   type TaskUserRef,
   MEMBER_THINKING_LEVELS,
-  MEMBER_TRUST_LEVEL_LABELS,
+  MEMBER_TRUST_TIERS,
+  normalizeTrustLevel,
+  trustLevelFromScore,
+  type MemberTrustTier,
+  type MemberTrustTierDef,
 } from '@/shared/member/types';

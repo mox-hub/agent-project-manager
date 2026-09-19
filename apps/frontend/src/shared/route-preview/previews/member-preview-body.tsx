@@ -11,7 +11,8 @@ import { useMemberDetail } from '@/modules/team-member/hooks';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   MEMBER_THINKING_LEVELS,
-  MEMBER_TRUST_LEVEL_LABELS,
+  MEMBER_TRUST_TIERS,
+  normalizeTrustLevel,
 } from '@/shared/member/types';
 import { TONE_DOT_CLASS, type StatusTone } from '@/shared/status/status-visuals';
 import { cn } from '@/lib/utils';
@@ -50,10 +51,10 @@ export function MemberPreviewBody({ id }: { id: string }) {
   if (isError || !member) return <PreviewBodyError />;
 
   const isAi = member.type === 'ai_agent';
+  // CAP-B-07：只显等级不显分数
+  const trustTier = normalizeTrustLevel(member.trustLevel);
   const trustLabel =
-    member.trustLevel != null
-      ? MEMBER_TRUST_LEVEL_LABELS[member.trustLevel] ?? `L${member.trustLevel}`
-      : null;
+    trustTier !== null ? t(MEMBER_TRUST_TIERS[trustTier - 1].labelKey) : null;
   const thinkingLabel = member.thinkingLevel
     ? MEMBER_THINKING_LEVELS.find((l) => l.value === member.thinkingLevel)?.label ??
       member.thinkingLevel
@@ -101,7 +102,6 @@ export function MemberPreviewBody({ id }: { id: string }) {
         <PreviewRow label={t('routePreview.member.title')}>{member.title ?? '—'}</PreviewRow>
         <PreviewRow label={LABEL_TRUST}>
           {trustLabel ?? '—'}
-          {member.trustScore != null ? ` · ${member.trustScore}` : ''}
         </PreviewRow>
       </PreviewSection>
 

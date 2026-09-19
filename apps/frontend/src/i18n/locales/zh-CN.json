@@ -1039,7 +1039,7 @@
       "cancelled": "已标记取消",
       "budgetUpdated": "预算已更新",
       "clarified": "已答复，AI 可继续推进",
-      "gatePassed": "闸门通过，剧本已进入下一阶段",
+      "gatePassed": "闸门通过，已进入下一阶段",
       "gateRejected": "闸门驳回，已留痕可回到访谈修改",
       "workflowApplied": "工作流已落库生效",
       "releaseApproved": "已批准发布，进入发布执行",
@@ -1395,11 +1395,11 @@
     "init": {
       "grilled": {
         "title": "AI 需求澄清完成",
-        "desc": "已按你们的对话生成需求澄清纪要，并自动挂载「需求承接」剧本——继续访谈可把需求拆成任务和验收清单。",
+        "desc": "已按你们的对话生成需求澄清纪要，并自动挂载「需求承接」项目步骤——继续访谈可把需求拆成任务和验收清单。",
         "scope": "这一期做什么",
         "nonGoals": "明确不做什么",
         "acceptance": "怎么算做完",
-        "gotoPlaybook": "去完成剧本访谈（支持 AI 预填）"
+        "gotoPlaybook": "去完成需求访谈（支持 AI 预填）"
       },
       "workspace": {
         "title": "绑定工作区目录",
@@ -1413,10 +1413,10 @@
         "title": "下一步",
         "desc": "项目已就绪，可以选择继续配置或直接开始",
         "playbook": {
-          "title": "进入剧本流程",
-          "desc": "访谈式收集项目信息，生成全流程剧本",
-          "titleGrilled": "完成剧本访谈",
-          "descGrilled": "需求承接剧本已自动挂载，访谈时可按澄清纪要 AI 预填"
+          "title": "进入项目步骤",
+          "desc": "访谈式收集项目信息，生成完整的项目步骤",
+          "titleGrilled": "完成需求访谈",
+          "descGrilled": "「需求承接」项目步骤已自动挂载，访谈时可按澄清纪要 AI 预填"
         },
         "profile": {
           "title": "接入已有仓库",
@@ -1553,12 +1553,12 @@
     },
     "playbookPage": {
       "title": "流程",
-      "description": "挂载剧本后，AI 按阶段推进：人话访谈收集信息、产出正式工件、闸门由你拍板。阶段可跳过，跳过会留痕。",
+      "description": "挂载项目步骤后，AI 按阶段推进：人话访谈收集信息、产出正式工件、闸门由你拍板。阶段可跳过，跳过会留痕。",
       "loadFailed": "流程状态加载失败",
-      "pickHint": "选择一个剧本挂载到项目（可随时在设置中调整）：",
+      "pickHint": "选择一套项目步骤挂载到项目（可随时在设置中调整）：",
       "audienceNovice": "新手托管",
       "audienceMaintenance": "维护型",
-      "mount": "挂载剧本",
+      "mount": "挂载项目步骤",
       "statusDone": "已通过",
       "statusActive": "进行中",
       "statusSkipped": "已跳过",
@@ -2609,7 +2609,6 @@
       "replayEmpty": "暂无已完成的执行",
       "replaySelectHint": "选择一个执行以查看回放",
       "trustEmpty": "暂无智能体信任档案",
-      "trustScore": "信任分",
       "recentEvaluations": "最近评估",
       "adjustTrust": "调整信任"
     }
@@ -4731,5 +4730,42 @@
       "cancelFilterTooltipBug": "点击取消筛选 AI 执行 Bug",
       "filterTooltipBug": "点击一键筛选正在 AI 执行的 Bug"
     }
+  },
+  "trust": {
+    "unrated": "未评估",
+    "unratedDesc": "尚未设定信任等级",
+    "tier1": {
+      "name": "观察者",
+      "desc": "只能读取上下文、给出建议，所有写操作都须人确认后执行",
+      "allow1": "读取项目上下文与文档",
+      "allow2": "起草方案与建议，不直接改动代码",
+      "allow3": "执行任何变更前逐一请求人确认"
+    },
+    "tier2": {
+      "name": "协助者",
+      "desc": "可自动执行常规变更，结果须人验收",
+      "allow1": "自动执行常规代码与文档变更",
+      "allow2": "自动运行测试与检查并反馈结果",
+      "allow3": "变更结果须人验收后才能合入"
+    },
+    "tier3": {
+      "name": "受托者",
+      "desc": "受托执行常规变更并可自行重试，关键结果人审",
+      "allow1": "自动执行常规变更并自行重试失败步骤",
+      "allow2": "自动提交代码与创建 Pull Request",
+      "allow3": "关键结果仍由人审查把关"
+    },
+    "delegationTitle": "该等级 AI 可自动做什么",
+    "redlineTitle": "红线：任何等级都必须由人确认",
+    "redlinePublish": "发布 / 发版",
+    "redlineDelete": "删除数据",
+    "redlineSpending": "花钱（订阅 / API 计费）",
+    "redlineMembers": "成员与权限变更",
+    "redlineNote": "红线操作在任何等级都永远须人确认，等级只决定常规工作的放权范围。",
+    "currentTier": "当前等级",
+    "adjustTitle": "调整信任——{{name}}",
+    "adjustDesc": "选择该 AI 成员的信任等级；等级决定其可自动执行的范围。",
+    "adjustSaved": "信任等级已更新",
+    "adjustFailed": "信任等级更新失败"
   }
 }
