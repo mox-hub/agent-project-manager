@@ -200,7 +200,7 @@ export function DataTable<T>({
 
   const clearSelection = () => onSelectedIdsChange?.([])
 
-  // 键盘行光标（宪法 §8.2：↑↓/j/k 移动、Enter 打开、Escape 清除选择）
+  // 键盘行光标（宪法 §8.2：↑↓/j/k 移动、Enter 打开、x/space 选中、Escape 清除）
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [activeRowId, setActiveRowId] = useState<string | null>(null)
   const visibleRows = table.getRowModel().rows
@@ -222,18 +222,57 @@ export function DataTable<T>({
     })
   }
 
+  const toggleRowSelection = (id: string) => {
+    const next = selectedIds.includes(id)
+      ? selectedIds.filter((s) => s !== id)
+      : [...selectedIds, id]
+    onSelectedIdsChange?.(next)
+  }
+
+  // 键盘流只在表格容器自身聚焦时接管：焦点落在行内交互元素（checkbox/排序按钮/链接）
+  // 时按键交还原生行为，避免 Enter/Space 双触发与 j/k 干扰，也不与命令面板/表单快捷键冲突。
+  // base-ui Checkbox.Root 渲染为 span[role=checkbox]（非 button），需显式纳入
+  const isInteractiveTarget = (e: React.KeyboardEvent | React.MouseEvent) => {
+    if (e.target === e.currentTarget) return false
+    return !!(e.target as HTMLElement).closest(
+      "button, a, input, textarea, select, [role=\"checkbox\"], [contenteditable=\"true\"]",
+    )
+  }
+
+  const handleContainerFocus = () => {
+    // 聚焦即激活首行（Tab 进入后直接可 Enter/x 操作，无需先按 j 探路）
+    if (!activeRowId && visibleRows.length > 0) setActiveRowId(visibleRows[0].id)
+  }
+
+  const handleContainerClickCapture = (e: React.MouseEvent) => {
+    if (isInteractiveTarget(e)) return
+    // 先聚焦（触发 onFocus 激活首行），再覆盖为被点击的行——
+    // 此前点击不可聚焦的 tr 会把焦点丢回 body，键盘流随之中断
+    containerRef.current?.focus({ preventScroll: true })
+    const rowEl = (e.target as HTMLElement).closest<HTMLElement>("[data-row-id]")
+    if (rowEl?.dataset.rowId) setActiveRowId(rowEl.dataset.rowId)
+  }
+
   const handleListKeyDown = (e: React.KeyboardEvent) => {
+    if (isInteractiveTarget(e)) return
     if (e.key === "ArrowDown" || e.key === "j") {
       e.preventDefault()
       moveActiveRow(1)
     } else if (e.key === "ArrowUp" || e.key === "k") {
       e.preventDefault()
       moveActiveRow(-1)
-    } else if ((e.key === "Enter" || e.key === " ") && activeRowId && onRowClick) {
-      const row = visibleRows.find((r) => r.id === activeRowId)
-      if (row) {
-        e.preventDefault()
-        onRowClick(row.original)
+    } else if ((e.key === "x" || e.key === "X" || e.key === " ") && selectionManaged && activeRowId) {
+      // x / space 切换当前行选中：走既有 enableSelection 受控契约（selectedIds/onSelectedIdsChange，
+      // 悬浮胶囊与页面批量操作随选中状态联动）
+      e.preventDefault()
+      toggleRowSelection(activeRowId)
+    } else if (e.key === "Enter" || (e.key === " " && !selectionManaged)) {
+      if (activeRowId && onRowClick) {
+        const row = visibleRows.find((r) => r.id === activeRowId)
+        if (row) {
+          e.preventDefault()
+          onRowClick(row.original)
+        }
       }
     } else if (e.key === "Escape") {
       clearSelection()
@@ -246,8 +285,10 @@ export function DataTable<T>({
       ref={containerRef}
       tabIndex={0}
       onKeyDown={handleListKeyDown}
-      className={cn("space-y-2 outline-none", className)}
-      aria-label="Table. Use arrow keys to navigate, Enter to open."
+      onFocus={handleContainerFocus}
+      onClickCapture={handleContainerClickCapture}
+      className={cn("space-y-2 outline-none focus-visible:ring-2 focus-visible:ring-ring/40", className)}
+      aria-label="Table. Use arrow keys or j/k to navigate, Enter to open, x or space to select, Escape to clear."
     >
       {/* 卡片式外壳（coss CardFrame 结构）：表格 + border-t 分隔 footer */}
       <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
