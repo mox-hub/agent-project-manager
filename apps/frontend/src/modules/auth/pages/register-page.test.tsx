@@ -138,4 +138,37 @@ describe('RegisterPage', () => {
     ).toBeInTheDocument();
     expect(navigateMock).not.toHaveBeenCalled();
   });
+
+  it('携带邀请 token：正常邀请展示邀请人横幅', async () => {
+    authApiMock.previewRegisterInvite.mockResolvedValue({
+      inviterName: '李四',
+      email: null,
+      status: 'pending',
+      expiresAt: '2026-09-30T00:00:00.000Z',
+    });
+    render(
+      <MemoryRouter initialEntries={['/register?invite=tok']}>
+        <RegisterPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('auth.inviteBy')).toBeInTheDocument();
+  });
+
+  it('失效邀请：展示失效横幅并禁用提交', async () => {
+    authApiMock.previewRegisterInvite.mockResolvedValue({
+      inviterName: '李四',
+      email: null,
+      status: 'expired',
+      expiresAt: '2026-09-01T00:00:00.000Z',
+    });
+    render(
+      <MemoryRouter initialEntries={['/register?invite=tok']}>
+        <RegisterPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('auth.inviteInvalid')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'auth.registerSubmit' })).toBeDisabled();
+  });
 });
