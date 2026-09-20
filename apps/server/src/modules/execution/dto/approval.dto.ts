@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateApprovalRequestDto {
@@ -28,7 +28,7 @@ export class CreateApprovalRequestDto {
       'status_change',
     ],
   })
-  @IsEnum([
+  @IsIn([
     'tool_call',
     'git_write',
     'terminal_exec',
@@ -38,7 +38,7 @@ export class CreateApprovalRequestDto {
   actionType!: string;
 
   @ApiProperty({ enum: ['read', 'write', 'high_risk'] })
-  @IsEnum(['read', 'write', 'high_risk'])
+  @IsIn(['read', 'write', 'high_risk'])
   riskLevel!: string;
 
   @ApiPropertyOptional()
@@ -59,7 +59,7 @@ export class CreateApprovalRequestDto {
 
 export class ResolveApprovalDto {
   @ApiProperty({ enum: ['approved', 'rejected'] })
-  @IsEnum(['approved', 'rejected'])
+  @IsIn(['approved', 'rejected'])
   resolution!: string;
 
   @ApiPropertyOptional()

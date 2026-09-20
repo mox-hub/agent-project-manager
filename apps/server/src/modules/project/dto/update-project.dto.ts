@@ -1,13 +1,13 @@
 import {
   IsString,
   IsOptional,
-  IsEnum,
   IsObject,
   IsInt,
   IsHexColor,
   Min,
   Max,
   IsDateString,
+  IsIn,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -36,7 +36,7 @@ export class UpdateProjectDto {
     example: 'team',
     required: false,
   })
-  @IsEnum(['personal', 'team', 'experiment', 'enterprise'])
+  @IsIn(['personal', 'team', 'experiment', 'enterprise'])
   @IsOptional()
   type?: string;
 
@@ -46,7 +46,7 @@ export class UpdateProjectDto {
     example: 'private',
     required: false,
   })
-  @IsEnum(['private', 'internal', 'public'])
+  @IsIn(['private', 'internal', 'public'])
   @IsOptional()
   visibility?: string;
 
@@ -56,7 +56,7 @@ export class UpdateProjectDto {
     example: 'active',
     required: false,
   })
-  @IsEnum(['active', 'archived'])
+  @IsIn(['active', 'archived'])
   @IsOptional()
   status?: string;
 
@@ -100,7 +100,7 @@ export class UpdateProjectDto {
     required: false,
     enum: ['low', 'medium', 'high', 'urgent'],
   })
-  @IsEnum(['low', 'medium', 'high', 'urgent'])
+  @IsIn(['low', 'medium', 'high', 'urgent'])
   @IsOptional()
   priority?: string;
 
@@ -108,7 +108,7 @@ export class UpdateProjectDto {
     required: false,
     enum: ['backlog', 'planned', 'in_progress', 'completed', 'canceled'],
   })
-  @IsEnum(['backlog', 'planned', 'in_progress', 'completed', 'canceled'])
+  @IsIn(['backlog', 'planned', 'in_progress', 'completed', 'canceled'])
   @IsOptional()
   workflowStatus?: string;
 
@@ -116,7 +116,7 @@ export class UpdateProjectDto {
     required: false,
     enum: ['on_track', 'at_risk', 'off_track'],
   })
-  @IsEnum(['on_track', 'at_risk', 'off_track'])
+  @IsIn(['on_track', 'at_risk', 'off_track'])
   @IsOptional()
   healthStatus?: string;
 
@@ -124,7 +124,7 @@ export class UpdateProjectDto {
     required: false,
     enum: ['low', 'medium', 'high', 'critical'],
   })
-  @IsEnum(['low', 'medium', 'high', 'critical'])
+  @IsIn(['low', 'medium', 'high', 'critical'])
   @IsOptional()
   riskLevel?: string;
 

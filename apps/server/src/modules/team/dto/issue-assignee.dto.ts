@@ -2,8 +2,8 @@ import {
   IsString,
   IsOptional,
   IsArray,
-  IsEnum,
   ValidateNested,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -27,7 +27,7 @@ export class CreateIssueAssigneeDto {
     enum: ['assignee', 'co_assignee', 'reviewer', 'watcher'],
     required: false,
   })
-  @IsEnum(['assignee', 'co_assignee', 'reviewer', 'watcher'])
+  @IsIn(['assignee', 'co_assignee', 'reviewer', 'watcher'])
   @IsOptional()
   role?: string;
 }
@@ -41,7 +41,7 @@ export class BulkIssueAssigneeItemDto {
     enum: ['assignee', 'co_assignee', 'reviewer', 'watcher'],
     required: false,
   })
-  @IsEnum(['assignee', 'co_assignee', 'reviewer', 'watcher'])
+  @IsIn(['assignee', 'co_assignee', 'reviewer', 'watcher'])
   @IsOptional()
   role?: string;
 }

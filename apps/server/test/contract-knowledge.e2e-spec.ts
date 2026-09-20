@@ -17,6 +17,7 @@ import * as os from 'os';
 import * as path from 'path';
 import type { Response } from 'supertest';
 import { AppModule } from '../src/app.module';
+import { MessageBusService } from '../src/core/message-bus/message-bus.service';
 import { ContractSeedService } from '../src/modules/contract/contract-seed.service';
 import { ContractBindingService } from '../src/modules/contract/contract-binding.service';
 import { ReleaseService } from '../src/modules/release/release.service';
@@ -196,9 +197,19 @@ describe('契约与文档知识层 · 实机验收 (e2e)', () => {
         createdBy: 'e2e-admin',
       }),
     );
-    await withWs(ws.id, () =>
-      releaseService.publishRelease(release.id, 'v0.1.0'),
-    );
+    // 造数：直写 released 后广播 release.created，驱动订阅器再生 CHANGELOG
+    // （正式发布链路门禁/审批/执行见 release-pipeline e2e）
+    // 注意：事件须在工作区 ALS 上下文内发布，订阅器据此解析导出路径
+    await withWs(ws.id, async () => {
+      await ws.db.release.update({
+        where: { id: release.id },
+        data: { status: 'released', releasedAt: new Date(), gitTag: 'v0.1.0' },
+      });
+      app.get(MessageBusService).publish('release.created', {
+        projectId,
+        releaseId: release.id,
+      });
+    });
     // 订阅器再生为异步事件链，轮询等待 CHANGELOG 落盘
     await waitFor(() =>
       Promise.resolve(

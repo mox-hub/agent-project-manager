@@ -3,12 +3,12 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
-  IsEnum,
   IsInt,
   IsObject,
   IsOptional,
   IsString,
   Min,
+  IsIn,
 } from 'class-validator';
 
 export class CreateIssueExecutionDto {
@@ -94,7 +94,7 @@ export class CreateIssueExecutionDto {
     enum: ['human', 'ai'],
     required: false,
   })
-  @IsEnum(['human', 'ai'])
+  @IsIn(['human', 'ai'])
   @IsOptional()
   subjectType?: 'human' | 'ai';
 

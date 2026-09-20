@@ -2,9 +2,9 @@
 import {
   IsString,
   IsOptional,
-  IsEnum,
   IsArray,
   ValidateNested,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -33,7 +33,7 @@ export class CreateTaskLinkDto {
     enum: ['references', 'blocks', 'relates', 'implements'],
   })
   @IsOptional()
-  @IsEnum(['references', 'blocks', 'relates', 'implements'])
+  @IsIn(['references', 'blocks', 'relates', 'implements'])
   linkType?: 'references' | 'blocks' | 'relates' | 'implements';
 
   @ApiPropertyOptional({ description: '备注' })
@@ -47,7 +47,7 @@ export class UpdateLinkTypeDto {
     description: '链接类型',
     enum: ['references', 'blocks', 'relates', 'implements'],
   })
-  @IsEnum(['references', 'blocks', 'relates', 'implements'])
+  @IsIn(['references', 'blocks', 'relates', 'implements'])
   linkType: 'references' | 'blocks' | 'relates' | 'implements';
 }
 

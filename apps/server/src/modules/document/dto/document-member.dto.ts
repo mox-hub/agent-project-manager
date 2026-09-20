@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AddDocumentAuthorDto {
@@ -14,7 +14,7 @@ export class AddDocumentAuthorDto {
     enum: ['author', 'co_author', 'reviewer'],
     required: false,
   })
-  @IsEnum(['author', 'co_author', 'reviewer'])
+  @IsIn(['author', 'co_author', 'reviewer'])
   @IsOptional()
   role?: string;
 }
@@ -36,7 +36,7 @@ export class AddDocumentReviewerDto {
 
 export class UpdateDocumentReviewerDto {
   @ApiProperty({ enum: ['pending', 'approved', 'rejected', 'skipped'] })
-  @IsEnum(['pending', 'approved', 'rejected', 'skipped'])
+  @IsIn(['pending', 'approved', 'rejected', 'skipped'])
   status: string;
 
   @ApiProperty({ required: false })
@@ -55,7 +55,7 @@ export class AddDocTaskLinkAssigneeDto {
   memberId: string;
 
   @ApiProperty({ enum: ['owner', 'contributor'], required: false })
-  @IsEnum(['owner', 'contributor'])
+  @IsIn(['owner', 'contributor'])
   @IsOptional()
   role?: string;
 }

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsIn } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SubmitApprovalDto {
@@ -13,7 +13,7 @@ export class ResolveApprovalDto {
     description: 'Approval decision',
     enum: ['approved', 'rejected'],
   })
-  @IsEnum(['approved', 'rejected'])
+  @IsIn(['approved', 'rejected'])
   status: string;
 
   @ApiPropertyOptional({ description: 'Comment for the decision' })
@@ -24,7 +24,7 @@ export class ResolveApprovalDto {
 
 export class ApprovalQueryDto {
   @ApiPropertyOptional({ description: 'Filter by status' })
-  @IsEnum(['pending', 'approved', 'rejected'])
+  @IsIn(['pending', 'approved', 'rejected'])
   @IsOptional()
   status?: string;
 

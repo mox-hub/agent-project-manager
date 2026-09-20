@@ -5,8 +5,8 @@
  *
  * 走真实 AppModule + 隔离工作区 SQLite + 真实临时工作区文件系统；
  * 执行/runtime 环节全走 HTTP 面（create → start → approvals resolve），
- * 不启动真守护进程。发版无 REST 面（ReleaseController 尚未建），
- * 经 ReleaseService 直调，与 contract-knowledge e2e 口径一致。
+ * 不启动真守护进程。发版段只验证 release.created 订阅事件链，造数经
+ * 服务直调 + 工作区库直写；门禁/审批/发布执行全链见 release-pipeline e2e。
  */
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -15,6 +15,7 @@ import * as os from 'os';
 import * as path from 'path';
 import type { Response } from 'supertest';
 import { AppModule } from '../src/app.module';
+import { MessageBusService } from '../src/core/message-bus/message-bus.service';
 import { ReleaseService } from '../src/modules/release/release.service';
 import {
   createIsolatedWorkspace,
@@ -248,9 +249,19 @@ describe('黄金路径 1：需求 → 执行 → 验收 → 发版 (e2e)', () =>
       }),
     );
     releaseId = release.id;
-    await withWs(ws.id, () =>
-      releaseService.publishRelease(releaseId, 'v0.1.0'),
-    );
+    // 造数：直写 released 后广播 release.created，驱动订阅事件链
+    // （正式发布链路门禁/审批/执行见 release-pipeline e2e）
+    // 注意：事件须在工作区 ALS 上下文内发布，订阅器据此解析导出路径
+    await withWs(ws.id, async () => {
+      await ws.db.release.update({
+        where: { id: releaseId },
+        data: { status: 'released', releasedAt: new Date(), gitTag: 'v0.1.0' },
+      });
+      app.get(MessageBusService).publish('release.created', {
+        projectId,
+        releaseId,
+      });
+    });
     expect(releaseId).toBeTruthy();
   });
 

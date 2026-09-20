@@ -1,13 +1,13 @@
 import {
   IsString,
   IsOptional,
-  IsEnum,
   IsObject,
   IsInt,
   IsHexColor,
   Min,
   Max,
   IsDateString,
+  IsIn,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -33,7 +33,7 @@ export class CreateProjectDto {
     enum: ['personal', 'team', 'experiment', 'enterprise'],
     example: 'team',
   })
-  @IsEnum(['personal', 'team', 'experiment', 'enterprise'])
+  @IsIn(['personal', 'team', 'experiment', 'enterprise'])
   type: string;
 
   @ApiProperty({
@@ -41,7 +41,7 @@ export class CreateProjectDto {
     enum: ['private', 'internal', 'public'],
     example: 'private',
   })
-  @IsEnum(['private', 'internal', 'public'])
+  @IsIn(['private', 'internal', 'public'])
   visibility: string;
 
   @ApiProperty({
@@ -84,7 +84,7 @@ export class CreateProjectDto {
     enum: ['low', 'medium', 'high', 'urgent'],
     example: 'medium',
   })
-  @IsEnum(['low', 'medium', 'high', 'urgent'])
+  @IsIn(['low', 'medium', 'high', 'urgent'])
   @IsOptional()
   priority?: string;
 
@@ -93,7 +93,7 @@ export class CreateProjectDto {
     enum: ['backlog', 'planned', 'in_progress', 'completed', 'canceled'],
     example: 'planned',
   })
-  @IsEnum(['backlog', 'planned', 'in_progress', 'completed', 'canceled'])
+  @IsIn(['backlog', 'planned', 'in_progress', 'completed', 'canceled'])
   @IsOptional()
   workflowStatus?: string;
 
@@ -102,7 +102,7 @@ export class CreateProjectDto {
     enum: ['on_track', 'at_risk', 'off_track'],
     example: 'at_risk',
   })
-  @IsEnum(['on_track', 'at_risk', 'off_track'])
+  @IsIn(['on_track', 'at_risk', 'off_track'])
   @IsOptional()
   healthStatus?: string;
 
@@ -111,7 +111,7 @@ export class CreateProjectDto {
     enum: ['low', 'medium', 'high', 'critical'],
     example: 'medium',
   })
-  @IsEnum(['low', 'medium', 'high', 'critical'])
+  @IsIn(['low', 'medium', 'high', 'critical'])
   @IsOptional()
   riskLevel?: string;
 
