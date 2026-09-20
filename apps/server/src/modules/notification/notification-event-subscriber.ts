@@ -99,20 +99,11 @@ export class NotificationEventSubscriber implements OnModuleInit {
     this.messageBus.subscribe('tag.created', this.handleTagCreated.bind(this));
     this.messageBus.subscribe('tag.deleted', this.handleTagDeleted.bind(this));
 
-    // CI 事件（Integration 模块预留发布方）
+    // 决策提案（proposal.service.create 发布，P0-12：此前从未订阅 →
+    // 决策收件箱有卡但 0 通知，用户不知道「AI 已把建议放进收件箱」）
     this.messageBus.subscribe(
-      'ci.build.failed',
-      this.handleCIBuildFailed.bind(this),
-    );
-    this.messageBus.subscribe(
-      'ci.build.succeeded',
-      this.handleCIBuildSucceeded.bind(this),
-    );
-
-    // AI 工作流事件
-    this.messageBus.subscribe(
-      'ai.workflow.completed',
-      this.handleAIWorkflowCompleted.bind(this),
+      'decision.proposal.created',
+      this.handleDecisionProposalCreated.bind(this),
     );
 
     // 执行状态变更（失败感知：failed/blocked 定向通知发起人与负责人）
@@ -854,108 +845,55 @@ export class NotificationEventSubscriber implements OnModuleInit {
     }
   }
 
-  // ─── CI / AI Workflow（既有）────────────────────────────
+  // ─── 决策提案（P0-12 通知管道收口）──────────────────────
 
-  private async handleCIBuildFailed(payload: any) {
+  /**
+   * decision.proposal.created（proposal.service.create 发布）→
+   * 通知提案所属项目成员（排除提案人）。事件 payload 不含操作者字段，
+   * 提案人从提案行补读（proposerId 为 userId 时排除生效；AI 成员 id
+   * 不在项目成员 userId 集合内，天然不影响受众）。无 projectId 的提案
+   * 最小版不通知（后续可扩展工作区级广播）。
+   */
+  private async handleDecisionProposalCreated(payload: any) {
     try {
-      // Get project members to notify
-      if (payload.projectId) {
-        const project = await this.prisma.project.findUnique({
-          where: { id: payload.projectId },
-          include: { members: true },
-        });
+      const proposal = await this.prisma.decisionProposal.findUnique({
+        where: { id: payload.proposalId },
+      });
+      if (!proposal || !proposal.projectId) return;
 
-        if (project) {
-          const userIds = project.members.map((m) => m.userId);
-          await this.notificationService.createNotificationFromEvent(
-            'ci.build.failed',
-            {
-              projectId: payload.projectId,
-              projectName: project.name,
-              buildName: payload.buildName,
-              buildUrl: payload.buildUrl,
-            },
-            userIds,
-          );
-        }
-      }
-    } catch (error) {
-      this.logger.error(
-        'Error handling ci.build.failed event',
-        error instanceof Error ? error.stack : String(error),
+      const project = await this.prisma.project.findUnique({
+        where: { id: proposal.projectId },
+        include: { members: true },
+      });
+      if (!project) return;
+
+      const userIds = [
+        ...new Set(
+          project.members
+            .map((m) => m.userId)
+            .filter(
+              (id): id is string =>
+                !!id && id !== (proposal.proposerId ?? undefined),
+            ),
+        ),
+      ];
+      if (userIds.length === 0) return;
+
+      await this.notificationService.createNotificationFromEvent(
+        'decision.proposal.created',
+        {
+          proposalId: proposal.id,
+          proposalTitle: proposal.title,
+          kind: proposal.kind,
+          projectId: proposal.projectId,
+          projectName: project.name,
+          issueId: proposal.issueId,
+        },
+        userIds,
       );
-    }
-  }
-
-  private async handleCIBuildSucceeded(payload: any) {
-    try {
-      // Similar to failed, but for success
-      if (payload.projectId) {
-        const project = await this.prisma.project.findUnique({
-          where: { id: payload.projectId },
-          include: { members: true },
-        });
-
-        if (project) {
-          const userIds = project.members.map((m) => m.userId);
-          await this.notificationService.createNotificationFromEvent(
-            'ci.build.succeeded',
-            {
-              projectId: payload.projectId,
-              projectName: project.name,
-              buildName: payload.buildName,
-              buildUrl: payload.buildUrl,
-            },
-            userIds,
-          );
-        }
-      }
     } catch (error) {
       this.logger.error(
-        'Error handling ci.build.succeeded event',
-        error instanceof Error ? error.stack : String(error),
-      );
-    }
-  }
-
-  private async handleAIWorkflowCompleted(payload: any) {
-    try {
-      // Notify workflow creator or project members
-      const userIds: string[] = [];
-      if (payload.createdBy) {
-        userIds.push(payload.createdBy);
-      }
-
-      if (payload.projectId) {
-        const project = await this.prisma.project.findUnique({
-          where: { id: payload.projectId },
-          include: { members: true },
-        });
-
-        if (project) {
-          project.members.forEach((m) => {
-            if (m.userId && !userIds.includes(m.userId)) {
-              userIds.push(m.userId);
-            }
-          });
-        }
-      }
-
-      if (userIds.length > 0) {
-        await this.notificationService.createNotificationFromEvent(
-          'ai.workflow.completed',
-          {
-            workflowId: payload.workflowId,
-            workflowName: payload.workflowName,
-            projectId: payload.projectId,
-            status: payload.status,
-          },
-          userIds,
-        );
-      }
-    } catch (error) {
-      this.logger.error(
-        'Error handling ai.workflow.completed event',
+        'Error handling decision.proposal.created event',
         error instanceof Error ? error.stack : String(error),
       );
     }

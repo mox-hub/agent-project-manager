@@ -21,6 +21,7 @@ describe('NotificationEventSubscriber', () => {
     member: { findMany: vi.fn().mockResolvedValue([]) },
     execution: { findUnique: vi.fn() },
     subscription: { findMany: vi.fn().mockResolvedValue([]) },
+    decisionProposal: { findUnique: vi.fn() },
   };
 
   beforeEach(async () => {
@@ -75,9 +76,65 @@ describe('NotificationEventSubscriber', () => {
       'milestone.created',
       'tag.created',
       'tag.deleted',
+      'decision.proposal.created',
     ]) {
       expect(handlers.has(event)).toBe(true);
     }
+  });
+
+  it('死订阅已删除：ci.build.* / ai.workflow.completed 全库无发布方（P0-12）', () => {
+    for (const dead of [
+      'ci.build.failed',
+      'ci.build.succeeded',
+      'ai.workflow.completed',
+    ]) {
+      expect(handlers.has(dead)).toBe(false);
+    }
+  });
+
+  it('decision.proposal.created 通知提案所属项目成员（排除提案人）', async () => {
+    prismaMock.decisionProposal.findUnique.mockResolvedValue({
+      id: 'dp1',
+      kind: 'assignment',
+      title: '将 3 个未分配任务分派给 AI 同事？',
+      projectId: 'p1',
+      issueId: null,
+      proposerId: 'proposer',
+    });
+    prismaMock.project.findUnique.mockResolvedValue({
+      id: 'p1',
+      name: 'APM',
+      members: [{ userId: 'u1' }, { userId: 'u2' }, { userId: 'proposer' }],
+    });
+
+    await handlers.get('decision.proposal.created')!({ proposalId: 'dp1' });
+
+    expect(createFromEvent).toHaveBeenCalledWith(
+      'decision.proposal.created',
+      expect.objectContaining({
+        proposalId: 'dp1',
+        proposalTitle: '将 3 个未分配任务分派给 AI 同事？',
+        kind: 'assignment',
+        projectId: 'p1',
+        projectName: 'APM',
+      }),
+      ['u1', 'u2'],
+    );
+  });
+
+  it('decision.proposal.created 无 projectId 或提案不存在时不通知', async () => {
+    prismaMock.decisionProposal.findUnique.mockResolvedValue(null);
+    await handlers.get('decision.proposal.created')!({
+      proposalId: 'ghost',
+    }).catch(() => undefined);
+    expect(createFromEvent).not.toHaveBeenCalled();
+
+    prismaMock.decisionProposal.findUnique.mockResolvedValue({
+      id: 'dp2',
+      projectId: null,
+    });
+    await handlers.get('decision.proposal.created')!({ proposalId: 'dp2' });
+    expect(createFromEvent).not.toHaveBeenCalled();
   });
 
   it('task.deleted 通知项目成员（排除操作者）', async () => {

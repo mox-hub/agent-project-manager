@@ -331,17 +331,9 @@ export class NotificationService {
         title: `新任务已创建：${p.taskTitle || '未命名任务'}`,
         body: `项目：${p.projectName || '未知项目'}`,
       }),
-      'ci.build.failed': (p) => ({
-        title: `构建失败：${p.buildName || '未知构建'}`,
-        body: `项目：${p.projectName || '未知项目'}，构建：${p.buildName || '未知构建'}`,
-      }),
-      'ci.build.succeeded': (p) => ({
-        title: `构建成功：${p.buildName || '未知构建'}`,
-        body: `项目：${p.projectName || '未知项目'}`,
-      }),
-      'ai.workflow.completed': (p) => ({
-        title: `AI 工作流已完成：${p.workflowName || '未知工作流'}`,
-        body: `工作流 "${p.workflowName || '未知工作流'}" 已成功完成`,
+      'decision.proposal.created': (p) => ({
+        title: `新决策提案待处理：${p.proposalTitle || '未命名提案'}`,
+        body: p.projectName ? `项目：${p.projectName}` : null,
       }),
       'task.deleted': (p) => ({
         title: `任务已删除：${p.taskTitle || '未命名任务'}`,

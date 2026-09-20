@@ -9,7 +9,7 @@ export class NotificationResponseDto {
   userId: string;
 
   @ApiProperty({
-    description: '事件类型（task.assigned / ci.build.failed 等）',
+    description: '事件类型（task.assigned / decision.proposal.created 等）',
   })
   type: string;
 
