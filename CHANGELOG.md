@@ -21,6 +21,17 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-09-20
+
+### v0.7.2 发版总览——体验测试 P1 修复批（19 项）+ 命令面板双模升级
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **命令面板双模升级**：coss ui p-command 替换手搓 cmdk（引擎=base-ui Autocomplete，壳=base-ui Dialog），内嵌轻量 AI 问答（`assistantApi.send` 真通道一问一答），命令注册表 23→40 条，快捷选择 Ctrl+1..9，非命令前缀输入直达实体搜索（工单/项目）；列表滚动视口修复 | — | `command-palette.test` 21 用例 + design-system 回归 25 用例绿 | COMPONENTS.md（Command 套件重写）+ frontend modules.md + page-registry 四行；cmdk 退场 |
+| server · frontend · cli · shared · contract | **体验测试 P1 修复批一/二/四**：错误呈现（工单页错误态/注册 409 语义码/login 字段错误归位 400/dashboard 坏路由/测试连接 60s+诊断透传，P1-1~6）+ 治理口径（决策卡 failed 契约门禁堵死绕过/详情只读回显验收标准/直写决策提案补发事件，P1-8/9/10）+ 契约链路（workflow 补 security、7 端点补分页、blocked 执行死锁统一出口、CLI adapter 能力位如实声明、mcp config 改 PAT 引导，P1-20/21/22a+A-1） | 体验报告 §四 | 全仓 test 5 包全绿；contract:check 零漂移；check:cli-contract 过 | openapi.json + 双端 api-types.gen.ts |
+| frontend | **体验测试 P1 修复批三（工单域效率基座 9 项）**：批量修改状态/优先级/负责人、命令面板实体搜索、表格排序+真开关 chips、全局页 CSV/JSON 导入导出、筛选 URL 持久化、键盘流焦点修复、详情页双向依赖区块+子任务缩进、类型切换器接通（base-ui Menu.Item 无 onSelect 死开关）、迭代创建/编辑/详情+日期状态推导（P1-11~19） | 体验报告 §四 | frontend 1022 用例绿；i18n 新键双语同步 | CHANGELOG 本条 |
+| 工具链 | **@nestjs/cli tree-kill win32 容错 patch + 命令面板配方白名单**：taskkill 非零退出（进程树部分消亡）不再拖死 dev:server（4300 悄悄死根因之一）；p-command 官方配方 11 个计算值登记 check-tailwind-arbitrary 白名单 | — | 完整 install + supply-chain 校验过；全仓门禁七链绿 | — |
+
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
 | --- | --- | --- | --- | --- |
 | frontend | **命令面板组件升级：coss ui p-command 替换手搓 cmdk 面板（含用户实测五项反馈返工）**：`components/ui/command.tsx` 整体重写为 coss `@coss/command` 移植（引擎=base-ui Autocomplete：accent/大小写不敏感 contains 过滤、分组、键盘导航/高亮全内置；壳=base-ui Dialog 弹出层），provider 按官方 p-command-2 配方组合——数据驱动 items（组数组）+ filter、List children 渲染函数（closed-template）、Kbd 页脚（↑↓/↵/ESC + 右侧实时改键触发键）。**内嵌轻量 AI 问答（双模面板）**：Tab/「询问 AI」/零命中回车三入口进入 AI 模式（不再跳转系统助手），`assistantApi.send` 真通道一问一答（sync 终文 markdown 渲染 / runtime 异步回流诚实提示 / 失败红色告警），「相关页面」引用 chips=问题词复用 /search 的真实命中，Esc capture 返回搜索不关面板；**快捷选择**：可见条目前 9 项显示 Ctrl+1..9（formatComboForDisplay 平台自适应）且真实生效（搜索命中组优先计入可见序）；**图标治理**：条目图标统一 size-4 + page-registry 品牌色（`iconColor` 与侧边栏同源），搜索命中走 entity-icons tone 语义色；**页面全覆盖**：命令注册表 23→40 条（补 releases/intake/delivery/ai-surface + 设置二级页 16 条，新增 settings 分组+`shell.groupSettings` 键），page-registry 补 shortcuts/memory/runtime/tokens 四行；**视觉修正（用户实测反馈）**：输入区/页脚 bg-muted/50 与中间面板 bg-popover 分层（此前同色）、聚焦 ring/边框加粗动画禁用、startAddon 搜索图标与 placeholder 重叠修复（死子选择器改 render Input 直挂 ps-9）；`AutocompleteList`/`CommandList` 增 `scrollAreaClassName` 通道（列表 max-h-72 滚动，AI 回答区 max-h-80）；cmdk 依赖退场；i18n `commandPalette.*` 11 新键 + `shell.groupSettings` 双语 | — | frontend `command-palette.test` 21 用例（15 旧契约原样过 + 关键词过滤/Enter 高亮选中/AI 模式自动提问/Esc 返回搜索/Tab 进 AI 模式/Ctrl+1 快选 6 项新引擎行为）；design-system 整页渲染 + shortcuts + dock 25 用例回归绿；tsc -b 零错、定向 eslint 0/0 | COMPONENTS.md（Command 套件条目重写）+ docs/02-架构设计/architecture/frontend/modules.md（command-palette 行）+ page-registry 四新行；依赖变更：frontend 移除 cmdk |
