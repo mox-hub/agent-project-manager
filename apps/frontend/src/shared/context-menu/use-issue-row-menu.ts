@@ -11,11 +11,11 @@
  *   并决定「复制链接」的基础路径（/app/issues/:id 或 /app/bugs/:id）
  * - entityName：删除确认文案里的实体名（任务 / Bug）
  *
- * 注：本地「固定」态（pinned）随每次调用独立持有；list 与看板若同时挂载，
- * 两侧固定状态不互相同步——属既有设计，需求只要求菜单内容一致。
+ * 注：「固定」态由 pinned-issues-store 统一持有（localStorage 持久化 +
+ * 跨实例同步），list 与看板、刷新前后固定状态一致。
  */
 
-import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { MenuItem } from '@/components/ui/context-menu';
 import {
   useCreateSubTask,
@@ -25,7 +25,12 @@ import {
 } from '@/modules/issue/hooks/use-project-tasks';
 import { useAssignPrimaryMember } from '@/modules/issue/hooks/use-assignee-sync';
 import { buildTaskRowMenu } from '@/shared/context-menu/row-context-menu';
+import {
+  togglePinnedIssueId,
+  usePinnedIssueIds,
+} from '@/shared/context-menu/pinned-issues-store';
 import { useConfirm } from '@/shared/confirm/use-confirm';
+import { usePrompt } from '@/shared/prompt/use-prompt';
 import { useMembers } from '@/modules/team-member/hooks';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
 import type { Task } from '@/modules/issue/api/issue-api';
@@ -41,13 +46,15 @@ export function useIssueRowMenu(
   options: UseIssueRowMenuOptions = {},
 ): (task: Task) => MenuItem[] {
   const { kind = 'task', entityName = '任务' } = options;
+  const { t } = useTranslation();
 
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const createSubTask = useCreateSubTask();
   const createTask = useCreateTask();
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => new Set());
+  const pinnedIds = usePinnedIssueIds();
   const confirmAction = useConfirm();
+  const promptAction = usePrompt();
 
   // 真实元数据（负责人候选 + 可用标签；标签按功能域隔离，与各自列表口径一致）
   const membersQuery = useMembers({ limit: 200 });
@@ -68,12 +75,7 @@ export function useIssueRowMenu(
   const assignPrimaryMember = useAssignPrimaryMember();
 
   const onTogglePin = (id: string) => {
-    setPinnedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    togglePinnedIssueId(id);
   };
 
   return (task: Task): MenuItem[] =>
@@ -97,8 +99,11 @@ export function useIssueRowMenu(
         });
         if (ok) deleteTask.mutate(task.id);
       },
-      onCreateChild: () => {
-        const title = window.prompt('输入子任务标题');
+      onCreateChild: async () => {
+        const title = await promptAction({
+          title: t('contextMenu.createSubtask'),
+          placeholder: t('taskDetail.subtaskTitle'),
+        });
         if (title?.trim()) {
           createSubTask.mutate({
             parentIssueId: task.id,
@@ -106,8 +111,11 @@ export function useIssueRowMenu(
           });
         }
       },
-      onCreateParent: () => {
-        const title = window.prompt('输入父任务标题');
+      onCreateParent: async () => {
+        const title = await promptAction({
+          title: t('contextMenu.createParentTask'),
+          placeholder: t('contextMenu.parentTaskTitle'),
+        });
         if (!title?.trim()) return;
         createTask.mutate(
           { title: title.trim(), projectId: task.projectId ?? undefined },

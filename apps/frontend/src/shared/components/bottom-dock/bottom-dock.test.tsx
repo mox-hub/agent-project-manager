@@ -313,6 +313,26 @@ describe('BottomDock —— 自动隐藏与鼠标靠近浮出', () => {
     expect(screen.getByTestId('dock-badge').getAttribute('data-collapsed')).toBe('true');
   });
 
+  it('收起态根节点整体退出命中测试——透明占位条带不得拦截下方元素的首次点击', () => {
+    renderDock();
+
+    expect(dockVisibleAttr()).toBe('false');
+    const root = document.querySelector('[data-dock-root]') as HTMLElement;
+    expect(root.className).toContain('pointer-events-none');
+  });
+
+  it('浮出后根节点恢复可命中，Dock 按钮 hover/点击不受影响', () => {
+    renderDock();
+    stubDockRect();
+
+    moveMouseTo(400, 760);
+    expect(dockVisibleAttr()).toBe('true');
+
+    const root = document.querySelector('[data-dock-root]') as HTMLElement;
+    expect(root.className).not.toContain('pointer-events-none');
+    expect(screen.getByTestId('dock-capsule').className).not.toContain('pointer-events-none');
+  });
+
   it('浮出后徽章栏抬回 Dock 上方（collapsed 解除）', () => {
     renderDock();
     stubDockRect();
