@@ -40,6 +40,7 @@
 | 收藏星标 | `FavoriteToggle`（shared/components/favorite-toggle.tsx）：可复用收藏按钮，PageHeader 内置同款；详情页 SubPageToolbar actions / 项目详情上下文栏/通知/搜索页的收藏入口 |
 | 状态统一视觉 | `status-visuals`（shared/status/status-visuals.ts）：任务/项目状态→tone(语义 accent)+图标+i18n 的唯一映射源，消费方：项目列表(StatusPill)、右键子菜单、项目看板、甘特条、任务列表配色 |
 | 状态图标底框 | `StatusIconFrame`（shared/status/status-icon-frame.tsx）：tone 语义浅底+圆角框+居中图标的统一底框形态，与 status-visuals 配套；任务/BUG 详情标题、子任务行、动态时间线事件图标 |
+| 工单类型胶囊 | `IssueTypePill`（shared/components/issue-type-pill.tsx）：类型标识强化形态（对比裸 IssueTypeIcon），pill=图标+类型名+浅色底胶囊（列表行首）、frame=图标+浅色底圆框（窄列）；色取 IssueType.color 运行时数据，未配置回落 muted；任务列表行首、任务表格 ID 列 | meta(IssueTypeMeta), variant(pill/frame), className |
 | 实体图标注册表 | `EntityIcon`/`getEntityIcon`（shared/entity-icons/entity-icons.tsx）：实体→图标+语义 tone 的唯一映射（issue/bug/project/workflow/execution/acceptance/document/member/team/decision/workspace/repository/release），PageHeader/引用 chip/预览卡等「实体身份」场景统一取图，尺寸四档 xs/sm/md/lg=12/14/16/20px；nav/tabs 注册表迁移留待第二批（规范 v0 见文件头注释） | entity, size, className |
 | Markdown 渲染 | `MarkdownView`（shared/components/markdown-view.tsx）：react-markdown+remark-gfm 运行时渲染（任务/BUG 描述、评论正文；GFM 表格/任务清单/删除线）；文档模块可编译 MDX 仍走 shared/mdx 管线 |
 | Markdown 编辑 | `MarkdownEditor`（shared/components/markdown-editor.tsx）：输入+所见即所得预览的标准编辑器，preview=live 分栏实时渲染（描述）/toggle 编辑预览切换（评论框）；renderInput 可换 MentionTextarea，actions 放表情/发送 |

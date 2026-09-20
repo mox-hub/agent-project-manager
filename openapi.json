@@ -25698,6 +25698,66 @@
         ]
       }
     },
+    "/_api/runtime/local-daemon/status": {
+      "get": {
+        "operationId": "RuntimeQueryController_getLocalDaemonStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "本机 daemon 状态（锁持有者探活；standalone 限定）",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/local-daemon/start": {
+      "post": {
+        "operationId": "RuntimeQueryController_startLocalDaemon",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "拉起本机 daemon（detached spawn；standalone 限定）",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/local-daemon/stop": {
+      "post": {
+        "operationId": "RuntimeQueryController_stopLocalDaemon",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "停止本机 daemon（进程树强杀；standalone 限定）",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
     "/_api/runtime/approvals": {
       "get": {
         "operationId": "RuntimeQueryController_listApprovals",
@@ -63570,9 +63630,21 @@
       "ImportIssueDto": {
         "type": "object",
         "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "所属项目 ID（列表内全部任务须同项目）"
+          },
           "title": {
             "type": "string",
             "description": "任务标题"
+          },
+          "type": {
+            "type": "string",
+            "description": "任务类型（task/bug）",
+            "enum": [
+              "task",
+              "bug"
+            ]
           },
           "description": {
             "type": "string",
@@ -69880,6 +69952,12 @@
             "type": "object",
             "description": "剩余额度",
             "nullable": true
+          },
+          "percent": {
+            "type": "object",
+            "description": "已用百分比（0-100；厂家仅返回百分比时提供，此时 used/limit 为 null）",
+            "nullable": true,
+            "example": 20
           },
           "resetsAt": {
             "type": "object",

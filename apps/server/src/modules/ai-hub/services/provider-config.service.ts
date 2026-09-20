@@ -534,8 +534,9 @@ export class ProviderConfigService {
   }
 
   /**
-   * 解析余额端点：metadata.balanceEndpoint 显式配置优先，
-   * 否则取 baseUrl（缺省回退厂家默认）的域名根 + /user/balance
+   * 解析余额端点：metadata.balanceEndpoint 显式配置优先；
+   * opencode-go 取 baseUrl 版本段下的 /usage（套餐用量端点，实机验证）；
+   * 其余取 baseUrl（缺省回退厂家默认）的域名根 + /user/balance
    * （余额端点通常不在 API 版本段下，如 https://api.deepseek.com/user/balance）
    */
   private resolveBalanceEndpoint(provider: {
@@ -558,6 +559,9 @@ export class ProviderConfigService {
       throw new BadRequestException(
         `Provider ${provider.provider} has no baseUrl and no balance endpoint configured`,
       );
+    }
+    if (provider.provider === 'opencode-go') {
+      return `${base}/usage`;
     }
     try {
       return `${new URL(base).origin}/user/balance`;
@@ -729,10 +733,10 @@ export class ProviderConfigService {
     );
   }
 
-  /** 周期别名归一化：5h/five_hour/5-hour→5h，weekly→week，monthly→month…；非周期键返回 null */
+  /** 周期别名归一化：5h/five_hour/5-hour/rolling→5h，weekly→week，monthly→month…；非周期键返回 null */
   private normalizeBalancePeriod(raw: string): string | null {
     const s = raw.trim().toLowerCase();
-    if (/^(5h|5[-_.]?hour|five[-_]?hour)$/.test(s)) return '5h';
+    if (/^(5h|5[-_.]?hour|five[-_]?hour|rolling)$/.test(s)) return '5h';
     if (/^(day|daily)$/.test(s)) return 'day';
     if (/^(week|weekly)$/.test(s)) return 'week';
     if (/^(month|monthly)$/.test(s)) return 'month';
@@ -774,7 +778,15 @@ export class ProviderConfigService {
       'available',
       'remaining_tokens',
     ]);
-    if (used === null && limit === null && remaining === null) return null;
+    const percent = pickNum(['percent', 'used_percent', 'usedPercent']);
+    if (
+      used === null &&
+      limit === null &&
+      remaining === null &&
+      percent === null
+    ) {
+      return null;
+    }
     const resets = [
       o.resets_at,
       o.reset_at,
@@ -783,7 +795,14 @@ export class ProviderConfigService {
       o.window_ends_at,
       o.reset_time,
     ].find((v) => typeof v === 'string' && v) as string | undefined;
-    return { period, used, limit, remaining, resetsAt: resets ?? null };
+    return {
+      period,
+      used,
+      limit,
+      remaining,
+      percent,
+      resetsAt: resets ?? null,
+    };
   }
 
   private toNullableNumber(v: unknown): number | null {

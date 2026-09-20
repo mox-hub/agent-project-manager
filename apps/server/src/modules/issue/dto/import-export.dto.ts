@@ -9,9 +9,22 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ImportIssueDto {
+  @ApiPropertyOptional({ description: '所属项目 ID（列表内全部任务须同项目）' })
+  @IsString()
+  @IsOptional()
+  projectId?: string;
+
   @ApiProperty({ description: '任务标题' })
   @IsString()
   title: string;
+
+  @ApiPropertyOptional({
+    description: '任务类型（task/bug）',
+    enum: ['task', 'bug'],
+  })
+  @IsString()
+  @IsOptional()
+  type?: string;
 
   @ApiPropertyOptional({ description: '任务描述' })
   @IsString()

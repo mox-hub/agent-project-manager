@@ -69,7 +69,7 @@ export async function runRuntimeDaemon(): Promise<void> {
       protocolVersion: PROTOCOL_VERSION,
       workspaceRoots,
       availableProviders: ['file', 'git', 'terminal'],
-      cliProviders: ['claude-code', 'codex', 'zcode'],
+      cliProviders: ['claude-code', 'codex', 'zcode', 'opencode'],
       metadata: { deviceSecret },
     } as RuntimeRegisterPayload,
   );
@@ -106,7 +106,7 @@ export async function runRuntimeDaemon(): Promise<void> {
         process: true,
         credentials: false,
       },
-      cliProviders: ['claude-code', 'codex', 'zcode'],
+      cliProviders: ['claude-code', 'codex', 'zcode', 'opencode'],
     } as RuntimeCapabilitiesPayload)
     .catch((e) => console.error('[capabilities]', e.message));
 

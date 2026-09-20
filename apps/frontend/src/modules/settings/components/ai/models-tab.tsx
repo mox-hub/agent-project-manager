@@ -173,22 +173,29 @@ function ProviderBalanceCard({
       </div>
     );
   } else {
-    // 套餐型：每窗口一条进度条（有 limit 用已用/限额，否则按剩余纯展示）
+    // 套餐型：每窗口一条进度条（百分比型直接取 percent；有 limit 用已用/限额，否则按剩余纯展示）
     body = (
       <div className="space-y-3">
         {data.windows.map((w) => {
-          const pct = w.limit && w.limit > 0 ? clampPercent(((w.used ?? 0) / w.limit) * 100) : null;
+          const pct =
+            w.percent != null
+              ? clampPercent(w.percent)
+              : w.limit && w.limit > 0
+                ? clampPercent(((w.used ?? 0) / w.limit) * 100)
+                : null;
           const tone = pct === null ? 'green' : pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green';
           return (
             <div key={w.period} className="space-y-1.5">
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="text-muted-foreground">{periodLabel(w.period)}</span>
                 <span className="tabular-nums text-foreground">
-                  {w.limit != null
-                    ? `${formatCompact(w.used ?? 0)} / ${formatCompact(w.limit)}`
-                    : w.remaining != null
-                      ? t('aiHub.balanceWindowRemaining', { amount: formatCompact(w.remaining) })
-                      : formatCompact(w.used ?? 0)}
+                  {w.percent != null
+                    ? `${clampPercent(w.percent)}%`
+                    : w.limit != null
+                      ? `${formatCompact(w.used ?? 0)} / ${formatCompact(w.limit)}`
+                      : w.remaining != null
+                        ? t('aiHub.balanceWindowRemaining', { amount: formatCompact(w.remaining) })
+                        : formatCompact(w.used ?? 0)}
                   {w.resetsAt ? (
                     <span className="ml-2 text-muted-foreground">
                       {t('aiHub.balanceResets', { time: w.resetsAt })}

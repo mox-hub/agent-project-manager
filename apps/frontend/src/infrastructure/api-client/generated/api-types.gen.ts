@@ -3113,6 +3113,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/runtime/local-daemon/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 本机 daemon 状态（锁持有者探活；standalone 限定） */
+        get: operations["RuntimeQueryController_getLocalDaemonStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/local-daemon/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 拉起本机 daemon（detached spawn；standalone 限定） */
+        post: operations["RuntimeQueryController_startLocalDaemon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/local-daemon/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 停止本机 daemon（进程树强杀；standalone 限定） */
+        post: operations["RuntimeQueryController_stopLocalDaemon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/runtime/approvals": {
         parameters: {
             query?: never;
@@ -9022,8 +9073,15 @@ export interface components {
             } | null;
         };
         ImportIssueDto: {
+            /** @description 所属项目 ID（列表内全部任务须同项目） */
+            projectId?: string;
             /** @description 任务标题 */
             title: string;
+            /**
+             * @description 任务类型（task/bug）
+             * @enum {string}
+             */
+            type?: "task" | "bug";
             /** @description 任务描述 */
             description?: string;
             /** @description 状态 */
@@ -11486,6 +11544,11 @@ export interface components {
             limit?: Record<string, never> | null;
             /** @description 剩余额度 */
             remaining?: Record<string, never> | null;
+            /**
+             * @description 已用百分比（0-100；厂家仅返回百分比时提供，此时 used/limit 为 null）
+             * @example 20
+             */
+            percent?: Record<string, never> | null;
             /** @description 窗口重置时间（厂家原样返回） */
             resetsAt?: Record<string, never> | null;
         };
@@ -29834,6 +29897,57 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeQueryController_getLocalDaemonStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeQueryController_startLocalDaemon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeQueryController_stopLocalDaemon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

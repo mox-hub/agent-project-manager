@@ -188,6 +188,8 @@ export interface AiBalanceWindow {
   used?: number | null;
   limit?: number | null;
   remaining?: number | null;
+  /** 已用百分比（0-100；厂家仅返回百分比时提供，此时 used/limit 为 null） */
+  percent?: number | null;
   resetsAt?: string | null;
 }
 

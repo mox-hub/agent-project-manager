@@ -26,6 +26,10 @@ export interface AiSdkAdapterOptions {
   baseUrl?: string;
   organizationId?: string;
   defaultModel: string;
+  /** 附加请求头（如 opencode 网关的 x-opencode-session） */
+  headers?: Record<string, string>;
+  /** openai 协议强制走 chat completions（opencode 网关不支持 responses API） */
+  useChatCompletions?: boolean;
 }
 
 /**
@@ -44,8 +48,15 @@ export class AiSdkAdapter implements ModelAdapter {
   }
 
   private createModel(): LanguageModel {
-    const { sdkType, apiKey, baseUrl, organizationId, defaultModel } =
-      this.options;
+    const {
+      sdkType,
+      apiKey,
+      baseUrl,
+      organizationId,
+      defaultModel,
+      headers,
+      useChatCompletions,
+    } = this.options;
 
     try {
       switch (sdkType) {
@@ -54,17 +65,20 @@ export class AiSdkAdapter implements ModelAdapter {
             apiKey,
             baseURL: baseUrl,
             organization: organizationId,
+            headers,
           });
-          return openaiProvider.languageModel(defaultModel);
+          return useChatCompletions
+            ? openaiProvider.chat(defaultModel)
+            : openaiProvider.languageModel(defaultModel);
         }
 
         case 'anthropic': {
-          const anthropicProvider = createAnthropic({ apiKey });
+          const anthropicProvider = createAnthropic({ apiKey, headers });
           return anthropicProvider.languageModel(defaultModel);
         }
 
         case 'google': {
-          const googleProvider = createGoogleGenerativeAI({ apiKey });
+          const googleProvider = createGoogleGenerativeAI({ apiKey, headers });
           return googleProvider.languageModel(defaultModel);
         }
 

@@ -2357,12 +2357,19 @@ export class IssueService {
 
     const status = defaultStatus?.key || 'todo';
 
-    // Create tasks
+    // Create tasks（shortId 顺序分配：两段式全局序号，与手工创建同源；
+    // type 为遗留口径列，bug 型工单在此分化）
+    const shortIds: string[] = [];
+    for (let i = 0; i < tasks.length; i += 1) {
+      shortIds.push(await this.issueIdService.nextShortId());
+    }
     const createdTasks = await Promise.all(
-      tasks.map((task) =>
+      tasks.map((task, i) =>
         this.prisma.issue.create({
           data: {
             projectId,
+            shortId: shortIds[i],
+            type: task.type === 'bug' ? 'bug' : 'task',
             title: task.title,
             description: task.description,
             status: task.status || status,

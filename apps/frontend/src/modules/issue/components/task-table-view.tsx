@@ -5,9 +5,9 @@ import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-vis
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { ListAvatar, ListDate } from '@/components/ui/data-list';
 import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
+import { IssueTypePill } from '@/shared/components/issue-type-pill';
 import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
-import { IssueTypeIcon } from '@/shared/components/issue-type-icon';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
 import { ArrowDown, ArrowUp, ChevronsUp, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -56,7 +56,7 @@ export function TaskTableView({
           const id = task.shortId || task.externalIdentifier || task.id.slice(0, 8);
           return (
             <div className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
-              <IssueTypeIcon meta={issueTypeOf(task)} />
+              <IssueTypePill meta={issueTypeOf(task)} variant="frame" />
               <span>{id}</span>
             </div>
           );

@@ -416,8 +416,78 @@ describe('ProviderConfigService（模型查询 + 内置模型）', () => {
         used: 120,
         limit: 500,
         remaining: null,
+        percent: null,
         resetsAt: null,
       });
+    });
+
+    it('OpenCode Go 套餐：/usage 端点 + rolling 别名归一 5h + percent-only 窗口（percent=0 不丢）', async () => {
+      mockPrisma.aIProviderConfig.findUnique.mockResolvedValue({
+        ...deepseekProvider,
+        provider: 'opencode-go',
+        baseUrl: 'https://opencode.ai/zen/go/v1',
+      });
+      // 实机响应夹具（2026-09-19 采样）：仅 percent + resetsAt，无 used/limit 绝对值
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        jsonResponse({
+          usage: {
+            rolling: {
+              status: 'ok',
+              percent: 0,
+              resetsAt: '2026-09-19T16:29:20.195Z',
+            },
+            weekly: {
+              status: 'ok',
+              percent: 20,
+              resetsAt: '2026-09-21T00:00:00.195Z',
+            },
+            monthly: {
+              status: 'ok',
+              percent: 2,
+              resetsAt: '2026-10-15T15:22:49.195Z',
+            },
+          },
+        }),
+      );
+
+      const balance = await service.getProviderBalance('p-deepseek');
+
+      // 端点：baseUrl 版本段下拼 /usage（非域名根 /user/balance）
+      expect((fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(
+        'https://opencode.ai/zen/go/v1/usage',
+      );
+      expect(balance.type).toBe('subscription');
+      expect(balance.windows.map((w) => w.period)).toEqual([
+        '5h',
+        'week',
+        'month',
+      ]);
+      expect(balance.windows).toEqual([
+        {
+          period: '5h',
+          used: null,
+          limit: null,
+          remaining: null,
+          percent: 0,
+          resetsAt: '2026-09-19T16:29:20.195Z',
+        },
+        {
+          period: 'week',
+          used: null,
+          limit: null,
+          remaining: null,
+          percent: 20,
+          resetsAt: '2026-09-21T00:00:00.195Z',
+        },
+        {
+          period: 'month',
+          used: null,
+          limit: null,
+          remaining: null,
+          percent: 2,
+          resetsAt: '2026-10-15T15:22:49.195Z',
+        },
+      ]);
     });
 
     it('windows 数组直出形态（自带 period 字段）同样识别', async () => {
@@ -441,6 +511,7 @@ describe('ProviderConfigService（模型查询 + 内置模型）', () => {
           used: 3.5,
           limit: 10,
           remaining: null,
+          percent: null,
           resetsAt: '2026-09-20',
         },
       ]);

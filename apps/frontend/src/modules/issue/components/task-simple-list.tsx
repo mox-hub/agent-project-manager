@@ -18,9 +18,10 @@ import type { LucideIcon } from 'lucide-react';
 import { ListAvatar, ListChip, ListDate, ListIcon, ListText, DataList } from '@/components/ui/data-list';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
+import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
-import { IssueTypeIcon } from '@/shared/components/issue-type-icon';
+import { IssueTypePill } from '@/shared/components/issue-type-pill';
 import { cn } from '@/lib/utils';
 import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
@@ -256,6 +257,7 @@ export function TaskSimpleList({
         const todoTotal = task.todoItems?.length ?? task._count?.subIssues ?? 0;
         const todoDone = task.todoItems?.filter((item) => item.completed).length ?? 0;
         const aiExecution = getAiExecution?.(task);
+        const statusVisual = TASK_STATUS_VISUALS[normalizeStatus(task.status)] ?? TASK_STATUS_VISUALS.todo;
         return (
           <>
             {aiExecution ? (
@@ -267,7 +269,11 @@ export function TaskSimpleList({
             {task.type === 'bug' ? (
               <span className={cn('h-6 w-1.5 shrink-0 rounded-full', SEVERITY_BAR[severityOf(task)])} />
             ) : null}
-            <IssueTypeIcon meta={issueTypeOf(task)} />
+            <IssueTypePill meta={issueTypeOf(task)} />
+            {/* 进度状态图标紧跟类型之后（Linear 式行首链） */}
+            <span className="inline-flex shrink-0" title={STATUS_CONFIG[normalizeStatus(task.status)]?.label}>
+              <StatusIconFrame icon={statusVisual.icon} tone={statusVisual.tone} size="xs" />
+            </span>
             {/* ID 完整展示，不截断 */}
             <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{idOf(task)}</span>
             <ListIcon icon={PRIORITY_CONFIG[priorityOf(task)].icon} className={PRIORITY_CONFIG[priorityOf(task)].color} />

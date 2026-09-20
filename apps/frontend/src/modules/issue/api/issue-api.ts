@@ -244,6 +244,8 @@ export interface UpdateTaskRequest {
   tags?: string[];
   // Task Details
   type?: TaskType;
+  /** 工单类型（IssueType 适配引擎）：typeId 为事实源，服务端同步遗留 type 列 */
+  typeId?: string;
   severity?: BugSeverity;
   milestoneId?: string;
   todoItems?: TodoItem[];

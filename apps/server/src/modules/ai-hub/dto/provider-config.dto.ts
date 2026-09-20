@@ -343,6 +343,14 @@ export class ProviderBalanceWindowDto {
   remaining?: number | null;
 
   @ApiPropertyOptional({
+    description:
+      '已用百分比（0-100；厂家仅返回百分比时提供，此时 used/limit 为 null）',
+    nullable: true,
+    example: 20,
+  })
+  percent?: number | null;
+
+  @ApiPropertyOptional({
     description: '窗口重置时间（厂家原样返回）',
     nullable: true,
   })
