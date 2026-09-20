@@ -25,11 +25,23 @@ vi.mock('@/modules/search/api/search-api', () => ({
   searchApi: { search: vi.fn() },
 }));
 
-const searchMock = vi.mocked(searchApi.search);
+// 内嵌 AI 问答走 assistantApi：单测里 mock 掉（不触真实 LLM 通道）
+vi.mock('@/modules/assistant/api/assistant-api', () => ({
+  assistantApi: { send: vi.fn() },
+}));
 
-// jsdom 未实现 scrollIntoView，cmdk 渲染选中项时会调用
+import { assistantApi } from '@/modules/assistant/api/assistant-api';
+
+const searchMock = vi.mocked(searchApi.search);
+const sendMock = vi.mocked(assistantApi.send);
+
+// jsdom 未实现 scrollIntoView（列表滚动定位）与 Web Animations API
+// （base-ui ScrollArea viewport 淡入动画调 getAnimations），补空实现
 beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn();
+  Element.prototype.getAnimations = vi.fn(
+    () => [],
+  ) as unknown as typeof Element.prototype.getAnimations;
 });
 
 /** 复刻 shell-layout 的映射逻辑：i18n key → 已翻译 label；entity/icon → 图标组件 */
@@ -341,5 +353,149 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
     });
     expect(screen.queryByText('搜索结果')).toBeNull();
     expect(screen.getByTestId('palette-entity-search-hint')).toBeTruthy();
+  });
+});
+
+describe('coss p-command 引擎行为（base-ui autocomplete 替换 cmdk 后）', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('输入关键词按 label/keywords 过滤命令，不匹配条目从面板移除', async () => {
+    searchMock.mockResolvedValue({ items: [], total: 0 });
+    renderProvider();
+    const input = await openPaletteReal();
+    fireEvent.change(input, { target: { value: 'workflow' } });
+
+    await waitFor(() =>
+      expect(screen.getByText('shell.openWorkflows')).toBeTruthy(),
+    );
+    expect(screen.queryByText('shell.openProjects')).toBeNull();
+  });
+
+  it('Enter 选中高亮项跳转对应路由并关闭面板', async () => {
+    searchMock.mockResolvedValue({ items: [], total: 0 });
+    renderProvider();
+    const input = await openPaletteReal();
+    fireEvent.change(input, { target: { value: 'workflow' } });
+
+    // 等 base-ui autoHighlight 把首条置为高亮（data-highlighted）再回车
+    await waitFor(() => {
+      const item = screen.getByText('shell.openWorkflows').closest('[data-slot=command-item]');
+      expect(item?.hasAttribute('data-highlighted')).toBe(true);
+    });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location-probe').textContent).toBe('/app/workflows'),
+    );
+    expect(screen.getByTestId('palette-open').textContent).toBe('false');
+  });
+
+  it('零命中回车带词进入内嵌 AI 问答并直接提问（assistantApi.send 真通道 mock）', async () => {
+    sendMock.mockResolvedValue({
+      conversationId: 'conv-1',
+      mode: 'sync',
+      message: { id: 'msg-1', role: 'assistant', content: '这是面板回答' },
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    searchMock.mockResolvedValue({ items: [], total: 0 });
+    render(
+      <MemoryRouter initialEntries={['/app/projects']}>
+        <QueryClientProvider client={queryClient}>
+          <CommandPaletteProvider
+            initialCommands={[{ id: 'cmd-projects', label: 'shell.openProjects', to: '/app/projects' }]}
+          >
+            <OpenProbe />
+          </CommandPaletteProvider>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+    act(() => {
+      window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
+    });
+    const input = await screen.findByPlaceholderText('commandPalette.placeholder');
+    fireEvent.change(input, { target: { value: 'zzz-无匹配' } });
+
+    await waitFor(() =>
+      expect(screen.getByText('按 Enter 询问 AI 助手：')).toBeTruthy(),
+    );
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    // 进入 AI 模式并自动提问：send 收到原查询词，回答内嵌渲染，面板保持打开
+    await waitFor(() => expect(sendMock).toHaveBeenCalledTimes(1));
+    expect(sendMock.mock.calls[0]?.[0]).toEqual({ content: 'zzz-无匹配' });
+    await waitFor(() =>
+      expect(screen.getByText('这是面板回答')).toBeTruthy(),
+    );
+    expect(screen.getByTestId('palette-open').textContent).toBe('true');
+  });
+
+  it('Tab 进入内嵌 AI 问答模式（不再跳转系统助手）', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <MemoryRouter initialEntries={['/app/projects']}>
+        <QueryClientProvider client={queryClient}>
+          <CommandPaletteProvider
+            initialCommands={[{ id: 'cmd-projects', label: 'shell.openProjects', to: '/app/projects' }]}
+          >
+            <OpenProbe />
+          </CommandPaletteProvider>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+    act(() => {
+      window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
+    });
+    const input = await screen.findByPlaceholderText('commandPalette.placeholder');
+    fireEvent.keyDown(input, { key: 'Tab' });
+
+    // AI 模式输入框出现（placeholder 走 t 兜底文案），仍处于打开态
+    expect(await screen.findByPlaceholderText('问问 AI…')).toBeTruthy();
+    expect(screen.getByTestId('palette-open').textContent).toBe('true');
+  });
+
+  it('AI 模式下 Esc 返回搜索模式而非关闭面板', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <MemoryRouter initialEntries={['/app/projects']}>
+        <QueryClientProvider client={queryClient}>
+          <CommandPaletteProvider
+            initialCommands={[{ id: 'cmd-projects', label: 'shell.openProjects', to: '/app/projects' }]}
+          >
+            <OpenProbe />
+          </CommandPaletteProvider>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+    act(() => {
+      window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
+    });
+    const input = await screen.findByPlaceholderText('commandPalette.placeholder');
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(await screen.findByPlaceholderText('问问 AI…')).toBeTruthy();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(await screen.findByPlaceholderText('commandPalette.placeholder')).toBeTruthy();
+    expect(screen.getByTestId('palette-open').textContent).toBe('true');
+  });
+
+  it('Ctrl+1..9 快速选择可见条目（首条=导航分组第一项）', async () => {
+    searchMock.mockResolvedValue({ items: [], total: 0 });
+    renderProvider();
+    const input = await openPaletteReal();
+
+    // 空查询下可见序首条 = cmd-projects（/app/projects）
+    fireEvent.keyDown(input, { key: '1', ctrlKey: true });
+    await waitFor(() =>
+      expect(screen.getByTestId('location-probe').textContent).toBe('/app/projects'),
+    );
+    expect(screen.getByTestId('palette-open').textContent).toBe('false');
   });
 });

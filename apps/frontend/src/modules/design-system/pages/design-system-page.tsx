@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import {
   Activity,
   AlertCircle,
@@ -77,12 +78,16 @@ import {
 import { Button } from '@/components/ui/button'
 import {
   Command,
-  CommandInput,
-  CommandList,
-  CommandGroup,
-  CommandItem,
-  CommandShortcut,
+  CommandCollection,
+  CommandEmpty,
   CommandFooter,
+  CommandGroup,
+  CommandGroupLabel,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandPanel,
+  CommandShortcut,
 } from '@/components/ui/command'
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons'
 import { Badge } from '@/components/ui/badge'
@@ -756,6 +761,118 @@ function MarkdownEditorDemo() {
       preview="live"
       placeholder="live 分栏实时预览（宽容器）"
     />
+  )
+}
+
+/* coss p-command 演示（base-ui autocomplete 引擎，与全局面板同源实现） */
+
+type CommandDemoItem = {
+  id: string
+  label: string
+  keywords?: string[]
+  shortcut?: string
+  icon?: LucideIcon
+}
+
+const commandDemoGroups: Array<{ value: string; label: string; items: CommandDemoItem[] }> = [
+  {
+    value: 'nav',
+    label: '导航',
+    items: (
+      [
+        { entity: 'project', label: '打开项目', keywords: ['project', '项目'] },
+        { entity: 'issue', label: '打开任务', keywords: ['task', '任务'] },
+        { entity: 'workflow', label: '打开工作流', keywords: ['workflow'] },
+        { entity: 'acceptance', label: '打开验收', keywords: ['acceptance'] },
+        { entity: 'decision', label: '打开决策收件箱', keywords: ['decision'] },
+        { entity: 'repository', label: '打开仓库', keywords: ['repo'] },
+      ] as const
+    ).map(({ entity, label, keywords }) => ({
+      id: `demo-${entity}`,
+      label,
+      keywords: [...keywords],
+      icon: getEntityIcon(entity).icon,
+    })),
+  },
+  {
+    value: 'actions',
+    label: '操作',
+    items: [
+      { id: 'demo-ask-ai', label: '问主 AI', keywords: ['ai', 'assistant'], shortcut: 'Alt A', icon: MessagesSquare },
+      { id: 'demo-theme', label: '切换到深色 / 浅色模式', keywords: ['theme', 'dark', 'light'], icon: SunMoon },
+    ],
+  },
+]
+
+function CommandPaletteDemo() {
+  const [query, setQuery] = useState('')
+  // 引擎同款过滤（accent/大小写不敏感 contains + keywords），预滤掉空组避免渲染孤儿标题
+  const { contains } = useAutocompleteFilter({ sensitivity: 'base' })
+  const filterItem = useCallback((item: CommandDemoItem, q: string): boolean => {
+    if (!q.trim()) return true
+    if (contains(item.label, q)) return true
+    return (item.keywords ?? []).some((keyword) => contains(keyword, q))
+  }, [contains])
+  const trimmed = query.trim()
+  const visibleGroups = useMemo(
+    () =>
+      commandDemoGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => filterItem(item, query)),
+        }))
+        .filter((group) => group.items.length > 0),
+    [filterItem, query]
+  )
+
+  return (
+    <div className="flex justify-center">
+      <div className="w-140 overflow-hidden rounded-xl border border-border shadow-2xl bg-card">
+        <Command items={visibleGroups} filter={filterItem}>
+          <div className="relative flex items-center *:first:flex-1">
+            <CommandInput
+              placeholder="输入命令或搜索…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
+          <CommandPanel>
+            <CommandEmpty className="not-empty:py-12">
+              <p className="text-muted-foreground text-sm">
+                {trimmed ? `没有匹配「${trimmed}」的命令` : '没有匹配的命令'}
+              </p>
+            </CommandEmpty>
+            <CommandList>
+              {(group: (typeof visibleGroups)[number]) => (
+                <CommandGroup items={group.items} key={group.value}>
+                  <CommandGroupLabel>{group.label}</CommandGroupLabel>
+                  <CommandCollection>
+                    {(item: CommandDemoItem) => {
+                      const Icon = item.icon
+                      return (
+                        <CommandItem key={item.id} value={item} onClick={() => undefined}>
+                          {Icon ? <Icon className="text-muted-foreground" /> : null}
+                          <span className="flex-1">{item.label}</span>
+                          {item.shortcut ? <CommandShortcut>{item.shortcut}</CommandShortcut> : null}
+                        </CommandItem>
+                      )
+                    }}
+                  </CommandCollection>
+                </CommandGroup>
+              )}
+            </CommandList>
+          </CommandPanel>
+          <CommandFooter>
+            <div className="flex items-center gap-4">
+              <span>↑↓ 导航</span>
+              <span>↵ 选择</span>
+              <span>ESC 关闭</span>
+            </div>
+            <span className="text-10">coss p-command · base-ui autocomplete 引擎</span>
+          </CommandFooter>
+        </Command>
+      </div>
+    </div>
   )
 }
 
@@ -5509,48 +5626,8 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="command">
             <SectionTitle>Command Palette</SectionTitle>
-            <SubLabel>Live primitives (components/ui/command) — 全局面板同源，⌘K / Ctrl+/ 唤起真实面板</SubLabel>
-            <div className="flex justify-center">
-              <div className="w-140 overflow-hidden rounded-xl border border-border shadow-2xl bg-card">
-                <Command shouldFilter={false}>
-                  <CommandInput placeholder="输入命令或搜索…" />
-                  <CommandList>
-                    <CommandGroup heading="导航">
-                      {(
-                        [
-                          { entity: 'project', label: '打开项目' },
-                          { entity: 'issue', label: '打开任务' },
-                          { entity: 'workflow', label: '打开工作流' },
-                          { entity: 'acceptance', label: '打开验收' },
-                          { entity: 'decision', label: '打开决策收件箱' },
-                          { entity: 'repository', label: '打开仓库' },
-                        ] as const
-                      ).map(({ entity, label }) => {
-                        const { icon: Icon } = getEntityIcon(entity)
-                        return (
-                          <CommandItem key={entity} onSelect={() => undefined}>
-                            <Icon className="text-muted-foreground" />
-                            <span>{label}</span>
-                          </CommandItem>
-                        )
-                      })}
-                    </CommandGroup>
-                    <CommandGroup heading="操作">
-                      <CommandItem onSelect={() => undefined}>
-                        <MessagesSquare className="text-muted-foreground" />
-                        <span>问主 AI</span>
-                        <CommandShortcut>Alt A</CommandShortcut>
-                      </CommandItem>
-                      <CommandItem onSelect={() => undefined}>
-                        <SunMoon className="text-muted-foreground" />
-                        <span>切换到深色 / 浅色模式</span>
-                      </CommandItem>
-                    </CommandGroup>
-                  </CommandList>
-                  <CommandFooter />
-                </Command>
-              </div>
-            </div>
+            <SubLabel>coss ui p-command 配方（base-ui autocomplete 引擎，components/ui/command）—— 全局面板同源，⌘K / Ctrl+K 唤起真实面板</SubLabel>
+            <CommandPaletteDemo />
           </SectionAnchor>
 
           <Separator />
