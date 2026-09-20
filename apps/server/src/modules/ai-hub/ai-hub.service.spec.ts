@@ -16,6 +16,7 @@ describe('AiHubService', () => {
     aIModelConfig: { findMany: vi.fn() },
     aIConversation: { findUnique: vi.fn(), create: vi.fn() },
     aIUsageLog: { findMany: vi.fn() },
+    appConfig: { findFirst: vi.fn().mockResolvedValue(null) },
   };
 
   const mockMessageBusService = {
@@ -119,11 +120,13 @@ describe('AiHubService', () => {
         modelName: 'gpt-4.1-mini',
         totalTokens: 100,
         estimatedCost: 0.01,
+        conversationId: 'conv-1',
       },
       {
         modelName: 'gpt-4.1-mini',
         totalTokens: 300,
         estimatedCost: 0.02,
+        executionRunId: 'exec-1',
       },
       {
         modelName: 'gpt-4.1',
@@ -150,5 +153,10 @@ describe('AiHubService', () => {
         }),
       ]),
     );
+    // 调用来源分类计数：conversation 优先，execution/workflow 次之，其余为静默
+    expect(usage.totalCalls).toBe(3);
+    expect(usage.conversationCalls).toBe(1);
+    expect(usage.executionCalls).toBe(1);
+    expect(usage.silentCalls).toBe(1);
   });
 });

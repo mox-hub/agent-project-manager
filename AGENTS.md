@@ -5,14 +5,17 @@ id: ROOT-001
 category: meta
 status: active
 version: 1.2.0
-created: "2026-09-07"
-modified: "2026-09-19"
+created: '2026-09-07'
+modified: '2026-09-19'
 scope: AI 会话（Claude Code / Codex / Cursor / opencode 等跨工具入口）
 ai-session-types: all
 ai-priority: critical
 ai-freshness: realtime
-ai-audiences: "session:all"
-tags: "AI, governance, meta, entry, agents"
+ai-audiences: 'session:all'
+tags: 'AI, governance, meta, entry, agents'
+apm_project_id: cmu8iciuo001sfyo0kc7uj6m1
+apm_file_type: agents
+apm_sync_mode: managed
 ---
 
 # AGENTS.md — 跨工具 AI 会话入口
@@ -188,3 +191,9 @@ hotfix/*（从 main 检出） · release/*（从 pre-prod 检出）
 - 行为/状态变更 → 同步 `docs/` 设计文档 + `CHANGELOG.md`（文档即契约）。
 - 定义完成：改完自查 `pnpm quality:gate`（或最小子集 type-check + test + lint），并在回复附变更摘要。
 - 需求入口：新功能想法 / 功能变更 / 功能废弃一律先走 `requirement-intake` skill（流程见 `docs/01-需求/需求入口流程-v1.md`）——**未进能力清单（`docs/01-需求/能力清单-v1.md`）的功能不得开工**；测试映射与缺口账见 `docs/01-需求/测试映射矩阵-v1.md`。
+
+<!-- BEGIN apm:managed:project-intro -->
+# Agent Project Manager
+
+APM 自举（dogfooding）：用 APM 管理 APM 自己的开发——需求管理、发布与版本管理、任务与文档纳入本系统管辖
+<!-- END apm:managed:project-intro -->

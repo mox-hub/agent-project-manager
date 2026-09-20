@@ -18,6 +18,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
+import { ToolbarRow } from '@/components/ui/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -25,7 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { NativeSelect } from '@/components/ui/native-select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -85,14 +87,12 @@ export function IssueTypeDetailSection() {
   const type = useMemo(() => types.find((ty) => ty.key === typeKey), [types, typeKey]);
 
   return (
-    <PageShell
-      variant="standard"
-      icon={Shapes}
-      iconColor="text-accent-blue"
-      title={type ? type.name : t('settings.issueTypeDetail', '任务类型详情')}
-      className="bg-background text-foreground"
-      contentClassName="space-y-4"
-    >
+    <PageShell className="overflow-hidden bg-background text-foreground">
+      <PageHeader
+        icon={Shapes}
+        iconColor="text-accent-blue"
+        title={type ? type.name : t('settings.issueTypeDetail', '任务类型详情')}
+      />
       <AsyncState
         isLoading={isLoading}
         isEmpty={!isLoading && !type}
@@ -109,55 +109,64 @@ function IssueTypeDetailBody({ type }: { type: IssueTypeMeta }) {
   const { t } = useTranslation();
   const isDefault = type.key === 'task';
   const [tab, setTab] = useState('basics');
+  // 状态页签计数（全局状态族，与 StatusesTab 同源）
+  const statusesQuery = useStatuses();
+  const statusCount = (statusesQuery.data ?? []).filter((s) => !s.projectId).length;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <IssueTypeIcon meta={type} className="size-8" />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-base font-semibold text-foreground">{type.name}</span>
-            {isDefault ? <Badge variant="secondary">{t('settings.defaultType', '默认')}</Badge> : null}
-            {!type.enabled ? <Badge variant="outline">{t('settings.typeDisabled', '已停用')}</Badge> : null}
-          </div>
-          <div className="truncate text-xs text-content-text-secondary">
-            {type.description || t('settings.issueTypeNoDesc', '尚未填写类型描述')}
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* 纯样式切换页：不传 views（视图管理整体隐藏），仅居中页签 */}
+      <ToolbarRow
+        aiId="settings.issue-type-detail"
+        viewStyle={{
+          layout: 'centered',
+          value: tab,
+          onChange: setTab,
+          options: [
+            { value: 'basics', label: t('settings.basicsTab', '基本信息') },
+            {
+              value: 'fields',
+              label: `${t('settings.fieldsTab', '自定义字段')}（${type.fieldSchema?.length ?? 0}）`,
+            },
+            {
+              value: 'statuses',
+              label: `${t('settings.statusTab', '状态')}（${statusCount}）`,
+            },
+          ],
+        }}
+        filterMenu={false}
+        displayMenu={false}
+        downloadMenu={false}
+      />
+
+      <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4 md:px-7">
+        <div className="flex items-center gap-3">
+          <IssueTypeIcon meta={type} className="size-8" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-base font-semibold text-foreground">{type.name}</span>
+              {isDefault ? <Badge variant="secondary">{t('settings.defaultType', '默认')}</Badge> : null}
+              {!type.enabled ? <Badge variant="outline">{t('settings.typeDisabled', '已停用')}</Badge> : null}
+            </div>
+            <div className="truncate text-xs text-content-text-secondary">
+              {type.description || t('settings.issueTypeNoDesc', '尚未填写类型描述')}
+            </div>
           </div>
         </div>
+
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsContent value="basics">
+            <BasicsTab key={type.id} type={type} isDefault={isDefault} />
+          </TabsContent>
+          <TabsContent value="fields">
+            <FieldsTab key={type.id} type={type} />
+          </TabsContent>
+          <TabsContent value="statuses">
+            <StatusesTab />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
-          <TabsTrigger value="basics">{t('settings.basicsTab', '基本信息')}</TabsTrigger>
-          <TabsTrigger value="fields">
-            {t('settings.fieldsTab', '自定义字段')}（{type.fieldSchema?.length ?? 0}）
-          </TabsTrigger>
-          <TabsTrigger value="statuses">
-            <StatusTabLabel />
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="basics">
-          <BasicsTab key={type.id} type={type} isDefault={isDefault} />
-        </TabsContent>
-        <TabsContent value="fields">
-          <FieldsTab key={type.id} type={type} />
-        </TabsContent>
-        <TabsContent value="statuses">
-          <StatusesTab />
-        </TabsContent>
-      </Tabs>
     </div>
-  );
-}
-
-function StatusTabLabel() {
-  const { t } = useTranslation();
-  const statusesQuery = useStatuses();
-  const count = (statusesQuery.data ?? []).filter((s) => !s.projectId).length;
-  return (
-    <>
-      {t('settings.statusTab', '状态')}（{count}）
-    </>
   );
 }
 

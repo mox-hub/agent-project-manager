@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { useDocumentDetail } from '../hooks/use-document-detail';
 import { useUpdateDocument } from '../hooks/use-document-mutations';
+import { useDocumentDeleteFlow } from '../hooks/use-document-delete';
 import { SectionNavigation } from '../components/section-navigation';
 import { DocumentTaskLinks } from '../components/document-task-links';
 import { SectionTaskLinksList } from '../components/section-task-links-list';
@@ -101,6 +102,14 @@ export function DocumentViewPage() {
   const currentProjectId = useAppStore((state) => state.currentProjectId ?? '');
   const submitForReview = useSubmitForReview();
   const updateDocument = useUpdateDocument();
+  // 删除成功后导航回列表（列表 invalidate 由 useDeleteDocument 统一处理）
+  const { confirmDelete: confirmDeleteDocument, isDeleting: isDeletingDocument } =
+    useDocumentDeleteFlow({ redirectTo: '/app/documents' });
+
+  const handleDeleteDocument = useCallback(async () => {
+    setMenuOpen(false);
+    await confirmDeleteDocument({ id: documentId, title: detailQuery.data?.title });
+  }, [confirmDeleteDocument, documentId, detailQuery.data?.title]);
 
   // 属性面板写回：只更新 content（frontmatter），正文不动；DB 标签镜像由下方 syncMetadata 副作用跟随
   const handlePropertiesSave = useCallback(
@@ -320,7 +329,8 @@ export function DocumentViewPage() {
                 <button
                   type="button"
                   className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
-                  onClick={() => setMenuOpen(false)}
+                  disabled={isDeletingDocument}
+                  onClick={() => void handleDeleteDocument()}
                 >
                   <Trash2 size={14} /> 删除文档
                 </button>

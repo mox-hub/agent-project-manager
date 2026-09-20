@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useImportTasks, useExportTasks } from '../hooks/use-project-tasks';
+import { useTranslation } from 'react-i18next';
 import type { CreateTaskRequest, TaskPriority } from '../api/issue-api';
 
 interface TaskImportExportProps {
@@ -19,6 +20,26 @@ interface TaskImportExportProps {
 }
 
 type ExportFormat = 'csv' | 'json';
+
+/** 后端 400 error.details.errors 的逐行导入错误（P0-8b） */
+interface ImportRowError {
+  row: number;
+  field?: string;
+  message: string;
+}
+
+/** 从 ApiClientError.details 中提取逐行导入错误（鸭子类型判定，避免耦合错误类） */
+function extractImportRowErrors(err: unknown): ImportRowError[] {
+  const details = (err as { details?: { errors?: unknown } } | null)?.details;
+  const errors = details?.errors;
+  if (!Array.isArray(errors)) return [];
+  return errors.filter(
+    (e): e is ImportRowError =>
+      !!e &&
+      typeof e === 'object' &&
+      typeof (e as ImportRowError).message === 'string',
+  );
+}
 
 type ExportTaskRow = {
   title?: string;
@@ -78,8 +99,10 @@ function ImportModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [preview, setPreview] = useState<CreateTaskRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [rowErrors, setRowErrors] = useState<ImportRowError[]>([]);
   const importTasks = useImportTasks();
 
   const parseCSV = (content: string) => {
@@ -129,6 +152,7 @@ function ImportModal({
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = String(event.target?.result ?? '');
+      setRowErrors([]);
       parseCSV(content);
     };
     reader.readAsText(file);
@@ -142,8 +166,22 @@ function ImportModal({
       onClose();
       setPreview([]);
       setError(null);
-    } catch {
-      setError('Failed to import tasks');
+      setRowErrors([]);
+    } catch (err) {
+      // P0-8b：后端任一行校验失败会整批拒绝（400 + details.errors），逐行展示
+      const importRowErrors = extractImportRowErrors(err);
+      setRowErrors(importRowErrors);
+      if (importRowErrors.length > 0) {
+        setError(
+          t(
+            'task.import.validationFailed',
+            '导入校验失败，本次导入未创建任何任务，共 {{count}} 处错误',
+            { count: importRowErrors.length },
+          ),
+        );
+      } else {
+        setError('Failed to import tasks');
+      }
     }
   };
 
@@ -171,6 +209,16 @@ function ImportModal({
 
           {error ? (
             <div className="rounded-md bg-accent-red-light px-3 py-2 text-sm text-accent-red">{error}</div>
+          ) : null}
+
+          {rowErrors.length > 0 ? (
+            <div className="max-h-40 space-y-1 overflow-auto rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
+              {rowErrors.map((rowError, idx) => (
+                <div key={`${rowError.row}-${idx}`} className="text-accent-red">
+                  {rowError.message}
+                </div>
+              ))}
+            </div>
           ) : null}
 
           {preview.length > 0 ? (

@@ -31,14 +31,29 @@ export function useDecisionSummary(projectId?: string) {
   });
 }
 
-export type DecisionResolutionAction = 'accept' | 'reject' | 'waive' | 'cancel';
+export type DecisionResolutionAction =
+  | 'accept'
+  | 'reject'
+  | 'waive'
+  | 'cancel'
+  // contract_conflict 的三个裁决动作：卡键即裁决方向，resolve 时经
+  // conflictAction 字段上送（payload 在提案升级时已固化，装不下此刻的选择）
+  | 'accept_file'
+  | 'accept_db'
+  | 'detach';
+
+const CONFLICT_ACTIONS = ['accept_file', 'accept_db', 'detach'] as const;
 
 /**
  * 决议闭环：卡片动作 → 各来源既有端点（不新增第二写路径）。
  * - approval   → POST /execution/approvals/:id/resolve（approved / rejected，reason 入 resolutionNote）
  * - acceptance → accept-completion / reject-completion / waive（reason 必填）
- * - 建议类提案 → POST /decisions/proposals/:id/resolve（accept 执行 applier；clarify 携带 answer）
+ * - 建议类提案 → POST /decisions/proposals/:id/resolve（accept 执行 applier；clarify 携带 answer；
+ *   contract_conflict 携带 conflictAction=accept_file|accept_db|detach，reject 仅留痕不裁决）
  * 成功后失效 decisions 与 acceptance 两组缓存，卡片自动移出待决列表。
+ *
+ * 历史缺陷：kind 不在 PROPOSAL_KINDS 词表内时会落到最下方的 acceptance 兜底分支，
+ * 把提案 id 调成 acceptCompletion（验收通过）——release / contract_conflict 都栽过。
  */
 export function useResolveDecision() {
   const qc = useQueryClient();
@@ -56,6 +71,28 @@ export function useResolveDecision() {
       reason?: string;
       answer?: string;
     }) => {
+      if (decision.kind === 'contract_conflict') {
+        if (action === 'waive' || action === 'cancel') {
+          throw new Error('waive/cancel is not applicable to contract conflicts');
+        }
+        if (action === 'reject' && !reason?.trim()) {
+          throw new Error('reject reason is required');
+        }
+        const isConflictAction = (CONFLICT_ACTIONS as readonly string[]).includes(action);
+        return api.post(
+          `/decisions/proposals/${decision.sourceId}/resolve`,
+          {
+            // 三个裁决键都走 accept（服务端执行 resolveConflict applier），
+            // 具体方向由 conflictAction 承载；reject 仅留痕不裁决
+            action: isConflictAction ? 'accept' : action,
+            ...(isConflictAction ? { conflictAction: action } : {}),
+            reason: reason?.trim() || undefined,
+            // CAP-C-04：回传决议者所见内容的指纹，服务端校验「所见即所批」——
+            // 决议期间内容被实质变更时服务端 409，禁止沿用旧印象的决议。
+            expectedFingerprint: decision.contentFingerprint,
+          },
+        );
+      }
       if (isProposalKind(decision.kind)) {
         return api.post(`/decisions/proposals/${decision.sourceId}/resolve`, {
           action: action === 'waive' ? 'reject' : action,

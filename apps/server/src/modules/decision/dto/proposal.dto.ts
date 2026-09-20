@@ -1,6 +1,7 @@
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsIn,
   IsInt,
   IsObject,
@@ -20,6 +21,8 @@ export const PROPOSAL_KINDS = [
   'clarify',
   'gate',
   'workflow_def',
+  'release',
+  'contract_conflict',
 ] as const;
 
 export class CreateProposalDto {
@@ -105,6 +108,17 @@ export class ResolveProposalDto {
   @IsOptional()
   @IsString()
   answer?: string;
+
+  @ApiPropertyOptional({
+    description:
+      '契约冲突裁决动作（仅 kind=contract_conflict 必填）：' +
+      'accept_file=采纳文件侧现值为新基线；accept_db=把平台托管内容写回文件' +
+      '（派生型绑定不支持，需重新导出）；detach=解绑停止对齐',
+    enum: ['accept_file', 'accept_db', 'detach'],
+  })
+  @IsOptional()
+  @IsIn(['accept_file', 'accept_db', 'detach'])
+  conflictAction?: 'accept_file' | 'accept_db' | 'detach';
 }
 
 export class GenerateAssignmentDto {
@@ -318,6 +332,37 @@ export class WorkflowDefProposalPayloadDto {
   })
   @IsObject()
   definition: Record<string, unknown>;
+}
+
+/**
+ * contract_conflict 提案 payload（由 ContractBindingService 冲突检查升级投递，
+ * 不经 CreateProposalDto 手工创建；此处为文档化结构）。
+ * 裁决动作本身随 resolve 请求体的 conflictAction 传入，不在 payload 里。
+ */
+export class ContractConflictProposalPayloadDto {
+  @ApiProperty({ description: '契约文件绑定 ID' })
+  @IsString()
+  bindingId: string;
+
+  @ApiProperty({ description: '冲突文件相对路径' })
+  @IsString()
+  filePath: string;
+
+  @ApiPropertyOptional({
+    description: 'true=派生型绑定（整文件派生自平台，如 CHANGELOG）',
+  })
+  @IsOptional()
+  @IsBoolean()
+  derived?: boolean;
+
+  @ApiPropertyOptional({
+    description: '托管型冲突的差异区间 [{ id, state, fileSide, dbSide }]',
+    type: [Object],
+    additionalProperties: true,
+  })
+  @IsOptional()
+  @IsArray()
+  blocks?: Array<Record<string, unknown>>;
 }
 
 export class ResolveProposalResponseDto {

@@ -48,6 +48,7 @@ import { SkillsModule } from './modules/skills/skills.module';
 import { ProjectRoleModule } from './modules/role/project-role.module';
 import { DecisionModule } from './modules/decision/decision.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { SearchModule } from './modules/search/search.module';
 import { MemoryModule } from './modules/memory/memory.module';
 import { CollaborationModule } from './modules/collaboration/collaboration.module';
 import { ProfileModule } from './modules/profile/profile.module';
@@ -118,6 +119,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ProjectRoleModule,
     DecisionModule,
     DashboardModule,
+    SearchModule,
     OfficeModule,
     ContractModule,
     ReleaseModule,

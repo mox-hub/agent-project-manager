@@ -8,7 +8,12 @@ import {
   IsArray,
 } from 'class-validator';
 
-export const CLI_PROVIDER_IDS = ['claude-code', 'codex', 'zcode'] as const;
+export const CLI_PROVIDER_IDS = [
+  'claude-code',
+  'codex',
+  'zcode',
+  'opencode',
+] as const;
 export type CliProviderId = (typeof CLI_PROVIDER_IDS)[number];
 
 export class ConfigureCliProviderDto {

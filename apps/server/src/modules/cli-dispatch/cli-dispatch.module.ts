@@ -14,6 +14,7 @@ import { RuntimeModule } from '@/modules/runtime/runtime.module';
 import { ClaudeCodeAdapter } from './adapters/claude-code.adapter';
 import { CodexAdapter } from './adapters/codex.adapter';
 import { ZCodeAdapter } from './adapters/zcode.adapter';
+import { OpenCodeAdapter } from './adapters/opencode.adapter';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ZCodeAdapter } from './adapters/zcode.adapter';
     ClaudeCodeAdapter,
     CodexAdapter,
     ZCodeAdapter,
+    OpenCodeAdapter,
     // Services
     CliExecutorService,
     CliDispatchService,
@@ -49,10 +51,12 @@ export class CliDispatchModule {
     private readonly claudeAdapter: ClaudeCodeAdapter,
     private readonly codexAdapter: CodexAdapter,
     private readonly zcodeAdapter: ZCodeAdapter,
+    private readonly opencodeAdapter: OpenCodeAdapter,
   ) {
     // Register adapters on module init
     registry.registerAdapter(claudeAdapter);
     registry.registerAdapter(codexAdapter);
     registry.registerAdapter(zcodeAdapter);
+    registry.registerAdapter(opencodeAdapter);
   }
 }

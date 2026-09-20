@@ -69,6 +69,7 @@ import {
 } from '../hooks/use-project-tasks';
 import { useIssueTypes } from '../hooks/use-issue-types';
 import { CustomFieldsSection, formatCustomFieldValue } from '../components/custom-field-input';
+import { IssueTypeSwitcher } from '../components/issue-type-switcher';
 import { useAssigneeSync } from '../hooks/use-assignee-sync';
 import { type TaskPriority, type UpdateTaskRequest } from '../api/issue-api';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
@@ -391,6 +392,7 @@ export function TaskDetailPage() {
               标题用系统标准页头字号 text-lg(18px)，`!` 防止基类 md:text-sm 覆盖 */}
           <div className="px-6 pt-5 pb-3 shrink-0">
             <div className="flex items-center gap-3">
+              <IssueTypeSwitcher task={task} onChanged={invalidateActivities} />
               <StatusIconFrame
                 icon={statusVisual.icon}
                 tone={statusVisual.tone}

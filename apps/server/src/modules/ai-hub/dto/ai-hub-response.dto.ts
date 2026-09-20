@@ -191,10 +191,34 @@ export class UsageResponseDto {
   @ApiProperty({ type: Number, description: '估算总成本（USD）' })
   totalCost: number;
 
+  @ApiProperty({ type: Number, description: '调用总次数' })
+  totalCalls: number;
+
+  @ApiProperty({
+    type: Number,
+    description: '对话调用次数（挂 conversationId）',
+  })
+  conversationCalls: number;
+
+  @ApiProperty({
+    type: Number,
+    description: '执行链调用次数（挂 executionRunId/workflowRunId）',
+  })
+  executionCalls: number;
+
+  @ApiProperty({
+    type: Number,
+    description: '静默场景调用次数（系统自动，无对话/执行关联）',
+  })
+  silentCalls: number;
+
   @ApiProperty({ type: [UsageByModelDto], description: '按模型聚合' })
   byModel: UsageByModelDto[];
 
-  @ApiProperty({ type: [UsageByDayDto], description: '按日聚合（近 30 天）' })
+  @ApiProperty({
+    type: [UsageByDayDto],
+    description: '按日聚合（最多 370 天，倒序）',
+  })
   byDay: UsageByDayDto[];
 }
 
@@ -229,12 +253,58 @@ export class AIModelDto {
 export class DetectModelsResponseDto {
   @ApiProperty({ type: [String], description: '探测到的模型名列表' })
   models: string[];
+
+  @ApiProperty({
+    type: Boolean,
+    description: '是否已覆盖同步到 AIModelConfig（查询结果为空时 false）',
+  })
+  synced: boolean;
 }
 
 /** DELETE /ai/providers/:id 返回 */
 export class DeleteProviderResponseDto {
   @ApiProperty({ type: Boolean, description: '删除成功标记' })
   success: boolean;
+}
+
+// ============ Pricing Source（models.dev 价目参考源，CAP-A-21）============
+
+/** GET/POST /ai/pricing-source 返回 */
+export class PricingSourceStatusDto {
+  @ApiProperty({
+    type: Boolean,
+    description: '价目数据是否可用（至少成功拉取过一次）',
+  })
+  available: boolean;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: '上次成功拉取时间（ISO，未拉取为 null）',
+    nullable: true,
+  })
+  fetchedAt?: string | null;
+
+  @ApiProperty({
+    type: Boolean,
+    description: '缓存是否过期（超过 TTL 24h 或从未加载）',
+  })
+  stale: boolean;
+
+  @ApiProperty({ type: Number, description: '覆盖厂家数' })
+  providerCount: number;
+
+  @ApiProperty({ type: Number, description: '覆盖模型数' })
+  modelCount: number;
+
+  @ApiProperty({ type: String, description: '数据源地址' })
+  source: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: '最近一次拉取失败原因（成功后清空）',
+    nullable: true,
+  })
+  error?: string | null;
 }
 
 // ============ AI Worker ============

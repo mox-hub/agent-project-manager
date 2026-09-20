@@ -1,8 +1,13 @@
-import { afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { afterEach, beforeAll, afterAll, expect, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
-// vitest 5 的 Assertion 与 chai 解耦：手动 extend(matchers) 只挂运行时不挂类型，
-// 必须用官方 vitest 入口（运行时 + 类型扩充一体）
-import '@testing-library/jest-dom/vitest';
+// jest-dom 的 /vitest 入口会从包自身位置向上解析 'vitest'，经 pnpm 隐藏提升目录
+// (.pnpm/node_modules/vitest) 命中另一份 vitest 安装 → worker 内出现两个 expect
+// 实例，后者初始化时覆盖 chai.Assertion.prototype 上的 rejects 等属性，
+// 导致 .rejects.toThrow 抛 TypeError (reading 'indexOf')。
+// 手动 extend(matchers) 只用 runner 的 expect；类型由 patches/vitest@5.0.0.patch
+// 把 TestingLibraryMatchers 混入 Assertion 接口提供。
+import * as jestDomMatchers from '@testing-library/jest-dom/matchers';
+expect.extend(jestDomMatchers);
 import { setupServer } from 'msw/node';
 import { allHandlers } from '@/test-utils/mock-handlers';
 import { useAppStore } from '@/infrastructure/store/app-store';

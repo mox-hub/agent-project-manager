@@ -16,6 +16,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
  *
  * 历史缺陷：本清单曾漏 `release`（而 apply() 与投递方都在用它），
  * 导致 `?kind=release` 过滤落空、前端把发布审批误路由到验收端点。
+ * 后又漏 `contract_conflict`（`ContractBindingService` 冲突升级在投递、
+ * apply() 无 case）：前端误路由到验收端点 + 批卡 400 Unknown proposal kind。
  */
 export const PROPOSAL_KIND_VALUES = [
   'plan',
@@ -26,6 +28,7 @@ export const PROPOSAL_KIND_VALUES = [
   'gate',
   'workflow_def',
   'release',
+  'contract_conflict',
 ] as const;
 
 /** 决策来源 kind 全集 = 两条实体来源 + 建议类提案 */

@@ -40,6 +40,7 @@
 | 收藏星标 | `FavoriteToggle`（shared/components/favorite-toggle.tsx）：可复用收藏按钮，PageHeader 内置同款；详情页 SubPageToolbar actions / 项目详情上下文栏/通知/搜索页的收藏入口 |
 | 状态统一视觉 | `status-visuals`（shared/status/status-visuals.ts）：任务/项目状态→tone(语义 accent)+图标+i18n 的唯一映射源，消费方：项目列表(StatusPill)、右键子菜单、项目看板、甘特条、任务列表配色 |
 | 状态图标底框 | `StatusIconFrame`（shared/status/status-icon-frame.tsx）：tone 语义浅底+圆角框+居中图标的统一底框形态，与 status-visuals 配套；任务/BUG 详情标题、子任务行、动态时间线事件图标 |
+| 工单类型胶囊 | `IssueTypePill`（shared/components/issue-type-pill.tsx）：类型标识强化形态（对比裸 IssueTypeIcon），pill=图标+类型名+浅色底胶囊（列表行首）、frame=图标+浅色底圆框（窄列）；色取 IssueType.color 运行时数据，未配置回落 muted；任务列表行首、任务表格 ID 列 | meta(IssueTypeMeta), variant(pill/frame), className |
 | 实体图标注册表 | `EntityIcon`/`getEntityIcon`（shared/entity-icons/entity-icons.tsx）：实体→图标+语义 tone 的唯一映射（issue/bug/project/workflow/execution/acceptance/document/member/team/decision/workspace/repository/release），PageHeader/引用 chip/预览卡等「实体身份」场景统一取图，尺寸四档 xs/sm/md/lg=12/14/16/20px；nav/tabs 注册表迁移留待第二批（规范 v0 见文件头注释） | entity, size, className |
 | Markdown 渲染 | `MarkdownView`（shared/components/markdown-view.tsx）：react-markdown+remark-gfm 运行时渲染（任务/BUG 描述、评论正文；GFM 表格/任务清单/删除线）；文档模块可编译 MDX 仍走 shared/mdx 管线 |
 | Markdown 编辑 | `MarkdownEditor`（shared/components/markdown-editor.tsx）：输入+所见即所得预览的标准编辑器，preview=live 分栏实时渲染（描述）/toggle 编辑预览切换（评论框）；renderInput 可换 MentionTextarea，actions 放表情/发送 |
@@ -62,7 +63,7 @@
 |------|------|------|-----------|
 | PageShell | ui/page-shell.tsx | 页面外壳（内嵌 PageHeader 的整体骨架） | aiPage, title, icon, metrics, actions, children |
 | PageHeader | ui/page-header.tsx | 单行页头（图标+标题+收藏星标+计数胶囊+操作组） | title, icon, iconColor, metrics, actions, favoriteId |
-| ToolbarRow + useToolbarViews | ui/toolbar-row.tsx | 列表页工具栏（已保存视图+样式切换+筛选/显示/下载下拉）+视图快照持久化 hook | views, viewStyle, filterMenu, displayMenu, downloadMenu, extraActions(支持 render 自定义动作件)；hook: key, defaults, onApply |
+| ToolbarRow + useToolbarViews | ui/toolbar-row.tsx | 列表页工具栏（已保存视图+样式切换+筛选/显示/下载下拉）+视图快照持久化 hook；**views 整体不传（undefined）即隐藏左侧视图管理区——纯样式切换页（居中页签无视图功能）的合规形态** | views?(可选省略), viewStyle, filterMenu, displayMenu, downloadMenu, extraActions(支持 render 自定义动作件), actions；hook: key, defaults, onApply |
 | ViewDisplayPopover | ui/view-display-popover.tsx | Linear 风格视图显示弹窗（视图切换+Grouping+Ordering+Completed 过滤+子项开关+Display properties 胶囊） | viewMode, onViewModeChange, groupBy, onGroupByChange, orderBy, onOrderByChange, completedFilter, displayProperties |
 | SubPageToolbar | ui/sub-page-toolbar.tsx | 二级页工具栏（返回+面包屑+居中页签+翻页+侧栏开关） | breadcrumbs, tabs, pager, actions, sidebar, onBack |
 | RightSidebar / SidebarButtonGroup / SidebarButton / SidebarToggle | ui/right-sidebar.tsx | 详情页右侧栏容器与按钮组（flex 并列可收起） | hidden, width；SidebarButton: icon, label, variant |
@@ -137,7 +138,7 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | IconMetric | ui/icon-metric.tsx | 图标+标签+数值指标块 | icon, label, value |
 | Progress | ui/progress.tsx | 进度条 | value |
 | Meter 套件 | ui/meter.tsx | 有界量程表（coss 配方，配额/用量语义；MeterValue 为 render-props children） | value, min, max；MeterValue: children(formatted)=>ReactNode |
-| ActivityHeatmap | ui/activity-heatmap.tsx | 活动热力图（GitHub 式日格计数） | data(日序列), days, emptyLabel |
+| ActivityHeatmap | ui/activity-heatmap.tsx | 活动热力图（GitHub 式日格计数；每格 hover Tooltip 浮窗，网格下方月份刻度） | data(日序列), days(年视图传 365), emptyLabel, formatTip(count=>浮窗文案，缺省「N 次活动」) |
 | Chart 套件 + ChartConfig | ui/chart.tsx | recharts 图表封装（主题色注入） | config, children |
 | Carousel 套件 | ui/carousel.tsx | 轮播（embla 封装） | opts, orientation, plugins, setApi |
 | Sortable 套件 | ui/sortable.tsx | 复合式拖拽排序列表（reui base-nova 移植，@dnd-kit；**语义=同列表条目重排**，看板跨列/画布节点/文件投放仍用 dnd-kit 原语；落放一次性提交，含拖拽 overlay 与键盘可达） | Sortable: value, onValueChange(持久化缝), getItemValue, strategy(vertical/horizontal/grid), onValueCommit(next+previousValue 回滚快照), onMove, render(容器元素)；SortableItem: value, disabled, render；SortableItemHandle: cursor, render |

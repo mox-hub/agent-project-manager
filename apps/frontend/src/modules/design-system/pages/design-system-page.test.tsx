@@ -16,6 +16,8 @@ global.ResizeObserver = class ResizeObserver {
 Element.prototype.scrollIntoView = vi.fn();
 
 describe('DesignSystemPage', () => {
+  // 整页渲染全部设计系统组件（含 Command Palette 真实原语与高密度卡片演示段），
+  // 本地实测 ~27s，CI runner 更慢会越过 30s 阈值——显式放宽到 180s
   it('renders all sections including AI High-Density Cards without errors', () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
@@ -50,5 +52,5 @@ describe('DesignSystemPage', () => {
 
     consoleError.mockRestore();
     // 全量并行时机器慢，设计系统页渲染整套组件库，5s 默认超时不够
-  }, 30000);
+  }, 180_000);
 });

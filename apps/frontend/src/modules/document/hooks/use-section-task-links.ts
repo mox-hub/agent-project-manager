@@ -49,10 +49,13 @@ export function useSectionTaskLinksByDoc(documentId: string) {
     queryKey: ['section-task-links', 'doc', documentId] as const,
     queryFn: async () => {
       const { api } = await import('@/infrastructure/api-client');
-      const res = await api.get<{ data: Array<{ sectionId: string; links: DocumentTaskLink[] }> }>(
+      // api.get 已解包 envelope：返回值即聚合数组本身。
+      // 此前再取 `.data` 得 undefined，React Query v5 直接报
+      // "Query data cannot be undefined"（正文任务 chip 计数与段落关联列表同源失效）。
+      const res = await api.get<Array<{ sectionId: string; links: DocumentTaskLink[] }>>(
         `/documents/${documentId}/links/by-section`,
       );
-      return res.data;
+      return res ?? [];
     },
     enabled: !!documentId,
   });

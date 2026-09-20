@@ -1,8 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ProposalService } from './proposal.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { ContractBindingService } from '../contract/contract-binding.service';
 import { computeProposalFingerprint } from './decision-fingerprint';
 
 describe('ProposalService', () => {
@@ -52,6 +57,10 @@ describe('ProposalService', () => {
     },
   };
 
+  const mockContractBindings = {
+    resolveConflict: vi.fn(),
+  };
+
   const tx = {
     issue: {
       create: vi.fn(),
@@ -82,6 +91,7 @@ describe('ProposalService', () => {
           useValue: { ...mockPrismaService, $transaction: mockTx },
         },
         { provide: MessageBusService, useValue: { publish: vi.fn() } },
+        { provide: ContractBindingService, useValue: mockContractBindings },
       ],
     }).compile();
 
@@ -312,6 +322,205 @@ describe('ProposalService', () => {
       await expect(
         service.resolve('pr-1', { action: 'cancel' }, 'u-1'),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('resolution accept：任务拨到 done 终态并落决议（回归：entityType 从 payload 自解析，前端不传）', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue({
+        ...pendingPlan,
+        kind: 'resolution',
+        payload: { entityType: 'task', entityId: 't-1' },
+      });
+      mockPrismaService.issue.findUnique.mockResolvedValue({
+        id: 't-1',
+        projectId: 'p1',
+        status: 'in_progress',
+      });
+      mockPrismaService.statusDefinition.findMany.mockResolvedValue([
+        { key: 'done', isFinal: true },
+      ]);
+      mockPrismaService.issue.update.mockResolvedValue({ id: 't-1' });
+      mockPrismaService.decisionProposal.update.mockResolvedValue({
+        ...pendingPlan,
+        status: 'accepted',
+      });
+
+      const result = await service.resolve('pr-1', { action: 'accept' }, 'u-1');
+
+      expect(mockPrismaService.issue.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 't-1' },
+          data: expect.objectContaining({ status: 'done' }),
+        }),
+      );
+      expect(result.status).toBe('accepted');
+    });
+
+    it('resolution accept 但 payload 缺 entityType（如历史示例卡误用 kind）→ 400 且带可读 message', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue({
+        ...pendingPlan,
+        kind: 'resolution',
+        payload: { decision: '后端框架最终采用 X', status: 'closed' },
+      });
+
+      await expect(
+        service.resolve('pr-1', { action: 'accept' }, 'u-1'),
+      ).rejects.toThrow(/entityType/);
+      expect(mockPrismaService.issue.update).not.toHaveBeenCalled();
+      expect(mockPrismaService.decisionProposal.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('contract_conflict accept（契约冲突裁决 → ContractBindingService.resolveConflict）', () => {
+    const pendingConflict = {
+      id: 'pr-cc-1',
+      kind: 'contract_conflict',
+      status: 'pending',
+      projectId: 'p1',
+      issueId: null,
+      title: '契约托管区冲突：AGENTS.md',
+      detail: null,
+      payload: { bindingId: 'b-1', filePath: 'AGENTS.md' },
+    };
+
+    const acceptAndResolve = async (
+      conflictAction: 'accept_file' | 'accept_db' | 'detach',
+    ) => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        pendingConflict,
+      );
+      mockContractBindings.resolveConflict.mockResolvedValue(undefined);
+      mockPrismaService.decisionProposal.update.mockResolvedValue({
+        ...pendingConflict,
+        status: 'accepted',
+      });
+      return service.resolve(
+        'pr-cc-1',
+        { action: 'accept', conflictAction },
+        'u-1',
+      );
+    };
+
+    it.each(['accept_file', 'accept_db', 'detach'] as const)(
+      '%s：按 conflictAction 映射调用 resolveConflict 并正常收口提案',
+      async (conflictAction) => {
+        const result = await acceptAndResolve(conflictAction);
+        expect(mockContractBindings.resolveConflict).toHaveBeenCalledWith(
+          'b-1',
+          conflictAction,
+        );
+        expect(result.status).toBe('accepted');
+        expect(
+          mockPrismaService.decisionProposal.update,
+        ).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({ status: 'accepted' }),
+          }),
+        );
+      },
+    );
+
+    it('缺 conflictAction → 400，不裁决不改提案状态', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        pendingConflict,
+      );
+
+      await expect(
+        service.resolve('pr-cc-1', { action: 'accept' }, 'u-1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockContractBindings.resolveConflict).not.toHaveBeenCalled();
+      expect(mockPrismaService.decisionProposal.update).not.toHaveBeenCalled();
+    });
+
+    it('非法 conflictAction → 400 且 message 列出三种合法动作', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        pendingConflict,
+      );
+
+      await expect(
+        service.resolve(
+          'pr-cc-1',
+          { action: 'accept', conflictAction: 'overwrite' as never },
+          'u-1',
+        ),
+      ).rejects.toThrow(/accept_file \| accept_db \| detach/);
+      expect(mockContractBindings.resolveConflict).not.toHaveBeenCalled();
+    });
+
+    it('payload 缺 bindingId → 400', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue({
+        ...pendingConflict,
+        payload: { filePath: 'AGENTS.md' },
+      });
+
+      await expect(
+        service.resolve(
+          'pr-cc-1',
+          { action: 'accept', conflictAction: 'detach' },
+          'u-1',
+        ),
+      ).rejects.toThrow(/bindingId/);
+      expect(mockContractBindings.resolveConflict).not.toHaveBeenCalled();
+    });
+
+    it('裁决业务失败（普通 Error，如派生型 accept_db）→ 收敛为 400 可读 message，提案保持 pending', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        pendingConflict,
+      );
+      mockContractBindings.resolveConflict.mockRejectedValue(
+        new Error('契约文件缺失: CHANGELOG.md'),
+      );
+
+      await expect(
+        service.resolve(
+          'pr-cc-1',
+          { action: 'accept', conflictAction: 'accept_db' },
+          'u-1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.resolve(
+          'pr-cc-1',
+          { action: 'accept', conflictAction: 'accept_db' },
+          'u-1',
+        ),
+      ).rejects.toThrow(/契约冲突裁决失败：契约文件缺失/);
+      expect(mockPrismaService.decisionProposal.update).not.toHaveBeenCalled();
+    });
+
+    it('绑定不存在（HttpException 404）→ 原样透传，不二次包装', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        pendingConflict,
+      );
+      mockContractBindings.resolveConflict.mockRejectedValue(
+        new NotFoundException('契约绑定不存在: b-1'),
+      );
+
+      await expect(
+        service.resolve(
+          'pr-cc-1',
+          { action: 'accept', conflictAction: 'detach' },
+          'u-1',
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('reject：仅留痕不裁决', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        pendingConflict,
+      );
+      mockPrismaService.decisionProposal.update.mockResolvedValue({
+        ...pendingConflict,
+        status: 'rejected',
+      });
+
+      const result = await service.resolve(
+        'pr-cc-1',
+        { action: 'reject', reason: '稍后人工比对' },
+        'u-1',
+      );
+
+      expect(mockContractBindings.resolveConflict).not.toHaveBeenCalled();
+      expect(result.status).toBe('rejected');
     });
   });
 

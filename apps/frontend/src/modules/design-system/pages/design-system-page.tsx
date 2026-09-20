@@ -322,6 +322,7 @@ import {
 import { ThinkingStream } from '@/modules/assistant/components/thinking-stream'
 import { AgentHandoffCard } from '@/modules/office/components/agent-handoff-card'
 import { DualTrackMetricPill } from '@/shared/components/dual-track-metric-pill'
+import { IssueTypePill } from '@/shared/components/issue-type-pill'
 import { AssistantToolCard } from '@/modules/assistant/components/assistant-tool-card'
 import { DecisionCardShell } from '@/shared/decision-card/decision-card-shell'
 
@@ -4947,6 +4948,18 @@ export function DesignSystemPage() {
                       <span className="text-xs text-muted-foreground">{PRIORITY_CFG[p].label}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div>
+                <SubLabel>IssueTypePill — 类型胶囊（pill / frame）</SubLabel>
+                <div className="flex flex-wrap items-center gap-4">
+                  <IssueTypePill meta={{ name: '任务', icon: 'ListTodo', color: '#5E6AD2' }} />
+                  <IssueTypePill meta={{ name: '缺陷', icon: 'Bug', color: '#E5484D' }} />
+                  <IssueTypePill meta={{ name: '需求', icon: 'Lightbulb', color: '#F5A623' }} />
+                  <IssueTypePill meta={{ name: '未配置', icon: 'Circle' }} />
+                  <IssueTypePill meta={{ name: '任务', icon: 'ListTodo', color: '#5E6AD2' }} variant="frame" />
+                  <IssueTypePill meta={{ name: '缺陷', icon: 'Bug', color: '#E5484D' }} variant="frame" />
                 </div>
               </div>
 

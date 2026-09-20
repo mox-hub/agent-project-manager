@@ -38,6 +38,13 @@ describe('IssueService', () => {
     },
     statusDefinition: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+    },
+    acceptance: {
+      create: vi.fn(),
+    },
+    acceptanceCriteria: {
+      createMany: vi.fn(),
     },
     issueTag: {
       create: vi.fn(),
@@ -72,6 +79,7 @@ describe('IssueService', () => {
     projectMember: {
       findUnique: vi.fn(),
     },
+    $transaction: vi.fn(),
   };
 
   const mockMessageBusService = {
@@ -648,6 +656,284 @@ describe('IssueService', () => {
         data: expect.objectContaining({ name: 'frontend' }),
       });
       expect(mockPrismaService.issueTag.create).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // P0-8b：导入三无（无事务 / 只校验首行 / 不校验枚举）
+  // -------------------------------------------------------------------------
+  describe('importTasks（P0-8b）', () => {
+    const mockProject = { id: 'project-1', members: [{ userId: 'user-1' }] };
+
+    beforeEach(() => {
+      mockPrismaService.statusDefinition.findMany.mockResolvedValue([
+        { key: 'todo' },
+        { key: 'in_progress' },
+      ]);
+      mockPrismaService.statusDefinition.findFirst.mockResolvedValue({
+        key: 'todo',
+      });
+      mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
+      // $transaction：以 prisma mock 自身作为 tx client
+      mockPrismaService.$transaction.mockImplementation(
+        async (fn: (tx: unknown) => unknown) => fn(mockPrismaService),
+      );
+      mockPrismaService.issue.create.mockImplementation(
+        async ({ data }: { data: Record<string, unknown> }) => ({
+          id: `task-${data.shortId}`,
+          ...data,
+        }),
+      );
+    });
+
+    it('正常导入：走事务逐行建任务，返回 imported=n 且 typeId 非空', async () => {
+      const result = await service.importTasks(
+        [
+          { projectId: 'project-1', title: 'Task A' },
+          {
+            projectId: 'project-1',
+            title: 'Bug B',
+            type: 'bug',
+            status: 'in_progress',
+            priority: 'high',
+          },
+        ] as never,
+        'user-1',
+      );
+
+      expect(result.imported).toBe(2);
+      expect(mockPrismaService.$transaction).toHaveBeenCalledTimes(1);
+      expect(mockPrismaService.issue.create).toHaveBeenCalledTimes(2);
+      // typeId 与 create() 同源桥接（resolveIdByKey → 'issuetype-task'），
+      // 不再出现导入行 typeId=null 的脏数据
+      expect(mockPrismaService.issue.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ typeId: 'issuetype-task' }),
+        }),
+      );
+      // 第二行显式 type/status/priority 生效
+      expect(mockPrismaService.issue.create).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            type: 'bug',
+            status: 'in_progress',
+            priority: 'high',
+          }),
+        }),
+      );
+    });
+
+    it('非法枚举行（priority=ultra）：400 IMPORT_VALIDATION_FAILED 且全量拒绝（未建任何行）', async () => {
+      let captured: BadRequestException | undefined;
+      await service
+        .importTasks(
+          [
+            { projectId: 'project-1', title: 'OK Row' },
+            { projectId: 'project-1', title: 'Bad Row', priority: 'ultra' },
+          ] as never,
+          'user-1',
+        )
+        .catch((err: BadRequestException) => {
+          captured = err;
+        });
+
+      expect(captured).toBeInstanceOf(BadRequestException);
+      const response = captured!.getResponse() as {
+        code: string;
+        details: { errors: Array<{ row: number; field?: string }> };
+      };
+      expect(response.code).toBe('IMPORT_VALIDATION_FAILED');
+      expect(response.details.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ row: 2, field: 'priority' }),
+        ]),
+      );
+      // 整体回滚语义：校验失败即整批拒绝，事务未开启、一行未建
+      expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+      expect(mockPrismaService.issue.create).not.toHaveBeenCalled();
+    });
+
+    it('跨项目行拒绝：第 2 行 projectId 与首行不一致报逐行错误', async () => {
+      let captured: BadRequestException | undefined;
+      await service
+        .importTasks(
+          [
+            { projectId: 'project-1', title: 'Row 1' },
+            { projectId: 'project-2', title: 'Row 2' },
+          ] as never,
+          'user-1',
+        )
+        .catch((err: BadRequestException) => {
+          captured = err;
+        });
+
+      expect(captured).toBeInstanceOf(BadRequestException);
+      const response = captured!.getResponse() as {
+        details: { errors: Array<{ row: number; field?: string }> };
+      };
+      expect(response.details.errors).toEqual([
+        expect.objectContaining({ row: 2, field: 'projectId' }),
+      ]);
+      expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('空 title 行报错（field=title）', async () => {
+      let captured: BadRequestException | undefined;
+      await service
+        .importTasks(
+          [
+            { projectId: 'project-1', title: 'Row 1' },
+            { projectId: 'project-1', title: '   ' },
+          ] as never,
+          'user-1',
+        )
+        .catch((err: BadRequestException) => {
+          captured = err;
+        });
+
+      expect(captured).toBeInstanceOf(BadRequestException);
+      const response = captured!.getResponse() as {
+        details: { errors: Array<{ row: number; field?: string }> };
+      };
+      expect(response.details.errors).toEqual([
+        expect.objectContaining({ row: 2, field: 'title' }),
+      ]);
+    });
+
+    it('status 须为项目/全局已定义 key，未定义则报逐行错误', async () => {
+      mockPrismaService.statusDefinition.findMany.mockResolvedValue([
+        { key: 'todo' },
+      ]);
+
+      let captured: BadRequestException | undefined;
+      await service
+        .importTasks(
+          [
+            { projectId: 'project-1', title: 'Row 1', status: 'ghost' },
+          ] as never,
+          'user-1',
+        )
+        .catch((err: BadRequestException) => {
+          captured = err;
+        });
+
+      expect(captured).toBeInstanceOf(BadRequestException);
+      const response = captured!.getResponse() as {
+        details: { errors: Array<{ row: number; field?: string }> };
+      };
+      expect(response.details.errors).toEqual([
+        expect.objectContaining({ row: 1, field: 'status' }),
+      ]);
+      expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // P0-9：acceptanceCriteria 缺 content 的项被静默丢弃
+  // -------------------------------------------------------------------------
+  describe('create acceptanceCriteria（P0-9）', () => {
+    const mockProject = { id: 'project-1', members: [{ userId: 'user-1' }] };
+    const mockTask = {
+      id: 'task-1',
+      projectId: 'project-1',
+      status: 'todo',
+      assignee: null,
+      reporter: null,
+      issueTags: [],
+    };
+
+    beforeEach(() => {
+      mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
+      mockPrismaService.project.findUnique.mockResolvedValue(mockProject);
+      mockPrismaService.statusDefinition.findFirst.mockResolvedValue({
+        key: 'todo',
+      });
+      mockPrismaService.issue.create.mockResolvedValue(mockTask);
+      mockPrismaService.issue.findFirst.mockResolvedValue(mockTask);
+      mockPrismaService.acceptance.create.mockResolvedValue({ id: 'acc-1' });
+      mockPrismaService.acceptanceCriteria.createMany.mockResolvedValue({
+        count: 1,
+      });
+    });
+
+    it('Gherkin 形状（缺 content）→ 400 且不落任何任务/契约', async () => {
+      await expect(
+        service.create(
+          {
+            projectId: 'project-1',
+            moduleCode: 'PF',
+            title: 'Gherkin Task',
+            acceptanceCriteria: [
+              { content: '正常标准' },
+              { title: '场景', given: '当', when: '则', then: '那么' },
+            ] as never,
+          },
+          'user-1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+
+      // 校验前置于落库：任务与验收契约均未创建
+      expect(mockPrismaService.issue.create).not.toHaveBeenCalled();
+      expect(mockPrismaService.acceptance.create).not.toHaveBeenCalled();
+    });
+
+    it('message 明确指出第 N 项缺少 content（VALIDATION_ERROR）', async () => {
+      let captured: BadRequestException | undefined;
+      await service
+        .create(
+          {
+            projectId: 'project-1',
+            moduleCode: 'PF',
+            title: 'T',
+            acceptanceCriteria: [
+              { content: 'a' },
+              {} as never,
+              { content: 'b' },
+            ],
+          },
+          'user-1',
+        )
+        .catch((err: BadRequestException) => {
+          captured = err;
+        });
+
+      expect(captured).toBeInstanceOf(BadRequestException);
+      const response = captured!.getResponse() as {
+        code: string;
+        message: string;
+      };
+      expect(response.code).toBe('VALIDATION_ERROR');
+      expect(response.message).toContain('acceptanceCriteria 第 2 项');
+      expect(response.message).toContain('content');
+    });
+
+    it('合法 acceptanceCriteria 仍正常落契约+标准', async () => {
+      const result = await service.create(
+        {
+          projectId: 'project-1',
+          moduleCode: 'PF',
+          title: 'With Criteria',
+          acceptanceCriteria: [
+            { content: '登录成功跳转工作台', criteriaType: 'functional' },
+          ],
+        },
+        'user-1',
+      );
+
+      expect(result).toBeDefined();
+      expect(mockPrismaService.acceptance.create).toHaveBeenCalledTimes(1);
+      expect(
+        mockPrismaService.acceptanceCriteria.createMany,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: [
+            expect.objectContaining({
+              content: '登录成功跳转工作台',
+              criteriaType: 'functional',
+            }),
+          ],
+        }),
+      );
     });
   });
 });

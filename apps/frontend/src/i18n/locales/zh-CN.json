@@ -260,7 +260,64 @@
     "releases": "发版交付"
   },
   "analytics": {
-    "title": "分析"
+    "title": "分析",
+    "cost": {
+      "range": "统计范围",
+      "range7d": "近 7 天",
+      "range30d": "近 30 天",
+      "rangeAll": "全部",
+      "totalTokens": "总 Token",
+      "totalCost": "估算成本",
+      "totalCalls": "调用总数",
+      "conversationCalls": "对话调用",
+      "silentCalls": "静默调用",
+      "executionCalls": "执行链调用",
+      "emptyTitle": "暂无 AI 用量记录",
+      "emptyHint": "AI 对话、静默调用与 CLI 执行的 Token 消耗都会在此汇总",
+      "dailyCost": "按日成本",
+      "monthlyCost": "按月成本",
+      "heatmap": "AI 活跃热力图",
+      "heatmapRange": "近一年",
+      "noDaily": "暂无按日记录",
+      "byModel": "按模型",
+      "model": "模型",
+      "tokens": "Token",
+      "cost": "估算成本",
+      "share": "成本占比"
+    },
+    "mockDataBadge": "演示数据 · 后端未接入，非真实统计",
+    "quality": {
+      "avgScore": "平均质量分",
+      "avgScoreSub": "全部项目综合",
+      "refactorRatio": "重构占比",
+      "refactorRatioSub": "AI 变更中重构的比例",
+      "patchRatio": "补丁占比",
+      "patchRatioSub": "较 W08 的 52% 回落",
+      "complexityDrift": "复杂度漂移",
+      "complexityDriftSub": "平均复杂度下降（向好）",
+      "trendTitle": "代码变更质量趋势",
+      "seriesPatch": "补丁 %",
+      "seriesRefactor": "重构 %",
+      "seriesComplexity": "复杂度",
+      "byProjectTitle": "各项目质量分",
+      "covLabel": "覆盖率",
+      "legendQuality": "质量",
+      "legendCoverage": "覆盖率"
+    },
+    "team": {
+      "activeMembers": "活跃成员",
+      "activeMembersSub": "今日有贡献",
+      "aiExecutions": "AI 执行次数",
+      "aiExecutionsSub": "今日全部 Agent 合计",
+      "conflictsDetected": "检测到冲突",
+      "conflictsSub": "Agent 工作重叠区间",
+      "stuckTasks": "停滞任务",
+      "stuckTasksSub": "超 5 天无进展",
+      "activityByMember": "成员 AI 活跃度（今日）",
+      "usageBreakdown": "成员 AI 用量拆解",
+      "unitRuns": "次执行",
+      "unitAcceptances": "个验收"
+    }
   },
   "intake": {
     "title": "需求承接",
@@ -923,7 +980,24 @@
       "approveBudget": "批准追加",
       "passGate": "通过闸门",
       "applyWorkflow": "落库生效",
-      "approveRelease": "批准发布"
+      "approveRelease": "批准发布",
+      "acceptFile": "采纳文件侧",
+      "acceptDb": "采纳平台侧",
+      "detach": "解绑"
+    },
+    "conflict": {
+      "derivedBadge": "派生型",
+      "managedBadge": "托管型",
+      "managedHint": "托管区间在文件侧被直接修改。采纳文件侧=以文件现值为准；采纳平台侧=把托管内容写回文件。",
+      "derivedHint": "该文件由平台派生（真相在平台侧）却被手改。可认可手改版为新基线，或通过重新导出恢复平台真相。",
+      "blockDiff": "冲突区间（{{n}}）",
+      "actionAcceptFile": "采纳文件侧：文件现值成为新基线，平台托管内容同步为文件版",
+      "actionAcceptDb": "采纳平台侧：把平台托管内容写回文件（派生型文件需走重新导出）",
+      "actionDetach": "解绑：停止托管对齐，文件与平台各自演进，之后可重新绑定",
+      "impactFile": "冲突文件",
+      "impactScope": "波及范围",
+      "scopeWholeFile": "整文件",
+      "scopeBlocks": "{{n}} 个区间"
     },
     "release": {
       "noGate": "尚未跑门禁——批准前请确认门禁已提交",
@@ -1043,7 +1117,8 @@
       "gateRejected": "闸门驳回，已留痕可回到访谈修改",
       "workflowApplied": "工作流已落库生效",
       "releaseApproved": "已批准发布，进入发布执行",
-      "releaseRejected": "发布已打回草案"
+      "releaseRejected": "发布已打回草案",
+      "conflictResolved": "契约冲突已裁决"
     },
     "body": {
       "placeholder": "该决策类型的主体渲染器待类型落地（当前为占位框架）"
@@ -1379,6 +1454,27 @@
       "table": "表格",
       "grid": "卡片",
       "cards": "卡片"
+    },
+    "batchDispatch": {
+      "crossProjectError": "选中项来自多个项目（或含未归属项目的收件箱任务），批量派发仅支持同一项目的任务，请调整选择后重试",
+      "dialogTitle": "批量派发 {{count}} 条任务给 AI 员工",
+      "dialogDesc": "将逐条派发以下任务给选中的 AI 员工，按角色绑定 CLI 自动执行：",
+      "issueListPreview": "{{first}} 等 {{count}} 条",
+      "success": "已派发 {{count}} 条任务给 AI 员工",
+      "cliFailedCount": "其中 {{count}} 条指派成功但 CLI 自动派发失败，可在执行面板重新派发",
+      "partial": "已派发 {{success}} 条、失败 {{failed}} 条：{{detail}}{{more}}",
+      "andMore": "等 {{count}} 条"
+    },
+    "aiAssign": {
+      "dialogTitle": "派发任务给 AI 员工",
+      "dialogDesc": "选择系统中注册的 AI 员工，按角色绑定 CLI 自动执行：",
+      "assigned": "已将任务指派给 AI 员工",
+      "assignedWithRun": "已派发任务给 AI 员工（执行 {{id}}）",
+      "assignedButDispatchFailed": "已指派给 AI 员工，但 CLI 自动派发失败：{{error}}",
+      "failed": "派发失败：{{message}}"
+    },
+    "import": {
+      "validationFailed": "导入校验失败，本次导入未创建任何任务，共 {{count}} 处错误"
     }
   },
   "project": {
@@ -1996,23 +2092,6 @@
     "aiManagement": "AI 管理",
     "aiAgents": "Agent 管理",
     "aiExecutions": "AI 执行中心",
-    "aiUsage": "AI 用量",
-    "aiUsageRange": "统计范围",
-    "aiUsageRange7d": "近 7 天",
-    "aiUsageRange30d": "近 30 天",
-    "aiUsageRangeAll": "全部",
-    "aiUsageEmpty": "暂无 AI 用量记录",
-    "aiUsageEmptyHint": "AI 对话、静默调用与 CLI 执行的 Token 消耗都会在此汇总",
-    "aiUsageTotalTokens": "总 Token",
-    "aiUsageTotalCost": "估算成本",
-    "aiUsageModels": "使用模型数",
-    "aiUsageByModel": "按模型",
-    "aiUsageByDay": "按日",
-    "aiUsageModel": "模型",
-    "aiUsageTokens": "Token",
-    "aiUsageCost": "估算成本",
-    "aiUsageDay": "日期",
-    "aiUsageNoDaily": "暂无按日记录",
     "tokens": "访问 Token",
     "runtime": "运行时",
     "runtimeTitle": "运行时与守护进程",
@@ -2107,6 +2186,12 @@
     "runtimeMachineColCli": "CLI",
     "runtimeBadgeBuiltin": "内置",
     "runtimeCliVersion": "CLI 版本",
+    "runtimeDaemonStart": "启动运行时",
+    "runtimeDaemonRestart": "重启运行时",
+    "runtimeDaemonStarting": "启动中…",
+    "runtimeDaemonRestarting": "重启中…",
+    "runtimeDaemonStarted": "运行时已启动，守护进程正在重新接入",
+    "runtimeDaemonActionFailed": "运行时操作失败",
     "runtimeJustNow": "刚刚",
     "runtimeMinutesAgo": "{{n}} 分钟前",
     "runtimeHoursAgo": "{{n}} 小时前",
@@ -2661,6 +2746,8 @@
   },
   "taskDetail": {
     "notExists": "任务不存在",
+    "switchType": "切换工单类型",
+    "manageTypes": "管理任务类型",
     "notFound": "任务未找到",
     "unnamedTitle": "未命名任务",
     "titleSaveFailed": "标题保存失败",
@@ -3697,9 +3784,49 @@
   },
   "aiHub": {
     "title": "AI 管理",
-    "description": "配置 AI 提供商、MCP 服务器、技能和角色",
+    "description": "配置模型服务、CLI 工具、MCP 服务器与技能",
     "settings": "设置",
     "overview": "概览",
+    "tabModels": "模型服务",
+    "quickSettings": "快捷设置",
+    "quickSettingsDesc": "常用配置一处搞定：内置模型与模型服务厂家启停",
+    "defaultModel": "内置模型",
+    "defaultModelHint": "全部 AI 功能的默认模型；未设置时回落到第一个可用厂家（优先 OpenAI）",
+    "defaultModelNotSet": "未设置内置模型",
+    "defaultModelBadge": "内置",
+    "defaultModelSaved": "内置模型已保存",
+    "defaultModelSaveFailed": "内置模型保存失败：{{message}}",
+    "defaultModelNoProviders": "尚未配置任何模型服务厂家",
+    "selectModelHint": "选择厂家与模型后保存",
+    "providerToggles": "模型服务厂家",
+    "detectModels": "查询模型",
+    "detectModelsHint": "从厂家模型查询端点拉取真实模型清单",
+    "detectModelsSuccess": "查询到 {{count}} 个模型",
+    "detectModelsFailed": "模型查询失败：{{message}}",
+    "modelsEndpointHint": "模型查询链接，留空使用默认端点（Base URL + /models）",
+    "balanceTitle": "余额",
+    "balanceRemainingLabel": "剩余余额",
+    "balanceUnavailable": "账户不可用",
+    "balanceLoadFailed": "余额查询失败，请检查 API key 或查询链接",
+    "balanceRetry": "重试",
+    "balanceRefresh": "刷新余额",
+    "balanceUnknownHint": "暂无法识别该厂家的余额格式，可配置自定义余额查询链接后重试",
+    "balanceEndpointHint": "余额查询链接，留空使用默认端点（Base URL 域名 + /user/balance）",
+    "balancePeriod5h": "5 小时限额",
+    "balancePeriodDay": "今日额度",
+    "balancePeriodWeek": "本周额度",
+    "balancePeriodMonth": "本月额度",
+    "balanceWindowRemaining": "剩余 {{amount}}",
+    "balanceResets": "{{time}} 重置",
+    "pricingSourceTitle": "参考价源（models.dev）",
+    "pricingSourceOnline": "已加载",
+    "pricingSourceNever": "尚未加载——点击右侧按钮拉取价目目录",
+    "pricingSourceStale": "已过期",
+    "pricingSourceCoverage": "{{providers}} 家厂家 · {{models}} 个模型",
+    "pricingSourceRefresh": "刷新价目目录",
+    "pricingSourceRefreshed": "价目目录已更新",
+    "pricingSourceRefreshFailed": "刷新失败：{{message}}",
+    "pricingSourceHint": "模型清单始终以供应商 /models 端点为权威；models.dev 仅提供成本估算参考单价（USD/百万 tokens）。",
     "providers": "提供商",
     "mcpServers": "MCP 服务器",
     "skills": "技能",
@@ -3884,6 +4011,7 @@
     "createFailed": "创建失败：{{message}}",
     "cliToolsDesc": "本机检测到的本地 Agent CLI。可启用/禁用提供商，或探测其在线状态。",
     "skillsRegistryDesc": "Agent 技能注册表 — 开关与指令正文会持久化到服务端。",
+    "skillEmpty": "暂无技能，可新建或从本地导入",
     "skillCreate": "新建技能",
     "skillImport": "从本地导入",
     "skillCreateTitle": "新建技能",
@@ -3996,7 +4124,10 @@
     "placeholderTitle": "搜索一切",
     "searching": "搜索中…",
     "noResults": "未找到匹配结果",
-    "noResultsHint": "换个关键词试试，或清除类型过滤"
+    "noResultsHint": "换个关键词试试，或清除类型过滤",
+    "loadFailed": "搜索失败",
+    "loadFailedHint": "搜索服务暂时不可用，请稍后重试",
+    "retry": "重试"
   },
   "filterPanel": {
     "activeFilters": "已筛选条件",
@@ -4097,7 +4228,8 @@
       "delete": "删除",
       "preview": "预览",
       "link": "关联",
-      "versionHistory": "版本历史"
+      "versionHistory": "版本历史",
+      "more": "更多操作"
     },
     "loading": "正在加载文档...",
     "loadFailed": "文档加载失败",
@@ -4132,6 +4264,14 @@
       "list": "列表",
       "grid": "卡片",
       "cards": "卡片"
+    },
+    "deleteConfirm": {
+      "title": "删除文档",
+      "description": "确定要删除文档「{{title}}」吗？此操作不可撤销。"
+    },
+    "sectionLinks": {
+      "loadFailed": "段落任务关联加载失败，请稍后重试",
+      "noSections": "文档尚未解析出章节，无法添加段落关联"
     }
   },
   "linearSync": {

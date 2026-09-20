@@ -705,12 +705,19 @@ export class AcceptanceService {
       select: { content: true },
     });
     const seen = new Set(existing.map((e) => e.content.trim()));
-    const toAdd = items.filter(
-      (i) =>
-        typeof i.content === 'string' &&
-        i.content.trim() &&
-        !seen.has(i.content.trim()),
-    );
+    // P0-9 同款修复（2026-09-20）：非法项（缺 content）显式 400 拒绝，
+    // 不再静默过滤——静默丢项会让「AI 代写 N 条、实际落库 M<N」无声发生。
+    // 同 content 去重语义保留（记入 skipped，不重复落库）。
+    items.forEach((item, index) => {
+      if (!item || typeof item.content !== 'string' || !item.content.trim()) {
+        throw new BadRequestException({
+          code: 'VALIDATION_ERROR',
+          message: `criteria 第 ${index + 1} 项缺少 content 字段`,
+          details: { index: index + 1, field: 'content' },
+        });
+      }
+    });
+    const toAdd = items.filter((i) => !seen.has(i.content.trim()));
     if (toAdd.length === 0) {
       return { acceptanceId: acceptance.id, added: 0, skipped: items.length };
     }

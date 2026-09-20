@@ -3,6 +3,8 @@
  * @description 周期性执行 probe 并在胶囊条上滚动记录结果（绿=正常/红=故障）：
  *              新样本从右侧推入，仅保留最近 total 条（默认 60），越靠右越新；
  *              hover 单根胶囊查看该次检测的时间与详情。
+ *              传入 persistKey 时样本持久化 localStorage（按 key 隔离），
+ *              退出页面/刷新后历史仍在；存储不可用（隐私模式等）静默降级为内存。
  */
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +29,42 @@ interface MonitorSample {
   detail?: string;
 }
 
+const STORAGE_PREFIX = 'apm.heartbeat-monitor.';
+const MAX_DETAIL_LENGTH = 200;
+
+/** 读回持久化样本：畸形条目丢弃、按时间截尾；存储不可用/数据损坏返回空 */
+function loadSamples(key: string, total: number): MonitorSample[] {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_PREFIX + key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (s): s is MonitorSample =>
+          !!s &&
+          typeof s === 'object' &&
+          typeof (s as MonitorSample).at === 'number' &&
+          typeof (s as MonitorSample).up === 'boolean',
+      )
+      .slice(-total);
+  } catch {
+    return [];
+  }
+}
+
+function saveSamples(key: string, samples: MonitorSample[]): void {
+  try {
+    const trimmed = samples.map((s) => ({
+      ...s,
+      detail: s.detail?.slice(0, MAX_DETAIL_LENGTH),
+    }));
+    window.localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(trimmed));
+  } catch {
+    // 配额超限/存储不可用：持久化尽力而为，不影响条带运行
+  }
+}
+
 interface HeartbeatMonitorProps {
   /** 单次探测：返回 up=false 或抛错均记为故障（错误消息进 tooltip） */
   probe: () => Promise<MonitorProbeResult>;
@@ -34,6 +72,8 @@ interface HeartbeatMonitorProps {
   intervalMs?: number;
   /** 保留样本数上限，默认 60 */
   total?: number;
+  /** 持久化隔离键（如 runtimeId）：传入则跨页面访问/刷新保留历史 */
+  persistKey?: string;
   className?: string;
 }
 
@@ -41,12 +81,21 @@ export function HeartbeatMonitor({
   probe,
   intervalMs = 30_000,
   total = 60,
+  persistKey,
   className,
 }: HeartbeatMonitorProps) {
   const { t } = useTranslation();
-  const [samples, setSamples] = useState<MonitorSample[]>([]);
+  const [samples, setSamples] = useState<MonitorSample[]>(() =>
+    persistKey ? loadSamples(persistKey, total) : [],
+  );
   const runningRef = useRef(false);
   const startedRef = useRef(false);
+
+  // 样本变化即落盘（persistKey 变化视为切换目标，不迁移旧数据）
+  useEffect(() => {
+    if (!persistKey || samples.length === 0) return;
+    saveSamples(persistKey, samples);
+  }, [persistKey, samples]);
 
   useEffect(() => {
     let disposed = false;

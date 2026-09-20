@@ -38,6 +38,7 @@ import { DocumentPreviewDialog } from '@/components/ui/document-preview-dialog';
 import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useDocuments } from '../hooks/use-documents';
+import { useDocumentDeleteFlow } from '../hooks/use-document-delete';
 import { useSyncWarnings, useClearSyncWarning } from '../hooks/use-sync-warnings';
 import type { DocumentCategory, DocumentStatus, DocumentListItem } from '../api/document-api';
 
@@ -137,6 +138,14 @@ export function DocumentsPage() {
   const { data: syncWarnings = [] } = useSyncWarnings();
   const clearSyncWarning = useClearSyncWarning();
   const [showSyncBanner, setShowSyncBanner] = useState(true);
+
+  // 删除走统一确认弹窗 + 软删 mutation（成功 toast / 列表 invalidate 在 hook 内）
+  const { confirmDelete: confirmDeleteDocument } = useDocumentDeleteFlow();
+
+  const handleDeleteDocument = (document: DocumentListItem) => {
+    setMenuOpen(null);
+    void confirmDeleteDocument({ id: document.id, title: document.title });
+  };
 
   if (isLoading) {
     return (
@@ -330,6 +339,7 @@ export function DocumentsPage() {
                   menuOpen={menuOpen}
                   onMenuToggle={setMenuOpen}
                   onPreview={setPreviewDocument}
+                  onDelete={handleDeleteDocument}
                 />
               ))}
             </div>
@@ -342,6 +352,7 @@ export function DocumentsPage() {
                   menuOpen={menuOpen}
                   onMenuToggle={setMenuOpen}
                   onPreview={setPreviewDocument}
+                  onDelete={handleDeleteDocument}
                 />
               ))}
             </div>
@@ -364,11 +375,13 @@ function DocumentCard({
   menuOpen,
   onMenuToggle,
   onPreview,
+  onDelete,
 }: {
   document: DocumentListItem;
   menuOpen: string | null;
   onMenuToggle: (id: string | null) => void;
   onPreview: (document: DocumentListItem) => void;
+  onDelete: (document: DocumentListItem) => void;
 }) {
   const { t, i18n } = useTranslation();
   const catConfig = resolveCategory(document.category);
@@ -396,6 +409,7 @@ function DocumentCard({
                 variant="ghost"
                 size="icon"
                 className="size-7 opacity-0 transition-opacity group-hover:opacity-100"
+                aria-label={t('document.actions.more', '更多操作')}
                 onClick={(e) => {
                   e.stopPropagation();
                   onMenuToggle(menuOpen === document.id ? null : document.id);
@@ -431,7 +445,7 @@ function DocumentCard({
                   <button
                     type="button"
                     className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
-                    onClick={() => onMenuToggle(null)}
+                    onClick={() => onDelete(document)}
                     data-ai-component={`document.document-list.card.${document.id}.delete`}
                     data-ai-action={`document.document-list.card.${document.id}.delete.click`}
                     data-ai-role="danger"
@@ -499,11 +513,13 @@ function DocumentListItem({
   menuOpen,
   onMenuToggle,
   onPreview,
+  onDelete,
 }: {
   document: DocumentListItem;
   menuOpen: string | null;
   onMenuToggle: (id: string | null) => void;
   onPreview: (document: DocumentListItem) => void;
+  onDelete: (document: DocumentListItem) => void;
 }) {
   const { t, i18n } = useTranslation();
   const catConfig = resolveCategory(document.category);
@@ -568,6 +584,7 @@ function DocumentListItem({
             variant="ghost"
             size="icon"
             className="size-7"
+            aria-label={t('document.actions.more', '更多操作')}
             onClick={(e) => {
               e.stopPropagation();
               onMenuToggle(menuOpen === document.id ? null : document.id);
@@ -591,7 +608,7 @@ function DocumentListItem({
               <button
                 type="button"
                 className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
-                onClick={() => onMenuToggle(null)}
+                onClick={() => onDelete(document)}
                 data-ai-component={`document.document-list.list-item.${document.id}.delete`}
                 data-ai-action={`document.document-list.list-item.${document.id}.delete.click`}
                 data-ai-role="danger"

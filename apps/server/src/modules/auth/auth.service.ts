@@ -57,10 +57,20 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
+  /**
+   * 登录标识校验：username 精确匹配优先（保持派生 username 即邮箱前缀场景不回归）；
+   * 未命中且标识形如邮箱时回退按 email 查询。email 入库口径统一 trim + 小写
+   * （见 register / updateProfile / createUserAccount），故回退查询同样归一化输入。
+   */
   async validateUser(username: string, password: string) {
-    const user = await this.prisma.user.findUnique({
+    let user = await this.prisma.user.findUnique({
       where: { username },
     });
+    if (!user && username.includes('@')) {
+      user = await this.prisma.user.findUnique({
+        where: { email: username.trim().toLowerCase() },
+      });
+    }
 
     if (!user || !user.passwordHash) {
       throw new BusinessException(

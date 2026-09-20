@@ -25,6 +25,26 @@ export function getRuntimeRegistrations(): Promise<RuntimeRegistration[]> {
   return api.get('/runtime/registrations');
 }
 
+/** 本机 daemon 状态（server standalone 代管；远程部署 403 → 按钮降级隐藏） */
+export interface LocalDaemonStatus {
+  running: boolean;
+  pid: number | null;
+  startedAt: string | null;
+  logPath: string;
+}
+
+export function getLocalDaemonStatus(): Promise<LocalDaemonStatus> {
+  return api.get('/runtime/local-daemon/status');
+}
+
+export function startLocalDaemon(): Promise<LocalDaemonStatus> {
+  return api.post('/runtime/local-daemon/start');
+}
+
+export function stopLocalDaemon(): Promise<{ ok: true }> {
+  return api.post('/runtime/local-daemon/stop');
+}
+
 /** 心跳间隔 30s，30s 轮询保持在线态与列表新鲜 */
 export function useRuntimeRegistrations() {
   return useQuery({

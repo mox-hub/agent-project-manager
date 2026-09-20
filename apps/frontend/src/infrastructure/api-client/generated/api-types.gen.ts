@@ -958,6 +958,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/issues/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export tasks to CSV/JSON */
+        get: operations["IssueController_exportTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/issues/{id}": {
         parameters: {
             query?: never;
@@ -1091,23 +1108,6 @@ export interface paths {
         put?: never;
         /** Import tasks from CSV/JSON */
         post: operations["IssueController_importTasks"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/issues/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export tasks to CSV/JSON */
-        get: operations["IssueController_exportTasks"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1574,6 +1574,74 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/_api/projects/{projectId}/contract/bindings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出契约文件绑定与工作区根（纯只读） */
+        get: operations["ContractController_listBindings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/projects/{projectId}/contract/seed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管） */
+        post: operations["ContractController_seed"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/projects/{projectId}/contract/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 对齐检查（managed 漂移将升级冲突提案） */
+        post: operations["ContractController_check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/projects/{projectId}/contract/bindings/{fileType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 切换绑定同步模式（managed/synced/detached） */
+        patch: operations["ContractController_setSyncMode"];
         trace?: never;
     };
     "/_api/iterations": {
@@ -3113,6 +3181,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/runtime/local-daemon/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 本机 daemon 状态（锁持有者探活；standalone 限定） */
+        get: operations["RuntimeQueryController_getLocalDaemonStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/local-daemon/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 拉起本机 daemon（detached spawn；standalone 限定） */
+        post: operations["RuntimeQueryController_startLocalDaemon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/local-daemon/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 停止本机 daemon（进程树强杀；standalone 限定） */
+        post: operations["RuntimeQueryController_stopLocalDaemon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/runtime/approvals": {
         parameters: {
             query?: never;
@@ -3329,8 +3448,77 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Auto-detect available models for provider */
+        /** Query provider model list from its /models endpoint (persists to AIModelConfig) */
         post: operations["AiHubController_detectModels"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/providers/{id}/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Query provider balance (proxied, normalized; prepaid vs subscription) */
+        get: operations["AiHubController_getProviderBalance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/pricing-source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get models.dev pricing source status */
+        get: operations["AiHubController_getPricingSourceStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/pricing-source/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Force refresh models.dev pricing catalog */
+        post: operations["AiHubController_refreshPricingSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/default-model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get workspace default AI model (内置模型) */
+        get: operations["AiHubController_getDefaultModel"];
+        /** Set workspace default AI model (内置模型) */
+        put: operations["AiHubController_setDefaultModel"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6519,6 +6707,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 全局搜索（工单/文档/项目，按项目成员可见性过滤） */
+        get: operations["SearchController_search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/office/summary": {
         parameters: {
             query?: never;
@@ -6534,74 +6739,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/_api/projects/{projectId}/contract/bindings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 列出契约文件绑定与工作区根（纯只读） */
-        get: operations["ContractController_listBindings"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/projects/{projectId}/contract/seed": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管） */
-        post: operations["ContractController_seed"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/projects/{projectId}/contract/check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 对齐检查（managed 漂移将升级冲突提案） */
-        post: operations["ContractController_check"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/projects/{projectId}/contract/bindings/{fileType}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** 切换绑定同步模式（managed/synced/detached） */
-        patch: operations["ContractController_setSyncMode"];
         trace?: never;
     };
     "/_api/releases": {
@@ -8516,6 +8653,40 @@ export interface components {
             /** @description 分页信息 */
             meta: components["schemas"]["IssuePageMetaDto"];
         };
+        IssueExportRowDto: {
+            /** @description 工单 ID */
+            id: string;
+            /** @description 标题 */
+            title: string;
+            /** @description 描述 */
+            description?: string | null;
+            /** @description 状态 */
+            status: string;
+            /** @description 优先级 */
+            priority: string;
+            /** @description 负责人 User ID */
+            assigneeId?: string | null;
+            /** @description 负责人姓名 */
+            assigneeName?: string | null;
+            /** @description 报告人 User ID */
+            reporterId?: string | null;
+            /** @description 报告人姓名 */
+            reporterName?: string | null;
+            /** @description 迭代 ID */
+            iterationId?: string | null;
+            /** @description 开始日期（ISO） */
+            startDate?: string | null;
+            /** @description 截止日期（ISO） */
+            dueDate?: string | null;
+            /** @description 预估工时（分钟） */
+            estimate?: number | null;
+            /** @description 标签名列表 */
+            tags: string[];
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+        };
         UpdateIssueDto: {
             /**
              * @description Target project ID — moving the task to another project
@@ -8953,14 +9124,24 @@ export interface components {
             } | null;
         };
         ImportIssueDto: {
+            /** @description 所属项目 ID（列表内全部任务须同项目） */
+            projectId?: string;
             /** @description 任务标题 */
             title: string;
+            /**
+             * @description 任务类型（task/bug）
+             * @enum {string}
+             */
+            type?: "task" | "bug";
             /** @description 任务描述 */
             description?: string;
-            /** @description 状态 */
+            /** @description 状态（须为项目/全局 StatusDefinition 已定义的 key） */
             status?: string;
-            /** @description 优先级 */
-            priority?: string;
+            /**
+             * @description 优先级
+             * @enum {string}
+             */
+            priority?: "low" | "medium" | "high" | "critical";
             /** @description 负责人用户 ID */
             assigneeId?: string;
             /** @description 报告人用户 ID */
@@ -9068,45 +9249,23 @@ export interface components {
             /** @description [兼容] 实际结果（customFields 回填） */
             bugActualResult?: string | null;
         };
+        IssueImportRowErrorDto: {
+            /** @description 数据行号，从 1 起 */
+            row: number;
+            /** @description 出错字段（title/projectId/type/priority/status） */
+            field?: string;
+            /** @description 人类可读的错误描述 */
+            message: string;
+        };
         IssueImportResponseDto: {
             /** @description 成功导入条数 */
             imported: number;
             /** @description 新建的工单（无关系预加载） */
             tasks: components["schemas"]["IssueBaseDto"][];
-        };
-        IssueExportRowDto: {
-            /** @description 工单 ID */
-            id: string;
-            /** @description 标题 */
-            title: string;
-            /** @description 描述 */
-            description?: string | null;
-            /** @description 状态 */
-            status: string;
-            /** @description 优先级 */
-            priority: string;
-            /** @description 负责人 User ID */
-            assigneeId?: string | null;
-            /** @description 负责人姓名 */
-            assigneeName?: string | null;
-            /** @description 报告人 User ID */
-            reporterId?: string | null;
-            /** @description 报告人姓名 */
-            reporterName?: string | null;
-            /** @description 迭代 ID */
-            iterationId?: string | null;
-            /** @description 开始日期（ISO） */
-            startDate?: string | null;
-            /** @description 截止日期（ISO） */
-            dueDate?: string | null;
-            /** @description 预估工时（分钟） */
-            estimate?: number | null;
-            /** @description 标签名列表 */
-            tags: string[];
-            /** @description 创建时间（ISO） */
-            createdAt: string;
-            /** @description 更新时间（ISO） */
-            updatedAt: string;
+            /** @description 失败条数（P0-8b：当前为整体回滚语义，仅出现在 400 错误 details 中，成功响应不返回） */
+            failed?: number;
+            /** @description 逐行校验错误（P0-8b：任一行失败整批拒绝，errors 随 400 error.details.errors 返回） */
+            errors?: components["schemas"]["IssueImportRowErrorDto"][];
         };
         ShortIdBackfillResponseDto: {
             /** @description 是否全部成功 */
@@ -9146,7 +9305,7 @@ export interface components {
              * @description 决策来源类型
              * @enum {string}
              */
-            kind: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release";
+            kind: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict";
             /** @description 原始实体 ID */
             sourceId: string;
             /** @description 原始状态（pending / in_review / …） */
@@ -9216,7 +9375,7 @@ export interface components {
              * @description 提案类型
              * @enum {string}
              */
-            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def";
+            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict";
             /** @description 决策陈述（一句话问句） */
             title: string;
             /** @description 提案数据（结构随 kind 而定，见 docs/roadmap/decision-cards-roadmap.md） */
@@ -9245,7 +9404,7 @@ export interface components {
              * @description 提案类型
              * @enum {string}
              */
-            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def";
+            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict";
             projectId?: string | null;
             issueId?: string | null;
             /** @description 决策陈述 */
@@ -9298,6 +9457,11 @@ export interface components {
             reason?: string;
             /** @description 答案（clarify：所选选项，供提案方轮询取回） */
             answer?: string;
+            /**
+             * @description 契约冲突裁决动作（仅 kind=contract_conflict 必填）：accept_file=采纳文件侧现值为新基线；accept_db=把平台托管内容写回文件（派生型绑定不支持，需重新导出）；detach=解绑停止对齐
+             * @enum {string}
+             */
+            conflictAction?: "accept_file" | "accept_db" | "detach";
         };
         ResolveProposalResponseDto: {
             /** @description 提案 ID */
@@ -9319,6 +9483,77 @@ export interface components {
         WatchSpendResponseDto: {
             /** @example true */
             ok: boolean;
+        };
+        ContractBindingResponseDto: {
+            id: string;
+            projectId: string;
+            /** @enum {string} */
+            fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
+            /** @description 工作区根相对路径（POSIX） */
+            filePath: string;
+            /** @enum {string} */
+            syncMode: "managed" | "synced" | "detached";
+            truthOwner: string;
+            /** @description 基线指纹 sha256 */
+            baseline?: string | null;
+            /** @description null | conflicted */
+            conflictState?: string | null;
+            lastWriter?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ContractBindingsResponseDto: {
+            /** @description 当前工作区根（未绑定为 null） */
+            workspaceRoot?: string | null;
+            bindings: components["schemas"]["ContractBindingResponseDto"][];
+        };
+        SeedContractFilesDto: {
+            /** @description 仅种生指定类型（缺省全量三件套） */
+            fileTypes?: ("agents" | "claude_alias" | "changelog" | "readme" | "docs_dir")[];
+            /** @description 格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间 */
+            formatOnly?: boolean;
+        };
+        SeedFileResultDto: {
+            path: string;
+            /** @enum {string} */
+            action: "created" | "updated" | "adopted" | "skipped_unchanged" | "skipped_existing" | "skipped_no_workspace";
+            bindingId?: string;
+        };
+        SeedContractResultDto: {
+            projectId: string;
+            workspaceRoot?: string | null;
+            files: components["schemas"]["SeedFileResultDto"][];
+        };
+        CheckAlignmentDto: {
+            /**
+             * @description 仅检查指定类型（缺省检查全部已绑定类型）
+             * @enum {string}
+             */
+            fileType?: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
+        };
+        AlignmentDiffDto: {
+            /** @description 托管区间 id */
+            id: string;
+            /** @enum {string} */
+            state: "equal" | "file_differs" | "missing_in_file";
+        };
+        ContractAlignmentReportDto: {
+            /** @enum {string} */
+            fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
+            /** @enum {string} */
+            state: "aligned" | "conflicted" | "skipped_detached" | "missing_file";
+            diffs?: components["schemas"]["AlignmentDiffDto"][];
+            /** @description 升级出的冲突提案 id */
+            proposalId?: string;
+        };
+        UpdateContractBindingDto: {
+            /**
+             * @description 目标同步模式
+             * @enum {string}
+             */
+            syncMode: "managed" | "synced" | "detached";
         };
         IterationIssueCountDto: {
             /** @description 迭代内任务数 */
@@ -9968,7 +10203,7 @@ export interface components {
              * @description AI 员工级默认 CLI Provider（覆盖项目级角色）
              * @enum {string}
              */
-            defaultCliProviderId?: "claude-code" | "codex" | "zcode";
+            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode";
             /**
              * @description AI 员工默认执行角色
              * @enum {string}
@@ -10104,7 +10339,7 @@ export interface components {
             costRatePerDay?: number;
             aiModelConfigId?: string;
             /** @enum {string} */
-            defaultCliProviderId?: "claude-code" | "codex" | "zcode";
+            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode";
             /** @enum {string} */
             defaultExecutionRole?: "coder" | "reviewer" | "pm" | "qa" | "general";
             metadata?: {
@@ -10370,7 +10605,7 @@ export interface components {
              * @description 默认 Provider（claude-code/codex 均不可用时为 null）
              * @enum {string|null}
              */
-            defaultProvider: "claude-code" | "codex" | "zcode" | null;
+            defaultProvider: "claude-code" | "codex" | "zcode" | "opencode" | null;
         };
         DetectedCliProviderDto: {
             providerId: string;
@@ -11219,9 +11454,17 @@ export interface components {
             totalTokens: number;
             /** @description 估算总成本（USD） */
             totalCost: number;
+            /** @description 调用总次数 */
+            totalCalls: number;
+            /** @description 对话调用次数（挂 conversationId） */
+            conversationCalls: number;
+            /** @description 执行链调用次数（挂 executionRunId/workflowRunId） */
+            executionCalls: number;
+            /** @description 静默场景调用次数（系统自动，无对话/执行关联） */
+            silentCalls: number;
             /** @description 按模型聚合 */
             byModel: components["schemas"]["UsageByModelDto"][];
-            /** @description 按日聚合（近 30 天） */
+            /** @description 按日聚合（最多 370 天，倒序） */
             byDay: components["schemas"]["UsageByDayDto"][];
         };
         AIModelDto: {
@@ -11245,7 +11488,7 @@ export interface components {
              * @description Provider 类型
              * @enum {string}
              */
-            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm";
+            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go";
             /** @description 显示名称 */
             displayName: string;
             /**
@@ -11277,6 +11520,14 @@ export interface components {
             metadata?: {
                 [key: string]: unknown;
             };
+            /**
+             * @description 该厂家已启用的模型清单（AIModelConfig，模型查询结果）
+             * @example [
+             *       "deepseek-chat",
+             *       "deepseek-reasoner"
+             *     ]
+             */
+            availableModels?: string[];
         };
         CreateProviderConfigDto: {
             /**
@@ -11284,7 +11535,7 @@ export interface components {
              * @example openai
              * @enum {string}
              */
-            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm";
+            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go";
             /**
              * @description 显示名称
              * @example OpenAI
@@ -11347,7 +11598,7 @@ export interface components {
              * @example openai
              * @enum {string}
              */
-            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm";
+            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go";
             /**
              * @description API Key
              * @example sk-...
@@ -11355,8 +11606,10 @@ export interface components {
             apiKey: string;
             /** @description 自定义端点 */
             baseUrl?: string;
-            /** @description OpenAI Organization ID */
+            /** @description 自定义端点 */
             organizationId?: string;
+            /** @description 已保存配置记录 ID——校验通过时同步该记录在线状态为 connected */
+            providerConfigId?: string;
         };
         ValidateProviderResponseDto: {
             /** @description 是否有效 */
@@ -11378,6 +11631,108 @@ export interface components {
         DetectModelsResponseDto: {
             /** @description 探测到的模型名列表 */
             models: string[];
+            /** @description 是否已覆盖同步到 AIModelConfig（查询结果为空时 false） */
+            synced: boolean;
+        };
+        ProviderBalanceWindowDto: {
+            /**
+             * @description 周期（归一化：5h / day / week / month）
+             * @example 5h
+             */
+            period: string;
+            /**
+             * @description 已用量（token 数或金额，视厂家返回而定）
+             * @example 1200000
+             */
+            used?: Record<string, never> | null;
+            /**
+             * @description 限额（token 数或金额）
+             * @example 5000000
+             */
+            limit?: Record<string, never> | null;
+            /** @description 剩余额度 */
+            remaining?: Record<string, never> | null;
+            /**
+             * @description 已用百分比（0-100；厂家仅返回百分比时提供，此时 used/limit 为 null）
+             * @example 20
+             */
+            percent?: Record<string, never> | null;
+            /** @description 窗口重置时间（厂家原样返回） */
+            resetsAt?: Record<string, never> | null;
+        };
+        ProviderBalanceResponseDto: {
+            /**
+             * @description 余额类型：prepaid=充值型（单余额）/ subscription=套餐型（限额窗口）/ unknown
+             * @example prepaid
+             * @enum {string}
+             */
+            type: "prepaid" | "subscription" | "unknown";
+            /**
+             * @description 币种（充值型，如 CNY）
+             * @example CNY
+             */
+            currency?: Record<string, never> | null;
+            /**
+             * @description 剩余余额（充值型）
+             * @example 110
+             */
+            balance?: Record<string, never> | null;
+            /**
+             * @description 赠送余额累计（充值型，可作进度条分母）
+             * @example 10
+             */
+            grantedBalance?: Record<string, never> | null;
+            /**
+             * @description 充值余额累计（充值型，可作进度条分母）
+             * @example 100.55
+             */
+            toppedUpBalance?: Record<string, never> | null;
+            /** @description 账户是否可用（DeepSeek is_available） */
+            isAvailable?: Record<string, never> | null;
+            /** @description 限额窗口（套餐型：5h/周/月等；充值型为空数组） */
+            windows: components["schemas"]["ProviderBalanceWindowDto"][];
+        };
+        PricingSourceStatusDto: {
+            /** @description 价目数据是否可用（至少成功拉取过一次） */
+            available: boolean;
+            /** @description 上次成功拉取时间（ISO，未拉取为 null） */
+            fetchedAt?: string | null;
+            /** @description 缓存是否过期（超过 TTL 24h 或从未加载） */
+            stale: boolean;
+            /** @description 覆盖厂家数 */
+            providerCount: number;
+            /** @description 覆盖模型数 */
+            modelCount: number;
+            /** @description 数据源地址 */
+            source: string;
+            /** @description 最近一次拉取失败原因（成功后清空） */
+            error?: string | null;
+        };
+        DefaultModelResponseDto: {
+            /**
+             * @description Provider 类型（未设置时为 null）
+             * @example deepseek
+             * @enum {string|null}
+             */
+            provider?: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go" | null;
+            /**
+             * @description 模型名（未设置时为 null）
+             * @example deepseek-chat
+             */
+            model?: Record<string, never> | null;
+        };
+        SetDefaultModelDto: {
+            /**
+             * @description Provider 类型（须为已配置且启用的厂家）
+             * @example deepseek
+             * @enum {string}
+             */
+            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go";
+            /**
+             * @description 模型名（不做白名单校验，允许自填新模型）
+             * @example deepseek-chat
+             */
+            model: string;
         };
         AssignIssueResponseDto: {
             /** @description 任务 ID */
@@ -12525,7 +12880,7 @@ export interface components {
             id: string;
             /** @description 接收用户 ID */
             userId: string;
-            /** @description 事件类型（task.assigned / ci.build.failed 等） */
+            /** @description 事件类型（task.assigned / decision.proposal.created 等） */
             type: string;
             title: string;
             body?: string | null;
@@ -14297,7 +14652,7 @@ export interface components {
              * @description Provider ID
              * @enum {string}
              */
-            providerId: "claude-code" | "codex" | "zcode";
+            providerId: "claude-code" | "codex" | "zcode" | "opencode";
             /** @description 二进制是否可用（且未被禁用） */
             available: boolean;
             /** @description 探测到的版本号 */
@@ -14334,7 +14689,7 @@ export interface components {
              * @description Provider ID (must match path param :id)
              * @enum {string}
              */
-            providerId: "claude-code" | "codex" | "zcode";
+            providerId: "claude-code" | "codex" | "zcode" | "opencode";
             /** @description Display name override */
             displayName?: string;
             /** @description Custom command path; if empty, fall back to PATH lookup */
@@ -14704,6 +15059,31 @@ export interface components {
             /** @description 生成时间（ISO） */
             generatedAt: string;
         };
+        SearchHitDto: {
+            /** @description 命中对象 ID */
+            id: string;
+            /**
+             * @description 命中类别
+             * @enum {string}
+             */
+            type: "task" | "bug" | "document" | "project";
+            /** @description 标题 */
+            title: string;
+            /** @description 副标题（展示用：项目/编号/状态摘要） */
+            subtitle: string;
+            /** @description 前端路由路径（/app/...） */
+            path: string;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+            /** @description 所属项目 ID（项目命中时为 null） */
+            projectId?: Record<string, never> | null;
+        };
+        SearchResponseDto: {
+            /** @description 扁平命中列表（前端按 type 分组渲染） */
+            items: components["schemas"]["SearchHitDto"][];
+            /** @description 命中总数（= items.length） */
+            total: number;
+        };
         OfficeCapacityDto: {
             /** @description 在途执行数（planned/in_progress/pending_approval） */
             activeRuns: number;
@@ -14793,77 +15173,6 @@ export interface components {
             colleagues: components["schemas"]["OfficeColleagueDto"][];
             /** @description 汇总 */
             totals: components["schemas"]["OfficeTotalsDto"];
-        };
-        ContractBindingResponseDto: {
-            id: string;
-            projectId: string;
-            /** @enum {string} */
-            fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
-            /** @description 工作区根相对路径（POSIX） */
-            filePath: string;
-            /** @enum {string} */
-            syncMode: "managed" | "synced" | "detached";
-            truthOwner: string;
-            /** @description 基线指纹 sha256 */
-            baseline?: string | null;
-            /** @description null | conflicted */
-            conflictState?: string | null;
-            lastWriter?: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        ContractBindingsResponseDto: {
-            /** @description 当前工作区根（未绑定为 null） */
-            workspaceRoot?: string | null;
-            bindings: components["schemas"]["ContractBindingResponseDto"][];
-        };
-        SeedContractFilesDto: {
-            /** @description 仅种生指定类型（缺省全量三件套） */
-            fileTypes?: ("agents" | "claude_alias" | "changelog" | "readme" | "docs_dir")[];
-            /** @description 格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间 */
-            formatOnly?: boolean;
-        };
-        SeedFileResultDto: {
-            path: string;
-            /** @enum {string} */
-            action: "created" | "updated" | "adopted" | "skipped_unchanged" | "skipped_existing" | "skipped_no_workspace";
-            bindingId?: string;
-        };
-        SeedContractResultDto: {
-            projectId: string;
-            workspaceRoot?: string | null;
-            files: components["schemas"]["SeedFileResultDto"][];
-        };
-        CheckAlignmentDto: {
-            /**
-             * @description 仅检查指定类型（缺省检查全部已绑定类型）
-             * @enum {string}
-             */
-            fileType?: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
-        };
-        AlignmentDiffDto: {
-            /** @description 托管区间 id */
-            id: string;
-            /** @enum {string} */
-            state: "equal" | "file_differs" | "missing_in_file";
-        };
-        ContractAlignmentReportDto: {
-            /** @enum {string} */
-            fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
-            /** @enum {string} */
-            state: "aligned" | "conflicted" | "skipped_detached" | "missing_file";
-            diffs?: components["schemas"]["AlignmentDiffDto"][];
-            /** @description 升级出的冲突提案 id */
-            proposalId?: string;
-        };
-        UpdateContractBindingDto: {
-            /**
-             * @description 目标同步模式
-             * @enum {string}
-             */
-            syncMode: "managed" | "synced" | "detached";
         };
         CreateReleaseDto: {
             /** @description 项目 ID */
@@ -19916,6 +20225,91 @@ export interface operations {
             };
         };
     };
+    IssueController_exportTasks: {
+        parameters: {
+            query: {
+                /** @description Project ID */
+                projectId: string;
+                /** @description Export format */
+                format?: "csv" | "json";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description format=json 返回导出行数组；format=csv 返回 CSV 文本（attachment 下载） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueExportRowDto"][];
+                    "text/csv": string;
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /**
+             * @description Unauthorized
+             *
+             *     未登录或登录已过期
+             */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
     IssueController_findOne: {
         parameters: {
             query?: never;
@@ -20734,91 +21128,6 @@ export interface operations {
             };
         };
     };
-    IssueController_exportTasks: {
-        parameters: {
-            query: {
-                /** @description Project ID */
-                projectId: string;
-                /** @description Export format */
-                format?: "csv" | "json";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description format=json 返回导出行数组；format=csv 返回 CSV 文本（attachment 下载） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IssueExportRowDto"][];
-                    "text/csv": string;
-                };
-            };
-            /** @description 请求参数错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /**
-             * @description Unauthorized
-             *
-             *     未登录或登录已过期
-             */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 资源不存在 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-        };
-    };
     IssueController_backfillShortIds: {
         parameters: {
             query?: never;
@@ -21479,7 +21788,7 @@ export interface operations {
                 limit?: string;
                 /** @description 默认 0 */
                 offset?: string;
-                kind?: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release";
+                kind?: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict";
             };
             header?: never;
             path?: never;
@@ -22028,6 +22337,107 @@ export interface operations {
                     "application/json": components["schemas"]["ApiResponseDto"] & {
                         error?: components["schemas"]["ErrorPayloadDto"];
                     };
+                };
+            };
+        };
+    };
+    ContractController_listBindings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractBindingsResponseDto"];
+                };
+            };
+        };
+    };
+    ContractController_seed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeedContractFilesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeedContractResultDto"];
+                };
+            };
+        };
+    };
+    ContractController_check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckAlignmentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractAlignmentReportDto"][];
+                };
+            };
+        };
+    };
+    ContractController_setSyncMode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+                fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateContractBindingDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractBindingResponseDto"];
                 };
             };
         };
@@ -29657,6 +30067,57 @@ export interface operations {
             };
         };
     };
+    RuntimeQueryController_getLocalDaemonStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeQueryController_startLocalDaemon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeQueryController_stopLocalDaemon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     RuntimeQueryController_listApprovals: {
         parameters: {
             query: {
@@ -30710,13 +31171,403 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 探测到的模型列表 { models: string[] } */
+            /** @description 查询到的模型列表 { models, synced }（覆盖式同步：以查询结果为准；结果为空时 synced=false 不覆盖；metadata.modelsEndpoint 可覆盖默认链接） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["DetectModelsResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /**
+             * @description 资源不存在
+             *
+             *     Provider not found
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_getProviderBalance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Provider ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 归一化余额 { type, balance?, currency?, windows[] }——充值型（如 DeepSeek /user/balance）单余额；套餐型（5h/周/月限额窗口）多进度；metadata.balanceEndpoint 可覆盖默认链接 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBalanceResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /**
+             * @description 资源不存在
+             *
+             *     Provider not found
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_getPricingSourceStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description models.dev 价目参考源状态 { available, fetchedAt, stale, providerCount, modelCount, source, error? }（只读，不触发网络） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PricingSourceStatusDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_refreshPricingSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 强制重新拉取 models.dev 价目目录；失败保留旧缓存并在 error 透出原因（不抛错） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PricingSourceStatusDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_getDefaultModel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 内置模型 { provider, model }（未设置时两者为 null） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefaultModelResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_setDefaultModel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetDefaultModelDto"];
+            };
+        };
+        responses: {
+            /** @description 保存后的内置模型 { provider, model } */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DefaultModelResponseDto"];
                 };
             };
             /** @description 请求参数错误 */
@@ -44699,7 +45550,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode";
+                id: "claude-code" | "codex" | "zcode" | "opencode";
             };
             cookie?: never;
         };
@@ -44780,7 +45631,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode";
+                id: "claude-code" | "codex" | "zcode" | "opencode";
             };
             cookie?: never;
         };
@@ -44865,7 +45716,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode";
+                id: "claude-code" | "codex" | "zcode" | "opencode";
             };
             cookie?: never;
         };
@@ -46158,6 +47009,88 @@ export interface operations {
             };
         };
     };
+    SearchController_search: {
+        parameters: {
+            query: {
+                /** @description 搜索关键词（title/shortId/description/name contains，大小写不敏感） */
+                q: string;
+                /** @description 类型过滤，可省略；可重复传（types=task&types=bug）或数组风格（types[]=task）；milestone/acceptance 为前端契约保留类别，后端暂不产出命中（返回空分组） */
+                types?: ("task" | "bug" | "document" | "project" | "milestone" | "acceptance")[];
+                /** @description 每类返回上限（默认 10，封顶 10） */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 扁平命中列表（前端按 type 分组渲染） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
     OfficeController_getSummary: {
         parameters: {
             query: {
@@ -46231,107 +47164,6 @@ export interface operations {
                     "application/json": components["schemas"]["ApiResponseDto"] & {
                         error?: components["schemas"]["ErrorPayloadDto"];
                     };
-                };
-            };
-        };
-    };
-    ContractController_listBindings: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目 ID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContractBindingsResponseDto"];
-                };
-            };
-        };
-    };
-    ContractController_seed: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目 ID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SeedContractFilesDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SeedContractResultDto"];
-                };
-            };
-        };
-    };
-    ContractController_check: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目 ID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CheckAlignmentDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContractAlignmentReportDto"][];
-                };
-            };
-        };
-    };
-    ContractController_setSyncMode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目 ID */
-                projectId: string;
-                fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateContractBindingDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContractBindingResponseDto"];
                 };
             };
         };

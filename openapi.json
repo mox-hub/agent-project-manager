@@ -8444,6 +8444,169 @@
         ]
       }
     },
+    "/_api/issues/export": {
+      "get": {
+        "operationId": "IssueController_exportTasks",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "description": "Project ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": false,
+            "in": "query",
+            "description": "Export format",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "csv",
+                "json"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "format=json 返回导出行数组；format=csv 返回 CSV 文本（attachment 下载）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IssueExportRowDto"
+                  }
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized\n\n未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Export tasks to CSV/JSON",
+        "tags": [
+          "Tasks"
+        ]
+      }
+    },
     "/_api/issues/{id}": {
       "get": {
         "operationId": "IssueController_findOne",
@@ -9866,169 +10029,6 @@
         ]
       }
     },
-    "/_api/issues/export": {
-      "get": {
-        "operationId": "IssueController_exportTasks",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "query",
-            "description": "Project ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "format",
-            "required": false,
-            "in": "query",
-            "description": "Export format",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "csv",
-                "json"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "format=json 返回导出行数组；format=csv 返回 CSV 文本（attachment 下载）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IssueExportRowDto"
-                  }
-                }
-              },
-              "text/csv": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "请求参数错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized\n\n未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "资源不存在",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "Export tasks to CSV/JSON",
-        "tags": [
-          "Tasks"
-        ]
-      }
-    },
     "/_api/issues/admin/backfill-short-ids": {
       "post": {
         "operationId": "IssueController_backfillShortIds",
@@ -10990,7 +10990,8 @@
                 "clarify",
                 "gate",
                 "workflow_def",
-                "release"
+                "release",
+                "contract_conflict"
               ],
               "type": "string"
             }
@@ -11980,6 +11981,202 @@
         "summary": "手动触发一次项目周花费阈值检查（正常由执行完成钩子自动触发）",
         "tags": [
           "Decisions"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/bindings": {
+      "get": {
+        "operationId": "ContractController_listBindings",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractBindingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "列出契约文件绑定与工作区根（纯只读）",
+        "tags": [
+          "Contract"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/seed": {
+      "post": {
+        "operationId": "ContractController_seed",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeedContractFilesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeedContractResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管）",
+        "tags": [
+          "Contract"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/check": {
+      "post": {
+        "operationId": "ContractController_check",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckAlignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContractAlignmentReportDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "对齐检查（managed 漂移将升级冲突提案）",
+        "tags": [
+          "Contract"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/bindings/{fileType}": {
+      "patch": {
+        "operationId": "ContractController_setSyncMode",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fileType",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "agents",
+                "claude_alias",
+                "changelog",
+                "readme",
+                "docs_dir"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContractBindingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractBindingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "切换绑定同步模式（managed/synced/detached）",
+        "tags": [
+          "Contract"
         ]
       }
     },
@@ -25698,6 +25895,66 @@
         ]
       }
     },
+    "/_api/runtime/local-daemon/status": {
+      "get": {
+        "operationId": "RuntimeQueryController_getLocalDaemonStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "本机 daemon 状态（锁持有者探活；standalone 限定）",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/local-daemon/start": {
+      "post": {
+        "operationId": "RuntimeQueryController_startLocalDaemon",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "拉起本机 daemon（detached spawn；standalone 限定）",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/local-daemon/stop": {
+      "post": {
+        "operationId": "RuntimeQueryController_stopLocalDaemon",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "停止本机 daemon（进程树强杀；standalone 限定）",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
     "/_api/runtime/approvals": {
       "get": {
         "operationId": "RuntimeQueryController_listApprovals",
@@ -27614,7 +27871,7 @@
         ],
         "responses": {
           "200": {
-            "description": "探测到的模型列表 { models: string[] }",
+            "description": "查询到的模型列表 { models, synced }（覆盖式同步：以查询结果为准；结果为空时 synced=false 不覆盖；metadata.modelsEndpoint 可覆盖默认链接）",
             "content": {
               "application/json": {
                 "schema": {
@@ -27734,7 +27991,685 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Auto-detect available models for provider",
+        "summary": "Query provider model list from its /models endpoint (persists to AIModelConfig)",
+        "tags": [
+          "AI Hub"
+        ]
+      }
+    },
+    "/_api/ai/providers/{id}/balance": {
+      "get": {
+        "operationId": "AiHubController_getProviderBalance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Provider ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "归一化余额 { type, balance?, currency?, windows[] }——充值型（如 DeepSeek /user/balance）单余额；套餐型（5h/周/月限额窗口）多进度；metadata.balanceEndpoint 可覆盖默认链接",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderBalanceResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在\n\nProvider not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Query provider balance (proxied, normalized; prepaid vs subscription)",
+        "tags": [
+          "AI Hub"
+        ]
+      }
+    },
+    "/_api/ai/pricing-source": {
+      "get": {
+        "operationId": "AiHubController_getPricingSourceStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "models.dev 价目参考源状态 { available, fetchedAt, stale, providerCount, modelCount, source, error? }（只读，不触发网络）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricingSourceStatusDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get models.dev pricing source status",
+        "tags": [
+          "AI Hub"
+        ]
+      }
+    },
+    "/_api/ai/pricing-source/refresh": {
+      "post": {
+        "operationId": "AiHubController_refreshPricingSource",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "强制重新拉取 models.dev 价目目录；失败保留旧缓存并在 error 透出原因（不抛错）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricingSourceStatusDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Force refresh models.dev pricing catalog",
+        "tags": [
+          "AI Hub"
+        ]
+      }
+    },
+    "/_api/ai/default-model": {
+      "get": {
+        "operationId": "AiHubController_getDefaultModel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "内置模型 { provider, model }（未设置时两者为 null）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get workspace default AI model (内置模型)",
+        "tags": [
+          "AI Hub"
+        ]
+      },
+      "put": {
+        "operationId": "AiHubController_setDefaultModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDefaultModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "保存后的内置模型 { provider, model }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultModelResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在\n\nProvider not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Set workspace default AI model (内置模型)",
         "tags": [
           "AI Hub"
         ]
@@ -52759,7 +53694,8 @@
               "enum": [
                 "claude-code",
                 "codex",
-                "zcode"
+                "zcode",
+                "opencode"
               ],
               "type": "string"
             }
@@ -52905,7 +53841,8 @@
               "enum": [
                 "claude-code",
                 "codex",
-                "zcode"
+                "zcode",
+                "opencode"
               ],
               "type": "string"
             }
@@ -53059,7 +53996,8 @@
               "enum": [
                 "claude-code",
                 "codex",
-                "zcode"
+                "zcode",
+                "opencode"
               ],
               "type": "string"
             }
@@ -55332,6 +56270,177 @@
         ]
       }
     },
+    "/_api/search": {
+      "get": {
+        "operationId": "SearchController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "description": "搜索关键词（title/shortId/description/name contains，大小写不敏感）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "types",
+            "required": false,
+            "in": "query",
+            "description": "类型过滤，可省略；可重复传（types=task&types=bug）或数组风格（types[]=task）；milestone/acceptance 为前端契约保留类别，后端暂不产出命中（返回空分组）",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "task",
+                  "bug",
+                  "document",
+                  "project",
+                  "milestone",
+                  "acceptance"
+                ]
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "每类返回上限（默认 10，封顶 10）",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "扁平命中列表（前端按 type 分组渲染）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "全局搜索（工单/文档/项目，按项目成员可见性过滤）",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
     "/_api/office/summary": {
       "get": {
         "operationId": "OfficeController_getSummary",
@@ -55470,202 +56579,6 @@
         "summary": "办公室聚合：按 AI 成员的员工卡（忙闲/待决/可接活度）",
         "tags": [
           "Office"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/contract/bindings": {
-      "get": {
-        "operationId": "ContractController_listBindings",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "description": "项目 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContractBindingsResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "列出契约文件绑定与工作区根（纯只读）",
-        "tags": [
-          "Contract"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/contract/seed": {
-      "post": {
-        "operationId": "ContractController_seed",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "description": "项目 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SeedContractFilesDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SeedContractResultDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管）",
-        "tags": [
-          "Contract"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/contract/check": {
-      "post": {
-        "operationId": "ContractController_check",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "description": "项目 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CheckAlignmentDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ContractAlignmentReportDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "对齐检查（managed 漂移将升级冲突提案）",
-        "tags": [
-          "Contract"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/contract/bindings/{fileType}": {
-      "patch": {
-        "operationId": "ContractController_setSyncMode",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "description": "项目 ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fileType",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "enum": [
-                "agents",
-                "claude_alias",
-                "changelog",
-                "readme",
-                "docs_dir"
-              ],
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateContractBindingDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContractBindingResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "切换绑定同步模式（managed/synced/detached）",
-        "tags": [
-          "Contract"
         ]
       }
     },
@@ -62107,6 +63020,96 @@
           "meta"
         ]
       },
+      "IssueExportRowDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "工单 ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "description": {
+            "type": "string",
+            "description": "描述",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "状态"
+          },
+          "priority": {
+            "type": "string",
+            "description": "优先级"
+          },
+          "assigneeId": {
+            "type": "string",
+            "description": "负责人 User ID",
+            "nullable": true
+          },
+          "assigneeName": {
+            "type": "string",
+            "description": "负责人姓名",
+            "nullable": true
+          },
+          "reporterId": {
+            "type": "string",
+            "description": "报告人 User ID",
+            "nullable": true
+          },
+          "reporterName": {
+            "type": "string",
+            "description": "报告人姓名",
+            "nullable": true
+          },
+          "iterationId": {
+            "type": "string",
+            "description": "迭代 ID",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "description": "开始日期（ISO）",
+            "nullable": true
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "截止日期（ISO）",
+            "nullable": true
+          },
+          "estimate": {
+            "type": "number",
+            "description": "预估工时（分钟）",
+            "nullable": true
+          },
+          "tags": {
+            "description": "标签名列表",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "priority",
+          "tags",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "UpdateIssueDto": {
         "type": "object",
         "properties": {
@@ -62889,9 +63892,21 @@
       "ImportIssueDto": {
         "type": "object",
         "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "所属项目 ID（列表内全部任务须同项目）"
+          },
           "title": {
             "type": "string",
             "description": "任务标题"
+          },
+          "type": {
+            "type": "string",
+            "description": "任务类型（task/bug）",
+            "enum": [
+              "task",
+              "bug"
+            ]
           },
           "description": {
             "type": "string",
@@ -62899,11 +63914,17 @@
           },
           "status": {
             "type": "string",
-            "description": "状态"
+            "description": "状态（须为项目/全局 StatusDefinition 已定义的 key）"
           },
           "priority": {
             "type": "string",
-            "description": "优先级"
+            "description": "优先级",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
           },
           "assigneeId": {
             "type": "string",
@@ -63160,6 +64181,27 @@
           "type"
         ]
       },
+      "IssueImportRowErrorDto": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "number",
+            "description": "数据行号，从 1 起"
+          },
+          "field": {
+            "type": "string",
+            "description": "出错字段（title/projectId/type/priority/status）"
+          },
+          "message": {
+            "type": "string",
+            "description": "人类可读的错误描述"
+          }
+        },
+        "required": [
+          "row",
+          "message"
+        ]
+      },
       "IssueImportResponseDto": {
         "type": "object",
         "properties": {
@@ -63173,101 +64215,22 @@
             "items": {
               "$ref": "#/components/schemas/IssueBaseDto"
             }
+          },
+          "failed": {
+            "type": "number",
+            "description": "失败条数（P0-8b：当前为整体回滚语义，仅出现在 400 错误 details 中，成功响应不返回）"
+          },
+          "errors": {
+            "description": "逐行校验错误（P0-8b：任一行失败整批拒绝，errors 随 400 error.details.errors 返回）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueImportRowErrorDto"
+            }
           }
         },
         "required": [
           "imported",
           "tasks"
-        ]
-      },
-      "IssueExportRowDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "工单 ID"
-          },
-          "title": {
-            "type": "string",
-            "description": "标题"
-          },
-          "description": {
-            "type": "string",
-            "description": "描述",
-            "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "description": "状态"
-          },
-          "priority": {
-            "type": "string",
-            "description": "优先级"
-          },
-          "assigneeId": {
-            "type": "string",
-            "description": "负责人 User ID",
-            "nullable": true
-          },
-          "assigneeName": {
-            "type": "string",
-            "description": "负责人姓名",
-            "nullable": true
-          },
-          "reporterId": {
-            "type": "string",
-            "description": "报告人 User ID",
-            "nullable": true
-          },
-          "reporterName": {
-            "type": "string",
-            "description": "报告人姓名",
-            "nullable": true
-          },
-          "iterationId": {
-            "type": "string",
-            "description": "迭代 ID",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "description": "开始日期（ISO）",
-            "nullable": true
-          },
-          "dueDate": {
-            "type": "string",
-            "description": "截止日期（ISO）",
-            "nullable": true
-          },
-          "estimate": {
-            "type": "number",
-            "description": "预估工时（分钟）",
-            "nullable": true
-          },
-          "tags": {
-            "description": "标签名列表",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "创建时间（ISO）"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "更新时间（ISO）"
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "status",
-          "priority",
-          "tags",
-          "createdAt",
-          "updatedAt"
         ]
       },
       "ShortIdBackfillResponseDto": {
@@ -63372,7 +64335,8 @@
               "clarify",
               "gate",
               "workflow_def",
-              "release"
+              "release",
+              "contract_conflict"
             ]
           },
           "sourceId": {
@@ -63542,7 +64506,9 @@
               "spend",
               "clarify",
               "gate",
-              "workflow_def"
+              "workflow_def",
+              "release",
+              "contract_conflict"
             ]
           },
           "title": {
@@ -63606,7 +64572,9 @@
               "spend",
               "clarify",
               "gate",
-              "workflow_def"
+              "workflow_def",
+              "release",
+              "contract_conflict"
             ]
           },
           "projectId": {
@@ -63729,6 +64697,15 @@
           "answer": {
             "type": "string",
             "description": "答案（clarify：所选选项，供提案方轮询取回）"
+          },
+          "conflictAction": {
+            "type": "string",
+            "description": "契约冲突裁决动作（仅 kind=contract_conflict 必填）：accept_file=采纳文件侧现值为新基线；accept_db=把平台托管内容写回文件（派生型绑定不支持，需重新导出）；detach=解绑停止对齐",
+            "enum": [
+              "accept_file",
+              "accept_db",
+              "detach"
+            ]
           }
         },
         "required": [
@@ -63784,6 +64761,256 @@
         },
         "required": [
           "ok"
+        ]
+      },
+      "ContractBindingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "agents",
+              "claude_alias",
+              "changelog",
+              "readme",
+              "docs_dir"
+            ]
+          },
+          "filePath": {
+            "type": "string",
+            "description": "工作区根相对路径（POSIX）"
+          },
+          "syncMode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "synced",
+              "detached"
+            ]
+          },
+          "truthOwner": {
+            "type": "string"
+          },
+          "baseline": {
+            "type": "string",
+            "nullable": true,
+            "description": "基线指纹 sha256"
+          },
+          "conflictState": {
+            "type": "string",
+            "nullable": true,
+            "description": "null | conflicted"
+          },
+          "lastWriter": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "fileType",
+          "filePath",
+          "syncMode",
+          "truthOwner",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ContractBindingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "workspaceRoot": {
+            "type": "string",
+            "nullable": true,
+            "description": "当前工作区根（未绑定为 null）"
+          },
+          "bindings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContractBindingResponseDto"
+            }
+          }
+        },
+        "required": [
+          "bindings"
+        ]
+      },
+      "SeedContractFilesDto": {
+        "type": "object",
+        "properties": {
+          "fileTypes": {
+            "type": "array",
+            "description": "仅种生指定类型（缺省全量三件套）",
+            "items": {
+              "type": "string",
+              "enum": [
+                "agents",
+                "claude_alias",
+                "changelog",
+                "readme",
+                "docs_dir"
+              ]
+            }
+          },
+          "formatOnly": {
+            "type": "boolean",
+            "description": "格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间"
+          }
+        }
+      },
+      "SeedFileResultDto": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "created",
+              "updated",
+              "adopted",
+              "skipped_unchanged",
+              "skipped_existing",
+              "skipped_no_workspace"
+            ]
+          },
+          "bindingId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "action"
+        ]
+      },
+      "SeedContractResultDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "workspaceRoot": {
+            "type": "string",
+            "nullable": true
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeedFileResultDto"
+            }
+          }
+        },
+        "required": [
+          "projectId",
+          "files"
+        ]
+      },
+      "CheckAlignmentDto": {
+        "type": "object",
+        "properties": {
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "agents",
+              "claude_alias",
+              "changelog",
+              "readme",
+              "docs_dir"
+            ],
+            "description": "仅检查指定类型（缺省检查全部已绑定类型）"
+          }
+        }
+      },
+      "AlignmentDiffDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "托管区间 id"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "file_differs",
+              "missing_in_file"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state"
+        ]
+      },
+      "ContractAlignmentReportDto": {
+        "type": "object",
+        "properties": {
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "agents",
+              "claude_alias",
+              "changelog",
+              "readme",
+              "docs_dir"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "aligned",
+              "conflicted",
+              "skipped_detached",
+              "missing_file"
+            ]
+          },
+          "diffs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlignmentDiffDto"
+            }
+          },
+          "proposalId": {
+            "type": "string",
+            "description": "升级出的冲突提案 id"
+          }
+        },
+        "required": [
+          "fileType",
+          "state"
+        ]
+      },
+      "UpdateContractBindingDto": {
+        "type": "object",
+        "properties": {
+          "syncMode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "synced",
+              "detached"
+            ],
+            "description": "目标同步模式"
+          }
+        },
+        "required": [
+          "syncMode"
         ]
       },
       "IterationIssueCountDto": {
@@ -65533,7 +66760,8 @@
             "enum": [
               "claude-code",
               "codex",
-              "zcode"
+              "zcode",
+              "opencode"
             ],
             "description": "AI 员工级默认 CLI Provider（覆盖项目级角色）"
           },
@@ -65953,7 +67181,8 @@
             "enum": [
               "claude-code",
               "codex",
-              "zcode"
+              "zcode",
+              "opencode"
             ]
           },
           "defaultExecutionRole": {
@@ -66750,7 +67979,8 @@
             "enum": [
               "claude-code",
               "codex",
-              "zcode"
+              "zcode",
+              "opencode"
             ]
           }
         },
@@ -68813,6 +70043,22 @@
             "type": "number",
             "description": "估算总成本（USD）"
           },
+          "totalCalls": {
+            "type": "number",
+            "description": "调用总次数"
+          },
+          "conversationCalls": {
+            "type": "number",
+            "description": "对话调用次数（挂 conversationId）"
+          },
+          "executionCalls": {
+            "type": "number",
+            "description": "执行链调用次数（挂 executionRunId/workflowRunId）"
+          },
+          "silentCalls": {
+            "type": "number",
+            "description": "静默场景调用次数（系统自动，无对话/执行关联）"
+          },
           "byModel": {
             "description": "按模型聚合",
             "type": "array",
@@ -68821,7 +70067,7 @@
             }
           },
           "byDay": {
-            "description": "按日聚合（近 30 天）",
+            "description": "按日聚合（最多 370 天，倒序）",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UsageByDayDto"
@@ -68831,6 +70077,10 @@
         "required": [
           "totalTokens",
           "totalCost",
+          "totalCalls",
+          "conversationCalls",
+          "executionCalls",
+          "silentCalls",
           "byModel",
           "byDay"
         ]
@@ -68890,7 +70140,9 @@
               "anthropic",
               "gemini",
               "deepseek",
-              "glm"
+              "glm",
+              "opencode",
+              "opencode-go"
             ]
           },
           "displayName": {
@@ -68944,6 +70196,17 @@
             "type": "object",
             "description": "附加配置",
             "additionalProperties": true
+          },
+          "availableModels": {
+            "description": "该厂家已启用的模型清单（AIModelConfig，模型查询结果）",
+            "example": [
+              "deepseek-chat",
+              "deepseek-reasoner"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -68966,7 +70229,9 @@
               "anthropic",
               "gemini",
               "deepseek",
-              "glm"
+              "glm",
+              "opencode",
+              "opencode-go"
             ],
             "example": "openai"
           },
@@ -69060,7 +70325,9 @@
               "anthropic",
               "gemini",
               "deepseek",
-              "glm"
+              "glm",
+              "opencode",
+              "opencode-go"
             ],
             "example": "openai"
           },
@@ -69075,7 +70342,11 @@
           },
           "organizationId": {
             "type": "string",
-            "description": "OpenAI Organization ID"
+            "description": "自定义端点"
+          },
+          "providerConfigId": {
+            "type": "string",
+            "description": "已保存配置记录 ID——校验通过时同步该记录在线状态为 connected"
           }
         },
         "required": [
@@ -69120,10 +70391,207 @@
             "items": {
               "type": "string"
             }
+          },
+          "synced": {
+            "type": "boolean",
+            "description": "是否已覆盖同步到 AIModelConfig（查询结果为空时 false）"
           }
         },
         "required": [
-          "models"
+          "models",
+          "synced"
+        ]
+      },
+      "ProviderBalanceWindowDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "description": "周期（归一化：5h / day / week / month）",
+            "example": "5h"
+          },
+          "used": {
+            "type": "object",
+            "description": "已用量（token 数或金额，视厂家返回而定）",
+            "nullable": true,
+            "example": 1200000
+          },
+          "limit": {
+            "type": "object",
+            "description": "限额（token 数或金额）",
+            "nullable": true,
+            "example": 5000000
+          },
+          "remaining": {
+            "type": "object",
+            "description": "剩余额度",
+            "nullable": true
+          },
+          "percent": {
+            "type": "object",
+            "description": "已用百分比（0-100；厂家仅返回百分比时提供，此时 used/limit 为 null）",
+            "nullable": true,
+            "example": 20
+          },
+          "resetsAt": {
+            "type": "object",
+            "description": "窗口重置时间（厂家原样返回）",
+            "nullable": true
+          }
+        },
+        "required": [
+          "period"
+        ]
+      },
+      "ProviderBalanceResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "余额类型：prepaid=充值型（单余额）/ subscription=套餐型（限额窗口）/ unknown",
+            "enum": [
+              "prepaid",
+              "subscription",
+              "unknown"
+            ],
+            "example": "prepaid"
+          },
+          "currency": {
+            "type": "object",
+            "description": "币种（充值型，如 CNY）",
+            "nullable": true,
+            "example": "CNY"
+          },
+          "balance": {
+            "type": "object",
+            "description": "剩余余额（充值型）",
+            "nullable": true,
+            "example": 110
+          },
+          "grantedBalance": {
+            "type": "object",
+            "description": "赠送余额累计（充值型，可作进度条分母）",
+            "nullable": true,
+            "example": 10
+          },
+          "toppedUpBalance": {
+            "type": "object",
+            "description": "充值余额累计（充值型，可作进度条分母）",
+            "nullable": true,
+            "example": 100.55
+          },
+          "isAvailable": {
+            "type": "object",
+            "description": "账户是否可用（DeepSeek is_available）",
+            "nullable": true
+          },
+          "windows": {
+            "description": "限额窗口（套餐型：5h/周/月等；充值型为空数组）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProviderBalanceWindowDto"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "windows"
+        ]
+      },
+      "PricingSourceStatusDto": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "description": "价目数据是否可用（至少成功拉取过一次）"
+          },
+          "fetchedAt": {
+            "type": "string",
+            "description": "上次成功拉取时间（ISO，未拉取为 null）",
+            "nullable": true
+          },
+          "stale": {
+            "type": "boolean",
+            "description": "缓存是否过期（超过 TTL 24h 或从未加载）"
+          },
+          "providerCount": {
+            "type": "number",
+            "description": "覆盖厂家数"
+          },
+          "modelCount": {
+            "type": "number",
+            "description": "覆盖模型数"
+          },
+          "source": {
+            "type": "string",
+            "description": "数据源地址"
+          },
+          "error": {
+            "type": "string",
+            "description": "最近一次拉取失败原因（成功后清空）",
+            "nullable": true
+          }
+        },
+        "required": [
+          "available",
+          "stale",
+          "providerCount",
+          "modelCount",
+          "source"
+        ]
+      },
+      "DefaultModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider 类型（未设置时为 null）",
+            "enum": [
+              "openai",
+              "anthropic",
+              "gemini",
+              "deepseek",
+              "glm",
+              "opencode",
+              "opencode-go"
+            ],
+            "nullable": true,
+            "example": "deepseek"
+          },
+          "model": {
+            "type": "object",
+            "description": "模型名（未设置时为 null）",
+            "nullable": true,
+            "example": "deepseek-chat"
+          }
+        }
+      },
+      "SetDefaultModelDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider 类型（须为已配置且启用的厂家）",
+            "enum": [
+              "openai",
+              "anthropic",
+              "gemini",
+              "deepseek",
+              "glm",
+              "opencode",
+              "opencode-go"
+            ],
+            "example": "deepseek"
+          },
+          "model": {
+            "type": "string",
+            "description": "模型名（不做白名单校验，允许自填新模型）",
+            "example": "deepseek-chat"
+          }
+        },
+        "required": [
+          "provider",
+          "model"
         ]
       },
       "AssignIssueResponseDto": {
@@ -72245,7 +73713,7 @@
           },
           "type": {
             "type": "string",
-            "description": "事件类型（task.assigned / ci.build.failed 等）"
+            "description": "事件类型（task.assigned / decision.proposal.created 等）"
           },
           "title": {
             "type": "string"
@@ -76560,7 +78028,8 @@
             "enum": [
               "claude-code",
               "codex",
-              "zcode"
+              "zcode",
+              "opencode"
             ]
           },
           "available": {
@@ -76646,7 +78115,8 @@
             "enum": [
               "claude-code",
               "codex",
-              "zcode"
+              "zcode",
+              "opencode"
             ]
           },
           "displayName": {
@@ -77658,6 +79128,74 @@
           "generatedAt"
         ]
       },
+      "SearchHitDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "命中对象 ID"
+          },
+          "type": {
+            "type": "string",
+            "description": "命中类别",
+            "enum": [
+              "task",
+              "bug",
+              "document",
+              "project"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "subtitle": {
+            "type": "string",
+            "description": "副标题（展示用：项目/编号/状态摘要）"
+          },
+          "path": {
+            "type": "string",
+            "description": "前端路由路径（/app/...）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          },
+          "projectId": {
+            "type": "object",
+            "description": "所属项目 ID（项目命中时为 null）",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title",
+          "subtitle",
+          "path",
+          "updatedAt"
+        ]
+      },
+      "SearchResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "扁平命中列表（前端按 type 分组渲染）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchHitDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "命中总数（= items.length）"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ]
+      },
       "OfficeCapacityDto": {
         "type": "object",
         "properties": {
@@ -77890,256 +79428,6 @@
         "required": [
           "colleagues",
           "totals"
-        ]
-      },
-      "ContractBindingResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "projectId": {
-            "type": "string"
-          },
-          "fileType": {
-            "type": "string",
-            "enum": [
-              "agents",
-              "claude_alias",
-              "changelog",
-              "readme",
-              "docs_dir"
-            ]
-          },
-          "filePath": {
-            "type": "string",
-            "description": "工作区根相对路径（POSIX）"
-          },
-          "syncMode": {
-            "type": "string",
-            "enum": [
-              "managed",
-              "synced",
-              "detached"
-            ]
-          },
-          "truthOwner": {
-            "type": "string"
-          },
-          "baseline": {
-            "type": "string",
-            "nullable": true,
-            "description": "基线指纹 sha256"
-          },
-          "conflictState": {
-            "type": "string",
-            "nullable": true,
-            "description": "null | conflicted"
-          },
-          "lastWriter": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "projectId",
-          "fileType",
-          "filePath",
-          "syncMode",
-          "truthOwner",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "ContractBindingsResponseDto": {
-        "type": "object",
-        "properties": {
-          "workspaceRoot": {
-            "type": "string",
-            "nullable": true,
-            "description": "当前工作区根（未绑定为 null）"
-          },
-          "bindings": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContractBindingResponseDto"
-            }
-          }
-        },
-        "required": [
-          "bindings"
-        ]
-      },
-      "SeedContractFilesDto": {
-        "type": "object",
-        "properties": {
-          "fileTypes": {
-            "type": "array",
-            "description": "仅种生指定类型（缺省全量三件套）",
-            "items": {
-              "type": "string",
-              "enum": [
-                "agents",
-                "claude_alias",
-                "changelog",
-                "readme",
-                "docs_dir"
-              ]
-            }
-          },
-          "formatOnly": {
-            "type": "boolean",
-            "description": "格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间"
-          }
-        }
-      },
-      "SeedFileResultDto": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string"
-          },
-          "action": {
-            "type": "string",
-            "enum": [
-              "created",
-              "updated",
-              "adopted",
-              "skipped_unchanged",
-              "skipped_existing",
-              "skipped_no_workspace"
-            ]
-          },
-          "bindingId": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "path",
-          "action"
-        ]
-      },
-      "SeedContractResultDto": {
-        "type": "object",
-        "properties": {
-          "projectId": {
-            "type": "string"
-          },
-          "workspaceRoot": {
-            "type": "string",
-            "nullable": true
-          },
-          "files": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SeedFileResultDto"
-            }
-          }
-        },
-        "required": [
-          "projectId",
-          "files"
-        ]
-      },
-      "CheckAlignmentDto": {
-        "type": "object",
-        "properties": {
-          "fileType": {
-            "type": "string",
-            "enum": [
-              "agents",
-              "claude_alias",
-              "changelog",
-              "readme",
-              "docs_dir"
-            ],
-            "description": "仅检查指定类型（缺省检查全部已绑定类型）"
-          }
-        }
-      },
-      "AlignmentDiffDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "托管区间 id"
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "equal",
-              "file_differs",
-              "missing_in_file"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "state"
-        ]
-      },
-      "ContractAlignmentReportDto": {
-        "type": "object",
-        "properties": {
-          "fileType": {
-            "type": "string",
-            "enum": [
-              "agents",
-              "claude_alias",
-              "changelog",
-              "readme",
-              "docs_dir"
-            ]
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "aligned",
-              "conflicted",
-              "skipped_detached",
-              "missing_file"
-            ]
-          },
-          "diffs": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AlignmentDiffDto"
-            }
-          },
-          "proposalId": {
-            "type": "string",
-            "description": "升级出的冲突提案 id"
-          }
-        },
-        "required": [
-          "fileType",
-          "state"
-        ]
-      },
-      "UpdateContractBindingDto": {
-        "type": "object",
-        "properties": {
-          "syncMode": {
-            "type": "string",
-            "enum": [
-              "managed",
-              "synced",
-              "detached"
-            ],
-            "description": "目标同步模式"
-          }
-        },
-        "required": [
-          "syncMode"
         ]
       },
       "CreateReleaseDto": {

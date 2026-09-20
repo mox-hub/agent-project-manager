@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { AiSdkAdapter, AiSdkAdapterOptions, SdkType } from './ai-sdk-adapter';
 
 /**
@@ -11,7 +12,28 @@ export class AiSdkAdapterFactory {
    * 创建适配器实例
    */
   create(options: AiSdkAdapterOptions): AiSdkAdapter {
-    return new AiSdkAdapter(options);
+    return new AiSdkAdapter(this.augmentForOpencode(options));
+  }
+
+  /**
+   * opencode 网关（Zen/Go）专属约束：
+   * - 只支持 OpenAI chat completions 协议（responses API 会被拒）
+   * - 要求 x-opencode-session 头做会话路由，缺失时请求 400
+   */
+  private augmentForOpencode(
+    options: AiSdkAdapterOptions,
+  ): AiSdkAdapterOptions {
+    if (options.provider !== 'opencode' && options.provider !== 'opencode-go') {
+      return options;
+    }
+    return {
+      ...options,
+      headers: {
+        ...options.headers,
+        'x-opencode-session': randomUUID(),
+      },
+      useChatCompletions: true,
+    };
   }
 
   /**
@@ -65,6 +87,8 @@ export class AiSdkAdapterFactory {
       gemini: 'gemini-1.5-flash',
       deepseek: 'deepseek-chat',
       glm: 'glm-4',
+      opencode: 'claude-sonnet-4-6',
+      'opencode-go': 'qwen3.7-max',
     };
     return defaults[provider] || 'gpt-4o';
   }

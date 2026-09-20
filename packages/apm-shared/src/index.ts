@@ -13,4 +13,5 @@ export * from './cli/adapters/interface';
 export * from './cli/adapters/claude-code';
 export * from './cli/adapters/codex';
 export * from './cli/adapters/zcode';
+export * from './cli/adapters/opencode';
 export * from './cli/process-runner';

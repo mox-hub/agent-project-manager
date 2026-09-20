@@ -4,17 +4,19 @@
  *              智能体 / 费用 / 各运行时 CLI 版本暂无上报数据，先以 — 占位，
  *              待守护进程按 provider 上报后回填。
  */
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { Monitor, Server } from 'lucide-react';
+import { Monitor, Power, RefreshCw, Server } from 'lucide-react';
 import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { SectionCard } from '@/components/ui/section-card';
 import { StatusPill } from '@/components/ui/status-pill';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/toast';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Table,
   TableBody,
@@ -29,10 +31,18 @@ import { SkeletonTable } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { getProviderMeta } from '@/shared/ai-providers/provider-meta';
 import {
+  invoke,
+  isDesktopShellAvailable,
+} from '@/shared/types/electron-api';
+import {
   formatRelativeTime,
+  getLocalDaemonStatus,
   getRuntimeRegistrations,
   machineDisplayName,
+  startLocalDaemon,
+  stopLocalDaemon,
   useRuntimeRegistrations,
+  type LocalDaemonStatus,
 } from '@/shared/runtime/runtime-api';
 import {
   HeartbeatMonitor,
@@ -46,6 +56,64 @@ export function RuntimeMachineDetailSection() {
   const { runtimeId } = useParams<{ runtimeId: string }>();
   const { data, isLoading } = useRuntimeRegistrations();
   const machine = (data ?? []).find((reg) => reg.runtimeId === runtimeId);
+
+  // 守护进程启停双通道：桌面壳走壳桥（壳托管进程），浏览器走 server standalone
+  // 代管端点（远程部署 403 → null，按钮降级隐藏）。null=不可知/不支持。
+  const isShell = isDesktopShellAvailable();
+  const [daemonRunning, setDaemonRunning] = useState<boolean | null>(null);
+  const [daemonBusy, setDaemonBusy] = useState(false);
+
+  const refreshDaemonStatus = useCallback(async () => {
+    try {
+      const status: LocalDaemonStatus = isShell
+        ? await invoke<LocalDaemonStatus>('get_runtime_daemon_status')
+        : await getLocalDaemonStatus();
+      setDaemonRunning(status.running);
+    } catch {
+      // 旧壳无该命令 / 远程部署 403：保持 null，按钮按不支持处理
+      setDaemonRunning(null);
+    }
+  }, [isShell]);
+
+  useEffect(() => {
+    void refreshDaemonStatus();
+  }, [refreshDaemonStatus]);
+
+  // 启动（重启）守护进程：重启 = 停止后拉起；成功后刷新注册列表（cliProviders 随重新注册更新）
+  const handleDaemonAction = useCallback(async () => {
+    if (daemonRunning === null || daemonBusy) return;
+    const restarting = daemonRunning;
+    setDaemonBusy(true);
+    try {
+      if (restarting) {
+        if (isShell) {
+          await invoke<Record<string, unknown>>('stop_runtime_daemon');
+        } else {
+          await stopLocalDaemon();
+        }
+      }
+      if (isShell) {
+        await invoke<{ pid: number }>('start_runtime_daemon');
+      } else {
+        await startLocalDaemon();
+      }
+      setDaemonRunning(true);
+      toast.success(t('settings.runtimeDaemonStarted'));
+      await queryClient.invalidateQueries({
+        queryKey: ['runtime-admin', 'registrations'],
+      });
+    } catch (err) {
+      toast.error(
+        `${t('settings.runtimeDaemonActionFailed')}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+      // 拉起失败后以真实状态为准
+      await refreshDaemonStatus();
+    } finally {
+      setDaemonBusy(false);
+    }
+  }, [isShell, daemonRunning, daemonBusy, t, queryClient, refreshDaemonStatus]);
 
   // 监控条探测：fetchQuery 与页面注册列表共用缓存去重；机器离线/未找到即故障
   const probe = useCallback(async (): Promise<MonitorProbeResult> => {
@@ -161,8 +229,31 @@ export function RuntimeMachineDetailSection() {
               </span>
             </div>
           </div>
-          <div className="ml-auto shrink-0 pt-1">
-            <HeartbeatMonitor probe={probe} />
+          <div className="ml-auto flex shrink-0 items-start gap-3 pt-1">
+            {daemonRunning !== null && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={daemonBusy}
+                onClick={handleDaemonAction}
+              >
+                {daemonBusy ? (
+                  <Spinner className="mr-1.5 size-3.5" />
+                ) : daemonRunning ? (
+                  <RefreshCw className="mr-1.5 size-3.5" />
+                ) : (
+                  <Power className="mr-1.5 size-3.5" />
+                )}
+                {daemonBusy
+                  ? daemonRunning
+                    ? t('settings.runtimeDaemonRestarting')
+                    : t('settings.runtimeDaemonStarting')
+                  : daemonRunning
+                    ? t('settings.runtimeDaemonRestart')
+                    : t('settings.runtimeDaemonStart')}
+              </Button>
+            )}
+            <HeartbeatMonitor key={runtimeId} probe={probe} persistKey={runtimeId} />
           </div>
         </div>
 

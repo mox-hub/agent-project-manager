@@ -244,6 +244,8 @@ export interface UpdateTaskRequest {
   tags?: string[];
   // Task Details
   type?: TaskType;
+  /** 工单类型（IssueType 适配引擎）：typeId 为事实源，服务端同步遗留 type 列 */
+  typeId?: string;
   severity?: BugSeverity;
   milestoneId?: string;
   todoItems?: TodoItem[];
@@ -383,7 +385,13 @@ export const taskApi = {
     api.delete<void>(`/issues/${issueId}`),
 
   importTasks: (tasks: CreateTaskRequest[]) =>
-    api.post<{ imported: number; tasks: Task[] }>('/issues/import', { tasks }),
+    api.post<{
+      imported: number;
+      tasks: Task[];
+      /** P0-8b：逐行校验失败时整批拒绝，错误随 400 error.details.errors 返回（此为可选契约字段） */
+      failed?: number;
+      errors?: Array<{ row: number; field?: string; message: string }>;
+    }>('/issues/import', { tasks }),
 
   exportTasks: (projectId: string, format: 'csv' | 'json' = 'csv') =>
     api.get<Task[]>(`/issues/export`, { projectId, format }),

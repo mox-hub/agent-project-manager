@@ -19,7 +19,7 @@ import {
   OnModuleInit,
   BadRequestException,
 } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
@@ -31,12 +31,24 @@ import { CliDispatchService } from '@/modules/cli-dispatch/dispatch.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { PrismaService } from '@/core/database/prisma.service';
 import { CliProviderService } from '@/modules/cli-provider/cli-provider.service';
+import { AuditService } from '@/core/audit';
 
 interface SseSessionEntry {
   sessionId: string;
   userId: string | null;
+  /** 建连时校验通过的 token SHA-256：消息上行时做零成本比对（不重复查库） */
+  tokenHash: string | null;
   createdAt: Date;
   lastSeenAt: Date;
+}
+
+/** 工具执行上下文：来自 PAT 解析的操作归因 */
+export interface McpToolContext {
+  userId: string | null;
+}
+
+export function hashMcpToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }
 
 @Injectable()
@@ -53,6 +65,7 @@ export class McpServerService implements OnModuleInit {
     private readonly messageBus: MessageBusService,
     private readonly prisma: PrismaService,
     private readonly cliProviderService: CliProviderService,
+    private readonly auditService: AuditService,
   ) {}
 
   onModuleInit() {
@@ -67,8 +80,9 @@ export class McpServerService implements OnModuleInit {
 
   /**
    * 为单个 SSE 连接创建一个独立的 McpServer 实例（共享工具定义）
+   * userId：PAT 校验出的操作者，用于工具执行归因/审计
    */
-  createServerForSession(): Server {
+  createServerForSession(userId: string | null = null): Server {
     const server = new Server(
       {
         name: 'apm-mcp-server',
@@ -83,7 +97,7 @@ export class McpServerService implements OnModuleInit {
       },
     );
 
-    this.registerToolsOnServer(server);
+    this.registerToolsOnServer(server, userId);
     return server;
   }
 
@@ -105,18 +119,39 @@ export class McpServerService implements OnModuleInit {
 
   /**
    * 创建新的 SSE session（client 调 GET /mcp/sse 时调用）
+   * tokenHash：已通过 AccessTokenService 校验的 token 摘要，供消息上行时比对
    */
-  createSession(userId: string | null): SseSessionEntry {
+  createSession(
+    userId: string | null,
+    tokenHash: string | null = null,
+  ): SseSessionEntry {
     const sessionId = `mcp_${randomUUID().replace(/-/g, '').slice(0, 24)}`;
     const now = new Date();
     const entry: SseSessionEntry = {
       sessionId,
       userId,
+      tokenHash,
       createdAt: now,
       lastSeenAt: now,
     };
     this.sessions.set(sessionId, entry);
     this.logger.log(`MCP SSE session created: ${sessionId} (user=${userId})`);
+    return entry;
+  }
+
+  /**
+   * 复用已有 session 时重新绑定身份：换 token 重连（如 PAT 轮换）后
+   * 会话归因与消息校验都随新 token 走；session 不存在返回 null
+   */
+  bindSession(
+    sessionId: string,
+    userId: string | null,
+    tokenHash: string | null,
+  ): SseSessionEntry | null {
+    const entry = this.validateSession(sessionId);
+    if (!entry) return null;
+    entry.userId = userId;
+    entry.tokenHash = tokenHash;
     return entry;
   }
 
@@ -154,7 +189,7 @@ export class McpServerService implements OnModuleInit {
     return this.server;
   }
 
-  private registerToolsOnServer(server: Server) {
+  private registerToolsOnServer(server: Server, userId: string | null) {
     // List tools handler
     server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
@@ -370,6 +405,8 @@ export class McpServerService implements OnModuleInit {
     });
 
     // Call tool handler
+    // ctx：PAT 解析出的操作者身份（P0-6 止血：操作可归因）
+    const ctx: McpToolContext = { userId };
     server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       const { name, arguments: args = {} } = request.params;
 
@@ -382,19 +419,19 @@ export class McpServerService implements OnModuleInit {
             return await this.getTaskContext(args);
 
           case 'claim_task':
-            return await this.claimTask(args);
+            return await this.claimTask(ctx, args);
 
           case 'update_task_status':
-            return await this.updateTaskStatus(args);
+            return await this.updateTaskStatus(ctx, args);
 
           case 'submit_task_result':
-            return await this.submitTaskResult(args);
+            return await this.submitTaskResult(ctx, args);
 
           case 'request_approval':
-            return await this.requestApproval(args);
+            return await this.requestApproval(ctx, args);
 
           case 'dispatch_task_to_cli':
-            return await this.dispatchToCli(args);
+            return await this.dispatchToCli(ctx, args);
 
           case 'get_context':
             return await this.getContext(args);
@@ -404,7 +441,7 @@ export class McpServerService implements OnModuleInit {
             return await this.getCliProvidersTool(args);
 
           case 'configure_cli_provider':
-            return await this.configureCliProviderTool(args);
+            return await this.configureCliProviderTool(ctx, args);
 
           case 'health_check_cli_provider':
             return await this.healthCheckCliProviderTool(args);
@@ -437,6 +474,39 @@ export class McpServerService implements OnModuleInit {
 
   // ─── New runtime tool implementations ────────────────────────────
 
+  /**
+   * 变更类工具的统一审计留痕（P0-6）：归因到 PAT 解析出的用户。
+   * best-effort：审计失败只告警，不阻断工具调用本身。
+   */
+  private async auditToolCall(
+    ctx: McpToolContext,
+    input: {
+      action: 'create' | 'update' | 'execute';
+      resourceType: 'task' | 'execution_run' | 'approval_request' | 'system';
+      resourceId: string;
+      tool: string;
+      metadata?: Record<string, unknown>;
+    },
+  ) {
+    try {
+      await this.auditService.log({
+        actorType: 'agent',
+        actorId: ctx.userId ?? 'mcp-agent',
+        action: input.action,
+        resourceType: input.resourceType,
+        resourceId: input.resourceId,
+        result: 'success',
+        metadata: { via: 'mcp', tool: input.tool, ...input.metadata },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `MCP audit log failed for ${input.tool}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+  }
+
   private async getCliProvidersTool(args: { forceRefresh?: boolean }) {
     if (args.forceRefresh) {
       await this.cliProviderService.detectAll();
@@ -452,15 +522,18 @@ export class McpServerService implements OnModuleInit {
     };
   }
 
-  private async configureCliProviderTool(args: {
-    providerId: 'claude-code' | 'codex' | 'zcode';
-    displayName?: string;
-    commandPath?: string;
-    model?: string;
-    env?: Record<string, string>;
-    allowedTools?: string[];
-    enabled?: boolean;
-  }) {
+  private async configureCliProviderTool(
+    ctx: McpToolContext,
+    args: {
+      providerId: 'claude-code' | 'codex' | 'zcode';
+      displayName?: string;
+      commandPath?: string;
+      model?: string;
+      env?: Record<string, string>;
+      allowedTools?: string[];
+      enabled?: boolean;
+    },
+  ) {
     if (!args.providerId) {
       throw new BadRequestException('providerId is required');
     }
@@ -468,6 +541,17 @@ export class McpServerService implements OnModuleInit {
       args.providerId,
       args,
     );
+    await this.auditToolCall(ctx, {
+      action: 'update',
+      resourceType: 'system',
+      resourceId: args.providerId,
+      tool: 'configure_cli_provider',
+      metadata: {
+        providerId: args.providerId,
+        enabled: args.enabled,
+        envKeys: args.env ? Object.keys(args.env) : [],
+      },
+    });
     return {
       content: [
         {
@@ -542,13 +626,63 @@ export class McpServerService implements OnModuleInit {
     };
   }
 
-  private async claimTask(args: { issueId: string; agentId?: string }) {
+  /**
+   * 解析并校验 claim/dispatch 的执行主体：
+   * - 显式 agentId 必须是存在的 Member（id 或 shortId），否则报错——杜绝幽灵 ID；
+   * - 未传时优先归因到 PAT 用户绑定的 Member，兜底保留旧占位 'mcp-agent'。
+   */
+  private async resolveAgentMemberId(
+    ctx: McpToolContext,
+    agentId?: string,
+  ): Promise<string> {
+    if (agentId) {
+      const member = await this.prisma.member.findFirst({
+        where: { OR: [{ id: agentId }, { shortId: agentId }] },
+        select: { id: true },
+      });
+      if (!member) {
+        throw new Error(`Agent member not found: ${agentId}`);
+      }
+      return member.id;
+    }
+    if (ctx.userId) {
+      const selfMember = await this.prisma.member.findFirst({
+        where: { userId: ctx.userId },
+        select: { id: true },
+      });
+      if (selfMember) return selfMember.id;
+    }
+    return 'mcp-agent';
+  }
+
+  private async claimTask(
+    ctx: McpToolContext,
+    args: { issueId: string; agentId?: string },
+  ) {
+    // P0-6：先验实体——issue 不存在直接报 404 语义错误，
+    // 而不是让 prisma.update 抛 P2025 内部错误
+    const issue = await this.prisma.issue.findUnique({
+      where: { id: args.issueId },
+      select: { id: true },
+    });
+    if (!issue) {
+      throw new Error(`Issue ${args.issueId} not found`);
+    }
+
+    const agentId = await this.resolveAgentMemberId(ctx, args.agentId);
     await this.prisma.issue.update({
       where: { id: args.issueId },
       data: {
-        aiAgentId: args.agentId || 'mcp-agent',
+        aiAgentId: agentId,
         assigneeType: 'ai_agent',
       },
+    });
+    await this.auditToolCall(ctx, {
+      action: 'update',
+      resourceType: 'task',
+      resourceId: args.issueId,
+      tool: 'claim_task',
+      metadata: { agentId },
     });
 
     return {
@@ -561,14 +695,24 @@ export class McpServerService implements OnModuleInit {
     };
   }
 
-  private async updateTaskStatus(args: {
-    issueId: string;
-    status: string;
-    comment?: string;
-  }) {
+  private async updateTaskStatus(
+    ctx: McpToolContext,
+    args: {
+      issueId: string;
+      status: string;
+      comment?: string;
+    },
+  ) {
     await this.prisma.issue.update({
       where: { id: args.issueId },
       data: { status: args.status },
+    });
+    await this.auditToolCall(ctx, {
+      action: 'update',
+      resourceType: 'task',
+      resourceId: args.issueId,
+      tool: 'update_task_status',
+      metadata: { status: args.status },
     });
 
     return {
@@ -581,14 +725,23 @@ export class McpServerService implements OnModuleInit {
     };
   }
 
-  private async submitTaskResult(args: {
-    executionRunId: string;
-    result: string;
-    artifacts?: string[];
-  }) {
+  private async submitTaskResult(
+    ctx: McpToolContext,
+    args: {
+      executionRunId: string;
+      result: string;
+      artifacts?: string[];
+    },
+  ) {
     await this.executionService.completeExecution(args.executionRunId, {
       summary: args.result,
       artifacts: args.artifacts || [],
+    });
+    await this.auditToolCall(ctx, {
+      action: 'update',
+      resourceType: 'execution_run',
+      resourceId: args.executionRunId,
+      tool: 'submit_task_result',
     });
 
     return {
@@ -601,12 +754,15 @@ export class McpServerService implements OnModuleInit {
     };
   }
 
-  private async requestApproval(args: {
-    executionRunId: string;
-    action: string;
-    reason?: string;
-    riskLevel?: string;
-  }) {
+  private async requestApproval(
+    ctx: McpToolContext,
+    args: {
+      executionRunId: string;
+      action: string;
+      reason?: string;
+      riskLevel?: string;
+    },
+  ) {
     const execution = await this.prisma.execution.findUnique({
       where: { id: args.executionRunId },
     });
@@ -624,6 +780,13 @@ export class McpServerService implements OnModuleInit {
       riskLevel: (args.riskLevel as 'read' | 'write' | 'high_risk') || 'write',
       reason: args.reason,
     });
+    await this.auditToolCall(ctx, {
+      action: 'create',
+      resourceType: 'approval_request',
+      resourceId: approval.id,
+      tool: 'request_approval',
+      metadata: { requestedAction: args.action },
+    });
 
     return {
       content: [
@@ -635,15 +798,19 @@ export class McpServerService implements OnModuleInit {
     };
   }
 
-  private async dispatchToCli(args: {
-    issueId: string;
-    providerId?: string;
-    model?: string;
-    executionId?: string;
-  }) {
+  private async dispatchToCli(
+    ctx: McpToolContext,
+    args: {
+      issueId: string;
+      providerId?: string;
+      model?: string;
+      executionId?: string;
+    },
+  ) {
+    const agentId = await this.resolveAgentMemberId(ctx);
     const result = await this.cliDispatch.dispatchTaskToCli(
       args.issueId,
-      'mcp-agent',
+      agentId,
       {
         providerId: args.providerId as
           'claude-code' | 'codex' | 'zcode' | undefined,
@@ -651,6 +818,13 @@ export class McpServerService implements OnModuleInit {
         executionId: args.executionId,
       },
     );
+    await this.auditToolCall(ctx, {
+      action: 'execute',
+      resourceType: 'task',
+      resourceId: args.issueId,
+      tool: 'dispatch_task_to_cli',
+      metadata: { providerId: args.providerId, model: args.model },
+    });
 
     return {
       content: [

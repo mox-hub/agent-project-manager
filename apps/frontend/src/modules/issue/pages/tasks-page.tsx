@@ -36,7 +36,7 @@ import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import type { Task } from '../api/issue-api';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { useTranslation } from 'react-i18next';
-import { AiAssignDialog } from '../components/ai-assign-dialog';
+import { AiAssignDialog, type AiAssignIssueRef } from '../components/ai-assign-dialog';
 import { TaskSimpleList } from '../components/task-simple-list';
 import { TaskTableView } from '../components/task-table-view';
 import { TaskGantt } from '../components/task-gantt';
@@ -44,6 +44,7 @@ import { useActiveExecutionsMap, type ActiveAiExecution } from '@/modules/execut
 import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
 import { ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
+import { toast } from '@/components/ui/toast';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import { cn } from '@/lib/utils';
@@ -92,7 +93,8 @@ export function TasksPage() {
   );
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [presetAssigneeId, setPresetAssigneeId] = useState<string | undefined>(undefined);
-  const [dispatchTask, setDispatchTask] = useState<{ task: Task; projectId: string } | null>(null);
+  // 派发上下文（P0-5）：issues 多于一条时 AiAssignDialog 进入批量模式
+  const [dispatch, setDispatch] = useState<{ projectId: string; issues: AiAssignIssueRef[] } | null>(null);
   const statsCards = usePersistentToggle('tasks-page.stats');
 
   // Linear 风格 Display 选项
@@ -365,6 +367,31 @@ export function TasksPage() {
     navigate(`/app/issues/${task.id}`);
   };
 
+  // P0-5：多选「指派 AI」真批量——同项目多选全部进入批量派发；
+  // 跨项目混选（含未归属项目的收件箱任务）显式报错，不再静默只取第一条
+  const handleDispatchSelected = useCallback(
+    (selected: Task[], close?: () => void) => {
+      const assignable = selected.filter((t) => t.projectId);
+      if (assignable.length === 0) return;
+      const projectIds = new Set(assignable.map((t) => t.projectId as string));
+      if (projectIds.size > 1 || assignable.length !== selected.length) {
+        toast.error(
+          t(
+            'task.batchDispatch.crossProjectError',
+            '选中项来自多个项目（或含未归属项目的收件箱任务），批量派发仅支持同一项目的任务，请调整选择后重试',
+          ),
+        );
+        return;
+      }
+      setDispatch({
+        projectId: assignable[0].projectId as string,
+        issues: assignable.map((t) => ({ id: t.id, title: t.title })),
+      });
+      close?.();
+    },
+    [t],
+  );
+
   return (
     <PageShell aiPage="task.tasks-list" className="overflow-hidden">
       {/* Header */}
@@ -407,15 +434,16 @@ export function TasksPage() {
         }}
       />
 
-      {/* AI Dispatch Dialog */}
-      {dispatchTask && (
+      {/* AI Dispatch Dialog（单条或批量，P0-5） */}
+      {dispatch && (
         <AiAssignDialog
-          open={!!dispatchTask}
-          onOpenChange={(open) => { if (!open) setDispatchTask(null); }}
-          issueId={dispatchTask.task.id}
-          projectId={dispatchTask.projectId}
-          taskTitle={dispatchTask.task.title}
-          onSuccess={() => { setDispatchTask(null); refetch(); }}
+          open
+          onOpenChange={(open) => { if (!open) setDispatch(null); }}
+          issueId={dispatch.issues[0].id}
+          projectId={dispatch.projectId}
+          taskTitle={dispatch.issues[0].title}
+          issues={dispatch.issues.length > 1 ? dispatch.issues : undefined}
+          onSuccess={() => { setDispatch(null); refetch(); }}
         />
       )}
 
@@ -617,10 +645,7 @@ export function TasksPage() {
               selectionActions={(selected, close) => (
                 <>
                   <ListActionButton
-                    onClick={() => {
-                      const first = selected.find((t) => t.projectId);
-                      if (first) setDispatchTask({ task: first, projectId: first.projectId! });
-                    }}
+                    onClick={() => handleDispatchSelected(selected, close)}
                     disabled={!selected.some((t) => t.projectId)}
                     title="指派 AI"
                     className="text-accent-purple"
@@ -657,7 +682,9 @@ export function TasksPage() {
               projects={projects}
               onTaskClick={handleTaskClick}
               getAiExecution={getIssueExecution}
-              onDispatchTask={(task, projectId) => setDispatchTask({ task, projectId })}
+              onDispatchTask={(task, projectId) =>
+                setDispatch({ projectId, issues: [{ id: task.id, title: task.title }] })
+              }
               onMoveTask={(task, data) => updateTask.mutate({ issueId: task.id, data })}
             />
           ) : viewMode === 'gantt' ? (
@@ -687,10 +714,7 @@ export function TasksPage() {
               selectionActions={(selected, close) => (
                 <>
                   <ListActionButton
-                    onClick={() => {
-                      const first = selected.find((t) => t.projectId);
-                      if (first) setDispatchTask({ task: first, projectId: first.projectId! });
-                    }}
+                    onClick={() => handleDispatchSelected(selected, close)}
                     disabled={!selected.some((t) => t.projectId)}
                     title="指派 AI"
                     className="text-accent-purple"

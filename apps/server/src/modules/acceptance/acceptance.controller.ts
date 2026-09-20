@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   BadRequestException,
+  ParseArrayPipe,
   Request,
 } from '@nestjs/common';
 import {
@@ -170,7 +171,9 @@ export class AcceptanceController {
   @ApiStandardErrors()
   async addCriteriaBatch(
     @Param('id') id: string,
-    @Body() criteria: CreateCriteriaDto[],
+    // 裸数组 body 不会被全局 ValidationPipe 的 whitelist 校验，必须显式挂 ParseArrayPipe
+    @Body(new ParseArrayPipe({ items: CreateCriteriaDto }))
+    criteria: CreateCriteriaDto[],
   ) {
     return this.criteriaService.createMany(id, criteria);
   }
