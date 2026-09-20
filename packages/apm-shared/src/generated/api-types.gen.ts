@@ -8829,10 +8829,16 @@ export interface components {
         };
         AssignIssueAgentDto: {
             /**
-             * @description AI 成员 ID（Member.id，type=ai_agent）
+             * @description AI 成员 ID（Member.id，type=ai_agent）。字段名与创建/更新 DTO 的 aiAgentId 对齐；两者同传时以 aiAgentId 为准，均缺省时 400
              * @example clx...
              */
-            agentId: string;
+            aiAgentId: string;
+            /**
+             * @deprecated
+             * @description [deprecated] 旧字段名，等价于 aiAgentId，仅为兼容既有调用方保留
+             * @example clx...
+             */
+            agentId?: string;
             /**
              * @description Assignee type
              * @example ai_agent
@@ -11531,13 +11537,13 @@ export interface components {
         };
         CreateProviderConfigDto: {
             /**
-             * @description Provider 类型
+             * @description Provider 类型（同类型可建多个槽位，如双网关；类型+显示名组合唯一）
              * @example openai
              * @enum {string}
              */
             provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go";
             /**
-             * @description 显示名称
+             * @description 槽位显示名称（同类型内唯一）
              * @example OpenAI
              */
             displayName: string;
@@ -11568,7 +11574,7 @@ export interface components {
         };
         UpdateProviderConfigDto: {
             /**
-             * @description 显示名称
+             * @description 显示名称（同类型内唯一，与同类型其他槽位重名时返回 400）
              * @example OpenAI Production
              */
             displayName?: string;
@@ -27465,7 +27471,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Invalid request or provider unavailable */
+            /** @description Invalid request or provider unavailable。含信任门禁拦截：code=TRUST_LEVEL_INSUFFICIENT（目标 AI 成员信任等级为观察者，自动派发需协助者及以上；details 带当前/所需等级与提升指路），未评估成员放行并记工单时间线提示 */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -27600,7 +27606,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description 不可重新执行：状态非 failed/blocked/superseded，或未关联有效工单；存在其他活跃执行时按错误信息先取消；派发被门禁阻断时新执行落 blocked */
+            /** @description 不可重新执行：状态非 failed/blocked/superseded，或未关联有效工单；存在其他活跃执行时按错误信息先取消；派发被门禁（验收契约/依赖/信任等级 TRUST_LEVEL_INSUFFICIENT）阻断时新执行落 blocked */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -27756,9 +27762,7 @@ export interface operations {
     };
     AcceptanceController_create: {
         parameters: {
-            query: {
-                userId: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -28289,9 +28293,7 @@ export interface operations {
     };
     AcceptanceController_updateCriteria: {
         parameters: {
-            query: {
-                userId: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 /** @description 标准 ID */
@@ -28369,9 +28371,7 @@ export interface operations {
     };
     AcceptanceController_addCriteriaEvidence: {
         parameters: {
-            query: {
-                userId: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 /** @description 标准 ID */
@@ -28919,9 +28919,7 @@ export interface operations {
     };
     AcceptanceController_removeChecklist: {
         parameters: {
-            query: {
-                userId: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 /** @description 清单 ID */
@@ -29001,9 +28999,7 @@ export interface operations {
     };
     AcceptanceController_updateChecklist: {
         parameters: {
-            query: {
-                userId: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 /** @description 清单 ID */
@@ -29089,9 +29085,7 @@ export interface operations {
     };
     AcceptanceController_createChecklist: {
         parameters: {
-            query: {
-                userId: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -29488,9 +29482,7 @@ export interface operations {
     };
     AcceptanceController_acceptCompletion: {
         parameters: {
-            query: {
-                userId: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 /** @description 契约 ID */
@@ -29572,9 +29564,7 @@ export interface operations {
     };
     AcceptanceController_rejectCompletion: {
         parameters: {
-            query: {
-                userId: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 /** @description 契约 ID */
@@ -29652,9 +29642,7 @@ export interface operations {
     };
     AcceptanceController_waiveCompletion: {
         parameters: {
-            query: {
-                userId: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 /** @description 契约 ID */
@@ -30709,7 +30697,7 @@ export interface operations {
             /**
              * @description 请求参数错误
              *
-             *     Invalid request or provider already exists
+             *     Invalid request or provider slot with the same display name already exists for this provider type
              */
             400: {
                 headers: {
