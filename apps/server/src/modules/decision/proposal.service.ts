@@ -1,12 +1,17 @@
 import {
   BadRequestException,
   HttpException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma.service';
+import {
+  BusinessException,
+  ErrorCode,
+} from '@/core/exceptions/business.exception';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import {
   ContractBindingService,
@@ -660,6 +665,22 @@ export class ProposalService {
       return;
     }
     if (outcome === 'completed') {
+      // P1 门禁收口：决议时刻重查该工单全部验收契约（提案生成后状态可能变化），
+      // 非 passed/waived（含 failed）即拒绝完成——与 issue.service 的
+      // TASK_DONE_BLOCKED 门禁同口径，堵住决策卡直写 DB 绕过验收的路径。
+      // 取消（cancelled）分支不拦：取消语义不主张交付成功，failed 恰是取消的常见理由。
+      // 抛错后走 resolve 的「副作用先行」语义：状态不变，卡片留在待决列表可重试。
+      const blocking = await this.prisma.acceptance.findMany({
+        where: { issueId: task.id, status: { notIn: ['passed', 'waived'] } },
+        select: { id: true, title: true, status: true },
+      });
+      if (blocking.length > 0) {
+        throw new BusinessException(
+          ErrorCode.ACCEPTANCE_FAILED_BLOCKING,
+          `该任务存在 ${blocking.length} 个未通过的验收契约，无法完成：请先修复并重开验收（passed）或豁免（waived）后再完成工单`,
+          HttpStatus.UNPROCESSABLE_ENTITY,
+        );
+      }
       const target =
         finalStatuses.find((s) => s.key === 'done') ?? finalStatuses[0];
       if (!target)
@@ -867,10 +888,13 @@ export class ProposalService {
         select: { id: true, title: true, projectId: true, status: true },
       });
       if (!task) return;
-      const pendingAcceptances = await this.prisma.acceptance.count({
-        where: { issueId, status: { in: ['pending', 'in_review', 'draft'] } },
+      // P1 门禁收口：与 issue.service TASK_DONE_BLOCKED 同口径——非 passed/waived
+      // 均视为未收口（含 failed；failed 是「未通过」，不是「可忽略」），
+      // 存在即不生成关闭提案，防未通过验收的工单被决策卡关单。
+      const blockingAcceptances = await this.prisma.acceptance.count({
+        where: { issueId, status: { notIn: ['passed', 'waived'] } },
       });
-      if (pendingAcceptances > 0) return;
+      if (blockingAcceptances > 0) return;
       const finalCount = await this.prisma.statusDefinition.count({
         where: { type: 'task', isFinal: true, key: task.status },
       });

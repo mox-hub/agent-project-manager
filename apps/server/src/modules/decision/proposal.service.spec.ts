@@ -35,6 +35,7 @@ describe('ProposalService', () => {
     },
     statusDefinition: {
       findMany: vi.fn(),
+      count: vi.fn(),
     },
     execution: {
       aggregate: vi.fn(),
@@ -46,6 +47,7 @@ describe('ProposalService', () => {
     },
     acceptance: {
       count: vi.fn(),
+      findMany: vi.fn(),
     },
     milestone: {
       update: vi.fn(),
@@ -338,6 +340,8 @@ describe('ProposalService', () => {
       mockPrismaService.statusDefinition.findMany.mockResolvedValue([
         { key: 'done', isFinal: true },
       ]);
+      // P1 门禁收口：completed 前重查验收契约，无阻断时放行
+      mockPrismaService.acceptance.findMany.mockResolvedValue([]);
       mockPrismaService.issue.update.mockResolvedValue({ id: 't-1' });
       mockPrismaService.decisionProposal.update.mockResolvedValue({
         ...pendingPlan,
@@ -367,6 +371,112 @@ describe('ProposalService', () => {
       ).rejects.toThrow(/entityType/);
       expect(mockPrismaService.issue.update).not.toHaveBeenCalled();
       expect(mockPrismaService.decisionProposal.update).not.toHaveBeenCalled();
+    });
+
+    it('resolution accept 但存在 failed 验收契约 → 422 拒绝完成，工单状态不变且卡片保持待决（P1 门禁收口）', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue({
+        ...pendingPlan,
+        kind: 'resolution',
+        payload: { entityType: 'task', entityId: 't-1' },
+      });
+      mockPrismaService.issue.findUnique.mockResolvedValue({
+        id: 't-1',
+        projectId: 'p1',
+        status: 'in_progress',
+      });
+      mockPrismaService.statusDefinition.findMany.mockResolvedValue([
+        { key: 'done', isFinal: true },
+      ]);
+      mockPrismaService.acceptance.findMany.mockResolvedValue([
+        { id: 'acc-1', title: '接口 P95 达标', status: 'failed' },
+      ]);
+
+      await expect(
+        service.resolve('pr-1', { action: 'accept' }, 'u-1'),
+      ).rejects.toMatchObject({ errorCode: 'ACCEPTANCE_FAILED_BLOCKING' });
+      // 副作用先行语义：apply 抛错即不落库——工单状态不变、卡片保持 pending 可重试
+      expect(mockPrismaService.issue.update).not.toHaveBeenCalled();
+      expect(mockPrismaService.decisionProposal.update).not.toHaveBeenCalled();
+    });
+
+    it('resolution cancel 不受 failed 验收契约阻断（取消语义不主张交付成功，与完成门禁不同口径）', async () => {
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue({
+        ...pendingPlan,
+        kind: 'resolution',
+        payload: { entityType: 'task', entityId: 't-1' },
+      });
+      mockPrismaService.issue.findUnique.mockResolvedValue({
+        id: 't-1',
+        projectId: 'p1',
+        status: 'in_progress',
+      });
+      mockPrismaService.statusDefinition.findMany.mockResolvedValue([
+        { key: 'done', isFinal: true },
+        { key: 'cancelled', isFinal: true },
+      ]);
+      mockPrismaService.acceptance.findMany.mockResolvedValue([
+        { id: 'acc-1', title: '接口 P95 达标', status: 'failed' },
+      ]);
+      mockPrismaService.issue.update.mockResolvedValue({ id: 't-1' });
+      mockPrismaService.decisionProposal.update.mockResolvedValue({
+        ...pendingPlan,
+        status: 'accepted',
+      });
+
+      const result = await service.resolve('pr-1', { action: 'cancel' }, 'u-1');
+
+      expect(mockPrismaService.issue.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 't-1' },
+          data: expect.objectContaining({ status: 'cancelled' }),
+        }),
+      );
+      expect(result.status).toBe('accepted');
+    });
+  });
+
+  describe('proposeTaskResolutionIfReady（P1 门禁收口：failed 契约阻断关闭提案）', () => {
+    const readyTask = {
+      id: 't-1',
+      title: '任务 X',
+      projectId: 'p1',
+      status: 'in_progress',
+    };
+
+    it('存在 failed 验收契约时不生成关闭提案（非 passed/waived 同口径阻断，failed 是「未通过」非「可忽略」）', async () => {
+      mockPrismaService.issue.findUnique.mockResolvedValue(readyTask);
+      mockPrismaService.acceptance.count.mockResolvedValue(1);
+
+      await service.proposeTaskResolutionIfReady('t-1');
+
+      // 口径固化：与 issue.service TASK_DONE_BLOCKED 同口径（非 passed/waived 均阻断）
+      expect(mockPrismaService.acceptance.count).toHaveBeenCalledWith({
+        where: { issueId: 't-1', status: { notIn: ['passed', 'waived'] } },
+      });
+      expect(mockPrismaService.decisionProposal.create).not.toHaveBeenCalled();
+    });
+
+    it('全部契约收口（passed/waived）且未终态时正常生成关闭提案（无 failed 不回归）', async () => {
+      mockPrismaService.issue.findUnique.mockResolvedValue(readyTask);
+      mockPrismaService.acceptance.count.mockResolvedValue(0);
+      mockPrismaService.statusDefinition.count.mockResolvedValue(0);
+      mockPrismaService.decisionProposal.findMany.mockResolvedValue([]);
+      mockPrismaService.decisionProposal.create.mockResolvedValue({
+        id: 'pr-r1',
+        kind: 'resolution',
+      });
+
+      await service.proposeTaskResolutionIfReady('t-1');
+
+      expect(mockPrismaService.decisionProposal.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            kind: 'resolution',
+            issueId: 't-1',
+            payload: { entityType: 'task', entityId: 't-1' },
+          }),
+        }),
+      );
     });
   });
 
