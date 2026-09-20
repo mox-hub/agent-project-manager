@@ -138,6 +138,15 @@ class StubPrisma {
         svc.proposals.push(row);
         return row;
       },
+      // createApprovalProposal 的同发版待批卡去重检查
+      // where 形如 { kind, status, payload: { path: '$.releaseId', equals } }
+      findFirst: async ({ where }: any) =>
+        svc.proposals.find(
+          (p: any) =>
+            p.kind === where.kind &&
+            p.status === where.status &&
+            (p.payload as any)?.releaseId === where.payload?.equals,
+        ) ?? null,
     };
   }
 
@@ -197,6 +206,7 @@ function buildHarness() {
     engine,
     resolver,
     fs,
+    bus,
   );
   // 驱动型发版子服务在本闭环测试中为透传桩（各自有独立 spec）
   const gate = {
@@ -277,6 +287,39 @@ describe('ReleaseService（1b：Release 实体 + CHANGELOG 单向导出）', () 
     await releases.publishRelease(r.id as string, 'v1.0.0');
     expect(bus.events).toHaveLength(1);
     expect(bus.events[0].type).toBe('release.created');
+  });
+
+  it('P1-10：createApprovalProposal 广播 decision.proposal.created（发版审批卡不再静默）', async () => {
+    const { releases, bus, prisma } = buildHarness();
+    const r = await releases.createRelease({
+      projectId: 'proj-1',
+      version: '1.0.0',
+      createdBy: 'user-1',
+    });
+    // 门禁通过 → gated（门禁桩恒过；CHANGELOG 未存在 → 一致性诚实放行）
+    await releases.submitGate(r.id as string);
+    const proposal = (await releases.createApprovalProposal(
+      r.id as string,
+      'user-2',
+    )) as Record<string, any>;
+
+    expect(proposal.kind).toBe('release');
+    expect(proposal.projectId).toBe('proj-1');
+    // 审批卡创建即广播，payload 与 ProposalService.create 同形态
+    expect(bus.events).toHaveLength(1);
+    expect(bus.events[0].type).toBe('decision.proposal.created');
+    expect(bus.events[0].payload).toMatchObject({
+      proposalId: 'dp_1',
+      kind: 'release',
+      projectId: 'proj-1',
+    });
+    expect((bus.events[0].payload as any).issueId).toBeUndefined();
+    // 已有同发版待批卡 → 400（去重），且不重复广播
+    await expect(
+      releases.createApprovalProposal(r.id as string, 'user-2'),
+    ).rejects.toThrow('待审批决策卡');
+    expect(bus.events).toHaveLength(1);
+    expect(prisma.proposals).toHaveLength(1);
   });
 
   it('listReleases：按 projectId 过滤；缺省返回全部（CAP-A-15 跨项目发版流水）', async () => {

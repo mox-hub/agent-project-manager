@@ -75,11 +75,14 @@ describe('AssistantToolsService', () => {
     respond: vi.fn(),
     verify: vi.fn(),
   };
+  // P1-10：决策卡直写后广播 decision.proposal.created（通知订阅链感知）
+  const mockMessageBus = { publish: vi.fn() };
 
   beforeEach(() => {
     vi.clearAllMocks();
     service = new AssistantToolsService(
       mockPrisma as unknown as PrismaService,
+      mockMessageBus as never,
       mockIssueService as unknown as IssueService,
       mockDocumentService as unknown as DocumentService,
       mockMemberService as unknown as MemberService,
@@ -152,6 +155,10 @@ describe('AssistantToolsService', () => {
     const createdAt = new Date('2026-09-04T08:00:00Z');
     mockPrisma.decisionProposal.create.mockResolvedValue({
       id: 'dp-1',
+      kind: 'plan',
+      title: '重构登录模块',
+      projectId: 'p1',
+      issueId: null,
       status: 'pending',
       createdAt,
     });
@@ -187,6 +194,18 @@ describe('AssistantToolsService', () => {
           status: 'pending',
         }),
       }),
+    );
+    // P1-10：直写后广播 decision.proposal.created，payload 与
+    // ProposalService.create 同形态（否则通知订阅/收件箱徽标感知不到）
+    expect(mockMessageBus.publish).toHaveBeenCalledWith(
+      'decision.proposal.created',
+      {
+        proposalId: 'dp-1',
+        kind: 'plan',
+        title: '重构登录模块',
+        projectId: 'p1',
+        issueId: null,
+      },
     );
   });
 
@@ -423,6 +442,10 @@ describe('AssistantToolsService', () => {
     mockPrisma.aIWorkflowDefinition.findUnique.mockResolvedValue(null);
     mockPrisma.decisionProposal.create.mockResolvedValue({
       id: 'pr-wf',
+      kind: 'workflow_def',
+      title: '创建工作流「站会助手」',
+      projectId: 'p1',
+      issueId: null,
       status: 'pending',
     });
     const ok = (await tools.create_workflow.execute({
@@ -441,6 +464,17 @@ describe('AssistantToolsService', () => {
     );
     expect(ok.proposalId).toBe('pr-wf');
     expect(ok.note).toMatch(/批准/);
+    // P1-10：workflow_def 决策卡同样广播（projectId 为空时订阅侧诚实降级）
+    expect(mockMessageBus.publish).toHaveBeenCalledWith(
+      'decision.proposal.created',
+      {
+        proposalId: 'pr-wf',
+        kind: 'workflow_def',
+        title: '创建工作流「站会助手」',
+        projectId: 'p1',
+        issueId: null,
+      },
+    );
   });
 
   it('update_workflow：key 不存在拒绝；存在则建修订卡（payload 带 mode=update）', async () => {

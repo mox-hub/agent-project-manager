@@ -318,6 +318,16 @@ export class ReleaseService {
         status: 'pending',
       },
     });
+    // P1-10：与 ProposalService.create 同事件同 payload 形态——发版审批卡此前
+    // 直写零发布，通知订阅（decision.proposal.created → 项目成员）与网关徽标
+    // 失效均感知不到，审批卡静默堆积（体验报告 P1-10 主断点）。
+    this.messageBus.publish('decision.proposal.created', {
+      proposalId: proposal.id,
+      kind: proposal.kind,
+      title: proposal.title,
+      projectId: proposal.projectId,
+      issueId: proposal.issueId,
+    });
     return proposal;
   }
 
