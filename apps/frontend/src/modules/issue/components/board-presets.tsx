@@ -292,9 +292,12 @@ export function bugCardRow1(
 }
 
 /** Bug 行3：截止日期/发现时间 + 子任务/关联 + 评论 + 项目 + 负责人 */
-export function bugCardRow3(bug: Task, projectName?: string): ReactNode {
+export function bugCardRow3(bug: Task, projectName?: string, t?: Translate): ReactNode {
   const dueDate = bug.dueDate ? new Date(bug.dueDate) : null;
   const isOverdue = !!dueDate && dueDate.getTime() < Date.now() && bug.status !== 'done' && bug.status !== 'canceled';
+  const dueTitle = isOverdue
+    ? (t?.('task.bug.overdue') ?? '已超期')
+    : (t?.('task.fields.dueDate') ?? '截止日期');
 
   return (
     <div className="flex items-center justify-between gap-2 pt-0.5">
@@ -305,7 +308,7 @@ export function bugCardRow3(bug: Task, projectName?: string): ReactNode {
               'inline-flex items-center gap-1 font-medium',
               isOverdue ? 'text-accent-red font-semibold' : 'text-muted-foreground',
             )}
-            title={isOverdue ? '已超期' : '截止日期'}
+            title={dueTitle}
           >
             <CalendarClock size={11} />
             {dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

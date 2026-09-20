@@ -5,18 +5,20 @@
  * - 显示 PR 状态、设置连接
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageShell } from '@/components/ui/page-shell';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
 import { GithubPanel } from '@/modules/github/components/github-panel';
 import { GithubSetupCard } from '@/modules/github/components/github-setup-card';
 import { GithubConfigForm } from '@/modules/github/components/github-config-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Github, Activity, AlertCircle } from 'lucide-react';
+import { Github, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export function GithubIntegrationSection() {
+  const { t } = useTranslation();
   const { data: integrationsResp } = useIntegrations();
   const integrations = integrationsResp?.data ?? [];
   const githubInts = integrations.filter((i) => i.provider === 'github');
@@ -26,18 +28,13 @@ export function GithubIntegrationSection() {
   return (
     <PageShell
       variant="standard"
-      title="GitHub Integration"
+      title={t('settings.integration.githubIntegration.title')}
       icon={Github}
       actions={
-        <div className="flex items-center gap-2">
-          <Button size="sm" className="h-7" onClick={() => setConnectOpen(true)}>
-            <Github className="mr-1 h-3.5 w-3.5" />
-            Connect GitHub
-          </Button>
-          <Badge variant="outline" className="font-mono text-10">
-            V3 Stage 2
-          </Badge>
-        </div>
+        <Button size="sm" className="h-7" onClick={() => setConnectOpen(true)}>
+          <Github className="mr-1 h-3.5 w-3.5" />
+          {t('settings.integration.githubIntegration.connect')}
+        </Button>
       }
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -47,15 +44,15 @@ export function GithubIntegrationSection() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <AlertCircle className="h-4 w-4 text-accent-yellow" />
-                  尚未配置 GitHub 集成
+                  {t('settings.integration.githubIntegration.emptyTitle')}
                 </CardTitle>
                 <CardDescription className="space-y-3">
                   <span className="block">
-                    通过 Personal Access Token (PAT) 创建 GitHub 集成配置（可选配 Webhook Secret 以接收实时事件），凭据加密存储。
+                    {t('settings.integration.githubIntegration.emptyDesc')}
                   </span>
                   <Button size="sm" onClick={() => setConnectOpen(true)}>
                     <Github className="mr-1 h-3.5 w-3.5" />
-                    立即创建 GitHub 集成
+                    {t('settings.integration.githubIntegration.emptyCta')}
                   </Button>
                 </CardDescription>
               </CardHeader>
@@ -69,7 +66,6 @@ export function GithubIntegrationSection() {
         </div>
         <div className="space-y-4">
           {firstId && <GithubSetupCard integrationId={firstId} />}
-          <Stage2SummaryCard />
         </div>
       </div>
 
@@ -82,21 +78,22 @@ export function GithubIntegrationSection() {
 }
 
 function PrLifecycleExplainerCard() {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">PR 生命周期</CardTitle>
+        <CardTitle className="text-base">{t('settings.integration.githubIntegration.prLifecycleTitle')}</CardTitle>
         <CardDescription>
-          Webhook 触发的 PR 状态会写入 <code>RemotePullRequest</code> 表，并反馈到 Agent 信任评分
+          {t('settings.integration.githubIntegration.prLifecycleDesc')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         <Table className="w-full text-xs">
           <TableHeader className="text-muted-foreground">
             <TableRow>
-              <TableHead className="text-left py-1">状态</TableHead>
-              <TableHead className="text-left py-1">语义</TableHead>
-              <TableHead className="text-left py-1">信任分变化</TableHead>
+              <TableHead className="text-left py-1">{t('settings.integration.githubIntegration.colStatus')}</TableHead>
+              <TableHead className="text-left py-1">{t('settings.integration.githubIntegration.colMeaning')}</TableHead>
+              <TableHead className="text-left py-1">{t('settings.integration.githubIntegration.colTrustDelta')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -104,65 +101,33 @@ function PrLifecycleExplainerCard() {
               <TableCell className="py-1">
                 <Badge className="bg-accent-purple">merged</Badge>
               </TableCell>
-              <TableCell className="py-1">PR merge</TableCell>
+              <TableCell className="py-1">{t('settings.integration.githubIntegration.meaningMerged')}</TableCell>
               <TableCell className="py-1 text-accent-green font-semibold">+8</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="py-1">
                 <Badge variant="secondary">merged_with_comments</Badge>
               </TableCell>
-              <TableCell className="py-1">合并但有评论</TableCell>
+              <TableCell className="py-1">{t('settings.integration.githubIntegration.meaningMergedComments')}</TableCell>
               <TableCell className="py-1 text-accent-green">+4</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="py-1">
                 <Badge variant="destructive">changes_requested</Badge>
               </TableCell>
-              <TableCell className="py-1">审查被打回</TableCell>
+              <TableCell className="py-1">{t('settings.integration.githubIntegration.meaningChangesRequested')}</TableCell>
               <TableCell className="py-1 text-destructive">−4</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="py-1">
                 <Badge variant="destructive">closed</Badge>
               </TableCell>
-              <TableCell className="py-1">未合并关闭</TableCell>
+              <TableCell className="py-1">{t('settings.integration.githubIntegration.meaningClosed')}</TableCell>
               <TableCell className="py-1 text-destructive">−2</TableCell>
             </TableRow>
           </TableBody>
         </Table>
       </CardContent>
     </Card>
-  );
-}
-
-function Stage2SummaryCard() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Activity className="h-4 w-4" />
-          阶段 2 完成度
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2 text-xs">
-        <Item label="GitHub API wrapper (octokit)" done />
-        <Item label="Webhook 签名校验 + 路由" done />
-        <Item label="PR 状态持久化（RemotePullRequest）" done />
-        <Item label="TrustService.applyPrOutcome" done />
-        <Item label="Dispatch → 真实 push + create PR" todo />
-        <Item label="PR 状态面板（前端）" done />
-        <Item label="e2e 验证" done />
-      </CardContent>
-    </Card>
-  );
-}
-
-function Item({ label, done, todo }: { label: string; done?: boolean; todo?: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      {done && <span className="text-accent-green">✓</span>}
-      {todo && <span className="text-accent-yellow">○</span>}
-      <span className={todo ? 'text-muted-foreground' : ''}>{label}</span>
-    </div>
   );
 }

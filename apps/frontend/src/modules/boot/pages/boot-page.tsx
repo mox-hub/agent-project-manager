@@ -96,10 +96,16 @@ export function BootPage() {
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <ScrollText className="h-3.5 w-3.5" />
-              {import.meta.env.DEV ? t('boot.devMode') : t('boot.prodMode')} · API:{' '}
-              <code className="font-mono">
-                {import.meta.env.VITE_API_BASE_URL || '/_api'}
-              </code>
+              {import.meta.env.DEV ? t('boot.devMode') : t('boot.prodMode')}
+              {/* API 地址仅开发模式展示，生产环境不暴露后端端点 */}
+              {import.meta.env.DEV && (
+                <>
+                  {' · API: '}
+                  <code className="font-mono">
+                    {import.meta.env.VITE_API_BASE_URL || '/_api'}
+                  </code>
+                </>
+              )}
             </span>
           </div>
           <div className="flex items-center gap-3">

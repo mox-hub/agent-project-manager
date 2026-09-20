@@ -96,8 +96,9 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
         render={
           <button
             type="button"
-            aria-label={t(subscribed ? 'subscribe.subscribed' : 'subscribe.title')}
-            title={t(subscribed ? 'subscribe.subscribed' : 'subscribe.title')}
+            // 订阅文案键位于 assistant.subscribe 命名空间（勿写裸 subscribe.*，会渲染出裸键）
+            aria-label={t(subscribed ? 'assistant.subscribe.subscribed' : 'assistant.subscribe.title')}
+            title={t(subscribed ? 'assistant.subscribe.subscribed' : 'assistant.subscribe.title')}
             data-ai-component="ui.subscribe-button"
             data-subscribed={subscribed}
             className={cn(
@@ -139,14 +140,14 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('subscribe.searchPlaceholder')}
+            placeholder={t('assistant.subscribe.searchPlaceholder')}
             className="h-8 pl-7 text-xs"
           />
         </div>
         {humans.length > 0 ? (
           <div className="mb-1">
             <p className="px-2 py-1 text-10 font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('subscribe.members')}
+              {t('assistant.subscribe.members')}
             </p>
             {humans.map(renderRow)}
           </div>
@@ -154,14 +155,14 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
         {agents.length > 0 ? (
           <div>
             <p className="px-2 py-1 text-10 font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('subscribe.agents')}
+              {t('assistant.subscribe.agents')}
             </p>
             {agents.map(renderRow)}
           </div>
         ) : null}
         {humans.length === 0 && agents.length === 0 ? (
           <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-            {t('subscribe.empty')}
+            {t('assistant.subscribe.empty')}
           </p>
         ) : null}
       </PopoverContent>

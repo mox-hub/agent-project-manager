@@ -258,16 +258,16 @@ export function AiAssignDialog({
         {isLoading ? (
           <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
             <Spinner className="size-4 mr-2 text-inherit" />
-            加载 AI 员工…
+            {t('task.aiAssign.loadingMembers')}
           </div>
         ) : !members || members.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
             <Bot size={24} className="mx-auto mb-2 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              系统中还没有注册的 AI 员工。
+              {t('task.aiAssign.noMembers')}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              请先到成员管理创建 AI 员工。
+              {t('task.aiAssign.noMembersHint')}
             </p>
           </div>
         ) : (
@@ -352,7 +352,7 @@ export function AiAssignDialog({
             size="sm"
             onClick={() => onOpenChange(false)}
           >
-            取消
+            {t('common.cancel')}
           </Button>
           <Button
             size="sm"
@@ -362,10 +362,10 @@ export function AiAssignDialog({
             {pending ? (
               <>
                 <Spinner className="size-3.5 mr-1 text-inherit" />
-                派发中…
+                {t('task.aiAssign.dispatching')}
               </>
             ) : (
-              '派发并执行'
+              t('task.aiAssign.dispatchAndExecute')
             )}
           </Button>
         </div>

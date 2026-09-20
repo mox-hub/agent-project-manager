@@ -1,4 +1,5 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   listTaskAssignees,
   addTaskAssignee,
@@ -20,6 +21,7 @@ import { toast } from '@/components/ui/toast';
  */
 export function useAssigneeSync(issueId: string | undefined) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { data: rows = [] } = useTaskAssignees(issueId);
   const add = useAddTaskAssignee();
   const remove = useRemoveTaskAssignee();
@@ -42,13 +44,18 @@ export function useAssigneeSync(issueId: string | undefined) {
       };
       if (result?.executionRunId) {
         toast.success(
-          `已派发给 AI 员工 (Execution ${result.executionRunId.slice(0, 8)}…)`,
+          t('task.aiAssign.dispatchedWithExecution', {
+            id: result.executionRunId.slice(0, 8),
+          }),
         );
       }
       if (result?.dispatchError) {
-        toast.warning(`指派成功但自动派发失败: ${result.dispatchError}`, {
-          duration: 8000,
-        });
+        toast.warning(
+          t('task.aiAssign.assignedButDispatchFailedShort', { error: result.dispatchError }),
+          {
+            duration: 8000,
+          },
+        );
       }
     }
     if (oldMemberId) {
@@ -80,6 +87,7 @@ export function useAssigneeSync(issueId: string | undefined) {
  */
 export function useAssignPrimaryMember() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async ({ issueId, memberId }: { issueId: string; memberId: string | null }) => {
       const rows = await listTaskAssignees(issueId);
@@ -96,7 +104,11 @@ export function useAssignPrimaryMember() {
       void queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
-      toast.error('指派负责人失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.assignPrimaryFailed', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Task, TaskPriority } from '@/modules/issue/api/issue-api';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MessageSquare, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
@@ -31,6 +32,7 @@ export interface TaskCardProps {
 }
 
 export function TaskCard({ task, onClick }: TaskCardProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const priority = (task.priority as TaskPriority) || 'medium';
 
@@ -141,7 +143,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
               {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               <IssueIcon size={12} />
               {task._count?.subIssues}
-              {isExpanded ? ' (展开)' : ''}
+              {isExpanded ? ` (${t('common.expand')})` : ''}
             </button>
           )}
 

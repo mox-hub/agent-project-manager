@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
 import { type IntegrationConfig } from "../api/integration-api";
@@ -30,6 +31,7 @@ function getProviderIcon(provider: string) {
 }
 
 export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }: IntegrationCardProps) {
+  const { t } = useTranslation();
   const aiPrefix = `integration.integration-list.card.${integration.id}`;
 
   return (
@@ -43,11 +45,15 @@ export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }
           <span className="text-2xl">{getProviderIcon(integration.provider)}</span>
           <div>
             <h4 className="text-base font-semibold text-foreground">{integration.name}</h4>
-            {integration.projectId ? <p className="text-xs text-muted-foreground">Project: {integration.projectId}</p> : null}
+            {integration.projectId ? (
+              <p className="text-xs text-muted-foreground">{t('integration.card.project', { id: integration.projectId })}</p>
+            ) : null}
           </div>
         </div>
         <StatusPill tone={getStatusTone(integration.status)}>
-          {integration.status || "inactive"}
+          {integration.status
+            ? t(`integration.card.status.${integration.status}`, { defaultValue: integration.status })
+            : t('integration.card.inactive')}
         </StatusPill>
       </div>
 
@@ -59,11 +65,13 @@ export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }
 
       <div className="flex items-center gap-2">
         <StatusPill tone={integration.enabled ? "success" : "default"}>
-          {integration.enabled ? "Enabled" : "Disabled"}
+          {integration.enabled ? t('integration.card.enabled') : t('integration.card.disabled')}
         </StatusPill>
         {integration.lastSyncAt ? (
           <span className="text-xs text-muted-foreground">
-            Last sync: {new Date(integration.lastSyncAt).toLocaleString()}
+            {t('integration.card.lastSync', {
+              time: new Date(integration.lastSyncAt).toLocaleString(),
+            })}
           </span>
         ) : null}
       </div>
@@ -77,7 +85,7 @@ export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }
             data-ai-action={`${aiPrefix}.configure.click`}
             data-ai-role="submit"
           >
-            Configure
+            {t('integration.card.configure')}
           </Button>
         ) : null}
         {onToggle ? (
@@ -89,7 +97,7 @@ export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }
             data-ai-action={`${aiPrefix}.toggle.click`}
             data-ai-role="select"
           >
-            {integration.enabled ? "Disable" : "Enable"}
+            {integration.enabled ? t('integration.card.disable') : t('integration.card.enable')}
           </Button>
         ) : null}
         {onDelete ? (
@@ -101,7 +109,7 @@ export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }
             data-ai-action={`${aiPrefix}.delete.click`}
             data-ai-role="danger"
           >
-            Delete
+            {t('integration.card.delete')}
           </Button>
         ) : null}
       </div>

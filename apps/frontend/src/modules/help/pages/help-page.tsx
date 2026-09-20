@@ -2,10 +2,29 @@
  * HelpPage - 帮助中心页面
  * 参考: refers/APM/SETTINGS_AND_HELP.md
  * 按照 Figma 设计实现
+ *
+ * 内容原则（help 不说谎，P2-26 重写）：
+ * - 章节与文章只描述真实存在的功能，入口路径与 router.tsx / 侧边导航 /
+ *   命令面板注册表（shared/command-palette/commands.ts）对齐；
+ * - 快捷键全部来自 hotkeys 注册表（CAP-A-17 单一真相源），历史占位里
+ *   宣传过的 Slack 集成、Ctrl+N / Ctrl+/ 等从未实现的条目已清除；
+ * - 全部文案走 help.* i18n（zh-CN 完整、en 同步），组件只持 id 不持文案。
  */
 
 import { useState } from 'react';
-import { HelpCircle, Search, Book, Keyboard, MessageCircle, ExternalLink, ChevronRight } from 'lucide-react';
+import {
+  HelpCircle,
+  Search,
+  Book,
+  Keyboard,
+  MessageCircle,
+  ExternalLink,
+  ChevronRight,
+  ListTodo,
+  Bot,
+  ShieldCheck,
+  Plug,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -24,134 +43,87 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { IconStack } from '@/components/ui/icon-stack';
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
 import { useTranslation } from '@/hooks/useTranslation';
-import { EDITABLE_HOTKEYS } from '@/shared/hotkeys/hotkey-definitions';
+import { HOTKEY_DEFINITIONS } from '@/shared/hotkeys/hotkey-definitions';
 import { getEffectiveCombo } from '@/shared/hotkeys/hotkey-store';
 import { formatComboForDisplay } from '@/shared/hotkeys/hotkey-utils';
 
-interface HelpSection {
+interface HelpArticleRef {
   id: string;
-  title: string;
-  icon: React.ReactNode;
-  description: string;
-  articles: HelpArticle[];
 }
 
-interface HelpArticle {
+interface HelpSectionDef {
   id: string;
-  title: string;
-  summary: string;
-  content: string;
+  icon: React.ReactNode;
+  articles: HelpArticleRef[];
 }
+
+/** 文案键约定：help.articles.<sectionId>.<articleId>.<title|summary|content> */
+const articleKey = (sectionId: string, articleId: string, field: 'title' | 'summary' | 'content') =>
+  `help.articles.${sectionId}.${articleId}.${field}`;
 
 /**
- * 快捷键表（CAP-A-17 注册表驱动）：全局组从 hotkey 注册表取当前生效键
- * （含用户自定义），场景组为真实存在的上下文键。历史上宣传过但从未实现的
- * 键位（Ctrl+N/P/B、Ctrl+Shift+A、Ctrl+/）已删除——help 不说谎。
+ * 快捷键表（CAP-A-17 注册表驱动）：全部组（含只读的场景键）从 hotkey 注册表
+ * 取当前生效键（含用户自定义），另补真实存在的 Esc 关闭行为。
+ * 历史上宣传过但从未实现的键位（Ctrl+N/P/B、Ctrl+Shift+A、Ctrl+/）已删除——help 不说谎。
  */
 function getKeyboardShortcuts(t: ReturnType<typeof useTranslation>['t']) {
-  const globalRows = EDITABLE_HOTKEYS.map((def) => ({
+  const registryRows = HOTKEY_DEFINITIONS.map((def) => ({
     keys: formatComboForDisplay(getEffectiveCombo(def.id) ?? def.defaultKeys),
     action: t(def.labelKey),
   }));
-  return [
-    ...globalRows,
-    { keys: ['Esc'], action: t('help.shortcuts.closeDialog') },
-    { keys: formatComboForDisplay('mod+s'), action: t('help.shortcuts.saveChanges') },
-  ];
+  return [...registryRows, { keys: ['Esc'], action: t('help.shortcuts.closeDialog') }];
 }
 
-const HELP_SECTIONS_DATA: HelpSection[] = [
+/**
+ * 章节注册表：只持 id 与图标，全部文案经 i18n 解析。
+ * 章节按真实功能域组织：入门 → 项目与任务 → AI 同事 → 质量与治理 →
+ * 集成与工具 → 快捷键 → FAQ。
+ */
+const HELP_SECTIONS: HelpSectionDef[] = [
   {
     id: 'getting-started',
-    title: 'Getting Started',
     icon: <Book className="w-5 h-5" />,
-    description: 'Learn the basics and get up and running quickly',
+    articles: [{ id: 'what-is-apm' }, { id: 'quick-start' }, { id: 'navigation' }],
+  },
+  {
+    id: 'projects-issues',
+    icon: <ListTodo className="w-5 h-5" />,
+    articles: [{ id: 'projects' }, { id: 'issues' }, { id: 'batch' }, { id: 'iterations' }],
+  },
+  {
+    id: 'ai',
+    icon: <Bot className="w-5 h-5" />,
+    articles: [{ id: 'what-ai-can-do' }, { id: 'configure-ai' }, { id: 'executions' }],
+  },
+  {
+    id: 'governance',
+    icon: <ShieldCheck className="w-5 h-5" />,
     articles: [
-      {
-        id: 'quick-start',
-        title: 'Quick Start Guide',
-        summary: 'Get started with APM in 5 minutes',
-        content: 'This guide will help you set up your first project and invite team members.',
-      },
-      {
-        id: 'project-creation',
-        title: 'Creating Your First Project',
-        summary: 'Step-by-step project setup',
-        content: 'Learn how to create a project, add tasks, and organize your work.',
-      },
-      {
-        id: 'navigation',
-        title: 'Navigating the Interface',
-        summary: 'Understanding the APM dashboard',
-        content: 'A tour of the main interface and how to use the sidebar navigation.',
-      },
+      { id: 'acceptance' },
+      { id: 'decisions' },
+      { id: 'documents-contracts' },
+      { id: 'releases' },
     ],
   },
   {
-    id: 'features',
-    title: 'Features',
-    icon: <HelpCircle className="w-5 h-5" />,
-    description: 'Explore APM features and capabilities',
+    id: 'tools',
+    icon: <Plug className="w-5 h-5" />,
     articles: [
-      {
-        id: 'tasks-management',
-        title: 'Task Management',
-        summary: 'Create, organize, and track tasks',
-        content: 'Learn about task creation, assignment, priorities, and status tracking.',
-      },
-      {
-        id: 'ai-assistant',
-        title: 'AI Assistant',
-        summary: 'Leverage AI for project management',
-        content: 'How to use the AI assistant to automate tasks and gain insights.',
-      },
-      {
-        id: 'integrations',
-        title: 'Integrations',
-        summary: 'Connect with your favorite tools',
-        content: 'Setting up integrations with GitHub, Slack, and other services.',
-      },
+      { id: 'integrations' },
+      { id: 'search' },
+      { id: 'notifications' },
+      { id: 'members-teams' },
     ],
   },
   {
     id: 'keyboard-shortcuts',
-    title: 'Keyboard Shortcuts',
     icon: <Keyboard className="w-5 h-5" />,
-    description: 'Speed up your workflow with keyboard shortcuts',
-    articles: [
-      {
-        id: 'global-shortcuts',
-        title: 'Global Shortcuts',
-        summary: 'Shortcuts available everywhere',
-        content: 'Ctrl+K: Command Palette, Ctrl+N: New Task, Ctrl+/ : Help',
-      },
-      {
-        id: 'editor-shortcuts',
-        title: 'Editor Shortcuts',
-        summary: 'Shortcuts for editing tasks and documents',
-        content: 'Ctrl+Enter: Save, Escape: Cancel, Tab: Next Field',
-      },
-    ],
+    articles: [{ id: 'overview' }, { id: 'customize' }],
   },
   {
     id: 'faq',
-    title: 'FAQ',
     icon: <MessageCircle className="w-5 h-5" />,
-    description: 'Frequently asked questions',
-    articles: [
-      {
-        id: 'account',
-        title: 'Account & Billing',
-        summary: 'Managing your account',
-        content: 'Answers about subscription, billing, and account settings.',
-      },
-      {
-        id: 'teams',
-        title: 'Teams & Permissions',
-        summary: 'Managing team access',
-        content: 'How to invite members, set roles, and manage permissions.',
-      },
-    ],
+    articles: [{ id: 'where-is-data' }, { id: 'ai-not-responding' }, { id: 'web-vs-desktop' }],
   },
 ];
 
@@ -163,19 +135,23 @@ export function HelpPage() {
 
   const KEYBOARD_SHORTCUTS = getKeyboardShortcuts(t);
 
-  const currentSection = HELP_SECTIONS_DATA.find((s) => s.id === selectedSection);
+  const currentSection = HELP_SECTIONS.find((s) => s.id === selectedSection);
   const currentArticle = currentSection?.articles.find((a) => a.id === selectedArticle);
 
-  const filteredSections = HELP_SECTIONS_DATA.filter(
-    (section) =>
-      section.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      section.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      section.articles.some(
-        (article) =>
-          article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          article.summary.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-  );
+  // 搜索匹配译文（标题/摘要），而非 id
+  const query = searchQuery.trim().toLowerCase();
+  const filteredSections = HELP_SECTIONS.filter((section) => {
+    if (!query) return true;
+    const sectionMatched =
+      t(`help.sections.${section.id}`).toLowerCase().includes(query) ||
+      t(`help.sectionDescriptions.${section.id}`).toLowerCase().includes(query);
+    const articleMatched = section.articles.some((article) =>
+      (['title', 'summary'] as const).some((field) =>
+        t(articleKey(section.id, article.id, field)).toLowerCase().includes(query),
+      ),
+    );
+    return sectionMatched || articleMatched;
+  });
 
   return (
     <PageShell className="overflow-hidden">
@@ -220,7 +196,7 @@ export function HelpPage() {
                   )}
                 >
                   {section.icon}
-                  {section.title}
+                  {t(`help.sections.${section.id}`)}
                 </button>
                 {selectedSection === section.id && (
                   <div className="ml-8 mt-1 space-y-1">
@@ -236,7 +212,7 @@ export function HelpPage() {
                         )}
                       >
                         <ChevronRight className="w-3 h-3" />
-                        {article.title}
+                        {t(articleKey(section.id, article.id, 'title'))}
                       </button>
                     ))}
                   </div>
@@ -255,18 +231,26 @@ export function HelpPage() {
                 onClick={() => setSelectedArticle(null)}
                 className="text-sm text-muted-foreground hover:text-foreground mb-4"
               >
-                ← {t('help.backTo', { section: currentSection?.title })}
+                ← {t('help.backTo', { section: currentSection ? t(`help.sections.${currentSection.id}`) : '' })}
               </button>
-              <h2 className="text-2xl font-bold mb-2">{currentArticle.title}</h2>
-              <p className="text-muted-foreground mb-6">{currentArticle.summary}</p>
+              <h2 className="text-2xl font-bold mb-2">
+                {t(articleKey(currentSection?.id ?? '', currentArticle.id, 'title'))}
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                {t(articleKey(currentSection?.id ?? '', currentArticle.id, 'summary'))}
+              </p>
               <div className="prose prose-sm max-w-none">
-                <p className="text-muted-foreground">{currentArticle.content}</p>
+                <p className="text-muted-foreground whitespace-pre-line">
+                  {t(articleKey(currentSection?.id ?? '', currentArticle.id, 'content'))}
+                </p>
               </div>
             </div>
           ) : currentSection ? (
             <div>
-              <h2 className="text-xl font-bold mb-2">{currentSection.title}</h2>
-              <p className="text-muted-foreground mb-6">{currentSection.description}</p>
+              <h2 className="text-xl font-bold mb-2">{t(`help.sections.${currentSection.id}`)}</h2>
+              <p className="text-muted-foreground mb-6">
+                {t(`help.sectionDescriptions.${currentSection.id}`)}
+              </p>
               <div className="grid gap-4">
                 {currentSection.articles.map((article) => (
                   <Card
@@ -275,11 +259,17 @@ export function HelpPage() {
                     onClick={() => setSelectedArticle(article.id)}
                   >
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-base">{article.title}</CardTitle>
-                      <CardDescription>{article.summary}</CardDescription>
+                      <CardTitle className="text-base">
+                        {t(articleKey(currentSection.id, article.id, 'title'))}
+                      </CardTitle>
+                      <CardDescription>
+                        {t(articleKey(currentSection.id, article.id, 'summary'))}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground">{article.content}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {t(articleKey(currentSection.id, article.id, 'content'))}
+                      </p>
                       <Button variant="link" size="sm" className="mt-2 p-0">
                         {t('help.readMore')} <ExternalLink className="w-3 h-3 ml-1" />
                       </Button>
@@ -336,6 +326,6 @@ export function HelpPage() {
       </div>
     </div>
     </PageShell>
-    
+
   );
 }

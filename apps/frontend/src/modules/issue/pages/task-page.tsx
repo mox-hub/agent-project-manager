@@ -293,7 +293,7 @@ export function TaskPage() {
                   {
                     id: 'ai-active-indicator',
                     icon: CheckSquare,
-                    label: `${totalActiveAiCount} 个 AI 执行中`,
+                    label: t('viewDisplay.aiFilter.executingCount', { count: totalActiveAiCount }),
                     variant: 'ghost',
                   },
                 ]
@@ -356,10 +356,10 @@ export function TaskPage() {
                   <ListActionButton
                     onClick={async () => {
                       const ok = await confirmAction({
-                        title: `删除选中的 ${selected.length} 项？`,
-                        description: '该操作会删除选中的任务及其子任务，且不可撤销。',
-                        confirmText: '删除',
-                        cancelText: '取消',
+                        title: t('task.selection.confirmTitle', { count: selected.length }),
+                        description: t('task.selection.confirmDescription'),
+                        confirmText: t('task.selection.confirmText'),
+                        cancelText: t('task.selection.cancelText'),
                         variant: 'destructive',
                       });
                       if (!ok) return;
@@ -367,10 +367,10 @@ export function TaskPage() {
                       close();
                       queryClient.invalidateQueries({ queryKey: ['project-tasks'] });
                     }}
-                    title="删除"
+                    title={t('common.delete')}
                     className="text-destructive"
                   >
-                    <Trash2 className="size-4" /> 删除
+                    <Trash2 className="size-4" /> {t('common.delete')}
                   </ListActionButton>
                 )}
               />
@@ -387,10 +387,10 @@ export function TaskPage() {
                   <ListActionButton
                     onClick={async () => {
                       const ok = await confirmAction({
-                        title: `删除选中的 ${selected.length} 项？`,
-                        description: '该操作会删除选中的任务及其子任务，且不可撤销。',
-                        confirmText: '删除',
-                        cancelText: '取消',
+                        title: t('task.selection.confirmTitle', { count: selected.length }),
+                        description: t('task.selection.confirmDescription'),
+                        confirmText: t('task.selection.confirmText'),
+                        cancelText: t('task.selection.cancelText'),
                         variant: 'destructive',
                       });
                       if (!ok) return;
@@ -398,10 +398,10 @@ export function TaskPage() {
                       close();
                       queryClient.invalidateQueries({ queryKey: ['project-tasks'] });
                     }}
-                    title="删除"
+                    title={t('common.delete')}
                     className="text-destructive"
                   >
-                    <Trash2 className="size-4" /> 删除
+                    <Trash2 className="size-4" /> {t('common.delete')}
                   </ListActionButton>
                 )}
               />

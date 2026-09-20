@@ -791,7 +791,7 @@ export function ShellLayout() {
           {/* 全局统一创建面板（Dock「新建」等与页面无关的创建入口） */}
           <GlobalCreateDialog />
 
-          {/* 桌面端首启初始化向导（桌面模式且未完成时弹出） */}
+          {/* 首启初始化向导（未完成时弹出；Web 与桌面一致，桌面版多一步工作目录） */}
           <OnboardingGate />
         </div>
       </TabsProvider>

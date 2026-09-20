@@ -17,7 +17,8 @@ export interface BootCheck {
   title: string;
   description: string;
   run: (ctx: BootContext) => Promise<BootCheckResult>;
-  skipIf?: (ctx: BootContext) => boolean;
+  /** 返回 true = 跳过（通用文案）；返回原因串（如 'desktop-only' | 'no-token'）= 跳过并如实说明原因 */
+  skipIf?: (ctx: BootContext) => boolean | string;
 }
 
 export interface BootRuntimeState {

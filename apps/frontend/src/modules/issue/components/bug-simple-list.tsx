@@ -8,6 +8,7 @@
  */
 
 import { Bug } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals';
 import {
@@ -95,6 +96,7 @@ export function BugSimpleList({
   selectionActions,
   className,
 }: BugSimpleListProps) {
+  const { t } = useTranslation();
   const groupFn = groupBy === 'none' ? undefined : (bug: Task) => groupValue(groupBy, bug);
 
   const groupMeta = (key: string) => {
@@ -148,7 +150,7 @@ export function BugSimpleList({
             {aiExecution ? (
               <span
                 className="h-6 w-1 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
-                title={`AI 接管中: ${aiExecution.agentName} (${aiExecution.stepSummary || '执行中'})`}
+                title={`${t('task.aiTakeover.title')}: ${aiExecution.agentName} (${aiExecution.stepSummary || t('task.aiTakeover.executing')})`}
               />
             ) : null}
             {/* 严重度指示条 */}

@@ -198,13 +198,13 @@ export function BugsPage() {
       },
       {
         id: 'aiExecution',
-        label: 'AI 执行态',
+        label: t('task.filter.aiExecutionGroup', 'AI 执行态'),
         icon: Bot,
         operators: ['is'],
         options: [
           {
             value: 'active',
-            label: 'AI 接管执行中',
+            label: t('task.filter.aiActive', 'AI 接管执行中'),
             hint: aiActiveCounts.toString(),
           },
         ],
@@ -330,7 +330,7 @@ export function BugsPage() {
           { id: 'open', label: t("task.bug.open") || 'open', value: stats.open, tone: 'warning' },
           { id: 'critical', label: t("task.bug.critical") || 'critical', value: stats.critical, tone: 'danger' },
           { id: 'resolved', label: t("task.bug.resolved") || 'resolved', value: stats.resolved, tone: 'success' },
-          ...(stats.aiExecuting > 0 ? [{ id: 'ai', label: 'AI 执行中', value: stats.aiExecuting, tone: 'default' as const }] : []),
+          ...(stats.aiExecuting > 0 ? [{ id: 'ai', label: t('viewDisplay.aiFilter.executing', 'AI 执行中'), value: stats.aiExecuting, tone: 'default' as const }] : []),
         ]}
         actions={
           <>
@@ -549,10 +549,10 @@ export function BugsPage() {
                 <ListActionButton
                   onClick={async () => {
                     const ok = await confirmAction({
-                      title: `删除选中的 ${selected.length} 项？`,
-                      description: '该操作会删除选中的 Bug 及其子任务，且不可撤销。',
-                      confirmText: '删除',
-                      cancelText: '取消',
+                      title: t('task.selection.confirmTitle', { count: selected.length }),
+                      description: t('task.bug.selection.confirmDescription'),
+                      confirmText: t('task.selection.confirmText'),
+                      cancelText: t('task.selection.cancelText'),
                       variant: 'destructive',
                     });
                     if (!ok) return;
@@ -561,10 +561,10 @@ export function BugsPage() {
                     queryClient.invalidateQueries({ queryKey: ['bugs'] });
                     refetch();
                   }}
-                  title="删除"
+                  title={t('common.delete')}
                   className="text-destructive"
                 >
-                  <Trash2 className="size-4" /> 删除
+                  <Trash2 className="size-4" /> {t('common.delete')}
                 </ListActionButton>
               )}
             />
@@ -607,10 +607,10 @@ export function BugsPage() {
                 <ListActionButton
                   onClick={async () => {
                     const ok = await confirmAction({
-                      title: `删除选中的 ${selected.length} 项？`,
-                      description: '该操作会删除选中的 Bug 及其子任务，且不可撤销。',
-                      confirmText: '删除',
-                      cancelText: '取消',
+                      title: t('task.selection.confirmTitle', { count: selected.length }),
+                      description: t('task.bug.selection.confirmDescription'),
+                      confirmText: t('task.selection.confirmText'),
+                      cancelText: t('task.selection.cancelText'),
                       variant: 'destructive',
                     });
                     if (!ok) return;
@@ -619,10 +619,10 @@ export function BugsPage() {
                     queryClient.invalidateQueries({ queryKey: ['bugs'] });
                     refetch();
                   }}
-                  title="删除"
+                  title={t('common.delete')}
                   className="text-destructive"
                 >
-                  <Trash2 className="size-4" /> 删除
+                  <Trash2 className="size-4" /> {t('common.delete')}
                 </ListActionButton>
               )}
             />
@@ -715,7 +715,7 @@ function BugBoardView({
     },
     row3: (bug: Task) => (
       <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0 flex-1">{bugCardRow3(bug, getProjectName(bug.projectId))}</div>
+        <div className="min-w-0 flex-1">{bugCardRow3(bug, getProjectName(bug.projectId), t)}</div>
         {bug.projectId && onDispatchBug ? (
           <button
             type="button"

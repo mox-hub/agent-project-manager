@@ -440,7 +440,8 @@
       "title": "Release gate",
       "submit": "Run gate",
       "ranAt": "Last checked:",
-      "notRun": "Gate not run yet — checks scope ownership, acceptance, CI evidence, contract bindings and completeness audit"
+      "notRun": "Gate not run yet — checks scope ownership, acceptance, CI evidence, contract bindings and completeness audit",
+      "skippedEmptyScope": "Nothing in scope, skipped"
     },
     "action": {
       "title": "Approval & publish",
@@ -821,7 +822,9 @@
       "completed": "Completed",
       "failed": "Failed",
       "blocked": "Blocked",
-      "superseded": "Superseded"
+      "superseded": "Superseded",
+      "approved": "Approved",
+      "rejected": "Rejected"
     },
     "timeline": {
       "model": "Model",
@@ -839,7 +842,11 @@
       "result": "Result",
       "error": "Error",
       "approval": "Approval",
-      "status": "Status"
+      "status": "Status",
+      "approvalRequest": "Approval request",
+      "toolResult": "Tool result",
+      "completed": "Execution completed",
+      "failed": "Execution failed"
     },
     "details": {
       "runtime": "Runtime",
@@ -853,7 +860,8 @@
       "completed": "Completed",
       "totalTokens": "Total tokens",
       "cost": "Cost"
-    }
+    },
+    "truncated": "truncated"
   },
   "execution": {
     "stats": {
@@ -1121,7 +1129,7 @@
       "conflictResolved": "Contract conflict resolved"
     },
     "body": {
-      "placeholder": "Rich body renderer for this decision type lands with the type itself (placeholder frame)"
+      "placeholder": "No custom detail view for this decision type yet — showing a summary of its contents"
     },
     "empty": {
       "title": "Nothing awaits your decision",
@@ -1141,7 +1149,12 @@
     "retryFailed": "Retry failed ({{count}})",
     "continueAnyway": "Continue anyway",
     "enterApp": "Enter APM",
-    "enterLogin": "Go to login"
+    "enterLogin": "Go to login",
+    "skip": {
+      "default": "Not applicable in this environment",
+      "desktop-only": "Desktop-only step — skipped automatically in the browser",
+      "no-token": "No local sign-in credentials found — runs automatically after you sign in"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1259,6 +1272,11 @@
       "loginFailed": "Login failed, please try again later",
       "sessionExpired": "Session expired, please login again"
     }
+  },
+  "contextMenu": {
+    "createSubtask": "Create Subtask",
+    "createParentTask": "Create Parent Task",
+    "parentTaskTitle": "Parent Task Title"
   },
   "task": {
     "title": "Tasks",
@@ -1399,6 +1417,8 @@
       "projectGroup": "Project",
       "iterationGroup": "Iteration",
       "tagGroup": "Label",
+      "aiExecutionGroup": "AI execution",
+      "aiActive": "AI is executing",
       "unassigned": "Unassigned"
     },
     "sort": {
@@ -1425,7 +1445,33 @@
       "deleteConfirm": "Are you sure you want to delete this task?",
       "noTasks": "No tasks found",
       "loadError": "Failed to load tasks",
-      "descriptionAcrossProjects": "tasks across all projects"
+      "descriptionAcrossProjects": "tasks across all projects",
+      "unknownError": "Unknown error",
+      "createIterationFailed": "Failed to create iteration: {{message}}",
+      "updateIterationFailed": "Failed to update iteration: {{message}}",
+      "createFailedMessage": "Failed to create task: {{message}}",
+      "updateFailedMessage": "Failed to update task: {{message}}",
+      "quickCreateFailed": "Failed to quickly create task: {{message}}",
+      "addDependencyFailedMessage": "Failed to add task dependency: {{message}}",
+      "removeDependencyFailedMessage": "Failed to remove task dependency: {{message}}",
+      "deleteFailedMessage": "Failed to delete task: {{message}}",
+      "moveFailed": "Failed to move task: {{message}}",
+      "importFailed": "Failed to import tasks: {{message}}",
+      "subtaskCreated": "Subtask created",
+      "createSubtaskFailedMessage": "Failed to create subtask: {{message}}",
+      "exportFailed": "Failed to export tasks: {{message}}",
+      "shortIdBackfilled": "Backfilled shortId for {{count}} tasks",
+      "shortIdBackfillPartial": "Backfill finished: {{success}} succeeded, {{failed}} failed",
+      "shortIdBackfillFailed": "Failed to backfill shortId: {{message}}",
+      "assignPrimaryFailed": "Failed to assign primary member: {{message}}"
+    },
+    "pagination": {
+      "range": "Showing {{from}}–{{to}} of {{total}}",
+      "filterScopeNote": "Filters apply to the current page only",
+      "prev": "Previous",
+      "next": "Next",
+      "exportScope": "Scope: filtered results on the current page ({{count}}) — matches the list's current search, filters and sorting; other pages are not included.",
+      "exportPageNote": "You are on page {{page}} of {{totalPages}}; the export contains this page only — go to another page and export again for more."
     },
     "bug": {
       "title": "Bug List",
@@ -1434,6 +1480,7 @@
       "descriptionBugs": "bugs",
       "critical": "critical",
       "open": "open",
+      "overdue": "Overdue",
       "severity": {
         "critical": "Critical",
         "high": "High",
@@ -1452,6 +1499,9 @@
       },
       "messages": {
         "noBugs": "No bugs found"
+      },
+      "selection": {
+        "confirmDescription": "This deletes the selected bugs and their subtasks and cannot be undone."
       }
     },
     "view": {
@@ -1478,7 +1528,14 @@
       "assigned": "Task assigned to AI member",
       "assignedWithRun": "Task assigned to AI member (run {{id}})",
       "assignedButDispatchFailed": "Assigned to AI member, but CLI dispatch failed: {{error}}",
-      "failed": "Dispatch failed: {{message}}"
+      "failed": "Dispatch failed: {{message}}",
+      "loadingMembers": "Loading AI members…",
+      "noMembers": "No AI members are registered yet.",
+      "noMembersHint": "Create an AI member in member management first.",
+      "dispatching": "Dispatching…",
+      "dispatchAndExecute": "Dispatch & execute",
+      "dispatchedWithExecution": "Dispatched to AI member (execution {{id}}…)",
+      "assignedButDispatchFailedShort": "Assigned, but automatic dispatch failed: {{error}}"
     },
     "import": {
       "validationFailed": "Import validation failed — nothing was imported ({{count}} errors)",
@@ -1494,7 +1551,17 @@
       "applying": "Updating…",
       "success": "Updated {{count}} issues",
       "partial": "Updated {{success}}, failed {{failed}}: {{detail}}{{more}}",
-      "andMore": " and {{count}} more"
+      "andMore": " and {{count}} more",
+      "unknownError": "Unknown error"
+    },
+    "gantt": {
+      "leftColumnTitle": "Task",
+      "empty": "No schedulable tasks",
+      "emptyDesc": "The Gantt view relies on date fields — set a due date on a task to schedule it here"
+    },
+    "aiTakeover": {
+      "title": "AI takeover",
+      "executing": "executing"
     },
     "export": {
       "label": "Export",
@@ -2049,8 +2116,174 @@
     "title": "Settings",
     "integration": {
       "emptyFiltered": "No integrations match your search",
-      "emptyFilteredHint": "Try adjusting your search or clearing the filters"
+      "emptyFilteredHint": "Try adjusting your search or clearing the filters",
+      "title": "Integrations",
+      "subtitle": "Connect your tools to supercharge AI-driven development.",
+      "searchPlaceholder": "Search integrations…",
+      "tabs": {
+        "all": "All",
+        "task": "Task Providers",
+        "code": "Code & PR",
+        "communication": "Communication",
+        "monitoring": "Monitoring"
+      },
+      "category": {
+        "task": "Task Providers",
+        "code": "Code & PR Sync",
+        "monitoring": "Monitoring",
+        "communication": "Communication"
+      },
+      "catDesc": {
+        "task": "Task providers are the source of truth for work items. Connect one or more to import tasks and let AI agents execute work directly.",
+        "code": "Code integrations link repositories to tasks, enabling AI agents to open PRs, track CI status, and post acceptance results as code review comments."
+      },
+      "status": {
+        "connected": "Connected",
+        "disconnected": "Not connected",
+        "error": "Error",
+        "pending": "Connecting…"
+      },
+      "metricErrors": "Errors",
+      "metricConnected": "Connected",
+      "count": "{{count}} integrations",
+      "connect": "Connect {{name}}",
+      "connecting": "Connecting…",
+      "sync": "Sync",
+      "disconnect": "Disconnect",
+      "reconnect": "Reconnect",
+      "errorConnectionLost": "Connection lost",
+      "errorCheckProvider": "check provider status",
+      "features": "Features",
+      "featuresActive": "{{active}}/{{total}} active",
+      "connectionDetails": "Connection Details",
+      "account": "Account",
+      "lastSync": "Last sync",
+      "noConnectionDetails": "No connection details reported yet.",
+      "viewSetupGuide": "View setup guide",
+      "moreFeatures": "+{{count}} more features",
+      "docs": "Docs",
+      "comingSoon": "Coming Soon",
+      "soon": "Soon",
+      "soonDesc": {
+        "notion": "Sync project docs and wikis",
+        "figma": "Link design files to task specs",
+        "vercel": "Track deployment status on tasks",
+        "datadog": "Alert on anomalies, create incidents",
+        "pagerduty": "Route on-call alerts to AgentPM tasks",
+        "loom": "Attach screen recordings to tasks"
+      },
+      "disconnectSuccess": "{{name}} disconnected",
+      "disconnectFailed": "Failed to disconnect, please try again",
+      "catalog": {
+        "linear": {
+          "desc": "Sync issues, cycles, and projects from Linear into AgentPM tasks.",
+          "longDesc": "Connect your Linear workspace to import and two-way sync issues as tasks. AI agents can create Linear issues directly, and acceptance results are posted back as issue comments.",
+          "f1": { "label": "Issue sync", "desc": "Import and sync Linear issues as AgentPM tasks" },
+          "f2": { "label": "Two-way sync", "desc": "Changes in either system propagate automatically" },
+          "f3": { "label": "AI issue creation", "desc": "Agents can create Linear issues directly" },
+          "f4": { "label": "Comment sync", "desc": "Acceptance results posted as Linear comments" },
+          "f5": { "label": "Member mapping", "desc": "Map Linear members to AgentPM team members" },
+          "f6": { "label": "Cycle tracking", "desc": "Import cycle progress into milestone view" }
+        },
+        "jira": {
+          "desc": "Import Jira tickets and epics; push AI-generated work back to your board.",
+          "longDesc": "Use your Jira Cloud or Data Center instance as a task source. Import epics, stories, and bugs. AI agents execute work tracked in Jira and post results as comments.",
+          "f1": { "label": "Ticket import", "desc": "Import Jira epics, stories, and bugs as tasks" },
+          "f2": { "label": "Status sync", "desc": "Sync Jira workflow statuses to AgentPM" },
+          "f3": { "label": "AI ticket creation", "desc": "Agents can create and update Jira tickets" },
+          "f4": { "label": "Comment sync", "desc": "Post acceptance results as Jira issue comments" },
+          "f5": { "label": "Assignee mapping", "desc": "Map Jira users to AgentPM team members" },
+          "f6": { "label": "Bug tracking", "desc": "Import Jira bug reports into AgentPM bug list" }
+        },
+        "github": {
+          "desc": "Sync repositories, pull requests, and CI status. Link PRs to tasks automatically.",
+          "longDesc": "Connect GitHub to track pull requests, code reviews, and CI/CD runs. AI agents can open PRs, request reviews, and monitor build status in real time.",
+          "f1": { "label": "PR sync", "desc": "Link pull requests to tasks automatically" },
+          "f2": { "label": "AI PR creation", "desc": "Agents can open and update pull requests" },
+          "f3": { "label": "Branch rules", "desc": "Enforce branch protection via AgentPM policies" },
+          "f4": { "label": "CI status", "desc": "Show CI/CD build status on task cards" },
+          "f5": { "label": "Webhooks", "desc": "Real-time push events via GitHub webhook" },
+          "f6": { "label": "Review comments", "desc": "Post acceptance audit results as PR comments" }
+        },
+        "gitlab": {
+          "desc": "Sync GitLab MRs and pipelines. Works with self-hosted and GitLab.com.",
+          "longDesc": "Integrate GitLab to manage merge requests, monitor pipelines, and keep your code and tasks in sync. Supports GitLab.com and self-hosted instances.",
+          "f1": { "label": "MR sync", "desc": "Sync merge requests to AgentPM task timeline" },
+          "f2": { "label": "AI MR creation", "desc": "Agents can open and update merge requests" },
+          "f3": { "label": "Pipeline status", "desc": "Track GitLab CI/CD pipeline status on tasks" },
+          "f4": { "label": "Webhooks", "desc": "Real-time push events via GitLab webhook" },
+          "f5": { "label": "Self-hosted", "desc": "Connect your GitLab CE/EE instance via PAT" },
+          "f6": { "label": "MR discussions", "desc": "Post acceptance results as MR discussion threads" }
+        },
+        "slack": {
+          "desc": "Send task updates, AI execution alerts, and acceptance results to Slack channels.",
+          "longDesc": "Post notifications to your Slack workspace when tasks change status, AI agents complete runs, or acceptances are approved or rejected.",
+          "f1": { "label": "Task notifications", "desc": "Post task status changes to chosen channels" },
+          "f2": { "label": "AI run alerts", "desc": "Alert when AI agents start or complete runs" },
+          "f3": { "label": "Acceptance alerts", "desc": "Post approval/rejection to a review channel" },
+          "f4": { "label": "Daily digest", "desc": "Send a morning digest of project activity" }
+        },
+        "sentry": {
+          "desc": "Turn Sentry error alerts into AgentPM bugs automatically.",
+          "longDesc": "Connect Sentry to automatically create bug reports from error events. AI agents can investigate stack traces and propose fixes.",
+          "f1": { "label": "Auto bug creation", "desc": "Create bugs from Sentry error events automatically" },
+          "f2": { "label": "AI diagnosis", "desc": "Agents analyze stack traces and suggest root causes" },
+          "f3": { "label": "Error trends", "desc": "Surface error frequency on project health dashboard" }
+        }
+      },
+      "githubIntegration": {
+        "title": "GitHub Integration",
+        "connect": "Connect GitHub",
+        "emptyTitle": "No GitHub integration configured yet",
+        "emptyDesc": "Create a GitHub integration with a Personal Access Token (PAT), optionally with a Webhook Secret for real-time events. Credentials are stored encrypted.",
+        "emptyCta": "Create GitHub integration",
+        "prLifecycleTitle": "PR lifecycle",
+        "prLifecycleDesc": "PR statuses delivered by webhooks are stored locally and feed into the agent trust score.",
+        "colStatus": "Status",
+        "colMeaning": "Meaning",
+        "colTrustDelta": "Trust delta",
+        "meaningMerged": "PR merged",
+        "meaningMergedComments": "Merged with review comments",
+        "meaningChangesRequested": "Review rejected the change",
+        "meaningClosed": "Closed without merging"
+      },
+      "linearIntegration": {
+        "notFound": "Integration not found",
+        "deleteTitle": "Delete Linear integration",
+        "deleteDesc": "Delete this Linear integration? Linked projects will lose sync but local data is preserved.",
+        "disable": "Disable",
+        "enable": "Enable",
+        "recentSync": "Recent sync activity",
+        "quickActions": "Quick actions",
+        "pullProject": "Pull a Linear project…",
+        "aboutSync": "About sync",
+        "syncProjects": "Projects: one-way (Linear → APM)",
+        "syncTasks": "Tasks: two-way with hybrid conflict policy",
+        "lockedFields": "Locked fields: name, description, icon, color, status, priority, health",
+        "editableLocally": "Editable locally: members, progress, AI context, custom metadata"
+      }
     },
+    "timezone": {
+      "shanghai": "UTC+8 Shanghai",
+      "hongKong": "UTC+8 Hong Kong",
+      "singapore": "UTC+8 Singapore",
+      "tokyo": "UTC+9 Tokyo",
+      "seoul": "UTC+9 Seoul",
+      "mumbai": "UTC+5:30 Mumbai",
+      "dubai": "UTC+4 Dubai",
+      "london": "UTC+0/1 London",
+      "paris": "UTC+1/2 Paris",
+      "berlin": "UTC+1/2 Berlin",
+      "moscow": "UTC+3 Moscow",
+      "newYork": "UTC-5/-4 New York",
+      "chicago": "UTC-6/-5 Chicago",
+      "denver": "UTC-7/-6 Denver",
+      "losAngeles": "UTC-8/-7 Los Angeles",
+      "sydney": "UTC+10/11 Sydney",
+      "auckland": "UTC+12/13 Auckland"
+    },
+    "none": "None",
+    "runtimeBackToOverview": "Back to runtime overview",
     "general": "General",
     "groupAccount": "Account",
     "profile": "Profile",
@@ -2874,7 +3107,10 @@
     "execActionViewLog": "View execution log",
     "execActionMore": "More actions",
     "parentTaskLabel": "Parent task",
-    "customFields": "Fields"
+    "customFields": "Fields",
+    "drawerNoAgents": "No AI members are available to assign yet. Create one in member management first.",
+    "aiGoalTemplate": "Generate a next-step execution plan for \"{{title}}\" and prepare a status write-back",
+    "approvalReasonWrite": "This execution writes back task status or results and requires human confirmation"
   },
   "activity": {
     "title": "Activity",
@@ -3649,20 +3885,162 @@
     "title": "Help Center",
     "description": "Find answers and learn how to use APM",
     "searchPlaceholder": "Search help...",
-    "searchTitle": "Search Help Center",
-    "searchHint": "Use the search box to find articles, guides, and FAQs",
+    "searchTitle": "Nothing matched your search",
+    "searchHint": "Try different keywords, or browse the topics on the left",
     "sections": {
-      "gettingStarted": "Getting Started",
-      "features": "Features",
-      "keyboardShortcuts": "Keyboard Shortcuts",
+      "getting-started": "Getting Started",
+      "projects-issues": "Projects & Issues",
+      "ai": "AI Teammate",
+      "governance": "Quality & Governance",
+      "tools": "Integrations & Tools",
+      "keyboard-shortcuts": "Keyboard Shortcuts",
       "faq": "FAQ"
+    },
+    "sectionDescriptions": {
+      "getting-started": "Meet APM and get productive in minutes",
+      "projects-issues": "Create projects, manage tasks and bugs, work in batches and iterations",
+      "ai": "Meet your AI teammate: configure models, dispatch work, follow results",
+      "governance": "Acceptance gates, decisions, document contracts, and releases",
+      "tools": "GitHub / Linear integrations, global search, and notifications",
+      "keyboard-shortcuts": "Every shortcut that actually works; global ones are customizable",
+      "faq": "Questions new users ask most"
+    },
+    "articles": {
+      "getting-started": {
+        "what-is-apm": {
+          "title": "What is APM?",
+          "summary": "An AI-powered project management tool: you decide, your AI teammate does the work.",
+          "content": "APM brings project management (projects, tasks, iterations, acceptance) and AI execution (an AI teammate that reads and writes tasks, runs code, and submits results) into one workspace. You break work down into tasks with clear acceptance criteria; the AI teammate executes under acceptance gates and your approvals, while the important calls stay yours. The sidebar is organized into four groups — Workbench, Development Lifecycle, Collaboration & Foundation, and System — and the six-stage lifecycle (01 Intake → 02 Issues → 03 Repositories → 04 Executions → 05 Acceptance → 06 Releases) walks you through a full delivery."
+        },
+        "quick-start": {
+          "title": "Quick Start",
+          "summary": "Three steps: create a project → add issues → assign them to yourself or the AI teammate.",
+          "content": "1) Create your first project on the Projects page. 2) Open the project and add issues with a title, description, and acceptance criteria. 3) Assign each issue to yourself or to the AI teammate — for AI assignment, configure a model first under Settings → AI Management. Once work is done, verify the evidence against the acceptance criteria on the Acceptance page. No need to configure everything up front: create a throwaway project to explore, and every onboarding step can be completed later."
+        },
+        "navigation": {
+          "title": "Touring the Interface",
+          "summary": "Four sidebar groups, the six-stage lifecycle, and the command palette.",
+          "content": "Workbench holds the dashboard, the decision inbox, and projects. Development Lifecycle is the six-stage main flow. Collaboration & Foundation holds office, documents, members, teams, workflows, analytics, and the AI surface. System holds settings, help, and the admin console. The fastest way to find a page is Ctrl+K — the command palette jumps anywhere by name. The magnifier and bell at the top of the sidebar open global search and notifications. Favorite pages from their title bar to pin them under Favorites in the sidebar."
+        }
+      },
+      "projects-issues": {
+        "projects": {
+          "title": "Managing Projects",
+          "summary": "A project is the container for issues, documents, members, and goals.",
+          "content": "Create a project on the Projects page with a name, description, and type. Inside a project, the top tabs switch between Overview, Issues, Milestones, Profile, Playbook, Team, and Settings: Overview shows health and progress, Milestones mark key dates, and Settings holds project-level options such as workflows and contract bindings. Favorite a project from its title bar to reach it quickly from the sidebar."
+        },
+        "issues": {
+          "title": "Issues & Bugs",
+          "summary": "One unified work-item system: tasks and bugs are managed the same way.",
+          "content": "The Issues page (lifecycle stage 02) is the center of all work items: list, board, table, and Gantt views, filterable by status, priority, assignee, and labels. Open an issue for its detail view: the properties panel handles status, assignee, and iteration; inside the detail page you can switch the issue type (types are configured under Settings → Issue Types), refine the description and acceptance criteria, and add dependencies. Issues can also be assigned to the AI teammate. The Bugs page collects bugs in one place, and the unified create panel lets you add several items in a row."
+        },
+        "batch": {
+          "title": "Batch Operations & Import/Export",
+          "summary": "Multi-select edits, table editing, and CSV import/export.",
+          "content": "In the table view, select multiple issues and change status, assignee, iteration, priority, or labels in one go; the table also supports direct cell editing. To migrate historical data, use Import to turn a CSV file into issues in bulk; use Export to download the current filtered results for reporting or archiving."
+        },
+        "iterations": {
+          "title": "Iteration Planning",
+          "summary": "Group the work of a time box into an iteration.",
+          "content": "An iteration is a work cycle with start and end dates (say, a two-week sprint). Create iterations on the Issues page, set the dates, then drag or batch-move issues into them. Iteration detail derives in-progress/closed status from the dates and rolls up progress. A good start: put next week's work into one iteration — no need for elaborate scheduling on day one."
+        }
+      },
+      "ai": {
+        "what-ai-can-do": {
+          "title": "What the AI Teammate Can Do",
+          "summary": "Pick up issues, write code, and submit acceptance evidence like a team member.",
+          "content": "The AI teammate is APM's built-in AI executor: it can be assigned issues, read and write code in connected repositories, run commands, and record every step under Executions. Its work is governed end to end: you see the plan before it starts, important actions require your approval, and finished work must pass the acceptance gate with evidence. In short: the AI does the work, you make the calls."
+        },
+        "configure-ai": {
+          "title": "Configuring AI Models",
+          "summary": "Set up model providers and API keys under Settings → AI Management.",
+          "content": "Go to Settings → AI Management and add a model provider (OpenAI, Anthropic, Zhipu GLM, DeepSeek, and more), then fill in the API key and endpoint. The same page also manages agents and skills. Without a configured model, project management keeps working — the AI teammate just won't execute. On desktop, also make sure the daemon is online under Settings → Runtime so the AI can actually run locally."
+        },
+        "executions": {
+          "title": "Dispatch & Execution Records",
+          "summary": "After handing an issue to the AI, follow every step here.",
+          "content": "Assigning an issue to the AI teammate creates an execution record. The Executions page (lifecycle stage 04) shows status transitions, logs, and outputs; actions requiring approval appear as approval requests and the run pauses until you decide. A run can be cancelled at any time. The AI Execution Center under Settings aggregates all AI execution history for retrospective."
+        }
+      },
+      "governance": {
+        "acceptance": {
+          "title": "Acceptance Gates",
+          "summary": "Nothing counts as done until it passes acceptance: criteria first, evidence always.",
+          "content": "Every issue can define acceptance criteria — ideally when the issue is created (\"what does done look like?\"). When the AI or a member submits work, verify it criterion by criterion on the Acceptance page (lifecycle stage 05): review the submitted evidence (code, screenshots, notes), approve to close, or reject with reasons. The acceptance gate is APM's core mechanism for proving that work was done — and done right."
+        },
+        "decisions": {
+          "title": "Decision Cards & Inbox",
+          "summary": "The AI proposes, you decide; pending calls collect in one inbox.",
+          "content": "When the AI needs a human call (a trade-off, a risk choice), it raises a decision card into the Decisions inbox — the sidebar shows how many are waiting. Each card lays out context, options, and a recommendation; you can approve, reject, or ask for more information. Every decision is archived, so you can always trace why a call was made."
+        },
+        "documents-contracts": {
+          "title": "Documents & Contracts",
+          "summary": "The document library holds context; contracts bind specs to code files.",
+          "content": "Documents are the team knowledge base with Markdown editing and version history; issues and projects can link documents as context. A contract is a binding between a spec in a document and code files: once bound in project settings, the system can track which files implement the design and whether they are still in sync, keeping docs and code from drifting apart."
+        },
+        "releases": {
+          "title": "Releases & CHANGELOG",
+          "summary": "A release closes the loop: one release, one traceable change record.",
+          "content": "The Releases page (lifecycle stage 06) manages releases: create one and gather its issues and fixes; the CHANGELOG is generated one-way from release data, so what you announce always matches what actually shipped. The release detail lists every included issue for announcements and later debugging."
+        }
+      },
+      "tools": {
+        "integrations": {
+          "title": "Integrations: GitHub & Linear",
+          "summary": "Connect code hosting and external task sources with two-way sync.",
+          "content": "Connect GitHub and Linear under Settings → Integrations. With GitHub connected, repositories, commits, and pull requests appear on the Repositories page and inside projects; with Linear connected, external issues sync two ways into APM issues, and the project header shows sync status with a manual sync button. If an integration misbehaves, check its connection and authorization under Settings → Integrations first."
+        },
+        "search": {
+          "title": "Global Search",
+          "summary": "One place to search issues, projects, and documents.",
+          "content": "Click the magnifier at the top of the sidebar (or open Search from the command palette) and type keywords to find issues, projects, and documents. Results are grouped by type with keyboard navigation (arrows to move, Enter to jump). If nothing shows up, try more specific keywords or narrow by type."
+        },
+        "notifications": {
+          "title": "Notifications",
+          "summary": "Things that need your attention land in one place, with an unread badge in the sidebar.",
+          "content": "The bell at the top of the sidebar opens the notification center: task updates, approval and acceptance progress, and other events arrive here, with the unread count shown as a badge. Click a notification to jump to the related page, and mark items as read once handled."
+        },
+        "members-teams": {
+          "title": "Members, Teams & Permissions",
+          "summary": "Invite colleagues, form teams, and control access with roles.",
+          "content": "The Members page manages every principal in the workspace (humans, AI members, and external agents in one place), and the Teams page organizes members into teams. Access is governed by roles configured under Settings → Roles; personal access tokens (PATs) for API and integration use are issued under Settings → Access Tokens."
+        }
+      },
+      "keyboard-shortcuts": {
+        "overview": {
+          "title": "Shortcut Reference",
+          "summary": "The table below lists every shortcut that actually works, live from the registry.",
+          "content": "The table is generated from the hotkey registry: global shortcuts (Ctrl+K command palette, Alt+A AI assistant panel) can be rebound in Settings, while context shortcuts (Ctrl+S to save in the document editor, Ctrl+1 / Ctrl+Enter in the create panel, Enter in decision review) are read-only. Esc closes dialogs and panels."
+        },
+        "customize": {
+          "title": "Customizing Shortcuts",
+          "summary": "Record your own key bindings under Settings → Shortcuts.",
+          "content": "Open Settings → Shortcuts, click the record button next to a global action, and press the new combination to override the default; your bindings are stored locally. Conflicts with existing bindings are detected and flagged; context shortcuts (rows marked as context) cannot be rebound yet."
+        }
+      },
+      "faq": {
+        "where-is-data": {
+          "title": "Where is my data stored?",
+          "summary": "On the APM server you connect to — one isolated database per workspace.",
+          "content": "APM data (projects, issues, documents, and so on) lives on the server, isolated per workspace. On desktop, the server runs on your own machine, so data never leaves it; on web, it depends on where the server you connect to is deployed. Workspaces and storage are visible under Settings → Storage."
+        },
+        "ai-not-responding": {
+          "title": "The AI isn't responding",
+          "summary": "Check in order: model configuration → runtime daemon → the error in the execution record.",
+          "content": "1) Confirm a model provider and a valid API key are configured under Settings → AI Management. 2) On desktop, check that the daemon is online under Settings → Runtime. 3) Open Executions, find the run, and read the failure in its status and logs. Most cases come down to an invalid key or an exhausted quota — replace the key and dispatch again."
+        },
+        "web-vs-desktop": {
+          "title": "Web vs. desktop: what's the difference?",
+          "summary": "Same features; desktop adds local execution and a managed daemon.",
+          "content": "Both use the same interface and feature set, and the onboarding wizard appears on first entry on both (desktop adds one extra step — choosing the local working directory where the AI executes code). The desktop shell hosts a local server and daemon so the AI can read and write repositories on your machine; the web version fits project management and collaboration that don't involve local code execution."
+        }
+      }
     },
     "shortcuts": {
       "title": "Keyboard Shortcuts",
       "shortcut": "Shortcut",
       "action": "Action",
-      "closeDialog": "Close Dialog/Panel",
-      "saveChanges": "Save Changes"
+      "closeDialog": "Close dialog / panel"
     },
     "readMore": "Read more",
     "backTo": "Back to {{section}}"
@@ -4226,6 +4604,28 @@
   },
   "integration": {
     "title": "Integrations",
+    "card": {
+      "project": "Project: {{id}}",
+      "inactive": "Inactive",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "lastSync": "Last sync: {{time}}",
+      "configure": "Configure",
+      "enable": "Enable",
+      "disable": "Disable",
+      "delete": "Delete",
+      "status": {
+        "connected": "Connected",
+        "error": "Error",
+        "pending": "Pending"
+      }
+    },
+    "form": {
+      "configureTitle": "Configure {{name}}",
+      "nameLabel": "Integration name",
+      "enableLabel": "Enable this integration",
+      "saving": "Saving…"
+    },
     "active": "active",
     "browseMarketplace": "Browse Marketplace",
     "installed": "Installed",
@@ -4754,6 +5154,13 @@
   },
   "office": {
     "title": "Office",
+    "handoff": {
+      "badge": "Handoff",
+      "gates": "Governance gates",
+      "gatePassed": "Ready",
+      "gateBlocked": "Blocked",
+      "gatePending": "Checking"
+    },
     "totals": "{{colleagues}} AI colleagues · {{working}} working · {{needYou}} need you · {{blocking}} blocking",
     "projectFilter": "Filter by project",
     "allProjects": "All projects",

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ interface IntegrationConfigFormProps {
 }
 
 export function IntegrationConfigForm({ integration, onClose }: IntegrationConfigFormProps) {
+  const { t } = useTranslation();
   const aiPrefix = `integration.integration-list.config.${integration.id}`;
   const updateIntegration = useUpdateIntegration();
   const [formData, setFormData] = useState<UpdateIntegrationConfigRequest>({
@@ -41,11 +43,11 @@ export function IntegrationConfigForm({ integration, onClose }: IntegrationConfi
         data-ai-role="panel"
       >
         <DialogHeader>
-          <DialogTitle>Configure {integration.name}</DialogTitle>
+          <DialogTitle>{t('integration.form.configureTitle', { name: integration.name })}</DialogTitle>
         </DialogHeader>
         <form className="space-y-4" onSubmit={handleSubmit} data-ai-component={`${aiPrefix}.form`} data-ai-role="input">
           <div className="space-y-1">
-            <Label htmlFor="integration-name">Integration Name</Label>
+            <Label htmlFor="integration-name">{t('integration.form.nameLabel')}</Label>
             <Input
               id="integration-name"
               value={formData.name}
@@ -65,7 +67,7 @@ export function IntegrationConfigForm({ integration, onClose }: IntegrationConfi
               data-ai-action={`${aiPrefix}.enabled.toggle`}
               data-ai-role="select"
             />
-            <Label htmlFor="integration-enabled">Enable this integration</Label>
+            <Label htmlFor="integration-enabled">{t('integration.form.enableLabel')}</Label>
           </div>
 
           <DialogFooter>
@@ -77,7 +79,7 @@ export function IntegrationConfigForm({ integration, onClose }: IntegrationConfi
               data-ai-action={`${aiPrefix}.cancel.click`}
               data-ai-role="jump"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -86,7 +88,7 @@ export function IntegrationConfigForm({ integration, onClose }: IntegrationConfi
               data-ai-action={`${aiPrefix}.save.click`}
               data-ai-role="submit"
             >
-              {updateIntegration.isPending ? "Saving..." : "Save Changes"}
+              {updateIntegration.isPending ? t('integration.form.saving') : t('common.save')}
             </Button>
           </DialogFooter>
         </form>
