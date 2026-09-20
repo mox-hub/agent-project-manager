@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, useLocation, useParams } from 'react-router-dom';
 import { LoginPage } from '@/modules/auth/pages/login-page';
+import { WelcomePage } from '@/modules/auth/pages/welcome-page';
 import { AuthGuard } from '@/modules/auth/components/auth-guard';
 import { ShellLayout } from '@/shared/layout/shell-layout';
 import { ProjectListPage } from '@/modules/project/pages/project-list-page';
@@ -209,6 +210,16 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     lazy: () => import('@/modules/auth/pages/register-page').then((m) => ({ Component: m.RegisterPage })),
+    errorElement: <ErrorPage />,
+  },
+  // 注册成功欢迎页（CAP-A-22）：身份工牌仪式页，AuthGuard 保证已登录
+  {
+    path: '/welcome',
+    element: (
+      <AuthGuard>
+        <WelcomePage />
+      </AuthGuard>
+    ),
     errorElement: <ErrorPage />,
   },
   {
