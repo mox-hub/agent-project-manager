@@ -15,6 +15,7 @@ import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
 import type { CreateExecutionRunDto } from '@/modules/execution/execution.service';
+import { ACTIVE_EXECUTION_STATUSES } from '@/modules/execution/execution.service';
 import { RuntimeService } from '@/modules/runtime/runtime.service';
 import { CliExecutorService } from './cli-executor.service';
 import { CliProviderRegistry } from './cli-provider.registry';
@@ -204,17 +205,42 @@ export class CliDispatchService {
     if (!original) {
       throw new NotFoundException(`Execution ${executionRunId} not found`);
     }
-    // superseded（人工取消）不放开：重新执行只面向失败/阻塞的执行
-    const RETRYABLE_STATUSES = ['failed', 'blocked'];
+    // P1-21：superseded（人工取消）放开为可重新执行。blocked 执行受单活跃
+    // 约束（G5）无法直接重试——原执行自身即「活跃」，唯一出口是「先取消再
+    // 重新执行」；若取消后不可重试，指路文案就成了死路。原执行保持
+    // superseded 终态留痕（步骤/产物/错误详情不丢），新执行携带 retryOfId
+    // 血缘，审计链完整；是否存在其他活跃执行仍由下方预检与 G5 把关。
+    const RETRYABLE_STATUSES = ['failed', 'blocked', 'superseded'];
     if (!RETRYABLE_STATUSES.includes(original.status)) {
       throw new BadRequestException(
-        `执行 ${original.id} 当前状态为 ${original.status}，仅 failed/blocked 可重新执行`,
+        `执行 ${original.id} 当前状态为 ${original.status}，仅 failed/blocked/superseded 可重新执行`,
       );
     }
     const issueId = original.issueId;
     if (!issueId || !original.issue) {
       throw new BadRequestException(
         `执行 ${original.id} 未关联有效工单，无法重新执行`,
+      );
+    }
+
+    // P1-21：重试遇活跃执行的指路——单活跃约束下重试必被 createExecutionRun
+    // 互斥拒绝，这里提前拦截并给可执行出口；被重试的 blocked 原执行自身仍属
+    // 「活跃」（与 execution.service 同一词表），错误须说明这一层，避免
+    // 「等待其完成」式死路指引。
+    const active = await this.prisma.execution.findFirst({
+      where: {
+        issueId,
+        status: { in: [...ACTIVE_EXECUTION_STATUSES] },
+      },
+      select: { id: true, title: true, status: true },
+    });
+    if (active) {
+      throw new BadRequestException(
+        active.id === original.id
+          ? `执行 ${original.id} 自身仍处于活跃状态（${active.status}），不可直接重新执行：` +
+              `请先取消它（执行详情「取消执行」动作，或取消接口 POST /_api/ai/execution-runs/${original.id}/cancel），取消后再重新执行`
+          : `该工单已存在其他活跃执行「${active.title ?? active.id}」（ID：${active.id}，状态：${active.status}）：` +
+              `请先取消它（执行详情「取消执行」动作，或取消接口 POST /_api/ai/execution-runs/${active.id}/cancel），再重新执行 ${original.id}`,
       );
     }
 
@@ -657,6 +683,12 @@ export class CliDispatchService {
 
   /**
    * Cancel a running CLI execution
+   * P1-21：取消出口补降级路径——CLI binding 仅在派发成功时创建，blocked
+   * （派发被门禁阻断落痕）等从未派发的执行没有 binding，此前直接 404 使
+   * 「先取消再重新执行」的指路成为死路。现按两段查找：binding 命中走既有
+   * 进程取消链路；binding 缺失时按 executionId 回落为纯执行记录取消（无
+   * 进程可杀、无 binding/session 待清理，状态流转仍走 executionService
+   * 状态机，终态校验与幂等语义不变）；两段都查不到才 404，并说明查了什么。
    */
   async cancelExecution(
     executionRunId: string,
@@ -667,9 +699,27 @@ export class CliDispatchService {
     });
 
     if (!binding) {
-      throw new NotFoundException(
-        `No CLI binding found for execution ${executionRunId}`,
+      const run = await this.prisma.execution.findUnique({
+        where: { id: executionRunId },
+        select: { id: true },
+      });
+      if (!run) {
+        throw new NotFoundException(
+          `取消失败：执行 ${executionRunId} 不存在` +
+            `（已查 CLI 执行绑定与执行记录两路，均未命中，请确认执行 ID 是否正确）`,
+        );
+      }
+      await this.executionService.cancelExecution(
+        executionRunId,
+        'Cancelled by user',
       );
+      this.messageBus.publish('cli.cancelled', {
+        executionRunId,
+        cancelledBy: userId,
+        viaBinding: false,
+      });
+      // 无 binding = 无在跑 CLI 进程可杀，返回值与既有语义一致（success=是否杀掉进程）
+      return false;
     }
 
     // Cancel the process

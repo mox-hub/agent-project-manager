@@ -201,7 +201,7 @@ describe('ExecutionService 单活跃互斥（需求重审 G5，2026-09-17 裁决
     return { svc, prisma };
   }
 
-  it('已有活跃执行时拒绝新建并引导走「重新执行」', async () => {
+  it('已有活跃执行时拒绝新建并引导先取消（P1-21 指路：ID+取消途径+重新执行出口）', async () => {
     const { svc, prisma } = makeMutexService({
       id: 'exec-1',
       title: '实现登录',
@@ -212,6 +212,16 @@ describe('ExecutionService 单活跃互斥（需求重审 G5，2026-09-17 裁决
     );
     await expect((svc as any).createExecutionRun(dto)).rejects.toThrow(
       /重新执行/,
+    );
+    // P1-21：错误信息必须可执行——指名活跃执行 ID 与两条取消途径
+    await expect((svc as any).createExecutionRun(dto)).rejects.toThrow(
+      /exec-1/,
+    );
+    await expect((svc as any).createExecutionRun(dto)).rejects.toThrow(
+      /执行详情「取消执行」/,
+    );
+    await expect((svc as any).createExecutionRun(dto)).rejects.toThrow(
+      /POST \/_api\/ai\/execution-runs\/exec-1\/cancel/,
     );
     expect(prisma.execution.create).not.toHaveBeenCalled();
   });

@@ -2571,7 +2571,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Cancel a running CLI execution */
+        /** Cancel a CLI execution (falls back to execution-record cancel when no CLI binding exists) */
         post: operations["CliDispatchController_cancelExecution"];
         delete?: never;
         options?: never;
@@ -2588,7 +2588,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Re-execute a failed/blocked execution as a new execution (clone + lineage + same dispatch flow) */
+        /** Re-execute a failed/blocked/superseded execution as a new execution (clone + lineage + same dispatch flow) */
         post: operations["CliDispatchController_retryExecution"];
         delete?: never;
         options?: never;
@@ -27554,7 +27554,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Execution cancelled */
+            /** @description Execution cancelled。success 表示是否终止了 CLI 进程；无 CLI 绑定时按执行记录直接走状态机取消，success 为 false 但取消已生效 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -27582,7 +27582,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description 原执行 ID（须为 failed/blocked） */
+                /** @description 原执行 ID（须为 failed/blocked/superseded） */
                 id: string;
             };
             cookie?: never;
@@ -27600,7 +27600,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description 不可重新执行：状态非 failed/blocked，或未关联有效工单；派发被门禁阻断时新执行落 blocked */
+            /** @description 不可重新执行：状态非 failed/blocked/superseded，或未关联有效工单；存在其他活跃执行时按错误信息先取消；派发被门禁阻断时新执行落 blocked */
             400: {
                 headers: {
                     [name: string]: unknown;
