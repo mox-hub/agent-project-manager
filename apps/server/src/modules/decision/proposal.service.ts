@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   Logger,
   NotFoundException,
@@ -7,6 +8,10 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
+import {
+  ContractBindingService,
+  ConflictAction,
+} from '@/modules/contract/contract-binding.service';
 import {
   GATE_PLAYBOOK_TYPE,
   PlaybookGatePayload,
@@ -81,6 +86,21 @@ interface SpendPayload {
   newValue?: number;
 }
 
+/** contract_conflict 提案 payload（ContractBindingService 冲突升级时投递） */
+interface ContractConflictPayload {
+  bindingId: string;
+  filePath?: string;
+  /** true=派生型绑定（整文件派生自平台，如 CHANGELOG） */
+  derived?: boolean;
+}
+
+/** 合法冲突裁决动作（与 ContractBindingService.resolveConflict 对齐） */
+const CONFLICT_ACTIONS: readonly ConflictAction[] = [
+  'accept_file',
+  'accept_db',
+  'detach',
+];
+
 @Injectable()
 export class ProposalService {
   private readonly logger = new Logger(ProposalService.name);
@@ -88,6 +108,7 @@ export class ProposalService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
+    private readonly contractBindings: ContractBindingService,
   ) {}
 
   async create(dto: CreateProposalDto, userId?: string) {
@@ -224,10 +245,54 @@ export class ProposalService {
           throw new BadRequestException('clarify resolve requires answer');
         }
         return;
+      case 'contract_conflict':
+        return this.applyContractConflict(proposal, dto);
       default:
         throw new BadRequestException(
           `Unknown proposal kind: ${proposal.kind}`,
         );
+    }
+  }
+
+  /**
+   * contract_conflict：契约托管区冲突裁决（ContractBindingService 冲突检查升级的提案）。
+   * 裁决动作由用户在卡上选择、随 resolve 请求体 conflictAction 传入
+   * （payload 在升级时已固化，装不下「此刻的选择」）：
+   * - accept_file：文件现值为新真相（派生型=认可手改版为新基线）；
+   * - accept_db：平台托管内容写回文件（派生型不支持，由导出方重新导出）；
+   * - detach：解绑，停止对齐。
+   * 与其他 applier 同风格：副作用先行，resolveConflict 抛错即状态不变、卡片留在待决可重试
+   * （契约侧写路径由 ContractBindingService 内部负责，此处不重复包事务）。
+   * reject = 仅留痕不裁决，冲突提案被驳回后可重新发起检查再升级。
+   */
+  private async applyContractConflict(
+    proposal: Proposal,
+    dto: ResolveProposalDto,
+  ): Promise<void> {
+    const payload = (proposal.payload ??
+      {}) as unknown as ContractConflictPayload;
+    if (!payload.bindingId || typeof payload.bindingId !== 'string') {
+      throw new BadRequestException(
+        'contract_conflict proposal requires payload.bindingId',
+      );
+    }
+    if (!dto.conflictAction || !CONFLICT_ACTIONS.includes(dto.conflictAction)) {
+      throw new BadRequestException(
+        `contract_conflict 决议需 conflictAction ∈ ${CONFLICT_ACTIONS.join(' | ')}（收到: ${dto.conflictAction ?? '缺省'}）`,
+      );
+    }
+    try {
+      await this.contractBindings.resolveConflict(
+        payload.bindingId,
+        dto.conflictAction,
+      );
+    } catch (err) {
+      // 契约侧的业务性失败（文件缺失 / 派生型不支持 accept_db 等）目前以普通
+      // Error 抛出，这里收敛为 400 让卡面可读；HttpException（如 404 绑定不存在）原样透传
+      if (err instanceof HttpException) throw err;
+      throw new BadRequestException(
+        `契约冲突裁决失败：${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 
@@ -555,6 +620,15 @@ export class ProposalService {
     outcome: 'completed' | 'cancelled',
   ): Promise<void> {
     const payload = (proposal.payload ?? {}) as unknown as ResolutionPayload;
+    // 形状守卫：resolution 提案的 payload 必须指明裁决对象。此前缺 entityType
+    // 会落到下面的 Unsupported 分支报出「Unsupported entityType: undefined」，
+    // 用户无从知道是提案数据本身坏了（如历史示例卡误用 kind=resolution）
+    if (!payload.entityType || !payload.entityId) {
+      throw new BadRequestException(
+        'resolution 提案 payload 缺少 { entityType: "task" | "milestone", entityId }，' +
+          '无法执行完成/取消（请检查提案创建方的 payload 形状）',
+      );
+    }
     if (payload.entityType === 'milestone') {
       await this.prisma.milestone.update({
         where: { id: payload.entityId },

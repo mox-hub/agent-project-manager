@@ -27,6 +27,7 @@ export const PROPOSAL_KINDS = [
   'gate',
   'workflow_def',
   'release',
+  'contract_conflict',
 ] as const;
 
 /** 建议（DecisionProposal）来源的建议类 kind 与实体 kind 的全集 */

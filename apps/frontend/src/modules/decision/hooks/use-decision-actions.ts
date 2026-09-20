@@ -42,6 +42,13 @@ function resolveToastKey(kind: Decision['kind'], action: string): string | null 
     if (action === 'accept') return 'decision.toast.releaseApproved';
     if (action === 'reject') return 'decision.toast.releaseRejected';
   }
+  if (kind === 'contract_conflict') {
+    // 三个裁决键都已执行 resolveConflict applier，共用一条成功话术
+    if (action === 'accept_file' || action === 'accept_db' || action === 'detach') {
+      return 'decision.toast.conflictResolved';
+    }
+    if (action === 'reject') return 'decision.toast.rejected';
+  }
   // 兜底 null = 该 (kind, action) 组合没有成功提示文案。
   // 注意：null 只意味着"不说成功话术"，不代表静默——失败仍由下方 catch 统一 toast.error。
   return null;

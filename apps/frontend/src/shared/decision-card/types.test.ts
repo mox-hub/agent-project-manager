@@ -22,6 +22,7 @@ const SERVER_PROPOSAL_KINDS = [
   'gate',
   'workflow_def',
   'release',
+  'contract_conflict',
 ];
 
 describe('PROPOSAL_KINDS', () => {
@@ -42,5 +43,10 @@ describe('PROPOSAL_KINDS', () => {
 
   it('release 必须在列（否则「批准发版」会被误当「验收通过」）', () => {
     expect(PROPOSAL_KINDS).toContain('release');
+  });
+
+  it('contract_conflict 必须在列（否则契约冲突卡会被误当「验收通过」路由到验收端点）', () => {
+    expect(PROPOSAL_KINDS).toContain('contract_conflict');
+    expect(isProposalKind('contract_conflict')).toBe(true);
   });
 });

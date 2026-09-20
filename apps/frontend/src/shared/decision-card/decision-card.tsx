@@ -11,8 +11,10 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  Database,
   EyeOff,
   FastForward,
+  FileCheck,
   FileText,
   GitBranch,
   GitPullRequest,
@@ -24,6 +26,7 @@ import {
   ScrollText,
   ShieldCheck,
   TrendingUp,
+  Unlink,
   User,
   UserCheck,
   X,
@@ -140,6 +143,22 @@ interface GateProposalPayload {
   consequences?: string[];
 }
 
+/** 契约冲突提案 payload（与服务端 ContractBindingService 冲突升级投递对齐） */
+interface ContractConflictPayload {
+  /** 契约文件绑定 ID（裁决动作经 resolve 请求体 conflictAction 上送） */
+  bindingId?: string;
+  filePath?: string;
+  /** true=派生型绑定（整文件派生自平台，如 CHANGELOG），真相在平台侧 */
+  derived?: boolean;
+  /** 托管型冲突的差异区间 */
+  blocks?: Array<{
+    id?: string;
+    state?: string;
+    fileSide?: string | null;
+    dbSide?: string | null;
+  }>;
+}
+
 /** 各 kind 的动作定义（快捷键 = 数组序号；闭环端点见 useResolveDecision） */
 export const KIND_ACTIONS: Record<DecisionKind, DecisionActionDef[]> = {
   approval: [
@@ -182,6 +201,14 @@ export const KIND_ACTIONS: Record<DecisionKind, DecisionActionDef[]> = {
   // 并触发事件驱动发布；reject = 打回草案（服务端仅 gated/approved 可打回）。
   release: [
     { action: 'accept', label: 'decision.action.approveRelease', icon: Check },
+    { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
+  ],
+  // 契约冲突裁决（ContractBindingService 冲突升级投递）：三个裁决键各自携带
+  // conflictAction 上送 resolve 端点（见 useResolveDecision）；reject = 仅留痕不裁决。
+  contract_conflict: [
+    { action: 'accept_file', label: 'decision.action.acceptFile', icon: FileCheck },
+    { action: 'accept_db', label: 'decision.action.acceptDb', icon: Database },
+    { action: 'detach', label: 'decision.action.detach', icon: Unlink },
     { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
   ],
 };
@@ -977,6 +1004,121 @@ function buildReleaseSlots(decision: Decision, t: TFunc): DecisionSlots {
   };
 }
 
+/** 证据文本截断：托管区间两侧内容可能整段，卡面只给可辨认的摘要 */
+function excerpt(text: string | null | undefined, max = 64): string | null {
+  if (!text) return null;
+  const oneLine = text.replace(/\s+/g, ' ').trim();
+  return oneLine.length > max ? `${oneLine.slice(0, max)}…` : oneLine;
+}
+
+/**
+ * contract_conflict 槽位：契约托管区冲突裁决（ContractBindingService 冲突升级投递）。
+ * 主体 = 冲突文件 + 差异区间对照 + 三种裁决动作的语义说明（与动作栏四键一一对应），
+ * 让不了解契约托管机制的人也能看懂每个键按下后会发生什么。
+ */
+function buildContractConflictSlots(decision: Decision, t: TFunc): DecisionSlots {
+  const p = (decision.payload ?? {}) as unknown as ContractConflictPayload;
+  const blocks = p.blocks ?? [];
+  const derived = p.derived === true;
+
+  const actionSemantics: Array<{ icon: typeof FileCheck; key: string }> = [
+    { icon: FileCheck, key: 'decision.conflict.actionAcceptFile' },
+    { icon: Database, key: 'decision.conflict.actionAcceptDb' },
+    { icon: Unlink, key: 'decision.conflict.actionDetach' },
+  ];
+
+  const body = (
+    <div className="space-y-2" data-ai="decision-conflict-body">
+      {/* 冲突文件行 */}
+      <div className="flex items-center gap-2.5 rounded-lg border border-accent-yellow/40 bg-accent-yellow-light/30 px-2.5 py-1.5 text-xs">
+        <FileText className="size-4 shrink-0 text-accent-yellow" />
+        <span className="min-w-0 flex-1 truncate font-mono font-medium text-content-text">
+          {p.filePath ?? '—'}
+        </span>
+        {derived ? (
+          <span className="shrink-0 rounded bg-accent-orange-light px-1.5 py-0.5 text-10 text-accent-orange">
+            {t('decision.conflict.derivedBadge')}
+          </span>
+        ) : (
+          <span className="shrink-0 rounded bg-content-bg-secondary px-1.5 py-0.5 text-10 text-content-text-muted">
+            {t('decision.conflict.managedBadge')}
+          </span>
+        )}
+      </div>
+
+      {/* 冲突说明：托管型 = 区间被文件侧直改；派生型 = 整文件派生自平台被发现手改 */}
+      <p className="text-11 leading-relaxed text-content-text-secondary">
+        {derived ? t('decision.conflict.derivedHint') : t('decision.conflict.managedHint')}
+      </p>
+
+      {/* 托管差异区间对照（派生型无区间，整文件指纹失配，不渲染） */}
+      {blocks.length > 0 ? (
+        <div className="space-y-1">
+          <p className="text-11 font-medium text-content-text-muted">
+            {t('decision.conflict.blockDiff', { n: blocks.length })}
+          </p>
+          {blocks.map((b, i) => {
+            const file = excerpt(b.fileSide);
+            const db = excerpt(b.dbSide);
+            return (
+              <div
+                key={b.id ?? i}
+                className="rounded-lg border border-border/60 bg-content-bg-secondary/40 px-2.5 py-1.5 text-11"
+              >
+                <p className="font-mono text-content-text-muted">#{b.id ?? i} · {b.state ?? '—'}</p>
+                {file ? (
+                  <p className="mt-0.5 flex items-start gap-1.5">
+                    <FileCheck className="mt-0.5 size-3 shrink-0 text-accent-blue" />
+                    <span className="min-w-0 flex-1 text-content-text-secondary">{file}</span>
+                  </p>
+                ) : null}
+                {db ? (
+                  <p className="mt-0.5 flex items-start gap-1.5">
+                    <Database className="mt-0.5 size-3 shrink-0 text-accent-purple" />
+                    <span className="min-w-0 flex-1 text-content-text-secondary">{db}</span>
+                  </p>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {/* 三种裁决动作的语义说明（顺序与动作栏前三键一致） */}
+      <div className="space-y-1 rounded-lg border border-border/60 p-2.5">
+        {actionSemantics.map(({ icon: Icon, key }) => (
+          <p key={key} className="flex items-start gap-1.5 text-11">
+            <Icon className="mt-0.5 size-3 shrink-0 text-content-text-muted" />
+            <span className="min-w-0 flex-1 leading-relaxed text-content-text-secondary">{t(key)}</span>
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+
+  const impact: DecisionImpactItem[] = [
+    {
+      label: t('decision.conflict.impactFile'),
+      value: p.filePath ?? '—',
+      icon: GitBranch,
+      tone: 'yellow',
+    },
+    {
+      label: t('decision.conflict.impactScope'),
+      value: derived
+        ? t('decision.conflict.scopeWholeFile')
+        : t('decision.conflict.scopeBlocks', { n: blocks.length }),
+      icon: ListChecks,
+    },
+  ];
+
+  return {
+    body,
+    impact,
+    evidence: decision.detail ? <p>{decision.detail}</p> : undefined,
+  };
+}
+
 type TFunc = (k: string, o?: Record<string, unknown>) => string;
 
 const SLOT_BUILDERS: Partial<Record<DecisionKind, (d: Decision, t: TFunc) => DecisionSlots>> = {
@@ -989,6 +1131,7 @@ const SLOT_BUILDERS: Partial<Record<DecisionKind, (d: Decision, t: TFunc) => Dec
   gate: buildGateSlots,
   workflow_def: buildWorkflowDefSlots,
   release: buildReleaseSlots,
+  contract_conflict: buildContractConflictSlots,
 };
 
 export interface DecisionCardProps {
