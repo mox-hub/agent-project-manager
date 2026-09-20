@@ -37,7 +37,11 @@ export class AiWorkerCoordinatorService {
     dispatchError?: string;
   }> {
     // 1. 指派：IssueAssignee 绑定 + assigneeType/aiAgentId 同步（内部校验成员与项目绑定）
-    await this.issueService.assignAgent(issueId, { agentId: memberId }, userId);
+    await this.issueService.assignAgent(
+      issueId,
+      { aiAgentId: memberId },
+      userId,
+    );
 
     // 2. 派发：成员级 provider 解析 + Execution 创建/绑定（4d-3 executionId）
     try {

@@ -8,8 +8,10 @@ import { spawn } from 'child_process';
 import {
   CliAdapter,
   CliExecutionInput,
+  CliUsage,
   CommandBuildResult,
   StreamEmitter,
+  extractCliUsage,
 } from './cli-adapter.interface';
 
 export class ClaudeCodeAdapter implements CliAdapter {
@@ -121,6 +123,11 @@ export class ClaudeCodeAdapter implements CliAdapter {
 
       switch (type) {
         case 'assistant':
+          // assistant 事件自带的 message.usage（逐轮）；result 终事件为全量口径
+          if (data.message?.usage) {
+            const usage = extractCliUsage(data.message);
+            if (usage) emit.usage?.(usage);
+          }
           if (data.message?.content) {
             const content = data.message.content;
             if (Array.isArray(content)) {
@@ -150,6 +157,11 @@ export class ClaudeCodeAdapter implements CliAdapter {
           break;
 
         case 'result':
+          // 终事件：usage（input/output tokens + 顶层 total_cost_usd）
+          {
+            const usage = extractCliUsage(data);
+            if (usage) emit.usage?.(usage);
+          }
           if (data.subtype === 'tool_result') {
             emit.step?.({
               stepType: 'observation',
@@ -207,11 +219,13 @@ export class ClaudeCodeAdapter implements CliAdapter {
     artifacts: Array<{ type: string; name: string; content?: string }>;
     error?: string;
     output?: Record<string, unknown>;
+    usage?: CliUsage;
   } {
     const artifacts: Array<{ type: string; name: string; content?: string }> =
       [];
     const lines = stdout.split('\n').filter(Boolean);
     const finalOutput: string[] = [];
+    let usage: CliUsage | undefined;
 
     for (const line of lines) {
       try {
@@ -229,6 +243,8 @@ export class ClaudeCodeAdapter implements CliAdapter {
         }
 
         if (data.type === 'result') {
+          // 终事件 usage（真实 stream-json subtype=success 携带 usage + total_cost_usd）
+          usage = extractCliUsage(data) ?? usage;
           if (data.subtype === 'finished') {
             artifacts.push({
               type: 'result',
@@ -250,6 +266,7 @@ export class ClaudeCodeAdapter implements CliAdapter {
         artifacts,
         error: `Claude CLI exited with code ${exitCode}`,
         output: { stdout, exitCode },
+        usage,
       };
     }
 
@@ -257,6 +274,7 @@ export class ClaudeCodeAdapter implements CliAdapter {
       status: 'completed',
       artifacts,
       output: { response: finalOutput.join('\n') },
+      usage,
     };
   }
 }

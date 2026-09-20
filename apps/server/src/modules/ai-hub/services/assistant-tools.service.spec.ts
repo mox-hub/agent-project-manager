@@ -151,6 +151,145 @@ describe('AssistantToolsService', () => {
     expect(mockPrisma.decisionProposal.create).not.toHaveBeenCalled();
   });
 
+  it('propose_decision plan 形状不合法（added 缺失/空/缺 title）时拒卡', async () => {
+    const tools = service.buildTools({ projectId: 'p1', userId: 'u1' });
+    const propose = (
+      tools as unknown as Record<
+        string,
+        { execute: (args: unknown) => Promise<unknown> }
+      >
+    ).propose_decision;
+    for (const payload of [
+      { steps: ['a'] },
+      { added: [] },
+      { added: [{ estimate: 3 }] },
+    ]) {
+      const bad = (await propose.execute({
+        kind: 'plan',
+        title: 't',
+        payload,
+      })) as { error?: string };
+      expect(bad.error).toContain('added');
+    }
+    expect(mockPrisma.decisionProposal.create).not.toHaveBeenCalled();
+  });
+
+  it('propose_decision resolution 形状不合法时拒卡并说明期望形状', async () => {
+    const tools = service.buildTools({ projectId: 'p1', userId: 'u1' });
+    const propose = (
+      tools as unknown as Record<
+        string,
+        { execute: (args: unknown) => Promise<unknown> }
+      >
+    ).propose_decision;
+    for (const payload of [
+      { entityType: 'task' },
+      { entityType: 'bug', entityId: 't1' },
+      { entityId: 't1' },
+    ]) {
+      const bad = (await propose.execute({
+        kind: 'resolution',
+        title: 't',
+        payload,
+      })) as { error?: string };
+      expect(bad.error).toContain('entityType');
+    }
+    expect(mockPrisma.decisionProposal.create).not.toHaveBeenCalled();
+  });
+
+  it('propose_decision spend 合法形状落卡；budgetType 非法或缺项目上下文拒卡', async () => {
+    mockPrisma.decisionProposal.create.mockResolvedValue({
+      id: 'dp-spend',
+      kind: 'spend',
+      title: '预算调整',
+      projectId: 'p1',
+      issueId: null,
+      status: 'pending',
+      createdAt: new Date('2026-09-20T08:00:00Z'),
+    });
+    const tools = service.buildTools({ projectId: 'p1', userId: 'u1' });
+    const propose = (
+      tools as unknown as Record<
+        string,
+        { execute: (args: unknown) => Promise<unknown> }
+      >
+    ).propose_decision;
+    const ok = (await propose.execute({
+      kind: 'spend',
+      title: '预算调整',
+      payload: { budgetType: 'tokens', newValue: 200000 },
+    })) as { error?: string; proposalId?: string };
+    expect(ok.error).toBeUndefined();
+    expect(ok.proposalId).toBe('dp-spend');
+
+    const badBudgetType = (await propose.execute({
+      kind: 'spend',
+      title: 't',
+      payload: { budgetType: 'usd!', newValue: '很多' },
+    })) as { error?: string };
+    expect(badBudgetType.error).toContain('budgetType');
+
+    const noProject = (await (
+      service.buildTools({ userId: 'u1' }) as unknown as Record<
+        string,
+        { execute: (args: unknown) => Promise<unknown> }
+      >
+    ).propose_decision.execute({
+      kind: 'spend',
+      title: 't',
+      payload: { budgetType: 'tokens', newValue: 1 },
+    })) as { error?: string };
+    expect(noProject.error).toContain('项目上下文');
+    expect(mockPrisma.decisionProposal.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('propose_decision clarify 合法形状放行；缺 choices/ question 时拒卡', async () => {
+    mockPrisma.decisionProposal.create.mockResolvedValue({
+      id: 'dp-clarify',
+      kind: 'clarify',
+      title: '澄清',
+      projectId: 'p1',
+      issueId: null,
+      status: 'pending',
+      createdAt: new Date('2026-09-20T08:00:00Z'),
+    });
+    const tools = service.buildTools({ projectId: 'p1', userId: 'u1' });
+    const propose = (
+      tools as unknown as Record<
+        string,
+        { execute: (args: unknown) => Promise<unknown> }
+      >
+    ).propose_decision;
+    const ok = (await propose.execute({
+      kind: 'clarify',
+      title: '澄清',
+      payload: {
+        question: '采用哪种鉴权？',
+        choices: [
+          { key: 'jwt', label: 'JWT', guess: true },
+          { key: 'session', label: 'Session' },
+        ],
+      },
+    })) as { error?: string; proposalId?: string };
+    expect(ok.error).toBeUndefined();
+    expect(ok.proposalId).toBe('dp-clarify');
+
+    const bad = (await propose.execute({
+      kind: 'clarify',
+      title: 't',
+      payload: { question: '采用哪种鉴权？' },
+    })) as { error?: string };
+    expect(bad.error).toContain('choices');
+
+    const badQuestion = (await propose.execute({
+      kind: 'clarify',
+      title: 't',
+      payload: { question: '   ', choices: [{ key: 'a' }] },
+    })) as { error?: string };
+    expect(badQuestion.error).toContain('choices');
+    expect(mockPrisma.decisionProposal.create).toHaveBeenCalledTimes(1);
+  });
+
   it('propose_decision 工具落 DecisionProposal（ai_agent/main-assistant，pending）', async () => {
     const createdAt = new Date('2026-09-04T08:00:00Z');
     mockPrisma.decisionProposal.create.mockResolvedValue({
@@ -171,7 +310,7 @@ describe('AssistantToolsService', () => {
     const result = await propose.execute({
       kind: 'plan',
       title: '重构登录模块',
-      payload: { steps: ['a', 'b'] },
+      payload: { added: [{ title: '拆解步骤A' }, { title: '拆解步骤B' }] },
       detail: '两步走',
     });
 
