@@ -138,6 +138,60 @@ export class IssueController {
     return this.issueService.findAccessibleTasks(query, user.id);
   }
 
+  // P0-8a：export 必须声明在 ':id' 之前——Nest 按声明顺序匹配路由，
+  // 置于其后时 GET /issues/export 会被 findOne 当作 id 吞掉而永远 404
+  @Get('export')
+  @ApiOperation({ summary: 'Export tasks to CSV/JSON' })
+  @ApiQuery({ name: 'projectId', required: true, description: 'Project ID' })
+  @ApiQuery({
+    name: 'format',
+    required: false,
+    enum: ExportFormat,
+    description: 'Export format',
+  })
+  @ApiStandardErrors()
+  @ApiExtraModels(IssueExportRowDto)
+  @ApiOkResponse({
+    description:
+      'format=json 返回导出行数组；format=csv 返回 CSV 文本（attachment 下载）',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: { $ref: getSchemaPath(IssueExportRowDto) },
+        },
+      },
+      'text/csv': {
+        schema: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async exportTasks(
+    @Query('projectId') projectId: string,
+    @Query('format') format: ExportFormat = ExportFormat.CSV,
+    @CurrentUser() user: any,
+    @Res() res: Response,
+  ) {
+    const data = await this.issueService.exportTasks(
+      projectId,
+      user.id,
+      format,
+    );
+
+    if (format === ExportFormat.JSON) {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', 'attachment; filename=tasks.json');
+      return res.status(HttpStatus.OK).json(data);
+    }
+
+    // CSV format
+    const csv = this.issueService.convertToCSV(data);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=tasks.csv');
+    return res.status(HttpStatus.OK).send(csv);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get task by ID' })
   @ApiParam({ name: 'id', description: 'Task ID' })
@@ -304,58 +358,6 @@ export class IssueController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   importTasks(@Body() dto: ImportIssuesDto, @CurrentUser() user: any) {
     return this.issueService.importTasks(dto.tasks, user.id);
-  }
-
-  @Get('export')
-  @ApiOperation({ summary: 'Export tasks to CSV/JSON' })
-  @ApiQuery({ name: 'projectId', required: true, description: 'Project ID' })
-  @ApiQuery({
-    name: 'format',
-    required: false,
-    enum: ExportFormat,
-    description: 'Export format',
-  })
-  @ApiStandardErrors()
-  @ApiExtraModels(IssueExportRowDto)
-  @ApiOkResponse({
-    description:
-      'format=json 返回导出行数组；format=csv 返回 CSV 文本（attachment 下载）',
-    content: {
-      'application/json': {
-        schema: {
-          type: 'array',
-          items: { $ref: getSchemaPath(IssueExportRowDto) },
-        },
-      },
-      'text/csv': {
-        schema: { type: 'string' },
-      },
-    },
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async exportTasks(
-    @Query('projectId') projectId: string,
-    @Query('format') format: ExportFormat = ExportFormat.CSV,
-    @CurrentUser() user: any,
-    @Res() res: Response,
-  ) {
-    const data = await this.issueService.exportTasks(
-      projectId,
-      user.id,
-      format,
-    );
-
-    if (format === ExportFormat.JSON) {
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', 'attachment; filename=tasks.json');
-      return res.status(HttpStatus.OK).json(data);
-    }
-
-    // CSV format
-    const csv = this.issueService.convertToCSV(data);
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename=tasks.csv');
-    return res.status(HttpStatus.OK).send(csv);
   }
 
   // ─── Task ID 管理 ──────────────────────────────────────────

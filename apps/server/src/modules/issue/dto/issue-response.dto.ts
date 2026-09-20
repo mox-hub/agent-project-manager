@@ -1021,6 +1021,21 @@ export class IssueActivityResponseDto {
   metadata?: Record<string, unknown> | null;
 }
 
+/** 导入单行错误（P0-8b：随 400 响应 error.details.errors 返回） */
+export class IssueImportRowErrorDto {
+  @ApiProperty({ type: Number, description: '数据行号，从 1 起' })
+  row: number;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: '出错字段（title/projectId/type/priority/status）',
+  })
+  field?: string;
+
+  @ApiProperty({ type: String, description: '人类可读的错误描述' })
+  message: string;
+}
+
 /** 导入结果（importTasks） */
 export class IssueImportResponseDto {
   @ApiProperty({ type: Number, description: '成功导入条数' })
@@ -1031,6 +1046,20 @@ export class IssueImportResponseDto {
     description: '新建的工单（无关系预加载）',
   })
   tasks: IssueBaseDto[];
+
+  @ApiPropertyOptional({
+    type: Number,
+    description:
+      '失败条数（P0-8b：当前为整体回滚语义，仅出现在 400 错误 details 中，成功响应不返回）',
+  })
+  failed?: number;
+
+  @ApiPropertyOptional({
+    type: [IssueImportRowErrorDto],
+    description:
+      '逐行校验错误（P0-8b：任一行失败整批拒绝，errors 随 400 error.details.errors 返回）',
+  })
+  errors?: IssueImportRowErrorDto[];
 }
 
 /** 导出行（exportTasks JSON 格式） */

@@ -13,6 +13,12 @@ import { UpdateIssueDto } from './dto/update-issue.dto';
 import { IssueQueryDto } from './dto/issue-query.dto';
 import { CreateIssueDependencyDto } from './dto/create-issue-dependency.dto';
 import { AssignIssueAgentDto } from './dto/assign-issue-agent.dto';
+import {
+  ImportIssueDto,
+  IMPORT_ISSUE_PRIORITIES,
+  IMPORT_ISSUE_TYPES,
+  IssueImportRowError,
+} from './dto/import-export.dto';
 import { CreateIssueExecutionDto } from './dto/create-issue-execution.dto';
 import { ConfirmIssueExecutionDto } from './dto/confirm-issue-execution.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
@@ -49,6 +55,26 @@ export class IssueService {
   /** 类型桥接：旧 type 字符串 → IssueType.id（缺省回落内置 task） */
   private async resolveTypeId(typeKey?: string): Promise<string | null> {
     return this.issueTypeService.resolveIdByKey(typeKey || 'task');
+  }
+
+  /**
+   * P0-9：验收标准显式校验——含缺 content 的项直接 400，不再静默丢弃。
+   * 此前 filter 吞掉后仍返回 201，Gherkin 直觉形状（{title,given,when,then}）
+   * 的标准零落库，用户到派发时才被「无标准」拦截且无从知道原因。
+   * 必须在任务落库前调用，避免「先建任务再抛错」的半成品状态。
+   */
+  private validateAcceptanceCriteriaDraft(
+    criteria?: CreateIssueDto['acceptanceCriteria'],
+  ): void {
+    (criteria ?? []).forEach((item, index) => {
+      if (!item || typeof item.content !== 'string' || !item.content.trim()) {
+        throw new BadRequestException({
+          code: 'VALIDATION_ERROR',
+          message: `acceptanceCriteria 第 ${index + 1} 项缺少 content 字段`,
+          details: { index: index + 1, field: 'content' },
+        });
+      }
+    });
   }
 
   /**
@@ -368,6 +394,9 @@ export class IssueService {
   }
 
   async create(createIssueDto: CreateIssueDto, userId: string) {
+    // P0-9：验收标准先校验再落库（缺 content 的项 400，杜绝半成品任务）
+    this.validateAcceptanceCriteriaDraft(createIssueDto.acceptanceCriteria);
+
     // Resolve effective project: 显式传入优先, 其次从父任务继承, 否则为无项目任务
     const projectId = await this.resolveProjectContext(createIssueDto);
 
@@ -555,9 +584,8 @@ export class IssueService {
 
     // 兜底改造批 3：创建即落验收契约——acceptanceCriteria 直建契约+标准，
     // 创建面板的验收标准从此进门禁体系（todoItems 保持待办语义不再承载）
-    const draftCriteria = (createIssueDto.acceptanceCriteria ?? []).filter(
-      (c) => typeof c?.content === 'string' && c.content.trim(),
-    );
+    // P0-9：缺 content 的项已在 create() 开头显式 400，此处不再静默过滤
+    const draftCriteria = createIssueDto.acceptanceCriteria ?? [];
     if (draftCriteria.length > 0 && projectId) {
       const acceptance = await this.prisma.acceptance.create({
         data: {
@@ -2317,15 +2345,79 @@ export class IssueService {
     });
   }
 
-  async importTasks(tasks: any[], userId: string) {
+  async importTasks(tasks: ImportIssueDto[], userId: string) {
     if (!tasks || tasks.length === 0) {
       throw new BadRequestException('No tasks to import');
     }
 
-    // Use the first task's projectId (all tasks should be in the same project)
+    // P0-8b：逐行校验（此前只看首行 projectId、枚举不校验，脏数据直接入库）。
+    // 口径对齐 create()：priority/type 用 CreateIssueDto 同款字面量枚举；
+    // status 须为项目级或全局 StatusDefinition 已定义的 key。
     const projectId = tasks[0].projectId;
     if (!projectId) {
       throw new BadRequestException('projectId is required for import');
+    }
+
+    const statusDefinitions = await this.prisma.statusDefinition.findMany({
+      where: { type: 'task', OR: [{ projectId }, { projectId: null }] },
+      select: { key: true },
+    });
+    const allowedStatuses = new Set(statusDefinitions.map((s) => s.key));
+
+    const errors: IssueImportRowError[] = [];
+    tasks.forEach((task, index) => {
+      const row = index + 1;
+      if (typeof task.title !== 'string' || !task.title.trim()) {
+        errors.push({
+          row,
+          field: 'title',
+          message: `第 ${row} 行缺少 title`,
+        });
+      }
+      if (!task.projectId) {
+        errors.push({
+          row,
+          field: 'projectId',
+          message: `第 ${row} 行缺少 projectId`,
+        });
+      } else if (task.projectId !== projectId) {
+        errors.push({
+          row,
+          field: 'projectId',
+          message: `第 ${row} 行 projectId（${task.projectId}）与首行（${projectId}）不一致，不支持跨项目导入`,
+        });
+      }
+      if (task.type && !IMPORT_ISSUE_TYPES.includes(task.type)) {
+        errors.push({
+          row,
+          field: 'type',
+          message: `第 ${row} 行 type「${task.type}」非法（可选：${IMPORT_ISSUE_TYPES.join('/')}）`,
+        });
+      }
+      if (task.priority && !IMPORT_ISSUE_PRIORITIES.includes(task.priority)) {
+        errors.push({
+          row,
+          field: 'priority',
+          message: `第 ${row} 行 priority「${task.priority}」非法（可选：${IMPORT_ISSUE_PRIORITIES.join('/')}）`,
+        });
+      }
+      if (task.status && !allowedStatuses.has(task.status)) {
+        errors.push({
+          row,
+          field: 'status',
+          message: `第 ${row} 行 status「${task.status}」不存在（项目或全局状态定义中无此 key）`,
+        });
+      }
+    });
+
+    if (errors.length > 0) {
+      // 全量回滚语义：任一行不合法则整批拒绝（$transaction 尚未开始，天然零落库），
+      // 逐行错误随 details.errors 返回，前端可定向提示
+      throw new BadRequestException({
+        code: 'IMPORT_VALIDATION_FAILED',
+        message: `导入校验失败：${errors.length} 处错误，本次导入已整体拒绝，未创建任何任务`,
+        details: { errors },
+      });
     }
 
     // Verify project exists and user has access
@@ -2358,30 +2450,38 @@ export class IssueService {
     const status = defaultStatus?.key || 'todo';
 
     // Create tasks（shortId 顺序分配：两段式全局序号，与手工创建同源；
-    // type 为遗留口径列，bug 型工单在此分化）
+    // type 为遗留口径列，bug 型工单在此分化）。
+    // shortId 与 typeId 在事务外解析：SQLite 写事务串行，事务内只做建行操作。
     const shortIds: string[] = [];
     for (let i = 0; i < tasks.length; i += 1) {
       shortIds.push(await this.issueIdService.nextShortId());
     }
-    const createdTasks = await Promise.all(
-      tasks.map((task, i) =>
-        this.prisma.issue.create({
-          data: {
-            projectId,
-            shortId: shortIds[i],
-            type: task.type === 'bug' ? 'bug' : 'task',
-            title: task.title,
-            description: task.description,
-            status: task.status || status,
-            priority: task.priority || 'medium',
-            assigneeId: task.assigneeId,
-            reporterId: task.reporterId || userId,
-            iterationId: task.iterationId,
-            startDate: task.startDate ? new Date(task.startDate) : null,
-            dueDate: task.dueDate ? new Date(task.dueDate) : null,
-            estimate: task.estimate,
-          },
-        }),
+    // typeId 与 create() 同源桥接，避免导入行 typeId=null 的脏数据
+    const taskTypeId = await this.resolveTypeId('task');
+    const bugTypeId = await this.resolveTypeId('bug');
+
+    const createdTasks = await this.prisma.$transaction(async (tx) =>
+      Promise.all(
+        tasks.map((task, i) =>
+          tx.issue.create({
+            data: {
+              projectId,
+              shortId: shortIds[i],
+              type: task.type === 'bug' ? 'bug' : 'task',
+              typeId: task.type === 'bug' ? bugTypeId : taskTypeId,
+              title: task.title,
+              description: task.description,
+              status: task.status || status,
+              priority: task.priority || 'medium',
+              assigneeId: task.assigneeId,
+              reporterId: task.reporterId || userId,
+              iterationId: task.iterationId,
+              startDate: task.startDate ? new Date(task.startDate) : null,
+              dueDate: task.dueDate ? new Date(task.dueDate) : null,
+              estimate: task.estimate,
+            },
+          }),
+        ),
       ),
     );
 
