@@ -300,7 +300,7 @@ function ValueMenu({
                 className="h-8 text-xs"
               />
             ) : null}
-            <CommandList scrollAreaClassName="max-h-64">
+            <CommandList scrollAreaClassName="[&_[data-slot=scroll-area-viewport]]:max-h-64">
               <CommandEmpty>{t("common.filterNoResults")}</CommandEmpty>
               {((group: (typeof menuGroups)[number]) => (
                 <Fragment key={group.value}>

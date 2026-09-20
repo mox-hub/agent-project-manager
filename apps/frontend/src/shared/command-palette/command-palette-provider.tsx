@@ -484,7 +484,12 @@ export function CommandPaletteProvider({
                 </Button>
               </div>
               <CommandPanel>
-                <ScrollArea className="max-h-80" overscrollContain scrollbarGutter scrollFade>
+                <ScrollArea
+                  className="[&_[data-slot=scroll-area-viewport]]:max-h-80"
+                  overscrollContain
+                  scrollbarGutter
+                  scrollFade
+                >
                   <div className="p-5">
                     {!ai.isGenerating && !ai.response && !ai.error && !ai.submitted ? (
                       <p className="py-6 text-center text-muted-foreground text-sm">
@@ -640,7 +645,8 @@ export function CommandPaletteProvider({
                     {t('commandPalette.searchHint', '输入以搜索工单/项目')}
                   </div>
                 ) : null}
-                <CommandList scrollAreaClassName="max-h-72">
+                {/* base-ui ScrollArea 坑：max-h 挂根无效（viewport h-full 在 auto 高度父级失效不可滚），约束须任意变体打 viewport */}
+                <CommandList scrollAreaClassName="[&_[data-slot=scroll-area-viewport]]:max-h-72">
                   {(group: PaletteGroup) => (
                     <CommandGroup items={group.items} key={group.value}>
                       <CommandGroupLabel>{group.label}</CommandGroupLabel>
