@@ -15,6 +15,7 @@
     "prebuild": "cd ../.. && pnpm --filter @apm/shared build",
     "build": "tsc -p tsconfig.build.json",
     "type-check": "tsc -p tsconfig.build.json --noEmit",
+    "pretest": "cd ../.. && pnpm --filter @apm/shared build",
     "test": "vitest run"
   },
   "dependencies": {
