@@ -21,7 +21,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAiProviders, useUpdateProvider, useTestProvider, useDetectModels, useProviderBalance, providerKeys } from '@/modules/ai-hub/hooks/use-ai-providers';
+import { useAiProviders, useUpdateProvider, useTestProvider, useDetectModels, useProviderBalance, providerKeys, resolveTestConnectionErrorMessage } from '@/modules/ai-hub/hooks/use-ai-providers';
 import { usePricingSource, useRefreshPricingSource } from '@/modules/ai-hub/hooks/use-pricing-source';
 import { useProviderValidation } from '@/modules/ai-hub/hooks/use-validate-provider';
 import type { AIProviderConfig } from '@/modules/ai-hub/api/ai-hub-api';
@@ -634,9 +634,11 @@ export function ModelsTab() {
         toast.error(t('aiHub.connectionFailedToast', { name, message: msg }));
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('aiHub.testFailed');
+      // 超时/断网用 i18n 文案（禁英文 axios 默认文案）；后端结构化错误透传完整 message
+      const message = resolveTestConnectionErrorMessage(error, t);
       toast.error(t('aiHub.connectionFailedToast', { name, message }));
     } finally {
+      // 超时/失败也复位 loading，按钮恢复可点，允许立即重试
       setTestingProviderId(null);
     }
   };

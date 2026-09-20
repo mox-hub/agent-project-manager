@@ -383,8 +383,15 @@ export const aiHubApi = {
   validateProvider: (data: ValidateProviderRequest) =>
     api.post<ValidateProviderResponse>('/ai/providers/validate', data),
 
+  /**
+   * 测试已保存 Provider 的连接（触发后端真实验证链路，最长约 38s）。
+   * timeoutMs 放宽到 60s：全局默认 30s 会先于后端返回超时，
+   * 吞掉后端拼好的结构化诊断信息。
+   */
   testProvider: (id: string) =>
-    api.post<ValidateProviderResponse>(`/ai/providers/${id}/test`),
+    api.post<ValidateProviderResponse>(`/ai/providers/${id}/test`, undefined, {
+      timeoutMs: 60_000,
+    }),
 
   detectModels: (id: string) =>
     api.post<{ models: string[]; synced: boolean }>(

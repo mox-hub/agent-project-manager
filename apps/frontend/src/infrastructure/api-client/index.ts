@@ -122,9 +122,14 @@ apiClient.interceptors.response.use(
     }
 
     if (status === 0) {
+      // 区分前端超时与网络断开：axios 超时（config.timeout 触发）code 为
+      // ECONNABORTED（部分环境为 ETIMEDOUT）。不区分的话组件只能拿到英文
+      // axios 默认文案（"timeout of 30000ms exceeded"），无法展示 i18n 超时提示。
+      const isTimeout =
+        error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT';
       throw new ApiClientError({
-        code: 'NETWORK_ERROR',
-        message: error.message || '网络异常',
+        code: isTimeout ? 'TIMEOUT' : 'NETWORK_ERROR',
+        message: isTimeout ? '请求超时' : error.message || '网络异常',
         status: 0,
         endpoint,
       });
@@ -163,6 +168,12 @@ export interface RequestOptions {
   params?: Record<string, unknown>;
   signal?: AbortSignal;
   data?: unknown;
+  /**
+   * 单请求超时覆盖（ms）：仅覆盖本次请求的 axios timeout，
+   * 不改全局实例默认值（30s）。供长耗时请求（如 AI 供应商测试连接）
+   * 放宽窗口；不传走实例默认。
+   */
+  timeoutMs?: number;
 }
 
 function normalizeParams(params: unknown): Record<string, unknown> | undefined {
@@ -185,6 +196,7 @@ export const api = {
       .get<unknown>(url, {
         params: options?.params ?? normalizeParams(params),
         signal: options?.signal,
+        timeout: options?.timeoutMs,
       })
       .then((res) => unwrapEnvelope<T>(res.data)),
 
@@ -193,6 +205,7 @@ export const api = {
       .post<unknown>(url, data, {
         params: options?.params,
         signal: options?.signal,
+        timeout: options?.timeoutMs,
       })
       .then((res) => unwrapEnvelope<T>(res.data)),
 
@@ -201,6 +214,7 @@ export const api = {
       .put<unknown>(url, data, {
         params: options?.params,
         signal: options?.signal,
+        timeout: options?.timeoutMs,
       })
       .then((res) => unwrapEnvelope<T>(res.data)),
 
@@ -209,6 +223,7 @@ export const api = {
       .patch<unknown>(url, data, {
         params: options?.params,
         signal: options?.signal,
+        timeout: options?.timeoutMs,
       })
       .then((res) => unwrapEnvelope<T>(res.data)),
 
@@ -218,6 +233,7 @@ export const api = {
         params: options?.params,
         signal: options?.signal,
         data: options?.data,
+        timeout: options?.timeoutMs,
       })
       .then((res) => unwrapEnvelope<T>(res.data)),
 
