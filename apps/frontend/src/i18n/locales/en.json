@@ -1350,7 +1350,8 @@
       "inProgress": "In Progress",
       "inReview": "In Review",
       "done": "Done",
-      "canceled": "Canceled"
+      "canceled": "Canceled",
+      "showingFiltered": "Showing"
     },
     "status": {
       "all": "All Status",
@@ -1393,7 +1394,12 @@
       "byAssignee": "By Assignee",
       "byLabel": "By Label",
       "searchPlaceholder": "Search tasks...",
-      "all": "All"
+      "all": "All",
+      "typeGroup": "Type",
+      "projectGroup": "Project",
+      "iterationGroup": "Iteration",
+      "tagGroup": "Label",
+      "unassigned": "Unassigned"
     },
     "sort": {
       "createdAt": "Created Date",
@@ -1475,7 +1481,26 @@
       "failed": "Dispatch failed: {{message}}"
     },
     "import": {
-      "validationFailed": "Import validation failed — nothing was imported ({{count}} errors)"
+      "validationFailed": "Import validation failed — nothing was imported ({{count}} errors)",
+      "action": "Import",
+      "actionTitle": "Import issues from CSV (imports to the inbox when no project is selected)"
+    },
+    "batchUpdate": {
+      "action": "Batch update",
+      "actionTitle": "Batch update status / priority / assignee",
+      "title": "Batch update {{count}} issues",
+      "noChange": "No change",
+      "apply": "Apply to {{count}} issues",
+      "applying": "Updating…",
+      "success": "Updated {{count}} issues",
+      "partial": "Updated {{success}}, failed {{failed}}: {{detail}}{{more}}",
+      "andMore": " and {{count}} more"
+    },
+    "export": {
+      "label": "Export",
+      "globalTitle": "Export issues",
+      "formatLegend": "Export format",
+      "confirm": "Export {{count}} issues"
     }
   },
   "project": {
@@ -4116,6 +4141,8 @@
     "description": "Search for a command to run...",
     "placeholder": "Search for a command...",
     "empty": "No command found.",
+    "searchResults": "Search Results",
+    "searchHint": "Type to search issues and projects",
     "ungrouped": "Ungrouped",
     "hintNavigate": "Navigate",
     "hintSelect": "Select",
@@ -4831,7 +4858,14 @@
       "dueDate": "Due date",
       "created": "Created",
       "updated": "Updated",
-      "title": "Title"
+      "title": "Title",
+      "shortId": "ID",
+      "status": "Status",
+      "assignee": "Assignee",
+      "project": "Project",
+      "estimate": "Estimate",
+      "labels": "Labels",
+      "aiExecution": "AI State"
     },
     "orderDirections": {
       "asc": "Ascending",
@@ -4861,7 +4895,8 @@
       "timeInStatus": "Time in status",
       "created": "Created",
       "updated": "Updated",
-      "aiExecution": "AI State"
+      "aiExecution": "AI State",
+      "estimate": "Estimate"
     },
     "aiFilter": {
       "executingCount": "{{count}} AI Running",

@@ -4,9 +4,9 @@
  */
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
-  Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, CalendarRange, TableProperties, Trash2, CircleDashed, SearchX,
+  Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, CalendarRange, TableProperties, Trash2, CircleDashed, SearchX, Flag, Users, Target, Upload, SlidersHorizontal, Tag as TagIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AsyncState } from '@/components/ui/async-state';
@@ -39,7 +39,16 @@ import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { useTranslation } from 'react-i18next';
 import { AiAssignDialog, type AiAssignIssueRef } from '../components/ai-assign-dialog';
 import { TaskSimpleList } from '../components/task-simple-list';
-import { TaskTableView } from '../components/task-table-view';
+import {
+  TaskTableView,
+  TASK_TABLE_PROPERTY_KEYS,
+  assigneeNameOf,
+  issueTimeOf,
+} from '../components/task-table-view';
+import { BatchUpdateIssuesDialog, type BatchUpdateIssueRef } from '../components/batch-update-issues-dialog';
+import { GlobalTaskExportDialog } from '../components/global-task-export-dialog';
+import { ImportModal } from '../components/task-import-export';
+import { useIterationNameMap } from '../hooks/use-iteration-name-map';
 import { TaskGantt } from '../components/task-gantt';
 import { useActiveExecutionsMap, type ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
 import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
@@ -74,6 +83,97 @@ const severityOf = (task: Task): Severity =>
   task.severity ||
   (task.priority === 'critical' ? 'critical' : task.priority === 'high' ? 'high' : task.priority === 'medium' ? 'medium' : 'low');
 
+/* ───────── P1-16：筛选状态 ↔ URL query 同步 ─────────
+ * 参数约定：q=搜索；completed=完成度（active/completed）；f_<fieldId>=v1,v2（条件条，
+ * isNot/notInclude 的值加 ! 前缀）。优先级：保存视图 > URL > 默认——保存视图 onApply
+ * 覆盖页面态后由同步 effect 回写 URL；直开带参时 URL 初始化页面态。 */
+const CONDITION_PARAM_PREFIX = 'f_';
+const SEARCH_PARAM = 'q';
+const COMPLETED_PARAM = 'completed';
+
+/** 条件条 → URL params（同字段 is/exclude 合并为一个参数，exclude 值带 ! 前缀） */
+function conditionsToParams(conditions: FilterCondition[]): Array<[string, string]> {
+  const byField = new Map<string, { include: string[]; exclude: string[] }>();
+  for (const condition of conditions) {
+    if (condition.values.length === 0) continue;
+    const entry = byField.get(condition.fieldId) ?? { include: [], exclude: [] };
+    if (condition.operator === 'isNot' || condition.operator === 'notInclude') {
+      entry.exclude.push(...condition.values);
+    } else {
+      entry.include.push(...condition.values);
+    }
+    byField.set(condition.fieldId, entry);
+  }
+  return [...byField.entries()]
+    .map(([fieldId, { include, exclude }]) => {
+      const encoded = [...include, ...exclude.map((v) => `!${v}`)].join(',');
+      return [`${CONDITION_PARAM_PREFIX}${fieldId}`, encoded] as [string, string];
+    })
+    .filter(([, value]) => value !== '');
+}
+
+/** URL params → 条件条（include/exclude 分列两条；非本页管理的键忽略） */
+function paramsToConditions(params: URLSearchParams): FilterCondition[] {
+  const conditions: FilterCondition[] = [];
+  let seq = 0;
+  for (const [key, raw] of params.entries()) {
+    if (!key.startsWith(CONDITION_PARAM_PREFIX)) continue;
+    const fieldId = key.slice(CONDITION_PARAM_PREFIX.length);
+    if (!fieldId) continue;
+    const include: string[] = [];
+    const exclude: string[] = [];
+    for (const part of raw.split(',')) {
+      if (!part) continue;
+      if (part.startsWith('!')) exclude.push(part.slice(1));
+      else include.push(part);
+    }
+    if (include.length > 0) {
+      seq += 1;
+      conditions.push({ id: `cond-url-${seq}`, fieldId, operator: 'is', values: include });
+    }
+    if (exclude.length > 0) {
+      seq += 1;
+      conditions.push({ id: `cond-url-${seq}`, fieldId, operator: 'notInclude', values: exclude });
+    }
+  }
+  return conditions;
+}
+
+/* ───────── P1-14：表格「展示属性」chips 与排序选项（与 TaskTableView 列映射对齐，全部真实生效） ───────── */
+const DISPLAY_PROPERTY_LABELS: Record<string, string> = {
+  id: 'ID',
+  status: 'Status',
+  assignee: 'Assignee',
+  priority: 'Priority',
+  project: 'Project',
+  estimate: 'Estimate',
+  dueDate: 'Due date',
+  labels: 'Labels',
+  created: 'Created',
+  updated: 'Updated',
+  aiExecution: 'AI State',
+};
+
+const SORTABLE_COLUMN_LABELS: Record<string, string> = {
+  priority: 'Priority',
+  dueDate: 'Due date',
+  created: 'Created',
+  updated: 'Updated',
+  title: 'Title',
+  shortId: 'ID',
+  status: 'Status',
+  assignee: 'Assignee',
+  project: 'Project',
+  estimate: 'Estimate',
+  labels: 'Labels',
+  aiExecution: 'AI State',
+};
+
+const PRIORITY_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+
+/** 负责人筛选口径：主负责人优先，AI 员工指派次之，均无 = unassigned */
+const assigneeIdOf = (task: Task) => task.assignee?.id ?? task.aiAgentId ?? 'unassigned';
+
 /** 页头实体图标：统一从 entity-icons 注册表取（规范 v0） */
 const ISSUE_ENTITY = getEntityIcon('issue');
 
@@ -82,39 +182,44 @@ export function TasksPage() {
   const navigate = useNavigate();
   // 管道项目聚焦（CAP-A-15）：URL ?project 优先——作为项目筛选 chips 的受控初值
   const { focusProjectId } = usePipelineProjectFilter();
+  // P1-16：筛选状态同步 URL query（useSearchParams）
+  const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
-  const [search, setSearch] = useState('');
-  // 筛选条件条（Linear 形态）：字段 + 算子 + 值集，空数组 = 无筛选；
-  // 聚焦项目时初值预置 project is <focusProjectId>（仅初值，用户可在页内再改）
-  const [conditions, setConditions] = useState<FilterCondition[]>(() =>
-    focusProjectId
+  // 筛选初值优先级（P1-16）：URL 参数 > 管道聚焦项目 > 默认空
+  const [search, setSearch] = useState(() => searchParams.get(SEARCH_PARAM) ?? '');
+  const [conditions, setConditions] = useState<FilterCondition[]>(() => {
+    const fromUrl = paramsToConditions(searchParams);
+    if (fromUrl.length > 0) return fromUrl;
+    // 聚焦项目时初值预置 project is <focusProjectId>（仅初值，用户可在页内再改）
+    return focusProjectId
       ? [{ id: 'cond-pipeline-focus-project', fieldId: 'project', operator: 'is', values: [focusProjectId] }]
-      : [],
-  );
+      : [];
+  });
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [presetAssigneeId, setPresetAssigneeId] = useState<string | undefined>(undefined);
   // 派发上下文（P0-5）：issues 多于一条时 AiAssignDialog 进入批量模式
   const [dispatch, setDispatch] = useState<{ projectId: string; issues: AiAssignIssueRef[] } | null>(null);
+  // 批量修改上下文（P1-12）：选中的工单进入批量改状态/优先级/负责人对话框
+  const [batchUpdateIssues, setBatchUpdateIssues] = useState<BatchUpdateIssueRef[] | null>(null);
+  // 导入导出（P1-15）：导出范围 = 当前筛选结果（对话框内明示）
+  const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const statsCards = usePersistentToggle('tasks-page.stats');
 
   // Linear 风格 Display 选项
   const [orderBy, setOrderBy] = useState<string>('priority');
   const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
-  const [completedFilter, setCompletedFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [completedFilter, setCompletedFilter] = useState<'all' | 'active' | 'completed'>(() => {
+    const value = searchParams.get(COMPLETED_PARAM);
+    return value === 'active' || value === 'completed' ? value : 'all';
+  });
   const [showSubIssues, setShowSubIssues] = useState(true);
   const [showEmptyGroups, setShowEmptyGroups] = useState(false);
-  const [displayProperties, setDisplayProperties] = useState<Record<string, boolean>>({
-    id: true,
-    status: true,
-    assignee: true,
-    priority: true,
-    project: true,
-    dueDate: true,
-    labels: true,
-    created: true,
-    aiExecution: true,
-  });
+  // P1-14：展示属性 chips 键集与 TaskTableView 列映射对齐（全键初始化，首次开关即生效）
+  const [displayProperties, setDisplayProperties] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(TASK_TABLE_PROPERTY_KEYS.map((key) => [key, true])),
+  );
 
   const isAiFiltering = useMemo(() => {
     return conditions.some((c) => c.fieldId === 'aiExecution' && c.values.includes('active'));
@@ -189,6 +294,25 @@ export function TasksPage() {
     updateActiveSnapshot({ search, conditions, viewMode, groupBy });
   }, [updateActiveSnapshot, search, conditions, viewMode, groupBy]);
 
+  // P1-16：筛选状态 → URL query 回写（replace，不产生历史记录；前进后退/刷新后可还原）。
+  // 仅增删本页管理的参数键，不触碰 ?project（管道聚焦）等外部参数；等值时跳过避免循环。
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    for (const key of [...next.keys()]) {
+      if (key === SEARCH_PARAM || key === COMPLETED_PARAM || key.startsWith(CONDITION_PARAM_PREFIX)) {
+        next.delete(key);
+      }
+    }
+    if (search.trim()) next.set(SEARCH_PARAM, search.trim());
+    if (completedFilter !== 'all') next.set(COMPLETED_PARAM, completedFilter);
+    for (const [key, value] of conditionsToParams(conditions)) {
+      next.set(key, value);
+    }
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [search, conditions, completedFilter, searchParams, setSearchParams]);
+
   // AI 活跃执行接管状态
   const { getIssueExecution, totalActiveAiCount } = useActiveExecutionsMap();
 
@@ -206,6 +330,52 @@ export function TasksPage() {
   // Task + Bug 一起展示 (任务页 = 统一任务视图)
   const allTasks = useMemo(() => tasksData?.data ?? [], [tasksData]);
 
+  // 项目名解析（排序 comparator 与列表渲染共用；上移到派生逻辑之前）
+  const getProjectName = useCallback(
+    (projectId: string | null | undefined) => {
+      if (!projectId) return t('common.noProject');
+      return projects.find((p) => p.id === projectId)?.name || projectId;
+    },
+    [t, projects],
+  );
+
+  // 迭代维度（P1-16）：迭代名按项目查询聚合；任一项目失败仅影响该项显示名（id 兜底）
+  const iterationIds = useMemo(
+    () => [...new Set(allTasks.map((task) => task.iterationId).filter((v): v is string => !!v))],
+    [allTasks],
+  );
+  const iterationNameById = useIterationNameMap(iterationIds);
+
+  // 负责人维度（P1-16）：从当前列表聚合（主负责人 + AI 员工指派两种主体）
+  const assigneeOptions = useMemo(() => {
+    const byId = new Map<string, { value: string; label: string; isAi: boolean }>();
+    for (const task of allTasks) {
+      if (task.assignee?.id) {
+        if (!byId.has(task.assignee.id)) {
+          byId.set(task.assignee.id, {
+            value: task.assignee.id,
+            label: task.assignee.displayName || task.assignee.username || task.assignee.id,
+            isAi: false,
+          });
+        }
+      } else if (task.aiAgent && !byId.has(task.aiAgent.id)) {
+        byId.set(task.aiAgent.id, { value: task.aiAgent.id, label: task.aiAgent.name, isAi: true });
+      }
+    }
+    return [...byId.values()];
+  }, [allTasks]);
+
+  // 标签维度（P1-16）：标签数据随列表响应返回（issueTags.tag），直接聚合即可
+  const tagOptions = useMemo(() => {
+    const byId = new Map<string, string>();
+    for (const task of allTasks) {
+      for (const { tag } of task.issueTags ?? []) {
+        if (!byId.has(tag.id)) byId.set(tag.id, tag.name);
+      }
+    }
+    return [...byId.entries()].map(([value, label]) => ({ value, label }));
+  }, [allTasks]);
+
   // 筛选字段定义（级联菜单与条件条共用；hint 为各值计数）
   const { types: issueTypeOptions, byKey: issueTypesByKey } = useIssueTypes();
 
@@ -221,6 +391,16 @@ export function TasksPage() {
     const severityCounts = countBy(allTasks, severityOf);
     const projectCounts = countBy(allTasks, (task) => task.projectId);
     const typeCounts = countBy(allTasks, (task) => effectiveTypeId(task) ?? 'unknown');
+    const priorityCounts = countBy(allTasks, (task) => task.priority ?? 'medium');
+    // assigneeIdOf 无主体时归 'unassigned'，天然计入未分配计数
+    const assigneeCounts = countBy(allTasks, assigneeIdOf);
+    const iterationCounts = countBy(allTasks, (task) => task.iterationId);
+    const tagCounts = new Map<string, number>();
+    for (const task of allTasks) {
+      for (const { tag } of task.issueTags ?? []) {
+        tagCounts.set(tag.id, (tagCounts.get(tag.id) ?? 0) + 1);
+      }
+    }
     const aiActiveCounts = allTasks.filter((t) => !!getIssueExecution(t)?.isExecuting).length;
 
     return [
@@ -277,6 +457,58 @@ export function TasksPage() {
         })),
       },
       {
+        id: 'priority',
+        label: t('viewDisplay.properties.priority', 'Priority'),
+        icon: Flag,
+        operators: ['is', 'isNot'],
+        options: (['critical', 'high', 'medium', 'low'] as const).map((value) => ({
+          value,
+          label: t(`task.priority.${value}`, value),
+          hint: priorityCounts.get(value)?.toString(),
+        })),
+      },
+      {
+        id: 'assignee',
+        label: t('viewDisplay.properties.assignee', 'Assignee'),
+        icon: Users,
+        operators: ['is', 'isNot'],
+        searchable: true,
+        options: [
+          {
+            value: 'unassigned',
+            label: t('task.filter.unassigned', '未分配'),
+            hint: assigneeCounts.get('unassigned')?.toString(),
+          },
+          ...assigneeOptions.map((option) => ({
+            value: option.value,
+            label: option.isAi ? `[AI] ${option.label}` : option.label,
+            hint: assigneeCounts.get(option.value)?.toString(),
+          })),
+        ],
+      },
+      {
+        id: 'iteration',
+        label: t('task.filter.iterationGroup', 'Iteration'),
+        icon: Target,
+        operators: ['is', 'isNot'],
+        options: iterationIds.map((id) => ({
+          value: id,
+          label: iterationNameById.get(id)?.name ?? `${id.slice(0, 8)}…`,
+          hint: iterationCounts.get(id)?.toString(),
+        })),
+      },
+      {
+        id: 'tag',
+        label: t('task.filter.tagGroup', '标签'),
+        icon: TagIcon,
+        operators: ['is', 'isNot'],
+        options: tagOptions.map((tag) => ({
+          value: tag.value,
+          label: tag.label,
+          hint: tagCounts.get(tag.value)?.toString(),
+        })),
+      },
+      {
         id: 'project',
         label: t('task.filter.projectGroup', 'Project'),
         icon: getEntityIcon('project').icon,
@@ -289,7 +521,7 @@ export function TasksPage() {
         })),
       },
     ];
-  }, [t, projects, allTasks, getIssueExecution, issueTypeOptions, effectiveTypeId]);
+  }, [t, projects, allTasks, getIssueExecution, issueTypeOptions, effectiveTypeId, assigneeOptions, iterationIds, iterationNameById, tagOptions]);
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -298,6 +530,11 @@ export function TasksPage() {
     const projectSets = filterConditionSets(conditions, 'project');
     const aiSets = filterConditionSets(conditions, 'aiExecution');
     const typeSets = filterConditionSets(conditions, 'type');
+    // P1-16 新增维度：优先级 / 负责人 / 迭代 / 标签
+    const prioritySets = filterConditionSets(conditions, 'priority');
+    const assigneeSets = filterConditionSets(conditions, 'assignee');
+    const iterationSets = filterConditionSets(conditions, 'iteration');
+    const tagSets = filterConditionSets(conditions, 'tag');
 
     const list = allTasks.filter((task) => {
       if (search && !task.title.toLowerCase().includes(search.toLowerCase()) &&
@@ -331,35 +568,71 @@ export function TasksPage() {
       if (!matchesConditionSets(task.projectId, projectSets)) {
         return false;
       }
+      // P1-16：优先级 / 负责人（主负责人 → AI 员工 → unassigned）/ 迭代
+      if (!matchesConditionSets(task.priority ?? 'medium', prioritySets)) {
+        return false;
+      }
+      if (!matchesConditionSets(assigneeIdOf(task), assigneeSets)) {
+        return false;
+      }
+      if (!matchesConditionSets(task.iterationId, iterationSets)) {
+        return false;
+      }
+      // 标签为多值字段：include 命中任一即通过；exclude 命中任一即否决
+      if (tagSets.include.length > 0 &&
+          !task.issueTags?.some(({ tag }) => tagSets.include.includes(tag.id))) {
+        return false;
+      }
+      if (tagSets.exclude.length > 0 &&
+          task.issueTags?.some(({ tag }) => tagSets.exclude.includes(tag.id))) {
+        return false;
+      }
       return true;
     });
 
+    // P1-14/16：排序键与表格表头/显示菜单同源——全键可排（数值/字符串自适应比较）
+    const sortValueOf = (task: Task): string | number => {
+      switch (orderBy) {
+        case 'priority':
+          return PRIORITY_RANK[task.priority ?? 'low'] ?? 0;
+        case 'dueDate':
+          return issueTimeOf(task.dueDate);
+        case 'created':
+          return issueTimeOf(task.createdAt);
+        case 'updated':
+          return issueTimeOf(task.updatedAt);
+        case 'estimate':
+          return task.estimate ?? 0;
+        case 'shortId':
+          return (task.shortId || task.externalIdentifier || task.id.slice(0, 8)).toLowerCase();
+        case 'status':
+          return task.status ?? '';
+        case 'assignee':
+          return assigneeNameOf(task);
+        case 'project':
+          return task.projectId ? getProjectName(task.projectId) : '';
+        case 'labels':
+          return task.issueTags?.[0]?.tag?.name ?? '';
+        case 'aiExecution':
+          return getIssueExecution(task)?.isExecuting ? 1 : 0;
+        case 'title':
+        default:
+          return task.title;
+      }
+    };
+
     const sorted = [...list];
     sorted.sort((a, b) => {
-      let res = 0;
-      if (orderBy === 'priority') {
-        const pOrder: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
-        res = (pOrder[a.priority ?? 'low'] ?? 0) - (pOrder[b.priority ?? 'low'] ?? 0);
-      } else if (orderBy === 'dueDate') {
-        const da = a.dueDate ? new Date(a.dueDate).getTime() : 0;
-        const db = b.dueDate ? new Date(b.dueDate).getTime() : 0;
-        res = da - db;
-      } else if (orderBy === 'created') {
-        const ca = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const cb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        res = ca - cb;
-      } else if (orderBy === 'title') {
-        res = a.title.localeCompare(b.title);
-      }
+      const valueA = sortValueOf(a);
+      const valueB = sortValueOf(b);
+      const res =
+        typeof valueA === 'number' && typeof valueB === 'number'
+          ? valueA - valueB
+          : String(valueA).localeCompare(String(valueB));
       return orderDirection === 'desc' ? -res : res;
     });
     return sorted;
-  }, [allTasks, search, conditions, getIssueExecution, completedFilter, orderBy, orderDirection, effectiveTypeId]);
-
-  const getProjectName = (projectId: string | null | undefined) => {
-    if (!projectId) return t('common.noProject');
-    return projects.find((p) => p.id === projectId)?.name || projectId;
-  };
+  }, [allTasks, search, conditions, getIssueExecution, completedFilter, orderBy, orderDirection, effectiveTypeId, getProjectName]);
 
   // 空态接管判定：搜索 / 条件条 / 完成度开关任一生效时，筛选空态提供「清除筛选」入口
   const hasActiveFilters =
@@ -394,6 +667,54 @@ export function TasksPage() {
     [t],
   );
 
+  // 多选悬浮操作（列表 / 表格视图共用；P1-12 增加批量修改状态/优先级/负责人）
+  const buildSelectionActions = useCallback(
+    (selected: Task[], close: () => void) => (
+      <>
+        <ListActionButton
+          onClick={() => {
+            setBatchUpdateIssues(
+              selected.map((task) => ({ id: task.id, title: task.title, shortId: task.shortId })),
+            );
+            close();
+          }}
+          title={t('task.batchUpdate.actionTitle', '批量修改状态 / 优先级 / 负责人')}
+          className="text-accent-blue"
+        >
+          <SlidersHorizontal className="size-3.5" /> {t('task.batchUpdate.action', '批量修改')}
+        </ListActionButton>
+        <ListActionButton
+          onClick={() => handleDispatchSelected(selected, close)}
+          disabled={!selected.some((task) => task.projectId)}
+          title="指派 AI"
+          className="text-accent-purple"
+        >
+          <BotIcon className="size-3.5" /> 指派 AI
+        </ListActionButton>
+        <ListActionButton
+          onClick={async () => {
+            const ok = await confirmAction({
+              title: `删除选中的 ${selected.length} 项？`,
+              description: '该操作会删除选中的任务及其子任务，且不可撤销。',
+              confirmText: '删除',
+              cancelText: '取消',
+              variant: 'destructive',
+            });
+            if (!ok) return;
+            await Promise.allSettled(selected.map((task) => deleteTask.mutateAsync(task.id)));
+            close();
+            refetch();
+          }}
+          title="删除"
+          className="text-destructive"
+        >
+          <Trash2 className="size-3.5" /> 删除
+        </ListActionButton>
+      </>
+    ),
+    [t, handleDispatchSelected, confirmAction, deleteTask, refetch],
+  );
+
   return (
     <PageShell aiPage="task.tasks-list" className="overflow-hidden">
       {/* Header */}
@@ -402,7 +723,12 @@ export function TasksPage() {
         title={t("task.title")}
         icon={ISSUE_ENTITY.icon}
         iconColor={TONE_TEXT_CLASS[ISSUE_ENTITY.tone]}
-        metrics={[{ id: 'total', label: t("task.title"), value: filteredTasks.length }]}
+        // P1-16：计数口径 = 当前筛选结果集长度（前端筛选，如实标注）；无筛选时与全量一致
+        metrics={[{
+          id: 'total',
+          label: hasActiveFilters ? t('task.stats.showingFiltered', '当前显示') : t('task.title'),
+          value: filteredTasks.length,
+        }]}
         actions={
           <>
             <QuickCardsToggle
@@ -411,6 +737,13 @@ export function TasksPage() {
               label={t('task.showStats', 'Stats')}
               activeLabel={t('task.hideStats', 'Hide stats')}
               aiId="task.tasks-list.stats-toggle"
+            />
+            <HeaderActionButton
+              variant="outline"
+              icon={Upload}
+              label={t('task.import.action', '导入')}
+              title={t('task.import.actionTitle', '从 CSV 导入工单（未限定项目时导入收件箱）')}
+              onClick={() => setImportOpen(true)}
             />
             <HeaderActionButton
               icon={Plus}
@@ -448,6 +781,27 @@ export function TasksPage() {
           onSuccess={() => { setDispatch(null); refetch(); }}
         />
       )}
+
+      {/* Batch Update Dialog（P1-12：批量改状态/优先级/负责人，逐条 PATCH + 汇总 toast） */}
+      {batchUpdateIssues && (
+        <BatchUpdateIssuesDialog
+          open
+          onOpenChange={(open) => { if (!open) setBatchUpdateIssues(null); }}
+          issues={batchUpdateIssues}
+          onCompleted={() => refetch()}
+        />
+      )}
+
+      {/* Export Dialog（P1-15：后端 /issues/export 为项目级端点，全局视图前端导出当前筛选结果） */}
+      <GlobalTaskExportDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        tasks={filteredTasks}
+        getProjectName={getProjectName}
+      />
+
+      {/* Import Dialog（P1-15：复用项目任务页导入对话框，projectId 不限定 → 收件箱） */}
+      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
 
       {/* Stats Cards（默认隐藏，header 幽灵按钮切换） */}
       {statsCards.visible ? (
@@ -557,6 +911,11 @@ export function TasksPage() {
             ],
             orderBy,
             onOrderByChange: setOrderBy,
+            // P1-14：Ordering 选项与表格可排序列同源（表头点击会写入同一状态）
+            orderByOptions: Object.entries(SORTABLE_COLUMN_LABELS).map(([value, fallback]) => ({
+              value,
+              label: t(`viewDisplay.orderOptions.${value}`, fallback),
+            })),
             orderDirection,
             onOrderDirectionToggle: () => setOrderDirection((prev) => (prev === 'asc' ? 'desc' : 'asc')),
             completedFilter,
@@ -568,13 +927,19 @@ export function TasksPage() {
             displayProperties,
             onToggleDisplayProperty: (key) =>
               setDisplayProperties((prev) => ({ ...prev, [key]: !prev[key] })),
+            // P1-14：chips 键集与表格列映射对齐（milestone/links/timeInStatus 无对应列，不再展示假开关）
+            availableProperties: TASK_TABLE_PROPERTY_KEYS.map((key) => ({
+              key,
+              label: DISPLAY_PROPERTY_LABELS[key] ?? key,
+            })),
           },
         }}
         downloadMenu={{
           items: [
             { type: 'label', label: t('task.export.label', 'Export') },
-            { id: 'csv', type: 'item', label: 'CSV', disabled: true },
-            { id: 'json', type: 'item', label: 'JSON', disabled: true },
+            // P1-15：导出真正可用——范围 = 当前筛选结果（对话框内明示条数与口径）
+            { id: 'csv', type: 'item', label: 'CSV', onSelect: () => setExportOpen(true) },
+            { id: 'json', type: 'item', label: 'JSON', onSelect: () => setExportOpen(true) },
           ],
         }}
       />
@@ -652,37 +1017,7 @@ export function TasksPage() {
               getProjectName={getProjectName}
               getAiExecution={getIssueExecution}
               onGroupCreate={() => setShowCreateDialog(true)}
-              selectionActions={(selected, close) => (
-                <>
-                  <ListActionButton
-                    onClick={() => handleDispatchSelected(selected, close)}
-                    disabled={!selected.some((t) => t.projectId)}
-                    title="指派 AI"
-                    className="text-accent-purple"
-                  >
-                    <BotIcon className="size-3.5" /> 指派 AI
-                  </ListActionButton>
-                  <ListActionButton
-                    onClick={async () => {
-                      const ok = await confirmAction({
-                        title: `删除选中的 ${selected.length} 项？`,
-                        description: '该操作会删除选中的任务及其子任务，且不可撤销。',
-                        confirmText: '删除',
-                        cancelText: '取消',
-                        variant: 'destructive',
-                      });
-                      if (!ok) return;
-                      await Promise.allSettled(selected.map((t) => deleteTask.mutateAsync(t.id)));
-                      close();
-                      refetch();
-                    }}
-                    title="删除"
-                    className="text-destructive"
-                  >
-                    <Trash2 className="size-3.5" /> 删除
-                  </ListActionButton>
-                </>
-              )}
+              selectionActions={buildSelectionActions}
             />
           ) : viewMode === 'board' ? (
             <TasksBoardView
@@ -721,37 +1056,14 @@ export function TasksPage() {
               onTaskClick={handleTaskClick}
               getAiExecution={getIssueExecution}
               getProjectName={getProjectName}
-              selectionActions={(selected, close) => (
-                <>
-                  <ListActionButton
-                    onClick={() => handleDispatchSelected(selected, close)}
-                    disabled={!selected.some((t) => t.projectId)}
-                    title="指派 AI"
-                    className="text-accent-purple"
-                  >
-                    <BotIcon className="size-3.5" /> 指派 AI
-                  </ListActionButton>
-                  <ListActionButton
-                    onClick={async () => {
-                      const ok = await confirmAction({
-                        title: `删除选中的 ${selected.length} 项？`,
-                        description: '该操作会删除选中的任务及其子任务，且不可撤销。',
-                        confirmText: '删除',
-                        cancelText: '取消',
-                        variant: 'destructive',
-                      });
-                      if (!ok) return;
-                      await Promise.allSettled(selected.map((t) => deleteTask.mutateAsync(t.id)));
-                      close();
-                      refetch();
-                    }}
-                    title="删除"
-                    className="text-destructive"
-                  >
-                    <Trash2 className="size-3.5" /> 删除
-                  </ListActionButton>
-                </>
-              )}
+              // P1-14：列显隐与排序收口在页面级，表头点击经 onSortChange 回写同一状态
+              displayProperties={displayProperties}
+              sorting={{ orderBy, orderDirection }}
+              onSortChange={(nextOrderBy, nextDirection) => {
+                setOrderBy(nextOrderBy);
+                setOrderDirection(nextDirection);
+              }}
+              selectionActions={buildSelectionActions}
             />
           )}
         </div>

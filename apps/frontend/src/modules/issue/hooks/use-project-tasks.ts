@@ -391,6 +391,9 @@ export function useImportTasks() {
       queryClient.invalidateQueries({
         queryKey: ['projectTasks', variables.projectId],
       });
+      // P1-15：全局任务页复用导入对话框（projectId 可不传），同步失效跨项目列表缓存
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
       toast.error('导入任务失败: ' + (err instanceof Error ? err.message : '未知错误'));

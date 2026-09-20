@@ -90,12 +90,14 @@ export function TaskImportExport({ projectId }: TaskImportExportProps) {
   );
 }
 
-function ImportModal({
+/** 导入对话框（P1-15 起具名导出）：项目任务页与全局任务页共用 */
+export function ImportModal({
   projectId,
   open,
   onClose,
 }: {
-  projectId: string;
+  /** 可选（P1-15）：全局任务页复用本对话框时不限定项目——未归属项目的工单落收件箱 */
+  projectId?: string;
   open: boolean;
   onClose: () => void;
 }) {
@@ -118,7 +120,7 @@ function ImportModal({
 
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map((v) => v.trim().replace(/^"|"$/g, ''));
-      const draft: Partial<CreateTaskRequest> & { projectId: string } = { projectId };
+      const draft: Partial<CreateTaskRequest> = projectId ? { projectId } : {};
 
       headers.forEach((header, idx) => {
         const value = values[idx] || '';
@@ -192,6 +194,13 @@ function ImportModal({
           <DialogTitle>Import Tasks</DialogTitle>
           <DialogDescription>
             Upload a CSV file with columns: title, description, status, priority, estimate, dueDate
+            {!projectId
+              ? ' ' +
+                t(
+                  'task.import.noProjectNote',
+                  '当前未限定项目：导入的工单将进入收件箱（未归属项目）。',
+                )
+              : ''}
           </DialogDescription>
         </DialogHeader>
 

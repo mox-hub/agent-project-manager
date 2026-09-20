@@ -62,12 +62,34 @@ vi.mock('../components/ai-assign-dialog', () => ({
   AiAssignDialog: () => null,
 }));
 
+vi.mock('../components/batch-update-issues-dialog', () => ({
+  BatchUpdateIssuesDialog: () => <div data-testid="batch-update-dialog" />,
+}));
+
+vi.mock('../components/global-task-export-dialog', () => ({
+  GlobalTaskExportDialog: () => <div data-testid="global-export-dialog" />,
+}));
+
+vi.mock('../components/task-import-export', () => ({
+  ImportModal: () => <div data-testid="import-modal" />,
+}));
+
+vi.mock('../hooks/use-iteration-name-map', () => ({
+  useIterationNameMap: () => new Map(),
+}));
+
 vi.mock('../components/task-simple-list', () => ({
   TaskSimpleList: () => <div data-testid="task-view-list" />,
 }));
 
 vi.mock('../components/task-table-view', () => ({
+  // 具名导出与组件一并 mock：页面初始化 displayProperties 依赖键集
   TaskTableView: () => <div data-testid="task-view-table" />,
+  TASK_TABLE_PROPERTY_KEYS: [
+    'id', 'status', 'assignee', 'priority', 'project', 'estimate', 'dueDate', 'labels', 'created', 'updated', 'aiExecution',
+  ],
+  assigneeNameOf: () => '',
+  issueTimeOf: () => 0,
 }));
 
 vi.mock('../components/task-gantt', () => ({
@@ -110,10 +132,10 @@ beforeEach(() => {
   });
 });
 
-const renderTasksPage = () =>
+const renderTasksPage = (initialEntries: string[] = ['/app/issues']) =>
   render(
     <QueryClientProvider client={createQueryClient()}>
-      <MemoryRouter initialEntries={['/app/issues']}>
+      <MemoryRouter initialEntries={initialEntries}>
         <TasksPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -167,5 +189,86 @@ describe('TasksPage', () => {
 
     expect(await screen.findByText('暂无任务')).toBeTruthy();
     expect(screen.queryByText('加载失败')).toBeNull();
+  });
+});
+
+describe('TasksPage P1-16 筛选 URL 还原与头部计数', () => {
+  const twoTasksData = {
+    data: [
+      { id: 't1', title: 'Prepare release plan', status: 'todo', priority: 'medium', projectId: 'p1' },
+      { id: 't2', title: 'Write docs', status: 'done', priority: 'low', projectId: 'p1' },
+    ],
+    meta: { page: 1, pageSize: 1000, total: 2, totalPages: 1 },
+  };
+
+  it('restores q / f_status filters from URL and header count reflects the filtered result', async () => {
+    useAllTasksMock.mockReturnValue({
+      data: twoTasksData,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: refetchMock,
+    });
+
+    renderTasksPage(['/app/issues?q=release&f_status=todo']);
+
+    expect(await screen.findByTestId('task-view-list')).toBeTruthy();
+    // P1-16：筛选生效时头部计数如实标注「当前显示」（筛选结果集长度 = 1）
+    expect(screen.getByText('当前显示')).toBeTruthy();
+    const metricText = screen.getByText('当前显示').parentElement?.textContent ?? '';
+    expect(metricText).toContain('1');
+  });
+
+  it('shows the unfiltered total metric when no filters are active', async () => {
+    useAllTasksMock.mockReturnValue({
+      data: twoTasksData,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: refetchMock,
+    });
+
+    renderTasksPage();
+
+    expect(await screen.findByTestId('task-view-list')).toBeTruthy();
+    // 无筛选时标签保持任务标题口径（h1 与 metric 同文案，取 metric 胶囊），计数 = 全量结果集
+    const metricText = screen
+      .getAllByText('task.title')
+      .map((el) => el.parentElement?.textContent ?? '')
+      .find((text) => text.includes('2'));
+    expect(metricText).toBeTruthy();
+    expect(screen.queryByText('当前显示')).toBeNull();
+  });
+});
+
+describe('TasksPage P1-15 导入导出入口', () => {
+  beforeEach(() => {
+    useAllTasksMock.mockReturnValue({
+      data: {
+        data: [{ id: 't1', title: 'Prepare release plan', status: 'todo', priority: 'medium', projectId: 'p1' }],
+        meta: { page: 1, pageSize: 1000, total: 1, totalPages: 1 },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: refetchMock,
+    });
+  });
+
+  it('opens the export dialog from the download menu instead of disabled CSV/JSON items', async () => {
+    renderTasksPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Download' }));
+    fireEvent.click(await screen.findByText('CSV'));
+
+    expect(await screen.findByTestId('global-export-dialog')).toBeTruthy();
+  });
+
+  it('opens the import dialog from the header action', async () => {
+    renderTasksPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: '导入' }));
+
+    expect(await screen.findByTestId('import-modal')).toBeTruthy();
   });
 });
