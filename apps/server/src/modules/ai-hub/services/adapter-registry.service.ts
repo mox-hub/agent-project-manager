@@ -45,12 +45,21 @@ export class AdapterRegistryService implements OnModuleInit {
 
     const providers = await this.prisma.aIProviderConfig.findMany({
       where: { enabled: true },
+      orderBy: { createdAt: 'asc' },
     });
 
     for (const provider of providers) {
       if (!provider.apiKeyEnc) {
         this.logger.log(
           `Provider ${provider.provider} has no API key, skipping`,
+        );
+        continue;
+      }
+
+      // 同类型多槽位：每类型只注册代表槽位（最早一条），后续槽位跳过
+      if (this.adapters.has(provider.provider)) {
+        this.logger.log(
+          `Provider ${provider.provider} already has a representative adapter, skipping slot ${provider.id}`,
         );
         continue;
       }
@@ -101,11 +110,9 @@ export class AdapterRegistryService implements OnModuleInit {
         if (key.startsWith(`${provider}::`)) this.modelAdapters.delete(key);
       }
 
-      const config = await this.prisma.aIProviderConfig.findUnique({
-        where: { provider },
-      });
+      const config = await this.findRepresentativeSlot(provider);
 
-      if (config?.enabled && config.apiKeyEnc) {
+      if (config?.apiKeyEnc) {
         const apiKey = this.encryptionService.decrypt(config.apiKeyEnc);
         const adapter = this.adapterFactory.createFromConfig({
           provider: config.provider,
@@ -121,6 +128,17 @@ export class AdapterRegistryService implements OnModuleInit {
       // 重新加载所有
       await this.loadAdapters();
     }
+  }
+
+  /**
+   * 同类型代表槽位解析：最早的启用槽位（类型唯一时代与 findUnique 语义等价）。
+   * 无启用槽位时返回 null（适配器只装载启用配置）。
+   */
+  private async findRepresentativeSlot(provider: string) {
+    return this.prisma.aIProviderConfig.findFirst({
+      where: { provider, enabled: true },
+      orderBy: { createdAt: 'asc' },
+    });
   }
 
   /**
@@ -147,10 +165,8 @@ export class AdapterRegistryService implements OnModuleInit {
     const cached = this.modelAdapters.get(cacheKey);
     if (cached) return cached;
 
-    const config = await this.prisma.aIProviderConfig.findUnique({
-      where: { provider },
-    });
-    if (!config?.enabled || !config.apiKeyEnc) return null;
+    const config = await this.findRepresentativeSlot(provider);
+    if (!config?.apiKeyEnc) return null;
 
     try {
       const apiKey = this.encryptionService.decrypt(config.apiKeyEnc);

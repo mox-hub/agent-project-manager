@@ -120,18 +120,26 @@ export class ProviderConfigService {
   }
 
   /**
-   * 创建 Provider 配置
+   * 创建 Provider 配置（同类型可建多槽位：provider+displayName 组合唯一）
    */
   async createProvider(
     dto: CreateProviderConfigDto,
   ): Promise<ProviderConfigResponseDto> {
-    // 检查是否已存在
+    // 检查同类型下显示名是否已被占用（组合唯一约束的前置可读校验）
     const existing = await this.prisma.aIProviderConfig.findUnique({
-      where: { provider: dto.provider },
+      where: {
+        uniq_ai_provider_configs_provider_display_name: {
+          provider: dto.provider,
+          displayName: dto.displayName,
+        },
+      },
     });
 
     if (existing) {
-      throw new BadRequestException(`Provider ${dto.provider} already exists`);
+      throw new BadRequestException(
+        `Provider slot "${dto.displayName}" already exists for type "${dto.provider}". ` +
+          `Use a different display name to create another slot of the same type.`,
+      );
     }
 
     // 加密 API Key
@@ -180,6 +188,22 @@ export class ProviderConfigService {
     const updateData: any = {};
 
     if (dto.displayName !== undefined) {
+      // 同类型内显示名唯一（组合唯一约束的前置可读校验；排除自身）
+      if (dto.displayName !== existing.displayName) {
+        const clash = await this.prisma.aIProviderConfig.findFirst({
+          where: {
+            provider: existing.provider,
+            displayName: dto.displayName,
+            id: { not: id },
+          },
+        });
+        if (clash) {
+          throw new BadRequestException(
+            `Provider slot "${dto.displayName}" already exists for type "${existing.provider}". ` +
+              `Use a different display name.`,
+          );
+        }
+      }
       updateData.displayName = dto.displayName;
     }
 
@@ -841,9 +865,7 @@ export class ProviderConfigService {
     provider: string,
     model: string,
   ): Promise<AiDefaultModelValue> {
-    const row = await this.prisma.aIProviderConfig.findUnique({
-      where: { provider },
-    });
+    const row = await this.findRepresentativeSlot(provider);
     if (!row) {
       throw new NotFoundException(`Provider not found: ${provider}`);
     }
@@ -953,6 +975,24 @@ export class ProviderConfigService {
         `Failed to mark provider ${id} as ${status}: ${(error as Error).message}`,
       );
     }
+  }
+
+  /**
+   * 同类型代表槽位解析（类型唯一时代与 findUnique 语义等价）：
+   * 最早的启用槽位优先；全部禁用时返回最早一条（调用方据 enabled 给出禁用语义）。
+   */
+  private async findRepresentativeSlot(
+    provider: string,
+  ): Promise<{ enabled: boolean } | null> {
+    const enabledSlot = await this.prisma.aIProviderConfig.findFirst({
+      where: { provider, enabled: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (enabledSlot) return enabledSlot;
+    return this.prisma.aIProviderConfig.findFirst({
+      where: { provider },
+      orderBy: { createdAt: 'asc' },
+    });
   }
 
   /**

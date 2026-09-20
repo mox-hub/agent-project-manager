@@ -206,6 +206,8 @@ export class ConfigService {
       'project.terminal.defaultCwd': 'Project default working directory',
       'project.terminal.defaultShell': 'Project default shell',
       'project.terminal.env': 'Project environment variables',
+      'dispatch.trustGateEnabled':
+        '是否启用派发信任门禁（CAP-B-07 三级授权：观察者等级不可自动派发，未评估放行并记时间线提示；缺省开启，设为 false 整体关闭）',
     };
 
     return descriptions[key] || `Configuration for ${key}`;
