@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createTestQueryClient } from '@/test-utils/providers';
@@ -13,6 +13,10 @@ vi.mock('react-i18next', () => ({
   // '@/hooks/useTranslation' → '@/i18n' 初始化链需要 initReactI18next 插件对象
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
+
+// mock 模式开关（P0-13：质量/团队 Tab 仅 msw 演示模式可见）——可变注入，默认关闭
+const mocksState = vi.hoisted(() => ({ mockEnabled: false }));
+vi.mock('@/mocks', () => ({ isMockModeEnabled: () => mocksState.mockEnabled }));
 
 // Overview 数据源 = GET /dashboard/overview（真实端点）；测试注入固定七段数据
 vi.mock('@/modules/project/hooks/use-dashboard-overview', () => ({
@@ -87,15 +91,20 @@ function renderPage(initialEntry = '/app/analytics') {
   );
 }
 
-describe('AnalyticsPage 可用 Tab 计算（CAP-C-06 消费面去重 + 成本做实）', () => {
-  it('生产模式保留 overview + cost（cost 迁入真实数据升正式 Tab），三个 mock Tab 不出现', () => {
-    const prod = getAvailableAnalyticsTabs(false);
+describe('AnalyticsPage 可用 Tab 计算（P0-13：mock 形态 Tab 按 msw 演示模式收敛）', () => {
+  it('生产模式保留 overview + cost（cost 迁入真实数据升正式 Tab），mock/dev Tab 均不出现', () => {
+    const prod = getAvailableAnalyticsTabs(false, false);
     expect(prod.map((d) => d.value)).toEqual(['overview', 'cost']);
   });
 
-  it('DEV 模式三个 mock Tab（quality/risk/team）仍在', () => {
-    const dev = getAvailableAnalyticsTabs(true);
-    expect(dev.map((d) => d.value)).toEqual(['overview', 'cost', 'quality', 'risk', 'team']);
+  it('DEV 未开 msw：risk 仍在（真实模式全 0 空态），quality/team 不再露出（P0-13 回归）', () => {
+    const dev = getAvailableAnalyticsTabs(true, false);
+    expect(dev.map((d) => d.value)).toEqual(['overview', 'cost', 'risk']);
+  });
+
+  it('msw 演示模式（DEV + VITE_API_MOCK=on）：五个 Tab 全量可见', () => {
+    const mock = getAvailableAnalyticsTabs(true, true);
+    expect(mock.map((d) => d.value)).toEqual(['overview', 'cost', 'quality', 'risk', 'team']);
   });
 });
 
@@ -116,15 +125,51 @@ describe('AnalyticsPage', () => {
     expect(screen.queryByText('示例项目')).toBeNull();
   });
 
-  it('标题走 i18n（analytics.title）；DEV 测试环境三个 mock Tab 仍在工具栏', async () => {
+  it('标题走 i18n（analytics.title）；DEV 未开 msw 时 quality/team 收敛、risk 保留', async () => {
     renderPage();
 
     expect(await screen.findByRole('heading', { name: '分析' })).toBeTruthy();
-    // vitest 运行在 DEV 模式（import.meta.env.DEV = true），mock Tab 标签仍在（cost 已升正式 Tab）
     expect(screen.getAllByText('成本').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('质量').length).toBeGreaterThan(0);
+    // risk 仍为 DEV 可见（真实模式全 0 空态）
     expect(screen.getAllByText('风险').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('团队').length).toBeGreaterThan(0);
+    // P0-13：mock 形态 Tab（质量/团队）在非演示模式不渲染，硬编码假数据不露出
+    expect(screen.queryByText('质量')).toBeNull();
+    expect(screen.queryByText('团队')).toBeNull();
+  });
+});
+
+describe('AnalyticsPage msw 演示模式（quality/team 可见 + 演示数据徽章）', () => {
+  afterEach(() => {
+    mocksState.mockEnabled = false;
+  });
+
+  it('演示模式下质量 Tab 渲染并带「演示数据」徽章，文案已中文化', async () => {
+    mocksState.mockEnabled = true;
+    renderPage('/app/analytics?tab=quality');
+
+    // 徽章 + 质量 Tab 中文化后的标题（t fallback 直出中文）
+    expect(await screen.findByText('演示数据 · 后端未接入，非真实统计')).toBeTruthy();
+    expect(screen.getByText('平均质量分')).toBeTruthy();
+    expect(screen.getByText('代码变更质量趋势')).toBeTruthy();
+    expect(screen.getByText('各项目质量分')).toBeTruthy();
+  });
+
+  it('演示模式下 ?tab=team 定位生效，团队 Tab 渲染中文化内容', async () => {
+    mocksState.mockEnabled = true;
+    renderPage('/app/analytics?tab=team');
+
+    expect(await screen.findByText('演示数据 · 后端未接入，非真实统计')).toBeTruthy();
+    expect(screen.getByText('活跃成员')).toBeTruthy();
+    expect(screen.getByText('成员 AI 用量拆解')).toBeTruthy();
+  });
+
+  it('非演示模式下 ?tab=team URL 不生效：回退 overview，质量/团队不渲染', async () => {
+    renderPage('/app/analytics?tab=team');
+
+    // 回退到 overview（回顾性内容可见）
+    expect(await screen.findByText('项目档案健康')).toBeTruthy();
+    expect(screen.queryByText('演示数据 · 后端未接入，非真实统计')).toBeNull();
+    expect(screen.queryByText('团队')).toBeNull();
   });
 });
 
