@@ -21,6 +21,19 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-20
+
+### v0.7.1 发版总览——OpenCode 支持三期 + AI 管理页重整 + 批二 P1 治理卡 + 体验测试 P0 修复批
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server · frontend · shared · cli | **OpenCode 支持三期全交付**：Zen/Go 供应商预设 + 第四家 CLI adapter（NDJSON 事件流实机采样）+ 模型清单覆盖式同步 + 在线状态联动 + 余额查询（充值/套餐双型归一）+ models.dev 价目参考源 + Go 网关会话头/chat completions 强制适配 + 运行时守护进程启停按钮 | CAP-A-20 / A-21 / B-05 | 各切片 spec 全绿 + 实机链路验证；契约三件套零漂移 | openapi.json + 双端 api-types.gen.ts；能力清单各卡 |
+| frontend · server | **AI 管理页信息架构重整**：「Agent 管理」并入「AI 管理」五页签（模型服务/概览/CLI/MCP/技能），「AI 用量」迁 analytics 成本 Tab 做实（柱状图+活跃热力图）；假数据清除（宪法 §9.1）+ 品牌图标全量替换（@lobehub） | CAP-C-06 | 合并页单测 + 定向回归全绿 | 能力清单 C-06 卡 |
+| server | **批二 P1 治理卡（五连发）**：CAP-C-01 assistant 领域 hook 归还各域（PR #66，零行为变更）+ CAP-B-06 ContextPack freshness 按数据源实龄计算 + CAP-K-03 交付成果清单 + CAP-B-01/B-02 验收标准版本化与审计绑定 + CAP-C-04 决策批准绑定内容指纹 + CAP-B-07 信任三级分级授权（观察者/协助者/受托者）+ CAP-P-01 需求修订影响链路最小闭环 | 批二 P1 各卡 | 各切片 spec 全绿 | 能力清单各卡 |
+| server · frontend | **夜航体验测试 P0 修复批（12 项，PR #72）**：工作区数据隔离、信任评估量纲统一 0-100（修复成功执行反降信任的反向演进）、质量/团队假数据生产隐藏、AI 建议非法项显式 400、决策提案直写路径补发创建事件等；同批收编 AI 管理页在途改动 | 体验报告 §十 | 全仓 test 全绿 + e2e 增补 | docs/roadmap/experience-report-2026-09-20.md |
+| 工具链 | **测试基建治理**：四包测试运行时统一 Vitest 5.0.0（catalog 精确锚定）+ PR 增量门禁（gate:quick + CI 分类器，pre-prod/main 强制全量）+ nightly 全量门禁 + worktree 依赖共享 + test-workspace 补盲 | — | 门禁全绿 | AGENTS.md 质量门禁节 |
+| frontend | **心跳监控条样本持久化**：探测历史按 key 落盘 localStorage（60 条窗口），重挂载恢复拼接，损坏静默降级 | CAP-A-14 | heartbeat-monitor 新 spec 4 用例 | — |
+
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
 | --- | --- | --- | --- | --- |
 | server · frontend | **OpenCode Go 套餐用量查询接入（余额链 percent-only 窗口适配）**：实机验证 Go 网关套餐接口 `GET {baseUrl}/usage`（Bearer 认证，返回 `{usage:{rolling·weekly·monthly:{status,percent,resetsAt}}}`——仅已用百分比+重置时间，无 used/limit 绝对值），据此四处适配既有余额查询链：①`resolveBalanceEndpoint` 对 opencode-go 默认取 baseUrl 版本段下 `/usage`（原默认域名根 `/user/balance` 对网关型厂家不成立；metadata.balanceEndpoint 覆盖优先不变）；②`normalizeBalancePeriod` 补 `rolling→5h` 别名（opencode 滚动窗口即 5h 计费窗）；③`toBalanceWindow` 补 percent 拾取（`percent/used_percent/usedPercent`），窗口成立条件放宽为四值任一非 null（percent=0 不丢）；④契约先行 `ProviderBalanceWindowDto` 增可选 `percent`（0-100，仅百分比型窗口有值此时 used/limit 为 null）+ 前端 `AiBalanceWindow` 手写镜像同步，模型服务 Tab 套餐窗口渲染 percent 优先（文案 `N%`、进度条直接以百分比为值，黄/红阈值照常生效） | CAP-A-20（OpenCode 套餐查询切片） | server `provider-config.service.spec` 24 用例（+opencode-go /usage 真实夹具：端点断言/rolling 别名/percent-only 三窗口稳定排序/percent=0 保留，既有两用例窗口期望同步 +percent 键）；契约三件套零漂移（openapi +percent 字段 + 双端 gen 重导出）；双端 tsc 零错、定向 eslint 0/0、前端合并页 spec 8 用例回归绿；实机链路：直连 `/usage` 200 采样 → APM `GET /ai/providers/:id/balance` 200 返回 `{type:'subscription', windows:[5h pct0/week pct20/month pct2]}` | openapi.json + 双端 api-types.gen.ts（ProviderBalanceWindowDto.percent） |
