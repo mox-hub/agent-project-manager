@@ -1254,6 +1254,7 @@
     "passwordPlaceholder": "请输入密码",
     "errors": {
       "invalidCredentials": "用户名或密码错误",
+      "emailAlreadyRegistered": "该邮箱已注册，请直接登录",
       "userInactive": "账号已被禁用，请联系管理员",
       "loginFailed": "登录失败，请稍后重试",
       "sessionExpired": "会话已过期，请重新登录"
@@ -3931,6 +3932,7 @@
     "noApiKeyConfigured": "{{name}}：未配置 API 密钥",
     "connectedToast": "{{name}}：连接成功",
     "connectionFailedToast": "{{name}}：{{message}}",
+    "testConnectionTimeout": "测试连接超时（60s）：供应商响应过慢，验证仍在后台进行，可稍后重试",
     "connectionFailed": "连接失败",
     "testFailed": "测试失败",
     "detectComplete": "CLI 提供商探测完成",

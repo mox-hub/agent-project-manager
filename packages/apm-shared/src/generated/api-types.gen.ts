@@ -15458,6 +15458,13 @@ export interface operations {
                     "application/json": components["schemas"]["LoginResponseDto"];
                 };
             };
+            /** @description Validation error — invalid or missing fields (VALIDATION_ERROR) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Invalid credentials */
             401: {
                 headers: {

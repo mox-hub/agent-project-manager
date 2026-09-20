@@ -2,6 +2,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 export enum ErrorCode {
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
+  EMAIL_ALREADY_REGISTERED = 'EMAIL_ALREADY_REGISTERED',
   USER_INACTIVE = 'USER_INACTIVE',
   FORBIDDEN = 'FORBIDDEN',
   NOT_FOUND = 'NOT_FOUND',

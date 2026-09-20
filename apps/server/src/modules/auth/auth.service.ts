@@ -129,7 +129,12 @@ export class AuthService {
 
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) {
-      throw new ConflictException('该邮箱已注册');
+      // 语义化错误码（信封 error.code）供前端定向映射"该邮箱已注册，请直接登录"
+      throw new BusinessException(
+        ErrorCode.EMAIL_ALREADY_REGISTERED,
+        '该邮箱已注册',
+        HttpStatus.CONFLICT,
+      );
     }
 
     const displayName = dto.displayName?.trim() || email.split('@')[0];

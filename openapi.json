@@ -113,6 +113,9 @@
               }
             }
           },
+          "400": {
+            "description": "Validation error — invalid or missing fields (VALIDATION_ERROR)"
+          },
           "401": {
             "description": "Invalid credentials"
           }

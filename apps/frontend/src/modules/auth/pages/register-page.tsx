@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -8,11 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/brand/logo';
 import { authApi, type RegisterInvitePreview } from '../api/auth-api';
 
+/** api-client 拦截器把后端错误信封转成顶层 code/status 的 ApiClientError */
+type ApiClientErrorLike = { code?: string; status?: number; message?: string };
+
 /**
  * 邮箱注册页：注册成功即登录（后端自动创建 User + human Member）。
  * 携带 ?invite=<token> 时为邀请注册：展示邀请人信息并随表单提交 token。
  */
 export function RegisterPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('invite') || '';
 
@@ -59,9 +64,15 @@ export function RegisterPage() {
       localStorage.setItem('access_token', res.accessToken);
       window.location.href = '/app/projects';
     } catch (err) {
-      type ApiError = { response?: { data?: { error?: { message?: string } } } };
-      const apiError = err as ApiError;
-      setError(apiError.response?.data?.error?.message || '注册失败，请稍后再试');
+      const apiError = err as ApiClientErrorLike;
+      if (
+        apiError.code === 'EMAIL_ALREADY_REGISTERED' ||
+        apiError.status === 409
+      ) {
+        setError(t('auth.errors.emailAlreadyRegistered'));
+      } else {
+        setError(apiError.message || '注册失败，请稍后再试');
+      }
     } finally {
       setSubmitting(false);
     }

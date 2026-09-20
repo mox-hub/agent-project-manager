@@ -1254,6 +1254,7 @@
     "passwordPlaceholder": "Enter your password",
     "errors": {
       "invalidCredentials": "Invalid username or password",
+      "emailAlreadyRegistered": "This email is already registered. Please sign in instead",
       "userInactive": "Account has been disabled, please contact administrator",
       "loginFailed": "Login failed, please try again later",
       "sessionExpired": "Session expired, please login again"
@@ -3931,6 +3932,7 @@
     "noApiKeyConfigured": "{{name}}: No API key configured",
     "connectedToast": "{{name}}: Connected",
     "connectionFailedToast": "{{name}}: {{message}}",
+    "testConnectionTimeout": "Test connection timed out (60s): the provider is responding too slowly; validation continues in the background, try again later",
     "connectionFailed": "Connection failed",
     "testFailed": "Test failed",
     "detectComplete": "CLI provider detection complete",
