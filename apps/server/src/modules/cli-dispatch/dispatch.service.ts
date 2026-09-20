@@ -78,6 +78,34 @@ const THINKING_LEVEL_INSTRUCTIONS: Record<string, string> = {
   max: '最大化思考：全面穷举方案、权衡与测试策略后再给出结论',
 };
 
+/**
+ * 执行信任评估 criteria（P0-10 量纲修复，2026-09-20）：**统一 0-100 量纲**，
+ * 与 TrustService.evaluateExecution 契约一致（等级阈值 40/70、历史/滚动维度
+ * 缺省 50、PR 回灌 delta 均为 0-100 口径）。
+ * 此前此处传 0-1 值（0.9/0.7…）而 trust 侧按 0-100 加权，一次成功执行的
+ * 综合分仅 ≈30，把信任分从基线 50 打到 30、等级降为观察者——执行越多分越低，
+ * 与「执行评估驱动信任演进」方向相反。
+ */
+export const TRUST_CRITERIA_SUCCESS = {
+  correctness: 90,
+  efficiency: 70,
+  safety: 90,
+  collaboration: 70,
+};
+
+/**
+ * 失败评估 criteria（0-100 量纲，与 runtime 路径历史口径 10/20/50/30 一致；
+ * 综合分 ≈41 < 基线 50，保证失败评估拉低信任分）。
+ * 原进程内 onComplete 失败分支的 0.2/0.7/0.9/0.7 放大后会得出 ≈55 的失败加分，
+ * 与其余两处失败口径不一致，一并对齐到此常量。
+ */
+export const TRUST_CRITERIA_FAILURE = {
+  correctness: 10,
+  efficiency: 20,
+  safety: 50,
+  collaboration: 30,
+};
+
 @Injectable()
 export class CliDispatchService {
   private readonly logger = new Logger(CliDispatchService.name);
@@ -546,12 +574,10 @@ export class CliDispatchService {
                 executionRunId: executionRun.id,
                 agentId: executionRun.subjectId,
                 projectId: executionRun.projectId,
-                criteria: {
-                  correctness: result.status === 'completed' ? 0.9 : 0.2,
-                  efficiency: 0.7,
-                  safety: 0.9,
-                  collaboration: 0.7,
-                },
+                criteria:
+                  result.status === 'completed'
+                    ? TRUST_CRITERIA_SUCCESS
+                    : TRUST_CRITERIA_FAILURE,
                 outcome: result.status === 'completed' ? 'success' : 'failure',
               });
             } catch (e) {
@@ -583,12 +609,7 @@ export class CliDispatchService {
                 executionRunId: executionRun.id,
                 agentId: executionRun.subjectId,
                 projectId: executionRun.projectId,
-                criteria: {
-                  correctness: 0.1,
-                  efficiency: 0.2,
-                  safety: 0.5,
-                  collaboration: 0.3,
-                },
+                criteria: TRUST_CRITERIA_FAILURE,
                 outcome: 'failure',
               });
             } catch (e) {
@@ -833,19 +854,7 @@ export class CliDispatchService {
           executionRunId,
           agentId: run.subjectId,
           projectId: run.projectId,
-          criteria: completed
-            ? {
-                correctness: 0.9,
-                efficiency: 0.7,
-                safety: 0.9,
-                collaboration: 0.7,
-              }
-            : {
-                correctness: 0.1,
-                efficiency: 0.2,
-                safety: 0.5,
-                collaboration: 0.3,
-              },
+          criteria: completed ? TRUST_CRITERIA_SUCCESS : TRUST_CRITERIA_FAILURE,
           outcome: completed ? 'success' : 'failure',
         });
       } catch (e) {
