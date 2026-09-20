@@ -9,6 +9,7 @@ import {
   Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, CalendarRange, TableProperties, Trash2, CircleDashed, SearchX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AsyncState } from '@/components/ui/async-state';
 import { EmptyState } from '@/components/ui/empty-state';
 import { IconStack } from '@/components/ui/icon-stack';
 import { PageHeader } from '@/components/ui/page-header';
@@ -192,7 +193,8 @@ export function TasksPage() {
   const { getIssueExecution, totalActiveAiCount } = useActiveExecutionsMap();
 
   // 跨项目查询所有 task + bug, 同时包含 inbox 项目下的未绑定任务
-  const { data: tasksData, isLoading, refetch } = useAllTasks({ pageSize: 1000 });
+  // isError 必须先于空态判定：请求失败 ≠ 真空态，错误时渲染错误态 + 重试（P1 体验修复）
+  const { data: tasksData, isLoading, isError, error, refetch } = useAllTasks({ pageSize: 1000 });
   const deleteTask = useDeleteTask();
   const updateTask = useUpdateTask();
   const confirmAction = useConfirm();
@@ -591,9 +593,17 @@ export function TasksPage() {
       ) : null}
 
       {/* Content：空态由页面统一接管（页面层级标准）——工单池为空走 A 类整页空态，
-          筛选后为空走 C 类紧凑空态；四视图不再各自维护空态形态 */}
+          筛选后为空走 C 类紧凑空态；四视图不再各自维护空态形态。
+          错误态优先于一切空态：请求失败时不得渲染「暂无任务」误导用户（与 bugs-page 同形态） */}
       <div className="flex-1 overflow-auto px-6 py-4 sm:px-8 sm:py-5 lg:px-10">
-        {!isLoading && allTasks.length === 0 ? (
+        {isError ? (
+          <AsyncState
+            error={error instanceof Error ? error.message : String(error)}
+            onRetry={() => refetch()}
+          >
+            {null}
+          </AsyncState>
+        ) : !isLoading && allTasks.length === 0 ? (
           <EmptyState
             variant="page"
             visual={

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConfirmProvider } from '@/shared/confirm/confirm-provider';
 import { TaskPage } from './task-page';
@@ -27,11 +27,11 @@ vi.mock('../hooks/use-task-filter-options', () => ({
   useTaskFilterOptions: () => [],
 }));
 
+// useProjectTasks 委托到可控 mock：错误态/成功态场景分别注入（工厂内保持惰性读取，避免 TDZ）
+const useProjectTasksMock = vi.fn();
+
 vi.mock('../hooks/use-project-tasks', () => ({
-  useProjectTasks: () => ({
-    data: { items: [taskItem], total: 1, page: 1, pageSize: 20 },
-    isLoading: false,
-  }),
+  useProjectTasks: (...args: unknown[]) => useProjectTasksMock(...args),
   useMoveTask: () => ({
     mutateAsync: moveTaskMutateAsync,
   }),
@@ -121,6 +121,20 @@ const createQueryClient = () =>
     },
   });
 
+const refetchMock = vi.fn(async () => undefined);
+
+// 默认注入成功态（useQuery.data = TaskListResponse：{ data: Task[], meta }）
+beforeEach(() => {
+  useProjectTasksMock.mockReset();
+  useProjectTasksMock.mockReturnValue({
+    data: { data: [taskItem], meta: { page: 1, pageSize: 100, total: 1, totalPages: 1 } },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: refetchMock,
+  });
+});
+
 describe('TaskPage', () => {
   it('supports view switching, board move callback, and detail drawer open', async () => {
     const queryClient = createQueryClient();
@@ -152,5 +166,38 @@ describe('TaskPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Gantt' }));
     expect(screen.getByTestId('task-view-gantt')).toBeTruthy();
+  });
+
+  it('renders error state with retry on query failure instead of list view', async () => {
+    refetchMock.mockClear();
+    // 请求失败（isError）：必须渲染错误态 + 重试，不得渲染任何列表/空态
+    useProjectTasksMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: new Error('Internal Server Error'),
+      refetch: refetchMock,
+    });
+
+    render(
+      <QueryClientProvider client={createQueryClient()}>
+        <ConfirmProvider>
+          <MemoryRouter initialEntries={['/app/projects/p1/issues']}>
+            <Routes>
+              <Route path="/app/projects/:projectId/issues" element={<TaskPage />} />
+            </Routes>
+          </MemoryRouter>
+        </ConfirmProvider>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText('加载失败')).toBeTruthy();
+    expect(screen.getByText('Internal Server Error')).toBeTruthy();
+    expect(screen.queryByTestId('task-view-board')).toBeNull();
+    expect(screen.queryByTestId('task-view-list')).toBeNull();
+    expect(screen.queryByText('暂无任务')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: '重试' }));
+    expect(refetchMock).toHaveBeenCalledTimes(1);
   });
 });

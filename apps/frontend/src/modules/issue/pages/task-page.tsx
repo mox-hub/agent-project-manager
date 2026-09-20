@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/ui/page-shell';
+import { AsyncState } from '@/components/ui/async-state';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -86,7 +87,8 @@ export function TaskPage() {
     updateActiveSnapshot({ search: searchValue, filters: selectedFilters, viewStyle: viewMode });
   }, [updateActiveSnapshot, searchValue, selectedFilters, viewMode]);
 
-  const { data: tasksData, isLoading } = useProjectTasks(projectId, {
+  // isError 先于一切视图渲染：请求失败 ≠ 真空态，错误时渲染错误态 + 重试（P1 体验修复）
+  const { data: tasksData, isLoading, isError, error, refetch } = useProjectTasks(projectId, {
     pageSize: 100,
     ...filters,
   });
@@ -305,7 +307,14 @@ export function TaskPage() {
             data-ai-component="task.task-workspace.primary-content"
             data-ai-role="content"
           >
-            {viewMode === 'board' ? (
+            {isError ? (
+              <AsyncState
+                error={error instanceof Error ? error.message : String(error)}
+                onRetry={() => refetch()}
+              >
+                {null}
+              </AsyncState>
+            ) : viewMode === 'board' ? (
               <TaskBoard
                 projectId={projectId}
                 tasks={filteredTasks}
