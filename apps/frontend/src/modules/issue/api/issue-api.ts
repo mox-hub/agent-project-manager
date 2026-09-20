@@ -45,12 +45,14 @@ export interface TaskDependencyRef {
   dependsOnIssueId: string;
   type: 'blocks' | 'relates';
   createdAt: string;
-  dependsOnTask?: {
+  /** 被依赖工单摘要（openapi IssueDependencyLinkDto.dependsOnIssue；挂在 task.dependencies 元素上） */
+  dependsOnIssue?: {
     id: string;
     title: string;
     status: string;
   };
-  task?: {
+  /** 依赖方工单摘要（openapi IssueBlockedByLinkDto.issue；挂在 task.blockedBy 元素上） */
+  issue?: {
     id: string;
     title: string;
     status: string;

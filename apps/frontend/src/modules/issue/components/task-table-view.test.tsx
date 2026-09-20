@@ -81,3 +81,62 @@ describe('TaskTableView（P1-14 表格排序与列显隐）', () => {
     }
   });
 });
+
+describe('TaskTableView 子任务缩进与折叠（P1-17）', () => {
+  const parent = buildTask({ title: 'Parent', id: 'p1', priority: 'high' });
+  const child = buildTask({ title: 'Child', id: 'c1', parentIssueId: 'p1', priority: 'low' });
+  const standalone = buildTask({ title: 'Standalone', id: 's1', priority: 'low' });
+
+  it('子任务行按 parentIssueId 跟随父行缩进展示（父行后紧跟子行）', () => {
+    render(<TaskTableView tasks={[parent, child, standalone]} />);
+
+    // 渲染顺序：父行 → 子行 → 独立任务（树化平铺）
+    const titles = screen.getAllByText(/Parent|Child|Standalone/).map((el) => el.textContent);
+    expect(titles).toEqual(['Parent', 'Child', 'Standalone']);
+
+    // 子行 title 有缩进（depth=1 → paddingLeft 16px），父行/独立任务无缩进
+    const childCell = screen.getByText('Child').closest('[data-subtask-depth]') as HTMLElement;
+    expect(childCell.dataset.subtaskDepth).toBe('1');
+    expect(childCell.style.paddingLeft).toBe('16px');
+    const parentCell = screen.getByText('Parent').closest('[data-subtask-depth]') as HTMLElement;
+    expect(parentCell.dataset.subtaskDepth).toBe('0');
+    expect(parentCell.style.paddingLeft).toBe('');
+  });
+
+  it('父行折叠 chevron 收起子任务，再展开恢复', () => {
+    render(<TaskTableView tasks={[parent, child]} />);
+
+    expect(screen.getByRole('button', { name: 'Collapse Parent' }).getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse Parent' }));
+    expect(screen.queryByText('Child')).toBeNull();
+    // 折叠引发列定义重建 → 表格重渲染，需重新查询按钮引用
+    expect(
+      screen.getByRole('button', { name: 'Expand Parent' }).getAttribute('aria-expanded'),
+    ).toBe('false');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand Parent' }));
+    expect(screen.getByText('Child')).toBeTruthy();
+  });
+
+  it('无子任务的父行不渲染折叠 chevron（仅占位对齐）', () => {
+    render(<TaskTableView tasks={[standalone]} />);
+    expect(screen.queryByRole('button', { name: /Collapse|Expand/ })).toBeNull();
+  });
+
+  it('孤儿子任务（父不在当前列表）按普通行展示，不缩进', () => {
+    const orphan = buildTask({ title: 'Orphan', id: 'o1', parentIssueId: 'ghost-parent' });
+    render(<TaskTableView tasks={[orphan]} />);
+    const cell = screen.getByText('Orphan').closest('[data-subtask-depth]') as HTMLElement;
+    expect(cell.dataset.subtaskDepth).toBe('0');
+  });
+
+  it('排序回声：客户端排序下子行取父行排序值，紧贴父行不被甩出相邻位', () => {
+    // priority desc：Parent(high) → Child 回声 high（自身 low），Standalone(low)
+    // 若无回声，Child(low) 会被排到 Standalone 旁而脱离父行
+    render(
+      <TaskTableView tasks={[parent, child, standalone]} sorting={{ orderBy: 'priority', orderDirection: 'desc' }} />,
+    );
+    const titles = screen.getAllByText(/Parent|Child|Standalone/).map((el) => el.textContent);
+    expect(titles).toEqual(['Parent', 'Child', 'Standalone']);
+  });
+});

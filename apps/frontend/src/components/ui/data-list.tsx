@@ -587,18 +587,49 @@ export function DataList<T extends DataListItem>({
     });
   };
 
+  // 键盘流只在列表容器自身聚焦时接管：焦点落在行内交互元素（checkbox/链接/按钮/输入框）
+  // 时按键交还原生行为，避免 Enter/Space 双触发与 j/k 干扰，也不与命令面板/表单快捷键冲突
+  const isInteractiveTarget = (e: React.KeyboardEvent | React.MouseEvent) => {
+    if (e.target === e.currentTarget) return false;
+    return !!(e.target as HTMLElement).closest(
+      'button, a, input, textarea, select, [contenteditable="true"]',
+    );
+  };
+
+  const handleContainerFocus = () => {
+    // 聚焦即激活首行（Tab 进入后直接可 Enter/x 操作，无需先按 j 探路）
+    if (!activeId && visibleItems.length > 0) setActiveId(visibleItems[0].id);
+  };
+
+  const handleContainerClickCapture = (e: React.MouseEvent) => {
+    if (isInteractiveTarget(e)) return;
+    // 先聚焦（触发 onFocus 激活首行），再覆盖为被点击的行——
+    // 此前点击不可聚焦的行 div 会把焦点丢回 body，键盘流随之中断
+    containerRef.current?.focus({ preventScroll: true });
+    const rowEl = (e.target as HTMLElement).closest<HTMLElement>('[data-row-id]');
+    if (rowEl?.dataset.rowId) setActiveId(rowEl.dataset.rowId);
+  };
+
   const handleListKeyDown = (e: React.KeyboardEvent) => {
+    if (isInteractiveTarget(e)) return;
     if (e.key === 'ArrowDown' || e.key === 'j') {
       e.preventDefault();
       moveActive(1);
     } else if (e.key === 'ArrowUp' || e.key === 'k') {
       e.preventDefault();
       moveActive(-1);
-    } else if ((e.key === 'Enter' || e.key === ' ') && activeId && onItemClick) {
-      const item = visibleItems.find((it) => it.id === activeId);
-      if (item) {
-        e.preventDefault();
-        onItemClick(item);
+    } else if ((e.key === 'x' || e.key === 'X' || e.key === ' ') && selectable && activeId) {
+      // x / space 切换当前行选中：走既有 selectable 契约（受控 onSelectionChange 或内部状态，
+      // 悬浮胶囊与页面批量操作随选中状态联动）
+      e.preventDefault();
+      toggleSelect(activeId);
+    } else if (e.key === 'Enter' || (e.key === ' ' && !selectable)) {
+      if (activeId && onItemClick) {
+        const item = visibleItems.find((it) => it.id === activeId);
+        if (item) {
+          e.preventDefault();
+          onItemClick(item);
+        }
       }
     } else if (e.key === 'Escape') {
       clearSelection();
@@ -651,8 +682,10 @@ export function DataList<T extends DataListItem>({
       ref={containerRef}
       tabIndex={0}
       onKeyDown={handleListKeyDown}
-      className={cn('relative outline-none', className)}
-      aria-label="List. Use arrow keys to navigate, Enter to open."
+      onFocus={handleContainerFocus}
+      onClickCapture={handleContainerClickCapture}
+      className={cn('relative outline-none focus-visible:ring-2 focus-visible:ring-ring/40', className)}
+      aria-label="List. Use arrow keys or j/k to navigate, Enter to open, x or space to select, Escape to clear."
     >
       {isGrouping ? (
         <div className="flex flex-col gap-2">

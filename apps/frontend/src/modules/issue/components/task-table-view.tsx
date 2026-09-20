@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { type ColumnDef, type OnChangeFn, type SortingState } from '@tanstack/react-table';
 import { DataTable } from '@/components/ui/data-table';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
@@ -9,7 +9,7 @@ import { IssueTypePill } from '@/shared/components/issue-type-pill';
 import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
-import { ArrowDown, ArrowUp, ChevronsUp, Minus } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, ChevronsUp, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface TaskTableViewProps {
@@ -66,6 +66,12 @@ export const assigneeNameOf = (task: Task) =>
 export const issueTimeOf = (value: string | null | undefined) =>
   value ? new Date(value).getTime() : 0;
 
+/** 行元数据：树化平铺时记录的层级与父行引用（title 列缩进 / 折叠 / 排序回声共用） */
+interface RowTreeMeta {
+  depth: number;
+  parent: Task | null;
+}
+
 export function TaskTableView({
   tasks,
   loading = false,
@@ -80,14 +86,66 @@ export function TaskTableView({
   className,
 }: TaskTableViewProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // P1-17：子任务客户端折叠（父行 chevron 切换，键 = 父任务 id）
+  const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const toggleCollapsed = useCallback((id: string) => {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
   const issueTypeOf = useIssueTypeOf();
+
+  // ── P1-17：子任务按 parentIssueId 挂到父行下平铺（父行后跟其子行；
+  // parentIssueId 命中当前列表的父才挂载，孤儿按普通行展示，与 TaskRowsList 同口径）
+  const { displayRows, metaByTask, childCountById } = useMemo(() => {
+    const meta = new Map<Task, RowTreeMeta>();
+    const childCount = new Map<string, number>();
+    const parentIds = new Set(tasks.map((t) => t.id));
+    const childrenByParent = new Map<string, Task[]>();
+    const roots: Task[] = [];
+    tasks.forEach((task) => {
+      const parentId = task.parentIssueId;
+      if (parentId && parentIds.has(parentId)) {
+        const list = childrenByParent.get(parentId) ?? [];
+        list.push(task);
+        childrenByParent.set(parentId, list);
+        childCount.set(parentId, (childCount.get(parentId) ?? 0) + 1);
+      } else {
+        roots.push(task);
+      }
+    });
+    const rows: Task[] = [];
+    const walk = (task: Task, depth: number, parent: Task | null) => {
+      rows.push(task);
+      meta.set(task, { depth, parent });
+      const kids = childrenByParent.get(task.id);
+      if (kids && kids.length > 0 && !collapsedIds.has(task.id)) {
+        kids.forEach((kid) => walk(kid, depth + 1, task));
+      }
+    };
+    roots.forEach((root) => walk(root, 0, null));
+    return { displayRows: rows, metaByTask: meta, childCountById: childCount };
+  }, [tasks, collapsedIds]);
+
+  // 子行排序回声：accessor 取父行的值 → 客户端稳定排序下子行紧贴父行，
+  // 不被表头排序甩出父行相邻位（排序算法稳定，同值保持原相对顺序）
+  const sortValue = useCallback(
+    (task: Task, own: (t: Task) => unknown): unknown => {
+      const anchor = metaByTask.get(task)?.parent ?? task;
+      return own(anchor);
+    },
+    [metaByTask],
+  );
 
   const columns = useMemo<ColumnDef<Task, unknown>[]>(() => {
     return [
       {
         id: 'shortId',
         // accessorFn 让表头真正可排序（此前仅 id 无 accessor，getCanSort 恒 false → 死开关）
-        accessorFn: (task) => task.shortId || task.externalIdentifier || task.id.slice(0, 8),
+        accessorFn: (task) => sortValue(task, (t) => t.shortId || t.externalIdentifier || t.id.slice(0, 8)),
         header: 'ID',
         size: 90,
         cell: ({ row }) => {
@@ -103,23 +161,51 @@ export function TaskTableView({
       },
       {
         id: 'title',
-        accessorFn: (task) => task.title,
+        accessorFn: (task) => sortValue(task, (t) => t.title),
         header: 'Title',
         cell: ({ row }) => {
           const task = row.original;
+          const meta = metaByTask.get(task);
+          const depth = meta?.depth ?? 0;
+          const isSubtask = depth > 0;
+          const kidCount = childCountById.get(task.id) ?? 0;
+          const isCollapsed = collapsedIds.has(task.id);
           const todoTotal = task.todoItems?.length ?? task._count?.subIssues ?? 0;
           const todoDone = task.todoItems?.filter((item) => item.completed).length ?? 0;
           const ai = getAiExecution?.(task);
 
           return (
-            <div className="flex items-center gap-2 min-w-0">
+            <div
+              className="flex items-center gap-2 min-w-0"
+              style={depth > 0 ? { paddingLeft: depth * 16 } : undefined}
+              data-subtask-depth={depth}
+            >
+              {kidCount > 0 ? (
+                <button
+                  type="button"
+                  aria-expanded={!isCollapsed}
+                  aria-label={isCollapsed ? `Expand ${task.title}` : `Collapse ${task.title}`}
+                  title={isCollapsed ? `Expand ${task.title}` : `Collapse ${task.title}`}
+                  className="flex size-4 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleCollapsed(task.id);
+                  }}
+                >
+                  {isCollapsed ? <ChevronRight className="size-3" /> : <ChevronDown className="size-3" />}
+                </button>
+              ) : (
+                <span className="size-4 shrink-0" />
+              )}
               {ai ? (
                 <span
                   className="size-1.5 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
                   title="AI 接管执行中"
                 />
               ) : null}
-              <span className="truncate font-medium text-foreground">{task.title}</span>
+              <span className={cn('truncate min-w-0', isSubtask ? 'text-muted-foreground' : 'font-medium text-foreground')}>
+                {task.title}
+              </span>
               {todoTotal > 0 ? (
                 <span className="shrink-0 rounded-full border border-border bg-muted/60 px-1.5 py-0.2 text-10 text-muted-foreground">
                   {todoDone}/{todoTotal}
@@ -131,7 +217,7 @@ export function TaskTableView({
       },
       {
         id: 'aiExecution',
-        accessorFn: (task) => (getAiExecution?.(task)?.isExecuting ? 1 : 0),
+        accessorFn: (task) => sortValue(task, (t) => (getAiExecution?.(t)?.isExecuting ? 1 : 0)),
         header: 'AI 接管状态',
         size: 140,
         cell: ({ row }) => {
@@ -145,7 +231,7 @@ export function TaskTableView({
       },
       {
         id: 'status',
-        accessorFn: (task) => task.status || 'todo',
+        accessorFn: (task) => sortValue(task, (t) => t.status || 'todo'),
         header: 'Status',
         size: 110,
         cell: ({ row }) => {
@@ -167,7 +253,7 @@ export function TaskTableView({
       },
       {
         id: 'priority',
-        accessorFn: (task) => PRIORITY_RANK[task.priority || 'medium'] ?? 0,
+        accessorFn: (task) => sortValue(task, (t) => PRIORITY_RANK[t.priority || 'medium'] ?? 0),
         header: 'Priority',
         size: 90,
         cell: ({ row }) => {
@@ -184,7 +270,7 @@ export function TaskTableView({
       },
       {
         id: 'assignee',
-        accessorFn: (task) => assigneeNameOf(task),
+        accessorFn: (task) => sortValue(task, (t) => assigneeNameOf(t)),
         header: 'Assignee',
         size: 130,
         cell: ({ row }) => {
@@ -201,7 +287,7 @@ export function TaskTableView({
       },
       {
         id: 'project',
-        accessorFn: (task) => getProjectName?.(task.projectId) ?? '',
+        accessorFn: (task) => sortValue(task, (t) => getProjectName?.(t.projectId) ?? ''),
         header: 'Project',
         size: 110,
         cell: ({ row }) => {
@@ -212,7 +298,7 @@ export function TaskTableView({
       },
       {
         id: 'estimate',
-        accessorFn: (task) => task.estimate ?? 0,
+        accessorFn: (task) => sortValue(task, (t) => t.estimate ?? 0),
         header: 'Estimate',
         size: 80,
         cell: ({ row }) => {
@@ -223,7 +309,7 @@ export function TaskTableView({
       },
       {
         id: 'dueDate',
-        accessorFn: (task) => issueTimeOf(task.dueDate),
+        accessorFn: (task) => sortValue(task, (t) => issueTimeOf(t.dueDate)),
         header: 'Due Date',
         size: 100,
         cell: ({ row }) => {
@@ -234,7 +320,7 @@ export function TaskTableView({
       },
       {
         id: 'labels',
-        accessorFn: (task) => task.issueTags?.[0]?.tag?.name ?? '',
+        accessorFn: (task) => sortValue(task, (t) => t.issueTags?.[0]?.tag?.name ?? ''),
         header: 'Labels',
         size: 110,
         cell: ({ row }) => {
@@ -259,20 +345,20 @@ export function TaskTableView({
       },
       {
         id: 'created',
-        accessorFn: (task) => issueTimeOf(task.createdAt),
+        accessorFn: (task) => sortValue(task, (t) => issueTimeOf(t.createdAt)),
         header: 'Created',
         size: 100,
         cell: ({ row }) => <ListDate value={row.original.createdAt} />,
       },
       {
         id: 'updated',
-        accessorFn: (task) => issueTimeOf(task.updatedAt),
+        accessorFn: (task) => sortValue(task, (t) => issueTimeOf(t.updatedAt)),
         header: 'Updated',
         size: 100,
         cell: ({ row }) => <ListDate value={row.original.updatedAt} />,
       },
     ];
-  }, [getAiExecution, getProjectName, issueTypeOf]);
+  }, [getAiExecution, getProjectName, issueTypeOf, sortValue, metaByTask, childCountById, collapsedIds, toggleCollapsed]);
 
   // 列显隐（P1-14）：按展示属性 key 对齐列 id；未传开关表 = 全部展示
   const visibleColumns = useMemo(() => {
@@ -307,7 +393,7 @@ export function TaskTableView({
     <div className={cn('w-full', className)}>
       <DataTable<Task>
         columns={visibleColumns}
-        data={tasks}
+        data={displayRows}
         getRowId={(task) => task.id}
         onRowClick={onTaskClick}
         enableSelection={!!selectionActions}
