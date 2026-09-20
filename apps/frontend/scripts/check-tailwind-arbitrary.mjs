@@ -176,6 +176,20 @@ const ALLOWED_TOKENS = new Set([
   "w-[calc(100%-var(--toast-inset)*2)]",
   "w-[calc(var(--thumb-size)*2-2px)]",
   "z-[calc(9999-var(--toast-index))]",
+  // 命令面板 coss p-command 官方配方（7e9daeb 移植原值）：base-ui Dialog 弹出层
+  // 动画链式变量（--nested-dialogs 级联位移/缩放/透明度）与双层圆角微调、
+  // 触发器紧凑间距——均为变量/表达式计算值，无对应 token 可归约
+  "py-[max(--spacing(4),4vh)]",
+  "py-[10vh]",
+  "translate-y-[calc(1.25rem*var(--nested-dialogs))]",
+  "scale-[calc(1-0.1*var(--nested-dialogs))]",
+  "opacity-[calc(1-0.1*var(--nested-dialogs))]",
+  "transition-[scale,opacity,translate]",
+  "rounded-[calc(var(--radius-2xl)-1px)]",
+  "rounded-t-[calc(var(--radius-xl)-1px)]",
+  "rounded-b-[calc(var(--radius-2xl)-1px)]",
+  "px-[0.3rem]",
+  "py-[0.2rem]",
 ]);
 
 // 变体前缀的方括号不是任意值（data-[...]、aria-[...]、has-[...] 等）
