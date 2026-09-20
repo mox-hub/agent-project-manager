@@ -5,7 +5,7 @@
 import type { ReactNode } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProjectMilestonesPage } from './project-milestones-page';
 
@@ -29,6 +29,7 @@ vi.mock('react-i18next', () => ({
         'project.milestonesPage.status.reached': '已达成',
         'project.milestonesPage.status.missed': '已错过',
         'project.milestonesPage.status.cancelled': '已取消',
+        'project.milestonesPage.newIteration': '新建迭代',
         'release.status.released': '已发布',
         'release.status.draft': '草案',
       };
@@ -68,13 +69,53 @@ vi.mock('@/modules/issue/hooks/use-project-tasks', () => ({
 }));
 
 vi.mock('../components/dashboard/project-detail-frame', () => ({
-  ProjectDetailFrame: ({ children }: { children?: ReactNode }) => (
-    <div data-testid="project-detail-frame">{children}</div>
+  ProjectDetailFrame: ({
+    children,
+    actions,
+  }: {
+    children?: ReactNode;
+    actions?: ReactNode;
+  }) => (
+    <div data-testid="project-detail-frame">
+      {actions}
+      {children}
+    </div>
   ),
 }));
 
 vi.mock('@/shared/components/create-dialog', () => ({
   UnifiedCreateDialog: () => <div data-testid="unified-create-dialog" />,
+}));
+
+// P1-19：迭代详情/表单对话框以可观察 stub 代替，验证页面接线（打开/携带迭代）；
+// 组件内部行为由各自组件测试覆盖
+const iterationDetailStub = vi.fn();
+const iterationFormStub = vi.fn();
+vi.mock('@/modules/issue/components/iteration-detail-dialog', () => ({
+  IterationDetailDialog: (props: {
+    open: boolean;
+    iteration: { id: string } | null;
+  }) => {
+    iterationDetailStub(props);
+    return props.open ? (
+      <div data-testid="iteration-detail-stub">
+        detail:{props.iteration?.id}
+      </div>
+    ) : null;
+  },
+}));
+vi.mock('@/modules/issue/components/iteration-form-dialog', () => ({
+  IterationFormDialog: (props: {
+    open: boolean;
+    iteration: { id: string } | null;
+  }) => {
+    iterationFormStub(props);
+    return props.open ? (
+      <div data-testid="iteration-form-stub">
+        form:{props.iteration?.id ?? 'new'}
+      </div>
+    ) : null;
+  },
 }));
 
 vi.mock('@/shared/ai/identifiers', () => ({
@@ -183,5 +224,64 @@ describe('ProjectMilestonesPage（里程碑与发布时间轴）', () => {
 
     renderPage();
     expect(screen.getByText('暂无里程碑。')).toBeTruthy();
+  });
+});
+
+describe('ProjectMilestonesPage 迭代区可用性（P1-19）', () => {
+  it('迭代卡片可点：点击打开详情对话框并携带该迭代', () => {
+    milestonesState.data = [];
+    iterationsState.data = [
+      {
+        id: 'it-1',
+        name: 'Sprint 1',
+        status: 'planned',
+        startDate: '2026-09-01T00:00:00Z',
+        endDate: '2026-09-30T00:00:00Z',
+        _count: { issues: 5 },
+      },
+    ];
+
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /Sprint 1/ }));
+
+    expect(screen.getByTestId('iteration-detail-stub')).toBeTruthy();
+    const props = iterationDetailStub.mock.lastCall?.[0] as
+      | { open: boolean; iteration?: { id: string } }
+      | undefined;
+    expect(props?.open).toBe(true);
+    expect(props?.iteration?.id).toBe('it-1');
+  });
+
+  it('日期已开始的迭代按推导显示「进行中」（后端默认 planned 不再覆盖日期）', () => {
+    milestonesState.data = [];
+    iterationsState.data = [
+      {
+        id: 'it-1',
+        name: 'Sprint 1',
+        status: 'planned',
+        startDate: '2026-09-01T00:00:00Z',
+        endDate: '2026-09-30T00:00:00Z',
+        _count: { issues: 5 },
+      },
+    ];
+
+    renderPage();
+    const card = screen.getByRole('button', { name: /Sprint 1/ });
+    expect(card).toHaveTextContent('进行中');
+  });
+
+  it('页头提供「新建迭代」入口：点击打开创建表单（无预填迭代）', () => {
+    milestonesState.data = [];
+    iterationsState.data = [];
+
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: '新建迭代' }));
+
+    expect(screen.getByTestId('iteration-form-stub')).toBeTruthy();
+    const props = iterationFormStub.mock.lastCall?.[0] as
+      | { open: boolean; iteration?: { id: string } | null }
+      | undefined;
+    expect(props?.open).toBe(true);
+    expect(props?.iteration).toBeNull();
   });
 });

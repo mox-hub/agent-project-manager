@@ -1875,6 +1875,11 @@
       "taskCount": "{{count}} tasks",
       "unscheduled": "Unscheduled",
       "unscheduledDesc": "Milestones without a target date, pending scheduling.",
+      "newIteration": "New iteration",
+      "editIteration": "Edit iteration",
+      "iterationName": "Iteration name",
+      "iterationStartDate": "Start date",
+      "iterationEndDate": "End date",
       "status": {
         "completed": "Completed",
         "inProgress": "In Progress",

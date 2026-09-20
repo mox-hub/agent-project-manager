@@ -29,6 +29,12 @@ import {
   useProjectIterations,
   useProjectMilestones,
 } from '@/modules/issue/hooks/use-project-tasks';
+import { IterationFormDialog } from '@/modules/issue/components/iteration-form-dialog';
+import { IterationDetailDialog } from '@/modules/issue/components/iteration-detail-dialog';
+import {
+  deriveIterationStatus,
+  ITERATION_STATUS_TONE,
+} from '@/modules/issue/lib/iteration-status';
 import type {
   IterationRef,
   MilestoneRef,
@@ -91,28 +97,9 @@ const RELEASE_TONE: Record<string, string> = {
   failed: 'bg-accent-red-light text-accent-red',
 };
 
-/** 迭代状态（进行中高亮，其余弱化） */
-function iterationTone(status: string) {
-  const normalized = status.toLowerCase();
-  if (normalized.includes('progress') || normalized.includes('active')) {
-    return {
-      labelKey: 'project.milestonesPage.status.inProgress',
-      badgeClass: 'bg-accent-blue-light text-accent-blue border-accent-blue/30',
-      barClass: 'bg-accent-blue/15 border-accent-blue/30',
-    };
-  }
-  if (normalized.includes('done') || normalized.includes('complete')) {
-    return {
-      labelKey: 'project.milestonesPage.status.completed',
-      badgeClass: 'bg-accent-green-light text-accent-green border-accent-green/30',
-      barClass: 'bg-accent-green/10 border-accent-green/30',
-    };
-  }
-  return {
-    labelKey: 'project.milestonesPage.status.planned',
-    badgeClass: 'bg-muted text-muted-foreground border-border',
-    barClass: 'bg-muted/30 border-border',
-  };
+/** 迭代状态 tone：统一走日期推导纯函数（P1-19），tone 常量与详情对话框共享 */
+function iterationToneOf(iteration: IterationRef) {
+  return ITERATION_STATUS_TONE[deriveIterationStatus(iteration)];
 }
 
 type TimelineEntry =
@@ -137,6 +124,10 @@ export function ProjectMilestonesPage() {
     isLoading: iterationsLoading,
   } = useProjectIterations(projectId);
   const [showUnifiedCreate, setShowUnifiedCreate] = useState(false);
+  // P1-19：迭代可用性——详情对话框（卡片点击）/ 创建编辑表单对话框
+  const [detailIteration, setDetailIteration] = useState<IterationRef | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingIteration, setEditingIteration] = useState<IterationRef | null>(null);
 
   const completedCount = useMemo(
     () =>
@@ -193,14 +184,27 @@ export function ProjectMilestonesPage() {
         total: milestones?.length || 0,
       })}
       actions={
-        <HeaderActionButton
-          icon={Plus}
-          label={t('project.detail.newMilestone')}
-          onClick={() => setShowUnifiedCreate(true)}
-          data-ai-component="project.project-milestones.header.new-milestone"
-          data-ai-action="project.project-milestones.header.new-milestone.click"
-          data-ai-role="submit"
-        />
+        <>
+          <HeaderActionButton
+            icon={CalendarRange}
+            label={t('project.milestonesPage.newIteration', '新建迭代')}
+            onClick={() => {
+              setEditingIteration(null);
+              setFormOpen(true);
+            }}
+            data-ai-component="project.project-milestones.header.new-iteration"
+            data-ai-action="project.project-milestones.header.new-iteration.click"
+            data-ai-role="submit"
+          />
+          <HeaderActionButton
+            icon={Plus}
+            label={t('project.detail.newMilestone')}
+            onClick={() => setShowUnifiedCreate(true)}
+            data-ai-component="project.project-milestones.header.new-milestone"
+            data-ai-action="project.project-milestones.header.new-milestone.click"
+            data-ai-role="submit"
+          />
+        </>
       }
       contextBar={
         <SectionCard className="py-0" contentClassName="gap-0 px-4 py-3">
@@ -251,6 +255,7 @@ export function ProjectMilestonesPage() {
                       key={`iter-${entry.iteration.id}`}
                       iteration={entry.iteration}
                       isLast={index === scheduled.length - 1}
+                      onOpen={setDetailIteration}
                     />
                   ) : (
                     <TimelineMilestoneRow
@@ -304,6 +309,28 @@ export function ProjectMilestonesPage() {
         defaultType="milestone"
         projectId={projectId}
       />
+
+      {/* P1-19：迭代详情（卡片点击）+ 创建/编辑表单；key 保证创建/编辑切换时表单重置 */}
+      <IterationDetailDialog
+        open={detailIteration !== null}
+        onOpenChange={(open) => {
+          if (!open) setDetailIteration(null);
+        }}
+        projectId={projectId}
+        iteration={detailIteration}
+        onEdit={(iteration) => {
+          setDetailIteration(null);
+          setEditingIteration(iteration);
+          setFormOpen(true);
+        }}
+      />
+      <IterationFormDialog
+        key={editingIteration?.id ?? 'new'}
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        projectId={projectId}
+        iteration={editingIteration}
+      />
     </ProjectDetailFrame>
   );
 }
@@ -344,16 +371,18 @@ function TimelineRow({
   );
 }
 
-/** 迭代 = 时间盒区间条（名称 + 起止 + 容量） */
+/** 迭代 = 时间盒区间条（名称 + 推导状态 + 起止 + 容量；点击开详情对话框） */
 function TimelineIterationRow({
   iteration,
   isLast,
+  onOpen,
 }: {
   iteration: IterationRef;
   isLast: boolean;
+  onOpen: (iteration: IterationRef) => void;
 }) {
   const { t } = useTranslation();
-  const tone = iterationTone(iteration.status);
+  const tone = iterationToneOf(iteration);
   const capacity = iteration._count?.issues ?? 0;
   return (
     <TimelineRow
@@ -365,11 +394,16 @@ function TimelineIterationRow({
       iconClass="text-accent-purple"
       isLast={isLast}
     >
-      <div
+      <button
+        type="button"
         className={cn(
-          'flex flex-wrap items-center gap-2 rounded-md border px-3 py-2',
+          'flex w-full cursor-pointer flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-left transition-colors hover:bg-muted/40',
           tone.barClass,
         )}
+        onClick={() => onOpen(iteration)}
+        data-ai-component="project.project-milestones.iteration-card"
+        data-ai-action="project.project-milestones.iteration-card.click"
+        data-ai-role="jump"
       >
         <span className="text-sm font-medium text-foreground">
           {iteration.name}
@@ -384,7 +418,7 @@ function TimelineIterationRow({
             {t('project.milestonesPage.taskCount', { count: capacity })}
           </span>
         </span>
-      </div>
+      </button>
     </TimelineRow>
   );
 }

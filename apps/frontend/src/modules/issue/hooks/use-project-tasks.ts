@@ -21,12 +21,15 @@ import type {
   CreateTaskExecutionRequest,
   ConfirmTaskExecutionRequest,
   TaskExecutionRun,
+  CreateIterationRequest,
+  UpdateIterationRequest,
 } from '../api/issue-api';
 
 export function useProjectTasks(
   projectId: string | undefined,
   params?: TaskListParams,
-  options?: Omit<UseQueryOptions<TaskListResponse>, 'queryKey' | 'queryFn' | 'enabled'>,
+  // P1-19：放开 enabled 覆盖（展开序在默认值之后），供迭代详情对话框按需开关查询
+  options?: Omit<UseQueryOptions<TaskListResponse>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery({
     queryKey: ['projectTasks', projectId, params],
@@ -83,6 +86,51 @@ export function useProjectIterations(
     enabled: !!projectId,
     queryFn: () => taskApi.getProjectIterations(projectId!),
     ...options,
+  });
+}
+
+/** P1-19：创建迭代（POST /projects/:projectId/iterations），成功后失效迭代列表缓存 */
+export function useCreateIteration(projectId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: Omit<CreateIterationRequest, 'projectId'>) => {
+      if (!projectId) {
+        throw new Error('projectId is required');
+      }
+      return taskApi.createIteration(projectId, data);
+    },
+    onSuccess: () => {
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: ['projectIterations', projectId],
+        });
+      }
+    },
+    onError: (err) => {
+      toast.error('创建迭代失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
+  });
+}
+
+/** P1-19：更新迭代（PATCH /iterations/:id），成功后失效所属项目的迭代列表缓存 */
+export function useUpdateIteration(projectId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: { iterationId: string; data: UpdateIterationRequest }) =>
+      taskApi.updateIteration(variables.iterationId, variables.data),
+    onSuccess: (iteration) => {
+      const targetProjectId = projectId ?? iteration?.projectId;
+      if (targetProjectId) {
+        queryClient.invalidateQueries({
+          queryKey: ['projectIterations', targetProjectId],
+        });
+      }
+    },
+    onError: (err) => {
+      toast.error('更新迭代失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 

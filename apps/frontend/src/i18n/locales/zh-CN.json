@@ -1875,6 +1875,11 @@
       "taskCount": "{{count}} 个任务",
       "unscheduled": "未计划",
       "unscheduledDesc": "未设置目标日期的里程碑，待排期。",
+      "newIteration": "新建迭代",
+      "editIteration": "编辑迭代",
+      "iterationName": "迭代名称",
+      "iterationStartDate": "开始日期",
+      "iterationEndDate": "结束日期",
       "status": {
         "completed": "已完成",
         "inProgress": "进行中",
