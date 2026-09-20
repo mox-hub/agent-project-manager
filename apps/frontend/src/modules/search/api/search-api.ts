@@ -24,6 +24,8 @@ export interface SearchResponse {
 }
 
 export const searchApi = {
-  search: (params: { q: string; types?: SearchResultType[]; limit?: number }) =>
-    api.get<SearchResponse>('/search', params),
+  search: (
+    params: { q: string; types?: SearchResultType[]; limit?: number },
+    options?: { signal?: AbortSignal },
+  ) => api.get<SearchResponse>('/search', params, options),
 };
