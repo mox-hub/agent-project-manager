@@ -14,6 +14,7 @@ import { createTaskFixture } from './helpers/fixtures';
 describe('Acceptance (e2e)', () => {
   let app: INestApplication;
   let accessToken: string;
+  let adminUserId: string;
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
   let projectId: string;
@@ -37,6 +38,7 @@ describe('Acceptance (e2e)', () => {
       password: 'password123',
     });
     accessToken = loginRes.body.data.accessToken;
+    adminUserId = loginRes.body.data.user.id;
 
     const fixture = await createTaskFixture(wsHttp, ws, accessToken);
     projectId = fixture.projectId;
@@ -200,7 +202,6 @@ describe('Acceptance (e2e)', () => {
       return wsHttp
         .post(`/_api/acceptance/criteria/${criteriaId}/evidence`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'admin-e2e' })
         .send({
           evidenceType: 'test_report',
           content: 'e2e 证据内容',
@@ -214,7 +215,6 @@ describe('Acceptance (e2e)', () => {
       return wsHttp
         .patch(`/_api/acceptance/criteria/${criteriaId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'admin-e2e' })
         .send({ status: 'passed' })
         .expect(200);
     });
@@ -359,7 +359,6 @@ describe('Acceptance (e2e)', () => {
         wsHttp
           .post(`/_api/acceptance/${acceptanceId}/accept-completion`)
           .set('Authorization', `Bearer ${accessToken}`)
-          .query({ userId: 'admin-e2e' })
           // artifact 契约证据本身合法，但「e2e 技术标准 2」从无证据 →
           // criteriaEvidence 门禁拦截（批一 CAP-B-01 修订即失效闭环）
           .send({
@@ -384,7 +383,6 @@ describe('Acceptance (e2e)', () => {
       const ev = await wsHttp
         .post(`/_api/acceptance/criteria/${secondCriteriaId}/evidence`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'admin-e2e' })
         .send({
           evidenceType: 'test_report',
           content: 'e2e 技术标准证据（当前版本）',
@@ -395,7 +393,6 @@ describe('Acceptance (e2e)', () => {
         wsHttp
           .post(`/_api/acceptance/${acceptanceId}/accept-completion`)
           .set('Authorization', `Bearer ${accessToken}`)
-          .query({ userId: 'admin-e2e' })
           // artifact 契约：evidence 需含 artifactId 或 artifacts 数组
           .send({
             evidence: {
@@ -456,12 +453,26 @@ describe('Acceptance (e2e)', () => {
 
   describe('POST /_api/acceptance/checklists (团队自定义清单 CRUD)', () => {
     let teamChecklistId: string;
+    let foreignChecklistId: string;
+
+    beforeAll(async () => {
+      // 他人所有的清单：身份改由鉴权上下文取得后，只能直连库播种
+      const seeded = await ws.db.completenessChecklist.create({
+        data: {
+          name: 'E2E 他人清单',
+          projectType: 'backend',
+          techStack: 'ts-node',
+          checklist: [],
+          ownerId: 'someone-else',
+        },
+      });
+      foreignChecklistId = seeded.id;
+    });
 
     it('should create a team checklist (isSystem=false, 归当前用户)', () => {
       return wsHttp
         .post('/_api/acceptance/checklists')
         .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'e2e-owner' })
         .send({
           name: 'E2E 团队清单',
           projectType: 'backend',
@@ -485,30 +496,28 @@ describe('Acceptance (e2e)', () => {
           const created = res.body.data;
           expect(created.name).toBe('E2E 团队清单');
           expect(created.isSystem).toBe(false);
-          expect(created.ownerId).toBe('e2e-owner');
+          expect(created.ownerId).toBe(adminUserId);
           expect(created.checklist).toHaveLength(2);
           teamChecklistId = created.id;
         });
     });
 
-    it('should reject create without userId', () => {
+    it('should 401 without authentication', () => {
       return wsHttp
         .post('/_api/acceptance/checklists')
-        .set('Authorization', `Bearer ${accessToken}`)
         .send({
           name: 'x',
           projectType: 'api',
           techStack: 'ts-node',
           checklist: [],
         })
-        .expect(400);
+        .expect(401);
     });
 
     it('should update own team checklist and bump version', async () => {
       const res = await wsHttp
         .patch(`/_api/acceptance/checklists/${teamChecklistId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'e2e-owner' })
         .send({
           name: 'E2E 团队清单 v2',
           checklist: [
@@ -525,17 +534,22 @@ describe('Acceptance (e2e)', () => {
       return wsHttp
         .patch(`/_api/acceptance/checklists/${systemChecklistId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'e2e-owner' })
         .send({ name: 'hack' })
         .expect(400);
     });
 
     it('should reject update by non-owner', () => {
       return wsHttp
-        .patch(`/_api/acceptance/checklists/${teamChecklistId}`)
+        .patch(`/_api/acceptance/checklists/${foreignChecklistId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'someone-else' })
         .send({ name: 'not mine' })
+        .expect(400);
+    });
+
+    it('should reject deleting a foreign-owned checklist', () => {
+      return wsHttp
+        .delete(`/_api/acceptance/checklists/${foreignChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(400);
     });
 
@@ -543,7 +557,6 @@ describe('Acceptance (e2e)', () => {
       return wsHttp
         .delete(`/_api/acceptance/checklists/${teamChecklistId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'e2e-owner' })
         .expect(200);
     });
 
@@ -551,7 +564,6 @@ describe('Acceptance (e2e)', () => {
       return wsHttp
         .delete(`/_api/acceptance/checklists/${teamChecklistId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'e2e-owner' })
         .expect(404);
     });
   });

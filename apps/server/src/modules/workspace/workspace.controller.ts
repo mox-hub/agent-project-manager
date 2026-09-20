@@ -48,13 +48,16 @@ class CreateWorkspaceDto {
 
 /**
  * 工作区元数据端点（注册表为文件级存储，不经过业务库）。
- * 列表/切换为 @Public；创建需默认工作区的 admin 身份
+ * current 仅回显请求头、供启动探测，保持 @Public；
+ * 列表与激活需登录（注册表含工作区名与库路径，不向未认证方暴露）；
+ * 创建需默认工作区的 admin 身份
  * （客户端调用时不携带 x-workspace-id，即在默认库校验）。
  */
 @ApiTags('Workspaces')
 @Controller('workspaces')
 export class WorkspaceController {
-  @Public()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @Get()
   @ApiOperation({ summary: '工作区列表（含默认工作区）' })
   @ApiOkResponse({
@@ -96,7 +99,8 @@ export class WorkspaceController {
     }
   }
 
-  @Public()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @Post(':id/activate')
   @ApiOperation({ summary: '标记工作区最近打开（前端切换时调用）' })
   @ApiOkResponse({
