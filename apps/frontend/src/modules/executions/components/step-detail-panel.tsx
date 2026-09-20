@@ -90,7 +90,10 @@ export function StepDetailPanel({
       {/* 头部：类型标签 + 偏移 + 工具名 */}
       <div className="flex shrink-0 items-center gap-2 border-b border-border bg-muted/20 px-3 py-2.5">
         <span className="truncate font-mono text-12 font-semibold text-content-text">
-          {entry.title ?? t(`runDetails.event.${entry.kind}`)}
+          {entry.title ??
+            (entry.titleKey
+              ? t(entry.titleKey)
+              : t(`runDetails.event.${entry.kind}`))}
         </span>
         {offsetLabel ? (
           <span className="shrink-0 font-mono text-11 text-content-text-muted">{offsetLabel}</span>

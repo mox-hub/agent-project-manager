@@ -2,6 +2,7 @@
  * 运行详情面板的纯函数层：格式化、事件条目构建、触发来源与产物聚合。
  * 全部无副作用（渲染期禁 Date.now 等，运行中 run 的时间窗右端取最后事件时间）。
  */
+import i18n from '@/i18n';
 import type {
   ExecutionArtifactRecord,
   ExecutionRunDetail,
@@ -29,6 +30,8 @@ export interface RunEventEntry {
   kind: RunEventKind;
   /** 工具名 / 事件类型等短标题（原始值，翻译由组件按 kind 处理） */
   title?: string;
+  /** 合成条目的展示标题 i18n 键（无原始标题时组件按此翻译，优先于 kind 兜底） */
+  titleKey?: string;
   text?: string;
   at?: string;
   durationMs?: number;
@@ -81,7 +84,9 @@ function pickDetail(value: unknown, maxLen = 6000): string | undefined {
   }
   const trimmed = text.trim();
   if (!trimmed) return undefined;
-  return trimmed.length > maxLen ? `${trimmed.slice(0, maxLen)}\n…（已截断）` : trimmed;
+  return trimmed.length > maxLen
+    ? `${trimmed.slice(0, maxLen)}\n…${i18n.t('runDetails.truncated')}`
+    : trimmed;
 }
 
 export function formatCost(n?: number | null): string | null {
@@ -247,13 +252,13 @@ function eventToEntry(event: ExecutionRunEvent): RunEventEntry {
     }
     case 'execution.tool.result': {
       const tool =
-        detailString(detail, 'tool') ??
-        (event.stepId ? `结果 ${event.stepId}` : '工具结果');
+        detailString(detail, 'tool') ?? (event.stepId ? `#${event.stepId}` : undefined);
       const output = detail?.output;
       return {
         id: event.id,
         kind: 'result',
         title: tool,
+        titleKey: tool ? undefined : 'runDetails.event.toolResult',
         text: event.errorCode ? event.errorCode : pickText(output),
         at,
         durationMs: undefined,
@@ -288,7 +293,7 @@ function eventToEntry(event: ExecutionRunEvent): RunEventEntry {
       return {
         id: event.id,
         kind: 'approval',
-        title: '审批请求',
+        titleKey: 'runDetails.event.approvalRequest',
         text: event.summary,
         at,
         detail: detail ? { output: pickDetail(detail) } : undefined,
@@ -297,7 +302,7 @@ function eventToEntry(event: ExecutionRunEvent): RunEventEntry {
       return {
         id: event.id,
         kind: 'result',
-        title: '执行完成',
+        titleKey: 'runDetails.event.completed',
         text: event.summary,
         at,
         detail: detail ? { output: pickDetail(detail) } : undefined,
@@ -306,7 +311,7 @@ function eventToEntry(event: ExecutionRunEvent): RunEventEntry {
       return {
         id: event.id,
         kind: 'error',
-        title: '执行失败',
+        titleKey: 'runDetails.event.failed',
         text: event.summary,
         at,
         detail: detail ? { output: pickDetail(detail) } : undefined,

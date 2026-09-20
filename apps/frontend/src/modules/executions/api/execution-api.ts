@@ -9,7 +9,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
 
-/** 服务端 ExecutionRun.status 全集（prisma schema 注释枚举） */
+/** 服务端 ExecutionRun.status 全集（prisma schema 注释枚举 + confirmExecution 裁决态） */
 export type ExecutionRunStatus =
   | 'draft'
   | 'planned'
@@ -18,10 +18,20 @@ export type ExecutionRunStatus =
   | 'completed'
   | 'failed'
   | 'blocked'
-  | 'superseded';
+  | 'superseded'
+  /** 任务详情「确认 AI 执行」裁决态（issue.service.confirmExecution 写入，状态机无出边） */
+  | 'approved'
+  | 'rejected';
 
-/** 终态：命中即停轮询/停刷新 */
-export const RUN_TERMINAL_STATUSES = ['completed', 'failed', 'blocked', 'superseded'];
+/** 终态：命中即停轮询/停刷新（approved/rejected 状态机无出边，事实终态） */
+export const RUN_TERMINAL_STATUSES = [
+  'completed',
+  'failed',
+  'blocked',
+  'superseded',
+  'approved',
+  'rejected',
+];
 
 export function isTerminalRunStatus(status?: string | null): boolean {
   return !!status && RUN_TERMINAL_STATUSES.includes(status);

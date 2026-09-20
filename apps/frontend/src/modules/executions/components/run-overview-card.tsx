@@ -11,6 +11,7 @@ import { StatusPill } from '@/components/ui/status-pill';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import {
+  isTerminalRunStatus,
   useExecutionRunDetail,
   useExecutionRunEvents,
   type ExecutionRunRecord,
@@ -70,6 +71,8 @@ const STATUS_STRIP_CLASS: Record<string, string> = {
   draft: 'bg-muted-foreground/40',
   planned: 'bg-muted-foreground/40',
   superseded: 'bg-muted-foreground/40',
+  approved: 'bg-accent-green',
+  rejected: 'bg-accent-red',
 };
 
 function StatCell({
@@ -100,9 +103,7 @@ export function RunOverviewCard({
 }) {
   const { t } = useTranslation();
   const detail = useExecutionRunDetail(open ? run.id : null);
-  const stillActive = detail.data
-    ? !['completed', 'failed', 'blocked', 'superseded'].includes(detail.data.status)
-    : true;
+  const stillActive = detail.data ? !isTerminalRunStatus(detail.data.status) : true;
   const events = useExecutionRunEvents(open ? run.id : null, stillActive);
 
   const data = useMemo(
@@ -251,9 +252,9 @@ export function RunOverviewCard({
 function StatusPillFor({ status }: { status: ExecutionRunRecord['status'] }) {
   const { t } = useTranslation();
   const tone =
-    status === 'completed'
+    status === 'completed' || status === 'approved'
       ? 'success'
-      : status === 'failed' || status === 'blocked'
+      : status === 'failed' || status === 'blocked' || status === 'rejected'
         ? 'danger'
         : status === 'in_progress'
           ? 'info'
