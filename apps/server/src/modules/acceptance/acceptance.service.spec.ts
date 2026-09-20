@@ -132,3 +132,101 @@ describe('AcceptanceService.acceptCompletion 证据版本门禁（CAP-B-01）', 
     expect(updated.status).toBe('passed');
   });
 });
+
+/** P0-9 同款修复：AI 代写标准落库（applyCriteriaForIssue）非法项显式 400，不再静默过滤 */
+describe('AcceptanceService.applyCriteriaForIssue 非法项显式拒绝', () => {
+  function buildApplyPrisma(existingContents: string[] = []) {
+    const createMany = vi.fn(async ({ data }: any) => ({ count: data.length }));
+    const prisma = {
+      issue: {
+        findUnique: vi.fn(async () => ({ id: 'iss1', projectId: 'proj_1' })),
+      },
+      acceptance: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValue({ id: 'acc1', issueId: 'iss1', status: 'draft' }),
+      },
+      acceptanceCriteria: {
+        findMany: vi
+          .fn()
+          .mockResolvedValue(existingContents.map((content) => ({ content }))),
+        createMany,
+      },
+    };
+    const { service, messageBus } = buildDeps(prisma);
+    return { service, createMany, messageBus };
+  }
+
+  it('含缺 content 的非法项 → 400 VALIDATION_ERROR 指明第 N 项，且不落库', async () => {
+    const { service, createMany } = buildApplyPrisma();
+
+    const err = await service
+      .applyCriteriaForIssue(
+        'iss1',
+        [
+          { content: '导出为 xlsx' },
+          { content: '   ' },
+          { content: '返回码 0' },
+        ] as any,
+        'u1',
+      )
+      .catch((e) => e);
+
+    expect(err).toBeInstanceOf(BadRequestException);
+    expect(err.response.code).toBe('VALIDATION_ERROR');
+    expect(err.response.message).toContain('第 2 项');
+    expect(err.response.details).toEqual({ index: 2, field: 'content' });
+    expect(createMany).not.toHaveBeenCalled();
+  });
+
+  it('content 非字符串同样 400 拒绝（原实现会静默丢弃）', async () => {
+    const { service, createMany } = buildApplyPrisma();
+
+    const err = await service
+      .applyCriteriaForIssue('iss1', [{ content: 123 }] as any, 'u1')
+      .catch((e) => e);
+
+    expect(err).toBeInstanceOf(BadRequestException);
+    expect(err.response.code).toBe('VALIDATION_ERROR');
+    expect(createMany).not.toHaveBeenCalled();
+  });
+
+  it('合法项正常落库；与存量同 content 去重记入 skipped', async () => {
+    const { service, createMany, messageBus } = buildApplyPrisma(['已有标准A']);
+
+    const result = await service.applyCriteriaForIssue(
+      'iss1',
+      [
+        { content: '已有标准A' },
+        { content: '  新标准B  ' },
+        { content: '新标准C' },
+      ],
+      'u1',
+    );
+
+    expect(result.added).toBe(2);
+    expect(result.skipped).toBe(1);
+    expect(createMany).toHaveBeenCalledTimes(1);
+    const data = createMany.mock.calls[0][0].data;
+    expect(data[0].content).toBe('新标准B'); // trim 后落库
+    expect(data[0].source).toBe('ai-generated');
+    expect(messageBus.publish).toHaveBeenCalledWith(
+      'acceptance.updated',
+      expect.objectContaining({ added: 2, source: 'ai-generated' }),
+    );
+  });
+
+  it('全部为重复项 → added=0 提前返回，不触发 createMany', async () => {
+    const { service, createMany } = buildApplyPrisma(['标准A']);
+
+    const result = await service.applyCriteriaForIssue(
+      'iss1',
+      [{ content: '标准A' }],
+      'u1',
+    );
+
+    expect(result.added).toBe(0);
+    expect(result.skipped).toBe(1);
+    expect(createMany).not.toHaveBeenCalled();
+  });
+});
