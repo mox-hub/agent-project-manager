@@ -79,7 +79,7 @@ describe('Error paths: 六模块异常流抽样 (e2e)', () => {
   });
 
   describe('GET /_api/issues/:id（越权 workspace 头隔离）', () => {
-    it('should 401 when workspace header is not the owner', async () => {
+    it('should 404 WORKSPACE_NOT_FOUND when workspace header is not the owner', async () => {
       const created = await wsHttp
         .post('/_api/issues')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -87,13 +87,15 @@ describe('Error paths: 六模块异常流抽样 (e2e)', () => {
         .expect(201);
       const issueId = created.body.data.id as string;
 
-      // 未注册的工作区头：请求者在该工作区无身份，认证守卫直接拒绝
-      // （数据按工作区物理隔离，语义为 401 而非 404 资源不可见）
+      // 未注册的工作区头：数据层按工作区物理隔离（P0-7 安全止血）——
+      // 未注册/库文件缺失一律 404 WORKSPACE_NOT_FOUND 拒绝数据访问，
+      // 绝不静默回落默认库（防串库/越权），也不暴露资源存在性
       const stranger = wsRequest(app, 'ws-not-registered-e2e');
-      return stranger
+      const res = await stranger
         .get(`/_api/issues/${issueId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(401);
+        .expect(404);
+      expect(res.body.error?.code).toBe('WORKSPACE_NOT_FOUND');
     });
   });
 

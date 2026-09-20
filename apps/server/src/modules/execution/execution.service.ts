@@ -104,6 +104,15 @@ export class ExecutionService {
   }
 
   async createExecutionRun(dto: CreateExecutionRunDto) {
+    // 必缺失校验前置：projectId/subjectType/subjectId 是 Prisma 必填字段，
+    // controller 层 body 为 any 未被 ValidationPipe 拦截，缺参会直穿到
+    // prisma.create 裸抛 PrismaClientValidationError——显式 400 提前拒绝
+    if (!dto.projectId || !dto.subjectType || !dto.subjectId) {
+      throw new BadRequestException(
+        '创建执行缺少必填参数：projectId、subjectType、subjectId 均为必传',
+      );
+    }
+
     // V3: 派发自动关联验收契约——未显式传入 acceptanceId 时，取任务活契约，无则创建
     let acceptanceId = dto.acceptanceId ?? null;
     if (dto.issueId && !acceptanceId) {

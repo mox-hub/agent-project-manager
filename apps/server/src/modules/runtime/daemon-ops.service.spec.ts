@@ -20,6 +20,20 @@ vi.mock('child_process', () => ({
 
 import { DaemonOpsService } from './daemon-ops.service';
 
+// 平台自洽（Linux CI 防 worker 自杀）：stop() 的非 win32 分支走
+// process.kill(pid, 'SIGTERM')，而本 spec 的锁 pid 用测试进程自身——
+// 不 mock 会在 Linux 上把 vitest worker 自己杀掉（SIGTERM）。
+// 探活（signal 0）语义保留：仅测试进程自身视为存活，其余 pid 视为不存在。
+const killSpy = vi.spyOn(process, 'kill').mockImplementation(((
+  pid: number,
+  signal?: string | number,
+) => {
+  if ((signal ?? 0) === 0 && pid !== process.pid) {
+    throw new Error('ESRCH');
+  }
+  return true;
+}) as unknown as typeof process.kill);
+
 const makeService = (appMode: string | undefined) => {
   return new DaemonOpsService({
     get: (key: string) => (key === 'APP_MODE' ? appMode : undefined),
@@ -112,7 +126,7 @@ describe('DaemonOpsService（本机 daemon 运维）', () => {
     expect(opts.env.APM_BACKEND).toBe('http://127.0.0.1:4300');
   });
 
-  it('stop：未运行 → 400；运行中（锁 pid 存活）→ win32 taskkill /T /F', () => {
+  it('stop：未运行 → 400；运行中（锁 pid 存活）→ 平台强杀（win32 taskkill /T /F，Unix SIGTERM）', () => {
     const service = makeService('standalone');
 
     expect(() => service.stop()).toThrow(BadRequestException);
@@ -122,9 +136,13 @@ describe('DaemonOpsService（本机 daemon 运维）', () => {
       JSON.stringify({ pid: process.pid, startedAt: '2026-09-19T00:00:00Z' }),
     );
     service.stop();
-    expect(spawnSyncMock).toHaveBeenCalledWith(
-      'taskkill',
-      expect.arrayContaining(['/PID', String(process.pid), '/T', '/F']),
-    );
+    if (process.platform === 'win32') {
+      expect(spawnSyncMock).toHaveBeenCalledWith(
+        'taskkill',
+        expect.arrayContaining(['/PID', String(process.pid), '/T', '/F']),
+      );
+    } else {
+      expect(killSpy).toHaveBeenCalledWith(process.pid, 'SIGTERM');
+    }
   });
 });
