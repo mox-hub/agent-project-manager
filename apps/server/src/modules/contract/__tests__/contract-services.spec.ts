@@ -128,11 +128,19 @@ function buildHarness() {
   const fs = new StubFs();
   const engine = new ContractEngineService();
   const resolver = new ContractWorkspaceResolver(prisma as never);
+  // P1-10：冲突升级现在会广播 decision.proposal.created，桩收集以便断言
+  const bus = {
+    events: [] as { type: string; payload: unknown }[],
+    publish(type: string, payload?: unknown) {
+      this.events.push({ type, payload });
+    },
+  };
   const bindings = new ContractBindingService(
     prisma as never,
     engine,
     resolver,
     fs,
+    bus as never,
   );
   const seed = new ContractSeedService(
     prisma as never,
@@ -141,7 +149,7 @@ function buildHarness() {
     resolver,
     fs,
   );
-  return { prisma, fs, engine, resolver, bindings, seed };
+  return { prisma, fs, engine, resolver, bindings, seed, bus };
 }
 
 // 与 ContractWorkspaceResolver.join 一致的本地绝对路径（Windows 下 resolve 会补盘符）
@@ -311,7 +319,7 @@ describe('ContractBindingService 对齐与冲突闭环', () => {
   });
 
   it('managed 下文件侧被手改 → 升级 DecisionProposal 且不静默覆盖', async () => {
-    const { fs, bindings, prisma } = await setupWithBinding();
+    const { fs, bindings, prisma, bus } = await setupWithBinding();
     const tampered = fs
       .get(FILES.agents)!
       .replace('# 示例项目', '# 被手改的标题');
@@ -333,6 +341,14 @@ describe('ContractBindingService 对齐与冲突闭环', () => {
     const again = await bindings.checkAlignment('proj-1', 'agents');
     expect(again.proposalId).toBeUndefined();
     expect(prisma.proposals).toHaveLength(1);
+    // P1-10：冲突卡升级即广播（通知订阅链可感知，不再静默堆积）
+    expect(bus.events).toHaveLength(1);
+    expect(bus.events[0].type).toBe('decision.proposal.created');
+    expect(bus.events[0].payload).toMatchObject({
+      proposalId: 'dp_1',
+      kind: 'contract_conflict',
+      projectId: 'proj-1',
+    });
   });
 
   it('resolveConflict accept_db：DB 真相写回文件并对齐', async () => {

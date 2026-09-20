@@ -308,7 +308,7 @@ export class McpServerService implements OnModuleInit {
                 issueId: { type: 'string', description: 'Task ID' },
                 providerId: {
                   type: 'string',
-                  enum: ['claude-code', 'codex', 'zcode'],
+                  enum: ['claude-code', 'codex', 'zcode', 'opencode'],
                   description: 'CLI provider',
                 },
                 model: { type: 'string', description: 'Model to use' },
@@ -341,7 +341,7 @@ export class McpServerService implements OnModuleInit {
           {
             name: 'get_cli_providers',
             description:
-              'List locally available CLI providers (Claude Code / Codex / ZCode) with status and DB overrides',
+              'List locally available CLI providers (Claude Code / Codex / ZCode / OpenCode) with status and DB overrides',
             inputSchema: {
               type: 'object',
               properties: {
@@ -362,7 +362,7 @@ export class McpServerService implements OnModuleInit {
               properties: {
                 providerId: {
                   type: 'string',
-                  enum: ['claude-code', 'codex', 'zcode'],
+                  enum: ['claude-code', 'codex', 'zcode', 'opencode'],
                   description: 'CLI provider',
                 },
                 displayName: { type: 'string' },
@@ -394,7 +394,7 @@ export class McpServerService implements OnModuleInit {
               properties: {
                 providerId: {
                   type: 'string',
-                  enum: ['claude-code', 'codex', 'zcode'],
+                  enum: ['claude-code', 'codex', 'zcode', 'opencode'],
                 },
               },
               required: ['providerId'],
@@ -525,7 +525,7 @@ export class McpServerService implements OnModuleInit {
   private async configureCliProviderTool(
     ctx: McpToolContext,
     args: {
-      providerId: 'claude-code' | 'codex' | 'zcode';
+      providerId: 'claude-code' | 'codex' | 'zcode' | 'opencode';
       displayName?: string;
       commandPath?: string;
       model?: string;
@@ -563,7 +563,7 @@ export class McpServerService implements OnModuleInit {
   }
 
   private async healthCheckCliProviderTool(args: {
-    providerId: 'claude-code' | 'codex' | 'zcode';
+    providerId: 'claude-code' | 'codex' | 'zcode' | 'opencode';
   }) {
     if (!args.providerId) {
       throw new BadRequestException('providerId is required');
@@ -813,7 +813,7 @@ export class McpServerService implements OnModuleInit {
       agentId,
       {
         providerId: args.providerId as
-          'claude-code' | 'codex' | 'zcode' | undefined,
+          'claude-code' | 'codex' | 'zcode' | 'opencode' | undefined,
         model: args.model,
         executionId: args.executionId,
       },

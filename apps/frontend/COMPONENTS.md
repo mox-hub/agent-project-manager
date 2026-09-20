@@ -182,7 +182,7 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | Tabs 套件 | ui/tabs.tsx | 页签（base-ui，default/line/segmented 变体） | value, onValueChange；TabsList: variant |
 | Breadcrumb 套件 | ui/breadcrumb.tsx | 面包屑导航（base-ui render） | render(Link), href/to |
 | Pagination 套件 | ui/pagination.tsx | 分页导航（静态结构） | isActive, size, href |
-| Command 套件 | ui/command.tsx | 命令面板基元（Dialog 式命令列表） | CommandDialog: open, onOpenChange；CommandInput: value, onChange |
+| Command 套件（coss） | ui/command.tsx | 命令面板基元（coss `@coss/command` 移植：引擎=base-ui Autocomplete（过滤/分组/键盘导航/高亮内置），壳=base-ui Dialog；旧 cmdk 实现已废弃）。数据驱动：Root 传 items（组数组 `{value,label,items}`）+ filter；`mode:'none'` 可切静态渲染。List children 渲染函数 + CommandGroup(items) + CommandCollection 为官方 closed-template 形态（children 函数类型未收窄处需 `as unknown as ReactNode`）。CommandList 支持 scrollAreaClassName 约束滚动高度 | CommandDialog(Root): open, onOpenChange；CommandDialogPopup: 弹出层（含 Backdrop/Viewport）；Command: items, filter, mode, onItemHighlighted；CommandInput: value, onChange, onKeyDown；CommandEmpty/CommandGroup/CommandGroupLabel/CommandCollection/CommandItem(value 为对象)/CommandShortcut/CommandPanel/CommandFooter |
 | Menu 套件（coss） | ui/menu.tsx | 下拉菜单标准件（coss 配方：分组/勾选/单选/子菜单/快捷键/破坏性项；DropdownMenu* 别名同源） | MenuTrigger, MenuPopup, MenuItem(variant), MenuCheckboxItem, MenuRadioGroup/Item, MenuSub, MenuShortcut |
 | ContextMenu 套件 + createMenuItems | ui/context-menu.tsx | 右键菜单（base-ui ContextMenu 原语 + coss Menu 弹出层设计，元数据驱动 items） | items(MenuItem[]), onItemClick |
 | DropdownMenu 套件 | ui/dropdown-menu.tsx | 下拉菜单（base-ui 官方配方） | children |

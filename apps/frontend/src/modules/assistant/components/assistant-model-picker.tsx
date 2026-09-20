@@ -76,7 +76,7 @@ export function AssistantModelPicker({
           <DropdownMenuLabel>{t('assistant.model.label')}</DropdownMenuLabel>
           <DropdownMenuItem
             disabled={!hasCli || !projectId}
-            onSelect={() => onChange('cli')}
+            onClick={() => onChange('cli')}
             className="gap-2"
           >
             <ModelItemLabel
@@ -101,7 +101,7 @@ export function AssistantModelPicker({
             <DropdownMenuItem
               key={option.id}
               disabled={!projectId}
-              onSelect={() => onChange(option.id)}
+              onClick={() => onChange(option.id)}
               className="gap-2"
             >
               <ModelItemLabel option={option} />
@@ -113,7 +113,7 @@ export function AssistantModelPicker({
           {llmOptions.map((option) => (
             <DropdownMenuItem
               key={option.id}
-              onSelect={() => onChange(option.id)}
+              onClick={() => onChange(option.id)}
               className="gap-2"
             >
               <ModelItemLabel option={option} />

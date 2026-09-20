@@ -13,6 +13,7 @@ import { ExecutionService } from '@/modules/execution/execution.service';
 import { ApprovalService } from '@/modules/execution/approval.service';
 import {
   CliExecutionInput,
+  CLI_ADAPTER_CAPABILITIES,
   StreamEmitter,
   ExecutionStepUpdate,
   ProviderId,
@@ -72,8 +73,22 @@ export class CliExecutorService {
     const args: string[] = [...built.args];
     let env = built.env;
 
-    // Apply DB overrides (commandPath / model / env / allowedTools)
+    // P1-22a：治理语义能力位——请求携带了 adapter 不支持的选项时显式告警，不再静默忽略
+    const capabilities = CLI_ADAPTER_CAPABILITIES[context.providerId];
     const override = this.registry.getOverrideConfig(context.providerId);
+    const unsupportedOptions: string[] = [];
+    if (input.allowedTools?.length && !capabilities.allowedTools) {
+      unsupportedOptions.push(
+        `allowedTools（${input.allowedTools.length} 项，来自派发请求）`,
+      );
+    }
+    if (override?.allowedTools?.length && !capabilities.allowedTools) {
+      unsupportedOptions.push(
+        `allowedTools（${override.allowedTools.length} 项，来自 provider 配置）`,
+      );
+    }
+
+    // Apply DB overrides (commandPath / model / env / allowedTools)
     if (override) {
       if (override.commandPath) {
         cmd = override.commandPath;
@@ -81,10 +96,14 @@ export class CliExecutorService {
       if (override.env) {
         env = { ...env, ...override.env };
       }
-      if (override.allowedTools && override.allowedTools.length > 0) {
+      if (
+        override.allowedTools &&
+        override.allowedTools.length > 0 &&
+        capabilities.allowedTools
+      ) {
         // Inject --allowedTools / --allow based on adapter contract
         // Claude Code uses comma-joined flag; Codex uses comma-joined --allow
-        // For zcode, this is a no-op fallback (no flag known yet)
+        // 能力位不支持的家（zcode/opencode）不注入：未知 flag 会污染 positional 参数或被 CLI 拒绝，改为显式告警
         const joiner = context.providerId === 'codex' ? ',' : ',';
         const flagName =
           context.providerId === 'codex' ? '--allow' : '--allowedTools';
@@ -111,6 +130,31 @@ export class CliExecutorService {
 
     // Start execution
     await this.executionService.startExecution(executionRunId);
+
+    // P1-22a：能力告警落执行时间线（不阻断执行；跟随 addExecutionStep 既有形态）
+    if (unsupportedOptions.length > 0) {
+      const detail = {
+        providerId: context.providerId,
+        unsupportedOptions,
+        hint: '该 CLI provider 能力位不支持以上选项，执行时已忽略',
+      };
+      this.logger.warn(
+        `[capability] ${context.providerId} 不支持: ${unsupportedOptions.join('、')}（execution=${executionRunId}）`,
+      );
+      try {
+        await this.executionService.addExecutionStep(executionRunId, {
+          stepType: 'observation',
+          name: 'capability_warning',
+          sequence: 0,
+          input: detail,
+          status: 'completed',
+        });
+      } catch (warnError) {
+        this.logger.warn(
+          `[capability] 告警时间线写入失败（不阻断执行）: ${warnError}`,
+        );
+      }
+    }
 
     // Create stream emitter
     const emitter: StreamEmitter = this.createEmitter(context, options);

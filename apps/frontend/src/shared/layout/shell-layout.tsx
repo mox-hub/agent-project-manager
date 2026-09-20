@@ -362,6 +362,8 @@ export function ShellLayout() {
           icon: entry.entity
             ? getEntityIcon(entry.entity).icon
             : (entry.icon ?? undefined),
+          // 品牌彩色（page-registry 唯一真相源），命令面板图标着色与侧边栏同源
+          iconColor: entry.to ? PAGE_REGISTRY[entry.to]?.color : undefined,
           onSelect: entry.action ? commandActions[entry.action] : undefined,
         })),
     [commandActions, isAdminRole, mode, t],

@@ -20,7 +20,6 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -73,7 +72,6 @@ export class AuthController {
   }
 
   @Public()
-  @UseGuards(LocalAuthGuard)
   @Post('login')
   @ApiOperation({ summary: 'User login' })
   @ApiBody({ type: LoginDto })
@@ -81,9 +79,24 @@ export class AuthController {
     description: 'Login successful, returns JWT token and user info',
     type: LoginResponseDto,
   })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Validation error — invalid or missing fields (VALIDATION_ERROR)',
+  })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() _loginDto: LoginDto, @Request() req: any) {
-    return this.authService.loginByUserId(req.user.id, {
+  /**
+   * 不再经 LocalAuthGuard：guard 先于 ValidationPipe 执行，body 缺 username
+   * 字段时 passport-local 直接 fail('Missing credentials', 401)，字段错误被
+   * 伪装成凭证错误。改为 controller 内显式校验凭证——DTO 字段问题由全局
+   * ValidationPipe 返回 400，凭证错误由 validateUser 抛 401 + INVALID_CREDENTIALS。
+   */
+  async login(@Body() dto: LoginDto, @Request() req: any) {
+    const user = await this.authService.validateUser(
+      dto.username,
+      dto.password,
+    );
+    return this.authService.loginByUserId(user.id, {
       identitySource: 'local',
       ipAddress: req.ip,
       userAgent: req.headers?.['user-agent'],

@@ -15,6 +15,7 @@ import { Prisma } from '@prisma/client';
 import { tool, type Tool } from 'ai';
 import { z } from 'zod';
 import { PrismaService } from '../../../core/database/prisma.service';
+import { MessageBusService } from '../../../core/message-bus/message-bus.service';
 import {
   parseWorkflowDefinition,
   summarizeDefinition,
@@ -635,6 +636,7 @@ export class AssistantToolsService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly messageBus: MessageBusService,
     private readonly issueService: IssueService,
     private readonly documentService: DocumentService,
     private readonly memberService: MemberService,
@@ -720,6 +722,15 @@ export class AssistantToolsService {
         proposerId: assistantMember?.id ?? null,
         status: 'pending',
       },
+    });
+    // P1-10：与 ProposalService.create 同事件同 payload 形态（proposalId 不在
+    // 时订阅侧按「无 projectId 不通知」诚实降级）——直写此前零发布，卡片静默
+    this.messageBus.publish('decision.proposal.created', {
+      proposalId: proposal.id,
+      kind: proposal.kind,
+      title: proposal.title,
+      projectId: proposal.projectId,
+      issueId: proposal.issueId,
     });
     this.logger.log(`Assistant proposed workflow_def ${mode} ${key}: ${title}`);
     return jsonSafe({
@@ -2010,6 +2021,16 @@ export class AssistantToolsService {
               proposerId: assistantMember?.id ?? null,
               status: 'pending',
             },
+          });
+          // P1-10：与 ProposalService.create 同事件同 payload 形态——助手直出的
+          // 决策卡此前零发布，通知订阅与网关徽标均感知不到（projectId 为空时
+          // 订阅侧按「无 projectId 不通知」诚实降级）
+          this.messageBus.publish('decision.proposal.created', {
+            proposalId: proposal.id,
+            kind: proposal.kind,
+            title: proposal.title,
+            projectId: proposal.projectId,
+            issueId: proposal.issueId,
           });
           this.logger.log(
             `Assistant proposed ${kind} decision ${proposal.id}: ${title}`,

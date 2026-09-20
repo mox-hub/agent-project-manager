@@ -177,6 +177,23 @@ export function startWorker(
       return;
     }
 
+    // P1-22a：能力位告警——派发请求携带了 adapter 不支持的选项时显式上报，不静默忽略
+    if (dispatch.allowedTools?.length && !adapter.getCapabilities().allowedTools) {
+      await api
+        .post(RUNTIME_ENDPOINTS.executionEvents(executionRunId), {
+          eventType: EXECUTION_EVENT_TYPES.STEP_UPDATED,
+          runtimeId,
+          status: 'completed',
+          summary: `能力告警：${providerId} 不支持 allowedTools（${dispatch.allowedTools.length} 项），执行时已忽略`,
+          detail: {
+            providerId,
+            unsupportedOptions: ['allowedTools'],
+            allowedTools: dispatch.allowedTools,
+          },
+        } as ExecutionEventPayload)
+        .catch(() => {});
+    }
+
     // token 节流批量上报
     let tokenBuffer = '';
     let tokenFlushTimer: NodeJS.Timeout | null = null;

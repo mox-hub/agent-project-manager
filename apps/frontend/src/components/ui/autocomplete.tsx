@@ -60,14 +60,14 @@ export function AutocompleteInput({
       <AutocompletePrimitive.Input
         className={cn(
           startAddon &&
-            "data-[size=sm]:*:data-[slot=autocomplete-input]:ps-[calc(--spacing(7.5)-1px)] *:data-[slot=autocomplete-input]:ps-[calc(--spacing(8.5)-1px)] sm:data-[size=sm]:*:data-[slot=autocomplete-input]:ps-[calc(--spacing(7)-1px)] sm:*:data-[slot=autocomplete-input]:ps-[calc(--spacing(8)-1px)]",
+            "*:data-[slot=input]:ps-9 sm:*:data-[slot=input]:ps-8.5",
           size === "sm"
             ? "has-[+[data-slot=autocomplete-trigger],+[data-slot=autocomplete-clear]]:*:data-[slot=autocomplete-input]:pe-6.5"
             : "has-[+[data-slot=autocomplete-trigger],+[data-slot=autocomplete-clear]]:*:data-[slot=autocomplete-input]:pe-7",
           className
         )}
         data-slot="autocomplete-input"
-        render={<Input className={cn(heightClass, "pr-8")} />}
+        render={<Input className={cn(heightClass, startAddon && "ps-9 sm:ps-8.5", "pr-8")} />}
         {...props}
       />
       {showTrigger && (
@@ -241,10 +241,19 @@ export const AutocompleteValue: typeof AutocompletePrimitive.Value =
 
 export function AutocompleteList({
   className,
+  scrollAreaClassName,
   ...props
-}: AutocompletePrimitive.List.Props): React.ReactElement {
+}: AutocompletePrimitive.List.Props & {
+  /** 高度约束等样式落在 ScrollArea 根上（List 本体在 viewport 内部） */
+  scrollAreaClassName?: string
+}) {
   return (
-    <ScrollArea overscrollContain scrollbarGutter scrollFade>
+    <ScrollArea
+      className={scrollAreaClassName}
+      overscrollContain
+      scrollbarGutter
+      scrollFade
+    >
       <AutocompletePrimitive.List
         className={cn(
           "not-empty:scroll-py-1 not-empty:p-1 in-data-has-overflow-y:pe-3",

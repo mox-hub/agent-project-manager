@@ -16,17 +16,34 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Bell,
+  Brain,
   Building2,
   ChartColumn,
   CircleHelp,
   CircleUserRound,
+  ClipboardCheck,
+  GitBranch,
+  Hash,
+  HardDrive,
+  KeyRound,
+  Keyboard,
   LayoutDashboard,
+  LayoutTemplate,
+  ListChecks,
+  ListTree,
   LogOut,
   MessagesSquare,
+  Palette,
+  Plug,
+  Rocket,
   Search,
+  Server,
   Settings,
+  Shapes,
   Sparkles,
   SunMoon,
+  Tag,
+  TerminalSquare,
   UserCog,
 } from 'lucide-react';
 import type { EntityKind } from '@/shared/entity-icons/entity-icons';
@@ -36,6 +53,7 @@ export type CommandGroupId =
   | 'navigation'
   | 'workflow'
   | 'collaboration'
+  | 'settings'
   | 'system'
   | 'actions';
 
@@ -70,6 +88,7 @@ export const COMMAND_GROUP_LABEL_KEYS: Record<CommandGroupId, string> = {
   navigation: 'shell.navigation',
   workflow: 'shell.groupWorkflow',
   collaboration: 'shell.groupCollaboration',
+  settings: 'shell.groupSettings',
   system: 'shell.system',
   actions: 'common.actions',
 };
@@ -93,15 +112,37 @@ export const commandEntries: CommandEntry[] = [
   { id: 'cmd-acceptance', labelKey: 'shell.openAcceptance', to: '/app/acceptance', group: 'workflow', entity: 'acceptance', keywords: ['acceptance', '验收', '门禁'] },
   { id: 'cmd-decisions', labelKey: 'shell.openDecisions', to: '/app/decisions', group: 'workflow', entity: 'decision', keywords: ['decision', '决策', '收件箱', 'inbox'] },
   { id: 'cmd-executions', labelKey: 'shell.openExecutions', to: '/app/executions', group: 'workflow', entity: 'execution', keywords: ['execution', '执行', 'run', '运行'] },
+  { id: 'cmd-releases', labelKey: 'nav.releases', to: '/app/releases', group: 'workflow', icon: Rocket, keywords: ['release', '发版', '交付', 'changelog'] },
+  { id: 'cmd-intake', labelKey: 'nav.intake', to: '/app/intake', group: 'workflow', entity: 'document', keywords: ['intake', '需求', '承接'] },
+  { id: 'cmd-delivery', labelKey: 'nav.delivery', to: '/app/delivery', group: 'workflow', icon: ListTree, keywords: ['delivery', '交付视图'] },
   // —— 协作与工具 ——
   { id: 'cmd-office', labelKey: 'shell.openOffice', to: '/app/office', group: 'collaboration', icon: Building2, keywords: ['office', '办公', '办公室'] },
   { id: 'cmd-repositories', labelKey: 'shell.openRepositories', to: '/app/repositories', group: 'collaboration', entity: 'repository', keywords: ['repository', 'repo', 'git', '仓库', '代码'] },
   { id: 'cmd-notifications', labelKey: 'shell.openNotifications', to: '/app/notifications', group: 'collaboration', icon: Bell, keywords: ['notification', '通知', '消息', 'message'] },
   { id: 'cmd-search', labelKey: 'shell.openSearch', to: '/app/search', group: 'collaboration', icon: Search, keywords: ['search', '搜索', '查找'] },
+  { id: 'cmd-ai-surface', labelKey: 'nav.aiSurface', to: '/app/ai-surface', group: 'collaboration', icon: Sparkles, keywords: ['ai', 'surface', '表面', '同事'] },
+  // —— 设置（二级页全量登记，路由与 router.tsx 对齐）——
+  { id: 'cmd-ai', labelKey: 'shell.openAiSpace', to: '/app/settings/ai', group: 'settings', icon: Sparkles, keywords: ['ai', 'assistant', 'agent', 'mcp', '助手', '智能体', '模型'] },
+  { id: 'cmd-ai-executions', labelKey: 'settings.aiExecutions', to: '/app/settings/ai/executions', group: 'settings', entity: 'execution', keywords: ['ai', 'execution', '执行中心'] },
+  { id: 'cmd-settings-integrations', labelKey: 'settings.integrations', to: '/app/settings/integrations', group: 'settings', icon: Plug, keywords: ['integration', 'github', 'linear', '集成'] },
+  { id: 'cmd-settings-runtime', labelKey: 'settings.runtime', to: '/app/settings/runtime', group: 'settings', icon: Server, keywords: ['runtime', 'daemon', '运行时', '守护进程'] },
+  { id: 'cmd-settings-memory', labelKey: 'settings.memory', to: '/app/settings/memory', group: 'settings', icon: Brain, keywords: ['memory', '记忆'] },
+  { id: 'cmd-settings-tokens', labelKey: 'settings.tokens', to: '/app/settings/tokens', group: 'settings', icon: KeyRound, keywords: ['token', 'pat', '令牌', '访问令牌'] },
+  { id: 'cmd-settings-shortcuts', labelKey: 'settings.shortcuts', to: '/app/settings/shortcuts', group: 'settings', icon: Keyboard, keywords: ['shortcut', 'hotkey', '快捷键', '键位'] },
+  { id: 'cmd-settings-appearance', labelKey: 'settings.appearance', to: '/app/settings/appearance', group: 'settings', icon: Palette, keywords: ['appearance', 'theme', '外观', '主题'] },
+  { id: 'cmd-settings-git', labelKey: 'settings.git', to: '/app/settings/git', group: 'settings', icon: GitBranch, keywords: ['git'] },
+  { id: 'cmd-settings-terminal', labelKey: 'settings.terminal', to: '/app/settings/terminal', group: 'settings', icon: TerminalSquare, keywords: ['terminal', '终端'] },
+  { id: 'cmd-settings-labels', labelKey: 'settings.labels', to: '/app/settings/labels', group: 'settings', icon: Tag, keywords: ['label', '标签'] },
+  { id: 'cmd-settings-statuses', labelKey: 'settings.statuses', to: '/app/settings/statuses', group: 'settings', icon: ListChecks, keywords: ['status', '状态'] },
+  { id: 'cmd-settings-issue-types', labelKey: 'settings.issueTypes', to: '/app/settings/issue-types', group: 'settings', icon: Shapes, keywords: ['type', '类型', '工单类型'] },
+  { id: 'cmd-settings-checklists', labelKey: 'settings.checklists', to: '/app/settings/checklists', group: 'settings', icon: ClipboardCheck, keywords: ['checklist', '清单', '完备性'] },
+  { id: 'cmd-settings-roles', labelKey: 'settings.roles', to: '/app/settings/roles', group: 'settings', icon: UserCog, keywords: ['role', 'permission', '角色', '权限'] },
+  { id: 'cmd-settings-templates', labelKey: 'settings.templates', to: '/app/settings/templates', group: 'settings', icon: LayoutTemplate, keywords: ['template', '模板'] },
+  { id: 'cmd-settings-short-id', labelKey: 'settings.shortId', to: '/app/settings/short-id', group: 'settings', icon: Hash, keywords: ['short id', '短id', '编号规则'] },
+  { id: 'cmd-settings-storage', labelKey: 'settings.storage', to: '/app/settings/storage', group: 'settings', icon: HardDrive, keywords: ['storage', '存储', '工作区'] },
   // —— 系统 ——
   { id: 'cmd-settings', labelKey: 'shell.openSettings', to: '/app/settings', group: 'system', icon: Settings, keywords: ['settings', '设置'] },
   { id: 'cmd-profile', labelKey: 'shell.openProfile', to: '/app/settings/profile', group: 'system', icon: CircleUserRound, keywords: ['profile', '个人资料', '账户', 'account'] },
-  { id: 'cmd-ai', labelKey: 'shell.openAiSpace', to: '/app/settings/ai', group: 'system', icon: Sparkles, keywords: ['ai', 'assistant', 'agent', 'mcp', '助手', '智能体'] },
   { id: 'cmd-admin', labelKey: 'nav.admin', to: '/app/admin', group: 'system', adminOnly: true, icon: UserCog, keywords: ['admin', 'accounts', 'invites', '管理'] },
   { id: 'cmd-help', labelKey: 'shell.openHelp', to: '/app/help', group: 'system', icon: CircleHelp, keywords: ['help', 'docs', '帮助'] },
   // —— 操作 ——

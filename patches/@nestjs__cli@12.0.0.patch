@@ -1,0 +1,20 @@
+diff --git a/lib/utils/tree-kill.js b/lib/utils/tree-kill.js
+index f62728e6f06f059d69653041a5028d2b267aa77b..643a5ab6276161fa3f39f91a703736eadee94b5f 100644
+--- a/lib/utils/tree-kill.js
++++ b/lib/utils/tree-kill.js
+@@ -1,7 +1,14 @@
+ import { execSync, spawnSync } from 'child_process';
+ export function treeKillSync(pid, signal) {
+     if (process.platform === 'win32') {
+-        execSync('taskkill /pid ' + pid + ' /T /F');
++        // taskkill 以非零退出码报「找不到进程/操作不受支持」是常态（进程树已部分消亡），
++        // 这里是尽力而为的清理；抛出去会连带拖死整个 nest start --watch。
++        try {
++            execSync('taskkill /pid ' + pid + ' /T /F');
++        }
++        catch {
++            // ignore
++        }
+         return;
+     }
+     const children = getAllChildren(pid);

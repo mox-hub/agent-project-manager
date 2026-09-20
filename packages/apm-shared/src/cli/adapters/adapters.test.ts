@@ -6,11 +6,83 @@ import { ClaudeCodeAdapter } from './claude-code';
 import { CodexAdapter } from './codex';
 import { ZCodeAdapter } from './zcode';
 import { OpenCodeAdapter } from './opencode';
-import type { CliExecutionInput, StreamEmitter } from './interface';
+import {
+  CLI_ADAPTER_CAPABILITIES,
+  type CliExecutionInput,
+  type StreamEmitter,
+} from './interface';
 
 const input = (prompt = '你好'): CliExecutionInput => ({
   workspaceRoot: '/ws',
   prompt,
+});
+
+describe('adapter 治理语义能力位（P1-22a）', () => {
+  it('四家能力位与代码事实一致（防静默失效回归）', () => {
+    expect(CLI_ADAPTER_CAPABILITIES['claude-code']).toEqual({
+      allowedTools: true,
+      usage: true,
+      approval: true,
+      mcpTools: true,
+    });
+    // codex：--allow 透传；usage 无提取路径；--non-interactive 排除审批
+    expect(CLI_ADAPTER_CAPABILITIES.codex).toEqual({
+      allowedTools: true,
+      usage: false,
+      approval: false,
+      mcpTools: true,
+    });
+    // zcode：协议未校准骨架，allowedTools/usage/approval 均保守声明不支持
+    expect(CLI_ADAPTER_CAPABILITIES.zcode).toEqual({
+      allowedTools: false,
+      usage: false,
+      approval: false,
+      mcpTools: true,
+    });
+    // opencode：allowedTools 无消费通道；usage 经 step_finish 实跑采样校准
+    expect(CLI_ADAPTER_CAPABILITIES.opencode).toEqual({
+      allowedTools: false,
+      usage: true,
+      approval: false,
+      mcpTools: true,
+    });
+  });
+
+  it('每家 adapter 的 getCapabilities 与总表对应项一致', () => {
+    expect(new ClaudeCodeAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES['claude-code'],
+    );
+    expect(new CodexAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES.codex,
+    );
+    expect(new ZCodeAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES.zcode,
+    );
+    expect(new OpenCodeAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES.opencode,
+    );
+  });
+
+  it('allowedTools 能力位与 buildCommand 实际透传行为互锁', () => {
+    const opts: CliExecutionInput = { ...input('x'), allowedTools: ['Bash', 'Read'] };
+
+    // 声明支持的：参数必须真实进入命令行
+    const claude = new ClaudeCodeAdapter().buildCommand(opts);
+    expect(claude.args).toContain('--allowedTools');
+    expect(claude.args).toContain('Bash,Read');
+
+    const codex = new CodexAdapter().buildCommand(opts);
+    expect(codex.args).toContain('--allow');
+    expect(codex.args).toContain('Bash,Read');
+
+    // 声明不支持的：不得伪装透传（静默忽略由派发侧告警兜底）
+    expect(
+      new ZCodeAdapter().buildCommand(opts).args.join(' '),
+    ).not.toContain('allowedTools');
+    expect(
+      new OpenCodeAdapter().buildCommand(opts).args.join(' '),
+    ).not.toContain('allowedTools');
+  });
 });
 
 function makeEmit() {

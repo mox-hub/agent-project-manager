@@ -19,7 +19,9 @@
 import { spawn } from 'child_process';
 import {
   CliAdapter,
+  CliAdapterCapabilities,
   CliExecutionInput,
+  CLI_ADAPTER_CAPABILITIES,
   CliUsage,
   CommandBuildResult,
   DetectResult,
@@ -70,6 +72,10 @@ function usageFromPart(part: OpenCodePart): CliUsage | undefined {
 export class OpenCodeAdapter implements CliAdapter {
   getProviderId(): 'opencode' {
     return 'opencode';
+  }
+
+  getCapabilities(): CliAdapterCapabilities {
+    return CLI_ADAPTER_CAPABILITIES.opencode;
   }
 
   async detect(commandPath?: string): Promise<DetectResult> {

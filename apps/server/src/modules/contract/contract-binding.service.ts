@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { ContractEngineService } from './contract-engine.service';
 import {
   CONTRACT_WORKSPACE_FS,
@@ -52,6 +53,7 @@ export class ContractBindingService {
     private readonly engine: ContractEngineService,
     private readonly resolver: ContractWorkspaceResolver,
     @Inject(CONTRACT_WORKSPACE_FS) private readonly fs: ContractWorkspaceFs,
+    private readonly messageBus: MessageBusService,
   ) {}
 
   async getBinding(projectId: string, fileType: ContractFileType) {
@@ -315,6 +317,15 @@ export class ContractBindingService {
       where: { id: bindingId },
       data: { conflictState: 'conflicted', lastWriter: 'file' },
     });
+    // P1-10：与 ProposalService.create 同事件同形态——冲突裁决卡此前直写零发布，
+    // 待批卡静默堆积（通知订阅 + 网关徽标均感知不到）
+    this.messageBus.publish('decision.proposal.created', {
+      proposalId: proposal.id,
+      kind: proposal.kind,
+      title: proposal.title,
+      projectId: proposal.projectId,
+      issueId: proposal.issueId,
+    });
     this.logger.warn(`契约托管区冲突已升级为提案 ${proposal.id}: ${filePath}`);
     return proposal.id;
   }
@@ -340,6 +351,13 @@ export class ContractBindingService {
     await this.prisma.contractFileBinding.update({
       where: { id: bindingId },
       data: { conflictState: 'conflicted', lastWriter: 'file' },
+    });
+    this.messageBus.publish('decision.proposal.created', {
+      proposalId: proposal.id,
+      kind: proposal.kind,
+      title: proposal.title,
+      projectId: proposal.projectId,
+      issueId: proposal.issueId,
     });
     this.logger.warn(
       `派生契约文件冲突已升级为提案 ${proposal.id}: ${filePath}`,

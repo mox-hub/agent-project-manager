@@ -5,6 +5,43 @@
 
 export type ProviderId = 'claude-code' | 'codex' | 'zcode' | 'opencode';
 
+/**
+ * CLI adapter 治理语义能力位（P1-22a）。
+ * 镜像自 packages/apm-shared/src/cli/adapters/interface.ts（单源），server 侧
+ * 进程内派发告警按此读；两侧口径必须一致，修改需同步镜像。
+ */
+export interface CliAdapterCapabilities {
+  /** buildCommand 是否真正把 input.allowedTools 透传为 CLI 参数（false = 调用方传入会被静默忽略） */
+  allowedTools: boolean;
+  /** 是否产出 token 用量（StreamEmitter.usage / ParseResult.usage）；false = 双轨成本无该家数据 */
+  usage: boolean;
+  /** parseStream 是否能把审批类事件映射为 approvalNeeded（false = 审批事件通道不可达） */
+  approval: boolean;
+  /** MCP server 工具枚举（mcp-server 模块 CLI 工具 schema）是否收录该 provider */
+  mcpTools: boolean;
+}
+
+/** 四家 adapter 能力位总表（镜像 shared 单源事实） */
+export const CLI_ADAPTER_CAPABILITIES: Record<
+  ProviderId,
+  CliAdapterCapabilities
+> = {
+  'claude-code': {
+    allowedTools: true,
+    usage: true,
+    approval: true,
+    mcpTools: true,
+  },
+  codex: { allowedTools: true, usage: false, approval: false, mcpTools: true },
+  zcode: { allowedTools: false, usage: false, approval: false, mcpTools: true },
+  opencode: {
+    allowedTools: false,
+    usage: true,
+    approval: false,
+    mcpTools: true,
+  },
+};
+
 export interface Artifact {
   type: string;
   name: string;

@@ -20,6 +20,7 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type OnChangeFn,
   type RowSelectionState,
   type SortingState,
 } from "@tanstack/react-table"
@@ -65,6 +66,10 @@ export interface DataTableProps<T> {
   onSelectedIdsChange?: (ids: string[]) => void
   /** 选中悬浮胶囊内的批量操作（对齐 DataList.selectionActions；配合 ListActionButton 使用） */
   selectionActions?: (selectedRows: T[], clear: () => void) => ReactNode
+  /** 受控排序（页面级 state 下发，如与「显示」菜单排序共用一个状态源）；不传则组件内部自管 */
+  sorting?: SortingState
+  /** 受控排序回调（与 sorting 成对出现）；不传则组件内部自管排序状态 */
+  onSortingChange?: OnChangeFn<SortingState>
   /** 受控分页（服务端）；不传则客户端分页（默认 pageSize 20） */
   manualPagination?: DataTableManualPagination
   pageSize?: number
@@ -87,6 +92,8 @@ export function DataTable<T>({
   selectedIds = [],
   onSelectedIdsChange,
   selectionActions,
+  sorting,
+  onSortingChange,
   manualPagination,
   pageSize = 20,
   emptyContent,
@@ -95,8 +102,13 @@ export function DataTable<T>({
   maxHeight,
 }: DataTableProps<T>) {
   const { t } = useTranslation()
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [internalSorting, setInternalSorting] = useState<SortingState>([])
   const [clientPage, setClientPage] = useState(1)
+
+  // 排序受控环：外部传 onSortingChange 即为受控（sorting 可选，缺省视为未排序），
+  // 否则回落内部状态——两种模式对表头渲染无差别
+  const sortingManaged = onSortingChange !== undefined
+  const effectiveSorting = sortingManaged ? (sorting ?? []) : internalSorting
 
   // 选择列受控：外部 string[] <-> tanstack RowSelectionState（受控环：
   // state 由 selectedIds 派生，内部 toggle 经 onRowSelectionChange 上报后由外部回流）
@@ -143,13 +155,13 @@ export function DataTable<T>({
     columns: columnsWithSelector,
     getRowId,
     state: {
-      sorting,
+      sorting: effectiveSorting,
       ...(selectionManaged ? { rowSelection: derivedSelection } : {}),
       ...(manualPagination
         ? { pagination: { pageIndex: manualPagination.page - 1, pageSize: manualPagination.pageSize } }
         : { pagination: { pageIndex: clientPage - 1, pageSize } }),
     },
-    onSortingChange: setSorting,
+    onSortingChange: sortingManaged ? onSortingChange : setInternalSorting,
     enableRowSelection: enableSelection,
     ...(selectionManaged
       ? {

@@ -8,7 +8,7 @@
  * 结构参照 Linear 筛选设计：[字段图标+名称｜算子｜值(图标堆叠+文案)｜×] 四段拼接 chip，
  * 行尾 + 追加条件（允许同字段多条件），右侧 Clear / Save(保存到当前视图·另存为新视图)。
  */
-import { useRef, useState, type ReactNode } from "react";
+import { Fragment, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, Filter, Plus, X, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ import {
 } from "./menu";
 import {
   Command,
+  CommandCollection,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -35,6 +36,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "./command";
+import { useAutocompleteFilter } from "./autocomplete";
 import { MENU_ITEM_CLASS } from "./menu-surface";
 
 /* ────────────────────────────── 模型 ────────────────────────────── */
@@ -212,14 +214,34 @@ function ValueMenu({
       values.includes(value) ? values.filter((v) => v !== value) : [...values, value],
     );
 
+  // coss p-command 引擎同款过滤（accent/大小写不敏感 contains，中文子串可用）
+  const { contains } = useAutocompleteFilter({ sensitivity: "base" });
+  const trimmedQuery = query.trim();
   const selected = field.options.filter((option) => values.includes(option.value));
-  const rest = field.options.filter((option) => !values.includes(option.value));
+  const visibleRest = field.options
+    .filter((option) => !values.includes(option.value))
+    .filter((option) => !trimmedQuery || contains(option.label, trimmedQuery));
 
-  const renderItem = (option: FilterValueOption, checked: boolean) => (
+  // 数据驱动 groups：mode="none" 静态渲染（过滤自管），空组不进 items 使空态正确判定
+  const menuGroups = [
+    ...(selected.length > 0 ? [{ value: "selected", items: selected }] : []),
+    ...(visibleRest.length > 0 ? [{ value: "rest", items: visibleRest }] : []),
+  ];
+
+  // base-ui 高亮项经 onItemHighlighted 记录，回车切换选中（与旧 cmdk onSelect 语义对齐）
+  const highlightedRef = useRef<FilterValueOption | null>(null);
+  const handleInputKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" && highlightedRef.current) {
+      event.preventDefault();
+      toggle(highlightedRef.current.value);
+    }
+  };
+
+  const renderOption = (option: FilterValueOption, checked: boolean) => (
     <CommandItem
       key={option.value}
-      value={option.label}
-      onSelect={() => toggle(option.value)}
+      value={option}
+      onClick={() => toggle(option.value)}
       className="text-xs"
     >
       <Checkbox className="mr-1" checked={checked} render={<span aria-hidden="true" />} />
@@ -261,30 +283,40 @@ function ValueMenu({
         )}
       </button>
       <AnchoredMenu open={open} onClose={close} anchor={anchorRef}>
-        <Command className="w-56">
-          {field.searchable ? (
-            <div className="p-1.5 pb-0">
+        <div className="w-56">
+          <Command
+            mode="none"
+            items={menuGroups}
+            onItemHighlighted={(value) => {
+              highlightedRef.current = (value as FilterValueOption | undefined) ?? null;
+            }}
+          >
+            {field.searchable ? (
               <CommandInput
                 value={query}
-                onValueChange={setQuery}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={handleInputKeyDown}
                 placeholder={field.label}
                 className="h-8 text-xs"
               />
-            </div>
-          ) : null}
-          <CommandList className="max-h-64">
-            <CommandEmpty>{t("common.filterNoResults")}</CommandEmpty>
-            {selected.length > 0 ? (
-              <CommandGroup>{selected.map((option) => renderItem(option, true))}</CommandGroup>
             ) : null}
-            {rest.length > 0 ? (
-              <>
-                {selected.length > 0 ? <CommandSeparator /> : null}
-                <CommandGroup>{rest.map((option) => renderItem(option, false))}</CommandGroup>
-              </>
-            ) : null}
-          </CommandList>
-        </Command>
+            <CommandList scrollAreaClassName="[&_[data-slot=scroll-area-viewport]]:max-h-64">
+              <CommandEmpty>{t("common.filterNoResults")}</CommandEmpty>
+              {((group: (typeof menuGroups)[number]) => (
+                <Fragment key={group.value}>
+                  {group.value === "rest" ? <CommandSeparator /> : null}
+                  <CommandGroup items={group.items} className="py-1">
+                    <CommandCollection>
+                      {(option: FilterValueOption) =>
+                        renderOption(option, group.value === "selected")
+                      }
+                    </CommandCollection>
+                  </CommandGroup>
+                </Fragment>
+              )) as unknown as ReactNode}
+            </CommandList>
+          </Command>
+        </div>
       </AnchoredMenu>
     </>
   );

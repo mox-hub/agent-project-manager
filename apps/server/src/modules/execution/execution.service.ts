@@ -56,6 +56,18 @@ export interface UpdateExecutionRunDto {
 }
 
 /**
+ * 单活跃约束（需求重审 G5，2026-09-17 裁决 B）的执行「活跃」词表。
+ * 与 issue.service 关单守卫同一口径；dispatch 侧 retry 的活跃预检（P1-21）
+ * 亦复用此常量，避免词表漂移导致两条路径的互斥判定不一致。
+ */
+export const ACTIVE_EXECUTION_STATUSES: readonly string[] = [
+  'planned',
+  'in_progress',
+  'pending_approval',
+  'blocked',
+];
+
+/**
  * 执行项状态机（4d）：禁止跳步。
  * 人工执行进入 completed 前必须经 pending_approval（提交时自动创建审批单）；
  * AI 执行沿用既有派发审批流（dispatch 时已建审批单）。
@@ -129,15 +141,16 @@ export class ExecutionService {
       const active = await this.prisma.execution.findFirst({
         where: {
           issueId: dto.issueId,
-          status: {
-            in: ['planned', 'in_progress', 'pending_approval', 'blocked'],
-          },
+          status: { in: [...ACTIVE_EXECUTION_STATUSES] },
         },
         select: { id: true, title: true, status: true },
       });
       if (active) {
+        // P1-21：错误信息必须给可执行出口——指名活跃执行与两条取消途径，
+        // 与 dispatch 侧 retry/cancel 的指路文案保持同一口径，互不矛盾
         throw new BadRequestException(
-          `该工单已有活跃执行（${active.title ?? active.id}，状态：${active.status}），暂不可新建：请等待其完成，或取消后使用「重新执行」（保留失败现场与血缘）`,
+          `该工单已存在活跃执行「${active.title ?? active.id}」（ID：${active.id}，状态：${active.status}），暂不可新建：` +
+            `请先取消它（执行详情「取消执行」动作，或取消接口 POST /_api/ai/execution-runs/${active.id}/cancel），再重新执行或新建`,
         );
       }
     }

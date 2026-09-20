@@ -1254,6 +1254,7 @@
     "passwordPlaceholder": "请输入密码",
     "errors": {
       "invalidCredentials": "用户名或密码错误",
+      "emailAlreadyRegistered": "该邮箱已注册，请直接登录",
       "userInactive": "账号已被禁用，请联系管理员",
       "loginFailed": "登录失败，请稍后重试",
       "sessionExpired": "会话已过期，请重新登录"
@@ -1349,7 +1350,8 @@
       "inProgress": "进行中",
       "inReview": "审核中",
       "done": "已完成",
-      "canceled": "已取消"
+      "canceled": "已取消",
+      "showingFiltered": "当前显示"
     },
     "status": {
       "all": "全部状态",
@@ -1392,7 +1394,12 @@
       "byAssignee": "按负责人",
       "byLabel": "按标签",
       "searchPlaceholder": "搜索任务...",
-      "all": "全部"
+      "all": "全部",
+      "typeGroup": "类型",
+      "projectGroup": "项目",
+      "iterationGroup": "迭代",
+      "tagGroup": "标签",
+      "unassigned": "未分配"
     },
     "sort": {
       "createdAt": "创建时间",
@@ -1474,7 +1481,26 @@
       "failed": "派发失败：{{message}}"
     },
     "import": {
-      "validationFailed": "导入校验失败，本次导入未创建任何任务，共 {{count}} 处错误"
+      "validationFailed": "导入校验失败，本次导入未创建任何任务，共 {{count}} 处错误",
+      "action": "导入",
+      "actionTitle": "从 CSV 导入工单（未限定项目时导入收件箱）"
+    },
+    "batchUpdate": {
+      "action": "批量修改",
+      "actionTitle": "批量修改状态 / 优先级 / 负责人",
+      "title": "批量修改 {{count}} 条工单",
+      "noChange": "不修改",
+      "apply": "应用到 {{count}} 条",
+      "applying": "更新中…",
+      "success": "已更新 {{count}} 条工单",
+      "partial": "已更新 {{success}} 条、失败 {{failed}} 条：{{detail}}{{more}}",
+      "andMore": "等 {{count}} 条"
+    },
+    "export": {
+      "label": "导出",
+      "globalTitle": "导出任务",
+      "formatLegend": "导出格式",
+      "confirm": "导出 {{count}} 条"
     }
   },
   "project": {
@@ -1849,6 +1875,11 @@
       "taskCount": "{{count}} 个任务",
       "unscheduled": "未计划",
       "unscheduledDesc": "未设置目标日期的里程碑，待排期。",
+      "newIteration": "新建迭代",
+      "editIteration": "编辑迭代",
+      "iterationName": "迭代名称",
+      "iterationStartDate": "开始日期",
+      "iterationEndDate": "结束日期",
       "status": {
         "completed": "已完成",
         "inProgress": "进行中",
@@ -2747,7 +2778,7 @@
   "taskDetail": {
     "notExists": "任务不存在",
     "switchType": "切换工单类型",
-    "manageTypes": "管理任务类型",
+    "manageTypes": "管理工单类型",
     "notFound": "任务未找到",
     "unnamedTitle": "未命名任务",
     "titleSaveFailed": "标题保存失败",
@@ -3931,6 +3962,7 @@
     "noApiKeyConfigured": "{{name}}：未配置 API 密钥",
     "connectedToast": "{{name}}：连接成功",
     "connectionFailedToast": "{{name}}：{{message}}",
+    "testConnectionTimeout": "测试连接超时（60s）：供应商响应过慢，验证仍在后台进行，可稍后重试",
     "connectionFailed": "连接失败",
     "testFailed": "测试失败",
     "detectComplete": "CLI 提供商探测完成",
@@ -4086,6 +4118,7 @@
     "logout": "退出登录",
     "navigation": "导航",
     "groupWorkflow": "工作流与治理",
+    "groupSettings": "设置",
     "groupCollaboration": "协作与工具",
     "noTabsOpen": "暂无打开的标签页",
     "pipelineFocus": {
@@ -4114,6 +4147,19 @@
     "description": "搜索并跳转到任意页面或动作",
     "placeholder": "搜索命令...",
     "empty": "没有匹配的命令。",
+    "searchResults": "搜索结果",
+    "searchHint": "输入以搜索工单/项目",
+    "searching": "搜索中…",
+    "askAi": "询问 AI",
+    "askAiAbout": "按 Enter 询问 AI 助手：",
+    "aiPlaceholder": "问问 AI…",
+    "aiEmpty": "输入问题，按 Enter 获取回答",
+    "aiSendHint": "发送",
+    "aiGenerating": "生成中…",
+    "youAsked": "你问过：",
+    "aiError": "生成失败，请重试。",
+    "aiRuntimeDelegated": "已转交 CLI 同事异步执行，回答将在 AI 助手面板回流。",
+    "relatedPages": "相关页面",
     "ungrouped": "其他",
     "hintNavigate": "导航",
     "hintSelect": "选择",
@@ -4829,7 +4875,14 @@
       "dueDate": "截止日期",
       "created": "创建时间",
       "updated": "更新时间",
-      "title": "标题"
+      "title": "标题",
+      "shortId": "编号",
+      "status": "状态",
+      "assignee": "负责人",
+      "project": "项目",
+      "estimate": "估算",
+      "labels": "标签",
+      "aiExecution": "AI 状态"
     },
     "orderDirections": {
       "asc": "升序",
@@ -4859,7 +4912,8 @@
       "timeInStatus": "停留时间",
       "created": "创建时间",
       "updated": "更新时间",
-      "aiExecution": "AI 状态"
+      "aiExecution": "AI 状态",
+      "estimate": "估算"
     },
     "aiFilter": {
       "executingCount": "{{count}} 个 AI 执行中",

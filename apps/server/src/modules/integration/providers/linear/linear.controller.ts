@@ -14,6 +14,7 @@ import {
   ApiOperation,
   ApiBearerAuth,
   ApiOkResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
@@ -118,6 +119,12 @@ export class LinearController {
 
   @Get(':integrationId/sync-logs')
   @ApiOperation({ summary: 'List sync logs for this integration' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '默认 50',
+  })
   @ApiOkResponse({
     type: [IntegrationSyncLogResponseDto],
     description: '同步日志列表（按创建时间倒序）',

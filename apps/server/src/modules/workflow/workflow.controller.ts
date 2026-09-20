@@ -23,6 +23,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -47,6 +48,7 @@ import {
 } from './dto/workflow-response.dto';
 
 @ApiTags('workflows')
+@ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class WorkflowController {

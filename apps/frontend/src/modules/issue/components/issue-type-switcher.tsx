@@ -8,6 +8,7 @@
  */
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronsUpDown, Settings2 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ export function IssueTypeSwitcher({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { types } = useIssueTypes();
   const issueTypeOf = useIssueTypeOf();
   const updateTask = useUpdateTask();
@@ -42,11 +44,20 @@ export function IssueTypeSwitcher({
 
   const switchType = async (typeId: string) => {
     if (!current || typeId === current.id) return;
+    // 乐观更新：详情缓存立即切换 UI；失败回滚（错误 toast 由 useUpdateTask onError 呈现）
+    // 只写 typeId（UI 解析走 byId）；遗留 type 列由服务端响应与失效刷新同步
+    const taskKey = ['task', task.id] as const;
+    const previous = queryClient.getQueryData<Task>(taskKey);
+    queryClient.setQueryData<Task>(taskKey, (old) =>
+      old ? { ...old, typeId } : old,
+    );
     try {
       await updateTask.mutateAsync({ issueId: task.id, data: { typeId } });
       onChanged?.();
     } catch {
-      // 失败提示由 useUpdateTask 的 onError toast 呈现
+      if (previous !== undefined) {
+        queryClient.setQueryData(taskKey, previous);
+      }
     }
   };
 
@@ -63,11 +74,12 @@ export function IssueTypeSwitcher({
         {selectable.map((ty) => {
           const Icon = issueTypeIcon(ty.icon);
           const selected = ty.id === current?.id;
+          // Base UI Menu.Item 只有 onClick（Radix 的 onSelect 在此不触发）
           return (
             <DropdownMenuItem
               key={ty.id}
               className="gap-2"
-              onSelect={() => void switchType(ty.id)}
+              onClick={() => void switchType(ty.id)}
             >
               <Icon className="size-3.5 shrink-0" style={{ color: ty.color }} />
               <span className="flex-1">{ty.name}</span>

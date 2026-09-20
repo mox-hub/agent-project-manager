@@ -1,9 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { ConfigService } from '../../core/config/config.service';
-import { BusinessException } from '../../core/exceptions/business.exception';
+import {
+  BusinessException,
+  ErrorCode,
+} from '../../core/exceptions/business.exception';
 import * as bcrypt from 'bcrypt';
 
 describe('AuthService', () => {
@@ -12,6 +16,7 @@ describe('AuthService', () => {
   const mockPrismaService = {
     user: {
       findUnique: vi.fn(),
+      create: vi.fn(),
     },
     session: {
       create: vi.fn(),
@@ -22,12 +27,25 @@ describe('AuthService', () => {
     },
     roleAssignment: {
       findMany: vi.fn(),
+      create: vi.fn(),
     },
     actorClaimSnapshot: {
       create: vi.fn(),
     },
     projectMember: {
       findUnique: vi.fn(),
+    },
+    appConfig: {
+      findFirst: vi.fn(),
+    },
+    registrationInvite: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    member: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      updateMany: vi.fn(),
     },
   };
 
@@ -232,6 +250,29 @@ describe('AuthService', () => {
       await expect(
         service.validateUser('ghost@example.com', 'password'),
       ).rejects.toThrow(BusinessException);
+    });
+  });
+
+  describe('register', () => {
+    it('should throw 409 with EMAIL_ALREADY_REGISTERED when email is taken', async () => {
+      // open 注册模式：无 appConfig 记录
+      mockPrismaService.appConfig.findFirst.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'existing-1',
+        username: 'taken',
+        email: 'taken@example.com',
+      });
+
+      const error = await service
+        .register({
+          email: 'taken@example.com',
+          password: 'password123',
+        })
+        .catch((e: BusinessException) => e);
+
+      expect(error).toBeInstanceOf(BusinessException);
+      expect(error.errorCode).toBe(ErrorCode.EMAIL_ALREADY_REGISTERED);
+      expect(error.getStatus()).toBe(HttpStatus.CONFLICT);
     });
   });
 

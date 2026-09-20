@@ -1,6 +1,7 @@
-import { describe, expect, it, vi, beforeAll } from 'vitest';
-import { act, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { describe, expect, it, vi, beforeAll, afterEach } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   CommandPaletteProvider,
   OPEN_COMMAND_PALETTE_EVENT,
@@ -9,15 +10,38 @@ import {
 import { commandEntries, COMMAND_GROUP_LABEL_KEYS } from './commands';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useHotkeyStore } from '@/shared/hotkeys/hotkey-store';
+import { searchApi } from '@/modules/search/api/search-api';
 
-// vitest 环境无 i18next 实例：t() 直通返回 key（与现有组件测试做法一致）
+// vitest 环境无 i18next 实例：t() 直通返回 key，带 defaultValue 时返回兜底文案
+// （对齐 i18next 缺键行为，供实体搜索空态/分组标题等内联兜底断言）
 vi.mock('@/hooks/useTranslation', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string, defaultValue?: string) => defaultValue ?? key,
+  }),
 }));
 
-// jsdom 未实现 scrollIntoView，cmdk 渲染选中项时会调用
+// 实体搜索走 searchApi：单测里 mock 掉，不触真实网络（MSW onUnhandledRequest=error）
+vi.mock('@/modules/search/api/search-api', () => ({
+  searchApi: { search: vi.fn() },
+}));
+
+// 内嵌 AI 问答走 assistantApi：单测里 mock 掉（不触真实 LLM 通道）
+vi.mock('@/modules/assistant/api/assistant-api', () => ({
+  assistantApi: { send: vi.fn() },
+}));
+
+import { assistantApi } from '@/modules/assistant/api/assistant-api';
+
+const searchMock = vi.mocked(searchApi.search);
+const sendMock = vi.mocked(assistantApi.send);
+
+// jsdom 未实现 scrollIntoView（列表滚动定位）与 Web Animations API
+// （base-ui ScrollArea viewport 淡入动画调 getAnimations），补空实现
 beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn();
+  Element.prototype.getAnimations = vi.fn(
+    () => [],
+  ) as unknown as typeof Element.prototype.getAnimations;
 });
 
 /** 复刻 shell-layout 的映射逻辑：i18n key → 已翻译 label；entity/icon → 图标组件 */
@@ -44,14 +68,45 @@ function OpenProbe() {
   return <div data-testid="palette-open">{String(open)}</div>;
 }
 
+/** 读取当前路由的探针：断言搜索命中项点击后跳转到实体详情 */
+function LocationProbe() {
+  const { pathname } = useLocation();
+  return <div data-testid="location-probe">{pathname}</div>;
+}
+
 function renderProvider() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <MemoryRouter>
-      <CommandPaletteProvider initialCommands={buildInitialCommands()}>
-        <OpenProbe />
-      </CommandPaletteProvider>
+    <MemoryRouter initialEntries={['/app/projects']}>
+      <QueryClientProvider client={queryClient}>
+        <CommandPaletteProvider initialCommands={buildInitialCommands()}>
+          <OpenProbe />
+        </CommandPaletteProvider>
+      </QueryClientProvider>
+      <LocationProbe />
     </MemoryRouter>,
   );
+}
+
+/** 打开面板并 flush 挂载（fake timers 下同步推进一轮） */
+async function openPalette() {
+  act(() => {
+    window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
+  });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(0);
+  });
+  return screen.getByPlaceholderText('commandPalette.placeholder');
+}
+
+/** 打开面板（真实计时器：挂载走 findBy 轮询） */
+async function openPaletteReal() {
+  act(() => {
+    window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
+  });
+  return screen.findByPlaceholderText('commandPalette.placeholder');
 }
 
 describe('command palette registry (commands.ts)', () => {
@@ -200,5 +255,247 @@ describe('CommandPaletteProvider 快捷键收编（CAP-A-17 注册表）', () =>
         useHotkeyStore.getState().resetAll();
       });
     }
+  });
+});
+
+describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('面板打开未输入时不发请求，空态提示「输入以搜索工单/项目」', async () => {
+    vi.useFakeTimers();
+    renderProvider();
+    await openPalette();
+
+    expect(searchMock).not.toHaveBeenCalled();
+    expect(screen.getByTestId('palette-entity-search-hint').textContent).toBe(
+      '输入以搜索工单/项目',
+    );
+  });
+
+  it('输入经 300ms 防抖后单次调用 /search（抖动合并只保留最后一次，仅工单/项目类别）', async () => {
+    vi.useFakeTimers();
+    // 注：react-query 的结果通知在 fake timers 下不落 DOM（React 调度不走 fake clock），
+    // 故本用例只断言请求时序；结果渲染断言见下方真实计时器用例。
+    searchMock.mockResolvedValue({ items: [], total: 0 });
+    renderProvider();
+    const input = await openPalette();
+
+    fireEvent.change(input, { target: { value: '登录' } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(150);
+    });
+    fireEvent.change(input, { target: { value: '登录崩' } });
+    expect(searchMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(searchMock).toHaveBeenCalledTimes(1);
+    expect(searchMock.mock.calls[0]?.[0]).toEqual({
+      q: '登录崩',
+      types: ['task', 'bug', 'project'],
+      limit: 8,
+    });
+  });
+
+  it('命中工单/项目以「搜索结果」分组渲染，点击跳转对应详情路由', async () => {
+    searchMock.mockResolvedValue({
+      items: [
+        {
+          id: 'issue-1',
+          type: 'task',
+          title: '登录页崩溃',
+          subtitle: 'BUG-1 · 高',
+          path: '/app/issues/issue-1',
+          updatedAt: '2026-09-18T00:00:00.000Z',
+        },
+        {
+          id: 'project-1',
+          type: 'project',
+          title: 'APM 主项目',
+          subtitle: '3 个进行中工单',
+          path: '/app/projects/project-1',
+          updatedAt: '2026-09-19T00:00:00.000Z',
+        },
+      ],
+      total: 2,
+    });
+    renderProvider();
+    const input = await openPaletteReal();
+    fireEvent.change(input, { target: { value: '登录' } });
+
+    // 防抖 300ms 后请求并渲染（真实计时器 + waitFor 轮询）
+    await waitFor(
+      () => expect(screen.getByText('APM 主项目')).toBeTruthy(),
+      { timeout: 2000 },
+    );
+    expect(screen.getByText('搜索结果')).toBeTruthy();
+    expect(screen.getByText('登录页崩溃')).toBeTruthy();
+
+    fireEvent.click(screen.getByText('APM 主项目'));
+    expect(screen.getByTestId('location-probe').textContent).toBe(
+      '/app/projects/project-1',
+    );
+    // 选中后面板关闭
+    expect(screen.getByTestId('palette-open').textContent).toBe('false');
+  });
+
+  it('返回零命中时不渲染搜索分组，保留「输入以搜索」空态提示', async () => {
+    searchMock.mockResolvedValue({ items: [], total: 0 });
+    renderProvider();
+    const input = await openPaletteReal();
+    fireEvent.change(input, { target: { value: 'zzz-无命中' } });
+
+    await waitFor(() => expect(searchMock).toHaveBeenCalledTimes(1), {
+      timeout: 2000,
+    });
+    expect(screen.queryByText('搜索结果')).toBeNull();
+    expect(screen.getByTestId('palette-entity-search-hint')).toBeTruthy();
+  });
+});
+
+describe('coss p-command 引擎行为（base-ui autocomplete 替换 cmdk 后）', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('输入关键词按 label/keywords 过滤命令，不匹配条目从面板移除', async () => {
+    searchMock.mockResolvedValue({ items: [], total: 0 });
+    renderProvider();
+    const input = await openPaletteReal();
+    fireEvent.change(input, { target: { value: 'workflow' } });
+
+    await waitFor(() =>
+      expect(screen.getByText('shell.openWorkflows')).toBeTruthy(),
+    );
+    expect(screen.queryByText('shell.openProjects')).toBeNull();
+  });
+
+  it('Enter 选中高亮项跳转对应路由并关闭面板', async () => {
+    searchMock.mockResolvedValue({ items: [], total: 0 });
+    renderProvider();
+    const input = await openPaletteReal();
+    fireEvent.change(input, { target: { value: 'workflow' } });
+
+    // 等 base-ui autoHighlight 把首条置为高亮（data-highlighted）再回车
+    await waitFor(() => {
+      const item = screen.getByText('shell.openWorkflows').closest('[data-slot=command-item]');
+      expect(item?.hasAttribute('data-highlighted')).toBe(true);
+    });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location-probe').textContent).toBe('/app/workflows'),
+    );
+    expect(screen.getByTestId('palette-open').textContent).toBe('false');
+  });
+
+  it('零命中回车带词进入内嵌 AI 问答并直接提问（assistantApi.send 真通道 mock）', async () => {
+    sendMock.mockResolvedValue({
+      conversationId: 'conv-1',
+      mode: 'sync',
+      message: { id: 'msg-1', role: 'assistant', content: '这是面板回答' },
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    searchMock.mockResolvedValue({ items: [], total: 0 });
+    render(
+      <MemoryRouter initialEntries={['/app/projects']}>
+        <QueryClientProvider client={queryClient}>
+          <CommandPaletteProvider
+            initialCommands={[{ id: 'cmd-projects', label: 'shell.openProjects', to: '/app/projects' }]}
+          >
+            <OpenProbe />
+          </CommandPaletteProvider>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+    act(() => {
+      window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
+    });
+    const input = await screen.findByPlaceholderText('commandPalette.placeholder');
+    fireEvent.change(input, { target: { value: 'zzz-无匹配' } });
+
+    await waitFor(() =>
+      expect(screen.getByText('按 Enter 询问 AI 助手：')).toBeTruthy(),
+    );
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    // 进入 AI 模式并自动提问：send 收到原查询词，回答内嵌渲染，面板保持打开
+    await waitFor(() => expect(sendMock).toHaveBeenCalledTimes(1));
+    expect(sendMock.mock.calls[0]?.[0]).toEqual({ content: 'zzz-无匹配' });
+    await waitFor(() =>
+      expect(screen.getByText('这是面板回答')).toBeTruthy(),
+    );
+    expect(screen.getByTestId('palette-open').textContent).toBe('true');
+  });
+
+  it('Tab 进入内嵌 AI 问答模式（不再跳转系统助手）', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <MemoryRouter initialEntries={['/app/projects']}>
+        <QueryClientProvider client={queryClient}>
+          <CommandPaletteProvider
+            initialCommands={[{ id: 'cmd-projects', label: 'shell.openProjects', to: '/app/projects' }]}
+          >
+            <OpenProbe />
+          </CommandPaletteProvider>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+    act(() => {
+      window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
+    });
+    const input = await screen.findByPlaceholderText('commandPalette.placeholder');
+    fireEvent.keyDown(input, { key: 'Tab' });
+
+    // AI 模式输入框出现（placeholder 走 t 兜底文案），仍处于打开态
+    expect(await screen.findByPlaceholderText('问问 AI…')).toBeTruthy();
+    expect(screen.getByTestId('palette-open').textContent).toBe('true');
+  });
+
+  it('AI 模式下 Esc 返回搜索模式而非关闭面板', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <MemoryRouter initialEntries={['/app/projects']}>
+        <QueryClientProvider client={queryClient}>
+          <CommandPaletteProvider
+            initialCommands={[{ id: 'cmd-projects', label: 'shell.openProjects', to: '/app/projects' }]}
+          >
+            <OpenProbe />
+          </CommandPaletteProvider>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+    act(() => {
+      window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
+    });
+    const input = await screen.findByPlaceholderText('commandPalette.placeholder');
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(await screen.findByPlaceholderText('问问 AI…')).toBeTruthy();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(await screen.findByPlaceholderText('commandPalette.placeholder')).toBeTruthy();
+    expect(screen.getByTestId('palette-open').textContent).toBe('true');
+  });
+
+  it('Ctrl+1..9 快速选择可见条目（首条=导航分组第一项）', async () => {
+    searchMock.mockResolvedValue({ items: [], total: 0 });
+    renderProvider();
+    const input = await openPaletteReal();
+
+    // 空查询下可见序首条 = cmd-projects（/app/projects）
+    fireEvent.keyDown(input, { key: '1', ctrlKey: true });
+    await waitFor(() =>
+      expect(screen.getByTestId('location-probe').textContent).toBe('/app/projects'),
+    );
+    expect(screen.getByTestId('palette-open').textContent).toBe('false');
   });
 });

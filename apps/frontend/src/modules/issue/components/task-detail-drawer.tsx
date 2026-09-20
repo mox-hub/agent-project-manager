@@ -824,7 +824,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                         className="flex items-center justify-between p-2 bg-muted rounded-md"
                       >
                         <span className="text-sm">
-                          {dep.dependsOnTask?.title || dep.dependsOnIssueId}
+                          {dep.dependsOnIssue?.title || dep.dependsOnIssueId}
                         </span>
                         <Button
                           variant="ghost"
@@ -1020,7 +1020,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                         className="p-2 rounded-md border-l-4 bg-destructive/10 border-l-destructive"
                       >
                         <span className="text-sm">
-                          {dep.task?.title || dep.issueId}
+                          {dep.issue?.title || dep.issueId}
                         </span>
                       </div>
                     ))}

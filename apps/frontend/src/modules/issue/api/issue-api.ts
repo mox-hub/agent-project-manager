@@ -45,12 +45,14 @@ export interface TaskDependencyRef {
   dependsOnIssueId: string;
   type: 'blocks' | 'relates';
   createdAt: string;
-  dependsOnTask?: {
+  /** 被依赖工单摘要（openapi IssueDependencyLinkDto.dependsOnIssue；挂在 task.dependencies 元素上） */
+  dependsOnIssue?: {
     id: string;
     title: string;
     status: string;
   };
-  task?: {
+  /** 依赖方工单摘要（openapi IssueBlockedByLinkDto.issue；挂在 task.blockedBy 元素上） */
+  issue?: {
     id: string;
     title: string;
     status: string;
@@ -152,6 +154,8 @@ export interface TaskListParams {
 
 export interface IterationRef {
   id: string;
+  /** 所属项目（后端 IterationResponseDto 均返回；投影可选） */
+  projectId?: string;
   name: string;
   status: string;
   /** 时间盒起止（CAP-A-16 时间轴：后端 GET /projects/:id/iterations 全量投影） */
@@ -159,6 +163,21 @@ export interface IterationRef {
   endDate?: string | null;
   /** 容量：迭代内工单数（_count.issues） */
   _count?: { issues?: number };
+}
+
+/** P1-19：创建迭代（POST /projects/:projectId/iterations；projectId 由路径注入，body 兜底携带） */
+export interface CreateIterationRequest {
+  projectId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+}
+
+/** P1-19：更新迭代（PATCH /iterations/:id，全部可选部分提交） */
+export interface UpdateIterationRequest {
+  name?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface MilestoneRef {
@@ -339,6 +358,17 @@ export const taskApi = {
 
   getProjectIterations: (projectId: string) =>
     api.get<IterationRef[]>(`/projects/${projectId}/iterations`),
+
+  /** P1-19：创建迭代（后端 ProjectController 注入 path projectId，body 兜底携带以过 DTO 校验） */
+  createIteration: (projectId: string, data: Omit<CreateIterationRequest, 'projectId'>) =>
+    api.post<IterationRef>(`/projects/${projectId}/iterations`, {
+      ...data,
+      projectId,
+    }),
+
+  /** P1-19：更新迭代（走 IterationController PATCH /iterations/:id） */
+  updateIteration: (iterationId: string, data: UpdateIterationRequest) =>
+    api.patch<IterationRef>(`/iterations/${iterationId}`, data),
 
   getProjectMilestones: (projectId: string) =>
     api.get<MilestoneRef[]>(`/projects/${projectId}/milestones`),

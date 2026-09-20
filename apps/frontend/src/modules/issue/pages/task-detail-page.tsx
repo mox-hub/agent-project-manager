@@ -86,6 +86,8 @@ import { ExecutionItemsPanel } from '../components/execution-items-panel';
 import { useIssueExecutions } from '@/modules/execution/hooks/use-execution';
 import type { ExecutionStatus } from '@/modules/execution/api/execution-api';
 import { CompletionReview } from '../components/completion-review';
+import { AcceptanceCriteriaPreview } from '../components/acceptance-criteria-preview';
+import { IssueDependenciesSection } from '../components/issue-dependencies-section';
 import { useAcceptancesByTask } from '@/modules/acceptance/hooks/use-acceptance';
 import {
   useTaskDocumentLinks, LINK_TYPE_LABELS, LINK_TYPE_COLORS,
@@ -518,6 +520,20 @@ export function TaskDetailPage() {
             issueId={task.id}
             typeId={task.typeId}
             customFields={task.customFields}
+          />
+
+          {/* 验收契约只读回显（P1-9）：标准条目提升到正文区，编辑仍走右栏
+              「验收契约」卡——「编辑」轻链接仅展开右栏；数据复用既有 acceptance 查询 */}
+          <AcceptanceCriteriaPreview
+            acceptances={acceptances}
+            onOpenEditor={() => setAsideHidden(false)}
+          />
+
+          {/* 依赖关系（P1-17）：blocked by / blocks 双向只读列表，条目跳转对应工单；
+              数据由 useTaskDetail 响应直传（dependencies/blockedBy），双向皆空不渲染 */}
+          <IssueDependenciesSection
+            dependencies={task.dependencies}
+            blockedBy={task.blockedBy}
           />
 
           {/* Execution items（4d：统一执行单位，主栏与子任务同级，置于其上方） */}

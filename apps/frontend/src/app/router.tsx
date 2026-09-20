@@ -232,6 +232,13 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        // 旧工作台路径重定向（工作台挂载在 /app/projects/dashboard，裸 /app/dashboard
+        // 此前无匹配、落入顶层 * 兜底渲染成 INTERNAL_ERROR 错误页，2026-09-20 修复）
+        path: 'dashboard',
+        element: <Navigate to="/app/projects/dashboard" replace />,
+        errorElement: <ErrorPage />,
+      },
+      {
         path: 'projects',
         errorElement: <ErrorPage />,
         children: [

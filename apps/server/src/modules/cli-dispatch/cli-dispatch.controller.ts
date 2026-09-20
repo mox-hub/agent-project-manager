@@ -133,9 +133,16 @@ export class CliDispatchController {
   }
 
   @Post('execution-runs/:id/cancel')
-  @ApiOperation({ summary: 'Cancel a running CLI execution' })
+  @ApiOperation({
+    summary:
+      'Cancel a CLI execution (falls back to execution-record cancel when no CLI binding exists)',
+  })
   @ApiParam({ name: 'id', description: 'Execution Run ID' })
-  @ApiResponse({ status: 200, description: 'Execution cancelled' })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Execution cancelled。success 表示是否终止了 CLI 进程；无 CLI 绑定时按执行记录直接走状态机取消，success 为 false 但取消已生效',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Execution not found' })
   async cancelExecution(
@@ -152,9 +159,12 @@ export class CliDispatchController {
   @Post('execution-runs/:id/retry')
   @ApiOperation({
     summary:
-      'Re-execute a failed/blocked execution as a new execution (clone + lineage + same dispatch flow)',
+      'Re-execute a failed/blocked/superseded execution as a new execution (clone + lineage + same dispatch flow)',
   })
-  @ApiParam({ name: 'id', description: '原执行 ID（须为 failed/blocked）' })
+  @ApiParam({
+    name: 'id',
+    description: '原执行 ID（须为 failed/blocked/superseded）',
+  })
   @ApiResponse({
     status: 200,
     description: '新执行已创建并派发（retryOfId 血缘指回原执行）',
@@ -162,7 +172,7 @@ export class CliDispatchController {
   @ApiResponse({
     status: 400,
     description:
-      '不可重新执行：状态非 failed/blocked，或未关联有效工单；派发被门禁阻断时新执行落 blocked',
+      '不可重新执行：状态非 failed/blocked/superseded，或未关联有效工单；存在其他活跃执行时按错误信息先取消；派发被门禁阻断时新执行落 blocked',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Execution not found' })

@@ -377,6 +377,84 @@ describe('IssueService', () => {
         service.update('non-existent', { title: 'Updated' }, 'user-1'),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('切换工单类型：typeId 存在时写入 typeId 并同步遗留 type 列为 key', async () => {
+      mockPrismaService.issue.findFirst.mockResolvedValue({
+        id: 'task-1',
+        projectId: 'project-1',
+        status: 'todo',
+        typeId: 'type-task',
+        type: 'task',
+        reporterId: 'user-1',
+        assigneeId: 'user-1',
+        project: { members: [{ userId: 'user-1' }] },
+      });
+      mockPrismaService.issueType.findUnique.mockResolvedValue({
+        id: 'type-bug',
+        key: 'bug',
+        fieldSchema: null,
+      });
+      mockPrismaService.issue.update.mockResolvedValue({ id: 'task-1' });
+
+      await service.update('task-1', { typeId: 'type-bug' }, 'user-1');
+
+      expect(mockPrismaService.issueType.findUnique).toHaveBeenCalledWith({
+        where: { id: 'type-bug' },
+      });
+      expect(mockPrismaService.issue.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ typeId: 'type-bug', type: 'bug' }),
+        }),
+      );
+    });
+
+    it('切换工单类型：typeId 不存在 → BadRequestException 且不写库', async () => {
+      mockPrismaService.issue.findFirst.mockResolvedValue({
+        id: 'task-1',
+        projectId: 'project-1',
+        status: 'todo',
+        typeId: 'type-task',
+        reporterId: 'user-1',
+        assigneeId: 'user-1',
+        project: { members: [{ userId: 'user-1' }] },
+      });
+      mockPrismaService.issueType.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.update('task-1', { typeId: 'type-ghost' }, 'user-1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.issue.update).not.toHaveBeenCalled();
+    });
+
+    it('切换工单类型：typeId 与当前相同 → 幂等跳过（update data 不含 typeId/type）', async () => {
+      mockPrismaService.issue.findFirst.mockResolvedValue({
+        id: 'task-1',
+        projectId: 'project-1',
+        status: 'todo',
+        typeId: 'type-task',
+        type: 'task',
+        reporterId: 'user-1',
+        assigneeId: 'user-1',
+        project: { members: [{ userId: 'user-1' }] },
+      });
+      mockPrismaService.issueType.findUnique.mockResolvedValue({
+        id: 'type-task',
+        key: 'task',
+        fieldSchema: null,
+      });
+      mockPrismaService.issue.update.mockResolvedValue({ id: 'task-1' });
+
+      await service.update('task-1', { typeId: 'type-task' }, 'user-1');
+
+      expect(mockPrismaService.issue.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.not.objectContaining({
+            typeId: expect.anything(),
+            type: expect.anything(),
+          }),
+        }),
+      );
+    });
   });
 
   describe('addDependency', () => {

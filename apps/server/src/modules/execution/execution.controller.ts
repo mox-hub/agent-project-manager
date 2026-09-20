@@ -236,6 +236,18 @@ export class ExecutionController {
   @Get('approvals')
   @ApiOperation({ summary: '列出审批请求' })
   @ApiQuery({ name: 'projectId', required: false })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '默认 20',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: '默认 0',
+  })
   @ApiResponse({ status: 200, description: '返回审批列表' })
   async listApprovals(
     @Query() query: any,

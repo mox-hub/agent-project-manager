@@ -1,5 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { aiHubApi } from '../api/ai-hub-api';
+import { ApiClientError } from '@/shared/types/api';
+
+/** 错误文案兜底翻译签名（测试传 stub 即可，不依赖 i18next 实例） */
+export type TranslateFn = (key: string) => string;
+
+/**
+ * 「测试连接」错误 → toast 文案解析（纯函数，供 handleTestConnection 与单测共用）：
+ * - 前端超时（TIMEOUT）：不透传英文 axios 默认文案，用 i18n 超时提示（后端 60s 内仍在验证）；
+ * - 网络断开（NETWORK_ERROR）：axios message 为英文默认文案，禁用，回落 i18n 连接失败；
+ * - 其余 ApiClientError（后端错误信封）：透传 error.message——保留后端验证链路拼好的结构化诊断；
+ * - 非 Error / 空 message：回落 i18n 连接失败。
+ */
+export function resolveTestConnectionErrorMessage(
+  error: unknown,
+  t: TranslateFn,
+): string {
+  if (error instanceof ApiClientError) {
+    if (error.code === 'TIMEOUT') return t('aiHub.testConnectionTimeout');
+    if (error.code === 'NETWORK_ERROR') return t('aiHub.connectionFailed');
+    if (error.message) return error.message;
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return t('aiHub.connectionFailed');
+}
 
 export const providerKeys = {
   all: ['providers'] as const,

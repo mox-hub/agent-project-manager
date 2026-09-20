@@ -55,7 +55,6 @@
     "buffer": "^5.7.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "cmdk": "^1.0.4",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "gray-matter": "^4.0.3",
