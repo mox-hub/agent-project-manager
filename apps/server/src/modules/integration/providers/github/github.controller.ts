@@ -19,6 +19,7 @@ import {
   ApiOkResponse,
   ApiCreatedResponse,
   ApiPropertyOptional,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import * as crypto from 'node:crypto';
@@ -162,6 +163,12 @@ export class GitHubController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'List sync logs' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '默认 50',
+  })
   @ApiStandardErrors()
   @ApiOkResponse({
     type: GitHubSyncLogDto,

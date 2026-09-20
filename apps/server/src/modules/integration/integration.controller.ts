@@ -16,6 +16,7 @@ import {
   ApiOkResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { IntegrationService } from './integration.service';
 import { LinearSyncService } from './providers/linear/linear-sync.service';
@@ -129,6 +130,12 @@ export class IntegrationController {
 
   @Get(':id/sync-logs')
   @ApiOperation({ summary: 'Get sync logs for an integration' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '默认 50',
+  })
   @ApiOkResponse({
     type: [IntegrationSyncLogResponseDto],
     description: '同步日志列表（按创建时间倒序）',

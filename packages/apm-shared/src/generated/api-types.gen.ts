@@ -19909,7 +19909,10 @@ export interface operations {
     };
     IssueController_findAllBugs: {
         parameters: {
-            query?: never;
+            query?: {
+                pageSize?: number;
+                page?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -19989,6 +19992,8 @@ export interface operations {
     IssueController_findAllTasks: {
         parameters: {
             query?: {
+                pageSize?: number;
+                page?: number;
                 type?: "task" | "bug" | "all";
             };
             header?: never;
@@ -20155,7 +20160,10 @@ export interface operations {
     };
     IssueController_findAccessibleTasks: {
         parameters: {
-            query?: never;
+            query?: {
+                pageSize?: number;
+                page?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -21613,6 +21621,10 @@ export interface operations {
     ExecutionController_listApprovals: {
         parameters: {
             query?: {
+                /** @description 默认 0 */
+                offset?: number;
+                /** @description 默认 20 */
+                limit?: number;
                 projectId?: unknown;
             };
             header?: never;
@@ -41400,7 +41412,10 @@ export interface operations {
     };
     IntegrationController_getSyncLogs: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 默认 50 */
+                limit?: number;
+            };
             header?: never;
             path: {
                 id: string;
@@ -41483,7 +41498,10 @@ export interface operations {
     };
     LinearController_listLogs: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 默认 50 */
+                limit?: number;
+            };
             header?: never;
             path: {
                 integrationId: string;
@@ -41747,7 +41765,10 @@ export interface operations {
     };
     GitHubController_listLogs: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 默认 50 */
+                limit?: number;
+            };
             header?: never;
             path: {
                 integrationId: string;

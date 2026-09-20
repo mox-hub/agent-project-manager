@@ -75,6 +75,8 @@ export class IssueController {
 
   @Get('bugs')
   @ApiOperation({ summary: 'Get all bugs across projects' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiStandardErrors()
   @ApiOkResponse({
     type: IssuePageResponseDto,
@@ -93,6 +95,8 @@ export class IssueController {
   @Get('all')
   @ApiOperation({ summary: 'Get all tasks and bugs across projects' })
   @ApiQuery({ name: 'type', required: false, enum: ['task', 'bug', 'all'] })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiStandardErrors()
   @ApiOkResponse({
     type: IssuePageResponseDto,
@@ -127,6 +131,8 @@ export class IssueController {
   @ApiOperation({
     summary: 'Get tasks and bugs accessible to current user (cross-project)',
   })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiStandardErrors()
   @ApiOkResponse({
     type: IssuePageResponseDto,

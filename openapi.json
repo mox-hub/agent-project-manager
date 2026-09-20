@@ -7898,7 +7898,24 @@
     "/_api/issues/bugs": {
       "get": {
         "operationId": "IssueController_findAllBugs",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "跨项目 bug 分页列表（{ data: Issue[], meta: { page, pageSize, total, totalPages } }）",
@@ -8031,6 +8048,22 @@
       "get": {
         "operationId": "IssueController_findAllTasks",
         "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
           {
             "name": "type",
             "required": false,
@@ -8318,7 +8351,24 @@
     "/_api/issues/accessible": {
       "get": {
         "operationId": "IssueController_findAccessibleTasks",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "当前用户可访问的 task/bug 分页列表（{ data, meta }，item 附 project 摘要）",
@@ -10743,6 +10793,24 @@
       "get": {
         "operationId": "ExecutionController_listApprovals",
         "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "默认 0",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "默认 20",
+            "schema": {
+              "type": "number"
+            }
+          },
           {
             "name": "projectId",
             "required": false,
@@ -44717,6 +44785,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "工作流定义列表",
         "tags": [
           "workflows"
@@ -44845,6 +44918,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "创建工作流定义（画布编辑保存；人直接编辑不走决策卡）",
         "tags": [
           "workflows"
@@ -44965,6 +45043,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "产品动作目录（CAP-A-12 节点库单一真相）",
         "tags": [
           "workflows"
@@ -45102,6 +45185,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "工作流定义详情",
         "tags": [
           "workflows"
@@ -45240,6 +45328,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "更新工作流定义（definition 变更时 version 自增）",
         "tags": [
           "workflows"
@@ -45387,6 +45480,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "触发工作流运行（异步执行）",
         "tags": [
           "workflows"
@@ -45566,6 +45664,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "工作流运行分页列表",
         "tags": [
           "workflows"
@@ -45703,6 +45806,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "工作流运行详情（含步骤状态）",
         "tags": [
           "workflows"
@@ -45850,6 +45958,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "恢复被人工确认暂停的工作流运行",
         "tags": [
           "workflows"
@@ -46178,6 +46291,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "默认 50",
+            "schema": {
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -46311,6 +46433,15 @@
             "in": "path",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "默认 50",
+            "schema": {
+              "type": "number"
             }
           }
         ],
@@ -46762,6 +46893,15 @@
             "in": "path",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "默认 50",
+            "schema": {
+              "type": "number"
             }
           }
         ],
