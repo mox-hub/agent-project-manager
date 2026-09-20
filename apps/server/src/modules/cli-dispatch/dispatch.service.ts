@@ -34,7 +34,7 @@ import {
 export interface DispatchOptions {
   /** 目标 AI 成员（Member.id，type=ai_agent）；缺省时以发起用户为执行主体 */
   memberId?: string;
-  providerId?: 'claude-code' | 'codex' | 'zcode';
+  providerId?: 'claude-code' | 'codex' | 'zcode' | 'opencode';
   model?: string;
   allowedTools?: string[];
   timeout?: number;

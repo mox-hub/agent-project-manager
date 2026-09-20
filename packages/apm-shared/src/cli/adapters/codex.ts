@@ -6,7 +6,9 @@
 import { spawn } from 'child_process';
 import {
   CliAdapter,
+  CliAdapterCapabilities,
   CliExecutionInput,
+  CLI_ADAPTER_CAPABILITIES,
   CliUsage,
   CommandBuildResult,
   StreamEmitter,
@@ -16,6 +18,10 @@ import {
 export class CodexAdapter implements CliAdapter {
   getProviderId(): 'codex' {
     return 'codex';
+  }
+
+  getCapabilities(): CliAdapterCapabilities {
+    return CLI_ADAPTER_CAPABILITIES.codex;
   }
 
   async detect(): Promise<{ available: boolean; version?: string; error?: string }> {

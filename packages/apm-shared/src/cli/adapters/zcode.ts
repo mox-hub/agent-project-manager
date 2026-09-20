@@ -7,7 +7,9 @@
 import { spawn } from 'child_process';
 import {
   CliAdapter,
+  CliAdapterCapabilities,
   CliExecutionInput,
+  CLI_ADAPTER_CAPABILITIES,
   CliUsage,
   CommandBuildResult,
   StreamEmitter,
@@ -17,6 +19,10 @@ import {
 export class ZCodeAdapter implements CliAdapter {
   getProviderId(): 'zcode' {
     return 'zcode';
+  }
+
+  getCapabilities(): CliAdapterCapabilities {
+    return CLI_ADAPTER_CAPABILITIES.zcode;
   }
 
   async detect(): Promise<{ available: boolean; version?: string; error?: string }> {

@@ -154,8 +154,39 @@ export function extractCliUsage(data: unknown): CliUsage | undefined {
   };
 }
 
+/**
+ * CLI adapter 治理语义能力位：按代码事实静态声明该 adapter 真正支持的治理能力，
+ * 让「请求选项被静默忽略 / 事件通道不可达」在派发侧可见（P1-22a）。
+ * 判定口径：治理链路（参数透传 / 事件解析 → emit → 下游）在当前命令构造下能否真实走通；
+ * 依赖未校准协议假设或被命令行形态排除的，一律保守声明 false。
+ */
+export interface CliAdapterCapabilities {
+  /** buildCommand 是否真正把 input.allowedTools 透传为 CLI 参数（false = 调用方传入会被静默忽略） */
+  allowedTools: boolean;
+  /** 是否产出 token 用量（StreamEmitter.usage / ParseResult.usage）；false = 双轨成本无该家数据 */
+  usage: boolean;
+  /** parseStream 是否能把审批类事件映射为 approvalNeeded（false = 审批事件通道不可达） */
+  approval: boolean;
+  /** MCP server 工具枚举（mcp-server 模块 CLI 工具 schema）是否收录该 provider */
+  mcpTools: boolean;
+}
+
+/** 四家 adapter 能力位总表（单源事实，server 侧派发告警与 daemon worker 均按此读） */
+export const CLI_ADAPTER_CAPABILITIES: Record<ProviderId, CliAdapterCapabilities> = {
+  'claude-code': { allowedTools: true, usage: true, approval: true, mcpTools: true },
+  // codex：usage 无任何提取路径；--non-interactive 排除交互审批（approval_required 分支不可达）
+  codex: { allowedTools: true, usage: false, approval: false, mcpTools: true },
+  // zcode：配置驱动骨架（协议待校准），buildCommand 不消费 allowedTools，usage/approval 为未验证的乐观映射
+  zcode: { allowedTools: false, usage: false, approval: false, mcpTools: true },
+  // opencode：buildCommand 不消费 allowedTools（权限走全局配置）；usage 经 step_finish 实跑采样校准；无审批事件
+  opencode: { allowedTools: false, usage: true, approval: false, mcpTools: true },
+};
+
 export interface CliAdapter {
   getProviderId(): ProviderId;
+
+  /** 治理语义能力位（读 CLI_ADAPTER_CAPABILITIES，派发侧告警依据） */
+  getCapabilities(): CliAdapterCapabilities;
 
   detect(): Promise<DetectResult>;
 

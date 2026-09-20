@@ -6,7 +6,9 @@
 import { spawn } from 'child_process';
 import {
   CliAdapter,
+  CliAdapterCapabilities,
   CliExecutionInput,
+  CLI_ADAPTER_CAPABILITIES,
   CliUsage,
   CommandBuildResult,
   StreamEmitter,
@@ -16,6 +18,10 @@ import {
 export class ClaudeCodeAdapter implements CliAdapter {
   getProviderId(): 'claude-code' {
     return 'claude-code';
+  }
+
+  getCapabilities(): CliAdapterCapabilities {
+    return CLI_ADAPTER_CAPABILITIES['claude-code'];
   }
 
   async detect(): Promise<{ available: boolean; version?: string; error?: string }> {

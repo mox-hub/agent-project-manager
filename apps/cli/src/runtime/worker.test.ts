@@ -42,6 +42,12 @@ const dispatch: RuntimeDispatch = {
 function fakeAdapter(): CliAdapter {
   return {
     getProviderId: () => 'claude-code',
+    getCapabilities: () => ({
+      allowedTools: true,
+      usage: true,
+      approval: true,
+      mcpTools: true,
+    }),
     detect: async () => ({ available: true }),
     buildCommand: () => ({ cmd: 'fake', args: [], env: {} }),
     parseStream: () => {},
@@ -115,7 +121,7 @@ describe('runtime worker', () => {
     const w = startWorker(api, 'rt-1', { 'claude-code': fakeAdapter() });
     let onApprovalNeeded: RunnerCallbacks['onApprovalNeeded'] | undefined;
     mockRun.mockImplementation((_adapter, _input, callbacks) => {
-      onApprovalNeeded = callbacks.onApprovalNeeded;
+      onApprovalNeeded = callbacks?.onApprovalNeeded;
       return { proc: fakeProc(), promise: neverPromise() };
     });
     void w.handleDispatch(dispatch);
