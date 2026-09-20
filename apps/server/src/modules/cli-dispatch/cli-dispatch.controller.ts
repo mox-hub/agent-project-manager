@@ -2,20 +2,12 @@
  * CLI Dispatch Controller
  */
 
-import {
-  Controller,
-  Post,
-  Get,
-  Param,
-  Query,
-  Body,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiOkResponse,
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
@@ -33,11 +25,17 @@ import { CliDispatchService } from './dispatch.service';
 import { CliProviderRegistry } from './cli-provider.registry';
 import { ExecutionService } from '@/modules/execution/execution.service';
 import { CliExecutorService } from './cli-executor.service';
+import {
+  CliProvidersResponseDto,
+  DetectedCliProvidersResponseDto,
+  ExecutionStatusResponseDto,
+} from './dto/cli-provider-response.dto';
+import { RetryExecutionDto } from './dto/retry-execution.dto';
 
 class DispatchCliDto {
   @IsOptional()
   @IsString()
-  agentBindingId?: string;
+  memberId?: string;
 
   @IsOptional()
   @IsIn(['claude-code', 'codex', 'zcode'])
@@ -56,10 +54,10 @@ class DispatchCliDto {
   @IsInt()
   @Min(0)
   timeout?: number;
-}
 
-class CancelExecutionDto {
-  reason?: string;
+  @IsOptional()
+  @IsString()
+  executionId?: string;
 }
 
 @ApiTags('CLI Dispatch')
@@ -74,7 +72,7 @@ export class CliDispatchController {
     private readonly executor: CliExecutorService,
   ) {}
 
-  @Post('tasks/:taskId/dispatch-cli')
+  @Post('issues/:issueId/dispatch-cli')
   @ApiOperation({ summary: 'Dispatch task to CLI for AI execution' })
   @ApiResponse({ status: 200, description: 'Task dispatched to CLI' })
   @ApiResponse({
@@ -84,22 +82,26 @@ export class CliDispatchController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Task not found' })
   async dispatchToCli(
-    @Param('taskId') taskId: string,
+    @Param('issueId') issueId: string,
     @Body() dto: DispatchCliDto,
     @CurrentUser() user: any,
   ) {
-    return this.dispatchService.dispatchTaskToCli(taskId, user.id, {
-      agentBindingId: dto.agentBindingId,
+    return this.dispatchService.dispatchTaskToCli(issueId, user.id, {
+      memberId: dto.memberId,
       providerId: dto.providerId,
       model: dto.model,
       allowedTools: dto.allowedTools,
       timeout: dto.timeout,
+      executionId: dto.executionId,
     });
   }
 
   @Get('cli-providers')
   @ApiOperation({ summary: 'Get available CLI providers on this machine' })
-  @ApiResponse({ status: 200, description: 'Returns list of CLI providers' })
+  @ApiOkResponse({
+    type: CliProvidersResponseDto,
+    description: '本机 CLI provider 列表与默认 provider',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getCliProviders() {
     const all = this.registry.listAll();
@@ -120,7 +122,10 @@ export class CliDispatchController {
 
   @Get('cli-providers/detect')
   @ApiOperation({ summary: 'Re-detect CLI providers' })
-  @ApiResponse({ status: 200, description: 'Returns detected providers' })
+  @ApiOkResponse({
+    type: DetectedCliProvidersResponseDto,
+    description: '重新探测后的 provider 列表',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async detectProviders() {
     const results = await this.registry.detectAllProviders();
@@ -128,9 +133,16 @@ export class CliDispatchController {
   }
 
   @Post('execution-runs/:id/cancel')
-  @ApiOperation({ summary: 'Cancel a running CLI execution' })
+  @ApiOperation({
+    summary:
+      'Cancel a CLI execution (falls back to execution-record cancel when no CLI binding exists)',
+  })
   @ApiParam({ name: 'id', description: 'Execution Run ID' })
-  @ApiResponse({ status: 200, description: 'Execution cancelled' })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Execution cancelled。success 表示是否终止了 CLI 进程；无 CLI 绑定时按执行记录直接走状态机取消，success 为 false 但取消已生效',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Execution not found' })
   async cancelExecution(
@@ -144,10 +156,45 @@ export class CliDispatchController {
     return { success: cancelled };
   }
 
+  @Post('execution-runs/:id/retry')
+  @ApiOperation({
+    summary:
+      'Re-execute a failed/blocked/superseded execution as a new execution (clone + lineage + same dispatch flow)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: '原执行 ID（须为 failed/blocked/superseded）',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '新执行已创建并派发（retryOfId 血缘指回原执行）',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      '不可重新执行：状态非 failed/blocked/superseded，或未关联有效工单；存在其他活跃执行时按错误信息先取消；派发被门禁阻断时新执行落 blocked',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Execution not found' })
+  async retryExecution(
+    @Param('id') executionRunId: string,
+    @CurrentUser() user: any,
+    @Body() dto?: RetryExecutionDto,
+  ) {
+    return this.dispatchService.retryExecution(
+      executionRunId,
+      user.id,
+      dto?.diagnosis,
+    );
+  }
+
   @Get('execution-runs/:id/status')
   @ApiOperation({ summary: 'Get CLI execution status' })
   @ApiParam({ name: 'id', description: 'Execution Run ID' })
-  @ApiResponse({ status: 200, description: 'Returns execution status' })
+  @ApiOkResponse({
+    type: ExecutionStatusResponseDto,
+    description: '执行状态（含本机进程存活判定）',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Execution not found' })
   async getExecutionStatus(

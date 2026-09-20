@@ -20,6 +20,7 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type OnChangeFn,
   type RowSelectionState,
   type SortingState,
 } from "@tanstack/react-table"
@@ -65,6 +66,10 @@ export interface DataTableProps<T> {
   onSelectedIdsChange?: (ids: string[]) => void
   /** 选中悬浮胶囊内的批量操作（对齐 DataList.selectionActions；配合 ListActionButton 使用） */
   selectionActions?: (selectedRows: T[], clear: () => void) => ReactNode
+  /** 受控排序（页面级 state 下发，如与「显示」菜单排序共用一个状态源）；不传则组件内部自管 */
+  sorting?: SortingState
+  /** 受控排序回调（与 sorting 成对出现）；不传则组件内部自管排序状态 */
+  onSortingChange?: OnChangeFn<SortingState>
   /** 受控分页（服务端）；不传则客户端分页（默认 pageSize 20） */
   manualPagination?: DataTableManualPagination
   pageSize?: number
@@ -72,6 +77,10 @@ export interface DataTableProps<T> {
   emptyContent?: ReactNode
   /** 表格外层附加类名 */
   className?: string
+  /** 是否固定吸顶表头（默认 true） */
+  stickyHeader?: boolean
+  /** 滚动容器最大高度（内容独立滚动，表头稳固吸顶） */
+  maxHeight?: string
 }
 
 export function DataTable<T>({
@@ -83,14 +92,23 @@ export function DataTable<T>({
   selectedIds = [],
   onSelectedIdsChange,
   selectionActions,
+  sorting,
+  onSortingChange,
   manualPagination,
   pageSize = 20,
   emptyContent,
   className,
+  stickyHeader = true,
+  maxHeight,
 }: DataTableProps<T>) {
   const { t } = useTranslation()
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [internalSorting, setInternalSorting] = useState<SortingState>([])
   const [clientPage, setClientPage] = useState(1)
+
+  // 排序受控环：外部传 onSortingChange 即为受控（sorting 可选，缺省视为未排序），
+  // 否则回落内部状态——两种模式对表头渲染无差别
+  const sortingManaged = onSortingChange !== undefined
+  const effectiveSorting = sortingManaged ? (sorting ?? []) : internalSorting
 
   // 选择列受控：外部 string[] <-> tanstack RowSelectionState（受控环：
   // state 由 selectedIds 派生，内部 toggle 经 onRowSelectionChange 上报后由外部回流）
@@ -137,13 +155,13 @@ export function DataTable<T>({
     columns: columnsWithSelector,
     getRowId,
     state: {
-      sorting,
+      sorting: effectiveSorting,
       ...(selectionManaged ? { rowSelection: derivedSelection } : {}),
       ...(manualPagination
         ? { pagination: { pageIndex: manualPagination.page - 1, pageSize: manualPagination.pageSize } }
         : { pagination: { pageIndex: clientPage - 1, pageSize } }),
     },
-    onSortingChange: setSorting,
+    onSortingChange: sortingManaged ? onSortingChange : setInternalSorting,
     enableRowSelection: enableSelection,
     ...(selectionManaged
       ? {
@@ -232,10 +250,21 @@ export function DataTable<T>({
       aria-label="Table. Use arrow keys to navigate, Enter to open."
     >
       {/* 卡片式外壳（coss CardFrame 结构）：表格 + border-t 分隔 footer */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-        <div className="w-full overflow-x-auto">
+      <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+        <div
+          className={cn(
+            "w-full overflow-x-auto",
+            maxHeight ? "overflow-y-auto" : "",
+          )}
+          style={maxHeight ? { maxHeight } : undefined}
+        >
           <Table>
-            <TableHeader className="bg-muted/40">
+            <TableHeader
+              className={cn(
+                "bg-muted/40",
+                stickyHeader && "sticky top-0 z-20 bg-card/95 backdrop-blur-xs border-b border-border shadow-2xs",
+              )}
+            >
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
@@ -244,6 +273,7 @@ export function DataTable<T>({
                     return (
                       <TableHead
                         key={header.id}
+                        className={cn(stickyHeader && "sticky top-0 z-20 bg-inherit")}
                         style={header.getSize() !== 150 ? { width: header.getSize() } : undefined}
                         aria-sort={
                           sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined
@@ -342,10 +372,15 @@ export function DataTable<T>({
 
       {/* 多选悬浮胶囊（对齐 DataList SelectionBar 形态） */}
       {selectionManaged && selectionActions && selectedRows.length > 0 && (
-        <div className="pointer-events-none fixed bottom-5 left-1/2 z-50 -translate-x-1/2">
+        <div className="pointer-events-none fixed bottom-28 left-1/2 z-50 -translate-x-1/2 transition-all duration-200">
           <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-2 shadow-lg">
             <span className="px-2 text-sm font-semibold tabular-nums">
-              {t("dataTable.selected", { count: selectedRows.length })}
+              {total > 0
+                ? t("dataTable.selectedWithTotal", {
+                    count: selectedRows.length,
+                    total,
+                  })
+                : t("dataTable.selected", { count: selectedRows.length })}
             </span>
             <div className="flex items-center gap-1">
               {selectionActions(selectedRows, clearSelection)}

@@ -30,7 +30,7 @@ export async function createTaskFixture(
   wsHttp: WsRequest,
   ws: IsolatedWorkspace,
   token: string,
-): Promise<{ projectId: string; taskId: string }> {
+): Promise<{ projectId: string; issueId: string }> {
   const projectId = await createProjectFixture(
     wsHttp,
     token,
@@ -48,7 +48,7 @@ export async function createTaskFixture(
   });
 
   const res = await wsHttp
-    .post('/_api/tasks')
+    .post('/_api/issues')
     .set('Authorization', `Bearer ${token}`)
     .send({
       projectId,
@@ -58,7 +58,7 @@ export async function createTaskFixture(
   expect(res.status).toBe(201);
   expect(res.body.data).toBeTruthy();
 
-  return { projectId, taskId: res.body.data.id as string };
+  return { projectId, issueId: res.body.data.id as string };
 }
 
 let memberSeq = 0;

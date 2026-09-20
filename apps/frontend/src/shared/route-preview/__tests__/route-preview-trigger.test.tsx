@@ -42,7 +42,7 @@ describe('RoutePreviewTrigger', () => {
   it('hover 离开后延迟关闭卡片', async () => {
     const user = userEvent.setup();
     render(
-      <RoutePreviewTrigger path="/app/tasks" title="Tasks" delay={0} closeDelay={0}>
+      <RoutePreviewTrigger path="/app/issues" title="Tasks" delay={0} closeDelay={0}>
         <button type="button">tasks-tab</button>
       </RoutePreviewTrigger>
     );

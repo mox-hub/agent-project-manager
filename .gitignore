@@ -7,6 +7,10 @@
 # build output
 **/dist/
 **/build/
+# 例外：Electron 桌面壳 buildResources（icon.ico/品牌位图/installer.nsh——源资产非构建产物）；
+# 曾被上方 **/build/ 静默排除出库，CI 打包报 cannot find build/installerHeader.bmp
+!apps/desktop/build/
+!apps/desktop/build/**
 **/out/
 .next/
 refers/
@@ -110,11 +114,8 @@ Desktop.ini
 **/.vitest-cache/
 **/apps/server/.playwright-cli/
 
-# Tauri (迁移中)
-apps/desktop/src-tauri/target/
-apps/desktop/src-tauri/Cargo.lock
-apps/desktop/src-tauri/.taurignore
-apps/desktop/src-tauri/gen/
+apps/desktop/electron/dist/
+apps/desktop/electron-resources/
 
 # Agent Tools (should not be version controlled)
 .claude/
@@ -143,3 +144,18 @@ apps/frontend/public/logo-preview.html
 # One-off PowerShell/Python diagnostic scripts
 test-dispatch.ps1
 scripts/check_icon_tools.py
+
+# Turbo 本地任务缓存
+.turbo
+
+# 本地 AI 协作目录（不进版本库）
+.agents/
+.openbitfun/
+.worktrees/
+
+# 桌面壳打包 staging（pack.mjs 产物；electron-builder extraResources 源）
+apps/desktop/build/desktop-pack/
+
+# 夜航体验测试产物（截图/一次性脚本，2026-09-20）
+tmp/
+tmp-apm-*.py

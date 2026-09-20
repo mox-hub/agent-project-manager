@@ -1,11 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { LinearController } from './linear.controller';
 import { LinearSyncService } from './linear-sync.service';
 import { LinearSDKService } from './linear-sdk.service';
-import { TaskModule } from '../../../task/task.module';
+import { IntegrationModule } from '../../integration.module';
+import { IssueModule } from '../../../issue/issue.module';
 
 @Module({
-  imports: [TaskModule],
+  imports: [IssueModule, forwardRef(() => IntegrationModule)],
   controllers: [LinearController],
   providers: [LinearSyncService, LinearSDKService],
   exports: [LinearSyncService, LinearSDKService],

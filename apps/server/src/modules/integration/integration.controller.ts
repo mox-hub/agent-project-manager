@@ -13,8 +13,10 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiOkResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { IntegrationService } from './integration.service';
 import { LinearSyncService } from './providers/linear/linear-sync.service';
@@ -23,6 +25,11 @@ import { UpdateIntegrationConfigDto } from './dto/update-integration-config.dto'
 import { IntegrationQueryDto } from './dto/integration-query.dto';
 import { CreateExternalIssueLinkDto } from './dto/create-external-issue-link.dto';
 import { ExternalIssueQueryDto } from './dto/external-issue-query.dto';
+import {
+  ExternalIssueLinkResponseDto,
+  IntegrationConfigResponseDto,
+  IntegrationSyncLogResponseDto,
+} from './dto/integration-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -38,9 +45,9 @@ export class IntegrationController {
 
   @Get()
   @ApiOperation({ summary: 'Get integration configurations' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns list of integration configurations',
+  @ApiOkResponse({
+    type: [IntegrationConfigResponseDto],
+    description: '集成配置列表（configJson 脱敏不出网）',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getIntegrationConfigs(
@@ -66,9 +73,9 @@ export class IntegrationController {
 
   @Get('external-issues')
   @ApiOperation({ summary: 'Get external issue links' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns list of external issue links',
+  @ApiOkResponse({
+    type: [ExternalIssueLinkResponseDto],
+    description: '外部工单链接列表',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getExternalIssueLinks(
@@ -81,9 +88,9 @@ export class IntegrationController {
   @Get(':id')
   @ApiOperation({ summary: 'Get integration configuration by ID' })
   @ApiParam({ name: 'id', description: 'Integration configuration ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns integration configuration details',
+  @ApiOkResponse({
+    type: IntegrationConfigResponseDto,
+    description: '集成配置详情（configJson 脱敏不出网）',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
@@ -123,7 +130,16 @@ export class IntegrationController {
 
   @Get(':id/sync-logs')
   @ApiOperation({ summary: 'Get sync logs for an integration' })
-  @ApiResponse({ status: 200, description: 'Sync log list' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '默认 50',
+  })
+  @ApiOkResponse({
+    type: [IntegrationSyncLogResponseDto],
+    description: '同步日志列表（按创建时间倒序）',
+  })
   async getSyncLogs(
     @Param('id') id: string,
     @Query('projectId') projectId: string | undefined,

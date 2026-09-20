@@ -1,24 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
+import { DocRegistryService } from '../../document/services/doc-registry.service';
 
 export interface ContextData {
   projectSummary?: string;
   taskDetails?: string;
   recentActivities?: string;
   gitDiff?: string;
+  /** 项目知识段（契约与文档知识层 v2 纪要 §9/§11）：Registry catalog + 命中 digest */
+  projectKnowledge?: string;
 }
 
 @Injectable()
 export class ContextBuilderService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly docRegistry: DocRegistryService,
+  ) {}
 
   async buildContext(options: {
     projectId?: string;
-    taskId?: string;
+    issueId?: string;
     includeProjectSummary?: boolean;
     includeTaskDetails?: boolean;
     includeRecentActivities?: boolean;
     includeGitDiff?: boolean;
+    includeProjectKnowledge?: boolean;
   }): Promise<ContextData> {
     const context: ContextData = {};
 
@@ -26,8 +33,14 @@ export class ContextBuilderService {
       context.projectSummary = await this.getProjectSummary(options.projectId);
     }
 
-    if (options.includeTaskDetails && options.taskId) {
-      context.taskDetails = await this.getTaskDetails(options.taskId);
+    if (options.includeProjectKnowledge && options.projectId) {
+      context.projectKnowledge = await this.getProjectKnowledge(
+        options.projectId,
+      );
+    }
+
+    if (options.includeTaskDetails && options.issueId) {
+      context.taskDetails = await this.getTaskDetails(options.issueId);
     }
 
     if (options.includeRecentActivities) {
@@ -35,9 +48,9 @@ export class ContextBuilderService {
         context.recentActivities = await this.getProjectRecentActivities(
           options.projectId,
         );
-      } else if (options.taskId) {
+      } else if (options.issueId) {
         context.recentActivities = await this.getTaskRecentActivities(
-          options.taskId,
+          options.issueId,
         );
       }
     }
@@ -56,7 +69,7 @@ export class ContextBuilderService {
       include: {
         _count: {
           select: {
-            tasks: true,
+            issues: true,
             iterations: true,
             members: true,
           },
@@ -72,14 +85,46 @@ export class ContextBuilderService {
 描述: ${project.description || '无'}
 类型: ${project.type}
 状态: ${project.status}
-任务数: ${project._count.tasks}
+任务数: ${project._count.issues}
 迭代数: ${project._count.iterations}
 成员数: ${project._count.members}`;
   }
 
-  private async getTaskDetails(taskId: string): Promise<string> {
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
+  /**
+   * 项目知识段（契约与文档知识层 v2 纪要 §9 通道 B 的 docs provider）：
+   * 从 DocRegistry 取 catalog + ready digest，拼装为紧凑知识清单。
+   * 只装元数据/摘要/锚点引用，永不装正文（§11）。
+   */
+  private async getProjectKnowledge(projectId: string): Promise<string> {
+    const catalog = await this.docRegistry.getCatalog(projectId);
+    if (catalog.length === 0) return '';
+
+    const topEntries = catalog.slice(0, 20);
+    const lines: string[] = ['## 项目知识文档'];
+    for (const entry of topEntries) {
+      const ref = entry.shortId ? `doc/${entry.shortId}` : entry.docId;
+      const role = entry.docRole ? ` [${entry.docRole}]` : '';
+      lines.push(
+        `- ${entry.title}${role} (${ref}, ${entry.status}${
+          entry.folderPath ? `, ${entry.folderPath}` : ''
+        })`,
+      );
+
+      if (entry.digestPolicy === 'off') continue;
+      const subset = await this.docRegistry.getSubset(entry.docId);
+      if (subset?.digest?.summary) {
+        lines.push(`  摘要: ${subset.digest.summary}`);
+      }
+    }
+    if (catalog.length > topEntries.length) {
+      lines.push(`（其余 ${catalog.length - topEntries.length} 篇见文档目录）`);
+    }
+    return lines.join('\n');
+  }
+
+  private async getTaskDetails(issueId: string): Promise<string> {
+    const task = await this.prisma.issue.findUnique({
+      where: { id: issueId },
       include: {
         assignee: {
           select: {
@@ -95,7 +140,7 @@ export class ContextBuilderService {
             displayName: true,
           },
         },
-        taskTags: {
+        issueTags: {
           include: {
             tag: true,
           },
@@ -107,7 +152,7 @@ export class ContextBuilderService {
       return '';
     }
 
-    const tags = task.taskTags.map((tt) => tt.tag.name).join(', ');
+    const tags = task.issueTags.map((tt) => tt.tag.name).join(', ');
 
     return `任务标题: ${task.title}
 描述: ${task.description || '无'}
@@ -123,12 +168,12 @@ export class ContextBuilderService {
     projectId: string,
     limit = 10,
   ): Promise<string> {
-    const activities = await this.prisma.taskActivity.findMany({
+    const activities = await this.prisma.issueActivity.findMany({
       where: { projectId },
       orderBy: { timestamp: 'desc' },
       take: limit,
       include: {
-        task: {
+        issue: {
           select: {
             id: true,
             title: true,
@@ -146,17 +191,17 @@ export class ContextBuilderService {
         (act) =>
           `[${new Date(act.timestamp).toLocaleString()}] ${act.type}: ${
             act.summary || ''
-          } (任务: ${act.task.title})`,
+          } (任务: ${act.issue.title})`,
       )
       .join('\n');
   }
 
   private async getTaskRecentActivities(
-    taskId: string,
+    issueId: string,
     limit = 10,
   ): Promise<string> {
-    const activities = await this.prisma.taskActivity.findMany({
-      where: { taskId },
+    const activities = await this.prisma.issueActivity.findMany({
+      where: { issueId },
       orderBy: { timestamp: 'desc' },
       take: limit,
     });
@@ -203,10 +248,10 @@ export class ContextBuilderService {
    * Build a structured task execution context enriched with ProjectAIContext data.
    * Used by AI Worker Coordinator for dispatch context packs.
    */
-  async buildTaskExecutionContext(taskId: string, projectId: string) {
+  async buildTaskExecutionContext(issueId: string, projectId: string) {
     const [task, aiContext] = await Promise.all([
-      this.prisma.task.findUnique({
-        where: { id: taskId },
+      this.prisma.issue.findUnique({
+        where: { id: issueId },
         include: {
           assignee: {
             select: { id: true, username: true, displayName: true },
@@ -214,15 +259,15 @@ export class ContextBuilderService {
           reporter: {
             select: { id: true, username: true, displayName: true },
           },
-          taskTags: { include: { tag: true } },
+          issueTags: { include: { tag: true } },
           dependencies: {
             include: {
-              dependsOnTask: {
+              dependsOnIssue: {
                 select: { id: true, title: true, status: true },
               },
             },
           },
-          subTasks: {
+          subIssues: {
             select: { id: true, title: true, status: true },
           },
           // V3: 包含验收契约
@@ -257,14 +302,14 @@ export class ContextBuilderService {
         description: task.description,
         status: task.status,
         priority: task.priority,
-        tags: task.taskTags.map((tt) => tt.tag.name),
+        tags: task.issueTags.map((tt) => tt.tag.name),
         assignee: task.assignee?.displayName ?? null,
         dependencies: task.dependencies.map((d) => ({
-          id: d.dependsOnTask.id,
-          title: d.dependsOnTask.title,
-          status: d.dependsOnTask.status,
+          id: d.dependsOnIssue.id,
+          title: d.dependsOnIssue.title,
+          status: d.dependsOnIssue.status,
         })),
-        subTasks: task.subTasks,
+        subIssues: task.subIssues,
       },
       // V3: 注入验收标准
       acceptance: acceptance ? this.formatAcceptanceContext(acceptance) : null,

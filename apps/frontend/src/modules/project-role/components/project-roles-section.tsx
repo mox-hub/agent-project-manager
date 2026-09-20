@@ -50,6 +50,12 @@ const CLI_PROVIDERS: { value: CliProviderId; label: string }[] = [
   { value: 'zcode', label: 'ZCode' },
 ];
 
+/** 「不指定」哨兵项 + 可选项；作为 Select 的 items 交给 base-ui 解析 label */
+const CLI_PROVIDER_SELECT_ITEMS = [
+  { value: 'none', label: '不指定' },
+  ...CLI_PROVIDERS,
+];
+
 export function ProjectRolesSection({ projectId }: { projectId: string }) {
   const confirmDialog = useConfirm();
   const [showCreate, setShowCreate] = useState(false);
@@ -325,6 +331,7 @@ function RoleEditDialog({
               <Select
                 value={executionRole}
                 onValueChange={(v) => setExecutionRole(v as ExecutionRole)}
+                items={EXECUTION_ROLES}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -345,13 +352,13 @@ function RoleEditDialog({
                 onValueChange={(v) =>
                   setCliProviderId(String(v) === 'none' ? '' : (v as CliProviderId))
                 }
+                items={CLI_PROVIDER_SELECT_ITEMS}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="未指定" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">不指定</SelectItem>
-                  {CLI_PROVIDERS.map((p) => (
+                  {CLI_PROVIDER_SELECT_ITEMS.map((p) => (
                     <SelectItem key={p.value} value={p.value}>
                       {p.label}
                     </SelectItem>

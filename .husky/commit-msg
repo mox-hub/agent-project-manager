@@ -12,7 +12,7 @@ if ! echo "$commit_msg" | grep -EqE "$pattern"; then
   echo ""
   echo "Expected format: <type>(<scope>): <description>"
   echo "Valid types: feat, fix, docs, style, refactor, test, chore, perf, ci, build"
-  echo "Example: feat(desktop): add tauri window management"
+  echo "Example: feat(desktop): add electron window management"
   echo "Example: docs: update API documentation"
   echo ""
   exit 1

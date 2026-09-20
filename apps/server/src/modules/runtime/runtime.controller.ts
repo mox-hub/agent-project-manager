@@ -12,6 +12,7 @@ import {
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiOkResponse,
   ApiParam,
   ApiQuery,
   ApiResponse,
@@ -26,6 +27,7 @@ import { DispatchQueryDto } from './dto/dispatch-query.dto';
 import { ExecutionEventDto } from './dto/execution-event.dto';
 import { ExecutionResultDto } from './dto/execution-result.dto';
 import { ApprovalRequestDto } from './dto/approval-request.dto';
+import { RuntimeDispatchResponseDto } from './dto/runtime-dispatch-response.dto';
 import { RuntimeSessionGuard } from './guards/runtime-session.guard';
 
 @ApiTags('Runtime')
@@ -72,6 +74,10 @@ export class RuntimeController {
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiOperation({ summary: '拉取待执行任务派发' })
+  @ApiOkResponse({
+    type: [RuntimeDispatchResponseDto],
+    description: '待执行派发列表',
+  })
   getDispatches(
     @Param('runtimeId') runtimeId: string,
     @Query() query: DispatchQueryDto,
@@ -88,6 +94,10 @@ export class RuntimeController {
   @ApiBearerAuth('RuntimeSession')
   @ApiParam({ name: 'executionRunId' })
   @ApiOperation({ summary: '获取执行上下文' })
+  @ApiOkResponse({
+    schema: { type: 'object', additionalProperties: true },
+    description: '执行上下文（KV 包：contextPack、执行载荷等任意字段）',
+  })
   getExecutionContext(
     @Param('executionRunId') executionRunId: string,
     @Req() req: any,

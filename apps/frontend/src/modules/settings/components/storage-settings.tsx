@@ -88,8 +88,8 @@ export function StorageSettings() {
       <Card className="border-border shadow-none">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <FolderOpen className="h-4 w-4 text-accent-blue" />
-            <CardTitle>{t('settings.storageTitle')}</CardTitle>
+            <FolderOpen size={16} className="text-accent-yellow" />
+            <CardTitle className="text-base">{t('settings.storageTitle')}</CardTitle>
           </div>
           <CardDescription>
             {t('settings.storageDesc')}
@@ -208,9 +208,9 @@ export function StorageSettings() {
       <Card className="border-border shadow-none">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-2">
+              <FileText size={16} className="text-accent-yellow" />
               <CardTitle className="text-base">{t('settings.storageSyncedFiles')}</CardTitle>
-              <CardDescription>{t('settings.storageSyncedFilesDesc')}</CardDescription>
             </div>
             <Button
               variant="outline"
@@ -223,6 +223,7 @@ export function StorageSettings() {
               {t('common.refresh')}
             </Button>
           </div>
+          <CardDescription>{t('settings.storageSyncedFilesDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {files === undefined ? (

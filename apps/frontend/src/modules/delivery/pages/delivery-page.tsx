@@ -9,7 +9,7 @@
  * 仅用于展示 refer 设计还原效果，不接入真实 API。
  * 顶层容器标记 data-mock="true" 便于检索与后续替换。
  */
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   ListTree, ChevronRight, ChevronDown, Check, X, Minus, Clock,
   AlertTriangle, Circle, Code2, FlaskConical, Building2,
@@ -22,14 +22,13 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
-import { Card, CardContent } from '@/components/ui/card';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type ViewMode = 'dev' | 'pm' | 'user';
 import type {
   AcceptStatus, NodeLevel, StageKey, AgentKey, AgentStatus,
-  AcceptanceRecord, AgentRecord, Annotation, DeliveryNode,
+  AcceptanceRecord, Annotation, DeliveryNode,
 } from '../api/delivery-api';
 import { useDeliveryOverview } from '../hooks/use-delivery';
 
@@ -84,6 +83,12 @@ const COL_DEFS: ColDef[] = [
 
 // ── Status / config ───────────────────────────────────────────────────────────
 
+/**
+ * 验收状态视觉（AcceptStatus 六态）。与 status-visuals.TASK_STATUS_VISUALS 的关系：
+ * 这是「验收门禁状态」（passed/waived/blocked 等验收专属态），非「任务状态」，
+ * 故保留本地映射（且 tone 词表外还用了 accent-orange）；收编需先为 status-visuals
+ * 扩「验收状态」映射表。本页为 DEV ONLY 设计还原页（data-mock），不接入真实 API。
+ */
 const STATUS_CFG: Record<AcceptStatus, { label: string; icon: React.ElementType; cell: string; text: string; border: string; bg: string }> = {
   pending:     { label: '待验收', icon: Circle,        cell: 'text-muted-foreground/30', text: 'text-muted-foreground',          border: 'border-border',                              bg: 'bg-muted/40'                        },
   in_progress: { label: '验收中', icon: Loader,        cell: 'text-accent-blue',            text: 'text-accent-blue',     border: 'border-accent-blue/30',       bg: 'bg-accent-blue/10'     },
@@ -804,16 +809,19 @@ const VIEW_CONFIG: Record<ViewMode, { label: string; icon: React.ElementType; de
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function DeliveryPage() {
-  const { data: overview, isLoading } = useDeliveryOverview();
-  const DELIVERY_DATA = overview?.nodes ?? [];
+  const { data: overview } = useDeliveryOverview();
+  const DELIVERY_DATA = useMemo(() => overview?.nodes ?? [], [overview]);
   const [viewMode, setViewMode]       = useState<ViewMode>('dev');
   const [expanded, setExpanded]       = useState<Set<string>>(new Set(['p1', 'p2', 'm1', 'm2', 'm4']));
-  const [acceptance, setAcceptance]   = useState<Record<string, AcceptanceRecord>>({});
-
-  // 数据到达/变化后重置验收矩阵（原为静态数据一次性初始化）
-  useEffect(() => {
-    if (DELIVERY_DATA.length > 0) setAcceptance(initAcceptance(DELIVERY_DATA));
-  }, [overview]);
+  // 数据版本化编辑：编辑值绑定生成它的 overview 版本，数据变化即重置回 initAcceptance
+  const [acceptanceEdit, setAcceptanceEdit] = useState<{
+    src: typeof overview;
+    value: Record<string, AcceptanceRecord>;
+  } | null>(null);
+  const acceptance = useMemo(
+    () => (acceptanceEdit?.src === overview && acceptanceEdit ? acceptanceEdit.value : initAcceptance(DELIVERY_DATA)),
+    [acceptanceEdit, overview, DELIVERY_DATA],
+  );
   const [annotations, setAnnotations] = useState<Annotation[]>([
     { id: 'a1', nodeId: 'f11', author: 'Maria', content: '已与用户确认，Webhook延迟问题在2周内修复，用户表示可接受临时状态', tag: 'negotiated', timestamp: '08-01 14:30' },
     { id: 'a2', nodeId: 'f10', author: 'Ben', content: '3D Secure 目前仅支持欧区，国内暂时豁免该验收项', tag: 'decision', timestamp: '08-03 09:15' },
@@ -838,10 +846,14 @@ export function DeliveryPage() {
   }, []);
 
   const handleAcceptChange = useCallback((nodeId: string, key: StageKey, status: AcceptStatus) => {
-    setAcceptance(prev => ({ ...prev, [nodeId]: { ...prev[nodeId], [key]: status } }));
+    setAcceptanceEdit(prev => {
+      const base =
+        prev?.src === overview && prev ? prev.value : initAcceptance(DELIVERY_DATA);
+      return { src: overview, value: { ...base, [nodeId]: { ...base[nodeId], [key]: status } } };
+    });
     const node = flattenNodes(DELIVERY_DATA).find(n => n.id === nodeId);
     toast.success(`${node?.title ?? nodeId} · ${COL_DEFS.find(c => c.id === key)?.label} → ${STATUS_CFG[status].label}`);
-  }, []);
+  }, [overview, DELIVERY_DATA]);
 
   const handleAnnotationAdd = useCallback((ann: Omit<Annotation, 'id' | 'timestamp'>) => {
     const now = new Date();

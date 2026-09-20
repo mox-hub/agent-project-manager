@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsBoolean,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsOptional, IsEnum, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateDocumentDto {
@@ -28,10 +22,26 @@ export class CreateDocumentDto {
 
   @ApiProperty({
     description: 'Document category',
-    enum: ['requirement', 'design', 'api', 'testing', 'guide', 'custom'],
+    enum: [
+      'requirement',
+      'analysis',
+      'design',
+      'api',
+      'testing',
+      'guide',
+      'custom',
+    ],
     default: 'custom',
   })
-  @IsEnum(['requirement', 'design', 'api', 'testing', 'guide', 'custom'])
+  @IsEnum([
+    'requirement',
+    'analysis',
+    'design',
+    'api',
+    'testing',
+    'guide',
+    'custom',
+  ])
   @IsOptional()
   category?: string = 'custom';
 

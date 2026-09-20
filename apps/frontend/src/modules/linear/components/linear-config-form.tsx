@@ -17,7 +17,6 @@ import { LinearStatusIndicator } from './linear-provider-card';
 import {
   useCreateIntegration,
 } from '@/modules/integration/hooks/use-integrations';
-import { useLinearViewer } from '../hooks/use-linear-sync';
 import type { LinearViewer } from '../api/linear-api';
 import { api } from '@/infrastructure/api-client';
 import { cn } from '@/lib/utils';
@@ -99,9 +98,9 @@ export function LinearConfigForm({
               orgCount: viewer.organizations.length,
             }
           : undefined,
-      } as any);
+      });
       toast.success('Linear integration saved');
-      onSuccess?.((result as any).id);
+      onSuccess?.(result.id);
       onClose();
     } catch (err) {
       toast.error(
@@ -112,7 +111,7 @@ export function LinearConfigForm({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-xl border-border">
+      <DialogContent keepDefaultWidth={false} className="max-w-xl border-border">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <LinearIcon size={24} /> Connect Linear

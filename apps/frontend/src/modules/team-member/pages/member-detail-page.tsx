@@ -29,6 +29,7 @@ import {
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui/right-sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -58,11 +59,13 @@ import {
 } from '../hooks';
 import {
   MEMBER_THINKING_LEVELS,
-  MEMBER_TRUST_LEVEL_LABELS,
+  MEMBER_TRUST_TIERS,
   type Member,
 } from '@/shared/member/types';
 import { MemberAvatar } from '../components/member-avatar';
 import { MemberToolGrants } from '../components/member-tool-grants';
+import { useSetViewingContext } from '@/shared/viewing-context';
+import { isSystemAssistantMember } from '@/shared/member/types';
 
 type DetailTab = 'overview' | 'projects' | 'teams' | 'activities' | 'grants';
 
@@ -75,6 +78,10 @@ export default function MemberDetailPage() {
   const { copyToClipboard } = useCopyToClipboard();
 
   const { data: member, isLoading } = useMemberDetail(memberId);
+  // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
+  useSetViewingContext(
+    member ? { type: 'member', id: member.id, title: member.displayName } : null,
+  );
   const { data: card } = useMemberCard(memberId);
   const bind = useBindMemberProject(memberId!);
   const unbind = useUnbindMemberProject(memberId!);
@@ -175,9 +182,10 @@ export default function MemberDetailPage() {
       : []),
   ];
 
-  const trustOptions = MEMBER_TRUST_LEVEL_LABELS.map((label, level) => ({
-    value: String(level),
-    label,
+  // CAP-B-07：人工调整入口=选三级等级（观察者/协助者/受托者）
+  const trustOptions = MEMBER_TRUST_TIERS.map((tier) => ({
+    value: String(tier.level),
+    label: t(tier.labelKey),
   }));
 
   return (
@@ -192,7 +200,10 @@ export default function MemberDetailPage() {
           { label: member.displayName },
         ]}
         tabs={{ value: activeTab, onChange: (v) => setActiveTab(v as DetailTab), items: tabItems }}
-        actions={<FavoriteToggle label={member.displayName} />}
+        actions={<>
+          <FavoriteToggle label={member.displayName} />
+          <SubscribeButton />
+        </>}
         pager={pager}
         sidebar={{ open: !asideHidden, onToggle: () => setAsideHidden((v) => !v) }}
       />
@@ -201,6 +212,7 @@ export default function MemberDetailPage() {
       <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* 主区（纵向滚动） */}
         <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+          <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
           {mutationError && (
             <div className="mx-6 mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {mutationError}
@@ -443,6 +455,7 @@ export default function MemberDetailPage() {
 
             {activeTab === 'grants' && isAI && <MemberToolGrants memberId={member.id} />}
           </div>
+          </div>
         </div>
 
         {/* 右侧栏（320px，可收起） */}
@@ -453,13 +466,18 @@ export default function MemberDetailPage() {
               label={t('memberDetail.copyId', '复制短 ID')}
               onClick={() => copyToClipboard(member.shortId)}
             />
-            {isAdmin && member.status === 'active' && (
+            {isAdmin && member.status === 'active' && !isSystemAssistantMember(member) && (
               <SidebarButton
                 icon={UserX}
                 label={t('members.deactivate', '停用')}
                 onClick={handleDeactivate}
                 className="text-destructive hover:text-destructive"
               />
+            )}
+            {isSystemAssistantMember(member) && (
+              <p className="px-2 text-11 text-content-text-muted">
+                {t('members.systemAssistantProtected', '系统内置 AI 助理：可修改信息，不可删除或停用')}
+              </p>
             )}
           </SidebarButtonGroup>
 

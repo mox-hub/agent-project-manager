@@ -4,6 +4,9 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiPropertyOptional,
 } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
@@ -11,8 +14,14 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { Public } from '@/common/decorators/public.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { InviteService } from './invite.service';
+import {
+  InviteAcceptResponseDto,
+  InvitePreviewResponseDto,
+} from './dto/invite-response.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 class AcceptInviteDto {
+  @ApiPropertyOptional({ description: '接受邀请时自定义的显示名' })
   @IsOptional()
   @IsString()
   displayName?: string;
@@ -26,7 +35,10 @@ export class InviteController {
   @Public()
   @Get(':token')
   @ApiOperation({ summary: '邀请公开预览（团队名/角色/状态）' })
-  @ApiResponse({ status: 200, description: '返回邀请预览' })
+  @ApiOkResponse({
+    type: InvitePreviewResponseDto,
+    description: '返回邀请预览',
+  })
   async preview(@Param('token') token: string) {
     return this.inviteService.preview(token);
   }
@@ -36,6 +48,8 @@ export class InviteController {
   @Post(':token/accept')
   @ApiOperation({ summary: '接受邀请（登录邮箱须匹配）' })
   @ApiResponse({ status: 201, description: '已加入团队' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({ type: InviteAcceptResponseDto })
   async accept(
     @Param('token') token: string,
     @CurrentUser() user: { id: string },

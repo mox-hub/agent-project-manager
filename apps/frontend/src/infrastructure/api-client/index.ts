@@ -5,6 +5,8 @@ import axios, {
 } from 'axios';
 import { serializeFilters } from '@/shared/filters/adapters';
 import { logger } from '@/shared/lib/logger';
+import { persistTokenToShell } from '@/shared/lib/desktop-session';
+import { unwrapEnvelope as parseEnvelope } from '@apm/shared/http/envelope';
 import {
   ApiClientError,
   type BackendEnvelope,
@@ -91,6 +93,7 @@ apiClient.interceptors.response.use(
 
     if (status === 401) {
       localStorage.removeItem('access_token');
+      persistTokenToShell(null);
       const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
       // 启动页与登录页本身不应被 401 重定向踢出流程
       const isBootOrLogin = pathname === '/login' || pathname === '/boot' || pathname === '/';
@@ -119,9 +122,14 @@ apiClient.interceptors.response.use(
     }
 
     if (status === 0) {
+      // 区分前端超时与网络断开：axios 超时（config.timeout 触发）code 为
+      // ECONNABORTED（部分环境为 ETIMEDOUT）。不区分的话组件只能拿到英文
+      // axios 默认文案（"timeout of 30000ms exceeded"），无法展示 i18n 超时提示。
+      const isTimeout =
+        error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT';
       throw new ApiClientError({
-        code: 'NETWORK_ERROR',
-        message: error.message || '网络异常',
+        code: isTimeout ? 'TIMEOUT' : 'NETWORK_ERROR',
+        message: isTimeout ? '请求超时' : error.message || '网络异常',
         status: 0,
         endpoint,
       });
@@ -140,33 +148,32 @@ apiClient.interceptors.response.use(
  * Unwrap a backend envelope to its business data.
  * Returns `null` when the body is null/undefined.
  * Throws ApiClientError when the envelope is an error envelope.
+ * 解析逻辑单源于 @apm-shared/http/envelope，这里只负责错误抛出。
  */
 function unwrapEnvelope<T>(body: unknown): T {
-  if (body === null || body === undefined) return null as T;
-
-  if (typeof body === 'object') {
-    const env = body as Partial<BackendEnvelope<T>>;
-    if (env.success === true && 'data' in env) {
-      return (env.data ?? null) as T;
-    }
-    if (env.success === false && env.error) {
-      throw new ApiClientError({
-        code: env.error.code,
-        message: env.description ?? env.error.message,
-        status: env.status ?? 500,
-        details: env.error.details,
-        requestId: env.requestId,
-      });
-    }
+  const { data, error } = parseEnvelope<T>(body);
+  if (error) {
+    throw new ApiClientError({
+      code: error.error.code,
+      message: error.description ?? error.error.message,
+      status: error.status ?? 500,
+      details: error.error.details,
+      requestId: error.requestId,
+    });
   }
-
-  return body as T;
+  return data as T;
 }
 
 export interface RequestOptions {
   params?: Record<string, unknown>;
   signal?: AbortSignal;
   data?: unknown;
+  /**
+   * 单请求超时覆盖（ms）：仅覆盖本次请求的 axios timeout，
+   * 不改全局实例默认值（30s）。供长耗时请求（如 AI 供应商测试连接）
+   * 放宽窗口；不传走实例默认。
+   */
+  timeoutMs?: number;
 }
 
 function normalizeParams(params: unknown): Record<string, unknown> | undefined {
@@ -189,6 +196,7 @@ export const api = {
       .get<unknown>(url, {
         params: options?.params ?? normalizeParams(params),
         signal: options?.signal,
+        timeout: options?.timeoutMs,
       })
       .then((res) => unwrapEnvelope<T>(res.data)),
 
@@ -197,6 +205,7 @@ export const api = {
       .post<unknown>(url, data, {
         params: options?.params,
         signal: options?.signal,
+        timeout: options?.timeoutMs,
       })
       .then((res) => unwrapEnvelope<T>(res.data)),
 
@@ -205,6 +214,7 @@ export const api = {
       .put<unknown>(url, data, {
         params: options?.params,
         signal: options?.signal,
+        timeout: options?.timeoutMs,
       })
       .then((res) => unwrapEnvelope<T>(res.data)),
 
@@ -213,6 +223,7 @@ export const api = {
       .patch<unknown>(url, data, {
         params: options?.params,
         signal: options?.signal,
+        timeout: options?.timeoutMs,
       })
       .then((res) => unwrapEnvelope<T>(res.data)),
 
@@ -222,6 +233,7 @@ export const api = {
         params: options?.params,
         signal: options?.signal,
         data: options?.data,
+        timeout: options?.timeoutMs,
       })
       .then((res) => unwrapEnvelope<T>(res.data)),
 

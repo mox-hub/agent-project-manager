@@ -4,17 +4,30 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { Prisma } from '@prisma/client';
+import {
+  streamText,
+  stepCountIs,
+  type LanguageModel,
+  type ModelMessage,
+} from 'ai';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { aiChatLog } from '../../core/logger/ai-chat-file.logger';
 import { ModelAdapter } from './adapters/model-adapter.interface';
 import { ContextBuilderService } from './services/context-builder.service';
 import { AdapterRegistryService } from './services/adapter-registry.service';
+import { AssistantToolsService } from './services/assistant-tools.service';
+import { UsagePricingService } from './services/usage-pricing.service';
+import {
+  extractMessagePlainText,
+  isUiMessageRunning,
+} from './utils/ui-message-text';
 import { ChatRequestDto } from './dto/chat.dto';
 import { ConversationQueryDto } from './dto/conversation-query.dto';
-import { RunWorkflowDto } from './dto/workflow-run.dto';
 import { UsageQueryDto } from './dto/usage-query.dto';
-import { CreateAgentIdentityDto } from './dto/agent-identity.dto';
+import { AI_DEFAULT_MODEL_CONFIG_KEY } from './services/provider-config.service';
 
 @Injectable()
 export class AiHubService {
@@ -25,14 +38,39 @@ export class AiHubService {
     private readonly messageBus: MessageBusService,
     private readonly contextBuilder: ContextBuilderService,
     private readonly adapterRegistry: AdapterRegistryService,
+    private readonly assistantTools: AssistantToolsService,
+    private readonly usagePricing: UsagePricingService,
   ) {}
 
-  private getAdapter(modelPreference?: string): ModelAdapter {
+  private async getAdapter(modelPreference?: string): Promise<ModelAdapter> {
     if (modelPreference) {
       // Try to find by model name first
       const adapter = this.adapterRegistry.getAdapterByModel(modelPreference);
       if (adapter) {
         return adapter;
+      }
+      // 再按 provider 名匹配（llm:<provider> 形式的模型选择）
+      const byProvider = this.adapterRegistry.getAdapter(modelPreference);
+      if (byProvider) {
+        return byProvider;
+      }
+    }
+
+    // 无显式偏好：消费工作区内置模型配置（AppConfig ai.defaultModel）
+    const defaultRow = await this.prisma.appConfig.findFirst({
+      where: { key: AI_DEFAULT_MODEL_CONFIG_KEY, scope: 'global' },
+    });
+    const defaultModel = defaultRow?.value as {
+      provider?: string;
+      model?: string;
+    } | null;
+    if (defaultModel?.provider && defaultModel?.model) {
+      const resolved = await this.adapterRegistry.resolveAdapter(
+        defaultModel.provider,
+        defaultModel.model,
+      );
+      if (resolved) {
+        return resolved;
       }
     }
 
@@ -58,11 +96,13 @@ export class AiHubService {
   async chat(chatDto: ChatRequestDto, userId: string) {
     const {
       projectId,
-      taskId,
+      issueId,
       conversationId,
       message,
       contextHints,
       modelPreference,
+      systemInstruction,
+      enableTools,
     } = chatDto;
 
     // Get or create conversation
@@ -83,7 +123,7 @@ export class AiHubService {
       conversation = await this.prisma.aIConversation.create({
         data: {
           projectId: projectId || null,
-          taskId: taskId || null,
+          issueId: issueId || null,
           createdBy: userId,
           title: message.content.substring(0, 50) || 'New Conversation',
         },
@@ -91,7 +131,7 @@ export class AiHubService {
     }
 
     // Save user message
-    const userMessage = await this.prisma.aIMessage.create({
+    await this.prisma.aIMessage.create({
       data: {
         conversationId: conversation.id,
         role: 'user',
@@ -102,7 +142,7 @@ export class AiHubService {
     // Build context
     const context = await this.contextBuilder.buildContext({
       projectId,
-      taskId,
+      issueId,
       includeProjectSummary: contextHints?.includeProjectSummary,
       includeTaskDetails: contextHints?.includeTaskDetails,
       includeRecentActivities: contextHints?.includeRecentActivities,
@@ -123,58 +163,191 @@ export class AiHubService {
     });
 
     const systemContext = [
+      systemInstruction,
       this.contextBuilder.formatContextForPrompt(context),
       mentionContext,
     ]
       .filter(Boolean)
       .join('\n\n');
-    const aiMessages = [
-      ...(systemContext
-        ? [{ role: 'system' as const, content: systemContext }]
-        : []),
-      ...historyMessages.map((m) => ({
-        role: m.role as 'user' | 'assistant' | 'system',
-        content: m.content,
-      })),
-    ];
+    // AI SDK v7：messages 中不允许 system 消息，系统提示走 streamText 的 instructions 选项
+    const aiMessages = historyMessages
+      .filter((m) => m.role !== 'system' && !isUiMessageRunning(m))
+      .map((m) => ({
+        role: m.role as 'user' | 'assistant',
+        content: extractMessagePlainText(m),
+      }))
+      .filter((m) => m.content.length > 0);
 
     // Get adapter
-    const adapter = this.getAdapter(modelPreference);
+    const adapter = await this.getAdapter(modelPreference);
     const modelName = adapter.getModelName();
+    const languageModel = adapter.getModel() as LanguageModel | null;
+    if (!languageModel) {
+      throw new BadRequestException(
+        '当前 provider 适配器不支持流式对话（缺少模型实例）',
+      );
+    }
 
-    // Stream response
-    let fullContent = '';
-    const messageId = `msg_${Date.now()}`;
+    // Stream response（UI Message Stream：chunk 直达前端，onEnd 拿到完整 UIMessage）
+    const messageId = randomUUID();
+    let finalUiMessage: unknown;
+    const startedAt = Date.now();
+
+    // 控制台只留关键事件；完整 prompt/chunk/终文进 logs/ai-chat.log
+    this.logger.log(
+      `AI chat start: ${adapter.getProvider()}/${modelName} conv=${conversation.id}`,
+    );
+    aiChatLog({
+      phase: 'request',
+      source: 'llm',
+      conversationId: conversation.id,
+      messageId,
+      userId,
+      provider: adapter.getProvider(),
+      model: modelName,
+      instructions: systemContext || undefined,
+      messages: aiMessages,
+    });
 
     try {
-      for await (const chunk of adapter.chatStream(aiMessages)) {
-        fullContent += chunk;
-        // Emit stream event
+      const result = streamText({
+        model: languageModel,
+        instructions: systemContext || undefined,
+        messages: aiMessages as ModelMessage[],
+        temperature: 0.7,
+        // 主助手可开启系统工具循环（服务端代查库/出卡；userId 为写操作执行者）
+        ...(enableTools
+          ? {
+              tools: this.assistantTools.buildTools({ projectId, userId }),
+              stopWhen: stepCountIs(5),
+            }
+          : {}),
+      });
+
+      const uiStream = result.toUIMessageStream({
+        generateMessageId: () => messageId,
+        messageMetadata: ({ part }) =>
+          part.type === 'start' || part.type === 'finish'
+            ? { modelId: modelName }
+            : undefined,
+        onError: (error) => {
+          this.logger.error('Chat stream error', error);
+          aiChatLog({
+            phase: 'error',
+            source: 'llm',
+            conversationId: conversation.id,
+            messageId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          return 'AI 流式响应失败，请稍后重试';
+        },
+        onEnd: ({ responseMessage }) => {
+          finalUiMessage = responseMessage;
+        },
+      });
+
+      for await (const chunk of uiStream) {
+        aiChatLog({
+          phase: 'chunk',
+          source: 'llm',
+          conversationId: conversation.id,
+          messageId,
+          chunk,
+        });
+        // Emit stream event（带 userId 供网关定向推送，避免全局广播）
         this.messageBus.publish('ai.stream', {
           conversationId: conversation.id,
           messageId,
           chunk,
-          isFinal: false,
+          userId,
         });
       }
 
-      // Emit final event
-      this.messageBus.publish('ai.stream', {
+      const [fullContent, usage, steps] = await Promise.all([
+        result.text,
+        result.usage,
+        result.steps,
+      ]);
+      // 多步工具循环时聚合各步用量（stepCountIs(5) 下 usage 仅反映部分供应商的累计口径）
+      let fullUsage = usage;
+      if (steps.length > 1) {
+        const summed = steps.reduce(
+          (acc, step) => ({
+            inputTokens: acc.inputTokens + (step.usage?.inputTokens ?? 0),
+            outputTokens: acc.outputTokens + (step.usage?.outputTokens ?? 0),
+            totalTokens: acc.totalTokens + (step.usage?.totalTokens ?? 0),
+          }),
+          { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
+        );
+        if (summed.totalTokens > (fullUsage?.totalTokens ?? 0)) {
+          fullUsage = { ...fullUsage, ...summed };
+        }
+      }
+      const durationMs = Date.now() - startedAt;
+
+      this.logger.log(
+        `AI chat done: conv=${conversation.id} chars=${fullContent.length} tokens=${usage?.totalTokens ?? 0} ${durationMs}ms`,
+      );
+      aiChatLog({
+        phase: 'final',
+        source: 'llm',
         conversationId: conversation.id,
         messageId,
-        chunk: '',
-        isFinal: true,
+        userId,
+        provider: adapter.getProvider(),
+        model: modelName,
+        text: fullContent,
+        usage,
+        durationMs,
       });
 
-      // Save assistant message
+      // Save assistant message：UIMessage JSON 存 content，纯文本由前端从 parts 提取
+      const persisted = (finalUiMessage as
+        { id: string; role: string; parts: unknown[] } | undefined) ?? {
+        id: messageId,
+        role: 'assistant',
+        parts: [{ type: 'text', text: fullContent }],
+      };
       const assistantMessage = await this.prisma.aIMessage.create({
         data: {
+          id: messageId,
           conversationId: conversation.id,
           role: 'assistant',
-          content: fullContent,
+          content: JSON.stringify(persisted),
           modelName,
+          tokens: fullUsage?.totalTokens ?? null,
+          metadata: { format: 'ui-message', model: modelName },
         },
       });
+
+      // usage 落库（含成本估算与步级聚合）
+      try {
+        const estimatedCost = await this.usagePricing.estimateCostUsd({
+          modelName,
+          provider: adapter.getProvider(),
+          promptTokens: fullUsage?.inputTokens ?? 0,
+          completionTokens: fullUsage?.outputTokens ?? 0,
+        });
+        await this.prisma.aIUsageLog.create({
+          data: {
+            userId,
+            projectId: projectId ?? null,
+            issueId: issueId ?? null,
+            conversationId: conversation.id,
+            modelName,
+            provider: adapter.getProvider(),
+            promptTokens: fullUsage?.inputTokens ?? 0,
+            completionTokens: fullUsage?.outputTokens ?? 0,
+            totalTokens: fullUsage?.totalTokens ?? 0,
+            estimatedCost,
+            responseMetadata: { durationMs } as Prisma.InputJsonValue,
+          },
+        });
+      } catch (usageError) {
+        this.logger.warn(
+          `Failed to write AI usage log: ${usageError instanceof Error ? usageError.message : String(usageError)}`,
+        );
+      }
 
       // Update conversation
       await this.prisma.aIConversation.update({
@@ -184,15 +357,23 @@ export class AiHubService {
 
       return {
         conversationId: conversation.id,
+        mode: 'sync' as const,
         message: {
           id: assistantMessage.id,
           role: assistantMessage.role,
-          content: assistantMessage.content,
+          content: fullContent,
           modelName: assistantMessage.modelName,
         },
       };
     } catch (error) {
       this.logger.error('Chat error', error);
+      aiChatLog({
+        phase: 'error',
+        source: 'llm',
+        conversationId: conversation.id,
+        messageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw new BadRequestException(`AI chat failed: ${error.message}`);
     }
   }
@@ -254,7 +435,7 @@ export class AiHubService {
   }
 
   async getConversations(query: ConversationQueryDto, userId: string) {
-    const { projectId, taskId, q, from, to, page = 1, pageSize = 20 } = query;
+    const { projectId, issueId, q, from, to, page = 1, pageSize = 20 } = query;
 
     const where: any = {
       createdBy: userId,
@@ -264,8 +445,8 @@ export class AiHubService {
       where.projectId = projectId;
     }
 
-    if (taskId) {
-      where.taskId = taskId;
+    if (issueId) {
+      where.issueId = issueId;
     }
 
     if (q) {
@@ -326,7 +507,7 @@ export class AiHubService {
             name: true,
           },
         },
-        task: {
+        issue: {
           select: {
             id: true,
             title: true,
@@ -344,163 +525,6 @@ export class AiHubService {
     }
 
     return conversation;
-  }
-
-  async runWorkflow(
-    workflowId: string,
-    runDto: RunWorkflowDto,
-    userId: string,
-  ) {
-    const workflow = await this.prisma.aIWorkflowDefinition.findUnique({
-      where: { key: workflowId },
-    });
-
-    if (!workflow) {
-      throw new NotFoundException('Workflow not found');
-    }
-
-    const workflowRun = await this.prisma.aIWorkflowRun.create({
-      data: {
-        workflowId: workflow.id,
-        projectId: runDto.projectId || null,
-        taskId: runDto.taskId || null,
-        triggerType: runDto.triggerType || 'manual',
-        status: 'pending',
-        input: runDto.parameters || {},
-        createdBy: userId,
-      },
-    });
-
-    // Emit workflow update event
-    this.messageBus.publish('ai.workflow.update', {
-      workflowRunId: workflowRun.id,
-      status: 'pending',
-    });
-
-    // TODO: Execute workflow asynchronously
-    // For now, just mark as running
-    setTimeout(async () => {
-      await this.prisma.aIWorkflowRun.update({
-        where: { id: workflowRun.id },
-        data: {
-          status: 'running',
-          startedAt: new Date(),
-        },
-      });
-
-      this.messageBus.publish('ai.workflow.update', {
-        workflowRunId: workflowRun.id,
-        status: 'running',
-      });
-
-      // Simulate workflow completion
-      setTimeout(async () => {
-        await this.prisma.aIWorkflowRun.update({
-          where: { id: workflowRun.id },
-          data: {
-            status: 'succeeded',
-            finishedAt: new Date(),
-            output: { message: 'Workflow completed (mock)' },
-          },
-        });
-
-        this.messageBus.publish('ai.workflow.update', {
-          workflowRunId: workflowRun.id,
-          status: 'succeeded',
-        });
-      }, 2000);
-    }, 100);
-
-    return {
-      workflowRunId: workflowRun.id,
-      status: workflowRun.status,
-    };
-  }
-
-  async getWorkflows() {
-    const workflows = await this.prisma.aIWorkflowDefinition.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return workflows.map((w) => ({
-      id: w.id,
-      key: w.key,
-      name: w.name,
-      description: w.description,
-      version: w.version,
-    }));
-  }
-
-  async getWorkflow(id: string) {
-    const workflow = await this.prisma.aIWorkflowDefinition.findUnique({
-      where: { id },
-    });
-
-    if (!workflow) {
-      throw new NotFoundException('Workflow not found');
-    }
-
-    return workflow;
-  }
-
-  async getWorkflowRuns(query: {
-    workflowId?: string;
-    projectId?: string;
-    taskId?: string;
-    status?: string;
-    page?: number;
-    pageSize?: number;
-  }) {
-    const {
-      workflowId,
-      projectId,
-      taskId,
-      status,
-      page = 1,
-      pageSize = 20,
-    } = query;
-
-    const where: any = {};
-    if (workflowId) {
-      const workflow = await this.prisma.aIWorkflowDefinition.findUnique({
-        where: { id: workflowId },
-      });
-      if (workflow) {
-        where.workflowId = workflow.id;
-      }
-    }
-    if (projectId) where.projectId = projectId;
-    if (taskId) where.taskId = taskId;
-    if (status) where.status = status;
-
-    const [runs, total] = await Promise.all([
-      this.prisma.aIWorkflowRun.findMany({
-        where,
-        skip: (Number(page) - 1) * Number(pageSize),
-        take: Number(pageSize),
-        orderBy: { createdAt: 'desc' },
-        include: {
-          workflow: {
-            select: {
-              id: true,
-              key: true,
-              name: true,
-            },
-          },
-        },
-      }),
-      this.prisma.aIWorkflowRun.count({ where }),
-    ]);
-
-    return {
-      data: runs,
-      meta: {
-        page: Number(page),
-        pageSize: Number(pageSize),
-        total,
-        totalPages: Math.ceil(total / Number(pageSize)),
-      },
-    };
   }
 
   async getModels(provider?: string) {
@@ -524,54 +548,6 @@ export class AiHubService {
     return [...dbModels, ...adapterModels];
   }
 
-  private toJsonValue(value: unknown): Prisma.InputJsonValue {
-    return value as Prisma.InputJsonValue;
-  }
-
-  async getAgents(projectId?: string) {
-    return this.prisma.agentIdentity.findMany({
-      where: projectId
-        ? {
-            OR: [{ projectId }, { projectId: null }],
-          }
-        : undefined,
-      orderBy: [{ projectId: 'asc' }, { createdAt: 'desc' }],
-    });
-  }
-
-  async createAgent(dto: CreateAgentIdentityDto, userId: string) {
-    if (dto.projectId) {
-      const membership = await this.prisma.projectMember.findFirst({
-        where: {
-          projectId: dto.projectId,
-          userId,
-          role: { in: ['owner', 'maintainer'] },
-        },
-      });
-
-      if (!membership) {
-        throw new BadRequestException(
-          'Only owner or maintainer can create project-scoped AI agents',
-        );
-      }
-    }
-
-    return this.prisma.agentIdentity.create({
-      data: {
-        projectId: dto.projectId || null,
-        name: dto.name,
-        type: dto.type || 'ai_employee',
-        description: dto.description,
-        systemPrompt: dto.systemPrompt,
-        toolPolicy: dto.toolPolicy
-          ? this.toJsonValue(dto.toolPolicy)
-          : undefined,
-        metadata: dto.metadata ? this.toJsonValue(dto.metadata) : undefined,
-        createdBy: userId,
-      },
-    });
-  }
-
   async getUsage(query: UsageQueryDto) {
     const { userId, projectId, modelName, from, to } = query;
 
@@ -588,6 +564,7 @@ export class AiHubService {
     const logs = await this.prisma.aIUsageLog.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      take: 5000,
     });
 
     const totalTokens = logs.reduce((sum, log) => sum + log.totalTokens, 0);
@@ -615,10 +592,41 @@ export class AiHubService {
       >,
     );
 
+    // 按日聚合（最多 370 天：成本页全年活跃热力图消费）
+    const byDayMap = new Map<string, { tokens: number; cost: number }>();
+    for (const log of logs) {
+      const created = new Date(log.createdAt);
+      if (Number.isNaN(created.getTime())) continue;
+      const day = created.toISOString().slice(0, 10);
+      const entry = byDayMap.get(day) ?? { tokens: 0, cost: 0 };
+      entry.tokens += log.totalTokens;
+      entry.cost += log.estimatedCost || 0;
+      byDayMap.set(day, entry);
+    }
+    const byDay = [...byDayMap.entries()]
+      .map(([day, v]) => ({ day, totalTokens: v.tokens, totalCost: v.cost }))
+      .sort((a, b) => b.day.localeCompare(a.day))
+      .slice(0, 370);
+
+    // 调用来源分类计数：conversation=对话调用；execution/workflow=执行链调用；其余=静默场景（系统自动）
+    let conversationCalls = 0;
+    let executionCalls = 0;
+    let silentCalls = 0;
+    for (const log of logs) {
+      if (log.conversationId) conversationCalls += 1;
+      else if (log.executionRunId || log.workflowRunId) executionCalls += 1;
+      else silentCalls += 1;
+    }
+
     return {
       totalTokens,
       totalCost,
+      totalCalls: logs.length,
+      conversationCalls,
+      executionCalls,
+      silentCalls,
       byModel: Object.values(byModel),
+      byDay,
     };
   }
 }

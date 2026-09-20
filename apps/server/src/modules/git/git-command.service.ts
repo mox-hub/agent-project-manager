@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { LoggerService } from '../../core/logger/logger.service';
 import { GitToolService } from './git-tool.service';
@@ -138,7 +134,6 @@ export class GitCommandService {
         cwd: localPath,
         timeout,
       } as any);
-      const exitCode = 0;
 
       const duration = Date.now() - startTime;
       const stdoutStr = stdout ? stdout.toString() : '';

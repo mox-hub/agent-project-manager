@@ -3,17 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useProjectList } from '../hooks/use-project-list';
 import { useUpdateProject } from '../hooks/use-project-mutations';
 import { useProjectFilterOptions } from '../hooks/use-project-filter-options';
-import { ProjectList, type ProjectListColumnKey } from '../components/project-list';
 import { ProjectSimpleList } from '../components/project-simple-list';
-import { ProjectFormDialog } from '../components/project-form-dialog';
 import { ProjectBoard } from '../components/project-board';
 import { ProjectGantt } from '../components/project-gantt';
 import type { ProjectListParams, ProjectWorkflowStatus } from '../api/project-api';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { Button } from '@/components/ui/button';
+import { IconStack } from '@/components/ui/icon-stack';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { cn } from '@/lib/utils';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -31,20 +29,24 @@ import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/f
 import type { FilterState } from '@/shared/filters/types';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
+import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
+import { useActiveExecutionsMap } from '@/modules/execution/hooks/use-active-executions-map';
 import {
   Plus,
-  Settings,
-  FolderOpen,
   AlertTriangle,
   List,
   Kanban,
   CalendarRange,
   Archive,
+  Bot,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
+
+/** 页头/空态实体图标：统一从 entity-icons 注册表取（规范 v0） */
+const PROJECT_ENTITY = getEntityIcon('project');
 
 const PROJECT_FILTER_KEYS = [
   'status',
@@ -55,6 +57,20 @@ const PROJECT_FILTER_KEYS = [
   'riskLevel',
   'ownerId',
 ] as const;
+
+/** 项目列表可显示列（原 ProjectList 列口径；列可见性经 app-store 持久化） */
+type ProjectListColumnKey =
+  | 'icon'
+  | 'name'
+  | 'health'
+  | 'priority'
+  | 'owner'
+  | 'members'
+  | 'start'
+  | 'target'
+  | 'progress'
+  | 'updated'
+  | 'status';
 
 const getColumnOptions = (t: (key: string) => string): { key: ProjectListColumnKey; label: string }[] => [
   { key: 'icon', label: t("project.columns.icon") },
@@ -81,7 +97,6 @@ export function ProjectListPage() {
     pageSize: 20,
   });
   const [showUnifiedCreate, setShowUnifiedCreate] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const visibleColumns = useAppStore((state) => state.projectListVisibleColumns as ProjectListColumnKey[]);
   const setVisibleColumns = useAppStore((state) => state.setProjectListVisibleColumns);
@@ -117,6 +132,7 @@ export function ProjectListPage() {
   const { data, isLoading, isError, error, refetch } = useProjectList(filters);
   const updateProject = useUpdateProject();
   const confirmAction = useConfirm();
+  const { getProjectExecutionCount, activeCount } = useActiveExecutionsMap();
 
   const projects = data?.items ?? [];
   const projectFilterGroups = useProjectFilterOptions({ projects });
@@ -204,7 +220,7 @@ export function ProjectListPage() {
       <PageHeader
         aiId="project.project-list"
         title={t("project.title")}
-        icon={FolderOpen}
+        icon={PROJECT_ENTITY.icon}
         iconColor="text-accent-blue"
         metrics={[{ id: 'total', label: t("project.title"), value: total }]}
         actions={(
@@ -228,13 +244,27 @@ export function ProjectListPage() {
         onCreateView={toolbar.createView}
         onUpdateView={toolbar.updateView}
         onDeleteView={toolbar.deleteView}
+        isDirty={toolbar.isDirty}
+        onSaveCurrentView={toolbar.saveCurrentToActive}
+        actions={
+          activeCount > 0 ? (
+            <span
+              className="inline-flex h-7 items-center gap-1.5 rounded-md bg-accent-purple/10 px-2 text-xs font-medium text-accent-purple"
+              title={t('project.messages.aiExecutingTooltip')}
+            >
+              <Bot className="size-3.5" />
+              <span>{t('project.messages.aiExecutingCount', { count: activeCount })}</span>
+            </span>
+          ) : null
+        }
         viewStyle={{
+          layout: 'centered',
           value: viewMode,
           onChange: (value) => setViewMode(value as ViewMode),
           options: [
-            { value: 'list', label: t('project.view.list', 'List'), icon: List },
-            { value: 'board', label: t('project.view.board', 'Board'), icon: Kanban },
-            { value: 'gantt', label: t('project.view.gantt', 'Gantt'), icon: CalendarRange },
+            { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+            { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
+            { value: 'gantt', label: t('viewDisplay.views.gantt', 'Gantt'), icon: CalendarRange },
           ],
         }}
         filterMenu={{
@@ -242,7 +272,7 @@ export function ProjectListPage() {
           search: {
             value: filters.q ?? '',
             onChange: (value) => applyFilterState(currentFilterState, value),
-            placeholder: t('project.messages.searchPlaceholder') || 'Search projects...',
+            placeholder: t('project.messages.searchPlaceholder'),
           },
           items: projectFilterGroups.flatMap((group, groupIndex) => [
             ...(groupIndex > 0 ? [{ id: `sep-${group.id}`, type: 'separator' as const }] : []),
@@ -292,11 +322,11 @@ export function ProjectListPage() {
             <Alert variant="destructive" className="max-w-md">
               <AlertTriangle className="size-4" />
               <AlertDescription>
-                {error?.message ?? 'Failed to load projects. Please try again.'}
+                {error?.message ?? t('project.messages.loadError')}
               </AlertDescription>
               <div className="mt-3">
                 <Button size="sm" variant="destructive" onClick={() => refetch()}>
-                  重试
+                  {t('common.retry')}
                 </Button>
               </div>
             </Alert>
@@ -304,17 +334,17 @@ export function ProjectListPage() {
         ) : projects.length === 0 ? (
           <div className="flex flex-1 items-center justify-center">
             <div className="text-center">
-              <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
-                <FolderOpen size={20} className="text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground">No projects found</p>
+              <IconStack aria-hidden="true" className="mx-auto mb-3">
+                <PROJECT_ENTITY.icon className="size-4" />
+              </IconStack>
+              <p className="text-sm text-muted-foreground">{t('project.messages.noProjects')}</p>
               <Button
                 size="sm"
                 className="mt-3"
-                onClick={() => setShowCreate(true)}
+                onClick={() => setShowUnifiedCreate(true)}
               >
                 <Plus size={14} />
-                New Project
+                {t('project.create')}
               </Button>
             </div>
           </div>
@@ -323,6 +353,7 @@ export function ProjectListPage() {
             {viewMode === 'board' ? (
               <ProjectBoard
                 projects={projects}
+                getProjectExecutionCount={getProjectExecutionCount}
                 onProjectClick={(project) => {
                   navigate(`/app/projects/${project.id}`);
                 }}
@@ -336,6 +367,7 @@ export function ProjectListPage() {
             ) : viewMode === 'gantt' ? (
               <ProjectGantt
                 projects={projects}
+                getProjectExecutionCount={getProjectExecutionCount}
                 onProjectClick={(project) => {
                   navigate(`/app/projects/${project.id}`);
                 }}
@@ -355,15 +387,16 @@ export function ProjectListPage() {
               <ProjectSimpleList
                 projects={projects}
                 loading={isLoading}
+                getProjectExecutionCount={getProjectExecutionCount}
                 onProjectClick={(project) => navigate(`/app/projects/${project.id}`)}
                 selectionActions={(selected, close) => (
                   <ListActionButton
                     onClick={async () => {
                       const ok = await confirmAction({
-                        title: `归档选中的 ${selected.length} 个项目？`,
-                        description: '归档后项目将从活跃列表移除，但数据会被保留。',
-                        confirmText: '归档',
-                        cancelText: '取消',
+                        title: t('project.archive.confirmTitle', { count: selected.length }),
+                        description: t('project.archive.confirmDescription'),
+                        confirmText: t('project.archive.label'),
+                        cancelText: t('common.cancel'),
                       });
                       if (!ok) return;
                       await Promise.allSettled(
@@ -377,10 +410,10 @@ export function ProjectListPage() {
                       close();
                       refetch();
                     }}
-                    title="归档"
+                    title={t('project.archive.label')}
                     className="text-muted-foreground"
                   >
-                    <Archive className="size-4" /> 归档
+                    <Archive className="size-4" /> {t('project.archive.label')}
                   </ListActionButton>
                 )}
               />
@@ -392,7 +425,7 @@ export function ProjectListPage() {
         {total > 0 && (
           <div className="flex shrink-0 items-center justify-between gap-4 border-t border-border pt-2.5">
             <p className="text-11 text-muted-foreground">
-              Showing {from}–{to} of {total} projects
+              {t('project.messages.pageShowing', { from, to, total })}
             </p>
             {totalPages > 1 && (
               <Pagination className="mx-0 w-auto justify-end">
@@ -445,15 +478,10 @@ export function ProjectListPage() {
 
       </div>
 
-      {/* 空态创建入口的对话框（create 模式；编辑模式在 ProjectSimpleList 右键里） */}
-      <ProjectFormDialog open={showCreate} onOpenChange={setShowCreate} />
       <UnifiedCreateDialog
         open={showUnifiedCreate}
         onOpenChange={setShowUnifiedCreate}
         defaultType="project"
-        onSuccess={() => {
-          setShowUnifiedCreate(false);
-        }}
       />
     </PageShell>
   );

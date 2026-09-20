@@ -12,6 +12,7 @@ import {
   ApiOperation,
   ApiBearerAuth,
   ApiResponse,
+  ApiOkResponse,
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
@@ -24,6 +25,15 @@ import {
   AsyncFileSyncService,
   type SyncWarning,
 } from '../services/async-file-sync.service';
+import {
+  ClearedResponseDto,
+  DefaultPathResponseDto,
+  DeletedResponseDto,
+  DocumentContentResponseDto,
+  StorageConfigResponseDto,
+  StoredFileMetaResponseDto,
+  SyncWarningResponseDto,
+} from '../dto/storage-response.dto';
 
 @ApiTags('Document Storage')
 @ApiBearerAuth('JWT-auth')
@@ -37,14 +47,14 @@ export class DocumentStorageController {
 
   @Get('config')
   @ApiOperation({ summary: 'Get document storage configuration' })
-  @ApiResponse({ status: 200, description: '返回存储配置' })
+  @ApiOkResponse({ type: StorageConfigResponseDto, description: '存储配置' })
   async getConfig(): Promise<StorageConfig> {
     return this.storage.getConfig();
   }
 
   @Put('config')
   @ApiOperation({ summary: 'Update document storage configuration' })
-  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiOkResponse({ type: StorageConfigResponseDto, description: '更新成功' })
   async updateConfig(
     @Body() updates: Partial<StorageConfig>,
   ): Promise<StorageConfig> {
@@ -53,7 +63,7 @@ export class DocumentStorageController {
 
   @Get('default-path')
   @ApiOperation({ summary: 'Detect default storage path' })
-  @ApiResponse({ status: 200, description: '返回默认路径' })
+  @ApiOkResponse({ type: DefaultPathResponseDto, description: '默认路径' })
   async getDefaultPath(): Promise<{ path: string }> {
     const p = await this.storage.detectDefaultPath();
     return { path: p };
@@ -61,7 +71,10 @@ export class DocumentStorageController {
 
   @Get('files')
   @ApiOperation({ summary: 'List all storage files' })
-  @ApiResponse({ status: 200, description: '返回文件列表' })
+  @ApiOkResponse({
+    type: [StoredFileMetaResponseDto],
+    description: '本地 markdown 文件列表',
+  })
   async listFiles(): Promise<StoredFileMeta[]> {
     return this.storage.listMarkdownFiles();
   }
@@ -76,7 +89,10 @@ export class DocumentSyncController {
 
   @Get('warnings')
   @ApiOperation({ summary: 'List documents whose local-file sync is failing' })
-  @ApiResponse({ status: 200, description: '返回同步警告列表' })
+  @ApiOkResponse({
+    type: [SyncWarningResponseDto],
+    description: '同步警告列表',
+  })
   async listWarnings(): Promise<SyncWarning[]> {
     return this.asyncFileSync.getWarnings();
   }
@@ -86,7 +102,7 @@ export class DocumentSyncController {
     summary: 'Acknowledge / clear a sync warning for a document',
   })
   @ApiParam({ name: 'id', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '已确认' })
+  @ApiOkResponse({ type: ClearedResponseDto, description: '已确认' })
   async clearWarning(@Param('id') id: string): Promise<{ cleared: boolean }> {
     const cleared = this.asyncFileSync.clearWarning(id);
     return { cleared };
@@ -103,7 +119,10 @@ export class DocumentFileController {
   @Get()
   @ApiOperation({ summary: 'Load document markdown from local storage' })
   @ApiParam({ name: 'id', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '返回文档内容' })
+  @ApiOkResponse({
+    type: DocumentContentResponseDto,
+    description: '本地 markdown 内容',
+  })
   async load(@Param('id') id: string): Promise<{ content: string }> {
     const content = await this.storage.loadMarkdown(id);
     return { content };
@@ -124,7 +143,7 @@ export class DocumentFileController {
   @Post('delete')
   @ApiOperation({ summary: 'Delete document storage file' })
   @ApiParam({ name: 'id', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '已删除' })
+  @ApiOkResponse({ type: DeletedResponseDto, description: '已删除' })
   async delete(@Param('id') id: string): Promise<{ deleted: boolean }> {
     const deleted = await this.storage.deleteMarkdown(id);
     return { deleted };

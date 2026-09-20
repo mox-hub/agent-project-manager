@@ -26,7 +26,7 @@ export function formatBootLog(errors: BootErrorEntry[], extra?: { note?: string 
         }
       }
       lines.push(
-        `  Context: platform=${ctx.platform} mode=${ctx.mode} url=${ctx.url} apiBaseUrl=${ctx.apiBaseUrl} tauri=${ctx.isTauri}`,
+        `  Context: platform=${ctx.platform} mode=${ctx.mode} url=${ctx.url} apiBaseUrl=${ctx.apiBaseUrl} desktop=${ctx.isDesktopShell}`,
       );
       return lines.join('\n');
     })

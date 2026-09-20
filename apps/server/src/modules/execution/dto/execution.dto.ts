@@ -4,7 +4,6 @@ import {
   IsEnum,
   IsObject,
   IsUUID,
-  IsDateString,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -16,7 +15,7 @@ export class CreateExecutionRunDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiProperty({ enum: ['human', 'platform_ai_member', 'external_agent'] })
   @IsEnum(['human', 'platform_ai_member', 'external_agent'])
@@ -165,7 +164,7 @@ export class ExecutionQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { GanttChart, type GanttChartItem, type GanttDateRange } from '@/shared/components/gantt-chart';
-import { PROJECT_WORKFLOW_VISUALS } from '@/shared/status/status-visuals';
 import type { Project } from '../api/project-api';
 
 interface ProjectGanttProps {
   projects: Project[];
   onProjectClick?: (project: Project) => void;
   onDateRangeChange?: (projectId: string, range: { startDate: string; targetDate: string }) => Promise<void> | void;
+  getProjectExecutionCount?: (projectId: string) => number;
 }
 
 /** workflowStatus → 甘特条颜色（共享 gantt 按任务态值判断，项目侧必须显式传 colorClassName） */
@@ -48,6 +48,7 @@ export function ProjectGantt({
   projects,
   onProjectClick,
   onDateRangeChange,
+  getProjectExecutionCount,
 }: ProjectGanttProps) {
   const projectMap = useMemo(
     () => new Map(projects.map((project) => [project.id, project])),
@@ -58,21 +59,24 @@ export function ProjectGantt({
     return projects.reduce<GanttChartItem[]>((acc, project) => {
       const range = mapProjectRange(project);
       if (!range) return acc;
+      const count = getProjectExecutionCount?.(project.id) ?? 0;
       acc.push({
-          id: project.id,
-          title: project.name,
-          startDate: range.startDate,
-          endDate: range.endDate,
-          status: project.workflowStatus,
-          priority: project.priority,
-          colorClassName:
-            WORKFLOW_BAR_CLASS[project.workflowStatus ?? 'backlog'] ??
-            WORKFLOW_BAR_CLASS.backlog,
-          meta: project.owner?.displayName || project.owner?.username || undefined,
+        id: project.id,
+        title: project.name,
+        startDate: range.startDate,
+        endDate: range.endDate,
+        status: project.workflowStatus,
+        priority: project.priority,
+        isAiExecuting: count > 0,
+        aiExecutionSummary: count > 0 ? `${count} 个任务 AI 执行中` : undefined,
+        colorClassName:
+          WORKFLOW_BAR_CLASS[project.workflowStatus ?? 'backlog'] ??
+          WORKFLOW_BAR_CLASS.backlog,
+        meta: project.owner?.displayName || project.owner?.username || undefined,
       });
       return acc;
     }, []);
-  }, [projects]);
+  }, [projects, getProjectExecutionCount]);
 
   const handleClick = (projectId: string) => {
     const project = projectMap.get(projectId);
@@ -92,7 +96,8 @@ export function ProjectGantt({
       onItemClick={handleClick}
       onItemDateChange={handleDateChange}
       leftColumnTitle="Project"
-      emptyMessage="No projects with valid dates to display"
+      emptyMessage="暂无可排期的项目"
+      emptyDescription="为项目设置开始 / 目标日期后即可在此排期"
     />
   );
 }

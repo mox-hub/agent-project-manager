@@ -1,5 +1,37 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsArray,
+  IsBoolean,
+  IsIn,
+  ArrayMinSize,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+/** 清单检查项（审计按 severity 分级：critical/high=阻断，medium/low=建议） */
+export class ChecklistItemDto {
+  @ApiProperty({ description: '分类' })
+  @IsString()
+  category: string;
+
+  @ApiProperty({ description: '检查项内容' })
+  @IsString()
+  content: string;
+
+  @ApiProperty({
+    description: '严重级别',
+    enum: ['critical', 'high', 'medium', 'low'],
+  })
+  @IsIn(['critical', 'high', 'medium', 'low'])
+  severity: string;
+
+  @ApiPropertyOptional({ description: '是否可自动修复' })
+  @IsOptional()
+  @IsBoolean()
+  autoFixable?: boolean;
+}
 
 export class CreateChecklistDto {
   @ApiProperty({ description: '清单名称' })
@@ -19,9 +51,12 @@ export class CreateChecklistDto {
   @IsString()
   techStack: string;
 
-  @ApiProperty({ description: '清单内容' })
-  @IsString()
-  checklist: any;
+  @ApiProperty({ description: '清单内容', type: [ChecklistItemDto] })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => ChecklistItemDto)
+  checklist: ChecklistItemDto[];
 }
 
 export class UpdateChecklistDto {
@@ -35,25 +70,11 @@ export class UpdateChecklistDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ description: '清单内容' })
+  @ApiPropertyOptional({ description: '清单内容', type: [ChecklistItemDto] })
   @IsOptional()
-  checklist?: any;
-}
-
-export class ChecklistItemDto {
-  @ApiProperty({ description: '分类' })
-  @IsString()
-  category: string;
-
-  @ApiProperty({ description: '检查项内容' })
-  @IsString()
-  content: string;
-
-  @ApiProperty({ description: '严重级别' })
-  @IsString()
-  severity: string;
-
-  @ApiPropertyOptional({ description: '是否可自动修复' })
-  @IsOptional()
-  autoFixable?: boolean;
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => ChecklistItemDto)
+  checklist?: ChecklistItemDto[];
 }

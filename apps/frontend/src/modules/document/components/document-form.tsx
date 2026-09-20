@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import * as Icons from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import type { DocumentCategory, CreateDocumentRequest, UpdateDocumentRequest } from '../api/document-api';
@@ -21,12 +20,27 @@ interface DocumentFormProps {
 
 const categories: { value: DocumentCategory; label: string; icon: string }[] = [
   { value: 'requirement', label: '需求', icon: '📋' },
+  { value: 'analysis', label: '分析报告', icon: '🔍' },
   { value: 'design', label: '设计', icon: '🎨' },
   { value: 'api', label: 'API', icon: '🔌' },
   { value: 'testing', label: '测试', icon: '🧪' },
   { value: 'guide', label: '指南', icon: '📖' },
   { value: 'custom', label: '自定义', icon: '📄' },
 ];
+
+/**
+ * Select 的 label 映射（`SelectItem` 展示内容与 Root 的 `items` 共用同一份）：
+ * base-ui 必须经 Root 的 `items` 才能把 value 显示成名称，否则 trigger 显示原始 value。
+ */
+const CATEGORY_ITEMS = categories.map((cat) => ({
+  value: cat.value,
+  label: (
+    <span className="flex items-center gap-2">
+      <span>{cat.icon}</span>
+      <span>{cat.label}</span>
+    </span>
+  ),
+}));
 
 export function DocumentForm({
   defaultValues = {},
@@ -79,19 +93,20 @@ export function DocumentForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>分类</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                items={CATEGORY_ITEMS}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="选择文档分类" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      <span className="flex items-center gap-2">
-                        <span>{cat.icon}</span>
-                        <span>{cat.label}</span>
-                      </span>
+                  {CATEGORY_ITEMS.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -70,20 +70,20 @@ function checkNewDocsHaveFrontmatter(changed) {
 }
 
 /**
- * Check 3: Electron docs should not be added to main path (should be archive)
+ * Check 3: Tauri docs should not be added to main path (should be archive)
+ * （ADR-014 定版 Electron，Tauri 为已剔除的历史壳）
  */
-function checkNoElectronMainPath(changed) {
-  const electronMainFiles = changed.filter((f) =>
-    /desktop-electron|electron.*\.md$/i.test(f) &&
-    !f.includes('archive/') &&
-    !f.includes('desktop-tauri'),
+function checkNoTauriMainPath(changed) {
+  const tauriMainFiles = changed.filter((f) =>
+    /desktop-tauri|tauri.*\.md$/i.test(f) &&
+    !f.includes('archive/'),
   );
 
-  if (electronMainFiles.length > 0) {
-    console.error('[docs-sync] Electron docs must not be added to main path during migration:');
-    electronMainFiles.forEach((f) => console.error(`  - ${f}`));
-    console.error('[docs-sync] Electron docs should be placed in docs/archive/');
-    console.error('[docs-sync] new Desktop docs should use Tauri as the main approach');
+  if (tauriMainFiles.length > 0) {
+    console.error('[docs-sync] Tauri docs must not be added to main path (legacy shell, removed by ADR-014):');
+    tauriMainFiles.forEach((f) => console.error(`  - ${f}`));
+    console.error('[docs-sync] Tauri docs should be placed in docs/archive/');
+    console.error('[docs-sync] new Desktop docs should use Electron as the main approach');
     process.exit(1);
   }
 }
@@ -137,7 +137,21 @@ if (changed.length === 0) {
   process.exit(0);
 }
 
-const codeChanged = changed.some((f) => f.startsWith('apps/server/') || f.startsWith('apps/frontend/'));
+// 测试资产变更（spec/e2e/测试夹具）不影响运行时行为，不强制同 PR 更新文档：
+// *.spec.ts / *.e2e-spec.ts、test/ 与 __tests__/ 目录下的文件
+function isTestFile(f) {
+  return (
+    /\.(e2e-)?spec\.tsx?$/.test(f) ||
+    /\.test\.tsx?$/.test(f) ||
+    /(^|\/)(test|__tests__)\/./.test(f)
+  );
+}
+
+const codeChanged = changed.some(
+  (f) =>
+    (f.startsWith('apps/server/') || f.startsWith('apps/frontend/')) &&
+    !isTestFile(f),
+);
 const docChanged = changed.some((f) => f.startsWith('docs/'));
 const governanceChanged = changed.some((f) =>
   ['AGENTS.md', 'CHANGELOG.md', '.github/PULL_REQUEST_TEMPLATE.md'].includes(f),
@@ -146,7 +160,7 @@ const governanceChanged = changed.some((f) =>
 // Run all checks
 checkCodeNeedsDocs(codeChanged, docChanged, governanceChanged);
 checkNewDocsHaveFrontmatter(changed);
-checkNoElectronMainPath(changed);
+checkNoTauriMainPath(changed);
 checkSoftDeleteCandidates(changed);
 
 console.log('[docs-sync] passed.');

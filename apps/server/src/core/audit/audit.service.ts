@@ -85,7 +85,7 @@ export class AuditService {
    * 记录任务创建审计
    */
   async logTaskCreated(
-    taskId: string,
+    issueId: string,
     projectId: string,
     actor: { type: 'human' | 'agent'; id: string },
   ): Promise<void> {
@@ -94,7 +94,7 @@ export class AuditService {
       actorId: actor.id,
       action: 'create',
       resourceType: 'task',
-      resourceId: taskId,
+      resourceId: issueId,
       projectId,
       result: 'success',
     });

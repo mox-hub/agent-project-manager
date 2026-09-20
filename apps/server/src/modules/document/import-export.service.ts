@@ -8,7 +8,6 @@ export class ImportExportService {
     content: string;
     headings: Array<{ level: number; text: string; anchor: string }>;
   } {
-    const lines = content.split('\n');
     let title = '';
     let summary = '';
 

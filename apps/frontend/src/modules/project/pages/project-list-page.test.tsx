@@ -18,7 +18,7 @@ vi.mock('@/infrastructure/store/app-store', () => ({
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, defaultValue?: string) => {
+    t: (key: string, defaultValue?: string | Record<string, unknown>) => {
       const translations: Record<string, string> = {
         'project.title': 'Projects',
         'project.create': 'New Project',
@@ -26,7 +26,8 @@ vi.mock('react-i18next', () => ({
         'project.viewSettings': 'View settings',
         'common.filters': 'Filters',
       };
-      return translations[key] ?? defaultValue ?? key;
+      // 第二参可能是插值对象（如 pageShowing 的 {from,to,total}）：仅字符串 fallback 透传
+      return translations[key] ?? (typeof defaultValue === 'string' ? defaultValue : key);
     },
   }),
 }));
@@ -90,7 +91,7 @@ vi.mock('@/shared/ui/filter-panel', () => ({
   FilterPanel: () => <div data-testid="filter-panel" />,
 }));
 
-vi.mock('@/components/ui/unified-create-dialog', () => ({
+vi.mock('@/shared/components/create-dialog', () => ({
   UnifiedCreateDialog: () => null,
 }));
 

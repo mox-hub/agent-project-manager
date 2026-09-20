@@ -1,0 +1,278 @@
+import { useEffect, useRef, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { FolderGit2, ScanSearch } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { SkeletonList } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
+import { isTerminalRunStatus, useExecutionRunDetail, useExecutionRunEvents } from '@/modules/executions/api/execution-api';
+import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
+import { ProjectEntryWizard } from '../components/import/project-entry-wizard';
+import { ProfileCompletenessRing } from '../components/profile/profile-completeness-ring';
+import { ProfileHealthChips } from '../components/profile/profile-health-chips';
+import { ProfileSlotSection } from '../components/profile/profile-slot-section';
+import {
+  useApproveAllProfileAtoms,
+  useApproveProfileAtom,
+  useCreateProfileAtom,
+  useDeleteProfileAtom,
+  useEditProfileAtom,
+  useIngestArchaeology,
+  useProfile,
+  useRejectProfileAtom,
+  useStartArchaeology,
+} from '../hooks/use-profile';
+import { countArchaeologyProgress } from '../hooks/archaeology-progress';
+
+/**
+ * 项目档案页（v2 纪要切片 1）：槽位分组 + 完备度环 + AI 草稿审批区。
+ * 考古流程：触发 → 轮询执行详情 → 终态自动 ingest 落草稿 → 草稿区人工批准。
+ */
+export function ProjectProfilePage() {
+  const { t } = useTranslation();
+  const { projectId = '' } = useParams<{ projectId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { data: profile, isLoading, isError } = useProfile(projectId);
+
+  // ?wizard=1：创建流程选「导入已有项目」后带参跳入，自动打开接入向导。
+  // 以 URL 参数为真相源派生开关，避免 effect 同步 setState。
+  const wizardOpen = searchParams.get('wizard') === '1';
+  const openWizard = () =>
+    setSearchParams(
+      (prev) => {
+        prev.set('wizard', '1');
+        return prev;
+      },
+      { replace: true },
+    );
+  const closeWizard = () => setSearchParams({}, { replace: true });
+
+  const [archaeologyExecutionId, setArchaeologyExecutionId] = useState<string | null>(null);
+  // 一次性触发闸：终态到达后只 ingest 一次（ref 不参与渲染，不触级联重渲染）
+  const ingestTriggeredRef = useRef<string | null>(null);
+  const { data: runDetail } = useExecutionRunDetail(archaeologyExecutionId, {
+    // 未到终态时 4s 轮询跟随（考古执行在后台推进，页面须主动拉取）
+    refetchInterval: (query) =>
+      isTerminalRunStatus(query.state.data?.status) ? false : 4000,
+  });
+  const startArchaeology = useStartArchaeology(projectId);
+  const ingest = useIngestArchaeology(projectId);
+  const runTerminal = isTerminalRunStatus(runDetail?.status);
+  // 进度计数走事件流水（daemon 逐步上报）；steps 表仅进程内执行器写入，runtime 路径恒空
+  const { data: runEvents } = useExecutionRunEvents(
+    archaeologyExecutionId,
+    !runTerminal,
+  );
+
+  const createAtom = useCreateProfileAtom(projectId);
+  const editAtom = useEditProfileAtom(projectId);
+  const approveAtom = useApproveProfileAtom(projectId);
+  const rejectAtom = useRejectProfileAtom(projectId);
+  const deleteAtom = useDeleteProfileAtom(projectId);
+  const approveAll = useApproveAllProfileAtoms(projectId);
+
+  const [addSlot, setAddSlot] = useState<string | null>(null);
+  const [addContent, setAddContent] = useState('');
+
+  // 考古执行到终态：completed 自动入库；失败/阻塞停在原地由人查看执行日志
+  const runCompleted = runDetail?.status === 'completed';
+  useEffect(() => {
+    if (!archaeologyExecutionId || !runCompleted) return;
+    if (ingestTriggeredRef.current === archaeologyExecutionId) return;
+    ingestTriggeredRef.current = archaeologyExecutionId;
+    ingest.mutate(archaeologyExecutionId);
+  }, [archaeologyExecutionId, runCompleted, ingest]);
+
+  const busy =
+    createAtom.isPending ||
+    editAtom.isPending ||
+    approveAtom.isPending ||
+    rejectAtom.isPending ||
+    deleteAtom.isPending ||
+    approveAll.isPending;
+
+  return (
+    <ProjectDetailFrame
+      aiPage={CORE_AI_PAGE_IDS.projectProfile}
+      projectId={projectId}
+      title={t('project.profilePage.title')}
+      hideBreadcrumb
+      description={t('project.profilePage.description')}
+      actions={
+        <div className="flex items-center gap-2">
+          {profile && (
+            <div
+              className="mr-1 flex items-center gap-2"
+              title={t('project.profilePage.completeness')}
+            >
+              <ProfileHealthChips profile={profile} />
+              <ProfileCompletenessRing
+                filled={profile.completeness.filled}
+                total={profile.completeness.total}
+                size={40}
+              />
+            </div>
+          )}
+          <HeaderActionButton
+            icon={FolderGit2}
+            label={t('project.profilePage.importExisting')}
+            onClick={openWizard}
+            data-ai-component="project.project-profile.import"
+            data-ai-action="project.project-profile.import.click"
+            data-ai-role="jump"
+          />
+          <HeaderActionButton
+            icon={ScanSearch}
+            label={
+              startArchaeology.isPending
+                ? t('project.profilePage.archaeologyStarting')
+                : t('project.profilePage.runArchaeology')
+            }
+            disabled={startArchaeology.isPending}
+            onClick={() =>
+              startArchaeology.mutate(undefined, {
+                onSuccess: (res) => {
+                  ingestTriggeredRef.current = null;
+                  ingest.reset();
+                  setArchaeologyExecutionId(res.executionId);
+                },
+              })
+            }
+            data-ai-component="project.project-profile.archaeology"
+            data-ai-action="project.project-profile.archaeology.click"
+            data-ai-role="submit"
+          />
+        </div>
+      }
+    >
+      {startArchaeology.isPending && (
+        <p className="mb-3 rounded-lg bg-accent-blue-light/50 px-3 py-2 text-xs text-accent-blue">
+          {t('project.profilePage.archaeologyStarting')}
+        </p>
+      )}
+      {archaeologyExecutionId && runDetail && !runTerminal && (
+        <p className="mb-3 rounded-lg bg-accent-blue-light/50 px-3 py-2 text-xs text-accent-blue">
+          {t('project.profilePage.archaeologyRunning', {
+            status: runDetail.status,
+            steps: countArchaeologyProgress(runEvents),
+          })}
+        </p>
+      )}
+      {ingest.isPending && (
+        <p className="mb-3 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+          {t('project.profilePage.ingesting')}
+        </p>
+      )}
+      {ingest.isError && (
+        <p className="mb-3 rounded-lg bg-accent-red-light/50 px-3 py-2 text-xs text-accent-red">
+          {t('project.profilePage.ingestFailed', {
+            reason: ingest.error instanceof Error ? ingest.error.message : '',
+          })}
+        </p>
+      )}
+      {ingest.isSuccess && !ingest.isPending && (
+        <p className="mb-3 rounded-lg bg-accent-green-light/50 px-3 py-2 text-xs text-accent-green">
+          {t('project.profilePage.ingestDone', { created: ingest.data?.created ?? 0, skipped: ingest.data?.skipped ?? 0 })}
+        </p>
+      )}
+      {startArchaeology.isError && (
+        <p className="mb-3 rounded-lg bg-accent-red-light/50 px-3 py-2 text-xs text-accent-red">
+          {t('project.profilePage.archaeologyFailed')}
+        </p>
+      )}
+
+      {isLoading ? (
+        <SkeletonList count={5} />
+      ) : isError || !profile ? (
+        // isEmpty 误用修正：错误态直接给 EmptyState（原写法 children 永不渲染，恒显「暂无数据」）
+        <EmptyState
+          title={t('project.profilePage.loadFailed')}
+          description={t('project.profilePage.loadFailedDesc')}
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {profile.slots.map((group) => (
+            <ProfileSlotSection
+              key={group.slot}
+              group={group}
+              projectId={projectId}
+              busy={busy}
+              onEdit={(atomId, content) => editAtom.mutate({ atomId, content })}
+              onApprove={(atomId) => approveAtom.mutate(atomId)}
+              onReject={(atomId) => rejectAtom.mutate({ atomId })}
+              onApproveAll={(atomIds) => approveAll.mutate(atomIds)}
+              onDelete={(atomId) => deleteAtom.mutate(atomId)}
+              onAdd={(slot) => {
+                setAddSlot(slot);
+                setAddContent('');
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      <ProjectEntryWizard
+        projectId={projectId}
+        open={wizardOpen}
+        onOpenChange={(open) => (open ? openWizard() : closeWizard())}
+      />
+
+      <Dialog open={!!addSlot} onOpenChange={(open) => !open && setAddSlot(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {t('project.profilePage.addTo', {
+                slot: profile?.slots.find((s) => s.slot === addSlot)?.label ?? addSlot ?? '',
+              })}
+            </DialogTitle>
+          </DialogHeader>
+          <Input
+            value={addContent}
+            onChange={(e) => setAddContent(e.target.value)}
+            placeholder={t('project.profilePage.addPlaceholder')}
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && addContent.trim()) {
+                createAtom.mutate(
+                  {
+                    projectId,
+                    slot: addSlot as never,
+                    content: addContent.trim(),
+                  },
+                  { onSuccess: () => setAddSlot(null) },
+                );
+              }
+            }}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddSlot(null)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              disabled={!addContent.trim() || createAtom.isPending}
+              onClick={() =>
+                addSlot &&
+                createAtom.mutate(
+                  { projectId, slot: addSlot as never, content: addContent.trim() },
+                  { onSuccess: () => setAddSlot(null) },
+                )
+              }
+            >
+              {t('common.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </ProjectDetailFrame>
+  );
+}

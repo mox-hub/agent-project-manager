@@ -1,0 +1,105 @@
+import { useMemo } from 'react';
+import { GanttChart, type GanttDateRange, type GanttChartItem, type GanttScale } from '@/shared/components/gantt-chart';
+import type { Task } from '../api/issue-api';
+import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
+
+interface TaskGanttProps {
+  tasks: Task[];
+  onTaskClick?: (task: Task) => void;
+  onDateRangeChange?: (issueId: string, range: { startDate: string; dueDate: string }) => Promise<void> | void;
+  getAiExecution?: (task: Task) => ActiveAiExecution | null;
+  scale?: GanttScale;
+  onScaleChange?: (scale: GanttScale) => void;
+}
+
+function parseDate(value?: string | null): Date | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function toDateOnly(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function mapTaskToRange(task: Task): { startDate: string; endDate: string } | null {
+  const due = parseDate(task.dueDate);
+  if (!due) return null;
+
+  const explicitStart = parseDate(task.startDate);
+  if (explicitStart) {
+    const start = explicitStart <= due ? explicitStart : due;
+    const end = explicitStart <= due ? due : explicitStart;
+    return { startDate: toDateOnly(start), endDate: toDateOnly(end) };
+  }
+
+  const durationDays = Math.max(1, Math.ceil((task.estimate ?? 8) / 8));
+  const derivedStart = addDays(due, -(durationDays - 1));
+  return {
+    startDate: toDateOnly(derivedStart),
+    endDate: toDateOnly(due),
+  };
+}
+
+export function TaskGantt({
+  tasks,
+  onTaskClick,
+  onDateRangeChange,
+  getAiExecution,
+  scale,
+  onScaleChange,
+}: TaskGanttProps) {
+  const taskMap = useMemo(() => new Map(tasks.map((task) => [task.id, task])), [tasks]);
+
+  const items = useMemo<GanttChartItem[]>(() => {
+    return tasks.reduce<GanttChartItem[]>((acc, task) => {
+      const range = mapTaskToRange(task);
+      if (!range) return acc;
+      const ai = getAiExecution?.(task);
+      acc.push({
+        id: task.id,
+        title: task.title,
+        startDate: range.startDate,
+        endDate: range.endDate,
+        status: task.status,
+        priority: task.priority,
+        meta: task.estimate ? `${task.estimate}h` : undefined,
+        isAiExecuting: !!ai?.isExecuting,
+        aiExecutionSummary: ai?.stepSummary,
+      });
+      return acc;
+    }, []);
+  }, [tasks, getAiExecution]);
+
+  const handleItemClick = (itemId: string) => {
+    const task = taskMap.get(itemId);
+    if (task) onTaskClick?.(task);
+  };
+
+  const handleDateChange = (itemId: string, range: GanttDateRange) => {
+    return onDateRangeChange?.(itemId, {
+      startDate: range.startDate,
+      dueDate: range.endDate,
+    });
+  };
+
+  return (
+    <GanttChart
+      items={items}
+      onItemClick={handleItemClick}
+      onItemDateChange={handleDateChange}
+      leftColumnTitle="Task"
+      emptyMessage="暂无可排期的任务"
+      emptyDescription="甘特视图依赖日期字段，为任务设置截止日期后即可在此排期"
+      scale={scale}
+      onScaleChange={onScaleChange}
+    />
+  );
+}

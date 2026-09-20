@@ -4,10 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 @Injectable()
 export class MilestoneService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messageBus: MessageBusService,
+  ) {}
 
   async findAll(projectId: string, userId: string) {
     const project = await this.prisma.project.findFirst({
@@ -26,13 +30,14 @@ export class MilestoneService {
     }
 
     // 获取里程碑及其关联的任务（通过 MilestoneTask 连接表）
+    // 与关联发布（CAP-A-16 计划-交付轴：里程碑下挂发版标记，供前端时间轴聚合）
     const milestones = await this.prisma.milestone.findMany({
       where: { projectId },
       orderBy: { targetDate: 'asc' },
       include: {
         tasks: {
           include: {
-            task: {
+            issue: {
               select: {
                 id: true,
                 title: true,
@@ -41,6 +46,15 @@ export class MilestoneService {
               },
             },
           },
+        },
+        releases: {
+          select: {
+            id: true,
+            version: true,
+            status: true,
+            releasedAt: true,
+          },
+          orderBy: [{ releasedAt: 'desc' }, { createdAt: 'desc' }],
         },
       },
     });
@@ -54,10 +68,16 @@ export class MilestoneService {
       description: milestone.description,
       taskCount: milestone.tasks.length,
       tasks: milestone.tasks.map((mt) => ({
-        id: mt.task.id,
-        title: mt.task.title,
-        status: mt.task.status,
-        priority: mt.task.priority,
+        id: mt.issue.id,
+        title: mt.issue.title,
+        status: mt.issue.status,
+        priority: mt.issue.priority,
+      })),
+      releases: milestone.releases.map((r) => ({
+        id: r.id,
+        version: r.version,
+        status: r.status,
+        releasedAt: r.releasedAt?.toISOString() || null,
       })),
     }));
   }
@@ -92,7 +112,7 @@ export class MilestoneService {
 
     const targetDate = data.targetDate ? new Date(data.targetDate) : null;
 
-    return this.prisma.milestone.create({
+    const milestone = await this.prisma.milestone.create({
       data: {
         projectId,
         iterationId: data.iterationId || null,
@@ -103,5 +123,13 @@ export class MilestoneService {
         metadata: data.metadata || {},
       },
     });
+
+    this.messageBus.publish('milestone.created', {
+      milestoneId: milestone.id,
+      name: milestone.name,
+      projectId,
+      userId,
+    });
+    return milestone;
   }
 }

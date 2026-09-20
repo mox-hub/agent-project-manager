@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Bot, User, Workflow as WorkflowIcon } from 'lucide-react';
-import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
+import { useWorkflows } from '@/modules/workflow/hooks/use-workflows';
 import { listTeamMembers } from '../api/team-member-api';
 import { MemberAvatar } from './member-avatar';
 import { MemberCardPopover } from './member-card-popover';
@@ -63,11 +63,7 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
     queryKey: ['team-members', teamId],
     queryFn: () => listTeamMembers(teamId),
   });
-  const { data: workflows } = useQuery({
-    queryKey: ['ai-workflows'],
-    queryFn: () => aiHubApi.getWorkflows(),
-    staleTime: 60 * 1000,
-  });
+  const { data: workflows } = useWorkflows();
 
   const groups = useMemo(() => {
     const rows = (members ?? []) as unknown as TeamMemberRow[];

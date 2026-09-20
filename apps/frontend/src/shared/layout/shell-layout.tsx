@@ -1,8 +1,12 @@
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation, useMatches } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
+import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
+import { useUnreadNotificationsCount } from '@/modules/notification/hooks/use-notifications';
+import { useDecisionSummary } from '@/modules/decision/hooks/use-decisions';
 import { toast } from '@/hooks/use-toast';
 import { useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
 import { useSyncProgress } from '@/modules/linear/hooks/use-sync-progress';
@@ -11,50 +15,49 @@ import {
 } from '@/modules/linear/components/sync-progress-dialog';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
-import { FloatingActions } from '@/shared/components/floating-actions';
+import { commandEntries, COMMAND_GROUP_LABEL_KEYS, type CommandActionId } from '@/shared/command-palette/commands';
+import { BottomDock } from '@/shared/components/bottom-dock';
+import { GlobalCreateDialog } from '@/shared/components/global-create-dialog';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { AISlotLayer } from '@/shared/ai-slot/ai-slot-layer';
+import { OnboardingGate } from '@/modules/onboarding/components/onboarding-gate';
 import { cn } from '@/lib/utils';
+import { StatusPill } from '@/components/ui/status-pill';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { NativeSelect } from '@/components/ui/native-select';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import {
-  FolderKanban,
-  LayoutGrid,
   HelpCircle,
-  Sun,
-  Moon,
   LayoutDashboard,
   Bell,
-  GitBranch,
-  TerminalSquare,
+  DoorOpen,
   Settings,
   PanelLeftOpen,
   Menu,
-  X,
-  ArrowLeftRight,
   BarChart3,
-  FileText,
+  BookMarked,
   ListTodo,
   Milestone,
+  Route as RouteIcon,
   RefreshCw,
   Users,
-  UsersRound,
-  ShieldCheck,
-  CheckSquare,
-  AlertCircle,
-  CheckCircle,
-  Zap,
+  UserCog,
+  ChevronDown,
   Search,
   Palette,
   ListTree,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useTheme } from '@/shared/theme/theme-context';
+import { PIPELINE_STAGES } from '@/shared/layout/pipeline-stages';
+import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { FAVORITE_FALLBACK_ICON, PAGE_REGISTRY } from '@/shared/layout/page-registry';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { Logo } from '@/components/brand/logo';
 import { TabBar } from '@/components/ui/tab-bar';
-import { NotificationPopover } from '@/components/ui/notification-popover';
 import { TabsProvider } from '@/shared/tabs/tabs-context';
 import {
   ProjectSidebarProvider,
@@ -64,8 +67,14 @@ import {
   PROJECT_SIDEBAR_MAX_WIDTH,
 } from '@/modules/project/components/dashboard/project-sidebar-context';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
+import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
+import { AssistantFab } from '@/modules/assistant';
+import { ConnectionBanner } from '@/shared/components/connection-banner';
+import { useGlobalHotkey } from '@/shared/hotkeys/use-global-hotkey';
+import { getEffectiveCombo } from '@/shared/hotkeys/hotkey-store';
+import { formatComboForDisplay } from '@/shared/hotkeys/hotkey-utils';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /** 侧栏导航项（收藏分区的项带 favorite 标记，渲染时挂 hover 预览卡） */
@@ -77,6 +86,24 @@ interface SidebarNavItem {
   capsule?: string;
   count?: number;
   favorite?: boolean;
+  stageNumber?: string;
+  hint?: string;
+}
+
+/** 导航分组标识：所有分组均可折叠 */
+type NavGroupId =
+  | 'workbench'
+  | 'pipeline'
+  | 'collaboration'
+  | 'favorites'
+  | 'system'
+  | string;
+
+interface NavGroup {
+  id: NavGroupId;
+  label: string;
+  items: SidebarNavItem[];
+  isPipeline?: boolean;
 }
 
 export function ShellLayout() {
@@ -86,6 +113,9 @@ export function ShellLayout() {
   const {
     sidebarCollapsed,
     toggleSidebar,
+    navGroupsCollapsed,
+    toggleNavGroupCollapsed,
+    setAiPanelOpen,
   } = useAppStore();
   const favoritePages = useAppStore((s) => s.favoritePages);
   const { mode, toggleTheme } = useTheme();
@@ -95,78 +125,150 @@ export function ShellLayout() {
     (r) => r.scopeType === 'global' && r.role === 'admin',
   );
 
+  // 侧栏红点数量角标数据源：通知=未读数；决策收件箱=待处理决策数（summary.pending）
+  const { data: unreadCount = 0 } = useUnreadNotificationsCount();
+  const { data: decisionSummary } = useDecisionSummary();
+  const pendingDecisionCount = decisionSummary?.pending ?? 0;
+  // 通知未读数实时刷新：新增/已读事件都失效 notifications 前缀（含 unread count）
+  const queryClient = useQueryClient();
+  useEventSubscription('notification.created', () => {
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  });
+  useEventSubscription('notification.read', () => {
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  });
+  // 兜底改造批 4：提案创建实时失效——此前靠用户恰好在收件箱页/助手面板
+  useEventSubscription('decision.proposal.created', () => {
+    queryClient.invalidateQueries({ queryKey: ['decisions'] });
+  });
+
+  // 统一读取某导航分组的折叠态
+  const navCollapsed = (id: NavGroupId) => Boolean(navGroupsCollapsed[id]);
+
   // Navigation groups with translations - 新增搜索和通知选项置顶
   // favorite 标记：收藏分区的项挂 RoutePreviewTrigger（hover 预览卡），主导航保持 Tooltip
-  const favoriteGroup = useMemo(() => {
-    if (favoritePages.length === 0) return [];
-    return [
+  const favoriteGroupItems = useMemo<SidebarNavItem[]>(
+    () =>
+      favoritePages.map((fav) => {
+        const registered = PAGE_REGISTRY[fav.path];
+        return {
+          to: fav.path,
+          icon: registered?.icon ?? FAVORITE_FALLBACK_ICON,
+          color: registered?.color,
+          label: registered?.labelKey
+            ? t(registered.labelKey)
+            : registered?.label ?? fav.label,
+          favorite: true,
+        };
+      }),
+    [favoritePages, t],
+  );
+
+  const NAV_GROUPS = useMemo<NavGroup[]>(() => {
+    const groups: NavGroup[] = [
       {
+        id: 'workbench',
+        label: t('shell.workbench', '工作台'),
+        items: [
+          { to: '/app/projects/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
+          {
+            to: '/app/decisions',
+            icon: getEntityIcon('decision').icon,
+            label: t('nav.decisions'),
+            count: pendingDecisionCount,
+          },
+          { to: '/app/projects', icon: getEntityIcon('project').icon, label: t('nav.projects') },
+        ],
+      },
+      {
+        id: 'pipeline',
+        label: t('shell.pipeline', '研发生命周期'),
+        isPipeline: true,
+        // 六站唯一定义源见 pipeline-stages.ts（CAP-A-15）：01 承接→02 拆解→03 研发→04 执行→05 验收→06 交付
+        items: PIPELINE_STAGES.map((stage) => ({
+          to: stage.to,
+          icon: stage.icon,
+          label: t(stage.labelKey, stage.labelFallback),
+          stageNumber: stage.stageNumber,
+          hint: t(stage.hintKey, stage.hintFallback),
+        })),
+      },
+      {
+        id: 'collaboration',
+        label: t('shell.collaboration', '协同与底座'),
+        items: [
+          { to: '/app/office', icon: DoorOpen, label: t('nav.office') },
+          // 文档知识库：D 线契约知识承载，不在生命周期编号内（CAP-A-15 迁位）
+          {
+            to: '/app/documents',
+            icon: getEntityIcon('document').icon,
+            label: t('document.title'),
+          },
+          { to: '/app/members', icon: getEntityIcon('member').icon, label: t('nav.members') },
+          { to: '/app/teams', icon: getEntityIcon('team').icon, label: t('nav.teams') },
+          { to: '/app/workflows', icon: getEntityIcon('workflow').icon, label: t('nav.workflow') },
+          // AI 表面：候补区 pending 形态实验（非流程站），带 exp 徽标放协同组
+          {
+            to: '/app/ai-surface',
+            icon: Sparkles,
+            label: t('nav.aiSurface'),
+            color: '#A855F7',
+            capsule: 'exp',
+          },
+          { to: '/app/analytics', icon: BarChart3, label: t('nav.analytics') },
+        ],
+      },
+      // 收藏分区固定在主导航与系统之间（置于系统上方）；无收藏不占位
+      {
+        id: 'favorites',
         label: t('shell.favorites'),
-        items: favoritePages.map((fav) => {
-          const registered = PAGE_REGISTRY[fav.path];
-          return {
-            to: fav.path,
-            icon: registered?.icon ?? FAVORITE_FALLBACK_ICON,
-            color: registered?.color,
-            label: registered?.labelKey
-              ? t(registered.labelKey)
-              : registered?.label ?? fav.label,
-            favorite: true,
-          };
-        }),
+        items: favoriteGroupItems,
+      },
+      {
+        id: 'system',
+        label: t('shell.system'),
+        items: [
+          { to: '/app/settings', icon: Settings, label: t('nav.settings') },
+          ...(isAdminRole
+            ? [
+                {
+                  to: '/app/admin',
+                  // admin 域导航非验收实体：ShieldCheck 三方重叠裁决改用 UserCog（规范 v0）
+                  icon: UserCog,
+                  label: t('nav.admin'),
+                  capsule: 'admin',
+                },
+              ]
+            : []),
+          { to: '/app/help', icon: HelpCircle, label: t('nav.help') },
+          ...(import.meta.env.DEV
+            ? [
+                { to: '/app/design-system', icon: Palette, label: 'Design System', capsule: 'dev' },
+                // 交付视图：mock 还原页（data-mock），不进正式导航（CAP-A-15），仅 DEV 可达
+                { to: '/app/delivery', icon: ListTree, label: t('nav.delivery', '交付视图'), capsule: 'dev' },
+              ]
+            : []),
+        ],
       },
     ];
-  }, [favoritePages, t]);
-
-  const NAV_GROUPS = useMemo<Array<{ label: string; items: SidebarNavItem[] }>>(() => [
-    {
-      label: t('shell.utilities'),
-      items: [
-        { to: '/app/search', icon: Search, label: t('nav.search') },
-        { to: '/app/notifications', icon: Bell, label: t('nav.notifications'), count: 0 },
-      ],
-    },
-    {
-      label: t('shell.main'),
-      items: [
-        { to: '/app/projects/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
-        { to: '/app/projects', icon: FolderKanban, label: t('nav.projects') },
-        { to: '/app/tasks', icon: CheckSquare, label: t('nav.tasks') },
-        { to: '/app/bugs', icon: AlertCircle, label: t('task.bug.title') },
-        { to: '/app/acceptance', icon: CheckCircle, label: t('nav.acceptance') },
-        { to: '/app/documents', icon: FileText, label: t('document.title') },
-        { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
-        { to: '/app/members', icon: Users, label: t('nav.members') },
-        { to: '/app/teams', icon: UsersRound, label: t('nav.teams') },
-      ],
-    },
-    // AI 页面与集成页面已迁入设置页（/app/settings/ai、/app/settings/integrations），
-    // 原 "AI Tools" 分组仅剩 Git 仓库，已并入 main 分组
-    {
-      label: t('shell.system'),
-      items: [
-        { to: '/app/settings', icon: Settings, label: t('nav.settings') },
-        ...(isAdminRole
-          ? [{ to: '/app/admin', icon: ShieldCheck, label: t('nav.admin') }]
-          : []),
-        { to: '/app/help', icon: HelpCircle, label: t('nav.help') },
-        ...(import.meta.env.DEV
-          ? [
-              { to: '/app/design-system', icon: Palette, label: 'Design System', capsule: 'dev' },
-              { to: '/app/delivery', icon: ListTree, label: 'Delivery', capsule: 'dev' },
-            ]
-          : []),
-      ],
-    },
-    // 收藏分区移到最下方
-    ...favoriteGroup,
-  ], [favoriteGroup, isAdminRole, t]);
+    // 无收藏时移除收藏分组，避免空头
+    return favoriteGroupItems.length === 0
+      ? groups.filter((g) => g.id !== 'favorites')
+      : groups;
+  }, [favoriteGroupItems, isAdminRole, t, pendingDecisionCount]);
 
   useEffect(() => {
     if (!eventClient.isConnected()) {
       eventClient.connect(import.meta.env.VITE_WS_URL || undefined);
     }
   }, []);
+
+  // 全局快捷键走注册表（CAP-A-17）：Alt+A 开合主 AI 助手面板，用户可在设置 · 快捷键改键
+  // （历史备注：Ctrl/Cmd+J 与浏览器下载/DevTools 冲突，弃用）
+  useGlobalHotkey('ai-assistant', () => {
+    const { aiPanelOpen, setAiPanelOpen: setOpen } = useAppStore.getState();
+    setOpen(!aiPanelOpen);
+  });
 
   useEffect(() => {
     if (!mobileSidebarOpen) return;
@@ -191,8 +293,8 @@ export function ShellLayout() {
           !location.pathname.startsWith('/app/projects/dashboard'))
       );
     }
-    if (to === '/app/tasks') {
-      return location.pathname === '/app/tasks' || location.pathname.startsWith('/app/tasks');
+    if (to === '/app/issues') {
+      return location.pathname === '/app/issues' || location.pathname.startsWith('/app/issues');
     }
     if (to === '/app/bugs') {
       return location.pathname === '/app/bugs' || location.pathname.startsWith('/app/bugs');
@@ -207,8 +309,15 @@ export function ShellLayout() {
   };
 
   // isProjectDetailRoute matches /app/projects/:projectId/* routes EXCEPT /app/projects/dashboard
-  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(board|tasks|milestones|team|settings|roles))?$/.test(
+  // issues/playbook 为现役路由；board/tasks/roles 为历次改名遗留，兜底重定向过渡态
+  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(issues|board|tasks|milestones|profile|playbook|team|settings|roles))?$/.test(
     location.pathname,
+  );
+
+  // 详情类路由经 router handle 声明自管滚动：页面高度锁死视口，toolbar 固定、
+  // 主区/侧栏各自独立滚动，不参与 shell 层滚动（避免标题栏跟着内容滚走）
+  const routeSelfScroll = useMatches().some(
+    (m) => (m.handle as { selfScroll?: boolean } | null)?.selfScroll === true,
   );
 
   // Get current projectId from URL for ProjectDetailNav
@@ -220,50 +329,53 @@ export function ShellLayout() {
   // Fetch real project data
   const { data: currentProject } = useProjectDetail(currentProjectId || undefined);
 
+  // 命令面板注册表：条目声明在 shared/command-palette/commands.ts（i18n key + 动作 id），
+  // 这里负责翻译时点（t() 把 labelKey/groupKey 映射成已翻译字符串）与运行时动作绑定
+  const commandActions = useMemo<Record<CommandActionId, () => void>>(
+    () => ({
+      toggleTheme: () => toggleTheme(),
+      openAiPanel: () => setAiPanelOpen(true),
+      logout,
+    }),
+    [logout, setAiPanelOpen, toggleTheme],
+  );
+
   const commandItems = useMemo<CommandPaletteItem[]>(
-    () => [
-      { id: "cmd-projects", label: t('shell.openProjects'), to: "/app/projects", shortcut: "G P", group: t('shell.navigation'), keywords: ["project", "projects"] },
-      { id: "cmd-dashboard", label: t('shell.openDashboard'), to: "/app/projects/dashboard", shortcut: "G D", group: t('shell.navigation'), keywords: ["dashboard"] },
-      { id: "cmd-tasks", label: t('shell.openTasks'), to: "/app/tasks", shortcut: "G T", group: t('shell.navigation'), keywords: ["task", "tasks"] },
-      { id: "cmd-bugs", label: t('shell.openBugs'), to: "/app/bugs", shortcut: "G B", group: t('shell.navigation'), keywords: ["bug", "bugs"] },
-      { id: "cmd-documents", label: t('shell.openDocuments'), to: "/app/documents", shortcut: "G O", group: t('shell.navigation'), keywords: ["docs", "documents"] },
-      { id: "cmd-members", label: t('shell.openMembers'), to: "/app/members", shortcut: "G E", group: t('shell.navigation'), keywords: ["member", "members", "team"] },
-      { id: "cmd-teams", label: t('shell.openTeams'), to: "/app/teams", shortcut: "G M", group: t('shell.navigation'), keywords: ["team", "teams"] },
-      { id: "cmd-ai", label: t('shell.openAiSpace'), to: "/app/settings/ai", shortcut: "G A", group: t('shell.navigation'), keywords: ["ai", "assistant"] },
-      { id: "cmd-ai-management", label: t('shell.openAiManagement'), to: "/app/settings/ai", shortcut: "G M", group: t('shell.navigation'), keywords: ["ai", "management"] },
-      { id: "cmd-agents", label: t('shell.openAgents') || 'Open Agent Management', to: "/app/settings/ai/agents", shortcut: "G G", group: t('shell.navigation'), keywords: ["agent", "agents", "mcp"] },
-      { id: "cmd-analytics", label: t('shell.openAnalytics'), to: "/app/analytics", shortcut: "G N", group: t('shell.navigation'), keywords: ["analytics", "metrics"] },
-      // Terminal命令已废弃 - Terminal功能已并入Runtime模块
-      { id: "cmd-settings", label: t('shell.openSettings'), to: "/app/settings", shortcut: "G S", group: t('shell.navigation'), keywords: ["settings"] },
-      ...(isAdminRole
-        ? [{ id: "cmd-admin", label: t('nav.admin'), to: "/app/admin", group: t('shell.navigation'), keywords: ["admin", "accounts", "invites"] }]
-        : []),
-      { id: "cmd-help", label: t('shell.openHelp'), to: "/app/help", shortcut: "G H", group: t('shell.navigation'), keywords: ["help", "docs"] },
-      {
-        id: "cmd-theme",
-        label: mode === "light" ? t('shell.switchToDark') : t('shell.switchToLight'),
-        group: t('common.actions'),
-        shortcut: "T",
-        keywords: ["theme", "dark", "light"],
-        onSelect: () => toggleTheme(),
-      },
-      {
-        id: "cmd-logout",
-        label: t('shell.logout'),
-        group: t('common.actions'),
-        shortcut: "L",
-        keywords: ["logout", "sign out"],
-        onSelect: () => logout(),
-      },
-    ],
-    [isAdminRole, logout, mode, toggleTheme, t],
+    () =>
+      commandEntries
+        .filter((entry) => !entry.adminOnly || isAdminRole)
+        .map((entry) => ({
+          id: entry.id,
+          label: t(
+            entry.darkModeLabelKey && mode === 'dark'
+              ? entry.darkModeLabelKey
+              : entry.labelKey,
+          ),
+          keywords: entry.keywords,
+          // hotkeyId 优先：从快捷键注册表解析当前生效键（含用户自定义）
+          shortcut: entry.hotkeyId
+            ? formatComboForDisplay(getEffectiveCombo(entry.hotkeyId) ?? '').join(' ').trim() || undefined
+            : entry.shortcut,
+          group: t(COMMAND_GROUP_LABEL_KEYS[entry.group]),
+          to: entry.to,
+          // 实体命令经 entity-icons 注册表解析（单一图标真相源），动作命令用自带 lucide 图标
+          icon: entry.entity
+            ? getEntityIcon(entry.entity).icon
+            : (entry.icon ?? undefined),
+          // 品牌彩色（page-registry 唯一真相源），命令面板图标着色与侧边栏同源
+          iconColor: entry.to ? PAGE_REGISTRY[entry.to]?.color : undefined,
+          onSelect: entry.action ? commandActions[entry.action] : undefined,
+        })),
+    [commandActions, isAdminRole, mode, t],
   );
 
   return (
     <CommandPaletteProvider initialCommands={commandItems}>
       <ShellSidebarProvider>
         <TabsProvider>
-        <div className="flex h-screen overflow-hidden bg-background text-foreground" data-ai-component="layout.shell" data-ai-role="content">
+        <div className="flex h-screen overflow-hidden bg-sidebar text-foreground" data-ai-component="layout.shell" data-ai-role="content">
+          {/* 实时连接断线横幅（兜底改造批 1）：断线期间数据陈旧，需全局可见 */}
+          <ConnectionBanner />
           {/* Mobile sidebar backdrop */}
           {mobileSidebarOpen ? (
             <button
@@ -274,33 +386,85 @@ export function ShellLayout() {
             />
           ) : null}
 
-          {/* Sidebar - 移除分割线 */}
+          {/* Sidebar - Codex 磨砂一体化底座 */}
           <aside
             className={cn(
-              'flex flex-col h-full bg-sidebar transition-all duration-200',
+              'flex flex-col h-full bg-sidebar/85 backdrop-blur-xl transition-all duration-200',
               mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:relative',
-              sidebarCollapsed ? 'w-17' : 'w-56',
+              sidebarCollapsed ? 'w-16' : 'w-56',
             )}
             aria-label={t('shell.mainNav')}
             data-ai-component="layout.sidebar"
             data-ai-role="nav"
           >
             <TooltipProvider>
-              {/* Logo / App Header */}
-              <div className="flex items-center h-14 px-4 shrink-0 gap-3">
+              {/* Logo / App Header - 与菜单图标严格垂直对齐与居中 */}
+              <div className={cn(
+                'flex items-center h-12 shrink-0',
+                sidebarCollapsed ? 'justify-center px-0' : 'px-2.5 gap-2'
+              )}>
                 <button
                   onClick={toggleSidebar}
-                  className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-1 min-w-0"
+                  className={cn(
+                    'flex items-center rounded-lg transition-colors hover:bg-sidebar-accent/60',
+                    sidebarCollapsed
+                      ? 'size-10 justify-center'
+                      : 'flex-1 min-w-0 gap-2.5 px-2.5 py-1.5'
+                  )}
                   aria-label="Toggle sidebar"
+                  title={sidebarCollapsed ? t('shell.expandSidebar') : t('shell.appName')}
                 >
-                  <Logo size="lg" variant="framed" tone="auto" className="shrink-0" ariaLabel="Agent Project Manager" />
+                  <Logo size="sm" variant="framed" tone="auto" className="shrink-0 size-6" ariaLabel="Agent Project Manager" />
                   {!sidebarCollapsed && (
-                    <span className="text-base font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
+                    <span className="text-sm font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
                   )}
                 </button>
                 {!sidebarCollapsed && (
-                  <div className="shrink-0">
-                    <NotificationPopover />
+                  <div className="shrink-0 flex items-center gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <NavLink
+                          to="/app/search"
+                          className={({ isActive }) =>
+                            cn(
+                              'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                              isActive && 'bg-sidebar-accent text-sidebar-foreground',
+                            )
+                          }
+                          aria-label={t('nav.search')}
+                        >
+                          <Search className="size-4" />
+                        </NavLink>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {t('nav.search')}
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <NavLink
+                          to="/app/notifications"
+                          className={({ isActive }) =>
+                            cn(
+                              'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                              isActive && 'bg-sidebar-accent text-sidebar-foreground',
+                            )
+                          }
+                          aria-label={t('nav.notifications')}
+                        >
+                          <Bell className="size-4" />
+                          {unreadCount > 0 && (
+                            <span
+                              className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive ring-2 ring-sidebar"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </NavLink>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {t('nav.notifications')}
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 )}
               </div>
@@ -309,96 +473,252 @@ export function ShellLayout() {
               <div className="flex-1 min-h-0 overflow-y-auto">
               {/* Navigation */}
               <nav className="py-1">
-                {NAV_GROUPS.map((group, groupIndex) => (
-                  <div key={group.label}>
-                    {/* Group Label */}
-                    {!sidebarCollapsed && (
-                      <div className="px-3 pt-2 pb-1 mt-0.5">
-                        <p className="text-11 text-sidebar-foreground/40 font-semibold uppercase tracking-wider">
-                          {group.label}
-                        </p>
-                      </div>
-                    )}
+                {NAV_GROUPS.map((group, groupIndex) => {
+                  const collapsibleId = group.id;
+                  const itemsHidden = !sidebarCollapsed && navCollapsed(group.id);
+                  return (
+                    <div key={group.id}>
+                      {/* 折叠窄栏模式下，组与组之间渲染微弱分割线（第一组除外） */}
+                      {sidebarCollapsed && groupIndex > 0 && (
+                        <div className="my-1.5 mx-auto w-6 border-t border-sidebar-border/40" />
+                      )}
 
-                    {/* Group Items */}
-                    <div className="px-2.5 py-0.5 space-y-0.5">
-                      {group.items.map(({ to, icon: Icon, label, color, capsule, count, favorite }) => {
-                        // NavLink 同时被两条路径消费：收藏项由 RoutePreviewTrigger 克隆
-                        // （base-ui render 模式，事件/className/ref 组合合入 DOM），
-                        // 其余项由 Tooltip asChild 克隆——这里只负责产出元素
-                        const renderLink = () => (
-                          <NavLink
-                            to={to}
-                            end={to !== '/app/projects'}
+                      {/* Group Header：可收缩按钮 */}
+                      {!sidebarCollapsed && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (collapsibleId)
+                              toggleNavGroupCollapsed(collapsibleId);
+                          }}
+                          aria-expanded={!navCollapsed(group.id)}
+                          aria-label={
+                            navCollapsed(group.id)
+                              ? `${group.label} (${group.items.length})`
+                              : group.label
+                          }
+                          className="flex w-full items-center gap-1 px-3 pt-2 pb-1 mt-0.5 text-left text-sidebar-foreground/40 transition-colors hover:text-sidebar-foreground/70"
+                        >
+                          <span className="truncate text-xs font-semibold uppercase tracking-wider">
+                            {group.label}
+                          </span>
+                          <ChevronDown
                             className={cn(
-                              'flex items-center rounded-lg text-sm transition-colors',
-                              isNavActive(to)
-                                ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
-                                : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground',
-                              sidebarCollapsed
-                                ? 'justify-center aspect-square p-2 w-9'
-                                : 'gap-2 px-2.5 py-1.5',
+                              'size-3.5 shrink-0 transition-transform',
+                              navCollapsed(group.id) && '-rotate-90',
                             )}
-                            onClick={() => setMobileSidebarOpen(false)}
-                          >
-                            <Icon
-                              className="w-4 h-4 shrink-0"
-                              style={color ? { color } : undefined}
+                          />
+                          {navCollapsed(group.id) && (
+                            <span className="ml-auto shrink-0 rounded-full bg-sidebar-accent px-1.5 py-px text-10 font-semibold tabular-nums text-sidebar-foreground/70">
+                              {group.items.length}
+                            </span>
+                          )}
+                        </button>
+                      )}
+
+                      {!itemsHidden && (
+                        <div className={cn(
+                          sidebarCollapsed
+                            ? 'flex flex-col items-center px-0 space-y-1'
+                            : group.isPipeline
+                              ? 'relative pl-3 pr-2.5 py-0.5 space-y-0.5'
+                              : 'px-2.5 py-0.5 space-y-0.5',
+                        )}>
+                          {/* 研发生命周期特有的纵向引导线（展开态） */}
+                          {group.isPipeline && !sidebarCollapsed && (
+                            <div
+                              className="absolute left-2.5 top-4 bottom-4 w-px bg-sidebar-border/80 pointer-events-none"
+                              aria-hidden="true"
                             />
-                            {!sidebarCollapsed && (
-                              <>
-                                <span className="flex-1 truncate">{label}</span>
-                                {typeof count === 'number' && count > 0 && (
-                                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-10 font-semibold text-primary-foreground tabular-nums">
-                                    {count > 99 ? '99+' : count}
-                                  </span>
-                                )}
-                                {capsule && (
-                                  <span className="inline-flex items-center rounded-full border px-1.5 py-px text-10 font-medium uppercase tracking-wide bg-accent-purple-light text-accent-purple border-accent-purple/30">
-                                    {capsule}
-                                  </span>
-                                )}
-                              </>
-                            )}
-                          </NavLink>
-                        );
+                          )}
+                          {/* 管道「项目聚焦」筛选器（CAP-A-15）：?project 统一参数，六站联动过滤。
+                              折叠态（w-16）空间不足不渲染，展开后恢复 */}
+                          {group.isPipeline && !sidebarCollapsed && <PipelineFocusFilter />}
+                          {group.items.map((item) => {
+                            const { to, icon: Icon, label, color, capsule, count, favorite, stageNumber, hint } = item;
+                            // Tooltip/预览触发器的 hover 状态会跨渲染存活：折叠后 TooltipContent
+                            // 才挂载，若指针停在该行，base-ui 会“自动”打开气泡（折叠/展开动画结束后
+                            // 悬浮弹出）。key 绑定折叠态与路由，切换即重挂载、重置 hover 态；
+                            // 顺带消除点击导航后气泡残留。
+                            const navKey = sidebarCollapsed
+                              ? `${to}:c:${location.pathname}`
+                              : `${to}:e`;
 
-                        // 收藏项：hover 预览卡接管（卡片头部含标题，取代收起态的纯 label Tooltip）
-                        if (favorite) {
-                          return (
-                            <RoutePreviewTrigger key={to} path={to} title={label} icon={Icon} side="right">
-                              {renderLink()}
-                            </RoutePreviewTrigger>
-                          );
-                        }
+                            const tooltipText = stageNumber && hint
+                              ? `${stageNumber} ${hint} · ${label}`
+                              : label;
 
-                        return (
-                          <Tooltip key={to}>
-                            <TooltipTrigger asChild>{renderLink()}</TooltipTrigger>
-                            {sidebarCollapsed && (
-                              <TooltipContent side="right">{label}</TooltipContent>
-                            )}
-                          </Tooltip>
-                        );
-                      })}
+                            // NavLink 同时被两条路径消费：收藏项由 RoutePreviewTrigger 克隆
+                            // （base-ui render模式，事件/className/ref 组合合入 DOM），
+                            // 其余项由 Tooltip asChild 克隆——这里只负责产出元素
+                            const renderLink = () => {
+                              const active = isNavActive(to);
+                              return (
+                                <NavLink
+                                  to={to}
+                                  end={to !== '/app/projects'}
+                                  className={cn(
+                                    'flex items-center rounded-lg text-xs font-medium transition-colors relative',
+                                    active
+                                      ? 'bg-sidebar-accent text-sidebar-foreground shadow-2xs border border-sidebar-border/40'
+                                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground border border-transparent',
+                                    sidebarCollapsed
+                                      ? 'justify-center size-10'
+                                      : 'gap-2 px-2.5 py-1.5 h-8 w-full',
+                                  )}
+                                  onClick={() => setMobileSidebarOpen(false)}
+                                >
+                                  {/* 流水线展开模式下的微步进节点，与垂直引导线咬合 */}
+                                  {group.isPipeline && !sidebarCollapsed && (
+                                    <span
+                                      className={cn(
+                                        'absolute -left-1 top-1/2 -translate-y-1/2 size-1.5 rounded-full ring-2 ring-sidebar transition-all duration-200',
+                                        active
+                                          ? 'bg-primary ring-sidebar scale-125'
+                                          : 'bg-sidebar-border/90 hover:bg-sidebar-foreground/60',
+                                      )}
+                                      aria-hidden="true"
+                                    />
+                                  )}
+                                  <Icon
+                                    className="size-4 shrink-0"
+                                    style={color ? { color } : undefined}
+                                  />
+                                  {!sidebarCollapsed && (
+                                    <>
+                                      <span className="flex-1 truncate">{label}</span>
+                                      {stageNumber && (
+                                        <span
+                                          className={cn(
+                                            'font-mono text-10 font-medium px-1.5 py-0.5 rounded tabular-nums transition-colors',
+                                            active
+                                              ? 'bg-sidebar-primary text-sidebar-primary-foreground font-semibold'
+                                              : 'bg-sidebar-accent/70 text-sidebar-foreground/50',
+                                          )}
+                                        >
+                                          {stageNumber}
+                                        </span>
+                                      )}
+                                      {typeof count === 'number' && count > 0 && (
+                                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1.5 text-10 font-semibold text-destructive-foreground tabular-nums">
+                                          {count > 99 ? '99+' : count}
+                                        </span>
+                                      )}
+                                      {capsule && (
+                                        <StatusPill
+                                          tone={capsule === 'admin' ? 'danger' : 'default'}
+                                          className={
+                                            capsule === 'dev'
+                                              ? 'bg-accent-purple-light text-accent-purple'
+                                              : undefined
+                                          }
+                                        >
+                                          {capsule.toUpperCase()}
+                                        </StatusPill>
+                                      )}
+                                    </>
+                                  )}
+                                  {/* 折叠窄栏：有待处理/未读时右上角红点（不显数字） */}
+                                  {sidebarCollapsed &&
+                                    typeof count === 'number' &&
+                                    count > 0 && (
+                                      <span
+                                        className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive ring-2 ring-sidebar"
+                                        aria-hidden="true"
+                                      />
+                                    )}
+                                </NavLink>
+                              );
+                            };
+
+                            // 收藏项：hover 预览卡接管（卡片头部含标题，取代收起态的纯 label Tooltip）
+                            if (favorite) {
+                              return (
+                                <RoutePreviewTrigger
+                                  key={`${navKey}:f`}
+                                  path={to}
+                                  title={label}
+                                  icon={Icon}
+                                  side="right"
+                                >
+                                  {renderLink()}
+                                </RoutePreviewTrigger>
+                              );
+                            }
+
+                            return (
+                              <Tooltip key={navKey}>
+                                <TooltipTrigger asChild>{renderLink()}</TooltipTrigger>
+                                {sidebarCollapsed && (
+                                  <TooltipContent side="right">{tooltipText}</TooltipContent>
+                                )}
+                              </Tooltip>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </nav>
               </div>
 
-              {/* Sidebar Toggle Button - Only show when collapsed */}
+              {/* Sidebar Toggle Button & Notification & Search - Only show when collapsed */}
               {sidebarCollapsed && (
-                <div className="shrink-0 px-3 py-3">
+                <div className="shrink-0 flex flex-col items-center gap-1.5 px-0 py-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <NavLink
+                        to="/app/search"
+                        className={({ isActive }) =>
+                          cn(
+                            'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                            isActive && 'bg-sidebar-accent text-sidebar-foreground',
+                          )
+                        }
+                        aria-label={t('nav.search')}
+                      >
+                        <Search className="size-4" />
+                      </NavLink>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {t('nav.search')}
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <NavLink
+                        to="/app/notifications"
+                        className={({ isActive }) =>
+                          cn(
+                            'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                            isActive && 'bg-sidebar-accent text-sidebar-foreground',
+                          )
+                        }
+                        aria-label={t('nav.notifications')}
+                      >
+                        <Bell className="size-4" />
+                        {unreadCount > 0 && (
+                          <span
+                            className="absolute right-1 top-1 size-2 rounded-full bg-destructive ring-2 ring-sidebar"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </NavLink>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {t('nav.notifications')}
+                    </TooltipContent>
+                  </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
                         onClick={toggleSidebar}
-                        className="flex w-full items-center justify-center aspect-square p-2.5 rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground transition-colors"
+                        className="flex items-center justify-center size-10 rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground transition-colors"
                         aria-label={t('shell.expandSidebar')}
                       >
-                        <PanelLeftOpen className="w-5 h-5 shrink-0" />
+                        <PanelLeftOpen className="size-4.5 shrink-0" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -411,14 +731,14 @@ export function ShellLayout() {
           </aside>
 
           {/* Main content area */}
-          <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-sidebar">
-            {/* TabBar - 与侧边栏统一 */}
-            <div className="bg-sidebar">
+          <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-sidebar/85 backdrop-blur-xl">
+            {/* TabBar - 与侧边栏连通的一体化磨砂画布 */}
+            <div className="bg-transparent">
               <TabBar />
             </div>
 
             {/* Mobile header */}
-            <div className="flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 py-2 md:hidden">
+            <div className="flex items-center gap-2 bg-sidebar/85 backdrop-blur-md px-3 py-2 md:hidden">
               <button
                 type="button"
                 className="rounded-md bg-transparent p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
@@ -431,24 +751,25 @@ export function ShellLayout() {
               <span className="text-sm font-medium text-sidebar-foreground">{t('shell.appName')}</span>
             </div>
 
-            {/* Content area with rounded rectangle - 只有页面内容在圆角矩形内 */}
-            <div className="flex flex-1 overflow-hidden p-3 pt-0 pl-0 bg-sidebar">
-              <div className="h-full w-full overflow-hidden rounded-xl bg-background shadow-lg border border-border/50">
+            {/* Content area with rounded rectangle - 悬浮在磨砂画布上的工作台卡片 */}
+            <div className="flex flex-1 overflow-hidden p-2.5 pt-0 pl-0 bg-transparent">
+              <div className="h-full w-full overflow-hidden rounded-xl bg-background/95 shadow-sm border border-border/60 backdrop-blur-xs">
                 {/* Project Context Bar (only on project sub-routes, excluding /app/projects/dashboard) */}
                 {isProjectDetailRoute && currentProjectId && (
                   <ProjectContextBar projectId={currentProjectId} project={currentProject} />
                 )}
 
-                {/* Page content：项目详情路由由页面内部自管滚动（主区/右侧栏各自独立），
-                    其余页面沿用 shell 层 ScrollArea 滚动 */}
-                {isProjectDetailRoute ? (
+                {/* Page content：项目详情与带 selfScroll handle 的详情路由由页面内部
+                    自管滚动（toolbar 固定、主区/侧栏各自独立）；其余页面沿用 shell 层
+                    ScrollArea 滚动，fill 让页面至少占满视口高度 */}
+                {isProjectDetailRoute || routeSelfScroll ? (
                   <div className="flex h-full w-full flex-col overflow-hidden">
                     <ErrorBoundary fallback={<PageErrorFallback />}>
                       <Outlet />
                     </ErrorBoundary>
                   </div>
                 ) : (
-                  <ScrollArea className="h-full w-full">
+                  <ScrollArea className="h-full w-full" fill>
                     <ErrorBoundary fallback={<PageErrorFallback />}>
                       <Outlet />
                     </ErrorBoundary>
@@ -458,12 +779,56 @@ export function ShellLayout() {
             </div>
           </main>
 
-          {/* Floating Actions - bottom left corner */}
-          <FloatingActions theme={mode} onToggleTheme={toggleTheme} />
+          {/* 主 AI 助手：右下角圆形按钮 + 浮窗对话（可放大） */}
+          <AssistantFab />
+
+          {/* 局部侵入问答（CAP-C-07）：Ctrl/Cmd+左键卡片就地 AI 解释 */}
+          <AISlotLayer />
+
+          {/* 底部统一操作中枢与 AI 协同面 (Dock 栏) */}
+          <BottomDock />
+
+          {/* 全局统一创建面板（Dock「新建」等与页面无关的创建入口） */}
+          <GlobalCreateDialog />
+
+          {/* 桌面端首启初始化向导（桌面模式且未完成时弹出） */}
+          <OnboardingGate />
         </div>
       </TabsProvider>
       </ShellSidebarProvider>
     </CommandPaletteProvider>
+  );
+}
+
+/**
+ * 管道「项目聚焦」筛选器（CAP-A-15）：研发生命周期分组头下方的紧凑项目下拉。
+ * 值走 usePipelineProjectFilter（URL ?project 优先，store 兜底）；
+ * 「全部项目」= 清空聚焦（null）。仅展开态渲染（折叠 w-16 由调用方隐藏）。
+ */
+function PipelineFocusFilter() {
+  const { t } = useTranslation();
+  const { focusProjectId, setProjectId } = usePipelineProjectFilter();
+  const { data } = useProjectList({ pageSize: 100 });
+  const projects = data?.items ?? [];
+
+  return (
+    <div className="flex items-center gap-1.5 pb-1 pt-0.5">
+      <span className="shrink-0 text-10 font-medium text-sidebar-foreground/40">
+        {t('shell.pipelineFocus.label', '项目聚焦')}
+      </span>
+      <NativeSelect
+        aria-label={t('shell.pipelineFocus.label', '项目聚焦')}
+        value={focusProjectId ?? ''}
+        onChange={(e) => setProjectId(e.target.value || null)}
+        size="sm"
+        className="h-6 min-w-0 flex-1 text-10"
+      >
+        <option value="">{t('shell.pipelineFocus.allProjects', '全部项目')}</option>
+        {projects.map((p) => (
+          <option key={p.id} value={p.id}>{p.name}</option>
+        ))}
+      </NativeSelect>
+    </div>
   );
 }
 
@@ -511,8 +876,11 @@ function ProjectContextBar({
   const tabs = useMemo(
     () => [
       { value: 'overview', label: t('project.detail.overview'), icon: BarChart3 },
-      { value: 'tasks', label: t('project.detail.tasks'), icon: ListTodo },
+      // 工单 tab 路由 2026-09-06 Task→Issue 改名后为 issues（value 与 URL 段一致）
+      { value: 'issues', label: t('project.detail.tasks'), icon: ListTodo },
       { value: 'milestones', label: t('project.detail.milestones'), icon: Milestone },
+      { value: 'profile', label: t('project.detail.profile'), icon: BookMarked },
+      { value: 'playbook', label: t('project.detail.playbook'), icon: RouteIcon },
       { value: 'team', label: t('project.detail.team'), icon: Users },
       { value: 'settings', label: t('nav.settings'), icon: Settings },
     ],
@@ -604,9 +972,11 @@ function ProjectContextBar({
 
   return (
     <>
+      {/* 头部工具栏属于内容卡而非恒暗 chrome：用内容表面色（日间浅色），
+          而非 bg-sidebar（日间也深），避免白卡上顶一条深色带 */}
       <SubPageToolbar
         aiId="shell.project-context"
-        className="bg-sidebar"
+        className="bg-background"
         breadcrumbs={[
           { label: t('nav.projects'), to: '/app/projects' },
           { label: project?.name || t('project.title'), to: `/app/projects/${projectId}` },

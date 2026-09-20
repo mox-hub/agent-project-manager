@@ -1,0 +1,6 @@
+
+# Electron 打包产物（大文件严禁入库）——规则相对本 .gitignore 所在目录解析，
+# 不能带 apps/desktop/ 前缀（带了等于 apps/desktop/apps/desktop/...，永不命中）
+/dist-release/
+/dist-release*/
+/release/

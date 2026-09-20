@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotificationCenterPage } from './notification-center-page';
 
@@ -12,14 +13,32 @@ vi.mock('../hooks/use-notifications', () => ({
   useMarkNotificationsRead: () => ({ mutate: markMutateMock }),
 }));
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+vi.mock('@/modules/assistant/hooks/use-assistant-session', () => ({
+  useAssistantConversationList: () => ({ data: [], isLoading: false }),
+}));
+
+vi.mock('@/infrastructure/store/app-store', () => ({
+  useAppStore: (selector: (s: Record<string, unknown>) => unknown) =>
+    selector({
+      favoritePages: [],
+      toggleFavoritePage: vi.fn(),
+      openAssistantConversation: vi.fn(),
+    }),
+}));
+
 describe('NotificationCenterPage', () => {
   beforeEach(() => {
     useNotificationsMock.mockReset();
     markMutateMock.mockReset();
     useNotificationsMock.mockReturnValue({
       isLoading: false,
+      // 真实契约形状：GET /notifications → { data, meta }（非标准 PaginatedData）
       data: {
-        items: [
+        data: [
           {
             id: 'n1',
             type: 'task_assigned',
@@ -29,18 +48,18 @@ describe('NotificationCenterPage', () => {
             createdAt: '2026-03-28T10:00:00.000Z',
           },
         ],
-        total: 1,
-        page: 1,
-        pageSize: 20,
+        meta: { total: 1, page: 1, pageSize: 20 },
       },
     });
   });
 
   it('renders notifications and switches filter tab', async () => {
     render(
-      <MemoryRouter>
-        <NotificationCenterPage />
-      </MemoryRouter>,
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <NotificationCenterPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Notifications' })).toBeTruthy();
@@ -53,9 +72,11 @@ describe('NotificationCenterPage', () => {
 
   it('marks single notification as read on click', async () => {
     render(
-      <MemoryRouter>
-        <NotificationCenterPage />
-      </MemoryRouter>,
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <NotificationCenterPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     fireEvent.click(await screen.findByText('Task assigned'));

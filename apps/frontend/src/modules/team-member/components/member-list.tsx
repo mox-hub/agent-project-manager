@@ -12,6 +12,7 @@ import { DataList, type DataListItem } from '@/components/ui/data-list';
 import type { MenuItem } from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
 import type { Member } from '../types';
+import { isSystemAssistantMember } from '@/shared/member/types';
 import { MemberAvatar } from './member-avatar';
 import { TrustLevelBadge } from './trust-level-badge';
 
@@ -50,7 +51,7 @@ export function MemberList({
         onClick: () => onMemberClick(member),
       },
     ];
-    if (isAdmin && member.status === 'active' && onDeactivate) {
+    if (isAdmin && member.status === 'active' && onDeactivate && !isSystemAssistantMember(member)) {
       items.push({
         id: 'deactivate',
         label: t('members.deactivate', '停用'),
@@ -90,7 +91,7 @@ export function MemberList({
           ) : (
             <UserIcon className="size-4 shrink-0 text-accent-blue" />
           )}
-          <TrustLevelBadge level={member.trustLevel} score={member.trustScore} />
+          <TrustLevelBadge level={member.trustLevel} />
           <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
             <span
               className={cn(

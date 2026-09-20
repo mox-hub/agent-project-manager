@@ -137,7 +137,11 @@ export class CreateMemberDto {
   @IsIn(EXECUTION_ROLES as unknown as string[])
   defaultExecutionRole?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    required: false,
+    type: Object,
+    additionalProperties: true,
+  })
   @IsOptional()
   metadata?: Record<string, unknown>;
 
@@ -228,7 +232,11 @@ export class UpdateMemberDto {
   @IsIn(EXECUTION_ROLES as unknown as string[])
   defaultExecutionRole?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    required: false,
+    type: Object,
+    additionalProperties: true,
+  })
   @IsOptional()
   metadata?: Record<string, unknown>;
 

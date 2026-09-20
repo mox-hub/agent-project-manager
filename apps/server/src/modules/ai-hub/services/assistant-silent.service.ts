@@ -1,0 +1,1092 @@
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { PrismaService } from '../../../core/database/prisma.service';
+import { AdapterRegistryService } from './adapter-registry.service';
+import { UsagePricingService } from './usage-pricing.service';
+import { listWorkflowActions } from '../../workflow/workflow-actions';
+
+/**
+ * 统一后台静默 AI 机制 —— 各页面「预留 AI 接口」的单一接入协议。
+ *
+ * 协议：POST /ai/assistant/silent { scenario, projectId?, context? } → { scenario, data }
+ * 场景在 SCENARIOS 注册表登记（instructions 构建器 + 响应约定），页面各自传入
+ * 上下文拿到结构化 JSON 建议；无流式、不落消息，AIUsageLog 记账。
+ * 新页面需求 = 在 SCENARIOS 加一个场景 + 前端传 scenario 名，不再各起端点。
+ */
+
+interface SilentScenario {
+  /** 场景说明（目录/文档用） */
+  description: string;
+  /** 由页面上下文构建系统指令 */
+  buildInstructions: (context: Record<string, unknown>) => string;
+  /**
+   * 可选的服务端侦查钩子：在构建指令前按上下文加载权威事实（精确 grounding）。
+   * 锚点问答等"先侦查再开口"场景用；前端传来的上下文只有指针（kind+id），
+   * 事实一律以数据库为准。
+   */
+  prepareContext?: (
+    context: Record<string, unknown>,
+    deps: { prisma: PrismaService },
+  ) => Promise<Record<string, unknown>>;
+}
+
+export const SILENT_SCENARIOS: Record<string, SilentScenario> = {
+  'quick-prompts': {
+    description:
+      '助理面板快捷问法：按项目上下文生成 3~4 条适合当下提问的短问题',
+    buildInstructions: (context) => `你是项目管理系统的主 AI 助理「小周」。
+请根据当前上下文，为用户生成 3~4 条「现在最值得问你的问题」，作为输入框上方的快捷问法 chips。
+要求：每条不超过 20 个字；口语化、可直接点击发送；结合项目/工作区的实际状态（如风险、待决、进度）。
+${context.projectName ? `当前项目：${String(context.projectName)}。` : '当前处于工作区全局视图（无项目上下文）。'}
+${context.viewing ? `用户正在查看：${JSON.stringify(context.viewing)}。` : ''}
+只输出 JSON：{"prompts": ["问题1", "问题2", "问题3"]}`,
+  },
+  'create-suggestions': {
+    description: '统一创建面板建议：按表单草稿字段生成可回填的建议 chips',
+    buildInstructions: (
+      context,
+    ) => `你是项目管理系统的小助理。用户正在创建面板填写${String(context.type ?? '条目')}表单，已填内容：
+${JSON.stringify(context.fields ?? {})}
+请生成 3~5 条补全建议（优先级、标签、负责人提示、截止日期、验收要点等），每条给出展示文案与可回填字段。
+field 只能是：title、priority(low|medium|high|critical)、labels(逗号分隔字符串)、dueDate(YYYY-MM-DD)。
+只输出 JSON：{"suggestions": [{"label": "展示文案", "field": "priority", "value": "high"}]}`,
+  },
+  'create-draft': {
+    description:
+      '统一创建面板 AI 代理草稿（CAP-A-18）：一句话自然语言解析为实体创建草稿（type + fields），前端草稿卡人确认后复用手动提交流落库',
+    prepareContext: async (context) => {
+      const prompt =
+        typeof context.prompt === 'string' ? context.prompt.trim() : '';
+      if (!prompt) {
+        throw new BadRequestException(
+          'create-draft 缺少 prompt：请描述要创建的内容',
+        );
+      }
+      return context;
+    },
+    buildInstructions: (context) => {
+      const typeHint =
+        typeof context.typeHint === 'string' ? context.typeHint : '';
+      return `你是项目管理系统的创建代理。用户会用一句自然语言描述想创建的内容，请解析为结构化创建草稿，供人确认后落库。
+${typeHint ? `用户已把面板类型切到「${typeHint}」，type 必须用它。` : '请从描述自行判断最合适的目标类型。'}
+用户描述：${JSON.stringify(String(context.prompt ?? ''))}
+${context.projectName ? `当前项目：${String(context.projectName)}（projectId=${String(context.projectId ?? '')}）。` : '当前处于工作区全局视图。'}
+type 只能是：task / bug / doc / project / milestone。
+字段约定：
+- title 必填（project/milestone 同样放 title）；description 一两句补充。
+- task/bug：priority(low|medium|high|critical)、status(todo|in_progress|in_review|done|canceled)、dueDate(YYYY-MM-DD)、labels(字符串数组)；bug 另有 severity(critical|high|medium|low)。
+- doc：category(requirement|analysis|design|api|testing|guide|custom)。
+- project：只解析 title/description，其余字段留给人填。
+- 宁缺毋假：描述里没有的信息置 null，绝不编造日期、人名或标签。
+只输出 JSON：{"type": "task", "fields": {"title": "...", "description": "...", "priority": "high", "severity": null, "status": null, "dueDate": null, "labels": null, "category": null}}`;
+    },
+  },
+  'project-score': {
+    description: '项目 AI 洞察：在规则健康分之上给出评分与文字分析',
+    buildInstructions: (
+      context,
+    ) => `你是项目管理系统的 AI 分析师。请基于以下项目数据做一次快速健康评估：
+${JSON.stringify(context)}
+规则健康分仅供参考（0-100）。请输出 0-100 的 AI 评分、一段 2~3 句的中文总结、最多 3 条风险、最多 3 条建议。
+只输出 JSON：{"score": 82, "summary": "...", "risks": ["..."], "suggestions": ["..."]}`,
+  },
+  'anchor-qa': {
+    description:
+      '行内锚点问答：用户在实体页就地点名提问（锚点=显式上下文），服务端加载实体事实做精确 grounding，答案附可就地落库的动作建议',
+    prepareContext: async (context, { prisma }) => ({
+      ...context,
+      task: await loadTaskAnchorFacts(prisma, context.anchor),
+    }),
+    buildInstructions: (context) => {
+      const question = String(context.question ?? '').trim();
+      if (!question) {
+        throw new BadRequestException('行内问答缺少问题（question）');
+      }
+      return `你是项目管理系统的主 AI 助理「小周」。用户在任务页就地提问，必须基于下面给定的任务事实回答，不要编造事实里没有的内容。
+任务事实（权威，来自数据库）：
+${JSON.stringify(context.task ?? {})}
+
+用户问题：${question}
+
+回答要求：直接、简洁（3~5 句内）、先给结论；涉及"现在什么状态"必须引用事实；事实不足以回答时明确说"我查一下/这一点我没有数据"，绝不猜。
+如果回答自然引出一步就能落库的操作，附最多 2 条动作建议（用户点击后由前端走既有任务接口落库）。action 只能是：
+- "task.update_status"：params {"status": "状态 key"}
+- "task.update_priority"：params {"priority": "low|medium|high|critical"}
+- "task.update_due_date"：params {"dueDate": "YYYY-MM-DD"}
+不确定的操作就不要给，宁缺毋滥。
+只输出 JSON：{"answer": "...", "actions": [{"label": "按钮文案", "action": "task.update_status", "params": {"status": "done"}}]}`;
+    },
+  },
+  'card-explain': {
+    description:
+      '局部侵入问答：用户 Ctrl/Cmd+左键实体卡片就地解释（无显式问题时解释卡片上最值得知道的事），服务端加载实体事实做精确 grounding',
+    prepareContext: async (context, { prisma }) => ({
+      ...context,
+      entityFacts: await loadCardEntityFacts(prisma, context.entity),
+    }),
+    buildInstructions: (context) => {
+      const question = String(context.question ?? '').trim();
+      return `你是项目管理系统的主 AI 助理「小周」。用户对界面上的一张卡片按下了「就地解释」（Ctrl/Cmd+左键），默认读者是不熟悉工程与项目管理的新手。请只基于下面给定的实体事实，用大白话解释这张卡片。
+实体事实（权威，来自数据库）：
+${JSON.stringify(context.entityFacts ?? {})}
+${question ? `用户带着具体问题，优先回答它：${question}` : '用户没有具体问题——解释这张卡片上「最值得知道的事」。'}
+
+输出要求：
+- summary：2~3 句大白话说清「这是什么、现在什么状态」
+- details：2~4 条逐项解释（label 用短语，text 用大白话），覆盖此卡片最关键的面（状态/负责人/验收/风险等）
+- nextStep：一句话建议用户下一步该看什么或做什么；实在没有就给空字符串
+绝不编造事实里没有的内容；事实不足以回答的部分明确说「这一点我暂时没有数据」。
+契约绑定卡要顺带用大白话解释绑定模式（managed=系统托管生成、synced=观察文件手改、detached=已解绑不管）与冲突态。
+验收卡要顺带解释审计风险级别含义（red=有强阻断项不能交付、yellow=有建议补全项、green=无缺失），并点出验收标准里最关键的一条。
+只输出 JSON：{"title": "卡片标题（任务名/决策名/成员名/文档名，契约绑定行用文件类型名）", "summary": "...", "details": [{"label": "...", "text": "..."}], "nextStep": "..."}`;
+    },
+  },
+  'memory-digest': {
+    description:
+      '记忆消化器：会话静默后离线沉淀纪要/偏好/结论原子（写入 Store B，必带溯源）',
+    buildInstructions: (context) => {
+      const messages = Array.isArray(context.messages) ? context.messages : [];
+      if (messages.length === 0) {
+        throw new BadRequestException('无可消化的会话内容');
+      }
+      return `你是 APM 系统的记忆消化器。下面是用户与主 AI「小周」的一段对话记录，请提炼值得长期记住的记忆原子。只提炼"数据库查不到的偏好与结论"，绝不重复存能实时查到的状态（健康分/在途执行/任务状态一律不要）。
+对话记录：
+${JSON.stringify(context.messages)}
+
+要求：
+- summary：1 条会话纪要（最近状态与约定，供下次交接续接），不超过 120 字；无可提炼给空字符串
+- preferences：0~2 条用户偏好（表达方式/工作习惯/关注点）
+- conclusions：0~2 条结论或约定（讨论后达成的决定）
+拿不准的宁可不写；整体没有可提炼的输出空字段。
+只输出 JSON：{"summary": "...", "preferences": [{"content": "...", "confidence": 0.8}], "conclusions": [{"content": "...", "confidence": 0.8}]}`;
+    },
+  },
+  'grill-next': {
+    description:
+      'grill 需求拷问（创建面板 AI 代理模式）：无状态多轮——服务端加载 grilling 技能指令，按已问答历史出下一问（含猜测选项）或在收敛时输出结构化需求摘要',
+    prepareContext: async (context, { prisma }) => ({
+      ...context,
+      skillContent: await loadGrillingInstruction(prisma, context),
+    }),
+    buildInstructions: (context) => {
+      const history = Array.isArray(context.history) ? context.history : [];
+      const draft = String(context.draft ?? '').trim();
+      if (!draft && history.length === 0) {
+        throw new BadRequestException(
+          'grill 缺少输入：需求草稿（draft）与问答历史（history）至少一项',
+        );
+      }
+      if (!context.skillContent) {
+        throw new BadRequestException(
+          'grilling 技能不可用：请在 设置 → Agent 管理 → Skills 中启用或导入',
+        );
+      }
+      return `${String(context.skillContent)}
+
+——以下为本次会话数据——
+用户最初的想法：${draft || '（未提供，以问答历史为准）'}
+已完成的问答（按序）：
+${history.length ? JSON.stringify(history) : '（还没有，这是第一问）'}
+
+按技能指令决定：未收敛时输出 {"done": false, "question": "...", "choices": [...]}；已能诚实写出摘要时输出 {"done": true, "summary": {...}}。只输出 JSON。`;
+    },
+  },
+  'interview-prefill': {
+    description:
+      '剧本访谈预填（CAP-P-01）：按用户一句话需求（或 grill 摘要）为当前阶段每个访谈问题生成答案候选，人修改后走既有 submitInterview',
+    buildInstructions: (context) => {
+      const questions = Array.isArray(context.questions)
+        ? context.questions
+        : [];
+      if (questions.length === 0) {
+        throw new BadRequestException('访谈预填缺少问题组（questions）');
+      }
+      const requirement = String(context.requirement ?? '').trim();
+      return `你是项目管理系统的需求访谈助手。用户对下面这份访谈表单里的每个问题，按其需求描述预填一份答案候选；用户会在此基础上修改，所以候选要具体、可执行、说人话，绝不编造需求里没有的承诺（拿不准就写「待确认：…」）。
+用户的需求描述：
+${requirement || '（未提供，按问题自身语境给出常见合理候选）'}
+访谈问题组：
+${JSON.stringify(questions)}
+只输出 JSON：{"answers": [{"questionId": "问题 id", "answer": "答案候选"}]}，answers 必须覆盖每一个问题。`;
+    },
+  },
+  'intake-composite': {
+    description:
+      '组合件提案生成（CAP-P-01 二期）：读需求承接剧本的「任务拆解」与「验收草案」两份工件，AI 代写「任务族 + 每任务验收标准」的组合件 plan 卡 payload，人批卡后事务化落库',
+    prepareContext: async (context, { prisma }) => {
+      const ids = [
+        context.breakdownDocumentId,
+        context.acceptanceDocumentId,
+        context.analysisDocumentId,
+      ].filter((v): v is string => typeof v === 'string' && !!v);
+      if (ids.length === 0) {
+        throw new BadRequestException(
+          '组合件生成缺少工件：breakdownDocumentId / acceptanceDocumentId / analysisDocumentId 至少一项',
+        );
+      }
+      const docs = await prisma.document.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, title: true, content: true },
+      });
+      if (docs.length === 0) {
+        throw new BadRequestException('工件文档不存在');
+      }
+      return { ...context, documents: docs };
+    },
+    buildInstructions: (context) => {
+      const docs = Array.isArray(context.documents) ? context.documents : [];
+      if (docs.length === 0) {
+        throw new BadRequestException('组合件生成缺少工件文档');
+      }
+      return `你是项目管理系统的需求拆解助手。下面是需求承接访谈产出的工件（任务拆解 / 验收草案 / 需求分析报告），请把它们转成一份「任务族 + 验收清单」组合件提案 payload，供人在决策收件箱一次批卡落库。
+工件：
+${JSON.stringify(docs)}
+
+要求：
+- tasks：把拆解清单的每一块转成一个任务；title 短句动词开头；description 一句话补充；estimate 是小时数（拿不准给 8）。
+- 每个任务带 acceptance.criteria（1~4 条），从验收草案与需求分析报告的 acceptancePreview 中挑选与该任务相关的可检查标准；两处都不足以支撑的任务给空 criteria 数组，绝不编造。
+- 需求分析报告 risks 中与某任务直接相关的风险（severity=high），在该任务 description 末尾追加「⚠ 风险：…」一句提示。
+- 宁缺毋假：工件里没有的信息留空，不要发明需求。
+只输出 JSON：{"tasks": [{"title": "...", "description": "...", "estimate": 8, "acceptance": {"criteria": [{"criteriaType": "functional", "content": "...", "category": "..."}]}}]}`;
+    },
+  },
+  'acceptance-draft': {
+    description:
+      '验收标准代写（兜底改造批 3）：按工单标题/描述/待办与项目上下文产出 3~6 条可检查的验收标准草案，人确认后经 /acceptance/issue/:id/apply-criteria 落契约',
+    prepareContext: async (context, { prisma }) => {
+      // 两种模式：issueId 存在 = 按已建工单侦查（权威事实）；缺失 = 创建面板
+      // 按表单草稿字段（title/description/type/projectName）生成
+      const issueId = String(context.issueId ?? '');
+      if (!issueId) {
+        const title = String(context.title ?? '').trim();
+        if (!title) {
+          throw new BadRequestException(
+            '验收标准代写缺少上下文：issueId 或 title 至少一项',
+          );
+        }
+        return context;
+      }
+      const issue = await prisma.issue.findUnique({
+        where: { id: issueId },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          todoItems: true,
+          type: true,
+          project: { select: { name: true } },
+        },
+      });
+      if (!issue) {
+        throw new BadRequestException(`工单不存在：${issueId}`);
+      }
+      return { ...context, issue };
+    },
+    buildInstructions: (context) => {
+      const issue = (context.issue as
+        | {
+            title: string;
+            description: string | null;
+            todoItems: unknown;
+            type: string;
+            project: { name: string } | null;
+          }
+        | undefined) ?? {
+        // 创建面板草稿模式：直接取表单字段
+        title: String(context.title ?? ''),
+        description: context.description ? String(context.description) : null,
+        todoItems: null,
+        type: String(context.type ?? 'task'),
+        project: context.projectName
+          ? { name: String(context.projectName) }
+          : null,
+      };
+      if (!issue.title.trim()) {
+        throw new BadRequestException('验收标准代写缺少工单标题');
+      }
+      return `你是项目管理系统的验收标准助手。请为下面这张工单代写 3~6 条「可检查」的验收标准草案，供人确认后落入验收契约。读者是不熟悉工程的新手，每条标准都要说人话、可主观判定通过与否。
+
+工单类型：${issue.type === 'bug' ? '缺陷' : '任务'}
+标题：${issue.title}
+描述：${issue.description || '（无）'}
+${issue.todoItems ? `待办清单：${JSON.stringify(issue.todoItems)}` : ''}
+${issue.project ? `所属项目：${issue.project.name}` : ''}
+
+要求：
+- 每条标准描述一个可独立验证的完成迹象（行为/产物/效果），避免「做好」「完善」这类不可判定的措辞。
+- criteriaType 只能是 functional（功能行为）或 technical（技术约束：性能/安全/日志/兼容）。
+- severity 只能是 critical / high / medium / low：缺失即不达标的写 critical，其余按影响面评估。
+- 有明确依据的才写；工单信息不足的条目写「待确认：…」并在 category 标注 assumptions。
+只输出 JSON：{"criteria": [{"content": "...", "criteriaType": "functional", "severity": "medium", "category": ""}]}`;
+    },
+  },
+  'analysis-draft': {
+    description:
+      '需求分析代写（CAP-P-01 四期）：读调研/澄清工件与项目契约绑定（影响面 grounding），AI 代写结构化分析报告（可行性/影响面/依赖/风险/验收预清单），人确认后落 analysis 文档',
+    prepareContext: async (context, { prisma }) => {
+      const ids = [
+        context.researchDocumentId,
+        context.clarifyDocumentId,
+      ].filter((v): v is string => typeof v === 'string' && !!v);
+      if (ids.length === 0) {
+        throw new BadRequestException(
+          '分析生成缺少工件：researchDocumentId / clarifyDocumentId 至少一项',
+        );
+      }
+      const docs = await prisma.document.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, title: true, content: true, projectId: true },
+      });
+      if (docs.length === 0) {
+        throw new BadRequestException('工件文档不存在');
+      }
+      // K 线咬合：契约绑定是文件级影响面的权威来源，注入供 AI 影响面段落引用
+      const projectId = String(context.projectId ?? docs[0]?.projectId ?? '');
+      const contractBindings = projectId
+        ? await prisma.contractFileBinding.findMany({
+            where: { projectId },
+            select: {
+              fileType: true,
+              filePath: true,
+              syncMode: true,
+              conflictState: true,
+            },
+          })
+        : [];
+      return { ...context, documents: docs, contractBindings };
+    },
+    buildInstructions: (context) => {
+      const docs = Array.isArray(context.documents) ? context.documents : [];
+      if (docs.length === 0) {
+        throw new BadRequestException('分析生成缺少工件文档');
+      }
+      const bindings = Array.isArray(context.contractBindings)
+        ? context.contractBindings
+        : [];
+      return `你是项目管理系统的需求分析助手。下面是需求承接访谈产出的工件（调研纪要 / 澄清纪要），请代写一份结构化需求分析报告，供人确认后归档。读者是不熟悉工程的新手，结论要说人话。
+工件：
+${JSON.stringify(docs)}
+${bindings.length ? `项目已有的契约绑定文件（影响面的权威素材，评估「会牵连谁」时必须对照）：\n${JSON.stringify(bindings)}\n` : ''}要求：
+- feasibility：verdict 只能是 go / conditional / no-go；rationale 2~3 句；conditions 是放行条件（无则空数组）。
+- impact：summary 一句话；affectedAreas 逐条列出会被牵连的功能/系统/文档（有契约绑定时必须逐个对照说明是否受影响）。
+- dependencies：外部依赖（接口、权限、第三方、人工配合），每条带 note 说明卡点。
+- risks：最多 5 条，severity 只能是 high / medium / low，每条配 mitigation 应对办法；工件里没有线索的风险不要发明。
+- acceptancePreview：3~6 条可检查的验收要点草案（后续拆解阶段会展开成正式标准）。
+- 宁缺毋假：工件与绑定清单里没有的信息留空或写「待确认」，绝不编造。
+只输出 JSON：{"feasibility": {"verdict": "go", "rationale": "...", "conditions": ["..."]}, "impact": {"summary": "...", "affectedAreas": ["..."]}, "dependencies": [{"item": "...", "note": "..."}], "risks": [{"risk": "...", "severity": "high", "mitigation": "..."}], "acceptancePreview": [{"content": "...", "criteriaType": "functional"}]}`;
+    },
+  },
+  'failure-diagnosis': {
+    description:
+      '执行失败诊断（批一 P0 切片 3，2026-09-17 裁决 D 的按需 LLM 半）：读失败/阻塞执行现场（错误留痕/血缘/验收契约），输出结构化诊断（归类/原因/建议/下一步动作/缺失信息）；执行详情「AI 诊断」按钮按需触发，AIUsageLog 记账；零 token 的机械归类见 execution/failure-classifier',
+    prepareContext: async (context, { prisma }) => {
+      const executionRunId =
+        typeof context.executionRunId === 'string'
+          ? context.executionRunId.trim()
+          : '';
+      if (!executionRunId) {
+        throw new BadRequestException('失败诊断缺少 executionRunId');
+      }
+      const run = await prisma.execution.findUnique({
+        where: { id: executionRunId },
+        select: {
+          id: true,
+          goal: true,
+          title: true,
+          status: true,
+          errorDetail: true,
+          input: true,
+          issue: { select: { title: true, description: true } },
+          acceptance: {
+            select: { criteria: { select: { content: true }, take: 5 } },
+          },
+        },
+      });
+      if (!run) {
+        throw new BadRequestException('执行不存在');
+      }
+      if (!['failed', 'blocked'].includes(run.status)) {
+        throw new BadRequestException('仅失败/阻塞的执行支持诊断');
+      }
+      // 现场瘦身：input 只保留错误相关留痕，别把整包上下文塞给模型
+      const input = (run.input ?? null) as Record<string, unknown> | null;
+      const errorFacts = input
+        ? {
+            dispatchError: input.dispatchError ?? null,
+            retryContext: input.retryContext ?? null,
+          }
+        : null;
+      return {
+        ...context,
+        execution: {
+          goal: run.goal,
+          title: run.title,
+          status: run.status,
+          errorDetail: run.errorDetail ?? null,
+          errorFacts,
+          issue: run.issue,
+          acceptanceCriteria:
+            run.acceptance?.criteria.map((c) => c.content) ?? [],
+        },
+      };
+    },
+    buildInstructions: (context) => {
+      const run = context.execution as Record<string, unknown> | undefined;
+      if (!run) {
+        throw new BadRequestException('失败诊断缺少执行现场');
+      }
+      return `你是项目管理系统里的执行诊断助手。一个智能体执行任务失败了，下面是它的现场（目标、状态、错误留痕、所属任务与验收标准）。请给不懂工程的新手做一份诊断：说清楚「为什么失败、现在最该做什么」。宁缺毋假——现场里没有的线索不要编造，信息不足就明说缺什么。
+现场：
+${JSON.stringify(run)}
+要求：
+- category 只能是 environment（环境问题：命令/文件不存在、权限、网络端口）/ input（输入问题：描述不清、格式不对、信息缺失）/ dependency（依赖问题：前置任务未完成、外部服务未就绪）/ unknown（现场不足以判断）。
+- reason：2~3 句解释最可能的原因，用「现场里有/没有」作为依据。
+- recommendation：一句话给出最该做的下一步，具体可操作（例如「检查 xx 是否安装」而不是「检查环境」）。
+- action 只能是 continue（原样重试大概率能过）/ retry_adjusted（要先调整输入或环境再重试）/ escalate（需要人来处理，AI 自助重试无意义）。
+- missingInfo：判断所缺的关键信息清单，没有就空数组。
+只输出 JSON：{"category": "environment", "reason": "...", "recommendation": "...", "action": "retry_adjusted", "missingInfo": ["..."]}`;
+    },
+  },
+  'interview-dynamic': {
+    description:
+      '剧本访谈动态追问（CAP-P-01 三期）：无状态多轮——基于当前阶段问题组、已答历史与阶段工件深挖澄清（每轮一问 + 猜测选项），收敛时一次性给出问题组完整答案集，人审改后走既有 submitInterview',
+    prepareContext: async (context, { prisma }) => {
+      const ids = Array.isArray(context.artifactDocumentIds)
+        ? (context.artifactDocumentIds as unknown[]).filter(
+            (v): v is string => typeof v === 'string' && !!v,
+          )
+        : [];
+      if (ids.length === 0) return context;
+      const docs = await prisma.document.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, title: true, content: true },
+      });
+      return { ...context, documents: docs };
+    },
+    buildInstructions: (context) => {
+      const questions = Array.isArray(context.questions)
+        ? context.questions
+        : [];
+      if (questions.length === 0) {
+        throw new BadRequestException('访谈动态追问缺少问题组（questions）');
+      }
+      const history = Array.isArray(context.history) ? context.history : [];
+      const purpose = String(context.stagePurpose ?? '').trim();
+      const docs = Array.isArray(context.documents) ? context.documents : [];
+      return `你是项目管理系统的需求访谈员，正在与一位对工程术语不熟的用户对话澄清需求。本阶段目的：${purpose || '（见问题组）'}
+本阶段的访谈问题组（最终要为每一问产出答案）：
+${JSON.stringify(questions)}
+${docs.length ? `本阶段已有的工件材料（优先依据，绝不与之矛盾）：\n${JSON.stringify(docs)}\n` : ''}已完成的对话（按序）：
+${history.length ? JSON.stringify(history) : '（还没有，请开始第一问）'}
+
+规则：
+- 每轮只问一个问题：优先追问对话与工件中「模糊、缺失或自相矛盾」之处；问题组里已有固定问题不必逐条问用户，它们由最终答案集承载。
+- 说人话，不甩术语；给 2~4 个猜测选项降低思考负担（选项只是提示，用户可自由回答）；没有合适的猜测就给空数组。
+- 当对话已足够支撑问题组每一问的答案时收敛。收敛时输出覆盖问题组全部 id 的 answers：答案要具体、可执行、说人话，绝不编造用户没说的承诺（拿不准就写「待确认：…」）。
+- 未收敛只输出 JSON：{"done": false, "question": "...", "choices": ["...", "..."]}
+- 收敛只输出 JSON：{"done": true, "answers": [{"questionId": "问题 id", "answer": "答案"}]}`;
+    },
+  },
+  'workflow-draft': {
+    description:
+      '工作流草拟（CAP-A-12）：用户描述想要的流程，AI 按文法生成 workflow definition 草稿（名称+描述+步骤链），进画布编辑器人工修改后保存',
+    buildInstructions: (context) => {
+      const description = String(context.description ?? '').trim();
+      if (!description) {
+        throw new BadRequestException('草拟工作流缺少流程描述（description）');
+      }
+      const actions = listWorkflowActions();
+      return `你是项目管理系统的流程编排助手。用户会用自然语言描述想要的自动化流程，请把它写成 workflow definition 草稿。
+
+可用的步骤类型（线性链，按顺序执行）：
+- llm：AI 生成文本。字段：id、title、system?、prompt（必填）。输出落在 steps.<id>.value
+- http：外部 HTTP 请求。字段：id、title、url（必填）、method?、body?
+- human-confirm：暂停等人拍板。字段：id、title、message（必填）。批准结果落在 steps.<id>.approved / .note
+- condition：条件闸门，不满足则整个流程失败。字段：id、title、left（插值）、op（eq/ne/gt/gte/lt/lte/contains）、right
+- action：产品动作（落库写数据）。字段：id、title、action（必填）、params。可用动作：
+${JSON.stringify(actions)}
+
+插值语法：{input.x} 引用触发入参，{steps.<stepId>.y} 引用上游输出。步骤 id 用 kebab-case。
+规则：涉及写数据的环节前必须放 human-confirm 让人拍板；params 里只能填用户描述中明确的信息，拿不准的留必填缺失让用户在画布里补；不要发明不存在的动作。
+只输出 JSON：{"name": "流程名", "description": "一句话说明", "steps": [ ...步骤数组... ]}
+
+用户想要的流程：
+${description}`;
+    },
+  },
+
+  'release-notes': {
+    description:
+      '发布说明代写（CAP-K-03 驱动型发版）：按发版范围加载工单与验收事实，起草 Keep a Changelog 风格 markdown 发版说明',
+    prepareContext: async (context, { prisma }) => {
+      const releaseId = String(context.releaseId ?? '');
+      if (!releaseId) return { ...context, release: null };
+      const release = await prisma.release.findUnique({
+        where: { id: releaseId },
+      });
+      if (!release) return { ...context, release: null };
+      const scope =
+        (release.scope as { issueIds?: string[] } | null)?.issueIds ?? [];
+      const issues = scope.length
+        ? await prisma.issue.findMany({
+            where: { id: { in: scope } },
+            select: {
+              title: true,
+              type: true,
+              status: true,
+              acceptances: { select: { title: true, status: true } },
+            },
+          })
+        : [];
+      return {
+        version: release.version,
+        name: release.name,
+        issues,
+      };
+    },
+    buildInstructions: (context) => {
+      if (!context.version) {
+        return `发版不存在或未指定 releaseId，无法起草发布说明。只输出 JSON：{"notes": "", "error": "release not found"}`;
+      }
+      return `你是项目管理系统的 AI 同事「小周」。请为即将发布的版本起草发版说明（Keep a Changelog 风格 markdown）。
+
+版本：${String(context.version)}${context.name ? `「${String(context.name)}」` : ''}
+纳入本版本的工单与验收状态：
+${JSON.stringify(context.issues ?? [])}
+
+要求：
+- 以 ### Added / ### Fixed / ### Changed / ### Removed 分节（按实际内容取舍，空节省略）
+- 每条一句话描述用户可感知的变化，不要罗列内部字段或 ID
+- 语气面向使用团队，克制、具体、不夸大
+- 未验收（非 passed/waived）的工单不得写入说明
+
+只输出 JSON：{"notes": "markdown 文本"}`;
+    },
+  },
+
+  /**
+   * 盯盘叙述（ARCH-AISURFACE-001 §3.3 态三）。
+   *
+   * ## 为什么这个场景**没有** `prepareContext`
+   *
+   * 其余需要「先侦查再开口」的场景，前端只传指针，事实一律回数据库取。本场景反过来：
+   * 事实由**前端组装好的快照**（`context.snapshot`）传入。理由是 §4.7 的「不造第二套
+   * 数据口径」——盯盘面上已经由 `office` / `executions` / `decision` 等**既有服务**取到
+   * 了这些事实，若此处再写一遍聚合查询，就等于在 ai-hub 里长出第二份口径，两份迟早会打架。
+   * 传同一份事实还有个额外好处：**叙述不可能与同屏渲染的数字矛盾**（它们本来就是同一个数）。
+   *
+   * ## 四条硬约束的落点
+   *
+   * ① 事实与叙事分离 → 下面第 1~3 条规则：数字是快照里算好的，模型只翻译。
+   * ② 成本纪律 → 由调用方（前端 hook）以 TTL + 可见性触发保证，绝不逐事件调用；
+   *    本场景的自身开销经 `usage` 回执出去，供 UI 呈现。
+   * ③ 确定性降级 → **不在服务端**：模型不可用/超时/解析失败时，前端回落同源模板叙述。
+   *    服务端不做降级，是因为降级内容也必须建立在这份快照上，而快照只在前端手里。
+   * ④ 不主动弹窗 → 纯返回，是否展示由前端决定。
+   */
+  'surface-narration': {
+    description:
+      '盯盘叙述（CAP-C-08 态三）：读前端组装的盯盘事实快照，翻译成小白读得懂的一句话总述 + 动态 + 阻塞 + 待拍板 + 诚实缺口（只翻译不算数、不发明）',
+    buildInstructions: (context) => {
+      const snapshot = context.snapshot;
+      if (
+        !snapshot ||
+        typeof snapshot !== 'object' ||
+        Array.isArray(snapshot)
+      ) {
+        throw new BadRequestException('盯盘叙述缺少事实快照（snapshot）');
+      }
+      return `你是项目管理系统的 AI 同事「小周」。用户在盯盘面上看着项目，需要你用大白话告诉他此刻的实际状态。
+读者是对工程与项目管理完全不了解的新手，不要甩术语。
+
+事实快照（**唯一依据**：来自系统的既有查询，数字已经算好，字段为 null 表示该口径取不到）：
+${JSON.stringify(snapshot)}
+
+硬规则（违反即视为输出失败）：
+1. **只翻译，不算数**：快照里的数字原样引用。不做加减乘除、不推算百分比、不做"大约/接近"式的改口。
+2. **不发明**：快照里没有的人名、工单名、数字、时间、原因一律不得出现。拿不准就不写。
+3. **空就是空**：某类事实为 null 或为空数组时，明说"暂无"，绝不拿别的数据顶上。
+4. 说人话，句子短，不堆形容词。
+
+输出：
+- headline：一句话总述此刻状态，不超过 40 字。
+- highlights：0~3 条值得一说的动态，每条不超过 30 字。
+- blockers：卡住的事，每条 {what 卡了什么, who 谁在处理或卡在谁那, since 从什么时候（**用快照里的时间原文**）, why 为什么, whatYouCanDo 用户能做什么}；没有就给空数组。
+- needsYou：等用户拍板的事，每条 {decisionId **必须原样取自**快照 needsYou.top[].id, oneLineWhy 一句话说明为什么要你, urgency 原样取自同一项的 urgency}；没有就给空数组。
+- honestGaps：0~3 条**这份快照本身的数据缺口**（取自快照 gaps 字段，原样或改写成大白话），说清"哪件事现在看不到"；没有就给空数组。
+只输出 JSON：{"headline": "...", "highlights": ["..."], "blockers": [{"what": "...", "who": "...", "since": "...", "why": "...", "whatYouCanDo": "..."}], "needsYou": [{"decisionId": "...", "oneLineWhy": "...", "urgency": "blocking"}], "honestGaps": ["..."]}`;
+    },
+  },
+};
+
+/**
+ * grill 驱动指令加载：读启用中的 grilling 技能 content；
+ * 技能缺失/未启用/无正文时返回 null（buildInstructions 层转可读 400）。
+ */
+async function loadGrillingInstruction(
+  prisma: PrismaService,
+  context: Record<string, unknown>,
+): Promise<string | null> {
+  if (typeof context.skillContent === 'string' && context.skillContent.trim()) {
+    return context.skillContent;
+  }
+  const skill = await prisma.skillConfig.findUnique({
+    where: { key: 'grilling' },
+  });
+  if (!skill || !skill.enabled || !skill.content?.trim()) {
+    return null;
+  }
+  return skill.content;
+}
+
+/**
+ * 任务锚点事实加载：只取回答相关的权威字段（含负责人/验收/依赖/近期动态），
+ * 供行内问答精确 grounding。任务不存在抛 400（不静默——锚点是用户显式点的）。
+ */
+async function loadTaskAnchorFacts(
+  prisma: PrismaService,
+  anchor: unknown,
+): Promise<Record<string, unknown>> {
+  const value = (
+    typeof anchor === 'object' && anchor !== null ? anchor : {}
+  ) as { kind?: unknown; id?: unknown };
+  const id = typeof value.id === 'string' ? value.id : '';
+  const kind = typeof value.kind === 'string' ? value.kind : 'task';
+  if (!id) {
+    throw new BadRequestException('锚点缺少实体 id');
+  }
+  if (kind !== 'task') {
+    throw new BadRequestException(`行内问答暂只支持任务锚点，收到：${kind}`);
+  }
+
+  const task = await prisma.issue.findUnique({
+    where: { id },
+    include: {
+      project: { select: { id: true, name: true } },
+      assignee: { select: { displayName: true } },
+    },
+  });
+  if (!task) {
+    throw new BadRequestException('锚点任务不存在');
+  }
+
+  const [assigneeRows, acceptance, dependencies, activities] =
+    await Promise.all([
+      prisma.issueAssignee.findMany({ where: { issueId: id } }),
+      prisma.acceptance.findFirst({
+        where: { issueId: id },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          status: true,
+          title: true,
+          description: true,
+          criteria: { select: { content: true, status: true } },
+        },
+      }),
+      prisma.issueDependency.count({ where: { issueId: id } }),
+      prisma.issueActivity.findMany({
+        where: { issueId: id },
+        orderBy: { timestamp: 'desc' },
+        take: 5,
+        select: { type: true, detail: true, timestamp: true },
+      }),
+    ]);
+
+  // IssueAssignee 与 Member 无 Prisma 关系（memberId 手动关联），二次取成员名
+  const assigneeMemberIds = [
+    ...new Set(assigneeRows.map((row) => row.memberId)),
+  ];
+  const assigneeMembers = assigneeMemberIds.length
+    ? await prisma.member.findMany({
+        where: { id: { in: assigneeMemberIds } },
+        select: { id: true, displayName: true, type: true },
+      })
+    : [];
+  const memberById = new Map(assigneeMembers.map((m) => [m.id, m]));
+
+  return {
+    id: task.id,
+    shortId: task.shortId,
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    priority: task.priority,
+    type: task.type,
+    severity:
+      (task.customFields as Record<string, unknown> | null)?.severity ?? null,
+    dueDate: task.dueDate,
+    project: task.project
+      ? { id: task.project.id, name: task.project.name }
+      : null,
+    assignees: assigneeRows.map((row) => ({
+      name: memberById.get(row.memberId)?.displayName ?? null,
+      type: memberById.get(row.memberId)?.type ?? null,
+    })),
+    legacyAssignee: task.assignee?.displayName ?? null,
+    acceptance: acceptance ?? null,
+    dependencyCount: dependencies,
+    recentActivities: activities,
+  };
+}
+
+/**
+ * 卡片就地解释事实加载：按实体类型取权威字段（task 复用任务锚点事实；
+ * decision/member 取解释所需核心字段）。实体不存在抛 400——卡片是用户
+ * 显式点的，不静默吞掉。
+ */
+async function loadCardEntityFacts(
+  prisma: PrismaService,
+  entity: unknown,
+): Promise<Record<string, unknown>> {
+  const value = (
+    typeof entity === 'object' && entity !== null ? entity : {}
+  ) as { kind?: unknown; id?: unknown };
+  const id = typeof value.id === 'string' ? value.id : '';
+  const kind = typeof value.kind === 'string' ? value.kind : '';
+  if (!id) {
+    throw new BadRequestException('卡片缺少实体 id');
+  }
+
+  if (kind === 'task') {
+    return loadTaskAnchorFacts(prisma, { kind: 'task', id });
+  }
+
+  if (kind === 'decision') {
+    const proposal = await prisma.decisionProposal.findUnique({
+      where: { id },
+    });
+    if (!proposal) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    const proposer = proposal.proposerId
+      ? await prisma.member.findUnique({
+          where: { id: proposal.proposerId },
+          select: { displayName: true, type: true },
+        })
+      : null;
+    return {
+      entityType: 'decision',
+      kind: proposal.kind,
+      title: proposal.title,
+      detail: proposal.detail,
+      status: proposal.status,
+      payload: proposal.payload,
+      resolution: proposal.resolution,
+      proposer: proposer?.displayName ?? null,
+      createdAt: proposal.createdAt,
+    };
+  }
+
+  if (kind === 'member') {
+    const member = await prisma.member.findUnique({
+      where: { id },
+      select: {
+        displayName: true,
+        handle: true,
+        type: true,
+        title: true,
+        description: true,
+        status: true,
+        trustScore: true,
+        trustLevel: true,
+      },
+    });
+    if (!member) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    return { entityType: 'member', ...member };
+  }
+
+  if (kind === 'acceptance') {
+    const acceptance = await prisma.acceptance.findUnique({
+      where: { id },
+      include: {
+        issue: {
+          select: { title: true, shortId: true, status: true, type: true },
+        },
+        criteria: {
+          select: {
+            criteriaType: true,
+            content: true,
+            weight: true,
+            severity: true,
+            status: true,
+          },
+        },
+        auditReport: {
+          select: {
+            riskLevel: true,
+            blockedItems: true,
+            suggestedItems: true,
+            passedItems: true,
+            summary: true,
+            auditDate: true,
+          },
+        },
+      },
+    });
+    if (!acceptance) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    return {
+      entityType: 'acceptance',
+      title: acceptance.title,
+      status: acceptance.status,
+      type: acceptance.type,
+      completionType: acceptance.completionType,
+      issue: acceptance.issue,
+      criteria: acceptance.criteria,
+      auditReport: acceptance.auditReport,
+    };
+  }
+
+  if (kind === 'project') {
+    const project = await prisma.project.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        description: true,
+        projectCode: true,
+        type: true,
+        status: true,
+        workflowStatus: true,
+        healthStatus: true,
+        riskLevel: true,
+        targetDate: true,
+        owner: { select: { displayName: true, username: true } },
+      },
+    });
+    if (!project) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    const { owner, ...projectFields } = project;
+    return {
+      entityType: 'project',
+      ...projectFields,
+      ownerName: owner?.displayName ?? owner?.username ?? null,
+    };
+  }
+
+  if (kind === 'team') {
+    const team = await prisma.team.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        description: true,
+        status: true,
+        teamPrompt: true,
+      },
+    });
+    if (!team) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    return { entityType: 'team', ...team };
+  }
+
+  if (kind === 'contract-binding') {
+    const binding = await prisma.contractFileBinding.findUnique({
+      where: { id },
+      include: { project: { select: { id: true, name: true } } },
+    });
+    if (!binding) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    return {
+      entityType: 'contract-binding',
+      fileType: binding.fileType,
+      filePath: binding.filePath,
+      syncMode: binding.syncMode,
+      conflictState: binding.conflictState,
+      truthOwner: binding.truthOwner,
+      project: binding.project
+        ? { id: binding.project.id, name: binding.project.name }
+        : null,
+      updatedAt: binding.updatedAt,
+    };
+  }
+
+  if (kind === 'document') {
+    const document = await prisma.document.findUnique({
+      where: { id },
+      select: {
+        title: true,
+        status: true,
+        provenance: true,
+        publishedVersionId: true,
+        publishedAt: true,
+        updatedAt: true,
+        project: { select: { id: true, name: true } },
+      },
+    });
+    if (!document) {
+      throw new BadRequestException('卡片实体不存在');
+    }
+    return { entityType: 'document', ...document };
+  }
+
+  throw new BadRequestException(
+    `就地解释暂不支持该卡片类型：${kind || '未知'}`,
+  );
+}
+
+/** 一次静默调用的自身开销（契约镜像 `AssistantSilentUsageDto`） */
+export interface SilentRunUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  /** null = 估价口径不可用（≠ 0） */
+  costUsd: number | null;
+  model?: string;
+  durationMs: number;
+}
+
+export interface SilentRunResult {
+  scenario: string;
+  data: Record<string, unknown>;
+  /**
+   * provider **未上报 token** 时整个字段缺席——不补 0。
+   * 「没上报」与「没花钱」不是一回事，补 0 会让读者以为这次调用免费。
+   */
+  usage?: SilentRunUsage;
+}
+
+/** 从模型输出中提取 JSON（容忍 markdown code fence 与前后杂文） */
+export function extractJsonObject(text: string): Record<string, unknown> {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const candidate = (fenced ? fenced[1] : text).trim();
+  const start = candidate.indexOf('{');
+  const end = candidate.lastIndexOf('}');
+  if (start === -1 || end <= start) {
+    throw new BadRequestException('AI 返回内容无法解析为结构化建议');
+  }
+  try {
+    const parsed: unknown = JSON.parse(candidate.slice(start, end + 1));
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('not an object');
+    }
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new BadRequestException('AI 返回内容无法解析为结构化建议');
+  }
+}
+
+@Injectable()
+export class AssistantSilentService {
+  private readonly logger = new Logger(AssistantSilentService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly adapterRegistry: AdapterRegistryService,
+    private readonly usagePricing: UsagePricingService,
+  ) {}
+
+  /** 场景目录（可暴露给前端/文档） */
+  listScenarios(): Array<{ scenario: string; description: string }> {
+    return Object.entries(SILENT_SCENARIOS).map(([scenario, def]) => ({
+      scenario,
+      description: def.description,
+    }));
+  }
+
+  /**
+   * 执行一次静默生成：非流式 generateText → 结构化 JSON → { scenario, data }
+   */
+  async run(
+    scenario: string,
+    context: Record<string, unknown> | undefined,
+    projectId: string | null,
+    userId: string,
+  ): Promise<SilentRunResult> {
+    const def = SILENT_SCENARIOS[scenario];
+    if (!def) {
+      throw new BadRequestException(
+        `未知静默场景：${scenario}（可用：${Object.keys(SILENT_SCENARIOS).join('、')}）`,
+      );
+    }
+
+    const adapters = this.adapterRegistry.listAdapters();
+    if (adapters.length === 0) {
+      throw new BadRequestException(
+        '当前没有可用的 LLM provider，请先在设置中配置并启用',
+      );
+    }
+    const adapter = this.adapterRegistry.getAdapter(adapters[0].provider);
+    if (!adapter) {
+      throw new BadRequestException('LLM 适配器不可用，请重新加载 provider');
+    }
+
+    const rawContext = context ?? {};
+    // 先侦查再开口：有侦查钩子的场景先按数据库加载权威事实
+    const effectiveContext = def.prepareContext
+      ? await def.prepareContext(rawContext, { prisma: this.prisma })
+      : rawContext;
+
+    const instructions = def.buildInstructions(effectiveContext);
+    const startedAt = Date.now();
+    const result = await adapter.chat(
+      [{ role: 'user', content: '请按系统指令输出 JSON。' }],
+      { instructions, temperature: 0.4 },
+    );
+    const durationMs = Date.now() - startedAt;
+
+    const data = extractJsonObject(result.content ?? '');
+
+    const modelName = result.model ?? adapters[0].model;
+    const promptTokens = result.tokens?.prompt ?? 0;
+    const completionTokens = result.tokens?.completion ?? 0;
+    const totalTokens = result.tokens?.total ?? 0;
+
+    // 估价：口径不可用（未配价目表等）时保持 null，**不**落成 0
+    let estimatedCost: number | null = null;
+    if (result.tokens) {
+      try {
+        estimatedCost = await this.usagePricing.estimateCostUsd({
+          modelName,
+          provider: adapter.getProvider(),
+          promptTokens,
+          completionTokens,
+        });
+      } catch (err) {
+        this.logger.warn(
+          `Failed to estimate silent AI cost: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }
+
+    // 用量记账（复用 AIUsageLog；静默调用无会话/消息实体）
+    try {
+      await this.prisma.aIUsageLog.create({
+        data: {
+          userId,
+          projectId: projectId ?? null,
+          issueId: null,
+          conversationId: null,
+          modelName,
+          provider: adapter.getProvider(),
+          promptTokens,
+          completionTokens,
+          totalTokens,
+          estimatedCost,
+          responseMetadata: { kind: 'silent', scenario },
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Failed to write silent AI usage log: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
+    // 回执里的自身开销：provider 没报 token 就整个缺席（不补 0）
+    const usage: SilentRunUsage | undefined = result.tokens
+      ? {
+          promptTokens,
+          completionTokens,
+          totalTokens,
+          costUsd: estimatedCost,
+          model: modelName,
+          durationMs,
+        }
+      : undefined;
+
+    return { scenario, data, ...(usage ? { usage } : {}) };
+  }
+}

@@ -62,7 +62,12 @@ export class CliProviderService {
     const configs = await this.prisma.cliProviderConfig.findMany();
     const configMap = new Map(configs.map((c) => [c.providerId, c]));
 
-    const providerIds: ProviderId[] = ['claude-code', 'codex', 'zcode'];
+    const providerIds: ProviderId[] = [
+      'claude-code',
+      'codex',
+      'zcode',
+      'opencode',
+    ];
     const providers: CliProviderStatus[] = providerIds.map((pid) => {
       const info = this.registry.getAdapter(pid)
         ? {
@@ -182,7 +187,12 @@ export class CliProviderService {
     await this.registry.detectAllProviders();
 
     // 将探测到的 version / lastDetectedAt 写回 DB
-    const providerIds: ProviderId[] = ['claude-code', 'codex', 'zcode'];
+    const providerIds: ProviderId[] = [
+      'claude-code',
+      'codex',
+      'zcode',
+      'opencode',
+    ];
     const now = new Date();
     for (const pid of providerIds) {
       const version = this.registry.getVersion(pid) ?? null;

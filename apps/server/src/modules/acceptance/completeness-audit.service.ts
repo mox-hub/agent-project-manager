@@ -25,6 +25,28 @@ export interface AuditResult {
   summary: string;
 }
 
+/**
+ * CAP-B-02 审计过期判定（纯函数，唯一口径）：
+ * - 任一标准当前 revision ≠ 快照值 → 过期（标准被实质修订，结论基于旧版）
+ * - 快照中不存在的标准（审计后新增）→ 过期（结论未覆盖该标准）
+ * - 快照缺失（版本化之前的存量报告）→ 无法判定，不标过期（兼容口径）
+ */
+export function evaluateAuditStaleness(
+  snapshot: unknown,
+  criteria: Array<{ id: string; revision: number }>,
+): { stale: boolean; staleCriteriaIds: string[] } {
+  if (!snapshot || typeof snapshot !== 'object') {
+    return { stale: false, staleCriteriaIds: [] };
+  }
+  const revisions = snapshot as Record<string, number>;
+  const staleCriteriaIds = criteria
+    .filter(
+      (c) => revisions[c.id] === undefined || revisions[c.id] !== c.revision,
+    )
+    .map((c) => c.id);
+  return { stale: staleCriteriaIds.length > 0, staleCriteriaIds };
+}
+
 @Injectable()
 export class CompletenessAuditService {
   constructor(
@@ -39,11 +61,11 @@ export class CompletenessAuditService {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id: acceptanceId },
       include: {
-        task: {
+        issue: {
           include: {
             project: true,
             dependencies: {
-              include: { dependsOnTask: true },
+              include: { dependsOnIssue: true },
             },
           },
         },
@@ -65,7 +87,7 @@ export class CompletenessAuditService {
 
     // 1. 依赖完备性检查
     const dependencyFindings = await this.checkDependencyCompleteness(
-      acceptance.task,
+      acceptance.issue,
       acceptance.criteria,
     );
     result.blockedItems.push(
@@ -83,13 +105,13 @@ export class CompletenessAuditService {
     let checklist = null;
     if (checklistId) {
       checklist = await this.checklistService.findOne(checklistId);
-    } else if (acceptance.task.project) {
+    } else if (acceptance.issue.project) {
       // 自动选择清单
       const techStack = this.detectTechStack(
-        (acceptance.task.project as any)?.metadata,
+        (acceptance.issue.project as any)?.metadata,
       );
       checklist = await this.checklistService.findByTechStack(
-        this.detectProjectType((acceptance.task.project as any)?.metadata),
+        this.detectProjectType((acceptance.issue.project as any)?.metadata),
         techStack,
       );
     }
@@ -112,7 +134,6 @@ export class CompletenessAuditService {
     }
 
     // 3. 已通过项
-    const existingCriteria = acceptance.criteria.map((c) => c.content);
     result.passedItems = acceptance.criteria
       .filter((c) => c.status === 'passed')
       .map((c) => ({
@@ -137,7 +158,10 @@ export class CompletenessAuditService {
       result.summary = '验收标准完整，可以执行';
     }
 
-    // 5. 保存审计报告
+    // 5. 保存审计报告（CAP-B-02：同步快照各标准当前 revision，作为结论绑定依据）
+    const criteriaRevisions = Object.fromEntries(
+      acceptance.criteria.map((c) => [c.id, c.revision]),
+    );
     const report = await this.prisma.completenessAuditReport.upsert({
       where: { acceptanceId },
       create: {
@@ -147,6 +171,7 @@ export class CompletenessAuditService {
         blockedItems: result.blockedItems as any,
         suggestedItems: result.suggestedItems as any,
         passedItems: result.passedItems as any,
+        criteriaRevisions: criteriaRevisions as any,
         summary: result.summary,
       },
       update: {
@@ -155,6 +180,7 @@ export class CompletenessAuditService {
         blockedItems: result.blockedItems as any,
         suggestedItems: result.suggestedItems as any,
         passedItems: result.passedItems as any,
+        criteriaRevisions: criteriaRevisions as any,
         summary: result.summary,
         auditDate: new Date(),
       },
@@ -185,7 +211,7 @@ export class CompletenessAuditService {
     );
 
     for (const dep of task.dependencies) {
-      const depTask = dep.dependsOnTask;
+      const depTask = dep.dependsOnIssue;
       if (!depTask) continue;
 
       // 检查验收标准中是否提到了被依赖的任务
@@ -352,14 +378,29 @@ export class CompletenessAuditService {
   }
 
   /**
-   * 获取审计报告
+   * CAP-B-02 审计过期判定：查当前 criteria revisions 后委托纯函数 evaluateAuditStaleness。
+   */
+  async computeAuditStaleness(report: {
+    id: string;
+    acceptanceId: string;
+    criteriaRevisions?: unknown;
+  }): Promise<{ stale: boolean; staleCriteriaIds: string[] }> {
+    const criteria = await this.prisma.acceptanceCriteria.findMany({
+      where: { acceptanceId: report.acceptanceId },
+      select: { id: true, revision: true },
+    });
+    return evaluateAuditStaleness(report.criteriaRevisions, criteria);
+  }
+
+  /**
+   * 获取审计报告（附带 CAP-B-02 过期判定：stale / staleCriteriaIds）
    */
   async getAuditReport(acceptanceId: string) {
     const report = await this.prisma.completenessAuditReport.findUnique({
       where: { acceptanceId },
       include: {
         acceptance: {
-          select: { id: true, taskId: true },
+          select: { id: true, issueId: true },
         },
         checklist: {
           select: { id: true, name: true, techStack: true },
@@ -371,20 +412,21 @@ export class CompletenessAuditService {
       return null;
     }
 
-    return report;
+    const staleness = await this.computeAuditStaleness(report);
+    return { ...report, ...staleness };
   }
 
   /**
    * 强制审计 Gate（执行前检查）。
    * 以任务"活契约"（非终态最新一条）为准：无活契约不拦（派发时会自动创建）。
    */
-  async enforceAuditBeforeExecution(taskId: string): Promise<{
+  async enforceAuditBeforeExecution(issueId: string): Promise<{
     allowed: boolean;
     report?: any;
     message?: string;
   }> {
     const acceptance = await this.prisma.acceptance.findFirst({
-      where: { taskId, status: { notIn: ['passed', 'failed', 'waived'] } },
+      where: { issueId, status: { notIn: ['passed', 'failed', 'waived'] } },
       include: { auditReport: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -408,6 +450,18 @@ export class CompletenessAuditService {
         allowed: false,
         report: acceptance.auditReport,
         message: `存在 ${(acceptance.auditReport.blockedItems as any[]).length} 个强阻断项，必须补全后才能执行`,
+      };
+    }
+
+    // CAP-B-02：审计后标准被实质修订或新增 → 结论过期，必须重新审计。
+    // 派发门禁（assertDispatchGate 之外）与 audit-gate 端点共用本判定，
+    // 过期即拦截，杜绝「标准改了旧审计结论仍放行」。
+    const staleness = await this.computeAuditStaleness(acceptance.auditReport);
+    if (staleness.stale) {
+      return {
+        allowed: false,
+        report: acceptance.auditReport,
+        message: `验收标准在审计后已修订（${staleness.staleCriteriaIds.length} 条），审计结论过期，请重新审计后再执行`,
       };
     }
 

@@ -41,7 +41,9 @@ describe('useProjectList', () => {
       totalPages: 1,
     };
 
-    vi.mocked(projectApi.getList).mockResolvedValue(mockListResponse as any);
+    vi.mocked(projectApi.getList).mockResolvedValue(
+        mockListResponse as Awaited<ReturnType<typeof projectApi.getList>>,
+      );
 
     const { result } = renderHook(() => useProjectList({}), { wrapper });
 
@@ -62,7 +64,9 @@ describe('useProjectList', () => {
       totalPages: 2,
     };
 
-    vi.mocked(projectApi.getList).mockResolvedValue(mockListResponse as any);
+    vi.mocked(projectApi.getList).mockResolvedValue(
+        mockListResponse as Awaited<ReturnType<typeof projectApi.getList>>,
+      );
 
     const { result } = renderHook(
       () => useProjectList({ page: 2, pageSize: 10 }),

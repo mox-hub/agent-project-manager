@@ -4,6 +4,7 @@
  * 头部已改造为标准 PageHeader + SegmentedControl 工具栏
  */
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StatusPill } from '@/components/ui/status-pill';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -14,11 +15,9 @@ import {
   ChevronDown,
   RefreshCw,
   ExternalLink,
-  Settings,
   Zap,
   AlertTriangle,
   ArrowRight,
-  Globe,
   Lock,
   Webhook,
   Activity,
@@ -33,7 +32,7 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -41,7 +40,9 @@ import { useIntegrations, useDeleteIntegration } from '@/modules/integration/hoo
 import type { IntegrationConfig } from '@/modules/integration/api/integration-api';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from '@/components/ui/toast';
+import { EmptyState } from '@/components/ui/empty-state';
 import { LinearConfigForm } from '@/modules/linear/components/linear-config-form';
+import { GithubConfigForm } from '@/modules/github/components/github-config-form';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type ConnectionStatus = 'connected' | 'disconnected' | 'error' | 'pending';
@@ -523,12 +524,28 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function IntegrationsSettingsSection() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: integrationsData } = useIntegrations();
   const deleteIntegration = useDeleteIntegration();
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [linearFormOpen, setLinearFormOpen] = useState(false);
+  const [githubFormOpen, setGithubFormOpen] = useState(false);
+
+  // Provider 动作注册表（集成接入规范 v0 §3.1 / §七#15）：有真实 Connect 流（凭据采集 →
+  // 校验 → 保存 IntegrationConfig）的 provider 在此登记；卡片渲染只消费映射，不再写
+  // `i.id === 'xxx'` 的 if-else 硬编码链。未登记的 provider 不渲染 Connect 入口。
+  const connectFlows: Record<string, () => void> = {
+    linear: () => setLinearFormOpen(true),
+    github: () => setGithubFormOpen(true),
+  };
+
+  // Provider 配置页路由：Configure 按钮跳转目标；withId = 路由需要配置实例 ID
+  const providerSettingsRoutes: Record<string, { path: string; withId: boolean }> = {
+    linear: { path: '/app/settings/integrations/linear', withId: true },
+    github: { path: '/app/settings/integrations/github', withId: false },
+  };
 
   const integrations = useMemo(() => integrationsData?.data ?? [], [integrationsData?.data]);
 
@@ -591,8 +608,6 @@ export function IntegrationsSettingsSection() {
     { value: 'monitoring', label: 'Monitoring' },
   ];
 
-  const linearInstances = integrations.filter((i) => i.provider === 'linear');
-
   return (
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.integrationList}>
       <div className="flex flex-col h-full overflow-auto bg-background">
@@ -609,17 +624,20 @@ export function IntegrationsSettingsSection() {
           ]}
         />
 
-        {/* Toolbar: 分类筛选 + 搜索 */}
-        <div className="flex shrink-0 flex-col gap-2 border-b border-border px-6 py-3">
-          <p className="text-xs text-muted-foreground">
+        {/* Toolbar: 左说明 / 中 rect 分类页签 / 右搜索 */}
+        <div className="grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border px-6 py-2 md:px-7">
+          <p className="min-w-0 truncate text-xs text-muted-foreground">
             Connect your tools to supercharge AI-driven development.
           </p>
-          <div className="flex items-center justify-between gap-4">
+          <div className="justify-self-center">
             <SegmentedControl
+              variant="rect"
               value={activeTab}
               options={categoryOptions}
               onChange={(value) => setActiveTab(value)}
             />
+          </div>
+          <div className="flex items-center justify-end">
             <div className="relative shrink-0">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <Input
@@ -633,8 +651,8 @@ export function IntegrationsSettingsSection() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
-          <div className="max-w-4xl mx-auto space-y-8">
+        <div className="flex-1 overflow-auto">
+          <PageBody variant="standard" className="space-y-8">
             {Object.entries(grouped).map(([cat, items]) => (
               <section key={cat}>
                 {/* Section header */}
@@ -672,8 +690,8 @@ export function IntegrationsSettingsSection() {
                       status={i.status}
                       lastSync={i.lastSync}
                       onConnect={
-                        i.id === 'linear'
-                          ? () => setLinearFormOpen(true)
+                        connectFlows[i.id]
+                          ? () => connectFlows[i.id]()
                           : undefined
                       }
                       onDisconnect={
@@ -686,12 +704,15 @@ export function IntegrationsSettingsSection() {
                           : undefined
                       }
                       onConfigure={() => {
-                        if (i.id === 'linear') {
-                          if (linearInstances[0]) {
-                            navigate(`/app/settings/integrations/linear/${linearInstances[0].id}`);
-                          } else {
-                            setLinearFormOpen(true);
-                          }
+                        const route = providerSettingsRoutes[i.id];
+                        if (!route) return;
+                        if (config && route.withId) {
+                          navigate(`${route.path}/${config.id}`);
+                        } else if (connectFlows[i.id]) {
+                          // 尚无实例但有 Connect 流：先走创建（原 linear 行为）
+                          connectFlows[i.id]();
+                        } else {
+                          navigate(route.path);
                         }
                       }}
                     />
@@ -702,19 +723,22 @@ export function IntegrationsSettingsSection() {
             ))}
 
             {filtered.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <Plug2 className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                <p className="text-sm text-muted-foreground">No integrations match your search</p>
-                <button
-                  onClick={() => {
-                    setSearch('');
-                    setActiveTab('all');
-                  }}
-                  className="mt-3 text-xs text-primary hover:underline"
-                >
-                  Clear filters
-                </button>
-              </div>
+              <EmptyState
+                icon={Plug2}
+                title={t('settings.integration.emptyFiltered', '没有符合条件的集成')}
+                description={t('settings.integration.emptyFilteredHint', '调整搜索关键词或清除筛选再试')}
+                action={
+                  <button
+                    onClick={() => {
+                      setSearch('');
+                      setActiveTab('all');
+                    }}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {t('common.filterClear')}
+                  </button>
+                }
+              />
             )}
 
             {/* Coming soon */}
@@ -751,7 +775,7 @@ export function IntegrationsSettingsSection() {
                 ))}
               </div>
             </section>
-          </div>
+          </PageBody>
         </div>
       </div>
 
@@ -760,6 +784,14 @@ export function IntegrationsSettingsSection() {
         onClose={() => setLinearFormOpen(false)}
         onSuccess={(id) => {
           navigate(`/app/settings/integrations/linear/${id}`);
+        }}
+      />
+
+      <GithubConfigForm
+        open={githubFormOpen}
+        onClose={() => setGithubFormOpen(false)}
+        onSuccess={() => {
+          navigate('/app/settings/integrations/github');
         }}
       />
     </PageShell>

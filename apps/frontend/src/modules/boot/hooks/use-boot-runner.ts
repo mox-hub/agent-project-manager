@@ -47,7 +47,7 @@ function captureErrorContext(stepId: string, stepTitle: string, error: unknown):
       mode: env.MODE,
       url: typeof window !== 'undefined' ? window.location.pathname : '/',
       apiBaseUrl: env.VITE_API_BASE_URL || '/_api',
-      isTauri: !!window.__TAURI__,
+      isDesktopShell: !!window.__APM_DESKTOP__,
     },
   };
 }

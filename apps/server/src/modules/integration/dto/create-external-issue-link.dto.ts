@@ -16,7 +16,7 @@ export class CreateExternalIssueLinkDto {
   })
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiProperty({
     description: 'External provider name',
@@ -61,6 +61,8 @@ export class CreateExternalIssueLinkDto {
     description: 'Additional metadata',
     example: { key: 'value' },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsOptional()
   @IsObject()

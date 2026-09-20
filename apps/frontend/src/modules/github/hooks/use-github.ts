@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { githubApi, type GitHubPullRequest } from '../api/github-api';
+import { githubApi } from '../api/github-api';
 
 export const useGithubTestStored = (integrationId: string | undefined) =>
   useQuery({

@@ -4,7 +4,7 @@ import { configApi } from '@/modules/config/api/config-api';
 import { eventClient } from '@/infrastructure/event-client';
 import {
   invoke,
-  isTauriAvailable,
+  isDesktopShellAvailable,
   setApiBaseUrl,
 } from '@/shared/types/electron-api';
 import type { DesktopAppInfo } from '@/shared/types/electron-api';
@@ -13,13 +13,18 @@ import type { BootCheck, BootContext } from '../types';
 
 const TOKEN_STORAGE_KEY = 'access_token';
 
-function getWsBaseUrl(): string {
-  return getApiBaseUrl().replace(/^http/, 'ws');
+export function getWsBaseUrl(): string {
+  // getApiBaseUrl 恒带 REST 全局前缀 /_api；socket.io 网关挂在 origin 根上
+  //（HTTP path 默认 /socket.io + namespace /events）。不剥掉会把命名空间拼成
+  // /_api/events——服务端无此 namespace，握手直接 connect_error: Invalid namespace。
+  return getApiBaseUrl()
+    .replace(/\/_api\/?$/, '')
+    .replace(/^http/, 'ws');
 }
 
 export function buildBootContext(signal: AbortSignal): BootContext {
   return {
-    isTauri: isTauriAvailable(),
+    isDesktopShell: isDesktopShellAvailable(),
     hasToken: typeof window !== 'undefined' && !!localStorage.getItem(TOKEN_STORAGE_KEY),
     apiBaseUrl: getApiBaseUrl(),
     signal,
@@ -36,9 +41,9 @@ export const bootChecks: BootCheck[] = [
   {
     id: 'detect-runtime',
     title: '检测运行环境',
-    description: '读取 navigator / Tauri 标志判断当前运行环境',
+    description: '读取 navigator / 桌面壳标志判断当前运行环境',
     run: async () => {
-      const isTauri = isTauriAvailable();
+      const isDesktopShell = isDesktopShellAvailable();
       const nav = typeof navigator !== 'undefined' ? navigator : null;
       const ua = nav?.userAgent ?? 'unknown';
       const platform = nav?.platform ?? 'unknown';
@@ -52,7 +57,7 @@ export const bootChecks: BootCheck[] = [
       else if (/Firefox\//.test(ua)) engine = 'Firefox';
       else if (/Safari\//.test(ua)) engine = 'Safari';
 
-      const mode = isTauri ? 'Tauri 桌面' : `Web · ${engine}`;
+      const mode = isDesktopShell ? '桌面壳' : `Web · ${engine}`;
       const detail = `${mode} · ${platform} · ${screen}`;
       return { status: 'success', detail };
     },
@@ -60,8 +65,8 @@ export const bootChecks: BootCheck[] = [
   {
     id: 'fetch-app-info',
     title: '读取应用信息',
-    description: '从 Tauri 主机加载应用版本与数据路径（仅桌面）',
-    skipIf: (ctx) => !ctx.isTauri,
+    description: '从桌面壳加载应用版本与数据路径（仅桌面）',
+    skipIf: (ctx) => !ctx.isDesktopShell,
     run: async () => {
       const { result: info, ms } = await measure(() =>
         invoke<DesktopAppInfo>('get_app_info'),
@@ -80,7 +85,7 @@ export const bootChecks: BootCheck[] = [
     title: '连接后端服务',
     description: '桌面端拉起本地后端，浏览器端探测 /health 端点',
     async run(ctx) {
-      if (ctx.isTauri) {
+      if (ctx.isDesktopShell) {
         const status = await invoke<{
           running: boolean;
           info?: { port: number; apiBaseUrl: string };
@@ -107,6 +112,32 @@ export const bootChecks: BootCheck[] = [
         await api.get('/health', undefined, { signal: ctx.signal });
       });
       return { status: 'success', detail: `${ctx.apiBaseUrl}/health · ${ms}ms` };
+    },
+  },
+  {
+    id: 'check-runtime-daemon',
+    title: '检查 AI 执行运行时',
+    description: '桌面端确认 apm-runtime 守护进程已自动拉起并注册本机（AI 同事的执行面）',
+    skipIf: (ctx) => !ctx.isDesktopShell,
+    async run() {
+      const status = await invoke<{
+        running: boolean;
+        pid?: number;
+        workspaceRoots: string[];
+      }>('get_runtime_daemon_status');
+      if (status.running) {
+        return {
+          status: 'success',
+          detail: `守护进程运行中 · PID ${status.pid} · 工作目录 ${status.workspaceRoots.length} 个`,
+        };
+      }
+      // 未运行（如曾手动停止或意外退出）：boot 阶段自动重拉一次，失败则作为
+      // 可重试项展示（重试按钮重跑本项）；也可在 设置 → 运行时 手动启动
+      const started = await invoke<{ pid: number }>('start_runtime_daemon');
+      return {
+        status: 'success',
+        detail: `已重新拉起守护进程 · PID ${started.pid}`,
+      };
     },
   },
   {
@@ -164,8 +195,8 @@ export const bootChecks: BootCheck[] = [
     async run(ctx) {
       const wsUrl = getWsBaseUrl();
       const alreadyConnected = eventClient.isConnected();
-      // 把 ctx 中的 isTauri 信息嵌入 detail，方便桌面模式用户看到
-      void ctx.isTauri;
+      // 把 ctx 中的 isDesktopShell 信息嵌入 detail，方便桌面模式用户看到
+      void ctx.isDesktopShell;
       if (!alreadyConnected) {
         const { result, ms } = await measure(
           () =>
@@ -215,8 +246,8 @@ export const bootChecks: BootCheck[] = [
         configApi.getConfig({ scope: 'global' }),
       );
       const keyCount = result ? Object.keys(result).length : 0;
-      const tauriFlag = ctx.isTauri ? 'tauri' : 'web';
-      return { status: 'success', detail: `${keyCount} 项 · ${ms}ms · ${tauriFlag}` };
+      const shellFlag = ctx.isDesktopShell ? 'desktop' : 'web';
+      return { status: 'success', detail: `${keyCount} 项 · ${ms}ms · ${shellFlag}` };
     },
   },
 ];

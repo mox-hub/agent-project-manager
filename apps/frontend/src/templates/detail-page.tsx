@@ -1,5 +1,5 @@
 /**
- * 详情页模板 — 抽取自 modules/task/pages/task-detail-page.tsx（精简保留骨架）
+ * 详情页模板 — 抽取自 modules/issue/pages/task-detail-page.tsx（精简保留骨架）
  * 骨架：PageShell > SubPageToolbar(返回/面包屑/翻页/侧栏开关)
  *      > Body(flex: 主区纵向滚动 + RightSidebar)
  *      > 主区：错误条 > 标题热编辑 > 描述热编辑 > 子项/折叠区
@@ -239,7 +239,7 @@ export function XxxDetailPage() {
             </PropertyRow>
           </PropsCard>
 
-          {/* TODO: 其余右栏面板（SuggestionsCard / 外部集成 / 执行记录），按需保留 */}
+          {/* TODO: 其余右栏面板（外部集成 / 执行记录），按需保留 */}
         </RightSidebar>
       </div>
 

@@ -5,37 +5,40 @@ import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { AiHubService } from './ai-hub.service';
 import { ContextBuilderService } from './services/context-builder.service';
 import { AdapterRegistryService } from './services/adapter-registry.service';
+import { AssistantToolsService } from './services/assistant-tools.service';
+import { UsagePricingService } from './services/usage-pricing.service';
 import { EncryptionService } from '../../core/crypto/encryption.service';
 
 describe('AiHubService', () => {
   let service: AiHubService;
 
   const mockPrismaService = {
-    aIModelConfig: { findMany: jest.fn() },
-    aIConversation: { findUnique: jest.fn(), create: jest.fn() },
-    aIUsageLog: { findMany: jest.fn() },
+    aIModelConfig: { findMany: vi.fn() },
+    aIConversation: { findUnique: vi.fn(), create: vi.fn() },
+    aIUsageLog: { findMany: vi.fn() },
+    appConfig: { findFirst: vi.fn().mockResolvedValue(null) },
   };
 
   const mockMessageBusService = {
-    publish: jest.fn(),
+    publish: vi.fn(),
   };
 
   const mockContextBuilderService = {
-    buildContext: jest.fn(),
-    formatContextForPrompt: jest.fn(),
+    buildContext: vi.fn(),
+    formatContextForPrompt: vi.fn(),
   };
 
   const mockAdapterRegistryService = {
-    getAdapterByModel: jest.fn(),
-    getLoadedProviders: jest.fn().mockReturnValue(['openai']),
-    getAdapter: jest.fn(),
-    listAdapters: jest
+    getAdapterByModel: vi.fn(),
+    getLoadedProviders: vi.fn().mockReturnValue(['openai']),
+    getAdapter: vi.fn(),
+    listAdapters: vi
       .fn()
       .mockReturnValue([{ provider: 'openai', model: 'gpt-4' }]),
   };
 
   const mockEncryptionService = {
-    decrypt: jest.fn(),
+    decrypt: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -49,7 +52,19 @@ describe('AiHubService', () => {
           provide: AdapterRegistryService,
           useValue: mockAdapterRegistryService,
         },
+        {
+          provide: AssistantToolsService,
+          useValue: {
+            buildTools: vi.fn().mockReturnValue({}),
+            describeTools: vi.fn().mockReturnValue({ tools: [] }),
+            renderCatalogForPrompt: vi.fn().mockReturnValue(''),
+          },
+        },
         { provide: EncryptionService, useValue: mockEncryptionService },
+        {
+          provide: UsagePricingService,
+          useValue: { estimateCostUsd: vi.fn().mockResolvedValue(null) },
+        },
       ],
     }).compile();
 
@@ -57,7 +72,7 @@ describe('AiHubService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -91,7 +106,7 @@ describe('AiHubService', () => {
       createdBy: 'other-user',
       messages: [],
       project: null,
-      task: null,
+      issue: null,
     });
 
     await expect(service.getConversation('conv-1', 'user-1')).rejects.toThrow(
@@ -105,11 +120,13 @@ describe('AiHubService', () => {
         modelName: 'gpt-4.1-mini',
         totalTokens: 100,
         estimatedCost: 0.01,
+        conversationId: 'conv-1',
       },
       {
         modelName: 'gpt-4.1-mini',
         totalTokens: 300,
         estimatedCost: 0.02,
+        executionRunId: 'exec-1',
       },
       {
         modelName: 'gpt-4.1',
@@ -136,5 +153,10 @@ describe('AiHubService', () => {
         }),
       ]),
     );
+    // 调用来源分类计数：conversation 优先，execution/workflow 次之，其余为静默
+    expect(usage.totalCalls).toBe(3);
+    expect(usage.conversationCalls).toBe(1);
+    expect(usage.executionCalls).toBe(1);
+    expect(usage.silentCalls).toBe(1);
   });
 });

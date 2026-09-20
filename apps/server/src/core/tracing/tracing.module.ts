@@ -1,9 +1,5 @@
 import { Module, Global } from '@nestjs/common';
-import {
-  TraceContextService,
-  TraceMiddleware,
-  traceMiddlewareFactory,
-} from './trace-context.service';
+import { TraceContextService } from './trace-context.service';
 import { TraceInterceptor } from './trace.interceptor';
 
 @Global()

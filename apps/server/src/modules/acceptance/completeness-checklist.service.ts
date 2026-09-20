@@ -100,6 +100,29 @@ export class CompletenessChecklistService {
   }
 
   /**
+   * 删除团队自定义清单
+   */
+  async removeTeamChecklist(id: string, ownerId: string) {
+    const checklist = await this.prisma.completenessChecklist.findUnique({
+      where: { id },
+    });
+
+    if (!checklist) {
+      throw new NotFoundException(`Checklist ${id} not found`);
+    }
+
+    if (checklist.isSystem) {
+      throw new BadRequestException('Cannot delete system checklists');
+    }
+
+    if (checklist.ownerId !== ownerId) {
+      throw new BadRequestException('Not authorized to delete this checklist');
+    }
+
+    await this.prisma.completenessChecklist.delete({ where: { id } });
+  }
+
+  /**
    * 获取单个清单
    */
   async findOne(id: string) {

@@ -71,7 +71,7 @@ describe('Config (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ scope: 'global', keys: ['e2e.testKey', 'e2e.answer'] })
         .expect(200)
-        .expect((res: Response) => {
+        .expect((_res: Response) => {
           return wsHttp
             .get('/_api/config?scope=global')
             .set('Authorization', `Bearer ${accessToken}`)

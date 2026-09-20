@@ -64,6 +64,8 @@ export class UpdateProjectDto {
     description: 'Project configuration',
     example: { key: 'value' },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsObject()
   @IsOptional()
@@ -74,7 +76,12 @@ export class UpdateProjectDto {
   @IsOptional()
   projectCode?: string;
 
-  @ApiProperty({ required: false, example: 'C:/Users/me/APM/docs' })
+  @ApiProperty({
+    required: false,
+    example: 'C:/Users/me/APM/docs',
+    type: String,
+    nullable: true,
+  })
   @IsString()
   @IsOptional()
   documentsRepoPath?: string | null;

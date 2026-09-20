@@ -15,7 +15,7 @@ describe('Activity (e2e)', () => {
   let app: INestApplication;
   let accessToken: string;
   let projectId: string;
-  let taskId: string;
+  let issueId: string;
   let commentId: string;
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
@@ -35,7 +35,7 @@ describe('Activity (e2e)', () => {
     });
     accessToken = loginRes.body.data.accessToken;
 
-    ({ projectId, taskId } = await createTaskFixture(wsHttp, ws, accessToken));
+    ({ projectId, issueId } = await createTaskFixture(wsHttp, ws, accessToken));
   });
 
   afterAll(async () => {
@@ -50,7 +50,7 @@ describe('Activity (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           entityType: 'task',
-          entityId: taskId,
+          entityId: issueId,
           content: 'E2E 评论内容',
         })
         .expect(201)
@@ -67,7 +67,7 @@ describe('Activity (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           entityType: 'team',
-          entityId: taskId,
+          entityId: issueId,
           content: 'bad',
         })
         .expect(400);
@@ -78,7 +78,7 @@ describe('Activity (e2e)', () => {
     it('should list activities of the task', () => {
       return wsHttp
         .get('/_api/activities')
-        .query({ entityType: 'task', entityId: taskId })
+        .query({ entityType: 'task', entityId: issueId })
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {

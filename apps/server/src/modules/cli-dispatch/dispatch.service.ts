@@ -10,13 +10,19 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { randomUUID } from 'crypto';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
+import type { CreateExecutionRunDto } from '@/modules/execution/execution.service';
+import { ACTIVE_EXECUTION_STATUSES } from '@/modules/execution/execution.service';
 import { RuntimeService } from '@/modules/runtime/runtime.service';
-import { CliExecutorService, ExecutionContext } from './cli-executor.service';
+import { CliExecutorService } from './cli-executor.service';
 import { CliProviderRegistry } from './cli-provider.registry';
+import {
+  CliResolutionService,
+  type ResolvedBinding,
+} from './cli-resolution.service';
 import { ContextBuilderService } from '@/modules/ai-hub/services/context-builder.service';
 import { TrustService } from '@/modules/trust/trust.service';
 import { AcceptanceService } from '@/modules/acceptance/acceptance.service';
@@ -27,11 +33,24 @@ import {
 } from './adapters/test-report.schema';
 
 export interface DispatchOptions {
-  agentBindingId?: string;
-  providerId?: 'claude-code' | 'codex' | 'zcode';
+  /** 目标 AI 成员（Member.id，type=ai_agent）；缺省时以发起用户为执行主体 */
+  memberId?: string;
+  providerId?: 'claude-code' | 'codex' | 'zcode' | 'opencode';
   model?: string;
   allowedTools?: string[];
   timeout?: number;
+  /**
+   * 4d-3：绑定既有执行项（Execution.id）。传入时不再新建执行项，
+   * 而是复用该执行项（状态须为 draft/planned/failed/blocked）并经既有
+   * 状态机流转到 in_progress；缺省时保持原语义：为 issue 现场创建
+   * 默认执行项（语法糖：subject 回落 issue.aiAgentId 对应 AI 成员）。
+   */
+  executionId?: string;
+  /**
+   * 覆盖默认 prompt 组装（考古等非标准任务包场景）：传入时跳过
+   * buildPrompt 直接以该文本作为派发 prompt（角色/团队规则注入由调用方自理）
+   */
+  promptOverride?: string;
 }
 
 export interface DispatchResult {
@@ -60,6 +79,34 @@ const THINKING_LEVEL_INSTRUCTIONS: Record<string, string> = {
   max: '最大化思考：全面穷举方案、权衡与测试策略后再给出结论',
 };
 
+/**
+ * 执行信任评估 criteria（P0-10 量纲修复，2026-09-20）：**统一 0-100 量纲**，
+ * 与 TrustService.evaluateExecution 契约一致（等级阈值 40/70、历史/滚动维度
+ * 缺省 50、PR 回灌 delta 均为 0-100 口径）。
+ * 此前此处传 0-1 值（0.9/0.7…）而 trust 侧按 0-100 加权，一次成功执行的
+ * 综合分仅 ≈30，把信任分从基线 50 打到 30、等级降为观察者——执行越多分越低，
+ * 与「执行评估驱动信任演进」方向相反。
+ */
+export const TRUST_CRITERIA_SUCCESS = {
+  correctness: 90,
+  efficiency: 70,
+  safety: 90,
+  collaboration: 70,
+};
+
+/**
+ * 失败评估 criteria（0-100 量纲，与 runtime 路径历史口径 10/20/50/30 一致；
+ * 综合分 ≈41 < 基线 50，保证失败评估拉低信任分）。
+ * 原进程内 onComplete 失败分支的 0.2/0.7/0.9/0.7 放大后会得出 ≈55 的失败加分，
+ * 与其余两处失败口径不一致，一并对齐到此常量。
+ */
+export const TRUST_CRITERIA_FAILURE = {
+  correctness: 10,
+  efficiency: 20,
+  safety: 50,
+  collaboration: 30,
+};
+
 @Injectable()
 export class CliDispatchService {
   private readonly logger = new Logger(CliDispatchService.name);
@@ -70,6 +117,7 @@ export class CliDispatchService {
     private readonly executionService: ExecutionService,
     private readonly executor: CliExecutorService,
     private readonly registry: CliProviderRegistry,
+    private readonly cliResolution: CliResolutionService,
     private readonly contextBuilder: ContextBuilderService,
     private readonly trustService: TrustService,
     private readonly acceptanceService: AcceptanceService,
@@ -77,24 +125,214 @@ export class CliDispatchService {
   ) {}
 
   /**
-   * Dispatch a task to CLI for AI agent execution
+   * Dispatch a task to CLI for AI agent execution.
+   * 新建式派发失败时落一条 blocked 执行项留痕（可监控、可从执行项面板重派）；
+   * 绑定既有执行项的失败由该项自身状态承载，不另建记录。
    */
   async dispatchTaskToCli(
-    taskId: string,
+    issueId: string,
     userId: string,
     options: DispatchOptions = {},
   ): Promise<DispatchResult> {
-    const { providerId, model, allowedTools, timeout, agentBindingId } =
-      options;
+    try {
+      return await this.runDispatch(issueId, userId, options);
+    } catch (err) {
+      await this.recordDispatchFailure(issueId, userId, options, err as Error);
+      throw err;
+    }
+  }
+
+  /** 派发失败留痕：best-effort，落库失败只告警，不掩盖原始错误 */
+  private async recordDispatchFailure(
+    issueId: string,
+    userId: string,
+    options: DispatchOptions,
+    error: Error,
+  ) {
+    try {
+      if (options.executionId) return;
+      const task = await this.prisma.issue.findUnique({
+        where: { id: issueId },
+        select: { id: true, projectId: true, title: true, aiAgentId: true },
+      });
+      // 收件箱任务无项目，无法落执行项（Execution.projectId 必填）
+      if (!task?.projectId) return;
+      const subjectId = options.memberId ?? task.aiAgentId;
+      await this.executionService.createExecutionRun({
+        projectId: task.projectId,
+        issueId,
+        subjectType: subjectId ? 'platform_ai_member' : 'external_agent',
+        subjectId: subjectId ?? userId,
+        identitySource: 'cli',
+        goal: task.title,
+        title: task.title,
+        status: 'blocked',
+        input: {
+          dispatchError: error.message,
+          failedAt: new Date().toISOString(),
+        },
+        metadata: { dispatchFailed: true },
+        createdBy: userId,
+      });
+      this.logger.warn(
+        `Dispatch failure recorded as blocked execution for task ${issueId}: ${error.message}`,
+      );
+    } catch (e) {
+      this.logger.warn(
+        `Failed to record dispatch failure for task ${issueId}: ${(e as Error).message}`,
+      );
+    }
+  }
+
+  /**
+   * 兜底批 5：失败执行的重新执行——克隆新建一条执行并走既有派发链。
+   * 与绑定派发（options.executionId 原地复用）的语义差异：原执行保持
+   * failed/blocked 终态留痕（步骤/产物/错误详情不丢），新执行携带
+   * retryOfId 血缘与 retryContext（原状态/失败原因），同 issue 的活契约
+   * 关联由 createExecutionRun 自动对齐。
+   */
+  async retryExecution(
+    executionRunId: string,
+    userId: string,
+    diagnosis?: string,
+  ): Promise<DispatchResult> {
+    const original = await this.prisma.execution.findUnique({
+      where: { id: executionRunId },
+      include: {
+        issue: { select: { id: true, projectId: true, aiAgentId: true } },
+      },
+    });
+    if (!original) {
+      throw new NotFoundException(`Execution ${executionRunId} not found`);
+    }
+    // P1-21：superseded（人工取消）放开为可重新执行。blocked 执行受单活跃
+    // 约束（G5）无法直接重试——原执行自身即「活跃」，唯一出口是「先取消再
+    // 重新执行」；若取消后不可重试，指路文案就成了死路。原执行保持
+    // superseded 终态留痕（步骤/产物/错误详情不丢），新执行携带 retryOfId
+    // 血缘，审计链完整；是否存在其他活跃执行仍由下方预检与 G5 把关。
+    const RETRYABLE_STATUSES = ['failed', 'blocked', 'superseded'];
+    if (!RETRYABLE_STATUSES.includes(original.status)) {
+      throw new BadRequestException(
+        `执行 ${original.id} 当前状态为 ${original.status}，仅 failed/blocked/superseded 可重新执行`,
+      );
+    }
+    const issueId = original.issueId;
+    if (!issueId || !original.issue) {
+      throw new BadRequestException(
+        `执行 ${original.id} 未关联有效工单，无法重新执行`,
+      );
+    }
+
+    // P1-21：重试遇活跃执行的指路——单活跃约束下重试必被 createExecutionRun
+    // 互斥拒绝，这里提前拦截并给可执行出口；被重试的 blocked 原执行自身仍属
+    // 「活跃」（与 execution.service 同一词表），错误须说明这一层，避免
+    // 「等待其完成」式死路指引。
+    const active = await this.prisma.execution.findFirst({
+      where: {
+        issueId,
+        status: { in: [...ACTIVE_EXECUTION_STATUSES] },
+      },
+      select: { id: true, title: true, status: true },
+    });
+    if (active) {
+      throw new BadRequestException(
+        active.id === original.id
+          ? `执行 ${original.id} 自身仍处于活跃状态（${active.status}），不可直接重新执行：` +
+              `请先取消它（执行详情「取消执行」动作，或取消接口 POST /_api/ai/execution-runs/${original.id}/cancel），取消后再重新执行`
+          : `该工单已存在其他活跃执行「${active.title ?? active.id}」（ID：${active.id}，状态：${active.status}）：` +
+              `请先取消它（执行详情「取消执行」动作，或取消接口 POST /_api/ai/execution-runs/${active.id}/cancel），再重新执行 ${original.id}`,
+      );
+    }
+
+    const originalInput = (original.input as Record<string, unknown>) ?? {};
+    const retryInput: Record<string, unknown> = { ...originalInput };
+    // dispatchError 是原执行的派发留痕，归档到 retryContext，不进新执行主载荷
+    delete retryInput.dispatchError;
+    retryInput.retryContext = {
+      retryOfId: original.id,
+      originalStatus: original.status,
+      originalError: original.errorDetail ?? null,
+      originalDispatchError: originalInput.dispatchError ?? null,
+      // 失败诊断结论随血缘带入新执行（批一 P0 切片 3，裁决 D）：
+      // 「按诊断重试」时由前端传入，供下次派发上下文参考
+      ...(diagnosis ? { diagnosis } : {}),
+      retriedAt: new Date().toISOString(),
+      retriedBy: userId,
+    };
+
+    const cloned = await this.executionService.createExecutionRun({
+      projectId: original.projectId,
+      issueId,
+      subjectType: original.subjectType as CreateExecutionRunDto['subjectType'],
+      subjectId: original.subjectId,
+      identitySource:
+        original.identitySource as CreateExecutionRunDto['identitySource'],
+      goal: original.goal,
+      title: original.title ?? undefined,
+      description: original.description ?? undefined,
+      role: original.role ?? undefined,
+      level: original.level ?? undefined,
+      estimate: original.estimate ?? undefined,
+      order: original.order,
+      input: retryInput,
+      status: 'planned',
+      createdBy: userId,
+      metadata: { retriedFrom: original.id },
+      // 优先沿用原执行的验收契约关联；原执行未挂契约时由
+      // createExecutionRun 自动对齐 issue 活契约（无则创建）
+      acceptanceId: original.acceptanceId ?? undefined,
+      retryOfId: original.id,
+    });
+    this.logger.log(
+      `Retry execution created: ${cloned.id} (retryOf=${original.id}) for task ${issueId}`,
+    );
+
+    try {
+      return await this.dispatchTaskToCli(issueId, userId, {
+        executionId: cloned.id,
+        // 原执行主体是项目 AI 成员时沿用它；external/human 主体走
+        // dispatch 既有回落（issue.aiAgentId 或发起人）
+        memberId:
+          original.subjectType === 'platform_ai_member'
+            ? original.subjectId
+            : undefined,
+      });
+    } catch (err) {
+      // 派发未成（验收门禁阻断/provider 不可用等）：新执行落 blocked 留痕
+      //（与 recordDispatchFailure 同口径的可观测终态），原执行不受影响。
+      try {
+        await this.executionService.updateExecutionRun(cloned.id, {
+          status: 'blocked',
+          errorDetail: {
+            reason: 'RETRY_DISPATCH_FAILED',
+            message: (err as Error).message,
+          },
+          metadata: { dispatchFailed: true, retriedFrom: original.id },
+        });
+      } catch (e) {
+        this.logger.warn(
+          `Failed to mark retry execution ${cloned.id} as blocked: ${(e as Error).message}`,
+        );
+      }
+      throw err;
+    }
+  }
+
+  private async runDispatch(
+    issueId: string,
+    userId: string,
+    options: DispatchOptions = {},
+  ): Promise<DispatchResult> {
+    const { providerId, model, allowedTools, timeout, memberId } = options;
 
     // 1. Fetch task and validate
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
+    const task = await this.prisma.issue.findUnique({
+      where: { id: issueId },
       include: { project: true },
     });
 
     if (!task) {
-      throw new NotFoundException(`Task ${taskId} not found`);
+      throw new NotFoundException(`Task ${issueId} not found`);
     }
 
     if (!task.projectId) {
@@ -103,32 +341,46 @@ export class CliDispatchService {
 
     const projectId = task.projectId;
 
+    // 2. 验收门禁（兜底改造批 3，2026-09-15 裁决先按严格要求）：
+    // 无活契约或契约 0 条标准均阻断派发——先有标准再干活
+    await this.acceptanceService.assertDispatchGate(issueId);
+
+    // 2.5 依赖门禁（需求重审 G4，2026-09-17 裁决 A）：blocks 依赖未达终态
+    // 阻断派发——「B 依赖 A」须先完成 A 才可执行 B（此前仅为提示语义）
+    await this.assertDependenciesSatisfied(issueId);
+
     // 2. Get workspace root
     const workspaceRoot = await this.getWorkspaceRoot(projectId);
     if (!workspaceRoot) {
       throw new BadRequestException(
-        `No workspace root configured for project ${projectId}`,
+        `项目尚未配置工作区根目录（No workspace root configured for project ${projectId}）。` +
+          `请到「项目设置 → Git 与终端 → 工作区」填写本地路径并保存后，再重新派发。`,
       );
     }
 
-    // 3. Resolve provider and binding
+    // 3. V3 身份解析：AI 成员 → provider/role 现场解析（不再读 AgentIdentityBinding）
     let resolvedProviderId = providerId;
-    let binding = null;
+    let member: { id: string; type: string; status: string } | null = null;
+    let resolved: ResolvedBinding | null = null;
 
-    if (agentBindingId) {
-      binding = await this.prisma.agentIdentityBinding.findUnique({
-        where: { id: agentBindingId },
+    if (memberId) {
+      member = await this.prisma.member.findUnique({
+        where: { id: memberId },
+        select: { id: true, type: true, status: true },
       });
-
-      if (!binding) {
-        throw new NotFoundException(
-          `Agent binding ${agentBindingId} not found`,
+      if (
+        !member ||
+        member.type !== 'ai_agent' ||
+        member.status === 'inactive'
+      ) {
+        throw new BadRequestException(
+          `Member ${memberId} is not an available AI agent`,
         );
       }
-
-      // Provider from binding takes precedence
-      if (binding.providerId && !providerId) {
-        resolvedProviderId = binding.providerId as
+      resolved = await this.cliResolution.resolveForMember(memberId, projectId);
+      // 显式 providerId 入参优先于解析结果
+      if (!providerId) {
+        resolvedProviderId = resolved.providerId as
           'claude-code' | 'codex' | 'zcode';
       }
     }
@@ -147,15 +399,15 @@ export class CliDispatchService {
 
     // 6. Build execution context using ContextBuilder
     const context = await this.contextBuilder.buildTaskExecutionContext(
-      taskId,
+      issueId,
       projectId,
     );
 
     // 6.5 成员上下文：个人提示词 / 团队规则 / 思考强度；CLI 工具白名单收敛
-    const memberContext = await this.buildMemberPromptContext(binding);
+    const memberContext = await this.buildMemberPromptContext(memberId ?? null);
     let effectiveAllowedTools = allowedTools;
-    if (binding?.subjectId) {
-      const granted = await this.getGrantedCliTools(binding.subjectId);
+    if (memberId) {
+      const granted = await this.getGrantedCliTools(memberId);
       if (granted) {
         effectiveAllowedTools = allowedTools
           ? allowedTools.filter((t) => granted.includes(t))
@@ -168,35 +420,86 @@ export class CliDispatchService {
       }
     }
 
-    // 7. Create ExecutionRun
-    const executionRunId = `exec_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
-    const executionRun = await this.executionService.createExecutionRun({
-      projectId,
-      taskId,
-      subjectType:
-        (binding?.subjectType as
-          'human' | 'platform_ai_member' | 'external_agent') ||
-        'external_agent',
-      subjectId: binding?.subjectId || userId,
-      identitySource: 'cli',
-      goal: task.title,
-      role: binding?.mappedRole || undefined,
-      level: binding?.mappedLevel || undefined,
-      input: {
-        task: {
-          id: task.id,
-          title: task.title,
-          description: task.description,
+    // 7. Create ExecutionRun —— 传入 executionId 时复用既有执行项（4d-3），否则现场创建
+    let executionRun;
+    if (options.executionId) {
+      const existing = await this.prisma.execution.findUnique({
+        where: { id: options.executionId },
+      });
+      if (!existing) {
+        throw new NotFoundException(
+          `Execution ${options.executionId} not found`,
+        );
+      }
+      if (existing.issueId !== issueId) {
+        throw new BadRequestException(
+          `Execution ${existing.id} 不属于 issue ${issueId}`,
+        );
+      }
+      // 绑定派发允许的起始状态（4d-3）：流转到 in_progress 走
+      // updateExecutionRun 的既有状态机校验，不允许则 400。
+      const DISPATCHABLE_STATUSES = ['draft', 'planned', 'failed', 'blocked'];
+      if (!DISPATCHABLE_STATUSES.includes(existing.status)) {
+        throw new BadRequestException(
+          `执行项 ${existing.id} 当前状态为 ${existing.status}，仅 draft/planned/failed/blocked 可派发`,
+        );
+      }
+      executionRun = await this.executionService.updateExecutionRun(
+        existing.id,
+        {
+          status: 'in_progress',
+          startedAt: new Date(),
+          // goal/input 以派发参数为准：合并既有 input 并覆盖本次派发载荷
+          input: {
+            ...((existing.input as Record<string, unknown>) ?? {}),
+            task: {
+              id: task.id,
+              title: task.title,
+              description: task.description,
+            },
+            context,
+            model,
+            allowedTools: effectiveAllowedTools,
+          },
         },
-        context,
-        model,
-        allowedTools: effectiveAllowedTools,
-      },
-      createdBy: userId,
-    });
+      );
+    } else {
+      // 语法糖：未指定 memberId 时，回落到 issue 主负责人 AI 成员（aiAgentId），
+      // 使「issue 级直接派发」也能落到 platform_ai_member 语义的默认执行项。
+      let defaultMember = member;
+      if (!memberId && task.aiAgentId) {
+        const agent = await this.prisma.member.findUnique({
+          where: { id: task.aiAgentId },
+          select: { id: true, type: true, status: true },
+        });
+        if (agent && agent.type === 'ai_agent' && agent.status !== 'inactive') {
+          defaultMember = agent;
+        }
+      }
+      executionRun = await this.executionService.createExecutionRun({
+        projectId,
+        issueId,
+        subjectType: defaultMember ? 'platform_ai_member' : 'external_agent',
+        subjectId: defaultMember?.id ?? userId,
+        identitySource: 'cli',
+        goal: task.title,
+        role: resolved?.executionRole || undefined,
+        input: {
+          task: {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+          },
+          context,
+          model,
+          allowedTools: effectiveAllowedTools,
+        },
+        createdBy: userId,
+      });
+    }
 
     this.logger.log(
-      `ExecutionRun created: ${executionRun.id} for task ${taskId}`,
+      `ExecutionRun created: ${executionRun.id} for task ${issueId}`,
     );
 
     // 8. Create CliSession
@@ -209,7 +512,7 @@ export class CliDispatchService {
         status: 'active',
         metadata: {
           executionRunId: executionRun.id,
-          taskId,
+          issueId,
           projectId,
         },
       },
@@ -227,13 +530,19 @@ export class CliDispatchService {
       },
     });
 
-    // 10. Resolve agent role for prompt injection
-    const agentRole = binding
-      ? await this.resolveAgentRole(binding.mappedRole, projectId)
+    // 10. Resolve agent role for prompt injection（解析链路已带回 promptHint）
+    const agentRole = resolved?.promptHint
+      ? {
+          name: resolved.roleName ?? resolved.executionRole,
+          role: resolved.executionRole,
+          promptHint: resolved.promptHint,
+        }
       : null;
 
-    // 11. Build CLI input
-    const prompt = this.buildPrompt(task, context, agentRole, memberContext);
+    // 11. Build CLI input（promptOverride：考古等自定义任务包直接覆盖默认组装）
+    const prompt =
+      options.promptOverride ??
+      this.buildPrompt(task, context, agentRole, memberContext);
     const cliInput = {
       workspaceRoot,
       prompt,
@@ -248,12 +557,9 @@ export class CliDispatchService {
       await this.runtimeService.createDispatch(onlineRuntime.runtimeId, {
         executionRunId: executionRun.id,
         projectId,
-        taskId,
-        subjectType:
-          (binding?.subjectType as
-            'human' | 'platform_ai_member' | 'external_agent') ||
-          'external_agent',
-        subjectId: binding?.subjectId || userId,
+        issueId,
+        subjectType: executionRun.subjectType,
+        subjectId: executionRun.subjectId,
         prompt,
         workspaceRoot,
         providerId: resolvedProviderId,
@@ -262,7 +568,7 @@ export class CliDispatchService {
         timeout: timeout || 600000,
       });
       this.logger.log(
-        `Task ${taskId} dispatched to runtime ${onlineRuntime.runtimeId} (${resolvedProviderId})`,
+        `Task ${issueId} dispatched to runtime ${onlineRuntime.runtimeId} (${resolvedProviderId})`,
       );
     } else {
       this.logger.log(
@@ -272,7 +578,7 @@ export class CliDispatchService {
         {
           executionRunId: executionRun.id,
           projectId,
-          taskId,
+          issueId,
           providerId: resolvedProviderId,
           userId,
         },
@@ -294,12 +600,10 @@ export class CliDispatchService {
                 executionRunId: executionRun.id,
                 agentId: executionRun.subjectId,
                 projectId: executionRun.projectId,
-                criteria: {
-                  correctness: result.status === 'completed' ? 0.9 : 0.2,
-                  efficiency: 0.7,
-                  safety: 0.9,
-                  collaboration: 0.7,
-                },
+                criteria:
+                  result.status === 'completed'
+                    ? TRUST_CRITERIA_SUCCESS
+                    : TRUST_CRITERIA_FAILURE,
                 outcome: result.status === 'completed' ? 'success' : 'failure',
               });
             } catch (e) {
@@ -331,12 +635,7 @@ export class CliDispatchService {
                 executionRunId: executionRun.id,
                 agentId: executionRun.subjectId,
                 projectId: executionRun.projectId,
-                criteria: {
-                  correctness: 0.1,
-                  efficiency: 0.2,
-                  safety: 0.5,
-                  collaboration: 0.3,
-                },
+                criteria: TRUST_CRITERIA_FAILURE,
                 outcome: 'failure',
               });
             } catch (e) {
@@ -352,7 +651,7 @@ export class CliDispatchService {
     // 12. Publish dispatch event
     this.messageBus.publish('cli.dispatched', {
       executionRunId: executionRun.id,
-      taskId,
+      issueId,
       projectId,
       providerId: resolvedProviderId,
       cliSessionId: cliSession.id,
@@ -384,6 +683,12 @@ export class CliDispatchService {
 
   /**
    * Cancel a running CLI execution
+   * P1-21：取消出口补降级路径——CLI binding 仅在派发成功时创建，blocked
+   * （派发被门禁阻断落痕）等从未派发的执行没有 binding，此前直接 404 使
+   * 「先取消再重新执行」的指路成为死路。现按两段查找：binding 命中走既有
+   * 进程取消链路；binding 缺失时按 executionId 回落为纯执行记录取消（无
+   * 进程可杀、无 binding/session 待清理，状态流转仍走 executionService
+   * 状态机，终态校验与幂等语义不变）；两段都查不到才 404，并说明查了什么。
    */
   async cancelExecution(
     executionRunId: string,
@@ -394,9 +699,27 @@ export class CliDispatchService {
     });
 
     if (!binding) {
-      throw new NotFoundException(
-        `No CLI binding found for execution ${executionRunId}`,
+      const run = await this.prisma.execution.findUnique({
+        where: { id: executionRunId },
+        select: { id: true },
+      });
+      if (!run) {
+        throw new NotFoundException(
+          `取消失败：执行 ${executionRunId} 不存在` +
+            `（已查 CLI 执行绑定与执行记录两路，均未命中，请确认执行 ID 是否正确）`,
+        );
+      }
+      await this.executionService.cancelExecution(
+        executionRunId,
+        'Cancelled by user',
       );
+      this.messageBus.publish('cli.cancelled', {
+        executionRunId,
+        cancelledBy: userId,
+        viaBinding: false,
+      });
+      // 无 binding = 无在跑 CLI 进程可杀，返回值与既有语义一致（success=是否杀掉进程）
+      return false;
     }
 
     // Cancel the process
@@ -459,6 +782,28 @@ export class CliDispatchService {
    * 守护进程上报执行结果（runtime.execution.result）→ 桥接：
    * ExecutionRun 状态更新 + cliSession 状态 + 信任评估 + 验收证据落库。
    */
+  /**
+   * 守护进程 execution.started 事件 → 执行项 planned→in_progress。
+   * runtime 路径没有进程内执行器那样的 startExecution 时机，
+   * 不补这一步结果落地时会被状态机禁跳步拒收（planned→completed）。
+   */
+  @OnEvent('runtime.execution.event')
+  async onRuntimeExecutionEvent(payload: {
+    eventType?: string;
+    executionRunId?: string;
+  }): Promise<void> {
+    if (payload?.eventType !== 'execution.started' || !payload.executionRunId) {
+      return;
+    }
+    try {
+      await this.executionService.startExecution(payload.executionRunId);
+    } catch (e) {
+      this.logger.warn(
+        `Failed to mark ${payload.executionRunId} in_progress: ${(e as Error).message}`,
+      );
+    }
+  }
+
   @OnEvent('runtime.execution.result')
   async onRuntimeExecutionResult(payload: {
     executionRunId: string;
@@ -467,10 +812,25 @@ export class CliDispatchService {
     artifacts?: Array<{ type: string; ref: string }>;
     evidence?: Array<{ type: string; ref: string }>;
     error?: Record<string, unknown> | null;
+    usage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      costUsd?: number;
+      model?: string;
+    } | null;
+    output?: Record<string, unknown> | null;
   }): Promise<void> {
-    const { executionRunId, status, summary, artifacts = [], error } = payload;
+    const {
+      executionRunId,
+      status,
+      summary,
+      artifacts = [],
+      error,
+      usage,
+    } = payload;
     try {
-      const run = await this.prisma.executionRun.findUnique({
+      const run = await this.prisma.execution.findUnique({
         where: { id: executionRunId },
       });
       if (!run) {
@@ -480,10 +840,25 @@ export class CliDispatchService {
         return;
       }
 
+      // 兜底：started 事件缺失/乱序时先补 in_progress，避免终态被状态机拒收
+      if (
+        run.status !== 'in_progress' &&
+        !['completed', 'superseded'].includes(run.status)
+      ) {
+        try {
+          await this.executionService.startExecution(executionRunId);
+        } catch (e) {
+          this.logger.warn(
+            `Failed to backfill in_progress for ${executionRunId}: ${(e as Error).message}`,
+          );
+        }
+      }
+
       const completed = status === 'completed';
       const result = {
         status: completed ? ('completed' as const) : ('failed' as const),
-        output: { summary },
+        // daemon 上报的结构化输出优先（adapter parseFinalResult 产物），缺省回落 summary
+        output: payload.output ?? { summary },
         artifacts: artifacts.map((a) => ({
           type: a.type,
           name: a.ref,
@@ -529,19 +904,7 @@ export class CliDispatchService {
           executionRunId,
           agentId: run.subjectId,
           projectId: run.projectId,
-          criteria: completed
-            ? {
-                correctness: 0.9,
-                efficiency: 0.7,
-                safety: 0.9,
-                collaboration: 0.7,
-              }
-            : {
-                correctness: 0.1,
-                efficiency: 0.2,
-                safety: 0.5,
-                collaboration: 0.3,
-              },
+          criteria: completed ? TRUST_CRITERIA_SUCCESS : TRUST_CRITERIA_FAILURE,
           outcome: completed ? 'success' : 'failure',
         });
       } catch (e) {
@@ -553,12 +916,74 @@ export class CliDispatchService {
       // 4) 验收证据落库
       await this.persistCompletionEvidence(executionRunId, result);
 
+      // 5) 终事件落时间线：completed/failed 成为事件流最后一条（含 usage 快照）
+      try {
+        await this.prisma.systemEvent.create({
+          data: {
+            level: completed ? 'info' : 'error',
+            category: 'runtime.execution.event',
+            message: `${completed ? 'execution.completed' : 'execution.failed'} (${executionRunId})`,
+            context: {
+              executionRunId,
+              eventType: completed ? 'execution.completed' : 'execution.failed',
+              summary: summary ?? (completed ? '任务执行完成' : '任务执行失败'),
+              detail: { usage: usage ?? null, error: error ?? null },
+              timestamp: new Date().toISOString(),
+            } as Prisma.InputJsonValue,
+          },
+        });
+      } catch (e) {
+        this.logger.warn(
+          `Failed to persist terminal event for ${executionRunId}: ${(e as Error).message}`,
+        );
+      }
+
       this.logger.log(
         `Runtime execution ${completed ? 'completed' : 'failed'} for ${executionRunId}`,
       );
     } catch (e) {
       this.logger.warn(
         `onRuntimeExecutionResult failed for ${executionRunId}: ${(e as Error).message}`,
+      );
+    }
+  }
+
+  /**
+   * 依赖门禁（需求重审 G4，2026-09-17 裁决 A）：仅 type='blocks' 的依赖参与
+   * 派发拦截；依赖达成 = 依赖工单状态为终态（StatusDefinition.isFinal，与
+   * issue.service 关单守卫同一口径，不硬编码状态名；定义缺失时无法断言
+   * 未达终态，放行）。relates 型依赖仅进上下文提示，不拦执行。
+   */
+  private async assertDependenciesSatisfied(issueId: string): Promise<void> {
+    const deps = await this.prisma.issueDependency.findMany({
+      where: { issueId, type: 'blocks' },
+      select: {
+        dependsOnIssue: {
+          select: { id: true, title: true, status: true, projectId: true },
+        },
+      },
+    });
+    if (deps.length === 0) return;
+
+    const blockers: string[] = [];
+    for (const dep of deps) {
+      const depIssue = dep.dependsOnIssue;
+      if (!depIssue) continue;
+      const statusDef = await this.prisma.statusDefinition.findFirst({
+        where: {
+          type: 'task',
+          key: depIssue.status,
+          OR: [{ projectId: depIssue.projectId }, { projectId: null }],
+        },
+        select: { isFinal: true },
+      });
+      if (statusDef && !statusDef.isFinal) {
+        blockers.push(`「${depIssue.title}」（状态：${depIssue.status}）`);
+      }
+    }
+    if (blockers.length > 0) {
+      throw new BadRequestException(
+        `该工单存在未完成的 blocks 依赖，暂不可派发执行：${blockers.join('、')}。请先完成依赖工单，或调整依赖关系后再派发`,
       );
     }
   }
@@ -644,7 +1069,7 @@ export class CliDispatchService {
     },
   ): Promise<void> {
     try {
-      const run = await this.prisma.executionRun.findUnique({
+      const run = await this.prisma.execution.findUnique({
         where: { id: executionRunId },
         select: { acceptanceId: true },
       });
@@ -775,15 +1200,15 @@ export class CliDispatchService {
   }
 
   /**
-   * 成员提示词上下文：binding.subjectId 指向 Member 时聚合
+   * 成员提示词上下文：按 memberId 聚合个人提示词/团队规则/思考强度
    * 个人提示词、思考强度与所在活跃团队的团队规则。
    */
   private async buildMemberPromptContext(
-    binding: { subjectType: string; subjectId: string } | null,
+    memberId: string | null,
   ): Promise<MemberPromptContext | null> {
-    if (!binding) return null;
+    if (!memberId) return null;
     const member = await this.prisma.member.findUnique({
-      where: { id: binding.subjectId },
+      where: { id: memberId },
     });
     if (!member) return null;
 
@@ -824,42 +1249,5 @@ export class CliDispatchService {
     });
     if (rows.length === 0) return null;
     return rows.filter((r) => r.granted).map((r) => r.refKey);
-  }
-
-  /**
-   * Resolve agent role definition from binding's mappedRole key.
-   * Looks up ProjectRoleDefinition (project-specific first, then global fallback).
-   */
-  private async resolveAgentRole(
-    mappedRole: string | null,
-    projectId: string,
-  ): Promise<{ name: string; role: string; promptHint: string } | null> {
-    if (!mappedRole) return null;
-
-    // Try project-specific role first
-    const projectRole = await this.prisma.projectRoleDefinition.findFirst({
-      where: { projectId, key: mappedRole },
-    });
-    if (projectRole?.promptHint) {
-      return {
-        name: projectRole.name,
-        role: projectRole.executionRole,
-        promptHint: projectRole.promptHint,
-      };
-    }
-
-    // Fall back to global role
-    const globalRole = await this.prisma.projectRoleDefinition.findFirst({
-      where: { projectId: null, key: mappedRole },
-    });
-    if (globalRole?.promptHint) {
-      return {
-        name: globalRole.name,
-        role: globalRole.executionRole,
-        promptHint: globalRole.promptHint,
-      };
-    }
-
-    return null;
   }
 }

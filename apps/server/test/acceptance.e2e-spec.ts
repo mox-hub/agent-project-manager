@@ -17,9 +17,10 @@ describe('Acceptance (e2e)', () => {
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
   let projectId: string;
-  let taskId: string;
+  let issueId: string;
   let acceptanceId: string;
   let criteriaId: string;
+  let secondCriteriaId: string;
   let systemChecklistId: string;
 
   beforeAll(async () => {
@@ -39,15 +40,13 @@ describe('Acceptance (e2e)', () => {
 
     const fixture = await createTaskFixture(wsHttp, ws, accessToken);
     projectId = fixture.projectId;
-    taskId = fixture.taskId;
+    issueId = fixture.issueId;
   });
 
   afterAll(async () => {
     await app.close();
     await ws.cleanup();
   });
-
-  const auth = () => ({ Authorization: `Bearer ${accessToken}` });
 
   describe('GET /_api/acceptance/checklists/system', () => {
     it('should list system checklists', () => {
@@ -80,7 +79,7 @@ describe('Acceptance (e2e)', () => {
       return wsHttp
         .post('/_api/acceptance')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ taskId, type: 'mixed', priority: 'high', title: 'E2E 验收' })
+        .send({ issueId, type: 'mixed', priority: 'high', title: 'E2E 验收' })
         .expect((res: Response) => {
           if (res.status !== 201) {
             console.error('ACC-ERR', JSON.stringify(res.body));
@@ -104,6 +103,31 @@ describe('Acceptance (e2e)', () => {
         .expect((res: Response) => {
           expect(JSON.stringify(res.body.data)).toContain(acceptanceId);
         });
+    });
+
+    it('should exclude acceptances of other projects (CAP-A-15)', async () => {
+      // 第二项目的任务 + 契约：过滤本项目时不应出现
+      const other = await createTaskFixture(wsHttp, ws, accessToken);
+      const otherRes = await wsHttp
+        .post('/_api/acceptance')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          issueId: other.issueId,
+          type: 'mixed',
+          priority: 'medium',
+          title: 'E2E 他项目验收',
+        });
+      expect(otherRes.status).toBe(201);
+      const otherAcceptanceId: string = otherRes.body.data.id;
+
+      const res = await wsHttp
+        .get(`/_api/acceptance?projectId=${projectId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+      const items: Array<{ id: string }> = res.body.data.data ?? [];
+      expect(items.length).toBeGreaterThan(0);
+      expect(items.some((a) => a.id === acceptanceId)).toBe(true);
+      expect(items.some((a) => a.id === otherAcceptanceId)).toBe(false);
     });
   });
 
@@ -151,7 +175,11 @@ describe('Acceptance (e2e)', () => {
         .post(`/_api/acceptance/${acceptanceId}/criteria/batch`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send([{ criteriaType: 'technical', content: 'e2e 技术标准 2' }])
-        .expect(201);
+        .expect(201)
+        .expect((res: Response) => {
+          secondCriteriaId = res.body.data[0].id;
+          expect(secondCriteriaId).toBeTruthy();
+        });
     });
   });
 
@@ -203,6 +231,25 @@ describe('Acceptance (e2e)', () => {
           expect(res.body.data).toBeTruthy();
         });
     });
+
+    it('should persist report with riskLevel verdict (GAP-T-03)', () => {
+      return wsHttp
+        .post(`/_api/acceptance/${acceptanceId}/audit`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({})
+        .expect(201)
+        .expect((res: Response) => {
+          const { report, result } = res.body.data;
+          expect(['red', 'yellow', 'green']).toContain(result.riskLevel);
+          expect(typeof result.summary).toBe('string');
+          expect(result.summary.length).toBeGreaterThan(0);
+          expect(result.blockedItems).toEqual(expect.any(Array));
+          expect(result.suggestedItems).toEqual(expect.any(Array));
+          expect(result.passedItems).toEqual(expect.any(Array));
+          expect(report.acceptanceId).toBe(acceptanceId);
+          expect(report.riskLevel).toBe(result.riskLevel);
+        });
+    });
   });
 
   describe('GET /_api/acceptance/:id/audit-report', () => {
@@ -227,10 +274,27 @@ describe('Acceptance (e2e)', () => {
     });
   });
 
-  describe('GET /_api/acceptance/task/:taskId', () => {
+  describe('GET /_api/acceptance/checklists/:id (GAP-T-03)', () => {
+    it('should 404 on missing checklist', () => {
+      return wsHttp
+        .get('/_api/acceptance/checklists/cl-e2e-missing')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404);
+    });
+
+    it('should 404 on applying missing checklist to acceptance', () => {
+      return wsHttp
+        .post('/_api/acceptance/checklists/cl-e2e-missing/apply')
+        .query({ acceptanceId })
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404);
+    });
+  });
+
+  describe('GET /_api/acceptance/issue/:issueId', () => {
     it('should return acceptances of task', () => {
       return wsHttp
-        .get(`/_api/acceptance/task/${taskId}`)
+        .get(`/_api/acceptance/issue/${issueId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
@@ -239,12 +303,15 @@ describe('Acceptance (e2e)', () => {
     });
   });
 
-  describe('GET /_api/acceptance/task/:taskId/audit-gate', () => {
+  describe('GET /_api/acceptance/issue/:issueId/audit-gate', () => {
     it('should return audit gate status for task', () => {
       return wsHttp
-        .get(`/_api/acceptance/task/${taskId}/audit-gate`)
+        .get(`/_api/acceptance/issue/${issueId}/audit-gate`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
+        .expect(200)
+        .expect((res: Response) => {
+          expect(typeof res.body.data.allowed).toBe('boolean');
+        });
     });
   });
 
@@ -287,7 +354,43 @@ describe('Acceptance (e2e)', () => {
   });
 
   describe('POST /_api/acceptance/:id/accept-completion', () => {
-    it('should accept completion', () => {
+    it('should 400 when a criterion has no valid evidence (CAP-B-01 gate)', () => {
+      return (
+        wsHttp
+          .post(`/_api/acceptance/${acceptanceId}/accept-completion`)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .query({ userId: 'admin-e2e' })
+          // artifact 契约证据本身合法，但「e2e 技术标准 2」从无证据 →
+          // criteriaEvidence 门禁拦截（批一 CAP-B-01 修订即失效闭环）
+          .send({
+            evidence: {
+              summary: 'e2e 最终验收',
+              artifacts: [{ name: 'e2e-artifact.md', path: 'docs/e2e.md' }],
+            },
+          })
+          .expect(400)
+          .expect((res: Response) => {
+            expect(res.body.error?.code).toBe('ACCEPT_BLOCKED');
+            const failures: Array<{ check: string }> =
+              res.body.error?.details ?? [];
+            expect(failures.some((f) => f.check === 'criteriaEvidence')).toBe(
+              true,
+            );
+          })
+      );
+    });
+
+    it('should accept completion after every criterion has current-revision evidence', async () => {
+      const ev = await wsHttp
+        .post(`/_api/acceptance/criteria/${secondCriteriaId}/evidence`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'admin-e2e' })
+        .send({
+          evidenceType: 'test_report',
+          content: 'e2e 技术标准证据（当前版本）',
+        });
+      expect(ev.status).toBe(201);
+
       return (
         wsHttp
           .post(`/_api/acceptance/${acceptanceId}/accept-completion`)
@@ -302,6 +405,7 @@ describe('Acceptance (e2e)', () => {
           })
           .expect((res: Response) => {
             expect([200, 201]).toContain(res.status);
+            expect(res.body.data.status).toBe('passed');
           })
       );
     });
@@ -312,7 +416,7 @@ describe('Acceptance (e2e)', () => {
       const created = await wsHttp
         .post('/_api/acceptance')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ taskId, type: 'functional', title: 'E2E 豁免验收' });
+        .send({ issueId, type: 'functional', title: 'E2E 豁免验收' });
       expect(created.status).toBe(201);
       const waiveId = created.body.data.id;
 
@@ -341,12 +445,114 @@ describe('Acceptance (e2e)', () => {
       const created = await wsHttp
         .post('/_api/acceptance')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ taskId, type: 'technical', title: 'E2E 待删除验收' });
+        .send({ issueId, type: 'technical', title: 'E2E 待删除验收' });
       expect(created.status).toBe(201);
       return wsHttp
         .delete(`/_api/acceptance/${created.body.data.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
+    });
+  });
+
+  describe('POST /_api/acceptance/checklists (团队自定义清单 CRUD)', () => {
+    let teamChecklistId: string;
+
+    it('should create a team checklist (isSystem=false, 归当前用户)', () => {
+      return wsHttp
+        .post('/_api/acceptance/checklists')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'e2e-owner' })
+        .send({
+          name: 'E2E 团队清单',
+          projectType: 'backend',
+          techStack: 'ts-node',
+          checklist: [
+            {
+              category: '日志',
+              content: '是否定义了日志方案',
+              severity: 'high',
+            },
+            {
+              category: '测试',
+              content: '是否有测试计划',
+              severity: 'medium',
+              autoFixable: false,
+            },
+          ],
+        })
+        .expect(201)
+        .expect((res: Response) => {
+          const created = res.body.data;
+          expect(created.name).toBe('E2E 团队清单');
+          expect(created.isSystem).toBe(false);
+          expect(created.ownerId).toBe('e2e-owner');
+          expect(created.checklist).toHaveLength(2);
+          teamChecklistId = created.id;
+        });
+    });
+
+    it('should reject create without userId', () => {
+      return wsHttp
+        .post('/_api/acceptance/checklists')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'x',
+          projectType: 'api',
+          techStack: 'ts-node',
+          checklist: [],
+        })
+        .expect(400);
+    });
+
+    it('should update own team checklist and bump version', async () => {
+      const res = await wsHttp
+        .patch(`/_api/acceptance/checklists/${teamChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'e2e-owner' })
+        .send({
+          name: 'E2E 团队清单 v2',
+          checklist: [
+            { category: '安全', content: '是否鉴权', severity: 'critical' },
+          ],
+        })
+        .expect(200);
+      expect(res.body.data.name).toBe('E2E 团队清单 v2');
+      expect(res.body.data.version).toBe(2);
+    });
+
+    it('should reject updating a system checklist', () => {
+      if (!systemChecklistId) return Promise.resolve();
+      return wsHttp
+        .patch(`/_api/acceptance/checklists/${systemChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'e2e-owner' })
+        .send({ name: 'hack' })
+        .expect(400);
+    });
+
+    it('should reject update by non-owner', () => {
+      return wsHttp
+        .patch(`/_api/acceptance/checklists/${teamChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'someone-else' })
+        .send({ name: 'not mine' })
+        .expect(400);
+    });
+
+    it('should delete own team checklist', () => {
+      return wsHttp
+        .delete(`/_api/acceptance/checklists/${teamChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'e2e-owner' })
+        .expect(200);
+    });
+
+    it('should 404 on deleting an already deleted checklist', () => {
+      return wsHttp
+        .delete(`/_api/acceptance/checklists/${teamChecklistId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .query({ userId: 'e2e-owner' })
+        .expect(404);
     });
   });
 });

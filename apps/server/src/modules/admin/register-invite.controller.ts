@@ -1,8 +1,9 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Public } from '@/common/decorators/public.decorator';
 import { AdminService } from './admin.service';
+import { RegisterInvitePreviewDto } from './dto/admin-response.dto';
 
 @ApiTags('Admin')
 @Controller('register-invites')
@@ -12,7 +13,10 @@ export class RegisterInviteController {
   @Public()
   @Get(':token')
   @ApiOperation({ summary: '注册邀请公开预览（邀请人/受邀邮箱/状态）' })
-  @ApiResponse({ status: 200, description: '返回邀请预览' })
+  @ApiOkResponse({
+    type: RegisterInvitePreviewDto,
+    description: '邀请预览 { inviterName, email, status, expiresAt }',
+  })
   async preview(@Param('token') token: string) {
     return this.adminService.previewInvite(token);
   }

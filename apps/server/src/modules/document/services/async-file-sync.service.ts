@@ -1,8 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import {
-  DocumentStorageService,
-  type StoredFileMeta,
-} from './document-storage.service';
+import { DocumentStorageService } from './document-storage.service';
 
 export interface SyncWarning {
   documentId: string;

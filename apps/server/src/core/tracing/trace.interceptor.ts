@@ -17,7 +17,6 @@ export class TraceInterceptor implements NestInterceptor {
   constructor(private readonly traceContext: TraceContextService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const ctx = this.traceContext.getContext();
     const traceInfo = this.traceContext.formatForLog();
 
     // HTTP 请求信息

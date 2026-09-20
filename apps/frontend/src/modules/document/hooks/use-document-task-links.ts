@@ -21,7 +21,7 @@ const LINK_KEYS = {
   all: ['document-links'] as const,
   documentLinks: (documentId: string) => [...LINK_KEYS.all, 'document', documentId] as const,
   sectionLinks: (sectionId: string) => [...LINK_KEYS.all, 'section', sectionId] as const,
-  taskLinks: (taskId: string) => [...LINK_KEYS.all, 'task', taskId] as const,
+  taskLinks: (issueId: string) => [...LINK_KEYS.all, 'task', issueId] as const,
   projectLinks: (projectId: string) => [...LINK_KEYS.all, 'project', projectId] as const,
 };
 
@@ -147,11 +147,11 @@ export function useCreateSectionLink() {
 /**
  * 获取任务关联的文档
  */
-export function useTaskDocumentLinks(taskId: string) {
+export function useTaskDocumentLinks(issueId: string) {
   return useQuery({
-    queryKey: LINK_KEYS.taskLinks(taskId),
-    queryFn: () => fetchTaskDocumentLinks(taskId),
-    enabled: !!taskId,
+    queryKey: LINK_KEYS.taskLinks(issueId),
+    queryFn: () => fetchTaskDocumentLinks(issueId),
+    enabled: !!issueId,
   });
 }
 

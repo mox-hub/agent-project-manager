@@ -27,7 +27,7 @@ export function RightSidebar({
       hidden={hidden}
       style={typeof width === 'number' ? { width: `${width}px` } : { width }}
       className={cn(
-        'shrink-0 overflow-y-auto border-l border-border/40 bg-transparent',
+        'shrink-0 overflow-y-auto border-l border-border/60 bg-background/50 backdrop-blur-md',
         className,
       )}
       {...rest}

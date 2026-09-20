@@ -8,21 +8,25 @@ import { useAuth } from '@/modules/auth/hooks/use-auth';
 import {
   acceptanceApi,
   type Acceptance,
+  type CompletenessChecklist,
+  type CreateChecklistPayload,
+  type UpdateChecklistPayload,
 } from '@/modules/acceptance/api/acceptance-api';
 
 export const acceptanceKeys = {
   all: ['acceptance'] as const,
-  byTask: (taskId: string) => [...acceptanceKeys.all, 'task', taskId] as const,
+  byTask: (issueId: string) => [...acceptanceKeys.all, 'task', issueId] as const,
   detail: (id: string) => [...acceptanceKeys.all, 'detail', id] as const,
   audit: (id: string) => [...acceptanceKeys.all, 'audit', id] as const,
   systemChecklists: () => [...acceptanceKeys.all, 'systemChecklists'] as const,
+  checklists: () => [...acceptanceKeys.all, 'checklists'] as const,
 };
 
-export function useAcceptancesByTask(taskId: string | undefined) {
+export function useAcceptancesByTask(issueId: string | undefined) {
   return useQuery<Acceptance[]>({
-    queryKey: acceptanceKeys.byTask(taskId ?? ''),
-    queryFn: () => acceptanceApi.listByTask(taskId!),
-    enabled: !!taskId,
+    queryKey: acceptanceKeys.byTask(issueId ?? ''),
+    queryFn: () => acceptanceApi.listByTask(issueId!),
+    enabled: !!issueId,
   });
 }
 
@@ -30,7 +34,7 @@ export function useAcceptancesByTask(taskId: string | undefined) {
 export function useAcceptanceList(
   params: {
     status?: string;
-    taskId?: string;
+    issueId?: string;
     projectId?: string;
     page?: number;
     pageSize?: number;
@@ -59,7 +63,7 @@ export function useCreateAcceptance() {
     mutationFn: (payload: Parameters<typeof acceptanceApi.create>[0]) =>
       acceptanceApi.create(payload, currentUser?.id),
     onSuccess: (created) => {
-      qc.invalidateQueries({ queryKey: acceptanceKeys.byTask(created.taskId) });
+      qc.invalidateQueries({ queryKey: acceptanceKeys.byTask(created.issueId) });
       qc.invalidateQueries({ queryKey: [...acceptanceKeys.all, 'list'] });
     },
   });
@@ -78,7 +82,7 @@ export function useUpdateAcceptance() {
     }) => acceptanceApi.update(id, patch),
     onSuccess: (updated) => {
       qc.invalidateQueries({ queryKey: acceptanceKeys.detail(updated.id) });
-      qc.invalidateQueries({ queryKey: acceptanceKeys.byTask(updated.taskId) });
+      qc.invalidateQueries({ queryKey: acceptanceKeys.byTask(updated.issueId) });
     },
   });
 }
@@ -91,11 +95,11 @@ export function useAcceptCompletion() {
     mutationFn: (vars: {
       id: string;
       evidence?: Record<string, unknown>;
-      taskId: string;
+      issueId: string;
     }) => acceptanceApi.acceptCompletion(vars.id, vars.evidence, currentUser?.id),
-    onSuccess: (_updated, { taskId }) => {
+    onSuccess: (_updated, { issueId }) => {
       qc.invalidateQueries({ queryKey: acceptanceKeys.all });
-      if (taskId) qc.invalidateQueries({ queryKey: ['task', taskId] });
+      if (issueId) qc.invalidateQueries({ queryKey: ['task', issueId] });
     },
   });
 }
@@ -105,11 +109,11 @@ export function useRejectCompletion() {
   const qc = useQueryClient();
   const { currentUser } = useAuth();
   return useMutation({
-    mutationFn: (vars: { id: string; reason: string; taskId: string }) =>
+    mutationFn: (vars: { id: string; reason: string; issueId: string }) =>
       acceptanceApi.rejectCompletion(vars.id, vars.reason, currentUser?.id),
-    onSuccess: (_updated, { taskId }) => {
+    onSuccess: (_updated, { issueId }) => {
       qc.invalidateQueries({ queryKey: acceptanceKeys.all });
-      if (taskId) qc.invalidateQueries({ queryKey: ['task', taskId] });
+      if (issueId) qc.invalidateQueries({ queryKey: ['task', issueId] });
     },
   });
 }
@@ -119,11 +123,11 @@ export function useWaiveCompletion() {
   const qc = useQueryClient();
   const { currentUser } = useAuth();
   return useMutation({
-    mutationFn: (vars: { id: string; reason: string; taskId: string }) =>
+    mutationFn: (vars: { id: string; reason: string; issueId: string }) =>
       acceptanceApi.waiveCompletion(vars.id, vars.reason, currentUser?.id),
-    onSuccess: (_updated, { taskId }) => {
+    onSuccess: (_updated, { issueId }) => {
       qc.invalidateQueries({ queryKey: acceptanceKeys.all });
-      if (taskId) qc.invalidateQueries({ queryKey: ['task', taskId] });
+      if (issueId) qc.invalidateQueries({ queryKey: ['task', issueId] });
     },
   });
 }
@@ -201,5 +205,44 @@ export function useSystemChecklists() {
   return useQuery({
     queryKey: acceptanceKeys.systemChecklists(),
     queryFn: () => api.get('/acceptance/checklists/system'),
+  });
+}
+
+/** 全部完备性清单（系统预置在前，供审计选择器与设置管理面共用） */
+export function useChecklists() {
+  return useQuery<CompletenessChecklist[]>({
+    queryKey: acceptanceKeys.checklists(),
+    queryFn: () => acceptanceApi.listChecklists(),
+  });
+}
+
+export function useCreateChecklist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateChecklistPayload) => acceptanceApi.createChecklist(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: acceptanceKeys.checklists() });
+    },
+  });
+}
+
+export function useUpdateChecklist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: UpdateChecklistPayload }) =>
+      acceptanceApi.updateChecklist(id, patch),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: acceptanceKeys.checklists() });
+    },
+  });
+}
+
+export function useDeleteChecklist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => acceptanceApi.deleteChecklist(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: acceptanceKeys.checklists() });
+    },
   });
 }

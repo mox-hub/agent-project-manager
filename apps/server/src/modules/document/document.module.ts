@@ -10,14 +10,19 @@ import { DocumentEnhanceModule } from './document-enhance.module';
 import { DocumentMemberController } from './document-member.controller';
 import { DocumentMemberService } from './document-member.service';
 import { DocumentContextService } from './services/document-context.service';
+import { DecisionModule } from '../decision/decision.module';
+import { RevisionImpactService } from './services/revision-impact.service';
+import { RevisionImpactSubscriber } from './services/revision-impact.subscriber';
+import { RevisionImpactController } from './controllers/revision-impact.controller';
 
 @Module({
-  imports: [DocumentEnhanceModule],
+  imports: [DocumentEnhanceModule, DecisionModule],
   controllers: [
     DocumentController,
     FolderController,
     ApprovalController,
     DocumentMemberController,
+    RevisionImpactController,
   ],
   providers: [
     DocumentService,
@@ -26,6 +31,8 @@ import { DocumentContextService } from './services/document-context.service';
     ImportExportService,
     DocumentMemberService,
     DocumentContextService,
+    RevisionImpactService,
+    RevisionImpactSubscriber,
   ],
   exports: [
     DocumentService,

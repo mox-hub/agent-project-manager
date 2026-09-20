@@ -13,7 +13,8 @@
  * 所有信息均为页面传入的内嵌节点，另附几个常见格式的单元格组件：ListText / ListChip / ListDate / ListIcon / ListAvatar。
  */
 
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { isValidElement, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Check,
   ChevronDown,
@@ -25,7 +26,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ContextMenu, type MenuItem } from '@/components/ui/context-menu';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
 
 // ============================================================================
 // Types
@@ -50,8 +53,15 @@ export interface DataListProgress {
 export interface DataListProps<T extends DataListItem> {
   items: T[];
   loading?: boolean;
+  /** 空态文案（默认 i18n「暂无数据」）；渲染走 EmptyState 规范形态 */
   emptyMessage?: ReactNode;
+  /** 空态描述行（EmptyState description） */
+  emptyDescription?: ReactNode;
+  /** 空态图标（EmptyState muted 圆块形态） */
+  emptyIcon?: React.ComponentType<{ className?: string }>;
   className?: string;
+  /** 总条数基数（默认使用 items.length） */
+  totalCount?: number;
 
   // ---- 行内容（页面注册） ----
   /** 多选框右侧首要信息区 */
@@ -149,32 +159,20 @@ export function ListIcon({
 export function ListAvatar({
   name,
   url,
-  color,
+  color: _color,
 }: {
   name?: string;
   url?: string | null;
   color?: string;
 }) {
-  if (url) {
-    return (
-      <img
-        src={url}
-        alt={name ?? ''}
-        className="size-6 shrink-0 rounded-full object-cover"
-        title={name}
-      />
-    );
-  }
-  const initial = (name ?? '').trim().split(/\s+/).filter(Boolean);
-  const text = initial.length === 0 ? '' : initial.length === 1 ? initial[0].slice(0, 2).toUpperCase() : (initial[0][0] + initial[1][0]).toUpperCase();
   return (
-    <span
-      title={name}
-      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-10 font-semibold text-white"
-      style={{ backgroundColor: color || 'hsl(var(--primary))' }}
-    >
-      {text || <UserIcon className="size-3 opacity-60" />}
-    </span>
+    <MemberAvatar
+      name={name}
+      avatarUrl={url}
+      size="sm"
+      showBadge={false}
+      className="size-6"
+    />
   );
 }
 
@@ -335,7 +333,7 @@ function Row<T extends DataListItem>({
 // 内部：grouping bar
 // ============================================================================
 
-function GroupBar<T extends DataListItem>({
+function GroupBar({
   meta,
   count,
   expanded,
@@ -414,22 +412,30 @@ function SelectionBar<T extends DataListItem>({
   selected,
   actions,
   count,
+  total,
   onClose,
 }: {
   selected: T[];
   actions: DataListProps<T>['selectionActions'];
   count: number;
+  total?: number;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+  const summaryText =
+    typeof total === 'number' && total > 0
+      ? t('dataTable.selectedWithTotal', { count, total })
+      : t('dataTable.selected', { count });
+
   return (
-    <div className="pointer-events-none fixed bottom-5 left-1/2 z-50 -translate-x-1/2">
+    <div className="pointer-events-none fixed bottom-28 left-1/2 z-50 -translate-x-1/2 transition-all duration-200">
       <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-2 shadow-lg">
-        <span className="px-2 text-sm font-semibold tabular-nums">{count} selected</span>
+        <span className="px-2 text-sm font-semibold tabular-nums">{summaryText}</span>
         {actions ? <div className="flex items-center gap-1">{actions(selected, onClose)}</div> : null}
         <button
           type="button"
-          aria-label="Close"
-          title="Close"
+          aria-label={t('common.close', { defaultValue: 'Close' })}
+          title={t('common.close', { defaultValue: 'Close' })}
           onClick={onClose}
           className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
@@ -447,7 +453,7 @@ function SelectionBar<T extends DataListItem>({
 /** 骨架行标题条的宽度档位（交错宽度更接近真实数据的长短分布） */
 const ROW_TITLE_WIDTHS = ['w-1/4', 'w-2/5', 'w-1/3', 'w-1/2', 'w-1/5', 'w-1/3'];
 
-function DataListSkeleton({ grouping }: { grouping: boolean }) {
+export function DataListSkeleton({ grouping }: { grouping: boolean }) {
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-background" aria-busy="true">
       {grouping ? (
@@ -487,8 +493,11 @@ function DataListSkeleton({ grouping }: { grouping: boolean }) {
 export function DataList<T extends DataListItem>({
   items,
   loading,
-  emptyMessage = 'No items',
+  emptyMessage,
+  emptyDescription,
+  emptyIcon,
   className,
+  totalCount,
   renderLeading,
   renderTrailing,
   renderChildren,
@@ -503,6 +512,7 @@ export function DataList<T extends DataListItem>({
   onSelectionChange,
   selectionActions,
 }: DataListProps<T>) {
+  const { t } = useTranslation();
   // 多选状态：受控优先，否则内部维护
   const [internalSelected, setInternalSelected] = useState<Set<string>>(() => new Set());
   const selected = selectedIds ?? internalSelected;
@@ -539,7 +549,6 @@ export function DataList<T extends DataListItem>({
     });
     const arr = Array.from(buckets.entries()).map(([key, list]) => {
       const metaOverride = groupLabel?.(key, list) ?? {};
-      const first = list[0];
       const meta: DataListGroupMeta = {
         key,
         label: metaOverride.label ?? key,
@@ -578,18 +587,49 @@ export function DataList<T extends DataListItem>({
     });
   };
 
+  // 键盘流只在列表容器自身聚焦时接管：焦点落在行内交互元素（checkbox/链接/按钮/输入框）
+  // 时按键交还原生行为，避免 Enter/Space 双触发与 j/k 干扰，也不与命令面板/表单快捷键冲突
+  const isInteractiveTarget = (e: React.KeyboardEvent | React.MouseEvent) => {
+    if (e.target === e.currentTarget) return false;
+    return !!(e.target as HTMLElement).closest(
+      'button, a, input, textarea, select, [contenteditable="true"]',
+    );
+  };
+
+  const handleContainerFocus = () => {
+    // 聚焦即激活首行（Tab 进入后直接可 Enter/x 操作，无需先按 j 探路）
+    if (!activeId && visibleItems.length > 0) setActiveId(visibleItems[0].id);
+  };
+
+  const handleContainerClickCapture = (e: React.MouseEvent) => {
+    if (isInteractiveTarget(e)) return;
+    // 先聚焦（触发 onFocus 激活首行），再覆盖为被点击的行——
+    // 此前点击不可聚焦的行 div 会把焦点丢回 body，键盘流随之中断
+    containerRef.current?.focus({ preventScroll: true });
+    const rowEl = (e.target as HTMLElement).closest<HTMLElement>('[data-row-id]');
+    if (rowEl?.dataset.rowId) setActiveId(rowEl.dataset.rowId);
+  };
+
   const handleListKeyDown = (e: React.KeyboardEvent) => {
+    if (isInteractiveTarget(e)) return;
     if (e.key === 'ArrowDown' || e.key === 'j') {
       e.preventDefault();
       moveActive(1);
     } else if (e.key === 'ArrowUp' || e.key === 'k') {
       e.preventDefault();
       moveActive(-1);
-    } else if ((e.key === 'Enter' || e.key === ' ') && activeId && onItemClick) {
-      const item = visibleItems.find((it) => it.id === activeId);
-      if (item) {
-        e.preventDefault();
-        onItemClick(item);
+    } else if ((e.key === 'x' || e.key === 'X' || e.key === ' ') && selectable && activeId) {
+      // x / space 切换当前行选中：走既有 selectable 契约（受控 onSelectionChange 或内部状态，
+      // 悬浮胶囊与页面批量操作随选中状态联动）
+      e.preventDefault();
+      toggleSelect(activeId);
+    } else if (e.key === 'Enter' || (e.key === ' ' && !selectable)) {
+      if (activeId && onItemClick) {
+        const item = visibleItems.find((it) => it.id === activeId);
+        if (item) {
+          e.preventDefault();
+          onItemClick(item);
+        }
       }
     } else if (e.key === 'Escape') {
       clearSelection();
@@ -603,10 +643,17 @@ export function DataList<T extends DataListItem>({
   }
 
   if (items.length === 0) {
+    // emptyMessage 传完整空态元素（如带 IconStack 的 page 变体）时直接渲染，避免套成「EmptyState 套 EmptyState」
+    if (isValidElement(emptyMessage)) {
+      return <>{emptyMessage}</>;
+    }
     return (
-      <div className={cn('rounded-lg border border-border bg-background py-16 text-center text-xs text-muted-foreground', className)}>
-        {emptyMessage}
-      </div>
+      <EmptyState
+        icon={emptyIcon}
+        title={emptyMessage ?? t('dataTable.empty', '暂无数据')}
+        description={emptyDescription}
+        className={className}
+      />
     );
   }
 
@@ -635,8 +682,10 @@ export function DataList<T extends DataListItem>({
       ref={containerRef}
       tabIndex={0}
       onKeyDown={handleListKeyDown}
-      className={cn('relative outline-none', className)}
-      aria-label="List. Use arrow keys to navigate, Enter to open."
+      onFocus={handleContainerFocus}
+      onClickCapture={handleContainerClickCapture}
+      className={cn('relative outline-none focus-visible:ring-2 focus-visible:ring-ring/40', className)}
+      aria-label="List. Use arrow keys or j/k to navigate, Enter to open, x or space to select, Escape to clear."
     >
       {isGrouping ? (
         <div className="flex flex-col gap-2">
@@ -646,10 +695,10 @@ export function DataList<T extends DataListItem>({
             return (
               <div
                 key={meta.key}
-                className={cn('overflow-hidden rounded-lg border border-border bg-background', isCollapsed && '')}
+                className={cn('rounded-lg border border-border bg-background transition-all', isCollapsed && '')}
                 data-group={meta.key}
               >
-                <div className="group">
+                <div className="group sticky top-0 z-10 rounded-t-lg bg-background/95 backdrop-blur-xs border-b border-border/40 shadow-2xs transition-shadow">
                   <GroupBar
                     meta={meta}
                     count={list.length}
@@ -687,7 +736,13 @@ export function DataList<T extends DataListItem>({
       )}
 
       {selectable && selected.size > 0 ? (
-        <SelectionBar selected={selectedItems} actions={selectionActions} count={selected.size} onClose={clearSelection} />
+        <SelectionBar
+          selected={selectedItems}
+          actions={selectionActions}
+          count={selected.size}
+          total={totalCount ?? items.length}
+          onClose={clearSelection}
+        />
       ) : null}
     </div>
   );

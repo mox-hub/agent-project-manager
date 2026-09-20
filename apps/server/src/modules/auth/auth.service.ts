@@ -17,7 +17,6 @@ import {
 } from '../../core/exceptions/business.exception';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'node:crypto';
-import { CreateAgentIdentityBindingDto } from './dto/create-agent-identity-binding.dto';
 import { RegisterDto } from './dto/register.dto';
 import { generateMemberShortId } from '@/common/utils/member-short-id.util';
 
@@ -58,10 +57,20 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
+  /**
+   * 登录标识校验：username 精确匹配优先（保持派生 username 即邮箱前缀场景不回归）；
+   * 未命中且标识形如邮箱时回退按 email 查询。email 入库口径统一 trim + 小写
+   * （见 register / updateProfile / createUserAccount），故回退查询同样归一化输入。
+   */
   async validateUser(username: string, password: string) {
-    const user = await this.prisma.user.findUnique({
+    let user = await this.prisma.user.findUnique({
       where: { username },
     });
+    if (!user && username.includes('@')) {
+      user = await this.prisma.user.findUnique({
+        where: { email: username.trim().toLowerCase() },
+      });
+    }
 
     if (!user || !user.passwordHash) {
       throw new BusinessException(
@@ -120,7 +129,12 @@ export class AuthService {
 
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) {
-      throw new ConflictException('该邮箱已注册');
+      // 语义化错误码（信封 error.code）供前端定向映射"该邮箱已注册，请直接登录"
+      throw new BusinessException(
+        ErrorCode.EMAIL_ALREADY_REGISTERED,
+        '该邮箱已注册',
+        HttpStatus.CONFLICT,
+      );
     }
 
     const displayName = dto.displayName?.trim() || email.split('@')[0];
@@ -583,82 +597,6 @@ export class AuthService {
       roles,
       this.resolveSessionExpiry(),
     );
-  }
-
-  async listAgentIdentityBindings(projectId: string, userId: string) {
-    await this.assertProjectMember(projectId, userId);
-
-    return this.prisma.agentIdentityBinding.findMany({
-      where: { projectId },
-      orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
-    });
-  }
-
-  async upsertAgentIdentityBinding(
-    projectId: string,
-    dto: CreateAgentIdentityBindingDto,
-    userId: string,
-  ) {
-    await this.assertProjectMaintainer(projectId, userId);
-    const existing = await this.prisma.agentIdentityBinding.findFirst({
-      where: {
-        projectId,
-        subjectType: dto.subjectType,
-        subjectId: dto.subjectId,
-      },
-    });
-
-    if (existing) {
-      return this.prisma.agentIdentityBinding.update({
-        where: { id: existing.id },
-        data: {
-          providerId: dto.providerId,
-          identitySource: dto.identitySource,
-          mappedRole: dto.mappedRole,
-          mappedLevel: dto.mappedLevel,
-          status: dto.status || 'active',
-          metadata: this.toInputJson(dto.metadata),
-        },
-      });
-    }
-
-    return this.prisma.agentIdentityBinding.create({
-      data: {
-        projectId,
-        subjectType: dto.subjectType,
-        subjectId: dto.subjectId,
-        providerId: dto.providerId,
-        identitySource: dto.identitySource,
-        mappedRole: dto.mappedRole,
-        mappedLevel: dto.mappedLevel,
-        status: dto.status || 'active',
-        createdBy: userId,
-        metadata: this.toInputJson(dto.metadata),
-      },
-    });
-  }
-
-  async deleteAgentIdentityBinding(
-    projectId: string,
-    bindingId: string,
-    userId: string,
-  ) {
-    await this.assertProjectMaintainer(projectId, userId);
-
-    const binding = await this.prisma.agentIdentityBinding.findFirst({
-      where: {
-        id: bindingId,
-        projectId,
-      },
-    });
-
-    if (!binding) {
-      throw new NotFoundException('Agent identity binding not found');
-    }
-
-    await this.prisma.agentIdentityBinding.delete({
-      where: { id: bindingId },
-    });
   }
 
   async listSessions(userId: string) {

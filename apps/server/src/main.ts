@@ -22,7 +22,7 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const logger = app.get(LoggerService);
-  logger.setContext('Bootstrap');
+  logger.setContext('APM');
   app.useLogger(logger);
   app.flushLogs();
 
@@ -102,7 +102,10 @@ async function bootstrap() {
   // CORS configuration with whitelist
   const allowedOrigins = parseAllowedOriginsFromEnv();
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       if (isAllowedOrigin(origin, allowedOrigins)) {
         callback(null, true);
       } else {
@@ -128,21 +131,48 @@ async function bootstrap() {
     (next as any)();
   });
 
-  // Swagger 配置与 contract:export 脚本共用（src/openapi.document.ts）
-  const document = buildOpenApiDocument(app);
+  // Swagger/OpenAPI 文档构建（38 模块全量路由扫描 + 文档对象常驻内存）仅保留在
+  // 开发环境；生产默认跳过，需要时设 ENABLE_SWAGGER=1 显式开启。
+  // contract:export 不经此处：jest e2e 直调 buildOpenApiDocument（OPENAPI_EXPORT=1）。
+  const swaggerEnabled =
+    configService.nodeEnv !== 'production' ||
+    configService.get('ENABLE_SWAGGER') === '1';
 
-  SwaggerModule.setup('_api/docs', app, document, swaggerUiOptions);
+  if (swaggerEnabled) {
+    // Swagger 配置与 contract:export 脚本共用（src/openapi.document.ts）
+    const document = buildOpenApiDocument(app);
 
-  // Add OpenAPI JSON export endpoint
-  app.getHttpAdapter().get('/_api/openapi.json', (req: any, res: any) => {
-    res.setHeader('Content-Type', 'application/json');
-    res.send(document);
-  });
+    SwaggerModule.setup('_api/docs', app, document, swaggerUiOptions);
+
+    // Add OpenAPI JSON export endpoint
+    app.getHttpAdapter().get('/_api/openapi.json', (req: any, res: any) => {
+      res.setHeader('Content-Type', 'application/json');
+      res.send(document);
+    });
+  }
 
   configureFrontendStaticHosting(app, logger);
 
   const port = configService.port;
   await app.listen(port);
+
+  // 桌面壳 utility 承载的优雅关闭桥（ADR-015 P2）：壳 stop 流程先经 parentPort
+  // 发 apm:shutdown，Nest shutdown hooks 收尾（HTTP 连接池/Prisma 断开）后退出；
+  // 普通 node 进程无 parentPort，桥不挂载。SIGTERM 同路径由 enableShutdownHooks 兜住。
+  app.enableShutdownHooks();
+  type UtilityParentPort = {
+    on: (event: 'message', cb: (e: { data: unknown }) => void) => void;
+  };
+  const parentPort = (
+    process as typeof process & { parentPort?: UtilityParentPort }
+  ).parentPort;
+  if (parentPort) {
+    parentPort.on('message', (e) => {
+      if (e?.data === 'apm:shutdown') {
+        void app.close().finally(() => process.exit(0));
+      }
+    });
+  }
 
   logger.log(`Application is running on: http://localhost:${port}`);
   logger.log(`Environment: ${configService.nodeEnv}`);

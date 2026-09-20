@@ -2,34 +2,34 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { MemberCardService } from './member-card.service';
 import { PrismaService } from '../../core/database/prisma.service';
-import { TaskAssigneeService } from './task-assignee.service';
+import { IssueAssigneeService } from './issue-assignee.service';
 
 describe('MemberCardService', () => {
   let service: MemberCardService;
 
   const mockPrisma = {
     member: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     memberProjectBinding: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     teamMember: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     memberActivity: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     project: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     team: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
   };
 
   const mockTaskAssignee = {
-    getMemberLoad: jest.fn(),
+    getMemberLoad: vi.fn(),
   };
 
   const baseMember = {
@@ -57,11 +57,11 @@ describe('MemberCardService', () => {
       providers: [
         MemberCardService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: TaskAssigneeService, useValue: mockTaskAssignee },
+        { provide: IssueAssigneeService, useValue: mockTaskAssignee },
       ],
     }).compile();
     service = module.get<MemberCardService>(MemberCardService);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockPrisma.memberActivity.findMany.mockResolvedValue([]);
     mockTaskAssignee.getMemberLoad.mockResolvedValue({
       todo: 0,

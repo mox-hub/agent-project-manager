@@ -7,14 +7,22 @@
 import { spawn } from 'child_process';
 import {
   CliAdapter,
+  CliAdapterCapabilities,
   CliExecutionInput,
+  CLI_ADAPTER_CAPABILITIES,
+  CliUsage,
   CommandBuildResult,
   StreamEmitter,
+  extractCliUsage,
 } from './interface';
 
 export class ZCodeAdapter implements CliAdapter {
   getProviderId(): 'zcode' {
     return 'zcode';
+  }
+
+  getCapabilities(): CliAdapterCapabilities {
+    return CLI_ADAPTER_CAPABILITIES.zcode;
   }
 
   async detect(): Promise<{ available: boolean; version?: string; error?: string }> {
@@ -87,15 +95,25 @@ export class ZCodeAdapter implements CliAdapter {
 
   parseFinalResult(stdout: string, exitCode: number) {
     const artifacts: Array<{ type: string; name: string; content?: string }> = [];
+    let usage: CliUsage | undefined;
     if (exitCode !== 0) {
-      return { status: 'failed' as const, artifacts, error: `zcode CLI exited with code ${exitCode}`, output: { stdout, exitCode } };
+      return { status: 'failed' as const, artifacts, error: `zcode CLI exited with code ${exitCode}`, output: { stdout, exitCode }, usage };
     }
     try {
       const data = JSON.parse(stdout);
+      usage = extractCliUsage(data);
       artifacts.push({ type: 'result', name: 'zcode_execution', content: typeof data === 'string' ? data : JSON.stringify(data, null, 2) });
     } catch {
+      // 逐行尝试（stream-json 多行输出时末行为 result 事件）
+      for (const line of stdout.split('\n').filter(Boolean)) {
+        try {
+          usage = extractCliUsage(JSON.parse(line)) ?? usage;
+        } catch {
+          // 非 JSON 行忽略
+        }
+      }
       if (stdout.trim()) artifacts.push({ type: 'result', name: 'zcode_output', content: stdout });
     }
-    return { status: 'completed' as const, artifacts, output: { stdout } };
+    return { status: 'completed' as const, artifacts, output: { stdout }, usage };
   }
 }

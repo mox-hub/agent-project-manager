@@ -56,8 +56,10 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
         projectId: propProjectId || "",
         name: "",
       });
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || "Failed to create repository";
+    } catch (error) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage =
+        err?.response?.data?.message || err?.message || "Failed to create repository";
       setFormError(errorMessage);
     }
   };

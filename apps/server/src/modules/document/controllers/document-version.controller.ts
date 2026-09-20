@@ -14,10 +14,17 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiOkResponse,
+  ApiCreatedResponse,
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { DocumentVersionService } from '../services/document-version.service';
+import {
+  DocumentVersionDto,
+  DocumentVersionStatsDto,
+} from '../dto/version.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Document Versions')
 @ApiBearerAuth('JWT-auth')
@@ -29,7 +36,12 @@ export class DocumentVersionController {
   @Get()
   @ApiOperation({ summary: '获取版本历史' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '返回版本列表' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentVersionDto,
+    isArray: true,
+    description: '返回版本列表',
+  })
   async getVersions(@Param('documentId') documentId: string) {
     return this.versionService.getVersionsByDocument(documentId);
   }
@@ -37,7 +49,11 @@ export class DocumentVersionController {
   @Get('latest')
   @ApiOperation({ summary: '获取最新版本' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '返回最新版本' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentVersionDto,
+    description: '返回最新版本（文档尚无版本时为 null）',
+  })
   async getLatestVersion(@Param('documentId') documentId: string) {
     return this.versionService.getLatestVersion(documentId);
   }
@@ -46,7 +62,8 @@ export class DocumentVersionController {
   @ApiOperation({ summary: '获取特定版本' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
   @ApiParam({ name: 'versionId', description: '版本 ID' })
-  @ApiResponse({ status: 200, description: '返回版本详情' })
+  @ApiStandardErrors()
+  @ApiOkResponse({ type: DocumentVersionDto, description: '返回版本详情' })
   @ApiResponse({ status: 404, description: '版本不存在' })
   async getVersion(@Param('versionId') versionId: string) {
     return this.versionService.getVersion(versionId);
@@ -55,7 +72,11 @@ export class DocumentVersionController {
   @Post()
   @ApiOperation({ summary: '创建新版本' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
-  @ApiResponse({ status: 201, description: '版本已创建' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: DocumentVersionDto,
+    description: '版本已创建（内容相同时返回现有版本）',
+  })
   async createVersion(
     @Param('documentId') documentId: string,
     @Body() dto: { content: string; summary?: string },
@@ -73,7 +94,8 @@ export class DocumentVersionController {
   @ApiOperation({ summary: '重命名版本' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
   @ApiParam({ name: 'versionId', description: '版本 ID' })
-  @ApiResponse({ status: 200, description: '重命名成功' })
+  @ApiStandardErrors()
+  @ApiOkResponse({ type: DocumentVersionDto, description: '重命名成功' })
   async renameVersion(
     @Param('versionId') versionId: string,
     @Body() dto: { label: string },
@@ -84,7 +106,11 @@ export class DocumentVersionController {
   @Post('rollback')
   @ApiOperation({ summary: '回滚到指定版本' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '回滚成功' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentVersionDto,
+    description: '回滚成功（返回新建的回滚版本）',
+  })
   async rollback(
     @Param('documentId') documentId: string,
     @Body('versionId') versionId: string,
@@ -96,7 +122,8 @@ export class DocumentVersionController {
   @Get('stats')
   @ApiOperation({ summary: '获取版本统计' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '返回版本统计' })
+  @ApiStandardErrors()
+  @ApiOkResponse({ type: DocumentVersionStatsDto, description: '返回版本统计' })
   async getVersionStats(@Param('documentId') documentId: string) {
     return this.versionService.getVersionStats(documentId);
   }

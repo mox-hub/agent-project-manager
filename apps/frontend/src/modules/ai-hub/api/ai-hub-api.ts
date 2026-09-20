@@ -1,4 +1,5 @@
 import { api } from '@/infrastructure/api-client';
+import type { QueryOf, ResponseOf } from '@/infrastructure/api-client/contract';
 
 // ============================================
 // Chat Types
@@ -18,7 +19,7 @@ export interface ContextHints {
 
 export interface ChatRequest {
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   conversationId?: string;
   message: ChatMessage;
   contextHints?: ContextHints;
@@ -42,19 +43,21 @@ export interface AIMessage {
   content: string;
   modelName?: string | null;
   tokens?: number | null;
-  metadata?: any;
+  /** 后端 Json 自由字段，前端无结构化消费，收窄为 unknown */
+  metadata?: unknown;
   createdAt: string;
 }
 
 export interface AIConversation {
   id: string;
   projectId?: string | null;
-  taskId?: string | null;
+  issueId?: string | null;
   title?: string | null;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
-  metadata?: any;
+  /** 后端 Json 自由字段，前端无结构化消费，收窄为 unknown */
+  metadata?: unknown;
   messages?: AIMessage[];
   project?: {
     id: string;
@@ -71,7 +74,7 @@ export interface AIConversation {
 
 export interface ConversationListParams {
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   q?: string;
   from?: string;
   to?: string;
@@ -89,26 +92,6 @@ export interface ConversationListResponse {
   };
 }
 
-export interface AIWorkflow {
-  id: string;
-  key: string;
-  name: string;
-  description?: string | null;
-  version: number;
-}
-
-export interface RunWorkflowRequest {
-  projectId?: string;
-  taskId?: string;
-  parameters?: Record<string, any>;
-  triggerType?: string;
-}
-
-export interface RunWorkflowResponse {
-  workflowRunId: string;
-  status: string;
-}
-
 export interface AIModel {
   id: string;
   name: string;
@@ -121,67 +104,47 @@ export interface AIModel {
 export interface UsageStats {
   totalTokens: number;
   totalCost: number;
+  /** 调用总次数与来源分类计数（conversation=对话 / execution·workflow=执行链 / silent=系统自动静默） */
+  totalCalls?: number;
+  conversationCalls?: number;
+  executionCalls?: number;
+  silentCalls?: number;
   byModel: Array<{
     modelName: string;
+    totalTokens: number;
+    totalCost: number;
+  }>;
+  byDay?: Array<{
+    day: string;
     totalTokens: number;
     totalCost: number;
   }>;
 }
 
 // ============================================
-// AI Agent Types (CLI Dispatch)
+// AI Worker Types (V3: Member 身份)
 // ============================================
 
-export interface AIAgent {
-  id: string;
-  subjectType: string;
-  subjectId: string;
-  providerId: string;
-  identitySource: string;
-  mappedRole: string | null;
-  runtimeOnline: boolean;
-}
-
 export interface AssignTaskToAIRequest {
-  taskId: string;
-  agentSubjectId: string;
-  projectId: string;
+  issueId: string;
+  /** AI 成员 Member.id（type=ai_agent） */
+  memberId: string;
+  /** 4d-3：绑定既有执行项派发（可选） */
+  executionId?: string;
+  /** 仅供前端缓存失效用，不发送；收件箱任务为 null */
+  projectId?: string | null;
 }
 
 export interface AssignTaskToAIResponse {
   success: boolean;
+  /** 仅 AI 成员自动派发失败时返回（不阻塞指派），见 openapi IssueAssigneeWithMemberDto */
+  dispatchError?: string;
+  /** 两级审计 gate：派发黄牌警告文案（审计 red，不阻断执行） */
+  auditWarning?: string;
   executionRunId?: string;
   error?: string;
 }
 
-// ============================================
-// AI Identity Types (Agent Management)
-// ============================================
-
-export interface AgentIdentity {
-  id: string;
-  projectId?: string | null;
-  name: string;
-  type: 'ai_employee' | 'temp_agent';
-  status: 'active' | 'paused' | 'archived';
-  description?: string | null;
-  systemPrompt?: string | null;
-  toolPolicy?: Record<string, unknown> | null;
-  metadata?: Record<string, unknown> | null;
-  createdBy?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateAgentIdentityRequest {
-  projectId?: string;
-  name: string;
-  type?: 'ai_employee' | 'temp_agent';
-  description?: string;
-  systemPrompt?: string;
-  toolPolicy?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
-}
 
 // ============================================
 // CLI Dispatch Types
@@ -201,13 +164,59 @@ export interface AIProviderConfig {
   apiKeyMasked?: string;
   baseUrl?: string | null;
   defaultModel?: string | null;
+  /** 该厂家已启用模型清单（AIModelConfig：模型查询结果落库） */
   availableModels?: string[] | null;
+  /** 非敏感附加配置（含 modelsEndpoint 模型查询链接覆盖） */
+  metadata?: Record<string, unknown> | null;
   capabilities?: Record<string, unknown> | null;
   error?: string | null;
   errorMessage?: string | null;
   lastValidatedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/** 工作区内置模型（无显式偏好时 AI 调用链的默认 provider+model；未设置两者为 null） */
+export interface AiDefaultModel {
+  provider?: string | null;
+  model?: string | null;
+}
+
+/** 套餐型限额窗口（如编程套餐的 5 小时/周/月限额；token 数或金额视厂家而定） */
+export interface AiBalanceWindow {
+  period: '5h' | 'day' | 'week' | 'month' | (string & {});
+  used?: number | null;
+  limit?: number | null;
+  remaining?: number | null;
+  /** 已用百分比（0-100；厂家仅返回百分比时提供，此时 used/limit 为 null） */
+  percent?: number | null;
+  resetsAt?: string | null;
+}
+
+/**
+ * Provider 余额（归一化）：prepaid=充值型（单余额，如 DeepSeek /user/balance）/
+ * subscription=套餐型（5h/周/月等限额窗口）/ unknown=无法识别的返回形状
+ */
+export interface AiProviderBalance {
+  type: 'prepaid' | 'subscription' | 'unknown';
+  currency?: string | null;
+  balance?: number | null;
+  /** 充值型可选：赠送/充值累计（可作进度条分母） */
+  grantedBalance?: number | null;
+  toppedUpBalance?: number | null;
+  isAvailable?: boolean | null;
+  windows: AiBalanceWindow[];
+}
+
+/** models.dev 价目参考源状态（CAP-A-21：估价链的分项参考价外部源） */
+export interface AiPricingSourceStatus {
+  available: boolean;
+  fetchedAt?: string | null;
+  stale: boolean;
+  providerCount: number;
+  modelCount: number;
+  source: string;
+  error?: string | null;
 }
 
 export interface CreateProviderRequest {
@@ -225,6 +234,8 @@ export interface UpdateProviderRequest {
   baseUrl?: string;
   defaultModel?: string;
   enabled?: boolean;
+  /** 非敏感附加配置（整体替换，调用方负责与既有 metadata 合并） */
+  metadata?: Record<string, unknown>;
 }
 
 export interface ValidateProviderRequest {
@@ -232,6 +243,8 @@ export interface ValidateProviderRequest {
   providerId?: string;
   apiKey?: string;
   baseUrl?: string;
+  /** 已保存配置记录 ID——校验通过时后端同步该记录在线状态为 connected */
+  providerConfigId?: string;
 }
 
 export interface ValidateProviderResponse {
@@ -267,10 +280,14 @@ export interface CliProvidersResponse {
 }
 
 export interface DispatchToCliRequest {
-  cliProviderId: CliProviderId;
-  goal: string;
-  input?: Record<string, unknown>;
-  projectId?: string;
+  /** AI 成员 Member.id（可选，缺省回落 issue.aiAgentId） */
+  memberId?: string;
+  providerId?: CliProviderId;
+  model?: string;
+  allowedTools?: string[];
+  timeout?: number;
+  /** 4d-3：绑定既有执行项，传入则不新建执行项 */
+  executionId?: string;
 }
 
 export interface DispatchToCliResponse {
@@ -305,7 +322,7 @@ export interface ExecutionRunStatus {
 export interface ExecutionRunsResponse {
   data: Array<{
     id: string;
-    taskId?: string;
+    issueId?: string;
     projectId?: string;
     status: ExecutionRunStatusValue;
     startedAt?: string;
@@ -340,24 +357,12 @@ export const aiHubApi = {
   getConversation: (id: string) =>
     api.get<AIConversation>(`/ai/conversations/${id}`),
 
-  // ─── Workflow APIs ────────────────────────────────────────────
-
-  getWorkflows: () => api.get<AIWorkflow[]>('/ai/workflows'),
-
-  getWorkflow: (id: string) => api.get<AIWorkflow>(`/ai/workflows/${id}`),
-
-  runWorkflow: (id: string, data: RunWorkflowRequest) =>
-    api.post<RunWorkflowResponse>(`/ai/workflows/${id}/run`, data),
-
-  getWorkflowRuns: (params?: any) =>
-    api.get('/ai/workflow-runs', params),
-
   // ─── Model & Usage APIs ───────────────────────────────────────
 
   getModels: (provider?: string) =>
     api.get<AIModel[]>('/ai/models', provider ? { provider } : undefined),
 
-  getUsage: (params?: any) => api.get<UsageStats>('/ai/usage', params),
+  getUsage: (params?: QueryOf<'AiHubController_getUsage'>) => api.get<UsageStats>('/ai/usage', params),
 
   // ─── Provider APIs ────────────────────────────────────────────
 
@@ -378,27 +383,42 @@ export const aiHubApi = {
   validateProvider: (data: ValidateProviderRequest) =>
     api.post<ValidateProviderResponse>('/ai/providers/validate', data),
 
+  /**
+   * 测试已保存 Provider 的连接（触发后端真实验证链路，最长约 38s）。
+   * timeoutMs 放宽到 60s：全局默认 30s 会先于后端返回超时，
+   * 吞掉后端拼好的结构化诊断信息。
+   */
   testProvider: (id: string) =>
-    api.post<ValidateProviderResponse>(`/ai/providers/${id}/test`),
+    api.post<ValidateProviderResponse>(`/ai/providers/${id}/test`, undefined, {
+      timeoutMs: 60_000,
+    }),
 
   detectModels: (id: string) =>
-    api.post<{ models: string[] }>(`/ai/providers/${id}/detect-models`),
+    api.post<{ models: string[]; synced: boolean }>(
+      `/ai/providers/${id}/detect-models`,
+    ),
 
-  // ─── Agent Identity APIs ─────────────────────────────────────
+  /** 查询厂家余额（归一化：充值型单余额 / 套餐型限额窗口） */
+  getProviderBalance: (id: string) =>
+    api.get<AiProviderBalance>(`/ai/providers/${id}/balance`),
 
-  getAgents: (projectId?: string) =>
-    api.get<AgentIdentity[]>('/ai/agents', projectId ? { projectId } : undefined),
+  /** models.dev 价目参考源状态（只读，不触发网络） */
+  getPricingSourceStatus: () =>
+    api.get<AiPricingSourceStatus>('/ai/pricing-source'),
 
-  createAgent: (data: CreateAgentIdentityRequest) =>
-    api.post<AgentIdentity>('/ai/agents', data),
+  /** 强制刷新 models.dev 价目目录（失败保留旧缓存并在 error 透出，不抛错） */
+  refreshPricingSource: () =>
+    api.post<AiPricingSourceStatus>('/ai/pricing-source/refresh'),
+
+  getDefaultModel: () => api.get<AiDefaultModel>('/ai/default-model'),
+
+  setDefaultModel: (data: { provider: string; model: string }) =>
+    api.put<AiDefaultModel>('/ai/default-model', data),
 
   // ─── AI Worker APIs ───────────────────────────────────────────
 
-  getAvailableAgents: (projectId: string) =>
-    api.get<AIAgent[]>('/ai/agents', { projectId }),
-
-  assignTaskToAI: (data: AssignTaskToAIRequest) =>
-    api.post<AssignTaskToAIResponse>('/ai/assign-task', data),
+  assignTaskToAI: ({ projectId: _projectId, ...payload }: AssignTaskToAIRequest) =>
+    api.post<AssignTaskToAIResponse>('/ai/assign-issue', payload),
 
   // ─── CLI Dispatch APIs ────────────────────────────────────────
 
@@ -408,8 +428,20 @@ export const aiHubApi = {
   detectCliProviders: () =>
     api.get<{ providers: CliProvider[] }>('/ai/cli-providers/detect'),
 
-  dispatchTaskToCli: (taskId: string, data: DispatchToCliRequest) =>
-    api.post<DispatchToCliResponse>(`/ai/tasks/${taskId}/dispatch-cli`, data),
+  dispatchTaskToCli: (issueId: string, data: DispatchToCliRequest) =>
+    api.post<DispatchToCliResponse>(`/ai/issues/${issueId}/dispatch-cli`, data),
+
+  /**
+   * 重新执行失败/阻塞执行（兜底批 5）：服务端克隆新建一条执行
+   * （retryOfId 血缘指回原执行）并走同一派发链，原执行终态留痕不动。
+   * payload.diagnosis（批一 P0 切片 3，裁决 D）：「按诊断重试」时把失败
+   * 诊断结论随血缘写入新执行的 retryContext
+   */
+  retryExecution: (executionRunId: string, payload?: { diagnosis?: string }) =>
+    api.post<DispatchToCliResponse>(
+      `/ai/execution-runs/${executionRunId}/retry`,
+      payload,
+    ),
 
   cancelExecution: (executionRunId: string) =>
     api.post<{ success: boolean }>(`/ai/execution-runs/${executionRunId}/cancel`),
@@ -421,7 +453,10 @@ export const aiHubApi = {
     api.get<ExecutionRunsResponse>('/execution/runs', params),
 
   getPendingApprovals: (projectId?: string) =>
-    api.get<any>('/execution/approvals/pending', projectId ? { projectId } : undefined),
+    api.get<ResponseOf<'ExecutionController_getPendingApprovals'>>(
+      '/execution/approvals/pending',
+      projectId ? { projectId } : undefined,
+    ),
 
   // ─── MCP APIs ────────────────────────────────────────────────
 

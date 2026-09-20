@@ -1,9 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { ConfigService } from '../../core/config/config.service';
-import { BusinessException } from '../../core/exceptions/business.exception';
+import {
+  BusinessException,
+  ErrorCode,
+} from '../../core/exceptions/business.exception';
 import * as bcrypt from 'bcrypt';
 
 describe('AuthService', () => {
@@ -11,40 +15,47 @@ describe('AuthService', () => {
 
   const mockPrismaService = {
     user: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
     },
     session: {
-      create: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      findMany: jest.fn(),
-      deleteMany: jest.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      findMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     roleAssignment: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
     },
     actorClaimSnapshot: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
     projectMember: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
-    agentIdentityBinding: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      findFirst: jest.fn(),
-      delete: jest.fn(),
+    appConfig: {
+      findFirst: vi.fn(),
+    },
+    registrationInvite: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    member: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      updateMany: vi.fn(),
     },
   };
 
   const mockJwtService = {
-    sign: jest.fn().mockReturnValue('mock-jwt-token'),
+    sign: vi.fn().mockReturnValue('mock-jwt-token'),
   };
 
   const mockConfigService = {
-    get: jest.fn().mockReturnValue('7d'),
-    getOrThrow: jest.fn().mockReturnValue('test-secret'),
+    get: vi.fn().mockReturnValue('7d'),
+    getOrThrow: vi.fn().mockReturnValue('test-secret'),
   };
 
   beforeEach(async () => {
@@ -70,7 +81,7 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -144,6 +155,124 @@ describe('AuthService', () => {
       expect(result).not.toHaveProperty('passwordHash');
       expect(result.id).toBe('1');
       expect(result.username).toBe('test');
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { username: 'test' },
+      });
+    });
+
+    it('should login with email identifier when username lookup misses', async () => {
+      const passwordHash = await bcrypt.hash('password', 10);
+      const mockUser = {
+        id: '1',
+        username: 'test',
+        displayName: 'Test User',
+        email: 'test@example.com',
+        passwordHash,
+        isActive: true,
+      };
+
+      mockPrismaService.user.findUnique.mockImplementation(
+        (args: { where: { username?: string; email?: string } }) => {
+          if (args.where.username) return Promise.resolve(null);
+          return Promise.resolve(
+            args.where.email === 'test@example.com' ? mockUser : null,
+          );
+        },
+      );
+
+      const result = await service.validateUser('test@example.com', 'password');
+
+      expect(result).not.toHaveProperty('passwordHash');
+      expect(result.id).toBe('1');
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { username: 'test@example.com' },
+      });
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'test@example.com' },
+      });
+    });
+
+    it('should normalize email identifier case for email fallback', async () => {
+      const passwordHash = await bcrypt.hash('password', 10);
+      const mockUser = {
+        id: '2',
+        username: 'agent-exp',
+        email: 'agent-exp@night.test',
+        passwordHash,
+        isActive: true,
+      };
+
+      mockPrismaService.user.findUnique.mockImplementation(
+        (args: { where: { username?: string; email?: string } }) => {
+          if (args.where.username) return Promise.resolve(null);
+          return Promise.resolve(
+            args.where.email === 'agent-exp@night.test' ? mockUser : null,
+          );
+        },
+      );
+
+      const result = await service.validateUser(
+        'Agent-Exp@Night.Test',
+        'password',
+      );
+
+      expect(result.id).toBe('2');
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'agent-exp@night.test' },
+      });
+    });
+
+    it('should prefer username exact match without email fallback', async () => {
+      const passwordHash = await bcrypt.hash('password', 10);
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: '3',
+        username: 'admin@example.com',
+        email: 'other@example.com',
+        passwordHash,
+        isActive: true,
+      });
+
+      const result = await service.validateUser(
+        'admin@example.com',
+        'password',
+      );
+
+      expect(result.id).toBe('3');
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledTimes(1);
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { username: 'admin@example.com' },
+      });
+    });
+
+    it('should throw BusinessException for unknown email identifier', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.validateUser('ghost@example.com', 'password'),
+      ).rejects.toThrow(BusinessException);
+    });
+  });
+
+  describe('register', () => {
+    it('should throw 409 with EMAIL_ALREADY_REGISTERED when email is taken', async () => {
+      // open 注册模式：无 appConfig 记录
+      mockPrismaService.appConfig.findFirst.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'existing-1',
+        username: 'taken',
+        email: 'taken@example.com',
+      });
+
+      const error = await service
+        .register({
+          email: 'taken@example.com',
+          password: 'password123',
+        })
+        .catch((e: BusinessException) => e);
+
+      expect(error).toBeInstanceOf(BusinessException);
+      expect(error.errorCode).toBe(ErrorCode.EMAIL_ALREADY_REGISTERED);
+      expect(error.getStatus()).toBe(HttpStatus.CONFLICT);
     });
   });
 

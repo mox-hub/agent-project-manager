@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { BarChart3, ListTodo, Milestone, Settings, Users } from 'lucide-react';
+import { BarChart3, BookMarked, ListTodo, Milestone, Route, Settings, Users } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface ProjectDetailNavProps {
@@ -13,8 +13,10 @@ export function ProjectDetailNav({ projectId, className }: ProjectDetailNavProps
 
   const tabs = [
     { id: 'overview', label: t('project.detail.overview'), path: '', icon: BarChart3 },
-    { id: 'tasks', label: t('project.detail.tasks'), path: 'tasks', icon: ListTodo },
+    { id: 'tasks', label: t('project.detail.tasks'), path: 'issues', icon: ListTodo },
     { id: 'milestones', label: t('project.detail.milestones'), path: 'milestones', icon: Milestone },
+    { id: 'profile', label: t('project.detail.profile'), path: 'profile', icon: BookMarked },
+    { id: 'playbook', label: t('project.detail.playbook'), path: 'playbook', icon: Route },
     { id: 'team', label: t('project.detail.team'), path: 'team', icon: Users },
     { id: 'settings', label: t('nav.settings'), path: 'settings', icon: Settings },
   ];

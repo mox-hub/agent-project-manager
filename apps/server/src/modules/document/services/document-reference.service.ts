@@ -1,10 +1,7 @@
 // Document Reference Service - 使用 Prisma
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
-import type {
-  CreateDocumentReference,
-  ReferenceSourceType,
-} from '../entities/document-reference.entity';
+import type { CreateDocumentReference } from '../entities/document-reference.entity';
 
 @Injectable()
 export class DocumentReferenceService {

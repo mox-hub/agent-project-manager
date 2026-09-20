@@ -3,13 +3,14 @@
  * @description 创建（明文一次性展示+复制）、列表（前缀/状态/最近使用）、吊销。
  *              Token 供 AI/外部工具免登录调用 API：apm login --token <token>。
  */
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { KeyRound, Plus, Copy, Check, Trash2 } from 'lucide-react';
+import { KeyRound, Plus, Copy, Check, Trash2, Terminal } from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
 import { PageShell } from '@/components/ui/page-shell';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SectionCard } from '@/components/ui/section-card';
 import { StatusPill } from '@/components/ui/status-pill';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ import { SkeletonTable } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/toast';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
+import { formatDateTime } from '@/shared/lib/date-format';
 
 interface AccessTokenItem {
   id: string;
@@ -54,12 +56,6 @@ const EXPIRY_OPTIONS = [
   { value: '90', days: 90 },
   { value: '365', days: 365 },
 ] as const;
-
-function formatTime(value?: string | null): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
-}
 
 export function AccessTokensSettingsSection() {
   const { t } = useTranslation();
@@ -115,11 +111,8 @@ export function AccessTokensSettingsSection() {
     if (ok) revokeToken.mutate(item.id);
   };
 
-  // 过期判定需要当前时间：effect 中取快照，保持渲染纯度（首帧未判定、随后修正）
-  const [nowMs, setNowMs] = useState(0);
-  useEffect(() => {
-    setNowMs(Date.now());
-  }, [tokens.data]);
+  // 过期判定需要当前时间：以挂载时刻为快照（无 SSR，一次定格即可保持渲染纯度）
+  const [nowMs] = useState(() => Date.now());
 
   const tokenStatus = (item: AccessTokenItem) => {
     if (item.revokedAt) return { tone: 'default' as const, label: t('settings.tokenStatusRevoked') };
@@ -131,9 +124,12 @@ export function AccessTokensSettingsSection() {
 
   return (
     <PageShell
+      variant="standard"
+      contentClassName="space-y-6"
       aiPage="settings.tokens"
       title={t('settings.tokensTitle')}
       icon={KeyRound}
+      iconColor="text-accent-yellow"
       actions={
         <HeaderActionButton
           icon={Plus}
@@ -146,8 +142,9 @@ export function AccessTokensSettingsSection() {
         />
       }
     >
-      <div className="space-y-6 px-6 pb-6">
-        <SectionCard
+      <SectionCard
+          icon={KeyRound}
+          iconColor="text-accent-yellow"
           title={t('settings.tokensListTitle')}
           description={t('settings.tokensListDesc')}
         >
@@ -182,8 +179,8 @@ export function AccessTokensSettingsSection() {
                         <TableCell>
                           <StatusPill tone={status.tone}>{status.label}</StatusPill>
                         </TableCell>
-                        <TableCell>{formatTime(item.lastUsedAt)}</TableCell>
-                        <TableCell>{formatTime(item.createdAt)}</TableCell>
+                        <TableCell>{formatDateTime(item.lastUsedAt)}</TableCell>
+                        <TableCell>{formatDateTime(item.createdAt)}</TableCell>
                         <TableCell>
                           {!item.revokedAt && (
                             <Button
@@ -206,12 +203,21 @@ export function AccessTokensSettingsSection() {
           </AsyncState>
         </SectionCard>
 
-        <Alert>{t('settings.tokenUsageTip')}</Alert>
-        <div className="space-y-1.5 font-mono text-xs">
-          <div>apm login --token &lt;{t('settings.runtimeGuideToken')}&gt;</div>
-          <div>apm config set accessToken &lt;{t('settings.runtimeGuideToken')}&gt;</div>
-        </div>
-      </div>
+        <Card className="border-border shadow-none">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Terminal size={16} className="text-accent-yellow" />
+              {t('settings.tokenCliTitle')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Alert>{t('settings.tokenUsageTip')}</Alert>
+            <div className="space-y-1.5 rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs">
+              <div>apm login --token &lt;{t('settings.runtimeGuideToken')}&gt;</div>
+              <div>apm config set accessToken &lt;{t('settings.runtimeGuideToken')}&gt;</div>
+            </div>
+          </CardContent>
+        </Card>
 
       <Dialog
         open={createOpen}

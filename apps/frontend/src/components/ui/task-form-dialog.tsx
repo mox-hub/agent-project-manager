@@ -29,7 +29,7 @@ import {
   NativeSelectOption,
 } from '@/components/ui/native-select';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
-import { useCreateTask, useUpdateTask } from '@/modules/task/hooks/use-project-tasks';
+import { useCreateTask, useUpdateTask } from '@/modules/issue/hooks/use-project-tasks';
 import { MentionTextarea } from '@/modules/team-member/components/mention-textarea';
 import { cn } from '@/lib/utils';
 import {
@@ -57,9 +57,9 @@ export interface TaskFormDialogProps {
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   initialData?: Partial<TaskFormData>;
-  onSuccess?: (taskId: string) => void;
+  onSuccess?: (issueId: string) => void;
 }
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string; tint: string; bgColor: string }[] = [
@@ -170,7 +170,7 @@ ${data.description || 'No description'}
     setError(null);
 
     try {
-      const apiPriority = (data.priority === 'urgent' ? 'critical' : data.priority) as import('@/modules/task/api/task-api').TaskPriority;
+      const apiPriority = (data.priority === 'urgent' ? 'critical' : data.priority) as import('@/modules/issue/api/issue-api').TaskPriority;
       if (mode === 'create') {
         const result = await createTask.mutateAsync({
           projectId: data.projectId,
@@ -184,10 +184,10 @@ ${data.description || 'No description'}
           onSuccess?.(result.id);
         }
       } else {
-        const taskId = initialData && 'id' in initialData ? String(initialData.id) : undefined;
-        if (taskId) {
+        const issueId = initialData && 'id' in initialData ? String(initialData.id) : undefined;
+        if (issueId) {
           await updateTask.mutateAsync({
-            taskId,
+            issueId,
             data: {
               title: data.title,
               description: data.description,

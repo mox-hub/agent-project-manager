@@ -13,10 +13,13 @@ import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiResponse,
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 import { DocumentMemberService } from './document-member.service';
 import {
   AddDocumentAuthorDto,
@@ -24,6 +27,11 @@ import {
   UpdateDocumentReviewerDto,
   AddDocTaskLinkAssigneeDto,
 } from './dto/document-member.dto';
+import {
+  DocumentAuthorResponseDto,
+  DocumentReviewerResponseDto,
+  DocumentTaskLinkAssigneeResponseDto,
+} from './dto/document-member-response.dto';
 
 @ApiTags('Document Authors & Reviewers')
 @ApiBearerAuth('JWT-auth')
@@ -37,14 +45,23 @@ export class DocumentMemberController {
   @Get('document/:documentId/authors')
   @ApiOperation({ summary: '文档作者/协作者列表' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '返回作者列表' })
+  @ApiOkResponse({
+    description: '返回作者列表（按角色、创建时间排序）',
+    type: DocumentAuthorResponseDto,
+    isArray: true,
+  })
+  @ApiStandardErrors()
   async listAuthors(@Param('documentId') documentId: string) {
     return this.service.listAuthors(documentId);
   }
 
   @Post('authors')
   @ApiOperation({ summary: '添加文档作者/协作者' })
-  @ApiResponse({ status: 201, description: '作者已添加' })
+  @ApiCreatedResponse({
+    description: '作者已添加（已存在时幂等返回既有绑定）',
+    type: DocumentAuthorResponseDto,
+  })
+  @ApiStandardErrors()
   async addAuthor(@Body() dto: AddDocumentAuthorDto) {
     return this.service.addAuthor(dto);
   }
@@ -65,14 +82,23 @@ export class DocumentMemberController {
   @Get('document/:documentId/reviewers')
   @ApiOperation({ summary: '文档审阅人列表' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '返回审阅人列表' })
+  @ApiOkResponse({
+    description: '返回审阅人列表（按创建时间排序）',
+    type: DocumentReviewerResponseDto,
+    isArray: true,
+  })
+  @ApiStandardErrors()
   async listReviewers(@Param('documentId') documentId: string) {
     return this.service.listReviewers(documentId);
   }
 
   @Post('reviewers')
   @ApiOperation({ summary: '添加文档审阅人' })
-  @ApiResponse({ status: 201, description: '审阅人已添加' })
+  @ApiCreatedResponse({
+    description: '审阅人已添加（已存在时幂等返回既有绑定，status=pending）',
+    type: DocumentReviewerResponseDto,
+  })
+  @ApiStandardErrors()
   async addReviewer(@Body() dto: AddDocumentReviewerDto) {
     return this.service.addReviewer(dto);
   }
@@ -80,7 +106,11 @@ export class DocumentMemberController {
   @Patch('reviewers/:id')
   @ApiOperation({ summary: '更新文档审阅人状态' })
   @ApiParam({ name: 'id', description: '审阅绑定 ID' })
-  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiOkResponse({
+    description: '更新成功（approved/rejected 会同步写入 DocumentApproval）',
+    type: DocumentReviewerResponseDto,
+  })
+  @ApiStandardErrors()
   async updateReviewer(
     @Param('id') id: string,
     @Body() dto: UpdateDocumentReviewerDto,
@@ -102,14 +132,23 @@ export class DocumentMemberController {
   @Get('doc-task-link/:linkId/assignees')
   @ApiOperation({ summary: '文档任务链接负责人列表' })
   @ApiParam({ name: 'linkId', description: '文档-任务关联 ID' })
-  @ApiResponse({ status: 200, description: '返回负责人列表' })
+  @ApiOkResponse({
+    description: '返回负责人列表',
+    type: DocumentTaskLinkAssigneeResponseDto,
+    isArray: true,
+  })
+  @ApiStandardErrors()
   async listLinkAssignees(@Param('linkId') linkId: string) {
     return this.service.listLinkAssignees(linkId);
   }
 
   @Post('doc-task-link/assignees')
   @ApiOperation({ summary: '添加文档任务链接负责人' })
-  @ApiResponse({ status: 201, description: '已添加' })
+  @ApiCreatedResponse({
+    description: '已添加（已存在时幂等返回既有绑定）',
+    type: DocumentTaskLinkAssigneeResponseDto,
+  })
+  @ApiStandardErrors()
   async addLinkAssignee(@Body() dto: AddDocTaskLinkAssigneeDto) {
     return this.service.addLinkAssignee(dto);
   }

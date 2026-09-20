@@ -207,13 +207,16 @@ export class NotificationService {
         payload.projectId,
       );
 
-      // If user has disabled this event type, skip
-      if (!preferences.some((p) => p.enabled)) {
+      // 无显式偏好 = 默认开启（in-app）；
+      // 仅当存在显式偏好且全部关闭时才跳过（[].some() 恒为 false，
+      // 不能用 some 判断「未配置」的用户，否则他们永远收不到通知）
+      const enabledPreferences = preferences.filter((p) => p.enabled);
+      if (preferences.length > 0 && enabledPreferences.length === 0) {
         continue;
       }
 
       // Determine which channels to use
-      const channels = this.determineChannels(preferences, eventType);
+      const channels = this.determineChannels(enabledPreferences, eventType);
 
       // Generate notification title and body
       const { title, body } = this.generateNotificationContent(
@@ -229,7 +232,7 @@ export class NotificationService {
           title,
           body,
           projectId: payload.projectId || null,
-          taskId: payload.taskId || null,
+          issueId: payload.issueId || null,
           channels: channels as any,
           status: 'unread',
           payloadJson: payload as any,
@@ -238,12 +241,14 @@ export class NotificationService {
 
       notifications.push(notification);
 
-      // Publish event for real-time delivery
+      // Publish event for real-time delivery（title/body 供系统横幅直接展示）
       this.messageBus.publish('notification.created', {
         notificationId: notification.id,
         userId,
         type: eventType,
         channels,
+        title,
+        body,
       });
     }
 
@@ -258,7 +263,8 @@ export class NotificationService {
     const preferences = await this.prisma.notificationPreference.findMany({
       where: {
         userId,
-        enabled: true,
+        // 注意：不在此过滤 enabled——调用方需要区分「未配置」（默认开启）
+        // 与「显式关闭」（跳过），预过滤会让关闭行隐身、语义退化为同一分支
         OR: [
           { projectId: null }, // Global preferences
           ...(projectId ? [{ projectId }] : []), // Project-specific preferences
@@ -277,7 +283,7 @@ export class NotificationService {
     });
   }
 
-  private determineChannels(preferences: any[], eventType: string): string[] {
+  private determineChannels(preferences: any[], _eventType: string): string[] {
     // Merge channels from all matching preferences
     // （NotificationPreference.channels 是 String 列，存 JSON 串；Notification.channels 才是 Json 数组）
     const channels = new Set<string>();
@@ -325,17 +331,128 @@ export class NotificationService {
         title: `新任务已创建：${p.taskTitle || '未命名任务'}`,
         body: `项目：${p.projectName || '未知项目'}`,
       }),
-      'ci.build.failed': (p) => ({
-        title: `构建失败：${p.buildName || '未知构建'}`,
-        body: `项目：${p.projectName || '未知项目'}，构建：${p.buildName || '未知构建'}`,
+      'decision.proposal.created': (p) => ({
+        title: `新决策提案待处理：${p.proposalTitle || '未命名提案'}`,
+        body: p.projectName ? `项目：${p.projectName}` : null,
       }),
-      'ci.build.succeeded': (p) => ({
-        title: `构建成功：${p.buildName || '未知构建'}`,
-        body: `项目：${p.projectName || '未知项目'}`,
+      'task.deleted': (p) => ({
+        title: `任务已删除：${p.taskTitle || '未命名任务'}`,
+        body: p.projectName ? `项目：${p.projectName}` : null,
       }),
-      'ai.workflow.completed': (p) => ({
-        title: `AI 工作流已完成：${p.workflowName || '未知工作流'}`,
-        body: `工作流 "${p.workflowName || '未知工作流'}" 已成功完成`,
+      'document.created': (p) => ({
+        title: `新文档已创建：${p.title || '未命名文档'}`,
+        body: p.projectName ? `项目：${p.projectName}` : null,
+      }),
+      'document.deleted': (p) => ({
+        title: `文档已删除：${p.title || '未命名文档'}`,
+        body: p.projectName ? `项目：${p.projectName}` : null,
+      }),
+      'project.created': (p) => ({
+        title: `新项目已创建：${p.projectName || p.project?.name || '未命名项目'}`,
+        body: null,
+      }),
+      'project.archived': (p) => ({
+        title: `项目已归档：${p.projectName || '未命名项目'}`,
+        body: null,
+      }),
+      'member.created': (p) => ({
+        title: `新成员加入：${p.displayName || '未知成员'}`,
+        body: null,
+      }),
+      'member.removed': (p) => ({
+        title: `成员已移除：${p.displayName || '未知成员'}`,
+        body: null,
+      }),
+      'team.created': (p) => ({
+        title: `新团队已创建：${p.teamName || '未命名团队'}`,
+        body: null,
+      }),
+      'team.archived': (p) => ({
+        title: `团队已归档：${p.teamName || '未命名团队'}`,
+        body: null,
+      }),
+      'acceptance.created': (p) => ({
+        title: `新验收单：${p.title || '未命名验收单'}`,
+        body: null,
+      }),
+      'acceptance.resolved': (p) => {
+        const actionText =
+          p.action === 'accept'
+            ? '通过'
+            : p.action === 'reject'
+              ? '驳回'
+              : '豁免';
+        return {
+          title: `验收已${actionText}：${p.title || '未命名验收单'}`,
+          body: null,
+        };
+      },
+      'milestone.created': (p) => ({
+        title: `新里程碑：${p.name || '未命名里程碑'}`,
+        body: null,
+      }),
+      'tag.created': (p) => ({
+        title: `新标签：${p.name || '未命名标签'}`,
+        body: null,
+      }),
+      'tag.deleted': (p) => ({
+        title: `标签已删除：${p.name || '未命名标签'}`,
+        body: null,
+      }),
+      'task.fieldChanged': (p) => {
+        const FIELD_LABELS: Record<string, string> = {
+          title: '标题',
+          description: '描述',
+          priority: '优先级',
+          dueDate: '截止日期',
+          startDate: '开始日期',
+          status: '状态',
+          assigneeId: '负责人',
+          projectId: '所属项目',
+          moduleCode: '模块',
+          milestoneId: '里程碑',
+          iterationId: '迭代',
+          estimate: '估算',
+          estimatePoints: '估算点数',
+          labels: '标签',
+          tags: '标签',
+          customFields: '自定义字段',
+        };
+        const fieldNames = Array.isArray(p.fields)
+          ? p.fields.map((f: string) => FIELD_LABELS[f] ?? f).join('、')
+          : '字段';
+        return {
+          title: `任务${fieldNames}变更：${p.taskTitle || '未命名任务'}`,
+          body: p.projectName ? `项目：${p.projectName}` : null,
+        };
+      },
+      'task.commented': (p) => ({
+        title: `新评论：${p.taskTitle || p.entityId || '条目'}`,
+        body: p.excerpt ? String(p.excerpt).slice(0, 100) : null,
+      }),
+      'execution.terminal': (p) => ({
+        title:
+          p.status === 'failed'
+            ? `智能体任务失败：${p.goal || '未知目标'}`
+            : p.status === 'blocked'
+              ? `智能体任务被阻塞：${p.goal || '未知目标'}`
+              : `智能体任务完成：${p.goal || '未知目标'}`,
+        // 失败诊断·机械归类（批一 P0 切片 3，裁决 D 零 token 半）：先给
+        // 一层「为什么」，深入分析归执行详情的「AI 诊断」按需触发
+        body:
+          (p.status === 'failed' || p.status === 'blocked') && p.failureHint
+            ? `初步判断：${p.failureHint}`
+            : null,
+      }),
+      'approval.requested': (p) => ({
+        title: `智能体执行等待审批：${p.goal || p.requestedAction || '未知操作'}`,
+        body: p.requestedAction
+          ? String(p.requestedAction).slice(0, 100)
+          : null,
+      }),
+      'mention.created': (p) => ({
+        title: '有人提到了你',
+        body: p.text ? String(p.text).slice(0, 100) : null,
       }),
     };
 

@@ -7,12 +7,16 @@ import { ProjectListPage } from '@/modules/project/pages/project-list-page';
 import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-page';
 import { ProjectTasksPage } from '@/modules/project/pages/project-tasks-page';
 import { ProjectMilestonesPage } from '@/modules/project/pages/project-milestones-page';
+import { ProjectProfilePage } from '@/modules/project/pages/project-profile-page';
+import { ProjectPlaybookPage } from '@/modules/project/pages/project-playbook-page';
 import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { ErrorPage } from '@/shared/pages/error-page';
 // TerminalPage 已废弃 - Terminal模块已并入Runtime模块的terminal capability
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
 import { AppearanceSettingsSection } from '@/modules/settings/pages/sections/appearance-section';
+import { DockSettingsSection } from '@/modules/settings/pages/sections/dock-section';
+import { ShortcutsSettingsSection } from '@/modules/settings/pages/sections/shortcuts-section';
 import { ProfileSettingsSection } from '@/modules/settings/pages/sections/profile-section';
 import { GitSettingsSection } from '@/modules/settings/pages/sections/git-section';
 import { TerminalSettingsSection } from '@/modules/settings/pages/sections/terminal-section';
@@ -24,15 +28,20 @@ import {
   StorageSettingsSection,
 } from '@/modules/settings/pages/sections/manager-sections';
 import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-id-section';
+import { IssueTypesSettingsSection } from '@/modules/settings/pages/sections/issue-types-section';
+import { IssueTypeDetailSection } from '@/modules/settings/pages/sections/issue-type-detail-section';
+import { ChecklistsSettingsSection } from '@/modules/settings/pages/sections/checklists-section';
 import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
-import { AiAgentsSection } from '@/modules/settings/pages/sections/ai-agents-section';
+import { MemorySection } from '@/modules/settings/pages/sections/memory-section';
 import { RuntimeSettingsSection } from '@/modules/settings/pages/sections/runtime-section';
+import { RuntimeMachineDetailSection } from '@/modules/settings/pages/sections/runtime-machine-detail-section';
 import { AccessTokensSettingsSection } from '@/modules/settings/pages/sections/access-tokens-section';
 import { AiExecutionCenterSection } from '@/modules/settings/pages/sections/ai-execution-center-section';
 import { IntegrationsSettingsSection } from '@/modules/settings/pages/sections/integrations-section';
 import { GithubIntegrationSection } from '@/modules/settings/pages/sections/github-integration-section';
 import { LinearIntegrationSection } from '@/modules/settings/pages/sections/linear-integration-section';
 import { ProjectSettingsPage } from '@/modules/project/pages/project-settings-page';
+import { ProjectInitPage } from '@/modules/project/pages/project-init-page';
 import { NotificationCenterPage } from '@/modules/notification/pages/notification-center-page';
 import { RepositoryListPage } from '@/modules/git/pages/repository-list-page';
 import { RepositoryDetailPage } from '@/modules/git/pages/repository-detail-page';
@@ -44,13 +53,17 @@ import { DocumentEditPage } from '@/modules/document/pages/document-edit-page';
 import { DocumentNewPage } from '@/modules/document/pages/document-new-page';
 import { DesktopInitPage } from '@/modules/desktop/pages/desktop-init-page';
 import { BootPage } from '@/modules/boot/pages/boot-page';
-import { TasksPage } from '@/modules/task/pages/tasks-page';
-import { BugsPage } from '@/modules/task/pages/bugs-page';
-import { TaskDetailPage } from '@/modules/task/pages/task-detail-page';
-import { BugDetailPage } from '@/modules/task/pages/bug-detail-page';
+import { TasksPage } from '@/modules/issue/pages/tasks-page';
+import { BugsPage } from '@/modules/issue/pages/bugs-page';
+import { TaskDetailPage } from '@/modules/issue/pages/task-detail-page';
+import { BugDetailPage } from '@/modules/issue/pages/bug-detail-page';
 import { AcceptanceDetailPage } from '@/modules/acceptance/pages/acceptance-detail-page';
 import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-page';
 import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
+import { WorkflowListPage } from '@/modules/workflow/pages/workflow-list-page';
+import { WorkflowDetailPage } from '@/modules/workflow/pages/workflow-detail-page';
+import { ReleaseListPage } from '@/modules/release/pages/release-list-page';
+import { ReleaseDetailPage } from '@/modules/release/pages/release-detail-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
 import { SearchPage } from '@/modules/search/pages/search-page';
 
@@ -73,12 +86,37 @@ function LinearIntegrationRedirect() {
 }
 
 /**
- * 旧项目子页签链接重定向（board→tasks、roles→team，2026-08-23 tab 合并）。
- * 必须显式拼 :projectId：相对路径 `../tasks` 按路由层级解析会落到 /app/tasks，丢失项目段。
+ * 详情页路由包装：按 :id 给页面实例加 key。
+ * 路由元素是模块级常量，仅参数变化时 React 会复用同一页面实例，
+ * 弹窗开关/草稿等本地状态会跨实体残留（如 A 任务的指派弹窗出现在 B 任务）；
+ * key 化后每个详情页（标签页）拿到独立实例。
+ */
+function IssueDetailRoute() {
+  const { issueId } = useParams<{ issueId: string }>();
+  return <TaskDetailPage key={issueId} />;
+}
+
+function BugDetailRoute() {
+  const { bugId } = useParams<{ bugId: string }>();
+  return <BugDetailPage key={bugId} />;
+}
+
+/** 旧项目子页签链接重定向（board→issues、roles→team，2026-08-23 tab 合并）。
+ * 必须显式拼 :projectId：相对路径 `../issues` 按路由层级解析会落到 /app/issues，丢失项目段。
  */
 function ProjectTabRedirect({ to }: { to: string }) {
   const { projectId } = useParams<{ projectId: string }>();
   return <Navigate to={`/app/projects/${projectId}/${to}`} replace />;
+}
+
+/** 旧全局任务路由重定向（2026-09-06 Task→Issue 命名收尾，存量书签/收藏兜底） */
+function LegacyTasksRedirect() {
+  return <Navigate to="/app/issues" replace />;
+}
+
+function LegacyTaskDetailRedirect() {
+  const { taskId } = useParams<{ taskId: string }>();
+  return <Navigate to={`/app/issues/${taskId}`} replace />;
 }
 
 const DesignSystemPage = lazy(() =>
@@ -96,6 +134,11 @@ const DeliveryPage = lazy(() =>
 const MembersPage = lazy(() =>
   import('@/modules/team-member/pages/members-page'),
 );
+const OfficePage = lazy(() =>
+  import('@/modules/office/pages/office-page').then((m) => ({
+    default: m.OfficePage,
+  })),
+);
 const TeamsPage = lazy(() =>
   import('@/modules/team-member/pages/teams-page'),
 );
@@ -110,6 +153,32 @@ const TeamDetailPage = lazy(() =>
 const AdminPage = lazy(() =>
   import('@/modules/admin/pages/admin-page').then((m) => ({
     default: m.AdminPage,
+  })),
+);
+
+const DecisionInboxPage = lazy(() =>
+  import('@/modules/decision/pages/decision-inbox-page').then((m) => ({
+    default: m.DecisionInboxPage,
+  })),
+);
+
+const AiSurfacePage = lazy(() =>
+  import('@/modules/ai-surface/pages/ai-surface-page').then((m) => ({
+    default: m.AiSurfacePage,
+  })),
+);
+
+// 回放态（S5）：与盯盘面同一个模块，但**不是**同一个页面——它必须永远能开
+// （无 runtime、无 API key），故与盯盘页各自的 chunk 分开按需加载
+const AiSurfaceReplayPage = lazy(() =>
+  import('@/modules/ai-surface/pages/ai-surface-replay-page').then((m) => ({
+    default: m.AiSurfaceReplayPage,
+  })),
+);
+
+const RequirementIntakePage = lazy(() =>
+  import('@/modules/intake/pages/requirement-intake-page').then((m) => ({
+    default: m.RequirementIntakePage,
   })),
 );
 
@@ -158,7 +227,15 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
+        handle: { selfScroll: true },
         element: <ProjectListPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        // 旧工作台路径重定向（工作台挂载在 /app/projects/dashboard，裸 /app/dashboard
+        // 此前无匹配、落入顶层 * 兜底渲染成 INTERNAL_ERROR 错误页，2026-09-20 修复）
+        path: 'dashboard',
+        element: <Navigate to="/app/projects/dashboard" replace />,
         errorElement: <ErrorPage />,
       },
       {
@@ -167,6 +244,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
+            handle: { selfScroll: true },
             element: <ProjectListPage />,
             errorElement: <ErrorPage />,
           },
@@ -181,9 +259,15 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
-            // 旧 board 链接重定向到 tasks（2026-08-23 tab 合并）
+            // 旧 board 链接重定向到 issues（2026-08-23 tab 合并）
             path: ':projectId/board',
-            element: <ProjectTabRedirect to="tasks" />,
+            element: <ProjectTabRedirect to="issues" />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            // 旧 tasks 路径重定向（2026-09-06 Task→Issue 命名收尾，存量书签兜底）
+            path: ':projectId/tasks',
+            element: <ProjectTabRedirect to="issues" />,
             errorElement: <ErrorPage />,
           },
           {
@@ -192,18 +276,34 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            path: ':projectId/profile',
+            element: <ProjectProfilePage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/playbook',
+            element: <ProjectPlaybookPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
             path: ':projectId/team',
             element: <ProjectTeamPage />,
             errorElement: <ErrorPage />,
           },
           {
-            path: ':projectId/tasks',
+            path: ':projectId/issues',
             element: <ProjectTasksPage />,
             errorElement: <ErrorPage />,
           },
           {
             path: ':projectId/settings',
             element: <ProjectSettingsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            // 项目初始化页（一次性，不进 tabbar；统一创建面板建项后首站）
+            path: ':projectId/init',
+            element: <ProjectInitPage />,
             errorElement: <ErrorPage />,
           },
           {
@@ -226,13 +326,38 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        // Agent 管理已并入 AI 管理页签（2026-09-19 合并），旧路径落概览页签
         path: 'ai/agents',
-        element: <RedirectToSettings to="/app/settings/ai/agents" />,
+        element: <RedirectToSettings to="/app/settings/ai" />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'executions',
         element: <ExecutionsPage />,
+        handle: { selfScroll: true },
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'workflows',
+        element: <WorkflowListPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'workflows/:id',
+        element: <WorkflowDetailPage />,
+        handle: { selfScroll: true },
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'releases',
+        element: <ReleaseListPage />,
+        handle: { selfScroll: true },
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'releases/:id',
+        element: <ReleaseDetailPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -241,28 +366,83 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        path: 'tasks',
+        path: 'issues',
+        handle: { selfScroll: true },
         element: <TasksPage />,
         errorElement: <ErrorPage />,
       },
       {
+        // 旧全局任务路由（2026-09-06 改名遗留书签/收藏）
+        path: 'tasks',
+        element: <LegacyTasksRedirect />,
+        errorElement: <ErrorPage />,
+      },
+      {
         path: 'tasks/:taskId',
-        element: <TaskDetailPage />,
+        element: <LegacyTaskDetailRedirect />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'issues/:issueId',
+        element: <IssueDetailRoute />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
         path: 'bugs',
+        handle: { selfScroll: true },
         element: <BugsPage />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'bugs/:bugId',
-        element: <BugDetailPage />,
+        element: <BugDetailRoute />,
+        handle: { selfScroll: true },
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'office',
+        element: (
+          <Suspense fallback={null}>
+            <OfficePage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'ai-surface',
+        element: (
+          <Suspense fallback={null}>
+            <AiSurfacePage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        // 回放演示（S5）。独立路由而非盯盘面的一个"模式开关"：回放页不连 WS、
+        // 不取任何数、也不会因为断线而变样——把它塞进盯盘面的状态机里，
+        // 反而会让"回放为什么不需要连接"这件事说不清楚
+        path: 'ai-surface/replay',
+        element: (
+          <Suspense fallback={null}>
+            <AiSurfaceReplayPage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'intake',
+        element: (
+          <Suspense fallback={null}>
+            <RequirementIntakePage />
+          </Suspense>
+        ),
         errorElement: <ErrorPage />,
       },
       {
         path: 'members',
-        element: (
+        handle: { selfScroll: true },
+    element: (
           <Suspense fallback={null}>
             <MembersPage />
           </Suspense>
@@ -276,11 +456,13 @@ export const router = createBrowserRouter([
             <MemberDetailPage />
           </Suspense>
         ),
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
         path: 'teams',
-        element: (
+        handle: { selfScroll: true },
+    element: (
           <Suspense fallback={null}>
             <TeamsPage />
           </Suspense>
@@ -294,24 +476,54 @@ export const router = createBrowserRouter([
             <TeamDetailPage />
           </Suspense>
         ),
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
         path: 'acceptance',
+        handle: { selfScroll: true },
         element: <AcceptanceListPage />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'acceptance/:id',
         element: <AcceptanceDetailPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
+      // 交付视图：mock 还原页（data-mock），仅 DEV 注册（dev-only 页面规范 §6.7；需求重审 R5）
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: 'delivery',
+              element: (
+                <Suspense fallback={null}>
+                  <DeliveryPage />
+                </Suspense>
+              ),
+              handle: { selfScroll: true },
+              errorElement: <ErrorPage />,
+            },
+          ]
+        : []),
       {
         path: 'help',
+        handle: { selfScroll: true },
         element: <HelpPage />,
         errorElement: <ErrorPage />,
       },
       {
+        handle: { selfScroll: true },
+        path: 'decisions',
+        element: (
+          <Suspense fallback={null}>
+            <DecisionInboxPage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        handle: { selfScroll: true },
         path: 'notifications',
         element: <NotificationCenterPage />,
         errorElement: <ErrorPage />,
@@ -335,6 +547,7 @@ export const router = createBrowserRouter([
       {
         path: 'integrations/linear/:integrationId',
         element: <LinearIntegrationRedirect />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
@@ -359,14 +572,17 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <RepositoryListPage />,
+            handle: { selfScroll: true },
           },
           {
             path: ':repoId',
             element: <RepositoryDetailPage />,
+            handle: { selfScroll: true },
           },
           {
             path: ':repoId/settings',
             element: <RepositorySettingsPage />,
+            handle: { selfScroll: true },
           },
         ],
       },
@@ -378,6 +594,7 @@ export const router = createBrowserRouter([
       },
       // 管理员成员管理页（AdminGuard 校验全局 admin 角色，非 admin 重定向回 /app）
       {
+        handle: { selfScroll: true },
         path: 'admin',
         element: (
           <Suspense fallback={null}>
@@ -388,10 +605,12 @@ export const router = createBrowserRouter([
       },
       {
         path: 'documents',
+        handle: { selfScroll: true },
         element: <DocumentsPage />,
         errorElement: <ErrorPage />,
       },
       {
+        handle: { selfScroll: true },
         path: 'documents/new',
         element: <DocumentNewPage />,
         errorElement: <ErrorPage />,
@@ -399,11 +618,13 @@ export const router = createBrowserRouter([
       {
         path: 'documents/:documentId',
         element: <DocumentViewPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       {
         path: 'documents/:documentId/edit',
         element: <DocumentEditPage />,
+        handle: { selfScroll: true },
         errorElement: <ErrorPage />,
       },
       ...(import.meta.env.DEV
@@ -415,15 +636,7 @@ export const router = createBrowserRouter([
                   <DesignSystemPage />
                 </Suspense>
               ),
-              errorElement: <ErrorPage />,
-            },
-            {
-              path: 'delivery',
-              element: (
-                <Suspense fallback={null}>
-                  <DeliveryPage />
-                </Suspense>
-              ),
+              handle: { selfScroll: true },
               errorElement: <ErrorPage />,
             },
           ]
@@ -444,18 +657,36 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/app/settings/appearance" replace /> },
       { path: 'profile', element: <ProfileSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'appearance', element: <AppearanceSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'dock', element: <DockSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'shortcuts', element: <ShortcutsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'git', element: <GitSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'terminal', element: <TerminalSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'labels', element: <LabelsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'statuses', element: <StatusesSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'issue-types', element: <IssueTypesSettingsSection />, errorElement: <ErrorPage /> },
+      {
+        path: 'issue-types/:typeKey',
+        element: <IssueTypeDetailSection />,
+        errorElement: <ErrorPage />,
+      },
+      { path: 'checklists', element: <ChecklistsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'roles', element: <RolesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'templates', element: <TemplatesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'short-id', element: <ShortIdSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'storage', element: <StorageSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'ai', element: <AiManagementSection />, errorElement: <ErrorPage /> },
-      { path: 'ai/agents', element: <AiAgentsSection />, errorElement: <ErrorPage /> },
+      // 「Agent 管理」已并入本页页签（2026-09-19 合并）：旧路径重定向保书签，?tab=overview 贴近原页落地
+      { path: 'ai/agents', element: <Navigate to="/app/settings/ai?tab=overview" replace /> },
       { path: 'ai/executions', element: <AiExecutionCenterSection />, errorElement: <ErrorPage /> },
+      // 设置「AI 用量」页已迁入 /app/analytics 成本 Tab（CAP-C-06，2026-09-19）；旧路径重定向保书签
+      { path: 'ai/usage', element: <Navigate to="/app/analytics?tab=cost" replace /> },
+      { path: 'memory', element: <MemorySection />, errorElement: <ErrorPage /> },
       { path: 'runtime', element: <RuntimeSettingsSection />, errorElement: <ErrorPage /> },
+      {
+        path: 'runtime/:runtimeId',
+        element: <RuntimeMachineDetailSection />,
+        errorElement: <ErrorPage />,
+      },
       { path: 'tokens', element: <AccessTokensSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'integrations', element: <IntegrationsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'integrations/github', element: <GithubIntegrationSection />, errorElement: <ErrorPage /> },

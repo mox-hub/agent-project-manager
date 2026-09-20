@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Archive, CheckCircle2, LayoutGrid, List, Plus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +17,7 @@ import { useTeams, useArchiveTeam } from '../hooks';
 import { TeamCard } from '../components/team-card';
 import { TeamList, type TeamListItem } from '../components/team-list';
 import { TeamCreateDialog } from '../components/team-create-dialog';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 
 type ViewMode = 'grid' | 'list';
 type StatusFilter = 'all' | 'active' | 'archived';
@@ -24,6 +26,8 @@ export default function TeamsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const confirmDialog = useConfirm();
+  // 团队创建是管理员能力（普通用户 POST /teams 403），入口按角色隐藏
+  const { isAdmin } = useAuth();
 
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
@@ -141,14 +145,16 @@ export default function TeamsPage() {
               label={t('teams.statsToggle', '统计')}
               aiId="team-member.teams.stats-toggle"
             />
-            <HeaderActionButton
-              icon={Plus}
-              label={t('teams.create.title', '新建团队')}
-              onClick={() => setShowCreate(true)}
-              data-ai-component="team-member.teams.new-button"
-              data-ai-action="team-member.teams.new-button.click"
-              data-ai-role="submit"
-            />
+            {isAdmin && (
+              <HeaderActionButton
+                icon={Plus}
+                label={t('teams.create.title', '新建团队')}
+                onClick={() => setShowCreate(true)}
+                data-ai-component="team-member.teams.new-button"
+                data-ai-action="team-member.teams.new-button.click"
+                data-ai-role="submit"
+              />
+            )}
           </>
         }
       />
@@ -208,7 +214,15 @@ export default function TeamsPage() {
           isLoading ? (
             <div className="py-12 text-center text-muted-foreground">{t('common.loading', '加载中…')}</div>
           ) : teams.length === 0 ? (
-            <EmptyState title={t('teams.empty', '暂无团队，点击右上角创建第一个团队。')} />
+            <EmptyState
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-accent-purple">
+                  <Users className="size-4 text-accent-purple" />
+                </IconStack>
+              }
+              title={t('teams.empty', '暂无团队，点击右上角创建第一个团队。')}
+            />
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {teams.map((team) => (

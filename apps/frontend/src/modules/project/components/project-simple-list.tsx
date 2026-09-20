@@ -9,6 +9,7 @@
  */
 
 import {
+  Bot,
   FolderKanban,
   Rocket,
   Sparkles,
@@ -32,9 +33,9 @@ import {
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useMembers } from '@/modules/team-member/hooks';
 import { useUpdateProject } from '../hooks/use-project-mutations';
-import { ProjectFormDialog } from './project-form-dialog';
 import type { Project, ProjectPriority } from '../api/project-api';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/shared/lib/date-format';
 
 type GroupBy = 'none' | 'status' | 'type';
 
@@ -42,16 +43,6 @@ const GROUP_ORDER: Record<string, number> = {
   active: 0,
   archived: 1,
 };
-
-function formatDate(value?: string | null): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}/${month}/${day}`;
-}
 
 function getProjectIconNode(icon?: string | null) {
   if (icon === 'rocket') return <Rocket className="size-4" />;
@@ -81,6 +72,7 @@ export interface ProjectSimpleListProps {
   groupBy?: GroupBy;
   groupProgress?: (items: Project[]) => { done: number; total: number } | null;
   onGroupCreate?: (key: string, items: Project[]) => void;
+  getProjectExecutionCount?: (projectId: string) => number;
   selectionActions?: (selected: Project[], close: () => void) => React.ReactNode;
   className?: string;
 }
@@ -93,6 +85,7 @@ export function ProjectSimpleList({
   groupBy = 'none',
   groupProgress,
   onGroupCreate,
+  getProjectExecutionCount,
   selectionActions,
   className,
 }: ProjectSimpleListProps) {
@@ -118,11 +111,10 @@ export function ProjectSimpleList({
   const progress = (items: Project[]) =>
     groupProgress ? groupProgress(items) : { done: items.filter((p) => p.workflowStatus === 'completed').length, total: items.length };
 
-  // —— 统一行右键菜单（任务同款：枚举直改 + 编辑对话框） ——
+  // —— 统一行右键菜单（任务同款：枚举直改） ——
   const navigate = useNavigate();
   const confirmAction = useConfirm();
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => new Set());
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const updateProject = useUpdateProject();
   const { data: membersData } = useMembers({ limit: 200 });
   const ownerOptions = membersData?.items ?? [];
@@ -134,7 +126,6 @@ export function ProjectSimpleList({
       t,
       owners: ownerOptions,
       onUpdate: (data) => updateProject.mutate({ projectId: project.id, data }),
-      onEditBasic: () => setEditingProject(project),
       pinned: pinnedIds.has(project.id),
       onTogglePin: () =>
         setPinnedIds((prev) => {
@@ -173,8 +164,15 @@ export function ProjectSimpleList({
       selectionActions={selectionActions}
       renderLeading={(project) => {
         const color = project.color || '#5E6AD2';
+        const activeCount = getProjectExecutionCount?.(project.id) ?? 0;
         return (
           <>
+            {activeCount > 0 ? (
+              <span
+                className="h-6 w-1 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
+                title={`AI 接管中: ${activeCount} 个任务正在执行`}
+              />
+            ) : null}
             {/* 图标 */}
             <span
               className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-white"
@@ -185,6 +183,12 @@ export function ProjectSimpleList({
             </span>
             {/* 名称（完整展示，不截断）+ 来源徽标 */}
             <span className="min-w-0 shrink-0 whitespace-nowrap text-sm font-medium text-foreground">{project.name}</span>
+            {activeCount > 0 ? (
+              <span className="inline-flex items-center gap-1 rounded-md bg-accent-purple/15 px-1.5 py-0.5 text-11 font-medium text-accent-purple border border-accent-purple/30 animate-pulse">
+                <Bot className="size-3" />
+                {activeCount} AI 执行中
+              </span>
+            ) : null}
             <ListChip className="border border-border bg-muted/40 uppercase text-muted-foreground">
               {getSourceBadgeText(project.source)}
             </ListChip>
@@ -288,14 +292,6 @@ export function ProjectSimpleList({
           </>
         );
       }}
-      />
-      {/* 编辑基本信息对话框（右键「编辑基本信息」入口） */}
-      <ProjectFormDialog
-        open={!!editingProject}
-        onOpenChange={(open) => {
-          if (!open) setEditingProject(null);
-        }}
-        project={editingProject}
       />
     </>
   );

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class ExecutionEventDto {
   @ApiProperty({ example: 'execution.step.updated' })
@@ -27,6 +27,16 @@ export class ExecutionEventDto {
   @IsOptional()
   @IsString()
   summary?: string;
+
+  @ApiProperty({
+    required: false,
+    example: '{ tool: "Bash", input: { command: "ls" } }',
+    description:
+      '结构化详情（工具入参/产出/文件路径/usage），随事件落 SystemEvent',
+  })
+  @IsOptional()
+  @IsObject()
+  detail?: Record<string, unknown>;
 
   @ApiProperty({ required: false, type: [String], example: [] })
   @IsOptional()

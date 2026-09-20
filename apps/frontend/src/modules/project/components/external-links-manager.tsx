@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useExternalLinks, useAddExternalLink, useDeleteExternalLink } from '../hooks/use-project-links';
+import type { ExternalProjectLinkRequest } from '../api/project-api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +26,7 @@ export function ExternalLinksManager({ projectId }: ExternalLinksManagerProps) {
   const deleteLink = useDeleteExternalLink(projectId);
 
   const [isAdding, setIsAdding] = useState(false);
-  const [newLink, setNewLink] = useState({
+  const [newLink, setNewLink] = useState<ExternalProjectLinkRequest>({
     provider: 'github_projects' as const,
     externalProjectId: '',
     externalProjectUrl: '',
@@ -64,7 +65,7 @@ export function ExternalLinksManager({ projectId }: ExternalLinksManagerProps) {
               <NativeSelect
                 className="w-full"
                 value={newLink.provider}
-                onChange={(e) => setNewLink({ ...newLink, provider: e.target.value as any })}
+                onChange={(e) => setNewLink({ ...newLink, provider: e.target.value as ExternalProjectLinkRequest['provider'] })}
               >
                 {PROVIDER_OPTIONS.map((opt) => (
                   <NativeSelectOption key={opt.value} value={opt.value}>

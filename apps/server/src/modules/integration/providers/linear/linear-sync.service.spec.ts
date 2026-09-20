@@ -9,11 +9,11 @@ describe('LinearSyncService mappings', () => {
       {} as any,
       {} as any,
       {
-        publish: jest.fn(),
-        createEvent: jest.fn(),
-        publishAsync: jest.fn(),
+        publish: vi.fn(),
+        createEvent: vi.fn(),
+        publishAsync: vi.fn(),
       } as any,
-      { nextShortId: jest.fn().mockResolvedValue('APM-PF-001') } as any,
+      { nextShortId: vi.fn().mockResolvedValue('APM-PF-001') } as any,
     );
   });
 

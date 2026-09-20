@@ -1,10 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#059669"/>
-      <stop offset="1" stop-color="#0891b2"/>
+    <linearGradient id="bg3" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1c1917"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <linearGradient id="amberGlow" x1="20" y1="20" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#g)"/>
-  <text x="32" y="41" text-anchor="middle" font-size="30" font-family="'Segoe UI Emoji','Apple Color Emoji',sans-serif">🧠</text>
+  <rect width="64" height="64" rx="16" fill="url(#bg3)"/>
+  <rect x="1" y="1" width="62" height="62" rx="15" stroke="#f59e0b" stroke-opacity="0.25" stroke-width="2"/>
+  <!-- AI Neural Core Chip -->
+  <rect x="20" y="20" width="24" height="24" rx="6" fill="#78350f" stroke="#fbbf24" stroke-width="2"/>
+  <!-- Chip Pins -->
+  <path d="M26 14v6M32 14v6M38 14v6 M26 44v6M32 44v6M38 44v6 M14 26h6M14 32h6M14 38h6 M44 26h6M44 32h6M44 38h6" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Glowing Center Matrix -->
+  <circle cx="32" cy="32" r="5" fill="#fef3c7"/>
+  <path d="M30 32h4M32 30v4" stroke="#b45309" stroke-width="1.5" stroke-linecap="round"/>
 </svg>

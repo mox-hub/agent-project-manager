@@ -126,4 +126,62 @@ describe('Notifications (e2e)', () => {
         });
     });
   });
+
+  // 事件→通知生成链路（曾经只测读写端点，订阅者断链/偏好误杀均无测试兜底）
+  describe('事件→通知生成链路（task.created 全链路）', () => {
+    it('创建任务后项目成员收到通知、创建者不收（偏好未配置=默认开启）', async () => {
+      const peer = await ws.db.user.create({
+        data: {
+          username: 'notif-peer',
+          displayName: 'Peer',
+          authProvider: 'local',
+        },
+      });
+      const project = await ws.db.project.create({
+        data: {
+          name: 'Notif Chain Project',
+          type: 'team',
+          visibility: 'internal',
+          status: 'active',
+          createdBy: adminUserId,
+        },
+      });
+      await ws.db.projectModule.create({
+        data: { projectId: project.id, code: 'NT', name: '通知链路' },
+      });
+      await ws.db.projectMember.create({
+        data: { projectId: project.id, userId: adminUserId, role: 'owner' },
+      });
+      await ws.db.projectMember.create({
+        data: { projectId: project.id, userId: peer.id, role: 'maintainer' },
+      });
+
+      const createdRes = await wsHttp
+        .post('/_api/issues')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          title: '链路任务',
+          projectId: project.id,
+          type: 'task',
+          moduleCode: 'NT',
+        })
+        .expect(201);
+      const issueId = createdRes.body.data.id;
+
+      // 订阅者在请求后异步落库，轮询等待（上限 5s）
+      const deadline = Date.now() + 5000;
+      let rows: Array<{ userId: string }> = [];
+      while (Date.now() < deadline) {
+        rows = await ws.db.notification.findMany({
+          where: { type: 'task.created', issueId },
+        });
+        if (rows.length > 0) break;
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0].userId).toBe(peer.id);
+      expect(rows[0].userId).not.toBe(adminUserId);
+    }, 15000);
+  });
 });

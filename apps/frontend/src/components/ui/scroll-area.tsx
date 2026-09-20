@@ -44,7 +44,11 @@ export function ScrollArea({
         data-slot="scroll-area-viewport"
       >
         <ScrollAreaPrimitive.Content
-          className={cn(fill && "size-full")}
+          className={cn(
+            // fill：内容至少撑满视口（min-h-full）且贯通 flex 链——页面占满屏幕、
+            // 内容超出时自然撑高滚动；不用 size-full（锁死高度会裁断长内容）。
+            fill && "flex min-h-full w-full flex-col",
+          )}
           data-slot="scroll-area-content"
           style={clampContentMinWidth ? { minWidth: 0 } : undefined}
         >

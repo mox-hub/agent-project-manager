@@ -51,7 +51,7 @@ export class CreateCriteriaDto {
 export class CreateAcceptanceDto {
   @ApiProperty({ description: '关联的任务 ID' })
   @IsString()
-  taskId: string;
+  issueId: string;
 
   @ApiPropertyOptional({ description: '验收类型' })
   @IsOptional()

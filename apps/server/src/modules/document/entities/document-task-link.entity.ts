@@ -5,7 +5,7 @@ export type DocumentTaskLink = {
   id: string;
   documentId: string | null;
   sectionId: string | null;
-  taskId: string;
+  issueId: string;
   projectId: string;
   linkType: LinkType;
   note: string | null;
@@ -17,7 +17,7 @@ export type DocumentTaskLink = {
 export type CreateDocumentTaskLink = {
   documentId?: string | null;
   sectionId?: string | null;
-  taskId: string;
+  issueId: string;
   projectId: string;
   linkType?: LinkType;
   note?: string | null;

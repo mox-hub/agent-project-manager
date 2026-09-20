@@ -9,8 +9,8 @@ import { useMemo } from 'react';
 import {
   useProjectTasks,
   useProjectBugs,
-} from '@/modules/task/hooks/use-project-tasks';
-import type { Task } from '@/modules/task/api/task-api';
+} from '@/modules/issue/hooks/use-project-tasks';
+import type { Task } from '@/modules/issue/api/issue-api';
 
 export type EntityKind = 'task' | 'bug';
 

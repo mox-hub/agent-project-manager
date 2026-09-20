@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Patch,
-  Delete,
   Param,
   Query,
   Body,
@@ -47,8 +46,12 @@ export class ExecutionController {
 
   @Get('runs')
   @ApiOperation({ summary: '列出执行运行' })
-  @ApiQuery({ name: 'projectId', required: true })
-  @ApiQuery({ name: 'taskId', required: false })
+  @ApiQuery({
+    name: 'projectId',
+    required: false,
+    description: '缺省返回用户为成员的全部项目',
+  })
+  @ApiQuery({ name: 'issueId', required: false })
   @ApiQuery({ name: 'subjectType', required: false })
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -59,12 +62,10 @@ export class ExecutionController {
     @Query() query: any,
     @Request() req: { user: { id: string } },
   ) {
-    const { projectId, taskId, subjectType, status, limit, offset } = query;
-    if (!projectId) {
-      return { runs: [], total: 0 };
-    }
-    return this.executionService.listExecutionRuns(projectId, {
-      taskId,
+    const { projectId, issueId, subjectType, status, limit, offset } = query;
+    return this.executionService.listExecutionRuns(req.user.id, {
+      projectId,
+      issueId,
       subjectType,
       status,
       limit,
@@ -88,7 +89,13 @@ export class ExecutionController {
   @ApiOperation({ summary: '更新执行运行' })
   @ApiParam({ name: 'id', description: '执行运行 ID' })
   @ApiResponse({ status: 200, description: '更新成功' })
-  async updateRun(@Param('id') id: string, @Body() dto: any) {
+  async updateRun(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @Request() req: { user: { id: string } },
+  ) {
+    // 兜底改造批 2：写操作先过项目成员/创建者校验（此前无归属检查）
+    await this.executionService.getExecutionRun(id, req.user.id);
     return this.executionService.updateExecutionRun(id, dto);
   }
 
@@ -96,7 +103,11 @@ export class ExecutionController {
   @ApiOperation({ summary: '启动执行运行' })
   @ApiParam({ name: 'id', description: '执行运行 ID' })
   @ApiResponse({ status: 200, description: '已启动' })
-  async startRun(@Param('id') id: string) {
+  async startRun(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    await this.executionService.getExecutionRun(id, req.user.id);
     return this.executionService.startExecution(id);
   }
 
@@ -115,7 +126,9 @@ export class ExecutionController {
         content?: string;
       }>;
     },
+    @Request() req: { user: { id: string } },
   ) {
+    await this.executionService.getExecutionRun(id, req.user.id);
     return this.executionService.completeExecution(
       id,
       body.output ?? {},
@@ -130,7 +143,9 @@ export class ExecutionController {
   async failRun(
     @Param('id') id: string,
     @Body() body: { errorDetail: Record<string, unknown> },
+    @Request() req: { user: { id: string } },
   ) {
+    await this.executionService.getExecutionRun(id, req.user.id);
     return this.executionService.failExecution(id, body.errorDetail);
   }
 
@@ -138,8 +153,37 @@ export class ExecutionController {
   @ApiOperation({ summary: '取消执行运行' })
   @ApiParam({ name: 'id', description: '执行运行 ID' })
   @ApiResponse({ status: 200, description: '已取消' })
-  async cancelRun(@Param('id') id: string, @Body() body: { reason?: string }) {
+  async cancelRun(
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+    @Request() req: { user: { id: string } },
+  ) {
+    await this.executionService.getExecutionRun(id, req.user.id);
     return this.executionService.cancelExecution(id, body.reason);
+  }
+
+  @Get('runs/:id/events')
+  @ApiOperation({ summary: '获取运行事件流水（守护进程路径）' })
+  @ApiParam({ name: 'id', description: '执行运行 ID' })
+  @ApiResponse({ status: 200, description: '返回按时间升序的事件列表' })
+  @ApiResponse({ status: 404, description: '执行运行不存在' })
+  async getRunEvents(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.executionService.getExecutionRunEvents(id, req.user.id);
+  }
+
+  @Get('runs/:id/logs')
+  @ApiOperation({ summary: '获取执行原始日志（CLI stdout/stderr 分块）' })
+  @ApiParam({ name: 'id', description: '执行运行 ID' })
+  @ApiResponse({ status: 200, description: '返回按时间升序的日志块列表' })
+  @ApiResponse({ status: 404, description: '执行运行不存在' })
+  async getRunLogs(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.executionService.getExecutionRunLogs(id, req.user.id);
   }
 
   @Get('runs/:id/steps')
@@ -192,6 +236,18 @@ export class ExecutionController {
   @Get('approvals')
   @ApiOperation({ summary: '列出审批请求' })
   @ApiQuery({ name: 'projectId', required: false })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '默认 20',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: '默认 0',
+  })
   @ApiResponse({ status: 200, description: '返回审批列表' })
   async listApprovals(
     @Query() query: any,

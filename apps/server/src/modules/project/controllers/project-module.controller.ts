@@ -12,11 +12,13 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiOkResponse,
   ApiTags,
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ProjectModuleService } from '../services/project-module.service';
+import { ProjectModuleResponseDto } from '../dto/project-module-response.dto';
 
 @ApiTags('Project Modules')
 @ApiBearerAuth('JWT-auth')
@@ -28,7 +30,10 @@ export class ProjectModuleController {
   @Get()
   @ApiOperation({ summary: '列出项目的模块代码' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
-  @ApiResponse({ status: 200, description: '返回模块列表' })
+  @ApiOkResponse({
+    type: [ProjectModuleResponseDto],
+    description: '项目模块代码列表',
+  })
   list(@Param('projectId') projectId: string) {
     return this.service.list(projectId);
   }

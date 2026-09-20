@@ -12,8 +12,10 @@ describe('ProjectDetailNav', () => {
     );
 
     expect(screen.getByRole('link', { name: 'Overview' }).getAttribute('href')).toBe('/app/projects/project-1');
-    expect(screen.getByRole('link', { name: 'Tasks' }).getAttribute('href')).toBe('/app/projects/project-1/tasks');
-    expect(screen.getByRole('link', { name: 'Milestones' }).getAttribute('href')).toBe('/app/projects/project-1/milestones');
+    // 工单 tab 路由 2026-09-06 Task→Issue 命名收尾后为 /issues（旧 /tasks 由路由重定向兜底）
+    expect(screen.getByRole('link', { name: 'Tasks' }).getAttribute('href')).toBe('/app/projects/project-1/issues');
+    // 里程碑 tab 2026-09-13 随 CAP-A-16 升级「里程碑与发布」时间轴（i18n key 同步更名）
+    expect(screen.getByRole('link', { name: 'Milestones & Releases' }).getAttribute('href')).toBe('/app/projects/project-1/milestones');
     expect(screen.getByRole('link', { name: 'Team & Roles' }).getAttribute('href')).toBe('/app/projects/project-1/team');
     expect(screen.getByRole('link', { name: 'Settings' }).getAttribute('href')).toBe('/app/projects/project-1/settings');
   });

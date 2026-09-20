@@ -1,5 +1,10 @@
 import { api } from '@/infrastructure/api-client';
-import type { PaginatedData } from '@/shared/types/api';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；quietHours
+ * 现为具名 QuietHoursDto（start/end/timezone）。响应侧仍维持手写 interface。
+ */
 
 export type NotificationStatus = 'unread' | 'read';
 
@@ -10,7 +15,7 @@ export interface Notification {
   title: string;
   body?: string | null;
   projectId?: string | null;
-  taskId?: string | null;
+  issueId?: string | null;
   channels: string[];
   status: NotificationStatus;
   readAt?: string | null;
@@ -29,7 +34,15 @@ export interface NotificationListParams {
   pageSize?: number;
 }
 
-export type NotificationListResponse = PaginatedData<Notification>;
+/**
+ * GET /notifications 分页负载——契约 NotificationListResponseDto 口径为
+ * { data, meta }（非标准 PaginatedData 的 { items, total }），此前读错字段
+ * 导致通知列表恒为空。
+ */
+export interface NotificationListResponse {
+  data: Notification[];
+  meta: { page: number; pageSize: number; total: number };
+}
 
 export interface NotificationPreference {
   id: string;
@@ -49,34 +62,24 @@ export interface NotificationPreference {
   updatedAt: string;
 }
 
-export interface NotificationPreferenceItem {
-  projectId?: string;
-  eventType: string;
-  channels: string[];
-  digestFrequency?: string;
-  quietHours?: {
-    start: string;
-    end: string;
-    timezone: string;
-  };
-  enabled?: boolean;
-}
+export type UpdateNotificationPreferencesRequest =
+  RequestBodyOf<'NotificationController_updateNotificationPreferences'>;
 
-export interface UpdateNotificationPreferencesRequest {
-  preferences: NotificationPreferenceItem[];
-}
+export type NotificationPreferenceItem =
+  UpdateNotificationPreferencesRequest['preferences'][number];
 
 export interface MarkAsReadRequest {
   id: string;
 }
 
-export interface MarkNotificationsReadRequest {
-  ids: string[];
-}
+export type MarkNotificationsReadRequest =
+  RequestBodyOf<'NotificationController_markNotificationsRead'>;
 
 export const notificationApi = {
   getList: (params?: NotificationListParams) =>
-    api.getPaginated<Notification>('/notifications', params),
+    api.get<NotificationListResponse>('/notifications', params),
+
+  getUnreadCount: () => api.get<{ count: number }>('/notifications/unread-count'),
 
   markRead: (data: MarkNotificationsReadRequest) =>
     api.post<void>('/notifications/read', data),

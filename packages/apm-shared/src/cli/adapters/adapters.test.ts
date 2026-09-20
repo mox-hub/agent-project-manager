@@ -5,19 +5,93 @@ import { describe, expect, it, vi } from 'vitest';
 import { ClaudeCodeAdapter } from './claude-code';
 import { CodexAdapter } from './codex';
 import { ZCodeAdapter } from './zcode';
-import type { CliExecutionInput, StreamEmitter } from './interface';
+import { OpenCodeAdapter } from './opencode';
+import {
+  CLI_ADAPTER_CAPABILITIES,
+  type CliExecutionInput,
+  type StreamEmitter,
+} from './interface';
 
 const input = (prompt = '你好'): CliExecutionInput => ({
   workspaceRoot: '/ws',
   prompt,
 });
 
+describe('adapter 治理语义能力位（P1-22a）', () => {
+  it('四家能力位与代码事实一致（防静默失效回归）', () => {
+    expect(CLI_ADAPTER_CAPABILITIES['claude-code']).toEqual({
+      allowedTools: true,
+      usage: true,
+      approval: true,
+      mcpTools: true,
+    });
+    // codex：--allow 透传；usage 无提取路径；--non-interactive 排除审批
+    expect(CLI_ADAPTER_CAPABILITIES.codex).toEqual({
+      allowedTools: true,
+      usage: false,
+      approval: false,
+      mcpTools: true,
+    });
+    // zcode：协议未校准骨架，allowedTools/usage/approval 均保守声明不支持
+    expect(CLI_ADAPTER_CAPABILITIES.zcode).toEqual({
+      allowedTools: false,
+      usage: false,
+      approval: false,
+      mcpTools: true,
+    });
+    // opencode：allowedTools 无消费通道；usage 经 step_finish 实跑采样校准
+    expect(CLI_ADAPTER_CAPABILITIES.opencode).toEqual({
+      allowedTools: false,
+      usage: true,
+      approval: false,
+      mcpTools: true,
+    });
+  });
+
+  it('每家 adapter 的 getCapabilities 与总表对应项一致', () => {
+    expect(new ClaudeCodeAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES['claude-code'],
+    );
+    expect(new CodexAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES.codex,
+    );
+    expect(new ZCodeAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES.zcode,
+    );
+    expect(new OpenCodeAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES.opencode,
+    );
+  });
+
+  it('allowedTools 能力位与 buildCommand 实际透传行为互锁', () => {
+    const opts: CliExecutionInput = { ...input('x'), allowedTools: ['Bash', 'Read'] };
+
+    // 声明支持的：参数必须真实进入命令行
+    const claude = new ClaudeCodeAdapter().buildCommand(opts);
+    expect(claude.args).toContain('--allowedTools');
+    expect(claude.args).toContain('Bash,Read');
+
+    const codex = new CodexAdapter().buildCommand(opts);
+    expect(codex.args).toContain('--allow');
+    expect(codex.args).toContain('Bash,Read');
+
+    // 声明不支持的：不得伪装透传（静默忽略由派发侧告警兜底）
+    expect(
+      new ZCodeAdapter().buildCommand(opts).args.join(' '),
+    ).not.toContain('allowedTools');
+    expect(
+      new OpenCodeAdapter().buildCommand(opts).args.join(' '),
+    ).not.toContain('allowedTools');
+  });
+});
+
 function makeEmit() {
   const token = vi.fn();
   const step = vi.fn();
   const approvalNeeded = vi.fn();
-  const emit: StreamEmitter = { token, step, approvalNeeded };
-  return { emit, token, step, approvalNeeded };
+  const usage = vi.fn();
+  const emit: StreamEmitter = { token, step, approvalNeeded, usage };
+  return { emit, token, step, approvalNeeded, usage };
 }
 
 describe('ClaudeCodeAdapter', () => {
@@ -33,7 +107,7 @@ describe('ClaudeCodeAdapter', () => {
     expect(payload.message.content).toBe('实现登录页');
   });
 
-  it('parseStream：assistant 文本、tool_use、error、pending 审批', () => {
+  it('parseStream：assistant 文本、顶层 tool_use、error、pending 审批', () => {
     const a = new ClaudeCodeAdapter();
     const { emit, token, step, approvalNeeded } = makeEmit();
 
@@ -65,6 +139,134 @@ describe('ClaudeCodeAdapter', () => {
     );
     expect(approvalNeeded).toHaveBeenCalledWith(
       expect.objectContaining({ requestedAction: 'rm' }),
+    );
+  });
+
+  it('parseStream：真实 stream-json——assistant 内 thinking/tool_use 块与 usage', () => {
+    const a = new ClaudeCodeAdapter();
+    const { emit, step, usage } = makeEmit();
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'system',
+        subtype: 'init',
+        model: 'claude-sonnet',
+        cwd: '/ws',
+        session_id: 's1',
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'observation', name: 'session_init' }),
+    );
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'assistant',
+        message: {
+          usage: { input_tokens: 100, output_tokens: 50 },
+          content: [
+            { type: 'thinking', thinking: '先看目录' },
+            { type: 'tool_use', id: 't1', name: 'Bash', input: { command: 'ls' } },
+            { type: 'text', text: '马上执行' },
+          ],
+        },
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'thinking', output: { thinking: '先看目录' } }),
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepType: 'tool_call',
+        name: 'Bash',
+        input: { tool: 'Bash', command: 'ls' },
+        status: 'running',
+      }),
+    );
+    expect(usage).toHaveBeenCalledWith(
+      expect.objectContaining({ promptTokens: 100, completionTokens: 50 }),
+    );
+  });
+
+  it('parseStream：user 消息内 tool_result → observation（is_error 标 failed）', () => {
+    const a = new ClaudeCodeAdapter();
+    const { emit, step } = makeEmit();
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'user',
+        message: {
+          content: [{ type: 'tool_result', tool_use_id: 't1', content: 'file list' }],
+        },
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepType: 'observation',
+        name: 't1',
+        output: { content: 'file list' },
+        status: 'completed',
+      }),
+    );
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'user',
+        message: {
+          content: [
+            { type: 'tool_result', tool_use_id: 't2', content: 'boom', is_error: true },
+          ],
+        },
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 't2', status: 'failed' }),
+    );
+  });
+
+  it('parseStream：result 终事件提取 usage（含顶层 total_cost_usd）', () => {
+    const a = new ClaudeCodeAdapter();
+    const { emit, usage } = makeEmit();
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'result',
+        subtype: 'success',
+        result: 'done',
+        usage: { input_tokens: 1200, output_tokens: 300 },
+        total_cost_usd: 0.42,
+      }),
+      emit,
+    );
+    expect(usage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promptTokens: 1200,
+        completionTokens: 300,
+        totalTokens: 1500,
+        costUsd: 0.42,
+      }),
+    );
+  });
+
+  it('parseFinalResult：result 行提取 usage 与最终文本', () => {
+    const a = new ClaudeCodeAdapter();
+    const stdout = JSON.stringify({
+      type: 'result',
+      subtype: 'success',
+      result: '任务完成',
+      usage: { input_tokens: 100, output_tokens: 20 },
+      total_cost_usd: 0.1,
+    });
+    const res = a.parseFinalResult(stdout, 0);
+    expect(res.status).toBe('completed');
+    expect(res.usage?.totalTokens).toBe(120);
+    expect(res.usage?.costUsd).toBe(0.1);
+    expect(res.artifacts).toContainEqual(
+      expect.objectContaining({ name: 'execution_summary', content: '任务完成' }),
     );
   });
 
@@ -123,5 +325,128 @@ describe('ZCodeAdapter（骨架行为锁）', () => {
     const { emit, token } = makeEmit();
     a.parseStream(JSON.stringify({ type: 'assistant', content: 'z' }), emit);
     expect(token).toHaveBeenCalledWith('z');
+  });
+});
+
+describe('OpenCodeAdapter', () => {
+  it('buildCommand：--format json + positional prompt；model/session 透传', () => {
+    const a = new OpenCodeAdapter();
+    const built = a.buildCommand(input('实现登录页'));
+    expect(built.cmd).toBe('opencode');
+    expect(built.args).toContain('--format');
+    expect(built.args).toContain('json');
+    expect(built.args[built.args.length - 1]).toBe('实现登录页');
+    expect(built.stdinData).toBeUndefined();
+
+    const withOpts = a.buildCommand({
+      ...input('x'),
+      model: 'opencode-go/kimi-k2.6',
+      sessionId: 'ses_123',
+    });
+    expect(withOpts.args).toContain('--model');
+    expect(withOpts.args).toContain('opencode-go/kimi-k2.6');
+    expect(withOpts.args).toContain('--session');
+    expect(withOpts.args).toContain('ses_123');
+  });
+
+  it('parseStream：实跑样例——text token、step_start/step_finish、usage 与 costUsd', () => {
+    const a = new OpenCodeAdapter();
+    const { emit, token, step, usage } = makeEmit();
+
+    // 以下三行采集自 opencode 1.18.18 run --format json 实跑输出
+    a.parseStream(
+      '{"type":"step_start","timestamp":1789817360737,"sessionID":"ses_f469285fcffeQp3RCzGLmKxvak","part":{"id":"prt_0b96d91480017xt5aLTUVQPbZC","messageID":"msg_0b96d7b87001szEEuwB61eCEZy","sessionID":"ses_f469285fcffeQp3RCzGLmKxvak","type":"step-start"}}',
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'observation', status: 'running' }),
+    );
+
+    a.parseStream(
+      '{"type":"text","timestamp":1789817361428,"sessionID":"ses_f469285fcffeQp3RCzGLmKxvak","part":{"id":"prt_0b96d93b6001gVTlxDyFW8UkUf","messageID":"msg_0b96d7b87001szEEuwB61eCEZy","sessionID":"ses_f469285fcffeQp3RCzGLmKxvak","type":"text","text":"OK","time":{"start":1789817361334,"end":1789817361395}}}',
+      emit,
+    );
+    expect(token).toHaveBeenCalledWith('OK');
+
+    a.parseStream(
+      '{"type":"step_finish","timestamp":1789817361428,"sessionID":"ses_f469285fcffeQp3RCzGLmKxvak","part":{"id":"prt_0b96d93f9001SoYn6o69uRAFuz","reason":"stop","messageID":"msg_0b96d7b87001szEEuwB61eCEZy","sessionID":"ses_f469285fcffeQp3RCzGLmKxvak","type":"step-finish","tokens":{"total":11787,"input":11751,"output":3,"reasoning":33,"cache":{"write":0,"read":0}},"cost":0.01130745}}',
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepType: 'observation',
+        name: 'step:stop',
+        status: 'completed',
+      }),
+    );
+    // completion 口径 = output + reasoning（total = input + output + reasoning）
+    expect(usage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promptTokens: 11751,
+        completionTokens: 36,
+        totalTokens: 11787,
+        costUsd: 0.01130745,
+      }),
+    );
+  });
+
+  it('parseStream：error 事件 → error step；非 JSON 行回落 token；未知事件忽略', () => {
+    const a = new OpenCodeAdapter();
+    const { emit, token, step } = makeEmit();
+
+    a.parseStream(
+      '{"type":"error","timestamp":1789817330458,"sessionID":"ses_f4692e683ffek6QXb8GEZ5ua8D","error":{"name":"UnknownError","data":{"message":"Unexpected server error."}}}',
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepType: 'error',
+        name: 'opencode_error',
+        status: 'failed',
+      }),
+    );
+
+    token.mockClear();
+    a.parseStream('plain stdout line', emit);
+    expect(token).toHaveBeenCalledWith('plain stdout line');
+
+    step.mockClear();
+    token.mockClear();
+    a.parseStream(JSON.stringify({ type: 'session_started' }), emit);
+    expect(step).not.toHaveBeenCalled();
+    expect(token).not.toHaveBeenCalled();
+  });
+
+  it('parseFinalResult：拼接 text 事件为 execution_summary；提取 step_finish usage', () => {
+    const a = new OpenCodeAdapter();
+    const stdout = [
+      '{"type":"step_start","part":{"type":"step-start"}}',
+      '{"type":"text","part":{"type":"text","text":"第一段"}}',
+      '{"type":"text","part":{"type":"text","text":"第二段"}}',
+      '{"type":"step_finish","part":{"reason":"stop","tokens":{"total":100,"input":80,"output":20,"reasoning":0},"cost":0.5}}',
+    ].join('\n');
+    const res = a.parseFinalResult(stdout, 0);
+    expect(res.status).toBe('completed');
+    expect(res.artifacts).toContainEqual(
+      expect.objectContaining({
+        name: 'execution_summary',
+        content: '第一段\n第二段',
+      }),
+    );
+    expect(res.usage).toMatchObject({
+      promptTokens: 80,
+      completionTokens: 20,
+      totalTokens: 100,
+      costUsd: 0.5,
+    });
+  });
+
+  it('parseFinalResult：非零退出码返回 failed（usage 仍尽力提取）', () => {
+    const a = new OpenCodeAdapter();
+    const stdout =
+      '{"type":"error","error":{"name":"UnknownError","data":{"message":"boom"}}}';
+    const res = a.parseFinalResult(stdout, 1);
+    expect(res.status).toBe('failed');
+    expect(res.error).toContain('exited with code 1');
   });
 });

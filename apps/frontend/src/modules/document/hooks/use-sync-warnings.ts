@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { documentSyncApi, type DocumentSyncWarning } from '../api/document-api';
 import { useToastMutation } from '@/shared/hooks';
 
@@ -17,7 +17,7 @@ export function useSyncWarnings() {
   return useQuery<DocumentSyncWarning[]>({
     queryKey: SYNC_WARNINGS_KEY,
     queryFn: async () => {
-      const res: any = await documentSyncApi.getWarnings();
+      const res: unknown = await documentSyncApi.getWarnings();
       return unwrapList(res);
     },
     refetchInterval: 5000,
@@ -31,7 +31,7 @@ export function useClearSyncWarning() {
     successMessage: '同步警告已清除',
     errorPrefix: '清除同步警告',
     mutationFn: async (documentId) => {
-      const res: any = await documentSyncApi.clearWarning(documentId);
+      const res: unknown = await documentSyncApi.clearWarning(documentId);
       return res;
     },
     onSuccess: () => {

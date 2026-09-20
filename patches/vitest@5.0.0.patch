@@ -1,0 +1,16 @@
+--- a/dist/chunks/config.d.CU_b-wJj.d.ts
++++ b/dist/chunks/config.d.CU_b-wJj.d.ts
+@@ -1,3 +1,4 @@
++import matchers = require('@testing-library/jest-dom/matchers');
+ import { Disposable } from 'vitest/optional-runtime-types.js';
+ import { Fn, FnOptions, BenchOptions as BenchOptions$1, TaskResultCompleted, TaskResultRuntimeInfo, TaskResultTimestampProviderInfo, Statistics } from 'tinybench';
+ 
+@@ -1700,7 +1701,7 @@
+ interface Assertion<
+ 	R extends void | Promise<void> = void,
+ 	T = unknown
+-> extends VitestAssertion<Chai.Assertion, R, T>, JestAssertion<R, T>, ChaiMockAssertion<R, T>, Matchers<R, T> {
++> extends matchers.TestingLibraryMatchers<any, R>, VitestAssertion<Chai.Assertion, R, T>, JestAssertion<R, T>, ChaiMockAssertion<R, T>, Matchers<R, T> {
+ 	/**
+ 	* Ensures a value is of a specific type.
+ 	*

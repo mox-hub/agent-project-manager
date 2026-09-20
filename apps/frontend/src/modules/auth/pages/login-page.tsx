@@ -13,6 +13,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   USER_INACTIVE: 'auth.errors.userInactive',
 };
 
+/** api-client 拦截器把后端错误信封转成顶层 code/status 的 ApiClientError */
+type ApiClientErrorLike = { code?: string; status?: number; message?: string };
+
 export function LoginPage() {
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
@@ -28,23 +31,13 @@ export function LoginPage() {
       { username, password },
       {
         onError: (err: unknown) => {
-          type ApiError = {
-            response?: {
-              data?: {
-                error?: {
-                  code?: string;
-                  message?: string;
-                };
-              };
-            };
-          };
-
-          const apiError = err as ApiError;
-          const errorCode = apiError.response?.data?.error?.code;
-          const errorMessage = apiError.response?.data?.error?.message;
-
-          const errorKey = ERROR_MESSAGES[errorCode || ''];
-          setError(errorKey ? t(errorKey) : errorMessage || t('auth.errors.loginFailed'));
+          const apiError = err as ApiClientErrorLike;
+          const errorKey = ERROR_MESSAGES[apiError.code || ''];
+          setError(
+            errorKey
+              ? t(errorKey)
+              : apiError.message || t('auth.errors.loginFailed'),
+          );
         },
       },
     );

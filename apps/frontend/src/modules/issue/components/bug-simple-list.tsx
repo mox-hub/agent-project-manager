@@ -1,0 +1,225 @@
+/**
+ * BugSimpleList - 基于自建 DataList 的 Bug 列表适配
+ *
+ * 保留原 BugListView 字段并适配：
+ * - 首要信息区：严重度条 + 状态图标 + ID(完整展示) + Bug 图标 + 标题
+ * - 次要信息区：项目 + 严重度标签 + 标签(+N) + 责任人头像
+ * - 分组：按页面传入 groupBy（status / severity / project / none）
+ */
+
+import { Bug } from 'lucide-react';
+import { StatusIconFrame } from '@/shared/status/status-icon-frame';
+import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals';
+import {
+  DataList,
+  ListAvatar,
+  ListChip,
+  ListText,
+  type DataListProgress,
+} from '@/components/ui/data-list';
+import type { Task } from '../api/issue-api';
+import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
+import { AiExecutionBadge, type IssueAiExecutionState } from '@/shared/components/ai-execution-badge';
+import { cn } from '@/lib/utils';
+
+type Severity = 'critical' | 'high' | 'medium' | 'low';
+type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
+
+const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'canceled'];
+
+const STAT_C = {
+  todo: { label: 'Todo', order: 0 },
+  in_progress: { label: 'In Progress', order: 1 },
+  in_review: { label: 'In Review', order: 2 },
+  done: { label: 'Done', order: 3 },
+  canceled: { label: 'Canceled', order: 4 },
+} as const;
+
+const SEV_C = {
+  critical: { label: 'Critical', color: 'text-destructive', dotColor: 'bg-destructive', order: 0 },
+  high: { label: 'High', color: 'text-accent-orange', dotColor: 'bg-accent-orange', order: 1 },
+  medium: { label: 'Medium', color: 'text-accent-yellow', dotColor: 'bg-accent-yellow', order: 2 },
+  low: { label: 'Low', color: 'text-muted-foreground', dotColor: 'bg-muted-foreground/40', order: 3 },
+} as const;
+
+function severityOf(bug: Task): Severity {
+  return (['critical', 'high', 'medium', 'low'] as Severity[]).includes(bug.severity as Severity)
+    ? (bug.severity as Severity)
+    : bug.priority === 'critical'
+      ? 'critical'
+      : bug.priority === 'high'
+        ? 'high'
+        : bug.priority === 'medium'
+          ? 'medium'
+          : 'low';
+}
+
+function statusOf(bug: Task): TaskStatus {
+  return (STATUS_ORDER as string[]).includes(bug.status) ? (bug.status as TaskStatus) : 'todo';
+}
+
+function idOf(bug: Task): string {
+  return bug.shortId || bug.externalIdentifier || bug.id;
+}
+
+function assigneeNameOf(bug: Task): string {
+  return bug.assignee?.displayName || bug.assignee?.username || '';
+}
+
+export type BugSimpleGroupBy = 'status' | 'severity' | 'project' | 'none';
+
+export interface BugSimpleListProps {
+  bugs: Task[];
+  loading?: boolean;
+  emptyMessage?: string;
+  onBugClick?: (bug: Task) => void;
+  groupBy?: BugSimpleGroupBy;
+  onGroupCreate?: (key: string, items: Task[]) => void;
+  groupProgress?: (items: Task[]) => DataListProgress | null;
+  getProjectName?: (projectId: string | null | undefined) => string;
+  getAiExecution?: (bug: Task) => IssueAiExecutionState | undefined;
+  selectionActions?: (selected: Task[], close: () => void) => React.ReactNode;
+  className?: string;
+}
+
+export function BugSimpleList({
+  bugs,
+  loading,
+  emptyMessage = 'No bugs found',
+  onBugClick,
+  groupBy = 'none',
+  onGroupCreate,
+  groupProgress,
+  getProjectName,
+  getAiExecution,
+  selectionActions,
+  className,
+}: BugSimpleListProps) {
+  const groupFn = groupBy === 'none' ? undefined : (bug: Task) => groupValue(groupBy, bug);
+
+  const groupMeta = (key: string) => {
+    switch (groupBy) {
+      case 'status': {
+        const cfg = STAT_C[statusOf({ ...bugs[0], status: key } as Task)] ?? STAT_C.todo;
+        return { label: cfg.label, order: cfg.order };
+      }
+      case 'severity': {
+        const cfg = SEV_C[key as Severity] ?? SEV_C.medium;
+        return {
+          label: cfg.label,
+          icon: <span className={cn('inline-block size-3 shrink-0 rounded-full', cfg.dotColor)} />,
+          order: cfg.order,
+        };
+      }
+      case 'project':
+        return { label: getProjectName?.(key) ?? key, order: 0 };
+      default:
+        return { label: key };
+    }
+  };
+
+  const progress = (items: Task[]) =>
+    groupProgress
+      ? groupProgress(items)
+      : { done: items.filter((b) => b.status === 'done').length, total: items.length };
+
+  // —— 统一行右键菜单（list / kanban 共用 useIssueRowMenu，Bug 域隔离标签与链接） ——
+  const onItemContextMenu = useIssueRowMenu({ kind: 'bug', entityName: 'Bug' });
+
+  return (
+    <DataList
+      items={bugs}
+      loading={loading}
+      emptyMessage={emptyMessage}
+      className={className}
+      selectable
+      groupBy={groupFn}
+      groupLabel={groupMeta}
+      renderGroupProgress={progress}
+      onGroupCreate={onGroupCreate}
+      onItemClick={onBugClick}
+      onItemContextMenu={onItemContextMenu}
+      selectionActions={selectionActions}
+      renderLeading={(bug) => {
+        const sev = SEV_C[severityOf(bug)];
+        const aiExecution = getAiExecution?.(bug);
+        return (
+          <>
+            {aiExecution ? (
+              <span
+                className="h-6 w-1 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
+                title={`AI 接管中: ${aiExecution.agentName} (${aiExecution.stepSummary || '执行中'})`}
+              />
+            ) : null}
+            {/* 严重度指示条 */}
+            <span className={cn('h-6 w-1.5 shrink-0 rounded-full', sev.dotColor)} />
+            {/* 状态图标 */}
+            <StatusGlyph status={statusOf(bug)} />
+            {/* ID 完整展示（不截断） */}
+            <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{idOf(bug)}</span>
+            {/* 标题（带 Bug 图标） */}
+            <Bug className="size-4 shrink-0 text-destructive" />
+            <ListText className="min-w-0 flex-1">{bug.title}</ListText>
+            {aiExecution ? (
+              <AiExecutionBadge execution={aiExecution} size="xs" variant="compact" />
+            ) : null}
+          </>
+        );
+      }}
+      renderTrailing={(bug) => {
+        const sev = SEV_C[severityOf(bug)];
+        const tags = bug.issueTags ?? [];
+        const shown = tags.slice(0, 2);
+        const extra = tags.length - shown.length;
+        const aiExecution = getAiExecution?.(bug);
+        return (
+          <>
+            {aiExecution ? (
+              <AiExecutionBadge execution={aiExecution} size="sm" variant="pill" />
+            ) : null}
+            {/* 项目 */}
+            <ListChip className="border border-border bg-muted/40 text-muted-foreground">{getProjectName?.(bug.projectId) ?? ''}</ListChip>
+            {/* 严重度标签 */}
+            <span className="flex shrink-0 items-center gap-1.5">
+              <span className={cn('size-1.5 rounded-full', sev.dotColor)} />
+              <span className={cn('whitespace-nowrap text-xs font-medium', sev.color)}>{sev.label}</span>
+            </span>
+            {/* 标签（可折叠 +N） */}
+            <div className="flex shrink-0 items-center gap-1">
+              {shown.map(({ tag }) => (
+                <ListChip key={tag.id} color={tag.color}>{tag.name}</ListChip>
+              ))}
+              {extra > 0 ? <ListChip className="opacity-80 text-muted-foreground">+{extra}</ListChip> : null}
+            </div>
+            {/* 责任人 */}
+            <ListAvatar name={assigneeNameOf(bug)} url={bug.assignee?.avatarUrl} />
+          </>
+        );
+      }}
+    />
+  );
+}
+
+function StatusGlyph({ status }: { status: TaskStatus }) {
+  const visual = TASK_STATUS_VISUALS[status] ?? TASK_STATUS_VISUALS.todo;
+  return (
+    <StatusIconFrame
+      icon={visual.icon}
+      tone={visual.tone}
+      size="sm"
+      spin={status === 'in_progress'}
+      className="shrink-0"
+    />
+  );
+}
+
+function groupValue(groupBy: Exclude<BugSimpleGroupBy, 'none'>, bug: Task): string {
+  switch (groupBy) {
+    case 'status':
+      return statusOf(bug);
+    case 'severity':
+      return severityOf(bug);
+    case 'project':
+      return bug.projectId ?? 'unknown';
+  }
+}

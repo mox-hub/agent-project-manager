@@ -5,33 +5,35 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { MemberService } from './member.service';
+import { ProjectMembershipSyncService } from './project-membership-sync.service';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 describe('MemberService', () => {
   let service: MemberService;
 
   const mockPrisma = {
     member: {
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      count: jest.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
     },
     project: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     memberProjectBinding: {
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      findMany: jest.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      findMany: vi.fn(),
     },
     memberActivity: {
-      create: jest.fn(),
+      create: vi.fn(),
     },
   };
 
@@ -40,11 +42,19 @@ describe('MemberService', () => {
       providers: [
         MemberService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: MessageBusService, useValue: { publish: vi.fn() } },
+        {
+          provide: ProjectMembershipSyncService,
+          useValue: {
+            propagateMemberToProject: vi.fn(),
+            revokeMemberFromProject: vi.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<MemberService>(MemberService);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('create', () => {

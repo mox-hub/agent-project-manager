@@ -17,13 +17,15 @@ export class ZCodeAdapter implements CliAdapter {
     return 'zcode';
   }
 
-  async detect(): Promise<{
+  async detect(commandPath?: string): Promise<{
     available: boolean;
     version?: string;
     error?: string;
   }> {
     return new Promise((resolve) => {
-      const proc = spawn('zcode', ['--version'], { shell: true });
+      const proc = spawn(commandPath ?? 'zcode', ['--version'], {
+        shell: true,
+      });
 
       let version = '';
       let errorOutput = '';

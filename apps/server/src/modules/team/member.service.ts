@@ -4,8 +4,10 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import {
   CreateMemberDto,
   UpdateMemberDto,
@@ -14,12 +16,93 @@ import {
 } from './dto/member.dto';
 import { Prisma } from '@prisma/client';
 import { generateMemberShortId } from '@/common/utils/member-short-id.util';
+import { ProjectMembershipSyncService } from './project-membership-sync.service';
+
+/** 系统内置 AI 助理成员（小周）：metadata.isSystemAssistant 标记，禁删除/停用 */
+export const SYSTEM_ASSISTANT_HANDLE = 'xiaozhou';
+
+export function isSystemAssistantMember(member: {
+  handle?: string | null;
+  metadata?: unknown;
+}): boolean {
+  return (
+    member.handle === SYSTEM_ASSISTANT_HANDLE ||
+    (member.metadata as Record<string, unknown> | null | undefined)?.[
+      'isSystemAssistant'
+    ] === true
+  );
+}
 
 @Injectable()
-export class MemberService {
+export class MemberService implements OnModuleInit {
   private readonly logger = new Logger(MemberService.name);
 
-  constructor(readonly prisma: PrismaService) {}
+  constructor(
+    readonly prisma: PrismaService,
+    private readonly messageBus: MessageBusService,
+    private readonly membershipSync: ProjectMembershipSyncService,
+  ) {}
+
+  /**
+   * 确保小助理（小周）作为默认成员存在：服务启动时补齐既有库；
+   * 新工作区由 template.db 内置（build-template.ts 同规则 upsert）。
+   */
+  async onModuleInit() {
+    try {
+      await this.ensureSystemAssistantMember();
+    } catch (error) {
+      this.logger.warn(
+        `Ensure system assistant member failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async ensureSystemAssistantMember() {
+    const existing = await this.prisma.member.findUnique({
+      where: { handle: SYSTEM_ASSISTANT_HANDLE },
+    });
+    if (existing) {
+      // 旧库补标记（按 handle 幂等）
+      if (
+        (existing.metadata as Record<string, unknown> | null)?.[
+          'isSystemAssistant'
+        ] !== true
+      ) {
+        await this.prisma.member.update({
+          where: { id: existing.id },
+          data: {
+            metadata: {
+              ...((existing.metadata as Record<string, unknown>) ?? {}),
+              isSystemAssistant: true,
+            },
+          },
+        });
+      }
+      return existing;
+    }
+
+    let shortId = generateMemberShortId();
+    for (let i = 0; i < 5; i += 1) {
+      const dup = await this.prisma.member.findUnique({ where: { shortId } });
+      if (!dup) break;
+      shortId = generateMemberShortId();
+    }
+
+    return this.prisma.member.create({
+      data: {
+        type: 'ai_agent',
+        shortId,
+        handle: SYSTEM_ASSISTANT_HANDLE,
+        displayName: '小周',
+        title: 'AI 项目管理搭档',
+        description: '系统内置的主 AI 助理，可查询与操作项目数据。',
+        status: 'active',
+        metadata: { isSystemAssistant: true },
+      },
+    });
+  }
 
   async create(dto: CreateMemberDto, userId: string) {
     // 类型验证
@@ -71,7 +154,7 @@ export class MemberService {
       shortId = generateMemberShortId();
     }
 
-    return this.prisma.member.create({
+    const member = await this.prisma.member.create({
       data: {
         type: dto.type ?? 'human',
         shortId,
@@ -95,11 +178,26 @@ export class MemberService {
         status: dto.status ?? 'active',
       },
     });
+
+    this.messageBus.publish('member.created', {
+      memberId: member.id,
+      displayName: member.displayName,
+      type: member.type,
+      userId,
+    });
+    return member;
   }
 
   async update(id: string, dto: UpdateMemberDto) {
     const m = await this.prisma.member.findUnique({ where: { id } });
     if (!m) throw new NotFoundException('Member not found');
+
+    // 系统内置 AI 助理：允许改信息，不允许停用/删除
+    if (isSystemAssistantMember(m) && dto.status && dto.status !== 'active') {
+      throw new BadRequestException(
+        'AI 助理是系统内置成员，不可停用；仅允许修改资料信息',
+      );
+    }
 
     // AI 员工 defaultCliProviderId 校验
     if (m.type === 'ai_agent' && dto.defaultCliProviderId) {
@@ -141,17 +239,21 @@ export class MemberService {
     return member;
   }
 
-  /** 硬删除：清理成员关联行后删除本体；已绑定登录账号的成员禁止删除 */
+  /** 硬删除：清理成员关联行后删除本体；已绑定登录账号/系统内置成员禁止删除 */
   async remove(id: string) {
     const member = await this.findById(id);
+
+    if (isSystemAssistantMember(member)) {
+      throw new BadRequestException('AI 助理是系统内置成员，不可删除');
+    }
 
     if (member.userId) {
       throw new ConflictException('该成员已绑定登录账号，请改为停用对应账号');
     }
 
     await this.prisma.$transaction([
-      this.prisma.taskAssignee.deleteMany({ where: { memberId: member.id } }),
-      this.prisma.taskWatcher.deleteMany({ where: { memberId: member.id } }),
+      this.prisma.issueAssignee.deleteMany({ where: { memberId: member.id } }),
+      this.prisma.issueWatcher.deleteMany({ where: { memberId: member.id } }),
       this.prisma.teamMember.deleteMany({ where: { memberId: member.id } }),
       this.prisma.memberProjectBinding.deleteMany({
         where: { memberId: member.id },
@@ -164,6 +266,11 @@ export class MemberService {
       }),
       this.prisma.member.delete({ where: { id: member.id } }),
     ]);
+
+    this.messageBus.publish('member.removed', {
+      memberId: member.id,
+      displayName: member.displayName,
+    });
 
     return { ok: true };
   }
@@ -223,13 +330,22 @@ export class MemberService {
     });
     if (existing) throw new ConflictException('Member已绑定到此项目');
 
-    return this.prisma.memberProjectBinding.create({
+    const binding = await this.prisma.memberProjectBinding.create({
       data: {
         memberId,
         projectId: dto.projectId,
         role: dto.role ?? 'member',
+        source: 'direct',
       },
     });
+    // 对有登录账号的成员同步 ProjectMember 权限缓存
+    await this.membershipSync.propagateMemberToProject(
+      { id: memberId, userId: member.userId },
+      dto.projectId,
+      dto.role ?? 'member',
+      'direct',
+    );
+    return binding;
   }
 
   async unbindProject(memberId: string, projectId: string) {
@@ -238,9 +354,12 @@ export class MemberService {
     });
     if (!binding) throw new NotFoundException('Member未绑定到此项目');
 
-    return this.prisma.memberProjectBinding.delete({
+    await this.prisma.memberProjectBinding.delete({
       where: { id: binding.id },
     });
+    // 该成员在此项目已无任何绑定时清掉权限缓存
+    await this.membershipSync.revokeMemberFromProject(memberId, projectId);
+    return binding;
   }
 
   async recordActivity(

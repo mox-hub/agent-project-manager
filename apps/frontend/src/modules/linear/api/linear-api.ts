@@ -1,4 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；resolveConflict
+ * 手写把 issueId 一并放进 body，与契约（仅 resolution）不一致，维持手写。
+ */
 
 export interface LinearViewer {
   id: string;
@@ -82,34 +88,27 @@ export const linearApi = {
       `/integrations/linear/${integrationId}/projects`,
     ),
 
-  syncProject: (data: {
-    integrationId: string;
-    linearProjectId: string;
-    targetLocalProjectId?: string;
-  }) => api.post<{ projectId: string; created: boolean }>(
-    `/integrations/linear/sync/project`,
-    data,
-  ),
+  syncProject: (data: RequestBodyOf<'LinearController_syncProject'>) =>
+    api.post<{ projectId: string; created: boolean }>(
+      `/integrations/linear/sync/project`,
+      data,
+    ),
 
-  syncTasks: (data: {
-    projectId: string;
-    direction: SyncDirection;
-    taskIds?: string[];
-    confirm?: boolean;
-  }) => api.post<SyncSummary>(`/integrations/linear/sync/tasks`, data),
+  syncTasks: (data: RequestBodyOf<'LinearController_syncTasks'>) =>
+    api.post<SyncSummary>(`/integrations/linear/sync/issues`, data),
 
-  pushCreateIssue: (data: { projectId: string; localTaskId: string }) =>
-    api.post<{ taskId: string; identifier: string; url: string }>(
-      `/integrations/linear/sync/task/push-create`,
+  pushCreateIssue: (data: RequestBodyOf<'LinearController_pushCreate'>) =>
+    api.post<{ issueId: string; identifier: string; url: string }>(
+      `/integrations/linear/sync/issue/push-create`,
       data,
     ),
 
   resolveConflict: (data: {
-    taskId: string;
+    issueId: string;
     resolution: 'use_linear' | 'use_local' | 'keep_both';
   }) =>
     api.post<{ resolution: string; createdRemoteCopyId?: string }>(
-      `/integrations/linear/sync/task/${data.taskId}/resolve`,
+      `/integrations/linear/sync/issue/${data.issueId}/resolve`,
       data,
     ),
 

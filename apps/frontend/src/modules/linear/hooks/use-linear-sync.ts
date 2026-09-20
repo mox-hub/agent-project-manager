@@ -60,7 +60,7 @@ export function useSyncTasks() {
     mutationFn: (data: {
       projectId: string;
       direction: SyncDirection;
-      taskIds?: string[];
+      issueIds?: string[];
       confirm?: boolean;
     }) => linearApi.syncTasks(data),
     onSuccess: (summary: SyncSummary, variables) => {
@@ -94,11 +94,11 @@ export function useResolveConflict() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: {
-      taskId: string;
+      issueId: string;
       resolution: 'use_linear' | 'use_local' | 'keep_both';
     }) => linearApi.resolveConflict(data),
     onSuccess: (result, variables) => {
-      qc.invalidateQueries({ queryKey: ['task', variables.taskId] });
+      qc.invalidateQueries({ queryKey: ['task', variables.issueId] });
       toast.success(
         result.resolution === 'use_linear'
           ? 'Conflict resolved: Linear version applied'

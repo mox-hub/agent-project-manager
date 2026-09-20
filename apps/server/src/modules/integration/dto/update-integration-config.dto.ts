@@ -19,6 +19,8 @@ export class UpdateIntegrationConfigDto extends PartialType(
     description: 'Additional metadata',
     example: { key: 'value' },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsOptional()
   @IsObject()
@@ -37,6 +39,8 @@ export class UpdateIntegrationConfigDto extends PartialType(
     description: 'Integration configuration',
     example: { token: 'ghp_xxx' },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsOptional()
   @IsObject()

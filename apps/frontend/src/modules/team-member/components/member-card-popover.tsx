@@ -5,7 +5,6 @@ import { MemberAvatar } from './member-avatar';
 import { TrustLevelBadge } from './trust-level-badge';
 import {
   Bot,
-  Circle,
   Clock,
   Copy,
   Check,
@@ -105,7 +104,7 @@ export function MemberCardPopover({
   /** 任务编排：跳转任务页并预置该成员为负责人 */
   const dispatchTask = () => {
     if (!card) return;
-    navigate('/app/tasks', {
+    navigate('/app/issues', {
       state: { openCreate: true, presetAssigneeId: card.id },
     });
   };
@@ -177,7 +176,7 @@ export function MemberCardPopover({
 
           {/* Trust + shortId */}
           <div className="flex items-center justify-between gap-2">
-            <TrustLevelBadge level={card.trustLevel} score={card.trustScore} />
+            <TrustLevelBadge level={card.trustLevel} />
             <button
               type="button"
               onClick={copyShortId}

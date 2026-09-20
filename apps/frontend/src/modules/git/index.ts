@@ -4,8 +4,6 @@ export { GitToolStatusProps } from './components/git-tool-status';
 export * from './components/workspace-config';
 export * from './components/git-command-panel';
 export * from './components/branch-list';
-export * from './components/repository-list';
-export * from './components/repository-card';
 export * from './components/diff-viewer';
 export * from './components/commit-list';
 export * from './components/pull-request-list';

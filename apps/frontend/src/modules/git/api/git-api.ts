@@ -1,5 +1,10 @@
 import { api } from '../../../infrastructure/api-client';
-import type { PaginatedData } from '@/shared/types/api';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；契约该操作
+ * requestBody 缺失（content?: never）的端点仍维持手写 payload。
+ */
 
 export interface Repository {
   id: string;
@@ -18,15 +23,7 @@ export interface Repository {
   updatedAt: string;
 }
 
-export interface CreateRepositoryDto {
-  projectId: string;
-  name: string;
-  localPath?: string;
-  remoteUrl?: string;
-  role?: string;
-  defaultBranch?: string;
-  provider?: string;
-}
+export type CreateRepositoryDto = RequestBodyOf<'GitController_createRepository'>;
 
 export interface UpdateRepositoryDto {
   name?: string;
@@ -97,6 +94,8 @@ export interface PullRequest {
   createdAt: string;
   updatedAt: string;
   mergedAt?: string;
+  /** GitHub 实时回源的行带 htmlUrl（点击外跳）；本地行无此字段 */
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface GitToolStatusData {
@@ -212,12 +211,7 @@ export const gitApi = {
   },
 
   // Diff APIs
-  generateDiff: (dto: {
-    repoId: string;
-    baseRef: string;
-    targetRef: string;
-    pathFilter?: string[];
-  }) => {
+  generateDiff: (dto: RequestBodyOf<'GitController_generateDiff'>) => {
     return api.post<DiffResult>('/git/diff', dto);
   },
 

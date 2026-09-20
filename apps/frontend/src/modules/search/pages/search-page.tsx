@@ -13,11 +13,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search as SearchIcon, CheckSquare, Bug, FileText, Folder,
-  Target, ShieldCheck, Clock, ArrowUpRight, X,
+  Target, ShieldCheck, ArrowUpRight, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSearch } from '../hooks/use-search';
 import type { SearchResultType, SearchHit } from '../api/search-api';
@@ -38,9 +40,6 @@ const TYPE_CONFIG: Record<SearchResultType, { label: string; icon: React.Element
 
 const TYPE_ORDER: SearchResultType[] = ['task', 'bug', 'document', 'project', 'milestone', 'acceptance'];
 
-// 搜索建议种子（纯 UI 引导，非数据；历史记录可后续接 localStorage）
-const RECENT_SEARCHES = ['OAuth2', 'rate limiting', 'mobile', 'stripe'];
-
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function SearchPage() {
@@ -59,7 +58,7 @@ export function SearchPage() {
     const timer = setTimeout(() => setDebouncedQuery(query), 250);
     return () => clearTimeout(timer);
   }, [query]);
-  const { data, isFetching } = useSearch(debouncedQuery, typeFilter);
+  const { data, isFetching, isError, refetch } = useSearch(debouncedQuery, typeFilter);
   const results = data?.items ?? [];
 
   // Group results by type
@@ -95,7 +94,7 @@ export function SearchPage() {
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               ref={inputRef}
-              placeholder={t('shell.searchPlaceholder') || 'Search everything...'}
+              placeholder={t('search.placeholder')}
               value={query}
               onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
               onKeyDown={handleKeyDown}
@@ -117,22 +116,7 @@ export function SearchPage() {
             </div>
           </div>
 
-          {/* Recent searches */}
-          {!query && RECENT_SEARCHES.length > 0 && (
-            <div className="flex items-center gap-2 mt-3">
-              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-              {RECENT_SEARCHES.map(s => (
-                <button
-                  key={s}
-                  onClick={() => setQuery(s)}
-                  className="text-xs text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted px-2.5 py-1 rounded-full transition-colors"
-                  data-ai-action="search.recent"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Recent searches：占位演示热词已移除（真实搜索历史待接 localStorage，见 P0-4 修复说明） */}
 
           {/* Type filters */}
           {query && (
@@ -174,18 +158,44 @@ export function SearchPage() {
       <div className="flex-1 overflow-auto">
         <div className="max-w-2xl mx-auto p-6">
           {query.length === 0 ? (
-            <div className="text-center py-16">
-              <SearchIcon className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
-              <p className="text-sm text-muted-foreground">{t('help.searchHint') || 'Search across tasks, bugs, documents, projects, milestones and acceptances'}</p>
-            </div>
+            <EmptyState
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-primary">
+                  <SearchIcon className="size-4 text-primary" />
+                </IconStack>
+              }
+              title={t('search.placeholderTitle', '搜索一切')}
+              description={t('help.searchHint') || 'Search across tasks, bugs, documents, projects, milestones and acceptances'}
+            />
           ) : isFetching ? (
             <div className="text-center py-16">
-              <p className="text-sm text-muted-foreground">Searching…</p>
+              <p className="text-sm text-muted-foreground">{t('search.searching', 'Searching…')}</p>
             </div>
+          ) : isError ? (
+            <EmptyState
+              icon={SearchIcon}
+              title={t('search.loadFailed', '搜索失败')}
+              description={t('search.loadFailedHint', '搜索服务暂时不可用，请稍后重试')}
+              action={
+                <Button variant="outline" size="sm" onClick={() => refetch()}>
+                  {t('search.retry', '重试')}
+                </Button>
+              }
+            />
           ) : flatResults.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-sm text-muted-foreground">未找到匹配结果</p>
-            </div>
+            <EmptyState
+              icon={SearchIcon}
+              title={t('search.noResults', '未找到匹配结果')}
+              description={t('search.noResultsHint', '换个关键词试试，或清除类型过滤')}
+              action={
+                typeFilter !== 'all' ? (
+                  <Button variant="outline" size="sm" onClick={() => setTypeFilter('all')}>
+                    {t('common.filterClear', '清除类型过滤')}
+                  </Button>
+                ) : undefined
+              }
+            />
           ) : (
             <div className="space-y-5">
               {TYPE_ORDER.map(type => {

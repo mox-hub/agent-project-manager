@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { gitApi } from '../api/git-api';
-import type { DiffResult } from '../api/git-api';
 
 export function useWorkingDiff(repoId: string) {
   return useQuery({

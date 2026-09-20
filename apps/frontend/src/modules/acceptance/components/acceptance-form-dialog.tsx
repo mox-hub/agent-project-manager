@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
-import { useAllTasks } from '@/modules/task/hooks/use-project-tasks';
+import { useAllTasks } from '@/modules/issue/hooks/use-project-tasks';
 import { useCreateAcceptance } from '../hooks/use-acceptance';
 import type { CompletionType } from '../api/acceptance-api';
 
@@ -46,7 +46,7 @@ export function AcceptanceFormDialog({
   const { data: tasksData } = useAllTasks({ pageSize: 1000 });
   const createAcceptance = useCreateAcceptance();
 
-  const [taskId, setTaskId] = useState(defaultTaskId ?? '');
+  const [issueId, setTaskId] = useState(defaultTaskId ?? '');
   const [title, setTitle] = useState('');
   const [completionType, setCompletionType] = useState<CompletionType | 'auto'>('auto');
   const [description, setDescription] = useState('');
@@ -64,10 +64,10 @@ export function AcceptanceFormDialog({
   }
 
   const submit = async () => {
-    if (!taskId) return;
+    if (!issueId) return;
     try {
       const created = await createAcceptance.mutateAsync({
-        taskId,
+        issueId,
         title: title.trim() || undefined,
         description: description.trim() || undefined,
         completionType: completionType === 'auto' ? undefined : completionType,
@@ -96,7 +96,7 @@ export function AcceptanceFormDialog({
               {t('acceptance.form.task')}
             </span>
             <NativeSelect
-              value={taskId}
+              value={issueId}
               onChange={(e) => setTaskId(e.target.value)}
               className="w-full"
             >
@@ -151,7 +151,7 @@ export function AcceptanceFormDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('common.cancel')}
           </Button>
-          <Button onClick={submit} disabled={!taskId || createAcceptance.isPending}>
+          <Button onClick={submit} disabled={!issueId || createAcceptance.isPending}>
             {t('common.create')}
           </Button>
         </DialogFooter>

@@ -16,8 +16,13 @@ export function useNotifications(params?: NotificationListParams) {
 export function useUnreadNotificationsCount() {
   return useQuery({
     queryKey: ['notifications', 'unread', 'count'],
-    queryFn: () => notificationApi.getList({ status: 'unread', pageSize: 1 }),
-    select: (data) => data?.total ?? 0,
+    queryFn: async () => {
+      const data = await notificationApi.getUnreadCount();
+      return data?.count ?? 0;
+    },
+    // 60s 轮询兜底：主通道是 socket notification.created 失效，
+    // 断线期间徽标不至于永远冻结
+    refetchInterval: 60_000,
   });
 }
 

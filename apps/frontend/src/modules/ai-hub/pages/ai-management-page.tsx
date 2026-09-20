@@ -99,6 +99,7 @@ const CLI_PROVIDER_EMOJI: Record<CliProviderId, string> = {
   'claude-code': '🧠',
   codex: '⚡',
   zcode: '🌀',
+  opencode: '🎓',
 };
 
 export function AIManagementPage() {

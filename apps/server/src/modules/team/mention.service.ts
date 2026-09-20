@@ -1,12 +1,17 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { DomainEventTypes } from '@/core/message-bus/domain-events';
 import { PrismaService } from '@/core/database/prisma.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { CreateMentionDto, ParseMentionsDto } from './dto/mention.dto';
 
 @Injectable()
 export class MentionService {
   private readonly logger = new Logger(MentionService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messageBus: MessageBusService,
+  ) {}
 
   private HANDLE_REGEX = /@([a-zA-Z0-9_\-.]+)/g;
 
@@ -78,8 +83,22 @@ export class MentionService {
     });
     if (!members.length) return { created: 0, members: [] };
 
+    // 幂等去重：同源（sourceType+sourceId）已提及过的成员跳过——
+    // 描述等可反复编辑的文本重复解析时，不重复建记录、不重复提醒
+    const existing = await this.prisma.mention.findMany({
+      where: {
+        sourceType: dto.sourceType,
+        sourceId: dto.sourceId,
+        memberId: { in: members.map((m) => m.id) },
+      },
+      select: { memberId: true },
+    });
+    const mentionedSet = new Set(existing.map((m) => m.memberId));
+    const freshMembers = members.filter((m) => !mentionedSet.has(m.id));
+    if (!freshMembers.length) return { created: 0, members: [] };
+
     const records = [];
-    for (const m of members) {
+    for (const m of freshMembers) {
       records.push({
         sourceType: dto.sourceType,
         sourceId: dto.sourceId,
@@ -91,6 +110,24 @@ export class MentionService {
     for (const record of records) {
       await this.prisma.mention.create({ data: record });
     }
+
+    // 提及提醒：通知被 @ 的用户（通知设置「提及」开关消费 mention.created）
+    const mentionedMembers = await this.prisma.member.findMany({
+      where: {
+        id: { in: freshMembers.map((m) => m.id) },
+        userId: { not: null },
+      },
+      select: { userId: true },
+    });
+    this.messageBus.publish(DomainEventTypes.MentionCreated, {
+      sourceType: dto.sourceType,
+      sourceId: dto.sourceId,
+      text: dto.text.slice(0, 160),
+      actorId: mentionerId,
+      mentionedUserIds: mentionedMembers
+        .map((m) => m.userId as string)
+        .filter(Boolean),
+    });
 
     return { created: members.length, members };
   }

@@ -1,8 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  documentApi,
   folderApi,
-  type DocumentFolder,
   type CreateFolderRequest,
   type UpdateFolderRequest,
 } from '../api/document-api';

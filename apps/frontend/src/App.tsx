@@ -119,7 +119,7 @@ function App() {
         )}
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          AgentPM Desktop v0.1.0 - Tauri 2
+          AgentPM Desktop - Electron
         </p>
       </div>
     </div>

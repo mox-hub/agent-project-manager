@@ -3,7 +3,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { LanguageModel } from 'ai';
-import { generateText, streamText, CoreMessage } from 'ai';
+import { generateText, streamText, ModelMessage } from 'ai';
 import {
   ModelAdapter,
   ChatMessage,
@@ -26,6 +26,10 @@ export interface AiSdkAdapterOptions {
   baseUrl?: string;
   organizationId?: string;
   defaultModel: string;
+  /** 附加请求头（如 opencode 网关的 x-opencode-session） */
+  headers?: Record<string, string>;
+  /** openai 协议强制走 chat completions（opencode 网关不支持 responses API） */
+  useChatCompletions?: boolean;
 }
 
 /**
@@ -44,8 +48,15 @@ export class AiSdkAdapter implements ModelAdapter {
   }
 
   private createModel(): LanguageModel {
-    const { sdkType, apiKey, baseUrl, organizationId, defaultModel } =
-      this.options;
+    const {
+      sdkType,
+      apiKey,
+      baseUrl,
+      organizationId,
+      defaultModel,
+      headers,
+      useChatCompletions,
+    } = this.options;
 
     try {
       switch (sdkType) {
@@ -54,17 +65,20 @@ export class AiSdkAdapter implements ModelAdapter {
             apiKey,
             baseURL: baseUrl,
             organization: organizationId,
+            headers,
           });
-          return openaiProvider.languageModel(defaultModel);
+          return useChatCompletions
+            ? openaiProvider.chat(defaultModel)
+            : openaiProvider.languageModel(defaultModel);
         }
 
         case 'anthropic': {
-          const anthropicProvider = createAnthropic({ apiKey });
+          const anthropicProvider = createAnthropic({ apiKey, headers });
           return anthropicProvider.languageModel(defaultModel);
         }
 
         case 'google': {
-          const googleProvider = createGoogleGenerativeAI({ apiKey });
+          const googleProvider = createGoogleGenerativeAI({ apiKey, headers });
           return googleProvider.languageModel(defaultModel);
         }
 
@@ -85,6 +99,11 @@ export class AiSdkAdapter implements ModelAdapter {
     return this.options.provider;
   }
 
+  /** 暴露底层 LanguageModel（供主助手工具循环等直接使用 streamText 的高阶场景） */
+  getModel(): LanguageModel {
+    return this.model;
+  }
+
   /**
    * 流式聊天
    */
@@ -95,9 +114,9 @@ export class AiSdkAdapter implements ModelAdapter {
     try {
       const result = streamText({
         model: this.model,
-        messages: messages as CoreMessage[],
+        messages: messages as ModelMessage[],
         temperature: options?.temperature ?? 0.7,
-        maxTokens: options?.maxTokens,
+        maxOutputTokens: options?.maxTokens,
       });
 
       for await (const chunk of result.textStream) {
@@ -110,18 +129,25 @@ export class AiSdkAdapter implements ModelAdapter {
   }
 
   /**
-   * 非流式聊天
+   * 非流式聊天（v7 禁 messages 内 system：系统提示走 instructions 选项）
    */
   async chat(
     messages: ChatMessage[],
-    options?: { temperature?: number; maxTokens?: number },
+    options?: {
+      temperature?: number;
+      maxTokens?: number;
+      instructions?: string;
+    },
   ): Promise<ChatResponse> {
     try {
       const result = await generateText({
         model: this.model,
-        messages: messages as CoreMessage[],
+        messages: messages as ModelMessage[],
         temperature: options?.temperature ?? 0.7,
-        maxTokens: options?.maxTokens,
+        maxOutputTokens: options?.maxTokens,
+        ...(options?.instructions
+          ? { instructions: options.instructions }
+          : {}),
       });
 
       return {
@@ -129,9 +155,9 @@ export class AiSdkAdapter implements ModelAdapter {
         model: this.options.defaultModel,
         tokens: result.usage
           ? {
-              prompt: result.usage.promptTokens,
-              completion: result.usage.completionTokens,
-              total: result.usage.totalTokens,
+              prompt: result.usage.inputTokens ?? 0,
+              completion: result.usage.outputTokens ?? 0,
+              total: result.usage.totalTokens ?? 0,
             }
           : undefined,
       };
@@ -147,10 +173,10 @@ export class AiSdkAdapter implements ModelAdapter {
    */
   async validateConnection(): Promise<ValidationResult> {
     try {
-      const testResult = await generateText({
+      await generateText({
         model: this.model,
         messages: [{ role: 'user', content: 'Hi' }],
-        maxTokens: 5,
+        maxOutputTokens: 5,
       });
 
       return {

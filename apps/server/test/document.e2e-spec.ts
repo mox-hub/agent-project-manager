@@ -73,6 +73,36 @@ describe('Document (e2e)', () => {
         .expect(200);
     });
 
+    it('should filter documents by projectId (CAP-A-15)', async () => {
+      // 第二项目的文档：过滤时不应出现在结果里
+      const otherProjectId = await createProjectFixture(
+        wsHttp,
+        accessToken,
+        'E2E Document Project 2',
+      );
+      const otherRes = await wsHttp
+        .post('/_api/documents')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          title: 'E2E 他项目文档',
+          content: '他项目',
+          projectId: otherProjectId,
+          category: 'guide',
+        });
+      expect(otherRes.status).toBe(201);
+      const otherDocId: string = otherRes.body.data.id;
+
+      const res = await wsHttp
+        .get(`/_api/documents?projectId=${projectId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+      const items: Array<{ id: string; project?: { id?: string } }> =
+        res.body.data.data;
+      expect(items.length).toBeGreaterThan(0);
+      expect(items.every((d) => d.project?.id === projectId)).toBe(true);
+      expect(items.some((d) => d.id === otherDocId)).toBe(false);
+    });
+
     it('should return document stats', () => {
       return wsHttp
         .get('/_api/documents/stats')

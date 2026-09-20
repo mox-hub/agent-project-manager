@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiOkResponse,
   ApiTags,
   ApiOperation,
   ApiResponse,
@@ -19,7 +20,13 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 import { UserService } from './user.service';
+import {
+  RoleAssignmentDto,
+  UserResponseDto,
+  UserSearchItemDto,
+} from './dto/user-response.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -32,15 +39,20 @@ export class UserController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'maintainer')
   @ApiOperation({ summary: '按邮箱/用户名检索用户（本地直邀用）' })
-  @ApiResponse({ status: 200, description: '返回匹配用户' })
+  @ApiOkResponse({
+    type: [UserSearchItemDto],
+    description: '匹配用户列表（不含 timezone/createdAt）',
+  })
+  @ApiStandardErrors()
   search(@Query('q') q?: string, @Query('limit') limit?: string) {
     return this.userService.search(q ?? '', limit ? Number(limit) : 20);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Returns list of users' })
+  @ApiOkResponse({ type: [UserResponseDto], description: '用户列表' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiStandardErrors()
   findAll() {
     return this.userService.findAll();
   }
@@ -48,9 +60,9 @@ export class UserController {
   @Get(':userId')
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiParam({ name: 'userId', description: 'User ID' })
-  @ApiResponse({ status: 200, description: 'Returns user details' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiOkResponse({ type: UserResponseDto, description: '用户详情' })
   @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiStandardErrors()
   findOne(@Param('userId') userId: string) {
     return this.userService.findOne(userId);
   }
@@ -58,8 +70,11 @@ export class UserController {
   @Get(':userId/roles')
   @ApiOperation({ summary: 'Get user roles' })
   @ApiParam({ name: 'userId', description: 'User ID' })
-  @ApiResponse({ status: 200, description: 'Returns user roles' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiOkResponse({
+    type: [RoleAssignmentDto],
+    description: '用户角色分配列表（时间倒序）',
+  })
+  @ApiStandardErrors()
   getUserRoles(@Param('userId') userId: string) {
     return this.userService.getRoles(userId);
   }
@@ -80,8 +95,11 @@ export class UserController {
       required: ['scopeType', 'role'],
     },
   })
-  @ApiResponse({ status: 200, description: 'Role added successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiOkResponse({
+    type: RoleAssignmentDto,
+    description: '新建的角色分配',
+  })
+  @ApiStandardErrors()
   addUserRole(
     @Param('userId') userId: string,
     @Body() body: { scopeType: string; projectId?: string; role: string },

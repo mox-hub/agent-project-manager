@@ -1,5 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
 export type ActivityEntityType = 'task' | 'bug' | 'project';
 
 export interface ActivityActor {
@@ -42,11 +47,8 @@ export const activityApi = {
   list: (entityType: ActivityEntityType | undefined, entityId: string) =>
     api.get<ActivityItem[]>('/activities', { entityType, entityId }),
 
-  addComment: (data: {
-    entityType: ActivityEntityType;
-    entityId: string;
-    content: string;
-  }) => api.post<ActivityItem>('/activities/comments', data),
+  addComment: (data: RequestBodyOf<'ActivityController_addComment'>) =>
+    api.post<ActivityItem>('/activities/comments', data),
 
   updateComment: (id: string, content: string) =>
     api.patch<ActivityItem>(`/activities/comments/${id}`, { content }),

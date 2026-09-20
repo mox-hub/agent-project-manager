@@ -22,7 +22,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
   const memberCount = team.memberCount ?? team._count?.members ?? 0;
 
   return (
-    <Card className="group transition-shadow hover:shadow-md">
+    <Card className="group transition-shadow hover:shadow-md" data-ai-entity={`team:${team.id}`}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex min-w-0 items-center gap-3">
@@ -30,11 +30,11 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
               <img
                 src={team.avatarUrl}
                 alt={team.name}
-                className="size-10 shrink-0 rounded-lg object-cover"
+                className="size-10 shrink-0 rounded-full object-cover"
               />
             ) : (
               <div
-                className="flex size-10 shrink-0 items-center justify-center font-semibold text-white"
+                className="flex size-10 shrink-0 items-center justify-center rounded-full font-semibold text-white"
                 style={{ backgroundColor: team.color || '#5E6AD2' }}
               >
                 {team.name.slice(0, 2).toUpperCase()}

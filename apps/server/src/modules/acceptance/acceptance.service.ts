@@ -5,8 +5,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
+import { ProposalService } from '@/modules/decision/proposal.service';
 import { CreateAcceptanceDto, UpdateAcceptanceDto } from './dto/acceptance.dto';
+import { isEvidenceCurrent } from './acceptance-criteria.service';
+import { evaluateAuditStaleness } from './completeness-audit.service';
 import {
   CompletionType,
   TestReportPayload,
@@ -21,6 +25,8 @@ export class AcceptanceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly executionService: ExecutionService,
+    private readonly proposalService: ProposalService,
+    private readonly messageBus: MessageBusService,
   ) {}
 
   /**
@@ -28,13 +34,13 @@ export class AcceptanceService {
    */
   async create(dto: CreateAcceptanceDto, userId?: string) {
     // 验证 Task 存在
-    const task = await this.prisma.task.findUnique({
-      where: { id: dto.taskId },
-      include: { project: true, taskTags: { include: { tag: true } } },
+    const task = await this.prisma.issue.findUnique({
+      where: { id: dto.issueId },
+      include: { project: true, issueTags: { include: { tag: true } } },
     });
 
     if (!task) {
-      throw new NotFoundException(`Task ${dto.taskId} not found`);
+      throw new NotFoundException(`Task ${dto.issueId} not found`);
     }
 
     const projectId = task.projectId;
@@ -47,13 +53,13 @@ export class AcceptanceService {
       dto.completionType ??
       inferCompletionType({
         type: task.type,
-        tags: task.taskTags.map((tt) => tt.tag.name),
+        tags: task.issueTags.map((tt) => tt.tag.name),
       });
 
     // 创建 Acceptance
     const acceptance = await this.prisma.acceptance.create({
       data: {
-        taskId: dto.taskId,
+        issueId: dto.issueId,
         type: dto.type || 'mixed',
         priority: dto.priority || 'medium',
         title: dto.title || `验收 - ${task.title}`,
@@ -63,7 +69,7 @@ export class AcceptanceService {
         status: 'draft',
       },
       include: {
-        task: {
+        issue: {
           select: { id: true, title: true },
         },
         criteria: {
@@ -92,7 +98,7 @@ export class AcceptanceService {
     if (dto.autoCreateExecution) {
       await this.executionService.createExecutionRun({
         projectId,
-        taskId: dto.taskId,
+        issueId: dto.issueId,
         subjectType: 'human',
         subjectId: userId || 'system',
         identitySource: 'api',
@@ -104,6 +110,13 @@ export class AcceptanceService {
     }
 
     // 重新查询以包含所有关系
+    this.messageBus.publish('acceptance.created', {
+      acceptanceId: acceptance.id,
+      title: acceptance.title,
+      issueId: dto.issueId,
+      projectId,
+      userId,
+    });
     return this.findOne(acceptance.id);
   }
 
@@ -114,7 +127,7 @@ export class AcceptanceService {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id },
       include: {
-        task: {
+        issue: {
           select: { id: true, title: true, status: true },
         },
         criteria: {
@@ -150,6 +163,18 @@ export class AcceptanceService {
       throw new NotFoundException(`Acceptance ${id} not found`);
     }
 
+    // CAP-B-02：详情接口的审计报告附带过期判定（标准修订/新增后 stale=true）
+    if (acceptance.auditReport) {
+      const staleness = evaluateAuditStaleness(
+        (acceptance.auditReport as any).criteriaRevisions,
+        acceptance.criteria.map((c) => ({ id: c.id, revision: c.revision })),
+      );
+      return {
+        ...acceptance,
+        auditReport: { ...acceptance.auditReport, ...staleness },
+      };
+    }
+
     return acceptance;
   }
 
@@ -157,27 +182,27 @@ export class AcceptanceService {
    * 查询验收契约列表
    */
   async findAll(params: {
-    taskId?: string;
+    issueId?: string;
     projectId?: string;
     status?: string;
     page?: number;
     pageSize?: number;
   }) {
-    const { taskId, projectId, status, page = 1, pageSize = 20 } = params;
+    const { issueId, projectId, status, page = 1, pageSize = 20 } = params;
 
     const where: any = {};
-    if (taskId) where.taskId = taskId;
+    if (issueId) where.issueId = issueId;
     if (status) where.status = status;
 
     if (projectId) {
-      where.task = { projectId };
+      where.issue = { projectId };
     }
 
     const [data, total] = await Promise.all([
       this.prisma.acceptance.findMany({
         where,
         include: {
-          task: {
+          issue: {
             select: {
               id: true,
               title: true,
@@ -260,14 +285,28 @@ export class AcceptanceService {
     await this.prisma.acceptance.delete({
       where: { id },
     });
+
+    const task = acceptance.issueId
+      ? await this.prisma.issue.findUnique({
+          where: { id: acceptance.issueId },
+          select: { projectId: true },
+        })
+      : null;
+
+    this.messageBus.publish('acceptance.deleted', {
+      acceptanceId: id,
+      title: acceptance.title,
+      issueId: acceptance.issueId,
+      projectId: task?.projectId ?? null,
+    });
   }
 
   /**
    * 获取任务的所有验收契约
    */
-  async findByTask(taskId: string) {
+  async findByTask(issueId: string) {
     return this.prisma.acceptance.findMany({
-      where: { taskId },
+      where: { issueId },
       include: {
         criteria: {
           orderBy: { order: 'asc' },
@@ -282,7 +321,7 @@ export class AcceptanceService {
    * 汇总验收成本
    */
   async rollupCost(acceptanceId: string) {
-    const executions = await this.prisma.executionRun.findMany({
+    const executions = await this.prisma.execution.findMany({
       where: { acceptanceId },
       select: {
         totalCost: true,
@@ -418,7 +457,10 @@ export class AcceptanceService {
   ) {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id: acceptanceId },
-      include: { criteria: true, auditReport: true },
+      include: {
+        criteria: { include: { evidences: true } },
+        auditReport: true,
+      },
     });
     if (!acceptance)
       throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
@@ -465,6 +507,24 @@ export class AcceptanceService {
       });
     }
 
+    // 3.1 CAP-B-01 证据版本门禁：每条标准至少一条「有效」证据
+    // （证据快照 revision = 标准当前 revision；null 快照按初版 1 处理）。
+    // 标准修订后旧证据转「待复核」，必须按新版本标准重新提交证据才能接收。
+    for (const c of acceptance.criteria) {
+      const hasCurrent = (c.evidences ?? []).some((e) =>
+        isEvidenceCurrent(e, c.revision),
+      );
+      if (!hasCurrent) {
+        failures.push({
+          check: 'criteriaEvidence',
+          reason:
+            c.revision > 1
+              ? `标准已修订至 v${c.revision}，原证据待复核：${c.content}`
+              : `标准缺少有效验收证据：${c.content}`,
+        });
+      }
+    }
+
     // 4. 审计红牌：存在强阻断项不得接收
     if (acceptance.auditReport?.riskLevel === 'red') {
       const blocked = (acceptance.auditReport.blockedItems as unknown[]) ?? [];
@@ -482,17 +542,33 @@ export class AcceptanceService {
       });
     }
 
-    return this.prisma.acceptance.update({
-      where: { id: acceptanceId },
-      data: {
-        status: 'passed',
-        completionEvidence: incoming as any,
-        completedBy: userId,
-        completedAt: new Date(),
-        rejectionReason: null,
-        rejectedAt: null,
-      },
-    });
+    return this.prisma.acceptance
+      .update({
+        where: { id: acceptanceId },
+        data: {
+          status: 'passed',
+          completionEvidence: incoming as any,
+          completedBy: userId,
+          completedAt: new Date(),
+          rejectionReason: null,
+          rejectedAt: null,
+        },
+      })
+      .then((updated) => {
+        this.messageBus.publish('acceptance.resolved', {
+          acceptanceId,
+          action: 'accept',
+          status: updated.status,
+          issueId: acceptance.issueId,
+          title: acceptance.title,
+          userId,
+        });
+        // 旁路触发收口提案：任务全部验收通过且未终态 → 提议确认关闭
+        void this.proposalService.proposeTaskResolutionIfReady(
+          acceptance.issueId,
+        );
+        return updated;
+      });
   }
 
   /**
@@ -510,7 +586,7 @@ export class AcceptanceService {
     if (!acceptance)
       throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
 
-    return this.prisma.acceptance.update({
+    const updated = await this.prisma.acceptance.update({
       where: { id: acceptanceId },
       data: {
         status: 'failed',
@@ -520,6 +596,16 @@ export class AcceptanceService {
         completedBy: null,
       },
     });
+
+    this.messageBus.publish('acceptance.resolved', {
+      acceptanceId,
+      action: 'reject',
+      status: updated.status,
+      issueId: acceptance.issueId,
+      title: acceptance.title,
+      userId: _userId,
+    });
+    return updated;
   }
 
   /**
@@ -537,7 +623,7 @@ export class AcceptanceService {
       throw new BadRequestException(`终态（${acceptance.status}）契约不可豁免`);
     }
 
-    return this.prisma.acceptance.update({
+    const updated = await this.prisma.acceptance.update({
       where: { id: acceptanceId },
       data: {
         status: 'waived',
@@ -546,5 +632,125 @@ export class AcceptanceService {
         waivedAt: new Date(),
       },
     });
+
+    this.messageBus.publish('acceptance.resolved', {
+      acceptanceId,
+      action: 'waive',
+      status: updated.status,
+      issueId: acceptance.issueId,
+      title: acceptance.title,
+      userId,
+    });
+    return updated;
+  }
+
+  // ─── 验收标准供给侧（兜底改造批 3，2026-09-15 裁决：先按严格要求）───
+
+  /**
+   * 派发前验收门禁：无活契约或活契约 0 条标准均阻断派发。
+   * 翻转原「无契约不拦（派发时自动建空契约）」的宽松口径——杜绝
+   * 「执行完才发现没标准」的最大返工场景。返回活契约 id。
+   */
+  async assertDispatchGate(issueId: string): Promise<string> {
+    const acceptance = await this.prisma.acceptance.findFirst({
+      where: { issueId, status: { notIn: ['passed', 'failed', 'waived'] } },
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { criteria: true } } },
+    });
+    if (!acceptance) {
+      throw new BadRequestException(
+        '该工单还没有验收契约，暂不可派发执行：请先补全验收标准（可在任务详情页用 AI 代写后确认），再重新派发',
+      );
+    }
+    if (acceptance._count.criteria === 0) {
+      throw new BadRequestException(
+        '该工单的验收契约还没有任何验收标准，暂不可派发执行：请补全验收标准（可 AI 代写）后重试',
+      );
+    }
+    return acceptance.id;
+  }
+
+  /**
+   * AI 代写标准落库（人确认后调用）：找/建活契约 → 增量写入。
+   * 同 content 去重，绝不覆盖已有标准；source=ai-generated 供审计溯源。
+   */
+  async applyCriteriaForIssue(
+    issueId: string,
+    items: Array<{
+      content: string;
+      criteriaType?: string;
+      severity?: string;
+      category?: string;
+    }>,
+    userId?: string,
+  ): Promise<{ acceptanceId: string; added: number; skipped: number }> {
+    const task = await this.prisma.issue.findUnique({
+      where: { id: issueId },
+      select: { id: true, title: true, projectId: true },
+    });
+    if (!task) {
+      throw new NotFoundException(`Task ${issueId} not found`);
+    }
+
+    let acceptance = await this.prisma.acceptance.findFirst({
+      where: { issueId, status: { notIn: ['passed', 'failed', 'waived'] } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!acceptance) {
+      acceptance = await this.create({ issueId }, userId);
+    }
+
+    const existing = await this.prisma.acceptanceCriteria.findMany({
+      where: { acceptanceId: acceptance.id },
+      select: { content: true },
+    });
+    const seen = new Set(existing.map((e) => e.content.trim()));
+    // P0-9 同款修复（2026-09-20）：非法项（缺 content）显式 400 拒绝，
+    // 不再静默过滤——静默丢项会让「AI 代写 N 条、实际落库 M<N」无声发生。
+    // 同 content 去重语义保留（记入 skipped，不重复落库）。
+    items.forEach((item, index) => {
+      if (!item || typeof item.content !== 'string' || !item.content.trim()) {
+        throw new BadRequestException({
+          code: 'VALIDATION_ERROR',
+          message: `criteria 第 ${index + 1} 项缺少 content 字段`,
+          details: { index: index + 1, field: 'content' },
+        });
+      }
+    });
+    const toAdd = items.filter((i) => !seen.has(i.content.trim()));
+    if (toAdd.length === 0) {
+      return { acceptanceId: acceptance.id, added: 0, skipped: items.length };
+    }
+
+    await this.prisma.acceptanceCriteria.createMany({
+      data: toAdd.map((item, idx) => ({
+        acceptanceId: acceptance.id,
+        content: item.content.trim(),
+        criteriaType:
+          item.criteriaType === 'technical' ? 'technical' : 'functional',
+        severity: ['critical', 'high', 'medium', 'low'].includes(
+          item.severity ?? '',
+        )
+          ? (item.severity as string)
+          : 'medium',
+        category: item.category || null,
+        source: 'ai-generated',
+        order: existing.length + idx,
+      })),
+    });
+
+    this.messageBus.publish('acceptance.updated', {
+      acceptanceId: acceptance.id,
+      issueId,
+      added: toAdd.length,
+      source: 'ai-generated',
+      userId,
+    });
+
+    return {
+      acceptanceId: acceptance.id,
+      added: toAdd.length,
+      skipped: items.length - toAdd.length,
+    };
   }
 }

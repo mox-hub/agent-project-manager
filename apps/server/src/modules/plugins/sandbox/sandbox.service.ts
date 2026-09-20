@@ -18,7 +18,7 @@ export class SandboxService {
     pluginId: string,
     entryPoint: string,
     payload: any,
-    context?: Record<string, unknown>,
+    _context?: Record<string, unknown>,
   ): Promise<{
     output: any;
     error?: string;

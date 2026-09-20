@@ -1,3 +1,6 @@
+// Buffer polyfill 必须最先执行：gray-matter（文档 frontmatter）依赖裸 Buffer 全局，
+// 浏览器端缺失会让文档编辑页「保存」在 mergeFrontmatter 处同步抛 ReferenceError
+import "./polyfills"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -5,7 +8,6 @@ import { RouterProvider } from "react-router-dom"
 import { ThemeProvider } from "@/shared/theme/theme-context"
 import { ConfirmProvider } from "@/shared/confirm/confirm-provider"
 import { ToastProvider } from "@/components/ui/toast"
-import { forwardConsole } from "@/shared/lib/logger"
 import { router } from "./app/router"
 import { LoadingProvider } from "@/components/ui/loading-overlay"
 import { GlobalLoadingState } from "@/components/ui/global-loading-state"
@@ -13,8 +15,6 @@ import { MockBadge } from "@/components/ui/mock-badge"
 import { isMockModeEnabled } from "@/mocks"
 import "./index.css"
 import "./i18n" // i18n initialization
-
-forwardConsole()
 
 const queryClient = new QueryClient({
   defaultOptions: {

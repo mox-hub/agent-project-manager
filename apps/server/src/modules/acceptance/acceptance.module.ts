@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ExecutionModule } from '@/modules/execution/execution.module';
+import { DecisionModule } from '@/modules/decision/decision.module';
 import { AcceptanceService } from './acceptance.service';
 import { AcceptanceCriteriaService } from './acceptance-criteria.service';
 import { CompletenessChecklistService } from './completeness-checklist.service';
 import { CompletenessAuditService } from './completeness-audit.service';
+import { GithubEvidenceSubscriber } from './github-evidence.subscriber';
 import { AcceptanceController } from './acceptance.controller';
 
 @Module({
-  imports: [ExecutionModule],
+  imports: [ExecutionModule, DecisionModule],
   providers: [
     // PrismaService 由全局 DatabaseModule 提供（工作区 ALS 代理），
     // 此处不可重复声明，否则覆盖为直连默认库的裸实例
@@ -15,6 +17,7 @@ import { AcceptanceController } from './acceptance.controller';
     AcceptanceCriteriaService,
     CompletenessChecklistService,
     CompletenessAuditService,
+    GithubEvidenceSubscriber,
   ],
   controllers: [AcceptanceController],
   exports: [

@@ -34,7 +34,21 @@ export const swaggerUiOptions = {
 export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
   const config = new DocumentBuilder()
     .setTitle('Agent Project Manager API')
-    .setDescription('Agent Project Manager API Documentation')
+    .setDescription(
+      [
+        'Agent Project Manager API Documentation',
+        '',
+        '【响应信封（全局约定，不逐端点声明）】所有 JSON 响应（含错误）均由',
+        'TransformInterceptor / GlobalExceptionFilter 统一包裹为信封：',
+        '  { status, success, description, data, timestamp, requestId? }',
+        '失败时携带 error: { code, message, details? }。',
+        '',
+        '【响应口径】本契约各端点的 200/201 响应 schema 描述的是【解包后的业务数据】',
+        '（裸数据口径），信封不在端点级重复声明；返回 null/void 的端点无 content。',
+        '前端 api-client 与 CLI ApmClient 均在封装内统一解包；错误细节见各端点的',
+        '400/401/403/404/500 声明（ErrorPayloadDto）。',
+      ].join('\n'),
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {

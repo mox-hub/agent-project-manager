@@ -52,7 +52,7 @@ export const handlers = [
     return paginated(slice, page, pageSize, source.length);
   }),
 
-  http.get('*/tasks', async ({ request }) => {
+  http.get('*/issues', async ({ request }) => {
     const forced = await scenario(request);
     if (forced === 'error') return errorResponse();
     const url = new URL(request.url);
@@ -95,6 +95,20 @@ export const handlers = [
     const forced = await scenario(request);
     if (forced === 'error') return errorResponse();
     return ok(makeDashboardOverview());
+  }),
+
+  http.get('*/members', () => {
+    return ok({
+      items: [
+        { id: 'm1', displayName: 'Claude Coder', handle: 'claude-coder', type: 'ai_agent' },
+        { id: 'm2', displayName: 'Alice PM', handle: 'alice', type: 'human' },
+      ],
+      total: 2,
+    });
+  }),
+
+  http.get('*/subscriptions/my', () => {
+    return ok({ targetIds: [] });
   }),
 ];
 

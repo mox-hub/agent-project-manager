@@ -27,7 +27,11 @@ export default defineConfig([
     rules: {
       'react-refresh/only-export-components': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      // `_` 前缀 = 接口实现占位参数/有意保留的未用绑定（清零 warning 约定）
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrors: 'all' },
+      ],
       '@typescript-eslint/no-empty-object-type': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
       // 以下两条为 React Compiler 专属规则；本项目未启用 React Compiler
@@ -35,6 +39,13 @@ export default defineConfig([
       'react-hooks/incompatible-library': 'off',
       'react-hooks/preserve-manual-memoization': 'off',
       'prefer-const': 'warn',
+    },
+  },
+  {
+    // Playwright e2e spec：非 React 组件树，`use()` 是测试夹具不是 Hook
+    files: ['e2e/**/*.ts'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
     },
   },
 ])

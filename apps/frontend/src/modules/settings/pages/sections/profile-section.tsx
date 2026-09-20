@@ -11,7 +11,6 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
 import { toast } from '@/components/ui/toast';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { authApi } from '@/modules/auth/api/auth-api';
@@ -91,25 +90,29 @@ export function ProfileSettingsSection() {
   };
 
   return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader
-        icon={UserRound}
-        title={t('settings.profile')}
-        actions={
-          <HeaderActionButton
-            icon={Save}
-            label={saving ? t('settings.saving') : t('settings.saveChanges')}
-            pinned
-            onClick={handleSave}
-            disabled={saving || isLoading}
-          />
-        }
-      />
-      <div className="p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
-          <Card className="border-border shadow-none">
+    <PageShell
+      variant="standard"
+      icon={UserRound}
+      iconColor="text-accent-blue"
+      title={t('settings.profile')}
+      className="bg-background text-foreground"
+      contentClassName="space-y-6"
+      actions={
+        <HeaderActionButton
+          icon={Save}
+          label={saving ? t('settings.saving') : t('settings.saveChanges')}
+          pinned
+          onClick={handleSave}
+          disabled={saving || isLoading}
+        />
+      }
+    >
+      <Card className="border-border shadow-none">
             <CardHeader>
-              <CardTitle>{t('settings.profileBasic')}</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <UserRound size={16} className="text-accent-blue" />
+                {t('settings.profileBasic')}
+              </CardTitle>
               <CardDescription>{t('settings.profileBasicDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -191,8 +194,6 @@ export function ProfileSettingsSection() {
           </Card>
 
           <PasswordCard />
-        </div>
-      </div>
     </PageShell>
   );
 }
@@ -237,7 +238,7 @@ function PasswordCard() {
   return (
     <Card className="border-border shadow-none">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           <KeyRound size={16} className="text-accent-yellow" />
           {t('settings.profilePassword')}
         </CardTitle>

@@ -29,7 +29,6 @@ interface LinkedTaskCardProps {
 const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
   link,
   onDelete,
-  onUpdateType,
 }: LinkedTaskCardProps) {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -42,7 +41,7 @@ const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-medium">{link.task?.title || `任务 ${link.taskId}`}</span>
+            <span className="truncate text-sm font-medium">{link.task?.title || `任务 ${link.issueId}`}</span>
             {link.task?.shortId && (
               <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-10 text-muted-foreground">
                 {link.task.shortId}
@@ -123,12 +122,12 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
   const [pickerOpen, setPickerOpen] = useState(false);
   void currentUserId;
 
-  const handleAddLink = async (taskId: string, linkType: LinkType = 'references') => {
+  const handleAddLink = async (issueId: string, linkType: LinkType = 'references') => {
     await createLink.mutateAsync({
       documentId,
       data: {
         documentId,
-        taskId,
+        issueId,
         projectId,
         linkType,
       },
@@ -189,13 +188,11 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-border p-6 text-center">
-          <Icons.LinkIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
-          <EmptyState title="暂无任务关联" className="min-h-0 border-0 py-4" />
-          <p className="mt-1 text-xs text-muted-foreground">
-            将文档或章节与任务关联，便于追踪
-          </p>
-        </div>
+        <EmptyState
+          title="暂无任务关联"
+          description="将文档或章节与任务关联，便于追踪"
+          className="min-h-0 border-0 py-4"
+        />
       )}
 
       <TaskPickerDialog

@@ -9,13 +9,10 @@ import {
   type WsRequest,
 } from './helpers/ws-app';
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/core/database/prisma.service';
 
 describe('Project (e2e)', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
   let accessToken: string;
-  let userId: string;
   let projectId: string;
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
@@ -27,8 +24,6 @@ describe('Project (e2e)', () => {
 
     app = await initTestApp(moduleFixture);
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
-
     ws = createIsolatedWorkspace('Project e2e');
     wsHttp = wsRequest(app, ws.id);
 
@@ -38,7 +33,6 @@ describe('Project (e2e)', () => {
       password: 'password123',
     });
     accessToken = response.body.data.accessToken;
-    userId = response.body.data.user.id;
   });
 
   afterAll(async () => {

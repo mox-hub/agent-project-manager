@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApiDocLinks, useAddApiDocLink, useDeleteApiDocLink } from '../hooks/use-project-links';
+import type { ProjectApiDocLinkRequest } from '../api/project-api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,10 +28,10 @@ export function ApiDocLinksManager({ projectId }: ApiDocLinksManagerProps) {
   const deleteLink = useDeleteApiDocLink(projectId);
 
   const [isAdding, setIsAdding] = useState(false);
-  const [newLink, setNewLink] = useState({
+  const [newLink, setNewLink] = useState<ProjectApiDocLinkRequest>({
     label: '',
     url: '',
-    type: 'openapi' as const,
+    type: 'openapi',
     description: '',
     aiIndexed: false,
   });
@@ -78,7 +79,7 @@ export function ApiDocLinksManager({ projectId }: ApiDocLinksManagerProps) {
                 <NativeSelect
                   className="w-full"
                   value={newLink.type}
-                  onChange={(e) => setNewLink({ ...newLink, type: e.target.value as any })}
+                  onChange={(e) => setNewLink({ ...newLink, type: e.target.value as ProjectApiDocLinkRequest['type'] })}
                 >
                   {API_DOC_TYPE_OPTIONS.map((opt) => (
                     <NativeSelectOption key={opt.value} value={opt.value}>

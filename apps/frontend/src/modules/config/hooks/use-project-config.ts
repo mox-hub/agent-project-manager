@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { configApi } from '../api/config-api';
+import { configApi, type ConfigValues } from '../api/config-api';
 
 /**
  * Hook to get project configuration
@@ -20,7 +20,7 @@ export function useUpdateProjectConfig(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (config: Record<string, any>) =>
+    mutationFn: (config: ConfigValues) =>
       configApi.setConfig({ scope: 'project', projectId, config }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['config', 'project', projectId] });

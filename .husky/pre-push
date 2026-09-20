@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# pre-push hook: 全量 type-check + lint（重检查前移到 push 时点；均走 turbo 缓存）
+pnpm type-check && pnpm lint

@@ -69,7 +69,8 @@ export class CliProviderRegistry implements OnModuleInit {
       this.overrides.clear();
       for (const cfg of configs) {
         const pid = cfg.providerId as ProviderId;
-        if (!['claude-code', 'codex', 'zcode'].includes(pid)) continue;
+        if (!['claude-code', 'codex', 'zcode', 'opencode'].includes(pid))
+          continue;
         this.overrides.set(pid, {
           commandPath: cfg.commandPath ?? undefined,
           model: cfg.model ?? undefined,
@@ -104,7 +105,10 @@ export class CliProviderRegistry implements OnModuleInit {
     const detectPromises = Array.from(this.adapters.entries()).map(
       async ([providerId, adapter]) => {
         const startTime = Date.now();
-        const result = await adapter.detect();
+        // 探测与执行同语义：DB 覆盖的 commandPath 优先于内置默认命令
+        const result = await adapter.detect(
+          this.overrides.get(providerId)?.commandPath,
+        );
         const info: ProviderInfo = {
           providerId,
           available: result.available,

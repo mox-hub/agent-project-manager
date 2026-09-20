@@ -74,7 +74,7 @@ describe('Runtime (e2e)', () => {
         .set('x-runtime-session-id', runtimeSessionId)
         .set('x-runtime-session-token', runtimeSessionToken)
         .send({
-          workspaceRoots: ['E:\tmp\e2e'],
+          workspaceRoots: ['E:\\tmp\\e2e'],
           providers: { file: true, git: true, terminal: true },
           cliProviders: ['codex', 'claude-code'],
         })

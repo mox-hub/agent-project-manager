@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Member } from '../types';
+import { isSystemAssistantMember } from '@/shared/member/types';
 import { MemberAvatar } from './member-avatar';
 import { MemberCardPopover } from './member-card-popover';
 import { TrustLevelBadge } from './trust-level-badge';
@@ -26,8 +27,8 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
   const { t } = useTranslation();
 
   return (
-    <Card className="transition-shadow hover:shadow-md">
-      <CardContent className="p-3">
+    <Card className="gap-0 py-0 transition-shadow hover:shadow-md" data-ai-entity={`member:${member.id}`}>
+      <CardContent className="px-3.5 py-2.5">
         <div className="flex items-start gap-3">
           <MemberCardPopover
             memberId={member.id}
@@ -94,7 +95,7 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
               ? member.user?.username ?? t('members.standaloneUser', '独立用户')
               : member.aiModelConfig?.name ?? member.aiProvider ?? 'AI'}
           </span>
-          {isAdmin && member.status === 'active' && (
+          {isAdmin && member.status === 'active' && !isSystemAssistantMember(member) && (
             <Button
               variant="ghost"
               size="sm"

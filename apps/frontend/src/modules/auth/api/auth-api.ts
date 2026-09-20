@@ -1,9 +1,14 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
+export type LoginRequest = RequestBodyOf<'AuthController_login'>;
+export type RegisterRequest = RequestBodyOf<'AuthController_register'>;
+export type UpdateProfileRequest = RequestBodyOf<'AuthController_updateProfile'>;
+export type ChangePasswordRequest = RequestBodyOf<'AuthController_changePassword'>;
 
 export interface LoginResponse {
   accessToken: string;
@@ -32,25 +37,6 @@ export interface CurrentUserResponse {
     projectId?: string;
     role: string;
   }>;
-}
-
-export interface UpdateProfileRequest {
-  displayName?: string;
-  email?: string;
-  avatarUrl?: string;
-  timezone?: string;
-}
-
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  displayName?: string;
-  inviteToken?: string;
 }
 
 export interface InvitePreview {

@@ -48,17 +48,6 @@ export function LanguageSwitcher({
     onChange?.(newLocale as Locale);
   };
 
-  const getDisplayText = (locale: Locale) => {
-    const parts: string[] = [];
-    if (showFlag) {
-      parts.push(LOCALE_FLAGS[locale]);
-    }
-    if (showLabel) {
-      parts.push(LOCALE_LABELS[locale]);
-    }
-    return parts.join(' ');
-  };
-
   if (compact) {
     return (
       <Select value={currentLocale} onValueChange={handleValueChange}>

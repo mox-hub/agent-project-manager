@@ -1,8 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 import type {
   Member,
   MemberCard,
   Team,
+  TeamMember,
   TaskAssignee,
   TaskWatcher,
   DocumentAuthor,
@@ -11,6 +13,11 @@ import type {
   Mention,
 } from '../types';
 
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
+
 // ========== Teams ==========
 
 export async function listTeams(params?: { status?: string; q?: string; limit?: number; offset?: number }) {
@@ -18,12 +25,24 @@ export async function listTeams(params?: { status?: string; q?: string; limit?: 
   return res;
 }
 
+/** getTeam 聚合响应：服务端返回 Team + 关联数组 + 计数（契约 DTO 对齐前维持手写口径） */
+type TeamDetail = Team & {
+  members: TeamMember[];
+  projects: Array<{
+    id: string;
+    projectId: string;
+    createdAt: string;
+    project?: { id: string; name: string; color?: string | null } | null;
+  }>;
+  invites: unknown[];
+};
+
 export async function getTeam(id: string) {
-  const res = await api.get<Team & { members: any[]; projects: any[]; invites: any[] }>(`/teams/${id}`);
+  const res = await api.get<TeamDetail>(`/teams/${id}`);
   return res;
 }
 
-export async function createTeam(data: { name: string; slug: string; description?: string; avatarUrl?: string; color?: string }) {
+export async function createTeam(data: RequestBodyOf<'TeamController_create'>) {
   const res = await api.post<Team>('/teams', data);
   return res;
 }
@@ -58,7 +77,7 @@ export async function listTeamMembers(teamId: string) {
   return res;
 }
 
-export async function bindTeamProject(teamId: string, data: { projectId: string; role?: string }) {
+export async function bindTeamProject(teamId: string, data: RequestBodyOf<'TeamController_bindProject'>) {
   const res = await api.post(`/teams/${teamId}/projects`, data);
   return res;
 }
@@ -160,7 +179,7 @@ export async function getMemberToolGrants(memberId: string): Promise<MemberToolG
 
 export async function setMemberToolGrants(
   memberId: string,
-  items: Array<{ scope: MemberToolGrantScope; refKey: string; granted: boolean }>,
+  items: RequestBodyOf<'MemberController_setToolGrants'>['items'],
 ) {
   const res = await api.put<MemberToolGrant[]>(`/members/${memberId}/tool-grants`, { items });
   return res;
@@ -334,43 +353,43 @@ export async function unbindMemberProject(memberId: string, projectId: string) {
 
 // ========== Task Assignees ==========
 
-export async function listTaskAssignees(taskId: string): Promise<TaskAssignee[]> {
-  const res = await api.get<TaskAssignee[]>(`/task-assignees/task/${taskId}`);
+export async function listTaskAssignees(issueId: string): Promise<TaskAssignee[]> {
+  const res = await api.get<TaskAssignee[]>(`/issue-assignees/issue/${issueId}`);
   return res;
 }
 
-export async function addTaskAssignee(data: { taskId: string; memberId: string; role?: string }) {
-  const res = await api.post<TaskAssignee>('/task-assignees', data);
+export async function addTaskAssignee(data: RequestBodyOf<'IssueAssigneeController_add'>) {
+  const res = await api.post<TaskAssignee>('/issue-assignees', data);
   return res;
 }
 
-export async function bulkSetTaskAssignees(data: { taskId: string; assignees: Array<{ memberId: string; role?: string }> }) {
-  const res = await api.post('/task-assignees/bulk', data);
+export async function bulkSetTaskAssignees(data: RequestBodyOf<'IssueAssigneeController_bulk'>) {
+  const res = await api.post('/issue-assignees/bulk', data);
   return res;
 }
 
-export async function removeTaskAssignee(taskId: string, memberId: string, role: string) {
-  const res = await api.delete(`/task-assignees/task/${taskId}/member/${memberId}/role/${role}`);
+export async function removeTaskAssignee(issueId: string, memberId: string, role: string) {
+  const res = await api.delete(`/issue-assignees/issue/${issueId}/member/${memberId}/role/${role}`);
   return res;
 }
 
-export async function listTaskWatchers(taskId: string): Promise<TaskWatcher[]> {
-  const res = await api.get<TaskWatcher[]>(`/task-assignees/task/${taskId}/watchers`);
+export async function listTaskWatchers(issueId: string): Promise<TaskWatcher[]> {
+  const res = await api.get<TaskWatcher[]>(`/issue-assignees/issue/${issueId}/watchers`);
   return res;
 }
 
-export async function addTaskWatcher(data: { taskId: string; memberId: string }) {
-  const res = await api.post('/task-assignees/watchers', data);
+export async function addTaskWatcher(data: RequestBodyOf<'IssueAssigneeController_addWatcher'>) {
+  const res = await api.post('/issue-assignees/watchers', data);
   return res;
 }
 
-export async function removeTaskWatcher(taskId: string, memberId: string) {
-  const res = await api.delete(`/task-assignees/task/${taskId}/watchers/${memberId}`);
+export async function removeTaskWatcher(issueId: string, memberId: string) {
+  const res = await api.delete(`/issue-assignees/issue/${issueId}/watchers/${memberId}`);
   return res;
 }
 
 export async function getMemberLoad(memberId: string, projectId?: string) {
-  const res = await api.get(`/task-assignees/member/${memberId}/load`, { projectId });
+  const res = await api.get(`/issue-assignees/member/${memberId}/load`, { projectId });
   return res;
 }
 
@@ -381,7 +400,7 @@ export async function listDocumentAuthors(documentId: string): Promise<DocumentA
   return res;
 }
 
-export async function addDocumentAuthor(data: { documentId: string; memberId: string; role?: string }) {
+export async function addDocumentAuthor(data: RequestBodyOf<'DocumentMemberController_addAuthor'>) {
   const res = await api.post('/document-bindings/authors', data);
   return res;
 }
@@ -396,7 +415,7 @@ export async function listDocumentReviewers(documentId: string): Promise<Documen
   return res;
 }
 
-export async function addDocumentReviewer(data: { documentId: string; memberId: string; comment?: string }) {
+export async function addDocumentReviewer(data: RequestBodyOf<'DocumentMemberController_addReviewer'>) {
   const res = await api.post('/document-bindings/reviewers', data);
   return res;
 }
@@ -416,7 +435,7 @@ export async function listDocTaskLinkAssignees(linkId: string): Promise<Document
   return res;
 }
 
-export async function addDocTaskLinkAssignee(data: { documentTaskLinkId: string; memberId: string; role?: string }) {
+export async function addDocTaskLinkAssignee(data: RequestBodyOf<'DocumentMemberController_addLinkAssignee'>) {
   const res = await api.post('/document-bindings/doc-task-link/assignees', data);
   return res;
 }
@@ -436,7 +455,7 @@ export async function suggestMentions(q: string, limit = 8) {
   return res;
 }
 
-export async function parseMentions(data: { text: string; sourceType: string; sourceId: string }) {
+export async function parseMentions(data: RequestBodyOf<'MentionController_parse'>) {
   const res = await api.post('/mentions/parse', data);
   return res;
 }

@@ -12,13 +12,20 @@ import { McpConfigGenerator } from './mcp-config.generator';
 import { McpServersController } from './mcp-servers.controller';
 import { McpServersService } from './mcp-servers.service';
 import { McpClientRegistry } from './mcp-client.registry';
-import { TaskModule } from '@/modules/task/task.module';
+import { AuditModule } from '@/core/audit/audit.module';
+import { IssueModule } from '@/modules/issue/issue.module';
 import { ExecutionModule } from '@/modules/execution/execution.module';
 import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
 import { CliProviderModule } from '@/modules/cli-provider/cli-provider.module';
 
 @Module({
-  imports: [TaskModule, ExecutionModule, CliDispatchModule, CliProviderModule],
+  imports: [
+    AuditModule,
+    IssueModule,
+    ExecutionModule,
+    CliDispatchModule,
+    CliProviderModule,
+  ],
   controllers: [McpServerController, McpServersController],
   providers: [
     McpServerService,

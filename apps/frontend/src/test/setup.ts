@@ -1,13 +1,18 @@
-import { expect, afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { afterEach, beforeAll, afterAll, expect, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import * as matchers from '@testing-library/jest-dom/matchers';
+// jest-dom 的 /vitest 入口会从包自身位置向上解析 'vitest'，经 pnpm 隐藏提升目录
+// (.pnpm/node_modules/vitest) 命中另一份 vitest 安装 → worker 内出现两个 expect
+// 实例，后者初始化时覆盖 chai.Assertion.prototype 上的 rejects 等属性，
+// 导致 .rejects.toThrow 抛 TypeError (reading 'indexOf')。
+// 手动 extend(matchers) 只用 runner 的 expect；类型由 patches/vitest@5.0.0.patch
+// 把 TestingLibraryMatchers 混入 Assertion 接口提供。
+import * as jestDomMatchers from '@testing-library/jest-dom/matchers';
+expect.extend(jestDomMatchers);
 import { setupServer } from 'msw/node';
 import { allHandlers } from '@/test-utils/mock-handlers';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { resetEventClientMock } from '@/__mocks__/event-client';
 
-// Extend Vitest's expect with jest-dom matchers
-expect.extend(matchers);
 
 // jsdom 无真实布局：为 recharts 的 ResponsiveContainer 提供可测量的容器尺寸，
 // 消除 "The width(0) and height(0) of chart" 警告。

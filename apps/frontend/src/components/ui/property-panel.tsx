@@ -6,7 +6,6 @@
  * - Capsule / CapsuleSelect / DateCapsuleField (Linear 风格下拉胶囊)
  * - AutoSizeTextarea (自适应高度 textarea)
  * - PropertyRow / PropsCard (属性行 + 折叠卡片)
- * - SuggestionsCard (建议面板)
  * - MemberAvatar (成员头像)
  * - SubTaskCard (子任务输入卡片 + SmallCaps 内部组件)
  */
@@ -27,7 +26,6 @@ import {
   User as UserIcon,
   ListTodo,
   Sparkles,
-  type LucideProps,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
@@ -38,7 +36,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MemberAvatar as StandardMemberAvatar } from '@/modules/team-member/components/member-avatar';
 import { Textarea } from '@/components/ui/textarea';
 
 // ============================================================================
@@ -76,21 +74,25 @@ export const PropertyPanelIcons = {
 // MemberAvatar
 // ============================================================================
 
-export function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
-  if (avatarUrl) {
-    return (
-      <Avatar size="sm" className="shrink-0">
-        <AvatarImage src={avatarUrl} alt={name} />
-        <AvatarFallback>{name[0]?.toUpperCase() ?? '?'}</AvatarFallback>
-      </Avatar>
-    );
-  }
+export function MemberAvatar({
+  name,
+  avatarUrl,
+  size = 'sm',
+  className,
+}: {
+  name: string;
+  avatarUrl?: string | null;
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+}) {
   return (
-    <Avatar size="sm" className="shrink-0">
-      <AvatarFallback className="bg-primary/15 text-primary text-10 font-semibold">
-        {name[0]?.toUpperCase() ?? '?'}
-      </AvatarFallback>
-    </Avatar>
+    <StandardMemberAvatar
+      name={name}
+      avatarUrl={avatarUrl}
+      size={size}
+      className={className}
+      showBadge={false}
+    />
   );
 }
 
@@ -114,7 +116,7 @@ export function Capsule({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+        'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2 rounded-md border border-border/80 bg-background/60 text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border',
         active && 'bg-accent border-border text-foreground',
         className,
       )}
@@ -160,7 +162,7 @@ export function DateCapsuleField({
       formatDate={(d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
       trigger={
         <button type="button" className={cn(
-          'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+          'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2 rounded-md border border-border/80 bg-background/60 text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border',
           value && 'bg-accent border-border text-foreground',
         )}>
           <CalendarIcon className="size-3 shrink-0 opacity-70" />
@@ -221,7 +223,7 @@ export function CapsuleSelect({
         <button
           type="button"
           className={cn(
-            'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+            'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2 rounded-md border border-border/80 bg-background/60 text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border',
             active && 'bg-accent border-border text-foreground',
           )}
         >
@@ -299,16 +301,32 @@ export function PropertyRow({
   icon,
   label,
   children,
+  className,
+  labelClassName,
+  childrenClassName,
 }: {
   icon?: React.ReactNode;
   label: string;
   children: React.ReactNode;
+  /** 行根元素附加类（如 group/prop，供行内 hover 显隐动作） */
+  className?: string;
+  /** 键名附加类（如固定键列宽 w-30，默认 flex-1 弹性占满） */
+  labelClassName?: string;
+  /** 值容器附加类（默认 shrink-0 靠右，可传 min-w-0 flex-1 让值占满剩余宽度） */
+  childrenClassName?: string;
 }) {
   return (
-    <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg min-h-8 hover:bg-muted/40 transition-colors">
+    <div
+      className={cn(
+        'flex items-center gap-2 px-2 py-1.5 rounded-lg min-h-8 hover:bg-muted/40 transition-colors',
+        className,
+      )}
+    >
       {icon && <span className="text-muted-foreground shrink-0">{icon}</span>}
-      <span className="text-xs text-muted-foreground flex-1 min-w-0 truncate">{label}</span>
-      <div className="shrink-0">{children}</div>
+      <span className={cn('text-xs text-muted-foreground flex-1 min-w-0 truncate', labelClassName)}>
+        {label}
+      </span>
+      <div className={cn('shrink-0', childrenClassName)}>{children}</div>
     </div>
   );
 }
@@ -319,74 +337,30 @@ export function PropertyRow({
 
 export function PropsCard({
   title,
+  icon,
+  iconClassName,
   collapsed,
   onToggleCollapse,
   children,
 }: {
   title: string;
+  /** 标题区图标（透传 SidebarPanel） */
+  icon?: React.ReactNode;
+  /** 图标颜色类，如 "text-accent-purple" */
+  iconClassName?: string;
   collapsed: boolean;
   onToggleCollapse: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <SidebarPanel title={title} collapsed={collapsed} onToggle={onToggleCollapse}>
-      {children}
-    </SidebarPanel>
-  );
-}
-
-// ============================================================================
-// SuggestionsCard
-// ============================================================================
-
-export interface SuggestionsItem {
-  label: string;
-  icon: ComponentType<LucideProps>;
-  color: string;
-}
-
-const DEFAULT_SUGGESTIONS: SuggestionsItem[] = [
-  { label: 'High priority', icon: AlertCircleIcon, color: 'text-accent-orange' },
-  { label: 'Tag: frontend', icon: TagIcon, color: 'text-accent-blue' },
-  { label: 'Assign me', icon: UserIcon, color: 'text-accent-purple' },
-  { label: 'Today', icon: CalendarIcon, color: 'text-accent-green' },
-];
-
-export function SuggestionsCard({
-  collapsed,
-  onToggle,
-  items = DEFAULT_SUGGESTIONS,
-  title = 'Suggestions',
-}: {
-  collapsed: boolean;
-  onToggle: () => void;
-  items?: SuggestionsItem[];
-  /** 面板标题（调用方传 i18n，默认英文 Suggestions） */
-  title?: string;
-}) {
-  return (
     <SidebarPanel
       title={title}
-      icon={<Sparkles className="size-3" />}
-      iconClassName="text-accent-purple"
+      icon={icon}
+      iconClassName={iconClassName}
       collapsed={collapsed}
-      onToggle={onToggle}
+      onToggle={onToggleCollapse}
     >
-      <div className="flex flex-col gap-0.5">
-        {items.map((it) => {
-          const Icon = it.icon;
-          return (
-            <button
-              key={it.label}
-              type="button"
-              className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            >
-              <Icon className={cn('size-3.5', it.color)} />
-              <span className="flex-1 text-left">{it.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {children}
     </SidebarPanel>
   );
 }
@@ -408,7 +382,7 @@ function SmallCaps({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-full border border-border bg-transparent text-11 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+      className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-md border border-border/80 bg-background/60 text-11 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
     >
       <Icon className="size-3" />
       <span>{label}</span>
@@ -441,11 +415,11 @@ export function SubTaskCard({
 }) {
   if (!open) {
     return (
-      <div className="px-4 py-3 border-t border-border/40 bg-card/80 backdrop-blur-sm">
+      <div className="px-3 py-2 border-t border-border/40 bg-card/80 backdrop-blur-xs">
         <button
           type="button"
           onClick={onOpen}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors w-full px-1 py-1"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors w-full px-1 py-0.5"
         >
           <Plus className="size-3.5" />
           <span>Add sub-task</span>
@@ -454,9 +428,9 @@ export function SubTaskCard({
     );
   }
   return (
-    <div className="px-4 py-3 border-t border-border/40 bg-card/80 backdrop-blur-sm">
-      <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border/40 bg-muted/30">
+    <div className="px-3 py-2.5 border-t border-border/40 bg-card/80 backdrop-blur-xs">
+      <div className="rounded-lg border border-border/80 bg-muted/20 overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/40 bg-muted/30">
           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <ListTodo className="size-3.5" />
             <span>Sub-task</span>

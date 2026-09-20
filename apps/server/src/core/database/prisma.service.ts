@@ -1,6 +1,10 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { LoggerService } from '../logger/logger.service';
-import type { PrismaClient as PrismaClientType } from '@prisma/client';
 
 // IMPORTANT:
 // Prisma decides engine strategy when @prisma/client is loaded.
@@ -9,7 +13,11 @@ import type { PrismaClient as PrismaClientType } from '@prisma/client';
 process.env.PRISMA_CLIENT_ENGINE_TYPE = 'library';
 import { PrismaClient } from '@prisma/client';
 import { getCurrentWorkspaceId } from './workspace-context';
-import { resolveWorkspaceDbUrl } from './workspace-registry.util';
+import {
+  DEFAULT_WORKSPACE_ID,
+  findWorkspace,
+  resolveWorkspaceDbUrl,
+} from './workspace-registry.util';
 
 @Injectable()
 export class PrismaService
@@ -28,12 +36,20 @@ export class PrismaService
 
     this.logger.setContext('Prisma');
 
-    this.$on('query' as never, (e: any) => {
-      this.logger.debug('Prisma Query', {
-        query: e.query,
-        duration: e.duration,
+    // Prisma query 日志默认关闭：每条 SQL 都经 sanitize + JSON 序列化写入
+    // combined.log，高轮询场景下是 GC/CPU 大户。需要 SQL 观测时设
+    // PRISMA_QUERY_LOG=1 或 CONSOLE_LOG_LEVEL=debug 重新挂载。
+    const queryLogEnabled =
+      process.env.PRISMA_QUERY_LOG === '1' ||
+      process.env.CONSOLE_LOG_LEVEL === 'debug';
+    if (queryLogEnabled) {
+      this.$on('query' as never, (e: any) => {
+        this.logger.debug('Prisma Query', {
+          query: e.query,
+          duration: e.duration,
+        });
       });
-    });
+    }
 
     this.$on('error' as never, (e: any) => {
       this.logger.error('Prisma Error', e?.stack ?? String(e));
@@ -138,7 +154,11 @@ export class PrismaService
 /**
  * 工作区路由 PrismaService 工厂：
  * 返回 Proxy，按请求级 x-workspace-id（AsyncLocalStorage）把数据访问路由到
- * 对应工作区的 SQLite 库；无上下文或未注册工作区时回落默认库（DATABASE_URL）。
+ * 对应工作区的 SQLite 库；无上下文（未带头）或 'default' 走默认库（DATABASE_URL）。
+ *
+ * 安全止血（P0-7）：带了的头必须指向已注册且已初始化的工作区——
+ * 未注册 / 库文件缺失一律抛 404 WORKSPACE_NOT_FOUND，绝不静默回落默认库
+ * （旧行为会让用户以为在写 B 库，实际读写的是 default 库 → 串库/越权）。
  */
 export function createWorkspaceAwarePrismaService(
   logger: LoggerService,
@@ -148,11 +168,21 @@ export function createWorkspaceAwarePrismaService(
 
   const getClient = (): PrismaClient => {
     const wsId = getCurrentWorkspaceId();
-    if (!wsId) return base;
+    // 无头（后台任务/未带头的请求）与显式 default 恒走默认库
+    if (!wsId || wsId === DEFAULT_WORKSPACE_ID) return base;
     const url = resolveWorkspaceDbUrl(wsId);
     if (!url) {
-      logger.warn(`Workspace "${wsId}" 未注册或未初始化，回落默认工作区数据库`);
-      return base;
+      // 区分「未注册」与「已注册但库文件缺失」，两者都不允许回落默认库
+      const registered = findWorkspace(wsId) !== null;
+      logger.warn(
+        `Workspace "${wsId}" ${
+          registered ? '数据库文件缺失' : '未注册'
+        }，拒绝数据访问（WORKSPACE_NOT_FOUND）`,
+      );
+      throw new NotFoundException({
+        code: 'WORKSPACE_NOT_FOUND',
+        message: '工作区不存在或未注册',
+      });
     }
     if (url === process.env.DATABASE_URL) return base;
     let client = pool.get(url);

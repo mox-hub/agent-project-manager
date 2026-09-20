@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/toast';
 import { gitApi } from '../api/git-api';
-import type { Workspace, WorkspaceValidationResult } from '../api/git-api';
 
 export function useWorkspace(projectId: string) {
   return useQuery({

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Asia/Shanghai",
+  "schedule": ["before 6am on monday"],
+  "rangeStrategy": "bump",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "packageRules": [
+    {
+      "groupName": "eslint 系（eslint/typescript-eslint/prettier）",
+      "matchPackagePatterns": [
+        "^eslint",
+        "^typescript-eslint",
+        "^@typescript-eslint",
+        "^prettier"
+      ]
+    },
+    {
+      "groupName": "构建与测试基建（vite/vitest/turbo/playwright）",
+      "matchPackagePatterns": [
+        "^vite",
+        "^vitest",
+        "^@vitest/",
+        "^turbo",
+        "^@playwright/",
+        "dependency-cruiser",
+        "^knip"
+      ]
+    },
+    {
+      "groupName": "AI SDK 栈（大版本升级需人工盯协议变更）",
+      "matchPackagePatterns": ["^ai$", "^@ai-sdk/"],
+      "matchUpdateTypes": ["major"],
+      "labels": ["needs-human-review"]
+    }
+  ]
+}

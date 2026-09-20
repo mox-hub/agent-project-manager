@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MessageBusService, DomainEvent } from './message-bus.service';
@@ -8,13 +9,13 @@ describe('MessageBusService', () => {
   let eventEmitter: EventEmitter2;
 
   const mockLoggerService = {
-    setContext: jest.fn(),
-    debug: jest.fn(),
-    error: jest.fn(),
-    log: jest.fn(),
-    warn: jest.fn(),
-    verbose: jest.fn(),
-    logEvent: jest.fn(),
+    setContext: vi.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    log: vi.fn(),
+    warn: vi.fn(),
+    verbose: vi.fn(),
+    logEvent: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -24,10 +25,10 @@ describe('MessageBusService', () => {
         {
           provide: EventEmitter2,
           useValue: {
-            emit: jest.fn(),
-            emitAsync: jest.fn(),
-            on: jest.fn(),
-            off: jest.fn(),
+            emit: vi.fn(),
+            emitAsync: vi.fn(),
+            on: vi.fn(),
+            off: vi.fn(),
           },
         },
         {
@@ -42,7 +43,7 @@ describe('MessageBusService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -119,7 +120,7 @@ describe('MessageBusService', () => {
         payload: { async: true },
         occurredAt: new Date(),
       };
-      (eventEmitter.emitAsync as jest.Mock).mockResolvedValue(undefined);
+      (eventEmitter.emitAsync as Mock).mockResolvedValue(undefined);
 
       await service.publishAsync(event);
 
@@ -136,7 +137,7 @@ describe('MessageBusService', () => {
 
   describe('subscribe', () => {
     it('should subscribe to event', () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const unsubscribe = service.subscribe('test.event', handler);
 
       expect(eventEmitter.on).toHaveBeenCalledWith(
@@ -147,10 +148,10 @@ describe('MessageBusService', () => {
     });
 
     it('should call handler when event is published', async () => {
-      const handler = jest.fn().mockResolvedValue(undefined);
+      const handler = vi.fn().mockResolvedValue(undefined);
       let eventWrapper: any;
 
-      (eventEmitter.on as jest.Mock).mockImplementation((event, wrapper) => {
+      (eventEmitter.on as Mock).mockImplementation((event, wrapper) => {
         eventWrapper = wrapper;
       });
 
@@ -171,10 +172,10 @@ describe('MessageBusService', () => {
     });
 
     it('should handle errors in event handler', async () => {
-      const handler = jest.fn().mockRejectedValue(new Error('Handler error'));
+      const handler = vi.fn().mockRejectedValue(new Error('Handler error'));
       let eventWrapper: any;
 
-      (eventEmitter.on as jest.Mock).mockImplementation((event, wrapper) => {
+      (eventEmitter.on as Mock).mockImplementation((event, wrapper) => {
         eventWrapper = wrapper;
       });
 
@@ -200,7 +201,7 @@ describe('MessageBusService', () => {
     });
 
     it('should unsubscribe from event', () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const unsubscribe = service.subscribe('test.event', handler);
 
       unsubscribe();
@@ -211,7 +212,7 @@ describe('MessageBusService', () => {
 
   describe('onModuleDestroy', () => {
     it('should clear subscriptions on destroy', () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       service.subscribe('test.event', handler);
 
       service.onModuleDestroy();

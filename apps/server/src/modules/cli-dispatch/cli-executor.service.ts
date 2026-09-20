@@ -7,12 +7,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { spawn, ChildProcess } from 'child_process';
 import * as readline from 'readline';
 import { CliProviderRegistry } from './cli-provider.registry';
+import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
 import { ApprovalService } from '@/modules/execution/approval.service';
 import {
-  CliAdapter,
   CliExecutionInput,
+  CLI_ADAPTER_CAPABILITIES,
   StreamEmitter,
   ExecutionStepUpdate,
   ProviderId,
@@ -21,7 +22,7 @@ import {
 export interface ExecutionContext {
   executionRunId: string;
   projectId: string;
-  taskId?: string;
+  issueId?: string;
   providerId: ProviderId;
   conversationId?: string;
   userId?: string;
@@ -45,6 +46,7 @@ export class CliExecutorService {
     private readonly messageBus: MessageBusService,
     private readonly executionService: ExecutionService,
     private readonly approvalService: ApprovalService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async execute(
@@ -71,8 +73,22 @@ export class CliExecutorService {
     const args: string[] = [...built.args];
     let env = built.env;
 
-    // Apply DB overrides (commandPath / model / env / allowedTools)
+    // P1-22a：治理语义能力位——请求携带了 adapter 不支持的选项时显式告警，不再静默忽略
+    const capabilities = CLI_ADAPTER_CAPABILITIES[context.providerId];
     const override = this.registry.getOverrideConfig(context.providerId);
+    const unsupportedOptions: string[] = [];
+    if (input.allowedTools?.length && !capabilities.allowedTools) {
+      unsupportedOptions.push(
+        `allowedTools（${input.allowedTools.length} 项，来自派发请求）`,
+      );
+    }
+    if (override?.allowedTools?.length && !capabilities.allowedTools) {
+      unsupportedOptions.push(
+        `allowedTools（${override.allowedTools.length} 项，来自 provider 配置）`,
+      );
+    }
+
+    // Apply DB overrides (commandPath / model / env / allowedTools)
     if (override) {
       if (override.commandPath) {
         cmd = override.commandPath;
@@ -80,10 +96,14 @@ export class CliExecutorService {
       if (override.env) {
         env = { ...env, ...override.env };
       }
-      if (override.allowedTools && override.allowedTools.length > 0) {
+      if (
+        override.allowedTools &&
+        override.allowedTools.length > 0 &&
+        capabilities.allowedTools
+      ) {
         // Inject --allowedTools / --allow based on adapter contract
         // Claude Code uses comma-joined flag; Codex uses comma-joined --allow
-        // For zcode, this is a no-op fallback (no flag known yet)
+        // 能力位不支持的家（zcode/opencode）不注入：未知 flag 会污染 positional 参数或被 CLI 拒绝，改为显式告警
         const joiner = context.providerId === 'codex' ? ',' : ',';
         const flagName =
           context.providerId === 'codex' ? '--allow' : '--allowedTools';
@@ -110,6 +130,31 @@ export class CliExecutorService {
 
     // Start execution
     await this.executionService.startExecution(executionRunId);
+
+    // P1-22a：能力告警落执行时间线（不阻断执行；跟随 addExecutionStep 既有形态）
+    if (unsupportedOptions.length > 0) {
+      const detail = {
+        providerId: context.providerId,
+        unsupportedOptions,
+        hint: '该 CLI provider 能力位不支持以上选项，执行时已忽略',
+      };
+      this.logger.warn(
+        `[capability] ${context.providerId} 不支持: ${unsupportedOptions.join('、')}（execution=${executionRunId}）`,
+      );
+      try {
+        await this.executionService.addExecutionStep(executionRunId, {
+          stepType: 'observation',
+          name: 'capability_warning',
+          sequence: 0,
+          input: detail,
+          status: 'completed',
+        });
+      } catch (warnError) {
+        this.logger.warn(
+          `[capability] 告警时间线写入失败（不阻断执行）: ${warnError}`,
+        );
+      }
+    }
 
     // Create stream emitter
     const emitter: StreamEmitter = this.createEmitter(context, options);
@@ -140,6 +185,29 @@ export class CliExecutorService {
     let stderr = '';
     let currentStepSequence = 0;
 
+    // 流日志分块缓冲：周期性把 stdout/stderr 落 SystemEvent（执行记录弹窗「原始日志」）
+    const pendingOut: string[] = [];
+    const pendingErr: string[] = [];
+    const flushStreamLogs = async () => {
+      const out = pendingOut.splice(0).join('');
+      const err = pendingErr.splice(0).join('');
+      if (out) {
+        await this.executionService.appendExecutionStreamLog(
+          executionRunId,
+          out,
+          'stdout',
+        );
+      }
+      if (err) {
+        await this.executionService.appendExecutionStreamLog(
+          executionRunId,
+          err,
+          'stderr',
+        );
+      }
+    };
+    const logTimer = setInterval(() => void flushStreamLogs(), 2000);
+
     // Create readline interface for stdout
     const rl = readline.createInterface({
       input: proc.stdout!,
@@ -149,6 +217,7 @@ export class CliExecutorService {
     // Handle stdout stream
     rl.on('line', (line) => {
       stdout += line + '\n';
+      pendingOut.push(line + '\n');
       adapter.parseStream(line, {
         ...emitter,
         step: (step) => {
@@ -162,14 +231,18 @@ export class CliExecutorService {
 
     // Handle stderr
     proc.stderr?.on('data', (data) => {
-      stderr += data.toString();
-      this.logger.warn(`CLI stderr: ${data.toString().trim()}`);
+      const text = data.toString();
+      stderr += text;
+      pendingErr.push(text);
+      this.logger.warn(`CLI stderr: ${text.trim()}`);
     });
 
     // Handle process exit
     return new Promise((resolve) => {
       proc.on('close', async (code) => {
         this.activeProcesses.delete(executionRunId);
+        clearInterval(logTimer);
+        await flushStreamLogs();
 
         this.logger.log(`CLI process exited with code ${code}`);
 
@@ -206,7 +279,7 @@ export class CliExecutorService {
         this.messageBus.publish('execution.completed', {
           executionRunId,
           projectId: context.projectId,
-          taskId: context.taskId,
+          issueId: context.issueId,
           status: result.status,
           providerId: context.providerId,
         });
@@ -216,6 +289,8 @@ export class CliExecutorService {
 
       proc.on('error', async (err) => {
         this.activeProcesses.delete(executionRunId);
+        clearInterval(logTimer);
+        await flushStreamLogs();
         this.logger.error(`CLI process error: ${err.message}`);
 
         await this.executionService.failExecution(executionRunId, {
@@ -289,14 +364,31 @@ export class CliExecutorService {
   ): StreamEmitter {
     const { executionRunId, conversationId } = context;
 
+    // 兜底改造批 4：ai.stream 需带 userId 才能被网关定向推送（此前被丢弃，
+    // 进程内执行路径前端看不到实时输出）。惰性解析一次 run 属主并缓存。
+    let ownerIdPromise: Promise<string | null> | null = null;
+    const resolveOwnerId = () => {
+      ownerIdPromise ??= this.prisma.execution
+        .findUnique({
+          where: { id: executionRunId },
+          select: { createdBy: true },
+        })
+        .then((r) => r?.createdBy ?? null)
+        .catch(() => null);
+      return ownerIdPromise;
+    };
+
     return {
       token: (delta: string) => {
         // Publish token stream
-        this.messageBus.publish('ai.stream', {
-          conversationId,
-          executionRunId,
-          token: delta,
-          done: false,
+        void resolveOwnerId().then((ownerId) => {
+          this.messageBus.publish('ai.stream', {
+            conversationId,
+            executionRunId,
+            userId: ownerId ?? undefined,
+            token: delta,
+            done: false,
+          });
         });
         options.onToken?.(delta);
       },
@@ -308,7 +400,7 @@ export class CliExecutorService {
         const approval = await this.approvalService.createApprovalRequest({
           executionRunId,
           projectId: context.projectId,
-          taskId: context.taskId,
+          issueId: context.issueId,
           requestedAction: req.requestedAction,
           actionType: req.actionType,
           riskLevel: req.riskLevel,
@@ -333,11 +425,6 @@ export class CliExecutorService {
     options: ExecuteOptions,
   ) {
     try {
-      // Add or update step in execution
-      const existingSteps = await this.executionService.getExecutionArtifacts(
-        context.executionRunId,
-      );
-
       // Create new step
       await this.executionService.addExecutionStep(context.executionRunId, {
         stepType: step.stepType,

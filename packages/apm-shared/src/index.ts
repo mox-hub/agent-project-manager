@@ -3,11 +3,15 @@
  */
 
 export * from './errors';
+export * from './apm-ref';
 export * from './config/store';
 export * from './runtime/protocol';
+export * from './events/domain-events';
 export * from './http/apm-client';
+export * from './http/envelope';
 export * from './cli/adapters/interface';
 export * from './cli/adapters/claude-code';
 export * from './cli/adapters/codex';
 export * from './cli/adapters/zcode';
+export * from './cli/adapters/opencode';
 export * from './cli/process-runner';

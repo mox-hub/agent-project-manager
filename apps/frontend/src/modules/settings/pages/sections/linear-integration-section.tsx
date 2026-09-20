@@ -76,7 +76,7 @@ export function LinearIntegrationSection() {
   };
 
   return (
-    <PageShell>
+    <PageShell variant="standard">
       <SubPageToolbar
         aiId="integration.linear-detail"
         onBack={() => navigate('/app/settings/integrations')}

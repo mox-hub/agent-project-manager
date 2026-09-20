@@ -155,22 +155,31 @@ export class IntegrationService {
     }));
   }
 
-  async getIntegrationConfigById(id: string, userId: string) {
+  /**
+   * 集成配置访问校验的**单一实现**（集成接入规范 v0 §2.3，收敛 B5 三处重复）：
+   * - 配置不存在 → NotFoundException
+   * - project scope 且项目不存在/无成员资格 → NotFoundException / ForbiddenException
+   * - global scope → 对所有已认证用户可见（既定语义：global 配置为 workspace 级共享）
+   * github/linear controller 均应调用本方法，禁止各自实现访问校验。
+   * @returns 校验通过的 IntegrationConfig（供调用方复用，避免二次查询）
+   */
+  async assertIntegrationAccess(
+    integrationId: string,
+    userId: string,
+  ): Promise<any> {
     const config = await this.prisma.integrationConfig.findUnique({
-      where: { id },
+      where: { id: integrationId },
     });
-
     if (!config) {
-      throw new NotFoundException('Integration config not found');
+      throw new NotFoundException(`Integration ${integrationId} not found`);
     }
-
     if (config.scope === 'project' && config.projectId) {
       const project = await this.prisma.project.findUnique({
         where: { id: config.projectId },
         include: { members: true },
       });
       if (!project) {
-        throw new NotFoundException('Project not found');
+        throw new NotFoundException(`Integration ${integrationId} not found`);
       }
       const isMember = project.members.some((m) => m.userId === userId);
       if (!isMember) {
@@ -179,7 +188,12 @@ export class IntegrationService {
         );
       }
     }
+    // global scope：无额外校验（workspace 级共享，既定语义）
+    return config;
+  }
 
+  async getIntegrationConfigById(id: string, userId: string) {
+    const config = await this.assertIntegrationAccess(id, userId);
     return {
       ...config,
       configJson: undefined,
@@ -190,27 +204,7 @@ export class IntegrationService {
     id: string,
     userId: string,
   ): Promise<T> {
-    const config = await this.prisma.integrationConfig.findUnique({
-      where: { id },
-    });
-    if (!config) {
-      throw new NotFoundException('Integration config not found');
-    }
-    if (config.scope === 'project' && config.projectId) {
-      const project = await this.prisma.project.findUnique({
-        where: { id: config.projectId },
-        include: { members: true },
-      });
-      if (!project) {
-        throw new NotFoundException('Project not found');
-      }
-      const isMember = project.members.some((m) => m.userId === userId);
-      if (!isMember) {
-        throw new ForbiddenException(
-          'You do not have access to this integration',
-        );
-      }
-    }
+    const config = await this.assertIntegrationAccess(id, userId);
     return this.decryptConfig<T>(config.configJson);
   }
 
@@ -219,29 +213,7 @@ export class IntegrationService {
     dto: UpdateIntegrationConfigDto,
     userId: string,
   ) {
-    const existing = await this.prisma.integrationConfig.findUnique({
-      where: { id },
-    });
-
-    if (!existing) {
-      throw new NotFoundException('Integration config not found');
-    }
-
-    if (existing.scope === 'project' && existing.projectId) {
-      const project = await this.prisma.project.findUnique({
-        where: { id: existing.projectId },
-        include: { members: true },
-      });
-      if (!project) {
-        throw new NotFoundException('Project not found');
-      }
-      const isMember = project.members.some((m) => m.userId === userId);
-      if (!isMember) {
-        throw new ForbiddenException(
-          'You do not have access to this integration',
-        );
-      }
-    }
+    await this.assertIntegrationAccess(id, userId);
 
     if (dto.provider && !ALLOWED_PROVIDERS.has(dto.provider)) {
       throw new BadRequestException(
@@ -279,29 +251,7 @@ export class IntegrationService {
   }
 
   async deleteIntegrationConfig(id: string, userId: string) {
-    const existing = await this.prisma.integrationConfig.findUnique({
-      where: { id },
-    });
-
-    if (!existing) {
-      throw new NotFoundException('Integration config not found');
-    }
-
-    if (existing.scope === 'project' && existing.projectId) {
-      const project = await this.prisma.project.findUnique({
-        where: { id: existing.projectId },
-        include: { members: true },
-      });
-      if (!project) {
-        throw new NotFoundException('Project not found');
-      }
-      const isMember = project.members.some((m) => m.userId === userId);
-      if (!isMember) {
-        throw new ForbiddenException(
-          'You do not have access to this integration',
-        );
-      }
-    }
+    const existing = await this.assertIntegrationAccess(id, userId);
 
     await this.prisma.integrationConfig.delete({
       where: { id },
@@ -343,7 +293,7 @@ export class IntegrationService {
         where: { id: existing.id },
         data: {
           projectId: dto.projectId,
-          taskId: dto.taskId,
+          issueId: dto.issueId,
           url: dto.url,
           summary: dto.summary,
           status: dto.status,
@@ -355,7 +305,7 @@ export class IntegrationService {
         id: updated.id,
         provider: updated.provider,
         externalId: updated.externalId,
-        taskId: updated.taskId,
+        issueId: updated.issueId,
       });
 
       return updated;
@@ -364,7 +314,7 @@ export class IntegrationService {
     const link = await this.prisma.externalIssueLink.create({
       data: {
         projectId: dto.projectId,
-        taskId: dto.taskId,
+        issueId: dto.issueId,
         provider: dto.provider,
         externalId: dto.externalId,
         url: dto.url,
@@ -378,7 +328,7 @@ export class IntegrationService {
       id: link.id,
       provider: link.provider,
       externalId: link.externalId,
-      taskId: link.taskId,
+      issueId: link.issueId,
     });
 
     return link;
@@ -402,8 +352,8 @@ export class IntegrationService {
       }
     }
 
-    if (query.taskId) {
-      where.taskId = query.taskId;
+    if (query.issueId) {
+      where.issueId = query.issueId;
     }
 
     if (query.provider) {

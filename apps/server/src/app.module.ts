@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from './core/config/config.module';
@@ -15,8 +15,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
 import { ProjectModule } from './modules/project/project.module';
-import { TaskModule } from './modules/task/task.module';
-import { TaskTemplateModule } from './modules/task-template/task-template.module';
+import { IssueModule } from './modules/issue/issue.module';
+import { IssueTypeModule } from './modules/issue-type/issue-type.module';
+import { IssueTemplateModule } from './modules/issue-template/issue-template.module';
 import { IterationModule } from './modules/iteration/iteration.module';
 import { UserModule } from './modules/user/user.module';
 import { TeamModule } from './modules/team/team.module';
@@ -24,8 +25,10 @@ import { MailModule } from './modules/mail/mail.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
+import { WorkflowModule } from './modules/workflow/workflow.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { GitModule } from './modules/git/git.module';
 // Terminal模块已废弃，功能并入Runtime模块
 import { ConfigModule as AppConfigModule } from './modules/config/config.module';
@@ -43,6 +46,16 @@ import { McpServerModule } from './modules/mcp-server/mcp-server.module';
 import { CliProviderModule } from './modules/cli-provider/cli-provider.module';
 import { SkillsModule } from './modules/skills/skills.module';
 import { ProjectRoleModule } from './modules/role/project-role.module';
+import { DecisionModule } from './modules/decision/decision.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { SearchModule } from './modules/search/search.module';
+import { MemoryModule } from './modules/memory/memory.module';
+import { CollaborationModule } from './modules/collaboration/collaboration.module';
+import { ProfileModule } from './modules/profile/profile.module';
+import { PlaybookModule } from './modules/playbook/playbook.module';
+import { OfficeModule } from './modules/office/office.module';
+import { ContractModule } from './modules/contract/contract.module';
+import { ReleaseModule } from './modules/release/release.module';
 
 // Common infrastructure
 import {
@@ -54,9 +67,12 @@ import {
   CsrfConfig,
 } from './common';
 import { throttlerConfig } from './common/throttler/throttler.config';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    // 兜底改造批 2：执行悬挂对账 cron（ExecutionReconcileService @Interval）
+    ScheduleModule.forRoot(),
     ConfigModule,
     CryptoModule,
     LoggerModule,
@@ -70,8 +86,9 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     ActivityModule,
     MetadataModule,
     ProjectModule,
-    TaskModule,
-    TaskTemplateModule,
+    IssueModule,
+    IssueTypeModule,
+    IssueTemplateModule,
     IterationModule,
     UserModule,
     TeamModule,
@@ -79,8 +96,10 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     AdminModule,
     WorkspaceModule,
     AiHubModule,
+    WorkflowModule,
     IntegrationModule,
     NotificationModule,
+    SubscriptionModule,
     GitModule,
     // TerminalModule 已废弃，功能并入Runtime模块
     AppConfigModule,
@@ -98,6 +117,16 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     CliProviderModule,
     SkillsModule,
     ProjectRoleModule,
+    DecisionModule,
+    DashboardModule,
+    SearchModule,
+    OfficeModule,
+    ContractModule,
+    ReleaseModule,
+    MemoryModule,
+    CollaborationModule,
+    ProfileModule,
+    PlaybookModule,
   ],
   controllers: [AppController],
   providers: [

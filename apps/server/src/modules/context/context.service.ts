@@ -4,12 +4,161 @@
  * 此服务已废弃，功能并入 AI Hub 模块的 ContextBuilderService。
  * 计划 Phase 2 合并到 ContextBuilderService。
  *
+ * CAP-B-06（上下文时效性）：ContextPack 的 freshness 不再恒写 'realtime'，
+ * 改为按各层数据源实际更新时间（updatedAt 等既有字段）与当前时间的差值
+ * 映射到档位；无法取得可信时间戳时诚实降级为 'unknown'，绝不谎报。
+ *
  * @deprecated 使用 AiHubModule 中的 ContextBuilderService
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
+
+/**
+ * 判龄时钟注入 token。函数类型参数若依赖 Nest 的反射类型元数据会被当作
+ * `Function` token 解析而炸掉 AppModule 启动——必须经 @Inject 显式 token +
+ * ContextModule providers 注册（见 CONTEXT_CLOCK_PROVIDER）。
+ */
+export const CONTEXT_CLOCK = 'CONTEXT_CLOCK';
+
+/**
+ * ContextPack freshness 档位词表（由新到旧：fresh > recent > stale）。
+ * `unknown` 表示该层数据源无可信时间戳（空层/源不存在/时钟不可信），
+ * 是「诚实降级」档位，语义上比 stale 更不可信。
+ *
+ * 向后兼容：旧实现恒写的 'realtime' 不再输出，读取侧经
+ * normalizeContextFreshness 统一映射为 'fresh'。
+ */
+export type ContextFreshness = 'fresh' | 'recent' | 'stale' | 'unknown';
+
+/** 可参与「最低档」排序的档位（unknown 不可排序，见 aggregateContextFreshness） */
+export type RankedContextFreshness = Exclude<ContextFreshness, 'unknown'>;
+
+/** 排序权重：值越大越旧 */
+export const CONTEXT_FRESHNESS_RANK: Record<RankedContextFreshness, number> = {
+  fresh: 0,
+  recent: 1,
+  stale: 2,
+};
+
+/** 旧词表兼容映射：恒写 'realtime' 的历史口径按 fresh 理解 */
+const LEGACY_FRESHNESS_MAP: Record<string, ContextFreshness> = {
+  realtime: 'fresh',
+};
+
+/**
+ * 归一化历史 freshness 词表：'realtime' → 'fresh'；
+ * 未知词表原样归为 unknown（不猜测、不谎报）。
+ */
+export function normalizeContextFreshness(
+  raw: string | null | undefined,
+): ContextFreshness {
+  if (!raw) return 'unknown';
+  if (raw in LEGACY_FRESHNESS_MAP) return LEGACY_FRESHNESS_MAP[raw];
+  if (raw === 'fresh' || raw === 'recent' || raw === 'stale') return raw;
+  return 'unknown';
+}
+
+/** 默认阈值（毫秒）：<1h fresh、<24h recent、更旧 stale */
+export const DEFAULT_FRESH_MAX_AGE_MS = 60 * 60 * 1000;
+export const DEFAULT_RECENT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+/** 未来时间戳的时钟漂移容差：容差内按 fresh，超出视为不可信 */
+const CLOCK_SKEW_TOLERANCE_MS = 5 * 60 * 1000;
+
+function readThresholdFromEnv(key: string, fallback: number): number {
+  const raw = process.env[key];
+  if (!raw) return fallback;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+export interface FreshnessThresholds {
+  freshMaxAgeMs?: number;
+  recentMaxAgeMs?: number;
+}
+
+function resolveThresholds(
+  overrides?: FreshnessThresholds,
+): Required<FreshnessThresholds> {
+  return {
+    freshMaxAgeMs:
+      overrides?.freshMaxAgeMs ??
+      readThresholdFromEnv(
+        'CONTEXT_FRESH_MAX_AGE_MS',
+        DEFAULT_FRESH_MAX_AGE_MS,
+      ),
+    recentMaxAgeMs:
+      overrides?.recentMaxAgeMs ??
+      readThresholdFromEnv(
+        'CONTEXT_RECENT_MAX_AGE_MS',
+        DEFAULT_RECENT_MAX_AGE_MS,
+      ),
+  };
+}
+
+/**
+ * 数据源实龄 → freshness 档位。
+ *
+ * @param lastUpdatedAt 数据源最后更新时间（updatedAt/timestamp 等既有字段）
+ * @param now 判定时钟（可注入以便测试）
+ * @param thresholds 档位阈值（可注入以便测试；缺省读
+ *   CONTEXT_FRESH_MAX_AGE_MS / CONTEXT_RECENT_MAX_AGE_MS，再缺省 1h/24h）
+ * @returns 无可信时间戳（null/undefined/非法日期/超出容差的未来时间）一律
+ *   'unknown'——诚实降级，绝不回落 'realtime'
+ */
+export function resolveFreshnessFromAge(
+  lastUpdatedAt: Date | string | null | undefined,
+  now: Date = new Date(),
+  thresholds?: FreshnessThresholds,
+): ContextFreshness {
+  if (lastUpdatedAt == null) return 'unknown';
+  const ts =
+    lastUpdatedAt instanceof Date
+      ? lastUpdatedAt.getTime()
+      : Date.parse(lastUpdatedAt);
+  if (!Number.isFinite(ts)) return 'unknown';
+
+  const { freshMaxAgeMs, recentMaxAgeMs } = resolveThresholds(thresholds);
+  const ageMs = now.getTime() - ts;
+  if (ageMs < 0) {
+    // 轻微时钟漂移按 fresh；明显未来时间戳说明时钟不可信 → unknown
+    return ageMs >= -CLOCK_SKEW_TOLERANCE_MS ? 'fresh' : 'unknown';
+  }
+  if (ageMs < freshMaxAgeMs) return 'fresh';
+  if (ageMs < recentMaxAgeMs) return 'recent';
+  return 'stale';
+}
+
+/**
+ * 各层 freshness 聚合为整体档位：取可排序层的最低档（最旧者）。
+ * 诚实降级规则：存在 unknown 层时整体上限压到 recent——有层不可信就
+ * 不得自称 fresh；全部层均 unknown（或无层）时整体为 unknown。
+ */
+export function aggregateContextFreshness(
+  layers: ContextFreshness[],
+): ContextFreshness {
+  const ranked = layers.filter(
+    (v): v is RankedContextFreshness => v !== 'unknown',
+  );
+  if (ranked.length === 0) return 'unknown';
+
+  let worst = 'fresh' as RankedContextFreshness;
+  for (const v of ranked) {
+    if (CONTEXT_FRESHNESS_RANK[v] > CONTEXT_FRESHNESS_RANK[worst]) worst = v;
+  }
+
+  const hasUnknown = ranked.length !== layers.length;
+  if (hasUnknown && worst === 'fresh') return 'recent';
+  return worst;
+}
+
+/** 层数据 + 该层新鲜度判定基准（层内数据源最新更新时间；null = 无可信时间戳） */
+interface LayerResult<T> {
+  data: T;
+  basis: Date | null;
+}
 
 @Injectable()
 export class ContextService {
@@ -18,28 +167,51 @@ export class ContextService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
+    /** 判龄时钟（可注入以便测试；生产为系统时间） */
+    @Inject(CONTEXT_CLOCK) private readonly clock: () => Date,
   ) {}
 
-  async buildContextPack(projectId: string, taskId?: string) {
+  async buildContextPack(projectId: string, issueId?: string) {
     const [system, project, session, runtime] = await Promise.all([
       this.buildSystemContext(projectId),
-      this.buildProjectContext(projectId, taskId),
-      this.buildSessionContext(projectId, taskId),
+      this.buildProjectContext(projectId, issueId),
+      this.buildSessionContext(projectId, issueId),
       this.buildRuntimeContext(projectId),
     ]);
 
-    const tokens = this.calculateTokens(system, project, session, runtime);
-    const sources = this.collectSources(runtime);
+    const checkedAt = this.clock();
+    const layerFreshness = {
+      system: resolveFreshnessFromAge(system.basis, checkedAt),
+      project: resolveFreshnessFromAge(project.basis, checkedAt),
+      session: resolveFreshnessFromAge(session.basis, checkedAt),
+      runtime: resolveFreshnessFromAge(runtime.basis, checkedAt),
+    };
+
+    const tokens = this.calculateTokens(
+      system.data,
+      project.data,
+      session.data,
+      runtime.data,
+    );
+    await this.loadDocumentSources(projectId);
+    const sources = this.collectSources(runtime.data);
 
     return {
       id: `ctx_${Date.now()}`,
       projectId,
-      taskId,
-      layers: { system, project, session, runtime },
+      issueId,
+      layers: {
+        system: system.data,
+        project: project.data,
+        session: session.data,
+        runtime: runtime.data,
+      },
+      layerFreshness,
+      freshness: aggregateContextFreshness(Object.values(layerFreshness)),
+      freshnessCheckedAt: checkedAt.toISOString(),
       tokens,
       sources,
-      createdAt: new Date().toISOString(),
-      freshness: 'realtime',
+      createdAt: checkedAt.toISOString(),
     };
   }
 
@@ -90,10 +262,14 @@ export class ContextService {
     };
   }
 
-  async scoreFileRelevance(projectId: string, taskId: string, files: string[]) {
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
-      include: { taskTags: { include: { tag: true } } },
+  async scoreFileRelevance(
+    projectId: string,
+    issueId: string,
+    files: string[],
+  ) {
+    const task = await this.prisma.issue.findUnique({
+      where: { id: issueId },
+      include: { issueTags: { include: { tag: true } } },
     });
 
     if (!task) return {};
@@ -101,7 +277,7 @@ export class ContextService {
     const taskKeywords = this.extractKeywords(
       `${task.title} ${task.description || ''}`,
     );
-    const tagNames = task.taskTags.map((tt) => tt.tag.name.toLowerCase());
+    const tagNames = task.issueTags.map((tt) => tt.tag.name.toLowerCase());
     const scores: Record<string, number> = {};
 
     for (const file of files) {
@@ -125,7 +301,9 @@ export class ContextService {
     return scores;
   }
 
-  private async buildSystemContext(projectId: string) {
+  private async buildSystemContext(
+    projectId: string,
+  ): Promise<LayerResult<unknown>> {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
       include: { members: { include: { user: true } }, aiContext: true },
@@ -133,10 +311,13 @@ export class ContextService {
 
     if (!project) {
       return {
-        projectName: '',
-        projectType: '',
-        techStack: [] as string[],
-        teamRoles: {} as Record<string, string[]>,
+        data: {
+          projectName: '',
+          projectType: '',
+          techStack: [] as string[],
+          teamRoles: {} as Record<string, string[]>,
+        },
+        basis: null,
       };
     }
 
@@ -148,16 +329,22 @@ export class ContextService {
 
     const techStack = (project.aiContext as any)?.techStack || [];
     return {
-      projectName: project.name,
-      projectType: project.type,
-      techStack,
-      teamRoles,
+      data: {
+        projectName: project.name,
+        projectType: project.type,
+        techStack,
+        teamRoles,
+      },
+      basis: project.updatedAt,
     };
   }
 
-  private async buildProjectContext(projectId: string, taskId?: string) {
+  private async buildProjectContext(
+    projectId: string,
+    _issueId?: string,
+  ): Promise<LayerResult<unknown>> {
     const [activeTasks, milestones, recentActivity] = await Promise.all([
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         where: { projectId },
         select: {
           id: true,
@@ -165,6 +352,7 @@ export class ContextService {
           status: true,
           assigneeId: true,
           priority: true,
+          updatedAt: true,
         },
         take: 20,
         orderBy: { updatedAt: 'desc' },
@@ -174,7 +362,7 @@ export class ContextService {
         select: { id: true, name: true, status: true, targetDate: true },
         take: 10,
       }),
-      this.prisma.taskActivity.findMany({
+      this.prisma.issueActivity.findMany({
         where: { projectId },
         select: { type: true, timestamp: true, summary: true },
         take: 10,
@@ -182,40 +370,55 @@ export class ContextService {
       }),
     ]);
 
+    // 层基准 = 层内各数据源最新一条记录的更新时间（查询均按时间倒序，取首条）
+    const basis = this.latestOf(
+      activeTasks[0]?.updatedAt ?? null,
+      recentActivity[0]?.timestamp ?? null,
+    );
+
     return {
-      activeTasks: activeTasks.map((t) => ({
-        id: t.id,
-        title: t.title,
-        status: t.status,
-        assignee: t.assigneeId,
-        priority: t.priority,
-      })),
-      milestones: milestones.map((m) => ({
-        id: m.id,
-        name: m.name,
-        status: m.status,
-        targetDate: m.targetDate?.toISOString(),
-      })),
-      blockers: [] as any[],
-      recentActivity: recentActivity.map((a) => ({
-        type: a.type,
-        timestamp: a.timestamp.toISOString(),
-        summary: a.summary || '',
-      })),
+      data: {
+        activeTasks: activeTasks.map((t) => ({
+          id: t.id,
+          title: t.title,
+          status: t.status,
+          assignee: t.assigneeId,
+          priority: t.priority,
+        })),
+        milestones: milestones.map((m) => ({
+          id: m.id,
+          name: m.name,
+          status: m.status,
+          targetDate: m.targetDate?.toISOString(),
+        })),
+        blockers: [] as any[],
+        recentActivity: recentActivity.map((a) => ({
+          type: a.type,
+          timestamp: a.timestamp.toISOString(),
+          summary: a.summary || '',
+        })),
+      },
+      basis,
     };
   }
 
-  private async buildSessionContext(projectId: string, taskId?: string) {
-    if (!taskId) {
+  private async buildSessionContext(
+    projectId: string,
+    issueId?: string,
+  ): Promise<LayerResult<unknown>> {
+    if (!issueId) {
       return {
-        conversationHistory: [] as any[],
-        sharedContext: {},
-        artifacts: [] as any[],
+        data: {
+          conversationHistory: [] as any[],
+          sharedContext: {},
+          artifacts: [] as any[],
+        },
+        basis: null,
       };
     }
 
     const conversations = await this.prisma.aIConversation.findMany({
-      where: { taskId },
+      where: { issueId },
       include: {
         messages: { take: 5, orderBy: { createdAt: 'desc' as const } },
       },
@@ -224,7 +427,7 @@ export class ContextService {
     });
 
     const artifacts = await this.prisma.executionArtifact.findMany({
-      where: { executionRun: { taskId } },
+      where: { executionRun: { issueId } },
       select: { id: true, artifactType: true, name: true },
       take: 10,
     });
@@ -238,26 +441,52 @@ export class ContextService {
       })),
     );
 
+    // 层基准 = 最新会话的 updatedAt 与其最新一条消息 createdAt 的较大者；
+    // 无任何会话 → 无可信时间戳
+    const basis = conversations.length
+      ? this.latestOf(
+          conversations[0].updatedAt,
+          conversations[0].messages[0]?.createdAt ?? null,
+        )
+      : null;
+
     return {
-      conversationHistory,
-      sharedContext: {},
-      artifacts: artifacts.map((a) => ({
-        id: a.id,
-        type: a.artifactType,
-        name: a.name,
-      })),
+      data: {
+        conversationHistory,
+        sharedContext: {},
+        artifacts: artifacts.map((a) => ({
+          id: a.id,
+          type: a.artifactType,
+          name: a.name,
+        })),
+      },
+      basis,
     };
   }
 
-  private async buildRuntimeContext(projectId: string) {
+  private async buildRuntimeContext(
+    projectId: string,
+  ): Promise<LayerResult<unknown>> {
     const workspace = await this.prisma.projectWorkspace.findUnique({
       where: { projectId },
     });
 
     return {
-      workspacePath: workspace?.localPath,
-      currentFiles: [] as any[],
+      data: {
+        workspacePath: workspace?.localPath,
+        currentFiles: [] as any[],
+      },
+      basis: workspace?.updatedAt ?? null,
     };
+  }
+
+  /** 取多个候选时间中最新者（null 视为缺失；全缺失返回 null） */
+  private latestOf(...candidates: Array<Date | null>): Date | null {
+    const valid = candidates.filter(
+      (c): c is Date => c instanceof Date && Number.isFinite(c.getTime()),
+    );
+    if (valid.length === 0) return null;
+    return valid.reduce((a, b) => (a.getTime() >= b.getTime() ? a : b));
   }
 
   private calculateTokens(
@@ -286,7 +515,7 @@ export class ContextService {
   private collectSources(runtime: any) {
     return {
       databases: [] as any[],
-      documents: [] as any[],
+      documents: this.cachedDocuments,
       files: (runtime.currentFiles || []).map((f: any) => ({
         type: 'file',
         id: f.path,
@@ -297,10 +526,41 @@ export class ContextService {
     };
   }
 
+  /**
+   * 文档取数（契约与文档知识层 v2 纪要 §9）：catalog 摘要形态填充，
+   * 消灭历史空壳。注意：本服务已整体 deprecated，dispatch 管线的
+   * docs provider 正式接入点在 ai-hub ContextBuilderService.buildContext
+   * 的 projectKnowledge 段（含 digest 命中），此处仅为兼容性兜底。
+   */
+  private cachedDocuments: any[] = [];
+  private async loadDocumentSources(projectId: string): Promise<void> {
+    const docs = await this.prisma.document.findMany({
+      where: { projectId, isDeleted: false },
+      select: {
+        id: true,
+        title: true,
+        docRole: true,
+        status: true,
+        updatedAt: true,
+      },
+      take: 50,
+      orderBy: { updatedAt: 'desc' },
+    });
+    this.cachedDocuments = docs.map((d) => ({
+      type: 'document',
+      id: d.id,
+      name: d.title,
+      role: d.docRole,
+      status: d.status,
+      relevance: d.status === 'published' ? 0.9 : 0.6,
+      lastAccessed: d.updatedAt.toISOString(),
+    }));
+  }
+
   private async discoverAvailableSources(projectId: string) {
     const sources: any[] = [];
 
-    const tasks = await this.prisma.task.findMany({
+    const tasks = await this.prisma.issue.findMany({
       where: { projectId },
       select: { id: true, title: true, updatedAt: true },
       take: 50,

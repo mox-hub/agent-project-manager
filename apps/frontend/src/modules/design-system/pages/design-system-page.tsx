@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import {
   Activity,
   AlertCircle,
@@ -34,27 +35,33 @@ import {
   FlaskConical,
   FolderKanban,
   GitBranch,
+  GripVertical,
+  Inbox,
+  GitPullRequest,
+  GitCommit,
   Home,
   Info,
   Kanban,
   Layers,
-  LayoutDashboard,
   LayoutGrid,
   List,
-  ListTree,
   Loader,
   Loader2,
   Mail,
+  MessagesSquare,
+  Milestone,
   Minus,
   MoreHorizontal,
   Palette,
   Plus,
   RefreshCw,
+  Rocket,
   Search,
   Settings,
   Share2,
   Sparkles,
   Star,
+  SunMoon,
   Tag,
   Target,
   Trash2,
@@ -66,8 +73,23 @@ import {
   XCircle,
   Zap,
   CircleCheck,
+  ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandCollection,
+  CommandEmpty,
+  CommandFooter,
+  CommandGroup,
+  CommandGroupLabel,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandPanel,
+  CommandShortcut,
+} from '@/components/ui/command'
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -80,6 +102,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Slider } from '@/components/ui/slider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field'
+import { ColorPicker } from '@/components/ui/color-picker'
+import Avvvatars from 'avvvatars-react'
+import NiceAvatar, { genConfig } from 'react-nice-avatar'
+import { MemberAvatar } from '@/modules/team-member/components/member-avatar'
 import { TrustLevelBadge } from '@/modules/team-member/components/trust-level-badge'
 import { MentionTextarea } from '@/modules/team-member/components/mention-textarea'
 import { MentionRenderer } from '@/modules/team-member/components/mention-renderer'
@@ -145,10 +171,11 @@ import {
 } from '@/components/ui/combobox'
 import {
   HoverCard,
+  HoverCardArrow,
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
-import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger'
+import { PreviewFooterMeta, PreviewRow, PreviewSection } from '@/shared/route-preview/previews/preview-fields'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -163,6 +190,22 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { Spinner } from '@/components/ui/spinner'
+import {
+  Stepper,
+  StepperDescription,
+  StepperIndicator,
+  StepperItem,
+  StepperNav,
+  StepperSeparator,
+  StepperTitle,
+  StepperTrigger,
+} from '@/components/ui/stepper'
+import {
+  Sortable,
+  SortableItem,
+  SortableItemHandle,
+} from '@/components/ui/sortable'
+import { IconStack } from '@/components/ui/icon-stack'
 import { StatusPill } from '@/components/ui/status-pill'
 import { StatusIconFrame } from '@/shared/status/status-icon-frame'
 import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals'
@@ -209,6 +252,12 @@ import { PageHeader } from '@/components/ui/page-header'
 import { PageShell } from '@/components/ui/page-shell'
 import { HeaderActionButton } from '@/components/ui/header-action-button'
 import { ToolbarRow, useToolbarViews, type ToolbarViewStyleOption } from '@/components/ui/toolbar-row'
+import {
+  FilterChipsRow,
+  FilterCascadeMenu,
+  type FilterCondition,
+  type FilterFieldDef,
+} from '@/components/ui/filter-chips'
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
 import { SectionCard } from '@/components/ui/section-card'
 import { toast } from '@/components/ui/toast'
@@ -257,14 +306,6 @@ import { AsyncState } from '@/components/ui/async-state'
 import { DataList } from '@/components/ui/data-list'
 import { PropsCard, PropertyRow } from '@/components/ui/property-panel'
 import { LoadingOverlay } from '@/components/ui/loading-overlay'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
 import { cn } from '@/lib/utils'
 import {
   Area,
@@ -283,6 +324,12 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { ThinkingStream } from '@/modules/assistant/components/thinking-stream'
+import { AgentHandoffCard } from '@/modules/office/components/agent-handoff-card'
+import { DualTrackMetricPill } from '@/shared/components/dual-track-metric-pill'
+import { IssueTypePill } from '@/shared/components/issue-type-pill'
+import { AssistantToolCard } from '@/modules/assistant/components/assistant-tool-card'
+import { DecisionCardShell } from '@/shared/decision-card/decision-card-shell'
 
 const SECTIONS = [
   { id: 'colors', label: 'Color Tokens', group: 'Tokens' },
@@ -294,6 +341,7 @@ const SECTIONS = [
   { id: 'badges', label: 'Badges', group: 'Primitives' },
   { id: 'tags', label: 'Tags / Chips', group: 'Primitives' },
   { id: 'avatars', label: 'Avatars', group: 'Primitives' },
+  { id: 'member-identity', label: 'Member Identity', group: 'Primitives' },
   { id: 'cards', label: 'Cards', group: 'Primitives' },
   { id: 'forms', label: 'Forms', group: 'Primitives' },
   { id: 'number-field', label: 'Number Field', group: 'Primitives' },
@@ -302,6 +350,9 @@ const SECTIONS = [
   { id: 'alerts', label: 'Alerts', group: 'Primitives' },
   { id: 'toast', label: 'Toast', group: 'Primitives' },
   { id: 'progress', label: 'Progress', group: 'Primitives' },
+  { id: 'stepper', label: 'Stepper', group: 'Primitives' },
+  { id: 'sortable', label: 'Sortable', group: 'Primitives' },
+  { id: 'icon-stack', label: 'Icon Stack', group: 'Primitives' },
   { id: 'meter', label: 'Meter', group: 'Primitives' },
   { id: 'tabs', label: 'Tabs', group: 'Primitives' },
   { id: 'accordion', label: 'Accordion', group: 'Primitives' },
@@ -310,6 +361,7 @@ const SECTIONS = [
   { id: 'menu', label: 'Menu (coss)', group: 'Primitives' },
   { id: 'overlays', label: 'Overlays', group: 'Primitives' },
   { id: 'popover', label: 'Popover & Combobox', group: 'Primitives' },
+  { id: 'hover-card', label: 'Hover Card', group: 'Primitives' },
   { id: 'breadcrumb', label: 'Breadcrumb', group: 'Primitives' },
   { id: 'button-group', label: 'Button Group', group: 'Primitives' },
   { id: 'toggle', label: 'Toggle & Segmented', group: 'Primitives' },
@@ -338,6 +390,7 @@ const SECTIONS = [
   { id: 'floating-dock', label: 'Floating Dock', group: 'Primitives' },
   { id: 'page-header', label: 'Page Header', group: 'App Components' },
   { id: 'toolbar', label: 'Toolbar Row', group: 'App Components' },
+  { id: 'filter-chips', label: 'Filter Chips', group: 'App Components' },
   { id: 'sub-page-toolbar', label: 'Sub Page Toolbar', group: 'App Components' },
   { id: 'task-atoms', label: 'Task Atoms', group: 'App Components' },
   { id: 'task-rows', label: 'Task Rows', group: 'App Components' },
@@ -348,9 +401,58 @@ const SECTIONS = [
   { id: 'page-layout', label: 'Page Layout', group: 'App Components' },
   { id: 'stat-cards', label: 'Stat Cards', group: 'App Components' },
   { id: 'loading-states', label: 'Loading & Empty', group: 'App Components' },
+  { id: 'assembly-primitives', label: 'Assembly Primitives', group: 'App Components' },
+  { id: 'ai-density-cards', label: 'AI High-Density Cards [AI]', group: 'AI Execution' },
 ]
 
-const SECTION_GROUPS = ['Tokens', 'Primitives', 'App Components']
+function SortableDemo() {
+  const [items, setItems] = useState(['连接仓库', '扫描考古', '校对入库', '归档完成'])
+  return (
+    <Sortable
+      value={items}
+      onValueChange={setItems}
+      getItemValue={(item) => item}
+      className="divide-y divide-border rounded-lg border border-border bg-card"
+    >
+      {items.map((item) => (
+        <SortableItem key={item} value={item} className="flex items-center gap-2 bg-card px-3 py-2">
+          <SortableItemHandle
+            render={<button type="button" aria-label="拖拽排序" />}
+            className="touch-none text-muted-foreground"
+          >
+            <GripVertical className="size-3.5" />
+          </SortableItemHandle>
+          <span className="text-sm">{item}</span>
+        </SortableItem>
+      ))}
+    </Sortable>
+  )
+}
+
+function SortableGridDemo() {
+  const [tiles, setTiles] = useState(['To Do', 'In Progress', 'In Review', 'Done', 'Blocked', 'Backlog'])
+  return (
+    <Sortable
+      value={tiles}
+      onValueChange={setTiles}
+      getItemValue={(tile) => tile}
+      strategy="grid"
+      className="grid grid-cols-3 gap-2"
+    >
+      {tiles.map((tile) => (
+        <SortableItem
+          key={tile}
+          value={tile}
+          className="rounded-md border border-border bg-card px-3 py-4 text-center text-xs font-medium"
+        >
+          {tile}
+        </SortableItem>
+      ))}
+    </Sortable>
+  )
+}
+
+const SECTION_GROUPS = ['Tokens', 'Primitives', 'App Components', 'AI Execution']
 
 /** SubPageToolbar 演示：返回 + 面包屑 + 居中页签 + 翻页器/按钮组/侧栏开关 */
 function SubPageToolbarDemo({ withPager, withSidebar }: { withPager?: boolean; withSidebar?: boolean }) {
@@ -445,6 +547,64 @@ function ToolbarRowDemo({ demoKey, styleOptions }: { demoKey: string; styleOptio
   );
 }
 
+const FILTER_DEMO_FIELDS: FilterFieldDef[] = [
+  {
+    id: 'status',
+    label: 'Status',
+    icon: Circle,
+    operators: ['is', 'isNot'],
+    options: [
+      { value: 'todo', label: 'Todo', icon: <Circle className="size-3.5 text-muted-foreground" /> },
+      { value: 'in_progress', label: 'In Progress', icon: <Loader className="size-3.5 text-accent-blue" /> },
+      { value: 'done', label: 'Done', icon: <CircleCheck className="size-3.5 text-accent-green" /> },
+    ],
+  },
+  {
+    id: 'priority',
+    label: 'Priority',
+    icon: Flag,
+    operators: ['is', 'isNot'],
+    options: [
+      { value: 'urgent', label: 'Urgent', icon: <span className="size-2.5 shrink-0 rounded-full bg-accent-red" /> },
+      { value: 'high', label: 'High', icon: <span className="size-2.5 shrink-0 rounded-full bg-accent-orange" /> },
+      { value: 'medium', label: 'Medium', icon: <span className="size-2.5 shrink-0 rounded-full bg-accent-yellow" /> },
+      { value: 'low', label: 'Low', icon: <span className="size-2.5 shrink-0 rounded-full bg-muted-foreground/40" /> },
+    ],
+  },
+]
+
+/** FilterChipsRow 演示：Linear 风格条件条（字段｜算子｜值｜× 拼接 chip + 追加 + Clear/Save） */
+function FilterChipsDemo() {
+  const [conditions, setConditions] = React.useState<FilterCondition[]>([
+    { id: 'demo-status', fieldId: 'status', operator: 'is', values: ['todo', 'in_progress'] },
+    { id: 'demo-priority', fieldId: 'priority', operator: 'isNot', values: ['low'] },
+  ])
+
+  return (
+    <div className="space-y-2">
+      <FilterChipsRow
+        fields={FILTER_DEMO_FIELDS}
+        conditions={conditions}
+        onChange={setConditions}
+        onSaveToView={() => undefined}
+        onSaveAsNewView={() => undefined}
+      />
+      <div className="flex items-center gap-3">
+        <FilterCascadeMenu
+          fields={FILTER_DEMO_FIELDS}
+          conditions={conditions}
+          onChange={setConditions}
+          badge={conditions.filter((c) => c.values.length > 0).length}
+        />
+        <span className="text-xs text-muted-foreground">漏斗按钮二级级联菜单：字段搜索 + 值子菜单直接勾选，与条件条操作同一份状态</span>
+      </div>
+      <div className="text-xs text-muted-foreground">
+        {conditions.length} condition(s) — 点字段清单追加（允许同字段多条件），Save 菜单演示保存到视图/另存为新视图
+      </div>
+    </div>
+  )
+}
+
 const COLOR_GROUPS = [
   { label: 'Base', tokens: [
     { name: '--background', tw: 'bg-background' },
@@ -523,40 +683,40 @@ type Priority = 'urgent' | 'high' | 'medium' | 'low'
 type Severity = 'critical' | 'high' | 'medium' | 'low'
 
 const STATUS_CFG: Record<TaskStatus, { label: string; Icon: React.ElementType; color: string; bg: string }> = {
-  todo: { label: 'Todo', Icon: Circle, color: 'text-slate-500', bg: 'bg-slate-100 dark:bg-slate-800' },
-  in_progress: { label: 'In Progress', Icon: Loader, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/60' },
-  in_review: { label: 'In Review', Icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/60' },
-  done: { label: 'Done', Icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/60' },
-  canceled: { label: 'Canceled', Icon: XCircle, color: 'text-slate-400', bg: 'bg-muted' },
+  todo: { label: 'Todo', Icon: Circle, color: 'text-muted-foreground', bg: 'bg-muted/50' },
+  in_progress: { label: 'In Progress', Icon: Loader, color: 'text-accent-blue', bg: 'bg-accent-blue-light' },
+  in_review: { label: 'In Review', Icon: AlertCircle, color: 'text-accent-yellow', bg: 'bg-accent-yellow-light' },
+  done: { label: 'Done', Icon: CheckCircle2, color: 'text-accent-green', bg: 'bg-accent-green-light' },
+  canceled: { label: 'Canceled', Icon: XCircle, color: 'text-muted-foreground', bg: 'bg-muted/50' },
 }
 
 const PRIORITY_CFG: Record<Priority, { label: string; Icon: React.ElementType; color: string }> = {
-  urgent: { label: 'Urgent', Icon: ChevronsUp, color: 'text-red-500' },
-  high: { label: 'High', Icon: ArrowUp, color: 'text-orange-500' },
-  medium: { label: 'Medium', Icon: Minus, color: 'text-blue-500' },
-  low: { label: 'Low', Icon: ArrowDown, color: 'text-slate-400' },
+  urgent: { label: 'Urgent', Icon: ChevronsUp, color: 'text-accent-red' },
+  high: { label: 'High', Icon: ArrowUp, color: 'text-accent-orange' },
+  medium: { label: 'Medium', Icon: Minus, color: 'text-accent-blue' },
+  low: { label: 'Low', Icon: ArrowDown, color: 'text-muted-foreground' },
 }
 
 const SEVERITY_CFG: Record<Severity, { label: string; bar: string; text: string }> = {
-  critical: { label: 'Critical', bar: 'bg-red-500', text: 'text-red-600 dark:text-red-400' },
-  high: { label: 'High', bar: 'bg-orange-500', text: 'text-orange-600 dark:text-orange-400' },
-  medium: { label: 'Medium', bar: 'bg-amber-400', text: 'text-amber-600 dark:text-amber-400' },
-  low: { label: 'Low', bar: 'bg-slate-300', text: 'text-slate-500' },
+  critical: { label: 'Critical', bar: 'bg-accent-red', text: 'text-accent-red' },
+  high: { label: 'High', bar: 'bg-accent-orange', text: 'text-accent-orange' },
+  medium: { label: 'Medium', bar: 'bg-accent-yellow', text: 'text-accent-yellow' },
+  low: { label: 'Low', bar: 'bg-muted-foreground/30', text: 'text-muted-foreground' },
 }
 
 const MILESTONE_COLORS = [
-  { bg: 'bg-blue-50 dark:bg-blue-950/50', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800' },
-  { bg: 'bg-violet-50 dark:bg-violet-950/50', text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-200 dark:border-violet-800' },
-  { bg: 'bg-emerald-50 dark:bg-emerald-950/50', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
-  { bg: 'bg-amber-50 dark:bg-amber-950/50', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
+  { bg: 'bg-accent-blue-light', text: 'text-accent-blue', border: 'border-accent-blue/20' },
+  { bg: 'bg-accent-purple-light', text: 'text-accent-purple', border: 'border-accent-purple/20' },
+  { bg: 'bg-accent-green-light', text: 'text-accent-green', border: 'border-accent-green/20' },
+  { bg: 'bg-accent-yellow-light', text: 'text-accent-yellow', border: 'border-accent-yellow/20' },
 ]
 
 const ACCEPT_STAGES: Record<string, { label: string; color: string; bg: string }> = {
-  unit: { label: 'Unit Test', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
-  internal: { label: 'Internal', color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40' },
-  dev: { label: 'Dev Team', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
-  pm: { label: 'PM', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
-  client: { label: 'Client', color: 'text-slate-600', bg: 'bg-slate-50 dark:bg-slate-800' },
+  unit: { label: 'Unit Test', color: 'text-accent-blue', bg: 'bg-accent-blue-light' },
+  internal: { label: 'Internal', color: 'text-accent-purple', bg: 'bg-accent-purple-light' },
+  dev: { label: 'Dev Team', color: 'text-accent-green', bg: 'bg-accent-green-light' },
+  pm: { label: 'PM', color: 'text-accent-yellow', bg: 'bg-accent-yellow-light' },
+  client: { label: 'Client', color: 'text-muted-foreground', bg: 'bg-muted/60' },
 }
 
 function SectionAnchor({ id, children }: { id: string; children: React.ReactNode }) {
@@ -601,6 +761,118 @@ function MarkdownEditorDemo() {
       preview="live"
       placeholder="live 分栏实时预览（宽容器）"
     />
+  )
+}
+
+/* coss p-command 演示（base-ui autocomplete 引擎，与全局面板同源实现） */
+
+type CommandDemoItem = {
+  id: string
+  label: string
+  keywords?: string[]
+  shortcut?: string
+  icon?: LucideIcon
+}
+
+const commandDemoGroups: Array<{ value: string; label: string; items: CommandDemoItem[] }> = [
+  {
+    value: 'nav',
+    label: '导航',
+    items: (
+      [
+        { entity: 'project', label: '打开项目', keywords: ['project', '项目'] },
+        { entity: 'issue', label: '打开任务', keywords: ['task', '任务'] },
+        { entity: 'workflow', label: '打开工作流', keywords: ['workflow'] },
+        { entity: 'acceptance', label: '打开验收', keywords: ['acceptance'] },
+        { entity: 'decision', label: '打开决策收件箱', keywords: ['decision'] },
+        { entity: 'repository', label: '打开仓库', keywords: ['repo'] },
+      ] as const
+    ).map(({ entity, label, keywords }) => ({
+      id: `demo-${entity}`,
+      label,
+      keywords: [...keywords],
+      icon: getEntityIcon(entity).icon,
+    })),
+  },
+  {
+    value: 'actions',
+    label: '操作',
+    items: [
+      { id: 'demo-ask-ai', label: '问主 AI', keywords: ['ai', 'assistant'], shortcut: 'Alt A', icon: MessagesSquare },
+      { id: 'demo-theme', label: '切换到深色 / 浅色模式', keywords: ['theme', 'dark', 'light'], icon: SunMoon },
+    ],
+  },
+]
+
+function CommandPaletteDemo() {
+  const [query, setQuery] = useState('')
+  // 引擎同款过滤（accent/大小写不敏感 contains + keywords），预滤掉空组避免渲染孤儿标题
+  const { contains } = useAutocompleteFilter({ sensitivity: 'base' })
+  const filterItem = useCallback((item: CommandDemoItem, q: string): boolean => {
+    if (!q.trim()) return true
+    if (contains(item.label, q)) return true
+    return (item.keywords ?? []).some((keyword) => contains(keyword, q))
+  }, [contains])
+  const trimmed = query.trim()
+  const visibleGroups = useMemo(
+    () =>
+      commandDemoGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => filterItem(item, query)),
+        }))
+        .filter((group) => group.items.length > 0),
+    [filterItem, query]
+  )
+
+  return (
+    <div className="flex justify-center">
+      <div className="w-140 overflow-hidden rounded-xl border border-border shadow-2xl bg-card">
+        <Command items={visibleGroups} filter={filterItem}>
+          <div className="relative flex items-center *:first:flex-1">
+            <CommandInput
+              placeholder="输入命令或搜索…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
+          <CommandPanel>
+            <CommandEmpty className="not-empty:py-12">
+              <p className="text-muted-foreground text-sm">
+                {trimmed ? `没有匹配「${trimmed}」的命令` : '没有匹配的命令'}
+              </p>
+            </CommandEmpty>
+            <CommandList>
+              {(group: (typeof visibleGroups)[number]) => (
+                <CommandGroup items={group.items} key={group.value}>
+                  <CommandGroupLabel>{group.label}</CommandGroupLabel>
+                  <CommandCollection>
+                    {(item: CommandDemoItem) => {
+                      const Icon = item.icon
+                      return (
+                        <CommandItem key={item.id} value={item} onClick={() => undefined}>
+                          {Icon ? <Icon className="text-muted-foreground" /> : null}
+                          <span className="flex-1">{item.label}</span>
+                          {item.shortcut ? <CommandShortcut>{item.shortcut}</CommandShortcut> : null}
+                        </CommandItem>
+                      )
+                    }}
+                  </CommandCollection>
+                </CommandGroup>
+              )}
+            </CommandList>
+          </CommandPanel>
+          <CommandFooter>
+            <div className="flex items-center gap-4">
+              <span>↑↓ 导航</span>
+              <span>↵ 选择</span>
+              <span>ESC 关闭</span>
+            </div>
+            <span className="text-10">coss p-command · base-ui autocomplete 引擎</span>
+          </CommandFooter>
+        </Command>
+      </div>
+    </div>
   )
 }
 
@@ -853,7 +1125,7 @@ function FloatingDockDemo() {
 function StatusChip({ status }: { status: TaskStatus }) {
   const cfg = STATUS_CFG[status]
   return (
-    <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0', cfg.bg)} title={cfg.label}>
+    <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0 border border-border/40', cfg.bg)} title={cfg.label}>
       <cfg.Icon className={cn('w-3.5 h-3.5', cfg.color, status === 'in_progress' && 'animate-spin')}
         style={status === 'in_progress' ? { animationDuration: '2s' } : undefined} />
     </div>
@@ -866,9 +1138,9 @@ function PriorityIcon({ priority }: { priority: Priority }) {
 }
 
 function MilestonePill({ name, idx = 0 }: { name: string; idx?: number }) {
-  const c = MILESTONE_COLORS[idx % 4]
+  const c = MILESTONE_COLORS[idx % MILESTONE_COLORS.length]
   return (
-    <span className={cn('inline-flex items-center text-11 font-medium px-2 py-0.5 rounded-full border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
+    <span className={cn('inline-flex items-center text-11 font-medium px-2 py-0.5 rounded-md border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
       {name}
     </span>
   )
@@ -876,8 +1148,8 @@ function MilestonePill({ name, idx = 0 }: { name: string; idx?: number }) {
 
 function LabelChip({ name, color }: { name: string; color: string }) {
   return (
-    <span className="inline-flex items-center text-10 px-1.5 py-0.5 rounded-sm font-medium whitespace-nowrap"
-      style={{ backgroundColor: color + '22', color }}>
+    <span className="inline-flex items-center text-10 px-1.5 py-0.5 rounded-sm font-medium whitespace-nowrap bg-muted/60 text-foreground border border-border/40"
+      style={{ color }}>
       {name}
     </span>
   )
@@ -887,7 +1159,7 @@ function ProgressRing({ done, total, size = 14 }: { done: number; total: number;
   const r = (size - 2.5) / 2
   const circ = 2 * Math.PI * r
   const ratio = total > 0 ? done / total : 0
-  const stroke = ratio === 1 ? '#10B981' : ratio > 0 ? '#3B82F6' : '#94A3B8'
+  const stroke = ratio === 1 ? 'var(--accent-green, #10B981)' : ratio > 0 ? 'var(--accent-blue, #3B82F6)' : 'var(--muted-foreground, #94A3B8)'
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 -rotate-90">
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground/20" />
@@ -899,7 +1171,7 @@ function ProgressRing({ done, total, size = 14 }: { done: number; total: number;
 
 function SubtaskBadge({ done, total }: { done: number; total: number }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border bg-muted/60 text-10 font-medium text-muted-foreground shrink-0 ml-1.5">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-border/80 bg-muted/50 text-10 font-medium text-muted-foreground shrink-0 ml-1.5 font-mono">
       <ProgressRing done={done} total={total} />
       <span>{done}/{total}</span>
     </span>
@@ -909,25 +1181,333 @@ function SubtaskBadge({ done, total }: { done: number; total: number }) {
 function AssigneeAvatar({ initials, color }: { initials?: string; color?: string }) {
   if (!initials) {
     return (
-      <div className="w-5.5 h-5.5 rounded-full bg-muted flex items-center justify-center shrink-0">
-        <User className="h-3 w-3 text-muted-foreground/40" />
+      <div className="w-5.5 h-5.5 rounded-full bg-muted/60 border border-border/40 flex items-center justify-center shrink-0">
+        <User className="h-3 w-3 text-muted-foreground/60" />
       </div>
     )
   }
   return (
-    <div className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-white text-10 font-semibold shrink-0"
-      style={{ backgroundColor: color || '#6366F1' }}>
+    <div className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-primary-foreground text-10 font-semibold shrink-0 bg-primary/80 border border-primary/20"
+      style={color ? { backgroundColor: color } : undefined}>
       {initials}
     </div>
   )
 }
 
 function AvatarPickerShowcase() {
-  const [value, setValue] = useState<string | null>(null)
+  const [value, setValue] = useState<string | null>('nice-avatar:alex')
   return (
-    <div className="space-y-2 max-w-md">
-      <AvatarPickerField value={value} onValueChange={setValue} />
-      <div className="text-10 text-muted-foreground">当前值: {value ?? '（未选择）'}</div>
+    <div className="space-y-3 max-w-xl">
+      <div className="rounded-lg border border-border/70 p-3.5 bg-muted/10 space-y-2">
+        <p className="text-xs font-medium text-foreground">双表面预设（人类同事 NiceAvatar 插画肖像 & AI 智能体 Avvvatars 算法几何）</p>
+        <AvatarPickerField value={value} onValueChange={setValue} />
+        <div className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
+          <span>当前选择路径:</span>
+          <code className="font-mono text-11 px-1.5 py-0.5 rounded bg-muted text-foreground">
+            {value ?? '（未选择）'}
+          </code>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ColorPickerShowcase() {
+  const [value, setValue] = useState<string>('#5E6AD2')
+  const [presetOnly, setPresetOnly] = useState<string>('#22c55e')
+  return (
+    <div className="space-y-3 max-w-xl">
+      <div className="rounded-lg border border-border/70 p-3.5 bg-muted/10 space-y-2">
+        <p className="text-xs font-medium text-foreground">预设色板 + react-colorful 色域 + Hex 输入（allowCustom）</p>
+        <div className="flex items-center gap-3">
+          <ColorPicker value={value} onValueChange={setValue} />
+          <span className="text-xs text-muted-foreground">当前值:</span>
+          <code className="font-mono text-11 px-1.5 py-0.5 rounded bg-muted text-foreground">
+            {value}
+          </code>
+        </div>
+      </div>
+      <div className="rounded-lg border border-border/70 p-3.5 bg-muted/10 space-y-2">
+        <p className="text-xs font-medium text-foreground">纯预设模式（allowCustom=false，标签色等受约束场景）</p>
+        <ColorPicker value={presetOnly} onValueChange={setPresetOnly} allowCustom={false} />
+      </div>
+    </div>
+  )
+}
+
+function AvatarModernizationShowcase() {
+  const [humanSeed, setHumanSeed] = useState('Alex Chen')
+  const [humanNonce, setHumanNonce] = useState(0)
+  const [agentSeed, setAgentSeed] = useState('claude-code')
+  const [avStyle, setAvStyle] = useState<'shape' | 'character'>('shape')
+  const [avShadow, setAvShadow] = useState(true)
+
+  const humanPresets = ['Alex Chen', 'Sarah Lin', 'Leo Zhang', 'David Wu', 'Emma Zhao', 'Lucas Gray']
+  const agentPresets = ['claude-code', 'codex', 'zcode', 'doc-bot', 'qa-bot', 'guardian']
+
+  // 模拟团队人类同事（react-nice-avatar）与 AI 同事（avvvatars）全景花名册
+  const humanTeam = [
+    { name: 'Alex Chen', role: '系统架构师', handle: 'alex', status: 'online' as const },
+    { name: 'Sarah Lin', role: '研发技术主管', handle: 'sarah', status: 'online' as const },
+    { name: 'Leo Zhang', role: '全栈工程师', handle: 'leo', status: 'online' as const },
+    { name: 'David Wu', role: '数据架构师', handle: 'david', status: 'offline' as const },
+    { name: 'Emma Zhao', role: '体验设计主管', handle: 'emma', status: 'online' as const },
+    { name: 'Lucas Gray', role: '交付与质保', handle: 'lucas', status: 'busy' as const },
+  ]
+
+  const agentTeam = [
+    { name: 'Claude Coder', role: '主工程智能体', handle: 'claude-code', model: 'Claude 3.7', status: 'active' as const },
+    { name: 'Codex Reviewer', role: '代码审查智能体', handle: 'codex', model: 'Codex CLI', status: 'active' as const },
+    { name: 'ZCode Daemon', role: '运行时守护', handle: 'zcode', model: 'Runtime Agent', status: 'idle' as const },
+    { name: 'Doc Architect', role: '知识库与契约', handle: 'doc-bot', model: 'Knowledge AI', status: 'active' as const },
+    { name: 'QA Gatekeeper', role: '门禁与回流', handle: 'qa-bot', model: 'Evidence Guard', status: 'active' as const },
+    { name: 'Guardian Bot', role: '安全与风险审计', handle: 'guardian', model: 'Security Agent', status: 'idle' as const },
+  ]
+
+  const effectiveHumanSeed = humanNonce > 0 ? `${humanSeed}#${humanNonce}` : humanSeed
+  const currentNiceConfig = genConfig(effectiveHumanSeed)
+
+  return (
+    <div className="space-y-4 max-w-3xl rounded-xl border border-border p-4 bg-card/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border">
+        <div>
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-accent-purple" />
+            <h3 className="text-sm font-semibold text-foreground">
+              双表面头像体系（人类同事: react-nice-avatar × AI 同事: avvvatars）
+            </h3>
+            <Badge variant="outline" className="text-10 text-accent-blue border-accent-blue/30">官方定夺</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            全面舍弃其他非标方案。人类同事采用 <code>react-nice-avatar</code> 确定性插画肖像；AI 同事采用 <code>avvvatars</code> 算法几何。纯本地 SVG 驱动，零外网依赖。
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge variant="secondary" className="text-10 text-accent-green bg-accent-green/10 border-accent-green/30">
+            双表面 100% 确定性生成
+          </Badge>
+        </div>
+      </div>
+
+      {/* 双工作台：人类肖像 vs AI 几何 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* 左栏：人类同事肖像生成器 (react-nice-avatar) */}
+        <div className="rounded-xl border border-accent-blue/30 bg-background/90 p-4 space-y-3 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <User className="size-4 text-accent-blue" />
+              <span className="text-xs font-semibold text-foreground">人类同事肖像引擎</span>
+            </div>
+            <Badge variant="secondary" className="text-10 text-accent-blue bg-accent-blue/10">react-nice-avatar</Badge>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="size-16 rounded-full overflow-hidden border-2 border-accent-blue/40 shadow-sm shrink-0">
+              <NiceAvatar style={{ width: '100%', height: '100%' }} shape="circle" {...currentNiceConfig} />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground truncate">{humanSeed}</span>
+                <button
+                  type="button"
+                  onClick={() => setHumanNonce((n) => n + 1)}
+                  className="px-2 py-0.5 rounded text-10 font-medium bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                >
+                  随机变幻
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1 text-10 font-mono text-muted-foreground">
+                <span className="px-1.5 py-0.5 rounded bg-muted/60">性别: {currentNiceConfig.sex}</span>
+                <span className="px-1.5 py-0.5 rounded bg-muted/60">发型: {currentNiceConfig.hairStyle}</span>
+                <span className="px-1.5 py-0.5 rounded bg-muted/60">服饰: {currentNiceConfig.shirtStyle}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 pt-2 border-t border-border/50">
+            <div className="flex items-center justify-between">
+              <span className="text-10 text-muted-foreground">测试 Seed / 姓名:</span>
+              <div className="flex flex-wrap gap-1">
+                {humanPresets.slice(0, 4).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => { setHumanSeed(p); setHumanNonce(0); }}
+                    className={cn(
+                      'px-1.5 py-0.5 rounded text-10 font-mono transition-colors',
+                      humanSeed === p ? 'bg-primary text-primary-foreground font-semibold' : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                    )}
+                  >
+                    {p.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Input
+              value={humanSeed}
+              onChange={(e) => { setHumanSeed(e.target.value || 'User'); setHumanNonce(0); }}
+              placeholder="输入人类成员姓名或邮箱…"
+              className="h-7 text-xs font-mono"
+            />
+          </div>
+        </div>
+
+        {/* 右栏：AI 同事算法几何生成器 (avvvatars) */}
+        <div className="rounded-xl border border-accent-purple/30 bg-background/90 p-4 space-y-3 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Bot className="size-4 text-accent-purple" />
+              <span className="text-xs font-semibold text-foreground">AI 同事几何符号引擎</span>
+            </div>
+            <Badge variant="secondary" className="text-10 text-accent-purple bg-accent-purple/10">avvvatars-react</Badge>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="size-16 rounded-full overflow-hidden border-2 border-accent-purple/40 shadow-sm shrink-0 flex items-center justify-center">
+              <Avvvatars value={agentSeed} size={64} style={avStyle} shadow={avShadow} />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground truncate">@{agentSeed}</span>
+                <div className="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
+                  <button
+                    type="button"
+                    onClick={() => setAvStyle('shape')}
+                    className={cn(
+                      'px-1.5 py-0.5 text-10 font-medium rounded transition-colors',
+                      avStyle === 'shape' ? 'bg-background text-foreground shadow-xs font-semibold' : 'text-muted-foreground'
+                    )}
+                  >
+                    Shape
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAvStyle('character')}
+                    className={cn(
+                      'px-1.5 py-0.5 text-10 font-medium rounded transition-colors',
+                      avStyle === 'character' ? 'bg-background text-foreground shadow-xs font-semibold' : 'text-muted-foreground'
+                    )}
+                  >
+                    Char
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1 text-10 font-mono text-muted-foreground">
+                <span className="px-1.5 py-0.5 rounded bg-muted/60">模式: {avStyle}</span>
+                <span className="px-1.5 py-0.5 rounded bg-muted/60">60 几何哈希</span>
+                <button
+                  type="button"
+                  onClick={() => setAvShadow(!avShadow)}
+                  className="px-1.5 py-0.5 rounded bg-muted/60 hover:bg-muted text-accent-purple"
+                >
+                  {avShadow ? '阴影: 开' : '阴影: 关'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 pt-2 border-t border-border/50">
+            <div className="flex items-center justify-between">
+              <span className="text-10 text-muted-foreground">测试智能体 Handle:</span>
+              <div className="flex flex-wrap gap-1">
+                {agentPresets.slice(0, 4).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setAgentSeed(p)}
+                    className={cn(
+                      'px-1.5 py-0.5 rounded text-10 font-mono transition-colors',
+                      agentSeed === p ? 'bg-accent-purple text-white font-semibold' : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                    )}
+                  >
+                    @{p.split('-')[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Input
+              value={agentSeed}
+              onChange={(e) => setAgentSeed(e.target.value || 'agent')}
+              placeholder="输入智能体标识…"
+              className="h-7 text-xs font-mono"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 全景团队画廊 */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <Users className="size-3.5 text-primary" />
+            全景人机协同画廊（人类同事 react-nice-avatar vs AI 同事 avvvatars）
+          </span>
+          <span className="text-10 text-muted-foreground font-mono">2 大引擎 · 12 位协同成员</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* 人类同事阵列 */}
+          <div className="rounded-xl border border-border/80 bg-background p-3 space-y-2.5">
+            <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
+              <span className="text-xs font-semibold text-accent-blue flex items-center gap-1">
+                <User className="size-3" /> 人类工程师与产品团队
+              </span>
+              <Badge variant="outline" className="text-10 text-accent-blue border-accent-blue/30">插画肖像</Badge>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {humanTeam.map((h) => (
+                <div key={h.name} className="flex flex-col items-center text-center p-2 rounded-lg bg-muted/20 border border-border/40 hover:bg-muted/40 transition-colors">
+                  <div className="relative size-11 rounded-full overflow-hidden border border-border/60 shadow-xs mb-1.5">
+                    <NiceAvatar style={{ width: '100%', height: '100%' }} shape="circle" {...genConfig(h.name)} />
+                    <span className={cn(
+                      'absolute bottom-0 right-0 size-2.5 rounded-full border border-background',
+                      h.status === 'online' ? 'bg-accent-green' : h.status === 'busy' ? 'bg-accent-yellow' : 'bg-muted-foreground'
+                    )} />
+                  </div>
+                  <span className="text-xs font-medium text-foreground truncate max-w-24">{h.name}</span>
+                  <span className="text-10 text-muted-foreground truncate max-w-24">{h.role}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* AI 同事智能体阵列 */}
+          <div className="rounded-xl border border-border/80 bg-background p-3 space-y-2.5">
+            <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
+              <span className="text-xs font-semibold text-accent-purple flex items-center gap-1">
+                <Bot className="size-3" /> AI 智能体执行面
+              </span>
+              <Badge variant="outline" className="text-10 text-accent-purple border-accent-purple/30">算法几何</Badge>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {agentTeam.map((a) => (
+                <div key={a.handle} className="flex flex-col items-center text-center p-2 rounded-lg bg-muted/20 border border-border/40 hover:bg-muted/40 transition-colors">
+                  <div className="relative size-11 rounded-full overflow-hidden border border-border/60 shadow-xs mb-1.5 flex items-center justify-center">
+                    <Avvvatars value={a.handle} size={44} style={avStyle} shadow={false} />
+                    <span className={cn(
+                      'absolute bottom-0 right-0 size-2.5 rounded-full border border-background',
+                      a.status === 'active' ? 'bg-accent-purple animate-pulse' : 'bg-muted-foreground'
+                    )} />
+                  </div>
+                  <span className="text-xs font-medium text-foreground truncate max-w-24">{a.name}</span>
+                  <span className="text-10 text-accent-purple font-mono truncate max-w-24">@{a.handle}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 架构裁决横幅 */}
+      <div className="rounded-lg border border-accent-green/30 bg-accent-green/5 p-3.5 text-xs space-y-1.5">
+        <div className="flex items-center gap-2 text-accent-green font-semibold">
+          <CheckCircle2 className="size-4" />
+          <span>架构裁决：已舍弃其余非标方案，确立人类 (react-nice-avatar) 与 AI (avvvatars) 唯一标准</span>
+        </div>
+        <p className="text-11 text-muted-foreground leading-relaxed">
+          全仓统一由 <code>MemberAvatar</code> 组件自动承接：人类成员根据名称或标识确定性生成精美人物肖像；AI 智能体自动渲染极具未来感的算法几何符号。无需配置外部图片或 CDN，在离线与 Electron 桌面端具备 100% 稳定性与极致性能。
+        </p>
+      </div>
     </div>
   )
 }
@@ -1004,6 +1584,7 @@ function AgentPill({ name, status }: { name: string; status: 'active' | 'contrib
 
 export function DesignSystemPage() {
   const [activeSection, setActiveSection] = React.useState('colors')
+  const [navSearch, setNavSearch] = React.useState('')
   const [sliderVal, setSliderVal] = React.useState(40)
   const [groupCollapsed, setGroupCollapsed] = React.useState(false)
   const [dialogOpen, setDialogOpen] = React.useState(false)
@@ -1011,60 +1592,147 @@ export function DesignSystemPage() {
   const [segValue, setSegValue] = React.useState<string>('list')
   const [ownerValue, setOwnerValue] = React.useState('')
 
+  const mainRef = React.useRef<HTMLElement | null>(null)
+  const navRef = React.useRef<HTMLElement | null>(null)
+  const isScrollingProgrammaticallyRef = React.useRef(false)
+
   const scrollTo = (id: string) => {
     setActiveSection(id)
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    isScrollingProgrammaticallyRef.current = true
+
+    const el = document.getElementById(id)
+    if (el && mainRef.current) {
+      const mainEl = mainRef.current
+      const mainRect = mainEl.getBoundingClientRect()
+      const elRect = el.getBoundingClientRect()
+      const targetTop = mainEl.scrollTop + (elRect.top - mainRect.top) - 20
+      mainEl.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: 'smooth',
+      })
+    }
+
+    window.setTimeout(() => {
+      isScrollingProgrammaticallyRef.current = false
+    }, 600)
   }
 
-  const grouped = SECTION_GROUPS.map((g) => ({
-    label: g,
-    items: SECTIONS.filter((s) => s.group === g),
-  }))
+  const filteredSections = React.useMemo(() => {
+    if (!navSearch.trim()) return SECTIONS
+    const q = navSearch.toLowerCase()
+    return SECTIONS.filter(
+      (s) =>
+        s.label.toLowerCase().includes(q) ||
+        s.id.toLowerCase().includes(q) ||
+        s.group.toLowerCase().includes(q),
+    )
+  }, [navSearch])
+
+  const grouped = React.useMemo(
+    () =>
+      SECTION_GROUPS.map((g) => ({
+        label: g,
+        items: filteredSections.filter((s) => s.group === g),
+      })).filter((g) => g.items.length > 0),
+    [filteredSections],
+  )
+
+  const handleMainScroll = (e: React.UIEvent<HTMLElement>) => {
+    if (isScrollingProgrammaticallyRef.current) return
+    const el = e.currentTarget
+    const mainTop = el.getBoundingClientRect().top
+    let found = activeSection
+    for (const s of SECTIONS) {
+      const node = document.getElementById(s.id)
+      if (node) {
+        const offset = node.getBoundingClientRect().top - mainTop
+        if (offset <= 140) {
+          found = s.id
+        }
+      }
+    }
+    if (found && found !== activeSection) {
+      setActiveSection(found)
+    }
+  }
 
   return (
-    <div className="flex h-full overflow-hidden bg-background">
+    <div className="flex h-full w-full overflow-hidden bg-background">
 
-      <aside className="w-48 shrink-0 border-r border-border overflow-y-auto">
-        <div className="px-4 py-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-foreground">Design System</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-10 font-bold bg-violet-500 text-white uppercase tracking-wide">
-              DEV
-            </span>
-          </div>
-          <p className="text-10 text-muted-foreground mt-0.5">Tokens · Components · Patterns</p>
-        </div>
-        <nav className="p-2 space-y-3">
-          {grouped.map((g) => (
-            <div key={g.label}>
-              <p className="px-2.5 pb-1 text-10 font-bold text-muted-foreground/50 uppercase tracking-widest">{g.label}</p>
-              {g.items.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => scrollTo(s.id)}
-                  className={cn(
-                    'w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-colors',
-                    activeSection === s.id
-                      ? 'bg-accent text-foreground font-medium'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/60',
-                  )}
-                >
-                  {s.label}
-                </button>
-              ))}
+      {/* 左侧独立侧边栏：单独的滚动条，不跟右边共用，顶部常驻固定 */}
+      <aside className="w-56 shrink-0 border-r border-border h-full flex flex-col bg-background/95 select-none">
+        <div className="p-3.5 border-b border-border space-y-2.5 shrink-0 bg-background">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-foreground">Design System</span>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-10 font-bold bg-violet-500 text-white uppercase tracking-wide">
+                DEV
+              </span>
             </div>
-          ))}
+          </div>
+          {/* 快速搜索框 */}
+          <div className="relative">
+            <Search className="absolute left-2 top-2 size-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={navSearch}
+              onChange={(e) => setNavSearch(e.target.value)}
+              placeholder="搜索组件或 Token…"
+              className="w-full h-7 pl-7 pr-6 text-xs rounded-md border border-border bg-muted/40 placeholder:text-muted-foreground/60 focus:bg-background focus:outline-hidden focus:border-accent-blue transition-colors"
+            />
+            {navSearch && (
+              <button
+                type="button"
+                onClick={() => setNavSearch('')}
+                className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 侧栏导航：具有独立的垂直滚动条 */}
+        <nav ref={navRef} className="flex-1 overflow-y-auto p-2 space-y-3">
+          {grouped.length === 0 ? (
+            <p className="px-2 py-4 text-xs text-muted-foreground text-center">无匹配项</p>
+          ) : (
+            grouped.map((g) => (
+              <div key={g.label}>
+                <p className="px-2.5 pb-1 text-10 font-bold text-muted-foreground/60 uppercase tracking-widest">
+                  {g.label}
+                </p>
+                {g.items.map((s) => {
+                  const isActive = activeSection === s.id
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => scrollTo(s.id)}
+                      className={cn(
+                        'w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-colors flex items-center justify-between',
+                        isActive
+                          ? 'bg-accent text-foreground font-semibold shadow-xs'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/60',
+                      )}
+                    >
+                      <span className="truncate">{s.label}</span>
+                      {isActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent-blue shrink-0 ml-1.5" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            ))
+          )}
         </nav>
       </aside>
 
-      <main className="flex-1 overflow-y-auto"
-        onScroll={(e) => {
-          const el = e.currentTarget
-          for (const s of SECTIONS) {
-            const node = document.getElementById(s.id)
-            if (node && node.offsetTop - el.scrollTop < 120) setActiveSection(s.id)
-          }
-        }}
+      {/* 右侧主视口：具有独立的垂直滚动条，滚动不影响左侧栏 */}
+      <main
+        ref={mainRef}
+        className="flex-1 h-full overflow-y-auto"
+        onScroll={handleMainScroll}
       >
         <div className="max-w-4xl mx-auto px-8 py-6 space-y-12">
 
@@ -1423,15 +2091,89 @@ export function DesignSystemPage() {
             <SectionTitle>Member Identity</SectionTitle>
             <div className="space-y-4">
               <div>
-                <SubLabel>AvatarPickerField（内置头像 + 自定义 URL）</SubLabel>
+                <SubLabel>AvatarPickerField（人类插画肖像 + AI 算法几何 + 自定义 URL）</SubLabel>
                 <AvatarPickerShowcase />
               </div>
               <div>
-                <SubLabel>TrustLevelBadge（信任等级 L0-L4）</SubLabel>
+                <SubLabel>MemberAvatar 实体头像矩阵（人类: NiceAvatar 插画 vs AI: Avvvatars 几何 · 5 级尺寸阶梯）</SubLabel>
+                <div className="space-y-3 rounded-lg border border-border/70 p-3.5 bg-muted/10 max-w-2xl">
+                  {/* 人类成员尺寸阶梯 */}
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <span className="text-xs text-muted-foreground w-24 shrink-0 font-medium">人类成员:</span>
+                    {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((sz) => (
+                      <div key={sz} className="flex flex-col items-center gap-1">
+                        <MemberAvatar
+                          size={sz}
+                          member={{
+                            type: 'human',
+                            displayName: 'Alex Chen',
+                            handle: 'alex',
+                            isOnline: true,
+                          }}
+                        />
+                        <span className="text-10 text-muted-foreground font-mono">{sz}</span>
+                      </div>
+                    ))}
+                    {/* Fallback 纯文本模式 */}
+                    <div className="flex flex-col items-center gap-1">
+                      <MemberAvatar
+                        size="md"
+                        useInitials
+                        member={{
+                          type: 'human',
+                          displayName: 'Sarah Connor',
+                          handle: 'sarah',
+                          isOnline: false,
+                        }}
+                      />
+                      <span className="text-10 text-muted-foreground font-mono">initials</span>
+                    </div>
+                  </div>
+
+                  {/* AI 智能体尺寸阶梯 */}
+                  <div className="flex items-center gap-4 flex-wrap pt-2 border-t border-border/50">
+                    <span className="text-xs text-muted-foreground w-24 shrink-0 font-medium">AI 智能体:</span>
+                    {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((sz) => (
+                      <div key={sz} className="flex flex-col items-center gap-1">
+                        <MemberAvatar
+                          size={sz}
+                          member={{
+                            type: 'ai_agent',
+                            displayName: 'Claude Coder',
+                            handle: 'claude-coder',
+                            isOnline: true,
+                          }}
+                        />
+                        <span className="text-10 text-muted-foreground font-mono">{sz}</span>
+                      </div>
+                    ))}
+                    {/* AI 字符模式 */}
+                    <div className="flex flex-col items-center gap-1">
+                      <MemberAvatar
+                        size="md"
+                        avvvatarsStyle="character"
+                        member={{
+                          type: 'ai_agent',
+                          displayName: 'DeepSeek Architect',
+                          handle: 'deepseek-r1',
+                          isOnline: true,
+                        }}
+                      />
+                      <span className="text-10 text-muted-foreground font-mono">char-mode</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <SubLabel>双表面头像系统实装展台（人类: react-nice-avatar × AI: avvvatars）</SubLabel>
+                <AvatarModernizationShowcase />
+              </div>
+              <div>
+                <SubLabel>TrustLevelBadge（信任三级：观察者/协助者/受托者）</SubLabel>
                 <div className="flex items-center gap-2 flex-wrap">
                   <TrustLevelBadge level={null} />
-                  {[0, 1, 2, 3, 4].map((level) => (
-                    <TrustLevelBadge key={level} level={level} score={40 + level * 15} />
+                  {[1, 2, 3].map((level) => (
+                    <TrustLevelBadge key={level} level={level} />
                   ))}
                 </div>
               </div>
@@ -1528,7 +2270,13 @@ export function DesignSystemPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Select</Label>
-                  <Select>
+                  <Select
+                    items={[
+                      { value: 'a', label: 'Option Alpha' },
+                      { value: 'b', label: 'Option Beta' },
+                      { value: 'c', label: 'Option Gamma' },
+                    ]}
+                  >
                     <SelectTrigger className="w-full"><SelectValue placeholder="Choose…" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="a">Option Alpha</SelectItem>
@@ -1536,6 +2284,10 @@ export function DesignSystemPage() {
                       <SelectItem value="c">Option Gamma</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-3">
+                  <SubLabel>ColorPicker（Popover + 预设色板 + react-colorful）</SubLabel>
+                  <ColorPickerShowcase />
                 </div>
               </div>
               <div className="space-y-6">
@@ -1683,6 +2435,145 @@ export function DesignSystemPage() {
                       </div>
                     )
                   })}
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="stepper">
+            <SectionTitle>Stepper</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">reui base-nova 配方（base-ui 复合式）——向导场景放 Trigger 可点击导航，状态机推进场景只放 Indicator + Title 纯展示；纵向变体用于清单/时间线。</p>
+            <div className="space-y-8">
+              <div>
+                <SubLabel>Navigable Wizard — Trigger 可点击 + 键盘导航</SubLabel>
+                <Stepper defaultValue={2}>
+                  <StepperNav>
+                    {['Account', 'Profile', 'Workspace', 'Done'].map((label, i, arr) => (
+                      <StepperItem key={label} step={i + 1}>
+                        <StepperTrigger className="gap-1.5">
+                          <StepperIndicator className="size-5 text-10 font-medium">{i + 1}</StepperIndicator>
+                          <StepperTitle className="text-xs whitespace-nowrap">{label}</StepperTitle>
+                        </StepperTrigger>
+                        {i < arr.length - 1 && <StepperSeparator />}
+                      </StepperItem>
+                    ))}
+                  </StepperNav>
+                </Stepper>
+              </div>
+              <div>
+                <SubLabel>Status Chain — 纯展示 + completed/loading 指示器</SubLabel>
+                <Stepper
+                  value={3}
+                  indicators={{
+                    completed: <Check className="size-3" />,
+                    loading: <Spinner size="sm" className="size-3.5 text-primary-foreground" />,
+                  }}
+                >
+                  <StepperNav>
+                    {['Draft', 'Gated', 'Approved', 'Publishing', 'Released'].map((label, i, arr) => (
+                      <StepperItem key={label} step={i + 1} loading={i === 3}>
+                        <div className="flex items-center gap-2">
+                          <StepperIndicator className="size-5 text-10 font-medium">{i + 1}</StepperIndicator>
+                          <StepperTitle className="text-xs whitespace-nowrap">{label}</StepperTitle>
+                        </div>
+                        {i < arr.length - 1 && <StepperSeparator />}
+                      </StepperItem>
+                    ))}
+                  </StepperNav>
+                </Stepper>
+              </div>
+              <div>
+                <SubLabel>Vertical — 纵向 + 标题/描述（连接线随状态点亮）</SubLabel>
+                <div className="max-w-80">
+                  <Stepper orientation="vertical" value={2}>
+                    <StepperNav>
+                      {[
+                        { title: '连接仓库', desc: '绑定本地路径与远端地址' },
+                        { title: '扫描考古', desc: '解析提交历史并生成档案草稿' },
+                        { title: '校对入库', desc: '人工确认后进入项目档案' },
+                      ].map((s, i, arr) => (
+                        <StepperItem key={s.title} step={i + 1} className="w-full">
+                          <div className="flex w-full items-start gap-3">
+                            <div className="flex flex-col items-center self-stretch">
+                              <StepperIndicator className="text-10 font-medium">{i + 1}</StepperIndicator>
+                              {i < arr.length - 1 && (
+                                <StepperSeparator className="m-0 w-0.5 flex-1 rounded-full" />
+                              )}
+                            </div>
+                            <div className={cn('min-w-0 flex-1', i < arr.length - 1 && 'pb-6')}>
+                              <StepperTitle>{s.title}</StepperTitle>
+                              <StepperDescription className="mt-1 text-xs">{s.desc}</StepperDescription>
+                            </div>
+                          </div>
+                        </StepperItem>
+                      ))}
+                    </StepperNav>
+                  </Stepper>
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="sortable">
+            <SectionTitle>Sortable</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">reui base-nova 配方（@dnd-kit）——同列表条目重排专用；看板跨列/画布节点继续用 dnd-kit 原语。落放一次性提交，onValueChange 即持久化缝，onValueCommit 附带回滚快照。</p>
+            <div className="space-y-8">
+              <div>
+                <SubLabel>Vertical — 把手拖拽（键盘可达：聚焦把手后 Space 拾起、方向键移动、Space 落放）</SubLabel>
+                <div className="max-w-sm">
+                  <SortableDemo />
+                </div>
+              </div>
+              <div>
+                <SubLabel>Grid — 网格策略（整卡可拖）</SubLabel>
+                <div className="max-w-sm">
+                  <SortableGridDemo />
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="icon-stack">
+            <SectionTitle>Icon Stack</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">reui base-nova 配方——等距层叠图标插画容器（装饰性，纯视觉请 aria-hidden）：空态/引导/完成时刻的深度感图标，尺寸经 className、语义色经 text-* 传入。</p>
+            <div className="space-y-8">
+              <div>
+                <SubLabel>Sizes & Colors</SubLabel>
+                <div className="flex flex-wrap items-end gap-8">
+                  {[
+                    { label: 'default / muted', cls: '', icon: <Inbox className="size-4" /> },
+                    { label: 'primary', cls: 'text-primary', icon: <Rocket className="size-4 text-primary" /> },
+                    { label: 'success', cls: 'text-accent-green', icon: <CheckCircle2 className="size-4 text-accent-green" /> },
+                    { label: 'lg', cls: 'h-28 w-25', icon: <FileText className="size-5" /> },
+                  ].map(({ label, cls, icon }) => (
+                    <div key={label} className="flex flex-col items-center gap-2">
+                      <IconStack aria-hidden="true" className={cls}>
+                        {icon}
+                      </IconStack>
+                      <span className="text-10 text-muted-foreground">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <SubLabel>Empty State — EmptyState variant=page + visual 插画（整页大空态）</SubLabel>
+                <div className="h-60 max-w-md">
+                  <EmptyState
+                    variant="page"
+                    visual={
+                      <IconStack aria-hidden="true" className="text-primary">
+                        <FileText className="size-4 text-primary" />
+                      </IconStack>
+                    }
+                    title="暂无文档"
+                    description="开始创建你的第一个文档"
+                  />
                 </div>
               </div>
             </div>
@@ -1963,14 +2854,13 @@ export function DesignSystemPage() {
               <div>
                 <SubLabel>Popover — functional (base-ui)</SubLabel>
                 <Popover>
-                  <PopoverTrigger>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-xs hover:bg-muted transition-colors"
-                    >
-                      <Bell className="w-4 h-4" /> Notifications
-                    </button>
-                  </PopoverTrigger>
+                  <PopoverTrigger
+                    render={
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Bell className="w-4 h-4" /> Notifications
+                      </Button>
+                    }
+                  />
                   <PopoverContent className="w-72">
                     <PopoverHeader>
                       <PopoverTitle>Notifications</PopoverTitle>
@@ -2000,21 +2890,1420 @@ export function DesignSystemPage() {
                   </Combobox>
                 </div>
               </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="hover-card">
+            <SectionTitle>Hover Card（浮动预览卡片）</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+              用于光标悬停在触发元素时呈现上下文补充信息、富实体预览或路由直觉感知。基于{' '}
+              <code className="font-mono text-11 bg-muted px-1 py-0.5 rounded">@base-ui/react/preview-card</code>{' '}
+              封装，支持避障定位、无障碍语义与开闭过渡动画。
+            </p>
+
+            <div className="space-y-8">
+              {/* ① 尺寸规范阶梯 */}
               <div>
-                <SubLabel>Hover Card (static)</SubLabel>
-                <HoverCard>
-                  <HoverCardTrigger href="#">@alex</HoverCardTrigger>
-                  <HoverCardContent>
-                    <p className="text-sm font-medium">Alex Chen</p>
-                    <p className="text-xs text-muted-foreground mt-1">Senior Frontend Engineer · @alex</p>
-                  </HoverCardContent>
-                </HoverCard>
+                <SubLabel>① 尺寸规格阶梯（Sizes: sm / md / lg / xl）</SubLabel>
+                <div className="flex flex-wrap items-center gap-4">
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                      size="sm" (w-56)
+                    </HoverCardTrigger>
+                    <HoverCardContent size="sm">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Compact Card</span>
+                          <Badge variant="outline" className="text-10 px-1">sm</Badge>
+                        </div>
+                        <p className="text-11 text-muted-foreground leading-relaxed">
+                          适用于窄栏、密集表格单元格或单行轻量指标说明。
+                        </p>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                      size="md" (w-64 · 默认)
+                    </HoverCardTrigger>
+                    <HoverCardContent size="md">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Standard Card</span>
+                          <Badge variant="outline" className="text-10 px-1">md</Badge>
+                        </div>
+                        <p className="text-11 text-muted-foreground leading-relaxed">
+                          通用默认卡片宽度，满足绝大部分简短详情与状态预览。
+                        </p>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                      size="lg" (w-72 · 路由标准)
+                    </HoverCardTrigger>
+                    <HoverCardContent size="lg">
+                      <HoverCardArrow />
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Large Card + Arrow</span>
+                          <Badge variant="secondary" className="text-10 px-1">lg</Badge>
+                        </div>
+                        <p className="text-11 text-muted-foreground leading-relaxed">
+                          对齐 <code>route-preview</code> 规范标准宽，兼顾内容信息量与弹出留白。
+                        </p>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                      size="xl" (w-80 · 富实体宽)
+                    </HoverCardTrigger>
+                    <HoverCardContent size="xl">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground">Extra Large Card</span>
+                          <Badge variant="secondary" className="text-10 px-1">xl</Badge>
+                        </div>
+                        <p className="text-11 text-muted-foreground leading-relaxed">
+                          用于成员履历、AI 智能体运行态面板等高信息密度复合组件展示。
+                        </p>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                </div>
               </div>
+
+              {/* ② 方位与对齐矩阵 */}
               <div>
-                <SubLabel>Route Preview (tab / favorites hover card)</SubLabel>
-                <RoutePreviewTrigger path="/app/projects" title="Projects">
-                  <Button variant="outline" size="sm">Projects — hover me</Button>
-                </RoutePreviewTrigger>
+                <SubLabel>② 四向方位与对齐矩阵（Placements &amp; Alignments）</SubLabel>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl">
+                  {(['top', 'bottom', 'left', 'right'] as const).map((side) => (
+                    <div key={side} className="p-3 rounded-lg border border-border/60 bg-muted/10 flex flex-col items-center gap-2">
+                      <span className="text-10 font-mono text-muted-foreground uppercase">side="{side}"</span>
+                      <HoverCard>
+                        <HoverCardTrigger
+                          render={
+                            <Button variant="outline" size="sm" className="h-7 text-xs">
+                              Hover {side}
+                            </Button>
+                          }
+                        />
+                        <HoverCardContent side={side} size="sm">
+                          <HoverCardArrow />
+                          <p className="text-xs font-medium text-foreground">side="{side}"</p>
+                          <p className="text-10 text-muted-foreground mt-0.5">自动避障且居中锚定</p>
+                        </HoverCardContent>
+                      </HoverCard>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ③ 箭头与视觉修饰对比 */}
+              <div>
+                <SubLabel>③ 视觉修饰对比（无箭头默认 vs 显式气泡箭头 HoverCardArrow）</SubLabel>
+                <div className="flex flex-wrap items-center gap-6">
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs text-muted-foreground hover:text-foreground underline decoration-dotted">
+                      无箭头平整卡片（Clean Minimal）
+                    </HoverCardTrigger>
+                    <HoverCardContent size="sm">
+                      <p className="text-xs font-semibold text-foreground">无箭头紧凑浮层</p>
+                      <p className="text-11 text-muted-foreground mt-1">适合紧贴在按钮或操作栏下方的提示。</p>
+                    </HoverCardContent>
+                  </HoverCard>
+
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs text-muted-foreground hover:text-foreground underline decoration-dotted">
+                      带气泡指向箭头（With HoverCardArrow）
+                    </HoverCardTrigger>
+                    <HoverCardContent size="sm">
+                      <HoverCardArrow />
+                      <p className="text-xs font-semibold text-foreground">带指向箭头</p>
+                      <p className="text-11 text-muted-foreground mt-1">显式放入 children，明确视觉指示来源。</p>
+                    </HoverCardContent>
+                  </HoverCard>
+                </div>
+              </div>
+
+              {/* ④ 延迟策略 */}
+              <div>
+                <SubLabel>④ 响应延迟策略（Timings: 即时调试 vs 防误触人机工程）</SubLabel>
+                <div className="flex flex-wrap items-center gap-4">
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs font-mono px-2 py-1 rounded bg-muted/60 hover:bg-muted text-foreground">
+                      delay=0 (即时)
+                    </HoverCardTrigger>
+                    <HoverCardContent size="sm">
+                      <p className="text-xs font-medium text-foreground">即时展开 (0ms)</p>
+                      <p className="text-11 text-muted-foreground mt-1">鼠标触碰瞬间展开，适合调试测试。</p>
+                    </HoverCardContent>
+                  </HoverCard>
+
+                  <HoverCard>
+                    <HoverCardTrigger href="#" className="text-xs font-mono px-2 py-1 rounded bg-muted/60 hover:bg-muted text-foreground">
+                      delay=300 · closeDelay=150 (推荐生产配置)
+                    </HoverCardTrigger>
+                    <HoverCardContent size="sm">
+                      <HoverCardArrow />
+                      <p className="text-xs font-medium text-foreground">推荐延迟 (300ms/150ms)</p>
+                      <p className="text-11 text-muted-foreground mt-1">避免鼠标横穿屏幕时引发走马灯式闪烁。</p>
+                    </HoverCardContent>
+                  </HoverCard>
+                </div>
+              </div>
+
+              {/* ⑤ 真实业务场景卡片全景 */}
+              {/* ⑤ APM 全流程核心业务卡片矩阵（6 大核心业务深度特色） */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <SubLabel>⑤ APM 全流程核心业务卡片矩阵（统一架构 × 模块特色）</SubLabel>
+                  <span className="text-10 text-muted-foreground">
+                    严格遵循「四层三列」外舒内紧架构，突出各模块专属第一视觉信号 (Hero Visual)
+                  </span>
+                </div>
+
+                {/* A. 交互悬停体验栏 (Interactive Hover Triggers) */}
+                <div className="p-3.5 rounded-xl border border-border/80 bg-muted/10 space-y-2">
+                  <p className="text-11 font-medium text-foreground">
+                    交互悬浮测试（鼠标滑过以下实体，检验定位避障、气泡箭头与浮层开闭手感）：
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* 1. 任务卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <CheckSquare className="size-3.5 text-accent-blue" />
+                        <span className="group-hover:text-accent-blue">任务: #ISSUE-104</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                              <CheckSquare className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              重构 Design System 侧栏导航与悬停规范
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0">Task</Badge>
+                          </div>
+                          {/* Hero 带：状态 + 优先级 + 迭代 */}
+                          <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
+                            <div className="flex items-center gap-1.5">
+                              <StatusPill tone="info">In Progress</StatusPill>
+                              <span className="inline-flex items-center gap-1 text-10 text-accent-red font-medium">
+                                <Flag className="size-2.5 fill-accent-red" /> High
+                              </span>
+                            </div>
+                            <span className="text-10 font-mono text-muted-foreground">Sprint 24</span>
+                          </div>
+                          <PreviewSection title="工单属性">
+                            <PreviewRow label="负责人">
+                              <div className="flex items-center gap-1.5">
+                                <MemberAvatar
+                                  size="xs"
+                                  member={{
+                                    type: 'human',
+                                    displayName: 'Alex Chen',
+                                    handle: 'alex',
+                                    isOnline: true,
+                                  }}
+                                />
+                                <span>Alex Chen (@alex)</span>
+                              </div>
+                            </PreviewRow>
+                            <PreviewRow label="所属项目">Agent Project Manager</PreviewRow>
+                            <PreviewRow label="工时进度">
+                              <div className="flex items-center gap-2 flex-1">
+                                <Progress value={62} className="h-1.5 flex-1" />
+                                <span className="font-mono text-10 text-muted-foreground">2.5h / 4h</span>
+                              </div>
+                            </PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>分支: <code>feat/design-system</code></span>
+                            <span className="ml-auto font-mono text-10">截止 2026-09-15</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 2. 缺陷阻断卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-red/30 bg-accent-red/5 hover:bg-accent-red/10 text-xs font-medium text-accent-red transition-colors group">
+                        <Bug className="size-3.5" />
+                        <span className="group-hover:underline">缺陷: #BUG-42 (阻断)</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-red/10 text-accent-red">
+                              <Bug className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              工作区路由并发死锁（阻断发版）
+                            </span>
+                            <Badge variant="destructive" className="text-10 shrink-0">Bug</Badge>
+                          </div>
+                          {/* Hero 带：严重性标尺 + 阻断发版警示 */}
+                          <div className="flex items-center justify-between p-2 rounded-md bg-accent-red/10 border border-accent-red/30">
+                            <div className="flex items-center gap-2">
+                              <SeverityBar severity="critical" />
+                              <span className="text-10 font-bold text-accent-red uppercase tracking-wider">
+                                阻塞发布 (Blocker)
+                              </span>
+                            </div>
+                            <StatusPill tone="danger">Open</StatusPill>
+                          </div>
+                          <PreviewSection title="排查上下文">
+                            <PreviewRow label="复现环境">Node 20.14 · SQLite WAL · macOS 15</PreviewRow>
+                            <PreviewRow label="根因分类">AsyncLocalStorage 作用域穿透竞态</PreviewRow>
+                            <PreviewRow label="修复关联">已关联工单 #ISSUE-112</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span className="text-accent-red flex items-center gap-1 font-medium">
+                              <AlertCircle className="size-3" /> P0 紧急响应中
+                            </span>
+                            <span className="ml-auto font-mono text-10">报障人: @qa-bot</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 3. 工程治理验收卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-green/30 bg-accent-green/5 hover:bg-accent-green/10 text-xs font-medium text-accent-green transition-colors group">
+                        <ShieldCheck className="size-3.5" />
+                        <span className="group-hover:underline">验收: ACC-2026-09</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="xl">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-green/10 text-accent-green">
+                              <ShieldCheck className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              v2.4 核心质量门禁收口与闭环
+                            </span>
+                            <Badge variant="secondary" className="text-10 shrink-0 text-accent-green bg-accent-green/10">
+                              Acceptance
+                            </Badge>
+                          </div>
+                          {/* Hero 带：门禁通过率点阵 + 进度 */}
+                          <div className="space-y-1.5 p-2 rounded-md bg-accent-green/10 border border-accent-green/30">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-accent-green flex items-center gap-1">
+                                <CheckCircle2 className="size-3.5" /> 门禁通过率: 3/4 Passed
+                              </span>
+                              <span className="font-mono text-10 font-bold text-accent-green">75%</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="h-1.5 flex-1 rounded-full bg-accent-green" title="单测覆盖率: Passed" />
+                              <span className="h-1.5 flex-1 rounded-full bg-accent-green" title="API 契约零漂移: Passed" />
+                              <span className="h-1.5 flex-1 rounded-full bg-accent-green" title="文档同步对齐: Passed" />
+                              <span className="h-1.5 flex-1 rounded-full bg-accent-yellow animate-pulse" title="破坏性静态扫描: Pending" />
+                            </div>
+                          </div>
+                          <PreviewSection title="证据回流与治理">
+                            <PreviewRow label="证据链">12 条 CI/PR 自动化回流证据</PreviewRow>
+                            <PreviewRow label="AI 代写状态">AI 同事已草拟验收标准，待人审签署</PreviewRow>
+                            <PreviewRow label="阻断风险">1 项破坏性代码扫描待确认</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span className="text-accent-yellow flex items-center gap-1 font-medium">
+                              <Clock className="size-3" /> 等待人工签署确认
+                            </span>
+                            <span className="ml-auto font-mono text-10">对应 #ISSUE-104</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 4. 项目全景卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <FolderKanban className="size-3.5 text-primary" />
+                        <span className="group-hover:text-primary">项目: Nebula Core</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                              <FolderKanban className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              Nebula Core (AgentPM 核心平台)
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0">Project</Badge>
+                          </div>
+                          {/* Hero 带：健康度 + 交付进度 */}
+                          <div className="space-y-1.5 pb-1 border-b border-border/50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <StatusPill tone="success">On Track</StatusPill>
+                                <span className="text-11 font-medium text-foreground">健康度 94 分</span>
+                              </div>
+                              <span className="text-10 font-mono text-muted-foreground">已完成 48/60 工单</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Progress value={80} className="h-1.5 flex-1" />
+                              <span className="font-mono text-10 text-muted-foreground">80%</span>
+                            </div>
+                          </div>
+                          <PreviewSection title="项目大盘">
+                            <PreviewRow label="核心仓库">agent-project-manager (develop)</PreviewRow>
+                            <PreviewRow label="协作团队">4 位人类工程师 + 2 位 AI 同事</PreviewRow>
+                            <PreviewRow label="双轨成本">累计 186k Tokens ($1.42) · 38h</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>负责人: @alex</span>
+                            <span className="ml-auto font-mono text-10">目标 GA: 2026-09-30</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 5. AI 执行与审批卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-purple/30 bg-accent-purple/5 hover:bg-accent-purple/10 text-xs font-medium text-accent-purple transition-colors group">
+                        <Bot className="size-3.5" />
+                        <span className="group-hover:underline">执行审批: EXEC-891</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="xl">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-purple/10 text-accent-purple">
+                              <Bot className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              EXEC-891: 全局样式 Token 批量重构
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0 text-accent-purple border-accent-purple/40">
+                              Execution
+                            </Badge>
+                          </div>
+                          {/* Hero 带：等待审批 + 冷却倒计时 + 双轨消耗 */}
+                          <div className="p-2 rounded-md bg-accent-purple/10 border border-accent-purple/30 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-accent-purple flex items-center gap-1">
+                                <Clock className="size-3" /> 等待人审决议 (Pending Approval)
+                              </span>
+                              <span className="text-10 font-mono px-1.5 py-0.5 rounded bg-accent-red/20 text-accent-red font-semibold">
+                                高风险拦截
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <DualTrackMetricPill tokens={4280} durationMs={2400} costUsd={0.0064} model="Claude 3.7" />
+                            </div>
+                          </div>
+                          <PreviewSection title="执行影响分析">
+                            <PreviewRow label="触发源">CLI Dispatch (`claude-code` 运行时)</PreviewRow>
+                            <PreviewRow label="破坏性评估">波及 14 个组件，涉及 28 处基础色板变更</PreviewRow>
+                            <PreviewRow label="回滚保护">Git Worktree 独立隔离，支持一键丢弃</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span className="text-accent-purple font-medium">3s 冷却门禁已解除</span>
+                            <span className="ml-auto font-mono text-10">按键 1 确认 / 2 驳回</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 6. 版本发布卡 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-orange/30 bg-accent-orange/5 hover:bg-accent-orange/10 text-xs font-medium text-accent-orange transition-colors group">
+                        <Rocket className="size-3.5" />
+                        <span className="group-hover:underline">发版: Release v2.4.0</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-orange/10 text-accent-orange">
+                              <Rocket className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              Release v2.4.0 (Spring GA 稳定版)
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0 text-accent-orange border-accent-orange/40">
+                              Release
+                            </Badge>
+                          </div>
+                          {/* Hero 带：发布状态 + Git Tag + 门禁收口 */}
+                          <div className="space-y-1.5 pb-1 border-b border-border/50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <StatusPill tone="success">Published</StatusPill>
+                                <span className="text-11 font-mono font-medium text-foreground">tag: v2.4.0</span>
+                              </div>
+                              <span className="text-10 font-mono text-muted-foreground">commit 9f8e12a</span>
+                            </div>
+                            <div className="flex items-center justify-between text-10 text-muted-foreground pt-0.5">
+                              <span className="flex items-center gap-1 text-accent-green font-medium">
+                                <ShieldCheck className="size-3" /> 门禁归档 100% 审计闭环
+                              </span>
+                              <span className="font-mono">4/4 全绿</span>
+                            </div>
+                          </div>
+                          <PreviewSection title="发版资产与元数据">
+                            <PreviewRow label="变更真相源">CHANGELOG.md (单向再生完成)</PreviewRow>
+                            <PreviewRow label="归档工单">28 项工单 · 6 项治理验收闭环</PreviewRow>
+                            <PreviewRow label="多端分发">Web (Vite) / Desktop (Electron) / CLI</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>签发人: @alex (双签审计)</span>
+                            <span className="ml-auto font-mono text-10">2026-09-11 GA</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </div>
+                </div>
+
+                {/* B. 全景平铺审查画廊 (Expanded Spec Gallery) */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-11 font-medium text-foreground">
+                      全景平铺审查画廊（无需悬停，直接对比各模块卡片的统一底盘与差异化第一视觉）：
+                    </p>
+                    <Badge variant="secondary" className="text-10">静态展开对比</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* 卡片 1: 任务工单卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                            <CheckSquare className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            #ISSUE-104: 重构侧栏与 HoverCard
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0">Task</Badge>
+                        </div>
+                        <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
+                          <div className="flex items-center gap-1.5">
+                            <StatusPill tone="info">In Progress</StatusPill>
+                            <span className="inline-flex items-center gap-1 text-10 text-accent-red font-medium">
+                              <Flag className="size-2.5 fill-accent-red" /> High
+                            </span>
+                          </div>
+                          <span className="text-10 font-mono text-muted-foreground">Sprint 24</span>
+                        </div>
+                        <PreviewSection title="工单属性">
+                          <PreviewRow label="负责人">@alex (Alex Chen)</PreviewRow>
+                          <PreviewRow label="所属项目">Agent Project Manager</PreviewRow>
+                          <PreviewRow label="工时进度">2.5h / 4h (62%)</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>分支: <code>feat/design-system</code></span>
+                        <span className="ml-auto font-mono text-10">截止 09-15</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 2: 缺陷阻断卡 */}
+                    <div className="rounded-xl border border-accent-red/40 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-red/10 text-accent-red">
+                            <Bug className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            #BUG-42: 工作区路由并发死锁
+                          </span>
+                          <Badge variant="destructive" className="text-10 shrink-0">Bug</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-md bg-accent-red/10 border border-accent-red/30">
+                          <div className="flex items-center gap-2">
+                            <SeverityBar severity="critical" />
+                            <span className="text-10 font-bold text-accent-red uppercase tracking-wider">
+                              阻塞发布 (Blocker)
+                            </span>
+                          </div>
+                          <StatusPill tone="danger">Open</StatusPill>
+                        </div>
+                        <PreviewSection title="排查上下文">
+                          <PreviewRow label="复现环境">Node 20.14 · SQLite WAL</PreviewRow>
+                          <PreviewRow label="根因分类">AsyncLocalStorage 穿透竞态</PreviewRow>
+                          <PreviewRow label="修复关联">关联工单 #ISSUE-112</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span className="text-accent-red flex items-center gap-1 font-medium">
+                          <AlertCircle className="size-3" /> P0 紧急响应中
+                        </span>
+                        <span className="ml-auto font-mono text-10">@qa-bot</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 3: 工程验收卡 */}
+                    <div className="rounded-xl border border-accent-green/40 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-green/10 text-accent-green">
+                            <ShieldCheck className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            ACC-2026-09: 核心门禁收口
+                          </span>
+                          <Badge variant="secondary" className="text-10 shrink-0 text-accent-green bg-accent-green/10">
+                            Acceptance
+                          </Badge>
+                        </div>
+                        <div className="space-y-1.5 p-2 rounded-md bg-accent-green/10 border border-accent-green/30">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-semibold text-accent-green flex items-center gap-1">
+                              <CheckCircle2 className="size-3.5" /> 门禁通过率: 3/4 Passed
+                            </span>
+                            <span className="font-mono text-10 font-bold text-accent-green">75%</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="h-1.5 flex-1 rounded-full bg-accent-green" />
+                            <span className="h-1.5 flex-1 rounded-full bg-accent-green" />
+                            <span className="h-1.5 flex-1 rounded-full bg-accent-green" />
+                            <span className="h-1.5 flex-1 rounded-full bg-accent-yellow animate-pulse" />
+                          </div>
+                        </div>
+                        <PreviewSection title="证据回流与治理">
+                          <PreviewRow label="证据链">12 条 CI/PR 回流证据</PreviewRow>
+                          <PreviewRow label="AI 审计状态">AI 已草拟标准，待人审</PreviewRow>
+                          <PreviewRow label="阻断风险">1 项静态扫描待裁决</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span className="text-accent-yellow flex items-center gap-1 font-medium">
+                          <Clock className="size-3" /> 等待签署确认
+                        </span>
+                        <span className="ml-auto font-mono text-10">#ISSUE-104</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 4: 项目全景卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                            <FolderKanban className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            Nebula Core
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0">Project</Badge>
+                        </div>
+                        <div className="space-y-1.5 pb-1 border-b border-border/50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <StatusPill tone="success">On Track</StatusPill>
+                              <span className="text-11 font-medium text-foreground">健康度 94 分</span>
+                            </div>
+                            <span className="text-10 font-mono text-muted-foreground">48/60 工单</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Progress value={80} className="h-1.5 flex-1" />
+                            <span className="font-mono text-10 text-muted-foreground">80%</span>
+                          </div>
+                        </div>
+                        <PreviewSection title="项目大盘">
+                          <PreviewRow label="核心仓库">agent-project-manager</PreviewRow>
+                          <PreviewRow label="协作团队">4 位成员 + 2 位 AI</PreviewRow>
+                          <PreviewRow label="双轨成本">186k Tokens ($1.42) · 38h</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>负责人: @alex</span>
+                        <span className="ml-auto font-mono text-10">GA 09-30</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 5: AI 执行审批卡 */}
+                    <div className="rounded-xl border border-accent-purple/40 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-purple/10 text-accent-purple">
+                            <Bot className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            EXEC-891: 全局样式重构
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0 text-accent-purple border-accent-purple/40">
+                            Execution
+                          </Badge>
+                        </div>
+                        <div className="p-2 rounded-md bg-accent-purple/10 border border-accent-purple/30 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-accent-purple flex items-center gap-1">
+                              <Clock className="size-3" /> 等待人审决议
+                            </span>
+                            <span className="text-10 font-mono px-1.5 py-0.5 rounded bg-accent-red/20 text-accent-red font-semibold">
+                              高风险拦截
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DualTrackMetricPill tokens={4280} durationMs={2400} costUsd={0.0064} model="Claude 3.7" />
+                          </div>
+                        </div>
+                        <PreviewSection title="执行影响分析">
+                          <PreviewRow label="触发源">CLI Dispatch (`claude-code`)</PreviewRow>
+                          <PreviewRow label="破坏性评估">波及 14 个组件，改动 28 处样式</PreviewRow>
+                          <PreviewRow label="回滚保护">Git Worktree 隔离</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span className="text-accent-purple font-medium">3s 门禁已解除</span>
+                        <span className="ml-auto font-mono text-10">按键 1 确认 / 2 驳回</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 6: 版本发布归档卡 */}
+                    <div className="rounded-xl border border-accent-orange/40 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-orange/10 text-accent-orange">
+                            <Rocket className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            Release v2.4.0-GA
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0 text-accent-orange border-accent-orange/40">
+                            Release
+                          </Badge>
+                        </div>
+                        <div className="space-y-1.5 pb-1 border-b border-border/50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <StatusPill tone="success">Published</StatusPill>
+                              <span className="text-11 font-mono font-medium text-foreground">tag: v2.4.0</span>
+                            </div>
+                            <span className="text-10 font-mono text-muted-foreground">commit 9f8e12a</span>
+                          </div>
+                          <div className="flex items-center justify-between text-10 text-muted-foreground pt-0.5">
+                            <span className="flex items-center gap-1 text-accent-green font-medium">
+                              <ShieldCheck className="size-3" /> 门禁归档闭环
+                            </span>
+                            <span className="font-mono text-10 text-accent-green font-semibold">100% 审计</span>
+                          </div>
+                        </div>
+                        <PreviewSection title="发版资产与元数据">
+                          <PreviewRow label="变更真相源">CHANGELOG.md (单向再生)</PreviewRow>
+                          <PreviewRow label="归档工单">28 项工单 · 6 项验收闭环</PreviewRow>
+                          <PreviewRow label="多端产物">Web · Desktop · CLI</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>签发人: @alex (双签审计)</span>
+                        <span className="ml-auto font-mono text-10">09-11 GA</span>
+                      </PreviewFooterMeta>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ⑥ 孪生成员卡片体系（Twin Identity Cards: 人类同事 vs AI同事 · 对称底盘 × 异构度量） */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <SubLabel>⑥ 孪生成员卡片体系（Twin Identity Cards: 人类同事 vs AI 同事）</SubLabel>
+                  <span className="text-10 text-muted-foreground">
+                    双表面核心：相同底盘框架（Header 3列 / 统一 Hero 焦点带 / 统一 PreviewSection），特化异构数据
+                  </span>
+                </div>
+
+                {/* A. 交互悬停体验栏 */}
+                <div className="p-3.5 rounded-xl border border-border/80 bg-muted/10 space-y-2">
+                  <p className="text-11 font-medium text-foreground">
+                    孪生成员交互悬浮体验（分别悬停人类同事与 AI 同事，体验相同视觉底盘下的异构数据呈现）：
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* 人类同事 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <MemberAvatar
+                          size="xs"
+                          member={{
+                            type: 'human',
+                            displayName: 'Alex Chen',
+                            handle: 'alex',
+                            isOnline: true,
+                          }}
+                        />
+                        <span className="group-hover:text-accent-blue">人类同事: Alex Chen (@alex)</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="xl">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          {/* 统一三列 Header */}
+                          <div className="flex items-start gap-3">
+                            <MemberAvatar
+                              size="lg"
+                              member={{
+                                type: 'human',
+                                displayName: 'Alex Chen',
+                                handle: 'alex',
+                                isOnline: true,
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-xs font-semibold text-foreground truncate">Alex Chen</h4>
+                                <span className="inline-flex items-center gap-1 text-10 text-accent-green font-medium">
+                                  <span className="size-1.5 rounded-full bg-accent-green" /> 在职在线
+                                </span>
+                              </div>
+                              <p className="text-11 text-muted-foreground truncate">资深全栈架构师 · @alex</p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <TrustLevelBadge level={2} />
+                                <Badge variant="outline" className="text-10 py-0">PR 评审 / 生产发布</Badge>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Hero 焦点带：工时负荷 + 技术栈 */}
+                          <div className="p-2 rounded-md bg-muted/40 border border-border/60 space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-11 font-medium text-foreground flex items-center gap-1">
+                                <Activity className="size-3 text-accent-blue" /> 本周负荷 32h / 40h
+                              </span>
+                              <span className="font-mono text-10 text-muted-foreground">80% · 3 个活跃工单</span>
+                            </div>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {['React 19', 'NestJS 10', 'Tailwind v4', 'SQLite'].map((tech) => (
+                                <span key={tech} className="text-10 font-mono px-1.5 py-0.5 rounded bg-background border border-border/60 text-muted-foreground">
+                                  {tech}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          {/* 属性小节 */}
+                          <PreviewSection title="协作与职责">
+                            <PreviewRow label="所属团队">前端架构组 (Team Lead)</PreviewRow>
+                            <PreviewRow label="核心模块">Design System · 实时协同引擎</PreviewRow>
+                            <PreviewRow label="当前攻坚">#ISSUE-104: 重构侧栏与 HoverCard</PreviewRow>
+                          </PreviewSection>
+                          {/* 底部元信息 */}
+                          <PreviewFooterMeta>
+                            <span className="flex items-center gap-1">
+                              <Clock className="size-3 text-muted-foreground" /> 远程 · UTC+8 (5m 前活跃)
+                            </span>
+                            <span className="ml-auto font-mono text-10">alex@apm.dev</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* AI 同事 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-accent-purple/30 bg-accent-purple/5 hover:bg-accent-purple/10 text-xs font-medium text-accent-purple transition-colors group">
+                        <MemberAvatar
+                          size="xs"
+                          member={{
+                            type: 'ai_agent',
+                            displayName: 'Claude Coder',
+                            handle: 'claude-coder',
+                            isOnline: true,
+                          }}
+                        />
+                        <span className="group-hover:underline">AI 同事: Claude Coder (@claude-coder)</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="xl">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          {/* 统一三列 Header */}
+                          <div className="flex items-start gap-3">
+                            <MemberAvatar
+                              size="lg"
+                              member={{
+                                type: 'ai_agent',
+                                displayName: 'Claude Coder',
+                                handle: 'claude-coder',
+                                isOnline: true,
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-xs font-semibold text-foreground truncate">Claude Coder</h4>
+                                <span className="inline-flex items-center gap-1 text-10 text-accent-green font-medium">
+                                  <span className="size-1.5 rounded-full bg-accent-green animate-pulse" /> 常驻就绪
+                                </span>
+                              </div>
+                              <p className="text-11 text-muted-foreground truncate">全栈执行 Agent · Claude 3.7 Sonnet</p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <TrustLevelBadge level={3} />
+                                <Badge variant="outline" className="text-10 py-0">自主编码权限</Badge>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Hero 焦点带：Token 消耗 + CLI 工具流 */}
+                          <div className="p-2 rounded-md bg-accent-purple/10 border border-accent-purple/30 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <DualTrackMetricPill tokens={4280} durationMs={2400} costUsd={0.0064} model="Claude 3.7" />
+                            </div>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {['Git Worktree', 'CLI Dispatch', 'Jest/Vitest', 'API Contract'].map((tool) => (
+                                <span key={tool} className="text-10 font-mono px-1.5 py-0.5 rounded bg-background/80 border border-accent-purple/30 text-accent-purple">
+                                  {tool}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          {/* 属性小节 */}
+                          <PreviewSection title="执行表现度量">
+                            <PreviewRow label="门禁通过率">96.8% (31/32 门禁一次性通过)</PreviewRow>
+                            <PreviewRow label="常驻守护">apm-runtime 节点 #rt-08</PreviewRow>
+                            <PreviewRow label="授权边界">自主编码测试 · 生产合流需人审</PreviewRow>
+                          </PreviewSection>
+                          {/* 底部元信息 */}
+                          <PreviewFooterMeta>
+                            <span className="text-accent-green flex items-center gap-1">
+                              <CheckCircle2 className="size-3" /> 契约巡检零偏差
+                            </span>
+                            <span className="ml-auto font-mono text-10">活跃分支: feat/*</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </div>
+                </div>
+
+                {/* B. 孪生卡片对称 1:1 对比画廊 */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-11 font-medium text-foreground">
+                      孪生卡片 1:1 对称平铺画廊（验证三列头部、中间 Hero 焦点带、PreviewSection 高度节奏一致性）：
+                    </p>
+                    <Badge variant="secondary" className="text-10">对称规范对比</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                    {/* 左：人类同事卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <MemberAvatar
+                            size="lg"
+                            member={{
+                              type: 'human',
+                              displayName: 'Alex Chen',
+                              handle: 'alex',
+                              isOnline: true,
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-semibold text-foreground truncate">Alex Chen</h4>
+                              <span className="inline-flex items-center gap-1 text-10 text-accent-green font-medium">
+                                <span className="size-1.5 rounded-full bg-accent-green" /> 在职在线
+                              </span>
+                            </div>
+                            <p className="text-11 text-muted-foreground truncate">资深全栈架构师 · @alex</p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <TrustLevelBadge level={2} />
+                              <Badge variant="outline" className="text-10 py-0">PR 评审 / 生产发布</Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-2 rounded-md bg-muted/40 border border-border/60 space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-11 font-medium text-foreground flex items-center gap-1">
+                              <Activity className="size-3 text-accent-blue" /> 本周负荷 32h / 40h
+                            </span>
+                            <span className="font-mono text-10 text-muted-foreground">80% · 3 工单</span>
+                          </div>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {['React 19', 'NestJS 10', 'Tailwind v4', 'SQLite'].map((tech) => (
+                              <span key={tech} className="text-10 font-mono px-1.5 py-0.5 rounded bg-background border border-border/60 text-muted-foreground">
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <PreviewSection title="协作与职责">
+                          <PreviewRow label="所属团队">前端架构组 (Team Lead)</PreviewRow>
+                          <PreviewRow label="核心模块">Design System · 实时协同引擎</PreviewRow>
+                          <PreviewRow label="当前攻坚">#ISSUE-104: 重构侧栏与 HoverCard</PreviewRow>
+                        </PreviewSection>
+                      </div>
+
+                      <PreviewFooterMeta>
+                        <span className="flex items-center gap-1">
+                          <Clock className="size-3 text-muted-foreground" /> 远程 · UTC+8 (5m 前活跃)
+                        </span>
+                        <span className="ml-auto font-mono text-10">alex@apm.dev</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 右：AI 同事卡 */}
+                    <div className="rounded-xl border border-accent-purple/40 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <MemberAvatar
+                            size="lg"
+                            member={{
+                              type: 'ai_agent',
+                              displayName: 'Claude Coder',
+                              handle: 'claude-coder',
+                              isOnline: true,
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-semibold text-foreground truncate">Claude Coder</h4>
+                              <span className="inline-flex items-center gap-1 text-10 text-accent-green font-medium">
+                                <span className="size-1.5 rounded-full bg-accent-green animate-pulse" /> 常驻就绪
+                              </span>
+                            </div>
+                            <p className="text-11 text-muted-foreground truncate">全栈执行 Agent · Claude 3.7 Sonnet</p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <TrustLevelBadge level={3} />
+                              <Badge variant="outline" className="text-10 py-0">自主编码权限</Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-2 rounded-md bg-accent-purple/10 border border-accent-purple/30 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <DualTrackMetricPill tokens={4280} durationMs={2400} costUsd={0.0064} model="Claude 3.7" />
+                          </div>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {['Git Worktree', 'CLI Dispatch', 'Jest/Vitest', 'API Contract'].map((tool) => (
+                              <span key={tool} className="text-10 font-mono px-1.5 py-0.5 rounded bg-background/80 border border-accent-purple/30 text-accent-purple">
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <PreviewSection title="执行表现度量">
+                          <PreviewRow label="门禁通过率">96.8% (31/32 门禁一次通过)</PreviewRow>
+                          <PreviewRow label="常驻守护">apm-runtime 守护节点 #rt-08</PreviewRow>
+                          <PreviewRow label="授权边界">自主编码测试 · 生产合流需人审</PreviewRow>
+                        </PreviewSection>
+                      </div>
+
+                      <PreviewFooterMeta>
+                        <span className="text-accent-green flex items-center gap-1">
+                          <CheckCircle2 className="size-3" /> 契约巡检零偏差
+                        </span>
+                        <span className="ml-auto font-mono text-10">活跃分支: feat/*</span>
+                      </PreviewFooterMeta>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ⑦ 轻量级特殊属性卡片族（Lightweight Attribute Cards: 里程碑 / 团队 / PR 审查 / Git 提交） */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <SubLabel>⑦ 轻量级特殊属性卡片族（Lightweight Attribute Cards: 里程碑 / 团队 / PR / Git）</SubLabel>
+                  <span className="text-10 text-muted-foreground">
+                    面向高频元属性上下文提供轻快、聚焦的预览能力，统一采用 size="lg" 紧凑结构
+                  </span>
+                </div>
+
+                {/* A. 交互悬停体验栏 */}
+                <div className="p-3.5 rounded-xl border border-border/80 bg-muted/10 space-y-2">
+                  <p className="text-11 font-medium text-foreground">
+                    轻量属性交互悬浮测试（鼠标滑过以下微实体，体验轻巧灵动的属性卡片）：
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* 1. 里程碑 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <Milestone className="size-3.5 text-accent-blue" />
+                        <span className="group-hover:text-accent-blue">里程碑: v2.4 门禁收口</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                              <Milestone className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              v2.4 质量门禁收口与闭环
+                            </span>
+                            <StatusPill tone="info">进行中</StatusPill>
+                          </div>
+                          <div className="space-y-1.5 pb-1 border-b border-border/50">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-11 font-medium text-foreground">18 / 24 工单完成</span>
+                              <span className="font-mono text-10 text-muted-foreground">75% · 剩余 3 天</span>
+                            </div>
+                            <Progress value={75} className="h-1.5" />
+                            <div className="flex items-center justify-between text-10 text-muted-foreground">
+                              <span className="flex items-center gap-1 text-accent-green">
+                                <TrendingUp className="size-3" /> 燃尽速率平稳
+                              </span>
+                              <span>目标 2026-09-15</span>
+                            </div>
+                          </div>
+                          <PreviewSection title="排期与交付关联">
+                            <PreviewRow label="关联迭代">Sprint 24 (09-01 ~ 09-15)</PreviewRow>
+                            <PreviewRow label="关联发版">Release v2.4.0-rc.2</PreviewRow>
+                            <PreviewRow label="阻断风险">0 项 Blocker (风险可控)</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>负责人: @alex</span>
+                            <span className="ml-auto font-mono text-10">健康度: 92%</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 2. 团队 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <Users className="size-3.5 text-accent-purple" />
+                        <span className="group-hover:text-accent-purple">团队: 前端架构组</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-purple/10 text-accent-purple">
+                              <Users className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              前端架构与工程团队
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0">Core Team</Badge>
+                          </div>
+                          <div className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/60">
+                            <div className="flex items-center -space-x-2">
+                              <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Alex Chen', handle: 'alex', isOnline: true }} className="ring-2 ring-background" />
+                              <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Sarah Lin', handle: 'sarah', isOnline: true }} className="ring-2 ring-background" />
+                              <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Leo Zhang', handle: 'leo', isOnline: true }} className="ring-2 ring-background" />
+                              <MemberAvatar size="sm" member={{ type: 'ai_agent', displayName: 'Claude Coder', handle: 'claude-coder', isOnline: true }} className="ring-2 ring-background" />
+                            </div>
+                            <div className="text-right">
+                              <span className="text-11 font-medium text-foreground block">4 位协同成员</span>
+                              <span className="text-10 text-muted-foreground block">3 人类 + 1 AI 同事</span>
+                            </div>
+                          </div>
+                          <PreviewSection title="团队范畴与负荷">
+                            <PreviewRow label="核心职责">Web · Electron 桌面壳 · UI 规范</PreviewRow>
+                            <PreviewRow label="活跃负荷">14 个工单在跑 · 3 个分支</PreviewRow>
+                            <PreviewRow label="交付效能">本周 22 PR 合入 · 零缺陷</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>Team Lead: @alex</span>
+                            <span className="ml-auto font-mono text-10 text-accent-green flex items-center gap-1">
+                              <span className="size-1.5 rounded-full bg-accent-green" /> 全员协同就绪
+                            </span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 3. Pull Request Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <GitPullRequest className="size-3.5 text-accent-blue" />
+                        <span className="group-hover:text-accent-blue">PR: #128 HoverCard 体系</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                              <GitPullRequest className="size-3.5" />
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                              #128: 核心 HoverCard 体系规范化
+                            </span>
+                            <StatusPill tone="success">Approved</StatusPill>
+                          </div>
+                          <div className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/60">
+                            <div className="flex items-center gap-1.5 font-mono text-11 text-foreground min-w-0 truncate">
+                              <GitBranch className="size-3 text-muted-foreground shrink-0" />
+                              <span className="truncate">feat/design-system</span>
+                              <span className="text-muted-foreground">→</span>
+                              <span className="text-accent-blue font-semibold">develop</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 font-mono text-10 shrink-0">
+                              <span className="text-accent-green font-semibold">+248</span>
+                              <span className="text-accent-red font-semibold">-36</span>
+                            </div>
+                          </div>
+                          <PreviewSection title="审查与门禁验证">
+                            <PreviewRow label="CI 门禁">5/5 Passed (SWC, Vitest, Doc, Lint)</PreviewRow>
+                            <PreviewRow label="签署决议">@sarah (已批准) · @qa-bot (签署)</PreviewRow>
+                            <PreviewRow label="关联工单">#ISSUE-104: 重构侧栏与 HoverCard</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span className="text-accent-green flex items-center gap-1 font-medium">
+                              <CheckCircle2 className="size-3" /> 可无冲突 Squash 合并
+                            </span>
+                            <span className="ml-auto font-mono text-10">15 分钟前更新</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    {/* 4. Git 提交 Trigger */}
+                    <HoverCard>
+                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                        <GitCommit className="size-3.5 text-muted-foreground" />
+                        <span className="group-hover:text-foreground">提交: 7a3f8c1 (fix ALS)</span>
+                      </HoverCardTrigger>
+                      <HoverCardContent size="lg">
+                        <HoverCardArrow />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-foreground">
+                              <GitCommit className="size-3.5" />
+                            </span>
+                            <span className="font-mono text-xs font-semibold text-foreground">
+                              commit 7a3f8c1
+                            </span>
+                            <Badge variant="outline" className="text-10 shrink-0 text-accent-green border-accent-green/40 flex items-center gap-0.5">
+                              <ShieldCheck className="size-2.5" /> Verified
+                            </Badge>
+                          </div>
+                          <div className="p-2 rounded-md bg-muted/40 border border-border/60">
+                            <p className="text-xs font-medium text-foreground leading-snug">
+                              fix(runtime): resolve AsyncLocalStorage scope penetration race
+                            </p>
+                          </div>
+                          <PreviewSection title="变更上下文">
+                            <PreviewRow label="提交作者">Alex Chen (@alex) · 12 分钟前</PreviewRow>
+                            <PreviewRow label="变更规模">3 个文件变更 (+42 / -8 行代码)</PreviewRow>
+                            <PreviewRow label="CI 流水线">Commit Build #982 Passed (38s)</PreviewRow>
+                          </PreviewSection>
+                          <PreviewFooterMeta>
+                            <span>所在分支: <code>develop</code></span>
+                            <span className="ml-auto font-mono text-10">关联 #ISSUE-112</span>
+                          </PreviewFooterMeta>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </div>
+                </div>
+
+                {/* B. 全景平铺审查画廊 */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-11 font-medium text-foreground">
+                      轻量属性卡片平铺全景画廊（4 大高频元属性规范对比）：
+                    </p>
+                    <Badge variant="secondary" className="text-10">轻量元卡对比</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* 卡片 1: 里程碑卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                            <Milestone className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            v2.4 质量门禁收口
+                          </span>
+                          <StatusPill tone="info">进行中</StatusPill>
+                        </div>
+                        <div className="space-y-1.5 pb-1 border-b border-border/50">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-11 font-medium text-foreground">18 / 24 工单</span>
+                            <span className="font-mono text-10 text-muted-foreground">75% · 剩3天</span>
+                          </div>
+                          <Progress value={75} className="h-1.5" />
+                          <div className="flex items-center justify-between text-10 text-muted-foreground">
+                            <span className="flex items-center gap-1 text-accent-green">
+                              <TrendingUp className="size-3" /> 燃尽平稳
+                            </span>
+                            <span>09-15</span>
+                          </div>
+                        </div>
+                        <PreviewSection title="排期与交付关联">
+                          <PreviewRow label="关联迭代">Sprint 24</PreviewRow>
+                          <PreviewRow label="关联发版">v2.4.0-rc.2</PreviewRow>
+                          <PreviewRow label="阻断风险">0 项 Blocker</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>负责人: @alex</span>
+                        <span className="ml-auto font-mono text-10">健康度: 92%</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 2: 团队协同卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-purple/10 text-accent-purple">
+                            <Users className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            前端架构组
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0">Core</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/60">
+                          <div className="flex items-center -space-x-2">
+                            <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Alex Chen', handle: 'alex', isOnline: true }} className="ring-2 ring-background" />
+                            <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Sarah Lin', handle: 'sarah', isOnline: true }} className="ring-2 ring-background" />
+                            <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Leo Zhang', handle: 'leo', isOnline: true }} className="ring-2 ring-background" />
+                            <MemberAvatar size="sm" member={{ type: 'ai_agent', displayName: 'Claude Coder', handle: 'claude-coder', isOnline: true }} className="ring-2 ring-background" />
+                          </div>
+                          <div className="text-right">
+                            <span className="text-11 font-medium text-foreground block">4 位成员</span>
+                            <span className="text-10 text-muted-foreground block">3人+1AI</span>
+                          </div>
+                        </div>
+                        <PreviewSection title="团队范畴与负荷">
+                          <PreviewRow label="核心职责">Web · Desktop · UI</PreviewRow>
+                          <PreviewRow label="活跃负荷">14 工单 · 3 分支</PreviewRow>
+                          <PreviewRow label="交付效能">22 PR · 零缺陷</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>Lead: @alex</span>
+                        <span className="ml-auto font-mono text-10 text-accent-green flex items-center gap-1">
+                          <span className="size-1.5 rounded-full bg-accent-green" /> 全员就绪
+                        </span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 3: PR 审查卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
+                            <GitPullRequest className="size-3.5" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                            #128: HoverCard
+                          </span>
+                          <StatusPill tone="success">Approved</StatusPill>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/60">
+                          <div className="flex items-center gap-1 font-mono text-10 text-foreground min-w-0 truncate">
+                            <GitBranch className="size-3 text-muted-foreground shrink-0" />
+                            <span className="truncate">feat/ui</span>
+                            <span className="text-muted-foreground">→</span>
+                            <span className="text-accent-blue font-semibold">dev</span>
+                          </div>
+                          <div className="flex items-center gap-1 font-mono text-10 shrink-0">
+                            <span className="text-accent-green font-semibold">+248</span>
+                            <span className="text-accent-red font-semibold">-36</span>
+                          </div>
+                        </div>
+                        <PreviewSection title="审查与门禁验证">
+                          <PreviewRow label="CI 门禁">5/5 Passed</PreviewRow>
+                          <PreviewRow label="签署决议">@sarah · @qa-bot</PreviewRow>
+                          <PreviewRow label="关联工单">#ISSUE-104</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span className="text-accent-green flex items-center gap-1 font-medium">
+                          <CheckCircle2 className="size-3" /> 可无冲突合并
+                        </span>
+                        <span className="ml-auto font-mono text-10">15m 前</span>
+                      </PreviewFooterMeta>
+                    </div>
+
+                    {/* 卡片 4: Git 提交卡 */}
+                    <div className="rounded-xl border border-border/80 bg-card p-3.5 shadow-md space-y-3 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-foreground">
+                            <GitCommit className="size-3.5" />
+                          </span>
+                          <span className="font-mono text-xs font-semibold text-foreground">
+                            7a3f8c1
+                          </span>
+                          <Badge variant="outline" className="text-10 shrink-0 text-accent-green border-accent-green/40 flex items-center gap-0.5">
+                            <ShieldCheck className="size-2.5" /> Verified
+                          </Badge>
+                        </div>
+                        <div className="p-2 rounded-md bg-muted/40 border border-border/60">
+                          <p className="text-11 font-medium text-foreground leading-snug line-clamp-2">
+                            fix(runtime): resolve AsyncLocalStorage scope penetration race
+                          </p>
+                        </div>
+                        <PreviewSection title="变更上下文">
+                          <PreviewRow label="提交作者">Alex Chen · 12m前</PreviewRow>
+                          <PreviewRow label="变更规模">3 文件 (+42 / -8)</PreviewRow>
+                          <PreviewRow label="流水线">Build #982 Passed</PreviewRow>
+                        </PreviewSection>
+                      </div>
+                      <PreviewFooterMeta>
+                        <span>分支: <code>develop</code></span>
+                        <span className="ml-auto font-mono text-10">#ISSUE-112</span>
+                      </PreviewFooterMeta>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ⑧ HoverCard 现存问题诊断与优化点看板 */}
+              <div>
+                <SubLabel>⑧ 现行 HoverCard 样式诊断与优化点审查（Design System Audit）</SubLabel>
+                <div className="rounded-xl border border-accent-yellow/30 bg-accent-yellow/5 p-4 space-y-3 max-w-3xl">
+                  <div className="flex items-center gap-2 text-accent-yellow font-semibold text-xs">
+                    <AlertTriangle className="size-4" />
+                    <span>HoverCard 现状审查清单与 5 大改进建议</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-11">
+                    <div className="p-2.5 rounded-lg border border-border/80 bg-background/80 space-y-1">
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <span className="text-accent-red">1. 暗色模式边缘对比度较弱</span>
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        现状仅使用 <code className="text-10 bg-muted px-1 py-0.5 rounded">ring-1 ring-foreground/10 shadow-md</code>，在纯暗色或半透明底板上阴影被吸收，卡片边界不够清晰。建议补充 <code className="text-10 bg-muted px-1 py-0.5 rounded">border border-border/80 dark:shadow-black/70</code>。
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg border border-border/80 bg-background/80 space-y-1">
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <span className="text-accent-orange">2. HoverCardArrow 边缘描边断层</span>
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        箭头是旋转小方块，但未带 border。当主卡片有清晰边框时，箭头两侧与主卡片接合部会形成 1px 缺失断层。建议在 Arrow 上追加对齐的主边框色。
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg border border-border/80 bg-background/80 space-y-1">
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <span className="text-accent-blue">3. 移动端/触控环境降级缺失</span>
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        在触控屏或移动设备上无 hover 状态，Trigger 会直接跳转或失效。建议为纯 Trigger 增加点击弹出切换（Click Fallback）或长按呼出。
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg border border-border/80 bg-background/80 space-y-1">
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <span className="text-accent-purple">4. 视口越界高度与溢出滚动保护</span>
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        长内容卡片在低分辨率屏幕或视口边缘时可能被浏览器底部裁切。HoverCardContent 需具备默认的 <code className="text-10 bg-muted px-1 py-0.5 rounded">max-h-96 overflow-y-auto</code> 安全线。
+                      </p>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg border border-border/80 bg-background/80 space-y-1 sm:col-span-2">
+                      <p className="font-semibold text-foreground flex items-center gap-1">
+                        <span className="text-accent-green">5. 统一数据加载态骨架屏（Skeleton规范）</span>
+                      </p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        当 HoverCardContent 挂载时触发异步请求（如获取成员实时任务或 Git 提交），目前缺乏标准通用的 <code className="text-10 bg-muted px-1 py-0.5 rounded">HoverCardSkeleton</code>，易出现高度剧烈跳跃（Layout Shift）。
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </SectionAnchor>
@@ -2433,23 +4722,44 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="empty">
             <SectionTitle>Empty States</SectionTitle>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { Icon: CheckSquare, title: 'No tasks yet', desc: "You're all caught up! Create a new task to get started.", action: 'New Task' },
-                { Icon: FileText, title: 'No documents', desc: 'Start building your knowledge base with a new document.', action: 'New Document' },
-                { Icon: Search, title: 'No results found', desc: 'Try adjusting your search query or clearing the filters.', action: null },
-              ].map(({ Icon, title, desc, action }) => (
-                <div key={title} className="flex flex-col items-center justify-center text-center p-6 rounded-xl border border-dashed border-border bg-muted/10 gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{title}</p>
-                    <p className="text-xs text-muted-foreground mt-1 max-w-45">{desc}</p>
-                  </div>
-                  {action && <Button size="sm"><Plus className="w-3 h-3" /> {action}</Button>}
+            <p className="text-xs text-muted-foreground mb-3">空态三分场景：Page（整页主体空态，variant="page" 撑满内容区 + IconStack 插画 + 首个功能入口）/ In-Card（卡片/分区内空态，默认 card + muted 圆块图标，不用插画）/ Filter Results（筛选无结果，card + SearchX + 清除筛选动作）。</p>
+            <div className="space-y-8">
+              <div>
+                <SubLabel>Page — 整页空态（h-full 撑满父容器 + min-h-100 兜底）</SubLabel>
+                <div className="h-100">
+                  <EmptyState
+                    variant="page"
+                    visual={
+                      <IconStack aria-hidden="true" className="text-primary">
+                        <FileText className="size-4 text-primary" />
+                      </IconStack>
+                    }
+                    title="暂无文档"
+                    description="开始创建你的第一个文档"
+                    action={<Button size="sm"><Plus className="w-3 h-3" /> New Document</Button>}
+                  />
                 </div>
-              ))}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <SubLabel>In-Card — 分区/卡片空态（默认）</SubLabel>
+                  <EmptyState
+                    icon={CheckSquare}
+                    title="No tasks yet"
+                    description="You're all caught up! Create a new task to get started."
+                    action={<Button size="sm"><Plus className="w-3 h-3" /> New Task</Button>}
+                  />
+                </div>
+                <div>
+                  <SubLabel>Filter Results — 筛选无结果（+ 清除筛选）</SubLabel>
+                  <EmptyState
+                    icon={Search}
+                    title="No matching items"
+                    description="Try adjusting your search query or clearing the filters."
+                    action={<Button size="sm" variant="outline">Clear filters</Button>}
+                  />
+                </div>
+              </div>
             </div>
           </SectionAnchor>
 
@@ -2573,14 +4883,12 @@ export function DesignSystemPage() {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-4">
-                    <ResponsiveContainer width={160} height={160}>
-                      <PieChart>
-                        <Pie data={PIE_DATA} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
-                          {PIE_DATA.map((entry, idx) => <Cell key={idx} fill={entry.fill} />)}
-                        </Pie>
-                        <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }} />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <PieChart width={160} height={160}>
+                      <Pie data={PIE_DATA} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
+                        {PIE_DATA.map((entry, idx) => <Cell key={idx} fill={entry.fill} />)}
+                      </Pie>
+                      <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }} />
+                    </PieChart>
                     <div className="space-y-2">
                       {PIE_DATA.map((e) => (
                         <div key={e.name} className="flex items-center gap-2">
@@ -2709,6 +5017,16 @@ export function DesignSystemPage() {
 
           <Separator />
 
+          <SectionAnchor id="filter-chips">
+            <SectionTitle>Filter Chips</SectionTitle>
+            <div className="space-y-4">
+              <SubLabel>Linear 风格条件条 — 工具栏下单开一行：[字段｜算子｜值｜×] 拼接 chip，行尾 + 追加条件，右侧 Clear / Save（保存到当前视图 / 另存为新视图）</SubLabel>
+              <FilterChipsDemo />
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
           <SectionAnchor id="sub-page-toolbar">
             <SectionTitle>Sub Page Toolbar</SectionTitle>
             <div className="space-y-4">
@@ -2747,6 +5065,18 @@ export function DesignSystemPage() {
                       <span className="text-xs text-muted-foreground">{PRIORITY_CFG[p].label}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div>
+                <SubLabel>IssueTypePill — 类型胶囊（pill / frame）</SubLabel>
+                <div className="flex flex-wrap items-center gap-4">
+                  <IssueTypePill meta={{ name: '任务', icon: 'ListTodo', color: '#5E6AD2' }} />
+                  <IssueTypePill meta={{ name: '缺陷', icon: 'Bug', color: '#E5484D' }} />
+                  <IssueTypePill meta={{ name: '需求', icon: 'Lightbulb', color: '#F5A623' }} />
+                  <IssueTypePill meta={{ name: '未配置', icon: 'Circle' }} />
+                  <IssueTypePill meta={{ name: '任务', icon: 'ListTodo', color: '#5E6AD2' }} variant="frame" />
+                  <IssueTypePill meta={{ name: '缺陷', icon: 'Bug', color: '#E5484D' }} variant="frame" />
                 </div>
               </div>
 
@@ -2862,7 +5192,7 @@ export function DesignSystemPage() {
                       { id: 'APM-1', title: 'AI chat interface', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, subtasks: { done: 2, total: 3 }, milestone: 'Phase 1 · Core UI', labels: [{ name: 'Frontend', color: '#3B82F6' }], assignee: 'AK', color: '#6366F1', due: 'Mar 12' },
                       { id: 'APM-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, subtasks: { done: 1, total: 3 }, milestone: 'Phase 1 · Core UI', labels: [{ name: 'Frontend', color: '#3B82F6' }, { name: 'Design', color: '#8B5CF6' }], assignee: 'ML', color: '#F59E0B', due: 'Mar 20' },
                       { id: 'APM-4', title: 'AI velocity scoring', status: 'in_progress' as TaskStatus, priority: 'urgent' as Priority, subtasks: { done: 0, total: 2 }, milestone: 'Phase 2 · Intelligence', labels: [{ name: 'Backend', color: '#10B981' }], assignee: 'BK', color: '#EF4444', due: 'Mar 25' },
-                    ].map((task, taskIdx) => (
+                    ].map((task, issueIdx) => (
                       <div key={task.id}>
                         <div className="flex items-center gap-2 px-4 py-1.5 hover:bg-accent/20 transition-colors cursor-pointer">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -2878,7 +5208,7 @@ export function DesignSystemPage() {
                             <div className="w-35 flex gap-1 overflow-hidden">
                               {task.labels.map((l) => <LabelChip key={l.name} name={l.name} color={l.color} />)}
                             </div>
-                            <MilestonePill name={task.milestone} idx={taskIdx} />
+                            <MilestonePill name={task.milestone} idx={issueIdx} />
                             <div className="w-18 flex items-center gap-1 text-11 text-muted-foreground">
                               <Clock className="w-3 h-3 shrink-0" />{task.due}
                             </div>
@@ -2896,7 +5226,7 @@ export function DesignSystemPage() {
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="w-20 text-11 text-muted-foreground truncate">AgentPM</span>
                             <div className="w-35" />
-                            <MilestonePill name={task.milestone} idx={taskIdx} />
+                            <MilestonePill name={task.milestone} idx={issueIdx} />
                             <div className="w-18" />
                             <AssigneeAvatar initials={task.assignee} color={task.color} />
                           </div>
@@ -3296,65 +5626,8 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="command">
             <SectionTitle>Command Palette</SectionTitle>
-            <SubLabel>Static preview — opened with ⌘K / Ctrl+/</SubLabel>
-            <div className="flex justify-center">
-              <div className="w-140 rounded-xl border border-border shadow-2xl bg-card overflow-hidden">
-                <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
-                  <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <span className="flex-1 text-sm text-muted-foreground/50">输入命令或搜索…</span>
-                  <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-10 text-muted-foreground">ESC</kbd>
-                </div>
-
-                <div className="max-h-72 overflow-hidden p-2 space-y-1">
-                  <p className="px-2 py-1.5 text-10 font-semibold text-muted-foreground uppercase tracking-wider">导航</p>
-                  {[
-                    { Icon: Home, label: 'Go to Dashboard', shortcut: 'G D', active: false },
-                    { Icon: FolderKanban, label: 'Go to Projects', shortcut: 'G P', active: true },
-                    { Icon: CheckSquare, label: 'Go to Tasks', shortcut: 'G T', active: false },
-                    { Icon: Sparkles, label: 'Go to AI Hub', shortcut: 'G A', active: false },
-                    { Icon: GitBranch, label: 'Go to Repositories', shortcut: 'G R', active: false },
-                  ].map(({ Icon, label, shortcut, active }) => (
-                    <div key={label}
-                      className={cn(
-                        'flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm cursor-pointer transition-colors',
-                        active ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/60',
-                      )}>
-                      <div className="flex items-center gap-3">
-                        <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span>{label}</span>
-                      </div>
-                      <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-10 text-muted-foreground">{shortcut}</kbd>
-                    </div>
-                  ))}
-                  <p className="px-2 py-1.5 text-10 font-semibold text-muted-foreground uppercase tracking-wider pt-2">新建</p>
-                  {[
-                    { Icon: Plus, label: 'Create New Task', shortcut: 'C T' },
-                    { Icon: FileText, label: 'Create New Document', shortcut: 'C D' },
-                  ].map(({ Icon, label, shortcut }) => (
-                    <div key={label}
-                      className="flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-accent/60 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span>{label}</span>
-                      </div>
-                      <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-10 text-muted-foreground">{shortcut}</kbd>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border-t border-border px-4 py-2 flex items-center justify-between bg-muted/30">
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    {[['↑↓', '导航'], ['↵', '选择'], ['ESC', '关闭']].map(([key, label]) => (
-                      <div key={key} className="flex items-center gap-1">
-                        <kbd className="inline-flex h-5 items-center rounded border border-border/50 bg-background px-1.5 font-mono text-10">{key}</kbd>
-                        <span>{label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <kbd className="inline-flex h-5 items-center rounded border border-border/50 bg-background px-1.5 font-mono text-10 text-muted-foreground">Ctrl+/</kbd>
-                </div>
-              </div>
-            </div>
+            <SubLabel>coss ui p-command 配方（base-ui autocomplete 引擎，components/ui/command）—— 全局面板同源，⌘K / Ctrl+K 唤起真实面板</SubLabel>
+            <CommandPaletteDemo />
           </SectionAnchor>
 
           <Separator />
@@ -3461,12 +5734,24 @@ export function DesignSystemPage() {
                 </div>
               </div>
               <div>
-                <SubLabel>AsyncState</SubLabel>
+                <SubLabel>AsyncState（emptyVariant / emptyVisual 透传：page 空态走插画）</SubLabel>
                 <div className="space-y-3">
                   <AsyncState isLoading>
                     <p className="text-sm text-muted-foreground">Loaded content</p>
                   </AsyncState>
                   <AsyncState isEmpty emptyTitle="No tasks yet" emptyDescription="Create a task to get started">
+                    <p className="text-sm text-muted-foreground">Loaded content</p>
+                  </AsyncState>
+                  <AsyncState
+                    isEmpty
+                    emptyVariant="page"
+                    emptyTitle="No documents"
+                    emptyVisual={
+                      <IconStack aria-hidden="true" className="text-primary">
+                        <FileText className="size-4 text-primary" />
+                      </IconStack>
+                    }
+                  >
                     <p className="text-sm text-muted-foreground">Loaded content</p>
                   </AsyncState>
                   <AsyncState error="Failed to load data" onRetry={() => {}}>
@@ -3475,26 +5760,23 @@ export function DesignSystemPage() {
                 </div>
               </div>
               <div>
-                <SubLabel>EmptyState</SubLabel>
+                <SubLabel>EmptyState — In-Card（默认 card）</SubLabel>
                 <EmptyState
+                  icon={FileText}
                   title="No documents found"
                   description="Start building your knowledge base"
                   action={<Button size="sm"><Plus /> New Document</Button>}
                 />
               </div>
               <div>
-                <SubLabel>Empty primitives</SubLabel>
-                <div className="rounded-lg border border-dashed border-border">
-                  <Empty>
-                    <EmptyMedia variant="icon"><Search className="w-5 h-5" /></EmptyMedia>
-                    <EmptyHeader>
-                      <EmptyTitle>No results</EmptyTitle>
-                      <EmptyDescription>Try adjusting your search query or clearing the filters.</EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent>
-                      <Button size="sm" variant="outline">Clear filters</Button>
-                    </EmptyContent>
-                  </Empty>
+                <SubLabel>EmptyState — Filter Results（筛选无结果 + 清筛选）</SubLabel>
+                <div className="rounded-lg border border-border/60 bg-card p-2">
+                  <EmptyState
+                    icon={Search}
+                    title="No matching items"
+                    description="Try adjusting your search query or clearing the filters."
+                    action={<Button size="sm" variant="outline">Clear filters</Button>}
+                  />
                 </div>
               </div>
             </div>
@@ -3544,6 +5826,156 @@ export function DesignSystemPage() {
                       <span className="text-xs text-foreground">3h</span>
                     </PropertyRow>
                   </PropsCard>
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="ai-density-cards">
+            <SectionTitle>AI High-Density Cards [AI]</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              AI 执行面高信息密度卡片矩阵（DESIGN.md §6.1）：承载复杂多样化执行状态、推理链、工件交接、冷却门禁与双轨成本。
+            </p>
+
+            <div className="space-y-6">
+              {/* ① 思考折叠核 (ThinkingStream) */}
+              <div>
+                <SubLabel>① 思考折叠核 (ThinkingStream) — 26px 胶囊 · 烟熏紫脉冲 · 展开就地查看思维链</SubLabel>
+                <div className="space-y-2 max-w-xl">
+                  <ThinkingStream
+                    isThinking={true}
+                    steps={[
+                      { step: 1, title: '解析用户指令与架构契约', durationMs: 420 },
+                    ]}
+                  />
+                  <ThinkingStream
+                    isThinking={false}
+                    totalDurationMs={1850}
+                    defaultExpanded={true}
+                    steps={[
+                      { step: 1, title: '解析用户指令与架构契约', detail: '已验证 DESIGN.md 与 modules.md 架构对齐', durationMs: 420 },
+                      { step: 2, title: '静态扫描组件依赖树', detail: '确认 99 个 UI 原语与 150 个业务模块组件边界', durationMs: 680 },
+                      { step: 3, title: '构建低饱和 5 色阶与外舒内紧卡片方案', detail: '已生成 14px 标准 / 13px 密集自适应规则', durationMs: 750 },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              {/* ② 工具与命令执行胶囊 (AssistantToolCard) */}
+              <div>
+                <SubLabel>② 工具与命令执行胶囊 (AssistantToolCard) — 单行折叠 · 动词×实体 · 结果常显</SubLabel>
+                <div className="space-y-2 max-w-xl">
+                  <AssistantToolCard
+                    part={{
+                      type: 'tool-call',
+                      toolName: 'update_task',
+                      state: 'output-available',
+                      input: { taskId: 'ISSUE-104', priority: 'high', status: 'in_progress' },
+                      output: {
+                        taskId: 'ISSUE-104',
+                        title: '重构 Design System 紧凑型卡片',
+                        status: 'in_progress',
+                      },
+                    }}
+                  />
+                  <AssistantToolCard
+                    part={{
+                      type: 'tool-call',
+                      toolName: 'list_project_tasks',
+                      state: 'output-available',
+                      input: { projectId: 'p-core', limit: 10 },
+                      output: {
+                        count: 8,
+                        samples: [
+                          'ISSUE-101: 优化暗色模式色阶对比度',
+                          'ISSUE-102: 修复 PopoverTrigger 双嵌套',
+                          'ISSUE-103: 接入 DualTrackMetricPill',
+                        ],
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* ③ 多 Agent 协作交接卡 (AgentHandoffCard) */}
+              <div>
+                <SubLabel>③ 多 Agent 协作交接卡 (AgentHandoffCard) — 跨角色流转 · 显式契约门禁</SubLabel>
+                <div className="max-w-xl">
+                  <AgentHandoffCard
+                    fromAgent={{ name: 'Alice PM', role: '需求主管' }}
+                    toAgent={{ name: 'Claude Coder', role: '全栈执行 Agent' }}
+                    artifact={{
+                      title: 'DESIGN.md - APM 全局设计系统规范 v2.0',
+                      type: 'Architecture Spec',
+                    }}
+                    description="完成低饱和多色色阶、外舒内紧卡片、多端 13px/14px 双层字阶与动效白名单制定，请按清单完成卡片收口。"
+                    gates={[
+                      { id: 'g1', label: '契约绑定', status: 'passed' },
+                      { id: 'g2', label: '测试覆盖', status: 'passed' },
+                      { id: 'g3', label: '破坏性拦截', status: 'pending' },
+                    ]}
+                    metrics={{ tokens: 4280, durationMs: 2400, costUsd: 0.0064 }}
+                  />
+                </div>
+              </div>
+
+              {/* ④ 决策证据抽屉卡 (DecisionCardShell) */}
+              <div>
+                <SubLabel>④ 决策证据抽屉卡 (DecisionCardShell) — 证据强制 · 3s 冷却门禁 · 1~4 快捷键</SubLabel>
+                <div className="max-w-xl">
+                  <DecisionCardShell
+                    decision={{
+                      id: 'dec-ds-01',
+                      kind: 'approval',
+                      sourceId: 'dec-ds-01',
+                      status: 'pending',
+                      urgency: 'blocking',
+                      riskLevel: 'high_risk',
+                      title: '执行破坏性样式重构：全面清理 276 处非语义裸色与废弃伪组件',
+                      proposer: { type: 'ai_agent', name: 'Design Architect Agent' },
+                      createdAt: new Date().toISOString(),
+                      payload: { affectedFiles: 14, tokensChanged: 28, deletedLines: 120 },
+                    }}
+                    requireEvidence={true}
+                    cooldownSecs={3}
+                    impact={[
+                      { label: '波及组件', value: '18 个', tone: 'orange', icon: Sparkles },
+                      { label: '预估耗时', value: '5 分钟', tone: 'blue', icon: Clock },
+                      { label: '回滚策略', value: 'Git 分支保护', tone: 'green', icon: CheckCircle2 },
+                    ]}
+                    evidence={
+                      <div className="space-y-1 font-mono text-11 text-content-text-muted bg-content-bg-secondary p-2 rounded">
+                        <p className="text-accent-green">+ 引入 5 组低饱和多色色阶 (--accent-blue/green/amber/crimson/violet)</p>
+                        <p className="text-accent-red">- 移除 276 处 text-orange-500, bg-blue-50 等硬编码裸色</p>
+                        <p className="text-accent-blue">• 统一 Card 内边距为 p-3.5，CardTitle 设为 text-base font-semibold</p>
+                      </div>
+                    }
+                    onAction={(act) => toast.info(`触发决议动作: ${act}`)}
+                  />
+                </div>
+              </div>
+
+              {/* ⑤ 双轨成本微徽章 (DualTrackMetricPill) */}
+              <div>
+                <SubLabel>⑤ 双轨成本与执行微徽章 (DualTrackMetricPill) — 11px Mono · 低调角落常驻</SubLabel>
+                <div className="flex flex-wrap items-center gap-3">
+                  <DualTrackMetricPill
+                    tokens={3420}
+                    durationMs={1820}
+                    costUsd={0.0051}
+                    model="Claude 3.7 Sonnet"
+                  />
+                  <DualTrackMetricPill
+                    tokens={12400}
+                    durationMs={4500}
+                    costUsd={0.0186}
+                  />
+                  <DualTrackMetricPill
+                    durationMs={620}
+                    model="Gemini 2.5 Flash"
+                  />
                 </div>
               </div>
             </div>

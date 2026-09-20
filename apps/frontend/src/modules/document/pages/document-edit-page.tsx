@@ -9,7 +9,6 @@ import {
   Sparkles,
   Wand2,
   X,
-  Plus,
   Hash,
   Image as ImageIcon,
   AlignLeft,
@@ -20,6 +19,7 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { Textarea } from '@/components/ui/textarea';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
@@ -27,7 +27,7 @@ import type { DocumentCategory, Document, DocumentStatus } from '../api/document
 import { useDocumentDetail } from '../hooks/use-document-detail';
 import { useUpdateDocument } from '../hooks/use-document-mutations';
 import { useCreateVersion } from '../hooks/use-document-versions';
-import { useAppStore } from '@/infrastructure/store/app-store';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { parseFrontmatter, mergeFrontmatter, type DocumentFrontmatter } from '../services/mdx-frontmatter';
 import { MdxRenderer } from '../components/mdx-renderer';
 import { MdxEditor, type MdxEditorRef } from '../components/mdx-editor';
@@ -84,7 +84,6 @@ function DocumentEditWorkspace({
   const [editorMode, setEditorMode] = useState<EditorMode>('split');
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
-  const [tagInput, setTagInput] = useState('');
   const editorRef = useRef<MdxEditorRef | null>(null);
 
   const [title] = useState(data.title);
@@ -96,26 +95,15 @@ function DocumentEditWorkspace({
   // 元数据 (frontmatter) 草稿态
   const [summary, setSummary] = useState<string>(initialFrontmatter.summary ?? '');
   const [coverImage, setCoverImage] = useState<string>(initialFrontmatter.coverImage ?? '');
-  const [tags, setTags] = useState<string[]>(initialFrontmatter.tags ?? []);
+  // 标签来源 frontmatter，页面内只读展示
+  const [tags] = useState<string[]>(initialFrontmatter.tags ?? []);
 
   const updateDocument = useUpdateDocument();
   const createVersion = useCreateVersion(data.id);
-  const currentUserId = useAppStore((s) => s.currentUser?.id ?? '');
-
-  const addTag = () => {
-    const t = tagInput.trim();
-    if (!t) return;
-    if (tags.includes(t)) {
-      setTagInput('');
-      return;
-    }
-    setTags((prev) => [...prev, t]);
-    setTagInput('');
-  };
-
-  const removeTag = (t: string) => {
-    setTags((prev) => prev.filter((x) => x !== t));
-  };
+  // 版本快照作者走 useAuth（react-query ['auth','me']，路由守卫同源），
+  // app-store.currentUser 刷新后异步回填，用它会让快照/保存判定偶发失效
+  const { currentUser } = useAuth();
+  const currentUserId = currentUser?.id ?? '';
 
   const handleSave = () => {
     // 把元数据合并到 markdown 顶部的 frontmatter, 再随 content 一起提交
@@ -186,7 +174,10 @@ function DocumentEditWorkspace({
           { label: '文档管理', to: '/app/documents' },
           { label: title || '未命名文档' },
         ]}
-        actions={<FavoriteToggle label={title || '未命名文档'} />}
+        actions={<>
+          <FavoriteToggle label={title || '未命名文档'} />
+          <SubscribeButton />
+        </>}
       />
       <div className="flex flex-1 min-h-0 flex-col border-t border-border bg-background">
         <header className="shrink-0 border-b border-border px-6 py-3">

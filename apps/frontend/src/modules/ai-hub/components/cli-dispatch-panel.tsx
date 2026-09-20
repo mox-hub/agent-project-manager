@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bot, Play, X, ChevronDown, Check } from 'lucide-react';
+import { Bot, Play, ChevronDown, Check } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,12 +28,12 @@ import { api } from '@/infrastructure/api-client';
 import type { CliProvider, CliProviderId } from '../api/ai-hub-api';
 
 interface CliDispatchPanelProps {
-  taskId: string;
+  issueId: string;
   taskTitle?: string;
   onDispatchSuccess?: (executionRunId: string) => void;
 }
 
-export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDispatchPanelProps) {
+export function CliDispatchPanel({ issueId, taskTitle, onDispatchSuccess }: CliDispatchPanelProps) {
   const [open, setOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<CliProviderId>('claude-code');
   const queryClient = useQueryClient();
@@ -49,7 +49,7 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
   const dispatchMutation = useMutation({
     mutationFn: async () => {
       return api.post<{ executionRunId: string; status: string }>(
-        `/ai/tasks/${taskId}/dispatch-cli`,
+        `/ai/issues/${issueId}/dispatch-cli`,
         { providerId: selectedProvider }
       );
     },
@@ -73,6 +73,7 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
     'claude-code': 'Claude Code',
     'codex': 'OpenAI Codex',
     'zcode': 'ZCode',
+    'opencode': 'OpenCode',
   };
 
   const selectedProviderInfo = providersData?.providers?.find(

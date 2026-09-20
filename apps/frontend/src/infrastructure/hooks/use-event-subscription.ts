@@ -41,7 +41,7 @@ interface ProjectEventPayload {
 
 interface TaskEventPayload {
   projectId: string;
-  taskId: string;
+  issueId: string;
   [key: string]: unknown;
 }
 

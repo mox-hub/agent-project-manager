@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
+import { readHistoryIdx, resolveBackSteps } from '@/shared/lib/history-back';
 import { useGitToolStatus } from '@/modules/git/hooks/use-git-tool';
 import { useTerminalStatus } from '@/modules/runtime/hooks/use-terminal-status';
 import { ArrowLeft, Search } from 'lucide-react';
@@ -159,24 +160,22 @@ export function SettingsPage() {
 
   // 记录进入设置页时的历史索引（布局跨子路由切换不卸载，值只记录一次）。
   // 子页切换会不断压入历史记录，navigate(-1) 只会回到上一个设置子页，
-  // 因此按「当前索引 - 进入时索引」的差值一次性跳回设置页之前的页面。
+  // 故按 resolveBackSteps 的差值一次性跨出设置页（步数含跨出的那一步）。
   const entryHistoryIdxRef = useRef<number | null>(null);
   useEffect(() => {
     if (entryHistoryIdxRef.current === null) {
-      entryHistoryIdxRef.current =
-        (window.history.state as { idx?: number } | null)?.idx ?? 0;
+      entryHistoryIdxRef.current = readHistoryIdx();
     }
   }, []);
 
-  // 返回应用：能回溯到进入前的页面则回退，否则回到项目首页
+  // 返回应用：能回溯到进入前的业务页面则一步跨回，否则回到项目首页
   const handleBackToApp = () => {
-    const currentIdx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
-    const entryIdx = entryHistoryIdxRef.current ?? 0;
-    if (entryIdx > 0 && currentIdx >= entryIdx) {
-      navigate(-Math.max(1, currentIdx - entryIdx));
-    } else {
+    const steps = resolveBackSteps(readHistoryIdx(), entryHistoryIdxRef.current ?? 0);
+    if (steps === null) {
       navigate('/app/projects');
+      return;
     }
+    navigate(-steps);
   };
 
   return (

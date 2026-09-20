@@ -63,6 +63,7 @@ const TreeNode = memo(function TreeNode({
   return (
     <div>
       <div
+        data-ai-entity={isFolder ? undefined : `document:${doc.id}`}
         className={cn(
           'group flex items-center gap-1 rounded-md px-2 py-1.5 cursor-pointer transition-colors duration-100',
           isSelected

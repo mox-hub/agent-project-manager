@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { CheckSquare, Bug, ExternalLink, Plus, X, Link2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CheckSquare, Bug, ExternalLink, Plus, X, Link2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { DocumentTaskLink } from '@/modules/document/api/document-task-link-api';
@@ -63,7 +64,8 @@ interface PickerState {
 }
 
 export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinksListProps) {
-  const { data: groupsRaw, isLoading } = useSectionTaskLinksByDoc(documentId);
+  const { t } = useTranslation();
+  const { data: groupsRaw, isLoading, isError } = useSectionTaskLinksByDoc(documentId);
   const groups = unwrapList<SectionGroup>(groupsRaw);
   const [picker, setPicker] = useState<PickerState | null>(null);
   const [highlightedSectionId, setHighlightedSectionId] = useState<string | null>(null);
@@ -136,11 +138,20 @@ export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinks
     );
   }
 
+  if (isError) {
+    return (
+      <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+        <AlertCircle size={14} className="mx-auto mb-1 text-muted-foreground/60" />
+        {t('document.sectionLinks.loadFailed', '段落任务关联加载失败，请稍后重试')}
+      </div>
+    );
+  }
+
   if (groups.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
         <Link2 size={14} className="mx-auto mb-1 text-muted-foreground/60" />
-        文档尚未解析出章节, 无法添加段落关联
+        {t('document.sectionLinks.noSections', '文档尚未解析出章节, 无法添加段落关联')}
       </div>
     );
   }
@@ -169,7 +180,7 @@ export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinks
           open
           onOpenChange={(open) => !open && setPicker(null)}
           projectId={picker.projectId}
-          onSelect={(taskId, linkType) => {
+          onSelect={(issueId, linkType) => {
             // 触发 SectionGroupCard 内的 mutation (通过 CustomEvent 转发)
             window.dispatchEvent(
               new CustomEvent('apm:create-section-link', {
@@ -177,7 +188,7 @@ export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinks
                   sectionId: picker.sectionId,
                   documentId: picker.documentId,
                   projectId: picker.projectId,
-                  taskId,
+                  issueId,
                   linkType,
                   currentUserId,
                 },
@@ -215,20 +226,20 @@ function SectionGroupCard({
         sectionId: string;
         documentId: string;
         projectId: string;
-        taskId: string;
+        issueId: string;
         linkType: DocumentTaskLink['linkType'];
         currentUserId: string;
       }>).detail;
       if (!detail || detail.sectionId !== group.sectionId) return;
       if (!detail.currentUserId) return;
+      // createdBy 由服务端从认证身份取，DTO 不收该字段
       create.mutate({
-        taskId: detail.taskId,
+        issueId: detail.issueId,
         projectId: detail.projectId,
         documentId: detail.documentId,
         sectionId: detail.sectionId,
         linkType: detail.linkType,
-        createdBy: detail.currentUserId,
-      } as any);
+      });
     };
     window.addEventListener('apm:create-section-link', handler);
     return () => window.removeEventListener('apm:create-section-link', handler);
@@ -290,11 +301,11 @@ function SectionGroupCard({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="truncate text-xs">
-                    {link.task?.title || link.taskId}
+                    {link.task?.title || link.issueId}
                   </span>
                   {link.task && (
                     <a
-                      href={`/app/projects/${projectId}/tasks/${link.taskId}`}
+                      href={`/app/projects/${projectId}/issues/${link.issueId}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-muted-foreground hover:text-foreground"

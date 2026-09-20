@@ -7,11 +7,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useTerminalStatus, useTestShell } from '@/modules/runtime/hooks/use-terminal-status';
-import { Terminal, RefreshCw, CheckCircle2, XCircle, Save } from 'lucide-react';
+import { Terminal, RefreshCw, CheckCircle2, XCircle, Save, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/toast';
 
@@ -74,7 +73,7 @@ function TerminalToolStatusCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Terminal size={16} className="text-accent-blue" />
-            <CardTitle>{t('settings.terminalStatus')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.terminalStatus')}</CardTitle>
           </div>
           <Button
             variant="outline"
@@ -224,26 +223,27 @@ export function TerminalSettingsSection() {
   const checkboxLabelClassName = 'flex items-center gap-2 text-sm text-muted-foreground';
 
   return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader
-        icon={Terminal}
-        title={t('settings.terminal')}
-        actions={
-          <HeaderActionButton
-            icon={Save}
-            label={isSaving ? t('settings.saving') : t('settings.saveChanges')}
-            pinned
-            onClick={handleSave}
-            disabled={isSaving || isLoading}
-            data-ai-component="settings.global-settings.header.save"
-            data-ai-action="settings.global-settings.header.save.click"
-          />
-        }
-      />
-      <div className="p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
-          {/* 终端工具状态卡片 */}
-          <TerminalToolStatusCard />
+    <PageShell
+      variant="standard"
+      icon={Terminal}
+      iconColor="text-accent-purple"
+      title={t('settings.terminal')}
+      className="bg-background text-foreground"
+      contentClassName="space-y-6"
+      actions={
+        <HeaderActionButton
+          icon={Save}
+          label={isSaving ? t('settings.saving') : t('settings.saveChanges')}
+          pinned
+          onClick={handleSave}
+          disabled={isSaving || isLoading}
+          data-ai-component="settings.global-settings.header.save"
+          data-ai-action="settings.global-settings.header.save.click"
+        />
+      }
+    >
+      {/* 终端工具状态卡片 */}
+      <TerminalToolStatusCard />
 
           {/* 终端配置卡片 */}
           <Card
@@ -251,7 +251,10 @@ export function TerminalSettingsSection() {
             data-ai-component="settings.global-settings.terminal-card"
           >
             <CardHeader>
-              <CardTitle>{t('settings.terminalTitle')}</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Settings2 size={16} className="text-accent-purple" />
+                {t('settings.terminalTitle')}
+              </CardTitle>
               <CardDescription>{t('settings.terminalDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
@@ -363,8 +366,6 @@ export function TerminalSettingsSection() {
               </Form>
             </CardContent>
           </Card>
-        </div>
-      </div>
     </PageShell>
   );
 }

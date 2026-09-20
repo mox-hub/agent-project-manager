@@ -7,7 +7,6 @@ import { AccessTokenController } from './access-token.controller';
 import { AuthController } from './auth.controller';
 import { OAuth2Controller } from './oauth2.controller';
 import { OAuth2Service } from './oauth2.service';
-import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { ConfigService } from '../../core/config/config.service';
 
@@ -26,7 +25,7 @@ import { ConfigService } from '../../core/config/config.service';
     }),
   ],
   controllers: [AuthController, OAuth2Controller, AccessTokenController],
-  providers: [AuthService, OAuth2Service, LocalStrategy, JwtStrategy],
+  providers: [AuthService, OAuth2Service, JwtStrategy],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

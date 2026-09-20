@@ -25,14 +25,18 @@ export function buildAiId(parts: Array<string | undefined | null>): string {
 }
 
 export const CORE_AI_PAGE_IDS = {
+  office: "office.office.main",
   projectList: "project.project-list.main",
   dashboardOverview: "project.dashboard-overview.main",
   projectDetail: "project.project-detail.main",
   projectDashboard: "project.project-dashboard.main",
   projectBoard: "project.project-board.main",
   projectMilestones: "project.project-milestones.main",
+  projectProfile: "project.project-profile.main",
+  projectPlaybook: "project.project-playbook.main",
   projectTeam: "project.project-team.main",
   projectSettings: "project.project-settings.main",
+  projectInit: "project.project-init.main",
   taskWorkspace: "task.task-workspace.main",
   aiManagement: "ai-hub.ai-management.main",
   integrationList: "integration.integration-list.main",

@@ -1,5 +1,5 @@
 /**
- * task：任务管理（列/查/建/改/认领/指派）
+ * task：工单管理（Task/Bug 统一为 Issue 族；命令名保留 task，API 走 /issues 口径）
  */
 import { Command } from 'commander';
 import { ApmError } from '@apm/shared';
@@ -22,7 +22,7 @@ export function registerTaskCommands(program: Command): void {
         cmd: Command,
       ) => {
         const ctx = buildContext(cmd);
-        const data = await ctx.client.get(`/projects/${opts.project}/tasks`, {
+        const data = await ctx.client.get(`/projects/${opts.project}/issues`, {
           status: opts.status,
           assigneeId: opts.assignee,
           page: Number(opts.page),
@@ -37,7 +37,7 @@ export function registerTaskCommands(program: Command): void {
     .description('查看任务详情')
     .action(async (id: string, _o: unknown, cmd: Command) => {
       const ctx = buildContext(cmd);
-      const data = await ctx.client.get(`/tasks/${id}`);
+      const data = await ctx.client.get(`/issues/${id}`);
       out(ctx, data);
     });
 
@@ -77,7 +77,7 @@ export function registerTaskCommands(program: Command): void {
         if (opts.description) body.description = opts.description;
         if (opts.status) body.status = opts.status;
         if (opts.type) body.type = opts.type;
-        const data = await ctx.client.post('/tasks', body);
+        const data = await ctx.client.post('/issues', body);
         out(ctx, data);
       },
     );
@@ -95,21 +95,19 @@ export function registerTaskCommands(program: Command): void {
         if (opts.status) body.status = opts.status;
         if (opts.title) body.title = opts.title;
         if (opts.description) body.description = opts.description;
-        const data = await ctx.client.patch(`/tasks/${id}`, body);
+        const data = await ctx.client.patch(`/issues/${id}`, body);
         out(ctx, data);
       },
     );
 
   task
     .command('claim <id>')
-    .description('认领任务（AI Worker）')
+    .description('认领任务（AI Worker）——后端 claim 端点已随术语重构移除，暂不可用')
     .option('--agent <bindingId>', 'Agent 绑定 id')
-    .action(async (id: string, opts: { agent?: string }, cmd: Command) => {
-      const ctx = buildContext(cmd);
-      const body: Record<string, unknown> = {};
-      if (opts.agent) body.agentBindingId = opts.agent;
-      const data = await ctx.client.post(`/tasks/${id}/claim`, body);
-      out(ctx, data);
+    .action(async () => {
+      throw new ApmError(
+        '后端已无 /issues/:id/claim 端点（Task→Issue 术语重构时移除），请改用 assign-agent',
+      );
     });
 
   task
@@ -122,7 +120,7 @@ export function registerTaskCommands(program: Command): void {
         const ctx = buildContext(cmd);
         const body: Record<string, unknown> = { agentBindingId: opts.agent };
         if (opts.provider) body.providerId = opts.provider;
-        const data = await ctx.client.post(`/tasks/${id}/assign-agent`, body);
+        const data = await ctx.client.post(`/issues/${id}/assign-agent`, body);
         out(ctx, data);
       },
     );

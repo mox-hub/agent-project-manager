@@ -22,6 +22,9 @@ export class ErrorPayloadDto {
 
   @ApiPropertyOptional({
     description: '附加上下文（如字段级校验错误、Prisma 元数据）',
+    type: Object,
+    additionalProperties: true,
+    nullable: true,
   })
   details?: unknown;
 }
@@ -52,8 +55,10 @@ export class ApiResponseDto<T = unknown> {
   description!: string;
 
   @ApiProperty({
-    description: '业务数据；无数据时为 null',
+    description: '业务数据；无数据时为 null（具体形状由各端点 allOf 覆盖）',
     nullable: true,
+    type: Object,
+    additionalProperties: true,
   })
   data!: T | null;
 

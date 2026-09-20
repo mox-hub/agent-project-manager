@@ -74,6 +74,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         if (typeof responseObj.error === 'string') {
           code = responseObj.error.toUpperCase().replace(/\s+/g, '_') || code;
         }
+        if (typeof responseObj.code === 'string' && responseObj.code) {
+          code = responseObj.code;
+        }
+        if (responseObj.failures !== undefined) {
+          details = responseObj.failures;
+        }
         if (Array.isArray(responseObj.message)) {
           description = this.i18n.t('common.VALIDATION_ERROR', {
             lang: i18nLang,

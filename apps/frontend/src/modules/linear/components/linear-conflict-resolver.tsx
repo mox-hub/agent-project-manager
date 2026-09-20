@@ -5,8 +5,10 @@ import { AlertTriangle, Download, Upload, Copy } from 'lucide-react';
 import { useResolveConflict } from '../hooks/use-linear-sync';
 import { LinearIcon } from '@/components/icons/linear';
 
+type ConflictResolution = 'use_linear' | 'use_local' | 'keep_both';
+
 interface LinearConflictResolverProps {
-  taskId: string;
+  issueId: string;
   localVersion?: string | null;
   remoteVersion?: string | null;
   onResolved?: () => void;
@@ -21,25 +23,24 @@ interface LinearConflictResolverProps {
 }
 
 export function LinearConflictResolver({
-  taskId,
+  issueId,
   localVersion,
   remoteVersion,
   onResolved,
   compact = false,
   triggerLabel = 'Resolve',
 }: LinearConflictResolverProps) {
-  const [pending, setPending] = useState<null | 'use_linear' | 'use_local' | 'keep_both'>(
-    null,
-  );
+  // pending 仅作为提交中的写入闸，值无读取方
+  const [, setPending] = useState<ConflictResolution | null>(null);
   const [openMenu, setOpenMenu] = useState(false);
   const resolve = useResolveConflict();
 
-  const submit = async (resolution: typeof pending) => {
+  const submit = async (resolution: ConflictResolution) => {
     if (!resolution) return;
     setPending(resolution);
     setOpenMenu(false);
     try {
-      await resolve.mutateAsync({ taskId, resolution });
+      await resolve.mutateAsync({ issueId, resolution });
       onResolved?.();
     } finally {
       setPending(null);

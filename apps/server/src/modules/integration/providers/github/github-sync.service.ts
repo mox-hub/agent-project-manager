@@ -4,9 +4,9 @@ import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { EncryptionService } from '@/core/crypto/encryption.service';
 import { TrustService } from '@/modules/trust/trust.service';
 import { GitHubSDKService } from './github-sdk.service';
-import { GitHubApiError } from './github-client';
-import { PR_OUTCOME_DELTAS, type GitHubPrState } from './github.constants';
+import { type GitHubPrState } from './github.constants';
 import type {
+  GitHubCheckRunWebhookPayload,
   GitHubCreatePrInput,
   GitHubPullRequest,
   GitHubPullRequestWebhookPayload,
@@ -66,8 +66,11 @@ export class GitHubSyncService {
     const client = await this.sdk.getClientForIntegration(integrationId);
     const pr = await client.createPullRequest(input);
 
-    // 立刻记录到 PullRequest 表（状态 open）
-    await this.recordPullRequest(pr, integrationId, 'open');
+    // 立刻记录到 PullRequest 表（状态 open），并落 APM 关联列（CAP-B-08 回流挂点）
+    await this.recordPullRequest(pr, integrationId, 'open', {
+      acceptanceId: input.acceptanceId,
+      executionRunId: input.executionRunId,
+    });
 
     return {
       ok: true,
@@ -165,6 +168,30 @@ export class GitHubSyncService {
   }
 
   /**
+   * 处理 check_run webhook event（CAP-B-08 CI 结论回流）：
+   * 仅 completed 且有 conclusion 时发布 github.check_run.completed，
+   * 由 acceptance 侧订阅者按分支解析验收并落证据；此处不落表。
+   */
+  async handleCheckRunEvent(
+    payload: GitHubCheckRunWebhookPayload,
+  ): Promise<{ published: boolean }> {
+    const { action, check_run: check, repository } = payload;
+    if (action !== 'completed' || !check.conclusion) {
+      return { published: false };
+    }
+    this.messageBus.publish('github.check_run.completed', {
+      provider: 'github',
+      repo: repository.full_name,
+      branch: check.check_suite.head_branch,
+      checkName: check.name,
+      conclusion: check.conclusion,
+      sha: check.head_sha,
+      htmlUrl: check.html_url,
+    });
+    return { published: true };
+  }
+
+  /**
    * 处理 pull_request_review webhook event：
    * - CHANGES_REQUESTED → 立刻扣分（无需等 PR 关闭）
    */
@@ -224,6 +251,17 @@ export class GitHubSyncService {
       },
     });
 
+    // CAP-B-08 二期：review 证据回流（acceptance 侧订阅者落 pr_review 证据）
+    this.messageBus.publish('github.pr_review.submitted', {
+      pullRequestId: stored.id,
+      repo: repository.full_name,
+      number: prNumber,
+      reviewId: String(reviewRaw.id),
+      reviewState: reviewRaw.state,
+      reviewerLogin: reviewRaw.user.login,
+      submittedAt: submittedAt.toISOString(),
+    });
+
     // CHANGES_REQUESTED → 同步扣 correctness
     if (reviewRaw.state === 'CHANGES_REQUESTED') {
       // 单独走一次 applyPrOutcome 用 -4 校正
@@ -262,7 +300,6 @@ export class GitHubSyncService {
       const client = await this.sdk.getClientForIntegration(integrationId);
       const [owner, repo] = repoFullName.split('/');
       const pr = await client.fetchPullRequest(owner, repo, prNumber);
-      const apmState = this.mapPrState(pr.state, pr.merged);
 
       // write log
       await this.prisma.integrationSyncLog.create({
@@ -310,11 +347,22 @@ export class GitHubSyncService {
     pr: GitHubPullRequest,
     integrationId: string,
     state: GitHubPrState | 'open',
+    links?: { acceptanceId?: string; executionRunId?: string },
   ) {
     const apmState = this.mapPrState(pr.state, pr.merged);
     const existing = await this.prisma.remotePullRequest.findFirst({
       where: { provider: 'github', externalId: String(pr.id) },
     });
+
+    // 关联列：projectId 由 acceptance → issue 推导（同库查询，查不到则置空）
+    let projectId: string | null = null;
+    if (links?.acceptanceId) {
+      const acceptance = await this.prisma.acceptance.findUnique({
+        where: { id: links.acceptanceId },
+        select: { issue: { select: { projectId: true } } },
+      });
+      projectId = acceptance?.issue?.projectId ?? null;
+    }
 
     const data = {
       provider: 'github' as const,
@@ -330,6 +378,9 @@ export class GitHubSyncService {
       headBranch: pr.head.ref,
       baseBranch: pr.base.ref,
       integrationId,
+      acceptanceId: links?.acceptanceId ?? null,
+      executionRunId: links?.executionRunId ?? null,
+      projectId,
     };
 
     if (existing) {
@@ -341,7 +392,8 @@ export class GitHubSyncService {
     return this.prisma.remotePullRequest.create({ data });
   }
 
-  private async findIntegrationByRepo(fullName: string) {
+  // 全局单 GitHub 集成口径，repo 维度过滤待多集成配置落工作区后启用
+  private async findIntegrationByRepo(_fullName: string) {
     return this.prisma.integrationConfig.findFirst({
       where: { provider: 'github', enabled: true },
     });

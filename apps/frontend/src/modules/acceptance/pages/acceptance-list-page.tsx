@@ -40,10 +40,14 @@ import {
   DollarSign,
   Eye,
   ArrowUpRight,
+  SearchX,
 } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
 import { useAcceptanceList } from '../hooks/use-acceptance';
+import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { AcceptanceFormDialog } from '../components/acceptance-form-dialog';
-import { ListActionButton } from '@/components/ui/data-list';
+import { DataList, ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { toast } from '@/components/ui/toast';
 import {
@@ -52,6 +56,7 @@ import {
   type Acceptance,
   type AcceptanceStatus,
 } from '../api/acceptance-api';
+import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 
 type AuditRisk = 'green' | 'yellow' | 'red';
 type ViewMode = 'list' | 'table';
@@ -303,107 +308,6 @@ function AuditRiskCard({
   );
 }
 
-// 验收列表行
-function AcceptanceRow({
-  acceptance,
-  onClick,
-}: {
-  acceptance: Acceptance;
-  onClick: () => void;
-}) {
-  const { t } = useTranslation();
-  const cfg = STATUS_CONFIG[acceptance.status] ?? STATUS_CONFIG.pending;
-  const StatusIcon = cfg.icon;
-
-  const criteria = acceptance.criteria ?? [];
-  const passedCriteria = criteria.filter((c) => c.status === 'passed').length;
-  const totalCriteria = criteria.length;
-  const progressPct =
-    totalCriteria > 0 ? Math.round((passedCriteria / totalCriteria) * 100) : 0;
-
-  const riskLevel = acceptance.auditReport?.riskLevel as AuditRisk | undefined;
-  const risk = riskLevel ? RISK_CONFIG[riskLevel] : null;
-
-  return (
-    <div
-      onClick={onClick}
-      className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-border/80 hover:bg-accent/30"
-    >
-      <StatusIcon className={cn('size-4 shrink-0', cfg.color)} />
-
-      <div className="min-w-0 flex-1">
-        <div className="mb-0.5 flex items-center gap-2">
-          <span className="truncate text-sm font-medium">
-            {acceptance.title || t('acceptance.title')}
-          </span>
-          <StatusBadge status={acceptance.status} />
-          {isActiveAcceptance(acceptance) && (
-            <Badge variant="secondary" className="text-10">
-              {t('acceptance.activeBadge')}
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-3 text-11 text-muted-foreground">
-          {acceptance.task?.project?.name && (
-            <span className="flex items-center gap-1">
-              <FolderKanban className="size-3" />
-              {acceptance.task.project.name}
-            </span>
-          )}
-          {acceptance.task?.title && (
-            <span className="flex items-center gap-1">
-              <Target className="size-3" />
-              {acceptance.task.title}
-            </span>
-          )}
-          {(acceptance.executions?.length ?? 0) > 0 && (
-            <span className="flex items-center gap-1">
-              <Sparkles className="size-3" />
-              {acceptance.executions!.length}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* 验收标准进度 */}
-      <div className="hidden w-28 shrink-0 flex-col items-end gap-1 md:flex">
-        <div className="flex w-full items-center gap-1.5">
-          <Progress value={progressPct} className="h-1.5 flex-1" />
-          <span className="w-10 text-right text-11 text-muted-foreground">
-            {passedCriteria}/{totalCriteria}
-          </span>
-        </div>
-        <span className="text-10 text-muted-foreground">
-          {t('acceptanceDetail.tabs.criteria')}
-        </span>
-      </div>
-
-      {/* 审计风险 */}
-      {risk && riskLevel && (
-        <div className="hidden w-20 shrink-0 items-center gap-1.5 sm:flex">
-          <span className={cn('size-2 rounded-full', risk.dot)} />
-          <span className={cn('text-xs font-medium', risk.color)}>
-            {t(risk.labelKey)}
-          </span>
-        </div>
-      )}
-
-      {/* 成本 */}
-      <div className="hidden w-14 shrink-0 text-right lg:block">
-        {(acceptance.totalCost ?? 0) > 0 ? (
-          <span className="text-xs text-muted-foreground">
-            ${acceptance.totalCost!.toFixed(1)}
-          </span>
-        ) : (
-          <span className="text-xs text-muted-foreground/40">—</span>
-        )}
-      </div>
-
-      <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-muted-foreground" />
-    </div>
-  );
-}
-
 // 主页面
 export function AcceptanceListPage() {
   const { t } = useTranslation();
@@ -451,9 +355,13 @@ export function AcceptanceListPage() {
     updateActiveSnapshot({ search, status: statusFilter, risk: riskFilter, viewMode });
   }, [updateActiveSnapshot, search, statusFilter, riskFilter, viewMode]);
 
-  // 服务端筛选：status + 分页；risk/search 为当前页客户端过滤
+  // 管道项目聚焦（CAP-A-15）：URL ?project 优先，服务端按 projectId 过滤
+  const { focusProjectId } = usePipelineProjectFilter();
+
+  // 服务端筛选：status + projectId + 分页；risk/search 为当前页客户端过滤
   const { data: pageData, isLoading } = useAcceptanceList({
     status: statusFilter === 'all' ? undefined : statusFilter,
+    projectId: focusProjectId ?? undefined,
     page,
     pageSize: 20,
   });
@@ -473,6 +381,10 @@ export function AcceptanceListPage() {
     if (riskFilter !== 'all' && a.auditReport?.riskLevel !== riskFilter) return false;
     return true;
   });
+
+  // 空态接管判定：搜索 / 状态 / 风险任一生效时，空态提供「清除筛选」入口
+  const hasActiveFilters =
+    search.trim() !== '' || statusFilter !== 'all' || riskFilter !== 'all';
 
   const handleStatusChange = (value: AcceptanceStatus | 'all') => {
     setStatusFilter(value);
@@ -626,7 +538,7 @@ export function AcceptanceListPage() {
     <PageShell>
       <PageHeader
         title={t('acceptance.title')}
-        icon={ShieldCheck}
+        icon={getEntityIcon('acceptance').icon}
         iconColor="text-accent-green"
         metrics={[
           { id: 'total', label: t('acceptance.title'), value: meta?.total ?? 0 },
@@ -711,7 +623,53 @@ export function AcceptanceListPage() {
         downloadMenu={false}
       />
 
-      <div className="mx-auto w-full max-w-screen-xl space-y-5 p-6">
+      {/* 主体：空态由页面统一接管（页面层级标准）——契约池为空走 A 类整页空态，
+          筛选后为空走 C 类紧凑空态；双视图不再各自维护空态形态。
+          EmptyState 必须直挂 flex-1 素块容器（本页走 shell ScrollArea fill，
+          中间套 flex-col 包装会使 h-full 解析失败回落 min-h-100） */}
+      {!isLoading && acceptances.length === 0 ? (
+        <div className="flex-1 overflow-auto px-6 py-4 sm:px-8 sm:py-5 lg:px-10">
+          {hasActiveFilters ? (
+            <EmptyState
+              icon={SearchX}
+              title={t('acceptance.emptyFiltered', '未找到匹配的验收契约')}
+              description={t('acceptance.emptyFilteredHint', '换个关键词，或清除筛选条件再试')}
+              action={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearch('');
+                    setStatusFilter('all');
+                    setRiskFilter('all');
+                    setPage(1);
+                  }}
+                >
+                  {t('common.clearFilters', '清除筛选')}
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              variant="page"
+              visual={
+                <IconStack aria-hidden="true" className="text-accent-green">
+                  <ShieldCheck className="size-4 text-accent-green" />
+                </IconStack>
+              }
+              title={t('acceptance.empty')}
+              description={t('acceptance.emptyHint')}
+              action={
+                <Button size="sm" onClick={() => setShowCreateDialog(true)}>
+                  <Plus className="size-4" />
+                  {t('acceptance.new')}
+                </Button>
+              }
+            />
+          )}
+        </div>
+      ) : (
+      <div className="flex-1 overflow-auto space-y-4 px-6 py-4 sm:px-8 sm:py-5 lg:px-10">
         {/* KPI + 概览卡（页头切换） */}
         {cardsVisible.visible ? (
           isLoading ? (
@@ -801,37 +759,119 @@ export function AcceptanceListPage() {
                   : undefined
               }
               emptyContent={
-                <div className="flex flex-col items-center py-8 text-center">
-                  <ShieldCheck className="mb-2 size-8 text-muted-foreground/30" />
-                  <p className="text-sm text-muted-foreground">{t('acceptance.empty')}</p>
-                </div>
+                <EmptyState
+                  icon={SearchX}
+                  title={t('acceptance.emptyFiltered', '未找到匹配的验收契约')}
+                  description={t('acceptance.emptyFilteredHint', '换个关键词，或清除筛选条件再试')}
+                  className="min-h-40"
+                />
               }
             />
           )
         ) : (
-          <div className="space-y-2">
-            {isLoading ? (
-              [...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)
-            ) : filteredAcceptances.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <ShieldCheck className="mb-3 size-10 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">{t('acceptance.empty')}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {t('acceptance.emptyHint')}
-                </p>
-              </div>
-            ) : (
-              filteredAcceptances.map((ac) => (
-                <AcceptanceRow
-                  key={ac.id}
-                  acceptance={ac}
-                  onClick={() => navigate(`/app/acceptance/${ac.id}`)}
-                />
-              ))
+          <DataList<Acceptance>
+            items={filteredAcceptances}
+            loading={isLoading}
+            selectable
+            onItemClick={(ac) => navigate(`/app/acceptance/${ac.id}`)}
+            emptyMessage={t('acceptance.emptyFiltered', '未找到匹配的验收契约')}
+            emptyDescription={t('acceptance.emptyFilteredHint', '换个关键词，或清除筛选条件再试')}
+            emptyIcon={SearchX}
+            selectionActions={(selected, clear) => (
+              <ListActionButton
+                onClick={() => handleBulkDelete(selected, clear)}
+                disabled={bulkDeleting}
+                className="text-destructive hover:text-destructive"
+              >
+                {t('common.delete')}
+              </ListActionButton>
             )}
-          </div>
+            renderLeading={(acceptance) => {
+              const cfg = STATUS_CONFIG[acceptance.status] ?? STATUS_CONFIG.pending;
+              const StatusIcon = cfg.icon;
+              return (
+                <>
+                  <StatusIcon className={cn('size-4 shrink-0', cfg.color)} />
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {acceptance.title || t('acceptance.title')}
+                  </span>
+                  <StatusBadge status={acceptance.status} />
+                  {isActiveAcceptance(acceptance) && (
+                    <Badge variant="secondary" className="shrink-0 text-10">
+                      {t('acceptance.activeBadge')}
+                    </Badge>
+                  )}
+                  {acceptance.task?.project?.name && (
+                    <span className="hidden items-center gap-1 text-xs text-muted-foreground md:inline-flex">
+                      <FolderKanban className="size-3 shrink-0" />
+                      <span className="max-w-32 truncate">{acceptance.task.project.name}</span>
+                    </span>
+                  )}
+                  {acceptance.task?.title && (
+                    <span className="hidden items-center gap-1 text-xs text-muted-foreground sm:inline-flex">
+                      <Target className="size-3 shrink-0" />
+                      <span className="max-w-40 truncate">{acceptance.task.title}</span>
+                    </span>
+                  )}
+                  {(acceptance.executions?.length ?? 0) > 0 && (
+                    <span className="hidden items-center gap-1 text-xs text-muted-foreground lg:inline-flex">
+                      <Sparkles className="size-3 shrink-0" />
+                      {acceptance.executions!.length}
+                    </span>
+                  )}
+                </>
+              );
+            }}
+            renderTrailing={(acceptance) => {
+              const criteria = acceptance.criteria ?? [];
+              const passedCriteria = criteria.filter((c) => c.status === 'passed').length;
+              const totalCriteria = criteria.length;
+              const progressPct =
+                totalCriteria > 0 ? Math.round((passedCriteria / totalCriteria) * 100) : 0;
+              const riskLevel = acceptance.auditReport?.riskLevel as AuditRisk | undefined;
+              const risk = riskLevel ? RISK_CONFIG[riskLevel] : null;
+
+              return (
+                <div className="flex items-center gap-4">
+                  {/* 验收标准进度 */}
+                  <div className="hidden w-28 shrink-0 flex-col items-end gap-1 sm:flex">
+                    <div className="flex w-full items-center gap-1.5">
+                      <Progress value={progressPct} className="h-1.5 flex-1" />
+                      <span className="w-10 text-right text-11 tabular-nums text-muted-foreground">
+                        {passedCriteria}/{totalCriteria}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 审计风险 */}
+                  {risk && riskLevel && (
+                    <div className="hidden w-16 shrink-0 items-center gap-1.5 md:flex">
+                      <span className={cn('size-2 rounded-full', risk.dot)} />
+                      <span className={cn('text-xs font-medium', risk.color)}>
+                        {t(risk.labelKey)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 成本 */}
+                  <div className="hidden w-14 shrink-0 text-right tabular-nums lg:block">
+                    {(acceptance.totalCost ?? 0) > 0 ? (
+                      <span className="text-xs text-muted-foreground">
+                        ${acceptance.totalCost!.toFixed(1)}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground/40">—</span>
+                    )}
+                  </div>
+
+                  <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-foreground" />
+                </div>
+              );
+            }}
+          />
         )}
       </div>
+      )}
     </PageShell>
   );
 }

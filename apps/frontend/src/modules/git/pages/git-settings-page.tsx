@@ -8,7 +8,6 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
-import { useConfirm } from '@/shared/confirm/use-confirm';
 import {
   ArrowLeft,
   Settings,
@@ -26,7 +25,6 @@ export function GitSettingsPage() {
   const navigate = useNavigate();
   const { data: gitStatus, isLoading, refetch } = useGitToolStatus();
   const setGitPath = useSetGitPath();
-  const confirmAction = useConfirm();
 
   const [gitPathInput, setGitPathInput] = useState(gitStatus?.path || 'git');
   const [testing, setTesting] = useState(false);
@@ -46,7 +44,7 @@ export function GitSettingsPage() {
       await setGitPath.mutateAsync(gitPathInput.trim());
       toast.success('Git path updated successfully');
       await refetch();
-    } catch (error) {
+    } catch {
       toast.error('Failed to update Git path');
     }
   };

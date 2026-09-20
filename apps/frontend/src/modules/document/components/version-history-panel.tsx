@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
-import { History, RotateCcw, GitCompare, Eye, Pencil, Save, X } from 'lucide-react';
+import { RotateCcw, GitCompare, Eye, Pencil, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -58,10 +58,6 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
     rollback.mutate({ versionId, createdBy: currentUserId });
   };
 
-  const handleStartCompare = (versionId: string) => {
-    setCompareTargetId(versionId);
-  };
-
   const handleStartRename = (versionId: string, currentLabel: string) => {
     setRenamingId(versionId);
     setRenameDraft(currentLabel);
@@ -90,11 +86,11 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
 
   if (orderedVersions.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 p-6 text-center text-sm text-muted-foreground">
-        <History size={20} className="opacity-50" />
-        <EmptyState title="暂无版本记录" />
-        <p className="text-xs opacity-70">编辑文档后会自动创建版本快照</p>
-      </div>
+      <EmptyState
+        title="暂无版本记录"
+        description="编辑文档后会自动创建版本快照"
+        className="min-h-0 border-0 py-4"
+      />
     );
   }
 

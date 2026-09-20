@@ -115,7 +115,6 @@ export class CreateIntegrationConfigDto {
     ],
   })
   @IsObject()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
   @ApiProperty({

@@ -10,59 +10,70 @@ describe('ProjectService', () => {
 
   const mockPrismaService = {
     project: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      count: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
     },
     projectTemplate: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
+    },
+    projectModule: {
+      create: vi.fn(),
+    },
+    member: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+    },
+    memberProjectBinding: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
     },
     projectMember: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
-    task: {
-      findMany: jest.fn(),
+    issue: {
+      findMany: vi.fn(),
     },
     projectHealthSnapshot: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     projectAIContext: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     },
     iteration: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     milestone: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
-    taskActivity: {
-      findMany: jest.fn(),
+    issueActivity: {
+      findMany: vi.fn(),
     },
     externalProjectLink: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     projectDocLink: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     projectApiDocLink: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     repository: {
-      findMany: jest.fn(),
+      findMany: vi.fn(),
     },
     teamProject: {
-      findMany: jest.fn().mockResolvedValue([]),
+      findMany: vi.fn().mockResolvedValue([]),
     },
     team: {
-      findMany: jest.fn().mockResolvedValue([]),
+      findMany: vi.fn().mockResolvedValue([]),
     },
   };
 
   const mockMessageBusService = {
-    publish: jest.fn(),
+    publish: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -79,7 +90,7 @@ describe('ProjectService', () => {
         },
         {
           provide: ActivityService,
-          useValue: { record: jest.fn() },
+          useValue: { record: vi.fn() },
         },
       ],
     }).compile();
@@ -88,7 +99,7 @@ describe('ProjectService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -113,11 +124,29 @@ describe('ProjectService', () => {
       };
 
       mockPrismaService.project.create.mockResolvedValue(mockProject);
+      mockPrismaService.member.findUnique.mockResolvedValue({
+        id: 'member-1',
+        userId: 'user-1',
+      });
+      mockPrismaService.memberProjectBinding.findFirst.mockResolvedValue(null);
 
       const result = await service.create(createDto, 'user-1');
 
       expect(result).toEqual(mockProject);
       expect(mockPrismaService.project.create).toHaveBeenCalled();
+      // 缺陷 6：默认模块（TASK/BUG）+ owner 成员绑定
+      expect(mockPrismaService.projectModule.create).toHaveBeenCalledTimes(2);
+      expect(
+        mockPrismaService.memberProjectBinding.create,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            projectId: 'project-1',
+            memberId: 'member-1',
+            role: 'owner',
+          }),
+        }),
+      );
       expect(mockMessageBusService.publish).toHaveBeenCalledWith(
         'project.created',
         expect.objectContaining({
@@ -153,6 +182,11 @@ describe('ProjectService', () => {
         mockTemplate,
       );
       mockPrismaService.project.create.mockResolvedValue(mockProject);
+      mockPrismaService.member.findUnique.mockResolvedValue({
+        id: 'member-1',
+        userId: 'user-1',
+      });
+      mockPrismaService.memberProjectBinding.findFirst.mockResolvedValue(null);
 
       const result = await service.create(createDto, 'user-1');
 
@@ -379,7 +413,7 @@ describe('ProjectService', () => {
         owner: null,
         members: [],
       });
-      mockPrismaService.task.findMany.mockResolvedValue([
+      mockPrismaService.issue.findMany.mockResolvedValue([
         {
           id: 'task-1',
           title: 'Do work',
@@ -404,7 +438,7 @@ describe('ProjectService', () => {
       });
       mockPrismaService.iteration.findMany.mockResolvedValue([]);
       mockPrismaService.milestone.findMany.mockResolvedValue([]);
-      mockPrismaService.taskActivity.findMany.mockResolvedValue([]);
+      mockPrismaService.issueActivity.findMany.mockResolvedValue([]);
       mockPrismaService.externalProjectLink.findMany.mockResolvedValue([]);
       mockPrismaService.projectDocLink.findMany.mockResolvedValue([]);
       mockPrismaService.projectApiDocLink.findMany.mockResolvedValue([]);
@@ -448,12 +482,12 @@ describe('ProjectService', () => {
         owner: null,
         members: [],
       });
-      mockPrismaService.task.findMany.mockResolvedValue([]);
+      mockPrismaService.issue.findMany.mockResolvedValue([]);
       mockPrismaService.projectHealthSnapshot.findMany.mockResolvedValue([]);
       mockPrismaService.projectAIContext.findUnique.mockResolvedValue(null);
       mockPrismaService.iteration.findMany.mockResolvedValue([]);
       mockPrismaService.milestone.findMany.mockResolvedValue([]);
-      mockPrismaService.taskActivity.findMany.mockResolvedValue([]);
+      mockPrismaService.issueActivity.findMany.mockResolvedValue([]);
       mockPrismaService.externalProjectLink.findMany.mockResolvedValue([]);
       mockPrismaService.projectDocLink.findMany.mockResolvedValue([]);
       mockPrismaService.projectApiDocLink.findMany.mockResolvedValue([]);

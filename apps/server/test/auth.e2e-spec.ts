@@ -9,11 +9,9 @@ import {
   type WsRequest,
 } from './helpers/ws-app';
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/core/database/prisma.service';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
 
@@ -23,8 +21,6 @@ describe('Auth (e2e)', () => {
     }).compile();
 
     app = await initTestApp(moduleFixture);
-
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
 
     ws = createIsolatedWorkspace('Auth e2e');
     wsHttp = wsRequest(app, ws.id);
@@ -58,11 +54,40 @@ describe('Auth (e2e)', () => {
           username: 'admin',
           password: 'wrongpassword',
         })
-        .expect(401);
+        .expect(401)
+        .expect((res: Response) => {
+          // 语义化错误码：前端据此定向映射"用户名或密码错误"
+          expect(res.body.error?.code).toBe('INVALID_CREDENTIALS');
+        });
     });
 
-    it('should reject missing credentials', () => {
-      return wsHttp.post('/_api/auth/login').send({}).expect(401);
+    it('should reject empty body with 400 validation error', () => {
+      return wsHttp
+        .post('/_api/auth/login')
+        .send({})
+        .expect(400)
+        .expect((res: Response) => {
+          expect(res.body.error?.code).toBe('VALIDATION_ERROR');
+        });
+    });
+
+    /**
+     * 【P1-4】提交 email 字段（而非 username）必须是 400 字段校验错误，
+     * 而非撞认证逻辑的 401——修复前 guard 先于 ValidationPipe 执行，
+     * passport-local 在 body 中找不到 username 字段直接 fail('Missing credentials', 401)。
+     */
+    it('should reject email-field body with 400 field error (not 401)', () => {
+      return wsHttp
+        .post('/_api/auth/login')
+        .send({
+          email: 'admin@example.com',
+          password: 'password123',
+        })
+        .expect(400)
+        .expect((res: Response) => {
+          expect(res.body.error?.code).toBe('VALIDATION_ERROR');
+          expect(res.body.error?.details).toBeDefined();
+        });
     });
   });
 

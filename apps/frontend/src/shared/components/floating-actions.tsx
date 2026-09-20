@@ -116,12 +116,12 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
 
   return (
     <div ref={menuRef} className="fixed bottom-4 left-4 z-50 flex items-end gap-3">
-      {/* 点击外部遮罩 */}
+      {/* 点击外部遮罩 - 柔和磨砂 */}
       {isOpen && (
         <button
           type="button"
           className={cn(
-            'fixed inset-0 z-[-1]',
+            'fixed inset-0 z-[-1] backdrop-blur-xs',
             theme === 'dark' ? 'bg-black/40' : 'bg-black/20',
           )}
           onClick={() => setIsOpen(false)}
@@ -129,18 +129,18 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
         />
       )}
 
-      {/* 左侧快捷操作按钮组 - 垂直排列，无背景 */}
+      {/* 左侧快捷操作按钮组 - 垂直排列，磨砂浮动质感 */}
       {isOpen && (
-        <div className="flex flex-col gap-3 animate-in fade-in-0 slide-in-from-left-2 duration-200">
+        <div className="flex flex-col gap-2.5 animate-in fade-in-0 slide-in-from-left-2 duration-200">
           {menuButtons.map((button, index) => (
             <div key={index} className="relative">
               <button
                 type="button"
                 onClick={button.onClick}
                 className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center transition-all',
+                  'w-9.5 h-9.5 rounded-full flex items-center justify-center transition-all',
                   'hover:scale-110 active:scale-95 shadow-md hover:shadow-lg',
-                  'bg-popover/90 backdrop-blur-sm hover:bg-accent border border-border/60 hover:border-border text-muted-foreground hover:text-foreground',
+                  'bg-popover/85 backdrop-blur-md hover:bg-popover border border-border/70 text-muted-foreground hover:text-foreground',
                 )}
                 title={button.label}
               >
@@ -189,9 +189,9 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
             </button>
           </div>
 
-          {/* 用户信息卡片 */}
+          {/* 用户信息卡片 - Codex 磨砂浮层 */}
           <div
-            className="w-72 rounded-xl overflow-hidden shadow-2xl bg-card border border-border"
+            className="w-72 rounded-xl overflow-hidden shadow-2xl bg-card/95 backdrop-blur-xl border border-border/70"
           >
             {/* Workspace Section */}
             <div
@@ -269,13 +269,13 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
             </div>
 
             {/* Quick Switch Button */}
-            <div className="p-4 bg-card">
+            <div className="p-4 bg-card/60">
               <button
                 onClick={() => {
                   navigate('/app/projects/dashboard');
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-colors bg-accent hover:bg-accent/80 text-foreground border border-border/50"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors bg-accent hover:bg-accent/80 text-foreground border border-border/50"
               >
                 <Play size={14} className="fill-current" />
                 <span>项目仪表盘</span>
@@ -285,26 +285,26 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
         </div>
       )}
 
-      {/* 主触发按钮 - 圆形按钮 */}
+      {/* 主触发按钮 - 圆形微光晕磨砂按钮 */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'w-12 h-12 rounded-full flex items-center justify-center',
+          'w-11 h-11 rounded-full flex items-center justify-center',
           'transition-all duration-200 hover:scale-105 active:scale-95',
-          'bg-primary hover:bg-primary/90 shadow-xl ring-4 ring-primary/20',
+          'bg-popover/90 hover:bg-popover backdrop-blur-md border border-border/70 shadow-lg ring-2 ring-primary/20',
           isOpen && 'scale-95',
         )}
         aria-label={isOpen ? '收起快捷面板' : '展开快捷面板'}
       >
         {isOpen ? (
-          <X className="w-5 h-5 transition-colors text-primary-foreground" />
+          <X className="w-5 h-5 transition-colors text-foreground" />
         ) : (
-          <Avatar className="w-9 h-9 border-2 border-border shadow-lg">
+          <Avatar className="w-8.5 h-8.5 border border-border/60 shadow-xs">
             {currentUser?.avatarUrl ? (
               <AvatarImage src={currentUser.avatarUrl} alt={currentUser?.displayName || currentUser?.username || 'User'} />
             ) : null}
-            <AvatarFallback className="font-bold text-primary-foreground text-xs bg-primary">
+            <AvatarFallback className="font-semibold text-primary-foreground text-xs bg-primary">
               {(currentUser?.displayName || currentUser?.username || 'U')[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>

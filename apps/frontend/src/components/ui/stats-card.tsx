@@ -59,29 +59,29 @@ export function StatsCard({
           <div
             key={item.key}
             className={cn(
-              'flex items-center gap-3 rounded-lg px-4 py-3 border transition-all',
-              item.colorClass || 'bg-muted/50 border-transparent',
+              'flex items-center gap-3 rounded-lg px-3.5 py-2.5 border bg-card border-border/70 shadow-2xs transition-all hover:border-border',
+              item.colorClass,
               item.className
             )}
           >
-            {/* 左侧图标 */}
+            {/* 左侧图标微框架 */}
             {Icon && (
-              <div className="shrink-0">
+              <div className={cn(
+                'size-8 rounded-md flex items-center justify-center shrink-0 bg-muted/40 border border-border/40',
+                item.iconColorClass ? '' : 'text-muted-foreground'
+              )}>
                 <Icon
-                  size={18}
+                  size={16}
                   className={cn(item.iconColorClass || 'text-muted-foreground')}
                 />
               </div>
             )}
             {/* 右侧数值和文本 */}
             <div className="flex flex-col min-w-0">
-              <span className={cn(
-                'text-xl font-semibold leading-tight truncate',
-                item.iconColorClass || 'text-foreground'
-              )}>
+              <span className="text-xl font-semibold font-mono tabular-nums leading-tight truncate text-foreground">
                 {item.value}
               </span>
-              <span className="text-xs text-muted-foreground truncate">
+              <span className="text-xs text-muted-foreground truncate mt-0.5">
                 {item.label}
               </span>
             </div>
@@ -92,34 +92,34 @@ export function StatsCard({
   );
 }
 
-/** 预设颜色主题 */
+/** 预设颜色主题 (仅点缀图标与微边框，背景保持低调中性 bg-card) */
 export const STATS_THEMES = {
   default: {
-    colorClass: 'bg-muted/50 border-transparent',
+    colorClass: 'border-border/60 hover:border-border',
     iconColorClass: 'text-muted-foreground',
   },
   green: {
-    colorClass: 'bg-accent-green/10 border-accent-green/20',
+    colorClass: 'hover:border-accent-green/40',
     iconColorClass: 'text-accent-green',
   },
   blue: {
-    colorClass: 'bg-accent-blue/10 border-accent-blue/20',
+    colorClass: 'hover:border-accent-blue/40',
     iconColorClass: 'text-accent-blue',
   },
   yellow: {
-    colorClass: 'bg-accent-yellow/10 border-accent-yellow/20',
+    colorClass: 'hover:border-accent-yellow/40',
     iconColorClass: 'text-accent-yellow',
   },
   red: {
-    colorClass: 'bg-accent-red/10 border-accent-red/20',
+    colorClass: 'hover:border-accent-red/40',
     iconColorClass: 'text-accent-red',
   },
   purple: {
-    colorClass: 'bg-accent-purple/10 border-accent-purple/20',
+    colorClass: 'hover:border-accent-purple/40',
     iconColorClass: 'text-accent-purple',
   },
   gray: {
-    colorClass: 'bg-muted/30 border-border/50',
+    colorClass: 'border-border/40',
     iconColorClass: 'text-muted-foreground',
   },
 } as const;

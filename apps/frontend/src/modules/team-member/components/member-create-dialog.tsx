@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { toast } from '@/components/ui/toast';
 import { useCreateMember, useUpdateMember } from '../hooks';
-import { MEMBER_THINKING_LEVELS, MEMBER_TRUST_LEVEL_LABELS, type Member } from '../types';
+import { MEMBER_THINKING_LEVELS, MEMBER_TRUST_TIERS, type Member, type ThinkingLevel } from '../types';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
 import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
@@ -32,12 +33,6 @@ export interface MemberCreateDialogProps {
   member?: Member | null;
 }
 
-interface AIModelRef {
-  id: string;
-  name: string;
-  provider: string;
-}
-
 // 注: ai-hub API 的 AIModel 类型见 ai-hub/api/ai-hub-api.ts
 
 export function MemberCreateDialog({
@@ -48,6 +43,7 @@ export function MemberCreateDialog({
   defaultProjectId,
   member = null,
 }: MemberCreateDialogProps) {
+  const { t } = useTranslation();
   const isEdit = Boolean(member);
   const [type, setType] = useState<'human' | 'ai_agent'>(defaultType);
   const [displayName, setDisplayName] = useState('');
@@ -63,7 +59,7 @@ export function MemberCreateDialog({
   const [costRatePerDay, setCostRatePerDay] = useState('');
   const [aiModelConfigId, setAiModelConfigId] = useState('');
   const [personalPrompt, setPersonalPrompt] = useState('');
-  const [thinkingLevel, setThinkingLevel] = useState('');
+  const [thinkingLevel, setThinkingLevel] = useState<ThinkingLevel | ''>('');
   const [tagsInput, setTagsInput] = useState('');
   const [defaultCliProviderId, setDefaultCliProviderId] =
     useState<string>('');
@@ -73,30 +69,34 @@ export function MemberCreateDialog({
   const createMember = useCreateMember();
   const updateMember = useUpdateMember();
 
-  // 编辑模式：打开时预填既有字段（costRatePerDay 存储单位为分）
-  useEffect(() => {
-    if (!open || !member) return;
-    setType(member.type === 'ai_agent' ? 'ai_agent' : 'human');
-    setDisplayName(member.displayName ?? '');
-    setHandle(member.handle ?? '');
-    setEmail(member.email ?? '');
-    setAvatarUrl(member.avatarUrl ?? null);
-    setTitle(member.title ?? '');
-    setDescription(member.description ?? '');
-    setTrustLevel(member.trustLevel === null || member.trustLevel === undefined ? '' : String(member.trustLevel));
-    setUserId(member.userId ?? '');
-    setPhone(member.phone ?? '');
-    setTimezone(member.timezone ?? 'Asia/Shanghai');
-    setCostRatePerDay(
-      member.costRatePerDay ? String(member.costRatePerDay / 100) : '',
-    );
-    setAiModelConfigId(member.aiModelConfigId ?? '');
-    setPersonalPrompt(member.personalPrompt ?? '');
-    setThinkingLevel(member.thinkingLevel ?? '');
-    setTagsInput(Array.isArray(member.tags) ? member.tags.join(', ') : '');
-    setDefaultCliProviderId(member.defaultCliProviderId ?? '');
-    setDefaultExecutionRole(member.defaultExecutionRole ?? '');
-  }, [open, member]);
+  // 编辑模式：打开时预填既有字段（渲染期比较，等价原 effect，避免级联渲染）
+  const [lastPrefillKey, setLastPrefillKey] = useState('');
+  const prefillKey = open && member ? `edit:${member.id}` : 'closed';
+  if (prefillKey !== lastPrefillKey) {
+    setLastPrefillKey(prefillKey);
+    if (open && member) {
+      setType(member.type === 'ai_agent' ? 'ai_agent' : 'human');
+      setDisplayName(member.displayName ?? '');
+      setHandle(member.handle ?? '');
+      setEmail(member.email ?? '');
+      setAvatarUrl(member.avatarUrl ?? null);
+      setTitle(member.title ?? '');
+      setDescription(member.description ?? '');
+      setTrustLevel(member.trustLevel === null || member.trustLevel === undefined ? '' : String(member.trustLevel));
+      setUserId(member.userId ?? '');
+      setPhone(member.phone ?? '');
+      setTimezone(member.timezone ?? 'Asia/Shanghai');
+      setCostRatePerDay(
+        member.costRatePerDay ? String(member.costRatePerDay / 100) : '',
+      );
+      setAiModelConfigId(member.aiModelConfigId ?? '');
+      setPersonalPrompt(member.personalPrompt ?? '');
+      setThinkingLevel(member.thinkingLevel ?? '');
+      setTagsInput(Array.isArray(member.tags) ? member.tags.join(', ') : '');
+      setDefaultCliProviderId(member.defaultCliProviderId ?? '');
+      setDefaultExecutionRole(member.defaultExecutionRole ?? '');
+    }
+  }
 
   const { data: aiModelsRes } = useQuery({
     queryKey: ['ai-models-list'],
@@ -163,7 +163,7 @@ export function MemberCreateDialog({
     e.preventDefault();
     if (!displayName || !handle) return;
 
-    const payload: any = {
+    const payload: Partial<Member> = {
       type,
       displayName,
       handle,
@@ -269,10 +269,10 @@ export function MemberCreateDialog({
                 value={trustLevel}
                 onChange={(e) => setTrustLevel(e.target.value)}
               >
-                <option value="">未评估</option>
-                {MEMBER_TRUST_LEVEL_LABELS.map((label, level) => (
-                  <option key={level} value={level}>
-                    {label}
+                <option value="">{t('trust.unrated', '未评估')}</option>
+                {MEMBER_TRUST_TIERS.map((tier) => (
+                  <option key={tier.level} value={tier.level}>
+                    {t(tier.labelKey)}
                   </option>
                 ))}
               </select>
@@ -389,7 +389,7 @@ export function MemberCreateDialog({
                   <select
                     className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
                     value={thinkingLevel}
-                    onChange={(e) => setThinkingLevel(e.target.value)}
+                    onChange={(e) => setThinkingLevel(e.target.value as ThinkingLevel | '')}
                   >
                     <option value="">默认</option>
                     {MEMBER_THINKING_LEVELS.map((l) => (

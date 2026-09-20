@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 export type ActivityEntityType = 'task' | 'bug' | 'project';
 
@@ -12,6 +13,31 @@ export interface ActivityChange {
   field: string;
   oldValue?: unknown;
   newValue?: unknown;
+}
+
+/**
+ * `Activity.changes` 归一化为 `ActivityChange[] | null`。
+ *
+ * 契约（Prisma 注释 / OpenAPI / DTO）声明的是「字段变更数组」，但**存量迁移数据不是**：
+ * 迁移脚本 `20260827000000_add_activity_module` 把旧 `TaskActivity.detail` 整段灌进了
+ * 新的 `changes` 列，而旧 `detail` 的形状是**对象**——`{ changes: [...] }`（旧包装）
+ * 或更早的 `{ from, to }`。这些行读出来不是数组，前端 `changes.find(...)` /
+ * `changes.slice(...)` 会直接抛 `is not a function` 并把整页打白（2026-09-11 修复）。
+ *
+ * 处理策略（尽量救回历史信息，而不是一律丢弃）：
+ * - 已是数组 → 原样使用；
+ * - 对象且带数组型 `changes` → 取出内层数组（旧包装形状）；
+ * - 其余不可解释的形状 → `null`（与既有 nullable 契约一致）。
+ */
+export function normalizeActivityChanges(
+  value: unknown,
+): ActivityChange[] | null {
+  if (Array.isArray(value)) return value as ActivityChange[];
+  if (value && typeof value === 'object') {
+    const nested = (value as { changes?: unknown }).changes;
+    if (Array.isArray(nested)) return nested as ActivityChange[];
+  }
+  return null;
 }
 
 export interface RecordActivityInput {
@@ -38,7 +64,10 @@ const ACTOR_SELECT = {
 export class ActivityService {
   private readonly logger = new Logger(ActivityService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messageBus: MessageBusService,
+  ) {}
 
   /**
    * 记录一条操作动态。失败只告警不抛错——业务主流程不应因动态记录失败而中断。
@@ -128,6 +157,18 @@ export class ActivityService {
         },
       },
     });
+
+    // 订阅提醒：评论落库后通知订阅了该任务/页面的人（订阅枢纽消费）；
+    // content 全文供 mention 解析（excerpt 截断版仅供通知预览）
+    this.messageBus.publish('task.commented', {
+      entityType,
+      entityId,
+      projectId,
+      actorId: userId,
+      content,
+      excerpt: content.slice(0, 120),
+    });
+
     return this.shapeActivity(created, userId);
   }
 
@@ -245,7 +286,7 @@ export class ActivityService {
       return project.id;
     }
 
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.issue.findFirst({
       where: {
         id: entityId,
         OR: [
@@ -303,7 +344,8 @@ export class ActivityService {
       type: row.type,
       summary: row.summary,
       content: row.content,
-      changes: row.changes ?? null,
+      // 归一化：存量迁移行的 changes 可能是对象形状，不能直接透出（见 normalizeActivityChanges）
+      changes: normalizeActivityChanges(row.changes),
       source: row.source,
       metadata: row.metadata ?? null,
       createdAt: row.createdAt,

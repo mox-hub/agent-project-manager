@@ -43,6 +43,7 @@ import { PropsCard, PropertyRow } from '@/components/ui/property-panel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -57,6 +58,7 @@ import {
 import { toast } from '@/components/ui/toast';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import {
   useAcceptanceDetail,
@@ -68,13 +70,16 @@ import {
   useAcceptCompletion,
   useRejectCompletion,
   useWaiveCompletion,
+  useChecklists,
 } from '../hooks/use-acceptance';
+import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '@/components/ui/native-select';
 import { AuditReportPanel } from '../components/audit-report-panel';
 import {
   extractFailures,
   isActiveAcceptance,
   type AcceptanceFailure,
   type AcceptanceStatus,
+  type AcceptanceCriterion,
   type CompletionType,
   type CriterionStatus,
 } from '../api/acceptance-api';
@@ -116,6 +121,21 @@ function nextCriterionStatus(s: CriterionStatus): CriterionStatus {
   return 'pending';
 }
 
+/**
+ * CAP-B-01 证据有效性（与服务端 isEvidenceCurrent 同口径）：
+ * 证据快照 revision 与标准当前 revision 一致即有效；无快照（null）按 1（初版）处理。
+ */
+function hasCurrentEvidence(c: AcceptanceCriterion): boolean {
+  return (c.evidences ?? []).some(
+    (ev) => (ev.criteriaRevision ?? 1) === (c.revision ?? 1),
+  );
+}
+
+/** 待复核：已有证据但全部落后于当前标准版本（标准修订后未重新提交证据） */
+function hasStaleEvidenceOnly(c: AcceptanceCriterion): boolean {
+  return (c.evidences ?? []).length > 0 && !hasCurrentEvidence(c);
+}
+
 export function AcceptanceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -125,6 +145,11 @@ export function AcceptanceDetailPage() {
   const { data: acceptance, isLoading } = useAcceptanceDetail(id);
   const auditMutation = useAudit(id!);
   const applySuggestionsMutation = useApplySuggestions(id!);
+  const { data: checklists = [] } = useChecklists();
+  const systemChecklists = checklists.filter((c) => c.isSystem);
+  const teamChecklists = checklists.filter((c) => !c.isSystem);
+  // 'auto' = 按项目类型与技术栈自动匹配；否则显式指定清单
+  const [auditChecklistId, setAuditChecklistId] = useState<string>('auto');
   const updateCriterion = useUpdateCriterion();
   const addCriterion = useAddCriterion();
   const deleteCriterion = useDeleteCriterion();
@@ -141,6 +166,15 @@ export function AcceptanceDetailPage() {
   const [acceptFailures, setAcceptFailures] = useState<AcceptanceFailure[] | null>(null);
   const [addType, setAddType] = useState<'functional' | 'technical'>('functional');
   const [addContent, setAddContent] = useState('');
+  // 已展开证据明细的标准（CAP-B-08 回流证据在此展示）
+  const [expandedCriteria, setExpandedCriteria] = useState<Set<string>>(new Set());
+  const toggleCriterionEvidence = (id: string) =>
+    setExpandedCriteria((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   if (isLoading) {
     return (
@@ -179,6 +213,8 @@ export function AcceptanceDetailPage() {
   const auditReport = acceptance.auditReport ?? null;
   const blockedCount = auditReport?.blockedItems?.length ?? 0;
   const suggestedCount = auditReport?.suggestedItems?.length ?? 0;
+  const runAudit = () =>
+    auditMutation.mutateAsync(auditChecklistId === 'auto' ? undefined : auditChecklistId);
 
   const TypeIcon = TYPE_ICON[acceptance.completionType];
   const canReview = acceptance.status === 'in_review' || acceptance.status === 'pending';
@@ -210,12 +246,12 @@ export function AcceptanceDetailPage() {
   };
 
   const handleAccept = async () => {
-    if (!id || !acceptance.taskId) return;
+    if (!id || !acceptance.issueId) return;
     const ok = await confirmAction({ title: t('acceptanceDetail.actions.approveConfirm') });
     if (!ok) return;
     setAcceptFailures(null);
     try {
-      await acceptCompletion.mutateAsync({ id, taskId: acceptance.taskId });
+      await acceptCompletion.mutateAsync({ id, issueId: acceptance.issueId });
       toast.success(t('acceptanceDetail.actions.acceptedToast'));
     } catch (err) {
       const failures = extractFailures(err);
@@ -225,12 +261,12 @@ export function AcceptanceDetailPage() {
   };
 
   const handleReject = async () => {
-    if (!id || !acceptance.taskId || !rejectReason.trim()) return;
+    if (!id || !acceptance.issueId || !rejectReason.trim()) return;
     try {
       await rejectCompletion.mutateAsync({
         id,
         reason: rejectReason.trim(),
-        taskId: acceptance.taskId,
+        issueId: acceptance.issueId,
       });
       toast.success(t('acceptanceDetail.actions.rejectedToast'));
       setShowRejectDialog(false);
@@ -241,12 +277,12 @@ export function AcceptanceDetailPage() {
   };
 
   const handleWaive = async () => {
-    if (!id || !acceptance.taskId || !waiveReason.trim()) return;
+    if (!id || !acceptance.issueId || !waiveReason.trim()) return;
     try {
       await waiveCompletion.mutateAsync({
         id,
         reason: waiveReason.trim(),
-        taskId: acceptance.taskId,
+        issueId: acceptance.issueId,
       });
       toast.success(t('acceptanceDetail.actions.waivedToast'));
       setShowWaiveDialog(false);
@@ -322,13 +358,63 @@ export function AcceptanceDetailPage() {
                       {t(`acceptance.severity.${c.severity}`, c.severity)}
                     </Badge>
                     <span>{t(`acceptance.criterionStatus.${c.status}`, c.status)}</span>
+                    {typeof c.revision === 'number' && c.revision > 1 && (
+                      <Badge
+                        variant="outline"
+                        className="text-10 py-0"
+                        title={c.revisedAt ? new Date(c.revisedAt).toLocaleString() : undefined}
+                      >
+                        v{c.revision}
+                      </Badge>
+                    )}
+                    {hasStaleEvidenceOnly(c) && (
+                      <Badge className="border-accent-yellow/50 bg-accent-yellow/15 py-0 text-10 text-accent-yellow">
+                        <AlertTriangle className="mr-0.5 size-2.5" />
+                        {t('acceptanceDetail.criteria.evidenceStale')}
+                      </Badge>
+                    )}
                     {c.evidences && c.evidences.length > 0 && (
-                      <span className="flex items-center gap-0.5">
+                      <button
+                        className="flex items-center gap-0.5 hover:text-foreground"
+                        title={t('acceptanceDetail.evidence.list.toggle')}
+                        onClick={() => toggleCriterionEvidence(c.id)}
+                      >
                         <ShieldCheck className="size-3" />
                         {c.evidences.length}
-                      </span>
+                      </button>
                     )}
                   </div>
+                  {c.evidences && expandedCriteria.has(c.id) && (
+                    <ul className="mt-2 space-y-1 border-l border-border pl-2.5">
+                      {c.evidences.map((ev) => {
+                        const prUrl =
+                          typeof ev.metadata?.htmlUrl === 'string'
+                            ? ev.metadata.htmlUrl
+                            : ev.storageRef;
+                        return (
+                          <li key={ev.id} className="flex items-center gap-1.5 text-10 text-muted-foreground">
+                            <Badge variant="outline" className="text-10 py-0">
+                              {t(`acceptanceDetail.evidenceType.${ev.evidenceType}`, ev.evidenceType)}
+                            </Badge>
+                            <span className="truncate">{ev.content ?? ev.evidenceType}</span>
+                            {prUrl && /^https?:\/\//.test(prUrl) && (
+                              <a
+                                href={prUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="shrink-0 text-accent-blue hover:underline"
+                              >
+                                <Link2 className="size-3" />
+                              </a>
+                            )}
+                            <span className="ml-auto shrink-0">
+                              {new Date(ev.createdAt).toLocaleString()}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </div>
                 <button
                   className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-red"
@@ -342,7 +428,7 @@ export function AcceptanceDetailPage() {
           );
         })}
         {items.length === 0 && (
-          <p className="py-4 text-center text-sm text-muted-foreground">{emptyText}</p>
+          <EmptyState title={emptyText} className="min-h-20" />
         )}
       </div>
     </div>
@@ -360,6 +446,7 @@ export function AcceptanceDetailPage() {
         actions={
           <>
             <FavoriteToggle label={acceptance.title || t('acceptance.title')} />
+            <SubscribeButton />
             {active && (
               <>
                 <HeaderActionButton
@@ -390,6 +477,7 @@ export function AcceptanceDetailPage() {
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* 主区 */}
         <div className="flex flex-1 min-w-0 flex-col overflow-y-auto">
+          <div className="mx-auto w-full max-w-5xl flex-1 flex flex-col">
           {/* 接收失败清单（聚合校验逐条展示） */}
           {acceptFailures && (
             <div className="mx-6 mt-3 rounded-lg border border-accent-red/40 bg-accent-red/10 p-3">
@@ -433,7 +521,7 @@ export function AcceptanceDetailPage() {
                   </span>
                   {acceptance.task && (
                     <Link
-                      to={`/app/tasks/${acceptance.taskId}`}
+                      to={`/app/issues/${acceptance.issueId}`}
                       className="flex items-center gap-1 hover:text-foreground hover:underline"
                     >
                       <Link2 className="size-3.5" />
@@ -488,6 +576,27 @@ export function AcceptanceDetailPage() {
               </p>
             </div>
           )}
+          {/* CAP-B-02：审计后标准修订/新增 → 审计结论过期待重审 */}
+          {auditReport?.stale && (
+            <div className="mx-6 mt-3 flex items-center gap-3 rounded-lg border border-accent-yellow/40 bg-accent-yellow/10 p-3">
+              <AlertTriangle className="size-4 shrink-0 text-accent-yellow" />
+              <p className="flex-1 text-sm">
+                {t('acceptanceDetail.audit.staleBanner', {
+                  count: auditReport.staleCriteriaIds?.length ?? 0,
+                })}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 text-xs"
+                onClick={() => runAudit()}
+                disabled={auditMutation.isPending}
+              >
+                <Sparkles className="mr-1.5 size-3.5 text-primary" />
+                {t('acceptanceDetail.audit.rerun')}
+              </Button>
+            </div>
+          )}
           {/* 接收门禁提示：critical/high 标准未通过 */}
           {blockingCount > 0 && active && (
             <div className="mx-6 mt-3 flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-3 text-xs text-muted-foreground">
@@ -528,7 +637,11 @@ export function AcceptanceDetailPage() {
               </TabsList>
 
               {/* 验收标准 */}
-              <TabsContent value="criteria" className="mt-4 space-y-5">
+              <TabsContent
+                value="criteria"
+                className="mt-4 space-y-5"
+                data-ai-entity={`acceptance:${id}`}
+              >
                 {renderCriterionGroup(
                   t('acceptanceDetail.criteria.functional'),
                   functionalCriteria,
@@ -580,7 +693,11 @@ export function AcceptanceDetailPage() {
               </TabsContent>
 
               {/* 审计报告 */}
-              <TabsContent value="audit" className="mt-4 space-y-4">
+              <TabsContent
+                value="audit"
+                className="mt-4 space-y-4"
+                data-ai-entity={`acceptance:${id}`}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-semibold">{t('acceptanceDetail.audit.title')}</h3>
@@ -591,19 +708,49 @@ export function AcceptanceDetailPage() {
                         : t('acceptanceDetail.audit.never')}
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => auditMutation.mutateAsync(undefined)}
-                    disabled={auditMutation.isPending}
-                  >
-                    <Sparkles className="mr-1.5 size-3.5 text-primary" />
-                    {auditMutation.isPending
-                      ? '…'
-                      : auditReport
-                        ? t('acceptanceDetail.audit.rerun')
-                        : t('acceptanceDetail.audit.run')}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <NativeSelect
+                      value={auditChecklistId}
+                      onChange={(e) => setAuditChecklistId(e.target.value)}
+                      className="h-8 w-52 text-xs"
+                      aria-label={t('acceptanceDetail.audit.checklistSelect')}
+                    >
+                      <NativeSelectOption value="auto">
+                        {t('acceptanceDetail.audit.autoChecklist')}
+                      </NativeSelectOption>
+                      {systemChecklists.length > 0 && (
+                        <NativeSelectOptGroup label={t('acceptanceDetail.audit.systemChecklists')}>
+                          {systemChecklists.map((c) => (
+                            <NativeSelectOption key={c.id} value={c.id}>
+                              {c.name} ({c.checklist?.length ?? 0})
+                            </NativeSelectOption>
+                          ))}
+                        </NativeSelectOptGroup>
+                      )}
+                      {teamChecklists.length > 0 && (
+                        <NativeSelectOptGroup label={t('acceptanceDetail.audit.teamChecklists')}>
+                          {teamChecklists.map((c) => (
+                            <NativeSelectOption key={c.id} value={c.id}>
+                              {c.name} ({c.checklist?.length ?? 0})
+                            </NativeSelectOption>
+                          ))}
+                        </NativeSelectOptGroup>
+                      )}
+                    </NativeSelect>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => runAudit()}
+                      disabled={auditMutation.isPending}
+                    >
+                      <Sparkles className="mr-1.5 size-3.5 text-primary" />
+                      {auditMutation.isPending
+                        ? '…'
+                        : auditReport
+                          ? t('acceptanceDetail.audit.rerun')
+                          : t('acceptanceDetail.audit.run')}
+                    </Button>
+                  </div>
                 </div>
                 {auditReport ? (
                   <AuditReportPanel
@@ -614,25 +761,22 @@ export function AcceptanceDetailPage() {
                     loading={applySuggestionsMutation.isPending}
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <ShieldCheck className="mb-3 size-10 text-muted-foreground/30" />
-                    <p className="text-sm text-muted-foreground">
-                      {t('acceptanceDetail.audit.empty')}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t('acceptanceDetail.audit.emptyHint')}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-3"
-                      onClick={() => auditMutation.mutateAsync(undefined)}
-                      disabled={auditMutation.isPending}
-                    >
-                      <Sparkles className="mr-1.5 size-3.5 text-primary" />
-                      {t('acceptanceDetail.audit.run')}
-                    </Button>
-                  </div>
+                  <EmptyState
+                    icon={ShieldCheck}
+                    title={t('acceptanceDetail.audit.empty')}
+                    description={t('acceptanceDetail.audit.emptyHint')}
+                    action={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => runAudit()}
+                        disabled={auditMutation.isPending}
+                      >
+                        <Sparkles className="mr-1.5 size-3.5 text-primary" />
+                        {t('acceptanceDetail.audit.run')}
+                      </Button>
+                    }
+                  />
                 )}
               </TabsContent>
 
@@ -689,25 +833,24 @@ export function AcceptanceDetailPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Clock className="mb-3 size-10 text-muted-foreground/30" />
-                    <p className="text-sm text-muted-foreground">
-                      {t('acceptanceDetail.executions.empty')}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t('acceptanceDetail.executions.emptyHint')}
-                    </p>
-                    {acceptance.taskId && (
-                      <Link to={`/app/tasks/${acceptance.taskId}`}>
-                        <Button variant="outline" size="sm" className="mt-3">
-                          {t('acceptanceDetail.actions.dispatchTask')}
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
+                  <EmptyState
+                    icon={Clock}
+                    title={t('acceptanceDetail.executions.empty')}
+                    description={t('acceptanceDetail.executions.emptyHint')}
+                    action={
+                      acceptance.issueId ? (
+                        <Link to={`/app/issues/${acceptance.issueId}`}>
+                          <Button variant="outline" size="sm">
+                            {t('acceptanceDetail.actions.dispatchTask')}
+                          </Button>
+                        </Link>
+                      ) : undefined
+                    }
+                  />
                 )}
               </TabsContent>
             </Tabs>
+          </div>
           </div>
         </div>
 
@@ -745,13 +888,13 @@ export function AcceptanceDetailPage() {
             >
               {acceptance.task ? (
                 <Link
-                  to={`/app/tasks/${acceptance.taskId}`}
+                  to={`/app/issues/${acceptance.issueId}`}
                   className="text-xs hover:underline"
                 >
                   {acceptance.task.title}
                 </Link>
               ) : (
-                <span className="text-xs text-muted-foreground">{acceptance.taskId}</span>
+                <span className="text-xs text-muted-foreground">{acceptance.issueId}</span>
               )}
             </PropertyRow>
             <PropertyRow
@@ -846,6 +989,41 @@ export function AcceptanceDetailPage() {
                       : t('acceptanceDetail.evidence.autoChecks.invalid')}
                     {' '}({acceptance.completionEvidence.autoChecks.passed}/
                     {acceptance.completionEvidence.autoChecks.total})
+                  </p>
+                )}
+                {acceptance.completionEvidence.prUrl && (
+                  <p className="flex items-center gap-1.5">
+                    <GitPullRequest className="size-3.5 shrink-0" />
+                    <a
+                      href={acceptance.completionEvidence.prUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="truncate text-accent-blue hover:underline"
+                    >
+                      {acceptance.completionEvidence.prRepo
+                        ? `${acceptance.completionEvidence.prRepo}#${acceptance.completionEvidence.prNumber ?? ''}`
+                        : acceptance.completionEvidence.prUrl}
+                    </a>
+                    {acceptance.completionEvidence.state && (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          'text-10 py-0 shrink-0',
+                          acceptance.completionEvidence.state === 'merged' && 'text-accent-green',
+                          acceptance.completionEvidence.state === 'closed' && 'text-accent-red',
+                          acceptance.completionEvidence.state === 'open' && 'text-accent-blue',
+                        )}
+                      >
+                        {acceptance.completionEvidence.state}
+                      </Badge>
+                    )}
+                    {acceptance.completionEvidence.prSyncedAt && (
+                      <span className="shrink-0">
+                        {t('acceptanceDetail.evidence.pr.syncedAt', {
+                          time: new Date(acceptance.completionEvidence.prSyncedAt).toLocaleString(),
+                        })}
+                      </span>
+                    )}
                   </p>
                 )}
               </div>

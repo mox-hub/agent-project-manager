@@ -46,7 +46,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/_api': {
-        target: 'http://localhost:4300',
+        // worktree 并行场景用 VITE_API_PORT 指向隔离后端（默认 4300）
+        target: `http://localhost:${process.env.VITE_API_PORT ?? 4300}`,
         changeOrigin: true,
       },
     },

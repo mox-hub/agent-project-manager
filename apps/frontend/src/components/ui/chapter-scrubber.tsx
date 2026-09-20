@@ -20,7 +20,19 @@ export interface Chapter {
   description?: React.ReactNode;
   /** Small muted label rendered above the title (e.g. a timestamp or step no.). */
   meta?: React.ReactNode;
+  /** Optional heading level (1-6): lower levels rest longer and the card shows an H{n} badge. */
+  level?: number;
 }
+
+// 静息长度按层级递减（H1 满长 → H6 最短），hover 波峰长度保持统一
+const LEVEL_REST_SCALE: Record<number, number> = {
+  1: 1,
+  2: 0.85,
+  3: 0.7,
+  4: 0.55,
+  5: 0.45,
+  6: 0.35,
+};
 
 export interface ChapterScrubberProps {
   /** Chapters rendered top-to-bottom, one uniform tick each. */
@@ -302,6 +314,8 @@ export function ChapterScrubber({
             typeof chapter.description === "string"
               ? `. ${chapter.description}`
               : "";
+          const restScale =
+            (chapter.level && LEVEL_REST_SCALE[chapter.level]) || 1;
           return (
             <button
               ref={(el) => {
@@ -312,7 +326,7 @@ export function ChapterScrubber({
               type="button"
               role="option"
               aria-selected={isCurrent}
-              aria-label={`${chapter.title}${descText}`}
+              aria-label={`${chapter.level ? `H${chapter.level} ` : ""}${chapter.title}${descText}`}
               tabIndex={index === rovingIndex ? 0 : -1}
               onFocus={() => {
                 focusedRef.current = index;
@@ -331,7 +345,7 @@ export function ChapterScrubber({
                 pointer={pointer}
                 strength={strength}
                 radius={radius}
-                restLength={restLength}
+                restLength={restLength * restScale}
                 peakLength={peakLength}
                 isCurrent={isCurrent}
               />
@@ -359,11 +373,16 @@ export function ChapterScrubber({
             resolvedSide === "right" ? "origin-left" : "origin-right",
           )}
         >
-          {chapters[activeIndex].meta ? (
-            <div className="mb-1 text-xs font-medium tabular-nums text-muted-foreground">
+          {(chapters[activeIndex].meta || chapters[activeIndex].level) && (
+            <div className="mb-1 flex items-center gap-1.5 text-xs font-medium tabular-nums text-muted-foreground">
+              {chapters[activeIndex].level ? (
+                <span className="rounded bg-muted px-1 py-px text-10 font-semibold">
+                  H{chapters[activeIndex].level}
+                </span>
+              ) : null}
               {chapters[activeIndex].meta}
             </div>
-          ) : null}
+          )}
           <div className="truncate text-sm font-semibold leading-snug tracking-[-0.01em]">
             {chapters[activeIndex].title}
           </div>

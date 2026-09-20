@@ -6,6 +6,7 @@ import { compileMdx, extractHeadings } from '@/shared/mdx/mdx-pipeline';
 import { useSectionTaskLinksByDoc } from '@/modules/document/hooks/use-section-task-links';
 import { useDocumentSections } from '@/modules/document/hooks/use-document-sections';
 import { SectionTaskBadgeProvider, HeadingChildProvider, MdxHeading } from '@/shared/mdx/components/mdx-heading';
+import { apmRefAnchorInterceptor } from '@/shared/apm-ref/apm-ref-chip';
 import { cn } from '@/lib/utils';
 import type { MdxComponent } from '@/shared/mdx/mdx-pipeline';
 
@@ -16,6 +17,8 @@ const BASE_MDX_COMPONENTS = {
   h4: (props: React.HTMLAttributes<HTMLHeadingElement>) => <MdxHeading level={4} {...props} />,
   h5: (props: React.HTMLAttributes<HTMLHeadingElement>) => <MdxHeading level={5} {...props} />,
   h6: (props: React.HTMLAttributes<HTMLHeadingElement>) => <MdxHeading level={6} {...props} />,
+  // apm:// 实体引用渲染为 chip（v2 纪要 §13），其余链接保持原生
+  a: apmRefAnchorInterceptor,
 };
 
 interface MdxRendererProps {

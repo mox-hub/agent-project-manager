@@ -136,39 +136,6 @@ async function ensureProjectBinding(memberId: string): Promise<void> {
   console.log(`  + ProjectBinding created: member=${memberId} project=${TARGET_PROJECT_ID}`);
 }
 
-async function ensureAgentIdentity(
-  memberId: string,
-  runtimeId: string,
-  executionRole: string,
-): Promise<void> {
-  const existing = await prisma.agentIdentityBinding.findFirst({
-    where: {
-      projectId: TARGET_PROJECT_ID,
-      subjectType: 'ai_member',
-      subjectId: memberId,
-    },
-  });
-  if (existing) {
-    console.log(`  ↻ AgentIdentityBinding exists: subject=${memberId} provider=${runtimeId}`);
-    return;
-  }
-  const adminUserId = await ensureAdminUserId();
-  await prisma.agentIdentityBinding.create({
-    data: {
-      projectId: TARGET_PROJECT_ID,
-      subjectType: 'ai_member',
-      subjectId: memberId,
-      providerId: runtimeId,
-      identitySource: 'local_seed',
-      mappedRole: executionRole,
-      mappedLevel: 'standard',
-      status: 'active',
-      createdBy: adminUserId,
-    },
-  });
-  console.log(`  + AgentIdentityBinding created: subject=${memberId} provider=${runtimeId}`);
-}
-
 async function main(): Promise<void> {
   console.log('🌱 Seeding AI workers...');
 
@@ -183,17 +150,13 @@ async function main(): Promise<void> {
       `seed-${seed.handle}`,
       `${seed.displayName} Runtime`,
     );
-    await ensureAgentIdentity(memberId, runtimeId, seed.defaultExecutionRole);
   }
 
   const memberCount = await prisma.member.count({ where: { type: 'ai_agent' } });
   const bindingCount = await prisma.memberProjectBinding.count({
     where: { projectId: TARGET_PROJECT_ID },
   });
-  const agentCount = await prisma.agentIdentityBinding.count({
-    where: { projectId: TARGET_PROJECT_ID, status: 'active' },
-  });
-  console.log(`\n📊 Summary: members=${memberCount} projectBindings=${bindingCount} agentBindings=${agentCount}`);
+  console.log(`\n📊 Summary: members=${memberCount} projectBindings=${bindingCount}`);
   console.log('🎉 AI worker seeding completed!');
 }
 

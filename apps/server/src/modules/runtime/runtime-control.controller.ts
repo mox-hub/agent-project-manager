@@ -1,4 +1,11 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -22,11 +29,23 @@ export class RuntimeControlController {
   @Post('dispatches')
   @ApiOperation({ summary: '控制面创建执行派发并推送给 Runtime' })
   @ApiResponse({ status: 201, description: '派发创建成功' })
+  @ApiResponse({
+    status: 400,
+    description: 'executionRunId / executionId 缺失',
+  })
   async createDispatch(@Body() dto: CreateDispatchDto) {
+    // 4d-3：executionId（执行项 ID）可作为 executionRunId 的别名传入
+    const executionRunId = dto.executionRunId ?? dto.executionId;
+    if (!executionRunId) {
+      throw new BadRequestException(
+        'executionRunId 或 executionId 必须提供一个',
+      );
+    }
+
     await this.runtimeService.createDispatch(dto.runtimeId, {
-      executionRunId: dto.executionRunId,
+      executionRunId,
       projectId: dto.projectId,
-      taskId: dto.taskId,
+      issueId: dto.issueId,
       subjectType: dto.subjectType,
       subjectId: dto.subjectId,
       contextPackRef: dto.contextPackRef,
@@ -38,7 +57,7 @@ export class RuntimeControlController {
     });
 
     return {
-      executionRunId: dto.executionRunId,
+      executionRunId,
       runtimeId: dto.runtimeId,
       status: 'pending',
     };

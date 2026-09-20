@@ -61,6 +61,15 @@ const ALLOWED_TOKENS = new Set([
   "w-[min(96vw,780px)]",
   "w-[min(96vw,720px)]",
   "w-[min(96vw,520px)]",
+  // 统一创建面板适度放大（1040px x 760px 居中呼吸档，拒绝全屏；2026-09 unified-create 登记批）
+  "w-[min(96vw,1040px)]",
+  "h-[min(84vh,760px)]",
+  // 助理浮窗面板尺寸（视口相关响应式表达式，无法 token 化；2026-09 assistant-fab 登记批）
+  "h-[min(50vh,calc(100vh-6rem))]",
+  "w-[min(50vw,42rem)]",
+  "h-[560px]",
+  "w-[380px]",
+  "max-w-[calc(100vw-2rem)]",
   // 边缘单次值（动画占位/微调/特殊定位）
   "max-h-[3000px]",
   "h-[18.4px]",
@@ -84,6 +93,11 @@ const ALLOWED_TOKENS = new Set([
   "tracking-[-0.01em]",
   "tracking-[0.03em]",
   "z-[-1]",
+  // ai-surface 驾驶舱网格（2026-09 S1/S2 登记批）：内容宽度是**页面级**布局常量，
+  // 刻意窄于其他页面的 max-w-7xl（驾驶舱要聚焦），故不升格为全局 --container-* token；
+  // 2fr:1fr 是 fr 比例模板，Tailwind 无对应 token 化写法（同表内其他 grid-cols-[...] 先例）。
+  "max-w-[1100px]",
+  "grid-cols-[2fr_1fr]",
   // ── shadcn 官方组件自带的运行时复杂值（vaul drawer / navigation-menu 动效），随官方升级保留 ──
   "opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))]",
   "ease-[cubic-bezier(0.32,0.72,0,1)]",
@@ -162,6 +176,20 @@ const ALLOWED_TOKENS = new Set([
   "w-[calc(100%-var(--toast-inset)*2)]",
   "w-[calc(var(--thumb-size)*2-2px)]",
   "z-[calc(9999-var(--toast-index))]",
+  // 命令面板 coss p-command 官方配方（7e9daeb 移植原值）：base-ui Dialog 弹出层
+  // 动画链式变量（--nested-dialogs 级联位移/缩放/透明度）与双层圆角微调、
+  // 触发器紧凑间距——均为变量/表达式计算值，无对应 token 可归约
+  "py-[max(--spacing(4),4vh)]",
+  "py-[10vh]",
+  "translate-y-[calc(1.25rem*var(--nested-dialogs))]",
+  "scale-[calc(1-0.1*var(--nested-dialogs))]",
+  "opacity-[calc(1-0.1*var(--nested-dialogs))]",
+  "transition-[scale,opacity,translate]",
+  "rounded-[calc(var(--radius-2xl)-1px)]",
+  "rounded-t-[calc(var(--radius-xl)-1px)]",
+  "rounded-b-[calc(var(--radius-2xl)-1px)]",
+  "px-[0.3rem]",
+  "py-[0.2rem]",
 ]);
 
 // 变体前缀的方括号不是任意值（data-[...]、aria-[...]、has-[...] 等）
