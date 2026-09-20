@@ -1323,9 +1323,15 @@ export class IssueService {
       if (!issueType) {
         throw new BadRequestException('工单类型不存在');
       }
-      updateData.typeId = issueType.id;
-      updateData.type = issueType.key;
       effectiveType = issueType;
+      if (issueType.id === task.typeId) {
+        // 幂等：类型未变，剥掉透传字段跳过写入（不产生空更新与 diff 动态）
+        delete updateData.typeId;
+        delete updateData.type;
+      } else {
+        updateData.typeId = issueType.id;
+        updateData.type = issueType.key;
+      }
     }
 
     // 4d 二期：顶层旧字段 + customFields 合并存储（针对现状类型定义校验；
