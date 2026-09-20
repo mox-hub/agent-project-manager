@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,9 +6,10 @@ import { TasksPage } from './tasks-page';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, defaultValue?: string | { defaultValue?: string }) => {
-      if (typeof defaultValue === 'string') return defaultValue;
-      return defaultValue?.defaultValue ?? key;
+    // 近似 i18next：默认值 + {{占位符}} 插值（分页区间/导出范围等含参数文案依赖此行为）
+    t: (key: string, defaultValue?: string | { defaultValue?: string }, options?: Record<string, unknown>) => {
+      const raw = typeof defaultValue === 'string' ? defaultValue : (defaultValue?.defaultValue ?? key);
+      return raw.replace(/\{\{(\w+)\}\}/g, (_, name: string) => String(options?.[name] ?? `{{${name}}}`));
     },
   }),
   // 导入链经 @/hooks/useTranslation → @/i18n 触达 i18n 初始化，需提供该导出（照抄 acceptance-list-page 模式）
@@ -124,7 +125,7 @@ const createQueryClient = () =>
 beforeEach(() => {
   useAllTasksMock.mockReset();
   useAllTasksMock.mockReturnValue({
-    data: { data: [taskItem], meta: { page: 1, pageSize: 1000, total: 1, totalPages: 1 } },
+    data: { data: [taskItem], meta: { page: 1, pageSize: 50, total: 1, totalPages: 1 } },
     isLoading: false,
     isError: false,
     error: null,
@@ -198,7 +199,7 @@ describe('TasksPage P1-16 筛选 URL 还原与头部计数', () => {
       { id: 't1', title: 'Prepare release plan', status: 'todo', priority: 'medium', projectId: 'p1' },
       { id: 't2', title: 'Write docs', status: 'done', priority: 'low', projectId: 'p1' },
     ],
-    meta: { page: 1, pageSize: 1000, total: 2, totalPages: 1 },
+    meta: { page: 1, pageSize: 50, total: 2, totalPages: 1 },
   };
 
   it('restores q / f_status filters from URL and header count reflects the filtered result', async () => {
@@ -246,7 +247,7 @@ describe('TasksPage P1-15 导入导出入口', () => {
     useAllTasksMock.mockReturnValue({
       data: {
         data: [{ id: 't1', title: 'Prepare release plan', status: 'todo', priority: 'medium', projectId: 'p1' }],
-        meta: { page: 1, pageSize: 1000, total: 1, totalPages: 1 },
+        meta: { page: 1, pageSize: 50, total: 1, totalPages: 1 },
       },
       isLoading: false,
       isError: false,
@@ -270,5 +271,108 @@ describe('TasksPage P1-15 导入导出入口', () => {
     fireEvent.click(await screen.findByRole('button', { name: '导入' }));
 
     expect(await screen.findByTestId('import-modal')).toBeTruthy();
+  });
+});
+
+describe('TasksPage P2-17 服务端分页', () => {
+  // 三页数据源（total=120 / pageSize=50）：页码窗口 1..3，下一页可点
+  const pagedData = (page: number) => ({
+    data: [taskItem],
+    meta: { page, pageSize: 50, total: 120, totalPages: 3 },
+  });
+
+  const lastCallArgs = () => {
+    const calls = useAllTasksMock.mock.calls;
+    return calls[calls.length - 1]?.[0] as { page: number; pageSize: number } | undefined;
+  };
+
+  beforeEach(() => {
+    useAllTasksMock.mockReset();
+    useAllTasksMock.mockReturnValue({
+      data: pagedData(1),
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: refetchMock,
+    });
+  });
+
+  it('requests page 1 with pageSize 50 and renders the pagination footer', async () => {
+    renderTasksPage();
+
+    expect(await screen.findByTestId('task-view-list')).toBeTruthy();
+    expect(useAllTasksMock.mock.calls[0][0]).toEqual({ page: 1, pageSize: 50 });
+    // meta.total=120 → 分页栏渲染（区间 + 页码窗口 + 上/下页）；区间文案同时出现在头部计数胶囊
+    expect(screen.getByRole('navigation', { name: 'pagination' })).toBeTruthy();
+    // PaginationLink 经 base-ui Button render 组合为 role=button 的 <a>；
+    // 上/下页按钮自带英文 aria-label（覆盖可见文本），故按文本定位
+    expect(screen.getAllByText('第 1–50 条 · 共 120 条').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('上一页').closest('a')).toBeTruthy();
+    expect(screen.getByText('下一页').closest('a')).toBeTruthy();
+    expect(screen.getByText('3', { selector: 'a' })).toBeTruthy();
+  });
+
+  it('hides the pagination footer while the first load is pending and for an empty result', async () => {
+    useAllTasksMock.mockReturnValue({
+      data: { data: [], meta: { page: 1, pageSize: 50, total: 0, totalPages: 0 } },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: refetchMock,
+    });
+    renderTasksPage();
+
+    expect(await screen.findByText('暂无任务')).toBeTruthy();
+    expect(screen.queryByRole('navigation', { name: 'pagination' })).toBeNull();
+  });
+
+  it('goes to the next page and refetches with page 2', async () => {
+    renderTasksPage();
+
+    const nextLink = screen.getByText('下一页').closest('a');
+    expect(nextLink).toBeTruthy();
+    fireEvent.click(nextLink as HTMLElement);
+
+    await waitFor(() => expect(lastCallArgs()).toEqual({ page: 2, pageSize: 50 }));
+  });
+
+  it('restores the page from the URL (?page=2) and highlights it', async () => {
+    useAllTasksMock.mockReturnValue({
+      data: pagedData(2),
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: refetchMock,
+    });
+
+    renderTasksPage(['/app/issues?page=2']);
+
+    expect(await screen.findByTestId('task-view-list')).toBeTruthy();
+    expect(useAllTasksMock.mock.calls[0][0]).toEqual({ page: 2, pageSize: 50 });
+    expect(screen.getByText('2', { selector: 'a' }).getAttribute('aria-current')).toBe('page');
+  });
+
+  it('clamps an out-of-range ?page back to the last page', async () => {
+    renderTasksPage(['/app/issues?page=99']);
+
+    await screen.findByTestId('task-view-list');
+    await waitFor(() => expect(lastCallArgs()).toEqual({ page: 3, pageSize: 50 }));
+  });
+
+  it('resets to page 1 when a filter changes', async () => {
+    useAllTasksMock.mockReturnValue({
+      data: pagedData(2),
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: refetchMock,
+    });
+    renderTasksPage(['/app/issues?page=2']);
+    await screen.findByTestId('task-view-list');
+
+    // 条件条变化入口之一：工具条「AI 执行中」一键筛选按钮
+    fireEvent.click(await screen.findByRole('button', { name: 'AI 执行中' }));
+
+    await waitFor(() => expect(lastCallArgs()).toEqual({ page: 1, pageSize: 50 }));
   });
 });

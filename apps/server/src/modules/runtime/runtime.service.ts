@@ -299,7 +299,10 @@ export class RuntimeService {
       return context.value;
     }
 
-    const dispatch = await this.findDispatchByExecutionRunId(executionRunId);
+    const dispatch = await this.findDispatchByExecutionRunId(
+      executionRunId,
+      runtimeId,
+    );
     if (!dispatch) {
       throw new NotFoundException('RUNTIME_EXECUTION_NOT_FOUND');
     }
@@ -396,8 +399,10 @@ export class RuntimeService {
       },
     );
 
-    const dispatchMeta =
-      await this.findDispatchConfigByExecutionRunId(executionRunId);
+    const dispatchMeta = await this.findDispatchConfigByExecutionRunId(
+      executionRunId,
+      runtimeId,
+    );
 
     if (dispatchMeta) {
       const dispatch = dispatchMeta.value as RuntimeDispatchRecord;
@@ -505,22 +510,17 @@ export class RuntimeService {
     runtimeSessionId: string,
     runtimeSessionToken: string,
   ): Promise<RuntimeSessionValidation> {
-    const registration = await this.prisma.appConfig.findFirst({
-      where: {
-        scope: 'runtime.registration',
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
-
-    if (!registration) {
-      throw new UnauthorizedException('RUNTIME_NOT_REGISTERED');
-    }
-
-    const allRegistrations = await this.prisma.appConfig.findMany({
+    // 注册行按 runtimeId 一行一条（key = runtime:registration:<runtimeId>），
+    // 单次查询同时承担「是否存在注册」与「会话三元组匹配」两个判定
+    const registrations = await this.prisma.appConfig.findMany({
       where: { scope: 'runtime.registration' },
     });
 
-    const hit = allRegistrations
+    if (registrations.length === 0) {
+      throw new UnauthorizedException('RUNTIME_NOT_REGISTERED');
+    }
+
+    const hit = registrations
       .map((item) => item.value as RuntimeRegistrationRecord)
       .find(
         (item) =>
@@ -834,9 +834,14 @@ export class RuntimeService {
     return registration.value as RuntimeRegistrationRecord;
   }
 
-  private async findDispatchByExecutionRunId(executionRunId: string) {
-    const dispatchConfig =
-      await this.findDispatchConfigByExecutionRunId(executionRunId);
+  private async findDispatchByExecutionRunId(
+    executionRunId: string,
+    runtimeId?: string,
+  ) {
+    const dispatchConfig = await this.findDispatchConfigByExecutionRunId(
+      executionRunId,
+      runtimeId,
+    );
     return dispatchConfig?.value as RuntimeDispatchRecord | undefined;
   }
 
@@ -844,8 +849,10 @@ export class RuntimeService {
     runtimeId: string,
     executionRunId: string,
   ) {
-    const dispatchConfig =
-      await this.findDispatchConfigByExecutionRunId(executionRunId);
+    const dispatchConfig = await this.findDispatchConfigByExecutionRunId(
+      executionRunId,
+      runtimeId,
+    );
 
     if (!dispatchConfig) {
       return;
@@ -857,7 +864,27 @@ export class RuntimeService {
     }
   }
 
-  private async findDispatchConfigByExecutionRunId(executionRunId: string) {
+  /**
+   * 已知 runtimeId 时按 (key, scope) 精确命中（idx_app_configs_key_scope），
+   * 未命中或无 runtimeId 时回退按 value.executionRunId 全量匹配，
+   * 保留跨 runtime 归属校验与控制面取消的既有语义。
+   */
+  private async findDispatchConfigByExecutionRunId(
+    executionRunId: string,
+    runtimeId?: string,
+  ) {
+    if (runtimeId) {
+      const exact = await this.prisma.appConfig.findFirst({
+        where: {
+          key: this.getDispatchKey(runtimeId, executionRunId),
+          scope: 'runtime.dispatch',
+        },
+      });
+      if (exact) {
+        return exact;
+      }
+    }
+
     const records = await this.prisma.appConfig.findMany({
       where: {
         scope: 'runtime.dispatch',

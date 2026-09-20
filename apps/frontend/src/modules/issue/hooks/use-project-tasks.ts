@@ -4,6 +4,7 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/toast';
 import { taskApi } from '../api/issue-api';
 import { activityApi } from '@/modules/activity/api/activity-api';
@@ -92,6 +93,7 @@ export function useProjectIterations(
 /** P1-19：创建迭代（POST /projects/:projectId/iterations），成功后失效迭代列表缓存 */
 export function useCreateIteration(projectId: string | undefined) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (data: Omit<CreateIterationRequest, 'projectId'>) => {
@@ -108,7 +110,11 @@ export function useCreateIteration(projectId: string | undefined) {
       }
     },
     onError: (err) => {
-      toast.error('创建迭代失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.createIterationFailed', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
@@ -116,6 +122,7 @@ export function useCreateIteration(projectId: string | undefined) {
 /** P1-19：更新迭代（PATCH /iterations/:id），成功后失效所属项目的迭代列表缓存 */
 export function useUpdateIteration(projectId: string | undefined) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (variables: { iterationId: string; data: UpdateIterationRequest }) =>
@@ -129,7 +136,11 @@ export function useUpdateIteration(projectId: string | undefined) {
       }
     },
     onError: (err) => {
-      toast.error('更新迭代失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.updateIterationFailed', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
@@ -202,6 +213,7 @@ export function useTaskExecutions(
 
 export function useCreateTask() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (data: CreateTaskRequest) => taskApi.create(data),
@@ -217,13 +229,18 @@ export function useCreateTask() {
       queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
-      toast.error('创建任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.createFailedMessage', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
 
 export function useUpdateTask() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (variables: { issueId: string; data: UpdateTaskRequest }) =>
@@ -246,7 +263,11 @@ export function useUpdateTask() {
       queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
-      toast.error('更新任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.updateFailedMessage', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
@@ -308,6 +329,7 @@ export function useConfirmTaskExecution() {
 
 export function useCreateTaskQuick(projectId: string | undefined) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (data: Pick<CreateTaskRequest, 'title' | 'description'>) => {
@@ -329,13 +351,18 @@ export function useCreateTaskQuick(projectId: string | undefined) {
       }
     },
     onError: (err) => {
-      toast.error('快速创建任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.quickCreateFailed', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
 
 export function useAddTaskDependency(issueId: string | undefined) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (data: CreateTaskDependencyRequest) => {
@@ -355,13 +382,18 @@ export function useAddTaskDependency(issueId: string | undefined) {
       }
     },
     onError: (err) => {
-      toast.error('添加任务依赖失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.addDependencyFailedMessage', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
 
 export function useRemoveTaskDependency(issueId: string | undefined, projectId?: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (dependencyId: string) => {
@@ -381,13 +413,18 @@ export function useRemoveTaskDependency(issueId: string | undefined, projectId?:
       }
     },
     onError: (err) => {
-      toast.error('移除任务依赖失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.removeDependencyFailedMessage', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
 
 export function useDeleteTask() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (issueId: string) => taskApi.delete(issueId),
@@ -398,13 +435,18 @@ export function useDeleteTask() {
       queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
-      toast.error('删除任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.deleteFailedMessage', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
 
 export function useMoveTask() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (variables: { issueId: string; status: string }) =>
@@ -424,13 +466,18 @@ export function useMoveTask() {
       queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
-      toast.error('移动任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.moveFailed', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
 
 export function useImportTasks() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (variables: { projectId: string; tasks: CreateTaskRequest[] }) =>
@@ -444,7 +491,11 @@ export function useImportTasks() {
       queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
-      toast.error('导入任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.importFailed', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
@@ -465,6 +516,7 @@ export function useSubTasks(parentIssueId: string | undefined) {
 /** 创建子任务 (内部调用 useCreateTask, 自动补 parentIssueId) */
 export function useCreateSubTask(options?: { onSuccess?: (task: Task) => void }) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: (data: Omit<CreateTaskRequest, 'parentIssueId'> & { parentIssueId: string }) =>
       taskApi.create(data),
@@ -473,21 +525,31 @@ export function useCreateSubTask(options?: { onSuccess?: (task: Task) => void })
       queryClient.invalidateQueries({ queryKey: ['task', variables.parentIssueId] });
       queryClient.invalidateQueries({ queryKey: ['allTasks'] });
       queryClient.invalidateQueries({ queryKey: ['allBugs'] });
-      toast.success('子任务已创建');
+      toast.success(t('task.messages.subtaskCreated'));
       options?.onSuccess?.(newTask);
     },
     onError: (err) => {
-      toast.error('创建子任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.createSubtaskFailedMessage', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
 
 export function useExportTasks() {
+  const { t } = useTranslation();
+
   return useMutation({
     mutationFn: (variables: { projectId: string; format: 'csv' | 'json' }) =>
       taskApi.exportTasks(variables.projectId, variables.format),
     onError: (err) => {
-      toast.error('导出任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.exportFailed', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
@@ -517,19 +579,29 @@ export function useShortIdStats() {
 
 export function useBackfillShortIds() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: () => taskApi.backfillShortIds(),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['shortIdStats'] });
       if (result.success) {
-        toast.success(`成功为 ${result.successCount} 个任务补充 shortId`);
+        toast.success(t('task.messages.shortIdBackfilled', { count: result.successCount }));
       } else {
-        toast.warning(`补充完成：成功 ${result.successCount} 个，失败 ${result.failed} 个`);
+        toast.warning(
+          t('task.messages.shortIdBackfillPartial', {
+            success: result.successCount,
+            failed: result.failed,
+          }),
+        );
       }
     },
     onError: (err) => {
-      toast.error('补充 shortId 失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.messages.shortIdBackfillFailed', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }
