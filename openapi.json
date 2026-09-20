@@ -8444,6 +8444,169 @@
         ]
       }
     },
+    "/_api/issues/export": {
+      "get": {
+        "operationId": "IssueController_exportTasks",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "description": "Project ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": false,
+            "in": "query",
+            "description": "Export format",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "csv",
+                "json"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "format=json 返回导出行数组；format=csv 返回 CSV 文本（attachment 下载）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IssueExportRowDto"
+                  }
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized\n\n未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Export tasks to CSV/JSON",
+        "tags": [
+          "Tasks"
+        ]
+      }
+    },
     "/_api/issues/{id}": {
       "get": {
         "operationId": "IssueController_findOne",
@@ -9866,169 +10029,6 @@
         ]
       }
     },
-    "/_api/issues/export": {
-      "get": {
-        "operationId": "IssueController_exportTasks",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "query",
-            "description": "Project ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "format",
-            "required": false,
-            "in": "query",
-            "description": "Export format",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "csv",
-                "json"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "format=json 返回导出行数组；format=csv 返回 CSV 文本（attachment 下载）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IssueExportRowDto"
-                  }
-                }
-              },
-              "text/csv": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "请求参数错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized\n\n未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "资源不存在",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "Export tasks to CSV/JSON",
-        "tags": [
-          "Tasks"
-        ]
-      }
-    },
     "/_api/issues/admin/backfill-short-ids": {
       "post": {
         "operationId": "IssueController_backfillShortIds",
@@ -10990,7 +10990,8 @@
                 "clarify",
                 "gate",
                 "workflow_def",
-                "release"
+                "release",
+                "contract_conflict"
               ],
               "type": "string"
             }
@@ -11980,6 +11981,202 @@
         "summary": "手动触发一次项目周花费阈值检查（正常由执行完成钩子自动触发）",
         "tags": [
           "Decisions"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/bindings": {
+      "get": {
+        "operationId": "ContractController_listBindings",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractBindingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "列出契约文件绑定与工作区根（纯只读）",
+        "tags": [
+          "Contract"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/seed": {
+      "post": {
+        "operationId": "ContractController_seed",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeedContractFilesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeedContractResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管）",
+        "tags": [
+          "Contract"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/check": {
+      "post": {
+        "operationId": "ContractController_check",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckAlignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContractAlignmentReportDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "对齐检查（managed 漂移将升级冲突提案）",
+        "tags": [
+          "Contract"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/contract/bindings/{fileType}": {
+      "patch": {
+        "operationId": "ContractController_setSyncMode",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fileType",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "agents",
+                "claude_alias",
+                "changelog",
+                "readme",
+                "docs_dir"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContractBindingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractBindingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "切换绑定同步模式（managed/synced/detached）",
+        "tags": [
+          "Contract"
         ]
       }
     },
@@ -56073,6 +56270,177 @@
         ]
       }
     },
+    "/_api/search": {
+      "get": {
+        "operationId": "SearchController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "description": "搜索关键词（title/shortId/description/name contains，大小写不敏感）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "types",
+            "required": false,
+            "in": "query",
+            "description": "类型过滤，可省略；可重复传（types=task&types=bug）或数组风格（types[]=task）；milestone/acceptance 为前端契约保留类别，后端暂不产出命中（返回空分组）",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "task",
+                  "bug",
+                  "document",
+                  "project",
+                  "milestone",
+                  "acceptance"
+                ]
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "每类返回上限（默认 10，封顶 10）",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "扁平命中列表（前端按 type 分组渲染）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "全局搜索（工单/文档/项目，按项目成员可见性过滤）",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
     "/_api/office/summary": {
       "get": {
         "operationId": "OfficeController_getSummary",
@@ -56211,202 +56579,6 @@
         "summary": "办公室聚合：按 AI 成员的员工卡（忙闲/待决/可接活度）",
         "tags": [
           "Office"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/contract/bindings": {
-      "get": {
-        "operationId": "ContractController_listBindings",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "description": "项目 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContractBindingsResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "列出契约文件绑定与工作区根（纯只读）",
-        "tags": [
-          "Contract"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/contract/seed": {
-      "post": {
-        "operationId": "ContractController_seed",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "description": "项目 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SeedContractFilesDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SeedContractResultDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管）",
-        "tags": [
-          "Contract"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/contract/check": {
-      "post": {
-        "operationId": "ContractController_check",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "description": "项目 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CheckAlignmentDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ContractAlignmentReportDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "对齐检查（managed 漂移将升级冲突提案）",
-        "tags": [
-          "Contract"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/contract/bindings/{fileType}": {
-      "patch": {
-        "operationId": "ContractController_setSyncMode",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "description": "项目 ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fileType",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "enum": [
-                "agents",
-                "claude_alias",
-                "changelog",
-                "readme",
-                "docs_dir"
-              ],
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateContractBindingDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ContractBindingResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "切换绑定同步模式（managed/synced/detached）",
-        "tags": [
-          "Contract"
         ]
       }
     },
@@ -62848,6 +63020,96 @@
           "meta"
         ]
       },
+      "IssueExportRowDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "工单 ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "description": {
+            "type": "string",
+            "description": "描述",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "状态"
+          },
+          "priority": {
+            "type": "string",
+            "description": "优先级"
+          },
+          "assigneeId": {
+            "type": "string",
+            "description": "负责人 User ID",
+            "nullable": true
+          },
+          "assigneeName": {
+            "type": "string",
+            "description": "负责人姓名",
+            "nullable": true
+          },
+          "reporterId": {
+            "type": "string",
+            "description": "报告人 User ID",
+            "nullable": true
+          },
+          "reporterName": {
+            "type": "string",
+            "description": "报告人姓名",
+            "nullable": true
+          },
+          "iterationId": {
+            "type": "string",
+            "description": "迭代 ID",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "description": "开始日期（ISO）",
+            "nullable": true
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "截止日期（ISO）",
+            "nullable": true
+          },
+          "estimate": {
+            "type": "number",
+            "description": "预估工时（分钟）",
+            "nullable": true
+          },
+          "tags": {
+            "description": "标签名列表",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "priority",
+          "tags",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "UpdateIssueDto": {
         "type": "object",
         "properties": {
@@ -63652,11 +63914,17 @@
           },
           "status": {
             "type": "string",
-            "description": "状态"
+            "description": "状态（须为项目/全局 StatusDefinition 已定义的 key）"
           },
           "priority": {
             "type": "string",
-            "description": "优先级"
+            "description": "优先级",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
           },
           "assigneeId": {
             "type": "string",
@@ -63913,6 +64181,27 @@
           "type"
         ]
       },
+      "IssueImportRowErrorDto": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "number",
+            "description": "数据行号，从 1 起"
+          },
+          "field": {
+            "type": "string",
+            "description": "出错字段（title/projectId/type/priority/status）"
+          },
+          "message": {
+            "type": "string",
+            "description": "人类可读的错误描述"
+          }
+        },
+        "required": [
+          "row",
+          "message"
+        ]
+      },
       "IssueImportResponseDto": {
         "type": "object",
         "properties": {
@@ -63926,101 +64215,22 @@
             "items": {
               "$ref": "#/components/schemas/IssueBaseDto"
             }
+          },
+          "failed": {
+            "type": "number",
+            "description": "失败条数（P0-8b：当前为整体回滚语义，仅出现在 400 错误 details 中，成功响应不返回）"
+          },
+          "errors": {
+            "description": "逐行校验错误（P0-8b：任一行失败整批拒绝，errors 随 400 error.details.errors 返回）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueImportRowErrorDto"
+            }
           }
         },
         "required": [
           "imported",
           "tasks"
-        ]
-      },
-      "IssueExportRowDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "工单 ID"
-          },
-          "title": {
-            "type": "string",
-            "description": "标题"
-          },
-          "description": {
-            "type": "string",
-            "description": "描述",
-            "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "description": "状态"
-          },
-          "priority": {
-            "type": "string",
-            "description": "优先级"
-          },
-          "assigneeId": {
-            "type": "string",
-            "description": "负责人 User ID",
-            "nullable": true
-          },
-          "assigneeName": {
-            "type": "string",
-            "description": "负责人姓名",
-            "nullable": true
-          },
-          "reporterId": {
-            "type": "string",
-            "description": "报告人 User ID",
-            "nullable": true
-          },
-          "reporterName": {
-            "type": "string",
-            "description": "报告人姓名",
-            "nullable": true
-          },
-          "iterationId": {
-            "type": "string",
-            "description": "迭代 ID",
-            "nullable": true
-          },
-          "startDate": {
-            "type": "string",
-            "description": "开始日期（ISO）",
-            "nullable": true
-          },
-          "dueDate": {
-            "type": "string",
-            "description": "截止日期（ISO）",
-            "nullable": true
-          },
-          "estimate": {
-            "type": "number",
-            "description": "预估工时（分钟）",
-            "nullable": true
-          },
-          "tags": {
-            "description": "标签名列表",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "创建时间（ISO）"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "更新时间（ISO）"
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "status",
-          "priority",
-          "tags",
-          "createdAt",
-          "updatedAt"
         ]
       },
       "ShortIdBackfillResponseDto": {
@@ -64125,7 +64335,8 @@
               "clarify",
               "gate",
               "workflow_def",
-              "release"
+              "release",
+              "contract_conflict"
             ]
           },
           "sourceId": {
@@ -64295,7 +64506,9 @@
               "spend",
               "clarify",
               "gate",
-              "workflow_def"
+              "workflow_def",
+              "release",
+              "contract_conflict"
             ]
           },
           "title": {
@@ -64359,7 +64572,9 @@
               "spend",
               "clarify",
               "gate",
-              "workflow_def"
+              "workflow_def",
+              "release",
+              "contract_conflict"
             ]
           },
           "projectId": {
@@ -64482,6 +64697,15 @@
           "answer": {
             "type": "string",
             "description": "答案（clarify：所选选项，供提案方轮询取回）"
+          },
+          "conflictAction": {
+            "type": "string",
+            "description": "契约冲突裁决动作（仅 kind=contract_conflict 必填）：accept_file=采纳文件侧现值为新基线；accept_db=把平台托管内容写回文件（派生型绑定不支持，需重新导出）；detach=解绑停止对齐",
+            "enum": [
+              "accept_file",
+              "accept_db",
+              "detach"
+            ]
           }
         },
         "required": [
@@ -64537,6 +64761,256 @@
         },
         "required": [
           "ok"
+        ]
+      },
+      "ContractBindingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "agents",
+              "claude_alias",
+              "changelog",
+              "readme",
+              "docs_dir"
+            ]
+          },
+          "filePath": {
+            "type": "string",
+            "description": "工作区根相对路径（POSIX）"
+          },
+          "syncMode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "synced",
+              "detached"
+            ]
+          },
+          "truthOwner": {
+            "type": "string"
+          },
+          "baseline": {
+            "type": "string",
+            "nullable": true,
+            "description": "基线指纹 sha256"
+          },
+          "conflictState": {
+            "type": "string",
+            "nullable": true,
+            "description": "null | conflicted"
+          },
+          "lastWriter": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "fileType",
+          "filePath",
+          "syncMode",
+          "truthOwner",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ContractBindingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "workspaceRoot": {
+            "type": "string",
+            "nullable": true,
+            "description": "当前工作区根（未绑定为 null）"
+          },
+          "bindings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContractBindingResponseDto"
+            }
+          }
+        },
+        "required": [
+          "bindings"
+        ]
+      },
+      "SeedContractFilesDto": {
+        "type": "object",
+        "properties": {
+          "fileTypes": {
+            "type": "array",
+            "description": "仅种生指定类型（缺省全量三件套）",
+            "items": {
+              "type": "string",
+              "enum": [
+                "agents",
+                "claude_alias",
+                "changelog",
+                "readme",
+                "docs_dir"
+              ]
+            }
+          },
+          "formatOnly": {
+            "type": "boolean",
+            "description": "格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间"
+          }
+        }
+      },
+      "SeedFileResultDto": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "created",
+              "updated",
+              "adopted",
+              "skipped_unchanged",
+              "skipped_existing",
+              "skipped_no_workspace"
+            ]
+          },
+          "bindingId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "action"
+        ]
+      },
+      "SeedContractResultDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "workspaceRoot": {
+            "type": "string",
+            "nullable": true
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeedFileResultDto"
+            }
+          }
+        },
+        "required": [
+          "projectId",
+          "files"
+        ]
+      },
+      "CheckAlignmentDto": {
+        "type": "object",
+        "properties": {
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "agents",
+              "claude_alias",
+              "changelog",
+              "readme",
+              "docs_dir"
+            ],
+            "description": "仅检查指定类型（缺省检查全部已绑定类型）"
+          }
+        }
+      },
+      "AlignmentDiffDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "托管区间 id"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "file_differs",
+              "missing_in_file"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state"
+        ]
+      },
+      "ContractAlignmentReportDto": {
+        "type": "object",
+        "properties": {
+          "fileType": {
+            "type": "string",
+            "enum": [
+              "agents",
+              "claude_alias",
+              "changelog",
+              "readme",
+              "docs_dir"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "aligned",
+              "conflicted",
+              "skipped_detached",
+              "missing_file"
+            ]
+          },
+          "diffs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlignmentDiffDto"
+            }
+          },
+          "proposalId": {
+            "type": "string",
+            "description": "升级出的冲突提案 id"
+          }
+        },
+        "required": [
+          "fileType",
+          "state"
+        ]
+      },
+      "UpdateContractBindingDto": {
+        "type": "object",
+        "properties": {
+          "syncMode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "synced",
+              "detached"
+            ],
+            "description": "目标同步模式"
+          }
+        },
+        "required": [
+          "syncMode"
         ]
       },
       "IterationIssueCountDto": {
@@ -73239,7 +73713,7 @@
           },
           "type": {
             "type": "string",
-            "description": "事件类型（task.assigned / ci.build.failed 等）"
+            "description": "事件类型（task.assigned / decision.proposal.created 等）"
           },
           "title": {
             "type": "string"
@@ -78654,6 +79128,74 @@
           "generatedAt"
         ]
       },
+      "SearchHitDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "命中对象 ID"
+          },
+          "type": {
+            "type": "string",
+            "description": "命中类别",
+            "enum": [
+              "task",
+              "bug",
+              "document",
+              "project"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "subtitle": {
+            "type": "string",
+            "description": "副标题（展示用：项目/编号/状态摘要）"
+          },
+          "path": {
+            "type": "string",
+            "description": "前端路由路径（/app/...）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          },
+          "projectId": {
+            "type": "object",
+            "description": "所属项目 ID（项目命中时为 null）",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title",
+          "subtitle",
+          "path",
+          "updatedAt"
+        ]
+      },
+      "SearchResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "扁平命中列表（前端按 type 分组渲染）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchHitDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "命中总数（= items.length）"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ]
+      },
       "OfficeCapacityDto": {
         "type": "object",
         "properties": {
@@ -78886,256 +79428,6 @@
         "required": [
           "colleagues",
           "totals"
-        ]
-      },
-      "ContractBindingResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "projectId": {
-            "type": "string"
-          },
-          "fileType": {
-            "type": "string",
-            "enum": [
-              "agents",
-              "claude_alias",
-              "changelog",
-              "readme",
-              "docs_dir"
-            ]
-          },
-          "filePath": {
-            "type": "string",
-            "description": "工作区根相对路径（POSIX）"
-          },
-          "syncMode": {
-            "type": "string",
-            "enum": [
-              "managed",
-              "synced",
-              "detached"
-            ]
-          },
-          "truthOwner": {
-            "type": "string"
-          },
-          "baseline": {
-            "type": "string",
-            "nullable": true,
-            "description": "基线指纹 sha256"
-          },
-          "conflictState": {
-            "type": "string",
-            "nullable": true,
-            "description": "null | conflicted"
-          },
-          "lastWriter": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "projectId",
-          "fileType",
-          "filePath",
-          "syncMode",
-          "truthOwner",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "ContractBindingsResponseDto": {
-        "type": "object",
-        "properties": {
-          "workspaceRoot": {
-            "type": "string",
-            "nullable": true,
-            "description": "当前工作区根（未绑定为 null）"
-          },
-          "bindings": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContractBindingResponseDto"
-            }
-          }
-        },
-        "required": [
-          "bindings"
-        ]
-      },
-      "SeedContractFilesDto": {
-        "type": "object",
-        "properties": {
-          "fileTypes": {
-            "type": "array",
-            "description": "仅种生指定类型（缺省全量三件套）",
-            "items": {
-              "type": "string",
-              "enum": [
-                "agents",
-                "claude_alias",
-                "changelog",
-                "readme",
-                "docs_dir"
-              ]
-            }
-          },
-          "formatOnly": {
-            "type": "boolean",
-            "description": "格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间"
-          }
-        }
-      },
-      "SeedFileResultDto": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string"
-          },
-          "action": {
-            "type": "string",
-            "enum": [
-              "created",
-              "updated",
-              "adopted",
-              "skipped_unchanged",
-              "skipped_existing",
-              "skipped_no_workspace"
-            ]
-          },
-          "bindingId": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "path",
-          "action"
-        ]
-      },
-      "SeedContractResultDto": {
-        "type": "object",
-        "properties": {
-          "projectId": {
-            "type": "string"
-          },
-          "workspaceRoot": {
-            "type": "string",
-            "nullable": true
-          },
-          "files": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SeedFileResultDto"
-            }
-          }
-        },
-        "required": [
-          "projectId",
-          "files"
-        ]
-      },
-      "CheckAlignmentDto": {
-        "type": "object",
-        "properties": {
-          "fileType": {
-            "type": "string",
-            "enum": [
-              "agents",
-              "claude_alias",
-              "changelog",
-              "readme",
-              "docs_dir"
-            ],
-            "description": "仅检查指定类型（缺省检查全部已绑定类型）"
-          }
-        }
-      },
-      "AlignmentDiffDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "托管区间 id"
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "equal",
-              "file_differs",
-              "missing_in_file"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "state"
-        ]
-      },
-      "ContractAlignmentReportDto": {
-        "type": "object",
-        "properties": {
-          "fileType": {
-            "type": "string",
-            "enum": [
-              "agents",
-              "claude_alias",
-              "changelog",
-              "readme",
-              "docs_dir"
-            ]
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "aligned",
-              "conflicted",
-              "skipped_detached",
-              "missing_file"
-            ]
-          },
-          "diffs": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AlignmentDiffDto"
-            }
-          },
-          "proposalId": {
-            "type": "string",
-            "description": "升级出的冲突提案 id"
-          }
-        },
-        "required": [
-          "fileType",
-          "state"
-        ]
-      },
-      "UpdateContractBindingDto": {
-        "type": "object",
-        "properties": {
-          "syncMode": {
-            "type": "string",
-            "enum": [
-              "managed",
-              "synced",
-              "detached"
-            ],
-            "description": "目标同步模式"
-          }
-        },
-        "required": [
-          "syncMode"
         ]
       },
       "CreateReleaseDto": {

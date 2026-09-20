@@ -284,6 +284,39 @@
       "tokens": "Tokens",
       "cost": "Estimated cost",
       "share": "Cost share"
+    },
+    "mockDataBadge": "Demo data · backend not connected",
+    "quality": {
+      "avgScore": "Avg Quality Score",
+      "avgScoreSub": "across all projects",
+      "refactorRatio": "Refactor Ratio",
+      "refactorRatioSub": "of AI changes are refactors",
+      "patchRatio": "Patch Ratio",
+      "patchRatioSub": "down from 52% in W08",
+      "complexityDrift": "Complexity Drift",
+      "complexityDriftSub": "avg complexity down (good)",
+      "trendTitle": "Code Change Quality Trend",
+      "seriesPatch": "Patch %",
+      "seriesRefactor": "Refactor %",
+      "seriesComplexity": "Complexity",
+      "byProjectTitle": "Quality Score by Project",
+      "covLabel": "Coverage",
+      "legendQuality": "Quality",
+      "legendCoverage": "Coverage"
+    },
+    "team": {
+      "activeMembers": "Active Members",
+      "activeMembersSub": "all contributed today",
+      "aiExecutions": "AI Executions",
+      "aiExecutionsSub": "today across all agents",
+      "conflictsDetected": "Conflicts Detected",
+      "conflictsSub": "in agent work overlap",
+      "stuckTasks": "Stuck Tasks",
+      "stuckTasksSub": "> 5 days, no progress",
+      "activityByMember": "AI Activity by Member (Today)",
+      "usageBreakdown": "Member AI Usage Breakdown",
+      "unitRuns": "runs",
+      "unitAcceptances": "acceptances"
     }
   },
   "intake": {
@@ -947,7 +980,24 @@
       "approveBudget": "Approve budget",
       "passGate": "Pass gate",
       "applyWorkflow": "Save & activate",
-      "approveRelease": "Approve release"
+      "approveRelease": "Approve release",
+      "acceptFile": "Keep file version",
+      "acceptDb": "Keep platform version",
+      "detach": "Unbind"
+    },
+    "conflict": {
+      "derivedBadge": "derived",
+      "managedBadge": "managed",
+      "managedHint": "A managed block was edited directly in the file. Keep file adopts the file as-is; keep platform writes managed content back.",
+      "derivedHint": "This platform-derived file was hand-edited. Keep the file as the new baseline, or re-export to restore platform truth.",
+      "blockDiff": "Conflicted blocks ({{n}})",
+      "actionAcceptFile": "Keep file: the file becomes the new baseline; managed content adopts it",
+      "actionAcceptDb": "Keep platform: write managed content back to the file (derived files must be re-exported)",
+      "actionDetach": "Unbind: stop managed alignment; file and platform evolve independently (can re-bind later)",
+      "impactFile": "conflicted file",
+      "impactScope": "scope",
+      "scopeWholeFile": "whole file",
+      "scopeBlocks": "{{n}} blocks"
     },
     "release": {
       "noGate": "Gate has not run yet — confirm the gate was submitted before approving",
@@ -1067,7 +1117,8 @@
       "gateRejected": "Gate rejected — on record, you can redo the interview",
       "workflowApplied": "Workflow saved and activated",
       "releaseApproved": "Release approved — publishing starting",
-      "releaseRejected": "Release sent back to draft"
+      "releaseRejected": "Release sent back to draft",
+      "conflictResolved": "Contract conflict resolved"
     },
     "body": {
       "placeholder": "Rich body renderer for this decision type lands with the type itself (placeholder frame)"
@@ -1403,6 +1454,27 @@
       "table": "Table",
       "grid": "Grid",
       "cards": "Cards"
+    },
+    "batchDispatch": {
+      "crossProjectError": "Selection spans multiple projects (or includes inbox tasks without a project). Batch dispatch supports tasks within one project only — adjust your selection and retry.",
+      "dialogTitle": "Batch dispatch {{count}} tasks to AI member",
+      "dialogDesc": "Each selected task will be dispatched to the chosen AI member for CLI execution:",
+      "issueListPreview": "{{first}} and {{count}} more",
+      "success": "Dispatched {{count}} tasks to AI member",
+      "cliFailedCount": "{{count}} assigned but CLI dispatch failed; re-dispatch from the executions panel",
+      "partial": "Dispatched {{success}}, failed {{failed}}: {{detail}}{{more}}",
+      "andMore": "and {{count}} more"
+    },
+    "aiAssign": {
+      "dialogTitle": "Dispatch task to AI member",
+      "dialogDesc": "Choose a registered AI member to execute via bound CLI:",
+      "assigned": "Task assigned to AI member",
+      "assignedWithRun": "Task assigned to AI member (run {{id}})",
+      "assignedButDispatchFailed": "Assigned to AI member, but CLI dispatch failed: {{error}}",
+      "failed": "Dispatch failed: {{message}}"
+    },
+    "import": {
+      "validationFailed": "Import validation failed — nothing was imported ({{count}} errors)"
     }
   },
   "project": {
@@ -4052,7 +4124,10 @@
     "placeholderTitle": "Search everything",
     "searching": "Searching…",
     "noResults": "No results found",
-    "noResultsHint": "Try a different keyword or clear the type filters"
+    "noResultsHint": "Try a different keyword or clear the type filters",
+    "loadFailed": "Search failed",
+    "loadFailedHint": "Search is temporarily unavailable. Please retry later.",
+    "retry": "Retry"
   },
   "filterPanel": {
     "activeFilters": "Active filters",
@@ -4153,7 +4228,8 @@
       "delete": "Delete",
       "preview": "Preview",
       "link": "Link",
-      "versionHistory": "Version History"
+      "versionHistory": "Version History",
+      "more": "More actions"
     },
     "loading": "Loading documents...",
     "loadFailed": "Failed to load documents",
@@ -4188,6 +4264,14 @@
       "list": "List",
       "grid": "Grid",
       "cards": "Cards"
+    },
+    "deleteConfirm": {
+      "title": "Delete document",
+      "description": "Delete document \"{{title}}\"? This action cannot be undone."
+    },
+    "sectionLinks": {
+      "loadFailed": "Failed to load section task links. Please retry.",
+      "noSections": "No sections parsed for this document. Section links unavailable."
     }
   },
   "linearSync": {

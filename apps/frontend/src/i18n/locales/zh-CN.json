@@ -284,6 +284,39 @@
       "tokens": "Token",
       "cost": "估算成本",
       "share": "成本占比"
+    },
+    "mockDataBadge": "演示数据 · 后端未接入，非真实统计",
+    "quality": {
+      "avgScore": "平均质量分",
+      "avgScoreSub": "全部项目综合",
+      "refactorRatio": "重构占比",
+      "refactorRatioSub": "AI 变更中重构的比例",
+      "patchRatio": "补丁占比",
+      "patchRatioSub": "较 W08 的 52% 回落",
+      "complexityDrift": "复杂度漂移",
+      "complexityDriftSub": "平均复杂度下降（向好）",
+      "trendTitle": "代码变更质量趋势",
+      "seriesPatch": "补丁 %",
+      "seriesRefactor": "重构 %",
+      "seriesComplexity": "复杂度",
+      "byProjectTitle": "各项目质量分",
+      "covLabel": "覆盖率",
+      "legendQuality": "质量",
+      "legendCoverage": "覆盖率"
+    },
+    "team": {
+      "activeMembers": "活跃成员",
+      "activeMembersSub": "今日有贡献",
+      "aiExecutions": "AI 执行次数",
+      "aiExecutionsSub": "今日全部 Agent 合计",
+      "conflictsDetected": "检测到冲突",
+      "conflictsSub": "Agent 工作重叠区间",
+      "stuckTasks": "停滞任务",
+      "stuckTasksSub": "超 5 天无进展",
+      "activityByMember": "成员 AI 活跃度（今日）",
+      "usageBreakdown": "成员 AI 用量拆解",
+      "unitRuns": "次执行",
+      "unitAcceptances": "个验收"
     }
   },
   "intake": {
@@ -947,7 +980,24 @@
       "approveBudget": "批准追加",
       "passGate": "通过闸门",
       "applyWorkflow": "落库生效",
-      "approveRelease": "批准发布"
+      "approveRelease": "批准发布",
+      "acceptFile": "采纳文件侧",
+      "acceptDb": "采纳平台侧",
+      "detach": "解绑"
+    },
+    "conflict": {
+      "derivedBadge": "派生型",
+      "managedBadge": "托管型",
+      "managedHint": "托管区间在文件侧被直接修改。采纳文件侧=以文件现值为准；采纳平台侧=把托管内容写回文件。",
+      "derivedHint": "该文件由平台派生（真相在平台侧）却被手改。可认可手改版为新基线，或通过重新导出恢复平台真相。",
+      "blockDiff": "冲突区间（{{n}}）",
+      "actionAcceptFile": "采纳文件侧：文件现值成为新基线，平台托管内容同步为文件版",
+      "actionAcceptDb": "采纳平台侧：把平台托管内容写回文件（派生型文件需走重新导出）",
+      "actionDetach": "解绑：停止托管对齐，文件与平台各自演进，之后可重新绑定",
+      "impactFile": "冲突文件",
+      "impactScope": "波及范围",
+      "scopeWholeFile": "整文件",
+      "scopeBlocks": "{{n}} 个区间"
     },
     "release": {
       "noGate": "尚未跑门禁——批准前请确认门禁已提交",
@@ -1067,7 +1117,8 @@
       "gateRejected": "闸门驳回，已留痕可回到访谈修改",
       "workflowApplied": "工作流已落库生效",
       "releaseApproved": "已批准发布，进入发布执行",
-      "releaseRejected": "发布已打回草案"
+      "releaseRejected": "发布已打回草案",
+      "conflictResolved": "契约冲突已裁决"
     },
     "body": {
       "placeholder": "该决策类型的主体渲染器待类型落地（当前为占位框架）"
@@ -1403,6 +1454,27 @@
       "table": "表格",
       "grid": "卡片",
       "cards": "卡片"
+    },
+    "batchDispatch": {
+      "crossProjectError": "选中项来自多个项目（或含未归属项目的收件箱任务），批量派发仅支持同一项目的任务，请调整选择后重试",
+      "dialogTitle": "批量派发 {{count}} 条任务给 AI 员工",
+      "dialogDesc": "将逐条派发以下任务给选中的 AI 员工，按角色绑定 CLI 自动执行：",
+      "issueListPreview": "{{first}} 等 {{count}} 条",
+      "success": "已派发 {{count}} 条任务给 AI 员工",
+      "cliFailedCount": "其中 {{count}} 条指派成功但 CLI 自动派发失败，可在执行面板重新派发",
+      "partial": "已派发 {{success}} 条、失败 {{failed}} 条：{{detail}}{{more}}",
+      "andMore": "等 {{count}} 条"
+    },
+    "aiAssign": {
+      "dialogTitle": "派发任务给 AI 员工",
+      "dialogDesc": "选择系统中注册的 AI 员工，按角色绑定 CLI 自动执行：",
+      "assigned": "已将任务指派给 AI 员工",
+      "assignedWithRun": "已派发任务给 AI 员工（执行 {{id}}）",
+      "assignedButDispatchFailed": "已指派给 AI 员工，但 CLI 自动派发失败：{{error}}",
+      "failed": "派发失败：{{message}}"
+    },
+    "import": {
+      "validationFailed": "导入校验失败，本次导入未创建任何任务，共 {{count}} 处错误"
     }
   },
   "project": {
@@ -4052,7 +4124,10 @@
     "placeholderTitle": "搜索一切",
     "searching": "搜索中…",
     "noResults": "未找到匹配结果",
-    "noResultsHint": "换个关键词试试，或清除类型过滤"
+    "noResultsHint": "换个关键词试试，或清除类型过滤",
+    "loadFailed": "搜索失败",
+    "loadFailedHint": "搜索服务暂时不可用，请稍后重试",
+    "retry": "重试"
   },
   "filterPanel": {
     "activeFilters": "已筛选条件",
@@ -4153,7 +4228,8 @@
       "delete": "删除",
       "preview": "预览",
       "link": "关联",
-      "versionHistory": "版本历史"
+      "versionHistory": "版本历史",
+      "more": "更多操作"
     },
     "loading": "正在加载文档...",
     "loadFailed": "文档加载失败",
@@ -4188,6 +4264,14 @@
       "list": "列表",
       "grid": "卡片",
       "cards": "卡片"
+    },
+    "deleteConfirm": {
+      "title": "删除文档",
+      "description": "确定要删除文档「{{title}}」吗？此操作不可撤销。"
+    },
+    "sectionLinks": {
+      "loadFailed": "段落任务关联加载失败，请稍后重试",
+      "noSections": "文档尚未解析出章节，无法添加段落关联"
     }
   },
   "linearSync": {
