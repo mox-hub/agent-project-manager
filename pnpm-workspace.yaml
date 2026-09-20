@@ -41,4 +41,5 @@ minimumReleaseAgeExclude:
 # 的模块增强静默失效（339 个 TS2339）。此 patch 在真实声明模块上追加 extends。
 # vitest 升级时 patch 会因 hash 失效需重新生成（chunk 文件名含内容 hash）。
 patchedDependencies:
+  '@nestjs/cli@12.0.0': patches/@nestjs__cli@12.0.0.patch
   'vitest@5.0.0': patches/vitest@5.0.0.patch

@@ -38,6 +38,7 @@ catalogs:
       version: 5.0.0
 
 patchedDependencies:
+  '@nestjs/cli@12.0.0': ecd68bd2921ea87fce3359a9d3ef2c2d0136b74c9d78f2b905c6a5ec0384fcdf
   vitest@5.0.0: 19f25432dec9d24201b069bfddcd9f7cd20b7ae31374cebf0bfb68a307e15086
 
 importers:
@@ -533,7 +534,7 @@ importers:
     devDependencies:
       '@nestjs/cli':
         specifier: ^12.0.0
-        version: 12.0.0(@swc/cli@0.8.1(@swc/core@1.16.2)(chokidar@5.0.0)(supports-color@10.2.2))(@swc/core@1.16.2)(@types/node@20.19.43)(prettier@3.9.6)(tsconfig-paths-webpack-plugin@4.2.0)(webpack-node-externals@3.0.0)
+        version: 12.0.0(patch_hash=ecd68bd2921ea87fce3359a9d3ef2c2d0136b74c9d78f2b905c6a5ec0384fcdf)(@swc/cli@0.8.1(@swc/core@1.16.2)(chokidar@5.0.0)(supports-color@10.2.2))(@swc/core@1.16.2)(@types/node@20.19.43)(prettier@3.9.6)(tsconfig-paths-webpack-plugin@4.2.0)(webpack-node-externals@3.0.0)
       '@nestjs/schematics':
         specifier: ^12.0.0
         version: 12.0.0(chokidar@5.0.0)(prettier@3.9.6)(typescript@5.9.3)
@@ -11759,7 +11760,7 @@ snapshots:
       axios: 1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       rxjs: 7.8.2
 
-  '@nestjs/cli@12.0.0(@swc/cli@0.8.1(@swc/core@1.16.2)(chokidar@5.0.0)(supports-color@10.2.2))(@swc/core@1.16.2)(@types/node@20.19.43)(prettier@3.9.6)(tsconfig-paths-webpack-plugin@4.2.0)(webpack-node-externals@3.0.0)':
+  '@nestjs/cli@12.0.0(patch_hash=ecd68bd2921ea87fce3359a9d3ef2c2d0136b74c9d78f2b905c6a5ec0384fcdf)(@swc/cli@0.8.1(@swc/core@1.16.2)(chokidar@5.0.0)(supports-color@10.2.2))(@swc/core@1.16.2)(@types/node@20.19.43)(prettier@3.9.6)(tsconfig-paths-webpack-plugin@4.2.0)(webpack-node-externals@3.0.0)':
     dependencies:
       '@angular-devkit/core': 22.1.5(chokidar@5.0.0)
       '@angular-devkit/schematics': 22.1.5(chokidar@5.0.0)
