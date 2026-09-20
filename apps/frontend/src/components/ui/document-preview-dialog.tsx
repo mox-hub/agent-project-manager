@@ -4,6 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { StatusPill } from '@/components/ui/status-pill';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
@@ -53,6 +54,7 @@ export function DocumentPreviewDialog({
 }: DocumentPreviewDialogProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const catConfig = CATEGORY_CONFIG[document?.category ?? 'custom'];
   const CatIcon = catConfig?.icon ?? FileText;
@@ -225,7 +227,12 @@ export function DocumentPreviewDialog({
                     variant="default"
                     size="sm"
                     className="gap-1.5 h-7 text-11 px-3"
-                    onClick={() => window.open(`/app/documents/${document.id}`, '_blank')}
+                    // 应用内路由跳转编辑页（原 window.open 弹新页在 Electron 壳中不生效，
+                    // 且与全站 SPA 导航不一致）；先关预览弹窗避免叠层
+                    onClick={() => {
+                      onOpenChange(false);
+                      navigate(`/app/documents/${document.id}/edit`);
+                    }}
                   >
                     <ExternalLink size={12} />
                     编辑器

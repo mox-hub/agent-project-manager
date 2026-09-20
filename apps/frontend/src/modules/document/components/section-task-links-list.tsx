@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { CheckSquare, Bug, ExternalLink, Plus, X, Link2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CheckSquare, Bug, ExternalLink, Plus, X, Link2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { DocumentTaskLink } from '@/modules/document/api/document-task-link-api';
@@ -63,7 +64,8 @@ interface PickerState {
 }
 
 export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinksListProps) {
-  const { data: groupsRaw, isLoading } = useSectionTaskLinksByDoc(documentId);
+  const { t } = useTranslation();
+  const { data: groupsRaw, isLoading, isError } = useSectionTaskLinksByDoc(documentId);
   const groups = unwrapList<SectionGroup>(groupsRaw);
   const [picker, setPicker] = useState<PickerState | null>(null);
   const [highlightedSectionId, setHighlightedSectionId] = useState<string | null>(null);
@@ -136,11 +138,20 @@ export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinks
     );
   }
 
+  if (isError) {
+    return (
+      <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+        <AlertCircle size={14} className="mx-auto mb-1 text-muted-foreground/60" />
+        {t('document.sectionLinks.loadFailed', '段落任务关联加载失败，请稍后重试')}
+      </div>
+    );
+  }
+
   if (groups.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
         <Link2 size={14} className="mx-auto mb-1 text-muted-foreground/60" />
-        文档尚未解析出章节, 无法添加段落关联
+        {t('document.sectionLinks.noSections', '文档尚未解析出章节, 无法添加段落关联')}
       </div>
     );
   }
