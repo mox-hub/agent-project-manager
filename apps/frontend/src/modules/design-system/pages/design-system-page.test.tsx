@@ -16,7 +16,9 @@ global.ResizeObserver = class ResizeObserver {
 Element.prototype.scrollIntoView = vi.fn();
 
 describe('DesignSystemPage', () => {
-  it('renders all sections including AI High-Density Cards without errors', () => {
+  // 整页渲染全部设计系统组件（含 Command Palette 真实原语与高密度卡片），
+  // 本地实测 ~27s，CI runner 更慢会越过默认 30s 阈值——显式放宽
+  it('renders all sections including AI High-Density Cards without errors', { timeout: 180_000 }, () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
