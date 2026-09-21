@@ -13,6 +13,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { SUPPORTED_LOCALES, LOCALE_LABELS, LOCALE_FLAGS } from '@/i18n/config';
 import type { Locale } from '@/shared/types/i18n';
+import { cn } from '@/lib/utils';
 
 interface LanguageSwitcherProps {
   /** Callback when language changes */
@@ -51,8 +52,15 @@ export function LanguageSwitcher({
   if (compact) {
     return (
       <Select value={currentLocale} onValueChange={handleValueChange}>
-        <SelectTrigger className={`w-auto border-0 bg-transparent ${className}`}>
-          <span className="text-lg">{LOCALE_FLAGS[currentLocale]}</span>
+        <SelectTrigger className={cn('w-auto border-0 bg-transparent', className)}>
+          <span className="flex items-center gap-1.5">
+            {showFlag && <span className="text-lg">{LOCALE_FLAGS[currentLocale]}</span>}
+            {(!showFlag || showLabel) && (
+              <span className={showFlag ? 'text-sm' : 'text-xs'}>
+                {LOCALE_LABELS[currentLocale]}
+              </span>
+            )}
+          </span>
         </SelectTrigger>
         <SelectContent>
           {SUPPORTED_LOCALES.map((locale) => (
@@ -70,7 +78,7 @@ export function LanguageSwitcher({
 
   return (
     <Select value={currentLocale} onValueChange={handleValueChange}>
-      <SelectTrigger className={`w-40 ${className}`}>
+      <SelectTrigger className={cn('w-40', className)}>
         <SelectValue>
           <span className="flex items-center gap-2">
             {showFlag && <span>{LOCALE_FLAGS[currentLocale]}</span>}

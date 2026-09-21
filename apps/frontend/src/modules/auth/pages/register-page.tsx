@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+import { AuthShell } from '../components/auth-shell';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/brand/logo';
+import { LanguageSwitcher } from '@/shared/components/language-switcher';
+import { persistTokenToShell } from '@/shared/lib/desktop-session';
 import { authApi, type RegisterInvitePreview } from '../api/auth-api';
 
 /** api-client 拦截器把后端错误信封转成顶层 code/status 的 ApiClientError */
@@ -15,9 +18,11 @@ type ApiClientErrorLike = { code?: string; status?: number; message?: string };
 /**
  * 邮箱注册页：注册成功即登录（后端自动创建 User + human Member）。
  * 携带 ?invite=<token> 时为邀请注册：展示邀请人信息并随表单提交 token。
+ * 成功后进欢迎页 /welcome 亮身份工牌（CAP-A-22），不再直落工作台。
  */
 export function RegisterPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('invite') || '';
 
@@ -46,11 +51,11 @@ export function RegisterPage() {
     e.preventDefault();
     setError(null);
     if (password.length < 8) {
-      setError('密码至少 8 位');
+      setError(t('auth.passwordTooShort'));
       return;
     }
     if (password !== confirm) {
-      setError('两次输入的密码不一致');
+      setError(t('auth.passwordMismatch'));
       return;
     }
     setSubmitting(true);
@@ -62,7 +67,8 @@ export function RegisterPage() {
         inviteToken: inviteToken || undefined,
       });
       localStorage.setItem('access_token', res.accessToken);
-      window.location.href = '/app/projects';
+      persistTokenToShell(res.accessToken);
+      navigate('/welcome', { state: { registeredAt: new Date().toISOString() } });
     } catch (err) {
       const apiError = err as ApiClientErrorLike;
       if (
@@ -71,7 +77,7 @@ export function RegisterPage() {
       ) {
         setError(t('auth.errors.emailAlreadyRegistered'));
       } else {
-        setError(apiError.message || '注册失败，请稍后再试');
+        setError(apiError.message || t('auth.registerFailed'));
       }
     } finally {
       setSubmitting(false);
@@ -81,97 +87,96 @@ export function RegisterPage() {
   const inviteInvalid = invite && invite.status !== 'pending';
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-75 space-y-6 rounded-lg border border-border bg-background p-8 shadow-md"
-      >
-        <div className="text-center">
-          <Logo size="lg" variant="framed" className="mx-auto mb-3" ariaLabel="Agent Project Manager" />
-          <h1 className="mb-1 text-2xl font-bold text-foreground">Agent Project Manager</h1>
-          <h2 className="mt-3 text-lg text-muted-foreground">
-            {inviteToken ? '受邀注册' : '邮箱注册'}
-          </h2>
-        </div>
+    <AuthShell
+      header={<Logo size="lg" variant="framed" ariaLabel="Agent Project Manager" />}
+      footer={
+        <>
+          <span className="text-xs text-muted-foreground">{t('auth.troubleLogin')}</span>
+          <LanguageSwitcher compact showFlag={false} />
+        </>
+      }
+    >
+      <h1 className="text-2xl font-semibold text-foreground">
+        {inviteToken ? t('auth.registerInviteTitle') : t('auth.registerHeading')}
+      </h1>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+        {t('auth.registerIntro')}
+      </p>
 
-        {invite && (
-          <div
-            className={`rounded-md px-3 py-2 text-xs ${
-              inviteInvalid
-                ? 'bg-accent-red/10 text-accent-red'
-                : 'bg-accent-blue/10 text-accent-blue'
-            }`}
-          >
-            {inviteInvalid
-              ? '该邀请已失效，请联系管理员重新发送。'
-              : `${invite.inviterName} 邀请你注册${
-                  invite.email ? `（受邀邮箱：${invite.email}）` : ''
-                }`}
-          </div>
-        )}
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="space-y-3">
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="name@example.com"
-            required
-            autoComplete="email"
-          />
-          <Input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="姓名（可选）"
-            autoComplete="name"
-          />
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="密码（至少 8 位）"
-            required
-            minLength={8}
-            autoComplete="new-password"
-          />
-          <Input
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="确认密码"
-            required
-            autoComplete="new-password"
-          />
-        </div>
-
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={submitting || Boolean(inviteInvalid)}
+      {invite && (
+        <div
+          className={`mt-6 rounded-md px-3 py-2 text-xs ${
+            inviteInvalid
+              ? 'bg-accent-red/10 text-accent-red'
+              : 'bg-accent-blue/10 text-accent-blue'
+          }`}
         >
+          {inviteInvalid
+            ? t('auth.inviteInvalid')
+            : t('auth.inviteBy', { name: invite.inviterName }) +
+              (invite.email
+                ? t('auth.inviteEmail', { email: invite.email })
+                : '')}
+        </div>
+      )}
+
+      {error && (
+        <Alert variant="destructive" className="mt-6">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        <Input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="name@example.com"
+          required
+          autoComplete="email"
+        />
+        <Input
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder={t('auth.displayNamePlaceholder')}
+          autoComplete="name"
+        />
+        <Input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={t('auth.passwordHint')}
+          required
+          minLength={8}
+          autoComplete="new-password"
+        />
+        <Input
+          type="password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          placeholder={t('auth.confirmPasswordPlaceholder')}
+          required
+          autoComplete="new-password"
+        />
+
+        <Button type="submit" className="w-full" disabled={submitting || Boolean(inviteInvalid)}>
           {submitting ? (
             <>
               <Spinner className="size-4 text-inherit" />
-              注册中…
+              {t('auth.registering')}
             </>
           ) : (
-            '注册并登录'
+            t('auth.registerSubmit')
           )}
         </Button>
-
-        <p className="text-center text-xs text-muted-foreground">
-          已有账号？{' '}
-          <Link to="/login" className="text-primary hover:underline">
-            返回登录
-          </Link>
-        </p>
       </form>
-    </div>
+
+      <p className="mt-4 text-xs text-muted-foreground">
+        {t('auth.alreadyHaveAccount')}{' '}
+        <Link to="/login" className="text-primary hover:underline">
+          {t('auth.toLogin')}
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

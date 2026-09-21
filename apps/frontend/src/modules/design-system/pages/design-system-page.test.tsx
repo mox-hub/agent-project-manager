@@ -15,6 +15,9 @@ global.ResizeObserver = class ResizeObserver {
 // jsdom 未实现 scrollIntoView，cmdk 渲染选中项时会调用（Command Palette 演示段为真实原语）
 Element.prototype.scrollIntoView = vi.fn();
 
+// jsdom 未实现 matchMedia，Logo（auth-surface 演示段的 MemberCard 内）按主题取色时会调用
+window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+
 describe('DesignSystemPage', () => {
   // 整页渲染全部设计系统组件（含 Command Palette 真实原语与高密度卡片演示段），
   // 本地实测 ~27s，CI runner 更慢会越过 30s 阈值——显式放宽到 180s
