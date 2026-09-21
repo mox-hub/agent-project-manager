@@ -1,4 +1,5 @@
 import { AuthVisual } from './auth-visual';
+import { useDesktopCompactWindow } from '@/modules/desktop';
 import { cn } from '@/lib/utils';
 
 interface AuthShellProps {
@@ -20,6 +21,8 @@ interface AuthShellProps {
  * 极简区定位（宪法 §1.2）：留白、少 chrome、层级分明。
  */
 export function AuthShell({ header, children, footer, visual, className }: AuthShellProps) {
+  // 桌面壳：认证面期间主窗口收缩为紧凑小窗并隐藏标题栏（web 端 no-op）
+  useDesktopCompactWindow();
   return (
     <div className="flex min-h-screen bg-background">
       <div
@@ -28,7 +31,13 @@ export function AuthShell({ header, children, footer, visual, className }: AuthS
           className,
         )}
       >
-        <div className="flex min-h-10 items-center">{header}</div>
+        {/* 品牌行兼桌面紧凑窗口拖动区（-webkit-app-region 浏览器端无效） */}
+        <div
+          className="flex min-h-10 items-center"
+          style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+        >
+          {header}
+        </div>
         <div className="my-auto flex flex-col py-10">{children}</div>
         <div className="flex items-center justify-between gap-4">{footer}</div>
       </div>
