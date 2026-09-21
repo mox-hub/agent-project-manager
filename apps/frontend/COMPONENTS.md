@@ -76,6 +76,14 @@
 | QuickCardsToggle | ui/quick-cards-toggle.tsx | 页头幽灵按钮：显隐「快捷统计卡」栏目 | visible, onToggle, label, aiId |
 | AppDock / AppDockItem / AppDockSeparator | ui/app-dock.tsx | 底部悬浮 Dock 栏容器（桌面级磨砂胶囊底座、弹簧微交互项、垂直分隔线） | children, label, badge, badgeTone, active |
 
+### 认证面（modules/auth，2026-09 CAP-A-22）
+
+| 组件 | 路径 | 用途 | 关键 props |
+|------|------|------|-----------|
+| AuthShell | modules/auth/components/auth-shell.tsx | 认证面分栏壳（登录/注册/欢迎页共用）：桌面左文右图（左栏三段=品牌/主体居中/操作贴底，右栏满高圆角视觉面板），窄屏单栏居中 | header, children, footer, visual(缺省 AuthVisual), className |
+| AuthVisual | modules/auth/components/auth-visual.tsx | 认证面右栏默认视觉：工单/决策/AI 同事迷你卡拼贴 + 点阵纹理 + logo 水印（装饰性 aria-hidden，插画资产可整体热替换） | className |
+| MemberCard | modules/auth/components/member-card.tsx | APM 身份工牌（欢迎页右栏）：SVG 环形口号 PEOPLE + AI COLLEAGUES + 显示名/成员编号/入职日期/签名（纯展示仪式件，本人视角不脱敏） | displayName, memberNo, joinedAt?, className |
+
 ### 表单输入
 
 | 组件 | 路径 | 用途 | 关键 props |

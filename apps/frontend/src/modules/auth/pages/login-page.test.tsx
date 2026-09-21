@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { LoginPage } from './login-page';
 
 /**
- * 登录页错误文案定向映射（P1-4）：
+ * 登录页错误文案定向映射（P1-4 引入，CAP-A-22 换壳后保留）：
  * api-client 拦截器把后端错误信封转成顶层 code 的 ApiClientError，
  * 页面必须据此映射 auth.errors.invalidCredentials，而非笼统的 loginFailed。
  */
@@ -23,6 +23,11 @@ vi.mock('@/components/brand/logo', () => ({
   Logo: () => <div data-testid="logo" />,
 }));
 
+// 语言切换依赖 base-ui Select 浮层，本测试不关注
+vi.mock('@/shared/components/language-switcher', () => ({
+  LanguageSwitcher: () => <div data-testid="language-switcher" />,
+}));
+
 const renderPage = () =>
   render(
     <MemoryRouter>
@@ -39,9 +44,10 @@ const submitAndGetOnError = () => {
   fireEvent.change(screen.getByLabelText('auth.password'), {
     target: { value: 'password123' },
   });
-  fireEvent.click(screen.getByRole('button'));
+  fireEvent.click(screen.getByRole('button', { name: 'auth.loginButton' }));
 
   expect(loginMock).toHaveBeenCalledTimes(1);
+  expect(loginMock.mock.calls[0][0]).toEqual({ username: 'admin', password: 'password123' });
   const options = loginMock.mock.calls[0][1] as { onError: (e: unknown) => void };
   expect(typeof options.onError).toBe('function');
   return options.onError;
