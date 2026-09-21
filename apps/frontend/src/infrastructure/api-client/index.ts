@@ -27,8 +27,14 @@ function normalizeBaseUrl(raw: string | undefined): string {
 }
 
 function getBaseUrl(): string {
-  if (typeof window !== 'undefined' && window.__DESKTOP_API_BASE_URL__) {
-    return normalizeBaseUrl(window.__DESKTOP_API_BASE_URL__);
+  if (typeof window !== 'undefined') {
+    if (window.__DESKTOP_API_BASE_URL__) {
+      return normalizeBaseUrl(window.__DESKTOP_API_BASE_URL__);
+    }
+    const custom = localStorage.getItem('apm_custom_api_base_url');
+    if (custom && custom.trim() !== '') {
+      return normalizeBaseUrl(custom.trim());
+    }
   }
   return normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL);
 }
