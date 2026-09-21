@@ -1,15 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-
-import { AuthShell } from '../components/auth-shell';
 import { useAuth } from '../hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
-import { Logo } from '@/components/brand/logo';
-import { LanguageSwitcher } from '@/shared/components/language-switcher';
+import { useTranslation } from 'react-i18next';
+import { AuthVisualCard } from '../components/auth-visual-card';
 
 const ERROR_MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: 'auth.errors.invalidCredentials',
@@ -47,73 +44,83 @@ export function LoginPage() {
   };
 
   return (
-    <AuthShell
-      header={<Logo size="lg" variant="framed" ariaLabel="Agent Project Manager" />}
-      footer={
-        <>
-          <span className="text-xs text-muted-foreground">{t('auth.troubleLogin')}</span>
-          <LanguageSwitcher compact showFlag={false} />
-        </>
-      }
-    >
-      <h1 className="text-2xl font-semibold text-foreground">{t('auth.welcomeBack')}</h1>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        {t('auth.welcomeSubtitle')}
-      </p>
+    <AuthVisualCard>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-      {error && (
-        <Alert variant="destructive" className="mt-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <label
+              className="text-xs font-medium text-foreground"
+              htmlFor="username"
+            >
+              {t('auth.username')}
+            </label>
+            <Input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              placeholder={t('auth.usernamePlaceholder') || '请输入账号或邮箱'}
+              autoComplete="username"
+              className="h-10 text-sm"
+            />
+          </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground" htmlFor="username">
-            {t('auth.username')}
-          </label>
-          <Input
-            id="username"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            placeholder={t('auth.usernamePlaceholder')}
-          />
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label
+                className="text-xs font-medium text-foreground"
+                htmlFor="password"
+              >
+                {t('auth.password')}
+              </label>
+            </div>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder={t('auth.passwordPlaceholder') || '请输入密码'}
+              autoComplete="current-password"
+              className="h-10 text-sm"
+            />
+          </div>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground" htmlFor="password">
-            {t('auth.password')}
-          </label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            placeholder={t('auth.passwordPlaceholder')}
-          />
-        </div>
-
-        <Button type="submit" disabled={isLoading} className="w-full">
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="h-10 w-full text-sm font-medium shadow-xs"
+        >
           {isLoading ? (
             <>
-              <Spinner className="size-4 text-inherit" />
-              {t('auth.loggingIn')}
+              <Spinner className="size-4 text-inherit mr-2" />
+              {t('auth.loggingIn') || '正在验证中…'}
             </>
           ) : (
-            t('auth.loginButton')
+            t('auth.loginButton') || '登录 APM'
           )}
         </Button>
-      </form>
 
-      <p className="mt-4 text-xs text-muted-foreground">
-        {t('auth.noAccount')}{' '}
-        <Link to="/register" className="text-primary hover:underline">
-          {t('auth.toRegister')}
-        </Link>
-      </p>
-    </AuthShell>
+        <p className="text-center text-xs text-muted-foreground pt-1">
+          没有账号？{' '}
+          <Link
+            to="/register"
+            className="text-primary hover:underline font-medium"
+          >
+            邮箱注册
+          </Link>
+        </p>
+      </form>
+    </AuthVisualCard>
   );
 }
+
+export default LoginPage;
