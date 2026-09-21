@@ -14,7 +14,9 @@ import type { AppConfig } from './config';
 import { getDatabaseUrl } from './config';
 import { logger } from './logger';
 
-const HEALTH_CHECK_TIMEOUT_MS = 30_000;
+// 60s：server 冷启动耗时抖动大（杀毒扫描/机器负载，实测 8s~31s）——30s 窗口曾把
+// 刚就绪（30.8s）的 server 判死并强杀，表现为「健康检查超时」boot 错误屏（2026-09-21）
+const HEALTH_CHECK_TIMEOUT_MS = 60_000;
 const HEALTH_CHECK_POLL_MS = 500;
 /** 优雅关闭宽限：postMessage shutdown 指令后等 NestJS 收尾（连接池/WAL），超时强杀 */
 const GRACEFUL_SHUTDOWN_TIMEOUT_MS = 3_000;
@@ -59,13 +61,13 @@ export async function pickBackendPort(start: number, end: number): Promise<numbe
   throw new Error(`无法分配后端端口（范围 ${start}-${end}）`);
 }
 
-/** 轮询 /_api/health 直到通过或超时（30s / 500ms，与旧壳一致）。 */
+/** 轮询 /_api/health 直到通过或超时（60s / 500ms，与旧壳一致）。 */
 export function waitForBackendHealth(apiBaseUrl: string): Promise<void> {
   const startedAt = Date.now();
   return new Promise((resolve, reject) => {
     const attempt = () => {
       if (Date.now() - startedAt > HEALTH_CHECK_TIMEOUT_MS) {
-        reject(new Error('后端健康检查超时'));
+        reject(new Error(`后端健康检查超时（已等待 ${Math.round((Date.now() - startedAt) / 1000)}s）`));
         return;
       }
       const req = http.get(`${apiBaseUrl}/_api/health`, { timeout: 2000 }, (res) => {
