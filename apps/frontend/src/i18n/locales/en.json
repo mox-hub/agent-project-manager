@@ -358,7 +358,25 @@
     "analysisDocsTitle": "Analysis Reports",
     "analysisDocsDesc": "Feasibility/impact/risk analyses drafted by AI and confirmed by humans (analysis documents)",
     "analysisDocsEmpty": "No analysis reports yet",
-    "analysisDocsEmptyDesc": "Analysis reports generated from the requirement notes above are filed here for breakdown and acceptance to reference"
+    "analysisDocsEmptyDesc": "Analysis reports generated from the requirement notes above are filed here for breakdown and acceptance to reference",
+    "pipelineCards": {
+      "title": "Pipeline Overview",
+      "desc": "One pipeline per requirement: five-stage progress and the next action (CAP-P-01 lifecycle main entry)",
+      "empty": "No active requirement pipelines yet; your pipeline will appear here after you file the first requirement",
+      "notAssessed": "Not assessed",
+      "activeStage": "Current · {{stage}}",
+      "allStagesDone": "All stages done",
+      "analysisCta": "AI analysis report",
+      "continueCta": "Continue · {{stage}}",
+      "viewCta": "View pipeline",
+      "mountCta": "Mount pipeline",
+      "stageStatus": {
+        "done": "Done",
+        "active": "Active",
+        "pending": "Pending",
+        "skipped": "Skipped"
+      }
+    }
   },
   "release": {
     "title": "Releases",
@@ -4425,10 +4443,38 @@
     },
     "tabs": {
       "general": "General",
+      "team": "Team",
+      "playbook": "Pipeline Playbook",
       "gitTerminal": "Git & Terminal",
       "contract": "Contract Files",
       "cloudSync": "Cloud Sync",
       "docs": "Documentation"
+    },
+    "team": {
+      "bindingsTitle": "Project & Team Bindings",
+      "bindingsDesc": "Members, external platform accounts and sync bindings",
+      "membersTitle": "Member Overview",
+      "membersDesc": "Current workload of {{count}} members",
+      "empty": "No members yet",
+      "openFull": "Open full team page",
+      "taskCount": "{{count}} tasks"
+    },
+    "playbook": {
+      "title": "Requirement Pipeline Playbook",
+      "unmountedTitle": "Playbook not mounted",
+      "mountedDesc": "Five-stage progress (read-only); interviews and gates live in the full page",
+      "unmountedDesc": "Once mounted, requirements advance through Research → Clarify → Analysis → Breakdown → Acceptance Draft",
+      "empty": "Playbook not mounted yet; pick a template in the full page",
+      "openFull": "Open full playbook page",
+      "gatePending": "Gate pending",
+      "gateHint": "A gate is pending; handle it in the decision inbox or the full playbook page",
+      "skipReason": "Skip reason",
+      "stageStatus": {
+        "done": "Done",
+        "active": "Active",
+        "pending": "Pending",
+        "skipped": "Skipped"
+      }
     },
     "general": {
       "title": "General Settings",

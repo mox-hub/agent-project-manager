@@ -358,7 +358,25 @@
     "analysisDocsTitle": "分析报告",
     "analysisDocsDesc": "AI 代写、人确认归档的可行性/影响面/风险分析（分析类文档）",
     "analysisDocsEmpty": "尚无分析报告",
-    "analysisDocsEmptyDesc": "从上方需求纪要生成分析报告后，会归档在这里供拆解与验收引用"
+    "analysisDocsEmptyDesc": "从上方需求纪要生成分析报告后，会归档在这里供拆解与验收引用",
+    "pipelineCards": {
+      "title": "管道总览",
+      "desc": "每条需求一条管道：五阶段进度与下一步动作（CAP-P-01 生命周期主入口）",
+      "empty": "尚无进行中的需求管道；提出第一条需求后，管道会出现在这里",
+      "notAssessed": "未评估",
+      "activeStage": "当前 · {{stage}}",
+      "allStagesDone": "全阶段完成",
+      "analysisCta": "AI 生成分析报告",
+      "continueCta": "继续 · {{stage}}",
+      "viewCta": "查看管道",
+      "mountCta": "挂载承接剧本",
+      "stageStatus": {
+        "done": "已完成",
+        "active": "进行中",
+        "pending": "待进行",
+        "skipped": "已跳过"
+      }
+    }
   },
   "release": {
     "title": "发版交付",
@@ -4425,10 +4443,38 @@
     },
     "tabs": {
       "general": "常规",
+      "team": "团队",
+      "playbook": "需求剧本",
       "gitTerminal": "Git 与终端",
       "contract": "契约文件",
       "cloudSync": "云端同步",
       "docs": "文档"
+    },
+    "team": {
+      "bindingsTitle": "项目与团队绑定",
+      "bindingsDesc": "团队成员、外部平台账号与同步绑定",
+      "membersTitle": "成员概览",
+      "membersDesc": "{{count}} 名成员的当前负载",
+      "empty": "尚无成员",
+      "openFull": "打开完整团队页",
+      "taskCount": "{{count}} 个任务"
+    },
+    "playbook": {
+      "title": "需求承接剧本",
+      "unmountedTitle": "未挂载需求承接剧本",
+      "mountedDesc": "五阶段进度（只读）；访谈与闸门操作在完整页进行",
+      "unmountedDesc": "挂载后按「调研 → 澄清 → 分析 → 拆解 → 验收草案」推进需求",
+      "empty": "尚未挂载剧本，进入完整页选择模板",
+      "openFull": "打开完整剧本页",
+      "gatePending": "闸门待决",
+      "gateHint": "有闸门待决，请到决策收件箱或完整剧本页处理",
+      "skipReason": "跳过原因",
+      "stageStatus": {
+        "done": "已完成",
+        "active": "进行中",
+        "pending": "待进行",
+        "skipped": "已跳过"
+      }
     },
     "general": {
       "title": "常规设置",
