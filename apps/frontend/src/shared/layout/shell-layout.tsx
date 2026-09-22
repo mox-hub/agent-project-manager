@@ -38,9 +38,7 @@ import {
   BookMarked,
   ListTodo,
   Milestone,
-  Route as RouteIcon,
   RefreshCw,
-  Users,
   UserCog,
   ChevronDown,
   Search,
@@ -880,8 +878,8 @@ function ProjectContextBar({
       { value: 'issues', label: t('project.detail.tasks'), icon: ListTodo },
       { value: 'milestones', label: t('project.detail.milestones'), icon: Milestone },
       { value: 'profile', label: t('project.detail.profile'), icon: BookMarked },
-      { value: 'playbook', label: t('project.detail.playbook'), icon: RouteIcon },
-      { value: 'team', label: t('project.detail.team'), icon: Users },
+      // CAP-P-01 五期 IA 降级（2026-09-22）：playbook/team 摘出主导航，降级为
+      // 项目设置页分页（路由保留兼容，intake 管道总览卡为生命周期主入口）
       { value: 'settings', label: t('nav.settings'), icon: Settings },
     ],
     [t],
