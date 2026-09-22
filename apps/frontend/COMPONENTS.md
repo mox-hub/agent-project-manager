@@ -70,7 +70,6 @@
 | SidebarPanel | ui/sidebar-panel.tsx | 右侧栏折叠面板（圆角矩形↔胶囊） | title, icon, collapsed, onToggle, action |
 | Sidebar 套件 | ui/sidebar.tsx | 应用侧栏骨架 | children, SidebarMenuButton: isActive, onClick |
 | SectionCard | ui/section-card.tsx | 带标题/描述/操作区的 Card 封装 | title, description, actions, children |
-| Resizable 套件 | ui/resizable.tsx | 可调分栏（resizable-panels 封装） | direction, withHandle, defaultSize |
 | ScrollArea / ScrollBar | ui/scroll-area.tsx | 滚动容器（coss 配方：滚动条浮现、边缘渐隐 scrollFade、滚动沟位 scrollbarGutter、滚动链隔离 overscrollContain） | className, children, scrollFade, scrollbarGutter, overscrollContain, fill |
 | AspectRatio | ui/aspect-ratio.tsx | 固定宽高比容器 | ratio, children |
 | QuickCardsToggle | ui/quick-cards-toggle.tsx | 页头幽灵按钮：显隐「快捷统计卡」栏目 | visible, onToggle, label, aiId |
@@ -148,10 +147,8 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | Meter 套件 | ui/meter.tsx | 有界量程表（coss 配方，配额/用量语义；MeterValue 为 render-props children） | value, min, max；MeterValue: children(formatted)=>ReactNode |
 | ActivityHeatmap | ui/activity-heatmap.tsx | 活动热力图（GitHub 式日格计数；每格 hover Tooltip 浮窗，网格下方月份刻度） | data(日序列), days(年视图传 365), emptyLabel, formatTip(count=>浮窗文案，缺省「N 次活动」) |
 | Chart 套件 + ChartConfig | ui/chart.tsx | recharts 图表封装（主题色注入） | config, children |
-| Carousel 套件 | ui/carousel.tsx | 轮播（embla 封装） | opts, orientation, plugins, setApi |
 | Sortable 套件 | ui/sortable.tsx | 复合式拖拽排序列表（reui base-nova 移植，@dnd-kit；**语义=同列表条目重排**，看板跨列/画布节点/文件投放仍用 dnd-kit 原语；落放一次性提交，含拖拽 overlay 与键盘可达） | Sortable: value, onValueChange(持久化缝), getItemValue, strategy(vertical/horizontal/grid), onValueCommit(next+previousValue 回滚快照), onMove, render(容器元素)；SortableItem: value, disabled, render；SortableItemHandle: cursor, render |
 | IconStack | ui/icon-stack.tsx | 等距层叠图标插画容器（reui 移植；空态/引导/完成时刻的装饰性深度图标，纯视觉场景须 aria-hidden） | className(尺寸默认 h-20 w-18、语义色 text-*)，children(居中图标) |
-| AttentionRail | ui/attention-rail.tsx | 「需要关注」侧栏（通知/逾期任务/风险项目聚合） | projectId, notifications, overdueTasks, atRiskProjects |
 
 ### 反馈 overlay
 
@@ -173,14 +170,10 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | AsyncState | ui/async-state.tsx | 加载/空/错误三态统一处理容器（默认文案 i18n）；空态支持 emptyVariant/emptyVisual 透传（page 整页空态走 IconStack 插画），错误态恒为 card 简式 | isLoading, isEmpty, error, onRetry, emptyVariant, emptyVisual, emptyIcon, emptyTitle, emptyDescription, children |
 | EmptyState | ui/empty-state.tsx | 轻量空状态三分场景：**page**=整页主体空态（h-full 撑满内容区 + min-h-100，配 visual 插画与首个功能入口）/ **card**=分区内/筛选无结果紧凑形态（默认，muted 圆块图标，不用插画） | icon, visual, variant(page/card), title, description, action, className |
 | ~~Empty 套件~~ | — | 已删除（2026-09 收敛为 EmptyState） | — |
-| PageLoader + usePageLoader | ui/page-loader.tsx | 全屏页面加载遮罩 | message, className |
 | GlobalLoadingState | ui/global-loading-state.tsx | 监听 Query 缓存显示全局顶部加载条（main.tsx 挂载） | 无 props |
 | MockBadge | ui/mock-badge.tsx | mock 模式全局角标（宪法 §9.3；仅 dev+VITE_API_MOCK=on 显示，main.tsx 挂载） | 无 props |
 | LoadingOverlay / ErrorOverlay / LoadingProvider + useLoading | ui/loading-overlay.tsx | 加载遮罩三模式（bar/overlay/inline）+错误遮罩+全局 Provider | visible, message, mode |
-| NotificationPopover | ui/notification-popover.tsx | 通知弹窗（未读/警报 Tab 过滤） | notifications, onMarkAsRead, onMarkAllAsRead |
 | UnifiedCreateDialog | shared/components/create-dialog/unified-create-dialog.tsx | 统一创建面板·手动×AI 代理双界面（task/bug/doc/project/milestone 五类型，属性胶囊右栏；AI 代理=create-draft 草稿确认流） | open, onOpenChange, defaultType, projectId, defaultAssigneeId, onSuccess |
-| TaskFormDialog | ui/task-form-dialog.tsx | 任务创建/编辑弹窗 | open, onOpenChange, mode, projectId, initialData, onSuccess |
-| BugReportDialog | ui/bug-report-dialog.tsx | 全局 Bug 报告创建弹窗（含严重度/优先级表单） | open, onOpenChange, projectId, initialData, onSuccess |
 | DocumentPreviewDialog | ui/document-preview-dialog.tsx | 文档预览弹窗（左目录右内容） | open, onOpenChange, document |
 
 ### 导航
