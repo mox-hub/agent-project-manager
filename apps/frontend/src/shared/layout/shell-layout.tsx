@@ -35,9 +35,6 @@ import {
   PanelLeftOpen,
   Menu,
   BarChart3,
-  BookMarked,
-  ListTodo,
-  Milestone,
   RefreshCw,
   UserCog,
   ChevronDown,
@@ -53,6 +50,10 @@ import { PIPELINE_STAGES } from '@/shared/layout/pipeline-stages';
 import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { FAVORITE_FALLBACK_ICON, PAGE_REGISTRY } from '@/shared/layout/page-registry';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
+import {
+  PROJECT_DETAIL_BASE_SEGMENT,
+  PROJECT_DETAIL_TABS,
+} from '@/shared/layout/project-detail-tabs';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { Logo } from '@/components/brand/logo';
 import { TabBar } from '@/components/ui/tab-bar';
@@ -871,17 +872,14 @@ function ProjectContextBar({
   const navigate = useNavigate();
   const sidebar = useProjectSidebar();
 
+  // 页签单一数据源：shared/layout/project-detail-tabs（与 ProjectDetailNav 共用）
   const tabs = useMemo(
-    () => [
-      { value: 'overview', label: t('project.detail.overview'), icon: BarChart3 },
-      // 工单 tab 路由 2026-09-06 Task→Issue 改名后为 issues（value 与 URL 段一致）
-      { value: 'issues', label: t('project.detail.tasks'), icon: ListTodo },
-      { value: 'milestones', label: t('project.detail.milestones'), icon: Milestone },
-      { value: 'profile', label: t('project.detail.profile'), icon: BookMarked },
-      // CAP-P-01 五期 IA 降级（2026-09-22）：playbook/team 摘出主导航，降级为
-      // 项目设置页分页（路由保留兼容，intake 管道总览卡为生命周期主入口）
-      { value: 'settings', label: t('nav.settings'), icon: Settings },
-    ],
+    () =>
+      PROJECT_DETAIL_TABS.map((tab) => ({
+        value: tab.segment || PROJECT_DETAIL_BASE_SEGMENT,
+        label: t(tab.labelKey),
+        icon: tab.icon,
+      })),
     [t],
   );
 

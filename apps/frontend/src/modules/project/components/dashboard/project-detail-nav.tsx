@@ -1,7 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { BarChart3, BookMarked, ListTodo, Milestone, Settings } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import {
+  PROJECT_DETAIL_BASE_SEGMENT,
+  PROJECT_DETAIL_TABS,
+} from '@/shared/layout/project-detail-tabs';
 
 interface ProjectDetailNavProps {
   projectId: string;
@@ -11,15 +14,13 @@ interface ProjectDetailNavProps {
 export function ProjectDetailNav({ projectId, className }: ProjectDetailNavProps) {
   const { t } = useTranslation();
 
-  // CAP-P-01 五期 IA 裁决（2026-09-22）：playbook/team 摘出主导航，降级为
-  // 项目设置页分页（路由 /playbook /team 保留兼容，intake 管道总览卡为生命周期主入口）
-  const tabs = [
-    { id: 'overview', label: t('project.detail.overview'), path: '', icon: BarChart3 },
-    { id: 'tasks', label: t('project.detail.tasks'), path: 'issues', icon: ListTodo },
-    { id: 'milestones', label: t('project.detail.milestones'), path: 'milestones', icon: Milestone },
-    { id: 'profile', label: t('project.detail.profile'), path: 'profile', icon: BookMarked },
-    { id: 'settings', label: t('nav.settings'), path: 'settings', icon: Settings },
-  ];
+  // 页签单一数据源：shared/layout/project-detail-tabs（与 shell-layout 分段控件共用）
+  const tabs = PROJECT_DETAIL_TABS.map((tab) => ({
+    id: tab.segment || PROJECT_DETAIL_BASE_SEGMENT,
+    label: t(tab.labelKey),
+    path: tab.segment,
+    icon: tab.icon,
+  }));
   return (
     <nav className={cn('flex flex-wrap items-center gap-0.5', className)}>
       {tabs.map((tab) => {
