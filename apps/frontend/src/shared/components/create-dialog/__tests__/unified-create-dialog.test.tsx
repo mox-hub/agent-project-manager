@@ -45,10 +45,23 @@ vi.mock('@/components/ui/toast', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-// grill 深访组件（CAP-P-01 主线）重依赖，面板测试 stub
-vi.mock('@/modules/project/components/grill/grill-interview', () => ({
-  GrillInterview: () => null,
-}));
+// grill 深访组件（CAP-P-01 主线）重依赖，面板测试 stub（带标记与兜底按钮供断言接管/回退态）
+vi.mock('@/modules/project/components/grill/grill-interview', async () => {
+  const { createElement } = await import('react');
+  return {
+    GrillInterview: (props: { onFallback?: () => void }) =>
+      createElement(
+        'div',
+        null,
+        createElement('div', { 'data-testid': 'grill-interview-stub' }),
+        createElement(
+          'button',
+          { type: 'button', onClick: props.onFallback },
+          'grill-fallback-stub',
+        ),
+      ),
+  };
+});
 vi.mock('@/modules/project/components/grill/grill-minutes', () => ({
   buildGrillMinutes: () => '',
 }));
@@ -142,6 +155,34 @@ describe('UnifiedCreateDialog 双界面（CAP-A-18）', () => {
     fireEvent.click(shuttleBtn);
     expect(screen.getByPlaceholderText('unifiedCreate.placeholder.task')).toBeInTheDocument();
     expect(screen.queryByPlaceholderText('unifiedCreate.aiPanel.inputPlaceholder')).not.toBeInTheDocument();
+  });
+
+  it('project 手动模式显示立项三分流（existing 无专属 UI 不露出），选 AI 访谈后 Grill 接管（CAP-P-01 切片 0 断链接通）', () => {
+    setup();
+    // 先点开类型 popover（默认 task）再切到 project
+    fireEvent.click(screen.getAllByText('unifiedCreate.labels.task')[0]);
+    fireEvent.click(screen.getAllByText('unifiedCreate.labels.project')[0]);
+    expect(screen.getByText('unifiedCreate.projectSource.scratch')).toBeInTheDocument();
+    expect(screen.getByText('unifiedCreate.projectSource.ai')).toBeInTheDocument();
+    expect(screen.queryByText('unifiedCreate.projectSource.existing')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('unifiedCreate.projectSource.ai'));
+    // 页脚提示先切 grillHint，证明 projectSource 状态已翻转；Grill stub 的兜底按钮渲染 = 接管态
+    expect(screen.getByText('unifiedCreate.projectSource.grillHint')).toBeInTheDocument();
+    expect(screen.getByText('grill-fallback-stub')).toBeInTheDocument();
+    // Grill 接管后手动表单与三分流自身退场
+    expect(screen.queryByPlaceholderText('unifiedCreate.placeholder.project')).not.toBeInTheDocument();
+    expect(screen.queryByText('unifiedCreate.projectSource.scratch')).not.toBeInTheDocument();
+
+    // 转手动兜底：回 scratch 三分流与表单回归
+    fireEvent.click(screen.getByText('grill-fallback-stub'));
+    expect(screen.queryByText('grill-fallback-stub')).not.toBeInTheDocument();
+    expect(screen.getByText('unifiedCreate.projectSource.scratch')).toBeInTheDocument();
+  });
+
+  it('非 project 类型不渲染立项三分流', () => {
+    setup();
+    expect(screen.queryByText('unifiedCreate.projectSource.scratch')).not.toBeInTheDocument();
   });
 
   it('AI 草稿流：生成 → 草稿卡预览 → 确认创建复用手动提交流落库', async () => {

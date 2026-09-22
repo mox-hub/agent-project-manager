@@ -19,7 +19,8 @@ import { useProjectDetail } from '../hooks/use-project-detail';
 import { LinearSyncLogDrawer } from '@/modules/linear/components/linear-sync-log-drawer';
 import { useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
 import { toast } from '@/hooks/use-toast';
-import { ProjectRolesSection } from '@/modules/project-role/components/project-roles-section';
+// CAP-P-01 五期 IA 裁决（2026-09-22）：项目-角色关联解除，ProjectRolesSection 摘除
+// （ProjectRoleDefinition 无成员绑定外键、无权限实效，模块 UI 撤离，API 与表暂留）
 import { ProjectTeamBindings } from '../components/project-team-bindings';
 
 function workloadColor(load: number) {
@@ -215,8 +216,6 @@ export function ProjectTeamPage() {
             </>
           )}
         </SectionCard>
-
-        <ProjectRolesSection projectId={projectId} />
       </div>
     </ProjectDetailFrame>
   );

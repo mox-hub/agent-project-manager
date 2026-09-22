@@ -32,6 +32,7 @@ import { useForm, useWatch, type UseFormReturn } from 'react-hook-form';
 import { GrillInterview } from '@/modules/project/components/grill/grill-interview';
 import { buildGrillMinutes } from '@/modules/project/components/grill/grill-minutes';
 import type { GrillSummary } from '@/modules/project/hooks/use-grill';
+import { ProjectSourceTabs } from './entity-templates/project-source-tabs';
 import {
   Dialog,
   DialogContent,
@@ -1218,6 +1219,16 @@ export function UnifiedCreateDialog({
                 />
               ) : (
                 <>
+                  {/* 项目立项来源三分流（CAP-A-18 / CAP-P-01 切片 0 断链接通）：
+                      scratch 手动表单（下方既有字段）/ ai 切 Grill 访谈；existing 尚无专属 UI 暂不露出 */}
+                  {mode === 'manual' && activeType === 'project' && (
+                    <ProjectSourceTabs
+                      value={projectSource}
+                      onChange={setProjectSource}
+                      sources={['scratch', 'ai']}
+                    />
+                  )}
+
                   {/* Title */}
                   <TitleField
                     activeType={activeType}

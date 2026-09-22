@@ -24,13 +24,15 @@ import { useDocuments } from '@/modules/document/hooks/use-documents';
 import type { DocumentListItem } from '@/modules/document/api/document-api';
 import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { AnalysisDraftDialog } from '../components/analysis-draft-dialog';
+import { PipelineOverviewCards } from '../components/pipeline-overview-cards';
 
 /**
  * 需求承接页（研发生命周期 01 位，CAP-A-15 / CAP-P-01 管道入口）：
  * 「提出需求」CTA 唤起统一创建面板（project AI 代理模式 → grill 澄清），
- * 下方展示承接管道五步说明、category=requirement 的需求纪要列表与
- * category=analysis 的分析报告列表（AI 代写 → 人确认，CAP-P-01 四期）。
- * 管道项目聚焦（CAP-A-15）：?project 联动过滤两份列表（服务端 projectId 过滤）。
+ * 承接管道五步说明 + 管道总览卡（CAP-P-01 五期切片 1：需求纪要按项目聚合，
+ * 五阶段进度 + CTA 钻取剧本页，生命周期主入口）+ category=requirement 的
+ * 需求纪要列表与 category=analysis 的分析报告列表（AI 代写 → 人确认，四期）。
+ * 管道项目聚焦（CAP-A-15）：?project 联动过滤（服务端 projectId 过滤）。
  */
 function DocListRow({ doc, onOpen }: { doc: DocumentListItem; onOpen: () => void }) {
   return (
@@ -150,6 +152,13 @@ export function RequirementIntakePage() {
           ))}
         </div>
       </SectionCard>
+
+      {/* 管道总览卡（CAP-P-01 五期切片 1：生命周期主入口；切片 2 接完备性评估） */}
+      <PipelineOverviewCards
+        docs={docs}
+        analysisDocs={analysisDocs}
+        isLoading={docsQuery.isLoading}
+      />
 
       {/* 需求纪要列表（category=requirement）+ AI 分析入口（CAP-P-01 四期） */}
       <SectionCard

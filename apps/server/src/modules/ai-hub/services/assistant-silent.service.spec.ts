@@ -110,6 +110,8 @@ describe('AssistantSilentService.run', () => {
       'intake-composite',
       'acceptance-draft',
       'analysis-draft',
+      'readiness-review',
+      'decomposition-review',
       'failure-diagnosis',
       'interview-dynamic',
       'workflow-draft',
@@ -368,6 +370,182 @@ describe('AssistantSilentService.run', () => {
         ),
       ).rejects.toThrow(/工件文档不存在/);
       expect(missing.chat).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('readiness-review（CAP-P-01 五期切片 2）', () => {
+    const READINESS_DOCS = [
+      {
+        id: 'r1',
+        title: '需求调研纪要 · P',
+        content: '目标：秘书会前 3 分钟知道今天要盯哪几件事',
+      },
+      {
+        id: 'c1',
+        title: '需求澄清纪要 · P',
+        content:
+          '范围：手机端看板；排除项：不做桌面端；外部接口：排班系统待确认',
+      },
+    ];
+    const PAYLOAD =
+      '{"dimensions": [{"key": "goal", "status": "ready", "evidence": "会前 3 分钟知道盯哪几件事", "gap": ""}, {"key": "dependency", "status": "unclear", "evidence": "", "gap": "排班系统接口未定"}], "missingInfo": [{"item": "排班系统接口由谁提供", "why": "决定是否含联调任务", "howToFill": "访谈确认接口方", "blocking": true}], "verdict": "blocked", "summary": "目标清晰但外部接口未定，先补接口方再拆解。"}';
+
+    const makeReadinessService = (
+      prismaDocs: unknown = READINESS_DOCS,
+      chatContent = PAYLOAD,
+    ) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const prisma = {
+        aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+        document: { findMany: vi.fn().mockResolvedValue(prismaDocs) },
+      };
+      const service = new AssistantSilentService(
+        prisma as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat, prisma };
+    };
+
+    it('侦查三工件 → instructions 含工件内容与六维度红线，输出评估结构', async () => {
+      const { service, chat } = makeReadinessService();
+      const result = await service.run(
+        'readiness-review',
+        {
+          researchDocumentId: 'r1',
+          clarifyDocumentId: 'c1',
+          analysisDocumentId: 'a1',
+        },
+        'p1',
+        'u1',
+      );
+
+      expect(result.data).toHaveProperty('dimensions');
+      expect(result.data).toHaveProperty('missingInfo');
+      expect(result.data).toHaveProperty('verdict');
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      // 工件内容注入
+      expect(instructions).toContain('会前 3 分钟知道今天要盯哪几件事');
+      expect(instructions).toContain('不做桌面端');
+      // 六维度与软闸门红线写入指令
+      expect(instructions).toContain('fallback');
+      expect(instructions).toContain('不替人做放行决定');
+    });
+
+    it('缺工件 id / 文档不存在 → 400（不触 LLM）', async () => {
+      const { service, chat } = makeReadinessService();
+      await expect(
+        service.run('readiness-review', {}, 'p1', 'u1'),
+      ).rejects.toThrow(/至少一项/);
+      expect(chat).not.toHaveBeenCalled();
+
+      const missing = makeReadinessService([]);
+      await expect(
+        missing.service.run(
+          'readiness-review',
+          { clarifyDocumentId: 'gone' },
+          'p1',
+          'u1',
+        ),
+      ).rejects.toThrow(/工件文档不存在/);
+      expect(missing.chat).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('decomposition-review（CAP-P-01 五期切片 3）', () => {
+    const TASKS = [
+      {
+        title: '导入 CSV 解析器',
+        description: '',
+        estimate: 8,
+        acceptance: { criteria: [{ content: '解析结果与样例一致' }] },
+      },
+      {
+        title: '批量导入服务',
+        description: '',
+        estimate: 40,
+        acceptance: { criteria: [] },
+      },
+    ];
+    const PAYLOAD =
+      '{"tasks": [{"index": 0, "granularity": "ok", "reason": "单一交付物", "suggestion": "", "testability": "ok"}, {"index": 1, "granularity": "too-big", "reason": "估时 40h 超过 3 天且含解析+落库+通知三个交付物", "suggestion": "按解析/落库/通知拆成三个任务", "testability": "weak"}], "coverage": {"uncovered": ["导入失败重试策略"], "orphans": []}, "verdict": "needs-review", "summary": "第二个任务过大需拆分，失败重试无任务承接。"}';
+
+    const makeDecompService = (
+      prismaDocs: unknown = [],
+      chatContent = PAYLOAD,
+    ) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const prisma = {
+        aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+        document: { findMany: vi.fn().mockResolvedValue(prismaDocs) },
+      };
+      const service = new AssistantSilentService(
+        prisma as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat, prisma };
+    };
+
+    it('任务族注入指令 + 工件可选取证（无工件时给内部一致性提示），输出逐任务评估', async () => {
+      const { service, chat, prisma } = makeDecompService([
+        { id: 'b1', title: '任务拆解清单', content: '含导入失败重试策略' },
+      ]);
+      const result = await service.run(
+        'decomposition-review',
+        {
+          tasks: TASKS,
+          breakdownDocumentId: 'b1',
+        },
+        'p1',
+        'u1',
+      );
+
+      expect(result.data).toHaveProperty('tasks');
+      expect(result.data).toHaveProperty('coverage');
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('批量导入服务');
+      expect(instructions).toContain('导入失败重试策略');
+      expect(instructions).toContain('不拦截人批卡');
+      // 传了工件 id → prisma 侦查被调
+      expect(prisma.document.findMany).toHaveBeenCalled();
+
+      const noDocs = makeDecompService();
+      await noDocs.service.run(
+        'decomposition-review',
+        { tasks: TASKS },
+        'p1',
+        'u1',
+      );
+      expect(noDocs.prisma.document.findMany).not.toHaveBeenCalled();
+      const noDocInstructions = (
+        noDocs.chat.mock.calls[0][1] as { instructions: string }
+      ).instructions;
+      expect(noDocInstructions).toContain('未提供需求工件');
+    });
+
+    it('缺任务族 → 400（不触 LLM）', async () => {
+      const { service, chat } = makeDecompService();
+      await expect(
+        service.run('decomposition-review', {}, 'p1', 'u1'),
+      ).rejects.toThrow(/缺少任务族/);
+      expect(chat).not.toHaveBeenCalled();
     });
   });
 
