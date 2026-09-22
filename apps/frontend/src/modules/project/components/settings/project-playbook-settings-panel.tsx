@@ -81,16 +81,18 @@ export function ProjectPlaybookSettingsPanel({ projectId }: { projectId: string 
           <div className="space-y-0">
             {stages.map((stage, index) => {
               const Icon = STAGE_ICONS[stage.status];
+              const isLast = index === stages.length - 1;
               return (
-                <div key={stage.key} className="relative flex items-start gap-3 py-2.5">
-                  {index < stages.length - 1 && (
-                    <span className="absolute left-[7px] top-8 h-[calc(100%-1rem)] w-px bg-border" />
-                  )}
-                  <Icon
-                    size={16}
-                    className={cn('mt-0.5 shrink-0', STAGE_ICON_CLASS[stage.status])}
-                  />
-                  <div className="min-w-0 flex-1">
+                <div key={stage.key} className="flex items-start gap-3 py-2.5">
+                  {/* 图标列自承载连接线（flex-col + flex-1），避免 absolute 任意值定位 */}
+                  <div className="flex flex-col items-center">
+                    <Icon
+                      size={16}
+                      className={cn('shrink-0', STAGE_ICON_CLASS[stage.status])}
+                    />
+                    {!isLast && <span className="mt-1 w-px flex-1 bg-border" />}
+                  </div>
+                  <div className="min-w-0 flex-1 pb-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-foreground">{stage.name}</span>
                       <span className="text-10 uppercase tracking-wide text-muted-foreground">
