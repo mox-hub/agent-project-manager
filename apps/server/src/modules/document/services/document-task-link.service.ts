@@ -36,11 +36,17 @@ export class DocumentTaskLinkService {
 
   /**
    * 获取任务关联的文档
+   * CAP-P-01 五期切片 4：include 文档/章节标题——需求溯源（「来自需求：XX」）
+   * 依赖标题渲染，裸行返回会让前端永远落到 id 兜底文案
    */
   async getLinksByTask(issueId: string) {
     return this.prisma.documentTaskLink.findMany({
       where: { issueId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        document: { select: { title: true } },
+        section: { select: { title: true } },
+      },
     });
   }
 
@@ -51,6 +57,10 @@ export class DocumentTaskLinkService {
     return this.prisma.documentTaskLink.findMany({
       where: { projectId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        document: { select: { title: true } },
+        section: { select: { title: true } },
+      },
     });
   }
 

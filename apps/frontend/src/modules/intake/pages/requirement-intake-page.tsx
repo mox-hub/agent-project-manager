@@ -153,8 +153,12 @@ export function RequirementIntakePage() {
         </div>
       </SectionCard>
 
-      {/* 管道总览卡（CAP-P-01 五期切片 1：生命周期主入口） */}
-      <PipelineOverviewCards docs={docs} isLoading={docsQuery.isLoading} />
+      {/* 管道总览卡（CAP-P-01 五期切片 1：生命周期主入口；切片 2 接完备性评估） */}
+      <PipelineOverviewCards
+        docs={docs}
+        analysisDocs={analysisDocs}
+        isLoading={docsQuery.isLoading}
+      />
 
       {/* 需求纪要列表（category=requirement）+ AI 分析入口（CAP-P-01 四期） */}
       <SectionCard

@@ -4,6 +4,7 @@
  * 完备度徽章占位（切片 2 readiness-review 接入前显示「未评估」）。
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { PipelineOverviewCards } from './pipeline-overview-cards';
@@ -74,10 +75,13 @@ beforeEach(() => {
 });
 
 function setup(docs: DocumentListItem[]) {
+  const queryClient = new QueryClient();
   return render(
-    <MemoryRouter>
-      <PipelineOverviewCards docs={docs} isLoading={false} />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <PipelineOverviewCards docs={docs} isLoading={false} />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

@@ -364,6 +364,7 @@
       "desc": "每条需求一条管道：五阶段进度与下一步动作（CAP-P-01 生命周期主入口）",
       "empty": "尚无进行中的需求管道；提出第一条需求后，管道会出现在这里",
       "notAssessed": "未评估",
+      "assessHint": "评估需求完备性",
       "activeStage": "当前 · {{stage}}",
       "allStagesDone": "全阶段完成",
       "analysisCta": "AI 生成分析报告",
@@ -376,6 +377,25 @@
         "pending": "待进行",
         "skipped": "已跳过"
       }
+    },
+    "readiness": {
+      "title": "完备性评估",
+      "desc": "AI 同事对照六维度评估这条需求的信息是否够开工，并给出缺口账；评估仅供你判断，不拦截任何操作。",
+      "sourceHint": "评估依据：需求纪要与分析报告（如有）。",
+      "failed": "评估失败，请重试",
+      "verdict": {
+        "ready": "可开工",
+        "needs-clarification": "待澄清",
+        "blocked": "阻塞"
+      },
+      "gapsTitle": "缺口账",
+      "blocking": "阻塞",
+      "why": "为什么",
+      "howToFill": "怎么补",
+      "disclaimer": "AI 评估仅供人审，不作为开工依据",
+      "goFill": "去补",
+      "run": "开始评估",
+      "reRun": "重新评估"
     }
   },
   "release": {
@@ -920,6 +940,27 @@
   "decision": {
     "title": "决策收件箱",
     "digestNote": "未处理项 48h 后升级进日报 · 沉默 ≠ 同意",
+    "decompReview": {
+      "title": "拆解质量评估",
+      "run": "AI 评估拆解",
+      "reRun": "重新评估",
+      "failed": "评估失败，请重试",
+      "verdict": {
+        "healthy": "健康",
+        "needs-review": "待复核",
+        "rework": "需返工"
+      },
+      "granularity": {
+        "too-big": "颗粒度过大",
+        "too-small": "颗粒度过小"
+      },
+      "weakTestability": "不可测",
+      "suggestion": "建议",
+      "uncovered": "以下需求点没有任务承接：{{points}}",
+      "orphans": "以下任务对不上需求点：{{indexes}}",
+      "okSummary": "其余 {{count}} 个任务颗粒度与可测性正常",
+      "disclaimer": "AI 评估仅供批卡参考，批卡决定不受影响"
+    },
     "detail": {
       "emptyTitle": "选择一条决策",
       "emptyHint": "在左侧列表选择条目，可在此查看并处理"

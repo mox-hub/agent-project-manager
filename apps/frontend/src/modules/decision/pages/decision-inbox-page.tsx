@@ -14,6 +14,7 @@ import { IconStack } from '@/components/ui/icon-stack';
 import { SkeletonText } from '@/components/ui/skeleton';
 import { DecisionCard } from '@/shared/decision-card/decision-card';
 import type { Decision } from '@/shared/decision-card/types';
+import { DecompositionReviewPanel } from '../components/decomposition-review-panel';
 import {
   usePendingDecisions,
 } from '@/modules/decision/hooks/use-decisions';
@@ -227,6 +228,8 @@ export function DecisionInboxPage() {
                 onAction={handleAction}
                 variant="vertical"
               />
+              {/* CAP-P-01 五期切片 3：plan 卡批卡前拆解质量评估（advisory，不拦截批卡） */}
+              <DecompositionReviewPanel decision={selected} />
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center p-6">

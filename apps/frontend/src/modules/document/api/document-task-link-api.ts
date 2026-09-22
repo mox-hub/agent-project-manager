@@ -140,9 +140,11 @@ export async function deleteSectionLink(linkId: string): Promise<void> {
 
 /**
  * 获取任务关联的文档
+ * CAP-P-01 五期切片 4 修复：controller 挂载在空路径（/issues/...），
+ * 原路径多写了 /documents 前缀导致 404，「关联文档」面板恒空
  */
 export async function fetchTaskDocumentLinks(issueId: string): Promise<DocumentTaskLink[]> {
-  const res = await api.get<DocumentTaskLink[]>(`/documents/issues/${issueId}/document-links`);
+  const res = await api.get<DocumentTaskLink[]>(`/issues/${issueId}/document-links`);
   return res;
 }
 
@@ -152,6 +154,6 @@ export async function fetchTaskDocumentLinks(issueId: string): Promise<DocumentT
  * 获取项目关联的文档
  */
 export async function fetchProjectDocumentLinks(projectId: string): Promise<DocumentTaskLink[]> {
-  const res = await api.get<DocumentTaskLink[]>(`/documents/projects/${projectId}/document-links`);
+  const res = await api.get<DocumentTaskLink[]>(`/projects/${projectId}/document-links`);
   return res;
 }
