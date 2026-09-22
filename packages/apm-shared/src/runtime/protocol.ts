@@ -38,6 +38,9 @@ export const WS_EVENTS = {
 // ---------- 常量 ----------
 export const HEARTBEAT_INTERVAL_SECONDS = 30;
 export const POLL_INTERVAL_MS = 15000;
+/** WS 重连退避：初始延迟与上限（daemon lifecycle 与服务端派发共用口径） */
+export const WS_RECONNECT_BASE_MS = 1000;
+export const WS_RECONNECT_MAX_MS = 60000;
 
 // ---------- DTO ----------
 export interface RuntimeRegisterPayload {
