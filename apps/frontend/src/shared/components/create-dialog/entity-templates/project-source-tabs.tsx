@@ -11,12 +11,14 @@ export type ProjectSource = 'scratch' | 'existing' | 'ai';
 export interface ProjectSourceTabsProps {
   value: ProjectSource;
   onChange: (source: ProjectSource) => void;
+  /** 可选：只渲染子集（按传入顺序），缺省全量三选（existing 尚无专属 UI，接入方按需过滤） */
+  sources?: ProjectSource[];
 }
 
-export function ProjectSourceTabs({ value, onChange }: ProjectSourceTabsProps) {
+export function ProjectSourceTabs({ value, onChange, sources }: ProjectSourceTabsProps) {
   const { t } = useTranslation();
 
-  const options: { value: ProjectSource; labelKey: string; defaultLabel: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  const allOptions: { value: ProjectSource; labelKey: string; defaultLabel: string; icon: React.ComponentType<{ className?: string }> }[] = [
     {
       value: 'scratch',
       labelKey: 'unifiedCreate.projectSource.scratch',
@@ -36,6 +38,11 @@ export function ProjectSourceTabs({ value, onChange }: ProjectSourceTabsProps) {
       icon: Sparkles,
     },
   ];
+  const options = sources
+    ? sources
+        .map((v) => allOptions.find((opt) => opt.value === v))
+        .filter((opt): opt is (typeof allOptions)[number] => !!opt)
+    : allOptions;
 
   return (
     <div className="flex items-center gap-1.5 p-1 rounded-lg bg-muted/30 border border-border/50 text-xs">
