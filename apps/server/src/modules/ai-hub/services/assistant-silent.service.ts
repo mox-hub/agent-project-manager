@@ -375,6 +375,92 @@ ${bindings.length ? `项目已有的契约绑定文件（影响面的权威素�
 只输出 JSON：{"feasibility": {"verdict": "go", "rationale": "...", "conditions": ["..."]}, "impact": {"summary": "...", "affectedAreas": ["..."]}, "dependencies": [{"item": "...", "note": "..."}], "risks": [{"risk": "...", "severity": "high", "mitigation": "..."}], "acceptancePreview": [{"content": "...", "criteriaType": "functional"}]}`;
     },
   },
+  'readiness-review': {
+    description:
+      '需求完备性评估（CAP-P-01 五期切片 2）：读调研/澄清/分析工件，AI 输出六维度三态评估 + 缺口账（缺什么/为什么/怎么补/是否阻塞）+ verdict；评估仅呈现给人（输入级软闸门），blocked 时引导补录而非禁止推进',
+    prepareContext: async (context, { prisma }) => {
+      const ids = [
+        context.researchDocumentId,
+        context.clarifyDocumentId,
+        context.analysisDocumentId,
+      ].filter((v): v is string => typeof v === 'string' && !!v);
+      if (ids.length === 0) {
+        throw new BadRequestException(
+          '完备性评估缺少工件：researchDocumentId / clarifyDocumentId / analysisDocumentId 至少一项',
+        );
+      }
+      const docs = await prisma.document.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, title: true, content: true },
+      });
+      if (docs.length === 0) {
+        throw new BadRequestException('工件文档不存在');
+      }
+      return { ...context, documents: docs };
+    },
+    buildInstructions: (context) => {
+      const docs = Array.isArray(context.documents) ? context.documents : [];
+      if (docs.length === 0) {
+        throw new BadRequestException('完备性评估缺少工件文档');
+      }
+      return `你是项目管理系统的需求评审助手。下面是需求承接管道产出的工件（调研纪要 / 澄清纪要 / 分析报告），请评估「这条需求的信息是否够开工」。读者是不熟悉工程的新手：评估要让人看完就知道缺什么、去哪补。
+工件：
+${JSON.stringify(docs)}
+
+六维度（key 固定）：goal（目标与价值：解决什么问题、给谁）、scope（范围与边界：做什么/明确不做什么）、scenario（用户与场景：谁用、什么场合）、acceptance（验收可判定：能否写出可检查的完成标准）、dependency（依赖与约束：外部接口/权限/时限）、fallback（失败与降级：出错怎么办）。
+要求：
+- 每维 status 只能是 ready（工件有明确答案）/ unclear（有线索但含糊）/ missing（工件只字未提）；evidence 引用工件原句或小节作为依据，工件里没有线索的维度 evidence 留空，绝不编造。
+- missingInfo 是缺口账：每条带 item（缺什么）/ why（为什么影响开工）/ howToFill（建议怎么补，具体到环节）/ blocking（不补就无法合理拆解为 true）。宁缺毋滥：工件里已覆盖的信息不进缺口账。
+- verdict 只能是 ready（可开工）/ needs-clarification（有非阻塞缺口，可边做边补）/ blocked（有阻塞缺口，先补再拆解）。
+- 评估只呈现给人参考，不替人做放行决定；summary 2~3 句说人话。
+只输出 JSON：{"dimensions": [{"key": "goal", "status": "ready", "evidence": "工件原句/小节", "gap": ""}], "missingInfo": [{"item": "外部接口由谁提供", "why": "决定是否含联调任务", "howToFill": "访谈确认接口方", "blocking": true}], "verdict": "needs-clarification", "summary": "..."}`;
+    },
+  },
+  'decomposition-review': {
+    description:
+      '拆解质量评估（CAP-P-01 五期切片 3）：读组合件任务族（+可选工件），AI 逐任务评估颗粒度与可测性、汇总覆盖度双向孤儿；批卡前的 advisory 信息层，由人手动触发，不拦截批卡动作',
+    prepareContext: async (context, { prisma }) => {
+      const tasks = Array.isArray(context.tasks) ? context.tasks : [];
+      if (tasks.length === 0) {
+        throw new BadRequestException(
+          '拆解评估缺少任务族（tasks）：请传入组合件提案的任务数组',
+        );
+      }
+      const ids = [
+        context.breakdownDocumentId,
+        context.acceptanceDocumentId,
+        context.analysisDocumentId,
+      ].filter((v): v is string => typeof v === 'string' && !!v);
+      const documents =
+        ids.length > 0
+          ? await prisma.document.findMany({
+              where: { id: { in: ids } },
+              select: { id: true, title: true, content: true },
+            })
+          : [];
+      return { ...context, tasks, documents };
+    },
+    buildInstructions: (context) => {
+      const tasks = Array.isArray(context.tasks) ? context.tasks : [];
+      if (tasks.length === 0) {
+        throw new BadRequestException('拆解评估缺少任务族');
+      }
+      const documents = Array.isArray(context.documents)
+        ? context.documents
+        : [];
+      return `你是项目管理系统的拆解评审助手。下面是一份「任务族 + 验收清单」组合件提案（来自需求拆解），请评估拆解质量，帮不懂工程的人在批卡前看清问题。宁缺毋假：材料里没有依据的判断不要硬给。
+任务族：
+${JSON.stringify(tasks)}
+${documents.length ? `需求侧工件（覆盖度对照的依据）：\n${JSON.stringify(documents)}\n` : '（未提供需求工件：覆盖度仅能基于任务族内部一致性判断，uncovered 留空并在 summary 说明）'}
+要求：
+- 每个任务按 index 评估：granularity 只能是 ok / too-big（估时超过 3 天，或一个任务里含多个可独立验收的交付物）/ too-small（不足 2 小时且与相邻任务强耦合应合并）；reason 一句话说依据；suggestion 给具体的拆/并办法（不需要改就留空）。
+- testability 只能是 ok（验收标准可检查）/ weak（没有可判定的完成迹象）；该任务 criteria 为空数组时视为 weak。
+- coverage：uncovered 列出「需求工件里提到、但没有任务承接的需求点」；orphans 列出「对不上任何需求点的任务 index」。材料不足以判定就给空数组。
+- verdict 只能是 healthy / needs-review / rework。
+- 这是批卡前的参考信息，不拦截人批卡；summary 2~3 句说人话。
+只输出 JSON：{"tasks": [{"index": 0, "granularity": "ok", "reason": "...", "suggestion": "", "testability": "ok"}], "coverage": {"uncovered": ["..."], "orphans": [0]}, "verdict": "healthy", "summary": "..."}`;
+    },
+  },
   'failure-diagnosis': {
     description:
       '执行失败诊断（批一 P0 切片 3，2026-09-17 裁决 D 的按需 LLM 半）：读失败/阻塞执行现场（错误留痕/血缘/验收契约），输出结构化诊断（归类/原因/建议/下一步动作/缺失信息）；执行详情「AI 诊断」按钮按需触发，AIUsageLog 记账；零 token 的机械归类见 execution/failure-classifier',

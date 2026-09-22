@@ -66,6 +66,17 @@ describe('实体针对性辅助与模式穿梭组件（CAP-A-18 V2）', () => {
       fireEvent.click(screen.getByText('接入已有代码库'));
       expect(onChange).toHaveBeenCalledWith('existing');
     });
+
+    it('sources 子集过滤：只渲染传入项且保持传入顺序（existing 无专属 UI 场景）', () => {
+      const onChange = vi.fn();
+      render(<ProjectSourceTabs value="scratch" onChange={onChange} sources={['ai', 'scratch']} />);
+      expect(screen.getByText('✨ AI 访谈立项 (Grill)')).toBeInTheDocument();
+      expect(screen.getByText('从零全新立项')).toBeInTheDocument();
+      expect(screen.queryByText('接入已有代码库')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByText('✨ AI 访谈立项 (Grill)'));
+      expect(onChange).toHaveBeenCalledWith('ai');
+    });
   });
 
   describe('ModeShuttleButton', () => {

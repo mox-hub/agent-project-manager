@@ -358,7 +358,45 @@
     "analysisDocsTitle": "分析报告",
     "analysisDocsDesc": "AI 代写、人确认归档的可行性/影响面/风险分析（分析类文档）",
     "analysisDocsEmpty": "尚无分析报告",
-    "analysisDocsEmptyDesc": "从上方需求纪要生成分析报告后，会归档在这里供拆解与验收引用"
+    "analysisDocsEmptyDesc": "从上方需求纪要生成分析报告后，会归档在这里供拆解与验收引用",
+    "pipelineCards": {
+      "title": "管道总览",
+      "desc": "每条需求一条管道：五阶段进度与下一步动作（CAP-P-01 生命周期主入口）",
+      "empty": "尚无进行中的需求管道；提出第一条需求后，管道会出现在这里",
+      "notAssessed": "未评估",
+      "assessHint": "评估需求完备性",
+      "activeStage": "当前 · {{stage}}",
+      "allStagesDone": "全阶段完成",
+      "analysisCta": "AI 生成分析报告",
+      "continueCta": "继续 · {{stage}}",
+      "viewCta": "查看管道",
+      "mountCta": "挂载承接剧本",
+      "stageStatus": {
+        "done": "已完成",
+        "active": "进行中",
+        "pending": "待进行",
+        "skipped": "已跳过"
+      }
+    },
+    "readiness": {
+      "title": "完备性评估",
+      "desc": "AI 同事对照六维度评估这条需求的信息是否够开工，并给出缺口账；评估仅供你判断，不拦截任何操作。",
+      "sourceHint": "评估依据：需求纪要与分析报告（如有）。",
+      "failed": "评估失败，请重试",
+      "verdict": {
+        "ready": "可开工",
+        "needs-clarification": "待澄清",
+        "blocked": "阻塞"
+      },
+      "gapsTitle": "缺口账",
+      "blocking": "阻塞",
+      "why": "为什么",
+      "howToFill": "怎么补",
+      "disclaimer": "AI 评估仅供人审，不作为开工依据",
+      "goFill": "去补",
+      "run": "开始评估",
+      "reRun": "重新评估"
+    }
   },
   "release": {
     "title": "发版交付",
@@ -902,6 +940,27 @@
   "decision": {
     "title": "决策收件箱",
     "digestNote": "未处理项 48h 后升级进日报 · 沉默 ≠ 同意",
+    "decompReview": {
+      "title": "拆解质量评估",
+      "run": "AI 评估拆解",
+      "reRun": "重新评估",
+      "failed": "评估失败，请重试",
+      "verdict": {
+        "healthy": "健康",
+        "needs-review": "待复核",
+        "rework": "需返工"
+      },
+      "granularity": {
+        "too-big": "颗粒度过大",
+        "too-small": "颗粒度过小"
+      },
+      "weakTestability": "不可测",
+      "suggestion": "建议",
+      "uncovered": "以下需求点没有任务承接：{{points}}",
+      "orphans": "以下任务对不上需求点：{{indexes}}",
+      "okSummary": "其余 {{count}} 个任务颗粒度与可测性正常",
+      "disclaimer": "AI 评估仅供批卡参考，批卡决定不受影响"
+    },
     "detail": {
       "emptyTitle": "选择一条决策",
       "emptyHint": "在左侧列表选择条目，可在此查看并处理"
@@ -4425,10 +4484,38 @@
     },
     "tabs": {
       "general": "常规",
+      "team": "团队",
+      "playbook": "需求剧本",
       "gitTerminal": "Git 与终端",
       "contract": "契约文件",
       "cloudSync": "云端同步",
       "docs": "文档"
+    },
+    "team": {
+      "bindingsTitle": "项目与团队绑定",
+      "bindingsDesc": "团队成员、外部平台账号与同步绑定",
+      "membersTitle": "成员概览",
+      "membersDesc": "{{count}} 名成员的当前负载",
+      "empty": "尚无成员",
+      "openFull": "打开完整团队页",
+      "taskCount": "{{count}} 个任务"
+    },
+    "playbook": {
+      "title": "需求承接剧本",
+      "unmountedTitle": "未挂载需求承接剧本",
+      "mountedDesc": "五阶段进度（只读）；访谈与闸门操作在完整页进行",
+      "unmountedDesc": "挂载后按「调研 → 澄清 → 分析 → 拆解 → 验收草案」推进需求",
+      "empty": "尚未挂载剧本，进入完整页选择模板",
+      "openFull": "打开完整剧本页",
+      "gatePending": "闸门待决",
+      "gateHint": "有闸门待决，请到决策收件箱或完整剧本页处理",
+      "skipReason": "跳过原因",
+      "stageStatus": {
+        "done": "已完成",
+        "active": "进行中",
+        "pending": "待进行",
+        "skipped": "已跳过"
+      }
     },
     "general": {
       "title": "常规设置",

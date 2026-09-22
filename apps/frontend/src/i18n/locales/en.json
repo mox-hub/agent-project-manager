@@ -358,7 +358,45 @@
     "analysisDocsTitle": "Analysis Reports",
     "analysisDocsDesc": "Feasibility/impact/risk analyses drafted by AI and confirmed by humans (analysis documents)",
     "analysisDocsEmpty": "No analysis reports yet",
-    "analysisDocsEmptyDesc": "Analysis reports generated from the requirement notes above are filed here for breakdown and acceptance to reference"
+    "analysisDocsEmptyDesc": "Analysis reports generated from the requirement notes above are filed here for breakdown and acceptance to reference",
+    "pipelineCards": {
+      "title": "Pipeline Overview",
+      "desc": "One pipeline per requirement: five-stage progress and the next action (CAP-P-01 lifecycle main entry)",
+      "empty": "No active requirement pipelines yet; your pipeline will appear here after you file the first requirement",
+      "notAssessed": "Not assessed",
+      "assessHint": "Assess requirement readiness",
+      "activeStage": "Current · {{stage}}",
+      "allStagesDone": "All stages done",
+      "analysisCta": "AI analysis report",
+      "continueCta": "Continue · {{stage}}",
+      "viewCta": "View pipeline",
+      "mountCta": "Mount pipeline",
+      "stageStatus": {
+        "done": "Done",
+        "active": "Active",
+        "pending": "Pending",
+        "skipped": "Skipped"
+      }
+    },
+    "readiness": {
+      "title": "Readiness Assessment",
+      "desc": "Your AI teammate assesses whether this requirement has enough information to start, across six dimensions, with a gap ledger; the assessment is for your judgment only and blocks nothing.",
+      "sourceHint": "Sources: requirement notes and analysis reports (if any).",
+      "failed": "Assessment failed, please retry",
+      "verdict": {
+        "ready": "Ready",
+        "needs-clarification": "Needs clarification",
+        "blocked": "Blocked"
+      },
+      "gapsTitle": "Gap ledger",
+      "blocking": "Blocking",
+      "why": "Why",
+      "howToFill": "How to fill",
+      "disclaimer": "AI assessment is for human review only, not a basis for starting work",
+      "goFill": "Go fill",
+      "run": "Run assessment",
+      "reRun": "Re-run"
+    }
   },
   "release": {
     "title": "Releases",
@@ -902,6 +940,27 @@
   "decision": {
     "title": "Decision Inbox",
     "digestNote": "Unresolved items escalate to the daily report after 48h · Silence ≠ consent",
+    "decompReview": {
+      "title": "Decomposition Review",
+      "run": "AI review",
+      "reRun": "Re-run",
+      "failed": "Assessment failed, please retry",
+      "verdict": {
+        "healthy": "Healthy",
+        "needs-review": "Needs review",
+        "rework": "Rework"
+      },
+      "granularity": {
+        "too-big": "Too big",
+        "too-small": "Too small"
+      },
+      "weakTestability": "Weak testability",
+      "suggestion": "Suggestion",
+      "uncovered": "Requirement points with no task covering them: {{points}}",
+      "orphans": "Tasks not tied to any requirement: {{indexes}}",
+      "okSummary": "The other {{count}} tasks are fine on granularity and testability",
+      "disclaimer": "AI assessment is advisory for your acceptance decision; the decision itself is unaffected"
+    },
     "detail": {
       "emptyTitle": "Select a decision",
       "emptyHint": "Pick an item from the list to review and act on it here"
@@ -4425,10 +4484,38 @@
     },
     "tabs": {
       "general": "General",
+      "team": "Team",
+      "playbook": "Pipeline Playbook",
       "gitTerminal": "Git & Terminal",
       "contract": "Contract Files",
       "cloudSync": "Cloud Sync",
       "docs": "Documentation"
+    },
+    "team": {
+      "bindingsTitle": "Project & Team Bindings",
+      "bindingsDesc": "Members, external platform accounts and sync bindings",
+      "membersTitle": "Member Overview",
+      "membersDesc": "Current workload of {{count}} members",
+      "empty": "No members yet",
+      "openFull": "Open full team page",
+      "taskCount": "{{count}} tasks"
+    },
+    "playbook": {
+      "title": "Requirement Pipeline Playbook",
+      "unmountedTitle": "Playbook not mounted",
+      "mountedDesc": "Five-stage progress (read-only); interviews and gates live in the full page",
+      "unmountedDesc": "Once mounted, requirements advance through Research → Clarify → Analysis → Breakdown → Acceptance Draft",
+      "empty": "Playbook not mounted yet; pick a template in the full page",
+      "openFull": "Open full playbook page",
+      "gatePending": "Gate pending",
+      "gateHint": "A gate is pending; handle it in the decision inbox or the full playbook page",
+      "skipReason": "Skip reason",
+      "stageStatus": {
+        "done": "Done",
+        "active": "Active",
+        "pending": "Pending",
+        "skipped": "Skipped"
+      }
     },
     "general": {
       "title": "General Settings",
