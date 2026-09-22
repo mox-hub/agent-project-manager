@@ -4,8 +4,6 @@
   "ignoreDependencies": [
     "@types/mdx",
     "buffer",
-    "embla-carousel-react",
-    "react-resizable-panels",
     "shadcn"
   ],
   "workspaces": {
@@ -21,7 +19,13 @@
       ]
     },
     "apps/frontend": {
-      "entry": ["src/main.tsx", "src/polyfills.ts"]
+      "entry": ["src/app/main.tsx", "src/polyfills.ts"]
+    },
+    "apps/cli": {
+      "entry": ["src/index.ts"]
+    },
+    "apps/desktop": {
+      "entry": ["electron/src/main.ts"]
     },
     "packages/apm-shared": {
       "entry": ["src/index.ts"]
