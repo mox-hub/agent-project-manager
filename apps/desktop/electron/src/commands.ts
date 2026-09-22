@@ -462,5 +462,3 @@ export const commandHandlers = {
     return { ok: true };
   },
 };
-
-export type DesktopCommand = keyof typeof commandHandlers;

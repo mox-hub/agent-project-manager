@@ -10,8 +10,6 @@ export const ExitCode = {
   BACKEND_UNREACHABLE: 4,
 } as const;
 
-export type ExitCodeValue = (typeof ExitCode)[keyof typeof ExitCode];
-
 export class ApmError extends Error {
   readonly exitCode: number;
   readonly backendErrorCode?: string;

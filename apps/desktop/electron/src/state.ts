@@ -22,20 +22,10 @@ export interface BackendInfo {
   pid: number;
 }
 
-export interface BackendStatus {
-  running: boolean;
-  info?: BackendInfo;
-}
-
 export interface FrontendInfo {
   port: number;
   url: string;
   pid: number;
-}
-
-export interface FrontendStatus {
-  running: boolean;
-  info?: FrontendInfo;
 }
 
 export interface AppState {
