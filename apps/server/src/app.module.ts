@@ -39,7 +39,6 @@ import { PluginModule } from './modules/plugins/plugin.module';
 import { RuntimeModule } from './modules/runtime/runtime.module';
 import { ExecutionModule } from './modules/execution/execution.module';
 import { TrustModule } from './modules/trust/trust.module';
-import { ContextModule } from './modules/context/context.module';
 import { AcceptanceModule } from './modules/acceptance/acceptance.module';
 import { CliDispatchModule } from './modules/cli-dispatch/cli-dispatch.module';
 import { McpServerModule } from './modules/mcp-server/mcp-server.module';
@@ -108,7 +107,6 @@ import { ScheduleModule } from '@nestjs/schedule';
     RuntimeModule,
     ExecutionModule,
     TrustModule,
-    ContextModule,
     AcceptanceModule,
     DocumentEnhanceModule,
     DocumentModule,
