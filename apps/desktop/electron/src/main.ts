@@ -7,8 +7,7 @@
  * 生命周期强化（ADR-015）：单实例锁防双开抢 ~/.apm；关窗最小化到托盘（服务保活）；
  * server/daemon 意外退出自动重启（指数退避+熔断）；渲染进程崩溃白屏自动重载。
  */
-import { app, BrowserWindow, ipcMain, powerMonitor, shell } from 'electron';
-import net from 'node:net';
+import { app, BrowserWindow, ipcMain, powerMonitor } from 'electron';
 import path from 'node:path';
 import { commandHandlers } from './commands';
 import { isDevMode, resolveAppConfig } from './config';
@@ -28,8 +27,13 @@ import { createTray, hasTray } from './tray';
 import { checkForUpdates, initAutoUpdater } from './updater';
 import { setInitError, state, stopAllProcesses } from './state';
 import { loadDesktopState, saveDesktopState } from './desktop-state';
+import {
+  createAuthWindow,
+  hardenWebContents,
+  registerMainWindowFactory,
+  resolveFrontendTarget,
+} from './windows';
 
-const FRONTEND_DEV_PORT = 5173;
 const DEEP_LINK_SCHEME = 'apm';
 
 const config = resolveAppConfig();
@@ -55,69 +59,37 @@ function extractDeepLink(argv: string[]): string | null {
 /** 启动带入的深链在窗口就绪后补转发（second-instance 场景直接转发） */
 let pendingDeepLink: string | null = null;
 
+let mainWindow: BrowserWindow | null = null;
+
+/**
+ * 当前承载 boot 屏/前端的窗口：认证面期间（首启无会话启动 / 401 或登出回登录页）
+ * 为认证窗，否则主窗。启动进度文案、前端加载、深链转发都发给它。
+ */
+function activeWindow(): BrowserWindow | null {
+  if (state.authWindow && !state.authWindow.isDestroyed()) {
+    return state.authWindow;
+  }
+  return mainWindow;
+}
+
 function forwardDeepLink(url: string): void {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('desktop:deep-link', url);
+  const win = activeWindow();
+  if (win && !win.isDestroyed()) {
+    win.webContents.send('desktop:deep-link', url);
     logger.info(`深链已转发前端: ${url}`);
   }
 }
 
-let mainWindow: BrowserWindow | null = null;
-/** 区分「用户退出」与「关窗常驻」：仅 before-quit（含托盘退出/quitAndInstall）置位 */
-let isQuitting = false;
-
-function portInUse(port: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = net.createConnection({ host: '127.0.0.1', port });
-    socket.setTimeout(200);
-    socket.on('connect', () => {
-      socket.destroy();
-      resolve(true);
-    });
-    socket.on('error', () => resolve(false));
-    socket.on('timeout', () => resolve(false));
-  });
-}
-
-/**
- * 启动屏阶段文案。did-finish-load 前先缓冲（data URL 文档尚未就绪），就绪后直通
- * executeJavaScript 原地更新——不重新 loadURL，避免闪屏。
- */
-let bootScreenReady = false;
-let bootStatus = { message: '正在启动…', detail: '' };
-
-function setBootStatus(message: string, detail = ''): void {
-  bootStatus = { message, detail };
-  if (bootScreenReady && mainWindow) {
-    void mainWindow.webContents.executeJavaScript(bootStatusScript(message, detail), true);
-  }
-}
-
-function showBootError(message: string, detail = ''): void {
-  logger.error(`${message}${detail ? `: ${detail}` : ''}`);
-  if (mainWindow) {
-    void mainWindow.webContents.executeJavaScript(bootErrorScript(message, detail), true);
-  }
-}
-
-/** 调试模式：dev 自动开；打包版经 --devtools 参数或 APM_DESKTOP_DEBUG=1 打开（v0.6.1 体验切片）。 */
-function shouldAutoOpenDevTools(): boolean {
-  return (
-    isDevMode() ||
-    process.argv.includes('--devtools') ||
-    process.env.APM_DESKTOP_DEBUG === '1'
-  );
-}
-
 function showMainWindow(): void {
-  if (!mainWindow || mainWindow.isDestroyed()) {
+  const win = activeWindow();
+  if (!win || win.isDestroyed()) {
     return;
   }
-  if (mainWindow.isMinimized()) {
-    mainWindow.restore();
+  if (win.isMinimized()) {
+    win.restore();
   }
-  mainWindow.show();
-  mainWindow.focus();
+  win.show();
+  win.focus();
 }
 
 /** 关窗前持久化窗口位置尺寸（正常态 bounds；最大化只记还原后区域）。 */
@@ -132,7 +104,49 @@ function persistWindowBounds(): void {
   }
 }
 
-function createWindow(): void {
+/**
+ * 启动屏阶段文案。did-finish-load 前先缓冲（data URL 文档尚未就绪），就绪后直通
+ * executeJavaScript 原地更新——不重新 loadURL，避免闪屏。
+ */
+let bootScreenReady = false;
+let bootStatus = { message: '正在启动…', detail: '' };
+
+function setBootStatus(message: string, detail = ''): void {
+  bootStatus = { message, detail };
+  const win = activeWindow();
+  if (bootScreenReady && win) {
+    void win.webContents.executeJavaScript(bootStatusScript(message, detail), true);
+  }
+}
+
+function showBootError(message: string, detail = ''): void {
+  logger.error(`${message}${detail ? `: ${detail}` : ''}`);
+  const win = activeWindow();
+  if (win) {
+    void win.webContents.executeJavaScript(bootErrorScript(message, detail), true);
+  }
+}
+
+/** 调试模式：dev 自动开；打包版经 --devtools 参数或 APM_DESKTOP_DEBUG=1 打开（v0.6.1 体验切片）。 */
+function shouldAutoOpenDevTools(): boolean {
+  return (
+    isDevMode() ||
+    process.argv.includes('--devtools') ||
+    process.env.APM_DESKTOP_DEBUG === '1'
+  );
+}
+
+/**
+ * 主窗（正常形态，承载工作台）+ 首启无会话时的认证窗创建。
+ * 认证面进出（/login·/register·/welcome）由 set_compact_mode 命令切窗（windows.ts）。
+ */
+/**
+ * 主窗工厂：建窗 + 事件绑定（close→托盘保活 / ready-to-show / boot 屏状态 /
+ * closed 清理），不加载内容——启动路径由 createWindow 加载 boot 屏，切窗路径
+ * 由 switchAuthSurface 直接加载前端目标。赋值模块级 mainWindow 供
+ * activeWindow()/persistWindowBounds 消费。
+ */
+function createMainWindow(): BrowserWindow {
   const saved = loadDesktopState(config.userDataDir).window_bounds;
   const bounds =
     saved &&
@@ -144,7 +158,7 @@ function createWindow(): void {
     saved.height > 0
       ? saved
       : null;
-  mainWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     width: bounds?.width ?? 1440,
     height: bounds?.height ?? 900,
     x: bounds?.x,
@@ -160,85 +174,56 @@ function createWindow(): void {
       sandbox: true,
     },
   });
-  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-  // 页面内导航白名单：仅本应用源（server 托管前端 / dev vite）。其余（被注入后的
-  // 跳转、外链）一律转系统浏览器，防止渲染进程被劫持后整页导航到钓鱼站
-  mainWindow.webContents.on('will-navigate', (event, url) => {
-    const backendBase = state.backend?.info.apiBaseUrl ?? '';
-    const allowed = [backendBase, `http://localhost:${FRONTEND_DEV_PORT}`, 'about:blank'];
-    if (allowed.some((base) => base && url.startsWith(base))) {
-      return;
-    }
-    event.preventDefault();
-    logger.warn(`拦截页内导航: ${url}（已转系统浏览器打开）`);
-    void shell.openExternal(url);
-  });
-  // 渲染进程崩溃白屏自愈：直接重载；60s 内 ≥3 次熔断（防 crash loop），只报错
-  let rendererCrashCount = 0;
-  let rendererCrashWindowStart = 0;
-  mainWindow.webContents.on('render-process-gone', (_event, details) => {
-    const now = Date.now();
-    if (now - rendererCrashWindowStart > 60_000) {
-      rendererCrashCount = 0;
-      rendererCrashWindowStart = now;
-    }
-    rendererCrashCount += 1;
-    logger.error(`渲染进程崩溃: ${details.reason}（窗口内第 ${rendererCrashCount} 次）`);
-    if (rendererCrashCount <= 3 && mainWindow && !mainWindow.isDestroyed()) {
-      void mainWindow.loadURL(bootScreenUrl()).then(() => loadAppSurface());
-    }
+  hardenWebContents(win, (target) => {
+    void target.loadURL(bootScreenUrl()).then(() => loadAppSurface());
   });
   // 关闭语义（ADR-015）：托盘存在且偏好为常驻（默认）→ 隐藏窗口服务保活；否则真退出
-  mainWindow.on('close', (event) => {
+  win.on('close', (event) => {
     persistWindowBounds();
     const closeToTray = loadDesktopState(config.userDataDir).close_to_tray !== false;
-    if (!isQuitting && closeToTray && hasTray()) {
+    if (!state.isQuitting && closeToTray && hasTray()) {
       event.preventDefault();
-      mainWindow?.hide();
+      win.hide();
       logger.info('窗口已最小化到托盘（服务保活中）');
     }
   });
-  mainWindow.once('ready-to-show', () => mainWindow?.show());
-  mainWindow.webContents.once('did-finish-load', () => {
+  win.once('ready-to-show', () => win.show());
+  win.webContents.once('did-finish-load', () => {
     bootScreenReady = true;
     setBootStatus(bootStatus.message, bootStatus.detail);
   });
-  // F12 / Ctrl+Shift+I 随时开关 DevTools（打包版调试模式入口，命令面另有 toggle_devtools）
-  mainWindow.webContents.on('before-input-event', (_event, input) => {
-    const isF12 = input.type === 'keyDown' && input.key === 'F12';
-    const isDevToolsChord =
-      input.type === 'keyDown' && input.control && input.shift && input.key.toLowerCase() === 'i';
-    if (isF12 || isDevToolsChord) {
-      const wc = mainWindow?.webContents;
-      if (wc) {
-        if (wc.isDevToolsOpened()) {
-          wc.closeDevTools();
-        } else {
-          wc.openDevTools({ mode: 'detach' });
-        }
-      }
-    }
-  });
-  mainWindow.loadURL(bootScreenUrl());
-  mainWindow.on('closed', () => {
+  win.on('closed', () => {
     mainWindow = null;
     bootScreenReady = false;
   });
+  mainWindow = win;
+  return win;
+}
+
+function createWindow(): void {
+  // 首启/未登录（壳侧无会话镜像）→ 前端必然落在认证面：直接以认证窗启动（品牌
+  // 启动屏也在小窗呈现），避免大窗→小窗闪变
+  const startCompact = !loadDesktopState(config.userDataDir).access_token;
+  if (startCompact) {
+    const auth = createAuthWindow();
+    auth.once('ready-to-show', () => auth.show());
+    auth.webContents.once('did-finish-load', () => {
+      bootScreenReady = true;
+      setBootStatus(bootStatus.message, bootStatus.detail);
+    });
+    void auth.loadURL(bootScreenUrl());
+    return;
+  }
+
+  createMainWindow().loadURL(bootScreenUrl());
 }
 
 async function loadAppSurface(): Promise<void> {
-  const win = mainWindow;
+  const win = activeWindow();
   if (!win) {
     return;
   }
-  let target: string;
-  if (isDevMode() && (await portInUse(FRONTEND_DEV_PORT))) {
-    target = `http://localhost:${FRONTEND_DEV_PORT}`;
-  } else if (state.backend) {
-    target = state.backend.info.apiBaseUrl;
-  } else {
-    throw new Error('无可用的前端加载源（server 未启动且开发服务器未运行）');
-  }
+  const target = await resolveFrontendTarget();
   await win.loadURL(target);
   logger.info(`窗口已加载: ${target}`);
 }
@@ -387,11 +372,13 @@ function bootstrap(): void {
   // 某些注销/关机路径不触发，shutdown 事件是最后防线）
   powerMonitor.on('resume', () => void reviveAfterResume());
   powerMonitor.on('shutdown', () => {
-    isQuitting = true;
+    state.isQuitting = true;
     void stopAllProcesses();
   });
   registerIpc();
   registerGlobalErrorHandlers();
+  // 切窗路径可能需要现建主窗（认证窗启动进程登录成功切回，见 windows.ts）
+  registerMainWindowFactory(createMainWindow);
   createWindow();
   void bootstrapServer();
 }
@@ -431,7 +418,7 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.on('before-quit', () => {
-    isQuitting = true;
+    state.isQuitting = true;
     // 退出时杀掉全部托管子进程（server + 守护进程），避免任务管理器残留
     void stopAllProcesses();
   });

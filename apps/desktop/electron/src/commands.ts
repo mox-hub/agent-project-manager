@@ -40,6 +40,7 @@ import { initializeDirs, resolveNodeExe, restoreDefaultDbIfNeeded } from './setu
 import { state, setInitError, type BackendInfo, type FrontendInfo } from './state';
 import { resolveTrayIconPath } from './tray';
 import { checkForUpdates, getUpdateStatus, type UpdateStatus } from './updater';
+import { switchAuthSurface } from './windows';
 
 const FRONTEND_DEV_PORT = 5173;
 
@@ -343,6 +344,18 @@ export const commandHandlers = {
       state.config.userDataDir,
       args?.keys ?? ['access_token', 'apm-workspace-id', 'onboarding_completed'],
     );
+  },
+
+  // ---------- 登录态紧凑窗口（CAP-A-14 切片：认证面小窗 + 隐藏标题栏） ----------
+
+  /**
+   * 进入/退出认证面紧凑窗（双窗编排见 windows.ts）。进入：认证窗加载前端并
+   * 显示、主窗隐藏；退出：主窗重载前端（登录态已更新）并显示、认证窗销毁。
+   * 幂等：重复进入/退出直接返回；web 端无壳桥不会调到这里。
+   */
+  async set_compact_mode(args?: { enabled?: boolean }): Promise<ActionResult> {
+    await switchAuthSurface(args?.enabled === true);
+    return { ok: true };
   },
 
   // ---------- apm-runtime 守护进程（AI 执行面） ----------

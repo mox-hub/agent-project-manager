@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Logo } from '@/components/brand/logo';
 import { Button } from '@/components/ui/button';
 import { useTheme, type ThemeMode } from '@/shared/theme/theme-context';
+import { useDesktopCompactWindow } from '@/modules/desktop';
 import { BlueprintCanvas } from './visuals/blueprint-canvas';
 import { PrismCanvas } from './visuals/prism-canvas';
 import { ServerConfigDialog } from './server-config-dialog';
@@ -54,6 +55,8 @@ export function AuthVisualCard({
   const { i18n } = useTranslation();
   const { mode, toggleTheme } = useSafeTheme();
   const isDark = mode === 'dark';
+  // 桌面壳：认证面期间主窗口收缩为紧凑小窗并隐藏标题栏（web 端 no-op）
+  useDesktopCompactWindow();
 
   // 双表面状态：一面人类控制面 (human)，一面 AI 执行面 (ai)
   const [surface, setSurface] = useState<SurfaceMode>(() => {
@@ -127,6 +130,13 @@ export function AuthVisualCard({
     <div className="flex min-h-screen w-full items-center justify-center bg-background p-4 sm:p-6 transition-colors duration-500">
       {/* 现代双栏一体化大卡片 */}
       <div className="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border/80 shadow-xl md:grid md:min-h-130 md:grid-cols-12 transition-colors duration-500 bg-card">
+        {/* 桌面紧凑窗口拖动区：盖住卡片顶部品牌行（右上控制按钮组 z-30 在其上可点；
+            -webkit-app-region 在浏览器端无效，不影响 web） */}
+        <div
+          className="absolute inset-x-0 top-0 z-20 h-10"
+          style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+        />
+
         {/* 右上角圆形悬浮控制按钮组 (反转卡片 + 日夜间切换) */}
         <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
           {/* 1. 双表面反转圆形按钮 (role="switch") */}

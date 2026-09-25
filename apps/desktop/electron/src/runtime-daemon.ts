@@ -202,7 +202,10 @@ export async function startRuntimeDaemon(backendPort: number): Promise<{ pid: nu
 
   const startedAt = new Date().toISOString();
   const handle: RuntimeDaemonHandle = {
-    pid: proc.pid ?? 0,
+    // fork 返回瞬间 proc.pid 可能尚未就绪（快照恒为 0），用 getter 实时取真实 pid
+    get pid() {
+      return proc.pid ?? 0;
+    },
     startedAt,
     sawOutput: () => sawOutput,
     stop: () =>
