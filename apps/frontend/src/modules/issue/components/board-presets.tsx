@@ -231,6 +231,9 @@ export const taskCardModel: BoardCardModel<Task> = {
   title: (task) => task.title,
   row1: (task) => taskCardRow1(task),
   row3: (task) => taskCardRow3(task),
+  // CAP-C-07 就地解释：声明后任务/BUG 卡在全部 BoardView 消费方（tasks/bugs/
+  // project-tasks/task-board）获得 AISlot 能力，页面展开继承无需重复声明
+  dataEntity: (task) => `task:${task.id}`,
 };
 
 const SEVERITY_BADGE_CLASS: Record<string, string> = {

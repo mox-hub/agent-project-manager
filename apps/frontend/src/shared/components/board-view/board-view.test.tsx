@@ -88,6 +88,20 @@ describe('BoardView', () => {
     );
   });
 
+  it('透传 card.dataEntity 到卡根 data-ai-entity，未声明时不渲染属性', () => {
+    // CAP-C-07 就地解释：AISlot 长按 Ctrl 高亮依赖该属性，看板卡模型漏声明
+    // 即整页无卡可解释（/app/issues 曾因 taskCardModel 漏接全页失效）
+    const { unmount } = renderBoard({
+      card: { ...card, dataEntity: (item) => `task:${item.id}` },
+    });
+    const cardRoot = screen.getByText('First task').closest('[data-ai-entity]');
+    expect(cardRoot?.getAttribute('data-ai-entity')).toBe('task:t1');
+    unmount();
+
+    renderBoard();
+    expect(screen.getByText('First task').closest('[data-ai-entity]')).toBeNull();
+  });
+
   it('renders fully custom cards via renderCard', () => {
     renderBoard({
       renderCard: (item) => <div data-testid={`custom-${item.id}`}>custom {item.title}</div>,

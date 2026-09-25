@@ -2,18 +2,24 @@
  * ProjectPropertyPanel - 项目属性面板（常用自定义组件）
  *
  * 与任务详情属性栏同款的 PropertyRow + CapsuleSelect 形态：
- * 类型 / 可见性 / 状态 / 优先级 四个枚举属性支持下拉直接选择并落库
- * （useUpdateProject），健康度 / 负责人 / 排期为只读展示。
+ * 类型 / 可见性 / 状态 / 优先级 枚举属性 + 负责人（成员下拉）+ 排期
+ * （日期胶囊）支持下拉直接选择并落库（useUpdateProject），健康度为只读展示。
+ * 负责人提交用 member.userId（Project.ownerId 是 User 外键，Member.id 会外键失败）。
  * Linear 锁定字段（fieldsLockedExternally）自动降级为只读，防止覆盖外部数据。
  */
 
 import { useTranslation } from 'react-i18next';
 import { Activity, Calendar, CircleDot, Flag, Folder, Lock, Tag, User as UserIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CapsuleSelect, PropertyRow } from '@/components/ui/property-panel';
+import {
+  CapsuleSelect,
+  DateCapsuleField,
+  PropertyRow,
+} from '@/components/ui/property-panel';
 import { SidebarPanel } from '@/components/ui/sidebar-panel';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { useUpdateProject } from '../hooks/use-project-mutations';
+import { useMembers } from '@/modules/team-member/hooks';
 import type {
   ProjectPriority,
   ProjectStatus,
@@ -57,6 +63,7 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
   const { t } = useTranslation();
   const { data: project } = useProjectDetail(projectId);
   const updateProject = useUpdateProject();
+  const { data: membersData } = useMembers({ limit: 200 });
 
   if (!project) {
     return (
@@ -94,6 +101,31 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
     label: t(`project.sidebar.priorityLabel.${v}`, v),
     icon: <StatusDot color={PRIORITY_COLOR[v]} />,
   }));
+
+  // 负责人候选：人工成员（userId 非空）——Project.ownerId 是 User 外键，
+  // option.value 必须用 member.userId（Member.id 会外键失败），与 project.ownerId 同口径打勾
+  const ownerOptions = (membersData?.items ?? [])
+    .filter((m) => m.userId)
+    .map((m) => ({
+      value: m.userId as string,
+      label: m.displayName,
+      icon: (
+        <Avatar className="h-4 w-4">
+          {m.avatarUrl ? <AvatarImage src={m.avatarUrl} alt="" /> : null}
+          <AvatarFallback className="text-10">
+            {(m.displayName || '?').slice(0, 1).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      ),
+    }));
+
+  /** 排期更新：清空传 null（@IsOptional 跳过校验后置空），空串会被 @IsDateString 拒绝 */
+  const updateDate = (field: 'startDate' | 'targetDate', value: string) => {
+    updateProject.mutate({
+      projectId,
+      data: { [field]: value || null } as never,
+    });
+  };
 
   return (
     <SidebarPanel
@@ -153,27 +185,32 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
       </PropertyRow>
 
       <PropertyRow icon={<UserIcon className="size-3.5" />} label={t('project.sidebar.owner')}>
-        {project.owner ? (
-          <span className="inline-flex items-center gap-1.5 max-w-40 h-6 px-1 rounded-full text-xs text-muted-foreground whitespace-nowrap">
-            <Avatar className="h-4 w-4">
-              {project.owner.avatarUrl ? <AvatarImage src={project.owner.avatarUrl} alt="" /> : null}
-              <AvatarFallback className="text-10">
-                {(project.owner.displayName || '?').slice(0, 1).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="truncate">{project.owner.displayName}</span>
-          </span>
-        ) : (
-          <span className="text-xs text-muted-foreground/60">{t('project.sidebar.unassigned')}</span>
-        )}
+        <CapsuleSelect
+          value={project.ownerId ?? ''}
+          options={ownerOptions}
+          onChange={(v) =>
+            updateProject.mutate({ projectId, data: { ownerId: v || null } as never })
+          }
+          placeholder={t('project.sidebar.unassigned')}
+        />
       </PropertyRow>
 
       <PropertyRow icon={<Calendar className="size-3.5" />} label={t('project.sidebar.schedule')}>
-        <span className="text-11 text-muted-foreground whitespace-nowrap">
-          {project.startDate ? new Date(project.startDate).toLocaleDateString() : '—'}
-          {' → '}
-          {project.targetDate ? new Date(project.targetDate).toLocaleDateString() : '—'}
-        </span>
+        <div className="flex items-center gap-1">
+          <DateCapsuleField
+            value={project.startDate ? project.startDate.split('T')[0] : ''}
+            onChange={(v) => updateDate('startDate', v)}
+            placeholder="—"
+            clearLabel={t('common.clear')}
+          />
+          <span className="text-11 text-muted-foreground">→</span>
+          <DateCapsuleField
+            value={project.targetDate ? project.targetDate.split('T')[0] : ''}
+            onChange={(v) => updateDate('targetDate', v)}
+            placeholder="—"
+            clearLabel={t('common.clear')}
+          />
+        </div>
       </PropertyRow>
     </SidebarPanel>
   );
