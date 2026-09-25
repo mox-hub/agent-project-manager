@@ -1375,7 +1375,17 @@
   "contextMenu": {
     "createSubtask": "Create Subtask",
     "createParentTask": "Create Parent Task",
-    "parentTaskTitle": "Parent Task Title"
+    "parentTaskTitle": "Parent Task Title",
+    "status": "Status",
+    "priority": "Priority",
+    "severity": "Severity",
+    "assignee": "Assignee",
+    "unassigned": "Unassigned"
+  },
+  "issueCell": {
+    "milestone": "Milestone",
+    "noMilestone": "No milestone",
+    "type": "Issue type"
   },
   "task": {
     "title": "Tasks",

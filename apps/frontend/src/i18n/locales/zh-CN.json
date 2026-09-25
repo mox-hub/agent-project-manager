@@ -1375,7 +1375,17 @@
   "contextMenu": {
     "createSubtask": "创建子任务",
     "createParentTask": "创建父任务",
-    "parentTaskTitle": "父任务标题"
+    "parentTaskTitle": "父任务标题",
+    "status": "状态",
+    "priority": "优先级",
+    "severity": "严重度",
+    "assignee": "负责人",
+    "unassigned": "未分配"
+  },
+  "issueCell": {
+    "milestone": "里程碑",
+    "noMilestone": "无里程碑",
+    "type": "工单类型"
   },
   "task": {
     "title": "任务",

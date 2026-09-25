@@ -19,6 +19,18 @@ vi.mock('@/shared/context-menu/use-issue-row-menu', () => ({
   useIssueRowMenu: () => () => undefined,
 }));
 
+// 行内属性下拉（cell-editors）的 mutation 链整桩：测试只关注排序/列显隐
+vi.mock('../hooks/use-project-tasks', () => ({
+  useUpdateTask: () => ({ mutate: vi.fn() }),
+  useProjectMilestones: () => ({ data: [] }),
+}));
+vi.mock('../hooks/use-assignee-sync', () => ({
+  useAssignPrimaryMember: () => ({ mutate: vi.fn() }),
+}));
+vi.mock('@/modules/team-member/hooks', () => ({
+  useMembers: () => ({ data: { items: [] } }),
+}));
+
 vi.mock('../hooks/use-issue-types', () => ({
   useIssueTypes: () => ({ types: [], byId: new Map(), byKey: new Map() }),
   useIssueTypeOf: () => () => undefined,

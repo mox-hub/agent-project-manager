@@ -8,6 +8,7 @@ import { ListAvatar, ListDate } from '@/components/ui/data-list';
 import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
 import { IssueTypePill } from '@/shared/components/issue-type-pill';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
+import { StatusCell, PriorityCell, AssigneeCell } from './cell-editors';
 import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
@@ -243,19 +244,22 @@ export function TaskTableView({
         header: 'Status',
         size: 110,
         cell: ({ row }) => {
-          const status = row.original.status || 'todo';
+          const task = row.original;
+          const status = task.status || 'todo';
           const visual = TASK_STATUS_VISUALS[status] ?? TASK_STATUS_VISUALS.todo;
           return (
-            <div className="flex items-center gap-1.5">
-              <StatusIconFrame
-                icon={visual.icon}
-                tone={visual.tone}
-                size="xs"
-              />
-              <span className={cn('text-xs capitalize', TONE_TEXT_CLASS[visual.tone])}>
-                {status.replace('_', ' ')}
-              </span>
-            </div>
+            <StatusCell task={task}>
+              <div className="flex items-center gap-1.5">
+                <StatusIconFrame
+                  icon={visual.icon}
+                  tone={visual.tone}
+                  size="xs"
+                />
+                <span className={cn('text-xs capitalize', TONE_TEXT_CLASS[visual.tone])}>
+                  {status.replace('_', ' ')}
+                </span>
+              </div>
+            </StatusCell>
           );
         },
       },
@@ -265,14 +269,17 @@ export function TaskTableView({
         header: 'Priority',
         size: 90,
         cell: ({ row }) => {
-          const priority = row.original.priority || 'medium';
+          const task = row.original;
+          const priority = task.priority || 'medium';
           const cfg = PRIORITY_CONFIG[priority] ?? PRIORITY_CONFIG.medium;
           const Icon = cfg.icon;
           return (
-            <div className="flex items-center gap-1 text-xs">
-              <Icon className={cn('size-3.5', cfg.color)} />
-              <span className="text-muted-foreground">{cfg.label}</span>
-            </div>
+            <PriorityCell task={task}>
+              <div className="flex items-center gap-1 text-xs">
+                <Icon className={cn('size-3.5', cfg.color)} />
+                <span className="text-muted-foreground">{cfg.label}</span>
+              </div>
+            </PriorityCell>
           );
         },
       },
@@ -284,12 +291,20 @@ export function TaskTableView({
         cell: ({ row }) => {
           const task = row.original;
           const name = task.assignee?.displayName || task.assignee?.username || task.aiAgent?.name;
-          if (!name) return <span className="text-xs text-muted-foreground/50">Unassigned</span>;
+          if (!name) {
+            return (
+              <AssigneeCell task={task}>
+                <span className="text-xs text-muted-foreground/50">Unassigned</span>
+              </AssigneeCell>
+            );
+          }
           return (
-            <div className="flex items-center gap-1.5">
-              <ListAvatar name={name} url={task.assignee?.avatarUrl} />
-              <span className="truncate text-xs text-foreground">{name}</span>
-            </div>
+            <AssigneeCell task={task}>
+              <div className="flex items-center gap-1.5">
+                <ListAvatar name={name} url={task.assignee?.avatarUrl} />
+                <span className="truncate text-xs text-foreground">{name}</span>
+              </div>
+            </AssigneeCell>
           );
         },
       },
