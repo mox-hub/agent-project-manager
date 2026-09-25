@@ -249,7 +249,7 @@ function TraceIssueRow({
         )}
         <Icon className={cn('size-4 shrink-0', TONE_TEXT_CLASS[entity.tone])} />
         <span className="min-w-0 flex-1 truncate text-sm font-medium">
-          {issue?.title ?? row.issueId}
+          {issue?.title ?? (row.loading ? '…' : '—')}
         </span>
         <StatusPill tone={acceptanceTone} className="shrink-0">
           <ShieldCheck className="size-3" />

@@ -13,6 +13,7 @@ import {
   CircleDashed,
   Clock,
   Flag,
+  FolderKanban,
   Rocket,
   Sparkles,
   XCircle,
@@ -96,7 +97,7 @@ export function ReleaseDetailPage() {
     <PageShell className="overflow-hidden" aiPage="releases.detail">
       <SubPageToolbar
         aiId="releases.detail"
-        onBack={() => navigate(release ? `/app/releases?projectId=${release.projectId}` : '/app/releases')}
+        onBack={() => navigate(release ? `/app/releases?project=${release.projectId}` : '/app/releases')}
         breadcrumbs={[
           { label: t('nav.releases', '发版交付'), to: '/app/releases' },
           { label: release ? `v${release.version}` : t('release.detail.loading') },
@@ -239,6 +240,12 @@ export function ReleaseDetailPage() {
                     </p>
                   )}
                   <div className="flex flex-wrap gap-4 border-t border-border pt-3 text-11 text-content-text-muted">
+                    {release.project ? (
+                      <span className="flex items-center gap-1">
+                        <FolderKanban className="size-3" />
+                        {t('release.detail.project')}: {release.project.name}
+                      </span>
+                    ) : null}
                     <span>{t('release.detail.tag')}: <span className="font-mono">{release.gitTag || `v${release.version}（${t('release.detail.tagPending')}）`}</span></span>
                     <span>
                       {t('release.detail.github')}:{' '}

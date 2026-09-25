@@ -150,7 +150,8 @@ export interface Acceptance {
   updatedAt?: string;
   criteria?: AcceptanceCriterion[];
   auditReport?: AuditReport | null;
-  task?: {
+  /** 关联任务摘要（服务端关系键为 issue，随 Issue 术语基线） */
+  issue?: {
     id: string;
     title: string;
     status: string;

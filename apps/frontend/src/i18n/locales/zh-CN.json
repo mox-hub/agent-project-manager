@@ -372,6 +372,7 @@
     "table": {
       "version": "版本",
       "name": "名称",
+      "project": "项目",
       "status": "状态",
       "milestone": "里程碑",
       "tag": "Git Tag",
@@ -463,6 +464,7 @@
       "noNotes": "暂无发版说明——可用 AI 起草后人工修订",
       "tag": "Git Tag",
       "tagPending": "发布时创建",
+      "project": "所属项目",
       "milestone": "所属里程碑",
       "github": "GitHub Release",
       "yes": "已创建",
@@ -3297,7 +3299,9 @@
       "functional": "功能",
       "technical": "技术",
       "applied": "已落库 {{added}} 条验收标准{{skipped}}"
-    },      "task": "关联任务"
+    },
+      "task": "关联任务",
+      "project": "所属项目"
     },
     "generic": {
       "hint": "悬停预览页面信息；项目、任务、Bug、文档等详情页会展示实体数据。"
@@ -4740,6 +4744,7 @@
       "status": "状态",
       "completionType": "完成契约",
       "priority": "优先级",
+      "project": "所属项目",
       "task": "关联任务",
       "criteriaCount": "标准数",
       "cost": "累计成本",

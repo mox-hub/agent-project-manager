@@ -374,7 +374,7 @@ export function AcceptanceListPage() {
       const q = search.toLowerCase();
       if (
         !(a.title?.toLowerCase().includes(q) ?? false) &&
-        !(a.task?.title?.toLowerCase().includes(q) ?? false)
+        !(a.issue?.title?.toLowerCase().includes(q) ?? false)
       )
         return false;
     }
@@ -444,15 +444,15 @@ export function AcceptanceListPage() {
         ),
       },
       {
-        accessorFn: (a) => a.task?.title ?? '',
-        id: 'task',
+        accessorFn: (a) => a.issue?.title ?? '',
+        id: 'issue',
         header: t('acceptanceDetail.props.task'),
         cell: ({ row }) => (
           <span className="flex max-w-44 flex-col truncate">
-            <span className="truncate">{row.original.task?.title ?? '—'}</span>
-            {row.original.task?.project?.name && (
-              <span className="truncate text-10 text-muted-foreground">
-                {row.original.task.project.name}
+            <span className="truncate">{row.original.issue?.title ?? '—'}</span>
+            {row.original.issue?.project?.name && (
+              <span className="truncate text-xs text-muted-foreground">
+                {row.original.issue.project.name}
               </span>
             )}
           </span>
@@ -801,16 +801,16 @@ export function AcceptanceListPage() {
                       {t('acceptance.activeBadge')}
                     </Badge>
                   )}
-                  {acceptance.task?.project?.name && (
+                  {acceptance.issue?.project?.name && (
                     <span className="hidden items-center gap-1 text-xs text-muted-foreground md:inline-flex">
                       <FolderKanban className="size-3 shrink-0" />
-                      <span className="max-w-32 truncate">{acceptance.task.project.name}</span>
+                      <span className="max-w-32 truncate">{acceptance.issue.project.name}</span>
                     </span>
                   )}
-                  {acceptance.task?.title && (
+                  {acceptance.issue?.title && (
                     <span className="hidden items-center gap-1 text-xs text-muted-foreground sm:inline-flex">
                       <Target className="size-3 shrink-0" />
-                      <span className="max-w-40 truncate">{acceptance.task.title}</span>
+                      <span className="max-w-40 truncate">{acceptance.issue.title}</span>
                     </span>
                   )}
                   {(acceptance.executions?.length ?? 0) > 0 && (

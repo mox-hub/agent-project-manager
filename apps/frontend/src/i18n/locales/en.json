@@ -372,6 +372,7 @@
     "table": {
       "version": "Version",
       "name": "Name",
+      "project": "Project",
       "status": "Status",
       "milestone": "Milestone",
       "tag": "Git Tag",
@@ -463,6 +464,7 @@
       "noNotes": "No notes yet — try AI draft and refine manually",
       "tag": "Git Tag",
       "tagPending": "created on publish",
+      "project": "Project",
       "milestone": "Milestone",
       "github": "GitHub Release",
       "yes": "Created",
@@ -3297,7 +3299,9 @@
       "functional": "Functional",
       "technical": "Technical",
       "applied": "Applied {{added}} criteria{{skipped}}"
-    },      "task": "Task"
+    },
+      "task": "Task",
+      "project": "Project"
     },
     "generic": {
       "hint": "Hover to preview pages; entity details show for projects, tasks, bugs, documents and more."
@@ -4740,6 +4744,7 @@
       "status": "Status",
       "completionType": "Completion Type",
       "priority": "Priority",
+      "project": "Project",
       "task": "Task",
       "criteriaCount": "Criteria",
       "cost": "Total Cost",

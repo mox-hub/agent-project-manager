@@ -68217,6 +68217,22 @@
           "completedAt"
         ]
       },
+      "AcceptanceProjectBriefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "项目名称"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
       "AcceptanceIssueBriefDto": {
         "type": "object",
         "properties": {
@@ -68236,9 +68252,14 @@
             "description": "归属项目 ID"
           },
           "project": {
+            "description": "归属项目（任务未关联项目时为 null）",
+            "nullable": true,
             "type": "object",
-            "description": "归属项目",
-            "additionalProperties": true
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AcceptanceProjectBriefDto"
+              }
+            ]
           }
         },
         "required": [

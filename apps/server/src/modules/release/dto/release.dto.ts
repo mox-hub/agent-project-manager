@@ -178,6 +178,12 @@ export class ReleaseDto {
   @ApiProperty({ description: '项目 ID' })
   projectId!: string;
 
+  @ApiPropertyOptional({
+    description: '所属项目摘要（id + 名称；前端绑定关系可读名展示用）',
+    nullable: true,
+  })
+  project?: { id: string; name: string } | null;
+
   @ApiProperty({ description: '版本号' })
   version!: string;
 

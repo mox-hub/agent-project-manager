@@ -2,6 +2,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 // ============ 验收契约（Acceptance）============
 
+/** 契约归属项目摘要（issue.project include） */
+export class AcceptanceProjectBriefDto {
+  @ApiProperty({ type: String }) id: string;
+  @ApiProperty({ type: String, description: '项目名称' })
+  name: string;
+}
+
 /** 契约关联任务摘要（findOne/create include） */
 export class AcceptanceIssueBriefDto {
   @ApiProperty({ type: String }) id: string;
@@ -12,11 +19,11 @@ export class AcceptanceIssueBriefDto {
   @ApiPropertyOptional({ type: String, description: '归属项目 ID' })
   projectId?: string;
   @ApiPropertyOptional({
-    description: '归属项目',
-    type: Object,
-    additionalProperties: true,
+    description: '归属项目（任务未关联项目时为 null）',
+    type: AcceptanceProjectBriefDto,
+    nullable: true,
   })
-  project?: { id: string; name: string };
+  project?: { id: string; name: string } | null;
 }
 
 /** 验收标准（AcceptanceCriteria） */
