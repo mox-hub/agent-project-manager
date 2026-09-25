@@ -107,8 +107,8 @@ describe('NotificationCenterPage', () => {
     expect(screen.getByText('稍后')).toBeTruthy();
     expect(screen.getByText('已清理')).toBeTruthy();
 
-    // 渲染了待办决策和通知项
-    expect(screen.getByText('等待批准敏感指令执行')).toBeTruthy();
+    // 渲染了待办决策和通知项（决策首项自动选中，列表行+详情面板双渲染，用 getAllByText 断言存在）
+    expect(screen.getAllByText('等待批准敏感指令执行').length).toBeGreaterThan(0);
     expect(screen.getByText('Task assigned to you')).toBeTruthy();
 
     // 渲染了关键行动标签
