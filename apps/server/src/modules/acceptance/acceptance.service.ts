@@ -128,7 +128,13 @@ export class AcceptanceService {
       where: { id },
       include: {
         issue: {
-          select: { id: true, title: true, status: true },
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            projectId: true,
+            project: { select: { id: true, name: true } },
+          },
         },
         criteria: {
           orderBy: { order: 'asc' },

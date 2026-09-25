@@ -54,8 +54,9 @@ export function assertDeliverableItems(items: unknown): void {
   });
 }
 
-/** Release 关联轻量投影（CAP-A-16）：列表/详情带所属里程碑摘要 */
-const RELEASE_MILESTONE_INCLUDE = {
+/** Release 关联轻量投影（CAP-A-16 计划-交付轴 + 绑定关系可读名）：所属项目与里程碑摘要 */
+const RELEASE_INCLUDE = {
+  project: { select: { id: true, name: true } },
   milestone: { select: { id: true, name: true, status: true } },
 } satisfies Prisma.ReleaseInclude;
 
@@ -112,7 +113,7 @@ export class ReleaseService {
           : undefined,
         milestoneId: input.milestoneId ?? undefined,
       },
-      include: RELEASE_MILESTONE_INCLUDE,
+      include: RELEASE_INCLUDE,
     });
   }
 
@@ -121,14 +122,14 @@ export class ReleaseService {
     return this.prisma.release.findMany({
       where: projectId ? { projectId } : undefined,
       orderBy: [{ releasedAt: 'desc' }, { createdAt: 'desc' }],
-      include: RELEASE_MILESTONE_INCLUDE,
+      include: RELEASE_INCLUDE,
     });
   }
 
   async getRelease(releaseId: string) {
     const release = await this.prisma.release.findUnique({
       where: { id: releaseId },
-      include: RELEASE_MILESTONE_INCLUDE,
+      include: RELEASE_INCLUDE,
     });
     if (!release) throw new NotFoundException(`发版不存在: ${releaseId}`);
     return release;
@@ -154,7 +155,7 @@ export class ReleaseService {
     return this.prisma.release.update({
       where: { id: releaseId },
       data: { deliverables: deliverables as unknown as Prisma.InputJsonValue },
-      include: RELEASE_MILESTONE_INCLUDE,
+      include: RELEASE_INCLUDE,
     });
   }
 
@@ -218,7 +219,7 @@ export class ReleaseService {
             : undefined,
         milestoneId: dto.milestoneId,
       },
-      include: RELEASE_MILESTONE_INCLUDE,
+      include: RELEASE_INCLUDE,
     });
   }
 

@@ -33,6 +33,8 @@ vi.mock('react-i18next', () => ({
         'release.create.milestoneLabel': '所属里程碑（可选）',
         'release.create.milestoneNone': '不关联里程碑',
         'release.table.milestone': '里程碑',
+        'release.table.project': '项目',
+        'release.detail.project': '所属项目',
       };
       const base = translations[key] ?? key;
       return base.replace('{{base}}', opts?.base ?? '');
@@ -76,6 +78,7 @@ vi.mock('../hooks/use-releases', () => ({
       {
         id: 'r-1',
         projectId: 'p-1',
+        project: { id: 'p-1', name: '示例项目' },
         version: '1.0.0',
         name: '首个发版',
         status: 'released',
@@ -129,6 +132,12 @@ describe('ReleaseListPage', () => {
     expect(screen.getByText('里程碑')).toBeTruthy();
   });
 
+  it('列表行渲染项目列实际名称而非关联 ID（绑定关系可读名）', () => {
+    renderWithRouter(<ReleaseListPage />, '/');
+    expect(screen.getByText('项目')).toBeTruthy();
+    expect(screen.getByText('示例项目')).toBeTruthy();
+  });
+
   it('创建对话框可选所属里程碑（CAP-A-16 计划-交付轴）', async () => {
     const user = userEvent.setup();
     renderWithRouter(<ReleaseListPage />, '/?project=p-1');
@@ -157,6 +166,7 @@ describe('ReleaseDetailPage', () => {
     detailState.release = {
       id: 'r-1',
       projectId: 'p-1',
+      project: { id: 'p-1', name: '示例项目' },
       version: '1.2.0',
       status: 'released',
       notes: '说明文本',
@@ -181,6 +191,9 @@ describe('ReleaseDetailPage', () => {
     };
     renderWithRouter(<ReleaseDetailPage />, '/r-1');
     expect(screen.getByText('发布门禁')).toBeTruthy();
+    // 项目名行：{label}: {name} 插值拆成多段 text node，用正则匹配整行文本
+    expect(screen.getByText(/所属项目/)).toBeTruthy();
+    expect(screen.getByText(/示例项目/)).toBeTruthy();
     expect(screen.getByText('存在失败结论')).toBeTruthy();
     expect(screen.getByText('发布执行日志')).toBeTruthy();
     expect(screen.getByText('github-release')).toBeTruthy();

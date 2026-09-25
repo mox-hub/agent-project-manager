@@ -10631,6 +10631,11 @@ export interface components {
             /** Format: date-time */
             completedAt: string | null;
         };
+        AcceptanceProjectBriefDto: {
+            id: string;
+            /** @description 项目名称 */
+            name: string;
+        };
         AcceptanceIssueBriefDto: {
             id: string;
             /** @description 任务标题 */
@@ -10639,10 +10644,8 @@ export interface components {
             status?: string;
             /** @description 归属项目 ID */
             projectId?: string;
-            /** @description 归属项目 */
-            project?: {
-                [key: string]: unknown;
-            };
+            /** @description 归属项目（任务未关联项目时为 null） */
+            project?: components["schemas"]["AcceptanceProjectBriefDto"] | null;
         };
         AcceptanceCriteriaDto: {
             id: string;

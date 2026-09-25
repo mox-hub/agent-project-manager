@@ -63,6 +63,8 @@ export interface ReleaseMilestoneSummary {
 export interface ReleaseRecord {
   id: string;
   projectId: string;
+  /** 所属项目摘要（后端 include 投影，绑定关系可读名展示用） */
+  project?: { id: string; name: string } | null;
   version: string;
   name?: string | null;
   notes?: string | null;

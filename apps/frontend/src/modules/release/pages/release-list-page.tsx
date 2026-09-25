@@ -81,7 +81,7 @@ export function ReleaseListPage() {
         if (statusFilter !== 'all' && r.status !== statusFilter) return false;
         if (search) {
           const kw = search.toLowerCase();
-          const haystack = [`v${r.version}`, r.name ?? '', r.gitTag ?? '']
+          const haystack = [`v${r.version}`, r.name ?? '', r.gitTag ?? '', r.project?.name ?? '']
             .join(' ')
             .toLowerCase();
           if (!haystack.includes(kw)) return false;
@@ -216,7 +216,7 @@ export function ReleaseListPage() {
           CAP-A-15：无 ?project 时仍发起请求（后端返回全部项目），不再渲染“先选项目”引导 */}
       <div className="flex-1 overflow-auto p-6">
         {releasesQuery.isLoading ? (
-          <SkeletonTable rows={4} columns={5} />
+          <SkeletonTable rows={4} columns={6} />
         ) : filtered.length === 0 ? (
           releases.length === 0 ? (
             <EmptyState
@@ -261,6 +261,7 @@ export function ReleaseListPage() {
                   <TableRow>
                     <TableHead className="w-32">{t('release.table.version')}</TableHead>
                     <TableHead>{t('release.table.name')}</TableHead>
+                    <TableHead className="w-36">{t('release.table.project')}</TableHead>
                     <TableHead className="w-28">{t('release.table.status')}</TableHead>
                     <TableHead className="w-36">{t('release.table.milestone')}</TableHead>
                     <TableHead className="w-32">{t('release.table.tag')}</TableHead>
@@ -278,6 +279,9 @@ export function ReleaseListPage() {
                         v{r.version}
                       </TableCell>
                       <TableCell className="text-xs">{r.name || '—'}</TableCell>
+                      <TableCell className="text-xs text-content-text-secondary">
+                        {r.project?.name || '—'}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant="secondary"
