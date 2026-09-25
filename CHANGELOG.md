@@ -21,6 +21,18 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-09-25
+
+### v0.7.3 发版总览——体验 P2 修复批 + 全仓剪枝专项 + 桌面紧凑窗口 + 认证面定版 + 全分支合流
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server · frontend · cli · shared · contract | **体验测试 P2 修复批（28 项）**：后端安全与管道（acceptance 冒名/未知路由信封/@IsIn/legacy publish 删除）+ 契约链路（分页对账 34 端点/payload 校验/usage 落账）+ 性能（任务页真分页/派发索引）+ 数据卫生 + 信任三级派发门禁 + 同类型多供应商槽位 + i18n 清账约 224 条 + 帮助中心重写 + Web onboarding | 体验报告 §五 | 全仓 test 5 包全绿；contract:check 零漂移；i18n 双语同步 | CHANGELOG Unreleased 明细（三行） |
+| 工具链 | **全仓死码剪枝专项**：前端死码 75 文件 + ui 组件/死依赖 + 服务端含 context 整模块 + shared/desktop 死导出 + 一次性脚本（P0 全删）；cli 404 修复、fs-extra 退场、页签单一数据源 + jsdiff、knip 补盲区（P1 快改） | — | 编译门禁逐批验证（tsc/测试拦截三类清查代理误报） | — |
+| desktop · frontend | **登录态紧凑窗口（CAP-A-14 切片）+ boot 失败双根因修复 + 实机三轮修复**：认证面小窗双窗编排（944×620、WCO、切窗 IPC）+ 健康检查 60s + dev schema db push 对齐 + 切窗闪退主窗工厂注入 + 认证面隐藏主窗 + boot 页纳入紧凑面 + 切窗防抖 250ms | CAP-A-14 | desktop tsc/eslint/tsup + frontend tsc + 新 spec 3 用例 + Playwright _electron 临时 e2e 六场景 PASS | CHANGELOG Unreleased 明细（两行） |
+| frontend | **认证面定版**：登录页 WIP 双表面翻转卡为最终形态 + AuthShell 左文右图分栏壳 + 注册欢迎身份工牌（D1~D6 裁决落地） | CAP-A-22 | 新 spec 三件 10 用例 + design-system smoke 回归绿 | CHANGELOG Unreleased 明细（三行） |
+| server · frontend · contract | **验收与发版补「所属项目」可读名 + 通知中心可操作收件箱 + CAP-C-07 看板卡接线与项目属性面板/行右键菜单修复（stash 抢救）** | CAP-A-16 | 定向 vitest 全绿；契约三线零漂移 | CHANGELOG Unreleased 明细（两行+修复一笔） |
+
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
 | --- | --- | --- | --- | --- |
 | desktop | **boot 失败双根因修复（健康检查窗口 + dev schema 对齐）**：①健康检查超时 30s→60s——server 冷启动耗时抖动大（杀毒扫描/负载，同机实测 7.9s↔30.8s），30s 窗口曾把刚就绪（30.8s）的 server 判死强杀报「健康检查超时」boot 错误屏；超时错误信息补已等待时长。②dev 模式已有库 schema 对齐——`restoreDefaultDbIfNeeded` 原只建库不迁移，代码新增列（approvedFingerprint/retryOfId）后用户旧库缺列导致运行期接口 500（CAP-A-14 重审注记「升级迁移路径」缺口实锤）；现 dev 启动（无 nodeExe）跑 `prisma db push`（无 --accept-data-loss）对齐，破坏性变更被 Prisma 拒绝显式抛错人工裁决；打包模式绝不触碰用户库 | CAP-A-14（重审注记升级迁移路径 dev 半边收口） | 用户库 `db push` 实测 928ms 对齐成功；desktop tsc 0 错 + eslint 0 + tsup 构建过 | 能力清单 §七变更记录 |
@@ -31,6 +43,8 @@ tags: "changelog,release"
 | server | **考古决策卡按项目成员过滤（R3 裁决落地）**：`/decisions/pending` 与 `/decisions/summary` 注入 CurrentUser——全局视图（无 projectId）收敛到请求者的成员项目集合（ProjectMember），显式 projectId 同样校验成员身份、非成员收敛为空集合（不可见而非 403）；projectId 为 null 的系统级卡（如发版审批）不挂项目、不参与成员过滤；userId 缺失（无 JWT 场景理论兜底）保持旧口径。同批执行 R1 自动清理：`cleanup-e2e-users.mjs --execute` 删除 21 个零引用 E2E/冒烟残留用户（备份+rollbackSql 落 scripts/backups/cleanup-e2e-users/） | 体验报告 §十五 R1/R3 / p2-fix-plan R1/R3 | decision.service.spec 9 用例全绿（新增 4：成员集合收敛/非成员显式 projectId 空集合/成员显式放行/summary 收敛）；server type-check（官方 tsconfig.build 口径）过；清理后 dry-run 复核 AUTO=0 | openapi 契约形状不变（query/响应结构未动，仅返回内容按调用者成员关系收敛）；CHANGELOG 本条；R1 人工候选 5 个留待用户逐个裁决 |
 | frontend | **全局顶部加载条在无 token 页面常挂修复**：`GlobalLoadingState` 旧实现按 `status === 'pending'` 逐事件计数——disabled 查询（如登录页 enabled 依赖 token 的 me 查询）status 恒为 pending 而 fetchStatus 为 idle，导致 /login 等无 token 页面顶部 2px 加载条永远挂着（CAP-A-22 认证面 1920×1080 截图实测显形，存量问题非本次引入）。修复为以 `fetchStatus === 'fetching'` 为唯一真相全量对账：每次 cache 事件重算「在途请求数 vs 已计数」差值增减，事件序漏计/多计天然免疫 | CAP-A-22（认证面改版随批修复） | frontend 新 spec `global-loading-state.test` 3 用例（disabled 不显示/启用后在途出现·完成消失/挂载即在途同断言）；auth + design-system + settings sections 定向回归绿；tsc -b 零错、定向 eslint 0/0 | — |
 | frontend | **认证面改版：左文右图分栏壳 + 注册欢迎身份工牌（CAP-A-22）**：参考 Qoder 双屏语法重做认证面（极简区，用户六点裁决 D1~D6：产品拼贴/工牌仅展示/web 先行/按钮主题色不改绿/语言切换上/不脱敏）——①新增 `AuthShell` 分栏壳（登录/注册/欢迎三页共用：桌面左文右图、左栏三段=品牌/主体居中/操作贴底、窄屏单栏居中；右栏满高圆角面板，缺省渲染 `AuthVisual` 产品卡拼贴——工单/决策/AI 同事迷你卡 + 点阵纹理 + logo 水印，装饰性 aria-hidden、语义色仅上分类 chip、插画资产留槽位可热替换）；②登录/注册页换壳重写（登录/注册逻辑与错误映射不动，硬编码中文全部收编 i18n `auth.*`，补 `auth.errors.emailAlreadyRegistered` 存量缺键，页脚挂 `LanguageSwitcher`——compact 形态修正为尊重 showFlag/showLabel 且 className 经 cn 合并可覆写宽度，`persistTokenToShell` 补桌面注册漏镜像）；③注册成功改进欢迎页 `/welcome`（AuthGuard 门控）：左侧祝贺文案 + 右侧 `MemberCard` 身份工牌（SVG 环形口号 PEOPLE + AI COLLEAGUES + 显示名/编号=id 尾 8 位大写/入职日期 YYYY/MM/DD/签名，纯展示仪式件），数据注册流 state 优先、/auth/me 兜底、均缺静默降级；语言文案 zh/en 双语 36 键对称 | CAP-A-22 | frontend 新 spec 三件 10 用例（登录错误映射 3 保留+凭据透传断言；注册校验两拦截/成功流存 token+桌面镜像+携 registeredAt 跳 /welcome/409 映射；工牌 me 兜底+state Time 行+占位名降级）；design-system 页 smoke 补 matchMedia 桩回归绿；宪法五 lint + lint:registry 103 组件对账过；tsc -b 零错、定向 eslint 0/0、settings sections 定向回归绿 | COMPONENTS.md（认证面三件登记 + design-system 页 Auth Surface 分区）；能力清单 CAP-A-22 新卡 + §七变更记录；测试映射矩阵 GAP-T-39 |
+| server · frontend · contract | **验收与发版补「所属项目」可读名**：AcceptanceResponse 经 issue 关联投影 `issue.project` 摘要（新增 AcceptanceProjectBriefDto，任务未关联项目时 nullable null）；ReleaseDto 补 `project` 摘要（include 投影并入 RELEASE_INCLUDE）；前端验收列表/详情/路由预览与发版列表/详情/溯源区补所属项目展示与列；openapi.json + 双端 api-types.gen.ts 三线同步；zh-CN 路由预览区错位嵌套的 task 键顺手归位 | CAP-A-16（发版投影延伸）· 验收详情可读性 | acceptance-list/acceptance-detail 与 release-pages 定向 vitest 用例随批扩展 | openapi.json + api-types.gen.ts ×2；CHANGELOG 本条 |
+| frontend | **通知中心可操作收件箱（actionable inbox）**：通知中心页重构为可操作收件箱——新增 inbox-item-row 行组件 + use-actionable-inbox 数据 hook + types/inbox 类型，通知项内联决策提案快速复核入口，缩短「通知→决策收件箱」路径 | —（候补登记待走 requirement-intake） | notification-center-page 测试用例随批扩展（inbox 数据流+行渲染） | CHANGELOG 本条 |
 
 ## [0.7.2] - 2026-09-20
 
