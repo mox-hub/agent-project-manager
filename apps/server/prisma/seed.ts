@@ -637,7 +637,7 @@ async function main() {
   ];
 
   for (const p of aiProviders) {
-    const existing = await prisma.aIProviderConfig.findUnique({
+    const existing = await prisma.aIProviderConfig.findFirst({
       where: { provider: p.provider },
     });
 

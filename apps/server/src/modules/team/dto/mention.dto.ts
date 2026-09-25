@@ -1,9 +1,9 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateMentionDto {
   @ApiProperty({ enum: ['task', 'document', 'comment', 'activity'] })
-  @IsEnum(['task', 'document', 'comment', 'activity'])
+  @IsIn(['task', 'document', 'comment', 'activity'])
   sourceType: string;
 
   @ApiProperty()
@@ -26,7 +26,7 @@ export class ParseMentionsDto {
   text: string;
 
   @ApiProperty({ enum: ['task', 'document', 'comment', 'activity'] })
-  @IsEnum(['task', 'document', 'comment', 'activity'])
+  @IsIn(['task', 'document', 'comment', 'activity'])
   sourceType: string;
 
   @ApiProperty()

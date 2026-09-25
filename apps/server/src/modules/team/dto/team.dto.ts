@@ -2,9 +2,9 @@ import {
   IsString,
   IsOptional,
   IsArray,
-  IsEnum,
   IsDateString,
   IsEmail,
+  IsIn,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -83,7 +83,7 @@ export class UpdateTeamDto {
   tags?: string[];
 
   @ApiProperty({ required: false, enum: ['active', 'archived'] })
-  @IsEnum(['active', 'archived'])
+  @IsIn(['active', 'archived'])
   @IsOptional()
   status?: string;
 }
@@ -97,14 +97,14 @@ export class AddTeamMemberDto {
     enum: ['owner', 'maintainer', 'member', 'guest'],
     required: false,
   })
-  @IsEnum(['owner', 'maintainer', 'member', 'guest'])
+  @IsIn(['owner', 'maintainer', 'member', 'guest'])
   @IsOptional()
   role?: string;
 }
 
 export class UpdateTeamMemberDto {
   @ApiProperty({ enum: ['owner', 'maintainer', 'member', 'guest'] })
-  @IsEnum(['owner', 'maintainer', 'member', 'guest'])
+  @IsIn(['owner', 'maintainer', 'member', 'guest'])
   role: string;
 }
 
@@ -117,7 +117,7 @@ export class BindTeamProjectDto {
     enum: ['owner', 'maintainer', 'contributor', 'viewer'],
     required: false,
   })
-  @IsEnum(['owner', 'maintainer', 'contributor', 'viewer'])
+  @IsIn(['owner', 'maintainer', 'contributor', 'viewer'])
   @IsOptional()
   role?: string;
 }
@@ -137,7 +137,7 @@ export class CreateTeamInviteDto {
     enum: ['owner', 'maintainer', 'member', 'guest'],
     required: false,
   })
-  @IsEnum(['owner', 'maintainer', 'member', 'guest'])
+  @IsIn(['owner', 'maintainer', 'member', 'guest'])
   @IsOptional()
   role?: string;
 

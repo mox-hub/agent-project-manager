@@ -10,6 +10,79 @@ import {
   type GitHubPrState,
 } from '@/modules/integration/providers/github/github.constants';
 
+// ==================== CAP-B-07 三级授权口径（P2-21 门禁共用） ====================
+
+/** 三级等级名（与前端 shared/member MEMBER_TRUST_TIERS、i18n trust.tierN 对齐） */
+export const TRUST_TIER_NAMES: Record<number, string> = {
+  1: '观察者',
+  2: '协助者',
+  3: '受托者',
+};
+
+/**
+ * 自动派发门槛等级 = 协助者（2）。
+ * 口径出处：docs/roadmap/experience-report-2026-09-20.md §八第三批 9
+ * 「信任等级接门禁（协助者以上才可自动派发等），兑现三级授权」；
+ * docs/01-需求/能力清单-v1.md §4.2 CAP-B-07（2026-09-18 三级裁决）。
+ */
+export const TRUST_DISPATCH_MIN_LEVEL = 2;
+
+/**
+ * 旧五档（L0-L4）存量归一：与前端 shared/member normalizeTrustLevel 同口径——
+ * >=4 归受托者（3）；1-3 原样；0/负数/非有限数值视为未评估（null，fail-open）。
+ */
+export function normalizeTrustLevel(
+  level: number | null | undefined,
+): number | null {
+  if (level === null || level === undefined || !Number.isFinite(level)) {
+    return null;
+  }
+  if (level >= 4) return 3;
+  if (level >= 1) return level;
+  return null;
+}
+
+/** 自动派发门禁判定结果 */
+export interface AutoDispatchDecision {
+  allowed: boolean;
+  /** allowed=false 时的原因；目前唯一拦截分支 = 明确低于门槛（观察者） */
+  reason: 'below_threshold' | null;
+  /** 归一化后的等级；未评估为 null */
+  level: number | null;
+  levelName: string | null;
+}
+
+/**
+ * P2-21：自动派发门禁判定（纯函数，供派发链消费）。
+ * - 协助者（2）/ 受托者（3）：可自动派发（协助者产出须人验收、受托者可自行重试，
+ *   由验收/评估链承载，不在本门禁范围）；
+ * - 观察者（1）：不可自动派发（唯一拦截分支）；
+ * - 未评估（null：trustLevel 缺失 / 旧档越界）：放行——存量兼容铁律，
+ *   由调用方在工单时间线记提示，绝不因等级拿不到卡死存量自动派发。
+ */
+export function evaluateAutoDispatchPermission(
+  trustLevel: number | null | undefined,
+): AutoDispatchDecision {
+  const level = normalizeTrustLevel(trustLevel);
+  if (level === null) {
+    return { allowed: true, reason: null, level: null, levelName: null };
+  }
+  if (level >= TRUST_DISPATCH_MIN_LEVEL) {
+    return {
+      allowed: true,
+      reason: null,
+      level,
+      levelName: TRUST_TIER_NAMES[level] ?? null,
+    };
+  }
+  return {
+    allowed: false,
+    reason: 'below_threshold',
+    level,
+    levelName: TRUST_TIER_NAMES[level] ?? null,
+  };
+}
+
 @Injectable()
 export class TrustService {
   private readonly logger = new Logger(TrustService.name);

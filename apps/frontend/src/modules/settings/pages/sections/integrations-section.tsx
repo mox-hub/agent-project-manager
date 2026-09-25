@@ -51,41 +51,41 @@ type FilterTab = 'all' | IntegrationCategory;
 
 interface IntegrationFeature {
   icon: React.ElementType;
-  label: string;
-  description: string;
+  labelKey: string;
+  descKey: string;
   enabled: boolean;
 }
 
-const CATEGORY_LABELS: Record<IntegrationCategory, string> = {
-  task: 'Task Providers',
-  code: 'Code & PR Sync',
-  monitoring: 'Monitoring',
-  communication: 'Communication',
+const CATEGORY_LABEL_KEYS: Record<IntegrationCategory, string> = {
+  task: 'settings.integration.category.task',
+  code: 'settings.integration.category.code',
+  monitoring: 'settings.integration.category.monitoring',
+  communication: 'settings.integration.category.communication',
 };
 
 const CATEGORY_ORDER: IntegrationCategory[] = ['task', 'code', 'communication', 'monitoring'];
 
-const STATUS_CFG: Record<ConnectionStatus, { label: string; color: string; dot: string; bg: string }> = {
+const STATUS_CFG: Record<ConnectionStatus, { labelKey: string; color: string; dot: string; bg: string }> = {
   connected: {
-    label: 'Connected',
+    labelKey: 'settings.integration.status.connected',
     color: 'text-accent-green',
     dot: 'bg-accent-green',
     bg: 'bg-accent-green/10 border-accent-green/30',
   },
   disconnected: {
-    label: 'Not connected',
+    labelKey: 'settings.integration.status.disconnected',
     color: 'text-muted-foreground',
     dot: 'bg-muted-foreground/40',
     bg: 'bg-muted/40 border-border',
   },
   error: {
-    label: 'Error',
+    labelKey: 'settings.integration.status.error',
     color: 'text-destructive',
     dot: 'bg-destructive',
     bg: 'bg-destructive/10 border-destructive/30',
   },
   pending: {
-    label: 'Connecting…',
+    labelKey: 'settings.integration.status.pending',
     color: 'text-accent-yellow',
     dot: 'bg-accent-yellow',
     bg: 'bg-accent-yellow/10 border-accent-yellow/30',
@@ -95,13 +95,14 @@ const STATUS_CFG: Record<ConnectionStatus, { label: string; color: string; dot: 
 // ── Mock data for demo (matches Figma design) ─────────────────────────────────
 
 // 供应商目录（展示性元数据）；连接状态一律来自真实 /integrations 配置（宪法 §9）
+// 文案一律走 i18n 键（settings.integration.catalog.*），名称为品牌名保留原文
 const INTEGRATION_CATALOG: Array<{
   id: string;
   name: string;
   logo: string;
   logoColor: string;
-  description: string;
-  longDescription: string;
+  descKey: string;
+  longDescKey: string;
   category: IntegrationCategory;
   features: IntegrationFeature[];
   docsUrl: string;
@@ -111,17 +112,16 @@ const INTEGRATION_CATALOG: Array<{
     name: 'Linear',
     logo: 'L',
     logoColor: '#5E6AD2',
-    description: 'Sync issues, cycles, and projects from Linear into AgentPM tasks.',
-    longDescription:
-      'Connect your Linear workspace to import and two-way sync issues as tasks. AI agents can create Linear issues directly, and acceptance results are posted back as issue comments.',
+    descKey: 'settings.integration.catalog.linear.desc',
+    longDescKey: 'settings.integration.catalog.linear.longDesc',
     category: 'task',
     features: [
-      { icon: FolderKanban, label: 'Issue sync', description: 'Import and sync Linear issues as AgentPM tasks', enabled: true },
-      { icon: ArrowRight, label: 'Two-way sync', description: 'Changes in either system propagate automatically', enabled: true },
-      { icon: Zap, label: 'AI issue creation', description: 'Agents can create Linear issues directly', enabled: true },
-      { icon: FileText, label: 'Comment sync', description: 'Acceptance results posted as Linear comments', enabled: false },
-      { icon: Users, label: 'Member mapping', description: 'Map Linear members to AgentPM team members', enabled: true },
-      { icon: BarChart3, label: 'Cycle tracking', description: 'Import cycle progress into milestone view', enabled: false },
+      { icon: FolderKanban, labelKey: 'settings.integration.catalog.linear.f1.label', descKey: 'settings.integration.catalog.linear.f1.desc', enabled: true },
+      { icon: ArrowRight, labelKey: 'settings.integration.catalog.linear.f2.label', descKey: 'settings.integration.catalog.linear.f2.desc', enabled: true },
+      { icon: Zap, labelKey: 'settings.integration.catalog.linear.f3.label', descKey: 'settings.integration.catalog.linear.f3.desc', enabled: true },
+      { icon: FileText, labelKey: 'settings.integration.catalog.linear.f4.label', descKey: 'settings.integration.catalog.linear.f4.desc', enabled: false },
+      { icon: Users, labelKey: 'settings.integration.catalog.linear.f5.label', descKey: 'settings.integration.catalog.linear.f5.desc', enabled: true },
+      { icon: BarChart3, labelKey: 'settings.integration.catalog.linear.f6.label', descKey: 'settings.integration.catalog.linear.f6.desc', enabled: false },
     ],
     docsUrl: 'https://docs.agentpm.io/integrations/linear',
   },
@@ -130,17 +130,16 @@ const INTEGRATION_CATALOG: Array<{
     name: 'Jira',
     logo: 'J',
     logoColor: '#0052CC',
-    description: 'Import Jira tickets and epics; push AI-generated work back to your board.',
-    longDescription:
-      'Use your Jira Cloud or Data Center instance as a task source. Import epics, stories, and bugs. AI agents execute work tracked in Jira and post results as comments.',
+    descKey: 'settings.integration.catalog.jira.desc',
+    longDescKey: 'settings.integration.catalog.jira.longDesc',
     category: 'task',
     features: [
-      { icon: FolderKanban, label: 'Ticket import', description: 'Import Jira epics, stories, and bugs as tasks', enabled: true },
-      { icon: ArrowRight, label: 'Status sync', description: 'Sync Jira workflow statuses to AgentPM', enabled: true },
-      { icon: Zap, label: 'AI ticket creation', description: 'Agents can create and update Jira tickets', enabled: false },
-      { icon: FileText, label: 'Comment sync', description: 'Post acceptance results as Jira issue comments', enabled: false },
-      { icon: Users, label: 'Assignee mapping', description: 'Map Jira users to AgentPM team members', enabled: true },
-      { icon: Bug, label: 'Bug tracking', description: 'Import Jira bug reports into AgentPM bug list', enabled: true },
+      { icon: FolderKanban, labelKey: 'settings.integration.catalog.jira.f1.label', descKey: 'settings.integration.catalog.jira.f1.desc', enabled: true },
+      { icon: ArrowRight, labelKey: 'settings.integration.catalog.jira.f2.label', descKey: 'settings.integration.catalog.jira.f2.desc', enabled: true },
+      { icon: Zap, labelKey: 'settings.integration.catalog.jira.f3.label', descKey: 'settings.integration.catalog.jira.f3.desc', enabled: false },
+      { icon: FileText, labelKey: 'settings.integration.catalog.jira.f4.label', descKey: 'settings.integration.catalog.jira.f4.desc', enabled: false },
+      { icon: Users, labelKey: 'settings.integration.catalog.jira.f5.label', descKey: 'settings.integration.catalog.jira.f5.desc', enabled: true },
+      { icon: Bug, labelKey: 'settings.integration.catalog.jira.f6.label', descKey: 'settings.integration.catalog.jira.f6.desc', enabled: true },
     ],
     docsUrl: 'https://docs.agentpm.io/integrations/jira',
   },
@@ -149,17 +148,16 @@ const INTEGRATION_CATALOG: Array<{
     name: 'GitHub',
     logo: 'G',
     logoColor: '#24292E',
-    description: 'Sync repositories, pull requests, and CI status. Link PRs to tasks automatically.',
-    longDescription:
-      'Connect GitHub to track pull requests, code reviews, and CI/CD runs. AI agents can open PRs, request reviews, and monitor build status in real time.',
+    descKey: 'settings.integration.catalog.github.desc',
+    longDescKey: 'settings.integration.catalog.github.longDesc',
     category: 'code',
     features: [
-      { icon: GitPullRequest, label: 'PR sync', description: 'Link pull requests to tasks automatically', enabled: true },
-      { icon: Zap, label: 'AI PR creation', description: 'Agents can open and update pull requests', enabled: true },
-      { icon: Shield, label: 'Branch rules', description: 'Enforce branch protection via AgentPM policies', enabled: false },
-      { icon: Activity, label: 'CI status', description: 'Show CI/CD build status on task cards', enabled: true },
-      { icon: Webhook, label: 'Webhooks', description: 'Real-time push events via GitHub webhook', enabled: true },
-      { icon: FileText, label: 'Review comments', description: 'Post acceptance audit results as PR comments', enabled: false },
+      { icon: GitPullRequest, labelKey: 'settings.integration.catalog.github.f1.label', descKey: 'settings.integration.catalog.github.f1.desc', enabled: true },
+      { icon: Zap, labelKey: 'settings.integration.catalog.github.f2.label', descKey: 'settings.integration.catalog.github.f2.desc', enabled: true },
+      { icon: Shield, labelKey: 'settings.integration.catalog.github.f3.label', descKey: 'settings.integration.catalog.github.f3.desc', enabled: false },
+      { icon: Activity, labelKey: 'settings.integration.catalog.github.f4.label', descKey: 'settings.integration.catalog.github.f4.desc', enabled: true },
+      { icon: Webhook, labelKey: 'settings.integration.catalog.github.f5.label', descKey: 'settings.integration.catalog.github.f5.desc', enabled: true },
+      { icon: FileText, labelKey: 'settings.integration.catalog.github.f6.label', descKey: 'settings.integration.catalog.github.f6.desc', enabled: false },
     ],
     docsUrl: 'https://docs.agentpm.io/integrations/github',
   },
@@ -168,17 +166,16 @@ const INTEGRATION_CATALOG: Array<{
     name: 'GitLab',
     logo: 'GL',
     logoColor: '#FC6D26',
-    description: 'Sync GitLab MRs and pipelines. Works with self-hosted and GitLab.com.',
-    longDescription:
-      'Integrate GitLab to manage merge requests, monitor pipelines, and keep your code and tasks in sync. Supports GitLab.com and self-hosted instances.',
+    descKey: 'settings.integration.catalog.gitlab.desc',
+    longDescKey: 'settings.integration.catalog.gitlab.longDesc',
     category: 'code',
     features: [
-      { icon: GitPullRequest, label: 'MR sync', description: 'Sync merge requests to AgentPM task timeline', enabled: true },
-      { icon: Zap, label: 'AI MR creation', description: 'Agents can open and update merge requests', enabled: false },
-      { icon: Activity, label: 'Pipeline status', description: 'Track GitLab CI/CD pipeline status on tasks', enabled: true },
-      { icon: Webhook, label: 'Webhooks', description: 'Real-time push events via GitLab webhook', enabled: true },
-      { icon: Lock, label: 'Self-hosted', description: 'Connect your GitLab CE/EE instance via PAT', enabled: false },
-      { icon: FileText, label: 'MR discussions', description: 'Post acceptance results as MR discussion threads', enabled: false },
+      { icon: GitPullRequest, labelKey: 'settings.integration.catalog.gitlab.f1.label', descKey: 'settings.integration.catalog.gitlab.f1.desc', enabled: true },
+      { icon: Zap, labelKey: 'settings.integration.catalog.gitlab.f2.label', descKey: 'settings.integration.catalog.gitlab.f2.desc', enabled: false },
+      { icon: Activity, labelKey: 'settings.integration.catalog.gitlab.f3.label', descKey: 'settings.integration.catalog.gitlab.f3.desc', enabled: true },
+      { icon: Webhook, labelKey: 'settings.integration.catalog.gitlab.f4.label', descKey: 'settings.integration.catalog.gitlab.f4.desc', enabled: true },
+      { icon: Lock, labelKey: 'settings.integration.catalog.gitlab.f5.label', descKey: 'settings.integration.catalog.gitlab.f5.desc', enabled: false },
+      { icon: FileText, labelKey: 'settings.integration.catalog.gitlab.f6.label', descKey: 'settings.integration.catalog.gitlab.f6.desc', enabled: false },
     ],
     docsUrl: 'https://docs.agentpm.io/integrations/gitlab',
   },
@@ -187,15 +184,14 @@ const INTEGRATION_CATALOG: Array<{
     name: 'Slack',
     logo: 'S',
     logoColor: '#4A154B',
-    description: 'Send task updates, AI execution alerts, and acceptance results to Slack channels.',
-    longDescription:
-      'Post notifications to your Slack workspace when tasks change status, AI agents complete runs, or acceptances are approved or rejected.',
+    descKey: 'settings.integration.catalog.slack.desc',
+    longDescKey: 'settings.integration.catalog.slack.longDesc',
     category: 'communication',
     features: [
-      { icon: Activity, label: 'Task notifications', description: 'Post task status changes to chosen channels', enabled: true },
-      { icon: Zap, label: 'AI run alerts', description: 'Alert when AI agents start or complete runs', enabled: true },
-      { icon: Shield, label: 'Acceptance alerts', description: 'Post approval/rejection to a review channel', enabled: false },
-      { icon: Clock, label: 'Daily digest', description: 'Send a morning digest of project activity', enabled: false },
+      { icon: Activity, labelKey: 'settings.integration.catalog.slack.f1.label', descKey: 'settings.integration.catalog.slack.f1.desc', enabled: true },
+      { icon: Zap, labelKey: 'settings.integration.catalog.slack.f2.label', descKey: 'settings.integration.catalog.slack.f2.desc', enabled: true },
+      { icon: Shield, labelKey: 'settings.integration.catalog.slack.f3.label', descKey: 'settings.integration.catalog.slack.f3.desc', enabled: false },
+      { icon: Clock, labelKey: 'settings.integration.catalog.slack.f4.label', descKey: 'settings.integration.catalog.slack.f4.desc', enabled: false },
     ],
     docsUrl: 'https://docs.agentpm.io/integrations/slack',
   },
@@ -204,14 +200,13 @@ const INTEGRATION_CATALOG: Array<{
     name: 'Sentry',
     logo: 'SE',
     logoColor: '#362D59',
-    description: 'Turn Sentry error alerts into AgentPM bugs automatically.',
-    longDescription:
-      'Connect Sentry to automatically create bug reports from error events. AI agents can investigate stack traces and propose fixes.',
+    descKey: 'settings.integration.catalog.sentry.desc',
+    longDescKey: 'settings.integration.catalog.sentry.longDesc',
     category: 'monitoring',
     features: [
-      { icon: Bug, label: 'Auto bug creation', description: 'Create bugs from Sentry error events automatically', enabled: true },
-      { icon: Zap, label: 'AI diagnosis', description: 'Agents analyze stack traces and suggest root causes', enabled: false },
-      { icon: Activity, label: 'Error trends', description: 'Surface error frequency on project health dashboard', enabled: true },
+      { icon: Bug, labelKey: 'settings.integration.catalog.sentry.f1.label', descKey: 'settings.integration.catalog.sentry.f1.desc', enabled: true },
+      { icon: Zap, labelKey: 'settings.integration.catalog.sentry.f2.label', descKey: 'settings.integration.catalog.sentry.f2.desc', enabled: false },
+      { icon: Activity, labelKey: 'settings.integration.catalog.sentry.f3.label', descKey: 'settings.integration.catalog.sentry.f3.desc', enabled: true },
     ],
     docsUrl: 'https://docs.agentpm.io/integrations/sentry',
   },
@@ -239,6 +234,7 @@ const CONN_TONE: Record<ConnectionStatus, 'success' | 'default' | 'warning' | 'd
 };
 
 function StatusBadge({ status }: { status: ConnectionStatus }) {
+  const { t } = useTranslation();
   const cfg = STATUS_CFG[status];
   return (
     <StatusPill tone={CONN_TONE[status]} className="gap-1.5">
@@ -249,19 +245,20 @@ function StatusBadge({ status }: { status: ConnectionStatus }) {
           (status === 'pending' || status === 'error') && 'animate-pulse',
         )}
       />
-      {cfg.label}
+      {t(cfg.labelKey)}
     </StatusPill>
   );
 }
 
 function FeatureToggle({ feature }: { feature: IntegrationFeature }) {
+  const { t } = useTranslation();
   const Icon = feature.icon;
   return (
     <div className="flex items-start gap-3 py-2.5 border-b border-border/60 last:border-0">
       <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium">{feature.label}</p>
-        <p className="text-11 text-muted-foreground mt-0.5 leading-relaxed">{feature.description}</p>
+        <p className="text-xs font-medium">{t(feature.labelKey)}</p>
+        <p className="text-11 text-muted-foreground mt-0.5 leading-relaxed">{t(feature.descKey)}</p>
       </div>
       <div
         className={cn(
@@ -294,6 +291,7 @@ interface IntegrationCardProps {
 }
 
 function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect, onDisconnect, onConfigure }: IntegrationCardProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   const handleConnect = () => onConnect?.();
@@ -318,7 +316,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
               <span className="text-sm font-semibold">{integration.name}</span>
               <StatusBadge status={status} />
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{integration.description}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{t(integration.descKey)}</p>
 
             {/* Connected meta */}
             {status === 'connected' && connectedAs && (
@@ -340,7 +338,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
             {status === 'error' && (
               <div className="flex items-center gap-1.5 mt-2 text-11 text-destructive">
                 <AlertTriangle className="w-3 h-3" />
-                Connection lost · {lastSync ?? 'check provider status'}
+                {t('settings.integration.errorConnectionLost')} · {lastSync ?? t('settings.integration.errorCheckProvider')}
               </div>
             )}
           </div>
@@ -353,7 +351,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: integration.logoColor }}
               >
-                Connect {integration.name}
+                {t('settings.integration.connect', { name: integration.name })}
               </button>
             )}
             {status === 'pending' && (
@@ -362,7 +360,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground cursor-not-allowed"
               >
                 <RefreshCw className="w-3 h-3 animate-spin" />
-                Connecting…
+                {t('settings.integration.connecting')}
               </button>
             )}
             {status === 'connected' && (
@@ -372,14 +370,14 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border border-border hover:bg-accent transition-colors"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  Sync
+                  {t('settings.integration.sync')}
                 </button>
                 <button
                   onClick={handleDisconnect}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border border-border hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border border-border hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-3 h-3" />
-                  Disconnect
+                  {t('settings.integration.disconnect')}
                 </button>
               </>
             )}
@@ -389,7 +387,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors"
               >
                 <RefreshCw className="w-3 h-3" />
-                Reconnect
+                {t('settings.integration.reconnect')}
               </button>
             )}
 
@@ -422,38 +420,38 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
             {/* Feature toggles */}
             <div className="p-5">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Features</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('settings.integration.features')}</p>
                 <span className="text-11 text-muted-foreground">
-                  {enabledCount}/{integration.features.length} active
+                  {t('settings.integration.featuresActive', { active: enabledCount, total: integration.features.length })}
                 </span>
               </div>
               <div>
                 {integration.features.map((f) => (
-                  <FeatureToggle key={f.label} feature={f} />
+                  <FeatureToggle key={f.labelKey} feature={f} />
                 ))}
               </div>
             </div>
 
             {/* Connection details */}
             <div className="p-5 space-y-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Connection Details</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('settings.integration.connectionDetails')}</p>
 
               {/* Account / Last sync（来自真实配置，可能为空） */}
               <div className="rounded-xl bg-muted/40 border border-border p-3 space-y-2">
                 {connectedAs && (
                   <div className="flex items-center justify-between">
-                    <span className="text-11 text-muted-foreground">Account</span>
+                    <span className="text-11 text-muted-foreground">{t('settings.integration.account')}</span>
                     <span className="text-xs font-medium">{connectedAs}</span>
                   </div>
                 )}
                 {lastSync && (
                   <div className="flex items-center justify-between">
-                    <span className="text-11 text-muted-foreground">Last sync</span>
+                    <span className="text-11 text-muted-foreground">{t('settings.integration.lastSync')}</span>
                     <span className="text-xs text-accent-green">{lastSync}</span>
                   </div>
                 )}
                 {!connectedAs && !lastSync && (
-                  <span className="text-11 text-muted-foreground">No connection details reported yet.</span>
+                  <span className="text-11 text-muted-foreground">{t('settings.integration.noConnectionDetails')}</span>
                 )}
               </div>
 
@@ -466,7 +464,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
                 className="flex items-center gap-1.5 text-xs text-primary hover:underline transition-colors"
               >
                 <ExternalLink className="w-3 h-3" />
-                View setup guide
+                {t('settings.integration.viewSetupGuide')}
               </a>
             </div>
           </div>
@@ -476,34 +474,40 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
       {/* Disconnected: description + connect CTA */}
       {status === 'disconnected' && (
         <div className="border-t border-border/60 px-5 pb-5 pt-4">
-          <p className="text-xs text-muted-foreground leading-relaxed mb-4">{integration.longDescription}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-4">{t(integration.longDescKey)}</p>
 
           {/* Feature preview (greyed) */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
             {integration.features.slice(0, 4).map((f) => {
               const Icon = f.icon;
               return (
-                <div key={f.label} className="flex items-center gap-2 text-11 text-muted-foreground/60">
+                <div key={f.labelKey} className="flex items-center gap-2 text-11 text-muted-foreground/60">
                   <Icon className="w-3 h-3 shrink-0" />
-                  {f.label}
+                  {t(f.labelKey)}
                 </div>
               );
             })}
             {integration.features.length > 4 && (
-              <div className="text-11 text-muted-foreground/40">+{integration.features.length - 4} more features</div>
+              <div className="text-11 text-muted-foreground/40">
+                {t('settings.integration.moreFeatures', { count: integration.features.length - 4 })}
+              </div>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            {onConnect && (
+            {onConnect ? (
               <button
                 onClick={handleConnect}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: integration.logoColor }}
               >
-                Connect {integration.name}
+                {t('settings.integration.connect', { name: integration.name })}
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
+            ) : (
+              <span className="text-10 px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                {t('settings.integration.soon')}
+              </span>
             )}
             <a
               href={integration.docsUrl}
@@ -512,7 +516,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs border border-border hover:bg-accent transition-colors text-muted-foreground"
             >
               <ExternalLink className="w-3 h-3" />
-              Docs
+              {t('settings.integration.docs')}
             </a>
           </div>
         </div>
@@ -586,12 +590,12 @@ export function IntegrationsSettingsSection() {
       if (
         search &&
         !i.name.toLowerCase().includes(search.toLowerCase()) &&
-        !i.description.toLowerCase().includes(search.toLowerCase())
+        !t(i.descKey).toLowerCase().includes(search.toLowerCase())
       )
         return false;
       return true;
     });
-  }, [activeTab, search, liveCatalog]);
+  }, [activeTab, search, liveCatalog, t]);
 
   // Group filtered results
   const grouped = CATEGORY_ORDER.reduce<Record<IntegrationCategory, typeof liveCatalog>>((acc, cat) => {
@@ -601,11 +605,11 @@ export function IntegrationsSettingsSection() {
   }, {} as Record<IntegrationCategory, typeof liveCatalog>);
 
   const categoryOptions: SegmentedOption<FilterTab>[] = [
-    { value: 'all', label: 'All' },
-    { value: 'task', label: 'Task Providers' },
-    { value: 'code', label: 'Code & PR' },
-    { value: 'communication', label: 'Communication' },
-    { value: 'monitoring', label: 'Monitoring' },
+    { value: 'all', label: t('settings.integration.tabs.all') },
+    { value: 'task', label: t('settings.integration.tabs.task') },
+    { value: 'code', label: t('settings.integration.tabs.code') },
+    { value: 'communication', label: t('settings.integration.tabs.communication') },
+    { value: 'monitoring', label: t('settings.integration.tabs.monitoring') },
   ];
 
   return (
@@ -613,21 +617,21 @@ export function IntegrationsSettingsSection() {
       <div className="flex flex-col h-full overflow-auto bg-background">
         {/* Header */}
         <PageHeader
-          title="Integrations"
+          title={t('settings.integration.title')}
           icon={Plug2}
           aiId="integration.integration-list.main"
           metrics={[
             ...(errorCount > 0
-              ? [{ id: 'errors', label: 'Errors', value: errorCount, tone: 'danger' as const }]
+              ? [{ id: 'errors', label: t('settings.integration.metricErrors'), value: errorCount, tone: 'danger' as const }]
               : []),
-            { id: 'connected', label: 'Connected', value: connectedCount, tone: 'success' as const },
+            { id: 'connected', label: t('settings.integration.metricConnected'), value: connectedCount, tone: 'success' as const },
           ]}
         />
 
         {/* Toolbar: 左说明 / 中 rect 分类页签 / 右搜索 */}
         <div className="grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border px-6 py-2 md:px-7">
           <p className="min-w-0 truncate text-xs text-muted-foreground">
-            Connect your tools to supercharge AI-driven development.
+            {t('settings.integration.subtitle')}
           </p>
           <div className="justify-self-center">
             <SegmentedControl
@@ -643,7 +647,7 @@ export function IntegrationsSettingsSection() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search integrations…"
+                placeholder={t('settings.integration.searchPlaceholder')}
                 className="pl-8 pr-3 py-1.5 text-xs bg-background border border-border rounded-lg focus:outline-hidden focus:border-ring w-44 h-8"
               />
             </div>
@@ -658,11 +662,11 @@ export function IntegrationsSettingsSection() {
                 {/* Section header */}
                 <div className="flex items-center gap-3 mb-4">
                   <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {CATEGORY_LABELS[cat as IntegrationCategory]}
+                    {t(CATEGORY_LABEL_KEYS[cat as IntegrationCategory])}
                   </h2>
                   <div className="flex-1 h-px bg-border" />
                   <span className="text-11 text-muted-foreground/60">
-                    {items.length} integration{items.length !== 1 ? 's' : ''}
+                    {t('settings.integration.count', { count: items.length })}
                   </span>
                 </div>
 
@@ -670,13 +674,13 @@ export function IntegrationsSettingsSection() {
                 {cat === 'task' && (
                   <p className="text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-muted/30 border border-border/60 flex items-start gap-2">
                     <Zap className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                    Task providers are the source of truth for work items. Connect one or more to import tasks and let AI agents execute work directly.
+                    {t('settings.integration.catDesc.task')}
                   </p>
                 )}
                 {cat === 'code' && (
                   <p className="text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-muted/30 border border-border/60 flex items-start gap-2">
                     <GitPullRequest className="w-3.5 h-3.5 text-accent-purple shrink-0 mt-0.5" />
-                    Code integrations link repositories to tasks, enabling AI agents to open PRs, track CI status, and post acceptance results as code review comments.
+                    {t('settings.integration.catDesc.code')}
                   </p>
                 )}
 
@@ -698,8 +702,8 @@ export function IntegrationsSettingsSection() {
                         config
                           ? () =>
                               deleteIntegration.mutate(config.id, {
-                                onSuccess: () => toast.success(`${i.name} 已断开连接`),
-                                onError: () => toast.error('断开连接失败，请重试'),
+                                onSuccess: () => toast.success(t('settings.integration.disconnectSuccess', { name: i.name })),
+                                onError: () => toast.error(t('settings.integration.disconnectFailed')),
                               })
                           : undefined
                       }
@@ -744,17 +748,17 @@ export function IntegrationsSettingsSection() {
             {/* Coming soon */}
             <section>
               <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Coming Soon</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('settings.integration.comingSoon')}</h2>
                 <div className="flex-1 h-px bg-border" />
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {[
-                  { name: 'Notion', logo: 'N', color: '#000000', desc: 'Sync project docs and wikis' },
-                  { name: 'Figma', logo: 'F', color: '#F24E1E', desc: 'Link design files to task specs' },
-                  { name: 'Vercel', logo: '▲', color: '#000000', desc: 'Track deployment status on tasks' },
-                  { name: 'Datadog', logo: 'DD', color: '#632CA6', desc: 'Alert on anomalies, create incidents' },
-                  { name: 'PagerDuty', logo: 'PD', color: '#06AC38', desc: 'Route on-call alerts to AgentPM tasks' },
-                  { name: 'Loom', logo: '🎥', color: '#625DF5', desc: 'Attach screen recordings to tasks' },
+                  { name: 'Notion', logo: 'N', color: '#000000', descKey: 'settings.integration.soonDesc.notion' },
+                  { name: 'Figma', logo: 'F', color: '#F24E1E', descKey: 'settings.integration.soonDesc.figma' },
+                  { name: 'Vercel', logo: '▲', color: '#000000', descKey: 'settings.integration.soonDesc.vercel' },
+                  { name: 'Datadog', logo: 'DD', color: '#632CA6', descKey: 'settings.integration.soonDesc.datadog' },
+                  { name: 'PagerDuty', logo: 'PD', color: '#06AC38', descKey: 'settings.integration.soonDesc.pagerduty' },
+                  { name: 'Loom', logo: '🎥', color: '#625DF5', descKey: 'settings.integration.soonDesc.loom' },
                 ].map((item) => (
                   <div
                     key={item.name}
@@ -768,9 +772,9 @@ export function IntegrationsSettingsSection() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-medium">{item.name}</p>
-                      <p className="text-10 text-muted-foreground truncate">{item.desc}</p>
+                      <p className="text-10 text-muted-foreground truncate">{t(item.descKey)}</p>
                     </div>
-                    <span className="ml-auto text-10 px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">Soon</span>
+                    <span className="ml-auto text-10 px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">{t('settings.integration.soon')}</span>
                   </div>
                 ))}
               </div>

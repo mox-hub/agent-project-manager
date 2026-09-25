@@ -39,6 +39,16 @@ import {
  * 派生默认模型查询端点（与后端 resolveModelsEndpoint 同口径）：
  * openai 兼容 `${base}/models`；anthropic/gemini 按版本段拼 /v1/models、/v1beta/models
  */
+/** baseUrl 展示 host（无效 URL 返回 null） */
+function hostFromUrl(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).host;
+  } catch {
+    return null;
+  }
+}
+
 function deriveDefaultModelsEndpoint(providerKey: string, baseUrl?: string | null): string {
   const base = (baseUrl || PROVIDER_DEFAULT_BASE_URL[providerKey] || '').replace(/\/+$/, '');
   if (!base) return '';
@@ -433,6 +443,13 @@ export function ModelsTab() {
     }
     return PROVIDER_MODELS[selectedProvider.provider] ?? [];
   }, [selectedProvider]);
+
+  // 同类型多槽位的类型集合：这些类型的卡片副标题显示 baseUrl host 以区分槽位
+  const multiSlotProviderKeys = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of providers) counts.set(p.provider, (counts.get(p.provider) ?? 0) + 1);
+    return new Set([...counts].filter(([, n]) => n > 1).map(([k]) => k));
+  }, [providers]);
 
   // ─── Effects ──────────────────────────────────────────────
   // Set initial selected provider（优先首个已连接 / 已配密钥的厂家）
@@ -920,6 +937,20 @@ export function ModelsTab() {
                       </div>
                       <div className="min-w-0 text-center">
                         <CardTitle className="text-sm">{nameOf(provider)}</CardTitle>
+                        {multiSlotProviderKeys.has(provider.provider) && (
+                          <p
+                            className="mt-0.5 w-full truncate text-center text-10 text-muted-foreground"
+                            title={
+                              provider.baseUrl ||
+                              PROVIDER_DEFAULT_BASE_URL[provider.provider] ||
+                              provider.provider
+                            }
+                          >
+                            {hostFromUrl(provider.baseUrl) ??
+                              hostFromUrl(PROVIDER_DEFAULT_BASE_URL[provider.provider]) ??
+                              provider.provider}
+                          </p>
+                        )}
                         <div className="mt-1">
                           <ProviderStatusBadge status={normalizeProviderStatus(provider.status)} />
                         </div>

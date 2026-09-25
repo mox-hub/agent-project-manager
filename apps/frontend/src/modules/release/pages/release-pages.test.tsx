@@ -22,6 +22,7 @@ vi.mock('react-i18next', () => ({
         'release.status.released': '已发布',
         'release.gate.title': '发布门禁',
         'release.gate.notRun': '尚未提交门禁',
+        'release.gate.skippedEmptyScope': '范围内无内容，跳过',
         'release.action.title': '审批与发布',
         'release.detail.logTitle': '发布执行日志',
         'release.detail.loading': '发版详情',
@@ -33,11 +34,15 @@ vi.mock('react-i18next', () => ({
         'release.create.milestoneLabel': '所属里程碑（可选）',
         'release.create.milestoneNone': '不关联里程碑',
         'release.table.milestone': '里程碑',
+        'release.table.project': '项目',
+        'release.detail.project': '所属项目',
       };
       const base = translations[key] ?? key;
       return base.replace('{{base}}', opts?.base ?? '');
     },
   }),
+  // 真实 src/i18n 入口会 .use(initReactI18next)，mock 缺该导出会在模块加载期炸
+  initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
 vi.mock('@/infrastructure/event-client', () => ({
@@ -76,6 +81,7 @@ vi.mock('../hooks/use-releases', () => ({
       {
         id: 'r-1',
         projectId: 'p-1',
+        project: { id: 'p-1', name: '示例项目' },
         version: '1.0.0',
         name: '首个发版',
         status: 'released',
@@ -129,6 +135,12 @@ describe('ReleaseListPage', () => {
     expect(screen.getByText('里程碑')).toBeTruthy();
   });
 
+  it('列表行渲染项目列实际名称而非关联 ID（绑定关系可读名）', () => {
+    renderWithRouter(<ReleaseListPage />, '/');
+    expect(screen.getByText('项目')).toBeTruthy();
+    expect(screen.getByText('示例项目')).toBeTruthy();
+  });
+
   it('创建对话框可选所属里程碑（CAP-A-16 计划-交付轴）', async () => {
     const user = userEvent.setup();
     renderWithRouter(<ReleaseListPage />, '/?project=p-1');
@@ -157,6 +169,7 @@ describe('ReleaseDetailPage', () => {
     detailState.release = {
       id: 'r-1',
       projectId: 'p-1',
+      project: { id: 'p-1', name: '示例项目' },
       version: '1.2.0',
       status: 'released',
       notes: '说明文本',
@@ -181,10 +194,70 @@ describe('ReleaseDetailPage', () => {
     };
     renderWithRouter(<ReleaseDetailPage />, '/r-1');
     expect(screen.getByText('发布门禁')).toBeTruthy();
+    // 项目名行：{label}: {name} 插值拆成多段 text node，用正则匹配整行文本
+    expect(screen.getByText(/所属项目/)).toBeTruthy();
+    expect(screen.getByText(/示例项目/)).toBeTruthy();
     expect(screen.getByText('存在失败结论')).toBeTruthy();
     expect(screen.getByText('发布执行日志')).toBeTruthy();
     expect(screen.getByText('github-release')).toBeTruthy();
     expect(screen.getByText('说明文本')).toBeTruthy();
+  });
+
+  it('空范围跳过的检查项统一中性渲染（ci/audit 不再红、acceptance 不再绿）', () => {
+    detailState.release = {
+      id: 'r-1',
+      projectId: 'p-1',
+      version: '1.2.0',
+      status: 'gated',
+      tagPushed: false,
+      githubReleased: false,
+      gateResult: {
+        passed: false,
+        ranAt: '2026-09-12T00:00:00Z',
+        checks: [
+          {
+            key: 'scope',
+            label: '发布范围',
+            passed: false,
+            detail: '发布范围为空——请先圈定纳入本版本的工单',
+          },
+          {
+            key: 'acceptance',
+            label: '验收全绿',
+            passed: true,
+            detail: '范围内 0 条工单验收全部通过或豁免',
+          },
+          { key: 'ci', label: 'CI 证据', passed: false, detail: '范围为空，跳过' },
+          { key: 'contract', label: '契约绑定', passed: true, detail: '绑定无失联' },
+          { key: 'audit', label: '完整性审计', passed: false, detail: '范围为空，跳过' },
+          {
+            key: 'changelog',
+            label: 'CHANGELOG 一致性',
+            passed: true,
+            detail: '项目无工作区，发布时将诚实跳过导出',
+          },
+        ],
+      },
+    };
+    renderWithRouter(<ReleaseDetailPage />, '/r-1');
+
+    // 统一跳过文案（acceptance/ci/audit 三项均替换为同一条）
+    expect(screen.getAllByText('范围内无内容，跳过')).toHaveLength(3);
+    // 真实失败仍红（scope）、真实通过仍绿（contract）
+    const rowOf = (label: string) =>
+      screen.getByText(label).closest('li') as HTMLElement;
+    expect(rowOf('发布范围').className).not.toContain('text-content-text-muted');
+    expect(rowOf('契约绑定').className).not.toContain('text-content-text-muted');
+    // 跳过态三项行级中性（灰），图标为虚线圈而非红 X / 绿勾
+    for (const label of ['验收全绿', 'CI 证据', '完整性审计', 'CHANGELOG 一致性']) {
+      const row = rowOf(label);
+      expect(row.className).toContain('text-content-text-muted');
+      expect(row.querySelector('.text-accent-red')).toBeNull();
+      expect(row.querySelector('.text-accent-green')).toBeNull();
+      expect(row.innerHTML).toContain('circle-dashed');
+    }
+    // 无工作区跳过保留服务端自述 detail
+    expect(screen.getByText('项目无工作区，发布时将诚实跳过导出')).toBeTruthy();
   });
 
   it('gated 态渲染审批动作按钮', () => {

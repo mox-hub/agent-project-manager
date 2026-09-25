@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, MaxLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateDocumentDto {
@@ -31,7 +31,7 @@ export class UpdateDocumentDto {
     ],
     required: false,
   })
-  @IsEnum([
+  @IsIn([
     'requirement',
     'analysis',
     'design',
@@ -48,7 +48,7 @@ export class UpdateDocumentDto {
     enum: ['draft', 'reviewing', 'published', 'rejected'],
     required: false,
   })
-  @IsEnum(['draft', 'reviewing', 'published', 'rejected'])
+  @IsIn(['draft', 'reviewing', 'published', 'rejected'])
   @IsOptional()
   status?: string;
 

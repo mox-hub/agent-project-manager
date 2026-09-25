@@ -6,6 +6,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsValidDisplayName } from '@/common/utils/display-name.util';
 
 export class RegisterDto {
   @ApiProperty({ example: 'alice@example.com' })
@@ -20,8 +21,7 @@ export class RegisterDto {
 
   @ApiProperty({ required: false, example: '张三' })
   @IsString()
-  @MinLength(1)
-  @MaxLength(40)
+  @IsValidDisplayName()
   @IsOptional()
   displayName?: string;
 

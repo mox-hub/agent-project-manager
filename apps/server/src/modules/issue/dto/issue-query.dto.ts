@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsInt, Min, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -27,7 +27,7 @@ export class IssueQueryDto {
     enum: ['task', 'bug'],
     required: false,
   })
-  @IsEnum(['task', 'bug'])
+  @IsIn(['task', 'bug'])
   @IsOptional()
   type?: string;
 
@@ -36,7 +36,7 @@ export class IssueQueryDto {
     enum: ['critical', 'high', 'medium', 'low'],
     required: false,
   })
-  @IsEnum(['critical', 'high', 'medium', 'low'])
+  @IsIn(['critical', 'high', 'medium', 'low'])
   @IsOptional()
   severity?: string;
 

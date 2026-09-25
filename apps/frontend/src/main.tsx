@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { RouterProvider } from "react-router-dom"
 import { ThemeProvider } from "@/shared/theme/theme-context"
 import { ConfirmProvider } from "@/shared/confirm/confirm-provider"
+import { PromptProvider } from "@/shared/prompt/prompt-provider"
 import { ToastProvider } from "@/components/ui/toast"
 import { router } from "./app/router"
 import { LoadingProvider } from "@/components/ui/loading-overlay"
@@ -31,10 +32,12 @@ createRoot(document.getElementById("root")!).render(
       <LoadingProvider defaultMode="bar">
         <ThemeProvider>
           <ConfirmProvider>
-            <RouterProvider router={router} />
-            <GlobalLoadingState />
-            <ToastProvider position="top-right" />
-            <MockBadge />
+            <PromptProvider>
+              <RouterProvider router={router} />
+              <GlobalLoadingState />
+              <ToastProvider position="top-right" />
+              <MockBadge />
+            </PromptProvider>
           </ConfirmProvider>
         </ThemeProvider>
       </LoadingProvider>

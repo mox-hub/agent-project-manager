@@ -77,7 +77,8 @@ export class CliDispatchController {
   @ApiResponse({ status: 200, description: 'Task dispatched to CLI' })
   @ApiResponse({
     status: 400,
-    description: 'Invalid request or provider unavailable',
+    description:
+      'Invalid request or provider unavailable。含信任门禁拦截：code=TRUST_LEVEL_INSUFFICIENT（目标 AI 成员信任等级为观察者，自动派发需协助者及以上；details 带当前/所需等级与提升指路），未评估成员放行并记工单时间线提示',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Task not found' })
@@ -172,7 +173,7 @@ export class CliDispatchController {
   @ApiResponse({
     status: 400,
     description:
-      '不可重新执行：状态非 failed/blocked/superseded，或未关联有效工单；存在其他活跃执行时按错误信息先取消；派发被门禁阻断时新执行落 blocked',
+      '不可重新执行：状态非 failed/blocked/superseded，或未关联有效工单；存在其他活跃执行时按错误信息先取消；派发被门禁（验收契约/依赖/信任等级 TRUST_LEVEL_INSUFFICIENT）阻断时新执行落 blocked',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Execution not found' })

@@ -165,7 +165,8 @@ export class AiHubController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid request or provider already exists',
+    description:
+      'Invalid request or provider slot with the same display name already exists for this provider type',
   })
   @ApiStandardErrors()
   async createProvider(@Body() dto: CreateProviderConfigDto) {

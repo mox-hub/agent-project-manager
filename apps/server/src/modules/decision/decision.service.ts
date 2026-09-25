@@ -58,6 +58,8 @@ const MAX_PULL = 200;
 const PROPOSAL_KINDS: readonly string[] = PROPOSAL_KIND_VALUES;
 
 export interface DecisionFilter {
+  /** 请求者用户 id——可见性口径（R3 裁决）：决策卡仅对其所属项目的成员可见 */
+  userId?: string;
   projectId?: string;
   kind?: string;
   limit?: number;
@@ -84,11 +86,20 @@ export class DecisionService {
     const wantProposals =
       filter.kind === undefined || PROPOSAL_KINDS.includes(filter.kind);
 
+    // R3 可见性口径：考古决策卡仅项目成员可见。全局视图（无 projectId）收敛到
+    // 请求者的成员项目集合；显式 projectId 同样要求成员身份（非成员查询命中
+    // `in: []` 自然为空）。projectId 为 null 的系统级卡（如发版审批）不挂项目，
+    // 不参与成员过滤。userId 缺失（理论上 JWT 守卫下不会发生）保持旧口径不过滤。
+    const projectScope = await this.resolveProjectScope(
+      filter.userId,
+      filter.projectId,
+    );
+
     const [approvals, acceptances, proposals] = await Promise.all([
       wantApprovals
         ? this.prisma.approvalRequest.findMany({
             where: {
-              ...(filter.projectId ? { projectId: filter.projectId } : {}),
+              ...(projectScope ? { projectId: projectScope } : {}),
               status: 'pending',
               OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
             },
@@ -112,9 +123,7 @@ export class DecisionService {
         ? this.prisma.acceptance.findMany({
             where: {
               status: { in: ['pending', 'in_review'] },
-              ...(filter.projectId
-                ? { issue: { projectId: filter.projectId } }
-                : {}),
+              ...(projectScope ? { issue: { projectId: projectScope } } : {}),
             },
             include: {
               issue: {
@@ -136,7 +145,7 @@ export class DecisionService {
               status: 'pending',
               // 兜底改造批 4：过期提案不再进收件箱（此前永久滞留）
               OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-              ...(filter.projectId ? { projectId: filter.projectId } : {}),
+              ...(projectScope ? { projectId: projectScope } : {}),
               ...(filter.kind && PROPOSAL_KINDS.includes(filter.kind)
                 ? { kind: filter.kind }
                 : {}),
@@ -174,13 +183,35 @@ export class DecisionService {
     };
   }
 
-  async summary(projectId?: string): Promise<DecisionSummaryDto> {
+  /** 可见性口径（R3）与 listPending 一致：userId 缺失时退回旧口径不过滤 */
+  private async resolveProjectScope(
+    userId?: string,
+    projectId?: string,
+  ): Promise<string | { in: string[] } | undefined> {
+    if (!userId) return projectId;
+    const memberships = await this.prisma.projectMember.findMany({
+      where: { userId },
+      select: { projectId: true },
+    });
+    const memberProjectIds = memberships.map((m) => m.projectId);
+    if (projectId) {
+      // 显式 projectId 同样要求成员身份：非成员收敛为空集合（查询自然为空）
+      return memberProjectIds.includes(projectId) ? projectId : { in: [] };
+    }
+    return { in: memberProjectIds };
+  }
+
+  async summary(filter: DecisionFilter = {}): Promise<DecisionSummaryDto> {
     const now = new Date();
+    const projectScope = await this.resolveProjectScope(
+      filter.userId,
+      filter.projectId,
+    );
     const [approval, acceptancePending, acceptanceInReview, proposal] =
       await Promise.all([
         this.prisma.approvalRequest.count({
           where: {
-            ...(projectId ? { projectId } : {}),
+            ...(projectScope ? { projectId: projectScope } : {}),
             status: 'pending',
             OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
           },
@@ -188,19 +219,19 @@ export class DecisionService {
         this.prisma.acceptance.count({
           where: {
             status: 'pending',
-            ...(projectId ? { issue: { projectId } } : {}),
+            ...(projectScope ? { issue: { projectId: projectScope } } : {}),
           },
         }),
         this.prisma.acceptance.count({
           where: {
             status: 'in_review',
-            ...(projectId ? { issue: { projectId } } : {}),
+            ...(projectScope ? { issue: { projectId: projectScope } } : {}),
           },
         }),
         this.prisma.decisionProposal.count({
           where: {
             status: 'pending',
-            ...(projectId ? { projectId } : {}),
+            ...(projectScope ? { projectId: projectScope } : {}),
           },
         }),
       ]);

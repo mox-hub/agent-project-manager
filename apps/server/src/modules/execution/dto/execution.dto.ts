@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsObject,
-  IsUUID,
-} from 'class-validator';
+import { IsString, IsOptional, IsObject, IsUUID, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateExecutionRunDto {
@@ -18,7 +12,7 @@ export class CreateExecutionRunDto {
   issueId?: string;
 
   @ApiProperty({ enum: ['human', 'platform_ai_member', 'external_agent'] })
-  @IsEnum(['human', 'platform_ai_member', 'external_agent'])
+  @IsIn(['human', 'platform_ai_member', 'external_agent'])
   subjectType!: string;
 
   @ApiProperty()
@@ -26,7 +20,7 @@ export class CreateExecutionRunDto {
   subjectId!: string;
 
   @ApiProperty({ enum: ['internal', 'mcp', 'cli', 'api', 'plugin'] })
-  @IsEnum(['internal', 'mcp', 'cli', 'api', 'plugin'])
+  @IsIn(['internal', 'mcp', 'cli', 'api', 'plugin'])
   identitySource!: string;
 
   @ApiProperty()
@@ -97,7 +91,7 @@ export class AddExecutionStepDto {
   executionRunId!: string;
 
   @ApiProperty()
-  @IsEnum(['pending', 'running', 'completed', 'failed', 'skipped'])
+  @IsIn(['pending', 'running', 'completed', 'failed', 'skipped'])
   status!: string;
 
   @ApiProperty()
@@ -130,7 +124,7 @@ export class CreateArtifactDto {
       'report',
     ],
   })
-  @IsEnum([
+  @IsIn([
     'code_diff',
     'command_output',
     'file_path',

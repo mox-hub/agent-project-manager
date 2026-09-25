@@ -1,4 +1,5 @@
 import { ArrowRight, CheckCircle2, Clock, FileCode, ShieldAlert, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { DualTrackMetricPill } from '@/shared/components/dual-track-metric-pill';
 
@@ -31,24 +32,25 @@ export function AgentHandoffCard({
   metrics,
   className,
 }: AgentHandoffCardProps) {
+  const { t } = useTranslation();
   const getGateBadge = (status: HandoffGate['status']) => {
     switch (status) {
       case 'passed':
         return (
           <span className="inline-flex items-center gap-1 rounded bg-accent-green-light px-1.5 py-0.5 text-10 font-medium text-accent-green">
-            <CheckCircle2 className="size-3" /> 已就绪
+            <CheckCircle2 className="size-3" /> {t('office.handoff.gatePassed')}
           </span>
         );
       case 'blocked':
         return (
           <span className="inline-flex items-center gap-1 rounded bg-accent-red-light px-1.5 py-0.5 text-10 font-medium text-accent-red">
-            <ShieldAlert className="size-3" /> 阻断
+            <ShieldAlert className="size-3" /> {t('office.handoff.gateBlocked')}
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 rounded bg-muted/60 px-1.5 py-0.5 text-10 font-medium text-content-text-muted">
-            <Clock className="size-3" /> 校验中
+            <Clock className="size-3" /> {t('office.handoff.gatePending')}
           </span>
         );
     }
@@ -77,7 +79,7 @@ export function AgentHandoffCard({
           </span>
         </div>
         <span className="rounded bg-accent-blue-light/60 px-1.5 py-0.5 text-10 font-medium text-accent-blue">
-          Handoff
+          {t('office.handoff.badge')}
         </span>
       </div>
 
@@ -100,7 +102,7 @@ export function AgentHandoffCard({
       {/* 治理门禁横排 */}
       <div className="flex flex-wrap items-center gap-2 rounded-lg bg-content-bg-secondary/40 p-2 text-11">
         <span className="text-10 font-semibold text-content-text-muted uppercase">
-          治理门禁:
+          {t('office.handoff.gates')}
         </span>
         {gates.map((g) => (
           <div key={g.id} className="flex items-center gap-1">

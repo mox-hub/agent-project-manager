@@ -14,10 +14,12 @@ import { ApprovalService } from '@/modules/execution/approval.service';
 import {
   CliExecutionInput,
   CLI_ADAPTER_CAPABILITIES,
+  CliUsage,
   StreamEmitter,
   ExecutionStepUpdate,
   ProviderId,
 } from './adapters/cli-adapter.interface';
+import { UsagePricingService } from '@/modules/ai-hub/services/usage-pricing.service';
 
 export interface ExecutionContext {
   executionRunId: string;
@@ -47,6 +49,7 @@ export class CliExecutorService {
     private readonly executionService: ExecutionService,
     private readonly approvalService: ApprovalService,
     private readonly prisma: PrismaService,
+    private readonly usagePricing: UsagePricingService,
   ) {}
 
   async execute(
@@ -249,6 +252,28 @@ export class CliExecutorService {
         // Parse final result
         const result = adapter.parseFinalResult(stdout, code ?? 0);
 
+        // 进程内路径的 usage 落 AIUsageLog（双轨成本线收口）：与 daemon 路径
+        // （runtime.service.submitResult）同口径同时序——先记 usage 再进
+        // completeExecution/failExecution，completeExecution 里的 rollupCost
+        // 才能把本行汇总到 ExecutionRun.totalTokens/totalCost。
+        // usage 能力位为 false 的家（codex/zcode）CLI 不上报，无数据即不落，不造假。
+        const usage = result.usage;
+        if (usage && usage.totalTokens > 0) {
+          try {
+            await this.recordExecutionUsage(
+              executionRunId,
+              usage,
+              context.providerId,
+            );
+          } catch (usageErr) {
+            this.logger.warn(
+              `Failed to record in-process usage for ${executionRunId}: ${
+                usageErr instanceof Error ? usageErr.message : String(usageErr)
+              }`,
+            );
+          }
+        }
+
         // Create artifacts
         const artifacts = result.artifacts.map((a) => ({
           artifactType: a.type,
@@ -320,6 +345,41 @@ export class CliExecutorService {
           }
         }, input.timeout);
       }
+    });
+  }
+
+  /** 进程内执行的用量归因：与 daemon 路径 runtime.service.recordExecutionUsage 同构，AIUsageLog.executionRunId 是 rollupCost 的聚合键 */
+  private async recordExecutionUsage(
+    executionRunId: string,
+    usage: CliUsage,
+    providerId: ProviderId,
+  ) {
+    const run = await this.prisma.execution.findUnique({
+      where: { id: executionRunId },
+      select: { projectId: true, createdBy: true, subjectId: true },
+    });
+    const modelName = usage.model ?? providerId;
+    const estimatedCost = usage.costUsd
+      ? Number(usage.costUsd.toFixed(6))
+      : await this.usagePricing.estimateCostUsd({
+          modelName,
+          provider: providerId,
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+        });
+    await this.prisma.aIUsageLog.create({
+      data: {
+        userId: run?.createdBy ?? run?.subjectId ?? null,
+        projectId: run?.projectId ?? null,
+        executionRunId,
+        modelName,
+        provider: providerId,
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        totalTokens: usage.totalTokens,
+        estimatedCost,
+        responseMetadata: { source: 'in-process-execution' },
+      },
     });
   }
 

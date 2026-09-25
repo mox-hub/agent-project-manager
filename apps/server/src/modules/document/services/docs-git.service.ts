@@ -6,7 +6,13 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
-import * as fs from 'fs-extra';
+import * as fs from 'node:fs/promises';
+
+const pathExists = (p: string): Promise<boolean> =>
+  fs.stat(p).then(
+    () => true,
+    () => false,
+  );
 import * as path from 'path';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
@@ -77,12 +83,12 @@ export class DocsGitService {
     const projectCode = project.projectCode || `project-${projectId}`;
     const repoDir = path.join(root, projectCode);
 
-    await fs.ensureDir(repoDir);
+    await fs.mkdir(repoDir, { recursive: true });
     const gitDir = path.join(repoDir, '.git');
-    if (!(await fs.pathExists(gitDir))) {
+    if (!(await pathExists(gitDir))) {
       await execFileP('git', ['init'], { cwd: repoDir });
       const gitignorePath = path.join(repoDir, '.gitignore');
-      if (!(await fs.pathExists(gitignorePath))) {
+      if (!(await pathExists(gitignorePath))) {
         await fs.writeFile(gitignorePath, '.apm-tmp/\n', 'utf8');
       }
       this.logger.log(`Initialized git repo at ${repoDir}`);
@@ -99,9 +105,9 @@ export class DocsGitService {
     if (!repoDir) return null;
 
     const fullPath = path.join(repoDir, input.fileName);
-    await fs.ensureDir(path.dirname(fullPath));
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
 
-    const existing = (await fs.pathExists(fullPath))
+    const existing = (await pathExists(fullPath))
       ? await fs.readFile(fullPath, 'utf8')
       : null;
     if (existing === input.content) {

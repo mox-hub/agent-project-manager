@@ -10,6 +10,7 @@ export * from './interceptors/transform.interceptor';
 
 // Filters
 export * from './filters/global-exception.filter';
+export * from './filters/unknown-route.filter';
 
 // DTOs
 export * from './dto/api-response.dto';

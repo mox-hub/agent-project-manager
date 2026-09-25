@@ -1,160 +1,97 @@
-import { useMemo, useState, type ComponentType } from "react";
-import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { useMemo, useState } from 'react';
 import {
-  AtSign,
+  Archive,
   Bell,
-  Bot,
   Check,
-  CheckSquare,
+  CheckCheck,
   Clock,
-  GitBranch,
-  Info,
-  MessageSquare,
+  ExternalLink,
+  Filter,
+  Inbox,
+  Layers,
+  Search,
   Settings2,
   Sparkles,
-} from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { toast } from '@/components/ui/toast';
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { IconStack } from "@/components/ui/icon-stack";
-import { PageShell } from "@/components/ui/page-shell";
-import { SkeletonCard } from "@/components/ui/skeleton";
-import { AsyncState } from "@/components/ui/async-state";
-import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
-import { cn } from "@/lib/utils";
-import { useAppStore } from "@/infrastructure/store/app-store";
-import { useAssistantConversationList } from "@/modules/assistant/hooks/use-assistant-session";
-import type { Notification } from "../api/notification-api";
-import { NotificationSettingsDialog } from "../components/notification-settings-dialog";
+  Star,
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { IconStack } from '@/components/ui/icon-stack';
+import { PageShell } from '@/components/ui/page-shell';
+import { SkeletonCard } from '@/components/ui/skeleton';
+import { AsyncState } from '@/components/ui/async-state';
+import { Input } from '@/components/ui/input';
 import {
-  useMarkNotificationsRead,
-  useNotifications,
-  useUnreadNotificationsCount,
-} from "../hooks/use-notifications";
-
-const NOTIFICATION_RENDER_TIME = Date.now();
-
-/** 类型 → 图标/配色。key 为后端 dot 格式事件名（前缀族兜底，未知落 system） */
-const TYPE_CONFIG: Record<
-  string,
-  { icon: ComponentType<{ className?: string }>; color: string; bg: string }
-> = {
-  "task.assigned": { icon: CheckSquare, color: "text-accent-blue", bg: "bg-accent-blue-light" },
-  "task.statusChanged": { icon: CheckSquare, color: "text-accent-blue", bg: "bg-accent-blue-light" },
-  "task.created": { icon: CheckSquare, color: "text-accent-green", bg: "bg-accent-green-light" },
-  "task.deleted": { icon: Clock, color: "text-accent-red", bg: "bg-accent-red-light" },
-  "task.overdue": { icon: Clock, color: "text-accent-red", bg: "bg-accent-red-light" },
-  "pr.review": { icon: GitBranch, color: "text-accent-yellow", bg: "bg-accent-yellow-light" },
-  "document.created": { icon: GitBranch, color: "text-accent-blue", bg: "bg-accent-blue-light" },
-  "document.deleted": { icon: GitBranch, color: "text-accent-red", bg: "bg-accent-red-light" },
-  "project.created": { icon: GitBranch, color: "text-accent-green", bg: "bg-accent-green-light" },
-  "project.archived": { icon: GitBranch, color: "text-accent-red", bg: "bg-accent-red-light" },
-  "member.created": { icon: AtSign, color: "text-accent-green", bg: "bg-accent-green-light" },
-  "member.removed": { icon: AtSign, color: "text-accent-red", bg: "bg-accent-red-light" },
-  "team.created": { icon: AtSign, color: "text-accent-green", bg: "bg-accent-green-light" },
-  "team.archived": { icon: AtSign, color: "text-accent-red", bg: "bg-accent-red-light" },
-  "acceptance.created": { icon: Bot, color: "text-accent-purple", bg: "bg-accent-purple-light" },
-  "acceptance.resolved": { icon: Bot, color: "text-accent-green", bg: "bg-accent-green-light" },
-  "milestone.created": { icon: CheckSquare, color: "text-accent-purple", bg: "bg-accent-purple-light" },
-  "tag.created": { icon: Info, color: "text-accent-blue", bg: "bg-accent-blue-light" },
-  "tag.deleted": { icon: Info, color: "text-accent-red", bg: "bg-accent-red-light" },
-  "ai.workflow.completed": { icon: Sparkles, color: "text-accent-purple", bg: "bg-accent-purple-light" },
-  "ci.build.failed": { icon: Clock, color: "text-accent-red", bg: "bg-accent-red-light" },
-  "ci.build.succeeded": { icon: Check, color: "text-accent-green", bg: "bg-accent-green-light" },
-  mention: { icon: AtSign, color: "text-accent-green", bg: "bg-accent-green-light" },
-  system: { icon: Info, color: "text-muted-foreground", bg: "bg-muted" },
-};
-
-/** dot 格式类型 → 图标配色；未知类型按事件族（task./document.…）兜底 */
-function typeConfigFor(type: string) {
-  if (TYPE_CONFIG[type]) return TYPE_CONFIG[type];
-  const family = `${type.split(".")[0]}.`;
-  const familyKey = Object.keys(TYPE_CONFIG).find((key) => key.startsWith(family));
-  return (familyKey && TYPE_CONFIG[familyKey]) || TYPE_CONFIG.system;
-}
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
+import { cn } from '@/lib/utils';
+import { DecisionCard } from '@/shared/decision-card/decision-card';
+import { DecisionReviewModal } from '@/modules/decision/components/decision-review-modal';
+import { NotificationSettingsDialog } from '../components/notification-settings-dialog';
+import { InboxItemRow } from '../components/inbox-item-row';
+import { useActionableInbox } from '../hooks/use-actionable-inbox';
+import type { ActionableInboxItem, InboxTab } from '../types/inbox';
 
 export function NotificationCenterPage() {
   const { t } = useTranslation();
-  const [filter, setFilter] = useState<"all" | "unread" | "assistant">("unread");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const openAssistantConversation = useAppStore(
-    (s) => s.openAssistantConversation,
-  );
-  const { data, isLoading, error, refetch } = useNotifications({
-    status: filter === "unread" ? "unread" : undefined,
-    pageSize: 100,
-  });
-  const { data: unreadCount = 0 } = useUnreadNotificationsCount();
-  const markRead = useMarkNotificationsRead();
-  // 「AI 助理」tab：全部助手会话，点击唤起右下角浮窗继续对话
+  const navigate = useNavigate();
+
   const {
-    data: conversations,
-    isLoading: conversationsLoading,
-  } = useAssistantConversationList(undefined);
+    activeTab,
+    setActiveTab,
+    searchQuery,
+    setSearchQuery,
+    typeFilter,
+    setTypeFilter,
+    items,
+    counts,
+    isLoading,
+    isError,
+    refetch,
+    clearItem,
+    restoreItem,
+    snoozeItem,
+    clearAllCurrent,
+    markAllRead,
+    rawDecisions,
+    handleDecisionAction,
+    busyDecisionId,
+  } = useActionableInbox();
 
-  // 契约形状 { data, meta }：列表在 data.data（此前误读 items 导致列表恒空）
-  const notifications = useMemo(() => data?.data ?? [], [data?.data]);
-  const unreadNotifications = useMemo(
-    () => notifications.filter((item) => item.status === "unread"),
-    [notifications],
-  );
-
-  /** 双栏详情：当前选中条目（通知或会话）；列表数据刷新后找不到即回落空态 */
-  const selectedNotification = useMemo(
-    () => notifications.find((item) => item.id === selectedId) ?? null,
-    [notifications, selectedId],
-  );
-  const selectedConversation = useMemo(
-    () =>
-      filter === "assistant"
-        ? (conversations ?? []).find((item) => item.id === selectedId) ?? null
-        : null,
-    [conversations, selectedId, filter],
-  );
-
-  const getTimeSince = (date: string) => {
-    const diff = NOTIFICATION_RENDER_TIME - new Date(date).getTime();
-    const hours = Math.floor(diff / 3600000);
-    if (hours < 1) return "刚刚";
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
-  };
-
-  /** 选中即视为已读（幂等：已读项跳过 mutation） */
-  const handleSelect = (notification: Notification) => {
-    setSelectedId(notification.id);
-    if (notification.status === "read") return;
-    markRead.mutate([notification.id], {
-      onError: () => {
-        toast.error("标记已读失败，请重试");
-      },
-    });
-  };
-
-  const handleSelectConversation = (conversationId: string) => {
-    setSelectedId(conversationId);
-  };
-
-  // 通知设置：个人级收件箱/系统通知开关，附属在通知模块
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
-  const listLoading = filter === "assistant" ? conversationsLoading : isLoading;
-  const listEmpty =
-    filter === "assistant"
-      ? (conversations ?? []).length === 0
-      : notifications.length === 0;
+  // 当前选中的条目
+  const selectedItem = useMemo(() => {
+    if (!selectedId) return items[0] || null;
+    return items.find((i) => i.id === selectedId) || items[0] || null;
+  }, [items, selectedId]);
 
-  const detailEmptyTitle =
-    filter === "assistant"
-      ? t("notification.detail.emptyConversation")
-      : t("notification.detail.emptyNotification");
+  const handleSelectItem = (item: ActionableInboxItem) => {
+    setSelectedId(item.id);
+  };
+
+  const tabs: { key: InboxTab; label: string; icon: typeof Star; count?: number }[] = [
+    { key: 'important', label: '重要', icon: Star, count: counts.important },
+    { key: 'other', label: '其他', icon: Inbox, count: counts.other },
+    { key: 'snoozed', label: '稍后', icon: Clock, count: counts.snoozed },
+    { key: 'cleared', label: '已清理', icon: CheckCheck, count: counts.cleared },
+  ];
 
   return (
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.notificationCenter}>
       <div className="flex min-h-0 flex-1">
-        {/* ── 左栏：快捷操作 + 通知/会话列表 ── */}
-        <aside className="flex w-80 shrink-0 flex-col border-r border-border">
+        {/* ── 左栏：分类 Tab + 工具栏 + 高密度收件箱列表 ── */}
+        <aside className="flex w-120 shrink-0 flex-col border-r border-border bg-background">
+          {/* 1. 顶部标题栏 */}
           <div className="border-b border-border px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -162,6 +99,22 @@ export function NotificationCenterPage() {
                 <FavoriteToggle label="Notifications" />
               </div>
               <div className="flex items-center gap-1">
+                {/* 快速审阅弹窗按钮（保留用户强诉求的决策卡批量审阅功能） */}
+                {rawDecisions.length > 0 && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-7 gap-1.5 rounded-full px-2.5 text-xs font-semibold shadow-xs"
+                    onClick={() => setReviewModalOpen(true)}
+                    title="快速审阅待办决策"
+                  >
+                    <Layers className="size-3.5" />
+                    <span>快速审阅</span>
+                    <span className="rounded-full bg-primary-foreground/25 px-1.5 py-0.2 font-mono text-10 leading-none">
+                      {rawDecisions.length}
+                    </span>
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -175,249 +128,285 @@ export function NotificationCenterPage() {
                 </Button>
               </div>
             </div>
-            <div className="mt-1 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {unreadCount > 0 ? `${unreadCount} unread` : t("notification.allCaughtUp")}
-              </span>
-              {unreadNotifications.length > 0 ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1.5 px-2 text-xs"
-                  onClick={() => markRead.mutate(unreadNotifications.map((item) => item.id))}
-                >
-                  <Check size={14} />
-                  Mark all read
-                </Button>
-              ) : null}
-            </div>
           </div>
+
           <NotificationSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
-          <div className="flex items-center gap-1 border-b border-border px-3 py-2">
-            {(["unread", "all", "assistant"] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => {
-                  setFilter(tab);
-                  setSelectedId(null);
-                }}
-                className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-                  filter === tab
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                {tab === "unread"
-                  ? "Unread"
-                  : tab === "assistant"
-                    ? t("notification.assistant.tab")
-                    : "All"}
-              </button>
-            ))}
+          {/* 2. 顶栏四大 GTD 分类 Tab（重要 / 其他 / 稍后 / 已清理） */}
+          <div className="flex items-center border-b border-border px-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(tab.key);
+                    setSelectedId(null);
+                  }}
+                  className={cn(
+                    'relative flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px',
+                    isActive
+                      ? 'border-primary text-foreground font-semibold'
+                      : 'border-transparent text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  <Icon className={cn('size-3.5', isActive ? 'text-primary' : 'text-muted-foreground')} />
+                  <span>{tab.label}</span>
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span
+                      className={cn(
+                        'ml-0.5 rounded-full px-1.5 py-0.2 font-mono text-10 leading-tight',
+                        tab.key === 'important'
+                          ? 'bg-accent-red text-white'
+                          : 'bg-muted text-content-text-muted',
+                      )}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-auto">
-            {listLoading ? (
+          {/* 3. 工具栏（搜索、筛选、一键清理、全部已读） */}
+          <div className="flex items-center justify-between gap-2 border-b border-border/80 px-3 py-2 bg-muted/20">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              {/* 筛选菜单 */}
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={<Button variant="ghost" size="icon" className="size-7 shrink-0 text-muted-foreground" />}
+                >
+                  <Filter className="size-3.5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-36 text-xs">
+                  <DropdownMenuItem onClick={() => setTypeFilter('all')}>
+                    全部类型
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTypeFilter('decision')}>
+                    仅决策待办
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTypeFilter('agent')}>
+                    仅 AI 同事
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTypeFilter('issue')}>
+                    仅工单任务
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* 搜索框 */}
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="搜索条目、工单或 Agent..."
+                  className="h-7 pl-7 text-xs bg-background"
+                />
+              </div>
+            </div>
+
+            {/* 批量动作 */}
+            <div className="flex items-center gap-1 shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={markAllRead}
+                title="全部标记为已读"
+              >
+                <Check className="mr-1 size-3.5" />
+                全部已读
+              </Button>
+
+              {activeTab !== 'cleared' && items.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs font-medium border-border/80 shadow-2xs hover:bg-muted"
+                  onClick={clearAllCurrent}
+                  title="全部清理当前视图"
+                >
+                  <CheckCheck className="size-3.5 text-accent-green" />
+                  全部清理
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* 4. 高密度列表区 */}
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+            {isLoading ? (
               <div className="flex flex-col gap-2 p-3">
                 <SkeletonCard />
                 <SkeletonCard />
                 <SkeletonCard />
               </div>
-            ) : error ? (
-              <div className="p-3">
-                <AsyncState error={error instanceof Error ? error.message : String(error)} onRetry={() => refetch()}>{null}</AsyncState>
+            ) : isError ? (
+              <div className="p-4">
+                <AsyncState error="加载收件箱失败" onRetry={refetch}>{null}</AsyncState>
               </div>
-            ) : listEmpty ? (
+            ) : items.length === 0 ? (
               <EmptyState
                 variant="page"
-                className="m-6"
+                className="m-8"
                 visual={
-                  <IconStack
-                    aria-hidden="true"
-                    className={filter === "assistant" ? "text-accent-purple" : "text-accent-blue"}
-                  >
-                    {filter === "assistant" ? (
-                      <Bot className="size-4 text-accent-purple" />
-                    ) : (
-                      <Bell className="size-4 text-accent-blue" />
-                    )}
+                  <IconStack aria-hidden="true" className="text-accent-blue">
+                    <Sparkles className="size-5 text-accent-blue" />
                   </IconStack>
                 }
-                title={
-                  filter === "assistant"
-                    ? t("notification.assistant.empty")
-                    : t("notification.empty", "You're all caught up!")
-                }
+                title={activeTab === 'important' ? '全部处理完毕 (Inbox Zero)' : '暂无相关条目'}
                 description={
-                  filter === "assistant"
-                    ? t("notification.assistant.hint")
-                    : t("notification.emptyHint", "No notifications yet")
+                  activeTab === 'important'
+                    ? '太棒了！当前没有任何阻塞待你拍板的事项。'
+                    : '已清理或被稍后提醒的条目会保存在对应视图。'
                 }
               />
-            ) : filter === "assistant" ? (
-              <div>
-                {(conversations ?? []).map((conversation) => {
-                  const selected = conversation.id === selectedId;
-                  return (
-                    <button
-                      key={conversation.id}
-                      type="button"
-                      className={cn(
-                        "flex w-full items-start gap-2.5 border-b border-border/60 px-3 py-2 text-left transition-colors hover:bg-accent",
-                        selected && "bg-accent text-accent-foreground",
-                      )}
-                      onClick={() => handleSelectConversation(conversation.id)}
-                    >
-                      <div className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-purple-light">
-                        <Bot className="size-3.5 text-accent-purple" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className={cn("truncate text-sm", selected ? "text-accent-foreground" : "text-foreground")}>
-                          {conversation.title || t("assistant.history.untitled")}
-                        </p>
-                        <p className={cn("mt-0.5 text-xs", selected ? "text-accent-foreground/70" : "text-muted-foreground")}>
-                          {t("notification.assistant.messageCount", { n: conversation.messageCount })}
-                          {" · "}
-                          {getTimeSince(conversation.updatedAt)}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
             ) : (
-              <div>
-                {notifications.map((item) => {
-                  const config = typeConfigFor(item.type);
-                  const Icon = config.icon;
-                  const selected = item.id === selectedId;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={cn(
-                        "flex w-full items-start gap-2.5 border-b border-border/60 px-3 py-2 text-left transition-colors hover:bg-accent",
-                        selected && "bg-accent text-accent-foreground",
-                        item.status === "unread" && !selected && "bg-accent/20",
-                      )}
-                      onClick={() => handleSelect(item)}
-                    >
-                      <div className={cn("mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full", config.bg)}>
-                        <Icon className={cn("size-3.5", config.color)} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          {item.status === "unread" ? <span className="size-1.5 shrink-0 rounded-full bg-primary" /> : null}
-                          <p className={cn("truncate text-sm", item.status === "unread" ? "font-medium text-foreground" : "text-muted-foreground", selected && "text-accent-foreground")}>
-                            {item.title}
-                          </p>
-                        </div>
-                        <p className={cn("mt-0.5 truncate text-xs", selected ? "text-accent-foreground/70" : "text-muted-foreground")}>
-                          {item.body || getTimeSince(item.createdAt)}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
+              <div className="divide-y divide-border/40">
+                {items.map((item) => (
+                  <InboxItemRow
+                    key={item.id}
+                    item={item}
+                    isSelected={selectedItem?.id === item.id}
+                    onSelect={handleSelectItem}
+                    onClear={clearItem}
+                    onRestore={restoreItem}
+                    onSnooze={snoozeItem}
+                    onToggleRead={() => {}}
+                  />
+                ))}
               </div>
             )}
           </div>
+
+          {/* 5. 底部产品核心心智横幅（对应截图字幕） */}
+          <div className="border-t border-border/70 px-4 py-2 bg-muted/15 flex items-center justify-between text-xs text-content-text-muted">
+            <span className="flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-accent-green animate-pulse" />
+              待确认事项自动进入「收件箱」
+            </span>
+            <span>{items.length} 项</span>
+          </div>
         </aside>
 
-        {/* ── 右栏：选中项详情 ── */}
-        <section className="flex min-w-0 flex-1 flex-col">
-          {filter === "assistant" ? (
-            selectedConversation ? (
-              <div className="mx-auto w-full max-w-2xl px-6 py-6">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-purple-light">
-                    <Bot className="size-5 text-accent-purple" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-lg font-semibold text-foreground">
-                      {selectedConversation.title || t("assistant.history.untitled")}
-                    </h2>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {t("notification.assistant.messageCount", { n: selectedConversation.messageCount })}
-                      {" · "}
-                      {getTimeSince(selectedConversation.updatedAt)}
-                    </p>
-                  </div>
+        {/* ── 右栏：选中项的就地拍板决策卡 / 通知详情联动 ── */}
+        <section className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-muted/10">
+          {selectedItem?.sourceKind === 'decision' && selectedItem.rawDecision ? (
+            <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-6 py-6">
+              <div className="mb-4 flex w-full items-center justify-between border-b border-border/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="rounded bg-accent-yellow-light text-accent-yellow px-2 py-0.5 text-xs font-semibold border border-accent-yellow/20">
+                    决策中心 · 就地拍板
+                  </span>
+                  <span className="text-xs text-content-text-muted">
+                    审核完毕将自动归入「已清理」
+                  </span>
                 </div>
-                <div className="mt-6">
-                  <Button
-                    className="gap-1.5"
-                    onClick={() => openAssistantConversation(selectedConversation.id)}
-                  >
-                    <MessageSquare className="size-4" />
-                    {t("notification.assistant.continueChat")}
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setReviewModalOpen(true)}
+                  className="h-7 gap-1.5 text-xs text-primary hover:text-primary"
+                >
+                  <Layers className="size-3.5" />
+                  <span>多卡集中批阅</span>
+                </Button>
               </div>
-            ) : (
-              <div className="flex flex-1 items-center justify-center p-6">
-                <EmptyState
-                  title={detailEmptyTitle}
-                  description={t("notification.detail.emptyHint")}
+
+              {/* 核心现实卡片直接渲染（五段式文法就地拍板） */}
+              <div className="w-full">
+                <DecisionCard
+                  decision={selectedItem.rawDecision}
+                  busy={busyDecisionId === selectedItem.rawDecision.id}
+                  onAction={handleDecisionAction}
+                  variant="vertical"
                 />
               </div>
-            )
-          ) : selectedNotification ? (
-            <div className="mx-auto w-full max-w-2xl px-6 py-6">
-              {(() => {
-                const config = typeConfigFor(selectedNotification.type);
-                const Icon = config.icon;
-                return (
+            </div>
+          ) : selectedItem ? (
+            <div className="mx-auto w-full max-w-2xl px-6 py-8">
+              <div className="rounded-xl border border-border/80 bg-background p-6 shadow-xs">
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-full", config.bg)}>
-                      <Icon className={cn("size-5", config.color)} />
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-blue-light text-accent-blue">
+                      <Bell className="size-5 text-accent-blue" />
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div>
                       <h2 className="text-lg font-semibold text-foreground">
-                        {selectedNotification.title}
+                        {selectedItem.title}
                       </h2>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {getTimeSince(selectedNotification.createdAt)}
-                        {" · "}
-                        {selectedNotification.status === "unread"
-                          ? t("notification.detail.unread")
-                          : t("notification.detail.read")}
-                      </p>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-content-text-muted">
+                        <span>{selectedItem.actor?.name || '系统动态'}</span>
+                        <span>·</span>
+                        <span>{new Date(selectedItem.createdAt).toLocaleString()}</span>
+                      </div>
                     </div>
                   </div>
-                );
-              })()}
-              {selectedNotification.body ? (
-                <p className="mt-4 text-base leading-relaxed text-content-text-secondary">
-                  {selectedNotification.body}
-                </p>
-              ) : null}
-              <div className="mt-6 flex items-center gap-2">
-                <Button
-                  variant={selectedNotification.status === "unread" ? "default" : "outline"}
-                  size="sm"
-                  className="gap-1.5 text-xs"
-                  onClick={() => handleSelect(selectedNotification)}
-                  disabled={selectedNotification.status === "read"}
-                >
-                  <Check size={14} />
-                  Mark as read
-                </Button>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1 text-xs"
+                      onClick={() => clearItem(selectedItem.id)}
+                    >
+                      <Check className="size-3.5" />
+                      清理归档
+                    </Button>
+                  </div>
+                </div>
+
+                {selectedItem.subtitle && (
+                  <div className="mt-6 rounded-lg bg-muted/40 p-4 text-sm text-foreground/90 leading-relaxed">
+                    {selectedItem.subtitle}
+                  </div>
+                )}
+
+                {/* 关联上下文卡片 */}
+                {selectedItem.issueId && (
+                  <div className="mt-6 flex items-center justify-between rounded-lg border border-border/80 p-3 bg-muted/10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-content-text-muted">关联工单：</span>
+                      <span className="text-xs font-medium text-foreground">
+                        {selectedItem.issueTitle || selectedItem.issueId}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 text-xs text-primary hover:text-primary"
+                      onClick={() => navigate(`/app/tasks/${selectedItem.issueId}`)}
+                    >
+                      <span>打开工单</span>
+                      <ExternalLink className="size-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
-            <div className="flex flex-1 items-center justify-center p-6">
+            <div className="flex flex-1 items-center justify-center p-8">
               <EmptyState
-                title={detailEmptyTitle}
-                description={t("notification.detail.emptyHint")}
+                title="选择一项查看详情"
+                description="点击左侧列表中的任意条目，右侧将展开决策卡片或关联上下文。"
               />
             </div>
           )}
         </section>
       </div>
+
+      {/* 全屏多卡集中快速审阅弹窗（保留现有的决策卡快速审阅功能） */}
+      <DecisionReviewModal
+        open={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        decisions={rawDecisions}
+        busyId={busyDecisionId}
+        onAction={handleDecisionAction}
+      />
     </PageShell>
   );
 }

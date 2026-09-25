@@ -621,6 +621,115 @@ function validateWorkflowDefPayload(
   }
 }
 
+/**
+ * propose_decision 按 kind 的 payload 形状守卫（对齐 ProposalService.apply 各 case
+ * 与 decision/dto/proposal.dto.ts 的期望形状）：AI 误用 kind / 漏字段时创建即拒卡
+ * 并给出期望形状，不再静默产出「人采纳时才炸」的坏卡。返回 null 表示形状合法。
+ */
+function validateProposalPayload(
+  kind: (typeof PROPOSAL_KINDS)[number],
+  payload: Record<string, unknown>,
+  options: { hasProjectContext: boolean },
+): string | null {
+  const bad = (expected: string) =>
+    `${kind} 提案的 payload 形状非法，期望 ${expected}；请修正 payload 或改用合适的 kind 后重新提交`;
+
+  switch (kind) {
+    case 'plan': {
+      const added = payload.added as unknown;
+      if (
+        !Array.isArray(added) ||
+        added.length === 0 ||
+        added.some(
+          (s) =>
+            !s ||
+            typeof s !== 'object' ||
+            typeof (s as { title?: unknown }).title !== 'string' ||
+            !(s as { title: string }).title.trim(),
+        )
+      ) {
+        return bad(
+          '{ added: [{ title, description?, estimate?, assigneeMemberId?, acceptance? }] }，added 必须为非空数组且每项含非空 title（字符串）',
+        );
+      }
+      return null;
+    }
+    case 'assignment': {
+      const assignments = payload.assignments as unknown;
+      if (
+        !Array.isArray(assignments) ||
+        assignments.length === 0 ||
+        assignments.some(
+          (a) =>
+            !a ||
+            typeof a !== 'object' ||
+            typeof (a as { issueId?: unknown }).issueId !== 'string' ||
+            typeof (a as { memberId?: unknown }).memberId !== 'string',
+        )
+      ) {
+        return bad(
+          '{ assignments: [{ issueId, memberId }] }，assignments 必须为非空数组且每项 issueId/memberId 均为字符串',
+        );
+      }
+      return null;
+    }
+    case 'resolution': {
+      const { entityType, entityId } = payload as {
+        entityType?: unknown;
+        entityId?: unknown;
+      };
+      if (
+        (entityType !== 'task' && entityType !== 'milestone') ||
+        typeof entityId !== 'string' ||
+        !entityId
+      ) {
+        return bad(
+          '{ entityType: "task" | "milestone", entityId }，entityId 为字符串',
+        );
+      }
+      return null;
+    }
+    case 'spend': {
+      if (!options.hasProjectContext) {
+        return 'spend 提案需要项目上下文（当前会话未绑定项目）：批准后的预算写入以 projectId 为前提，请在项目会话中重新提交';
+      }
+      const { budgetType, newValue } = payload as {
+        budgetType?: unknown;
+        newValue?: unknown;
+      };
+      if (
+        (budgetType !== 'tokens' && budgetType !== 'usd') ||
+        typeof newValue !== 'number' ||
+        !Number.isFinite(newValue)
+      ) {
+        return bad(
+          '{ budgetType: "tokens" | "usd", newValue: number }，newValue 为批准后写入项目配置的新预算值',
+        );
+      }
+      return null;
+    }
+    case 'clarify': {
+      const { question, choices } = payload as {
+        question?: unknown;
+        choices?: unknown;
+      };
+      if (
+        typeof question !== 'string' ||
+        !question.trim() ||
+        !Array.isArray(choices) ||
+        choices.some((c) => !c || typeof c !== 'object' || Array.isArray(c))
+      ) {
+        return bad(
+          '{ question, choices: [{ key, label, sub?, guess? }] }，question 为非空字符串、choices 为选项对象数组（首项可标 guess: true）',
+        );
+      }
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
 /** 列表场景的宽容摘要：历史脏数据不阻塞列表，摘要给空数组 */
 function summarizeDefinitionSafe(definition: unknown) {
   try {
@@ -1981,29 +2090,21 @@ export class AssistantToolsService {
         inputSchema: z.object({
           kind: z.enum(PROPOSAL_KINDS),
           title: z.string().describe('建议标题'),
-          payload: z.record(z.string(), z.unknown()).describe('结构化载荷'),
+          payload: z
+            .record(z.string(), z.unknown())
+            .describe(
+              '结构化载荷，形状随 kind：plan={added:[{title,...}]}、assignment={assignments:[{issueId,memberId}]}、resolution={entityType,entityId}、spend={budgetType,newValue}、clarify={question,choices}',
+            ),
           detail: z.string().optional().describe('补充说明'),
         }),
         execute: async ({ kind, title, payload, detail }) => {
-          // assignment 提案在创建时即校验形状，避免采纳时才炸
-          if (kind === 'assignment') {
-            const assignments = (
-              payload as { assignments?: Array<Record<string, unknown>> }
-            ).assignments;
-            if (
-              !Array.isArray(assignments) ||
-              assignments.length === 0 ||
-              assignments.some(
-                (a) =>
-                  typeof a?.issueId !== 'string' ||
-                  typeof a?.memberId !== 'string',
-              )
-            ) {
-              return {
-                error:
-                  'assignment 提案的 payload.assignments 必须是非空数组，每项形如 { issueId, memberId }',
-              };
-            }
+          // 提案在创建时即按 kind 校验 payload 形状（对齐 ProposalService.apply
+          // 的期望形状），避免 AI 误用 kind 产出「采纳时才炸」的坏卡
+          const payloadError = validateProposalPayload(kind, payload, {
+            hasProjectContext: Boolean(defaultProjectId),
+          });
+          if (payloadError) {
+            return { error: payloadError };
           }
           // 提案人归因到平台助理「小周」的真实 Member（V3 身份口径）
           const assistantMember = await this.prisma.member.findUnique({

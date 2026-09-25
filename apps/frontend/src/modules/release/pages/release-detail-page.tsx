@@ -13,6 +13,7 @@ import {
   CircleDashed,
   Clock,
   Flag,
+  FolderKanban,
   Rocket,
   Sparkles,
   XCircle,
@@ -59,6 +60,21 @@ const STATUS_FLOW: ReleaseStatus[] = [
   'released',
 ];
 
+/**
+ * 「范围为空跳过」检查项的 detail 文案（服务端固定输出，快照只读）。
+ * 服务端 GateCheck.passed 仅二值——ci/audit 空范围置 false、acceptance 空真置 true，
+ * 前端据此归类为跳过态统一中性渲染，避免同为跳过语义却红绿不一。
+ */
+const GATE_EMPTY_SCOPE_CHECK_DETAILS = new Set([
+  '范围为空，跳过',
+  '范围内 0 条工单验收全部通过或豁免',
+]);
+
+/** 非范围原因的跳过（无工作区）：服务端 detail 已自述原因，保留原文仅中和视觉 */
+const GATE_OTHER_SKIP_CHECK_DETAILS = new Set([
+  '项目无工作区，发布时将诚实跳过导出',
+]);
+
 export function ReleaseDetailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -96,7 +112,7 @@ export function ReleaseDetailPage() {
     <PageShell className="overflow-hidden" aiPage="releases.detail">
       <SubPageToolbar
         aiId="releases.detail"
-        onBack={() => navigate(release ? `/app/releases?projectId=${release.projectId}` : '/app/releases')}
+        onBack={() => navigate(release ? `/app/releases?project=${release.projectId}` : '/app/releases')}
         breadcrumbs={[
           { label: t('nav.releases', '发版交付'), to: '/app/releases' },
           { label: release ? `v${release.version}` : t('release.detail.loading') },
@@ -239,6 +255,12 @@ export function ReleaseDetailPage() {
                     </p>
                   )}
                   <div className="flex flex-wrap gap-4 border-t border-border pt-3 text-11 text-content-text-muted">
+                    {release.project ? (
+                      <span className="flex items-center gap-1">
+                        <FolderKanban className="size-3" />
+                        {t('release.detail.project')}: {release.project.name}
+                      </span>
+                    ) : null}
                     <span>{t('release.detail.tag')}: <span className="font-mono">{release.gitTag || `v${release.version}（${t('release.detail.tagPending')}）`}</span></span>
                     <span>
                       {t('release.detail.github')}:{' '}
@@ -380,22 +402,42 @@ function GateCard({
         {checks.length > 0 ? (
           <ul className="space-y-1.5">
             {checks.map((c) => (
-              <li key={c.key} className="flex items-start gap-2 text-xs">
-                {c.passed ? (
-                  <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-accent-green" />
-                ) : (
-                  <XCircle className="mt-0.5 size-3.5 shrink-0 text-accent-red" />
-                )}
-                <span>
-                  <span className="font-medium">{c.label}</span>
-                  <span className="ml-2 text-content-text-muted">{c.detail}</span>
-                </span>
-              </li>
+              <GateCheckRow key={c.key} check={c} />
             ))}
           </ul>
         ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+function GateCheckRow({ check }: { check: GateCheck }) {
+  const { t } = useTranslation();
+  const skippedEmptyScope = GATE_EMPTY_SCOPE_CHECK_DETAILS.has(check.detail);
+  const skipped =
+    skippedEmptyScope || GATE_OTHER_SKIP_CHECK_DETAILS.has(check.detail);
+  return (
+    <li
+      className={cn(
+        'flex items-start gap-2 text-xs',
+        skipped && 'text-content-text-muted',
+      )}
+    >
+      {skipped ? (
+        // 跳过态：中性灰 + 虚线圈（与执行日志 skipped 步骤同视觉语言）
+        <CircleDashed className="mt-0.5 size-3.5 shrink-0 text-content-text-muted" />
+      ) : check.passed ? (
+        <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-accent-green" />
+      ) : (
+        <XCircle className="mt-0.5 size-3.5 shrink-0 text-accent-red" />
+      )}
+      <span>
+        <span className="font-medium">{check.label}</span>
+        <span className="ml-2 text-content-text-muted">
+          {skippedEmptyScope ? t('release.gate.skippedEmptyScope') : check.detail}
+        </span>
+      </span>
+    </li>
   );
 }
 

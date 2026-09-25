@@ -60,9 +60,16 @@ export function AcceptancePreviewBody({ id }: { id: string }) {
       </div>
 
       <PreviewSection title="证据回流与治理">
-        <PreviewRow label={t('routePreview.acceptance.task')}>
-          {acceptance.task?.title ?? acceptance.issueId}
-        </PreviewRow>
+        {acceptance.issue?.project && (
+          <PreviewRow label={t('routePreview.acceptance.project')}>
+            {acceptance.issue.project.name}
+          </PreviewRow>
+        )}
+        {acceptance.issue && (
+          <PreviewRow label={t('routePreview.acceptance.task')}>
+            {acceptance.issue.title}
+          </PreviewRow>
+        )}
         {acceptance.completionType && (
           <PreviewRow label="闭环类型">
             <span className="text-10 font-mono text-muted-foreground">{acceptance.completionType}</span>

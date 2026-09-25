@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GanttChart, type GanttDateRange, type GanttChartItem, type GanttScale } from '@/shared/components/gantt-chart';
 import type { Task } from '../api/issue-api';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
@@ -56,6 +57,7 @@ export function TaskGantt({
   scale,
   onScaleChange,
 }: TaskGanttProps) {
+  const { t } = useTranslation();
   const taskMap = useMemo(() => new Map(tasks.map((task) => [task.id, task])), [tasks]);
 
   const items = useMemo<GanttChartItem[]>(() => {
@@ -95,9 +97,9 @@ export function TaskGantt({
       items={items}
       onItemClick={handleItemClick}
       onItemDateChange={handleDateChange}
-      leftColumnTitle="Task"
-      emptyMessage="暂无可排期的任务"
-      emptyDescription="甘特视图依赖日期字段，为任务设置截止日期后即可在此排期"
+      leftColumnTitle={t('task.gantt.leftColumnTitle')}
+      emptyMessage={t('task.gantt.empty')}
+      emptyDescription={t('task.gantt.emptyDesc')}
       scale={scale}
       onScaleChange={onScaleChange}
     />

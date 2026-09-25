@@ -17,6 +17,7 @@ import {
   DEFAULT_WORKSPACE_ID,
 } from '../../src/core/database/workspace-registry.util';
 import { workspaceALS } from '../../src/core/database/workspace-context';
+import { registerUnknownRouteFilter } from '../../src/common/filters/unknown-route.filter';
 
 // jest 运行级临时目录：注册表文件避免写真实 workspaces.json
 const runTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-e2e-'));
@@ -115,6 +116,8 @@ export async function initTestApp(
     },
   );
   await app.init();
+  // 路由注册完成后再追加未知路由信封兜底（与 main.ts 同口径）
+  registerUnknownRouteFilter(app);
   return app;
 }
 

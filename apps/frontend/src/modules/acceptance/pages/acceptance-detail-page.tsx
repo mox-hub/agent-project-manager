@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   ShieldCheck,
   Sparkles,
+  FolderKanban,
   ThumbsUp,
   ThumbsDown,
   Trash2,
@@ -519,13 +520,13 @@ export function AcceptanceDetailPage() {
                     <TypeIcon className="size-3.5" />
                     {t(`acceptance.completionType.${acceptance.completionType}`)}
                   </span>
-                  {acceptance.task && (
+                  {acceptance.issue && (
                     <Link
                       to={`/app/issues/${acceptance.issueId}`}
                       className="flex items-center gap-1 hover:text-foreground hover:underline"
                     >
                       <Link2 className="size-3.5" />
-                      {acceptance.task.title}
+                      {acceptance.issue.title}
                     </Link>
                   )}
                   {active && (
@@ -883,18 +884,33 @@ export function AcceptanceDetailPage() {
               </span>
             </PropertyRow>
             <PropertyRow
+              icon={<FolderKanban className="size-3.5" />}
+              label={t('acceptanceDetail.props.project')}
+            >
+              {acceptance.issue?.project ? (
+                <Link
+                  to={`/app/projects/${acceptance.issue.project.id}`}
+                  className="text-xs hover:underline"
+                >
+                  {acceptance.issue.project.name}
+                </Link>
+              ) : (
+                <span className="text-xs text-muted-foreground">—</span>
+              )}
+            </PropertyRow>
+            <PropertyRow
               icon={<Link2 className="size-3.5" />}
               label={t('acceptanceDetail.props.task')}
             >
-              {acceptance.task ? (
+              {acceptance.issue ? (
                 <Link
                   to={`/app/issues/${acceptance.issueId}`}
                   className="text-xs hover:underline"
                 >
-                  {acceptance.task.title}
+                  {acceptance.issue.title}
                 </Link>
               ) : (
-                <span className="text-xs text-muted-foreground">{acceptance.issueId}</span>
+                <span className="text-xs text-muted-foreground">—</span>
               )}
             </PropertyRow>
             <PropertyRow

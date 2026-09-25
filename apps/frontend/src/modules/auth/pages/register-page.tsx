@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
-import { Logo } from '@/components/brand/logo';
 import { authApi, type RegisterInvitePreview } from '../api/auth-api';
+import { AuthVisualCard } from '../components/auth-visual-card';
 
 /** api-client 拦截器把后端错误信封转成顶层 code/status 的 ApiClientError */
 type ApiClientErrorLike = { code?: string; status?: number; message?: string };
@@ -81,30 +81,19 @@ export function RegisterPage() {
   const inviteInvalid = invite && invite.status !== 'pending';
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-75 space-y-6 rounded-lg border border-border bg-background p-8 shadow-md"
-      >
-        <div className="text-center">
-          <Logo size="lg" variant="framed" className="mx-auto mb-3" ariaLabel="Agent Project Manager" />
-          <h1 className="mb-1 text-2xl font-bold text-foreground">Agent Project Manager</h1>
-          <h2 className="mt-3 text-lg text-muted-foreground">
-            {inviteToken ? '受邀注册' : '邮箱注册'}
-          </h2>
-        </div>
-
+    <AuthVisualCard isRegister>
+      <form onSubmit={handleSubmit} className="space-y-3.5">
         {invite && (
           <div
-            className={`rounded-md px-3 py-2 text-xs ${
+            className={`rounded-lg px-3 py-2 text-xs leading-relaxed ${
               inviteInvalid
-                ? 'bg-accent-red/10 text-accent-red'
-                : 'bg-accent-blue/10 text-accent-blue'
+                ? 'bg-destructive/10 text-destructive border border-destructive/20'
+                : 'bg-primary/10 text-primary border border-primary/20'
             }`}
           >
             {inviteInvalid
               ? '该邀请已失效，请联系管理员重新发送。'
-              : `${invite.inviterName} 邀请你注册${
+              : `${invite.inviterName} 邀请你加入 APM 团队${
                   invite.email ? `（受邀邮箱：${invite.email}）` : ''
                 }`}
           </div>
@@ -116,7 +105,7 @@ export function RegisterPage() {
           </Alert>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <Input
             type="email"
             value={email}
@@ -124,12 +113,14 @@ export function RegisterPage() {
             placeholder="name@example.com"
             required
             autoComplete="email"
+            className="h-9.5 text-sm"
           />
           <Input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="姓名（可选）"
             autoComplete="name"
+            className="h-9.5 text-sm"
           />
           <Input
             type="password"
@@ -139,6 +130,7 @@ export function RegisterPage() {
             required
             minLength={8}
             autoComplete="new-password"
+            className="h-9.5 text-sm"
           />
           <Input
             type="password"
@@ -147,31 +139,37 @@ export function RegisterPage() {
             placeholder="确认密码"
             required
             autoComplete="new-password"
+            className="h-9.5 text-sm"
           />
         </div>
 
         <Button
           type="submit"
-          className="w-full"
+          className="h-10 w-full text-sm font-medium shadow-xs"
           disabled={submitting || Boolean(inviteInvalid)}
         >
           {submitting ? (
             <>
-              <Spinner className="size-4 text-inherit" />
-              注册中…
+              <Spinner className="size-4 text-inherit mr-2" />
+              注册并初始化…
             </>
           ) : (
             '注册并登录'
           )}
         </Button>
 
-        <p className="text-center text-xs text-muted-foreground">
+        <p className="text-center text-xs text-muted-foreground pt-1">
           已有账号？{' '}
-          <Link to="/login" className="text-primary hover:underline">
+          <Link
+            to="/login"
+            className="text-primary hover:underline font-medium"
+          >
             返回登录
           </Link>
         </p>
       </form>
-    </div>
+    </AuthVisualCard>
   );
 }
+
+export default RegisterPage;

@@ -39,7 +39,7 @@ export function registerRunCommand(program: Command): void {
     .command('run')
     .description('派发任务给 CLI 执行（需本机已装对应 CLI，如 claude-code）')
     .requiredOption('--task <id>', '任务 id')
-    .option('--provider <p>', 'CLI provider（claude-code/codex/zcode）', 'claude-code')
+    .option('--provider <p>', 'CLI provider（claude-code/codex/zcode/opencode）', 'claude-code')
     .option('--model <m>', '模型覆盖')
     .option('--agent-binding <id>', 'Agent 绑定 id')
     .option('--timeout <ms>', '执行超时（毫秒）')
@@ -64,7 +64,7 @@ export function registerRunCommand(program: Command): void {
         if (opts.agentBinding) body.agentBindingId = opts.agentBinding;
         if (opts.timeout) body.timeout = Number(opts.timeout);
         const result = (await ctx.client.post(
-          `/ai/tasks/${opts.task}/dispatch-cli`,
+          `/ai/issues/${opts.task}/dispatch-cli`,
           body,
         )) as DispatchResult;
         out(ctx, result);

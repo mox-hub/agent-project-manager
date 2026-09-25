@@ -7,16 +7,17 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
+import { randomUUID } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 
-interface ErrorPayload {
+export interface ErrorPayload {
   code: string;
   message: string;
   details?: unknown;
 }
 
-interface ErrorResponseBody {
+export interface ErrorResponseBody {
   status: number;
   success: false;
   description: string;
@@ -24,6 +25,21 @@ interface ErrorResponseBody {
   error: ErrorPayload;
   timestamp: string;
   requestId?: string;
+}
+
+/**
+ * 请求追踪 ID：优先取请求对象上已落的值（TransformInterceptor 语义），
+ * 回落 x-request-id 头，再回落现生成——异常发生在拦截器之前（守卫拒绝、
+ * 404、body-parse 等）时信封仍带 requestId。
+ */
+export function resolveRequestId(
+  request: Request & { requestId?: string },
+): string {
+  if (request.requestId) return request.requestId;
+  const header = request.headers?.['x-request-id'];
+  if (typeof header === 'string' && header.trim()) return header;
+  if (Array.isArray(header) && header[0]?.trim()) return header[0];
+  return `req-${randomUUID()}`;
 }
 
 /**
@@ -139,7 +155,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       data: null,
       error: { code, message: description, details },
       timestamp: new Date().toISOString(),
-      requestId: request.requestId,
+      requestId: resolveRequestId(request),
     };
 
     response.status(status).json(body);

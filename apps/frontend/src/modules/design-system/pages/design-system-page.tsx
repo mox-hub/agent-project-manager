@@ -330,6 +330,7 @@ import { DualTrackMetricPill } from '@/shared/components/dual-track-metric-pill'
 import { IssueTypePill } from '@/shared/components/issue-type-pill'
 import { AssistantToolCard } from '@/modules/assistant/components/assistant-tool-card'
 import { DecisionCardShell } from '@/shared/decision-card/decision-card-shell'
+import { MemberCard } from '@/modules/auth/components/member-card'
 
 const SECTIONS = [
   { id: 'colors', label: 'Color Tokens', group: 'Tokens' },
@@ -353,6 +354,7 @@ const SECTIONS = [
   { id: 'stepper', label: 'Stepper', group: 'Primitives' },
   { id: 'sortable', label: 'Sortable', group: 'Primitives' },
   { id: 'icon-stack', label: 'Icon Stack', group: 'Primitives' },
+  { id: 'auth-surface', label: 'Auth Surface', group: 'Primitives' },
   { id: 'meter', label: 'Meter', group: 'Primitives' },
   { id: 'tabs', label: 'Tabs', group: 'Primitives' },
   { id: 'accordion', label: 'Accordion', group: 'Primitives' },
@@ -2576,6 +2578,16 @@ export function DesignSystemPage() {
                   />
                 </div>
               </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="auth-surface">
+            <SectionTitle>Auth Surface</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">CAP-A-22 认证面改版件——MemberCard 身份工牌（欢迎页右栏仪式件，环形口号 + 成员编号/入职日期/签名）；AuthShell 分栏壳与 AuthVisual 拼贴见 /login 实页。</p>
+            <div className="rounded-xl border border-border bg-secondary p-8 flex justify-center">
+              <MemberCard displayName="张三" memberNo="03057317" joinedAt="2026-09-20T00:00:00.000Z" />
             </div>
           </SectionAnchor>
 

@@ -1,7 +1,17 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { TaskGantt } from '@/modules/issue/components/task-gantt';
 import type { Task } from '@/modules/issue/api/issue-api';
+
+// 与仓内其他组件测试同口径：t 直接返回 key（或 defaultValue），断言用 key
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, defaultValue?: string | { defaultValue?: string }) => {
+      if (typeof defaultValue === 'string') return defaultValue;
+      return defaultValue?.defaultValue ?? key;
+    },
+  }),
+}));
 
 function buildTask(partial: Partial<Task>): Task {
   return {
@@ -49,6 +59,6 @@ describe('TaskGantt', () => {
       />,
     );
 
-    expect(screen.getByText('暂无可排期的任务')).toBeTruthy();
+    expect(screen.getByText('task.gantt.empty')).toBeTruthy();
   });
 });

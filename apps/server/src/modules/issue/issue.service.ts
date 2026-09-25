@@ -1762,13 +1762,21 @@ export class IssueService {
       throw new NotFoundException(`Task ${issueId} not found`);
     }
 
+    // 字段名与创建/更新 DTO 统一为 aiAgentId；agentId 为 deprecated 别名，兼容读取
+    const agentId = dto.aiAgentId ?? dto.agentId;
+    if (!agentId) {
+      throw new BadRequestException(
+        'aiAgentId is required (deprecated alias agentId also accepted)',
+      );
+    }
+
     // 项目任务要求项目成员；收件箱任务与 update() 同口径：仅 reporter/assignee 可指派
     if (task.projectId) {
       await this.ensureProjectMember(task.projectId, userId);
     } else if (task.reporterId !== userId && task.assigneeId !== userId) {
       throw new ForbiddenException('Insufficient permissions');
     }
-    const member = await this.ensureAssignableAgent(dto.agentId);
+    const member = await this.ensureAssignableAgent(agentId);
 
     // 指派真相源是 IssueAssignee 多对多，主负责人三字段同步之；
     // 旧主负责人行须同步移除（负责人显示取 assignedAt 升序首行，不移除会继续显示旧负责人）
@@ -1792,11 +1800,11 @@ export class IssueService {
 
     await this.prisma.$transaction([
       this.prisma.issueAssignee.upsert({
-        where: { issueId_memberId: { issueId, memberId: dto.agentId } },
-        create: { issueId, memberId: dto.agentId },
+        where: { issueId_memberId: { issueId, memberId: agentId } },
+        create: { issueId, memberId: agentId },
         update: {},
       }),
-      ...(prevPrimaryMemberId && prevPrimaryMemberId !== dto.agentId
+      ...(prevPrimaryMemberId && prevPrimaryMemberId !== agentId
         ? [
             this.prisma.issueAssignee.delete({
               where: {
@@ -1812,7 +1820,7 @@ export class IssueService {
         where: { id: issueId },
         data: {
           assigneeType: 'ai_agent',
-          aiAgentId: dto.agentId,
+          aiAgentId: agentId,
           assigneeId: member.userId ?? null,
         },
       }),
@@ -1824,7 +1832,7 @@ export class IssueService {
       summary: `Assigned AI agent "${member.displayName}"`,
       source: 'user',
       changes: [
-        { field: 'aiAgentId', oldValue: task.aiAgentId, newValue: dto.agentId },
+        { field: 'aiAgentId', oldValue: task.aiAgentId, newValue: agentId },
       ],
       metadata: { assigneeType: 'ai_agent' },
     });
@@ -1832,7 +1840,7 @@ export class IssueService {
     this.messageBus.publish('task.agent.assigned', {
       projectId: task.projectId,
       issueId,
-      agentId: dto.agentId,
+      agentId,
       userId,
     });
 

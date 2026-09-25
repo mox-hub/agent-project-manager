@@ -21350,7 +21350,7 @@
             "description": "Task dispatched to CLI"
           },
           "400": {
-            "description": "Invalid request or provider unavailable"
+            "description": "Invalid request or provider unavailable。含信任门禁拦截：code=TRUST_LEVEL_INSUFFICIENT（目标 AI 成员信任等级为观察者，自动派发需协助者及以上；details 带当前/所需等级与提升指路），未评估成员放行并记工单时间线提示"
           },
           "401": {
             "description": "Unauthorized"
@@ -21495,7 +21495,7 @@
             "description": "新执行已创建并派发（retryOfId 血缘指回原执行）"
           },
           "400": {
-            "description": "不可重新执行：状态非 failed/blocked/superseded，或未关联有效工单；存在其他活跃执行时按错误信息先取消；派发被门禁阻断时新执行落 blocked"
+            "description": "不可重新执行：状态非 failed/blocked/superseded，或未关联有效工单；存在其他活跃执行时按错误信息先取消；派发被门禁（验收契约/依赖/信任等级 TRUST_LEVEL_INSUFFICIENT）阻断时新执行落 blocked"
           },
           "401": {
             "description": "Unauthorized"
@@ -21561,16 +21561,7 @@
     "/_api/acceptance": {
       "post": {
         "operationId": "AcceptanceController_create",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -22705,14 +22696,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -22880,14 +22863,6 @@
             "required": true,
             "in": "path",
             "description": "标准 ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -23904,14 +23879,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "requestBody": {
@@ -24062,14 +24029,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -24196,16 +24155,7 @@
     "/_api/acceptance/checklists": {
       "post": {
         "operationId": "AcceptanceController_createChecklist",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -24939,14 +24889,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -25089,14 +25031,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -25236,14 +25170,6 @@
             "required": true,
             "in": "path",
             "description": "契约 ID",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -27094,7 +27020,7 @@
             }
           },
           "400": {
-            "description": "请求参数错误\n\nInvalid request or provider already exists",
+            "description": "请求参数错误\n\nInvalid request or provider slot with the same display name already exists for this provider type",
             "content": {
               "application/json": {
                 "schema": {
@@ -44469,6 +44395,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "工作区列表（含默认工作区）",
         "tags": [
           "Workspaces"
@@ -44655,6 +44586,11 @@
             }
           }
         },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
         "summary": "标记工作区最近打开（前端切换时调用）",
         "tags": [
           "Workspaces"
@@ -63429,10 +63365,16 @@
       "AssignIssueAgentDto": {
         "type": "object",
         "properties": {
+          "aiAgentId": {
+            "type": "string",
+            "description": "AI 成员 ID（Member.id，type=ai_agent）。字段名与创建/更新 DTO 的 aiAgentId 对齐；两者同传时以 aiAgentId 为准，均缺省时 400",
+            "example": "clx..."
+          },
           "agentId": {
             "type": "string",
-            "description": "AI 成员 ID（Member.id，type=ai_agent）",
-            "example": "clx..."
+            "description": "[deprecated] 旧字段名，等价于 aiAgentId，仅为兼容既有调用方保留",
+            "example": "clx...",
+            "deprecated": true
           },
           "assigneeType": {
             "type": "string",
@@ -63444,7 +63386,7 @@
           }
         },
         "required": [
-          "agentId"
+          "aiAgentId"
         ]
       },
       "ApprovalRequestResponseDto": {
@@ -68217,6 +68159,22 @@
           "completedAt"
         ]
       },
+      "AcceptanceProjectBriefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "项目名称"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
       "AcceptanceIssueBriefDto": {
         "type": "object",
         "properties": {
@@ -68236,9 +68194,14 @@
             "description": "归属项目 ID"
           },
           "project": {
+            "description": "归属项目（任务未关联项目时为 null）",
+            "nullable": true,
             "type": "object",
-            "description": "归属项目",
-            "additionalProperties": true
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AcceptanceProjectBriefDto"
+              }
+            ]
           }
         },
         "required": [
@@ -70366,7 +70329,7 @@
         "properties": {
           "provider": {
             "type": "string",
-            "description": "Provider 类型",
+            "description": "Provider 类型（同类型可建多个槽位，如双网关；类型+显示名组合唯一）",
             "enum": [
               "openai",
               "anthropic",
@@ -70380,7 +70343,7 @@
           },
           "displayName": {
             "type": "string",
-            "description": "显示名称",
+            "description": "槽位显示名称（同类型内唯一）",
             "example": "OpenAI"
           },
           "apiKey": {
@@ -70418,7 +70381,7 @@
         "properties": {
           "displayName": {
             "type": "string",
-            "description": "显示名称",
+            "description": "显示名称（同类型内唯一，与同类型其他槽位重名时返回 400）",
             "example": "OpenAI Production"
           },
           "apiKey": {

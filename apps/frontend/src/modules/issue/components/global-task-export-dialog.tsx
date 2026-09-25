@@ -21,6 +21,10 @@ interface GlobalTaskExportDialogProps {
   /** 当前筛选结果集（导出范围 = 列表当前所见，避免「导出的和我看到的不一样」） */
   tasks: Task[];
   getProjectName?: (projectId: string | null | undefined) => string;
+  /** P2-17：范围说明由调用方给出（全局任务页分页后 = 当前页的筛选结果） */
+  scopeNote?: string;
+  /** P2-17：分页补充说明（多页时提示仅含本页数据，翻页可再导出） */
+  pageNote?: string;
 }
 
 /**
@@ -90,6 +94,8 @@ export function GlobalTaskExportDialog({
   onOpenChange,
   tasks,
   getProjectName,
+  scopeNote,
+  pageNote,
 }: GlobalTaskExportDialogProps) {
   const { t } = useTranslation();
   const [format, setFormat] = useState<ExportFormat>('csv');
@@ -130,12 +136,14 @@ export function GlobalTaskExportDialog({
             {t('task.export.globalTitle', '导出任务')}
           </DialogTitle>
           <DialogDescription>
-            {t(
-              'task.export.scopeNote',
-              '导出范围：当前筛选结果（{{count}} 条）——与列表当前的搜索、筛选和排序一致，而非全部工单。',
-              { count: tasks.length },
-            )}
+            {scopeNote ??
+              t(
+                'task.export.scopeNote',
+                '导出范围：当前筛选结果（{{count}} 条）——与列表当前的搜索、筛选和排序一致，而非全部工单。',
+                { count: tasks.length },
+              )}
           </DialogDescription>
+          {pageNote ? <p className="text-xs text-muted-foreground">{pageNote}</p> : null}
         </DialogHeader>
 
         <fieldset className="space-y-3">

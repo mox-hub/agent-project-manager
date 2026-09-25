@@ -1,6 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { DocRegistryService } from '../../document/services/doc-registry.service';
+import { MemoryService } from '../../memory/memory.service';
+import { classifyExecutionFailure } from '../../execution/failure-classifier';
+import {
+  buildEnrichmentSection,
+  readBudgetFromEnv,
+  DEFAULT_CONTEXT_ENRICHMENT_BUDGET_TOKENS,
+  type EnrichmentSource,
+} from './context-enrichment';
 
 export interface ContextData {
   projectSummary?: string;
@@ -13,9 +21,12 @@ export interface ContextData {
 
 @Injectable()
 export class ContextBuilderService {
+  private readonly logger = new Logger(ContextBuilderService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly docRegistry: DocRegistryService,
+    private readonly memoryService: MemoryService,
   ) {}
 
   async buildContext(options: {
@@ -295,6 +306,11 @@ export class ContextBuilderService {
     // V3: 获取最新的 Acceptance
     const acceptance = task.acceptances[0] || null;
 
+    // P2-23：派发上下文富化（文档摘要 / 记忆原子 / 历史教训），受 token 预算
+    // 约束；单来源拉取失败诚实跳过（不造假），全空时 enrichment 为 null
+    //（不注空段）。
+    const enrichment = await this.buildEnrichment(projectId);
+
     return {
       task: {
         id: task.id,
@@ -327,8 +343,136 @@ export class ContextBuilderService {
             > | null,
           }
         : null,
+      enrichment,
       generatedAt: new Date().toISOString(),
     };
+  }
+
+  /**
+   * P2-23 上下文富化：项目文档摘要（Registry catalog + digest）、记忆原子
+   * （recall 项目域 + global）、历史教训（同项目最近 failed/blocked 执行的
+   * 机械归类 + 人话 hint）。三来源并行拉取、单来源失败跳过不炸派发；
+   * 拼装后经 token 预算器贪心装入（优先级 docs > memories > lessons），
+   * 超限截断并在 enrichment.truncated 如实标注。
+   */
+  private async buildEnrichment(projectId: string) {
+    const budgetTokens = readBudgetFromEnv(
+      'CONTEXT_ENRICHMENT_BUDGET_TOKENS',
+      DEFAULT_CONTEXT_ENRICHMENT_BUDGET_TOKENS,
+    );
+
+    const [docs, memories, lessons] = await Promise.all([
+      this.loadDocsSource(projectId),
+      this.loadMemoriesSource(projectId),
+      this.loadLessonsSource(projectId),
+    ]);
+
+    const sources: EnrichmentSource[] = [];
+    if (docs)
+      sources.push({
+        key: 'docs',
+        title: '## 项目知识文档',
+        text: docs,
+        priority: 1,
+      });
+    if (memories)
+      sources.push({
+        key: 'memories',
+        title: '## 项目记忆',
+        text: memories,
+        priority: 2,
+      });
+    if (lessons)
+      sources.push({
+        key: 'lessons',
+        title: '## 历史教训',
+        text: lessons,
+        priority: 3,
+      });
+
+    if (sources.length === 0) return null;
+
+    const section = buildEnrichmentSection(sources, budgetTokens);
+    if (!section.text) return null;
+
+    return {
+      text: section.text,
+      included: section.included,
+      truncated: section.truncated,
+      budgetTokens: section.budgetTokens,
+      usedTokens: section.usedTokens,
+    };
+  }
+
+  /** 文档摘要来源：复用 docs provider 的 catalog+digest 拼装（标题+摘要级，永不装正文） */
+  private async loadDocsSource(projectId: string): Promise<string> {
+    try {
+      return await this.getProjectKnowledge(projectId);
+    } catch (e) {
+      this.logger.warn(
+        `enrichment docs source failed for project ${projectId}: ${(e as Error).message}`,
+      );
+      return '';
+    }
+  }
+
+  /** 记忆原子来源：recall 项目域（可带 global 共享档），取 pinned/置信度优先的前若干条 */
+  private async loadMemoriesSource(projectId: string): Promise<string> {
+    try {
+      const atoms = await this.memoryService.recall({
+        projectId,
+        limit: 8,
+      });
+      if (atoms.length === 0) return '';
+      return atoms
+        .map((a) => {
+          const slot = (a as { slot?: string | null }).slot;
+          const label = slot || a.type;
+          return `- [${label}] ${a.content}`;
+        })
+        .join('\n');
+    } catch (e) {
+      this.logger.warn(
+        `enrichment memories source failed for project ${projectId}: ${(e as Error).message}`,
+      );
+      return '';
+    }
+  }
+
+  /** 历史教训来源：同项目最近 failed/blocked 执行 → 机械归类 + 人话 hint（存量纯函数，零 token） */
+  private async loadLessonsSource(projectId: string): Promise<string> {
+    try {
+      const failedRuns = await this.prisma.execution.findMany({
+        where: { projectId, status: { in: ['failed', 'blocked'] } },
+        select: {
+          goal: true,
+          title: true,
+          status: true,
+          errorDetail: true,
+          input: true,
+          updatedAt: true,
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 5,
+      });
+      const lines: string[] = [];
+      for (const run of failedRuns) {
+        const classification = classifyExecutionFailure({
+          errorDetail: run.errorDetail,
+          input: run.input,
+        });
+        if (!classification) continue;
+        lines.push(
+          `- 「${run.title || run.goal}」（${classification.category}）：${classification.hint}`,
+        );
+      }
+      return lines.join('\n');
+    } catch (e) {
+      this.logger.warn(
+        `enrichment lessons source failed for project ${projectId}: ${(e as Error).message}`,
+      );
+      return '';
+    }
   }
 
   /**

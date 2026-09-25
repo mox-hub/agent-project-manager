@@ -7,6 +7,9 @@ describe('DecisionService', () => {
   let service: DecisionService;
 
   const mockPrismaService = {
+    projectMember: {
+      findMany: vi.fn(),
+    },
     approvalRequest: {
       findMany: vi.fn(),
       count: vi.fn(),
@@ -176,6 +179,83 @@ describe('DecisionService', () => {
       );
       expect(card.approvalStale).toBe(false);
     });
+
+    it('R3：带 userId 时全局视图收敛到成员项目集合', async () => {
+      mockPrismaService.projectMember.findMany.mockResolvedValue([
+        { projectId: 'p-mine' },
+        { projectId: 'p-also-mine' },
+      ]);
+      mockPrismaService.approvalRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.acceptance.findMany.mockResolvedValue([]);
+      mockPrismaService.decisionProposal.findMany.mockResolvedValue([]);
+
+      await service.listPending({ userId: 'u-1' });
+
+      expect(mockPrismaService.projectMember.findMany).toHaveBeenCalledWith({
+        where: { userId: 'u-1' },
+        select: { projectId: true },
+      });
+      // 三个查询的 where 均限定在成员项目集合内
+      const scope = { in: ['p-mine', 'p-also-mine'] };
+      expect(mockPrismaService.approvalRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ projectId: scope }),
+        }),
+      );
+      expect(mockPrismaService.acceptance.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            issue: { projectId: scope },
+          }),
+        }),
+      );
+      expect(mockPrismaService.decisionProposal.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ projectId: scope }),
+        }),
+      );
+    });
+
+    it('R3：非成员显式 projectId 收敛为空集合（不可见）', async () => {
+      mockPrismaService.projectMember.findMany.mockResolvedValue([
+        { projectId: 'p-mine' },
+      ]);
+      mockPrismaService.approvalRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.acceptance.findMany.mockResolvedValue([]);
+      mockPrismaService.decisionProposal.findMany.mockResolvedValue([]);
+
+      await service.listPending({ userId: 'u-1', projectId: 'p-not-mine' });
+
+      // 显式 projectId 不在成员集合内 → scope 收敛为 { in: [] }，查询自然为空
+      const emptyScope = { in: [] };
+      expect(mockPrismaService.approvalRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ projectId: emptyScope }),
+        }),
+      );
+      expect(mockPrismaService.decisionProposal.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ projectId: emptyScope }),
+        }),
+      );
+    });
+
+    it('R3：成员显式自己所属的 projectId 正常放行', async () => {
+      mockPrismaService.projectMember.findMany.mockResolvedValue([
+        { projectId: 'p-mine' },
+      ]);
+      mockPrismaService.approvalRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.acceptance.findMany.mockResolvedValue([]);
+      mockPrismaService.decisionProposal.findMany.mockResolvedValue([]);
+
+      await service.listPending({ userId: 'u-1', projectId: 'p-mine' });
+
+      expect(mockPrismaService.approvalRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ projectId: 'p-mine' }),
+        }),
+      );
+    });
   });
 
   describe('summary', () => {
@@ -193,6 +273,25 @@ describe('DecisionService', () => {
         blocking: 2,
         advisory: 6,
         byKind: { approval: 2, acceptance: 4, proposal: 2 },
+      });
+    });
+
+    it('R3：summary 带 userId 时计数同样收敛到成员项目集合', async () => {
+      mockPrismaService.projectMember.findMany.mockResolvedValue([
+        { projectId: 'p-mine' },
+      ]);
+      mockPrismaService.approvalRequest.count.mockResolvedValue(0);
+      mockPrismaService.acceptance.count.mockResolvedValue(0);
+      mockPrismaService.decisionProposal.count.mockResolvedValue(0);
+
+      await service.summary({ userId: 'u-1' });
+
+      const scope = { in: ['p-mine'] };
+      expect(mockPrismaService.approvalRequest.count).toHaveBeenCalledWith({
+        where: expect.objectContaining({ projectId: scope }),
+      });
+      expect(mockPrismaService.decisionProposal.count).toHaveBeenCalledWith({
+        where: expect.objectContaining({ projectId: scope }),
       });
     });
   });

@@ -52,7 +52,7 @@
 | 接口协作卡 | `CollaborationSection`（modules/office/components/collaboration-section.tsx + api/collaboration-api.ts）：交接试点（办公室页协作分区）——前后端 AI 接口协作卡状态机（requested→committed→delivered→verified，rejected/cancelled/escalated 旁路）：卡片展示结构化负载（endpoint 形状/出处/验收口径）与流转日志，人闸口验证通过/打回/取消；澄清轮次超 2 自动升级 decisions 收件箱（clarify 提案）；agent 工具四件套 request_collaboration/check_feasibility/respond_collaboration/verify_collaboration 双路径；服务端 modules/collaboration + collaboration.updated 事件→通知订阅者 |
 | 记忆检视 | `MemorySection`（settings/pages/sections/memory-section.tsx + api/memory-api.ts）：设置 · AI 组的记忆档案分区——应用侧记忆原子（Store B）的人可检视面：scope 过滤（全局/项目）/类型徽标/置信度/命中次数，人可钉住（不参与衰减）/归档（证据可查不注入）/删除（软删 pruned）；服务端 modules/memory（MemoryAtom scope+type+content 去重合并、recall scope 隔离+命中保鲜、brief 交接摘要），消化器（ai-hub assistant-memory-digest）会话静默 20s 离线沉淀 summary/preference/conclusion（必带 sourceEventId），助手工具三件套 recall_memory/note_memory/what_do_you_know 双路径（LLM tool + CLI 目录回环），活跃记忆切片注入 LLM 与 CLI 对话 prompt（旁路容错） |
 | 行内锚点问答 | `AnchorQaThread`/`AnchorQaGhostButton`（modules/assistant/components/anchor-qa-thread.tsx + hooks/use-anchor-qa）：候选 B 试点（任务详情页右栏）——渐进披露②幽灵「✨ 问 AI」hover 显形，点击展开下沉线程（就地展开>弹层，Esc 收起零残留）；silent 场景 anchor-qa 服务端按任务事实精确 grounding（prepareContext 侦查钩子），答案贴动作 chips（白名单 task.update_status/priority/due_date 三种，点击走既有 updateField 落库并翻「已应用」）；线程尾必有升级出口（让我细聊=带问答语境预填面板 / 进办公室） |
-| 局部侵入问答 | `AISlotLayer`（shared/ai-slot/ai-slot-layer.tsx + hooks/use-silent-ai 的 useCardExplain）：CAP-C-07「哪里不懂点哪里」——Ctrl/Cmd+左键任意 `data-ai-entity="kind:id"` 卡片（试点 TaskCard/DecisionCardShell/MemberCard/TeamCard/契约绑定行/文档树文档节点/验收详情页标准与审计 tab/项目看板卡经 BoardCardModel.dataEntity 槽），原位 Portal 覆盖 AI 解释卡（原卡保持挂载零抖动），overlay 内右键/ESC/滚动恢复；**可发现性：长按 Ctrl/Cmd 500ms 高亮全部可解释卡**（根元素 ai-slot-discovery 类 + 全局 CSS，组合键窗口内其他键按下取消）；答案卡三态+「继续追问」带草稿跳浮窗；silent 场景 card-explain 服务端按实体类型查库组装权威事实（task/decision/member/contract-binding/document/acceptance 含审计报告/project/team）；shell-layout 全局挂载，新卡接入=根元素加一个 data-ai-entity 属性（看板卡走 BoardCardModel.dataEntity 槽） |
+| 局部侵入问答 | `AISlotLayer`（shared/ai-slot/ai-slot-layer.tsx + hooks/use-silent-ai 的 useCardExplain）：CAP-C-07「哪里不懂点哪里」——Ctrl/Cmd+左键任意 `data-ai-entity="kind:id"` 卡片（试点 任务/BUG 看板卡=taskCardModel.dataEntity（tasks/bugs/project-tasks/task-board 全 BoardView 消费方）/DecisionCardShell/MemberCard/TeamCard/契约绑定行/文档树文档节点/验收详情页标准与审计 tab/项目看板卡经 BoardCardModel.dataEntity 槽），原位 Portal 覆盖 AI 解释卡（原卡保持挂载零抖动），overlay 内右键/ESC/滚动恢复；**可发现性：长按 Ctrl/Cmd 500ms 高亮全部可解释卡**（根元素 ai-slot-discovery 类 + 全局 CSS，组合键窗口内其他键按下取消）；答案卡三态+「继续追问」带草稿跳浮窗；silent 场景 card-explain 服务端按实体类型查库组装权威事实（task/decision/member/contract-binding/document/acceptance 含审计报告/project/team）；shell-layout 全局挂载，新卡接入=根元素加一个 data-ai-entity 属性（看板卡走 BoardCardModel.dataEntity 槽） |
 | 办公室页 | `OfficePage`/`ColleagueCard`（modules/office/）：AI 同事化「办公室」/app/office（同事位=门，点击进办公室；Fab 才开面板）：员工卡网格（头像+信任徽标+忙闲状态点+当前执行+容量条可接活度+待决计数+开聊/详情动作），数据走 /office/summary 按成员聚合（忙闲派生 needYou>working>suggestions>idle 与面板同口径；待决按执行主体/提案者/交付归因；可接活度=在途/临时容量 5 + 本周成本 vs 项目 aiBudget 派生） |
 
 ## 完整清单
@@ -70,11 +70,18 @@
 | SidebarPanel | ui/sidebar-panel.tsx | 右侧栏折叠面板（圆角矩形↔胶囊） | title, icon, collapsed, onToggle, action |
 | Sidebar 套件 | ui/sidebar.tsx | 应用侧栏骨架 | children, SidebarMenuButton: isActive, onClick |
 | SectionCard | ui/section-card.tsx | 带标题/描述/操作区的 Card 封装 | title, description, actions, children |
-| Resizable 套件 | ui/resizable.tsx | 可调分栏（resizable-panels 封装） | direction, withHandle, defaultSize |
 | ScrollArea / ScrollBar | ui/scroll-area.tsx | 滚动容器（coss 配方：滚动条浮现、边缘渐隐 scrollFade、滚动沟位 scrollbarGutter、滚动链隔离 overscrollContain） | className, children, scrollFade, scrollbarGutter, overscrollContain, fill |
 | AspectRatio | ui/aspect-ratio.tsx | 固定宽高比容器 | ratio, children |
 | QuickCardsToggle | ui/quick-cards-toggle.tsx | 页头幽灵按钮：显隐「快捷统计卡」栏目 | visible, onToggle, label, aiId |
 | AppDock / AppDockItem / AppDockSeparator | ui/app-dock.tsx | 底部悬浮 Dock 栏容器（桌面级磨砂胶囊底座、弹簧微交互项、垂直分隔线） | children, label, badge, badgeTone, active |
+
+### 认证面（modules/auth，2026-09 CAP-A-22）
+
+| 组件 | 路径 | 用途 | 关键 props |
+|------|------|------|-----------|
+| AuthShell | modules/auth/components/auth-shell.tsx | 认证面分栏壳（登录/注册/欢迎页共用）：桌面左文右图（左栏三段=品牌/主体居中/操作贴底，右栏满高圆角视觉面板），窄屏单栏居中 | header, children, footer, visual(缺省 AuthVisual), className |
+| AuthVisual | modules/auth/components/auth-visual.tsx | 认证面右栏默认视觉：工单/决策/AI 同事迷你卡拼贴 + 点阵纹理 + logo 水印（装饰性 aria-hidden，插画资产可整体热替换） | className |
+| MemberCard | modules/auth/components/member-card.tsx | APM 身份工牌（欢迎页右栏）：SVG 环形口号 PEOPLE + AI COLLEAGUES + 显示名/成员编号/入职日期/签名（纯展示仪式件，本人视角不脱敏） | displayName, memberNo, joinedAt?, className |
 
 ### 表单输入
 
@@ -140,10 +147,8 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | Meter 套件 | ui/meter.tsx | 有界量程表（coss 配方，配额/用量语义；MeterValue 为 render-props children） | value, min, max；MeterValue: children(formatted)=>ReactNode |
 | ActivityHeatmap | ui/activity-heatmap.tsx | 活动热力图（GitHub 式日格计数；每格 hover Tooltip 浮窗，网格下方月份刻度） | data(日序列), days(年视图传 365), emptyLabel, formatTip(count=>浮窗文案，缺省「N 次活动」) |
 | Chart 套件 + ChartConfig | ui/chart.tsx | recharts 图表封装（主题色注入） | config, children |
-| Carousel 套件 | ui/carousel.tsx | 轮播（embla 封装） | opts, orientation, plugins, setApi |
 | Sortable 套件 | ui/sortable.tsx | 复合式拖拽排序列表（reui base-nova 移植，@dnd-kit；**语义=同列表条目重排**，看板跨列/画布节点/文件投放仍用 dnd-kit 原语；落放一次性提交，含拖拽 overlay 与键盘可达） | Sortable: value, onValueChange(持久化缝), getItemValue, strategy(vertical/horizontal/grid), onValueCommit(next+previousValue 回滚快照), onMove, render(容器元素)；SortableItem: value, disabled, render；SortableItemHandle: cursor, render |
 | IconStack | ui/icon-stack.tsx | 等距层叠图标插画容器（reui 移植；空态/引导/完成时刻的装饰性深度图标，纯视觉场景须 aria-hidden） | className(尺寸默认 h-20 w-18、语义色 text-*)，children(居中图标) |
-| AttentionRail | ui/attention-rail.tsx | 「需要关注」侧栏（通知/逾期任务/风险项目聚合） | projectId, notifications, overdueTasks, atRiskProjects |
 
 ### 反馈 overlay
 
@@ -165,14 +170,10 @@ base-ui 的 `Select.Value` **只在 Root 收到 `items` 时**才能把 value 映
 | AsyncState | ui/async-state.tsx | 加载/空/错误三态统一处理容器（默认文案 i18n）；空态支持 emptyVariant/emptyVisual 透传（page 整页空态走 IconStack 插画），错误态恒为 card 简式 | isLoading, isEmpty, error, onRetry, emptyVariant, emptyVisual, emptyIcon, emptyTitle, emptyDescription, children |
 | EmptyState | ui/empty-state.tsx | 轻量空状态三分场景：**page**=整页主体空态（h-full 撑满内容区 + min-h-100，配 visual 插画与首个功能入口）/ **card**=分区内/筛选无结果紧凑形态（默认，muted 圆块图标，不用插画） | icon, visual, variant(page/card), title, description, action, className |
 | ~~Empty 套件~~ | — | 已删除（2026-09 收敛为 EmptyState） | — |
-| PageLoader + usePageLoader | ui/page-loader.tsx | 全屏页面加载遮罩 | message, className |
 | GlobalLoadingState | ui/global-loading-state.tsx | 监听 Query 缓存显示全局顶部加载条（main.tsx 挂载） | 无 props |
 | MockBadge | ui/mock-badge.tsx | mock 模式全局角标（宪法 §9.3；仅 dev+VITE_API_MOCK=on 显示，main.tsx 挂载） | 无 props |
 | LoadingOverlay / ErrorOverlay / LoadingProvider + useLoading | ui/loading-overlay.tsx | 加载遮罩三模式（bar/overlay/inline）+错误遮罩+全局 Provider | visible, message, mode |
-| NotificationPopover | ui/notification-popover.tsx | 通知弹窗（未读/警报 Tab 过滤） | notifications, onMarkAsRead, onMarkAllAsRead |
 | UnifiedCreateDialog | shared/components/create-dialog/unified-create-dialog.tsx | 统一创建面板·手动×AI 代理双界面（task/bug/doc/project/milestone 五类型，属性胶囊右栏；AI 代理=create-draft 草稿确认流） | open, onOpenChange, defaultType, projectId, defaultAssigneeId, onSuccess |
-| TaskFormDialog | ui/task-form-dialog.tsx | 任务创建/编辑弹窗 | open, onOpenChange, mode, projectId, initialData, onSuccess |
-| BugReportDialog | ui/bug-report-dialog.tsx | 全局 Bug 报告创建弹窗（含严重度/优先级表单） | open, onOpenChange, projectId, initialData, onSuccess |
 | DocumentPreviewDialog | ui/document-preview-dialog.tsx | 文档预览弹窗（左目录右内容） | open, onOpenChange, document |
 
 ### 导航

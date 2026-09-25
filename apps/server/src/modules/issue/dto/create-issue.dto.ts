@@ -1,7 +1,6 @@
 import {
   IsString,
   IsOptional,
-  IsEnum,
   IsDateString,
   IsInt,
   IsArray,
@@ -96,7 +95,7 @@ export class CreateIssueDto {
     example: 'high',
     required: false,
   })
-  @IsEnum(['low', 'medium', 'high', 'critical'])
+  @IsIn(['low', 'medium', 'high', 'critical'])
   @IsOptional()
   priority?: string;
 
@@ -201,7 +200,7 @@ export class CreateIssueDto {
     example: 'high',
     required: false,
   })
-  @IsEnum(['critical', 'high', 'medium', 'low'])
+  @IsIn(['critical', 'high', 'medium', 'low'])
   @IsOptional()
   severity?: string;
 
@@ -269,7 +268,7 @@ export class CreateIssueDto {
     required: false,
     default: 'task',
   })
-  @IsEnum(['task', 'bug'])
+  @IsIn(['task', 'bug'])
   @IsOptional()
   type?: string;
 

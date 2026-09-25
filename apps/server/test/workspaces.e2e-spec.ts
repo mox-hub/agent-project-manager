@@ -45,12 +45,17 @@ describe('Workspaces (e2e)', () => {
     it('should list workspaces including default', () => {
       return wsHttp
         .get('/_api/workspaces')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('workspaces');
           expect(Array.isArray(res.body.data.workspaces)).toBe(true);
           expect(res.body.data.workspaces.length).toBeGreaterThanOrEqual(1);
         });
+    });
+
+    it('should 401 without authentication', () => {
+      return wsHttp.get('/_api/workspaces').expect(401);
     });
   });
 
@@ -84,9 +89,16 @@ describe('Workspaces (e2e)', () => {
   });
 
   describe('POST /_api/workspaces/:id/activate', () => {
+    it('should 401 without authentication', () => {
+      return wsHttp
+        .post(`/_api/workspaces/${createdWsId}/activate`)
+        .expect(401);
+    });
+
     it('should mark workspace as recently opened', () => {
       return wsHttp
         .post(`/_api/workspaces/${createdWsId}/activate`)
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect((res: Response) => {
           expect([200, 201]).toContain(res.status);
           expect(res.body.data.id).toBe(createdWsId);
@@ -96,6 +108,7 @@ describe('Workspaces (e2e)', () => {
     it('should 404 on unknown id', () => {
       return wsHttp
         .post('/_api/workspaces/nonexistent-ws/activate')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(404);
     });
   });

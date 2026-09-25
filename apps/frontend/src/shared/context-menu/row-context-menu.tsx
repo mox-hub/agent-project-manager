@@ -21,6 +21,7 @@ import {
   Trash2,
   Pencil,
   Briefcase,
+  Calendar,
   Check,
   User,
   Tag as TagIcon,
@@ -418,10 +419,13 @@ export function buildProjectRowMenu(opts: ProjectRowMenuOptions): MenuItem[] {
     ),
   ];
 
-  // 负责人（真实成员数据）
-  const owners = opts.owners ?? [];
+  // 负责人（真实成员数据）。Project.ownerId 是 User 外键（schema ProjectOwner），
+  // 提交与打勾一律用 member.userId 口径——传 Member.id 会外键失败，menu 静默无效；
+  // AI 成员（userId 为空）不作为负责人候选。「未分配」传 null（@IsOptional 跳过
+  // 校验后 Prisma 置空），空串会撞 @IsString/外键校验。
+  const owners = (opts.owners ?? []).filter((m) => m.userId);
   const currentOwnerId = project?.ownerId;
-  const currentOwner = owners.find((m) => m.id === currentOwnerId);
+  const currentOwner = owners.find((m) => m.userId === currentOwnerId);
   metadataItems.push({
     id: 'meta-owner',
     label: '负责人',
@@ -439,7 +443,7 @@ export function buildProjectRowMenu(opts: ProjectRowMenuOptions): MenuItem[] {
         label: '未分配',
         icon: <User className="h-4 w-4 text-muted-foreground" />,
         trailing: !currentOwnerId ? <Check className="h-3.5 w-3.5" /> : undefined,
-        onClick: () => onUpdate({ ownerId: '' }),
+        onClick: () => onUpdate({ ownerId: null }),
       },
       ...owners.map((m) => ({
         id: `owner-${m.id}`,
@@ -447,9 +451,51 @@ export function buildProjectRowMenu(opts: ProjectRowMenuOptions): MenuItem[] {
         icon: (
           <AssignMenuAvatar name={m.displayName} handle={m.handle ?? m.displayName} />
         ),
-        trailing: currentOwnerId === m.id ? <Check className="h-3.5 w-3.5" /> : undefined,
-        onClick: () => onUpdate({ ownerId: m.id }),
+        trailing: currentOwnerId === m.userId ? <Check className="h-3.5 w-3.5" /> : undefined,
+        onClick: () => onUpdate({ ownerId: m.userId ?? null }),
       })),
+    ],
+  });
+
+  // 排期快捷项（本地日期串过 @IsDateString；精确编辑走详情页属性面板日期胶囊）
+  const toLocalDate = (offsetDays: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const today = toLocalDate(0);
+  metadataItems.push({
+    id: 'meta-schedule',
+    label: '排期',
+    icon: <Calendar className="h-4 w-4 text-muted-foreground" />,
+    children: [
+      {
+        id: 'schedule-start-today',
+        label: '开始日期设为今天',
+        trailing: (project?.startDate ?? '').startsWith(today) ? <Check className="h-3.5 w-3.5" /> : undefined,
+        onClick: () => onUpdate({ startDate: today }),
+      },
+      {
+        id: 'schedule-target-today',
+        label: '截止日期设为今天',
+        trailing: (project?.targetDate ?? '').startsWith(today) ? <Check className="h-3.5 w-3.5" /> : undefined,
+        onClick: () => onUpdate({ targetDate: today }),
+      },
+      {
+        id: 'schedule-target-week',
+        label: '截止日期设为一周后',
+        onClick: () => onUpdate({ targetDate: toLocalDate(7) }),
+      },
+      {
+        id: 'schedule-target-month',
+        label: '截止日期设为一个月后',
+        onClick: () => onUpdate({ targetDate: toLocalDate(30) }),
+      },
+      {
+        id: 'schedule-clear',
+        label: '清除排期',
+        onClick: () => onUpdate({ startDate: null, targetDate: null }),
+      },
     ],
   });
 

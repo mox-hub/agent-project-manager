@@ -1,4 +1,8 @@
 import { TrustService } from './trust.service';
+import {
+  evaluateAutoDispatchPermission,
+  normalizeTrustLevel,
+} from './trust.service';
 import { PR_OUTCOME_DELTAS } from '@/modules/integration/providers/github/github.constants';
 
 /** 信任档案与评估管道单测（内存桩）：档案 CRUD、三层评估、等级升降、跨项目迁移、PR outcome 注入 */
@@ -394,5 +398,51 @@ describe('TrustService.applyPrOutcome', () => {
     expect(result.newTrustScore).toBe(100);
     expect((stored.value as any).trustLevel).toBe(3); // 三级口径：>= 70 = 受托者
     expect((stored.value as any).averageScores.correctness).toBe(100);
+  });
+});
+
+/**
+ * P2-21 自动派发门禁判定（CAP-B-07 三级授权）：
+ * 「协助者以上才可自动派发」（docs/roadmap/experience-report-2026-09-20.md §八第三批 9）。
+ * 观察者拦截、协助者/受托者放行、未评估放行（存量兼容，由调用方记时间线提示）。
+ */
+describe('evaluateAutoDispatchPermission（P2-21 三级授权门禁判定）', () => {
+  it('观察者（trustLevel=1）：明确低于门槛，拦截', () => {
+    const d = evaluateAutoDispatchPermission(1);
+    expect(d.allowed).toBe(false);
+    expect(d.reason).toBe('below_threshold');
+    expect(d.level).toBe(1);
+    expect(d.levelName).toBe('观察者');
+  });
+
+  it('协助者（trustLevel=2）：可自动派发', () => {
+    const d = evaluateAutoDispatchPermission(2);
+    expect(d.allowed).toBe(true);
+    expect(d.reason).toBeNull();
+    expect(d.level).toBe(2);
+    expect(d.levelName).toBe('协助者');
+  });
+
+  it('受托者（trustLevel=3）：可自动派发', () => {
+    const d = evaluateAutoDispatchPermission(3);
+    expect(d.allowed).toBe(true);
+    expect(d.level).toBe(3);
+    expect(d.levelName).toBe('受托者');
+  });
+
+  it('未评估（null/undefined/0/负数）：放行（存量兼容 fail-open）', () => {
+    for (const input of [null, undefined, 0, -1]) {
+      const d = evaluateAutoDispatchPermission(input);
+      expect(d.allowed).toBe(true);
+      expect(d.level).toBeNull();
+      expect(d.levelName).toBeNull();
+    }
+  });
+
+  it('旧五档（L0-L4）归一：4 归受托者放行，与前端 normalizeTrustLevel 同口径', () => {
+    expect(evaluateAutoDispatchPermission(4).level).toBe(3);
+    expect(evaluateAutoDispatchPermission(4).allowed).toBe(true);
+    expect(normalizeTrustLevel(5)).toBe(3);
+    expect(normalizeTrustLevel(2.5)).toBe(2.5); // 1-3 区间原样（不取整，仅门禁比较）
   });
 });

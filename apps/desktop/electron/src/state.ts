@@ -5,6 +5,7 @@
  * 旧壳 Rust 结构体输出 snake_case，与前端类型错位（dev 下被 vite proxy 掩盖），
  * Electron 侧按前端契约正确返回。
  */
+import type { BrowserWindow } from 'electron';
 import type { ServerHandle } from './backend';
 import type { AppConfig } from './config';
 
@@ -22,20 +23,10 @@ export interface BackendInfo {
   pid: number;
 }
 
-export interface BackendStatus {
-  running: boolean;
-  info?: BackendInfo;
-}
-
 export interface FrontendInfo {
   port: number;
   url: string;
   pid: number;
-}
-
-export interface FrontendStatus {
-  running: boolean;
-  info?: FrontendInfo;
 }
 
 export interface AppState {
@@ -48,6 +39,14 @@ export interface AppState {
   initError: string | null;
   /** 首装校验：true = ~/.apm 无既有密钥与数据库（全新安装）。启动时迁移与 ensureSecrets 之间检测。 */
   isFirstInstall: boolean;
+  /**
+   * 认证窗（登录态紧凑小窗，CAP-A-14 切片）：非 null = 前端正处认证面
+   * （/login·/register·/welcome），认证面由独立紧凑无边框窗承载（形态创建时定死，
+   * Electron 无运行时 titleBarStyle 切换 API），主窗此时隐藏。
+   */
+  authWindow: BrowserWindow | null;
+  /** 退出中标志（before-quit / powerMonitor.shutdown 置位）：窗口 close 不再转托盘隐藏 */
+  isQuitting: boolean;
 }
 
 export const state: AppState = {
@@ -57,6 +56,8 @@ export const state: AppState = {
   daemon: null,
   initError: null,
   isFirstInstall: false,
+  authWindow: null,
+  isQuitting: false,
 };
 
 export function setInitError(error: string | null): void {

@@ -6,6 +6,7 @@ import { MessageBusService } from '../../../core/message-bus/message-bus.service
 import { AdapterRegistryService } from './adapter-registry.service';
 import { AiSdkAdapterFactory } from '../adapters/ai-sdk-adapter.factory';
 import { ProviderConfigService } from './provider-config.service';
+import { CreateProviderConfigDto } from '../dto/provider-config.dto';
 
 /**
  * CAP-A-20：供应商模型真实查询（/models 端点 + metadata.modelsEndpoint 覆盖）
@@ -19,6 +20,7 @@ describe('ProviderConfigService（模型查询 + 内置模型）', () => {
     aIProviderConfig: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -601,24 +603,28 @@ describe('ProviderConfigService（模型查询 + 内置模型）', () => {
     });
 
     it('设置：未知 provider 404 / 禁用 provider 400', async () => {
-      mockPrisma.aIProviderConfig.findUnique.mockResolvedValueOnce(null);
+      // 代表槽位解析：无启用槽位（findFirst enabled→null）且无任何槽位 → 404
+      mockPrisma.aIProviderConfig.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
       await expect(
         service.setDefaultModel('deepseek', 'deepseek-chat'),
       ).rejects.toThrow(NotFoundException);
 
-      mockPrisma.aIProviderConfig.findUnique.mockResolvedValueOnce({
-        ...deepseekProvider,
-        enabled: false,
-      });
+      // 无启用槽位但存在禁用槽位 → 400 disabled
+      mockPrisma.aIProviderConfig.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          ...deepseekProvider,
+          enabled: false,
+        });
       await expect(
         service.setDefaultModel('deepseek', 'deepseek-chat'),
       ).rejects.toThrow(/disabled/);
     });
 
     it('设置成功：已有配置走 update、首次走 create，值形如 { provider, model }', async () => {
-      mockPrisma.aIProviderConfig.findUnique.mockResolvedValue(
-        deepseekProvider,
-      );
+      mockPrisma.aIProviderConfig.findFirst.mockResolvedValue(deepseekProvider);
 
       mockPrisma.appConfig.findFirst.mockResolvedValueOnce({
         id: 'cfg-1',
@@ -655,6 +661,79 @@ describe('ProviderConfigService（模型查询 + 内置模型）', () => {
         provider: 'deepseek',
         model: 'deepseek-chat',
       });
+    });
+  });
+
+  describe('同类型多槽位（provider+displayName 组合唯一）', () => {
+    it('同类型不同显示名可并存（双网关槽位）', async () => {
+      // 组合键 (deepseek, "DeepSeek 中转") 未占用
+      mockPrisma.aIProviderConfig.findUnique.mockResolvedValue(null);
+      mockPrisma.aIProviderConfig.create.mockResolvedValue({
+        ...deepseekProvider,
+        id: 'p-deepseek-relay',
+        displayName: 'DeepSeek 中转',
+        baseUrl: 'https://relay.example.com/v1',
+      });
+
+      const created = await service.createProvider({
+        provider: 'deepseek',
+        displayName: 'DeepSeek 中转',
+        apiKey: 'sk-relay',
+        baseUrl: 'https://relay.example.com/v1',
+      } as CreateProviderConfigDto);
+
+      expect(created.displayName).toBe('DeepSeek 中转');
+      expect(mockPrisma.aIProviderConfig.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            provider: 'deepseek',
+            displayName: 'DeepSeek 中转',
+          }),
+        }),
+      );
+    });
+
+    it('同类型同显示名重复创建 → 400 可读错误（不落库）', async () => {
+      mockPrisma.aIProviderConfig.findUnique.mockResolvedValue(
+        deepseekProvider,
+      );
+
+      await expect(
+        service.createProvider({
+          provider: 'deepseek',
+          displayName: 'DeepSeek',
+          apiKey: 'sk-again',
+        } as CreateProviderConfigDto),
+      ).rejects.toThrow(/already exists.*deepseek/s);
+      expect(mockPrisma.aIProviderConfig.create).not.toHaveBeenCalled();
+    });
+
+    it('改名撞同类型另一槽位显示名 → 400；不撞 → 正常更新', async () => {
+      mockPrisma.aIProviderConfig.findUnique.mockResolvedValue(
+        deepseekProvider,
+      );
+
+      // 撞名：同类型存在另一槽位占用目标显示名
+      mockPrisma.aIProviderConfig.findFirst.mockResolvedValueOnce({
+        ...deepseekProvider,
+        id: 'p-deepseek-relay',
+        displayName: 'DeepSeek 中转',
+      });
+      await expect(
+        service.updateProvider('p-deepseek', { displayName: 'DeepSeek 中转' }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.aIProviderConfig.update).not.toHaveBeenCalled();
+
+      // 不撞：正常更新
+      mockPrisma.aIProviderConfig.findFirst.mockResolvedValueOnce(null);
+      mockPrisma.aIProviderConfig.update.mockResolvedValue({
+        ...deepseekProvider,
+        displayName: 'DeepSeek 官方',
+      });
+      const updated = await service.updateProvider('p-deepseek', {
+        displayName: 'DeepSeek 官方',
+      });
+      expect(updated.displayName).toBe('DeepSeek 官方');
     });
   });
 });

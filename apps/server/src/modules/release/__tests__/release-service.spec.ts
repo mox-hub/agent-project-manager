@@ -277,18 +277,6 @@ describe('ReleaseService（1b：Release 实体 + CHANGELOG 单向导出）', () 
     expect(md).toContain('新增契约绑定。');
   });
 
-  it('publishRelease：发布并经 message-bus 发出 release.created', async () => {
-    const { releases, bus } = buildHarness();
-    const r = await releases.createRelease({
-      projectId: 'proj-1',
-      version: '1.0.0',
-      createdBy: 'user-1',
-    });
-    await releases.publishRelease(r.id as string, 'v1.0.0');
-    expect(bus.events).toHaveLength(1);
-    expect(bus.events[0].type).toBe('release.created');
-  });
-
   it('P1-10：createApprovalProposal 广播 decision.proposal.created（发版审批卡不再静默）', async () => {
     const { releases, bus, prisma } = buildHarness();
     const r = await releases.createRelease({
@@ -429,6 +417,18 @@ describe('ReleaseService（1b：Release 实体 + CHANGELOG 单向导出）', () 
     expect(cleared.milestone).toBeNull();
   });
 
+  /** CHANGELOG 用例的发布造数：直写桩库置 released（事件链由 publish-service spec 覆盖） */
+  async function seedReleased(
+    prisma: StubPrisma,
+    releaseId: unknown,
+    releasedAt = new Date('2026-09-08T00:00:00Z'),
+  ) {
+    await prisma.release.update({
+      where: { id: releaseId },
+      data: { status: 'released', releasedAt },
+    });
+  }
+
   it('exportChangelog：写入文件、登记 binding（managed/system）并记整文件指纹基线', async () => {
     const { releases, fs, bindings, engine, prisma } = buildHarness();
     const r = await releases.createRelease({
@@ -437,7 +437,7 @@ describe('ReleaseService（1b：Release 实体 + CHANGELOG 单向导出）', () 
       notes: '发版说明。',
       createdBy: 'user-1',
     });
-    await releases.publishRelease(r.id as string);
+    await seedReleased(prisma, r.id);
     const result = await releases.exportChangelog('proj-1');
 
     expect(result.exported).toBe(true);
@@ -460,7 +460,7 @@ describe('ReleaseService（1b：Release 实体 + CHANGELOG 单向导出）', () 
       version: '1.0.0',
       createdBy: 'user-1',
     });
-    await releases.publishRelease(r.id as string);
+    await seedReleased(prisma, r.id);
     await releases.exportChangelog('proj-1');
 
     // 人工手改导出文件
@@ -499,7 +499,7 @@ describe('ReleaseService（1b：Release 实体 + CHANGELOG 单向导出）', () 
       version: '1.0.0',
       createdBy: 'user-1',
     });
-    await releases.publishRelease(r.id as string);
+    await seedReleased(prisma, r.id);
     await releases.exportChangelog('proj-1');
     const binding = prisma.bindings.find((b) => b.fileType === 'changelog');
     await expect(

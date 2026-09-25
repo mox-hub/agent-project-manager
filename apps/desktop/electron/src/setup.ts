@@ -174,6 +174,12 @@ export function ensureSecrets(config: AppConfig): void {
 export function restoreDefaultDbIfNeeded(config: AppConfig): boolean {
   if (fs.existsSync(config.databasePath)) {
     logger.info(`数据库已存在，跳过建库: ${config.databasePath}`);
+    // dev 模式 schema 对齐：代码 schema 持续演进而已有库原地不动 →「新代码+旧库」
+    // 缺列 500（CAP-A-14 重审注记「升级迁移路径」缺口，2026-09-21 实锤）。打包模式
+    // （nodeExe 存在、随包无 prisma CLI）绝不触碰用户库，升级迁移走发版路径。
+    if (!config.nodeExe) {
+      alignDevDatabaseSchema(config);
+    }
     return false;
   }
 
@@ -192,6 +198,16 @@ export function restoreDefaultDbIfNeeded(config: AppConfig): boolean {
   }
 
   // dev 回退：现场 db push（原路径，开发环境有完整 prisma CLI）
+  runDbPush(config, '首次建库');
+  return true;
+}
+
+/**
+ * 执行 prisma db push（dev 专用：开发环境有完整 prisma CLI）。不带
+ * --accept-data-loss——纯加列等无损变更自动对齐；破坏性变更被 Prisma 拒绝
+ * （非零退出）并抛错显式暴露，由开发者人工裁决，绝不静默丢用户数据。
+ */
+function runDbPush(config: AppConfig, reason: string): void {
   const prismaSchema = path.join(config.serverCwd, 'prisma', 'schema.prisma');
   if (!fs.existsSync(prismaSchema)) {
     throw new Error(`未找到 Prisma schema: ${prismaSchema}`);
@@ -201,7 +217,7 @@ export function restoreDefaultDbIfNeeded(config: AppConfig): boolean {
     throw new Error(`未找到 Prisma CLI: ${prismaEntry}`);
   }
 
-  logger.info('首次启动，运行 Prisma db push...');
+  logger.info(`运行 Prisma db push（${reason}）...`);
   // ELECTRON_RUN_AS_NODE=1 让 electron.exe 以纯 Node 模式执行 CLI（Prisma CLI 用
   // schema engine 独立二进制，不涉查询引擎 ABI）——开发/打包两模式都不依赖 PATH node。
   const result = spawnSync(
@@ -220,10 +236,20 @@ export function restoreDefaultDbIfNeeded(config: AppConfig): boolean {
   );
 
   if (result.status !== 0) {
-    throw new Error(`数据库初始化失败（Prisma db push）: ${result.stderr ?? result.error?.message}`);
+    throw new Error(
+      `数据库初始化失败（Prisma db push，${reason}）: ${result.stderr ?? result.error?.message}`,
+    );
   }
   logger.info('Prisma db push 完成');
-  return true;
+}
+
+/**
+ * dev 模式已有库 schema 对齐（升级迁移路径缺口，2026-09-21 实锤修复）：代码新增
+ * 列（如 approvedFingerprint/retryOfId）后，已有库原地不动 →「新代码+旧库」运行期
+ * 缺列 500。每次 dev 启动对齐一次（实测 ~1s）；失败抛错进 initError 显式暴露。
+ */
+function alignDevDatabaseSchema(config: AppConfig): void {
+  runDbPush(config, 'dev 启动 schema 对齐');
 }
 
 /** 路径 A（spawn 随包 node.exe）专用：解析 Node 运行时，打包模式必须存在。 */

@@ -50,8 +50,3 @@ export function createTray(handlers: {
   logger.info('系统托盘已创建（关窗最小化到托盘）');
   return tray;
 }
-
-export function destroyTray(): void {
-  tray?.destroy();
-  tray = null;
-}

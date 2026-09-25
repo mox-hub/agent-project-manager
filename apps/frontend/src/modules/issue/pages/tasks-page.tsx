@@ -3,7 +3,7 @@
  * 使用真实 API 获取任务数据
  */
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, CalendarRange, TableProperties, Trash2, CircleDashed, SearchX, Flag, Users, Target, Upload, SlidersHorizontal, Tag as TagIcon,
@@ -53,6 +53,15 @@ import { TaskGantt } from '../components/task-gantt';
 import { useActiveExecutionsMap, type ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
 import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
 import { ListActionButton } from '@/components/ui/data-list';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { toast } from '@/components/ui/toast';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
@@ -90,6 +99,9 @@ const severityOf = (task: Task): Severity =>
 const CONDITION_PARAM_PREFIX = 'f_';
 const SEARCH_PARAM = 'q';
 const COMPLETED_PARAM = 'completed';
+const PAGE_PARAM = 'page';
+/** P2-17：服务端分页页大小——后端 /issues/all 信封含 meta.total/totalPages，前端按页拉取 */
+const PAGE_SIZE = 50;
 
 /** 条件条 → URL params（同字段 is/exclude 合并为一个参数，exclude 值带 ! 前缀） */
 function conditionsToParams(conditions: FilterCondition[]): Array<[string, string]> {
@@ -214,6 +226,11 @@ export function TasksPage() {
     const value = searchParams.get(COMPLETED_PARAM);
     return value === 'active' || value === 'completed' ? value : 'all';
   });
+  // P2-17：服务端分页页码，?page 进 URL（仅 >1 时写入），刷新/分享后保持页码
+  const [page, setPage] = useState(() => {
+    const parsed = Number(searchParams.get(PAGE_PARAM));
+    return Number.isInteger(parsed) && parsed >= 1 ? parsed : 1;
+  });
   const [showSubIssues, setShowSubIssues] = useState(true);
   const [showEmptyGroups, setShowEmptyGroups] = useState(false);
   // P1-14：展示属性 chips 键集与 TaskTableView 列映射对齐（全键初始化，首次开关即生效）
@@ -296,29 +313,52 @@ export function TasksPage() {
 
   // P1-16：筛选状态 → URL query 回写（replace，不产生历史记录；前进后退/刷新后可还原）。
   // 仅增删本页管理的参数键，不触碰 ?project（管道聚焦）等外部参数；等值时跳过避免循环。
+  // P2-17：?page 一并纳入管理（仅 >1 时写入，第 1 页省略保持 URL 干净）
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
     for (const key of [...next.keys()]) {
-      if (key === SEARCH_PARAM || key === COMPLETED_PARAM || key.startsWith(CONDITION_PARAM_PREFIX)) {
+      if (
+        key === SEARCH_PARAM ||
+        key === COMPLETED_PARAM ||
+        key === PAGE_PARAM ||
+        key.startsWith(CONDITION_PARAM_PREFIX)
+      ) {
         next.delete(key);
       }
     }
     if (search.trim()) next.set(SEARCH_PARAM, search.trim());
     if (completedFilter !== 'all') next.set(COMPLETED_PARAM, completedFilter);
+    if (page > 1) next.set(PAGE_PARAM, String(page));
     for (const [key, value] of conditionsToParams(conditions)) {
       next.set(key, value);
     }
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true });
     }
-  }, [search, conditions, completedFilter, searchParams, setSearchParams]);
+  }, [search, conditions, completedFilter, page, searchParams, setSearchParams]);
+
+  // P2-17：筛选条件（搜索 / 条件条 / 完成度，含保存视图应用与清除筛选）变化时回到第 1 页；
+  // 页码初值来自 URL，不算变化。签名用字段/算子/值拼接，与条件 id（含 URL 合成 id）解耦。
+  const filterSignature = `${search}\u0000${completedFilter}\u0000${conditions
+    .map((c) => `${c.fieldId}:${c.operator}:${c.values.join(',')}`)
+    .join(';')}`;
+  const prevFilterSignature = useRef(filterSignature);
+  useEffect(() => {
+    if (prevFilterSignature.current === filterSignature) return;
+    prevFilterSignature.current = filterSignature;
+    setPage(1);
+  }, [filterSignature]);
 
   // AI 活跃执行接管状态
   const { getIssueExecution, totalActiveAiCount } = useActiveExecutionsMap();
 
   // 跨项目查询所有 task + bug, 同时包含 inbox 项目下的未绑定任务
   // isError 必须先于空态判定：请求失败 ≠ 真空态，错误时渲染错误态 + 重试（P1 体验修复）
-  const { data: tasksData, isLoading, isError, error, refetch } = useAllTasks({ pageSize: 1000 });
+  // P2-17：按页拉取（page/pageSize），翻页瞬间 placeholderData 保留上一页数据避免整屏闪烁
+  const { data: tasksData, isLoading, isError, error, refetch } = useAllTasks(
+    { page, pageSize: PAGE_SIZE },
+    { placeholderData: (prev) => prev },
+  );
   const deleteTask = useDeleteTask();
   const updateTask = useUpdateTask();
   const confirmAction = useConfirm();
@@ -327,8 +367,22 @@ export function TasksPage() {
   const { data: projectsResponse } = useProjectList();
   const projects = useMemo(() => projectsResponse?.items ?? [], [projectsResponse]);
 
-  // Task + Bug 一起展示 (任务页 = 统一任务视图)
+  // Task + Bug 一起展示 (任务页 = 统一任务视图)；此处为服务端返回的当前页数据
   const allTasks = useMemo(() => tasksData?.data ?? [], [tasksData]);
+
+  // P2-17：分页 meta——total/totalPages 是服务端全量真相；前端筛选/排序只作用于当前页
+  const totalCount = tasksData?.meta?.total ?? allTasks.length;
+  const totalPages = tasksData?.meta?.totalPages ?? 1;
+  const pageFrom = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const pageTo = Math.min(page * PAGE_SIZE, totalCount);
+
+  // URL 直开超界页码 / 数据收缩（末页删空）时回退到最后一页
+  useEffect(() => {
+    const metaTotalPages = tasksData?.meta?.totalPages ?? 0;
+    if (!isLoading && metaTotalPages > 0 && page > metaTotalPages) {
+      setPage(metaTotalPages);
+    }
+  }, [tasksData, isLoading, page]);
 
   // 项目名解析（排序 comparator 与列表渲染共用；上移到派生逻辑之前）
   const getProjectName = useCallback(
@@ -433,13 +487,13 @@ export function TasksPage() {
       },
       {
         id: 'aiExecution',
-        label: 'AI 执行态',
+        label: t('task.filter.aiExecutionGroup', 'AI 执行态'),
         icon: BotIcon,
         operators: ['is'],
         options: [
           {
             value: 'active',
-            label: 'AI 接管执行中',
+            label: t('task.filter.aiActive', 'AI 接管执行中'),
             hint: aiActiveCounts.toString(),
           },
         ],
@@ -686,18 +740,18 @@ export function TasksPage() {
         <ListActionButton
           onClick={() => handleDispatchSelected(selected, close)}
           disabled={!selected.some((task) => task.projectId)}
-          title="指派 AI"
+          title={t('taskDetail.dispatchAi')}
           className="text-accent-purple"
         >
-          <BotIcon className="size-3.5" /> 指派 AI
+          <BotIcon className="size-3.5" /> {t('taskDetail.dispatchAi')}
         </ListActionButton>
         <ListActionButton
           onClick={async () => {
             const ok = await confirmAction({
-              title: `删除选中的 ${selected.length} 项？`,
-              description: '该操作会删除选中的任务及其子任务，且不可撤销。',
-              confirmText: '删除',
-              cancelText: '取消',
+              title: t('task.selection.confirmTitle', { count: selected.length }),
+              description: t('task.selection.confirmDescription'),
+              confirmText: t('task.selection.confirmText'),
+              cancelText: t('task.selection.cancelText'),
               variant: 'destructive',
             });
             if (!ok) return;
@@ -705,15 +759,36 @@ export function TasksPage() {
             close();
             refetch();
           }}
-          title="删除"
+          title={t('common.delete')}
           className="text-destructive"
         >
-          <Trash2 className="size-3.5" /> 删除
+          <Trash2 className="size-3.5" /> {t('common.delete')}
         </ListActionButton>
       </>
     ),
     [t, handleDispatchSelected, confirmAction, deleteTask, refetch],
   );
+
+  // P2-17：翻页（页码窗口 >7 页折叠省略号，与项目列表页同形态）
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      if (nextPage < 1 || nextPage > totalPages || nextPage === page) return;
+      setPage(nextPage);
+    },
+    [page, totalPages],
+  );
+
+  const pageNumbers = useMemo<(number | 'ellipsis')[]>(() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | 'ellipsis')[] = [1];
+    if (page > 3) pages.push('ellipsis');
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+      if (!pages.includes(i)) pages.push(i);
+    }
+    if (page < totalPages - 2) pages.push('ellipsis');
+    if (totalPages > 1) pages.push(totalPages);
+    return pages.filter((p, i, arr) => p !== 'ellipsis' || arr[i - 1] !== 'ellipsis');
+  }, [page, totalPages]);
 
   return (
     <PageShell aiPage="task.tasks-list" className="overflow-hidden">
@@ -723,11 +798,20 @@ export function TasksPage() {
         title={t("task.title")}
         icon={ISSUE_ENTITY.icon}
         iconColor={TONE_TEXT_CLASS[ISSUE_ENTITY.tone]}
-        // P1-16：计数口径 = 当前筛选结果集长度（前端筛选，如实标注）；无筛选时与全量一致
+        // P1-16/P2-17：计数如实标注——筛选生效时为「当前显示」（本页命中数）；
+        // 无筛选时为「第 x–y 条 / 共 total」（total 为服务端全量真相，随翻页更新）
         metrics={[{
           id: 'total',
           label: hasActiveFilters ? t('task.stats.showingFiltered', '当前显示') : t('task.title'),
-          value: filteredTasks.length,
+          value: hasActiveFilters
+            ? filteredTasks.length
+            : totalCount > 0
+              ? t('task.pagination.range', '第 {{from}}–{{to}} 条 · 共 {{total}} 条', {
+                  from: pageFrom,
+                  to: pageTo,
+                  total: totalCount,
+                })
+              : 0,
         }]}
         actions={
           <>
@@ -792,12 +876,27 @@ export function TasksPage() {
         />
       )}
 
-      {/* Export Dialog（P1-15：后端 /issues/export 为项目级端点，全局视图前端导出当前筛选结果） */}
+      {/* Export Dialog（P1-15/P2-17：后端 /issues/export 为项目级端点，全局视图前端导出
+          当前页的筛选结果——范围文案随分页如实标注，翻页后可再次导出其余数据） */}
       <GlobalTaskExportDialog
         open={exportOpen}
         onOpenChange={setExportOpen}
         tasks={filteredTasks}
         getProjectName={getProjectName}
+        scopeNote={t(
+          'task.pagination.exportScope',
+          '导出范围：当前页中的筛选结果（{{count}} 条）——与列表当前的搜索、筛选和排序一致，不含其他页数据。',
+          { count: filteredTasks.length },
+        )}
+        pageNote={
+          totalPages > 1
+            ? t(
+                'task.pagination.exportPageNote',
+                '当前为第 {{page}} / {{totalPages}} 页，导出仅含本页数据；如需其余数据请翻页后再次导出。',
+                { page, totalPages },
+              )
+            : undefined
+        }
       />
 
       {/* Import Dialog（P1-15：复用项目任务页导入对话框，projectId 不限定 → 收件箱） */}
@@ -1007,7 +1106,8 @@ export function TasksPage() {
             }
           />
         ) : (
-        <div className="w-full">
+        // key={page}：翻页重挂载视图，多选选中集随翻页明确清空（不做跨页选择）
+        <div key={page} className="w-full">
           {viewMode === 'list' ? (
             <TaskSimpleList
               tasks={filteredTasks}
@@ -1069,6 +1169,68 @@ export function TasksPage() {
         </div>
         )}
       </div>
+
+      {/* P2-17：分页栏——左侧如实条数区间（筛选生效时附作用域说明），右侧页码窗口 + 上/下页 */}
+      {!isLoading && totalCount > 0 ? (
+        <div className="flex shrink-0 items-center justify-between gap-4 border-t border-border px-6 py-2 md:px-7">
+          <p className="text-xs text-muted-foreground">
+            {t('task.pagination.range', '第 {{from}}–{{to}} 条 · 共 {{total}} 条', {
+              from: pageFrom,
+              to: pageTo,
+              total: totalCount,
+            })}
+            {hasActiveFilters ? ` · ${t('task.pagination.filterScopeNote', '筛选仅作用于当前页')}` : ''}
+          </p>
+          {totalPages > 1 ? (
+            <Pagination className="mx-0 w-auto justify-end">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    text={t('task.pagination.prev', '上一页')}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(page - 1);
+                    }}
+                    className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+                {pageNumbers.map((p, i) =>
+                  p === 'ellipsis' ? (
+                    <PaginationItem key={`ellipsis-${i}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem key={p}>
+                      <PaginationLink
+                        href="#"
+                        isActive={p === page}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(p);
+                        }}
+                      >
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ),
+                )}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    text={t('task.pagination.next', '下一页')}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(page + 1);
+                    }}
+                    className={page >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          ) : null}
+        </div>
+      ) : null}
 
       </PageShell>
   );

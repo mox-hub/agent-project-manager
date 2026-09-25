@@ -309,7 +309,10 @@ export function ExecutionsPage() {
             {run.providerId}
           </span>
         ) : null}
-        {run.stepsCount != null ? (
+        {/* 步数仅在 >0 时展示：daemon 路径不落 ExecutionStep 表，列表
+            stepsCount 恒为 0，显示「0 步」会误导；真实步骤数在详情/概览卡
+            按时间线事件条目如实统计（run-overview-card stepCount） */}
+        {run.stepsCount ? (
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <SquareTerminal className="size-3" />
             {t('execution.row.steps', { count: run.stepsCount })}

@@ -159,3 +159,9 @@ apps/desktop/build/desktop-pack/
 # 夜航体验测试产物（截图/一次性脚本，2026-09-20）
 tmp/
 tmp-apm-*.py
+
+# cleanup-e2e-users 等脚本的本地产物备份（含用户数据，禁止入库）
+scripts/backups/
+
+# 通知收件箱分支遗留的本地依赖目录（pnpm workspace 正规依赖在根 node_modules）
+apps/frontend/node_modules/

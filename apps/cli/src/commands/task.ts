@@ -113,12 +113,12 @@ export function registerTaskCommands(program: Command): void {
   task
     .command('assign-agent <id>')
     .description('指派 Agent 执行任务')
-    .requiredOption('--agent <bindingId>', 'Agent 绑定 id')
+    .requiredOption('--agent <memberId>', 'AI 成员 ID（Member.id，type=ai_agent）')
     .option('--provider <p>', 'CLI provider')
     .action(
       async (id: string, opts: { agent: string; provider?: string }, cmd: Command) => {
         const ctx = buildContext(cmd);
-        const body: Record<string, unknown> = { agentBindingId: opts.agent };
+        const body: Record<string, unknown> = { aiAgentId: opts.agent };
         if (opts.provider) body.providerId = opts.provider;
         const data = await ctx.client.post(`/issues/${id}/assign-agent`, body);
         out(ctx, data);

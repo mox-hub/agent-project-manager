@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsInt, Min } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -23,7 +23,7 @@ export class DocumentQueryDto {
     description: 'Filter by category',
     enum: [...CATEGORY_ENUM, 'all'],
   })
-  @IsEnum([...CATEGORY_ENUM, 'all'])
+  @IsIn([...CATEGORY_ENUM, 'all'])
   @IsOptional()
   category?: string;
 
@@ -31,7 +31,7 @@ export class DocumentQueryDto {
     description: 'Filter by status',
     enum: [...STATUS_ENUM, 'all'],
   })
-  @IsEnum([...STATUS_ENUM, 'all'])
+  @IsIn([...STATUS_ENUM, 'all'])
   @IsOptional()
   status?: string;
 

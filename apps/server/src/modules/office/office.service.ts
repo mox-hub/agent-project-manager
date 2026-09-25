@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { currentIsoWeek } from '@/modules/decision/proposal.service';
 import { PROVISIONAL_CAPACITY_PER_MEMBER } from '@/modules/dashboard/dashboard.service';
+import { ACTIVE_EXECUTION_STATUSES } from '@/modules/execution/execution.service';
 import {
   OfficeCapacityDto,
   OfficeColleagueDto,
@@ -13,15 +14,22 @@ import {
  * 办公室页聚合：按 AI 成员派生员工卡四件事——
  * 在干什么 / 忙不忙 / 压着多少待决 / 还能接多少活。
  * 真相全部来自既有表（ExecutionRun / ApprovalRequest / Acceptance /
- * DecisionProposal / AIConversation / runtime.dispatch 记录），这里只做归因与派生。
+ * DecisionProposal / AIConversation / AIUsageLog / runtime.dispatch 记录），
+ * 这里只做归因与派生。
  */
 
 /** 与 decision.service.listPending 相同的单源拉取上限 */
 const MAX_PULL = 200;
-/** 在途执行状态（与 execution.service.getActiveExecutions 同口径） */
-const ACTIVE_RUN_STATUSES = ['planned', 'in_progress', 'pending_approval'];
+/**
+ * 在途执行状态：直接复用 execution.service 的「执行活跃」词表
+ * （含 blocked——blocked 执行占据单活跃名额、需要人处理）。
+ * 此前本地词表漏了 blocked，与执行记录页状态互相矛盾（P2-04）。
+ */
+const ACTIVE_RUN_STATUSES: readonly string[] = ACTIVE_EXECUTION_STATUSES;
 /** 在途派发状态（runtime.dispatch 记录 value.status） */
 const ACTIVE_DISPATCH_STATUSES = new Set(['pending', 'running']);
+/** 周用量单成员拉取上限（AIUsageLog 一行 = 一次 CLI 结果上报，量级可控） */
+const MAX_WEEKLY_USAGE_PULL = 1000;
 
 type ColleagueStatus = OfficeColleagueDto['status'];
 type Acceptability = OfficeCapacityDto['acceptability'];
@@ -69,7 +77,7 @@ export class OfficeService {
     // 2) 并行拉取各归因源
     const [
       activeRuns,
-      weeklyBySubject,
+      weeklyUsageLogs,
       approvals,
       proposals,
       acceptances,
@@ -80,16 +88,27 @@ export class OfficeService {
       this.prisma.execution.findMany({
         where: {
           subjectId: { in: memberIds },
-          status: { in: ACTIVE_RUN_STATUSES },
+          status: { in: [...ACTIVE_RUN_STATUSES] },
         },
         include: { issue: { select: { id: true, title: true } } },
         orderBy: { createdAt: 'desc' },
         take: MAX_PULL,
       }),
-      this.prisma.execution.groupBy({
-        by: ['subjectId'],
-        where: { subjectId: { in: memberIds }, createdAt: { gte: weekStart } },
-        _sum: { totalTokens: true, totalCost: true },
+      // 周用量真相源 = AIUsageLog（CLI 结果上报即落，无论执行成败）；
+      // 此前聚合 ExecutionRun.totalTokens 只在完成时 rollup，失败/阻塞执行
+      // 用量不入账，导致「本周 0 tokens」与执行记录矛盾（P2-04）
+      this.prisma.aIUsageLog.findMany({
+        where: {
+          createdAt: { gte: weekStart },
+          executionRun: { subjectId: { in: memberIds } },
+        },
+        select: {
+          totalTokens: true,
+          estimatedCost: true,
+          executionRun: { select: { subjectId: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: MAX_WEEKLY_USAGE_PULL,
       }),
       this.prisma.approvalRequest.findMany({
         where: {
@@ -199,12 +218,16 @@ export class OfficeService {
       dispatchByMember.set(value.subjectId, bucket);
     }
 
-    const weeklyMap = new Map(
-      weeklyBySubject.map((row) => [
-        row.subjectId,
-        { tokens: row._sum.totalTokens ?? 0, costUsd: row._sum.totalCost ?? 0 },
-      ]),
-    );
+    // 周用量按执行主体归因聚合（JS 侧：SQLite 无 JSON path，日志表亦无 subjectId 列）
+    const weeklyMap = new Map<string, { tokens: number; costUsd: number }>();
+    for (const log of weeklyUsageLogs) {
+      const subjectId = log.executionRun?.subjectId;
+      if (!subjectId) continue;
+      const bucket = weeklyMap.get(subjectId) ?? { tokens: 0, costUsd: 0 };
+      bucket.tokens += log.totalTokens;
+      bucket.costUsd += log.estimatedCost ?? 0;
+      weeklyMap.set(subjectId, bucket);
+    }
 
     const budget = (project?.config as BudgetConfig | null)?.aiBudget;
 
@@ -227,7 +250,7 @@ export class OfficeService {
           : {}),
         ...(member.trustLevel != null ? { trustLevel: member.trustLevel } : {}),
         ...(member.trustScore != null ? { trustScore: member.trustScore } : {}),
-        status: this.deriveStatus(blocking, runs.length, advisory),
+        status: this.deriveStatus(blocking, runs, advisory),
         blocking,
         advisory,
         capacity: this.deriveCapacity(runs.length, weekly, budget),
@@ -315,14 +338,19 @@ export class OfficeService {
     });
   }
 
-  /** 忙闲派生：blocking > working > suggestions > idle（同前端 use-assistant-status 口径） */
+  /**
+   * 忙闲派生：blocking > working > suggestions > idle（同前端 use-assistant-status 口径）。
+   * blocked 在途执行归 needYou（等你拍板）：审批拒绝/派发失败后的执行需要人
+   * 处理，与执行记录页「已阻塞」指向同一件事，不再显示「工作中」互相矛盾（P2-04）。
+   */
   private deriveStatus(
     blocking: number,
-    activeRuns: number,
+    runs: ActiveRunRow[],
     advisory: number,
   ): ColleagueStatus {
     if (blocking > 0) return 'needYou';
-    if (activeRuns > 0) return 'working';
+    if (runs.some((run) => run.status === 'blocked')) return 'needYou';
+    if (runs.length > 0) return 'working';
     if (advisory > 0) return 'suggestions';
     return 'idle';
   }
