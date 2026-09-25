@@ -72,6 +72,13 @@ export function useActionableInbox() {
   const [snoozedMap, setSnoozedMap] = useState<Record<string, number>>(() =>
     readStoredMap(STORAGE_KEY_SNOOZED),
   );
+  // 当前时刻经状态供给（60s 粒度，snooze 判定足够）——渲染期保持纯函数，不直调 Date.now
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   // 清理过期 snooze（自动唤醒）
   useEffect(() => {
@@ -242,7 +249,7 @@ export function useActionableInbox() {
     return combined.map((item) => {
       const isCleared = clearedIds.has(item.id);
       const snoozedUntil = snoozedMap[item.id];
-      const isSnoozed = !!(snoozedUntil && snoozedUntil > Date.now());
+      const isSnoozed = !!(snoozedUntil && snoozedUntil > nowMs);
 
       return {
         ...item,
@@ -251,7 +258,7 @@ export function useActionableInbox() {
         snoozedUntil,
       };
     });
-  }, [decisionItems, notificationItems, clearedIds, snoozedMap]);
+  }, [decisionItems, notificationItems, clearedIds, snoozedMap, nowMs]);
 
   // 7. Tab 分类列表与统计
   const counts = useMemo(() => {

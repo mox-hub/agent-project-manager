@@ -90,7 +90,7 @@ export function NotificationCenterPage() {
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.notificationCenter}>
       <div className="flex min-h-0 flex-1">
         {/* ── 左栏：分类 Tab + 工具栏 + 高密度收件箱列表 ── */}
-        <aside className="flex w-[480px] shrink-0 flex-col border-r border-border bg-background">
+        <aside className="flex w-120 shrink-0 flex-col border-r border-border bg-background">
           {/* 1. 顶部标题栏 */}
           <div className="border-b border-border px-4 py-3">
             <div className="flex items-center justify-between">
@@ -176,10 +176,10 @@ export function NotificationCenterPage() {
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               {/* 筛选菜单 */}
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-7 shrink-0 text-muted-foreground">
-                    <Filter className="size-3.5" />
-                  </Button>
+                <DropdownMenuTrigger
+                  render={<Button variant="ghost" size="icon" className="size-7 shrink-0 text-muted-foreground" />}
+                >
+                  <Filter className="size-3.5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-36 text-xs">
                   <DropdownMenuItem onClick={() => setTypeFilter('all')}>

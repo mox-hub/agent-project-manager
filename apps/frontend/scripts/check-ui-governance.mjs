@@ -7,9 +7,7 @@ const ROOT = process.cwd();
 const CORE_PAGES = [
   "src/modules/project/pages/project-list-page.tsx",
   "src/modules/project/pages/project-dashboard-page.tsx",
-  "src/modules/issue/pages/task-page.tsx",
   "src/modules/issue/pages/tasks-page.tsx",
-  "src/modules/ai-hub/pages/ai-management-page.tsx",
   "src/modules/settings/pages/settings-page.tsx",
 ];
 

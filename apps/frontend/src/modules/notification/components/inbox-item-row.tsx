@@ -183,7 +183,7 @@ export function InboxItemRow({
 
       {/* 5. 触发者/Agent 身份与动态文字 */}
       {item.actor && (
-        <div className="hidden shrink-0 items-center gap-1.5 text-xs text-muted-foreground sm:flex max-w-[240px] truncate">
+        <div className="hidden shrink-0 items-center gap-1.5 text-xs text-muted-foreground sm:flex max-w-60 truncate">
           <div
             className={cn(
               'flex size-4 shrink-0 items-center justify-center rounded-full text-10',
@@ -228,16 +228,18 @@ export function InboxItemRow({
         {/* 稍后处理（Snooze） */}
         {!item.isCleared && (
           <DropdownMenu open={snoozeMenuOpen} onOpenChange={setSnoozeMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 rounded-md bg-background/90 shadow-xs hover:bg-muted"
-                title="稍后提醒"
-                aria-label="稍后提醒"
-              >
-                <Clock className="size-3.5 text-muted-foreground" />
-              </Button>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 rounded-md bg-background/90 shadow-xs hover:bg-muted"
+                  title="稍后提醒"
+                  aria-label="稍后提醒"
+                />
+              }
+            >
+              <Clock className="size-3.5 text-muted-foreground" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-36">
               <DropdownMenuItem onClick={() => onSnooze(item.id, 60 * 60 * 1000)}>
