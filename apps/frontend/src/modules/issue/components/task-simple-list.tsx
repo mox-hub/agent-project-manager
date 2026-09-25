@@ -255,6 +255,8 @@ export function TaskSimpleList({
       onGroupCreate={onGroupCreate}
       onItemClick={onTaskClick}
       onItemContextMenu={onItemContextMenu}
+      itemPreviewPath={(task) => `/app/issues/${task.id}`}
+      itemPreviewTitle={(task) => task.title}
       selectionActions={selectionActions}
       renderLeading={(task) => {
         const todoTotal = task.todoItems?.length ?? task._count?.subIssues ?? 0;

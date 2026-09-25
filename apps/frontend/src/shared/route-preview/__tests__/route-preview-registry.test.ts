@@ -27,6 +27,11 @@ describe('resolveRoutePreview', () => {
     expect(resolveRoutePreview('/app/releases/v1')).toEqual({ type: 'release', id: 'v1' });
   });
 
+  it('解析工作流详情（v0.7.4 增量）', () => {
+    expect(resolveRoutePreview('/app/workflows/w1')).toEqual({ type: 'workflow', id: 'w1' });
+    expect(resolveRoutePreview('/app/workflows')).toEqual({ type: 'generic' });
+  });
+
   it('新建页保留字回退通用卡片', () => {
     expect(resolveRoutePreview('/app/documents/new')).toEqual({ type: 'generic' });
     expect(resolveRoutePreview('/app/workspaces/new')).toEqual({ type: 'generic' });

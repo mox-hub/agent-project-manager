@@ -161,6 +161,8 @@ export function ProjectSimpleList({
       onGroupCreate={onGroupCreate}
       onItemClick={onProjectClick}
       onItemContextMenu={onItemContextMenu}
+      itemPreviewPath={(project) => `/app/projects/${project.id}`}
+      itemPreviewTitle={(project) => project.name}
       selectionActions={selectionActions}
       renderLeading={(project) => {
         const color = project.color || '#5E6AD2';

@@ -20,6 +20,7 @@ export type RoutePreviewType =
   | 'acceptance'
   | 'execution'
   | 'release'
+  | 'workflow'
   | 'generic';
 
 export interface RoutePreviewMatch {
@@ -41,6 +42,7 @@ const DYNAMIC_RULES: Array<{ prefix: string; type: RoutePreviewType }> = [
   { prefix: '/app/executions/', type: 'execution' },
   { prefix: '/app/settings/ai/executions/', type: 'execution' },
   { prefix: '/app/releases/', type: 'release' },
+  { prefix: '/app/workflows/', type: 'workflow' },
 ];
 
 /** 保留字路径段：命中时不作为实体 id 解析，回退通用卡片 */

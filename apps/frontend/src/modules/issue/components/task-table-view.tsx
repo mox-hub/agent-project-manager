@@ -7,6 +7,7 @@ import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { ListAvatar, ListDate } from '@/components/ui/data-list';
 import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
 import { IssueTypePill } from '@/shared/components/issue-type-pill';
+import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
@@ -32,6 +33,8 @@ export interface TaskTableViewProps {
   onSortChange?: (orderBy: string, orderDirection: 'asc' | 'desc') => void;
   maxHeight?: string;
   className?: string;
+  /** 行右键菜单标签功能域（task / bug：标签隔离与复制链接路径），默认 task */
+  contextMenuKind?: 'task' | 'bug';
 }
 
 /** 展示属性 key → 表格列 id（仅 'id' 与列 shortId 名不同，其余同名对齐） */
@@ -85,8 +88,11 @@ export function TaskTableView({
   onSortChange,
   maxHeight = 'calc(100vh - 220px)',
   className,
+  contextMenuKind = 'task',
 }: TaskTableViewProps) {
   const { t } = useTranslation();
+  // 行右键菜单与 list/board 同源（useIssueRowMenu），三视图菜单内容一致
+  const rowMenu = useIssueRowMenu({ kind: contextMenuKind, entityName: contextMenuKind === 'bug' ? 'Bug' : '任务' });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // P1-17：子任务客户端折叠（父行 chevron 切换，键 = 父任务 id）
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(() => new Set());
@@ -398,6 +404,7 @@ export function TaskTableView({
         data={displayRows}
         getRowId={(task) => task.id}
         onRowClick={onTaskClick}
+        onRowContextMenu={(task) => rowMenu(task)}
         enableSelection={!!selectionActions}
         selectedIds={selectedIds}
         onSelectedIdsChange={setSelectedIds}

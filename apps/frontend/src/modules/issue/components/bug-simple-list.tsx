@@ -141,6 +141,8 @@ export function BugSimpleList({
       onGroupCreate={onGroupCreate}
       onItemClick={onBugClick}
       onItemContextMenu={onItemContextMenu}
+      itemPreviewPath={(bug) => `/app/bugs/${bug.id}`}
+      itemPreviewTitle={(bug) => bug.title}
       selectionActions={selectionActions}
       renderLeading={(bug) => {
         const sev = SEV_C[severityOf(bug)];

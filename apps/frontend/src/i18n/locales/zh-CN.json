@@ -16,6 +16,7 @@
     "favorite": "收藏此页面",
     "unfavorite": "取消收藏",
     "search": "搜索",
+    "noMatches": "无匹配",
     "edit": "编辑",
     "create": "创建",
     "update": "更新",
@@ -3516,6 +3517,9 @@
       "member": "成员",
       "team": "团队",
       "acceptance": "验收",
+      "execution": "执行",
+      "release": "发版",
+      "workflow": "工作流",
       "generic": "页面"
     },
     "status": {
@@ -3565,6 +3569,13 @@
     },
     "task": {
       "project": "所属项目"
+    },
+    "workflow": {
+      "definition": "定义",
+      "version": "版本",
+      "steps": "步骤数",
+      "moreSteps": "另有 {{count}} 步",
+      "updatedAt": "更新"
     },
     "document": {
       "folder": "所属目录",

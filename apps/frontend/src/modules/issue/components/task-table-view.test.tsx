@@ -13,6 +13,12 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
+// TaskTableView 内部接 useIssueRowMenu（行右键菜单与 list/board 同源），
+// 测试只关注排序/列显隐，菜单 mutation 链路整桩（与 tasks-page.test 同惯例）
+vi.mock('@/shared/context-menu/use-issue-row-menu', () => ({
+  useIssueRowMenu: () => () => undefined,
+}));
+
 vi.mock('../hooks/use-issue-types', () => ({
   useIssueTypes: () => ({ types: [], byId: new Map(), byKey: new Map() }),
   useIssueTypeOf: () => () => undefined,

@@ -17,6 +17,7 @@ vi.mock('@/infrastructure/store/app-store', () => ({
 }));
 
 vi.mock('react-i18next', () => ({
+  initReactI18next: { type: '3rdParty', init: () => {} },
   useTranslation: () => ({
     t: (key: string, defaultValue?: string | Record<string, unknown>) => {
       const translations: Record<string, string> = {

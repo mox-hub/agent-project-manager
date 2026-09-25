@@ -16,6 +16,7 @@
     "favorite": "Favorite this page",
     "unfavorite": "Unfavorite this page",
     "search": "Search",
+    "noMatches": "No matches",
     "edit": "Edit",
     "create": "Create",
     "update": "Update",
@@ -3516,6 +3517,9 @@
       "member": "Member",
       "team": "Team",
       "acceptance": "Acceptance",
+      "execution": "Execution",
+      "release": "Release",
+      "workflow": "Workflow",
       "generic": "Page"
     },
     "status": {
@@ -3565,6 +3569,13 @@
     },
     "task": {
       "project": "Project"
+    },
+    "workflow": {
+      "definition": "Definition",
+      "version": "Version",
+      "steps": "Steps",
+      "moreSteps": "{{count}} more steps",
+      "updatedAt": "Updated"
     },
     "document": {
       "folder": "Folder",

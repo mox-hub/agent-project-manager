@@ -1,10 +1,12 @@
 "use client"
 
 import * as React from "react"
+import { useState } from "react"
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu"
+import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
-import { ChevronRightIcon } from "lucide-react"
+import { ChevronRightIcon, SearchIcon } from "lucide-react"
 import { Kbd } from "@/components/ui/kbd"
 import {
   MENU_ITEM_BASE_CLASS,
@@ -151,7 +153,9 @@ function ContextMenuSubContent({
           className={cn(MENU_POPUP_CLASS, className)}
           {...props}
         >
-          <div className="max-h-(--available-height) w-full overflow-y-auto p-1">
+          {/* 限高 320px（约 8 行）+ 滚动：负责人/标签等长候选列表不再无限撑高；
+              320px 以内的小视口仍受 --available-height 兜底 */}
+          <div className="max-h-80 w-full overflow-y-auto p-1">
             {children}
           </div>
         </ContextMenuPrimitive.Popup>
@@ -306,6 +310,10 @@ export interface MenuItem {
   onClick?: () => void
   children?: MenuItem[]
   separatorAfter?: boolean
+  /** 子菜单内置搜索框（标签/负责人等长候选列表；配合 children 使用） */
+  searchable?: boolean
+  /** 搜索匹配文本（缺省回退 string 型 label）；仅作为 searchable 子菜单的候选项时需要 */
+  searchText?: string
 }
 
 interface ContextMenuProps {
@@ -387,6 +395,62 @@ function MenuItemRow({
   )
 }
 
+/** searchable 子菜单的过滤文本：优先 searchText，回退 string 型 label */
+function menuSearchText(item: MenuItem): string {
+  if (item.searchText) return item.searchText
+  return typeof item.label === "string" ? item.label : ""
+}
+
+/** 子菜单内置搜索：顶部过滤输入框 + 实时过滤候选（Esc 先清词再关菜单） */
+function SearchableMenuChildren({
+  items,
+  onItemClick,
+}: {
+  items: MenuItem[]
+  onItemClick?: (item: MenuItem) => void
+}) {
+  const { t } = useTranslation()
+  const [query, setQuery] = useState("")
+  const trimmed = query.trim().toLowerCase()
+  const filtered = trimmed
+    ? items.filter((item) => menuSearchText(item).toLowerCase().includes(trimmed))
+    : items
+  return (
+    <>
+      {/* 键盘事件不外溢：输入框内的字母/方向键不能触发菜单 typeahead 与快捷键 */}
+      <div
+        className="px-1 pb-1"
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          if (e.key === "Escape" && query) {
+            e.preventDefault()
+            setQuery("")
+          }
+        }}
+      >
+        <div className="flex h-7 items-center gap-1.5 rounded-sm border border-border/60 bg-muted/40 px-2">
+          <SearchIcon className="size-3.5 shrink-0 text-muted-foreground" />
+          <input
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("common.search", "搜索")}
+            className="h-full w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+      </div>
+      <ContextMenuSeparator />
+      {filtered.length ? (
+        renderMenuItems(filtered, onItemClick)
+      ) : (
+        <div className="px-2 py-3 text-center text-xs text-muted-foreground">
+          {t("common.noMatches", "无匹配")}
+        </div>
+      )}
+    </>
+  )
+}
+
 function renderMenuItems(items: MenuItem[], onItemClick?: (item: MenuItem) => void) {
   return items.map((item) => (
     <React.Fragment key={item.id}>
@@ -399,7 +463,11 @@ function renderMenuItems(items: MenuItem[], onItemClick?: (item: MenuItem) => vo
             <span className="flex-1 truncate">{item.label}</span>
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            {renderMenuItems(item.children, onItemClick)}
+            {item.searchable ? (
+              <SearchableMenuChildren items={item.children} onItemClick={onItemClick} />
+            ) : (
+              renderMenuItems(item.children, onItemClick)
+            )}
           </ContextMenuSubContent>
         </ContextMenuSub>
       ) : (

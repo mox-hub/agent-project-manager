@@ -159,6 +159,9 @@ function AssignMenuAvatar({ name, handle }: { name?: string; handle?: string }) 
   );
 }
 
+/** 子菜单搜索框启用阈值：候选超过一屏（约 8 行）才值得过滤输入 */
+const SUBMENU_SEARCH_THRESHOLD = 8;
+
 /**
  * 构建统一的任务 / Bug 行右键菜单。
  */
@@ -219,11 +222,12 @@ export function buildTaskRowMenu(opts: TaskRowMenuOptions): MenuItem[] {
     });
   }
 
-  // —— 负责人（真实成员数据） ——
+  // —— 负责人（真实成员数据；候选多时二级菜单内置搜索） ——
   const currentAssignee = assignees.find((m) => m.id === currentAssigneeId);
   metadataItems.push({
     id: 'meta-assignee',
     label: '负责人',
+    searchable: assignees.length >= SUBMENU_SEARCH_THRESHOLD,
     icon: currentAssignee ? (
       <AssignMenuAvatar name={currentAssignee.displayName} handle={currentAssignee.handle ?? currentAssignee.displayName} />
     ) : (
@@ -243,6 +247,7 @@ export function buildTaskRowMenu(opts: TaskRowMenuOptions): MenuItem[] {
       ...assignees.map((m) => ({
         id: `assignee-${m.id}`,
         label: m.displayName,
+        searchText: `${m.displayName} ${m.handle ?? ''}`,
         icon: <AssignMenuAvatar name={m.displayName} handle={m.handle ?? m.displayName} />,
         // 对勾匹配用 User 口径（Task.assigneeId 外键是 User.id）
         trailing: trail(!!currentAssigneeId && currentAssigneeId === (m.userId ?? m.id)),
@@ -254,16 +259,18 @@ export function buildTaskRowMenu(opts: TaskRowMenuOptions): MenuItem[] {
     ],
   });
 
-  // —— 标签（真实数据，切换式） ——
+  // —— 标签（真实数据，切换式；候选多时二级菜单内置搜索） ——
   metadataItems.push({
     id: 'meta-tags',
     label: '标签',
+    searchable: tagOptions.length >= SUBMENU_SEARCH_THRESHOLD,
     icon: <TagIcon className="h-4 w-4 text-muted-foreground" />,
     children: tagOptions.map((tg) => {
       const active = currentTagIds.has(tg.id);
       return {
         id: `tag-${tg.id}`,
         label: tg.name,
+        searchText: tg.name,
         icon: <span className="inline-block size-3 shrink-0 rounded-sm ring-1 ring-border/40" style={{ backgroundColor: tg.color || '#94A3B8' }} />,
         trailing: trail(active),
         onClick: () => {
@@ -429,6 +436,7 @@ export function buildProjectRowMenu(opts: ProjectRowMenuOptions): MenuItem[] {
   metadataItems.push({
     id: 'meta-owner',
     label: '负责人',
+    searchable: owners.length >= SUBMENU_SEARCH_THRESHOLD,
     icon: currentOwner ? (
       <AssignMenuAvatar
         name={currentOwner.displayName}
@@ -448,6 +456,7 @@ export function buildProjectRowMenu(opts: ProjectRowMenuOptions): MenuItem[] {
       ...owners.map((m) => ({
         id: `owner-${m.id}`,
         label: m.displayName,
+        searchText: `${m.displayName} ${m.handle ?? ''}`,
         icon: (
           <AssignMenuAvatar name={m.displayName} handle={m.handle ?? m.displayName} />
         ),
