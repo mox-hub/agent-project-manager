@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { diffLines } from 'diff';
 import { ArrowLeftRight } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
@@ -21,44 +22,17 @@ interface DiffSegment {
 }
 
 function buildLineDiff(a: string, b: string): DiffSegment[] {
-  const aLines = a.replace(/\r\n/g, '\n').split('\n');
-  const bLines = b.replace(/\r\n/g, '\n').split('\n');
-  const m = aLines.length;
-  const n = bLines.length;
-
-  // LCS dynamic programming
-  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] = aLines[i - 1] === bLines[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
-    }
-  }
-
-  const result: DiffSegment[] = [];
-  let i = m;
-  let j = n;
-  while (i > 0 && j > 0) {
-    if (aLines[i - 1] === bLines[j - 1]) {
-      result.unshift({ op: 'equal', text: aLines[i - 1] });
-      i--;
-      j--;
-    } else if (dp[i - 1][j] >= dp[i][j - 1]) {
-      result.unshift({ op: 'delete', text: aLines[i - 1] });
-      i--;
-    } else {
-      result.unshift({ op: 'insert', text: bLines[j - 1] });
-      j--;
-    }
-  }
-  while (i > 0) {
-    result.unshift({ op: 'delete', text: aLines[i - 1] });
-    i--;
-  }
-  while (j > 0) {
-    result.unshift({ op: 'insert', text: bLines[j - 1] });
-    j--;
-  }
-  return result;
+  const norm = (v: string) => {
+    const lf = v.replace(/\r\n/g, '\n');
+    // 归一化结尾换行：与旧 LCS 实现的按行内容比对语义一致（jsdiff 行 token 含 \n）
+    return lf.endsWith('\n') ? lf.slice(0, -1) : lf;
+  };
+  // jsdiff（Myers）：千行级大文档不再受手写 LCS O(m·n) 内存/耗时瓶颈限制
+  return diffLines(norm(a), norm(b)).flatMap((part) => {
+    const op: DiffOp = part.added ? 'insert' : part.removed ? 'delete' : 'equal';
+    const value = part.value.endsWith('\n') ? part.value.slice(0, -1) : part.value;
+    return value.split('\n').map((line) => ({ op, text: line }));
+  });
 }
 
 export function VersionDiffView({ documentId, baseVersionId, targetVersionId }: VersionDiffViewProps) {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -38,6 +38,8 @@ export function MemberPicker({
   emptyText = '无匹配成员',
 }: MemberPickerProps) {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [triggerWidth, setTriggerWidth] = useState(0);
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<'all' | 'human' | 'ai_agent'>(filterType === 'all' ? 'all' : filterType);
 
@@ -86,12 +88,14 @@ export function MemberPicker({
         open={open}
         onOpenChange={(next) => {
           setOpen(next);
+          if (next) setTriggerWidth(triggerRef.current?.offsetWidth ?? 0);
           if (!next) setQuery('');
         }}
       >
         <PopoverTrigger>
           <button
             type="button"
+            ref={triggerRef}
             disabled={disabled}
             className={cn(
               'w-full min-h-9 flex flex-wrap items-center gap-1 px-2 py-1.5 rounded-md border border-input bg-background text-sm',
@@ -116,7 +120,8 @@ export function MemberPicker({
           </button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[--radix-popover-trigger-width] min-w-70 p-0"
+          className="min-w-70 p-0"
+          style={triggerWidth ? { width: triggerWidth } : undefined}
           align="start"
         >
           <div className="p-2 border-b border-border space-y-2">

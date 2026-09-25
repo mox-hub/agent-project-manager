@@ -6,7 +6,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../core/database/prisma.service';
-import * as fs from 'fs-extra';
+import * as fs from 'node:fs/promises';
+
+const pathExists = (p: string): Promise<boolean> =>
+  fs.stat(p).then(
+    () => true,
+    () => false,
+  );
 import * as path from 'path';
 import * as os from 'os';
 
@@ -98,7 +104,7 @@ export class DocumentStorageService {
 
   async ensureBasePath(): Promise<string> {
     const cfg = await this.getConfig();
-    await fs.ensureDir(cfg.basePath);
+    await fs.mkdir(cfg.basePath, { recursive: true });
     return cfg.basePath;
   }
 
@@ -111,7 +117,7 @@ export class DocumentStorageService {
     ];
     for (const candidate of candidates) {
       try {
-        if (await fs.pathExists(candidate)) {
+        if (await pathExists(candidate)) {
           return candidate;
         }
       } catch {
@@ -155,7 +161,7 @@ export class DocumentStorageService {
     const targetDir = cfg.defaultSubfolder
       ? path.join(cfg.basePath, cfg.defaultSubfolder)
       : cfg.basePath;
-    await fs.ensureDir(targetDir);
+    await fs.mkdir(targetDir, { recursive: true });
     const fullPath = path.join(targetDir, fileName);
 
     await fs.writeFile(fullPath, content, 'utf8');
@@ -189,7 +195,7 @@ export class DocumentStorageService {
       : cfg.basePath;
     const fullPath = path.join(targetDir, fileName);
 
-    if (!(await fs.pathExists(fullPath))) {
+    if (!(await pathExists(fullPath))) {
       throw new NotFoundException(`Storage file not found: ${fullPath}`);
     }
 
@@ -214,8 +220,8 @@ export class DocumentStorageService {
       : cfg.basePath;
     const fullPath = path.join(targetDir, fileName);
 
-    if (await fs.pathExists(fullPath)) {
-      await fs.remove(fullPath);
+    if (await pathExists(fullPath)) {
+      await fs.rm(fullPath, { recursive: true, force: true });
       return true;
     }
     return false;
@@ -223,13 +229,13 @@ export class DocumentStorageService {
 
   async listMarkdownFiles(): Promise<StoredFileMeta[]> {
     const cfg = await this.getConfig();
-    if (!(await fs.pathExists(cfg.basePath))) {
+    if (!(await pathExists(cfg.basePath))) {
       return [];
     }
     const targetDir = cfg.defaultSubfolder
       ? path.join(cfg.basePath, cfg.defaultSubfolder)
       : cfg.basePath;
-    if (!(await fs.pathExists(targetDir))) {
+    if (!(await pathExists(targetDir))) {
       return [];
     }
     const ext = cfg.fileExtension;

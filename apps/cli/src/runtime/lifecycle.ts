@@ -11,6 +11,8 @@ import {
   getConfigPath,
   HEARTBEAT_INTERVAL_SECONDS,
   POLL_INTERVAL_MS,
+  WS_RECONNECT_BASE_MS,
+  WS_RECONNECT_MAX_MS,
   readConfig,
   RuntimeCapabilitiesPayload,
   RuntimeDispatch,
@@ -117,8 +119,8 @@ export async function runRuntimeDaemon(): Promise<void> {
     auth: { runtimeSessionId: sessionId, runtimeSessionToken: sessionToken },
     transports: ['websocket'],
     reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 60000,
+    reconnectionDelay: WS_RECONNECT_BASE_MS,
+    reconnectionDelayMax: WS_RECONNECT_MAX_MS,
   });
 
   socket.on(WS_EVENTS.serverToRuntime.DISPATCH_CREATED, (payload: RuntimeDispatch) => {

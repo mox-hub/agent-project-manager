@@ -209,9 +209,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.4.0
-      embla-carousel-react:
-        specifier: ^8.6.0
-        version: 8.6.0(react@19.2.8)
+      diff:
+        specifier: ^9.0.0
+        version: 9.0.0
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
@@ -254,9 +254,6 @@ importers:
       react-nice-avatar:
         specifier: ^1.5.0
         version: 1.5.0(react@19.2.8)
-      react-resizable-panels:
-        specifier: ^4.7.2
-        version: 4.12.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react-router-dom:
         specifier: ^7.13.0
         version: 7.18.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -284,9 +281,6 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
-      zod:
-        specifier: ^4.1.11
-        version: 4.5.4
       zustand:
         specifier: ^5.0.11
         version: 5.0.15(@types/react@19.2.18)(immer@11.1.18)(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8))
@@ -465,18 +459,12 @@ importers:
       class-validator:
         specifier: ^0.14.3
         version: 0.14.4
-      conventional-commits-parser:
-        specifier: ^7.1.2
-        version: 7.1.2
       conventional-recommended-bump:
         specifier: ^12.1.0
         version: 12.1.0
       express:
         specifier: ^5.2.1
         version: 5.2.1(supports-color@10.2.2)
-      fs-extra:
-        specifier: ^11.3.5
-        version: 11.4.0
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
@@ -504,12 +492,6 @@ importers:
       passport-jwt:
         specifier: ^4.0.1
         version: 4.0.1
-      passport-local:
-        specifier: ^1.0.0
-        version: 1.0.0
-      prisma:
-        specifier: ^6.19.2
-        version: 6.19.3(magicast@0.3.5)(typescript@5.9.3)
       reflect-metadata:
         specifier: ^0.2.0
         version: 0.2.2
@@ -556,9 +538,6 @@ importers:
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.6
-      '@types/fs-extra':
-        specifier: ^11.0.4
-        version: 11.0.4
       '@types/node':
         specifier: ^20.3.1
         version: 20.19.43
@@ -568,9 +547,6 @@ importers:
       '@types/passport-jwt':
         specifier: ^4.0.1
         version: 4.0.1
-      '@types/passport-local':
-        specifier: ^1.0.38
-        version: 1.0.38
       '@types/semver':
         specifier: ^7.8.0
         version: 7.8.0
@@ -598,6 +574,9 @@ importers:
       prettier:
         specifier: 'catalog:'
         version: 3.9.6
+      prisma:
+        specifier: ^6.19.2
+        version: 6.19.3(magicast@0.3.5)(typescript@5.9.3)
       supertest:
         specifier: ^7.0.0
         version: 7.2.2(supports-color@10.2.2)
@@ -4077,9 +4056,6 @@ packages:
   '@types/express@5.0.6':
     resolution: {integrity: sha512-sKYVuV7Sv9fbPIt/442koC7+IIwK5olP1KWeD88e/idgoJqDm3JV/YUiPwkoKK92ylff2MGxSz1CSjsXelx0YA==}
 
-  '@types/fs-extra@11.0.4':
-    resolution: {integrity: sha512-yTbItCNreRooED33qjunPthRcSjERP1r4MqCZc7wv0u2sUkzTFp45tgUfS5+r7FrZPdmCCNflLhVSP/o+SemsQ==}
-
   '@types/fs-extra@9.0.13':
     resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
 
@@ -4097,9 +4073,6 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
-
-  '@types/jsonfile@6.1.4':
-    resolution: {integrity: sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ==}
 
   '@types/jsonwebtoken@9.0.10':
     resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
@@ -4139,9 +4112,6 @@ packages:
 
   '@types/passport-jwt@4.0.1':
     resolution: {integrity: sha512-Y0Ykz6nWP4jpxgEUYq8NoVZeCQPo1ZndJLfapI249g1jHChvRfZRO/LS3tqu26YgAS/laI1qx98sYGz0IalRXQ==}
-
-  '@types/passport-local@1.0.38':
-    resolution: {integrity: sha512-nsrW4A963lYE7lNTv9cr5WmiUD1ibYJvWrpE13oxApFsRt77b0RdtZvKbCdNIY4v/QZ6TRQWaDDEwV1kCTmcXg==}
 
   '@types/passport-strategy@0.2.38':
     resolution: {integrity: sha512-GC6eMqqojOooq993Tmnmp7AUTbbQSgilyvpCYQjT+H6JfG/g6RGc7nXEniZlp0zyKJ0WUdOiZWLBZft9Yug1uA==}
@@ -5503,19 +5473,6 @@ packages:
 
   elkjs@0.11.1:
     resolution: {integrity: sha512-zxxR9k+rx5ktMwT/FwyLdPCrq7xN6e4VGGHH8hA01vVYKjTFik7nHOxBnAYtrgYUB1RpAiLvA1/U2YraWxyKKg==}
-
-  embla-carousel-react@8.6.0:
-    resolution: {integrity: sha512-0/PjqU7geVmo6F734pmPqpyHqiM99olvyecY7zdweCw+6tKEXnrE90pBiBbMMU8s5tICemzpQ3hi5EpxzGW+JA==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.1 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc
-
-  embla-carousel-reactive-utils@8.6.0:
-    resolution: {integrity: sha512-fMVUDUEx0/uIEDM0Mz3dHznDhfX+znCCDCeIophYb1QGVM7YThSWX+wz11zlYwWFOr74b4QLGg0hrGPJeG2s4A==}
-    peerDependencies:
-      embla-carousel: 8.6.0
-
-  embla-carousel@8.6.0:
-    resolution: {integrity: sha512-SjWyZBHJPbqxHOzckOfo8lHisEaJWmwd23XppYFYVh10bU66/Pn5tkVkbkCMZVdbUE5eTCI2nD8OyIP4Z+uwkA==}
 
   emoji-mart@5.6.0:
     resolution: {integrity: sha512-eJp3QRe79pjwa+duv+n7+5YsNhRcMl812EcFVwrnRvYKoNPoQb5qxU8DG6Bgwji0akHdp6D4Ln6tYLG58MFSow==}
@@ -7796,10 +7753,6 @@ packages:
   passport-jwt@4.0.1:
     resolution: {integrity: sha512-UCKMDYhNuGOBE9/9Ycuoyh7vP6jpeTp/+sfMJl7nLff/t6dps+iaeE0hhNkKN8/HZHcJ7lCdOyDxHdDoxoSvdQ==}
 
-  passport-local@1.0.0:
-    resolution: {integrity: sha512-9wCE6qKznvf9mQYYbgJ3sVOHmCWoUNMVFoZzNoznmISbhnNNPhN9xfY3sLmScHMetEJeoY7CXwfhCe7argfQow==}
-    engines: {node: '>= 0.4.0'}
-
   passport-strategy@1.0.0:
     resolution: {integrity: sha512-CB97UUvDKJde2V0KDWWB3lyf6PC3FaZP7YxZ2G8OAtn9p4HI9j9JLP9qjOGZFvyl8uwNT8qM+hGnz/n16NI7oA==}
     engines: {node: '>= 0.4.0'}
@@ -8274,12 +8227,6 @@ packages:
   react-refresh@0.18.0:
     resolution: {integrity: sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw==}
     engines: {node: '>=0.10.0'}
-
-  react-resizable-panels@4.12.3:
-    resolution: {integrity: sha512-GHMJWnDXui/3RX4bT+cgBP+N3N2nkwcoZATr/2xLFpqQQe7TlBrE0cGM0dUa9ceT7A90tUrSRsiqgRG+g0/2AA==}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0
-      react-dom: ^18.0.0 || ^19.0.0
 
   react-rnd@10.5.3:
     resolution: {integrity: sha512-s/sIT3pGZnQ+57egijkTp9mizjIWrJz68Pq6yd+F/wniFY3IriML18dUXnQe/HP9uMiJ+9MAp44hljG99fZu6Q==}
@@ -13497,11 +13444,6 @@ snapshots:
       '@types/express-serve-static-core': 5.1.3
       '@types/serve-static': 2.2.0
 
-  '@types/fs-extra@11.0.4':
-    dependencies:
-      '@types/jsonfile': 6.1.4
-      '@types/node': 24.13.3
-
   '@types/fs-extra@9.0.13':
     dependencies:
       '@types/node': 24.13.3
@@ -13517,10 +13459,6 @@ snapshots:
   '@types/js-cookie@3.0.6': {}
 
   '@types/json-schema@7.0.15': {}
-
-  '@types/jsonfile@6.1.4':
-    dependencies:
-      '@types/node': 24.13.3
 
   '@types/jsonwebtoken@9.0.10':
     dependencies:
@@ -13562,12 +13500,6 @@ snapshots:
   '@types/passport-jwt@4.0.1':
     dependencies:
       '@types/jsonwebtoken': 9.0.10
-      '@types/passport-strategy': 0.2.38
-
-  '@types/passport-local@1.0.38':
-    dependencies:
-      '@types/express': 5.0.6
-      '@types/passport': 1.0.17
       '@types/passport-strategy': 0.2.38
 
   '@types/passport-strategy@0.2.38':
@@ -13770,7 +13702,7 @@ snapshots:
       obug: 2.1.4
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 5.0.0(patch_hash=19f25432dec9d24201b069bfddcd9f7cd20b7ae31374cebf0bfb68a307e15086)(@types/node@20.19.43)(@vitest/coverage-v8@5.0.0)(@vitest/ui@5.0.0)(jsdom@26.1.0(supports-color@10.2.2))(msw@2.15.0(@types/node@20.19.43)(typescript@5.9.3))(vite@7.3.6(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
+      vitest: 5.0.0(patch_hash=19f25432dec9d24201b069bfddcd9f7cd20b7ae31374cebf0bfb68a307e15086)(@types/node@24.13.3)(@vitest/coverage-v8@5.0.0)(@vitest/ui@5.0.0)(jsdom@23.2.0(supports-color@10.2.2))(msw@2.15.0(@types/node@24.13.3)(typescript@5.9.3))(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
 
   '@vitest/istanbul-lib-coverage@1.0.1': {}
 
@@ -13812,7 +13744,7 @@ snapshots:
       pathe: 2.0.3
       sirv: 3.0.2
       tinyrainbow: 3.1.1
-      vitest: 5.0.0(patch_hash=19f25432dec9d24201b069bfddcd9f7cd20b7ae31374cebf0bfb68a307e15086)(@types/node@20.19.43)(@vitest/coverage-v8@5.0.0)(@vitest/ui@5.0.0)(jsdom@26.1.0(supports-color@10.2.2))(msw@2.15.0(@types/node@20.19.43)(typescript@5.9.3))(vite@7.3.6(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
+      vitest: 5.0.0(patch_hash=19f25432dec9d24201b069bfddcd9f7cd20b7ae31374cebf0bfb68a307e15086)(@types/node@24.13.3)(@vitest/coverage-v8@5.0.0)(@vitest/ui@5.0.0)(jsdom@23.2.0(supports-color@10.2.2))(msw@2.15.0(@types/node@24.13.3)(typescript@5.9.3))(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
 
   '@vitest/utils@5.0.0':
     dependencies:
@@ -15154,18 +15086,6 @@ snapshots:
       - supports-color
 
   elkjs@0.11.1: {}
-
-  embla-carousel-react@8.6.0(react@19.2.8):
-    dependencies:
-      embla-carousel: 8.6.0
-      embla-carousel-reactive-utils: 8.6.0(embla-carousel@8.6.0)
-      react: 19.2.8
-
-  embla-carousel-reactive-utils@8.6.0(embla-carousel@8.6.0):
-    dependencies:
-      embla-carousel: 8.6.0
-
-  embla-carousel@8.6.0: {}
 
   emoji-mart@5.6.0: {}
 
@@ -18021,10 +17941,6 @@ snapshots:
       jsonwebtoken: 9.0.3
       passport-strategy: 1.0.0
 
-  passport-local@1.0.0:
-    dependencies:
-      passport-strategy: 1.0.0
-
   passport-strategy@1.0.0: {}
 
   passport@0.7.0:
@@ -18484,11 +18400,6 @@ snapshots:
       react: 19.2.8
 
   react-refresh@0.18.0: {}
-
-  react-resizable-panels@4.12.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
-    dependencies:
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
 
   react-rnd@10.5.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:

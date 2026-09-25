@@ -11,8 +11,6 @@ export const RUNTIME_ENDPOINTS = {
   capabilities: (runtimeId: string) => `/runtime/${runtimeId}/capabilities`,
   heartbeat: (runtimeId: string) => `/runtime/${runtimeId}/heartbeat`,
   dispatches: (runtimeId: string) => `/runtime/${runtimeId}/dispatches`,
-  executionContext: (executionRunId: string) =>
-    `/runtime/executions/${executionRunId}/context`,
   executionEvents: (executionRunId: string) =>
     `/runtime/executions/${executionRunId}/events`,
   executionResult: (executionRunId: string) =>
@@ -40,9 +38,9 @@ export const WS_EVENTS = {
 // ---------- 常量 ----------
 export const HEARTBEAT_INTERVAL_SECONDS = 30;
 export const POLL_INTERVAL_MS = 15000;
+/** WS 重连退避：初始延迟与上限（daemon lifecycle 与服务端派发共用口径） */
 export const WS_RECONNECT_BASE_MS = 1000;
 export const WS_RECONNECT_MAX_MS = 60000;
-export const DEFAULT_DISPATCH_LIMIT = 20;
 
 // ---------- DTO ----------
 export interface RuntimeRegisterPayload {
@@ -103,24 +101,7 @@ export interface RuntimeDispatch {
   timeout?: number;
 }
 
-/** 执行上下文（getExecutionContext 返回，含执行载荷） */
-export interface ExecutionContextPayload {
-  executionRunId: string;
-  projectId: string;
-  issueId?: string;
-  goal?: string;
-  input?: {
-    task?: { id?: string; title?: string; description?: string | null };
-    context?: unknown;
-    model?: string;
-    allowedTools?: string[];
-    prompt?: string;
-    workspaceRoot?: string;
-    providerId?: string;
-    timeout?: number;
-  };
-}
-
+/** 执行事件（daemon 上报执行过程事件流） */
 export interface ExecutionEventPayload {
   eventType: string;
   runtimeId: string;

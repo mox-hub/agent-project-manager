@@ -97,19 +97,6 @@ export function getProfile(
   return config.profiles[name];
 }
 
-/** 在 active profile 上设置单个键并落盘 */
-export function setProfileValue(
-  key: keyof ProfileConfig,
-  value: unknown,
-  profileName?: string,
-): ApmConfig {
-  const config = readConfig();
-  const profile = getProfile(config, profileName);
-  (profile as Record<string, unknown>)[key] = value;
-  writeConfig(config);
-  return config;
-}
-
 export function getBackend(config: ApmConfig, override?: string): string | undefined {
   return override || getProfile(config).backend;
 }
