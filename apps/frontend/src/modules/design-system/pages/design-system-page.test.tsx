@@ -15,8 +15,13 @@ global.ResizeObserver = class ResizeObserver {
 // jsdom 未实现 scrollIntoView，cmdk 渲染选中项时会调用（Command Palette 演示段为真实原语）
 Element.prototype.scrollIntoView = vi.fn();
 
-// jsdom 未实现 matchMedia，Logo（auth-surface 演示段的 MemberCard 内）按主题取色时会调用
-window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+// jsdom 未实现 matchMedia，Logo（auth-surface 演示段的 MemberCard 内）按主题取色时会调用；
+// framer-motion useReducedMotion（ChapterScrubber 高密度卡段）还需要 MediaQueryList 事件 API
+window.matchMedia = vi.fn().mockReturnValue({
+  matches: false,
+  addEventListener: () => {},
+  removeEventListener: () => {},
+});
 
 describe('DesignSystemPage', () => {
   // 整页渲染全部设计系统组件（含 Command Palette 真实原语与高密度卡片演示段），
