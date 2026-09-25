@@ -11,7 +11,7 @@
  * 排序始终为客户端排序（当前数据内）；manual 分页模式下即"当前页内排序"，
  * 需要服务端排序的调用方请在数据层处理后再传入。
  */
-import { useRef, useState, type ReactNode } from "react"
+import { Fragment, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import {
   flexRender,
@@ -42,6 +42,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
+import { ContextMenu, type MenuItem } from "@/components/ui/context-menu"
 import { Button } from "@/components/ui/button"
 
 export type { ColumnDef }
@@ -60,6 +61,8 @@ export interface DataTableProps<T> {
   getRowId?: (row: T, index: number) => string
   /** 行点击（整行可点，自动 cursor-pointer；点击选择框不触发） */
   onRowClick?: (row: T) => void
+  /** 行右键菜单：返回该行菜单项（与 DataList.onItemContextMenu 同构） */
+  onRowContextMenu?: (row: T) => MenuItem[] | undefined
   /** 启用行选择列（checkbox），受控：选中 id 列表 + 回调 */
   enableSelection?: boolean
   selectedIds?: string[]
@@ -88,6 +91,7 @@ export function DataTable<T>({
   data,
   getRowId,
   onRowClick,
+  onRowContextMenu,
   enableSelection = false,
   selectedIds = [],
   onSelectedIdsChange,
@@ -352,21 +356,30 @@ export function DataTable<T>({
                   </TableCell>
                 </TableRow>
               ) : (
-                visibleRows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-row-id={row.id}
-                    data-state={row.getIsSelected() ? "selected" : undefined}
-                    className={cn(onRowClick && "cursor-pointer", activeRowId === row.id && "bg-accent")}
-                    onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
+                visibleRows.map((row) => {
+                  const rowEl = (
+                    <TableRow
+                      data-row-id={row.id}
+                      data-state={row.getIsSelected() ? "selected" : undefined}
+                      className={cn(onRowClick && "cursor-pointer", activeRowId === row.id && "bg-accent")}
+                      onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                  const menuItems = onRowContextMenu?.(row.original);
+                  return menuItems?.length ? (
+                    <ContextMenu key={row.id} items={menuItems}>
+                      {rowEl}
+                    </ContextMenu>
+                  ) : (
+                    <Fragment key={row.id}>{rowEl}</Fragment>
+                  );
+                })
               )}
             </TableBody>
           </Table>

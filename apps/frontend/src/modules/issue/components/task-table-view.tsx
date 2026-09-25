@@ -7,6 +7,8 @@ import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { ListAvatar, ListDate } from '@/components/ui/data-list';
 import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
 import { IssueTypePill } from '@/shared/components/issue-type-pill';
+import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
+import { StatusCell, PriorityCell, AssigneeCell } from './cell-editors';
 import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
@@ -32,6 +34,8 @@ export interface TaskTableViewProps {
   onSortChange?: (orderBy: string, orderDirection: 'asc' | 'desc') => void;
   maxHeight?: string;
   className?: string;
+  /** 行右键菜单标签功能域（task / bug：标签隔离与复制链接路径），默认 task */
+  contextMenuKind?: 'task' | 'bug';
 }
 
 /** 展示属性 key → 表格列 id（仅 'id' 与列 shortId 名不同，其余同名对齐） */
@@ -85,8 +89,11 @@ export function TaskTableView({
   onSortChange,
   maxHeight = 'calc(100vh - 220px)',
   className,
+  contextMenuKind = 'task',
 }: TaskTableViewProps) {
   const { t } = useTranslation();
+  // 行右键菜单与 list/board 同源（useIssueRowMenu），三视图菜单内容一致
+  const rowMenu = useIssueRowMenu({ kind: contextMenuKind, entityName: contextMenuKind === 'bug' ? 'Bug' : '任务' });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // P1-17：子任务客户端折叠（父行 chevron 切换，键 = 父任务 id）
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(() => new Set());
@@ -237,19 +244,22 @@ export function TaskTableView({
         header: 'Status',
         size: 110,
         cell: ({ row }) => {
-          const status = row.original.status || 'todo';
+          const task = row.original;
+          const status = task.status || 'todo';
           const visual = TASK_STATUS_VISUALS[status] ?? TASK_STATUS_VISUALS.todo;
           return (
-            <div className="flex items-center gap-1.5">
-              <StatusIconFrame
-                icon={visual.icon}
-                tone={visual.tone}
-                size="xs"
-              />
-              <span className={cn('text-xs capitalize', TONE_TEXT_CLASS[visual.tone])}>
-                {status.replace('_', ' ')}
-              </span>
-            </div>
+            <StatusCell task={task}>
+              <div className="flex items-center gap-1.5">
+                <StatusIconFrame
+                  icon={visual.icon}
+                  tone={visual.tone}
+                  size="xs"
+                />
+                <span className={cn('text-xs capitalize', TONE_TEXT_CLASS[visual.tone])}>
+                  {status.replace('_', ' ')}
+                </span>
+              </div>
+            </StatusCell>
           );
         },
       },
@@ -259,14 +269,17 @@ export function TaskTableView({
         header: 'Priority',
         size: 90,
         cell: ({ row }) => {
-          const priority = row.original.priority || 'medium';
+          const task = row.original;
+          const priority = task.priority || 'medium';
           const cfg = PRIORITY_CONFIG[priority] ?? PRIORITY_CONFIG.medium;
           const Icon = cfg.icon;
           return (
-            <div className="flex items-center gap-1 text-xs">
-              <Icon className={cn('size-3.5', cfg.color)} />
-              <span className="text-muted-foreground">{cfg.label}</span>
-            </div>
+            <PriorityCell task={task}>
+              <div className="flex items-center gap-1 text-xs">
+                <Icon className={cn('size-3.5', cfg.color)} />
+                <span className="text-muted-foreground">{cfg.label}</span>
+              </div>
+            </PriorityCell>
           );
         },
       },
@@ -278,12 +291,20 @@ export function TaskTableView({
         cell: ({ row }) => {
           const task = row.original;
           const name = task.assignee?.displayName || task.assignee?.username || task.aiAgent?.name;
-          if (!name) return <span className="text-xs text-muted-foreground/50">Unassigned</span>;
+          if (!name) {
+            return (
+              <AssigneeCell task={task}>
+                <span className="text-xs text-muted-foreground/50">Unassigned</span>
+              </AssigneeCell>
+            );
+          }
           return (
-            <div className="flex items-center gap-1.5">
-              <ListAvatar name={name} url={task.assignee?.avatarUrl} />
-              <span className="truncate text-xs text-foreground">{name}</span>
-            </div>
+            <AssigneeCell task={task}>
+              <div className="flex items-center gap-1.5">
+                <ListAvatar name={name} url={task.assignee?.avatarUrl} />
+                <span className="truncate text-xs text-foreground">{name}</span>
+              </div>
+            </AssigneeCell>
           );
         },
       },
@@ -398,6 +419,7 @@ export function TaskTableView({
         data={displayRows}
         getRowId={(task) => task.id}
         onRowClick={onTaskClick}
+        onRowContextMenu={(task) => rowMenu(task)}
         enableSelection={!!selectionActions}
         selectedIds={selectedIds}
         onSelectedIdsChange={setSelectedIds}

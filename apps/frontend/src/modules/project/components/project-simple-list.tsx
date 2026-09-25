@@ -33,6 +33,7 @@ import {
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useMembers } from '@/modules/team-member/hooks';
 import { useUpdateProject } from '../hooks/use-project-mutations';
+import { ProjectEnumCell, ProjectOwnerCell } from './project-cell-editors';
 import type { Project, ProjectPriority } from '../api/project-api';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/shared/lib/date-format';
@@ -161,6 +162,8 @@ export function ProjectSimpleList({
       onGroupCreate={onGroupCreate}
       onItemClick={onProjectClick}
       onItemContextMenu={onItemContextMenu}
+      itemPreviewPath={(project) => `/app/projects/${project.id}`}
+      itemPreviewTitle={(project) => project.name}
       selectionActions={selectionActions}
       renderLeading={(project) => {
         const color = project.color || '#5E6AD2';
@@ -212,31 +215,57 @@ export function ProjectSimpleList({
         const rowUpdatedAt = project.lastActivityAt || project.updatedAt;
         return (
           <>
-            {/* 工作流状态（StatusPill 统一 tone） */}
-            <StatusPill tone={workflowVisual.tone}>
-              <WorkflowIcon className="size-3" />
-              {t(workflowVisual.labelKey)}
-            </StatusPill>
-            {/* 健康分 */}
-            <span className="flex shrink-0 items-center gap-1.5">
-              <HealthIcon className={cn('size-4', TONE_TEXT_CLASS[healthVisual.tone])} />
-              <span className={cn('text-xs font-medium', TONE_TEXT_CLASS[healthVisual.tone])}>{project.healthScore ?? '—'}</span>
-            </span>
-            {/* 优先级（图标 + 文字） */}
-            <span className={cn('inline-flex shrink-0 items-center gap-1 text-xs font-medium', TONE_TEXT_CLASS[priorityVisual.tone])}>
-              <PriorityIcon className="size-3.5" />
-              {t(priorityVisual.labelKey)}
-            </span>
-            {/* 负责人 */}
-            {owner ? (
-              <ListAvatar
-                name={owner.displayName || owner.username}
-                url={owner.avatarUrl}
-                color="hsl(var(--primary))"
-              />
-            ) : (
-              <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground"><UserRound className="size-4" />{t('project.menu.unassigned')}</span>
-            )}
+            {/* 工作流状态（StatusPill 统一 tone；点击即改） */}
+            <ProjectEnumCell
+              project={project}
+              field="workflowStatus"
+              visuals={PROJECT_WORKFLOW_VISUALS}
+              order={['backlog', 'planned', 'in_progress', 'completed', 'canceled']}
+              title={t('project.menu.workflowStatus')}
+            >
+              <StatusPill tone={workflowVisual.tone}>
+                <WorkflowIcon className="size-3" />
+                {t(workflowVisual.labelKey)}
+              </StatusPill>
+            </ProjectEnumCell>
+            {/* 健康度（点击即改；健康分在详情侧计算，此处改 healthStatus 枚举） */}
+            <ProjectEnumCell
+              project={project}
+              field="healthStatus"
+              visuals={HEALTH_VISUALS}
+              order={['on_track', 'at_risk', 'off_track']}
+              title={t('project.menu.health')}
+            >
+              <span className="flex shrink-0 items-center gap-1.5">
+                <HealthIcon className={cn('size-4', TONE_TEXT_CLASS[healthVisual.tone])} />
+                <span className={cn('text-xs font-medium', TONE_TEXT_CLASS[healthVisual.tone])}>{project.healthScore ?? '—'}</span>
+              </span>
+            </ProjectEnumCell>
+            {/* 优先级（图标 + 文字；点击即改） */}
+            <ProjectEnumCell
+              project={project}
+              field="priority"
+              visuals={PRIORITY_VISUALS}
+              order={['low', 'medium', 'high', 'urgent']}
+              title={t('project.menu.priority')}
+            >
+              <span className={cn('inline-flex shrink-0 items-center gap-1 text-xs font-medium', TONE_TEXT_CLASS[priorityVisual.tone])}>
+                <PriorityIcon className="size-3.5" />
+                {t(priorityVisual.labelKey)}
+              </span>
+            </ProjectEnumCell>
+            {/* 负责人（点击即改指派） */}
+            <ProjectOwnerCell project={project} owners={ownerOptions}>
+              {owner ? (
+                <ListAvatar
+                  name={owner.displayName || owner.username}
+                  url={owner.avatarUrl}
+                  color="hsl(var(--primary))"
+                />
+              ) : (
+                <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground"><UserRound className="size-4" />{t('project.menu.unassigned')}</span>
+              )}
+            </ProjectOwnerCell>
             {/* 所属团队 */}
             {teams.length > 0 ? (
               <span className="flex shrink-0 items-center gap-1">

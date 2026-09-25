@@ -16,6 +16,7 @@ import {
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
 import { commandEntries, COMMAND_GROUP_LABEL_KEYS, type CommandActionId } from '@/shared/command-palette/commands';
+import { OPEN_COMMAND_PALETTE_EVENT } from '@/shared/command-palette/command-palette-provider';
 import { BottomDock } from '@/shared/components/bottom-dock';
 import { GlobalCreateDialog } from '@/shared/components/global-create-dialog';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
@@ -334,6 +335,8 @@ export function ShellLayout() {
     () => ({
       toggleTheme: () => toggleTheme(),
       openAiPanel: () => setAiPanelOpen(true),
+      // 全局搜索（v0.7.4 悬浮化）：与面板热键同一路径，打开同一命令面板
+      openGlobalSearch: () => window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT)),
       logout,
     }),
     [logout, setAiPanelOpen, toggleTheme],
@@ -422,18 +425,14 @@ export function ShellLayout() {
                   <div className="shrink-0 flex items-center gap-1">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <NavLink
-                          to="/app/search"
-                          className={({ isActive }) =>
-                            cn(
-                              'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
-                              isActive && 'bg-sidebar-accent text-sidebar-foreground',
-                            )
-                          }
+                        <button
+                          type="button"
+                          onClick={() => window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))}
+                          className="relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
                           aria-label={t('nav.search')}
                         >
                           <Search className="size-4" />
-                        </NavLink>
+                        </button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
                         {t('nav.search')}
@@ -667,18 +666,14 @@ export function ShellLayout() {
                 <div className="shrink-0 flex flex-col items-center gap-1.5 px-0 py-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <NavLink
-                        to="/app/search"
-                        className={({ isActive }) =>
-                          cn(
-                            'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
-                            isActive && 'bg-sidebar-accent text-sidebar-foreground',
-                          )
-                        }
+                      <button
+                        type="button"
+                        onClick={() => window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))}
+                        className="relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
                         aria-label={t('nav.search')}
                       >
                         <Search className="size-4" />
-                      </NavLink>
+                      </button>
                     </TooltipTrigger>
                     <TooltipContent side="right">
                       {t('nav.search')}

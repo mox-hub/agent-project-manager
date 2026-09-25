@@ -16,6 +16,7 @@
     "favorite": "收藏此页面",
     "unfavorite": "取消收藏",
     "search": "搜索",
+    "noMatches": "无匹配",
     "edit": "编辑",
     "create": "创建",
     "update": "更新",
@@ -255,6 +256,7 @@
     "teams": "团队",
     "office": "办公室",
     "aiSurface": "AI 表面",
+    "aiSurfaceReplay": "AI 回放",
     "workflow": "工作流",
     "delivery": "交付视图",
     "releases": "发版交付"
@@ -1373,7 +1375,17 @@
   "contextMenu": {
     "createSubtask": "创建子任务",
     "createParentTask": "创建父任务",
-    "parentTaskTitle": "父任务标题"
+    "parentTaskTitle": "父任务标题",
+    "status": "状态",
+    "priority": "优先级",
+    "severity": "严重度",
+    "assignee": "负责人",
+    "unassigned": "未分配"
+  },
+  "issueCell": {
+    "milestone": "里程碑",
+    "noMilestone": "无里程碑",
+    "type": "工单类型"
   },
   "task": {
     "title": "任务",
@@ -3515,6 +3527,9 @@
       "member": "成员",
       "team": "团队",
       "acceptance": "验收",
+      "execution": "执行",
+      "release": "发版",
+      "workflow": "工作流",
       "generic": "页面"
     },
     "status": {
@@ -3564,6 +3579,13 @@
     },
     "task": {
       "project": "所属项目"
+    },
+    "workflow": {
+      "definition": "定义",
+      "version": "版本",
+      "steps": "步骤数",
+      "moreSteps": "另有 {{count}} 步",
+      "updatedAt": "更新"
     },
     "document": {
       "folder": "所属目录",
@@ -4608,6 +4630,8 @@
   "hotkeys": {
     "commandPalette": "打开命令面板",
     "commandPaletteDesc": "搜索并执行任意命令、跳转页面",
+    "globalSearch": "全局搜索",
+    "globalSearchDesc": "全文检索任务、Bug、文档、项目、里程碑与验收",
     "aiAssistant": "开合 AI 助手面板",
     "aiAssistantDesc": "打开或收起主 AI 助手侧栏",
     "documentSave": "保存文档",
@@ -4643,6 +4667,14 @@
     "hintClose": "关闭"
   },
   "search": {
+    "type": {
+      "task": "任务",
+      "bug": "Bug",
+      "document": "文档",
+      "project": "项目",
+      "milestone": "里程碑",
+      "acceptance": "验收"
+    },
     "placeholder": "搜索一切...",
     "placeholderTitle": "搜索一切",
     "searching": "搜索中…",
@@ -4744,6 +4776,10 @@
   "document": {
     "title": "文档管理",
     "description": "管理项目文档、API规范和技术指南",
+    "tab": {
+      "new": "新建文档",
+      "edit": "编辑文档"
+    },
     "newDocument": "新建文档",
     "totalDocuments": "总文档数",
     "published": "已发布",

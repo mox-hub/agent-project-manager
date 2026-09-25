@@ -58,7 +58,7 @@ export type CommandGroupId =
   | 'actions';
 
 /** 需要运行时回调的命令动作 id（shell-layout 负责绑定实现） */
-export type CommandActionId = 'toggleTheme' | 'openAiPanel' | 'logout';
+export type CommandActionId = 'toggleTheme' | 'openAiPanel' | 'openGlobalSearch' | 'logout';
 
 export type CommandEntry = {
   id: string;
@@ -119,7 +119,16 @@ export const commandEntries: CommandEntry[] = [
   { id: 'cmd-office', labelKey: 'shell.openOffice', to: '/app/office', group: 'collaboration', icon: Building2, keywords: ['office', '办公', '办公室'] },
   { id: 'cmd-repositories', labelKey: 'shell.openRepositories', to: '/app/repositories', group: 'collaboration', entity: 'repository', keywords: ['repository', 'repo', 'git', '仓库', '代码'] },
   { id: 'cmd-notifications', labelKey: 'shell.openNotifications', to: '/app/notifications', group: 'collaboration', icon: Bell, keywords: ['notification', '通知', '消息', 'message'] },
-  { id: 'cmd-search', labelKey: 'shell.openSearch', to: '/app/search', group: 'collaboration', icon: Search, keywords: ['search', '搜索', '查找'] },
+  // 全局搜索（v0.7.4 悬浮化）：不再跳 /app/search 页面，命令即开搜索面板
+  {
+    id: 'cmd-search',
+    labelKey: 'shell.openSearch',
+    group: 'collaboration',
+    icon: Search,
+    keywords: ['search', '搜索', '查找', 'find'],
+    action: 'openGlobalSearch',
+    hotkeyId: 'global-search',
+  },
   { id: 'cmd-ai-surface', labelKey: 'nav.aiSurface', to: '/app/ai-surface', group: 'collaboration', icon: Sparkles, keywords: ['ai', 'surface', '表面', '同事'] },
   // —— 设置（二级页全量登记，路由与 router.tsx 对齐）——
   { id: 'cmd-ai', labelKey: 'shell.openAiSpace', to: '/app/settings/ai', group: 'settings', icon: Sparkles, keywords: ['ai', 'assistant', 'agent', 'mcp', '助手', '智能体', '模型'] },

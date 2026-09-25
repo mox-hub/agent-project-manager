@@ -601,6 +601,7 @@ export function BugsPage() {
               tasks={filteredBugs}
               loading={isLoading}
               onTaskClick={handleBugClick}
+              contextMenuKind="bug"
               getAiExecution={getIssueExecution}
               getProjectName={getProjectName}
               selectionActions={(selected, close) => (

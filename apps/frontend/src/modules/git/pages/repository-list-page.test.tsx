@@ -10,6 +10,7 @@ vi.mock('@/shared/confirm/use-confirm', () => ({
 
 // Mock i18n
 vi.mock('react-i18next', () => ({
+  initReactI18next: { type: '3rdParty', init: () => {} },
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {

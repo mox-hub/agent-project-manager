@@ -29,6 +29,7 @@ import { ContextMenu, type MenuItem } from '@/components/ui/context-menu';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
+import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 
 // ============================================================================
 // Types
@@ -73,6 +74,10 @@ export interface DataListProps<T extends DataListItem> {
   onItemClick?: (item: T) => void;
   /** 行右键菜单：返回该行要展示的菜单项（统一右键菜单入口，所有列表页复用） */
   onItemContextMenu?: (item: T) => MenuItem[] | undefined;
+  /** 行 hover 预览卡：返回该行实体详情路由（/app/issues/:id 等），缺省不挂预览 */
+  itemPreviewPath?: (item: T) => string | undefined;
+  /** 预览卡头部标题兜底（实体名；缺省用路由注册表解析） */
+  itemPreviewTitle?: (item: T) => string | undefined;
 
   // ---- Grouping（提供 groupBy 即启用分组模式） ----
   groupBy?: (item: T) => string;
@@ -261,6 +266,8 @@ function Row<T extends DataListItem>({
   renderChildren,
   onItemClick,
   onItemContextMenu,
+  itemPreviewPath,
+  itemPreviewTitle,
   indent,
   isActive,
 }: {
@@ -273,6 +280,8 @@ function Row<T extends DataListItem>({
   renderChildren?: (item: T) => T[];
   onItemClick?: (item: T) => void;
   onItemContextMenu?: (item: T) => MenuItem[] | undefined;
+  itemPreviewPath?: (item: T) => string | undefined;
+  itemPreviewTitle?: (item: T) => string | undefined;
   indent?: boolean;
   /** 键盘行光标（宪法 §8.2）：bg-accent 与 selected 同 token */
   isActive?: boolean;
@@ -300,15 +309,26 @@ function Row<T extends DataListItem>({
   );
 
   const menuItems = onItemContextMenu?.(item);
+  const previewPath = itemPreviewPath?.(item);
+  // 嵌套顺序与 tab-bar 相同：ContextMenu（cloneElement 外层）→ RoutePreviewTrigger
+  // （转发 rest+ref 的组合组件）→ 行 div，两层 clone 因 ref 组合而不打架
+  const interactiveRow =
+    previewPath ? (
+      <RoutePreviewTrigger path={previewPath} title={itemPreviewTitle?.(item)} side="right" align="start">
+        {rowContent}
+      </RoutePreviewTrigger>
+    ) : (
+      rowContent
+    );
 
   return (
     <>
       {menuItems?.length ? (
         <ContextMenu items={menuItems}>
-          {rowContent}
+          {interactiveRow}
         </ContextMenu>
       ) : (
-        rowContent
+        interactiveRow
       )}
       {children.map((child) => (
         <Row
@@ -322,6 +342,8 @@ function Row<T extends DataListItem>({
           renderChildren={renderChildren}
           onItemClick={onItemClick}
           onItemContextMenu={onItemContextMenu}
+          itemPreviewPath={itemPreviewPath}
+          itemPreviewTitle={itemPreviewTitle}
           indent
         />
       ))}
@@ -503,6 +525,8 @@ export function DataList<T extends DataListItem>({
   renderChildren,
   onItemClick,
   onItemContextMenu,
+  itemPreviewPath,
+  itemPreviewTitle,
   groupBy,
   groupLabel,
   renderGroupProgress,
@@ -671,6 +695,8 @@ export function DataList<T extends DataListItem>({
           renderChildren={renderChildren}
           onItemClick={onItemClick}
           onItemContextMenu={onItemContextMenu}
+          itemPreviewPath={itemPreviewPath}
+          itemPreviewTitle={itemPreviewTitle}
           isActive={activeId === item.id}
         />
       ))}
@@ -722,6 +748,8 @@ export function DataList<T extends DataListItem>({
                         renderChildren={renderChildren}
                         onItemClick={onItemClick}
                         onItemContextMenu={onItemContextMenu}
+                        itemPreviewPath={itemPreviewPath}
+                        itemPreviewTitle={itemPreviewTitle}
                         isActive={activeId === item.id}
                       />
                     ))}

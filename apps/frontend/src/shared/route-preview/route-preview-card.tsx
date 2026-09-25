@@ -23,6 +23,7 @@ import { TeamPreviewBody } from './previews/team-preview-body';
 import { AcceptancePreviewBody } from './previews/acceptance-preview-body';
 import { ExecutionPreviewBody } from './previews/execution-preview-body';
 import { ReleasePreviewBody } from './previews/release-preview-body';
+import { WorkflowPreviewBody } from './previews/workflow-preview-body';
 import { GenericPreviewBody } from './previews/generic-preview-body';
 
 // 预览卡头部图标统一从 entity-icons 注册表取（规范 v0 第二批铺开）；
@@ -38,6 +39,7 @@ const TYPE_ICONS: Record<RoutePreviewType, LucideIcon> = {
   acceptance: getEntityIcon('acceptance').icon,
   execution: getEntityIcon('execution').icon,
   release: getEntityIcon('release').icon,
+  workflow: getEntityIcon('workflow').icon,
   // generic 优先用 PAGE_REGISTRY / 调用方传入的图标
   generic: Star,
 };
@@ -53,6 +55,7 @@ const ENTITY_COLOR_CLASSES: Record<RoutePreviewType, string> = {
   acceptance: 'bg-accent-green/10 text-accent-green',
   execution: 'bg-accent-purple/10 text-accent-purple',
   release: 'bg-accent-orange/10 text-accent-orange',
+  workflow: 'bg-primary/10 text-primary',
   generic: 'bg-muted text-muted-foreground',
 };
 
@@ -67,6 +70,7 @@ const TYPE_FALLBACK_LABELS: Record<RoutePreviewType, string> = {
   acceptance: '验收',
   execution: '执行',
   release: '发版',
+  workflow: '工作流',
   generic: '页面',
 };
 
@@ -145,6 +149,8 @@ function PreviewBody({ type, id, path }: { type: RoutePreviewType; id?: string; 
       return <ExecutionPreviewBody id={id!} />;
     case 'release':
       return <ReleasePreviewBody id={id!} />;
+    case 'workflow':
+      return <WorkflowPreviewBody id={id!} />;
     default:
       return <GenericPreviewBody path={path} />;
   }

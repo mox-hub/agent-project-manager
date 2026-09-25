@@ -118,11 +118,15 @@ type CommandPaletteContextValue = {
 
 const CommandPaletteContext = createContext<CommandPaletteContextValue | null>(null)
 
-// —— 实体搜索（P1-13）：面板输入经防抖后走 /search，命中以「搜索结果」分组渲染 ——
+// —— 全局搜索（v0.7.4 搜索悬浮化）：面板输入经防抖后走 /search，命中按实体类型分组渲染 ——
+// 标准（docs/design/PRINCIPLES §10.5）：全局搜索唯一形态 = 命令面板搜索模式；
+// 覆盖 /search 全部六类实体；入口统一为面板（mod+k / global-search 热键 / 侧栏按钮）。
 const ENTITY_SEARCH_DEBOUNCE_MS = 300
-/** 面板只搜有详情路由的实体：工单（task/bug）与项目；后端对未知类别返回空分组 */
-const ENTITY_SEARCH_TYPES: SearchResultType[] = ['task', 'bug', 'project']
-const ENTITY_SEARCH_LIMIT = 8
+/** 面板全文检索覆盖全部可搜实体（/app/search 页面已退役，此处是唯一检索面） */
+const ENTITY_SEARCH_TYPES: SearchResultType[] = ['task', 'bug', 'document', 'project', 'milestone', 'acceptance']
+const ENTITY_SEARCH_LIMIT = 20
+/** 分组渲染顺序：工单优先，其后文档/项目/里程碑/验收 */
+const SEARCH_GROUP_ORDER: SearchResultType[] = ['task', 'bug', 'document', 'project', 'milestone', 'acceptance']
 /** AI 相关页面引用：问题词搜文档/工单/项目，取前 3 条真实命中 */
 const AI_REF_TYPES: SearchResultType[] = ['document', 'task', 'bug', 'project']
 const AI_REF_LIMIT = 3
@@ -182,17 +186,21 @@ export function CommandPaletteProvider({
   const searchItems = useMemo<PaletteEntry[]>(() => {
     const hits = searchData?.items ?? []
     if (hits.length === 0) return []
-    return hits.map((hit) => ({
-      id: `search-hit-${hit.id}`,
-      label: hit.title,
-      keywords: [hit.subtitle, hit.type],
-      group: t('commandPalette.searchResults', '搜索结果'),
-      // 后端已产出实体详情路由（/app/issues/:id、/app/projects/:id 等），点击直达
-      to: hit.path,
-      icon: getEntityIcon(SEARCH_HIT_ENTITY[hit.type] ?? 'issue').icon,
-      iconToneClass: getEntityIconTextClass(SEARCH_HIT_ENTITY[hit.type] ?? 'issue'),
-      isSearchHit: true,
-    }))
+    // 按实体类型分组渲染（组间序 = SEARCH_GROUP_ORDER，组内保服务端相关序）
+    const typeRank = (type: SearchResultType) => SEARCH_GROUP_ORDER.indexOf(type)
+    return [...hits]
+      .sort((a, b) => typeRank(a.type) - typeRank(b.type))
+      .map((hit) => ({
+        id: `search-hit-${hit.id}`,
+        label: hit.title,
+        keywords: [hit.subtitle, hit.type],
+        group: t(`search.type.${hit.type}`, { defaultValue: String(hit.type) }),
+        // 后端已产出实体详情路由（/app/issues/:id、/app/projects/:id 等），点击直达
+        to: hit.path,
+        icon: getEntityIcon(SEARCH_HIT_ENTITY[hit.type] ?? 'issue').icon,
+        iconToneClass: getEntityIconTextClass(SEARCH_HIT_ENTITY[hit.type] ?? 'issue'),
+        isSearchHit: true,
+      }))
   }, [searchData, t])
 
   const registerCommands = useCallback((scope: string, items: CommandPaletteItem[]) => {
@@ -208,6 +216,8 @@ export function CommandPaletteProvider({
 
   // 全局快捷键走注册表（CAP-A-17）：缺省 mod+k，用户可在设置 · 快捷键改键
   useGlobalHotkey('command-palette', () => setOpen((prev) => !prev))
+  // 全局搜索热键（v0.7.4 搜索悬浮化）：缺省 mod+shift+f，同一面板聚焦搜索
+  useGlobalHotkey('global-search', () => setOpen(true))
 
   // TabBar「+」等外部入口通过 CustomEvent 请求打开面板
   useEffect(() => {

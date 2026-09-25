@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/data-list';
 import type { Task } from '../api/issue-api';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
+import { StatusCell, SeverityCell, AssigneeCell } from './cell-editors';
 import { AiExecutionBadge, type IssueAiExecutionState } from '@/shared/components/ai-execution-badge';
 import { cn } from '@/lib/utils';
 
@@ -141,6 +142,8 @@ export function BugSimpleList({
       onGroupCreate={onGroupCreate}
       onItemClick={onBugClick}
       onItemContextMenu={onItemContextMenu}
+      itemPreviewPath={(bug) => `/app/bugs/${bug.id}`}
+      itemPreviewTitle={(bug) => bug.title}
       selectionActions={selectionActions}
       renderLeading={(bug) => {
         const sev = SEV_C[severityOf(bug)];
@@ -153,10 +156,14 @@ export function BugSimpleList({
                 title={`${t('task.aiTakeover.title')}: ${aiExecution.agentName} (${aiExecution.stepSummary || t('task.aiTakeover.executing')})`}
               />
             ) : null}
-            {/* 严重度指示条 */}
-            <span className={cn('h-6 w-1.5 shrink-0 rounded-full', sev.dotColor)} />
-            {/* 状态图标 */}
-            <StatusGlyph status={statusOf(bug)} />
+            {/* 严重度指示条（点击即改严重度） */}
+            <SeverityCell task={bug}>
+              <span className={cn('h-6 w-1.5 shrink-0 rounded-full', sev.dotColor)} />
+            </SeverityCell>
+            {/* 状态图标（点击即改状态） */}
+            <StatusCell task={bug}>
+              <StatusGlyph status={statusOf(bug)} />
+            </StatusCell>
             {/* ID 完整展示（不截断） */}
             <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{idOf(bug)}</span>
             {/* 标题（带 Bug 图标） */}
@@ -181,11 +188,13 @@ export function BugSimpleList({
             ) : null}
             {/* 项目 */}
             <ListChip className="border border-border bg-muted/40 text-muted-foreground">{getProjectName?.(bug.projectId) ?? ''}</ListChip>
-            {/* 严重度标签 */}
-            <span className="flex shrink-0 items-center gap-1.5">
-              <span className={cn('size-1.5 rounded-full', sev.dotColor)} />
-              <span className={cn('whitespace-nowrap text-xs font-medium', sev.color)}>{sev.label}</span>
-            </span>
+            {/* 严重度标签（点击即改严重度） */}
+            <SeverityCell task={bug}>
+              <span className="flex shrink-0 items-center gap-1.5">
+                <span className={cn('size-1.5 rounded-full', sev.dotColor)} />
+                <span className={cn('whitespace-nowrap text-xs font-medium', sev.color)}>{sev.label}</span>
+              </span>
+            </SeverityCell>
             {/* 标签（可折叠 +N） */}
             <div className="flex shrink-0 items-center gap-1">
               {shown.map(({ tag }) => (
@@ -193,8 +202,10 @@ export function BugSimpleList({
               ))}
               {extra > 0 ? <ListChip className="opacity-80 text-muted-foreground">+{extra}</ListChip> : null}
             </div>
-            {/* 责任人 */}
-            <ListAvatar name={assigneeNameOf(bug)} url={bug.assignee?.avatarUrl} />
+            {/* 责任人（点击即改指派） */}
+            <AssigneeCell task={bug}>
+              <ListAvatar name={assigneeNameOf(bug)} url={bug.assignee?.avatarUrl} />
+            </AssigneeCell>
           </>
         );
       }}
