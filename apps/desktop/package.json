@@ -1,7 +1,7 @@
 {
   "name": "desktop",
   "private": true,
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Agent Project Manager desktop shell (Electron)",
   "main": "electron/dist/main.js",
   "scripts": {

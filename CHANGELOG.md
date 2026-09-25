@@ -21,6 +21,10 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-09-26
+
+### v0.7.4 发版总览——夜航体验批：标签页全覆盖 + 悬浮卡片更新 + 右键菜单强化 + 列表内联编辑 + 全局搜索悬浮化
+
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
 | --- | --- | --- | --- | --- |
 | frontend | **全局搜索退役改悬浮面板（夜航 0.7.4 · 其四，含标准制定）**：**标准**——全局搜索唯一形态 = 命令面板搜索模式（同一 base-ui Dialog 浮层，不再有第二个搜索 UI）；入口三线归一（mod+k 面板热键 / 新增 `global-search` 热键缺省 mod+shift+f 走 CAP-A-17 注册表可改键 / 侧栏两处搜索按钮与 cmd-search 命令均改派发开面板事件）；检索面 = /search 全部六类实体（task/bug/document/project/milestone/acceptance，limit 8→20），命中按实体类型分组渲染（工单→Bug→文档→项目→里程碑→验收），防抖 300ms / staleTime 30s 保持；Tab 进 AI 模式与零命中回车转问回退不变。**改造**——provider 实体搜索全类型化+分组化；/app/search 页面删除（SearchPage+use-search 摘除，路由改 SearchOverlayRedirect：打开面板+回项目列表，存量收藏/书签自动升级）；tabs-registry 不注册（页面不存在）；commands.ts cmd-search 改 action=openGlobalSearch+hotkeyId；侧栏 NavLink 换按钮；i18n 双语 +9 键（hotkeys.globalSearch 2 + search.type 6 + 豁免注记）；e2e S01 改验重定向+面板内分组命中 | CAP-A-17 · CAP-A-15 | command-palette 47 用例全绿（检索参数六类型/limit20、按类型分组、cmd-search 动作化、global-search 热键收编断言）；hotkey-store 注册表断言更新为三壳层动作；frontend 全量 170 文件 1102 用例绿；tsc -b 零错 | **docs/design/PRINCIPLES.md 增补 §10.5 全局搜索悬浮面板标准**（本地）；快捷键设置页自动出新条目（注册表驱动） |
