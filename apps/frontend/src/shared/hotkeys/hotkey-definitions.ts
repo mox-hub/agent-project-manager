@@ -33,6 +33,14 @@ export const HOTKEY_DEFINITIONS: HotkeyDefinition[] = [
     descKey: 'hotkeys.commandPaletteDesc',
   },
   {
+    // 全局搜索（v0.7.4 搜索悬浮化）：与命令面板同一下浮层，聚焦全文检索入口
+    id: 'global-search',
+    group: 'global',
+    defaultKeys: 'mod+shift+f',
+    labelKey: 'hotkeys.globalSearch',
+    descKey: 'hotkeys.globalSearchDesc',
+  },
+  {
     id: 'ai-assistant',
     group: 'global',
     defaultKeys: 'alt+a',

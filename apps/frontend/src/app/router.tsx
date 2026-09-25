@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { createBrowserRouter, Navigate, useLocation, useParams } from 'react-router-dom';
 import { LoginPage } from '@/modules/auth/pages/login-page';
 import { WelcomePage } from '@/modules/auth/pages/welcome-page';
@@ -66,7 +66,7 @@ import { WorkflowDetailPage } from '@/modules/workflow/pages/workflow-detail-pag
 import { ReleaseListPage } from '@/modules/release/pages/release-list-page';
 import { ReleaseDetailPage } from '@/modules/release/pages/release-detail-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
-import { SearchPage } from '@/modules/search/pages/search-page';
+import { OPEN_COMMAND_PALETTE_EVENT } from '@/shared/command-palette/command-palette-provider';
 
 /**
  * 旧 AI / 集成页面路由已迁入设置页（2026-08-19）。
@@ -118,6 +118,18 @@ function LegacyTasksRedirect() {
 function LegacyTaskDetailRedirect() {
   const { taskId } = useParams<{ taskId: string }>();
   return <Navigate to={`/app/issues/${taskId}`} replace />;
+}
+
+/**
+ * 全局搜索退役重定向（v0.7.4 搜索悬浮化）：搜索不再有页面，落点 = 打开命令面板
+ * （全局搜索唯一形态）并回到项目列表兜底；存量收藏/书签经此自动升级到新交互。
+ */
+function SearchOverlayRedirect() {
+  const { search, state } = useLocation();
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT));
+  }, []);
+  return <Navigate to={{ pathname: '/app/projects', search }} state={state} replace />;
 }
 
 const DesignSystemPage = lazy(() =>
@@ -540,8 +552,9 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        // v0.7.4 搜索悬浮化：页面退役，重定向打开命令面板（全局搜索唯一形态）
         path: 'search',
-        element: <SearchPage />,
+        element: <SearchOverlayRedirect />,
         errorElement: <ErrorPage />,
       },
       {

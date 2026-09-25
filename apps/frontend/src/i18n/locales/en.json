@@ -4630,6 +4630,8 @@
   "hotkeys": {
     "commandPalette": "Open command palette",
     "commandPaletteDesc": "Search and run any command or jump to a page",
+    "globalSearch": "Global search",
+    "globalSearchDesc": "Full-text search across tasks, bugs, documents, projects, milestones and acceptances",
     "aiAssistant": "Toggle AI assistant panel",
     "aiAssistantDesc": "Open or collapse the main AI assistant sidebar",
     "documentSave": "Save document",
@@ -4665,6 +4667,14 @@
     "hintClose": "Close"
   },
   "search": {
+    "type": {
+      "task": "Task",
+      "bug": "Bug",
+      "document": "Document",
+      "project": "Project",
+      "milestone": "Milestone",
+      "acceptance": "Acceptance"
+    },
     "placeholder": "Search everything...",
     "placeholderTitle": "Search everything",
     "searching": "Searching…",

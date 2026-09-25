@@ -16,7 +16,16 @@ import { searchApi } from '@/modules/search/api/search-api';
 // （对齐 i18next 缺键行为，供实体搜索空态/分组标题等内联兜底断言）
 vi.mock('@/hooks/useTranslation', () => ({
   useTranslation: () => ({
-    t: (key: string, defaultValue?: string) => defaultValue ?? key,
+    // 兼容 (key, string) 与 (key, { defaultValue, ...插值 }) 两种调用形态，
+    // 缺键回退 defaultValue、再回退 key（对齐 i18next 行为）
+    t: (key: string, arg?: string | { defaultValue?: string } & Record<string, unknown>) => {
+      if (typeof arg === 'string') return arg;
+      const fallback = arg?.defaultValue;
+      if (fallback == null) return key;
+      return fallback.replace(/\{\{(\w+)\}\}/g, (_, name: string) =>
+        String((arg as Record<string, unknown>)[name] ?? `{{${name}}}`),
+      );
+    },
   }),
 }));
 
@@ -125,7 +134,9 @@ describe('command palette registry (commands.ts)', () => {
     expect(byId.get('cmd-executions')?.to).toBe('/app/executions');
     expect(byId.get('cmd-repositories')?.to).toBe('/app/repositories');
     expect(byId.get('cmd-notifications')?.to).toBe('/app/notifications');
-    expect(byId.get('cmd-search')?.to).toBe('/app/search');
+    // v0.7.4 搜索悬浮化：cmd-search 不再跳页面，改为动作打开搜索面板
+    expect(byId.get('cmd-search')?.to).toBeUndefined();
+    expect(byId.get('cmd-search')?.action).toBe('openGlobalSearch');
     expect(byId.get('cmd-profile')?.to).toBe('/app/settings/profile');
   });
 
@@ -143,7 +154,8 @@ describe('command palette registry (commands.ts)', () => {
     const hotkeyIds = commandEntries
       .map((entry) => entry.hotkeyId)
       .filter((id): id is string => Boolean(id));
-    expect(hotkeyIds).toEqual(['ai-assistant']);
+    // v0.7.4：global-search 热键收编（与面板同一下浮层的全局搜索入口）
+    expect(hotkeyIds).toEqual(['global-search', 'ai-assistant']);
   });
 
   it('每个条目都有 labelKey 与合法分组，图标二选一（entity 或 icon）已填充', () => {
@@ -293,10 +305,11 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
       await vi.advanceTimersByTimeAsync(300);
     });
     expect(searchMock).toHaveBeenCalledTimes(1);
+    // v0.7.4 搜索悬浮化：覆盖 /search 全部六类实体，limit 提到 20
     expect(searchMock.mock.calls[0]?.[0]).toEqual({
       q: '登录崩',
-      types: ['task', 'bug', 'project'],
-      limit: 8,
+      types: ['task', 'bug', 'document', 'project', 'milestone', 'acceptance'],
+      limit: 20,
     });
   });
 
@@ -331,7 +344,9 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
       () => expect(screen.getByText('APM 主项目')).toBeTruthy(),
       { timeout: 2000 },
     );
-    expect(screen.getByText('搜索结果')).toBeTruthy();
+    // 按实体类型分组（mock t 缺键回退 defaultValue）：任务组 + 项目组
+    expect(screen.getByText('task')).toBeTruthy();
+    expect(screen.getByText('project')).toBeTruthy();
     expect(screen.getByText('登录页崩溃')).toBeTruthy();
 
     fireEvent.click(screen.getByText('APM 主项目'));
@@ -351,7 +366,7 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
     await waitFor(() => expect(searchMock).toHaveBeenCalledTimes(1), {
       timeout: 2000,
     });
-    expect(screen.queryByText('搜索结果')).toBeNull();
+    expect(screen.queryByText('task')).toBeNull();
     expect(screen.getByTestId('palette-entity-search-hint')).toBeTruthy();
   });
 });

@@ -44,21 +44,22 @@ test('N02 通知设置弹窗', async ({ page }) => {
 // 全局搜索
 // ---------------------------------------------------------------------------
 
-test('S01 全局搜索-命中任务并展示类型分组', async ({ page, api }) => {
+test('S01 全局搜索-悬浮面板命中任务并按类型分组', async ({ page, api }) => {
   const p = await api.createProject({ name: uniq('可搜索项目') })
   await api.ensureProjectModule(p.id)
   const task = await api.createTask({ title: uniq('唯一可搜索任务'), projectId: p.id, moduleCode: 'TASK' })
   await api.archiveProject(p.id).catch(() => {})
 
+  // v0.7.4 搜索悬浮化：/app/search 页面退役，重定向打开命令面板（全局搜索唯一形态）
   await page.goto('/app/search')
   const input = page.getByPlaceholder(/Search everything|搜索/)
   await input.waitFor({ state: 'visible', timeout: 60_000 })
   await input.fill(task.title)
+  // 命中结果直接渲染在面板内并按类型分组（任务/Task 分组标题可见）
   await expect(page.locator('body')).toContainText(task.title.slice(6, 14), { timeout: 15_000 }).catch(
     () => {},
   )
-  // 类型 chips（Task/Bug/Document 等）
-  await expect(page.locator('body')).toContainText(/Task|Bug|Document|全部/i, { timeout: 15_000 })
+  await expect(page.locator('body')).toContainText(/任务|Task|Bug|文档|Document/i, { timeout: 15_000 })
 })
 
 // ---------------------------------------------------------------------------

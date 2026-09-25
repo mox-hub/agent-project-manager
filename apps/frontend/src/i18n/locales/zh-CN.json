@@ -4630,6 +4630,8 @@
   "hotkeys": {
     "commandPalette": "打开命令面板",
     "commandPaletteDesc": "搜索并执行任意命令、跳转页面",
+    "globalSearch": "全局搜索",
+    "globalSearchDesc": "全文检索任务、Bug、文档、项目、里程碑与验收",
     "aiAssistant": "开合 AI 助手面板",
     "aiAssistantDesc": "打开或收起主 AI 助手侧栏",
     "documentSave": "保存文档",
@@ -4665,6 +4667,14 @@
     "hintClose": "关闭"
   },
   "search": {
+    "type": {
+      "task": "任务",
+      "bug": "Bug",
+      "document": "文档",
+      "project": "项目",
+      "milestone": "里程碑",
+      "acceptance": "验收"
+    },
     "placeholder": "搜索一切...",
     "placeholderTitle": "搜索一切",
     "searching": "搜索中…",
