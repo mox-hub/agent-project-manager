@@ -11,12 +11,12 @@ import {
   IsIn,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsValidDisplayName } from '@/common/utils/display-name.util';
 
 export class CreateAdminUserDto {
   @ApiProperty({ example: '张三' })
   @IsString()
-  @MinLength(1)
-  @MaxLength(40)
+  @IsValidDisplayName()
   displayName: string;
 
   @ApiProperty({ example: 'alice@example.com' })
@@ -47,8 +47,7 @@ export class CreateAdminUserDto {
 export class UpdateAdminUserDto {
   @ApiProperty({ required: false })
   @IsString()
-  @MinLength(1)
-  @MaxLength(40)
+  @IsValidDisplayName()
   @IsOptional()
   displayName?: string;
 

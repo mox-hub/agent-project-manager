@@ -66,7 +66,7 @@ export const bootChecks: BootCheck[] = [
     id: 'fetch-app-info',
     title: '读取应用信息',
     description: '从桌面壳加载应用版本与数据路径（仅桌面）',
-    skipIf: (ctx) => !ctx.isDesktopShell,
+    skipIf: (ctx) => (ctx.isDesktopShell ? false : 'desktop-only'),
     run: async () => {
       const { result: info, ms } = await measure(() =>
         invoke<DesktopAppInfo>('get_app_info'),
@@ -118,7 +118,7 @@ export const bootChecks: BootCheck[] = [
     id: 'check-runtime-daemon',
     title: '检查 AI 执行运行时',
     description: '桌面端确认 apm-runtime 守护进程已自动拉起并注册本机（AI 同事的执行面）',
-    skipIf: (ctx) => !ctx.isDesktopShell,
+    skipIf: (ctx) => (ctx.isDesktopShell ? false : 'desktop-only'),
     async run() {
       const status = await invoke<{
         running: boolean;
@@ -172,7 +172,7 @@ export const bootChecks: BootCheck[] = [
     id: 'probe-auth',
     title: '校验登录缓存',
     description: '若本地存在 access_token 则调用 /auth/me 验证',
-    skipIf: (ctx) => !ctx.hasToken,
+    skipIf: (ctx) => (ctx.hasToken ? false : 'no-token'),
     run: async () => {
       const { result, ms } = await measure(() => authApi.getCurrentUser());
       const user = result?.user;
@@ -191,7 +191,7 @@ export const bootChecks: BootCheck[] = [
     id: 'connect-ws',
     title: '建立实时通道',
     description: '打开 WebSocket 与后端 /events 网关握手',
-    skipIf: (ctx) => !ctx.hasToken,
+    skipIf: (ctx) => (ctx.hasToken ? false : 'no-token'),
     async run(ctx) {
       const wsUrl = getWsBaseUrl();
       const alreadyConnected = eventClient.isConnected();
@@ -240,7 +240,7 @@ export const bootChecks: BootCheck[] = [
     id: 'prime-cache',
     title: '预热全局配置',
     description: '调用 GET /config?scope=global 填充配置缓存',
-    skipIf: (ctx) => !ctx.hasToken,
+    skipIf: (ctx) => (ctx.hasToken ? false : 'no-token'),
     run: async (ctx) => {
       const { result, ms } = await measure(() =>
         configApi.getConfig({ scope: 'global' }),

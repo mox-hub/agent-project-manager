@@ -1,17 +1,11 @@
-import {
-  IsEmail,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsValidDisplayName } from '@/common/utils/display-name.util';
 
 export class UpdateProfileDto {
   @ApiProperty({ required: false, example: '张三' })
   @IsString()
-  @MinLength(1)
-  @MaxLength(40)
+  @IsValidDisplayName()
   @IsOptional()
   displayName?: string;
 

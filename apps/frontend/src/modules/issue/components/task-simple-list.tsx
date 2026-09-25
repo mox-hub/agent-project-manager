@@ -15,6 +15,7 @@ import {
   Minus,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ListAvatar, ListChip, ListDate, ListIcon, ListText, DataList } from '@/components/ui/data-list';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
@@ -195,7 +196,7 @@ export interface TaskSimpleListProps {
 export function TaskSimpleList({
   tasks,
   loading,
-  emptyMessage = '暂无任务',
+  emptyMessage,
   onTaskClick,
   groupBy = 'none',
   onGroupCreate,
@@ -206,6 +207,8 @@ export function TaskSimpleList({
   selectionActions,
   className,
 }: TaskSimpleListProps) {
+  const { t } = useTranslation();
+  const emptyText = emptyMessage ?? t('task.messages.noTasks');
   const groupFn = groupBy === 'none' ? undefined : (task: Task) => groupValue(groupBy, task);
 
   const groupMeta = (key: string, items: Task[]) => {
@@ -243,7 +246,7 @@ export function TaskSimpleList({
     <DataList
       items={tasks}
       loading={loading}
-      emptyMessage={emptyMessage}
+      emptyMessage={emptyText}
       className={className}
       selectable
       groupBy={groupFn}
@@ -263,7 +266,7 @@ export function TaskSimpleList({
             {aiExecution ? (
               <span
                 className="h-6 w-1 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
-                title={`AI 接管中: ${aiExecution.agentName} (${aiExecution.stepSummary || '执行中'})`}
+                title={`${t('task.aiTakeover.title')}: ${aiExecution.agentName} (${aiExecution.stepSummary || t('task.aiTakeover.executing')})`}
               />
             ) : null}
             {task.type === 'bug' ? (

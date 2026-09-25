@@ -24,8 +24,19 @@ import {
   type ResolvedBinding,
 } from './cli-resolution.service';
 import { ContextBuilderService } from '@/modules/ai-hub/services/context-builder.service';
-import { TrustService } from '@/modules/trust/trust.service';
+import {
+  TrustService,
+  TRUST_DISPATCH_MIN_LEVEL,
+  TRUST_TIER_NAMES,
+  evaluateAutoDispatchPermission,
+} from '@/modules/trust/trust.service';
 import { AcceptanceService } from '@/modules/acceptance/acceptance.service';
+import {
+  buildEnrichmentSection,
+  readBudgetFromEnv,
+  DEFAULT_DISPATCH_SKILLS_BUDGET_TOKENS,
+  DEFAULT_SKILL_CONTENT_MAX_CHARS,
+} from '@/modules/ai-hub/services/context-enrichment';
 import { TEST_REPORT_ARTIFACT_TYPE } from './adapters/cli-adapter.interface';
 import {
   validateTestReport,
@@ -107,6 +118,25 @@ export const TRUST_CRITERIA_FAILURE = {
   collaboration: 30,
 };
 
+/**
+ * 信任门禁的成员查询字段（P2-21）：派发链各处取目标 AI 成员时统一带出
+ * 信任等级/分数，避免门禁二次查询。
+ */
+const TRUST_GATE_MEMBER_SELECT = {
+  id: true,
+  displayName: true,
+  type: true,
+  status: true,
+  trustLevel: true,
+  trustScore: true,
+};
+
+/** 信任门禁的项目配置键（scope=project；缺省开启，false/'false' 关闭） */
+const TRUST_GATE_CONFIG_KEY = 'dispatch.trustGateEnabled';
+
+/** 技能注入开关的项目配置键（scope=project；缺省开启，false/'false' 关闭） */
+const SKILLS_CONFIG_KEY = 'dispatch.skillsEnabled';
+
 @Injectable()
 export class CliDispatchService {
   private readonly logger = new Logger(CliDispatchService.name);
@@ -180,6 +210,103 @@ export class CliDispatchService {
     } catch (e) {
       this.logger.warn(
         `Failed to record dispatch failure for task ${issueId}: ${(e as Error).message}`,
+      );
+    }
+  }
+
+  /**
+   * P2-21 派发信任门禁（CAP-B-07 三级授权）：观察者（trustLevel=1）不可自动派发，
+   * 协助者（2）/受托者（3）放行；未评估（trustLevel 缺失/旧五档越界归 null）放行
+   * 并在工单时间线记提示。
+   * 存量兼容铁律：只拦「明确低于门槛」的成员，等级拿不到绝不拦（fail-open），
+   * 避免 P1-7 式「最严口径卡死存量自动派发」。
+   * 口径出处：docs/roadmap/experience-report-2026-09-20.md §八第三批 9
+   * 「协助者以上才可自动派发」；docs/01-需求/能力清单-v1.md §4.2 CAP-B-07
+   * （2026-09-18 三级裁决：观察者/协助者/受托者）；PRD §12 原则 4「渐进放权」。
+   * 可用项目配置 dispatch.trustGateEnabled=false 整体关闭（缺省开启）。
+   */
+  private async assertTrustDispatchGate(
+    member:
+      | {
+          id: string;
+          displayName?: string | null;
+          type: string;
+          trustLevel: number | null;
+          trustScore?: number | null;
+        }
+      | null
+      | undefined,
+    ctx: { issueId: string; projectId: string; userId: string },
+  ): Promise<void> {
+    // 非 AI 成员（human/external_agent）无信任档案语义，不适用本门禁
+    if (!member || member.type !== 'ai_agent') return;
+    if (!(await this.isTrustGateEnabled(ctx.projectId))) return;
+
+    const decision = evaluateAutoDispatchPermission(member.trustLevel);
+    if (decision.allowed) {
+      // 未评估放行：时间线记一条提示（best-effort，失败不影响派发）
+      if (decision.level === null) {
+        await this.recordTrustGateNotice(member, ctx);
+      }
+      return;
+    }
+
+    throw new BadRequestException({
+      code: 'TRUST_LEVEL_INSUFFICIENT',
+      message:
+        `AI 成员「${member.displayName || member.id}」当前信任等级为${decision.levelName}（${decision.level} 级），暂不可自动派发执行：` +
+        `自动派发需要${TRUST_TIER_NAMES[TRUST_DISPATCH_MIN_LEVEL]}（${TRUST_DISPATCH_MIN_LEVEL} 级）及以上。` +
+        `可在「团队」页调高该成员信任等级，或先让其以低风险方式积累执行评估；` +
+        `如确需临时放开，可由管理员将项目配置 ${TRUST_GATE_CONFIG_KEY} 设为 false 后重试`,
+      details: {
+        memberId: member.id,
+        memberName: member.displayName ?? null,
+        currentLevel: decision.level,
+        currentLevelName: decision.levelName,
+        requiredLevel: TRUST_DISPATCH_MIN_LEVEL,
+        requiredLevelName: TRUST_TIER_NAMES[TRUST_DISPATCH_MIN_LEVEL] ?? null,
+        trustScore: member.trustScore ?? null,
+        configKey: TRUST_GATE_CONFIG_KEY,
+      },
+    });
+  }
+
+  /** 信任门禁开关：项目配置 dispatch.trustGateEnabled，缺省开启；读取异常按开启处理 */
+  private async isTrustGateEnabled(projectId: string): Promise<boolean> {
+    try {
+      const config = await this.prisma.appConfig.findFirst({
+        where: { scope: 'project', projectId, key: TRUST_GATE_CONFIG_KEY },
+      });
+      if (!config) return true;
+      const value = config.value as unknown;
+      return value !== false && value !== 'false';
+    } catch (e) {
+      this.logger.warn(
+        `Trust gate config read failed for project ${projectId}: ${(e as Error).message}`,
+      );
+      return true;
+    }
+  }
+
+  /** 未评估成员放行时的时间线提示（best-effort，落库失败只告警） */
+  private async recordTrustGateNotice(
+    member: { id: string; displayName?: string | null },
+    ctx: { issueId: string; projectId: string; userId: string },
+  ): Promise<void> {
+    try {
+      await this.prisma.issueActivity.create({
+        data: {
+          projectId: ctx.projectId,
+          issueId: ctx.issueId,
+          actorId: ctx.userId,
+          type: 'trust_gate',
+          summary: `AI 成员「${member.displayName || member.id}」尚未评估信任等级，本次按存量兼容放行自动派发（协助者及以上才可自动派发，评估产生等级后按等级放权）`,
+          source: 'system',
+        },
+      });
+    } catch (e) {
+      this.logger.warn(
+        `Trust gate notice write failed for issue ${ctx.issueId}: ${(e as Error).message}`,
       );
     }
   }
@@ -360,13 +487,20 @@ export class CliDispatchService {
 
     // 3. V3 身份解析：AI 成员 → provider/role 现场解析（不再读 AgentIdentityBinding）
     let resolvedProviderId = providerId;
-    let member: { id: string; type: string; status: string } | null = null;
+    let member: {
+      id: string;
+      displayName: string;
+      type: string;
+      status: string;
+      trustLevel: number | null;
+      trustScore: number | null;
+    } | null = null;
     let resolved: ResolvedBinding | null = null;
 
     if (memberId) {
       member = await this.prisma.member.findUnique({
         where: { id: memberId },
-        select: { id: true, type: true, status: true },
+        select: TRUST_GATE_MEMBER_SELECT,
       });
       if (
         !member ||
@@ -420,6 +554,18 @@ export class CliDispatchService {
       }
     }
 
+    // 6.7 信任门禁（P2-21 · CAP-B-07 三级授权「协助者以上才可自动派发」）：
+    // 显式指定的 AI 成员先行检查；回落主体（issue 主负责人）与绑定执行项的
+    // AI 主体在各自分支检查。未评估（trustLevel 缺失）放行并记时间线提示，
+    // 只拦「明确低于门槛」（观察者）——存量兼容，见 assertTrustDispatchGate。
+    if (member) {
+      await this.assertTrustDispatchGate(member, {
+        issueId,
+        projectId,
+        userId,
+      });
+    }
+
     // 7. Create ExecutionRun —— 传入 executionId 时复用既有执行项（4d-3），否则现场创建
     let executionRun;
     if (options.executionId) {
@@ -443,6 +589,18 @@ export class CliDispatchService {
         throw new BadRequestException(
           `执行项 ${existing.id} 当前状态为 ${existing.status}，仅 draft/planned/failed/blocked 可派发`,
         );
+      }
+      // 绑定派发未显式指定成员时，按既有执行项的 platform_ai_member 主体过信任门禁
+      if (!memberId && existing.subjectType === 'platform_ai_member') {
+        const subjectMember = await this.prisma.member.findUnique({
+          where: { id: existing.subjectId },
+          select: TRUST_GATE_MEMBER_SELECT,
+        });
+        await this.assertTrustDispatchGate(subjectMember, {
+          issueId,
+          projectId,
+          userId,
+        });
       }
       executionRun = await this.executionService.updateExecutionRun(
         existing.id,
@@ -470,10 +628,16 @@ export class CliDispatchService {
       if (!memberId && task.aiAgentId) {
         const agent = await this.prisma.member.findUnique({
           where: { id: task.aiAgentId },
-          select: { id: true, type: true, status: true },
+          select: TRUST_GATE_MEMBER_SELECT,
         });
         if (agent && agent.type === 'ai_agent' && agent.status !== 'inactive') {
           defaultMember = agent;
+          // 回落主体同样过信任门禁（观察者不可自动派发）
+          await this.assertTrustDispatchGate(agent, {
+            issueId,
+            projectId,
+            userId,
+          });
         }
       }
       executionRun = await this.executionService.createExecutionRun({
@@ -539,10 +703,14 @@ export class CliDispatchService {
         }
       : null;
 
-    // 11. Build CLI input（promptOverride：考古等自定义任务包直接覆盖默认组装）
+    // 11. Build CLI input（promptOverride：考古等自定义任务包直接覆盖默认组装，
+    // 技能注入同属默认组装，override 时由调用方自理）
+    const skillsSection = options.promptOverride
+      ? null
+      : await this.buildSkillsPromptSection(projectId);
     const prompt =
       options.promptOverride ??
-      this.buildPrompt(task, context, agentRole, memberContext);
+      this.buildPrompt(task, context, agentRole, memberContext, skillsSection);
     const cliInput = {
       workspaceRoot,
       prompt,
@@ -1157,6 +1325,7 @@ export class CliDispatchService {
     context: unknown,
     agentRole?: { name: string; role: string; promptHint: string } | null,
     memberContext?: MemberPromptContext | null,
+    skillsSection?: string | null,
   ): string {
     const parts: string[] = [];
 
@@ -1183,6 +1352,12 @@ export class CliDispatchService {
       );
     }
 
+    // 1.7 项目技能段（P2-23）：启用技能的名称+内容摘要，受 token 预算约束；
+    // 无技能/开关关闭/数据源失败时不注入空段落
+    if (skillsSection?.trim()) {
+      parts.push(skillsSection.trim());
+    }
+
     // 2. Task
     parts.push(`# Task\n${task.title}`);
     if (task.description) {
@@ -1197,6 +1372,92 @@ export class CliDispatchService {
     parts.push('\n\nPlease execute this task and report the results.');
 
     return parts.join('\n');
+  }
+
+  /**
+   * 项目技能段组装（P2-23）：把启用技能（名称 + 内容摘要）注入派发 prompt
+   * 的独立段落。技能注册表（SkillConfig）是全局级（无项目维度），「该项目的
+   * 启用技能」实际为全局启用技能——如实按全局口径注入。
+   * 铁律：无启用技能 / 开关关闭 / 数据源读取失败一律返回 null，不注空段落；
+   * 多技能按序全部参与但整段受 token 预算约束（字符/4 粗估，超限截断并在
+   * 段内如实标注）。开关沿用 dispatch.trustGateEnabled 的项目配置先例：
+   * dispatch.skillsEnabled，缺省开启。
+   */
+  private async buildSkillsPromptSection(
+    projectId: string,
+  ): Promise<string | null> {
+    if (!(await this.isSkillsInjectionEnabled(projectId))) return null;
+
+    let skills: Array<{
+      key: string;
+      name: string;
+      description: string | null;
+      content: string | null;
+    }>;
+    try {
+      skills = await this.prisma.skillConfig.findMany({
+        where: { enabled: true },
+        orderBy: [{ category: 'asc' }, { name: 'asc' }],
+        select: { key: true, name: true, description: true, content: true },
+      });
+    } catch (e) {
+      this.logger.warn(
+        `Skills section read failed for project ${projectId}: ${(e as Error).message}`,
+      );
+      return null;
+    }
+    if (!skills || skills.length === 0) return null;
+
+    const maxChars = readBudgetFromEnv(
+      'DISPATCH_SKILL_MAX_CHARS',
+      DEFAULT_SKILL_CONTENT_MAX_CHARS,
+    );
+    const budgetTokens = readBudgetFromEnv(
+      'DISPATCH_SKILLS_BUDGET_TOKENS',
+      DEFAULT_DISPATCH_SKILLS_BUDGET_TOKENS,
+    );
+
+    const sources = skills
+      .map((s, i) => {
+        const body = (s.content?.trim() || s.description || '').trim();
+        const summary =
+          body.length > maxChars ? `${body.slice(0, maxChars)}…` : body;
+        return {
+          key: s.key,
+          title: `### ${s.name}`,
+          text: summary,
+          priority: i,
+        };
+      })
+      .filter((s) => s.text);
+    if (sources.length === 0) return null;
+
+    const section = buildEnrichmentSection(sources, budgetTokens);
+    if (!section.text) return null;
+
+    return [
+      '## Project Skills',
+      '以下是已启用的项目技能，执行任务时遵循相关技能的方法与约束：',
+      '',
+      section.text,
+    ].join('\n');
+  }
+
+  /** 技能注入开关：项目配置 dispatch.skillsEnabled，缺省开启；读取异常按开启处理 */
+  private async isSkillsInjectionEnabled(projectId: string): Promise<boolean> {
+    try {
+      const config = await this.prisma.appConfig.findFirst({
+        where: { scope: 'project', projectId, key: SKILLS_CONFIG_KEY },
+      });
+      if (!config) return true;
+      const value = config.value as unknown;
+      return value !== false && value !== 'false';
+    } catch (e) {
+      this.logger.warn(
+        `Skills injection config read failed for project ${projectId}: ${(e as Error).message}`,
+      );
+      return true;
+    }
   }
 
   /**

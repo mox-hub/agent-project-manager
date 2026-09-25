@@ -1,7 +1,6 @@
 import {
   IsString,
   IsOptional,
-  IsEnum,
   IsInt,
   IsIn,
   IsArray,
@@ -26,7 +25,7 @@ export const THINKING_LEVELS = [
 
 export class CreateMemberDto {
   @ApiProperty({ enum: ['human', 'ai_agent'], default: 'human' })
-  @IsEnum(['human', 'ai_agent'])
+  @IsIn(['human', 'ai_agent'])
   @IsOptional()
   type?: string = 'human';
 
@@ -146,7 +145,7 @@ export class CreateMemberDto {
   metadata?: Record<string, unknown>;
 
   @ApiProperty({ required: false, enum: ['active', 'inactive', 'suspended'] })
-  @IsEnum(['active', 'inactive', 'suspended'])
+  @IsIn(['active', 'inactive', 'suspended'])
   @IsOptional()
   status?: string = 'active';
 }
@@ -241,14 +240,14 @@ export class UpdateMemberDto {
   metadata?: Record<string, unknown>;
 
   @ApiProperty({ required: false, enum: ['active', 'inactive', 'suspended'] })
-  @IsEnum(['active', 'inactive', 'suspended'])
+  @IsIn(['active', 'inactive', 'suspended'])
   @IsOptional()
   status?: string;
 }
 
 export class MemberQueryDto {
   @ApiProperty({ enum: ['human', 'ai_agent'], required: false })
-  @IsEnum(['human', 'ai_agent'])
+  @IsIn(['human', 'ai_agent'])
   @IsOptional()
   type?: string;
 
@@ -268,7 +267,7 @@ export class MemberQueryDto {
   teamId?: string;
 
   @ApiProperty({ enum: ['active', 'inactive', 'suspended'], required: false })
-  @IsEnum(['active', 'inactive', 'suspended'])
+  @IsIn(['active', 'inactive', 'suspended'])
   @IsOptional()
   status?: string;
 
@@ -289,7 +288,7 @@ export class BindMemberProjectDto {
   projectId: string;
 
   @ApiProperty({ enum: ['owner', 'maintainer', 'member', 'guest'] })
-  @IsEnum(['owner', 'maintainer', 'member', 'guest'])
+  @IsIn(['owner', 'maintainer', 'member', 'guest'])
   @IsOptional()
   role?: string = 'member';
 }

@@ -189,7 +189,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
     setPrevTask(task);
     setSelectedAgentId(task?.aiAgentId || '');
     if (task?.title) {
-      setExecutionGoal(`为任务「${task.title}」生成下一步执行计划并准备状态回写`);
+      setExecutionGoal(t('taskDetail.aiGoalTemplate', { title: task.title }));
     }
   }
 
@@ -288,7 +288,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
     try {
       await assignTaskAgent.mutateAsync({
         issueId,
-        data: { agentId: selectedAgentId },
+        data: { aiAgentId: selectedAgentId },
       });
     } catch (error) {
       setMutationError(
@@ -307,7 +307,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
           goal: executionGoal.trim() || undefined,
           requiresApproval: true,
           actionType: 'task.write',
-          approvalReason: '需要对任务状态或执行结果进行写回，请人工确认',
+          approvalReason: t('taskDetail.approvalReasonWrite'),
         },
       });
       setApprovalComment('');
@@ -905,7 +905,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                   </div>
                   {activeAgents.length === 0 ? (
                     <p className="mt-2 text-xs text-muted-foreground">
-                      系统中还没有可指派的 AI 员工。请先在成员管理中创建 AI 员工。
+                      {t('taskDetail.drawerNoAgents')}
                     </p>
                   ) : null}
                 </div>
@@ -1097,7 +1097,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                   </TabsTrigger>
                   <TabsTrigger value="documents" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <FileText className="mr-1 h-3 w-3" />
-                    关联文档
+                    {t('taskDetail.linkedDocs')}
                   </TabsTrigger>
                   <TabsTrigger value="discussion" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Activity className="mr-1 h-3 w-3" />
@@ -1437,14 +1437,15 @@ function TaskDiscussionContent({ activities }: { activities: ActivityItem[] | un
 export { TaskDetailDrawer as TaskDetailPanel };
 
 function TaskDocumentsContent({ issueId }: { issueId: string }) {
+  const { t } = useTranslation();
   const { data: links = [], isLoading } = useTaskDocumentLinks(issueId);
   if (isLoading) {
-    return <div className="text-xs text-muted-foreground">加载中…</div>;
+    return <div className="text-xs text-muted-foreground">{t('common.loading')}</div>;
   }
   if (links.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground">
-        暂无关联文档。在文档详情页的"关联任务"面板可添加。
+        {t('taskDetail.noLinkedDocs')}
       </div>
     );
   }
@@ -1458,11 +1459,11 @@ function TaskDocumentsContent({ issueId }: { issueId: string }) {
           >
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium text-foreground">
-                {link.document?.title || `文档 ${link.documentId}`}
+                {link.document?.title || t('taskDetail.documentFallback', { id: link.documentId })}
               </div>
               {link.section && (
                 <div className="truncate text-11 text-muted-foreground">
-                  段落: {link.section.title}
+                  {t('taskDetail.sectionLabel', { title: link.section.title })}
                 </div>
               )}
             </div>

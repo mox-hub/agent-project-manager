@@ -367,31 +367,6 @@ export class ReleaseService {
     });
   }
 
-  /**
-   * [legacy] v1 快捷发布：draft → released 一跳，跳过门禁与审批。
-   * 仅供既有内部链路（golden-path e2e 等）使用；产品链路走
-   * submitGate → createApprovalProposal → approve → ReleasePublishService.publish。
-   */
-  async publishRelease(releaseId: string, gitTag?: string) {
-    const release = await this.prisma.release.findUnique({
-      where: { id: releaseId },
-    });
-    if (!release) throw new NotFoundException(`发版不存在: ${releaseId}`);
-    const published = await this.prisma.release.update({
-      where: { id: releaseId },
-      data: {
-        status: 'released',
-        releasedAt: new Date(),
-        gitTag: gitTag ?? release.gitTag,
-      },
-    });
-    this.messageBus.publish('release.created', {
-      projectId: release.projectId,
-      releaseId,
-    });
-    return published;
-  }
-
   /** 版本推荐（conventional commits 机械推断，见 ReleaseVersionService） */
   recommendVersion(projectId: string, excludeReleaseId?: string) {
     return this.version.recommendVersion(projectId, excludeReleaseId);

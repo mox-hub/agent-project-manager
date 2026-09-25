@@ -16,27 +16,27 @@ import { useAppStore } from '@/infrastructure/store/app-store';
 import { authApi } from '@/modules/auth/api/auth-api';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 
-/** 常用时区清单（空值 = 不设置） */
-const TIMEZONES = [
+/** 常用时区清单（空值 = 不设置）；城市名走 i18n（settings.timezone.*） */
+const TIMEZONES: Array<{ value: string; label?: string; labelKey?: string }> = [
   { value: '', label: '—' },
   { value: 'UTC', label: 'UTC' },
-  { value: 'Asia/Shanghai', label: 'UTC+8 上海' },
-  { value: 'Asia/Hong_Kong', label: 'UTC+8 香港' },
-  { value: 'Asia/Singapore', label: 'UTC+8 新加坡' },
-  { value: 'Asia/Tokyo', label: 'UTC+9 东京' },
-  { value: 'Asia/Seoul', label: 'UTC+9 首尔' },
-  { value: 'Asia/Kolkata', label: 'UTC+5:30 孟买' },
-  { value: 'Asia/Dubai', label: 'UTC+4 迪拜' },
-  { value: 'Europe/London', label: 'UTC+0/1 伦敦' },
-  { value: 'Europe/Paris', label: 'UTC+1/2 巴黎' },
-  { value: 'Europe/Berlin', label: 'UTC+1/2 柏林' },
-  { value: 'Europe/Moscow', label: 'UTC+3 莫斯科' },
-  { value: 'America/New_York', label: 'UTC-5/-4 纽约' },
-  { value: 'America/Chicago', label: 'UTC-6/-5 芝加哥' },
-  { value: 'America/Denver', label: 'UTC-7/-6 丹佛' },
-  { value: 'America/Los_Angeles', label: 'UTC-8/-7 洛杉矶' },
-  { value: 'Australia/Sydney', label: 'UTC+10/11 悉尼' },
-  { value: 'Pacific/Auckland', label: 'UTC+12/13 奥克兰' },
+  { value: 'Asia/Shanghai', labelKey: 'settings.timezone.shanghai' },
+  { value: 'Asia/Hong_Kong', labelKey: 'settings.timezone.hongKong' },
+  { value: 'Asia/Singapore', labelKey: 'settings.timezone.singapore' },
+  { value: 'Asia/Tokyo', labelKey: 'settings.timezone.tokyo' },
+  { value: 'Asia/Seoul', labelKey: 'settings.timezone.seoul' },
+  { value: 'Asia/Kolkata', labelKey: 'settings.timezone.mumbai' },
+  { value: 'Asia/Dubai', labelKey: 'settings.timezone.dubai' },
+  { value: 'Europe/London', labelKey: 'settings.timezone.london' },
+  { value: 'Europe/Paris', labelKey: 'settings.timezone.paris' },
+  { value: 'Europe/Berlin', labelKey: 'settings.timezone.berlin' },
+  { value: 'Europe/Moscow', labelKey: 'settings.timezone.moscow' },
+  { value: 'America/New_York', labelKey: 'settings.timezone.newYork' },
+  { value: 'America/Chicago', labelKey: 'settings.timezone.chicago' },
+  { value: 'America/Denver', labelKey: 'settings.timezone.denver' },
+  { value: 'America/Los_Angeles', labelKey: 'settings.timezone.losAngeles' },
+  { value: 'Australia/Sydney', labelKey: 'settings.timezone.sydney' },
+  { value: 'Pacific/Auckland', labelKey: 'settings.timezone.auckland' },
 ];
 
 /** 个人资料设置子页：基本信息（昵称/邮箱/头像/时区）+ 修改密码 */
@@ -183,7 +183,7 @@ export function ProfileSettingsSection() {
                     >
                       {TIMEZONES.map((tz) => (
                         <NativeSelectOption key={tz.value} value={tz.value}>
-                          {tz.label}
+                          {tz.labelKey ? t(tz.labelKey) : tz.label}
                         </NativeSelectOption>
                       ))}
                     </NativeSelect>

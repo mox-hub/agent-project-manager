@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/toast';
 import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
 
 export function useAssignTaskToAI() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: aiHubApi.assignTaskToAI,
@@ -19,7 +21,11 @@ export function useAssignTaskToAI() {
       });
     },
     onError: (err) => {
-      toast.error('分配任务给AI失败: ' + (err instanceof Error ? err.message : '未知错误'));
+      toast.error(
+        t('task.aiAssign.failed', {
+          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+        }),
+      );
     },
   });
 }

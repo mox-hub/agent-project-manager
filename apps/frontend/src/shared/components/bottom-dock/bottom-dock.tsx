@@ -235,6 +235,10 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
         preview
           ? 'relative mx-auto w-fit'
           : 'fixed bottom-4 left-1/2 -translate-x-1/2 z-40',
+        // 收起态整棵子树退出命中测试：根节点盒（=胶囊布局盒，opacity-0 但仍占位）
+        // 仍压在底部中央，若不关命中，这层 z-40 的隐形条带会拦截下方元素的首次点击。
+        // 浮出判定走 document mousemove 坐标，不受 pointer-events 影响。
+        !dockVisible && 'pointer-events-none',
       )}
     >
       {/* 1. 双轨成本与执行微徽章 (常驻 / 变形响应)；Dock 收起时落到底边成为唯一可见元素 */}

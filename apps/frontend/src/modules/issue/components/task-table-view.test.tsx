@@ -68,7 +68,7 @@ describe('TaskTableView（P1-14 表格排序与列显隐）', () => {
     render(<TaskTableView tasks={tasks} displayProperties={{ status: false, aiExecution: false }} />);
 
     expect(screen.queryByText('Status')).toBeNull();
-    expect(screen.queryByText('AI 接管状态')).toBeNull();
+    expect(screen.queryByText('AI 执行态')).toBeNull();
     expect(screen.getByText('Title')).toBeTruthy();
     expect(screen.getByText('Priority')).toBeTruthy();
   });
@@ -76,7 +76,7 @@ describe('TaskTableView（P1-14 表格排序与列显隐）', () => {
   it('shows every property column by default when displayProperties is omitted', () => {
     render(<TaskTableView tasks={tasks} />);
 
-    for (const header of ['ID', 'Title', 'AI 接管状态', 'Status', 'Priority', 'Assignee', 'Project', 'Estimate', 'Due Date', 'Labels', 'Created', 'Updated']) {
+    for (const header of ['ID', 'Title', 'AI 执行态', 'Status', 'Priority', 'Assignee', 'Project', 'Estimate', 'Due Date', 'Labels', 'Created', 'Updated']) {
       expect(screen.getByText(header)).toBeTruthy();
     }
   });

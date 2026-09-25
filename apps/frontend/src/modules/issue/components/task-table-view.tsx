@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { type ColumnDef, type OnChangeFn, type SortingState } from '@tanstack/react-table';
 import { DataTable } from '@/components/ui/data-table';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
@@ -85,6 +86,7 @@ export function TaskTableView({
   maxHeight = 'calc(100vh - 220px)',
   className,
 }: TaskTableViewProps) {
+  const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // P1-17：子任务客户端折叠（父行 chevron 切换，键 = 父任务 id）
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(() => new Set());
@@ -200,7 +202,7 @@ export function TaskTableView({
               {ai ? (
                 <span
                   className="size-1.5 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
-                  title="AI 接管执行中"
+                  title={t('task.filter.aiActive', 'AI 接管执行中')}
                 />
               ) : null}
               <span className={cn('truncate min-w-0', isSubtask ? 'text-muted-foreground' : 'font-medium text-foreground')}>
@@ -218,7 +220,7 @@ export function TaskTableView({
       {
         id: 'aiExecution',
         accessorFn: (task) => sortValue(task, (t) => (getAiExecution?.(t)?.isExecuting ? 1 : 0)),
-        header: 'AI 接管状态',
+        header: t('task.filter.aiExecutionGroup', 'AI 执行态'),
         size: 140,
         cell: ({ row }) => {
           const task = row.original;
@@ -358,7 +360,7 @@ export function TaskTableView({
         cell: ({ row }) => <ListDate value={row.original.updatedAt} />,
       },
     ];
-  }, [getAiExecution, getProjectName, issueTypeOf, sortValue, metaByTask, childCountById, collapsedIds, toggleCollapsed]);
+  }, [t, getAiExecution, getProjectName, issueTypeOf, sortValue, metaByTask, childCountById, collapsedIds, toggleCollapsed]);
 
   // 列显隐（P1-14）：按展示属性 key 对齐列 id；未传开关表 = 全部展示
   const visibleColumns = useMemo(() => {
@@ -411,7 +413,7 @@ export function TaskTableView({
         maxHeight={maxHeight}
         emptyContent={
           <div className="p-8 text-center text-sm text-muted-foreground">
-            {loading ? '任务加载中…' : '暂无任务'}
+            {loading ? t('common.loading') : t('task.messages.noTasks')}
           </div>
         }
       />

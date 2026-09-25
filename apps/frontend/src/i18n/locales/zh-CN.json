@@ -479,7 +479,8 @@
       "title": "发布门禁",
       "submit": "提交门禁",
       "ranAt": "上次检查：",
-      "notRun": "尚未提交门禁——门禁校验范围归属、验收全绿、CI 证据、契约绑定与完整性审计"
+      "notRun": "尚未提交门禁——门禁校验范围归属、验收全绿、CI 证据、契约绑定与完整性审计",
+      "skippedEmptyScope": "范围内无内容，跳过"
     },
     "action": {
       "title": "审批与发布",
@@ -861,7 +862,9 @@
       "completed": "已完成",
       "failed": "失败",
       "blocked": "已阻塞",
-      "superseded": "已取代"
+      "superseded": "已取代",
+      "approved": "已批准",
+      "rejected": "已驳回"
     },
     "timeline": {
       "model": "模型",
@@ -879,7 +882,11 @@
       "result": "结果",
       "error": "错误",
       "approval": "审批",
-      "status": "状态"
+      "status": "状态",
+      "approvalRequest": "审批请求",
+      "toolResult": "工具结果",
+      "completed": "执行完成",
+      "failed": "执行失败"
     },
     "details": {
       "runtime": "运行时",
@@ -893,7 +900,8 @@
       "completed": "完成",
       "totalTokens": "总 Tokens",
       "cost": "费用"
-    }
+    },
+    "truncated": "已截断"
   },
   "execution": {
     "stats": {
@@ -1182,7 +1190,7 @@
       "conflictResolved": "契约冲突已裁决"
     },
     "body": {
-      "placeholder": "该决策类型的主体渲染器待类型落地（当前为占位框架）"
+      "placeholder": "这类决策暂无定制详情视图，以下为其内容摘要"
     },
     "empty": {
       "title": "没有待决事项",
@@ -1202,7 +1210,12 @@
     "retryFailed": "重试失败项（{{count}}）",
     "continueAnyway": "仍要继续",
     "enterApp": "进入 APM",
-    "enterLogin": "进入登录"
+    "enterLogin": "进入登录",
+    "skip": {
+      "default": "当前环境无需执行",
+      "desktop-only": "桌面端专用步骤，浏览器环境自动跳过",
+      "no-token": "未检测到本地登录凭据，登录后自动执行"
+    }
   },
   "dashboard": {
     "title": "仪表盘",
@@ -1357,6 +1370,11 @@
       "emailAlreadyRegistered": "该邮箱已注册，请直接登录"
     }
   },
+  "contextMenu": {
+    "createSubtask": "创建子任务",
+    "createParentTask": "创建父任务",
+    "parentTaskTitle": "父任务标题"
+  },
   "task": {
     "title": "任务",
     "empty": {
@@ -1496,6 +1514,8 @@
       "projectGroup": "项目",
       "iterationGroup": "迭代",
       "tagGroup": "标签",
+      "aiExecutionGroup": "AI 执行态",
+      "aiActive": "AI 接管执行中",
       "unassigned": "未分配"
     },
     "sort": {
@@ -1522,7 +1542,33 @@
       "deleteConfirm": "确定要删除此任务吗？",
       "noTasks": "暂无任务",
       "loadError": "加载任务失败",
-      "descriptionAcrossProjects": "个任务分布在所有项目中"
+      "descriptionAcrossProjects": "个任务分布在所有项目中",
+      "unknownError": "未知错误",
+      "createIterationFailed": "创建迭代失败: {{message}}",
+      "updateIterationFailed": "更新迭代失败: {{message}}",
+      "createFailedMessage": "创建任务失败: {{message}}",
+      "updateFailedMessage": "更新任务失败: {{message}}",
+      "quickCreateFailed": "快速创建任务失败: {{message}}",
+      "addDependencyFailedMessage": "添加任务依赖失败: {{message}}",
+      "removeDependencyFailedMessage": "移除任务依赖失败: {{message}}",
+      "deleteFailedMessage": "删除任务失败: {{message}}",
+      "moveFailed": "移动任务失败: {{message}}",
+      "importFailed": "导入任务失败: {{message}}",
+      "subtaskCreated": "子任务已创建",
+      "createSubtaskFailedMessage": "创建子任务失败: {{message}}",
+      "exportFailed": "导出任务失败: {{message}}",
+      "shortIdBackfilled": "成功为 {{count}} 个任务补充 shortId",
+      "shortIdBackfillPartial": "补充完成：成功 {{success}} 个，失败 {{failed}} 个",
+      "shortIdBackfillFailed": "补充 shortId 失败: {{message}}",
+      "assignPrimaryFailed": "指派负责人失败: {{message}}"
+    },
+    "pagination": {
+      "range": "第 {{from}}–{{to}} 条 · 共 {{total}} 条",
+      "filterScopeNote": "筛选仅作用于当前页",
+      "prev": "上一页",
+      "next": "下一页",
+      "exportScope": "导出范围：当前页中的筛选结果（{{count}} 条）——与列表当前的搜索、筛选和排序一致，不含其他页数据。",
+      "exportPageNote": "当前为第 {{page}} / {{totalPages}} 页，导出仅含本页数据；如需其余数据请翻页后再次导出。"
     },
     "bug": {
       "title": "Bug 列表",
@@ -1531,6 +1577,7 @@
       "descriptionBugs": "个 Bug",
       "critical": "个严重",
       "open": "个待处理",
+      "overdue": "已超期",
       "severity": {
         "critical": "严重",
         "high": "高",
@@ -1549,6 +1596,9 @@
       },
       "messages": {
         "noBugs": "暂无 Bug"
+      },
+      "selection": {
+        "confirmDescription": "该操作会删除选中的 Bug 及其子任务，且不可撤销。"
       }
     },
     "view": {
@@ -1575,7 +1625,14 @@
       "assigned": "已将任务指派给 AI 员工",
       "assignedWithRun": "已派发任务给 AI 员工（执行 {{id}}）",
       "assignedButDispatchFailed": "已指派给 AI 员工，但 CLI 自动派发失败：{{error}}",
-      "failed": "派发失败：{{message}}"
+      "failed": "派发失败：{{message}}",
+      "loadingMembers": "加载 AI 员工…",
+      "noMembers": "系统中还没有注册的 AI 员工。",
+      "noMembersHint": "请先到成员管理创建 AI 员工。",
+      "dispatching": "派发中…",
+      "dispatchAndExecute": "派发并执行",
+      "dispatchedWithExecution": "已派发给 AI 员工 (Execution {{id}}…)",
+      "assignedButDispatchFailedShort": "指派成功但自动派发失败: {{error}}"
     },
     "import": {
       "validationFailed": "导入校验失败，本次导入未创建任何任务，共 {{count}} 处错误",
@@ -1591,7 +1648,17 @@
       "applying": "更新中…",
       "success": "已更新 {{count}} 条工单",
       "partial": "已更新 {{success}} 条、失败 {{failed}} 条：{{detail}}{{more}}",
-      "andMore": "等 {{count}} 条"
+      "andMore": "等 {{count}} 条",
+      "unknownError": "未知错误"
+    },
+    "gantt": {
+      "leftColumnTitle": "任务",
+      "empty": "暂无可排期的任务",
+      "emptyDesc": "甘特视图依赖日期字段，为任务设置截止日期后即可在此排期"
+    },
+    "aiTakeover": {
+      "title": "AI 接管中",
+      "executing": "执行中"
     },
     "export": {
       "label": "导出",
@@ -2146,8 +2213,174 @@
     "title": "设置",
     "integration": {
       "emptyFiltered": "没有符合条件的集成",
-      "emptyFilteredHint": "调整搜索关键词或清除筛选再试"
+      "emptyFilteredHint": "调整搜索关键词或清除筛选再试",
+      "title": "集成",
+      "subtitle": "连接你的工具，为 AI 驱动的开发提效。",
+      "searchPlaceholder": "搜索集成…",
+      "tabs": {
+        "all": "全部",
+        "task": "任务源",
+        "code": "代码与 PR",
+        "communication": "沟通协同",
+        "monitoring": "监控告警"
+      },
+      "category": {
+        "task": "任务源",
+        "code": "代码与 PR 同步",
+        "monitoring": "监控告警",
+        "communication": "沟通协同"
+      },
+      "catDesc": {
+        "task": "任务源是工作项的真相来源。连接一个或多个来导入任务，并让 AI 同事直接执行工作。",
+        "code": "代码集成把仓库关联到任务，让 AI 同事能发起 PR、跟踪 CI 状态，并把验收结果作为代码评审评论回传。"
+      },
+      "status": {
+        "connected": "已连接",
+        "disconnected": "未连接",
+        "error": "连接异常",
+        "pending": "连接中…"
+      },
+      "metricErrors": "异常",
+      "metricConnected": "已连接",
+      "count": "{{count}} 个集成",
+      "connect": "连接 {{name}}",
+      "connecting": "连接中…",
+      "sync": "同步",
+      "disconnect": "断开",
+      "reconnect": "重新连接",
+      "errorConnectionLost": "连接已断开",
+      "errorCheckProvider": "请检查服务商状态",
+      "features": "功能",
+      "featuresActive": "{{active}}/{{total}} 项启用",
+      "connectionDetails": "连接详情",
+      "account": "账号",
+      "lastSync": "上次同步",
+      "noConnectionDetails": "暂无连接信息上报。",
+      "viewSetupGuide": "查看配置指南",
+      "moreFeatures": "还有 {{count}} 项功能",
+      "docs": "文档",
+      "comingSoon": "即将支持",
+      "soon": "即将上线",
+      "soonDesc": {
+        "notion": "同步项目文档与知识库",
+        "figma": "把设计稿关联到任务规格",
+        "vercel": "在任务上跟踪部署状态",
+        "datadog": "异常告警并自动建单",
+        "pagerduty": "值班告警路由到 APM 任务",
+        "loom": "把录屏附加到任务"
+      },
+      "disconnectSuccess": "{{name}} 已断开连接",
+      "disconnectFailed": "断开连接失败，请重试",
+      "catalog": {
+        "linear": {
+          "desc": "把 Linear 的问题、周期与项目同步为 APM 任务。",
+          "longDesc": "连接你的 Linear 工作区，导入并双向同步问题为任务。AI 同事可直接创建 Linear 问题，验收结果会作为问题评论回传。",
+          "f1": { "label": "问题同步", "desc": "导入 Linear 问题并与 APM 任务保持同步" },
+          "f2": { "label": "双向同步", "desc": "任一系统的变更自动互相传播" },
+          "f3": { "label": "AI 建单", "desc": "AI 同事可直接创建 Linear 问题" },
+          "f4": { "label": "评论同步", "desc": "验收结果以 Linear 评论回传" },
+          "f5": { "label": "成员映射", "desc": "把 Linear 成员映射到 APM 团队成员" },
+          "f6": { "label": "周期跟踪", "desc": "把周期进度导入里程碑视图" }
+        },
+        "jira": {
+          "desc": "导入 Jira 工单与史诗，AI 产出的工作成果回推到你的看板。",
+          "longDesc": "把 Jira Cloud 或 Data Center 实例作为任务源。导入史诗、故事与缺陷，AI 同事执行 Jira 中跟踪的工作并把结果以评论回传。",
+          "f1": { "label": "工单导入", "desc": "把 Jira 史诗、故事与缺陷导入为任务" },
+          "f2": { "label": "状态同步", "desc": "把 Jira 工作流状态同步到 APM" },
+          "f3": { "label": "AI 建单", "desc": "AI 同事可创建并更新 Jira 工单" },
+          "f4": { "label": "评论同步", "desc": "验收结果以 Jira 问题评论回传" },
+          "f5": { "label": "负责人映射", "desc": "把 Jira 用户映射到 APM 团队成员" },
+          "f6": { "label": "缺陷跟踪", "desc": "把 Jira 缺陷报告导入 APM 缺陷列表" }
+        },
+        "github": {
+          "desc": "同步仓库、PR 与 CI 状态，自动把 PR 关联到任务。",
+          "longDesc": "连接 GitHub 跟踪 PR、代码评审与 CI/CD 运行。AI 同事可发起 PR、请求评审并实时监控构建状态。",
+          "f1": { "label": "PR 同步", "desc": "自动把 PR 关联到任务" },
+          "f2": { "label": "AI 发 PR", "desc": "AI 同事可发起并更新 PR" },
+          "f3": { "label": "分支规则", "desc": "通过 APM 策略执行分支保护" },
+          "f4": { "label": "CI 状态", "desc": "在任务卡片上展示 CI/CD 构建状态" },
+          "f5": { "label": "Webhook", "desc": "经 GitHub webhook 实时推送事件" },
+          "f6": { "label": "评审评论", "desc": "把验收审计结果以 PR 评论回传" }
+        },
+        "gitlab": {
+          "desc": "同步 GitLab MR 与流水线，支持自建实例与 GitLab.com。",
+          "longDesc": "集成 GitLab 管理合并请求、监控流水线，让代码与任务保持同步。支持 GitLab.com 与自建实例。",
+          "f1": { "label": "MR 同步", "desc": "把合并请求同步到 APM 任务时间线" },
+          "f2": { "label": "AI 发 MR", "desc": "AI 同事可发起并更新合并请求" },
+          "f3": { "label": "流水线状态", "desc": "在任务上跟踪 GitLab CI/CD 流水线状态" },
+          "f4": { "label": "Webhook", "desc": "经 GitLab webhook 实时推送事件" },
+          "f5": { "label": "自建实例", "desc": "通过 PAT 连接你的 GitLab CE/EE 实例" },
+          "f6": { "label": "MR 讨论", "desc": "把验收结果以 MR 讨论线程回传" }
+        },
+        "slack": {
+          "desc": "把任务动态、AI 执行告警与验收结果发送到 Slack 频道。",
+          "longDesc": "当任务状态变化、AI 同事完成执行或验收通过/驳回时，向你的 Slack 工作区推送通知。",
+          "f1": { "label": "任务通知", "desc": "把任务状态变化推送到指定频道" },
+          "f2": { "label": "AI 执行告警", "desc": "AI 同事开始或完成执行时告警" },
+          "f3": { "label": "验收告警", "desc": "把批准/驳回推送到评审频道" },
+          "f4": { "label": "每日摘要", "desc": "每天早上发送项目动态摘要" }
+        },
+        "sentry": {
+          "desc": "把 Sentry 错误告警自动转为 APM 缺陷。",
+          "longDesc": "连接 Sentry，从错误事件自动创建缺陷报告。AI 同事可分析堆栈并提出修复建议。",
+          "f1": { "label": "自动建缺陷", "desc": "从 Sentry 错误事件自动创建缺陷" },
+          "f2": { "label": "AI 诊断", "desc": "AI 同事分析堆栈并给出根因建议" },
+          "f3": { "label": "错误趋势", "desc": "在项目健康仪表盘上呈现错误频率" }
+        }
+      },
+      "githubIntegration": {
+        "title": "GitHub 集成",
+        "connect": "连接 GitHub",
+        "emptyTitle": "尚未配置 GitHub 集成",
+        "emptyDesc": "通过 Personal Access Token (PAT) 创建 GitHub 集成配置（可选配 Webhook Secret 以接收实时事件），凭据加密存储。",
+        "emptyCta": "立即创建 GitHub 集成",
+        "prLifecycleTitle": "PR 生命周期",
+        "prLifecycleDesc": "Webhook 触发的 PR 状态会写入本地数据库，并反馈到 Agent 信任评分。",
+        "colStatus": "状态",
+        "colMeaning": "语义",
+        "colTrustDelta": "信任分变化",
+        "meaningMerged": "PR 已合并",
+        "meaningMergedComments": "合并但带有评审意见",
+        "meaningChangesRequested": "评审被打回",
+        "meaningClosed": "未合并即关闭"
+      },
+      "linearIntegration": {
+        "notFound": "找不到该集成",
+        "deleteTitle": "删除 Linear 集成",
+        "deleteDesc": "确定删除此 Linear 集成？已关联的项目将失去同步，但本地数据会保留。",
+        "disable": "停用",
+        "enable": "启用",
+        "recentSync": "最近同步动态",
+        "quickActions": "快捷操作",
+        "pullProject": "拉取 Linear 项目…",
+        "aboutSync": "关于同步",
+        "syncProjects": "项目：单向（Linear → APM）",
+        "syncTasks": "任务：双向同步，采用混合冲突策略",
+        "lockedFields": "锁定字段：名称、描述、图标、颜色、状态、优先级、健康度",
+        "editableLocally": "本地可编辑：成员、进度、AI 上下文、自定义元数据"
+      }
     },
+    "timezone": {
+      "shanghai": "UTC+8 上海",
+      "hongKong": "UTC+8 香港",
+      "singapore": "UTC+8 新加坡",
+      "tokyo": "UTC+9 东京",
+      "seoul": "UTC+9 首尔",
+      "mumbai": "UTC+5:30 孟买",
+      "dubai": "UTC+4 迪拜",
+      "london": "UTC+0/1 伦敦",
+      "paris": "UTC+1/2 巴黎",
+      "berlin": "UTC+1/2 柏林",
+      "moscow": "UTC+3 莫斯科",
+      "newYork": "UTC-5/-4 纽约",
+      "chicago": "UTC-6/-5 芝加哥",
+      "denver": "UTC-7/-6 丹佛",
+      "losAngeles": "UTC-8/-7 洛杉矶",
+      "sydney": "UTC+10/11 悉尼",
+      "auckland": "UTC+12/13 奥克兰"
+    },
+    "none": "无",
+    "runtimeBackToOverview": "返回运行时总览",
     "general": "通用",
     "groupAccount": "账号",
     "profile": "个人资料",
@@ -2971,7 +3204,10 @@
     "execActionViewLog": "查看执行日志",
     "execActionMore": "更多操作",
     "parentTaskLabel": "父任务",
-    "customFields": "字段"
+    "customFields": "字段",
+    "drawerNoAgents": "系统中还没有可指派的 AI 员工。请先在成员管理中创建 AI 员工。",
+    "aiGoalTemplate": "为任务「{{title}}」生成下一步执行计划并准备状态回写",
+    "approvalReasonWrite": "需要对任务状态或执行结果进行写回，请人工确认"
   },
   "activity": {
     "title": "动态",
@@ -3748,20 +3984,162 @@
     "title": "帮助中心",
     "description": "查找答案并学习如何使用 APM",
     "searchPlaceholder": "搜索帮助...",
-    "searchTitle": "搜索帮助中心",
-    "searchHint": "使用搜索框查找文章、指南和常见问题",
+    "searchTitle": "没有找到匹配的内容",
+    "searchHint": "换个关键词试试，或浏览左侧目录",
     "sections": {
-      "gettingStarted": "入门指南",
-      "features": "功能",
-      "keyboardShortcuts": "键盘快捷键",
+      "getting-started": "入门指南",
+      "projects-issues": "项目与任务",
+      "ai": "AI 同事",
+      "governance": "质量与治理",
+      "tools": "集成与工具",
+      "keyboard-shortcuts": "键盘快捷键",
       "faq": "常见问题"
+    },
+    "sectionDescriptions": {
+      "getting-started": "认识 APM，几分钟上手核心工作流",
+      "projects-issues": "创建项目，管理任务与缺陷，批量操作与迭代规划",
+      "ai": "认识你的 AI 同事：配置模型、派发执行、跟进结果",
+      "governance": "验收门禁、决策确认、文档契约与发版",
+      "tools": "集成 GitHub / Linear，全局搜索与通知",
+      "keyboard-shortcuts": "所有真实生效的快捷键，全局键可在设置中自定义",
+      "faq": "新手最常遇到的问题"
+    },
+    "articles": {
+      "getting-started": {
+        "what-is-apm": {
+          "title": "APM 是什么？",
+          "summary": "一个 AI 驱动的项目管理工具：你来决策，AI 同事来干活。",
+          "content": "APM 把项目管理（项目、任务、迭代、验收）和 AI 执行（AI 同事读写任务、执行代码、提交结果）放在同一个工作台。你把工作拆成任务、写清验收标准，AI 同事在验收门禁和你的审批之下执行；重要决定仍由你拍板。左侧边栏按「工作台 → 研发生命周期 → 协同与底座 → 系统」分组，跟着六站生命周期（01 需求承接 → 02 任务 → 03 仓库 → 04 执行记录 → 05 质量验收 → 06 发版交付）走，即可完成一次完整交付。"
+        },
+        "quick-start": {
+          "title": "快速上手",
+          "summary": "三步开始：建项目 → 建任务 → 指派给 AI 同事或自己完成。",
+          "content": "① 在「项目」页创建你的第一个项目；② 进入项目，在「任务」里新建任务，填好标题、描述和验收标准；③ 把任务指派给自己或 AI 同事——指派给 AI 前需要先在「设置 → AI 管理」配置模型。任务完成后在「质量验收」里对照验收标准核验证据。第一次使用不必急着配置，先建一个项目练手，引导里的每一步都可以稍后再完成。"
+        },
+        "navigation": {
+          "title": "界面导览",
+          "summary": "左侧导航四组、六站生命周期与命令面板。",
+          "content": "「工作台」放仪表盘、决策收件箱和项目；「研发生命周期」是六站主流程；「协同与底座」放办公、文档、成员、团队、工作流、分析报表与 AI 表面；「系统」放设置、帮助与管理后台。找页面最快的方式是按 Ctrl+K 打开命令面板，输入名字直接跳转；侧边栏顶部的放大镜和铃铛分别是全局搜索与通知中心。常用页面可通过标题栏的收藏按钮收进侧边栏「收藏」分区。"
+        }
+      },
+      "projects-issues": {
+        "projects": {
+          "title": "管理项目",
+          "summary": "项目是任务、文档、成员与目标的容器。",
+          "content": "在「项目」页新建项目，填写名称、描述与类型。进入项目后，顶部页签在总览、任务、里程碑、项目画像、剧本、团队与设置之间切换：总览看健康度与进度，「里程碑」标记关键时间点，「设置」里可配置工作流、契约绑定等项目级选项。常用的项目点标题栏收藏按钮，即可在侧边栏快速直达。"
+        },
+        "issues": {
+          "title": "任务与缺陷",
+          "summary": "统一的工单系统：任务和缺陷用同一套方式管理。",
+          "content": "「任务」页（生命周期第 02 站）是所有工单的中心：支持列表、看板、表格、甘特图等视图，按状态、优先级、负责人、标签筛选。点开工单进入详情：右侧属性面板改状态、负责人与迭代；详情页内可切换工单类型（类型在「设置 → 工单类型」配置）、补充描述与验收标准、建立依赖关系；也可以把工单指派给 AI 同事。「缺陷」页专门汇总 Bug，统一创建面板支持一次连续创建多条。"
+        },
+        "batch": {
+          "title": "批量操作与导入导出",
+          "summary": "多选批量修改、表格编辑、CSV 导入导出。",
+          "content": "在任务表格视图里勾选多条工单，可一次性修改状态、负责人、迭代、优先级或标签；表格视图还支持直接编辑单元格。要迁移历史数据时，用「导入」把 CSV 批量变成工单；「导出」可以把当前筛选结果导出成文件，方便汇报与归档。"
+        },
+        "iterations": {
+          "title": "迭代规划",
+          "summary": "用迭代圈定一段时间内要完成的任务。",
+          "content": "迭代是一段有起止日期的工作周期（比如两周一个冲刺）。在「任务」页创建迭代并设置日期，把任务拖入或批量移动到迭代里；迭代详情会按日期自动推导进行中/已结束状态，并汇总完成进度。新手建议从「把一周要做的事放进一个迭代」开始，不必一开始就追求复杂排期。"
+        }
+      },
+      "ai": {
+        "what-ai-can-do": {
+          "title": "AI 同事能做什么",
+          "summary": "像团队成员一样接任务、写代码、提交验收证据。",
+          "content": "AI 同事是 APM 内置的 AI 执行者：它可以被指派任务、在关联仓库里读写代码、执行命令，并把过程与结果记录到「执行记录」。它的所有执行都受治理约束：动手前你能看到方案，重要动作需要你审批，完成后必须提交证据通过验收门禁。简单说：AI 负责干活，你负责决策。"
+        },
+        "configure-ai": {
+          "title": "配置 AI 模型",
+          "summary": "在「设置 → AI 管理」里配置模型供应商与 API Key。",
+          "content": "进入「设置 → AI 管理」，添加模型供应商（支持 OpenAI、Anthropic、智谱 GLM、DeepSeek 等），填入 API Key 与端点即可；同一页面还能管理 Agent 与技能。未配置模型时，项目管理功能照常可用，只是 AI 同事不会执行任务。桌面版还需确认「设置 → 运行时」里的守护进程在线，AI 才能在本地真正执行。"
+        },
+        "executions": {
+          "title": "派发与执行记录",
+          "summary": "把任务派给 AI 之后，在这里跟进每一步。",
+          "content": "任务指派给 AI 同事后会生成执行记录，在「执行记录」页（生命周期第 04 站）可以看到状态流转、日志与产出；需要审批的动作会以审批请求的形式等你处理，通过后执行才会继续，执行过程中也可以随时中止。「设置 → AI 执行中心」汇总所有 AI 执行历史，方便复盘。"
+        }
+      },
+      "governance": {
+        "acceptance": {
+          "title": "验收门禁",
+          "summary": "完成之前必须过验收：标准先行、证据说话。",
+          "content": "每个任务都可以定义验收标准（建议建任务时就写清「做到什么样算完成」）。AI 或成员提交完成后，在「质量验收」页（生命周期第 05 站）对照标准逐条核验：查看提交的证据（代码、截图、说明），通过则关闭，不通过则驳回并说明原因。验收门禁是 APM 保证「做的是对的、能证明做成了」的核心机制。"
+        },
+        "decisions": {
+          "title": "决策卡与决策收件箱",
+          "summary": "AI 提方案，你拍板；待决策的事项集中在一个收件箱。",
+          "content": "当 AI 需要你拿主意（比如方案取舍、风险选择）时，会生成决策卡送进「决策」收件箱，侧边栏会显示待处理数量。打开决策卡能看到背景、选项与建议，你可以通过、驳回或要求补充信息。所有决策都会留档，日后可以回溯「当时为什么这么定」。"
+        },
+        "documents-contracts": {
+          "title": "文档与契约",
+          "summary": "文档知识库沉淀上下文；契约把设计文档与代码文件绑在一起。",
+          "content": "「文档」是团队的知识库，支持 Markdown 编辑与版本管理，任务和项目都可以关联文档作为上下文。契约是文档中的规格说明与代码文件之间的绑定：在项目设置里建立绑定后，系统可以追踪这份设计对应哪些代码文件、内容是否仍然同步，避免文档与实现脱节。"
+        },
+        "releases": {
+          "title": "发版与 CHANGELOG",
+          "summary": "发版是交付的收口：一次发版对应一份可追溯的变更记录。",
+          "content": "「发版交付」页（生命周期第 06 站）管理发版：创建发版、把相关任务与修复收拢进来；CHANGELOG 由发版数据单向生成，保证「对外说的」与「实际做的」一致。发版详情里能看到本版包含的全部工单，方便写公告与回溯问题。"
+        }
+      },
+      "tools": {
+        "integrations": {
+          "title": "集成：GitHub 与 Linear",
+          "summary": "连接代码托管与外部任务源，双向同步。",
+          "content": "在「设置 → 集成」里可以连接 GitHub 和 Linear。连接 GitHub 后，仓库、提交与 Pull Request 会出现在「仓库」页和对应项目里；连接 Linear 后可以把外部任务双向同步成 APM 工单，项目详情顶栏会显示同步状态与手动同步按钮。集成异常时，先到「设置 → 集成」检查连接与授权状态。"
+        },
+        "search": {
+          "title": "全局搜索",
+          "summary": "一个入口搜工单、项目与文档。",
+          "content": "点击侧边栏顶部的放大镜（或从命令面板进入「搜索」），按关键词即可查找工单、项目与文档，结果按类型分组，支持键盘上下选择、回车跳转。找不到时试试更具体的关键词，或用类型过滤缩小范围。"
+        },
+        "notifications": {
+          "title": "通知",
+          "summary": "需要你关注的事集中送达，未读数在侧边栏可见。",
+          "content": "侧边栏顶部的铃铛进入通知中心：任务动态、审批与验收进展等消息都会送达，未读数量以红点角标提示。点击单条通知可直接跳到相关页面，处理完可标记已读。"
+        },
+        "members-teams": {
+          "title": "成员、团队与权限",
+          "summary": "邀请同事、组建团队，用角色控制谁能做什么。",
+          "content": "「成员」页管理工作区内的所有主体（真人、AI 成员与外部代理统一管理），「团队」页把成员组织成团队。访问权限由角色决定，在「设置 → 角色」里配置；个人访问令牌（PAT）在「设置 → 访问令牌」生成，供 API 与集成调用使用。"
+        }
+      },
+      "keyboard-shortcuts": {
+        "overview": {
+          "title": "快捷键一览",
+          "summary": "下方表格列出所有真实生效的快捷键，随注册表实时更新。",
+          "content": "下表由快捷键注册表实时生成：全局键（如 Ctrl+K 命令面板、Alt+A AI 助手面板）可在设置中改键；场景键（如文档内 Ctrl+S 保存、创建面板内 Ctrl+1 切换类型与 Ctrl+Enter 提交、决策批阅 Enter）只读展示；Esc 用于关闭对话框与面板。"
+        },
+        "customize": {
+          "title": "自定义快捷键",
+          "summary": "在「设置 → 快捷键」录制你顺手的键位。",
+          "content": "打开「设置 → 快捷键」，点击全局动作右侧的录制按钮并按下新键位，即可覆盖默认值，自定义结果保存在本机。与已有键位冲突时会被检测并提示；场景类快捷键（标注为场景的行）暂不支持改键。"
+        }
+      },
+      "faq": {
+        "where-is-data": {
+          "title": "数据存在哪里？",
+          "summary": "保存在你连接的 APM 服务端，每个工作区一个独立数据库。",
+          "content": "APM 的数据（项目、任务、文档等）保存在服务端，按工作区隔离存储。桌面版的服务运行在你自己的电脑上，数据不出本机；Web 版则取决于所连接服务器的部署位置。工作区与存储情况可在「设置 → 存储」查看。"
+        },
+        "ai-not-responding": {
+          "title": "AI 没有反应？",
+          "summary": "按顺序检查：模型配置 → 运行时守护进程 → 执行记录里的报错。",
+          "content": "① 确认「设置 → AI 管理」里已配置模型供应商和有效的 API Key；② 桌面版再到「设置 → 运行时」确认守护进程在线；③ 打开「执行记录」找到对应执行，查看状态与日志中的失败原因。多数问题出在 Key 无效或额度用尽，更换有效的 Key 后重新派发即可。"
+        },
+        "web-vs-desktop": {
+          "title": "Web 版与桌面版有什么区别？",
+          "summary": "功能一致；桌面版多了本地执行能力与托管的守护进程。",
+          "content": "两端使用同一套界面与功能，首次进入都会出现初始化引导向导（桌面版会多一步「工作目录」，用于指定 AI 执行代码的本地目录）。桌面版由桌面壳托管本地服务与守护进程，AI 可以直接读写你电脑上的代码仓库；Web 版适合不涉及本地代码执行的项目管理与协作场景。"
+        }
+      }
     },
     "shortcuts": {
       "title": "键盘快捷键",
       "shortcut": "快捷键",
       "action": "操作",
-      "closeDialog": "关闭对话框/面板",
-      "saveChanges": "保存更改"
+      "closeDialog": "关闭对话框 / 面板"
     },
     "readMore": "阅读更多",
     "backTo": "返回 {{section}}"
@@ -4325,6 +4703,28 @@
   },
   "integration": {
     "title": "集成",
+    "card": {
+      "project": "项目：{{id}}",
+      "inactive": "未启用",
+      "enabled": "已启用",
+      "disabled": "已停用",
+      "lastSync": "上次同步：{{time}}",
+      "configure": "配置",
+      "enable": "启用",
+      "disable": "停用",
+      "delete": "删除",
+      "status": {
+        "connected": "已连接",
+        "error": "连接异常",
+        "pending": "连接中"
+      }
+    },
+    "form": {
+      "configureTitle": "配置 {{name}}",
+      "nameLabel": "集成名称",
+      "enableLabel": "启用此集成",
+      "saving": "保存中…"
+    },
     "active": "活跃",
     "browseMarketplace": "浏览市场",
     "installed": "已安装",
@@ -4882,6 +5282,13 @@
   },
   "office": {
     "title": "办公室",
+    "handoff": {
+      "badge": "交接",
+      "gates": "治理门禁",
+      "gatePassed": "已就绪",
+      "gateBlocked": "阻断",
+      "gatePending": "校验中"
+    },
     "totals": "{{colleagues}} 位 AI 同事 · {{working}} 人在忙 · {{needYou}} 人等你拍板 · {{blocking}} 件阻塞待决",
     "projectFilter": "按项目过滤",
     "allProjects": "全部项目",

@@ -30,6 +30,9 @@ export const RUN_STATUS_CONFIG: Record<
   failed: { icon: XCircle, color: 'text-accent-red' },
   blocked: { icon: Ban, color: 'text-accent-red' },
   superseded: { icon: Circle, color: 'text-muted-foreground' },
+  // confirmExecution 裁决态（issue.service 写入，见 execution-api 类型注释）
+  approved: { icon: CheckCircle2, color: 'text-accent-green' },
+  rejected: { icon: XCircle, color: 'text-accent-red' },
 };
 
 const STATUS_PILL_TONE: Record<string, 'default' | 'success' | 'warning' | 'danger' | 'info'> = {
@@ -41,6 +44,8 @@ const STATUS_PILL_TONE: Record<string, 'default' | 'success' | 'warning' | 'dang
   failed: 'danger',
   blocked: 'danger',
   superseded: 'default',
+  approved: 'success',
+  rejected: 'danger',
 };
 
 export function RunStatusBadge({ status, className }: { status: string; className?: string }) {

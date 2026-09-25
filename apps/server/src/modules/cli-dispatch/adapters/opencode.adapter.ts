@@ -10,9 +10,42 @@ import { spawn } from 'child_process';
 import {
   CliAdapter,
   CliExecutionInput,
+  CliUsage,
   CommandBuildResult,
   StreamEmitter,
 } from './cli-adapter.interface';
+
+/** opencode step_finish 事件的 part 载荷（镜像 shared 单源 OpenCodePart 的用量字段） */
+interface OpenCodePart {
+  type?: string;
+  text?: string;
+  reason?: string;
+  tokens?: {
+    input?: number;
+    output?: number;
+    reasoning?: number;
+    total?: number;
+  };
+  cost?: number;
+}
+
+/** 从 step_finish 的 part 提取用量（opencode 字段名不带 _tokens 后缀，extractCliUsage 不适用） */
+function usageFromPart(part: OpenCodePart): CliUsage | undefined {
+  const t = part.tokens;
+  if (!t || typeof t !== 'object') return undefined;
+  const promptTokens = typeof t.input === 'number' ? t.input : 0;
+  const reasoning = typeof t.reasoning === 'number' ? t.reasoning : 0;
+  const completionTokens =
+    (typeof t.output === 'number' ? t.output : 0) + reasoning;
+  const totalTokens =
+    typeof t.total === 'number' ? t.total : promptTokens + completionTokens;
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens,
+    ...(typeof part.cost === 'number' ? { costUsd: part.cost } : {}),
+  };
+}
 
 export class OpenCodeAdapter implements CliAdapter {
   getProviderId(): 'opencode' {
@@ -135,13 +168,16 @@ export class OpenCodeAdapter implements CliAdapter {
         });
         break;
 
-      case 'step_finish':
+      case 'step_finish': {
         emit.step?.({
           stepType: 'observation',
           name: `step:${event.part?.reason ?? 'stop'}`,
           status: 'completed',
         });
+        const usage = usageFromPart((event.part ?? {}) as OpenCodePart);
+        if (usage) emit.usage?.(usage);
         break;
+      }
 
       case 'tool':
         emit.step?.({
@@ -174,20 +210,25 @@ export class OpenCodeAdapter implements CliAdapter {
     artifacts: Array<{ type: string; name: string; content?: string }>;
     error?: string;
     output?: Record<string, unknown>;
+    usage?: CliUsage;
   } {
     const artifacts: Array<{ type: string; name: string; content?: string }> =
       [];
     let finalText = '';
+    let usage: CliUsage | undefined;
 
     for (const line of stdout.split('\n')) {
       if (!line.trim()) continue;
       try {
         const event = JSON.parse(line) as {
           type?: string;
-          part?: { text?: string };
+          part?: OpenCodePart;
         };
         if (event.type === 'text' && event.part?.text) {
           finalText += (finalText ? '\n' : '') + event.part.text;
+        }
+        if (event.type === 'step_finish' && event.part) {
+          usage = usageFromPart(event.part) ?? usage;
         }
       } catch {
         // 非 JSON 行忽略（--format json 模式下 stdout 应为纯事件流）
@@ -200,6 +241,7 @@ export class OpenCodeAdapter implements CliAdapter {
         artifacts,
         error: `opencode CLI exited with code ${exitCode}`,
         output: { stdout, exitCode },
+        usage,
       };
     }
 
@@ -221,6 +263,7 @@ export class OpenCodeAdapter implements CliAdapter {
       status: 'completed',
       artifacts,
       output: { stdout },
+      usage,
     };
   }
 }

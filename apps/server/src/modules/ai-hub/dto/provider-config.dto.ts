@@ -46,7 +46,8 @@ export enum AISdkType {
  */
 export class CreateProviderConfigDto {
   @ApiProperty({
-    description: 'Provider 类型',
+    description:
+      'Provider 类型（同类型可建多个槽位，如双网关；类型+显示名组合唯一）',
     enum: AIProviderType,
     example: 'openai',
   })
@@ -54,7 +55,7 @@ export class CreateProviderConfigDto {
   provider: AIProviderType;
 
   @ApiProperty({
-    description: '显示名称',
+    description: '槽位显示名称（同类型内唯一）',
     example: 'OpenAI',
   })
   @IsString()
@@ -101,7 +102,7 @@ export class CreateProviderConfigDto {
  */
 export class UpdateProviderConfigDto {
   @ApiPropertyOptional({
-    description: '显示名称',
+    description: '显示名称（同类型内唯一，与同类型其他槽位重名时返回 400）',
     example: 'OpenAI Production',
   })
   @IsString()

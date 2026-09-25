@@ -23,7 +23,7 @@ function buildPrisma(overrides: Record<string, Mock> = {}) {
     'member.findMany': vi.fn().mockResolvedValue([aiMember()]),
     'memberProjectBinding.findMany': vi.fn().mockResolvedValue([]),
     'execution.findMany': vi.fn().mockResolvedValue([]),
-    'execution.groupBy': vi.fn().mockResolvedValue([]),
+    'aIUsageLog.findMany': vi.fn().mockResolvedValue([]),
     'approvalRequest.findMany': vi.fn().mockResolvedValue([]),
     'decisionProposal.groupBy': vi.fn().mockResolvedValue([]),
     'acceptance.findMany': vi.fn().mockResolvedValue([]),
@@ -153,11 +153,24 @@ describe('OfficeService', () => {
           issue: null,
         })),
       ),
-      'execution.groupBy': vi
-        .fn()
-        .mockResolvedValue([
-          { subjectId: 'ai1', _sum: { totalTokens: 5000, totalCost: 6 } },
-        ]),
+      'aIUsageLog.findMany': vi.fn().mockResolvedValue([
+        {
+          totalTokens: 3000,
+          estimatedCost: 4,
+          executionRun: { subjectId: 'ai1' },
+        },
+        {
+          totalTokens: 2000,
+          estimatedCost: 2,
+          executionRun: { subjectId: 'ai1' },
+        },
+        // 其他主体的用量不得串账
+        {
+          totalTokens: 999,
+          estimatedCost: 9,
+          executionRun: { subjectId: 'other' },
+        },
+      ]),
       'project.findUnique': vi.fn().mockResolvedValue({
         config: { aiBudget: { weeklyCostUsd: 10 } },
       }),
@@ -178,16 +191,70 @@ describe('OfficeService', () => {
     expect(summary.projectId).toBe('p1');
   });
 
+  it('周用量取自 AIUsageLog 真相源：失败执行用量也计入', async () => {
+    const { prisma, base } = buildPrisma({
+      'execution.findMany': vi.fn().mockResolvedValue([]),
+      'aIUsageLog.findMany': vi.fn().mockResolvedValue([
+        {
+          totalTokens: 4200,
+          estimatedCost: 1.5,
+          executionRun: { subjectId: 'ai1' },
+        },
+      ]),
+    });
+    const summary = await buildService(prisma).getSummary();
+    expect(summary.colleagues[0].capacity.weeklyTokens).toBe(4200);
+    expect(summary.colleagues[0].capacity.weeklyCostUsd).toBe(1.5);
+    // 归因过滤：按 executionRun.subjectId 关联本周日志
+    expect(base['aIUsageLog.findMany']).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          executionRun: { subjectId: { in: ['ai1'] } },
+        }),
+      }),
+    );
+  });
+
+  it('blocked 在途执行归 needYou，与执行记录页「已阻塞」同指一件事', async () => {
+    const { prisma } = buildPrisma({
+      'execution.findMany': vi.fn().mockResolvedValue([
+        {
+          id: 'run-blocked',
+          goal: '修复发布流水线',
+          status: 'blocked',
+          subjectId: 'ai1',
+          startedAt: null,
+          createdAt: new Date(),
+          issue: { id: 't9', title: '发布流水线' },
+        },
+      ]),
+    });
+    const summary = await buildService(prisma).getSummary();
+    const card = summary.colleagues[0];
+    expect(card.status).toBe('needYou');
+    // blocked 执行仍算在途负载（占据单活跃名额）
+    expect(card.capacity.activeRuns).toBe(1);
+    // 当前执行如实透传 blocked run
+    expect(card.currentRun).toMatchObject({
+      id: 'run-blocked',
+      status: 'blocked',
+    });
+    expect(summary.totals.needYou).toBe(1);
+    expect(summary.totals.working).toBe(0);
+  });
+
   it('预算超 100% 封顶并判 saturated', async () => {
     const { prisma } = buildPrisma({
       'memberProjectBinding.findMany': vi
         .fn()
         .mockResolvedValue([{ memberId: 'ai1' }]),
-      'execution.groupBy': vi
-        .fn()
-        .mockResolvedValue([
-          { subjectId: 'ai1', _sum: { totalTokens: 0, totalCost: 33 } },
-        ]),
+      'aIUsageLog.findMany': vi.fn().mockResolvedValue([
+        {
+          totalTokens: 0,
+          estimatedCost: 33,
+          executionRun: { subjectId: 'ai1' },
+        },
+      ]),
       'project.findUnique': vi.fn().mockResolvedValue({
         config: { aiBudget: { weeklyCostUsd: 10 } },
       }),

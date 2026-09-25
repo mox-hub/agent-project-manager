@@ -108,7 +108,7 @@ export function BatchUpdateIssuesDialog({
         const firstError =
           failures[0]?.result.reason instanceof Error
             ? failures[0].result.reason.message
-            : String(failures[0]?.result.reason ?? '未知错误');
+            : String(failures[0]?.result.reason ?? t('task.batchUpdate.unknownError', '未知错误'));
         const detail = failures
           .slice(0, 3)
           .map((entry) => `「${labelOf(entry.issue)}」${firstError}`)

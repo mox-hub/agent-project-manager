@@ -9,6 +9,8 @@ vi.mock('react-i18next', () => ({
     t: (key: string, opts?: { count?: number }) =>
       opts && typeof opts.count === 'number' ? `${key}:${opts.count}` : key,
   }),
+  // run-details-format 依赖 '@/i18n'（截断后缀 i18n.t），真实 i18n 初始化需要该插件桩
+  initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
 const mockState = vi.hoisted(() => ({

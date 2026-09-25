@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, MaxLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateDocumentDto {
@@ -33,7 +33,7 @@ export class CreateDocumentDto {
     ],
     default: 'custom',
   })
-  @IsEnum([
+  @IsIn([
     'requirement',
     'analysis',
     'design',

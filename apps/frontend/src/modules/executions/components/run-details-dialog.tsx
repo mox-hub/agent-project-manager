@@ -54,6 +54,8 @@ const STATUS_META: Record<string, { tone: PillTone; i18n: string }> = {
   failed: { tone: 'danger', i18n: 'failed' },
   blocked: { tone: 'danger', i18n: 'blocked' },
   superseded: { tone: 'default', i18n: 'superseded' },
+  approved: { tone: 'success', i18n: 'approved' },
+  rejected: { tone: 'danger', i18n: 'rejected' },
 };
 
 const TRIGGER_I18N: Record<TriggerSource, string> = {

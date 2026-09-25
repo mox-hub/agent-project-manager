@@ -14,6 +14,7 @@ import {
   type DecisionKindValue,
 } from './dto/decision.dto';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 @ApiTags('Decisions')
 @ApiBearerAuth('JWT-auth')
@@ -36,12 +37,15 @@ export class DecisionController {
   @ApiQuery({ name: 'offset', required: false, description: '默认 0' })
   @ApiStandardErrors()
   async listPending(
+    @CurrentUser() user: { id: string },
     @Query('projectId') projectId?: string,
     @Query('kind') kind?: DecisionKindValue,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
     return this.decisionService.listPending({
+      // R3 可见性口径：决策卡仅项目成员可见
+      userId: user?.id,
       projectId: projectId || undefined,
       kind: kind || undefined,
       limit: limit
@@ -60,7 +64,13 @@ export class DecisionController {
   })
   @ApiQuery({ name: 'projectId', required: false, description: '按项目过滤' })
   @ApiStandardErrors()
-  async summary(@Query('projectId') projectId?: string) {
-    return this.decisionService.summary(projectId || undefined);
+  async summary(
+    @CurrentUser() user: { id: string },
+    @Query('projectId') projectId?: string,
+  ) {
+    return this.decisionService.summary({
+      userId: user?.id,
+      projectId: projectId || undefined,
+    });
   }
 }

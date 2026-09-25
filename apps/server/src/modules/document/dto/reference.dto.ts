@@ -2,9 +2,9 @@
 import {
   IsString,
   IsOptional,
-  IsEnum,
   IsArray,
   ValidateNested,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -14,7 +14,7 @@ export class CreateReferenceDto {
     description: '引用来源类型',
     enum: ['ai_conversation', 'task', 'project'],
   })
-  @IsEnum(['ai_conversation', 'task', 'project'])
+  @IsIn(['ai_conversation', 'task', 'project'])
   sourceType: 'ai_conversation' | 'task' | 'project';
 
   @ApiProperty({ description: '来源实体 ID' })

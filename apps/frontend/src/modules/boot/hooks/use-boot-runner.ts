@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { bootChecks, buildBootContext } from '../api/boot-checks';
 import { formatBootLog } from '../lib/log-formatter';
 import type {
@@ -53,6 +54,7 @@ function captureErrorContext(stepId: string, stepTitle: string, error: unknown):
 }
 
 export function useBootRunner(): BootRunnerApi {
+  const { t } = useTranslation();
   const environment = useMemo<BootEnvironment>(() => readEnvironment(), []);
 
   const [state, setState] = useState<BootRunnerState>(() => ({
@@ -96,7 +98,10 @@ export function useBootRunner(): BootRunnerApi {
 
       const ctx = buildBootContext(new AbortController().signal);
       try {
-        if (check.skipIf?.(ctx)) {
+        const skipResult = check.skipIf?.(ctx);
+        if (skipResult) {
+          // 诚实化：按跳过原因如实呈现（桌面端专用 / 未登录），不笼统说「无需执行」
+          const reason = typeof skipResult === 'string' ? skipResult : 'default';
           setState((prev) => ({
             ...prev,
             steps: prev.steps.map((step) =>
@@ -104,7 +109,7 @@ export function useBootRunner(): BootRunnerApi {
                 ? {
                     ...step,
                     status: 'skipped',
-                    detail: '当前环境无需执行',
+                    detail: t(`boot.skip.${reason}`, { defaultValue: t('boot.skip.default') }),
                     finishedAt: Date.now(),
                   }
                 : step,
@@ -148,7 +153,7 @@ export function useBootRunner(): BootRunnerApi {
         }));
       }
     },
-    [],
+    [t],
   );
 
   const advanceProgress = useCallback((current: number, total: number) => {

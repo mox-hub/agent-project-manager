@@ -22,6 +22,7 @@ vi.mock('react-i18next', () => ({
         'release.status.released': '已发布',
         'release.gate.title': '发布门禁',
         'release.gate.notRun': '尚未提交门禁',
+        'release.gate.skippedEmptyScope': '范围内无内容，跳过',
         'release.action.title': '审批与发布',
         'release.detail.logTitle': '发布执行日志',
         'release.detail.loading': '发版详情',
@@ -40,6 +41,8 @@ vi.mock('react-i18next', () => ({
       return base.replace('{{base}}', opts?.base ?? '');
     },
   }),
+  // 真实 src/i18n 入口会 .use(initReactI18next)，mock 缺该导出会在模块加载期炸
+  initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
 vi.mock('@/infrastructure/event-client', () => ({
@@ -198,6 +201,63 @@ describe('ReleaseDetailPage', () => {
     expect(screen.getByText('发布执行日志')).toBeTruthy();
     expect(screen.getByText('github-release')).toBeTruthy();
     expect(screen.getByText('说明文本')).toBeTruthy();
+  });
+
+  it('空范围跳过的检查项统一中性渲染（ci/audit 不再红、acceptance 不再绿）', () => {
+    detailState.release = {
+      id: 'r-1',
+      projectId: 'p-1',
+      version: '1.2.0',
+      status: 'gated',
+      tagPushed: false,
+      githubReleased: false,
+      gateResult: {
+        passed: false,
+        ranAt: '2026-09-12T00:00:00Z',
+        checks: [
+          {
+            key: 'scope',
+            label: '发布范围',
+            passed: false,
+            detail: '发布范围为空——请先圈定纳入本版本的工单',
+          },
+          {
+            key: 'acceptance',
+            label: '验收全绿',
+            passed: true,
+            detail: '范围内 0 条工单验收全部通过或豁免',
+          },
+          { key: 'ci', label: 'CI 证据', passed: false, detail: '范围为空，跳过' },
+          { key: 'contract', label: '契约绑定', passed: true, detail: '绑定无失联' },
+          { key: 'audit', label: '完整性审计', passed: false, detail: '范围为空，跳过' },
+          {
+            key: 'changelog',
+            label: 'CHANGELOG 一致性',
+            passed: true,
+            detail: '项目无工作区，发布时将诚实跳过导出',
+          },
+        ],
+      },
+    };
+    renderWithRouter(<ReleaseDetailPage />, '/r-1');
+
+    // 统一跳过文案（acceptance/ci/audit 三项均替换为同一条）
+    expect(screen.getAllByText('范围内无内容，跳过')).toHaveLength(3);
+    // 真实失败仍红（scope）、真实通过仍绿（contract）
+    const rowOf = (label: string) =>
+      screen.getByText(label).closest('li') as HTMLElement;
+    expect(rowOf('发布范围').className).not.toContain('text-content-text-muted');
+    expect(rowOf('契约绑定').className).not.toContain('text-content-text-muted');
+    // 跳过态三项行级中性（灰），图标为虚线圈而非红 X / 绿勾
+    for (const label of ['验收全绿', 'CI 证据', '完整性审计', 'CHANGELOG 一致性']) {
+      const row = rowOf(label);
+      expect(row.className).toContain('text-content-text-muted');
+      expect(row.querySelector('.text-accent-red')).toBeNull();
+      expect(row.querySelector('.text-accent-green')).toBeNull();
+      expect(row.innerHTML).toContain('circle-dashed');
+    }
+    // 无工作区跳过保留服务端自述 detail
+    expect(screen.getByText('项目无工作区，发布时将诚实跳过导出')).toBeTruthy();
   });
 
   it('gated 态渲染审批动作按钮', () => {

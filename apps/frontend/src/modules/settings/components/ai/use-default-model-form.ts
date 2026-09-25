@@ -31,10 +31,15 @@ export function useDefaultModelForm(providers: AIProviderConfig[]) {
   /** 展示值：未保存修改时跟随服务端 */
   const effective = draft ?? saved;
 
-  const providerOptions = useMemo(
-    () => providers.filter((p) => p.enabled),
-    [providers],
-  );
+  /** 供应商选项：按类型去重（同类型多槽位共享模型清单，内置模型只存类型+model） */
+  const providerOptions = useMemo(() => {
+    const seen = new Set<string>();
+    return providers.filter((p) => {
+      if (!p.enabled || seen.has(p.provider)) return false;
+      seen.add(p.provider);
+      return true;
+    });
+  }, [providers]);
 
   /** 模型选项：后端 availableModels 优先，空则内置清单兜底 */
   const modelOptionsFor = (providerKey: string): string[] => {

@@ -5,6 +5,7 @@ import { LoggerService } from './core/logger/logger.service';
 import { SwaggerModule } from '@nestjs/swagger';
 import { buildOpenApiDocument, swaggerUiOptions } from './openapi.document';
 import { RateLimitException } from './common';
+import { registerUnknownRouteFilter } from './common/filters/unknown-route.filter';
 import helmet from 'helmet';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { isAllowedOrigin, parseAllowedOriginsFromEnv } from './common';
@@ -155,6 +156,11 @@ async function bootstrap() {
 
   const port = configService.port;
   await app.listen(port);
+
+  // Nest 的路由级 404 只挂在 /_api 前缀下；前缀外未匹配路径会掉进
+  // Express 内置 404（HTML）。listen 完成即路由已注册，此刻把统一
+  // 信封兜底追加到栈尾，只接住前面全部放行的请求。
+  registerUnknownRouteFilter(app);
 
   // 桌面壳 utility 承载的优雅关闭桥（ADR-015 P2）：壳 stop 流程先经 parentPort
   // 发 apm:shutdown，Nest shutdown hooks 收尾（HTTP 连接池/Prisma 断开）后退出；

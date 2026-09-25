@@ -22,6 +22,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { AcceptanceService } from './acceptance.service';
 import { AcceptanceCriteriaService } from './acceptance-criteria.service';
 import { CompletenessChecklistService } from './completeness-checklist.service';
@@ -66,11 +67,8 @@ export class AcceptanceController {
   })
   @ApiResponse({ status: 400, description: '参数错误' })
   @ApiStandardErrors()
-  async create(
-    @Body() dto: CreateAcceptanceDto,
-    @Query('userId') userId?: string,
-  ) {
-    return this.acceptanceService.create(dto, userId);
+  async create(@Body() dto: CreateAcceptanceDto, @CurrentUser() user: any) {
+    return this.acceptanceService.create(dto, user?.id);
   }
 
   @Get()
@@ -209,9 +207,9 @@ export class AcceptanceController {
       severity?: string;
       order?: number;
     },
-    @Query('userId') userId?: string,
+    @CurrentUser() user: any,
   ) {
-    return this.criteriaService.update(criteriaId, data, userId);
+    return this.criteriaService.update(criteriaId, data, user?.id);
   }
 
   @Post('criteria/:criteriaId/evidence')
@@ -231,15 +229,12 @@ export class AcceptanceController {
       storageRef?: string;
       metadata?: Record<string, unknown>;
     },
-    @Query('userId') userId?: string,
+    @CurrentUser() user: any,
   ) {
     if (!body.evidenceType) {
       throw new BadRequestException('evidenceType is required');
     }
-    if (!userId) {
-      throw new BadRequestException('userId is required');
-    }
-    return this.criteriaService.addEvidence(criteriaId, body, userId);
+    return this.criteriaService.addEvidence(criteriaId, body, user?.id);
   }
 
   @Delete('criteria/:criteriaId')
@@ -340,12 +335,9 @@ export class AcceptanceController {
   @ApiStandardErrors()
   async createChecklist(
     @Body() dto: CreateChecklistDto,
-    @Query('userId') userId?: string,
+    @CurrentUser() user: any,
   ) {
-    if (!userId) {
-      throw new BadRequestException('userId is required');
-    }
-    return this.checklistService.createTeamChecklist(dto, userId);
+    return this.checklistService.createTeamChecklist(dto, user.id);
   }
 
   @Patch('checklists/:id')
@@ -359,12 +351,9 @@ export class AcceptanceController {
   async updateChecklist(
     @Param('id') id: string,
     @Body() dto: UpdateChecklistDto,
-    @Query('userId') userId?: string,
+    @CurrentUser() user: any,
   ) {
-    if (!userId) {
-      throw new BadRequestException('userId is required');
-    }
-    return this.checklistService.updateTeamChecklist(id, dto, userId);
+    return this.checklistService.updateTeamChecklist(id, dto, user.id);
   }
 
   @Delete('checklists/:id')
@@ -373,14 +362,8 @@ export class AcceptanceController {
   @ApiOkResponse({ description: '删除成功' })
   @ApiResponse({ status: 400, description: '系统预置清单或非所有者' })
   @ApiStandardErrors()
-  async removeChecklist(
-    @Param('id') id: string,
-    @Query('userId') userId?: string,
-  ) {
-    if (!userId) {
-      throw new BadRequestException('userId is required');
-    }
-    await this.checklistService.removeTeamChecklist(id, userId);
+  async removeChecklist(@Param('id') id: string, @CurrentUser() user: any) {
+    await this.checklistService.removeTeamChecklist(id, user.id);
   }
 
   @Post('checklists/:id/apply')
@@ -480,9 +463,9 @@ export class AcceptanceController {
   async acceptCompletion(
     @Param('id') id: string,
     @Body() body: { evidence?: Record<string, unknown> },
-    @Query('userId') userId?: string,
+    @CurrentUser() user: any,
   ) {
-    return this.acceptanceService.acceptCompletion(id, body.evidence, userId);
+    return this.acceptanceService.acceptCompletion(id, body.evidence, user?.id);
   }
 
   @Post(':id/reject-completion')
@@ -496,7 +479,7 @@ export class AcceptanceController {
   async rejectCompletion(
     @Param('id') id: string,
     @Body() body: { reason: string },
-    @Query('userId') userId?: string,
+    @CurrentUser() user: any,
   ) {
     if (!body.reason || !body.reason.trim()) {
       throw new BadRequestException('reject reason is required');
@@ -504,7 +487,7 @@ export class AcceptanceController {
     return this.acceptanceService.rejectCompletion(
       id,
       body.reason.trim(),
-      userId,
+      user?.id,
     );
   }
 
@@ -519,7 +502,7 @@ export class AcceptanceController {
   async waiveCompletion(
     @Param('id') id: string,
     @Body() body: { reason: string },
-    @Query('userId') userId?: string,
+    @CurrentUser() user: any,
   ) {
     if (!body.reason || !body.reason.trim()) {
       throw new BadRequestException('waive reason is required');
@@ -527,7 +510,7 @@ export class AcceptanceController {
     return this.acceptanceService.waiveCompletion(
       id,
       body.reason.trim(),
-      userId,
+      user?.id,
     );
   }
 
