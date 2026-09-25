@@ -255,6 +255,7 @@
     "teams": "Teams",
     "office": "Office",
     "aiSurface": "AI Surface",
+    "aiSurfaceReplay": "AI Replay",
     "workflow": "Workflows",
     "delivery": "Delivery",
     "releases": "Releases"
@@ -4744,6 +4745,10 @@
   "document": {
     "title": "Documents",
     "description": "Manage project documents, API specifications and technical guides",
+    "tab": {
+      "new": "New Document",
+      "edit": "Edit Document"
+    },
     "newDocument": "New Document",
     "totalDocuments": "Total Documents",
     "published": "Published",

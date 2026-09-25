@@ -255,6 +255,7 @@
     "teams": "团队",
     "office": "办公室",
     "aiSurface": "AI 表面",
+    "aiSurfaceReplay": "AI 回放",
     "workflow": "工作流",
     "delivery": "交付视图",
     "releases": "发版交付"
@@ -4744,6 +4745,10 @@
   "document": {
     "title": "文档管理",
     "description": "管理项目文档、API规范和技术指南",
+    "tab": {
+      "new": "新建文档",
+      "edit": "编辑文档"
+    },
     "newDocument": "新建文档",
     "totalDocuments": "总文档数",
     "published": "已发布",

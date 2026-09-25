@@ -21,6 +21,10 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **标签页注册 100% 覆盖（夜航 0.7.4 · 其一）**：tabs-registry 补齐 ShellLayout 内全部漏注册页面——executions/workflows(+详情)/releases(+详情)/office/intake/members/teams/delivery/design-system/ai-surface/replay 既往打开不建标签页，现全量进 tab 体系；新增 SUFFIX_RULES 结尾段规则层：项目子页签（任务/里程碑/档案/项目步骤/团队/设置）获得独立默认标题（对齐 project-detail-tabs 分段控件口径，不再与详情页共用「项目」）、文档新建/编辑态独立标题、项目初始化引导页按路由注释承诺以 `hidden` 语义不进 tabbar（tabs-context 支持 hidden 跳过）；详情页动态前缀（executions/workflows/releases）补前缀规则；配套覆盖率守卫测试（路由清单全覆盖断言 + 豁免须带理由 + 子页标题/hidden 语义断言） | CAP-A-08 | tabs-registry.test.ts 8 用例绿；frontend tsc -b 零错；`/app/search`、`/app/decisions` 两豁免注记对应 v0.7.4 搜索悬浮化与决策收件箱合并（另两条目） | tabs-registry 头注补 100% 覆盖契约 |
+
 ## [0.7.3] - 2026-09-25
 
 ### v0.7.3 发版总览——体验 P2 修复批 + 全仓剪枝专项 + 桌面紧凑窗口 + 认证面定版 + 全分支合流

@@ -64,9 +64,9 @@ export function TabsProvider({ children }: { children: ReactNode }) {
       // 切换到已存在的 tab
       setActiveTabId(existingTab.id);
     } else {
-      // 从注册表解析显示配置（集中管理）
+      // 从注册表解析显示配置（集中管理）；hidden 命中（一次性引导页）不建标签页
       const config = matchTabRoute(currentPath);
-      if (config) {
+      if (config && !config.hidden) {
         const pinned = config.pinnedByDefault ?? false;
         const newTab: Tab = {
           id: generateTabId(),
