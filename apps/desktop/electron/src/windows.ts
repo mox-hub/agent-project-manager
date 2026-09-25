@@ -17,9 +17,12 @@ import { state } from './state';
 
 export const FRONTEND_DEV_PORT = 5173;
 
-/** 认证窗尺寸：包住认证卡片（max-w-4xl 大卡 + 欢迎页双栏 ≥lg）并留呼吸边距 */
-export const AUTH_WINDOW_WIDTH = 1040;
-export const AUTH_WINDOW_HEIGHT = 700;
+/**
+ * 认证窗尺寸：贴住翻转认证卡（max-w-4xl=896 + p-6 呼吸边距 48）；
+ * 高 = 卡 min-h-130(520) + 垂直边距与 boot 页余量。
+ */
+export const AUTH_WINDOW_WIDTH = 944;
+export const AUTH_WINDOW_HEIGHT = 620;
 
 export function portInUse(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -151,13 +154,78 @@ export function createAuthWindow(): BrowserWindow {
 }
 
 /**
+ * 主窗工厂（main.ts 注册）：认证窗启动的进程（壳侧无会话镜像）主窗从未创建，
+ * 登录成功切回时必须现建主窗——否则销毁认证窗后所有窗口归零，window-all-closed
+ * → app.quit() 会把整个应用带退（实机「启动即闪退」根因）。
+ */
+let mainWindowFactory: (() => BrowserWindow) | null = null;
+
+export function registerMainWindowFactory(factory: () => BrowserWindow): void {
+  mainWindowFactory = factory;
+}
+
+/**
+ * 退出紧凑态防抖：认证面之间的路由切换（boot→login）会先卸载旧页发 false、
+ * 再挂载新页发 true——立即执行会切回大窗再重载认证窗（闪窗+初始化重跑）。
+ * false 延迟执行，期间 true 到来即取消。
+ */
+const COMPACT_EXIT_DEBOUNCE_MS = 250;
+let pendingCompactExit: NodeJS.Timeout | null = null;
+
+function exitCompactSurface(): void {
+  pendingCompactExit = null;
+  if (state.isQuitting) {
+    return;
+  }
+  const auth = state.authWindow;
+  if (!auth) {
+    return;
+  }
+  state.authWindow = null;
+  let main = BrowserWindow.getAllWindows().find((w) => w !== auth && !w.isDestroyed());
+  if (!main && mainWindowFactory) {
+    main = mainWindowFactory();
+    logger.info('主窗不存在（认证窗启动进程），已现建主窗');
+  }
+  void (async () => {
+    try {
+      if (main) {
+        const target = await resolveFrontendTarget();
+        await main.loadURL(target);
+        main.show();
+        main.focus();
+        logger.info(`已回到主窗: ${target}`);
+      }
+    } finally {
+      // loadURL 失败也必须销毁认证窗：state.authWindow 已置空，留着即成不可达的隐藏窗
+      auth.destroy();
+    }
+  })();
+}
+
+/**
  * 认证面进出切窗（前端 set_compact_mode 命令的实现体）。
- * 进入：开认证窗加载前端并显示，主窗隐藏；退出：主窗重载前端（登录态已更新）
- * 并显示，认证窗销毁。两端幂等（重复进入/退出直接返回）。
+ * 进入：隐藏主窗（登录前大窗不得可见），开认证窗加载前端并显示；
+ * 退出：主窗重载前端（登录态已更新）并显示（无主窗则经工厂现建），认证窗销毁。
+ * 两端幂等（重复进入/退出直接返回）。
  */
 export async function switchAuthSurface(enabled: boolean): Promise<void> {
   if (enabled) {
-    if (state.authWindow && !state.authWindow.isDestroyed()) {
+    if (pendingCompactExit) {
+      clearTimeout(pendingCompactExit);
+      pendingCompactExit = null;
+    }
+    const existing =
+      state.authWindow && !state.authWindow.isDestroyed() ? state.authWindow : null;
+    // 进入认证面：主窗隐藏让位小窗。壳侧 token 镜像可能早于前端会话失效
+    // （desktop-state.json 有 access_token 但前端已 401 跳登录）——主窗以主窗
+    // 启动却停在认证面，不隐藏则大窗残留在登录页后面（实机「登录前大窗出现」根因）
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (win !== existing) {
+        win.hide();
+      }
+    }
+    if (existing) {
       return;
     }
     const auth = createAuthWindow();
@@ -167,18 +235,9 @@ export async function switchAuthSurface(enabled: boolean): Promise<void> {
     logger.info(`认证窗已显示（紧凑模式）: ${target}`);
     return;
   }
-  const auth = state.authWindow;
-  if (!auth) {
+  // 退出：防抖执行（认证面间路由切换的 false→true 连发只算一次，且被 true 取消）
+  if (pendingCompactExit) {
     return;
   }
-  state.authWindow = null;
-  const main = BrowserWindow.getAllWindows().find((w) => w !== auth && !w.isDestroyed());
-  if (main) {
-    const target = await resolveFrontendTarget();
-    await main.loadURL(target);
-    main.show();
-    main.focus();
-    logger.info(`已回到主窗: ${target}`);
-  }
-  auth.destroy();
+  pendingCompactExit = setTimeout(() => exitCompactSurface(), COMPACT_EXIT_DEBOUNCE_MS);
 }

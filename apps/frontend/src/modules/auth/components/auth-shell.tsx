@@ -24,10 +24,13 @@ export function AuthShell({ header, children, footer, visual, className }: AuthS
   // 桌面壳：认证面期间主窗口收缩为紧凑小窗并隐藏标题栏（web 端 no-op）
   useDesktopCompactWindow();
   return (
-    <div className="flex min-h-screen bg-background">
+    // 分栏显隐用容器查询而非视口断点（lg）：桌面认证窗 944px 需保持左文右图双栏
+    // （右栏身份工牌是欢迎页主体），视口 lg=1024 会把它打成单列；断点值 = 左栏
+    // 416+80 边距 + 右栏工牌 336+80 边距
+    <div className="@container flex min-h-screen bg-background">
       <div
         className={cn(
-          'flex w-full flex-col px-6 py-6 lg:w-104 lg:shrink-0 lg:px-10',
+          'flex w-full flex-col px-6 py-6 @min-[920px]:w-104 @min-[920px]:shrink-0 @min-[920px]:px-10',
           className,
         )}
       >
@@ -41,7 +44,7 @@ export function AuthShell({ header, children, footer, visual, className }: AuthS
         <div className="my-auto flex flex-col py-10">{children}</div>
         <div className="flex items-center justify-between gap-4">{footer}</div>
       </div>
-      <div className="hidden flex-1 p-4 pl-0 lg:block">
+      <div className="hidden flex-1 p-4 pl-0 @min-[920px]:block">
         <div className="bg-secondary relative h-full overflow-hidden rounded-2xl">
           {visual ?? <AuthVisual />}
         </div>

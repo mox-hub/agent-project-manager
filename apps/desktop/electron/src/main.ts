@@ -30,6 +30,7 @@ import { loadDesktopState, saveDesktopState } from './desktop-state';
 import {
   createAuthWindow,
   hardenWebContents,
+  registerMainWindowFactory,
   resolveFrontendTarget,
 } from './windows';
 
@@ -139,21 +140,13 @@ function shouldAutoOpenDevTools(): boolean {
  * 主窗（正常形态，承载工作台）+ 首启无会话时的认证窗创建。
  * 认证面进出（/login·/register·/welcome）由 set_compact_mode 命令切窗（windows.ts）。
  */
-function createWindow(): void {
-  // 首启/未登录（壳侧无会话镜像）→ 前端必然落在认证面：直接以认证窗启动（品牌
-  // 启动屏也在小窗呈现），避免大窗→小窗闪变
-  const startCompact = !loadDesktopState(config.userDataDir).access_token;
-  if (startCompact) {
-    const auth = createAuthWindow();
-    auth.once('ready-to-show', () => auth.show());
-    auth.webContents.once('did-finish-load', () => {
-      bootScreenReady = true;
-      setBootStatus(bootStatus.message, bootStatus.detail);
-    });
-    void auth.loadURL(bootScreenUrl());
-    return;
-  }
-
+/**
+ * 主窗工厂：建窗 + 事件绑定（close→托盘保活 / ready-to-show / boot 屏状态 /
+ * closed 清理），不加载内容——启动路径由 createWindow 加载 boot 屏，切窗路径
+ * 由 switchAuthSurface 直接加载前端目标。赋值模块级 mainWindow 供
+ * activeWindow()/persistWindowBounds 消费。
+ */
+function createMainWindow(): BrowserWindow {
   const saved = loadDesktopState(config.userDataDir).window_bounds;
   const bounds =
     saved &&
@@ -165,7 +158,7 @@ function createWindow(): void {
     saved.height > 0
       ? saved
       : null;
-  mainWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     width: bounds?.width ?? 1440,
     height: bounds?.height ?? 900,
     x: bounds?.x,
@@ -181,29 +174,48 @@ function createWindow(): void {
       sandbox: true,
     },
   });
-  hardenWebContents(mainWindow, (win) => {
-    void win.loadURL(bootScreenUrl()).then(() => loadAppSurface());
+  hardenWebContents(win, (target) => {
+    void target.loadURL(bootScreenUrl()).then(() => loadAppSurface());
   });
   // 关闭语义（ADR-015）：托盘存在且偏好为常驻（默认）→ 隐藏窗口服务保活；否则真退出
-  mainWindow.on('close', (event) => {
+  win.on('close', (event) => {
     persistWindowBounds();
     const closeToTray = loadDesktopState(config.userDataDir).close_to_tray !== false;
     if (!state.isQuitting && closeToTray && hasTray()) {
       event.preventDefault();
-      mainWindow?.hide();
+      win.hide();
       logger.info('窗口已最小化到托盘（服务保活中）');
     }
   });
-  mainWindow.once('ready-to-show', () => mainWindow?.show());
-  mainWindow.webContents.once('did-finish-load', () => {
+  win.once('ready-to-show', () => win.show());
+  win.webContents.once('did-finish-load', () => {
     bootScreenReady = true;
     setBootStatus(bootStatus.message, bootStatus.detail);
   });
-  mainWindow.loadURL(bootScreenUrl());
-  mainWindow.on('closed', () => {
+  win.on('closed', () => {
     mainWindow = null;
     bootScreenReady = false;
   });
+  mainWindow = win;
+  return win;
+}
+
+function createWindow(): void {
+  // 首启/未登录（壳侧无会话镜像）→ 前端必然落在认证面：直接以认证窗启动（品牌
+  // 启动屏也在小窗呈现），避免大窗→小窗闪变
+  const startCompact = !loadDesktopState(config.userDataDir).access_token;
+  if (startCompact) {
+    const auth = createAuthWindow();
+    auth.once('ready-to-show', () => auth.show());
+    auth.webContents.once('did-finish-load', () => {
+      bootScreenReady = true;
+      setBootStatus(bootStatus.message, bootStatus.detail);
+    });
+    void auth.loadURL(bootScreenUrl());
+    return;
+  }
+
+  createMainWindow().loadURL(bootScreenUrl());
 }
 
 async function loadAppSurface(): Promise<void> {
@@ -365,6 +377,8 @@ function bootstrap(): void {
   });
   registerIpc();
   registerGlobalErrorHandlers();
+  // 切窗路径可能需要现建主窗（认证窗启动进程登录成功切回，见 windows.ts）
+  registerMainWindowFactory(createMainWindow);
   createWindow();
   void bootstrapServer();
 }
