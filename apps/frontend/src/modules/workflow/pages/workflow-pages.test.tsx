@@ -11,7 +11,7 @@ import { WorkflowDetailPage } from './workflow-detail-page';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, opts?: Record<string, string>) => {
+    t: (key: string, opts?: Record<string, unknown>) => {
       const translations: Record<string, string> = {
         'workflow.title': 'Workflows',
         'workflow.run': 'Run',
@@ -21,9 +21,12 @@ vi.mock('react-i18next', () => ({
         'workflow.approve': 'Approve & continue',
         'workflow.reject': 'Reject',
         'workflow.triggered': 'Run triggered',
+        'workflow.runPanel.stats.duration': '{{m}} 分 {{s}} 秒',
       };
       const base = translations[key] ?? key;
-      return opts?.name ? base.replace('{{name}}', opts.name) : base;
+      return opts
+        ? base.replace(/\{\{(\w+)\}\}/g, (_, k: string) => String(opts[k] ?? ''))
+        : base;
     },
   }),
 }));
@@ -145,7 +148,7 @@ describe('WorkflowDetailPage', () => {
         stepsState: {},
       },
     ];
-    // RunDetailPanel 拉取 run 详情
+    // RunPanel（主区）拉取 run 详情
     hooksState.runDetail = {
       id: 'run-1',
       workflowId: 'wf-1',
@@ -168,10 +171,81 @@ describe('WorkflowDetailPage', () => {
       expect(resumeLog.lastResume).toEqual({ resumeData: { approved: true, note: '' } });
     });
   });
+
+  it('v2 run 渲染阶段时间线：站名/药丸/计数/产物/统计（ZCode 卡形态复刻）', async () => {
+    hooksState.runs = [
+      {
+        id: 'run-v2',
+        workflowId: 'wf-1',
+        status: 'succeeded',
+        triggerType: 'manual',
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    hooksState.runDetail = {
+      id: 'run-v2',
+      workflowId: 'wf-1',
+      status: 'succeeded',
+      triggerType: 'manual',
+      engineVersion: 2,
+      startedAt: '2026-09-26T00:00:00.000Z',
+      finishedAt: '2026-09-26T00:04:45.000Z',
+      createdAt: new Date().toISOString(),
+      graphSummary: [
+        { id: 'prep', type: 'llm', title: '准备演示代码' },
+        {
+          id: 'review',
+          type: 'fan-out',
+          title: '逐个文件评审',
+          children: [
+            { id: 'rv-a', type: 'llm', title: '评审员 A' },
+            { id: 'rv-b', type: 'llm', title: '评审员 B' },
+          ],
+        },
+        { id: 'report', type: 'agent', title: '汇总报告' },
+      ],
+      nodeRuns: [
+        {
+          id: 'nr-1', runId: 'run-v2', nodeId: 'prep', nodeType: 'llm', attempt: 1,
+          status: 'succeeded', createdAt: '2026-09-26T00:00:00.000Z',
+        },
+        {
+          id: 'nr-2', runId: 'run-v2', nodeId: 'rv-a@i0', nodeType: 'llm', attempt: 1,
+          status: 'succeeded', createdAt: '2026-09-26T00:01:00.000Z',
+        },
+        {
+          id: 'nr-3', runId: 'run-v2', nodeId: 'rv-b@i1', nodeType: 'llm', attempt: 1,
+          status: 'succeeded', createdAt: '2026-09-26T00:01:00.000Z',
+        },
+        {
+          id: 'nr-4', runId: 'run-v2', nodeId: 'report', nodeType: 'agent', attempt: 1,
+          status: 'running', createdAt: '2026-09-26T00:02:00.000Z',
+        },
+      ],
+      output: { steps: { report: { documentId: 'doc-1', title: '演示报告' } } },
+    };
+
+    renderWithProviders(<WorkflowDetailPage />, ['/app/workflows/wf-1?runId=run-v2']);
+
+    // 种类词表头（v2 succeeded）
+    await waitFor(() => {
+      expect(screen.getByText('workflow.runPanel.kindSucceeded')).toBeTruthy();
+    });
+    // 站名与药丸（叶子站站头与药丸同名，用 getAllByText）
+    expect(screen.getAllByText('准备演示代码').length).toBeGreaterThan(0);
+    expect(screen.getByText('逐个文件评审')).toBeTruthy();
+    expect(screen.getByText('评审员 A')).toBeTruthy();
+    // fan-out 站计数徽标 2/2
+    expect(screen.getByText('2/2')).toBeTruthy();
+    // 文档回流产物行
+    expect(screen.getByText('演示报告')).toBeTruthy();
+    // 四格统计：时间 4 分 45 秒
+    expect(screen.getByText('4 分 45 秒')).toBeTruthy();
+  });
 });
 
 describe('WorkflowDetailPage v2（CAP-S-03）', () => {
-  it('v2 运行渲染节点执行账与取消按钮，恢复携带 nodeId', async () => {
+  it('v2 运行面板渲染阶段药丸与取消按钮，恢复携带 nodeId', async () => {
     hooksState.runs = [
       {
         id: 'run-2',
@@ -195,6 +269,11 @@ describe('WorkflowDetailPage v2（CAP-S-03）', () => {
         mode: 'inline',
         message: '请确认 {input.docTitle}',
       },
+      graphSummary: [
+        { id: 'make-doc', type: 'action', title: '生成文档' },
+        { id: 'dispatch-impl', type: 'agent', title: '派发实现' },
+        { id: 'review', type: 'human', title: '人工确认' },
+      ],
       nodeRuns: [
         { id: 'n1', runId: 'run-2', nodeId: 'make-doc', nodeType: 'action', attempt: 1, status: 'succeeded' },
         {
@@ -215,9 +294,10 @@ describe('WorkflowDetailPage v2（CAP-S-03）', () => {
 
     renderWithProviders(<WorkflowDetailPage />, ['/app/workflows/wf-1?runId=run-2']);
 
+    // 阶段药丸（graphSummary 静态 title；站头与药丸同名双渲染）
     await waitFor(() => {
-      expect(screen.getByText('make-doc')).toBeTruthy();
-      expect(screen.getByText('dispatch-impl')).toBeTruthy();
+      expect(screen.getAllByText('生成文档').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('派发实现').length).toBeGreaterThan(0);
     });
     // v2 引擎徽标 + 取消按钮
     expect(screen.getByText('workflow.engineV2')).toBeTruthy();

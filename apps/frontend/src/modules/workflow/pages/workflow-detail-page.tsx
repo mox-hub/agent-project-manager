@@ -1,42 +1,27 @@
 /**
- * Workflow 详情页（CAP-A-12）——SubPageToolbar 标准头 + 画布主区占满 + 右侧栏。
- * 非编辑：右栏 = 运行历史 + run 详情（suspended 确认卡批准/拒绝即 resume）。
- * 编辑：右栏 = 选中步骤属性面板，主区左侧浮出节点库（分类待选组件）。
+ * Workflow 详情页（CAP-A-12 / CAP-S-03 呈现层复刻）——SubPageToolbar 标准头
+ * + 主区两态 + 右侧栏。主区：选中 run 时渲染运行面板（ZCode 工作流卡形态：
+ * 种类词表头+阶段时间线+确认卡+产物+统计），未选中时为定义画布。
+ * 编辑：主区左侧浮出节点库（v1）或 JSON 源码模式（v2 节点树文法）。
  * 进度失效经 socket 推送 + suspended/running 时 5s 轮询兜底双通道。
  */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import {
-  Check,
-  CheckCircle2,
-  CircleDashed,
-  Clock,
-  PauseCircle,
-  Pencil,
-  Play,
-  UserCheck,
-  XCircle,
-} from 'lucide-react';
+import { Check, CircleDashed, Clock, Pencil, Play, XCircle, CheckCircle2, PauseCircle } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { RightSidebar } from '@/components/ui/right-sidebar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { StatusPill } from '@/components/ui/status-pill';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
-  useCancelWorkflow,
-  useResumeWorkflow,
   useUpdateWorkflow,
   useWorkflow,
   useWorkflowActions,
   useWorkflowEvents,
-  useWorkflowRun,
   useWorkflowRuns,
 } from '../hooks/use-workflows';
 import { WorkflowCanvas, type CanvasStep } from '../components/workflow-canvas';
@@ -45,10 +30,11 @@ import {
   type EditableStep,
 } from '../components/workflow-step-editor';
 import { WorkflowNodePalette } from '../components/workflow-node-palette';
+import { WorkflowRunPanel } from '../components/workflow-run-panel';
 import type { WorkflowRun } from '../api/workflow-api';
 
 const RUN_STATUS_META: Record<string, { icon: typeof Clock; tone: string; labelKey: string }> = {
-  running: { icon: CircleDashed, tone: 'text-accent-blue', labelKey: 'workflow.status.running' },
+  running: { icon: CircleDashed, tone: 'text-accent-yellow', labelKey: 'workflow.status.running' },
   succeeded: { icon: CheckCircle2, tone: 'text-accent-green', labelKey: 'workflow.status.succeeded' },
   failed: { icon: XCircle, tone: 'text-accent-red', labelKey: 'workflow.status.failed' },
   suspended: { icon: PauseCircle, tone: 'text-accent-yellow', labelKey: 'workflow.status.suspended' },
@@ -204,6 +190,12 @@ export function WorkflowDetailPage() {
     );
   };
 
+  const closeRun = () => {
+    setSelectedRunId(null);
+    searchParams.delete('runId');
+    setSearchParams(searchParams, { replace: true });
+  };
+
   return (
     <PageShell className="overflow-hidden" aiPage="workflow.detail">
       <SubPageToolbar
@@ -264,55 +256,61 @@ export function WorkflowDetailPage() {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 gap-0">
-          {/* 主区：描述行 + 画布（编辑模式左侧浮出节点库） */}
+          {/* 主区两态：选中 run → 运行面板；否则 → 描述 + 定义画布（编辑模式浮出节点库/JSON） */}
           <div className="flex min-w-0 flex-1 flex-col gap-2 px-4 pb-3">
-            <p className="line-clamp-1 text-xs text-muted-foreground">
-              {workflow.description || t('workflow.noDescription')}
-            </p>
-            <div className="flex min-h-0 flex-1 items-stretch gap-2">
-              {editing && !isV2Doc ? (
-                <WorkflowNodePalette
-                  actions={actions}
-                  onAdd={(type, actionId) =>
-                    insertAfter(
-                      selectedIndex,
-                      actionId
-                        ? { type: 'action', action: actionId }
-                        : { type },
-                    )
-                  }
-                  className="w-56 shrink-0 rounded-lg border border-border bg-card"
-                />
-              ) : null}
-              {editing && isV2Doc ? (
-                <div className="flex min-h-0 flex-1 flex-col gap-1.5">
-                  <p className="text-11 text-muted-foreground">
-                    {t('workflow.editor.jsonModeHint')}
-                  </p>
-                  <textarea
-                    value={jsonDraft}
-                    onChange={(e) => {
-                      setJsonDraft(e.target.value);
-                      setJsonError(null);
-                    }}
-                    spellCheck={false}
-                    className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-card p-3 font-mono text-xs leading-relaxed outline-none focus:border-primary/50"
-                    data-ai-component="workflow.detail.v2-json-editor"
-                  />
-                  {jsonError ? (
-                    <p className="text-xs text-destructive">{jsonError}</p>
+            {!editing && activeRunId ? (
+              <WorkflowRunPanel runId={activeRunId} onClose={closeRun} />
+            ) : (
+              <>
+                <p className="line-clamp-1 text-xs text-muted-foreground">
+                  {workflow.description || t('workflow.noDescription')}
+                </p>
+                <div className="flex min-h-0 flex-1 items-stretch gap-2">
+                  {editing && !isV2Doc ? (
+                    <WorkflowNodePalette
+                      actions={actions}
+                      onAdd={(type, actionId) =>
+                        insertAfter(
+                          selectedIndex,
+                          actionId
+                            ? { type: 'action', action: actionId }
+                            : { type },
+                        )
+                      }
+                      className="w-56 shrink-0 rounded-lg border border-border bg-card"
+                    />
                   ) : null}
+                  {editing && isV2Doc ? (
+                    <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+                      <p className="text-11 text-muted-foreground">
+                        {t('workflow.editor.jsonModeHint')}
+                      </p>
+                      <textarea
+                        value={jsonDraft}
+                        onChange={(e) => {
+                          setJsonDraft(e.target.value);
+                          setJsonError(null);
+                        }}
+                        spellCheck={false}
+                        className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-card p-3 font-mono text-xs leading-relaxed outline-none focus:border-primary/50"
+                        data-ai-component="workflow.detail.v2-json-editor"
+                      />
+                      {jsonError ? (
+                        <p className="text-xs text-destructive">{jsonError}</p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="min-w-0 flex-1">
+                      <WorkflowCanvas
+                        steps={canvasSteps}
+                        selectedId={selectedStepId}
+                        onStepClick={editing && !isV2Doc ? setSelectedStepId : undefined}
+                      />
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="min-w-0 flex-1">
-                  <WorkflowCanvas
-                    steps={canvasSteps}
-                    selectedId={selectedStepId}
-                    onStepClick={editing && !isV2Doc ? setSelectedStepId : undefined}
-                  />
-                </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
 
           {/* 右侧栏：非编辑=运行历史；编辑=选中步骤属性面板 */}
@@ -344,7 +342,12 @@ export function WorkflowDetailPage() {
                 activeRunId={activeRunId}
                 onSelect={(runId) => {
                   setSelectedRunId(runId);
-                  setSearchParams({ runId }, { replace: true });
+                  if (runId) {
+                    setSearchParams({ runId }, { replace: true });
+                  } else {
+                    searchParams.delete('runId');
+                    setSearchParams(searchParams, { replace: true });
+                  }
                 }}
               />
             )}
@@ -364,7 +367,8 @@ function RunsPanel({
   runsPage: { data: WorkflowRun[]; meta: { total: number } } | undefined;
   runsLoading: boolean;
   activeRunId: string | null;
-  onSelect: (runId: string) => void;
+  /** 点击 run：未选中则选中，已选中则取消（回定义视图） */
+  onSelect: (runId: string | null) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -383,12 +387,11 @@ function RunsPanel({
               key={run.id}
               run={run}
               active={run.id === activeRunId}
-              onClick={() => onSelect(run.id)}
+              onClick={() => onSelect(run.id === activeRunId ? null : run.id)}
             />
           ))
         )}
       </div>
-      {activeRunId ? <RunDetailPanel runId={activeRunId} /> : null}
     </div>
   );
 }
@@ -425,209 +428,5 @@ function RunRow({
         <Play className="size-3 shrink-0 text-content-text-muted" aria-hidden />
       ) : null}
     </button>
-  );
-}
-
-function NodeStatusIcon({ status }: { status: string }) {
-  const map: Record<string, { icon: typeof CheckCircle2; tone: string }> = {
-    succeeded: { icon: CheckCircle2, tone: 'text-accent-green' },
-    failed: { icon: XCircle, tone: 'text-accent-red' },
-    waiting: { icon: UserCheck, tone: 'text-accent-yellow' },
-    skipped: { icon: CircleDashed, tone: 'text-muted-foreground' },
-    running: { icon: CircleDashed, tone: 'text-accent-blue' },
-  };
-  const meta = map[status] ?? map.running;
-  const Icon = meta.icon;
-  return <Icon className={cn('size-3.5 shrink-0', meta.tone)} />;
-}
-
-const V2_NODE_TYPES = new Set([
-  'llm',
-  'human',
-  'condition',
-  'action',
-  'agent',
-  'fan-out',
-  'loop',
-  'wait',
-]);
-
-function RunDetailPanel({ runId }: { runId: string }) {
-  const { t } = useTranslation();
-  const { data: run, isLoading } = useWorkflowRun(runId);
-
-  const resume = useResumeWorkflow();
-  const cancel = useCancelWorkflow();
-  const [note, setNote] = useState('');
-
-  if (isLoading || !run) return <Skeleton className="h-32 rounded-lg" />;
-
-  const isV2Run = run.engineVersion === 2;
-  const waiting = run.waitingApproval;
-  const output = run.output as { error?: string } | null | undefined;
-  const cancellable = isV2Run && ['running', 'suspended'].includes(run.status);
-  const nodeRuns = run.nodeRuns ?? [];
-  const events = run.events ?? [];
-
-  return (
-    <Card className="shrink-0">
-      <CardContent className="space-y-3 p-3">
-        <div className="flex items-center justify-between">
-          <StatusPill tone="info">
-            <code className="text-11">{run.id.slice(0, 12)}…</code>
-          </StatusPill>
-          <span className="flex items-center gap-2 text-11 text-muted-foreground">
-            {isV2Run ? (
-              <Badge variant="secondary" className="text-10">
-                {t('workflow.engineV2')}
-              </Badge>
-            ) : null}
-            {t('workflow.triggerType')}: {run.triggerType}
-          </span>
-        </div>
-
-        {waiting ? (
-          <div className="space-y-2 rounded-md border border-accent-yellow/40 bg-accent-yellow/5 p-3">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-accent-yellow">
-              {/* 等待人工确认提示：图标与 human-confirm 节点同口径=UserCheck（裁决见 entity-icons.tsx） */}
-              <UserCheck className="size-3.5" />
-              {waiting.title || t('workflow.waitingApproval')}
-            </div>
-            <p className="whitespace-pre-wrap text-xs leading-relaxed">{waiting.message}</p>
-            <Input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder={t('workflow.notePlaceholder')}
-              className="h-7 text-xs"
-            />
-            <div className="flex justify-end gap-1.5">
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs"
-                disabled={resume.isPending}
-                onClick={() =>
-                  resume.mutate(
-                    {
-                      runId,
-                      data: {
-                        resumeData: { approved: false, note },
-                        ...(waiting.nodeId ? { nodeId: waiting.nodeId } : {}),
-                      },
-                    },
-                    { onSuccess: () => setNote('') },
-                  )
-                }
-              >
-                {t('workflow.reject')}
-              </Button>
-              <Button
-                size="sm"
-                className="h-7 text-xs"
-                disabled={resume.isPending}
-                onClick={() =>
-                  resume.mutate(
-                    {
-                      runId,
-                      data: {
-                        resumeData: { approved: true, note },
-                        ...(waiting.nodeId ? { nodeId: waiting.nodeId } : {}),
-                      },
-                    },
-                    { onSuccess: () => setNote('') },
-                  )
-                }
-              >
-                <CheckCircle2 className="mr-1 size-3" />
-                {t('workflow.approve')}
-              </Button>
-            </div>
-          </div>
-        ) : null}
-
-        {/* v2 journal 节点执行账：静态图 + 状态叠加（侧栏紧凑形态） */}
-        {isV2Run && nodeRuns.length > 0 ? (
-          <div className="space-y-1">
-            <h3 className="text-11 font-medium text-muted-foreground">
-              {t('workflow.nodeTimeline')}
-            </h3>
-            <ol className="space-y-1">
-              {nodeRuns.map((n) => (
-                <li
-                  key={n.id}
-                  className="flex items-start gap-2 rounded-md border border-border px-2 py-1.5"
-                >
-                  <NodeStatusIcon status={n.status} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <code className="truncate text-11 font-medium">{n.nodeId}</code>
-                      {V2_NODE_TYPES.has(n.nodeType) ? (
-                        <Badge variant="secondary" className="text-10">
-                          {n.nodeType}
-                        </Badge>
-                      ) : null}
-                      {n.attempt > 1 ? (
-                        <span className="text-10 text-muted-foreground">
-                          {t('workflow.nodeAttempt', { attempt: n.attempt })}
-                        </span>
-                      ) : null}
-                    </div>
-                    {n.executionRunId ? (
-                      <p className="truncate text-10 text-muted-foreground">
-                        {t('workflow.agentExecution')}: {n.executionRunId.slice(0, 12)}…
-                      </p>
-                    ) : null}
-                    {n.error?.message ? (
-                      <p className="text-10 text-destructive">{n.error.message}</p>
-                    ) : null}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        ) : null}
-
-        {cancellable ? (
-          <div className="flex justify-end">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs text-destructive"
-              disabled={cancel.isPending}
-              onClick={() => cancel.mutate(runId)}
-              data-ai-component="workflow.detail.cancel-run"
-            >
-              {t('workflow.cancelRun')}
-            </Button>
-          </div>
-        ) : null}
-
-        {isV2Run && events.length > 0 ? (
-          <details className="rounded-md border border-border px-2 py-1.5">
-            <summary className="cursor-pointer text-11 text-muted-foreground">
-              {t('workflow.runEvents')} ({events.length})
-            </summary>
-            <ol className="mt-1 space-y-0.5">
-              {events.map((e) => (
-                <li key={e.id} className="text-10 text-muted-foreground">
-                  <span className="mr-1 font-mono">#{e.seq}</span>
-                  {e.type}
-                </li>
-              ))}
-            </ol>
-          </details>
-        ) : null}
-
-        {output?.error ? (
-          <p className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">{output.error}</p>
-        ) : null}
-
-        {run.output && !output?.error ? (
-          <pre className="max-h-48 overflow-auto rounded-md bg-muted/50 p-2 text-11 leading-relaxed">
-            {JSON.stringify(run.output, null, 2)}
-          </pre>
-        ) : null}
-      </CardContent>
-    </Card>
   );
 }
