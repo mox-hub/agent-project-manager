@@ -144,18 +144,7 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     // 定义文法结构校验（编辑过的脏数据在此暴露）；摘要供前端列表/详情直读
     let stepsSummary: Array<Record<string, unknown>> = [];
     try {
-      if (isV2Definition(workflow.definition)) {
-        stepsSummary = summarizeV2Definition(
-          parseWorkflowDefinitionV2(workflow.definition),
-        ) as unknown as Array<Record<string, unknown>>;
-      } else {
-        const doc = parseWorkflowDefinition(workflow.definition);
-        stepsSummary = doc.steps.map((s) => ({
-          id: s.id,
-          type: s.type,
-          title: s.title,
-        }));
-      }
+      stepsSummary = this.summarizeByDocVersion(workflow.definition);
     } catch (err) {
       this.logger.warn(
         `Definition ${workflow.key} 文法校验失败：${err instanceof Error ? err.message : String(err)}`,
@@ -242,9 +231,9 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       id: updated.id,
       key: updated.key,
       version: updated.version,
-      stepsSummary: summarizeDefinition(
-        parseWorkflowDefinition(updated.definition),
-      ),
+      stepsSummary: this.summarizeByDocVersion(
+        updated.definition,
+      ) as unknown as Array<{ id: string; type: string; title?: string }>,
     };
   }
 
@@ -478,6 +467,20 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     parseWorkflowDefinition(raw);
+  }
+
+  /** 摘要投影按版本路由（v1 步骤清单 / v2 节点树摘要共用一个出口） */
+  private summarizeByDocVersion(raw: unknown): Array<Record<string, unknown>> {
+    if (isV2Definition(raw)) {
+      return summarizeV2Definition(
+        parseWorkflowDefinitionV2(raw),
+      ) as unknown as Array<Record<string, unknown>>;
+    }
+    return parseWorkflowDefinition(raw).steps.map((s) => ({
+      id: s.id,
+      type: s.type,
+      ...(s.title ? { title: s.title } : {}),
+    }));
   }
 
   /** v2 运行取消（v1 Mastra 基座无取消语义，仅 v2 提供） */

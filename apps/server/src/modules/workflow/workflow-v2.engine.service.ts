@@ -415,6 +415,15 @@ export class WorkflowV2EngineService implements OnModuleInit, OnModuleDestroy {
       return { kind: 'ok' };
     }
     if (prior?.status === 'skipped') return { kind: 'ok' };
+    if (prior?.status === 'failed') {
+      // v2.1 无自动重试：节点失败即终止重走（否则推进器事件会造成失败→重派发死循环）
+      const err = (prior.error ?? {}) as { message?: string };
+      return {
+        kind: 'failed',
+        message: err.message ?? '节点此前已失败',
+        classification: 'node',
+      };
+    }
     if (prior?.status === 'waiting') {
       // 挂起节点重走：agent 节点先核对执行项终态（推进器事件可能在重启窗口丢失）
       if (node.type === 'agent' && prior.executionRunId) {
