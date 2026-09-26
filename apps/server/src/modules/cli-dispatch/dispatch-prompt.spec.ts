@@ -27,27 +27,32 @@ describe('CliDispatchService buildPrompt（成员/团队注入）', () => {
     promptHint: '你是编码角色',
   };
 
-  it('基础组装：角色 + 任务 + 上下文', () => {
+  it('基础组装：执行者段（角色小节）+ 任务 + 上下文', () => {
     const prompt = (service as any).buildPrompt(task, { foo: 1 }, agentRole);
-    expect(prompt).toContain('## Your Role\n你是编码角色');
+    expect(prompt).toContain(
+      '## Your Role\n### Role Conventions (coder)\n你是编码角色',
+    );
     expect(prompt).toContain('# Task\n实现登录页');
     expect(prompt).toContain('## Context');
   });
 
-  it('注入成员个人提示词与思考强度', () => {
+  it('增强 C：执行者段合一段——角色小节 + 个人小节 + 思考强度同段呈现', () => {
     const prompt = (service as any).buildPrompt(task, null, agentRole, {
       memberName: 'Claude Coder',
       personalPrompt: '偏好简洁实现与充分测试',
       thinkingLevel: 'high',
       teamRules: [],
     });
-    expect(prompt).toContain('## Member Instructions (Claude Coder)');
-    expect(prompt).toContain('偏好简洁实现与充分测试');
-    expect(prompt).toContain('## Reasoning Effort');
-    expect(prompt).toContain('high');
+    expect(prompt).toContain('### Role Conventions (coder)\n你是编码角色');
+    expect(prompt).toContain(
+      '### Personal Instructions (Claude Coder)\n偏好简洁实现与充分测试',
+    );
+    expect(prompt).toContain('### Reasoning Effort\nhigh');
+    // 三小节同属一个 `## Your Role` 二级段（只出现一次）
+    expect(prompt.split('## Your Role').length - 1).toBe(1);
   });
 
-  it('注入团队规则（多团队去重拼接）', () => {
+  it('注入团队规则（多团队去重拼接，独立段）', () => {
     const prompt = (service as any).buildPrompt(task, null, agentRole, {
       memberName: 'A',
       personalPrompt: null,
@@ -62,12 +67,12 @@ describe('CliDispatchService buildPrompt（成员/团队注入）', () => {
   it('无成员上下文时保持原有格式', () => {
     const withCtx = (service as any).buildPrompt(task, null, agentRole, null);
     expect(withCtx).not.toContain('## Team Rules');
-    expect(withCtx).not.toContain('## Member Instructions');
-    expect(withCtx).not.toContain('## Reasoning Effort');
+    expect(withCtx).not.toContain('### Personal Instructions');
+    expect(withCtx).not.toContain('### Reasoning Effort');
   });
 });
 
-describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关）', () => {
+describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关，增强 C 段合并）', () => {
   const service = new CliDispatchService(
     undefined as never,
     undefined as never,
@@ -105,7 +110,7 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
     ...extra,
   });
 
-  it('全开：系统段/角色/团队/成员/项目/任务段全部注入', () => {
+  it('全开：系统段/执行者/团队/项目/任务段全部注入', () => {
     const prompt = (service as any).buildPrompt(
       task,
       { foo: 1 },
@@ -117,7 +122,7 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
     expect(prompt).toContain('# APM 协作基线');
     expect(prompt).toContain('## Your Role');
     expect(prompt).toContain('## Team Rules');
-    expect(prompt).toContain('## Member Instructions');
+    expect(prompt).toContain('### Personal Instructions');
     expect(prompt).toContain(
       '## Project Instructions\n技术栈约定：pnpm + NestJS。',
     );
@@ -142,29 +147,18 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
     expect(prompt).toContain('## Project Instructions');
   });
 
-  it('关 role / team / member：对应段逐一消失（思考强度随 member 开关）', () => {
-    const noRole = (service as any).buildPrompt(
+  it('关 executor：角色/个人/思考强度整段消失（合一段共用一个开关），团队规则不受影响', () => {
+    const prompt = (service as any).buildPrompt(
       task,
       null,
       agentRole,
       memberContext,
       null,
-      governance({ role: false }),
+      governance({ executor: false }),
     );
-    expect(noRole).not.toContain('## Your Role');
-    expect(noRole).toContain('## Team Rules');
-
-    const noMember = (service as any).buildPrompt(
-      task,
-      null,
-      agentRole,
-      memberContext,
-      null,
-      governance({ member: false }),
-    );
-    expect(noMember).not.toContain('## Member Instructions');
-    expect(noMember).not.toContain('## Reasoning Effort');
-    expect(noMember).toContain('## Team Rules');
+    expect(prompt).not.toContain('## Your Role');
+    expect(prompt).not.toContain('### Reasoning Effort');
+    expect(prompt).toContain('## Team Rules');
 
     const noTeam = (service as any).buildPrompt(
       task,
@@ -175,6 +169,7 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
       governance({ team: false }),
     );
     expect(noTeam).not.toContain('## Team Rules');
+    expect(noTeam).toContain('## Your Role');
   });
 
   it('关 task / context：任务级段与上下文段消失，任务本体保留', () => {
@@ -233,10 +228,10 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
     );
     expect(byKey.system.injected).toBe(false);
     expect(byKey.system.text).toContain('# APM 协作基线');
-    expect(byKey.role.injected).toBe(true);
+    expect(byKey.executor.injected).toBe(true);
   });
 
-  it('loadPromptGovernance：读取开关与项目/任务级提示词（fail-open 兜底由 prompt-shared 承担）', async () => {
+  it('loadPromptGovernance：读取开关与项目/任务级提示词；任务提示词按当单事实插值', async () => {
     const warnings: string[] = [];
     vi.spyOn(Logger.prototype, 'warn').mockImplementation((msg: string) =>
       warnings.push(String(msg)),
@@ -248,6 +243,62 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
             return { value: { system: false, skills: false } };
           }
           return { value: '项目提示词全文' };
+        },
+      },
+      acceptanceCriteria: {
+        findMany: async () => [
+          { content: '登录态 24 小时内有效' },
+          { content: '回归用例锁定缺陷' },
+        ],
+      },
+    };
+    const service = new CliDispatchService(
+      prisma as never,
+      undefined as never,
+      undefined as never,
+      undefined as never,
+      undefined as never,
+      undefined as never,
+      undefined as never,
+      undefined as never,
+      undefined as never,
+      undefined as never,
+    );
+    const gov = await (service as any).loadPromptGovernance(
+      'proj-1',
+      {
+        id: 'issue-1',
+        title: '修复登录超时',
+        type: 'bug',
+        priority: 'high',
+        status: 'todo',
+        metadata: {
+          taskPrompt: '修复 {{issue.title}}，标准：\n{{issue.acceptanceItems}}',
+        },
+      },
+      'APM',
+      'APM',
+    );
+    expect(gov.toggles).toEqual({
+      ...DEFAULT_PROMPT_INJECTION,
+      system: false,
+      skills: false,
+    });
+    expect(gov.projectPrompt).toBe('项目提示词全文');
+    expect(gov.taskPrompt).toContain('修复 修复登录超时');
+    expect(gov.taskPrompt).toContain('1. 登录态 24 小时内有效');
+    expect(gov.taskPrompt).not.toContain('{{issue.');
+    expect(gov.systemSection).toBeTruthy();
+  });
+
+  it('loadPromptGovernance：无模板变量或无任务提示词时原样透传，验收查询失败 fail-open', async () => {
+    const prisma = {
+      appConfig: {
+        findFirst: async () => null,
+      },
+      acceptanceCriteria: {
+        findMany: async () => {
+          throw new Error('db down');
         },
       },
     };
@@ -263,16 +314,18 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
       undefined as never,
       undefined as never,
     );
-    const gov = await (service as any).loadPromptGovernance('proj-1', {
-      taskPrompt: '任务级要求',
+    const noTemplate = await (service as any).loadPromptGovernance('p1', {
+      id: 'i1',
+      title: 'T',
+      metadata: { taskPrompt: '纯文本要求' },
     });
-    expect(gov.toggles).toEqual({
-      ...DEFAULT_PROMPT_INJECTION,
-      system: false,
-      skills: false,
+    expect(noTemplate.taskPrompt).toBe('纯文本要求');
+
+    const noPrompt = await (service as any).loadPromptGovernance('p1', {
+      id: 'i1',
+      title: 'T',
+      metadata: null,
     });
-    expect(gov.projectPrompt).toBe('项目提示词全文');
-    expect(gov.taskPrompt).toBe('任务级要求');
-    expect(gov.systemSection).toBeTruthy();
+    expect(noPrompt.taskPrompt).toBeNull();
   });
 });

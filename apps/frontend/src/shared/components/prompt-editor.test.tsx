@@ -58,4 +58,31 @@ describe('PromptEditor（CAP-A-24 提示词编辑/查看复用组件）', () => 
     renderWithProviders(<PromptEditor value="x" onChange={() => {}} actions={<button>保存</button>} />);
     expect(screen.getByText('保存')).toBeTruthy();
   });
+
+  it('增强 B AI 起草：点起草→生成→对照弹层→采用写回 onChange', async () => {
+    const onChange = vi.fn();
+    const onDraft = vi.fn().mockResolvedValue('# AI 草稿\n由 AI 代写');
+    renderWithProviders(
+      <PromptEditor value="# 当前" onChange={onChange} onDraft={onDraft} />,
+    );
+    fireEvent.click(screen.getByText('promptEditor.draft'));
+    // 异步生成完成后弹层展示草稿
+    await screen.findByText('由 AI 代写');
+    expect(screen.getByText('promptEditor.draftSuggestion')).toBeTruthy();
+    fireEvent.click(screen.getByText('promptEditor.draftApply'));
+    expect(onChange).toHaveBeenCalledWith('# AI 草稿\n由 AI 代写');
+    // 弹层关闭（草稿态清空）
+    expect(screen.queryByText('promptEditor.draftApply')).toBeNull();
+  });
+
+  it('增强 B AI 起草：生成失败时展示失败提示，不写回', async () => {
+    const onChange = vi.fn();
+    const onDraft = vi.fn().mockRejectedValue(new Error('boom'));
+    renderWithProviders(
+      <PromptEditor value="" onChange={onChange} onDraft={onDraft} />,
+    );
+    fireEvent.click(screen.getByText('promptEditor.draft'));
+    await screen.findByText('promptEditor.draftFailed');
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });

@@ -3127,6 +3127,7 @@
   "taskDetail": {
     "promptPanel": "任务提示词",
     "promptPlaceholder": "给执行本任务 AI 的自定义指令（以「Task Instructions」段注入）...",
+    "promptPickTemplate": "从模板选用",
     "promptSave": "保存",
     "promptRevert": "撤销",
     "notExists": "任务不存在",
@@ -4983,11 +4984,22 @@
     },
     "prompt": {
       "title": "项目提示词",
-      "desc": "支持 Markdown；保存后下次派发生效，留空即关闭注入。",
+      "desc": "支持 Markdown；保存后下次派发生效，并同步物化到工作区 AGENTS.md 受管区块；留空即关闭注入。",
       "placeholder": "如：技术栈约定、编码规范、领域背景……",
       "save": "保存",
       "revert": "撤销",
-      "saved": "项目提示词已保存"
+      "saved": "项目提示词已保存",
+      "agentsSynced": "已保存并同步到 AGENTS.md",
+      "agentsUnsynced": "已保存到 APM（AGENTS.md 未同步：{{reason}}）",
+      "adopted": "已以 AGENTS.md 文件侧内容为准",
+      "drifted": "AGENTS.md 文件侧的受管区块与 APM 侧配置不一致（可能在工作区被直接修改）。",
+      "adoptFile": "以文件为准",
+      "previewPickTask": "选择示例任务预览注入效果…",
+      "previewRun": "按此任务预览",
+      "previewHint": "展示该项目任一任务的完整派发 prompt 分段（所见即所派）。",
+      "previewTitle": "派发 Prompt 预览",
+      "previewDesc": "与真实派发同源组装，共 {{chars}} 字符",
+      "previewLoading": "正在干跑组装…"
     },
     "contract": {
       "title": "契约文件",
@@ -5587,7 +5599,60 @@
   },
   "promptEditor": {
     "empty": "暂无内容",
-    "charCount": "{{count}} 字符"
+    "charCount": "{{count}} 字符",
+    "draft": "AI 起草",
+    "draftTitle": "AI 起草对照",
+    "draftDesc": "左侧为当前内容，右侧为 AI 草稿；点「采用」才会写入编辑框，保存仍由你手动确认。",
+    "draftCurrent": "当前内容",
+    "draftSuggestion": "AI 草稿",
+    "draftLoading": "正在生成草稿…",
+    "draftFailed": "草稿生成失败，可重试",
+    "draftEmpty": "AI 没有给出草稿（可能信息不足）",
+    "draftRegenerate": "重新生成",
+    "draftApply": "采用草稿"
+  },
+  "prompt": {
+    "sections": {
+      "system": "系统规范",
+      "executor": "执行者（角色+个人）",
+      "team": "团队规则",
+      "project": "项目提示词",
+      "task": "任务提示词",
+      "skills": "项目技能",
+      "taskBody": "任务本体",
+      "context": "上下文 JSON",
+      "closing": "固定结尾",
+      "unknown": "未知段"
+    },
+    "templatePicker": {
+      "title": "从模板选用",
+      "desc": "选中模板会按任务事实插值预览；「采用」写入编辑框，保存仍由你手动确认。",
+      "empty": "暂无该类型模板",
+      "builtin": "内置",
+      "preview": "插值预览",
+      "previewing": "正在插值预览…",
+      "missingVars": "以下变量暂无事实来源，已保留占位，派发时仍会如实标注：{{vars}}",
+      "cancel": "取消",
+      "apply": "采用"
+    },
+    "templateEditor": {
+      "createTitle": "新建提示词模板",
+      "editTitle": "编辑模板",
+      "desc": "模板正文支持 {{issue.title}}、{{issue.acceptanceItems}} 等变量，注入时按当单事实自动插值。",
+      "namePlaceholder": "模板名称",
+      "descPlaceholder": "用途说明（可选）",
+      "bodyPlaceholder": "模板正文（Markdown）",
+      "variableHint": "可用变量：issue.title / issue.description / issue.priority / issue.acceptanceItems / project.name / today 等；缺失变量保留占位不静默清空。",
+      "untitled": "未命名模板",
+      "cancel": "取消",
+      "save": "保存模板"
+    },
+    "target": {
+      "task": "任务级",
+      "project": "项目级",
+      "role": "角色级",
+      "member": "成员级"
+    }
   },
   "prompts": {
     "toggles": {
@@ -5598,7 +5663,9 @@
       "system": "系统规范",
       "systemDesc": "内置 APM 协作基线与汇报规范（只读资产，随版本升级）",
       "project": "项目提示词",
-      "projectDesc": "项目级指令，在项目设置中编辑",
+      "projectDesc": "项目级指令，在项目设置中编辑（保存后同步到工作区 AGENTS.md）",
+      "executor": "执行者（角色+个人）",
+      "executorDesc": "角色共享约定与成员个人提示词合并为一个执行者段（含思考强度）",
       "role": "角色提示",
       "roleDesc": "项目角色 promptHint（## Your Role 段）",
       "team": "团队规则",
@@ -5607,10 +5674,20 @@
       "memberDesc": "成员 personalPrompt 与思考强度",
       "task": "任务提示词",
       "taskDesc": "工单级自定义提示词，在任务详情编辑（## Task Instructions 段）",
+      "taskBody": "任务本体",
+      "taskBodyDesc": "任务标题与描述（派发最小载荷，不受开关控制）",
       "skills": "项目技能",
       "skillsDesc": "已启用技能段（同时受项目级技能开关叠加控制）",
       "context": "上下文 JSON",
       "contextDesc": "任务执行上下文包（工单事实、验收标准、关联数据）"
+    },
+    "usage": {
+      "title": "注入率统计",
+      "desc": "最近执行的真实派发载荷按段统计——写的提示词有没有生效、花了多少字符，一眼看清。",
+      "empty": "还没有可统计的派发记录",
+      "emptyDesc": "派发一次任务后，这里会展示各段实际注入率与字符开销。",
+      "sample": "基于最近 {{count}} 条派发 · 平均整条 {{chars}} 字符",
+      "row": "{{ratio}}% · 均 {{chars}} 字"
     },
     "system": {
       "title": "系统提示词",
@@ -5619,11 +5696,22 @@
       "empty": "暂无系统提示词",
       "charCount": "{{count}} 字符"
     },
+    "templates": {
+      "title": "提示词模板库",
+      "desc": "可复用的提示词资产：内置模板随版本发布（只读，可复制为自定义），自定义模板在此维护。",
+      "hint": "任务/项目提示词编辑处可就地选用模板；任务级模板支持按工单事实插值。",
+      "create": "新建模板",
+      "empty": "暂无模板",
+      "builtin": "内置",
+      "edit": "编辑",
+      "duplicate": "复制为自定义"
+    },
     "where": {
       "title": "分层提示词编辑入口",
       "desc": "系统级在此只读查看，其余层级在各管理面编辑",
-      "project": "项目提示词 — 项目设置 → AI 提示词",
-      "task": "任务提示词 — 任务详情右栏 → 任务提示词",
+      "project": "项目提示词 — 项目设置 → AI 提示词（保存后同步 AGENTS.md）",
+      "task": "任务提示词 — 任务详情右栏 → 任务提示词（支持模板选用与 AI 起草）",
+      "executor": "执行者提示词 — 成员资料（个人补充）+ 角色管理（共享约定）",
       "role": "角色提示 — 工作区设置 → 角色管理 → 编辑角色",
       "member": "成员个人提示词 — 团队成员资料（既有入口）"
     }

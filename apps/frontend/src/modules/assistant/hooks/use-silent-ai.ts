@@ -370,3 +370,31 @@ export function parseProjectScore(
     suggestions: strList(data?.suggestions),
   };
 }
+
+/** 提示词起草/改写场景名（CAP-A-24 增强 B，server SCENARIOS 注册表同名单源） */
+export type PromptDraftScenario =
+  | 'prompt-draft-project'
+  | 'prompt-draft-task'
+  | 'prompt-draft-role'
+  | 'prompt-improve';
+
+/**
+ * 提示词 AI 起草（增强 B）：按需触发的静默场景，返回草稿全文（null = 无草稿）。
+ * 红线：草稿只进编辑框，生效走调用方既有保存链路——AI 只代写，人确认。
+ */
+export function useSilentPromptDraft() {
+  return useMutation({
+    mutationFn: async (input: {
+      scenario: PromptDraftScenario;
+      projectId?: string;
+      context: Record<string, unknown>;
+    }) => {
+      const res = await assistantApi.silent(input.scenario, {
+        projectId: input.projectId,
+        context: input.context,
+      });
+      const draft = (res.data as Record<string, unknown> | undefined)?.draft;
+      return typeof draft === 'string' && draft.trim() ? draft : null;
+    },
+  });
+}

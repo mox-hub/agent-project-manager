@@ -105,3 +105,71 @@ export function buildSystemPromptSection(
   if (bodies.length === 0) return null;
   return bodies.join('\n\n---\n\n');
 }
+
+/**
+ * 内置提示词模板（CAP-A-24 增强 A）：可复用的提示词资产，body 含
+ * {{issue.*}} 变量，派发组装/选用预览时按当单事实插值。内置模板走
+ * 代码常量合并不入库（升级随版本发布、不可删改），用户自定义模板
+ * 存 PromptTemplate 表——同一套列表/选用/预览面合并呈现。
+ */
+export interface BuiltinPromptTemplate {
+  /** 稳定标识（builtin: 前缀避免与表内 cuid 混淆） */
+  key: string;
+  name: string;
+  description: string;
+  /** 落到哪一级提示词 */
+  target: 'task' | 'project' | 'role' | 'member';
+  /** markdown 正文，含 {{变量}} 插值槽 */
+  body: string;
+}
+
+export const BUILTIN_PROMPT_TEMPLATES: BuiltinPromptTemplate[] = [
+  {
+    key: 'builtin:bug-fix-baseline',
+    name: 'Bug 修复基线',
+    description:
+      '缺陷修复任务的通用执行规范：先复现、最小修复、回归验证、说明根因。',
+    target: 'task',
+    body: `修复本缺陷时请遵循：
+
+1. **先复现**：动手前先在本地稳定复现 {{issue.title}}，无法复现时停下说明复现步骤缺口，不要凭猜测修复。
+2. **根因优先**：找到根因再改；不做只掩盖表象的补丁。
+3. **最小修复**：修复范围限定在根因路径上；顺手的重构不做，另开工单。
+4. **回归验证**：修复后补一条能锁死该缺陷的回归用例并跑绿。
+5. **汇报**：说明根因、修复方式与验证结果。
+
+优先级：{{issue.priority}}。验收标准：
+{{issue.acceptanceItems}}`,
+  },
+  {
+    key: 'builtin:release-checklist',
+    name: '发版检查单',
+    description:
+      '发版任务的执行检查序列：版本对齐、门禁全绿、标签与变更记录核对。',
+    target: 'task',
+    body: `执行本次发版（{{issue.title}}）时按序完成检查：
+
+1. **版本对齐**：核对发版号在 package.json / 桌面端 / CHANGELOG 归版段三处一致。
+2. **门禁全绿**：type-check、lint、全量单测、契约零漂移逐项确认，任何一项失败停下上报，不带病发版。
+3. **变更记录**：CHANGELOG 该版本段内容与实际变更清单核对，漏记的补上。
+4. **标签**：确认标签打在归版提交上。
+5. **汇报**：给出每项检查的证据（命令输出/链接）。
+
+遗留问题（未阻塞发版的）逐条列出并给出后续工单建议。`,
+  },
+  {
+    key: 'builtin:code-review-baseline',
+    name: '代码评审基线',
+    description:
+      '评审类任务的关注序列：正确性、边界、测试、可读性，意见带位置与理由。',
+    target: 'task',
+    body: `对 {{issue.title}} 执行评审时：
+
+1. **正确性**：先读懂意图再挑细节；逻辑错误优先于风格问题。
+2. **边界与异常**：空输入、并发、失败路径逐项过。
+3. **测试**：新增逻辑是否有测试锁定；修 bug 是否有回归用例。
+4. **可读性**：只提会实际影响维护成本的意见。
+
+输出意见必须带文件位置与理由；确认无问题的方面也明确说「已检查」。`,
+  },
+];

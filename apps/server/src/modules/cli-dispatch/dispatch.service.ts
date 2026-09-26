@@ -39,7 +39,9 @@ import {
 } from '@/modules/ai-hub/services/context-enrichment';
 import {
   buildSystemPromptSection,
+  buildTaskPromptFacts,
   extractTaskPrompt,
+  interpolatePromptTemplate,
   readProjectPrompt,
   readPromptInjectionToggles,
   type PromptInjectionToggles,
@@ -480,7 +482,9 @@ export class CliDispatchService {
 
     const governance = await this.loadPromptGovernance(
       task.projectId,
-      task.metadata,
+      task,
+      task.project?.name,
+      task.project?.projectCode,
     );
     const context = await this.contextBuilder.buildTaskExecutionContext(
       issueId,
@@ -527,10 +531,8 @@ export class CliDispatchService {
     // 标 false，设置页/排查可对照「开了但没内容」
     const SECTION_ORDER = [
       'system',
-      'role',
+      'executor',
       'team',
-      'member',
-      'thinking',
       'project',
       'task',
       'skills',
@@ -655,7 +657,12 @@ export class CliDispatchService {
     // promptOverride（考古等自定义任务包）跳过默认组装，治理层不参与。
     const governance = options.promptOverride
       ? null
-      : await this.loadPromptGovernance(projectId, task.metadata);
+      : await this.loadPromptGovernance(
+          projectId,
+          task,
+          task.project?.name,
+          task.project?.projectCode,
+        );
 
     let effectiveAllowedTools = allowedTools;
     if (memberId) {
@@ -1514,34 +1521,42 @@ export class CliDispatchService {
       add('system', on('system'), governance.systemSection);
     }
 
-    // 2. 角色提示（ProjectRoleDefinition.promptHint）
+    // 2. 执行者段（增强批 C：角色继承 + 个人补充 + 思考强度合一段）——
+    // 语义为「这个 agent 是谁、按什么规矩做事」，角色部分是共享约定模板、
+    // 个人部分是成员私有的补充，注入产物上一段呈现避免语义重叠。
+    const executorParts: string[] = [];
     if (agentRole?.promptHint?.trim()) {
-      add('role', on('role'), `## Your Role\n${agentRole.promptHint.trim()}`);
-    }
-
-    // 3. 团队规则 / 成员个人提示词 / 思考强度（后两者同受 member 开关）
-    if (memberContext?.teamRules?.length) {
-      add(
-        'team',
-        on('team'),
-        `## Team Rules\n${memberContext.teamRules.join('\n\n')}`,
+      executorParts.push(
+        `### Role Conventions (${agentRole.name})\n${agentRole.promptHint.trim()}`,
       );
     }
     if (memberContext?.personalPrompt?.trim()) {
-      add(
-        'member',
-        on('member'),
-        `## Member Instructions (${memberContext.memberName})\n${memberContext.personalPrompt.trim()}`,
+      executorParts.push(
+        `### Personal Instructions (${memberContext.memberName})\n${memberContext.personalPrompt.trim()}`,
       );
     }
     if (memberContext?.thinkingLevel) {
       const instruction =
         THINKING_LEVEL_INSTRUCTIONS[memberContext.thinkingLevel] ??
         memberContext.thinkingLevel;
+      executorParts.push(
+        `### Reasoning Effort\n${memberContext.thinkingLevel} — ${instruction}`,
+      );
+    }
+    if (executorParts.length) {
       add(
-        'thinking',
-        on('member'),
-        `## Reasoning Effort\n${memberContext.thinkingLevel} — ${instruction}`,
+        'executor',
+        on('executor'),
+        `## Your Role\n${executorParts.join('\n\n')}`,
+      );
+    }
+
+    // 3. 团队规则（执行者所在活跃团队的公共规矩，独立于执行者个人）
+    if (memberContext?.teamRules?.length) {
+      add(
+        'team',
+        on('team'),
+        `## Team Rules\n${memberContext.teamRules.join('\n\n')}`,
       );
     }
 
@@ -1593,20 +1608,68 @@ export class CliDispatchService {
    * 提示词治理载荷读取（CAP-A-24）：注入开关 + 系统段 + 项目/任务级提示词。
    * 各读取在 prompt-shared 内部 fail-open（配置读失败按默认值兜底），
    * 治理层故障不阻断派发主链路。
+   * 增强 A：任务级提示词按当单事实插值（{{issue.*}} 变量），模板存原文
+   * 跨任务复用——插值在本函数内完成，干跑预览与实际派发同源。
    */
   private async loadPromptGovernance(
     projectId: string,
-    taskMetadata?: unknown,
+    task: {
+      id: string;
+      title: string;
+      description?: string | null;
+      type?: string | null;
+      priority?: string | null;
+      status?: string | null;
+      metadata?: unknown;
+    },
+    projectName?: string | null,
+    projectCode?: string | null,
   ): Promise<PromptGovernance> {
-    const [toggles, projectPrompt] = await Promise.all([
+    // 验收标准原料查询 fail-open：无表桩/查询失败一律空数组，不阻断治理读取
+    const criteriaPromise: Promise<Array<{ content: string }>> = this.prisma
+      .acceptanceCriteria
+      ? this.prisma.acceptanceCriteria
+          .findMany({
+            where: { acceptance: { issueId: task.id } },
+            orderBy: [{ order: 'asc' }],
+            select: { content: true },
+            take: 20,
+          })
+          .then(
+            (rows) => rows as Array<{ content: string }>,
+            () => [] as Array<{ content: string }>,
+          )
+      : Promise.resolve([]);
+    const [toggles, projectPrompt, criteria] = await Promise.all([
       readPromptInjectionToggles(this.prisma),
       readProjectPrompt(this.prisma, projectId),
+      criteriaPromise,
     ]);
+    const rawTaskPrompt = extractTaskPrompt(task.metadata);
+    let taskPrompt: string | null = null;
+    if (rawTaskPrompt) {
+      const { text } = interpolatePromptTemplate(
+        rawTaskPrompt,
+        buildTaskPromptFacts({
+          issue: {
+            title: task.title,
+            description: task.description,
+            type: task.type,
+            priority: task.priority,
+            status: task.status,
+            acceptanceItems: criteria.map((c) => c.content),
+          },
+          projectName,
+          projectCode,
+        }),
+      );
+      taskPrompt = text;
+    }
     return {
       toggles,
       systemSection: buildSystemPromptSection(),
       projectPrompt,
-      taskPrompt: extractTaskPrompt(taskMetadata),
+      taskPrompt,
     };
   }
 

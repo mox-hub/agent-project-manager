@@ -112,6 +112,10 @@ describe('AssistantSilentService.run', () => {
       'analysis-draft',
       'readiness-review',
       'decomposition-review',
+      'prompt-draft-project',
+      'prompt-draft-task',
+      'prompt-draft-role',
+      'prompt-improve',
       'issue-decompose',
       'failure-diagnosis',
       'interview-dynamic',
@@ -630,6 +634,178 @@ describe('AssistantSilentService.run', () => {
         ),
       ).rejects.toThrow(BadRequestException);
       expect(notFound.chat).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('prompt-draft-* / prompt-improve（CAP-A-24 增强 B 提示词起草）', () => {
+    const DRAFT = '{"draft": "草稿正文"}';
+
+    const makeDraftPrismaService = (
+      prismaShape: Record<string, unknown>,
+      chatContent = DRAFT,
+    ) => {
+      const chat = vi.fn().mockResolvedValue({
+        content: chatContent,
+        model: 'test-model',
+        tokens: { prompt: 10, completion: 5, total: 15 },
+      });
+      const prisma = {
+        aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+        ...prismaShape,
+      };
+      const service = new AssistantSilentService(
+        prisma as never,
+        {
+          listAdapters: () => [{ provider: 'glm', model: 'm' }],
+          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        } as never,
+        { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      );
+      return { service, chat, prisma };
+    };
+
+    it('prompt-draft-project：侦查项目/角色/团队规则注入，指令含「确认后才保存」红线', async () => {
+      const { service, chat } = makeDraftPrismaService({
+        project: {
+          findUnique: vi.fn().mockResolvedValue({
+            name: 'Apollo',
+            description: '登月计划',
+            type: 'team',
+            priority: 'high',
+          }),
+        },
+        projectRoleDefinition: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              name: '前端工程师',
+              description: '写前端',
+              executionRole: 'coder',
+            },
+          ]),
+        },
+        team: {
+          findMany: vi
+            .fn()
+            .mockResolvedValue([{ name: 'T', teamPrompt: '提交前自测' }]),
+        },
+      });
+      const result = await service.run(
+        'prompt-draft-project',
+        { projectId: 'p1' },
+        'p1',
+        'u1',
+      );
+      expect(result.data).toEqual({ draft: '草稿正文' });
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('Apollo');
+      expect(instructions).toContain('前端工程师');
+      expect(instructions).toContain('提交前自测');
+      expect(instructions).toContain('AGENTS.md');
+      expect(instructions).toContain('确认');
+
+      const missing = makeDraftPrismaService({});
+      await expect(
+        missing.service.run('prompt-draft-project', {}, 'p1', 'u1'),
+      ).rejects.toThrow(/projectId/);
+      expect(missing.chat).not.toHaveBeenCalled();
+
+      const notFound = makeDraftPrismaService({
+        project: { findUnique: vi.fn().mockResolvedValue(null) },
+      });
+      await expect(
+        notFound.service.run(
+          'prompt-draft-project',
+          { projectId: 'nope' },
+          'p1',
+          'u1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+      expect(notFound.chat).not.toHaveBeenCalled();
+    });
+
+    it('prompt-draft-task：侦查工单事实，指令引导用 {{issue.acceptanceItems}} 变量而非复制标准', async () => {
+      const { service, chat } = makeDraftPrismaService({
+        issue: {
+          findUnique: vi.fn().mockResolvedValue({
+            title: '修复登录超时',
+            description: '会话被踢出',
+            status: 'todo',
+            priority: 'high',
+            type: 'bug',
+            issueType: { name: '缺陷' },
+            project: { name: 'Apollo' },
+            acceptances: [{ criteria: [{ content: '登录态 24 小时内有效' }] }],
+          }),
+        },
+      });
+      const result = await service.run(
+        'prompt-draft-task',
+        { issueId: 'i1' },
+        'p1',
+        'u1',
+      );
+      expect(result.data).toEqual({ draft: '草稿正文' });
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('修复登录超时');
+      expect(instructions).toContain('登录态 24 小时内有效');
+      expect(instructions).toContain('{{issue.acceptanceItems}}');
+      expect(instructions).toContain('确认');
+
+      const missing = makeDraftPrismaService({});
+      await expect(
+        missing.service.run('prompt-draft-task', {}, 'p1', 'u1'),
+      ).rejects.toThrow(/issueId/);
+      expect(missing.chat).not.toHaveBeenCalled();
+    });
+
+    it('prompt-draft-role：无侦查直出草稿，缺 roleName 400 不触 LLM', async () => {
+      const { service, chat } = makeDraftPrismaService({});
+      const result = await service.run(
+        'prompt-draft-role',
+        {
+          roleName: '前端工程师',
+          roleDuty: '实现前端页面',
+          executionRole: 'coder',
+        },
+        'p1',
+        'u1',
+      );
+      expect(result.data).toEqual({ draft: '草稿正文' });
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('前端工程师');
+      expect(instructions).toContain('实现前端页面');
+      expect(instructions).toContain('确认');
+
+      const missing = makeDraftPrismaService({});
+      await expect(
+        missing.service.run('prompt-draft-role', {}, 'p1', 'u1'),
+      ).rejects.toThrow(/roleName/);
+      expect(missing.chat).not.toHaveBeenCalled();
+    });
+
+    it('prompt-improve：按目标层级改写既有文本，缺 text 400；变量保留指引在案', async () => {
+      const { service, chat } = makeDraftPrismaService({});
+      const result = await service.run(
+        'prompt-improve',
+        { text: '代码要写好一点 测试也要写', layer: 'task' },
+        'p1',
+        'u1',
+      );
+      expect(result.data).toEqual({ draft: '草稿正文' });
+      const [, options] = chat.mock.calls[0];
+      const instructions = (options as { instructions: string }).instructions;
+      expect(instructions).toContain('代码要写好一点');
+      expect(instructions).toContain('任务级提示词');
+      expect(instructions).toContain('{{issue.*}}');
+
+      const missing = makeDraftPrismaService({});
+      await expect(
+        missing.service.run('prompt-improve', { layer: 'task' }, 'p1', 'u1'),
+      ).rejects.toThrow(/text/);
+      expect(missing.chat).not.toHaveBeenCalled();
     });
   });
 

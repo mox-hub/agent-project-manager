@@ -3127,6 +3127,7 @@
   "taskDetail": {
     "promptPanel": "Task prompt",
     "promptPlaceholder": "Custom instructions for AI executing this task (injected as 'Task Instructions')...",
+    "promptPickTemplate": "Pick from templates",
     "promptSave": "Save",
     "promptRevert": "Revert",
     "notExists": "Task does not exist",
@@ -4983,11 +4984,22 @@
     },
     "prompt": {
       "title": "Project prompt",
-      "desc": "Markdown supported; applies to the next dispatch after saving. Leave empty to disable injection.",
+      "desc": "Markdown supported; applies to the next dispatch after saving and is materialized into the workspace AGENTS.md managed block. Leave empty to disable injection.",
       "placeholder": "e.g. Tech stack conventions, coding standards, domain background...",
       "save": "Save",
       "revert": "Revert",
-      "saved": "Project prompt saved"
+      "saved": "Project prompt saved",
+      "agentsSynced": "Saved and synced to AGENTS.md",
+      "agentsUnsynced": "Saved in APM (AGENTS.md not synced: {{reason}})",
+      "adopted": "Adopted the AGENTS.md file-side content",
+      "drifted": "The managed block in AGENTS.md differs from the APM-side config (it may have been edited directly in the workspace).",
+      "adoptFile": "Adopt file side",
+      "previewPickTask": "Pick a sample task to preview injection…",
+      "previewRun": "Preview with this task",
+      "previewHint": "Shows the full segmented dispatch prompt for any task in this project (what you see is what gets dispatched).",
+      "previewTitle": "Dispatch prompt preview",
+      "previewDesc": "Assembled from the same source as real dispatch, {{chars}} chars in total",
+      "previewLoading": "Dry-running assembly…"
     },
     "contract": {
       "title": "Contract Files",
@@ -5587,7 +5599,60 @@
   },
   "promptEditor": {
     "empty": "No content yet",
-    "charCount": "{{count}} characters"
+    "charCount": "{{count}} characters",
+    "draft": "AI draft",
+    "draftTitle": "AI draft comparison",
+    "draftDesc": "Current content on the left, AI draft on the right; clicking \"Apply\" writes it into the editor — saving still requires your confirmation.",
+    "draftCurrent": "Current content",
+    "draftSuggestion": "AI draft",
+    "draftLoading": "Generating draft…",
+    "draftFailed": "Draft generation failed, you can retry",
+    "draftEmpty": "AI returned no draft (possibly insufficient information)",
+    "draftRegenerate": "Regenerate",
+    "draftApply": "Apply draft"
+  },
+  "prompt": {
+    "sections": {
+      "system": "System guide",
+      "executor": "Executor (role + personal)",
+      "team": "Team rules",
+      "project": "Project prompt",
+      "task": "Task prompt",
+      "skills": "Project skills",
+      "taskBody": "Task body",
+      "context": "Context JSON",
+      "closing": "Fixed closing",
+      "unknown": "Unknown section"
+    },
+    "templatePicker": {
+      "title": "Pick from templates",
+      "desc": "The selected template is previewed with real task facts; \"Apply\" writes it into the editor — saving still requires your confirmation.",
+      "empty": "No templates of this type",
+      "builtin": "Built-in",
+      "preview": "Interpolated preview",
+      "previewing": "Interpolating preview…",
+      "missingVars": "These variables have no facts yet and stay as placeholders; they are honestly annotated at dispatch: {{vars}}",
+      "cancel": "Cancel",
+      "apply": "Apply"
+    },
+    "templateEditor": {
+      "createTitle": "New prompt template",
+      "editTitle": "Edit template",
+      "desc": "Template bodies support {{issue.title}}, {{issue.acceptanceItems}} and other variables, interpolated per-issue facts at dispatch.",
+      "namePlaceholder": "Template name",
+      "descPlaceholder": "What it's for (optional)",
+      "bodyPlaceholder": "Template body (Markdown)",
+      "variableHint": "Available variables: issue.title / issue.description / issue.priority / issue.acceptanceItems / project.name / today, etc.; missing variables keep placeholders instead of being silently dropped.",
+      "untitled": "Untitled template",
+      "cancel": "Cancel",
+      "save": "Save template"
+    },
+    "target": {
+      "task": "Task",
+      "project": "Project",
+      "role": "Role",
+      "member": "Member"
+    }
   },
   "prompts": {
     "toggles": {
@@ -5598,7 +5663,9 @@
       "system": "System guide",
       "systemDesc": "Built-in APM collaboration baseline & reporting spec (read-only assets)",
       "project": "Project prompt",
-      "projectDesc": "Project-level instructions, edited in project settings",
+      "projectDesc": "Project-level instructions, edited in project settings (synced to the workspace AGENTS.md on save)",
+      "executor": "Executor (role + personal)",
+      "executorDesc": "Role conventions and member personal prompt merged into one executor section (incl. reasoning effort)",
       "role": "Role hint",
       "roleDesc": "Project role promptHint (## Your Role)",
       "team": "Team rules",
@@ -5607,10 +5674,20 @@
       "memberDesc": "Member personalPrompt and reasoning effort",
       "task": "Task prompt",
       "taskDesc": "Issue-level custom prompt, edited in task detail (## Task Instructions)",
+      "taskBody": "Task body",
+      "taskBodyDesc": "Task title and description (minimal dispatch payload, not gated by switches)",
       "skills": "Project skills",
       "skillsDesc": "Enabled skills section (also gated by the project-level skills toggle)",
       "context": "Context JSON",
       "contextDesc": "Task execution context pack (issue facts, acceptance criteria, related data)"
+    },
+    "usage": {
+      "title": "Injection stats",
+      "desc": "Recent real dispatch payloads analyzed per section — see at a glance whether your prompts actually took effect and what they cost.",
+      "empty": "No dispatch records to analyze yet",
+      "emptyDesc": "Dispatch a task and this panel will show each section's actual injection rate and size.",
+      "sample": "Based on the latest {{count}} dispatches · {{chars}} chars on average",
+      "row": "{{ratio}}% · {{chars}} chars avg"
     },
     "system": {
       "title": "System prompts",
@@ -5619,11 +5696,22 @@
       "empty": "No system prompts",
       "charCount": "{{count}} characters"
     },
+    "templates": {
+      "title": "Prompt template library",
+      "desc": "Reusable prompt assets: built-in templates ship with releases (read-only, duplicable), custom templates are maintained here.",
+      "hint": "Pick templates inline in task/project prompt editors; task-level templates interpolate per issue facts.",
+      "create": "New template",
+      "empty": "No templates",
+      "builtin": "Built-in",
+      "edit": "Edit",
+      "duplicate": "Duplicate as custom"
+    },
     "where": {
       "title": "Where layered prompts are edited",
       "desc": "System level is read-only here; other layers are edited in their management surfaces",
-      "project": "Project prompt — Project settings → AI Prompt",
-      "task": "Task prompt — Task detail right sidebar → Task prompt",
+      "project": "Project prompt — Project settings → AI Prompt (synced to AGENTS.md on save)",
+      "task": "Task prompt — Task detail right sidebar → Task prompt (template picker & AI draft)",
+      "executor": "Executor prompt — Member profile (personal) + Role management (shared conventions)",
       "role": "Role hint — Workspace settings → Roles → edit role",
       "member": "Member personal prompt — Team member profile (existing entry)"
     }

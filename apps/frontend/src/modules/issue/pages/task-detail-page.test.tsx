@@ -30,6 +30,7 @@ const hooks = vi.hoisted(() => ({
   decomposeMutateAsync: vi.fn(
     async (..._args: unknown[]) => ({}) as unknown,
   ),
+  draftMutateAsync: vi.fn(async (..._args: unknown[]) => null),
 }));
 
 // ── issue 模块 hooks / 组件 ──
@@ -50,6 +51,10 @@ vi.mock('../hooks/use-project-tasks', () => ({
 vi.mock('@/modules/assistant/hooks/use-silent-ai', () => ({
   useSilentIssueDecompose: () => ({
     mutateAsync: hooks.decomposeMutateAsync,
+    isPending: false,
+  }),
+  useSilentPromptDraft: () => ({
+    mutateAsync: hooks.draftMutateAsync,
     isPending: false,
   }),
   parseIssueDecompose: (data: Record<string, unknown> | undefined) => ({

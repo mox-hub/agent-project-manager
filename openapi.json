@@ -55374,7 +55374,7 @@
         ],
         "responses": {
           "200": {
-            "description": "注入开关（缺省全开）与项目级提示词（未配置 null）",
+            "description": "注入开关（缺省全开）、项目级提示词（未配置 null）与 AGENTS.md 文件侧状态",
             "content": {
               "application/json": {
                 "schema": {
@@ -55392,7 +55392,7 @@
             "JWT-auth": []
           }
         ],
-        "summary": "提示词注入配置（开关 + 项目级提示词）",
+        "summary": "提示词注入配置（开关 + 项目提示词 + AGENTS.md 状态）",
         "tags": [
           "Prompts"
         ]
@@ -55412,11 +55412,11 @@
         },
         "responses": {
           "200": {
-            "description": "更新后的配置（开关全量返回；项目提示词按传入 projectId 返回）",
+            "description": "更新后的配置；agentsSync 反映 AGENTS.md 物化结果（未绑定工作区/IO 失败为未同步降级）",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PromptConfigResponseDto"
+                  "$ref": "#/components/schemas/PromptConfigUpdateResponseDto"
                 }
               }
             }
@@ -55430,7 +55430,247 @@
             "JWT-auth": []
           }
         ],
-        "summary": "更新注入开关 / 项目级提示词",
+        "summary": "更新注入开关 / 项目级提示词（物化 AGENTS.md）",
+        "tags": [
+          "Prompts"
+        ]
+      }
+    },
+    "/_api/prompts/usage-stats": {
+      "get": {
+        "operationId": "PromptController_getUsageStats",
+        "parameters": [
+          {
+            "name": "sampleSize",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "各治理段实际注入率与平均字符开销；无样本时 promptCount=0",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptUsageStatsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "注入率统计（最近执行载荷按段头解析）",
+        "tags": [
+          "Prompts"
+        ]
+      }
+    },
+    "/_api/prompts/templates": {
+      "get": {
+        "operationId": "PromptController_listTemplates",
+        "parameters": [
+          {
+            "name": "target",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptTemplateListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "提示词模板库（内置 + 自定义）",
+        "tags": [
+          "Prompts"
+        ]
+      },
+      "post": {
+        "operationId": "PromptController_createTemplate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePromptTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "scope=project 缺 projectId 等"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "新建提示词模板",
+        "tags": [
+          "Prompts"
+        ]
+      }
+    },
+    "/_api/prompts/templates/preview": {
+      "post": {
+        "operationId": "PromptController_previewTemplate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromptTemplatePreviewRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptTemplatePreviewResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Task not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "模板插值干跑（按任务事实）",
+        "tags": [
+          "Prompts"
+        ]
+      }
+    },
+    "/_api/prompts/templates/{id}": {
+      "put": {
+        "operationId": "PromptController_updateTemplate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePromptTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Prompt template not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "更新自定义模板",
+        "tags": [
+          "Prompts"
+        ]
+      },
+      "delete": {
+        "operationId": "PromptController_deleteTemplate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Prompt template not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "删除自定义模板（内置模板不在表内不可删）",
         "tags": [
           "Prompts"
         ]
@@ -65610,6 +65850,10 @@
           "parentItemId": {
             "type": "string",
             "description": "父条目 ID（模板内层级）"
+          },
+          "promptHint": {
+            "type": "string",
+            "description": "任务级提示词模板（含 {{issue.*}} 变量）；应用模板建任务时落 metadata.taskPrompt"
           }
         },
         "required": [
@@ -65686,6 +65930,11 @@
             "type": "string",
             "description": "父条目 ID（模板内层级）",
             "nullable": true
+          },
+          "promptHint": {
+            "type": "string",
+            "description": "任务级提示词模板",
+            "nullable": true
           }
         },
         "required": [
@@ -65696,7 +65945,8 @@
           "status",
           "priority",
           "estimate",
-          "parentItemId"
+          "parentItemId",
+          "promptHint"
         ]
       },
       "IssueTemplateResponseDto": {
@@ -68239,17 +68489,13 @@
             "type": "boolean",
             "description": "项目级提示词段"
           },
-          "role": {
+          "executor": {
             "type": "boolean",
-            "description": "角色提示段（promptHint）"
+            "description": "执行者段（角色 promptHint 继承 + 成员个人提示词 + 思考强度，合一段）"
           },
           "team": {
             "type": "boolean",
             "description": "团队规则段（teamPrompt）"
-          },
-          "member": {
-            "type": "boolean",
-            "description": "成员个人提示词段（personalPrompt + 思考强度）"
           },
           "task": {
             "type": "boolean",
@@ -68267,9 +68513,8 @@
         "required": [
           "system",
           "project",
-          "role",
+          "executor",
           "team",
-          "member",
           "task",
           "skills",
           "context"
@@ -68280,7 +68525,7 @@
         "properties": {
           "key": {
             "type": "string",
-            "description": "段落标识：system/project/role/team/member/task/skills/taskBody/context/closing"
+            "description": "段落标识：system/executor/team/project/task/skills/taskBody/context/closing"
           },
           "injected": {
             "type": "boolean",
@@ -78934,11 +79179,17 @@
             "type": "string",
             "nullable": true,
             "description": "项目级提示词全文（传 projectId 时返回；未配置为 null）"
+          },
+          "agentsFile": {
+            "type": "object",
+            "nullable": true,
+            "description": "AGENTS.md 文件侧状态（传 projectId 时返回）：fileExists/blockContent/drifted"
           }
         },
         "required": [
           "toggles",
-          "projectPrompt"
+          "projectPrompt",
+          "agentsFile"
         ]
       },
       "UpdatePromptConfigDto": {
@@ -78950,13 +79201,10 @@
           "project": {
             "type": "boolean"
           },
-          "role": {
+          "executor": {
             "type": "boolean"
           },
           "team": {
-            "type": "boolean"
-          },
-          "member": {
             "type": "boolean"
           },
           "task": {
@@ -78974,7 +79222,284 @@
           },
           "projectPrompt": {
             "type": "string",
-            "description": "项目级提示词全文；空串清空（删除配置）"
+            "description": "项目级提示词全文；空串清空（删除配置）。保存后物化到 AGENTS.md 受管区块"
+          }
+        }
+      },
+      "PromptAgentsSyncResultDto": {
+        "type": "object",
+        "properties": {
+          "synced": {
+            "type": "boolean",
+            "description": "AGENTS.md 是否成功写入（无工作区/IO 失败为 false）"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "未同步原因（synced=false 时给人看）"
+          }
+        },
+        "required": [
+          "synced",
+          "reason"
+        ]
+      },
+      "PromptConfigUpdateResponseDto": {
+        "type": "object",
+        "properties": {
+          "toggles": {
+            "$ref": "#/components/schemas/PromptInjectionTogglesDto"
+          },
+          "projectPrompt": {
+            "type": "string",
+            "nullable": true,
+            "description": "项目级提示词全文（传 projectId 时返回）"
+          },
+          "agentsSync": {
+            "nullable": true,
+            "description": "AGENTS.md 物化结果（未涉及项目提示词保存时为 null）",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PromptAgentsSyncResultDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "toggles",
+          "projectPrompt",
+          "agentsSync"
+        ]
+      },
+      "PromptSectionUsageDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "段标识"
+          },
+          "count": {
+            "type": "number",
+            "description": "样本中出现次数"
+          },
+          "ratio": {
+            "type": "number",
+            "description": "注入率（0~1）"
+          },
+          "avgChars": {
+            "type": "number",
+            "description": "平均字符数"
+          }
+        },
+        "required": [
+          "key",
+          "count",
+          "ratio",
+          "avgChars"
+        ]
+      },
+      "PromptUsageStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "sampleSize": {
+            "type": "number",
+            "description": "采样执行条数上限"
+          },
+          "promptCount": {
+            "type": "number",
+            "description": "其中带完整 prompt 载荷的条数（0 = 无样本）"
+          },
+          "avgPromptChars": {
+            "type": "number",
+            "description": "平均整条 prompt 字符数"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromptSectionUsageDto"
+            }
+          }
+        },
+        "required": [
+          "sampleSize",
+          "promptCount",
+          "avgPromptChars",
+          "sections"
+        ]
+      },
+      "PromptTemplateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "内置模板为 builtin: 前缀 key"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "task",
+              "project",
+              "role",
+              "member"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "workspace",
+              "project"
+            ]
+          },
+          "projectId": {
+            "type": "string",
+            "nullable": true
+          },
+          "body": {
+            "type": "string",
+            "description": "markdown 正文（含 {{变量}}）"
+          },
+          "builtIn": {
+            "type": "boolean",
+            "description": "内置模板只读不可删"
+          },
+          "variables": {
+            "description": "正文中的插值变量",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "target",
+          "scope",
+          "projectId",
+          "body",
+          "builtIn",
+          "variables"
+        ]
+      },
+      "PromptTemplateListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromptTemplateDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreatePromptTemplateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "task",
+              "project",
+              "role",
+              "member"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "workspace",
+              "project"
+            ]
+          },
+          "projectId": {
+            "type": "string",
+            "description": "scope=project 时必填"
+          },
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "target",
+          "scope",
+          "body"
+        ]
+      },
+      "PromptTemplatePreviewRequestDto": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "description": "模板正文（含 {{变量}}）"
+          },
+          "issueId": {
+            "type": "string",
+            "description": "插值事实来源工单"
+          }
+        },
+        "required": [
+          "body",
+          "issueId"
+        ]
+      },
+      "PromptTemplatePreviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "issueId": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "description": "模板原文"
+          },
+          "text": {
+            "type": "string",
+            "description": "插值后的正文"
+          },
+          "missingVars": {
+            "description": "事实缺失保留占位的变量清单",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "issueId",
+          "body",
+          "text",
+          "missingVars"
+        ]
+      },
+      "UpdatePromptTemplateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
           }
         }
       },
