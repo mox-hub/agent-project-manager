@@ -780,49 +780,88 @@ model AIWorkflowDefinition {
   updatedAt   DateTime @updatedAt
 
   runs  AIWorkflowRun[]
-  steps AIWorkflowStep[]
 
   @@index([key], name: "idx_ai_workflow_definitions_key")
 }
 
-model AIWorkflowStep {
-  id         String   @id @default(cuid())
-  workflowId String
-  stepType   String
-  config     Json
-  order      Int
-  createdAt  DateTime @default(now())
-
-  workflow AIWorkflowDefinition @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-
-  @@index([workflowId, order], name: "idx_ai_workflow_steps_workflow_id_order")
-}
-
 model AIWorkflowRun {
-  id          String    @id @default(cuid())
-  workflowId  String
-  projectId   String?
-  issueId     String?
-  triggerType String
-  status      String
-  input       Json?
-  output      Json?
-  stepsState  Json?
-  startedAt   DateTime?
-  finishedAt  DateTime?
-  createdBy   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  workflowId    String
+  projectId     String?
+  issueId       String?
+  triggerType   String
+  status        String
+  input         Json?
+  output        Json?
+  stepsState    Json?
+  /// 引擎版本：1 = Mastra 编排壳（v1 文法线性链），2 = 自研确定性引擎（v2 节点树文法，
+  /// graphSnapshot 快照 + WorkflowNodeRun/WorkflowEvent journal；CAP-S-03）
+  engineVersion Int       @default(1)
+  /// 触发时的 definition 快照（v2 专用）：运行期以快照为准，定义后续编辑不影响进行中的运行
+  graphSnapshot Json?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdBy     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   workflow  AIWorkflowDefinition @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   project   Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
   issue     Issue?               @relation(fields: [issueId], references: [id], onDelete: SetNull)
   usageLogs AIUsageLog[]
+  nodeRuns  WorkflowNodeRun[]
+  events    WorkflowEvent[]
 
   @@index([workflowId], name: "idx_ai_workflow_runs_workflow_id")
   @@index([projectId], name: "idx_ai_workflow_runs_project_id")
   @@index([issueId], name: "idx_ai_workflow_runs_issue_id")
   @@index([status], name: "idx_ai_workflow_runs_status")
+}
+
+/// 节点执行账（CAP-S-03 D4：原 AIWorkflowStep 死表重造）——journal 双层的节点行：
+/// 准入即写 running，结算一笔写终态；attempt 支撑重试编号幂等
+model WorkflowNodeRun {
+  id             String    @id @default(cuid())
+  runId          String
+  /// 文法节点 id（fan-out 实例聚合在容器节点上；子节点同 id 不同 attempt 维度区分轮次）
+  nodeId         String
+  nodeType       String
+  attempt        Int       @default(1)
+  /// running | succeeded | failed | skipped | waiting
+  status         String
+  input          Json?
+  output         Json?
+  /// {code, message, classification: node|provider_deterministic|transient|run}
+  error          Json?
+  /// agent 节点派发生成的 Execution 关联（wait 推进器幂等结算键）
+  executionRunId String?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  run AIWorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, nodeId, attempt], name: "uniq_workflow_node_runs_run_node_attempt")
+  @@index([runId, status], name: "idx_workflow_node_runs_run_status")
+  @@index([executionRunId], name: "idx_workflow_node_runs_execution_run_id")
+}
+
+/// 运行事件流（CAP-S-03）：run/node 全部状态迁移留痕，seq 单调可回放
+model WorkflowEvent {
+  id        String   @id @default(cuid())
+  runId     String
+  seq       Int
+  /// run.started | node.entered | node.exited | node.failed | run.suspended |
+  /// run.resumed | run.completed | run.failed | run.cancelled
+  type      String
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  run AIWorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, seq], name: "uniq_workflow_events_run_seq")
+  @@index([runId], name: "idx_workflow_events_run_id")
 }
 
 model AIUsageLog {

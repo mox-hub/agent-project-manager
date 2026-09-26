@@ -16,6 +16,13 @@ import type { AnyWorkflow, Run } from '@mastra/core/workflows';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { WorkflowCompilerService } from './workflow-compiler.service';
+import { WorkflowV2EngineService } from './workflow-v2.engine.service';
+import {
+  isV2Definition,
+  parseWorkflowDefinitionV2,
+  summarizeV2Definition,
+  WorkflowV2DefinitionError,
+} from './workflow.definition.v2';
 import { listWorkflowActions } from './workflow-actions';
 import {
   BUILTIN_WORKFLOW_TEMPLATES,
@@ -71,6 +78,7 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
     private readonly compiler: WorkflowCompilerService,
+    private readonly engineV2: WorkflowV2EngineService,
   ) {}
 
   async onModuleInit() {
@@ -136,12 +144,18 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     // 定义文法结构校验（编辑过的脏数据在此暴露）；摘要供前端列表/详情直读
     let stepsSummary: Array<Record<string, unknown>> = [];
     try {
-      const doc = parseWorkflowDefinition(workflow.definition);
-      stepsSummary = doc.steps.map((s) => ({
-        id: s.id,
-        type: s.type,
-        title: s.title,
-      }));
+      if (isV2Definition(workflow.definition)) {
+        stepsSummary = summarizeV2Definition(
+          parseWorkflowDefinitionV2(workflow.definition),
+        ) as unknown as Array<Record<string, unknown>>;
+      } else {
+        const doc = parseWorkflowDefinition(workflow.definition);
+        stepsSummary = doc.steps.map((s) => ({
+          id: s.id,
+          type: s.type,
+          title: s.title,
+        }));
+      }
     } catch (err) {
       this.logger.warn(
         `Definition ${workflow.key} 文法校验失败：${err instanceof Error ? err.message : String(err)}`,
@@ -162,10 +176,10 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     userId: string,
   ) {
     try {
-      parseWorkflowDefinition(dto.definition);
+      this.validateDefinition(dto.definition);
     } catch (err) {
       throw new BadRequestException(
-        `definition 文法非法：${err instanceof WorkflowDefinitionError ? err.message : String(err)}`,
+        `definition 文法非法：${err instanceof WorkflowDefinitionError || err instanceof WorkflowV2DefinitionError ? err.message : String(err)}`,
       );
     }
     const existing = await this.prisma.aIWorkflowDefinition.findUnique({
@@ -202,10 +216,10 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     if (!workflow) throw new NotFoundException('Workflow not found');
     if (dto.definition !== undefined) {
       try {
-        parseWorkflowDefinition(dto.definition);
+        this.validateDefinition(dto.definition);
       } catch (err) {
         throw new BadRequestException(
-          `definition 文法非法：${err instanceof WorkflowDefinitionError ? err.message : String(err)}`,
+          `definition 文法非法：${err instanceof WorkflowDefinitionError || err instanceof WorkflowV2DefinitionError ? err.message : String(err)}`,
         );
       }
     }
@@ -256,6 +270,16 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     });
     if (!definition) throw new NotFoundException('Workflow not found');
 
+    // v1/v2 双栈路由（CAP-S-03）：version:2 文法走自研确定性引擎，v1 走 Mastra 兼容层
+    if (isV2Definition(definition.definition)) {
+      return this.engineV2.startRun(
+        { id: definition.id, key: definition.key },
+        definition.definition,
+        dto,
+        userId,
+      );
+    }
+
     const workflow = this.compileFor(definition.key, definition.definition);
 
     const run = await this.prisma.aIWorkflowRun.create({
@@ -284,12 +308,29 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
   async resumeRun(
     runId: string,
     resumeData: Record<string, unknown>,
-    _userId: string,
+    userId: string,
+    nodeId?: string,
   ) {
     const record = await this.prisma.aIWorkflowRun.findUnique({
       where: { id: runId },
     });
     if (!record) throw new NotFoundException('Workflow run not found');
+
+    // v2：按节点恢复（journal 精确到节点；human inline 恢复）
+    if (record.engineVersion === 2) {
+      const waiting = await this.prisma.workflowNodeRun.findFirst({
+        where: { runId, status: 'waiting' },
+        orderBy: { attempt: 'desc' },
+      });
+      const target = nodeId ?? waiting?.nodeId;
+      if (!target) {
+        throw new BadRequestException(
+          '恢复 v2 运行需要 nodeId（无 waiting 节点可推断）',
+        );
+      }
+      return this.engineV2.resumeHuman(runId, target, resumeData, userId);
+    }
+
     if (record.status !== 'suspended') {
       throw new BadRequestException(
         `仅 suspended 状态的运行可恢复（当前：${record.status}）`,
@@ -368,6 +409,45 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     });
     if (!run) throw new NotFoundException('Workflow run not found');
 
+    // v2：journal 双层账直出（节点行 + 事件流）+ 快照投影 + waiting 节点信息
+    if (run.engineVersion === 2) {
+      const [nodeRuns, events] = await Promise.all([
+        this.prisma.workflowNodeRun.findMany({
+          where: { runId: id },
+          orderBy: [{ createdAt: 'asc' as const }, { attempt: 'asc' as const }],
+        }),
+        this.prisma.workflowEvent.findMany({
+          where: { runId: id },
+          orderBy: { seq: 'asc' },
+        }),
+      ]);
+      const waitingNode = nodeRuns.find((n) => n.status === 'waiting') ?? null;
+      const waitingInput = (waitingNode?.input ?? null) as {
+        message?: string;
+        mode?: string;
+      } | null;
+      let graphSummary: unknown = null;
+      if (isV2Definition(run.graphSnapshot)) {
+        graphSummary = summarizeV2Definition(
+          run.graphSnapshot as unknown as import('./workflow.definition.v2').V2WorkflowDoc,
+        );
+      }
+      return {
+        ...run,
+        waitingApproval: waitingNode
+          ? {
+              stepId: waitingNode.nodeId,
+              nodeId: waitingNode.nodeId,
+              message: waitingInput?.message ?? '',
+              mode: waitingInput?.mode ?? 'inline',
+            }
+          : null,
+        nodeRuns,
+        events,
+        graphSummary,
+      };
+    }
+
     const stepsState = this.readStepsState(run.stepsState);
     let waitingApproval: {
       stepId: string;
@@ -390,6 +470,20 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
   }
 
   // ── 内部 ──
+
+  /** 定义文法校验按版本路由：version:2 → v2 节点树文法；其余 → v1 线性链文法 */
+  private validateDefinition(raw: Record<string, unknown>) {
+    if (isV2Definition(raw)) {
+      parseWorkflowDefinitionV2(raw);
+      return;
+    }
+    parseWorkflowDefinition(raw);
+  }
+
+  /** v2 运行取消（v1 Mastra 基座无取消语义，仅 v2 提供） */
+  async cancelRun(runId: string, userId: string) {
+    return this.engineV2.cancelRun(runId, userId);
+  }
 
   /** 编译并缓存（key+version 维度；定义更新后版本号变化自动重编译） */
   private compileCache = new Map<
