@@ -32,6 +32,8 @@ import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { PrismaService } from '@/core/database/prisma.service';
 import { CliProviderService } from '@/modules/cli-provider/cli-provider.service';
 import { AuditService } from '@/core/audit';
+import { SearchService } from '@/modules/search/search.service';
+import type { SearchQueryDto } from '@/modules/search/dto/search.dto';
 
 interface SseSessionEntry {
   sessionId: string;
@@ -66,6 +68,7 @@ export class McpServerService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly cliProviderService: CliProviderService,
     private readonly auditService: AuditService,
+    private readonly searchService: SearchService,
   ) {}
 
   onModuleInit() {
@@ -337,6 +340,31 @@ export class McpServerService implements OnModuleInit {
               required: ['type', 'id'],
             },
           },
+          {
+            name: 'search_entities',
+            description:
+              'Global search across tasks/bugs/documents/projects (fuzzy match on title/shortId/description, project-member visibility). ' +
+              'Hits carry apmRef (apm://{projectCode}/{kind}/{shortId}) — reference entities in generated markdown as [title](apmRef); never invent short IDs.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                q: { type: 'string', description: 'Search keyword' },
+                types: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                    enum: ['task', 'bug', 'document', 'project'],
+                  },
+                  description: 'Optional type filter (default: all)',
+                },
+                limit: {
+                  type: 'number',
+                  description: 'Per-category limit (default 10, max 10)',
+                },
+              },
+              required: ['q'],
+            },
+          },
           // ─── New runtime tools (V3 Addon) ──────────────────────
           {
             name: 'get_cli_providers',
@@ -435,6 +463,9 @@ export class McpServerService implements OnModuleInit {
 
           case 'get_context':
             return await this.getContext(args);
+
+          case 'search_entities':
+            return await this.searchEntities(ctx, args);
 
           // ─── New runtime tools ──────────────────────────────────
           case 'get_cli_providers':
@@ -878,5 +909,42 @@ export class McpServerService implements OnModuleInit {
           isError: true,
         };
     }
+  }
+
+  /**
+   * apm:// 协议查询面（CAP-A-23 AI 协议入口）：全局搜索任务/Bug/文档/项目，
+   * 命中带 apmRef 引用串——外部 agent 生成 markdown 引用实体时的短号真相源。
+   */
+  private async searchEntities(
+    ctx: McpToolContext,
+    args: { q?: string; types?: string[]; limit?: number },
+  ) {
+    const q = (args.q ?? '').trim();
+    if (!q) {
+      return {
+        content: [
+          { type: 'text', text: 'Error: q (search keyword) is required' },
+        ],
+        isError: true,
+      };
+    }
+    if (!ctx.userId) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: 'Error: authenticated PAT required to resolve visibility',
+          },
+        ],
+        isError: true,
+      };
+    }
+    const result = await this.searchService.search(
+      { q, types: args.types, limit: args.limit } as SearchQueryDto,
+      ctx.userId,
+    );
+    return {
+      content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+    };
   }
 }

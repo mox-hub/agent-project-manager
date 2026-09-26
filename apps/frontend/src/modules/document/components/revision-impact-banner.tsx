@@ -33,7 +33,7 @@ export function RevisionImpactBanner({
           })}
         </span>
         <a
-          href="/app/decisions"
+          href="/app/notifications"
           className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-accent-yellow hover:underline"
         >
           {t('document.revisionImpact.goInbox')}

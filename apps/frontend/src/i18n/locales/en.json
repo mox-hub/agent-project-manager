@@ -782,6 +782,12 @@
   },
   "runDetails": {
     "title": "Run details",
+    "tabFullPrompt": "Full prompt",
+    "fullPromptChars": "{{count}} characters",
+    "fullPromptCopy": "Copy",
+    "fullPromptCopied": "Copied",
+    "fullPromptEmptyTitle": "No prompt persisted for this run",
+    "fullPromptEmptyDesc": "Prompt persistence ships with the prompt governance update; runs dispatched before it have no full prompt on record.",
     "diagnosis": {
       "title": "Failure diagnosis",
       "mechanicalLabel": "Initial read",
@@ -2820,6 +2826,7 @@
     "storageRefreshHint": "Click \"Refresh\" to load the file list",
     "storageNoFiles": "No files synced yet",
     "memory": "Memory",
+    "prompts": "Prompts",
     "issueTypes": "Issue Types",
     "issueTypesPageDesc": "Manage all task types in this space.",
     "addIssueType": "Add Type",
@@ -3118,6 +3125,10 @@
     "parentTaskLabel": "Parent task"
   },
   "taskDetail": {
+    "promptPanel": "Task prompt",
+    "promptPlaceholder": "Custom instructions for AI executing this task (injected as 'Task Instructions')...",
+    "promptSave": "Save",
+    "promptRevert": "Revert",
     "notExists": "Task does not exist",
     "switchType": "Switch issue type",
     "manageTypes": "Manage issue types",
@@ -3219,7 +3230,23 @@
     "customFields": "Fields",
     "drawerNoAgents": "No AI members are available to assign yet. Create one in member management first.",
     "aiGoalTemplate": "Generate a next-step execution plan for \"{{title}}\" and prepare a status write-back",
-    "approvalReasonWrite": "This execution writes back task status or results and requires human confirmation"
+    "approvalReasonWrite": "This execution writes back task status or results and requires human confirmation",
+    "splitWithAi": "Split into subtasks with AI",
+    "splitRunning": "Splitting…",
+    "splitDone": "AI proposed {{count}} subtasks — confirm them below",
+    "splitDescOnly": "Description tidied up per the AI split suggestion",
+    "splitNoop": "AI considers this task simple enough — no split needed",
+    "splitFailed": "Split failed",
+    "splitReplaceTitle": "Split again?",
+    "splitReplaceDesc": "There are pending split suggestions. Splitting again replaces them (already confirmed subtasks are not affected)",
+    "splitReplaceConfirm": "Split again",
+    "splitPendingTitle": "AI split suggestions · {{count}} pending",
+    "splitAccept": "Add as subtask",
+    "splitAcceptAll": "Add all",
+    "splitDismiss": "Dismiss",
+    "splitDismissAll": "Dismiss all",
+    "splitCreateFailed": "Failed to create the subtask; remaining suggestions are kept",
+    "splitUpdateFailed": "Failed to save split suggestions"
   },
   "activity": {
     "title": "Activity",
@@ -4950,6 +4977,18 @@
   "projectSettings": {
     "loading": "Loading project settings...",
     "sidebarTitle": "Project Settings",
+    "ai": {
+      "title": "AI Prompt",
+      "desc": "Project-level instructions injected into every dispatch prompt of this project (as 'Project Instructions')"
+    },
+    "prompt": {
+      "title": "Project prompt",
+      "desc": "Markdown supported; applies to the next dispatch after saving. Leave empty to disable injection.",
+      "placeholder": "e.g. Tech stack conventions, coding standards, domain background...",
+      "save": "Save",
+      "revert": "Revert",
+      "saved": "Project prompt saved"
+    },
     "contract": {
       "title": "Contract Files",
       "desc": "Binding status, seeding and alignment management for project contract files",
@@ -4960,6 +4999,7 @@
     },
     "tabs": {
       "general": "General",
+      "ai": "AI Prompt",
       "team": "Team",
       "playbook": "Pipeline Playbook",
       "gitTerminal": "Git & Terminal",
@@ -5316,6 +5356,18 @@
     "hint": "Markdown supported",
     "nothingToPreview": "Nothing to preview"
   },
+  "entityRef": {
+    "slash": {
+      "hint": "Keep typing to filter tasks / bugs / docs / members",
+      "searching": "Searching…",
+      "empty": "No matches",
+      "filterAll": "All",
+      "filterTask": "Tasks",
+      "filterBug": "Bugs",
+      "filterDocument": "Docs",
+      "filterMember": "Members"
+    }
+  },
   "office": {
     "title": "Office",
     "handoff": {
@@ -5532,5 +5584,48 @@
     "adjustDesc": "Choose a trust tier for this AI member; the tier governs what it may do automatically.",
     "adjustSaved": "Trust tier updated",
     "adjustFailed": "Failed to update trust tier"
+  },
+  "promptEditor": {
+    "empty": "No content yet",
+    "charCount": "{{count}} characters"
+  },
+  "prompts": {
+    "toggles": {
+      "title": "Prompt injection switches",
+      "desc": "Control which sections are injected into dispatch prompts. Changes apply to the next dispatch; switching everything off still dispatches with the minimal task prompt."
+    },
+    "toggle": {
+      "system": "System guide",
+      "systemDesc": "Built-in APM collaboration baseline & reporting spec (read-only assets)",
+      "project": "Project prompt",
+      "projectDesc": "Project-level instructions, edited in project settings",
+      "role": "Role hint",
+      "roleDesc": "Project role promptHint (## Your Role)",
+      "team": "Team rules",
+      "teamDesc": "Active teams' teamPrompt of the dispatched member (## Team Rules)",
+      "member": "Member instructions",
+      "memberDesc": "Member personalPrompt and reasoning effort",
+      "task": "Task prompt",
+      "taskDesc": "Issue-level custom prompt, edited in task detail (## Task Instructions)",
+      "skills": "Project skills",
+      "skillsDesc": "Enabled skills section (also gated by the project-level skills toggle)",
+      "context": "Context JSON",
+      "contextDesc": "Task execution context pack (issue facts, acceptance criteria, related data)"
+    },
+    "system": {
+      "title": "System prompts",
+      "desc": "Built-in prompts that standardize how AI agents understand and work within APM. Read-only: upgrades ship with releases, no manual editing.",
+      "builtin": "Built-in",
+      "empty": "No system prompts",
+      "charCount": "{{count}} characters"
+    },
+    "where": {
+      "title": "Where layered prompts are edited",
+      "desc": "System level is read-only here; other layers are edited in their management surfaces",
+      "project": "Project prompt — Project settings → AI Prompt",
+      "task": "Task prompt — Task detail right sidebar → Task prompt",
+      "role": "Role hint — Workspace settings → Roles → edit role",
+      "member": "Member personal prompt — Team member profile (existing entry)"
+    }
   }
 }

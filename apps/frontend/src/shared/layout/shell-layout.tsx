@@ -6,7 +6,6 @@ import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
 import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
 import { useUnreadNotificationsCount } from '@/modules/notification/hooks/use-notifications';
-import { useDecisionSummary } from '@/modules/decision/hooks/use-decisions';
 import { toast } from '@/hooks/use-toast';
 import { useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
 import { useSyncProgress } from '@/modules/linear/hooks/use-sync-progress';
@@ -125,10 +124,8 @@ export function ShellLayout() {
     (r) => r.scopeType === 'global' && r.role === 'admin',
   );
 
-  // 侧栏红点数量角标数据源：通知=未读数；决策收件箱=待处理决策数（summary.pending）
+  // 侧栏红点数量角标数据源：通知=未读数（决策收件箱页面已取消，2026-09-25）
   const { data: unreadCount = 0 } = useUnreadNotificationsCount();
-  const { data: decisionSummary } = useDecisionSummary();
-  const pendingDecisionCount = decisionSummary?.pending ?? 0;
   // 通知未读数实时刷新：新增/已读事件都失效 notifications 前缀（含 unread count）
   const queryClient = useQueryClient();
   useEventSubscription('notification.created', () => {
@@ -171,12 +168,6 @@ export function ShellLayout() {
         label: t('shell.workbench', '工作台'),
         items: [
           { to: '/app/projects/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
-          {
-            to: '/app/decisions',
-            icon: getEntityIcon('decision').icon,
-            label: t('nav.decisions'),
-            count: pendingDecisionCount,
-          },
           { to: '/app/projects', icon: getEntityIcon('project').icon, label: t('nav.projects') },
         ],
       },
@@ -255,7 +246,7 @@ export function ShellLayout() {
     return favoriteGroupItems.length === 0
       ? groups.filter((g) => g.id !== 'favorites')
       : groups;
-  }, [favoriteGroupItems, isAdminRole, t, pendingDecisionCount]);
+  }, [favoriteGroupItems, isAdminRole, t]);
 
   useEffect(() => {
     if (!eventClient.isConnected()) {

@@ -269,7 +269,7 @@ export function ProjectPlaybookPage() {
                             {t('project.playbookPage.gatePending')}
                           </Badge>
                           <Button asChild size="sm" variant="outline" data-ai="playbook.gotoGate">
-                            <Link to="/app/decisions">
+                            <Link to="/app/notifications">
                               {t('project.playbookPage.goInbox')}
                             </Link>
                           </Button>
@@ -324,7 +324,7 @@ export function ProjectPlaybookPage() {
                 </div>
                 {intakeProposalId ? (
                   <Button asChild size="sm" variant="outline" data-ai="playbook.intake.gotoInbox">
-                    <Link to="/app/decisions">{t('project.playbookPage.intake.goInbox')}</Link>
+                    <Link to="/app/notifications">{t('project.playbookPage.intake.goInbox')}</Link>
                   </Button>
                 ) : (
                   <Button

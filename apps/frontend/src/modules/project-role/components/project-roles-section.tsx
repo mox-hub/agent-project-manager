@@ -3,7 +3,6 @@ import { Plus, Pencil, RefreshCw, Terminal, Trash2 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/section-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { SkeletonList } from '@/components/ui/skeleton';
@@ -23,6 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useConfirm } from '@/shared/confirm/confirm-provider';
+import { PromptEditor } from '@/shared/components/prompt-editor';
 import {
   useCreateProjectRole,
   useProjectRoles,
@@ -369,9 +369,9 @@ function RoleEditDialog({
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium">Prompt 提示（注入到 CLI）</label>
-            <Textarea
+            <PromptEditor
               value={promptHint}
-              onChange={(e) => setPromptHint(e.target.value)}
+              onChange={setPromptHint}
               placeholder="如: 你是负责编码的 AI 员工..."
               rows={4}
             />

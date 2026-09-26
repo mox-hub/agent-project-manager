@@ -104,7 +104,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
         )}
         {card.status === 'escalated' && (
           <Link
-            to="/app/decisions"
+            to="/app/notifications"
             className="flex items-center gap-1 text-11 text-accent-red hover:underline"
             data-ai-action="office.collaboration.to-decisions.click"
           >

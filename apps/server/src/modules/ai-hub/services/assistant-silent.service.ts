@@ -461,6 +461,70 @@ ${documents.length ? `需求侧工件（覆盖度对照的依据）：\n${JSON.s
 只输出 JSON：{"tasks": [{"index": 0, "granularity": "ok", "reason": "...", "suggestion": "", "testability": "ok"}], "coverage": {"uncovered": ["..."], "orphans": [0]}, "verdict": "healthy", "summary": "..."}`;
     },
   },
+  'issue-decompose': {
+    description:
+      '工单拆子任务建议：按工单事实（描述/类型/已有子任务/验收标准）生成子任务拆分建议与描述去重改写，前端以「待确认」清单逐条人确认后走既有 createSubTask 落库，描述改写随拆分生效（CAP-A-04 增强切片）',
+    prepareContext: async (context, { prisma }) => {
+      const issueId =
+        typeof context.issueId === 'string' ? context.issueId.trim() : '';
+      if (!issueId) {
+        throw new BadRequestException('工单拆分缺少 issueId');
+      }
+      const issue = await prisma.issue.findUnique({
+        where: { id: issueId },
+        select: {
+          title: true,
+          description: true,
+          status: true,
+          priority: true,
+          type: true,
+          issueType: { select: { name: true } },
+          project: { select: { name: true } },
+          subIssues: { select: { title: true, status: true } },
+          acceptances: {
+            select: { criteria: { select: { content: true }, take: 8 } },
+          },
+        },
+      });
+      if (!issue) {
+        throw new BadRequestException('工单不存在');
+      }
+      return {
+        issue: {
+          title: issue.title,
+          description: issue.description ?? '',
+          status: issue.status,
+          priority: issue.priority,
+          type: issue.issueType?.name ?? issue.type,
+          project: issue.project?.name ?? '',
+          existingSubtasks: issue.subIssues.map((s) => s.title),
+          acceptanceCriteria: issue.acceptances.flatMap((a) =>
+            a.criteria.map((c) => c.content),
+          ),
+        },
+      };
+    },
+    buildInstructions: (context) => {
+      const issue =
+        typeof context.issue === 'object' && context.issue !== null
+          ? (context.issue as Record<string, unknown>)
+          : null;
+      if (!issue?.title) {
+        throw new BadRequestException('工单拆分缺少工单事实');
+      }
+      return `你是项目管理系统的主 AI 助理「小周」。用户在工单详情页按下了「拆分」，请把这条工单分解为可执行的子任务建议。拆分结果会以「待确认」清单呈现，用户逐条确认后才会落库为真正的子任务——你只代写建议，不落库。
+工单事实（权威，来自数据库）：
+${JSON.stringify(issue)}
+
+拆分要求：
+- 按可独立交付、可独立验证的步骤拆，通常 2~6 条；工单本身已足够简单（一步能做完）时给空数组，不硬拆。
+- 每条：title 一句话祈使句（不超过 30 字）；description 1~2 句说清做什么、怎么算完成，不复读工单原文。
+- 子任务合起来要覆盖工单目标：不遗漏交付物，也不做工单没要求的事；「已有子任务」里列出的不要再拆。
+- revisedDescription：把描述中已被子任务覆盖的步骤清单部分收拢成一句概述或移除，保留目标、背景、约束与验收相关信息；若原描述没有可收拢的内容，原样返回。
+- 宁缺毋假：工单事实里没有的细节不要编造；信息不足的子任务在 description 里注明「待澄清：…」。
+只输出 JSON：{"subtasks": [{"title": "...", "description": "..."}], "revisedDescription": "..."}`;
+    },
+  },
   'failure-diagnosis': {
     description:
       '执行失败诊断（批一 P0 切片 3，2026-09-17 裁决 D 的按需 LLM 半）：读失败/阻塞执行现场（错误留痕/血缘/验收契约），输出结构化诊断（归类/原因/建议/下一步动作/缺失信息）；执行详情「AI 诊断」按钮按需触发，AIUsageLog 记账；零 token 的机械归类见 execution/failure-classifier',

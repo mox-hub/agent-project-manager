@@ -5,11 +5,12 @@ import { EditorState, Compartment } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, rectangularSelection, crosshairCursor, highlightActiveLine } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap, type CompletionContext } from '@codemirror/autocomplete';
 import { bracketMatching, foldGutter, foldKeymap, indentOnInput, indentUnit, syntaxHighlighting, defaultHighlightStyle, HighlightStyle } from '@codemirror/language';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { tags as t } from '@lezer/highlight';
 import { cn } from '@/lib/utils';
+import { searchApi } from '@/modules/search/api/search-api';
 
 export interface MdxEditorRef {
   insertText: (text: string, options?: { surroundWith?: string; placeholder?: string }) => void;
@@ -96,6 +97,35 @@ const darkTheme = EditorView.theme(
   { dark: true },
 );
 
+/**
+ * `/` 触发实体引用补全（CAP-A-23 全局引用系统，与 SlashRefTextarea 同源语义）：
+ * 行首/空白符后的 `/query` 词元 → searchApi 模糊匹配 → 以
+ * `[标题](apm://…)` 片段替换词元；无 apmRef 的命中不进候选。
+ */
+async function slashRefCompletionSource(context: CompletionContext) {
+  const before = context.matchBefore(/(?:^|\s)\/([^\s/]*)$/);
+  if (!before) return null;
+  const m = /(?:^|\s)\/([^\s/]*)$/.exec(before.text);
+  if (!m) return null;
+  const query = m[1] ?? '';
+  if (!query) return null;
+  const slashPos = before.from + before.text.length - query.length - 1;
+  try {
+    const res = await searchApi.search({ q: query, limit: 8 });
+    const options = res.items
+      .filter((hit) => hit.apmRef)
+      .map((hit) => ({
+        label: hit.title.replace(/[[\]]/g, ''),
+        detail: hit.subtitle,
+        apply: `[${hit.title.replace(/[[\]]/g, '')}](${hit.apmRef}) `,
+      }));
+    if (options.length === 0) return null;
+    return { from: slashPos, options, validFor: /^[^\s/]*$/ };
+  } catch {
+    return null;
+  }
+}
+
 export const MdxEditor = forwardRef<MdxEditorRef, MdxEditorProps>(function MdxEditor(
   { value, onChange, className },
   ref,
@@ -163,7 +193,7 @@ export const MdxEditor = forwardRef<MdxEditorRef, MdxEditorProps>(function MdxEd
         indentOnInput(),
         bracketMatching(),
         closeBrackets(),
-        autocompletion(),
+        autocompletion({ override: [slashRefCompletionSource] }),
         rectangularSelection(),
         crosshairCursor(),
         highlightActiveLine(),

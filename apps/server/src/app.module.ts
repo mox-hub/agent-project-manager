@@ -55,6 +55,7 @@ import { PlaybookModule } from './modules/playbook/playbook.module';
 import { OfficeModule } from './modules/office/office.module';
 import { ContractModule } from './modules/contract/contract.module';
 import { ReleaseModule } from './modules/release/release.module';
+import { PromptModule } from './modules/prompt/prompt.module';
 
 // Common infrastructure
 import {
@@ -114,6 +115,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     McpServerModule,
     CliProviderModule,
     SkillsModule,
+    PromptModule,
     ProjectRoleModule,
     DecisionModule,
     DashboardModule,

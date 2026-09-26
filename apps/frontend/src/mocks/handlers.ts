@@ -107,6 +107,62 @@ export const handlers = [
     });
   }),
 
+  // ── 提示词治理（CAP-A-24）：系统提示词只读 + 注入开关 + 项目提示词 + 干跑预览 ──
+  http.get('*/prompts/system', () => {
+    return ok({
+      items: [
+        {
+          key: 'apm-baseline',
+          title: 'APM 协作基线',
+          description: '你在 APM 中执行任务的行为基线',
+          charCount: 1024,
+        },
+      ],
+    });
+  }),
+  http.get('*/prompts/system/:key', ({ params }) => {
+    return ok({
+      key: params.key,
+      title: 'APM 协作基线',
+      description: '你在 APM 中执行任务的行为基线',
+      charCount: 1024,
+      content: '# APM 协作基线\n\n（mock 预览：系统提示词内置资产正文）',
+    });
+  }),
+  http.get('*/prompts/config', ({ request }) => {
+    const url = new URL(request.url);
+    const projectId = url.searchParams.get('projectId');
+    return ok({
+      toggles: {
+        system: true,
+        project: true,
+        role: true,
+        team: true,
+        member: true,
+        task: true,
+        skills: true,
+        context: true,
+      },
+      projectPrompt: projectId ? '（mock 预览）项目技术栈约定与编码规范。' : null,
+    });
+  }),
+  http.put('*/prompts/config', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return ok({
+      toggles: {
+        system: body.system ?? true,
+        project: body.project ?? true,
+        role: body.role ?? true,
+        team: body.team ?? true,
+        member: body.member ?? true,
+        task: body.task ?? true,
+        skills: body.skills ?? true,
+        context: body.context ?? true,
+      },
+      projectPrompt: typeof body.projectPrompt === 'string' ? body.projectPrompt : null,
+    });
+  }),
+
   http.get('*/subscriptions/my', () => {
     return ok({ targetIds: [] });
   }),

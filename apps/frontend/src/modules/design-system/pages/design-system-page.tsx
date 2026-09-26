@@ -211,6 +211,8 @@ import { StatusIconFrame } from '@/shared/status/status-icon-frame'
 import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals'
 import { MarkdownView } from '@/shared/components/markdown-view'
 import { MarkdownEditor } from '@/shared/components/markdown-editor'
+import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor'
+import { PromptEditor } from '@/shared/components/prompt-editor'
 import { EmojiPicker } from '@/shared/components/emoji-picker/emoji-picker'
 import { ChapterScrubber, type Chapter } from '@/components/ui/chapter-scrubber'
 import { FloatingDock, type DockItem } from '@/components/ui/floating-dock'
@@ -331,6 +333,10 @@ import { IssueTypePill } from '@/shared/components/issue-type-pill'
 import { AssistantToolCard } from '@/modules/assistant/components/assistant-tool-card'
 import { DecisionCardShell } from '@/shared/decision-card/decision-card-shell'
 import { MemberCard } from '@/modules/auth/components/member-card'
+import { ApmRefLink } from '@/shared/apm-ref/apm-ref-chip'
+import type { ApmRefKind } from '@apm/shared/apm-ref'
+import { SlashRefTextarea } from '@/shared/entity-ref/slash-ref-textarea'
+import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger'
 
 const SECTIONS = [
   { id: 'colors', label: 'Color Tokens', group: 'Tokens' },
@@ -373,6 +379,8 @@ const SECTIONS = [
   { id: 'status-icon-frame', label: 'Status Icon Frame', group: 'Primitives' },
   { id: 'markdown', label: 'Markdown View', group: 'Primitives' },
   { id: 'markdown-editor', label: 'Markdown Editor', group: 'Primitives' },
+  { id: 'markdown-live-editor', label: 'Markdown Live Editor', group: 'Primitives' },
+  { id: 'entity-ref', label: 'Entity Ref System', group: 'Primitives' },
   { id: 'emoji-picker', label: 'Emoji Picker', group: 'Primitives' },
   { id: 'pagination', label: 'Pagination', group: 'Primitives' },
   { id: 'calendar', label: 'Calendar', group: 'Primitives' },
@@ -766,6 +774,120 @@ function MarkdownEditorDemo() {
   )
 }
 
+/* ── 块级所见即所得编辑器演示（CAP-A-04 描述区形态） ───────────────── */
+
+function MarkdownLiveEditorDemo() {
+  const [value, setValue] = useState(
+    '点哪编哪：非活跃块恒为渲染态，点击块就地编辑。\n\n支持 **加粗**、`code`、- 列表、> 引用。\n\n失焦或 Esc 回渲染态。',
+  )
+  return (
+    <MarkdownLiveEditor
+      value={value}
+      onChange={setValue}
+      rows={2}
+      placeholder="添加描述…"
+    />
+  )
+}
+
+/* ── 提示词编辑器演示（CAP-A-24：编辑态所见即所得 / 只读态纯渲染） ── */
+
+function PromptEditorDemo({ mode }: { mode: 'edit' | 'readonly' }) {
+  const [value, setValue] = useState(
+    '# 项目协作约定\n\n- 提交前跑 **lint + test**\n- 引用任务用 `apm://` 链接\n',
+  )
+  return mode === 'edit' ? (
+    <PromptEditor
+      value={value}
+      onChange={setValue}
+      placeholder="项目提示词…"
+      rows={3}
+    />
+  ) : (
+    <PromptEditor value={value} readOnly />
+  )
+}
+
+/* ── 全局实体引用系统演示（CAP-A-23）：胶囊 / 斜杠命令 / 路由预览卡 ── */
+
+const REF_KIND_SAMPLES: Array<{ kind: ApmRefKind; label: string; href: string }> = [
+  { kind: 'doc', label: '需求分析报告', href: 'apm://APM/doc/D17' },
+  { kind: 'issue', label: '修复登录超时', href: 'apm://APM/issue/APM-PF-001' },
+  { kind: 'bug', label: '列表分页失效', href: 'apm://APM/bug/APM-BF-014' },
+  { kind: 'member', label: '王小明', href: 'apm://APM/member/M7' },
+  { kind: 'team', label: '平台组', href: 'apm://APM/team/T2' },
+  { kind: 'acceptance', label: '登录流验收', href: 'apm://APM/acceptance/AC9' },
+  { kind: 'release', label: 'v0.7.4', href: 'apm://APM/release/R12' },
+]
+
+function RefCapsuleDemo() {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {REF_KIND_SAMPLES.map((sample) => (
+        <ApmRefLink key={sample.kind} href={sample.href}>
+          {sample.label}
+        </ApmRefLink>
+      ))}
+    </div>
+  )
+}
+
+function RefMarkdownDemo() {
+  return (
+    <MarkdownView
+      content={[
+        '任务拆解见 [修复登录超时](apm://APM/issue/APM-PF-001)，依据 [需求分析报告](apm://APM/doc/D17)，评审人 [王小明](apm://APM/member/M7)。',
+        '',
+        '外链保持原样：[APM 文档站](https://example.com/docs)。',
+      ].join('\n')}
+    />
+  )
+}
+
+function SlashRefDemo() {
+  const [value, setValue] = useState('')
+  return (
+    <SlashRefTextarea
+      value={value}
+      onChange={setValue}
+      rows={2}
+      placeholder="键入 / 引用任务、Bug、文档、成员…"
+    />
+  )
+}
+
+/** 路由预览卡样例：占位 ID 无真实数据时卡片呈加载/错误态，真实实体即富数据 */
+const PREVIEW_ROUTE_SAMPLES: Array<{ label: string; path: string }> = [
+  { label: '项目', path: '/app/projects/demo-project' },
+  { label: '任务', path: '/app/issues/demo-issue' },
+  { label: 'Bug', path: '/app/bugs/demo-bug' },
+  { label: '文档', path: '/app/documents/demo-doc' },
+  { label: '仓库', path: '/app/repositories/demo-repo' },
+  { label: '成员', path: '/app/members/demo-member' },
+  { label: '团队', path: '/app/teams/demo-team' },
+  { label: '验收', path: '/app/acceptance/demo-acc' },
+  { label: '执行', path: '/app/executions/demo-exec' },
+  { label: '发版', path: '/app/releases/demo-release' },
+  { label: '工作流', path: '/app/workflows/demo-workflow' },
+]
+
+function RoutePreviewDemo() {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {PREVIEW_ROUTE_SAMPLES.map((sample) => (
+        <RoutePreviewTrigger key={sample.path} path={sample.path} side="top">
+          <span
+            title={sample.path}
+            className="inline-flex cursor-pointer items-center rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-xs text-primary transition-colors hover:bg-primary/10"
+          >
+            {sample.label}
+          </span>
+        </RoutePreviewTrigger>
+      ))}
+    </div>
+  )
+}
+
 /* coss p-command 演示（base-ui autocomplete 引擎，与全局面板同源实现） */
 
 type CommandDemoItem = {
@@ -786,7 +908,7 @@ const commandDemoGroups: Array<{ value: string; label: string; items: CommandDem
         { entity: 'issue', label: '打开任务', keywords: ['task', '任务'] },
         { entity: 'workflow', label: '打开工作流', keywords: ['workflow'] },
         { entity: 'acceptance', label: '打开验收', keywords: ['acceptance'] },
-        { entity: 'decision', label: '打开决策收件箱', keywords: ['decision'] },
+        { entity: 'decision', label: '打开决策', keywords: ['decision'] },
         { entity: 'repository', label: '打开仓库', keywords: ['repo'] },
       ] as const
     ).map(({ entity, label, keywords }) => ({
@@ -4513,6 +4635,55 @@ export function DesignSystemPage() {
                   preview="toggle"
                   placeholder="Write / Preview 切换模式（窄容器）"
                 />
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="markdown-live-editor">
+            <SectionTitle>Markdown Live Editor</SectionTitle>
+            <MarkdownLiveEditorDemo />
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="prompt-editor">
+            <SectionTitle>Prompt Editor</SectionTitle>
+            <div className="flex flex-col gap-4">
+              <PromptEditorDemo mode="edit" />
+              <PromptEditorDemo mode="readonly" />
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="entity-ref">
+            <SectionTitle>Entity Ref System</SectionTitle>
+            <div className="flex flex-col gap-4">
+              <div className="max-w-150 rounded-lg border border-border p-4">
+                <p className="mb-3 text-xs text-muted-foreground">
+                  引用胶囊 · apm:// 全部 kind（hover 出预览卡，点击直达详情路由）
+                </p>
+                <RefCapsuleDemo />
+              </div>
+              <div className="max-w-150 rounded-lg border border-border p-4">
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Markdown 原文保留 [标题](apm://…) 形态，渲染为胶囊；外链不受影响
+                </p>
+                <RefMarkdownDemo />
+              </div>
+              <div className="max-w-150">
+                <SlashRefDemo />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  键入 / 触发实体补全：类型筛选 + 键入过滤 + ↑↓/Enter 插入（评论框、描述区、文档编辑器同源）
+                </p>
+              </div>
+              <div className="max-w-150 rounded-lg border border-border p-4">
+                <p className="mb-3 text-xs text-muted-foreground">
+                  路由预览卡 · 全部实体类型（hover 出卡；示例 ID 无真实数据时呈错误态，真实实体显示富数据）
+                </p>
+                <RoutePreviewDemo />
               </div>
             </div>
           </SectionAnchor>

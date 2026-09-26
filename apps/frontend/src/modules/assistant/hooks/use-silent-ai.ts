@@ -233,6 +233,56 @@ export function useSilentProjectScore() {
   });
 }
 
+/** 工单拆子任务建议（CAP-A-04 增强切片）：issue-decompose 场景，服务端按工单事实侦查 */
+export function useSilentIssueDecompose() {
+  return useMutation({
+    mutationFn: (input: { issueId: string; projectId?: string }) =>
+      assistantApi.silent('issue-decompose', {
+        projectId: input.projectId,
+        context: { issueId: input.issueId },
+      }),
+    retry: false,
+  });
+}
+
+export interface IssueDecomposeProposal {
+  subtasks: { title: string; description?: string }[];
+  revisedDescription?: string;
+}
+
+/** 解析 issue-decompose 响应（容错：非法条目丢弃，title 空白不计） */
+export function parseIssueDecompose(
+  data: Record<string, unknown> | undefined,
+): IssueDecomposeProposal {
+  const raw = data?.subtasks;
+  const subtasks = Array.isArray(raw)
+    ? raw
+        .filter(
+          (it): it is Record<string, unknown> =>
+            !!it && typeof it === 'object' && !Array.isArray(it),
+        )
+        .filter(
+          (it) => typeof it.title === 'string' && it.title.trim().length > 0,
+        )
+        .slice(0, 8)
+        .map((it) => ({
+          title: (it.title as string).trim(),
+          description:
+            typeof it.description === 'string' && it.description.trim()
+              ? it.description.trim()
+              : undefined,
+        }))
+    : [];
+  return {
+    subtasks,
+    revisedDescription:
+      typeof data?.revisedDescription === 'string' &&
+      data.revisedDescription.trim()
+        ? data.revisedDescription
+        : undefined,
+  };
+}
+
 /** 卡片就地解释（CAP-C-07 AISlot）：Ctrl/Cmd+左键实体卡片触发 */
 export function useCardExplain() {
   return useMutation({

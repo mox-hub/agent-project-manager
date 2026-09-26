@@ -513,8 +513,11 @@ export function useSubTasks(parentIssueId: string | undefined) {
   });
 }
 
-/** 创建子任务 (内部调用 useCreateTask, 自动补 parentIssueId) */
-export function useCreateSubTask(options?: { onSuccess?: (task: Task) => void }) {
+/** 创建子任务 (内部调用 useCreateTask, 自动补 parentIssueId)；silent=自带成败 toast 全关（拆分建议批量落库用） */
+export function useCreateSubTask(options?: {
+  onSuccess?: (task: Task) => void;
+  silent?: boolean;
+}) {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   return useMutation({
@@ -525,15 +528,17 @@ export function useCreateSubTask(options?: { onSuccess?: (task: Task) => void })
       queryClient.invalidateQueries({ queryKey: ['task', variables.parentIssueId] });
       queryClient.invalidateQueries({ queryKey: ['allTasks'] });
       queryClient.invalidateQueries({ queryKey: ['allBugs'] });
-      toast.success(t('task.messages.subtaskCreated'));
+      if (!options?.silent) toast.success(t('task.messages.subtaskCreated'));
       options?.onSuccess?.(newTask);
     },
     onError: (err) => {
-      toast.error(
-        t('task.messages.createSubtaskFailedMessage', {
-          message: err instanceof Error ? err.message : t('task.messages.unknownError'),
-        }),
-      );
+      if (!options?.silent) {
+        toast.error(
+          t('task.messages.createSubtaskFailedMessage', {
+            message: err instanceof Error ? err.message : t('task.messages.unknownError'),
+          }),
+        );
+      }
     },
   });
 }

@@ -21370,6 +21370,57 @@
         ]
       }
     },
+    "/_api/ai/issues/{issueId}/prompt-preview": {
+      "get": {
+        "operationId": "CliDispatchController_previewPrompt",
+        "parameters": [
+          {
+            "name": "issueId",
+            "required": true,
+            "in": "path",
+            "description": "Work item ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Complete prompt + segment-by-segment breakdown + toggle comparison (same source as actual dispatch)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptPreviewResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Task not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Dry-run prompt preview: assemble the complete dispatch prompt via the same assembly chain as dispatch (no dispatch, no execution created)",
+        "tags": [
+          "CLI Dispatch"
+        ]
+      }
+    },
     "/_api/ai/cli-providers": {
       "get": {
         "operationId": "CliDispatchController_getCliProviders",
@@ -43503,6 +43554,177 @@
         ]
       }
     },
+    "/_api/search": {
+      "get": {
+        "operationId": "SearchController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "description": "搜索关键词（title/shortId/description/name contains，大小写不敏感）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "types",
+            "required": false,
+            "in": "query",
+            "description": "类型过滤，可省略；可重复传（types=task&types=bug）或数组风格（types[]=task）；milestone/acceptance 为前端契约保留类别，后端暂不产出命中（返回空分组）",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "task",
+                  "bug",
+                  "document",
+                  "project",
+                  "milestone",
+                  "acceptance"
+                ]
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "每类返回上限（默认 10，封顶 10）",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "扁平命中列表（前端按 type 分组渲染）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "全局搜索（工单/文档/项目，按项目成员可见性过滤）",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
     "/_api/admin/users": {
       "get": {
         "operationId": "AdminController_listUsers",
@@ -55065,6 +55287,155 @@
         ]
       }
     },
+    "/_api/prompts/system": {
+      "get": {
+        "operationId": "PromptController_listSystemPrompts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "内置系统提示词元数据（无写端点，升级随版本发布）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemPromptListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "系统提示词列表（内置只读）",
+        "tags": [
+          "Prompts"
+        ]
+      }
+    },
+    "/_api/prompts/system/{key}": {
+      "get": {
+        "operationId": "PromptController_getSystemPrompt",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "系统提示词 markdown 全文",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemPromptDetailDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "System prompt not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "系统提示词详情（只读全文）",
+        "tags": [
+          "Prompts"
+        ]
+      }
+    },
+    "/_api/prompts/config": {
+      "get": {
+        "operationId": "PromptController_getConfig",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "注入开关（缺省全开）与项目级提示词（未配置 null）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptConfigResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "提示词注入配置（开关 + 项目级提示词）",
+        "tags": [
+          "Prompts"
+        ]
+      },
+      "put": {
+        "operationId": "PromptController_updateConfig",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePromptConfigDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的配置（开关全量返回；项目提示词按传入 projectId 返回）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptConfigResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "更新注入开关 / 项目级提示词",
+        "tags": [
+          "Prompts"
+        ]
+      }
+    },
     "/_api/projects/{projectId}/roles": {
       "get": {
         "operationId": "ProjectRoleDefinitionController_list",
@@ -56346,177 +56717,6 @@
         "summary": "剧本健康卡（阶段通过/跳过率/退回率，全派生）",
         "tags": [
           "Dashboard"
-        ]
-      }
-    },
-    "/_api/search": {
-      "get": {
-        "operationId": "SearchController_search",
-        "parameters": [
-          {
-            "name": "q",
-            "required": true,
-            "in": "query",
-            "description": "搜索关键词（title/shortId/description/name contains，大小写不敏感）",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "types",
-            "required": false,
-            "in": "query",
-            "description": "类型过滤，可省略；可重复传（types=task&types=bug）或数组风格（types[]=task）；milestone/acceptance 为前端契约保留类别，后端暂不产出命中（返回空分组）",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": [
-                  "task",
-                  "bug",
-                  "document",
-                  "project",
-                  "milestone",
-                  "acceptance"
-                ]
-              }
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "每类返回上限（默认 10，封顶 10）",
-            "schema": {
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "扁平命中列表（前端按 type 分组渲染）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "请求参数错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "资源不存在",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "全局搜索（工单/文档/项目，按项目成员可见性过滤）",
-        "tags": [
-          "Search"
         ]
       }
     },
@@ -63359,6 +63559,12 @@
             "items": {
               "$ref": "#/components/schemas/TodoItemDto"
             }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "扩展元数据（整体提交，键集由调用方约定）",
+            "additionalProperties": true,
+            "nullable": true
           }
         }
       },
@@ -68021,6 +68227,108 @@
       "DispatchCliDto": {
         "type": "object",
         "properties": {}
+      },
+      "PromptInjectionTogglesDto": {
+        "type": "object",
+        "properties": {
+          "system": {
+            "type": "boolean",
+            "description": "系统提示词段（内置规范）"
+          },
+          "project": {
+            "type": "boolean",
+            "description": "项目级提示词段"
+          },
+          "role": {
+            "type": "boolean",
+            "description": "角色提示段（promptHint）"
+          },
+          "team": {
+            "type": "boolean",
+            "description": "团队规则段（teamPrompt）"
+          },
+          "member": {
+            "type": "boolean",
+            "description": "成员个人提示词段（personalPrompt + 思考强度）"
+          },
+          "task": {
+            "type": "boolean",
+            "description": "任务级自定义提示词段（metadata.taskPrompt）"
+          },
+          "skills": {
+            "type": "boolean",
+            "description": "项目技能段（与 dispatch.skillsEnabled 项目开关叠加）"
+          },
+          "context": {
+            "type": "boolean",
+            "description": "上下文 JSON 段"
+          }
+        },
+        "required": [
+          "system",
+          "project",
+          "role",
+          "team",
+          "member",
+          "task",
+          "skills",
+          "context"
+        ]
+      },
+      "PromptPreviewSectionDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "段落标识：system/project/role/team/member/task/skills/taskBody/context/closing"
+          },
+          "injected": {
+            "type": "boolean",
+            "description": "该段是否实际注入"
+          },
+          "content": {
+            "type": "string",
+            "nullable": true,
+            "description": "段落内容（未注入为 null）"
+          }
+        },
+        "required": [
+          "key",
+          "injected",
+          "content"
+        ]
+      },
+      "PromptPreviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "issueId": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "组装后的完整派发 prompt（与实际派发同源）"
+          },
+          "charCount": {
+            "type": "number"
+          },
+          "toggles": {
+            "$ref": "#/components/schemas/PromptInjectionTogglesDto"
+          },
+          "sections": {
+            "description": "逐段拆解（设置页/排查用）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromptPreviewSectionDto"
+            }
+          }
+        },
+        "required": [
+          "issueId",
+          "prompt",
+          "charCount",
+          "toggles",
+          "sections"
+        ]
       },
       "CliProviderSummaryDto": {
         "type": "object",
@@ -74486,6 +74794,79 @@
           "atoms"
         ]
       },
+      "SearchHitDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "命中对象 ID"
+          },
+          "type": {
+            "type": "string",
+            "description": "命中类别",
+            "enum": [
+              "task",
+              "bug",
+              "document",
+              "project"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "subtitle": {
+            "type": "string",
+            "description": "副标题（展示用：项目/编号/状态摘要）"
+          },
+          "path": {
+            "type": "string",
+            "description": "前端路由路径（/app/...）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          },
+          "projectId": {
+            "type": "object",
+            "description": "所属项目 ID（项目命中时为 null）",
+            "nullable": true
+          },
+          "apmRef": {
+            "type": "object",
+            "description": "apm:// 实体引用串（apm://{projectCode}/{kind}/{shortId}，全局引用系统插入用）；缺 projectCode/shortId 时为 null——调用方不得自行拼装",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title",
+          "subtitle",
+          "path",
+          "updatedAt"
+        ]
+      },
+      "SearchResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "扁平命中列表（前端按 type 分组渲染）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchHitDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "命中总数（= items.length）"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ]
+      },
       "AdminRoleItemDto": {
         "type": "object",
         "properties": {
@@ -78472,6 +78853,131 @@
           "deleted"
         ]
       },
+      "SystemPromptMetaDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "稳定标识"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "用途说明"
+          },
+          "charCount": {
+            "type": "number",
+            "description": "正文字符数"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "description",
+          "charCount"
+        ]
+      },
+      "SystemPromptListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SystemPromptMetaDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "SystemPromptDetailDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "稳定标识"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "用途说明"
+          },
+          "charCount": {
+            "type": "number",
+            "description": "正文字符数"
+          },
+          "content": {
+            "type": "string",
+            "description": "markdown 正文（只读）"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "description",
+          "charCount",
+          "content"
+        ]
+      },
+      "PromptConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "toggles": {
+            "$ref": "#/components/schemas/PromptInjectionTogglesDto"
+          },
+          "projectPrompt": {
+            "type": "string",
+            "nullable": true,
+            "description": "项目级提示词全文（传 projectId 时返回；未配置为 null）"
+          }
+        },
+        "required": [
+          "toggles",
+          "projectPrompt"
+        ]
+      },
+      "UpdatePromptConfigDto": {
+        "type": "object",
+        "properties": {
+          "system": {
+            "type": "boolean"
+          },
+          "project": {
+            "type": "boolean"
+          },
+          "role": {
+            "type": "boolean"
+          },
+          "team": {
+            "type": "boolean"
+          },
+          "member": {
+            "type": "boolean"
+          },
+          "task": {
+            "type": "boolean"
+          },
+          "skills": {
+            "type": "boolean"
+          },
+          "context": {
+            "type": "boolean"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "项目级提示词编辑目标项目；与 projectPrompt 搭配使用"
+          },
+          "projectPrompt": {
+            "type": "string",
+            "description": "项目级提示词全文；空串清空（删除配置）"
+          }
+        }
+      },
       "ProjectRoleResponseDto": {
         "type": "object",
         "properties": {
@@ -79232,74 +79738,6 @@
           "stages",
           "mountedProjects",
           "generatedAt"
-        ]
-      },
-      "SearchHitDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "命中对象 ID"
-          },
-          "type": {
-            "type": "string",
-            "description": "命中类别",
-            "enum": [
-              "task",
-              "bug",
-              "document",
-              "project"
-            ]
-          },
-          "title": {
-            "type": "string",
-            "description": "标题"
-          },
-          "subtitle": {
-            "type": "string",
-            "description": "副标题（展示用：项目/编号/状态摘要）"
-          },
-          "path": {
-            "type": "string",
-            "description": "前端路由路径（/app/...）"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "更新时间（ISO）"
-          },
-          "projectId": {
-            "type": "object",
-            "description": "所属项目 ID（项目命中时为 null）",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "type",
-          "title",
-          "subtitle",
-          "path",
-          "updatedAt"
-        ]
-      },
-      "SearchResponseDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "description": "扁平命中列表（前端按 type 分组渲染）",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SearchHitDto"
-            }
-          },
-          "total": {
-            "type": "number",
-            "description": "命中总数（= items.length）"
-          }
-        },
-        "required": [
-          "items",
-          "total"
         ]
       },
       "OfficeCapacityDto": {

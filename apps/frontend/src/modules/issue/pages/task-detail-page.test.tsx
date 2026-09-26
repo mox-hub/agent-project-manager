@@ -4,7 +4,7 @@
  * 覆盖：详情页正文区渲染验收标准回显块（多状态条目 + 只读）、
  * 无验收标准时不渲染空块。重依赖组件/hook 全部 stub，聚焦接线与渲染。
  */
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -23,15 +23,42 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
+// ── 可断言的 mutation 桩（拆分流 / 子任务落库共用） ──
+const hooks = vi.hoisted(() => ({
+  updateMutateAsync: vi.fn(async (..._args: unknown[]) => undefined),
+  createSubTaskMutateAsync: vi.fn(async (..._args: unknown[]) => undefined),
+  decomposeMutateAsync: vi.fn(
+    async (..._args: unknown[]) => ({}) as unknown,
+  ),
+}));
+
 // ── issue 模块 hooks / 组件 ──
 const useTaskDetailMock = vi.fn();
 vi.mock('../hooks/use-project-tasks', () => ({
   useTaskDetail: (...args: unknown[]) => useTaskDetailMock(...args),
-  useUpdateTask: () => ({ mutateAsync: vi.fn(async () => undefined), isPending: false }),
+  useUpdateTask: () => ({ mutateAsync: hooks.updateMutateAsync, isPending: false }),
   useDeleteTask: () => ({ mutateAsync: vi.fn(async () => undefined), isPending: false }),
   useProjectMilestones: () => ({ data: [] }),
   useSubTasks: () => ({ data: [], isLoading: false }),
-  useCreateSubTask: () => ({ mutateAsync: vi.fn(async () => undefined), isPending: false }),
+  useCreateSubTask: () => ({
+    mutateAsync: hooks.createSubTaskMutateAsync,
+    isPending: false,
+  }),
+}));
+
+// ── AI 静默拆分（场景调桩；解析用简化同构实现） ──
+vi.mock('@/modules/assistant/hooks/use-silent-ai', () => ({
+  useSilentIssueDecompose: () => ({
+    mutateAsync: hooks.decomposeMutateAsync,
+    isPending: false,
+  }),
+  parseIssueDecompose: (data: Record<string, unknown> | undefined) => ({
+    subtasks: Array.isArray(data?.subtasks) ? data.subtasks : [],
+    revisedDescription:
+      typeof data?.revisedDescription === 'string'
+        ? data.revisedDescription
+        : undefined,
+  }),
 }));
 
 vi.mock('../hooks/use-issue-types', () => ({
@@ -251,6 +278,9 @@ beforeEach(() => {
   useAcceptancesByTaskMock
     .mockReset()
     .mockReturnValue({ data: [acceptance], isLoading: false });
+  hooks.updateMutateAsync.mockReset();
+  hooks.createSubTaskMutateAsync.mockReset();
+  hooks.decomposeMutateAsync.mockReset().mockResolvedValue({});
 });
 
 describe('TaskDetailPage 验收标准正文回显（P1-9）', () => {
@@ -295,5 +325,112 @@ describe('TaskDetailPage 验收标准正文回显（P1-9）', () => {
 
     expect(await screen.findByText('接口描述')).toBeTruthy();
     expect(screen.queryByTestId('acceptance-criteria-preview')).toBeNull();
+  });
+});
+
+describe('TaskDetailPage AI 拆分子任务（CAP-A-04 增强切片）', () => {
+  it('拆分按钮 → 静默场景返回建议 → 写入 metadata.splitProposal 与描述改写', async () => {
+    hooks.decomposeMutateAsync.mockResolvedValue({
+      data: {
+        subtasks: [{ title: '子任务一', description: '做某事' }],
+        revisedDescription: '改写后的描述',
+      },
+    });
+    renderDetailPage();
+
+    fireEvent.click(await screen.findByTitle('taskDetail.splitWithAi'));
+
+    await waitFor(() => expect(hooks.updateMutateAsync).toHaveBeenCalled());
+    const call = hooks.updateMutateAsync.mock.calls[0][0] as {
+      issueId: string;
+      data: {
+        description?: string;
+        metadata?: { splitProposal?: { subtasks: unknown[] } };
+      };
+    };
+    expect(call.issueId).toBe('issue-1');
+    expect(call.data.description).toBe('改写后的描述');
+    expect(call.data.metadata?.splitProposal?.subtasks).toEqual([
+      { title: '子任务一', description: '做某事' },
+    ]);
+  });
+
+  it('AI 返回空建议且描述未变 → 不落库（noop）', async () => {
+    hooks.decomposeMutateAsync.mockResolvedValue({
+      data: { subtasks: [], revisedDescription: '接口描述' },
+    });
+    renderDetailPage();
+
+    fireEvent.click(await screen.findByTitle('taskDetail.splitWithAi'));
+
+    await waitFor(() => expect(hooks.decomposeMutateAsync).toHaveBeenCalled());
+    expect(hooks.updateMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('待确认建议块渲染；确认一条走 createSubTask 并出批', async () => {
+    useTaskDetailMock.mockReturnValue({
+      data: {
+        ...task,
+        metadata: {
+          splitProposal: {
+            batchId: 'b1',
+            createdAt: '',
+            subtasks: [{ title: '建议A' }, { title: '建议B' }],
+          },
+        },
+      },
+      isLoading: false,
+    });
+    renderDetailPage();
+
+    expect(await screen.findByText('taskDetail.splitPendingTitle')).toBeTruthy();
+    expect(screen.getByText('建议A')).toBeTruthy();
+    expect(screen.getByText('建议B')).toBeTruthy();
+
+    fireEvent.click(screen.getAllByTitle('taskDetail.splitAccept')[0]);
+
+    await waitFor(() =>
+      expect(hooks.createSubTaskMutateAsync).toHaveBeenCalled(),
+    );
+    expect(
+      (hooks.createSubTaskMutateAsync.mock.calls[0][0] as { title: string })
+        .title,
+    ).toBe('建议A');
+    await waitFor(() => expect(hooks.updateMutateAsync).toHaveBeenCalled());
+    const meta = (
+      hooks.updateMutateAsync.mock.calls[0][0] as {
+        data: { metadata: { splitProposal: { subtasks: unknown[] } } };
+      }
+    ).data.metadata;
+    expect(meta.splitProposal.subtasks).toEqual([{ title: '建议B' }]);
+  });
+
+  it('全部忽略 → 清空建议批', async () => {
+    useTaskDetailMock.mockReturnValue({
+      data: {
+        ...task,
+        metadata: {
+          splitProposal: {
+            batchId: 'b1',
+            createdAt: '',
+            subtasks: [{ title: '建议A' }],
+          },
+        },
+      },
+      isLoading: false,
+    });
+    renderDetailPage();
+
+    fireEvent.click(
+      await screen.findByText('taskDetail.splitDismissAll'),
+    );
+
+    await waitFor(() => expect(hooks.updateMutateAsync).toHaveBeenCalled());
+    const meta = (
+      hooks.updateMutateAsync.mock.calls[0][0] as {
+        data: { metadata: Record<string, unknown> };
+      }
+    ).data.metadata;
+    expect(meta.splitProposal).toBeUndefined();
   });
 });

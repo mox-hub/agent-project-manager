@@ -37,6 +37,13 @@ import {
   DEFAULT_DISPATCH_SKILLS_BUDGET_TOKENS,
   DEFAULT_SKILL_CONTENT_MAX_CHARS,
 } from '@/modules/ai-hub/services/context-enrichment';
+import {
+  buildSystemPromptSection,
+  extractTaskPrompt,
+  readProjectPrompt,
+  readPromptInjectionToggles,
+  type PromptInjectionToggles,
+} from '@/modules/prompt/prompt-shared';
 import { TEST_REPORT_ARTIFACT_TYPE } from './adapters/cli-adapter.interface';
 import {
   validateTestReport,
@@ -79,6 +86,14 @@ interface MemberPromptContext {
   personalPrompt: string | null;
   thinkingLevel: string | null;
   teamRules: string[];
+}
+
+/** 提示词治理载荷（CAP-A-24）：逐段注入开关 + 系统段 + 项目/任务级提示词 */
+export interface PromptGovernance {
+  toggles: PromptInjectionToggles;
+  systemSection: string | null;
+  projectPrompt: string | null;
+  taskPrompt: string | null;
 }
 
 /** 思考强度 → 派发 prompt 指令（CLI 无关的统一表述，各 CLI 自行映射执行强度） */
@@ -445,6 +460,102 @@ export class CliDispatchService {
     }
   }
 
+  /**
+   * 干跑预览（CAP-A-24）：按派发同一条组装链产出完整 prompt，不派发、不落执行。
+   * 与实际派发共用 loadPromptGovernance / buildSkillsPromptSection /
+   * buildPromptSegments——「所见即所派」：这里看到的组装结果与真实派发一致。
+   * 可选 memberId 带出角色提示与成员上下文（解析失败按无角色兜底）。
+   */
+  async previewTaskPrompt(issueId: string, memberId?: string) {
+    const task = await this.prisma.issue.findUnique({
+      where: { id: issueId },
+      include: { project: true },
+    });
+    if (!task) {
+      throw new NotFoundException(`Task ${issueId} not found`);
+    }
+    if (!task.projectId) {
+      throw new BadRequestException('Task must belong to a project');
+    }
+
+    const governance = await this.loadPromptGovernance(
+      task.projectId,
+      task.metadata,
+    );
+    const context = await this.contextBuilder.buildTaskExecutionContext(
+      issueId,
+      task.projectId,
+    );
+
+    let resolved: ResolvedBinding | null = null;
+    if (memberId) {
+      try {
+        resolved = await this.cliResolution.resolveForMember(
+          memberId,
+          task.projectId,
+        );
+      } catch {
+        resolved = null;
+      }
+    }
+    const agentRole = resolved?.promptHint
+      ? {
+          name: resolved.roleName ?? resolved.executionRole,
+          role: resolved.executionRole,
+          promptHint: resolved.promptHint,
+        }
+      : null;
+    const memberContext = memberId
+      ? await this.buildMemberPromptContext(memberId)
+      : null;
+    const skillsSection = await this.buildSkillsPromptSection(task.projectId);
+
+    const segments = this.buildPromptSegments(
+      task,
+      context,
+      agentRole,
+      memberContext,
+      skillsSection,
+      governance,
+    );
+    const prompt = segments
+      .filter((segment) => segment.injected)
+      .map((segment) => segment.text)
+      .join('\n\n');
+
+    // 段清单按固定键序返回：没进段清单的治理段（开关开着但内容为空）注入
+    // 标 false，设置页/排查可对照「开了但没内容」
+    const SECTION_ORDER = [
+      'system',
+      'role',
+      'team',
+      'member',
+      'thinking',
+      'project',
+      'task',
+      'skills',
+      'taskBody',
+      'context',
+      'closing',
+    ] as const;
+    const sections = SECTION_ORDER.map((key) => {
+      const segment = segments.find((s) => s.key === key);
+      return {
+        key,
+        injected: segment?.injected ?? false,
+        content: segment && segment.injected ? segment.text : null,
+      };
+    });
+
+    return {
+      issueId,
+      prompt,
+      charCount: prompt.length,
+      toggles: governance.toggles,
+      sections,
+    };
+  }
+
   private async runDispatch(
     issueId: string,
     userId: string,
@@ -539,6 +650,13 @@ export class CliDispatchService {
 
     // 6.5 成员上下文：个人提示词 / 团队规则 / 思考强度；CLI 工具白名单收敛
     const memberContext = await this.buildMemberPromptContext(memberId ?? null);
+
+    // 6.8 提示词治理（CAP-A-24）：注入开关 + 系统段 + 项目/任务级提示词。
+    // promptOverride（考古等自定义任务包）跳过默认组装，治理层不参与。
+    const governance = options.promptOverride
+      ? null
+      : await this.loadPromptGovernance(projectId, task.metadata);
+
     let effectiveAllowedTools = allowedTools;
     if (memberId) {
       const granted = await this.getGrantedCliTools(memberId);
@@ -710,7 +828,14 @@ export class CliDispatchService {
       : await this.buildSkillsPromptSection(projectId);
     const prompt =
       options.promptOverride ??
-      this.buildPrompt(task, context, agentRole, memberContext, skillsSection);
+      this.buildPrompt(
+        task,
+        context,
+        agentRole,
+        memberContext,
+        skillsSection,
+        governance,
+      );
     const cliInput = {
       workspaceRoot,
       prompt,
@@ -718,6 +843,24 @@ export class CliDispatchService {
       allowedTools: effectiveAllowedTools,
       timeout: timeout || 600000, // Default 10 minutes
     };
+
+    // 11.5 完整 prompt 随执行持久化（CAP-A-24）：执行面板「完整 Prompt」页签
+    // 展示的就是这份派发真实载荷（同源，非展示侧另拼）；失败仅告警不断派发
+    try {
+      await this.prisma.execution.update({
+        where: { id: executionRun.id },
+        data: {
+          input: {
+            ...((executionRun.input as Record<string, unknown>) ?? {}),
+            prompt,
+          },
+        },
+      });
+    } catch (e) {
+      this.logger.warn(
+        `Prompt persistence failed for ${executionRun.id}: ${(e as Error).message}`,
+      );
+    }
 
     // 11. 编排：优先派发到在线 runtime 守护进程，否则回退进程内执行（dev）
     const onlineRuntime = await this.findOnlineRuntime();
@@ -1319,6 +1462,8 @@ export class CliDispatchService {
 
   /**
    * Build prompt for CLI execution
+   * CAP-A-24：段级开关治理——每段来源数据存在时进入段清单，注入与否由
+   * governance.toggles 逐段决定（缺省全开）；预览与实际派发共用本清单（同源）。
    */
   private buildPrompt(
     task: { title: string; description?: string | null },
@@ -1326,20 +1471,66 @@ export class CliDispatchService {
     agentRole?: { name: string; role: string; promptHint: string } | null,
     memberContext?: MemberPromptContext | null,
     skillsSection?: string | null,
+    governance?: PromptGovernance | null,
   ): string {
-    const parts: string[] = [];
+    return this.buildPromptSegments(
+      task,
+      context,
+      agentRole,
+      memberContext,
+      skillsSection,
+      governance,
+    )
+      .filter((segment) => segment.injected)
+      .map((segment) => segment.text)
+      .join('\n\n');
+  }
 
-    // 1. Role block (injected first so it sets context before task details)
-    if (agentRole) {
-      parts.push(`## Your Role\n${agentRole.promptHint}`);
+  /**
+   * 派发 prompt 段清单（CAP-A-24）：按注入顺序产出全部候选段。
+   * injected=false 的段不进入实际 prompt，但保留在清单中供干跑预览展示
+   * 「配置了但因开关未注入」的对照。数据源为空（无提示词/无上下文）的段
+   * 不进清单——治理开关只控制「已存在的内容注不注入」。
+   */
+  private buildPromptSegments(
+    task: { title: string; description?: string | null },
+    context: unknown,
+    agentRole?: { name: string; role: string; promptHint: string } | null,
+    memberContext?: MemberPromptContext | null,
+    skillsSection?: string | null,
+    governance?: PromptGovernance | null,
+  ): Array<{ key: string; injected: boolean; text: string }> {
+    const on = (key: keyof PromptInjectionToggles): boolean =>
+      governance?.toggles?.[key] !== false;
+    const segments: Array<{ key: string; injected: boolean; text: string }> =
+      [];
+    const add = (key: string, injected: boolean, text: string) => {
+      const body = text.trim();
+      if (body) segments.push({ key, injected, text: body });
+    };
+
+    // 1. 系统规范段（CAP-A-24：内置系统提示词，开关 prompt.injection.system）
+    if (governance?.systemSection?.trim()) {
+      add('system', on('system'), governance.systemSection);
     }
 
-    // 1.5 Team rules + member personal instructions + reasoning effort
+    // 2. 角色提示（ProjectRoleDefinition.promptHint）
+    if (agentRole?.promptHint?.trim()) {
+      add('role', on('role'), `## Your Role\n${agentRole.promptHint.trim()}`);
+    }
+
+    // 3. 团队规则 / 成员个人提示词 / 思考强度（后两者同受 member 开关）
     if (memberContext?.teamRules?.length) {
-      parts.push(`## Team Rules\n${memberContext.teamRules.join('\n\n')}`);
+      add(
+        'team',
+        on('team'),
+        `## Team Rules\n${memberContext.teamRules.join('\n\n')}`,
+      );
     }
     if (memberContext?.personalPrompt?.trim()) {
-      parts.push(
+      add(
+        'member',
+        on('member'),
         `## Member Instructions (${memberContext.memberName})\n${memberContext.personalPrompt.trim()}`,
       );
     }
@@ -1347,31 +1538,76 @@ export class CliDispatchService {
       const instruction =
         THINKING_LEVEL_INSTRUCTIONS[memberContext.thinkingLevel] ??
         memberContext.thinkingLevel;
-      parts.push(
+      add(
+        'thinking',
+        on('member'),
         `## Reasoning Effort\n${memberContext.thinkingLevel} — ${instruction}`,
       );
     }
 
-    // 1.7 项目技能段（P2-23）：启用技能的名称+内容摘要，受 token 预算约束；
-    // 无技能/开关关闭/数据源失败时不注入空段落
+    // 4. 项目级 / 任务级自定义提示词（CAP-A-24）
+    if (governance?.projectPrompt?.trim()) {
+      add(
+        'project',
+        on('project'),
+        `## Project Instructions\n${governance.projectPrompt.trim()}`,
+      );
+    }
+    if (governance?.taskPrompt?.trim()) {
+      add(
+        'task',
+        on('task'),
+        `## Task Instructions\n${governance.taskPrompt.trim()}`,
+      );
+    }
+
+    // 5. 项目技能段（上游已受 dispatch.skillsEnabled 项目开关约束，此处再受 skills 开关）
     if (skillsSection?.trim()) {
-      parts.push(skillsSection.trim());
+      add('skills', on('skills'), skillsSection);
     }
 
-    // 2. Task
-    parts.push(`# Task\n${task.title}`);
-    if (task.description) {
-      parts.push(`\n## Description\n${task.description}`);
-    }
+    // 6. 任务本体（标题 + 描述；不受治理开关控制——任务本体是派发的最小必需载荷）
+    const description = task.description?.trim();
+    add(
+      'taskBody',
+      true,
+      `# Task\n${task.title}${description ? `\n## Description\n${description}` : ''}`,
+    );
 
-    // 3. Context
+    // 7. 上下文 JSON
     if (context) {
-      parts.push(`\n## Context\n${JSON.stringify(context, null, 2)}`);
+      add(
+        'context',
+        on('context'),
+        `## Context\n${JSON.stringify(context, null, 2)}`,
+      );
     }
 
-    parts.push('\n\nPlease execute this task and report the results.');
+    // 8. 固定结尾
+    add('closing', true, 'Please execute this task and report the results.');
 
-    return parts.join('\n');
+    return segments;
+  }
+
+  /**
+   * 提示词治理载荷读取（CAP-A-24）：注入开关 + 系统段 + 项目/任务级提示词。
+   * 各读取在 prompt-shared 内部 fail-open（配置读失败按默认值兜底），
+   * 治理层故障不阻断派发主链路。
+   */
+  private async loadPromptGovernance(
+    projectId: string,
+    taskMetadata?: unknown,
+  ): Promise<PromptGovernance> {
+    const [toggles, projectPrompt] = await Promise.all([
+      readPromptInjectionToggles(this.prisma),
+      readProjectPrompt(this.prisma, projectId),
+    ]);
+    return {
+      toggles,
+      systemSection: buildSystemPromptSection(),
+      projectPrompt,
+      taskPrompt: extractTaskPrompt(taskMetadata),
+    };
   }
 
   /**

@@ -16,7 +16,6 @@ import {
   FileText,
   Flag,
   ListChecks,
-  Pencil,
   SlidersHorizontal,
   Tag,
   Trash2,
@@ -41,7 +40,7 @@ import {
 } from '@/components/ui/property-panel';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
-import { MarkdownEditor } from '@/shared/components/markdown-editor';
+import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor';
 import {
   TONE_TEXT_CLASS,
   PRIORITY_VISUALS,
@@ -157,14 +156,12 @@ export function BugDetailPage() {
     }
   }, 1500);
 
-  // 描述查看/编辑态（切 bug 时重置）
+  // 描述本地草稿（块级所见即所得，切 bug 时重置）
   const [descriptionDraft, setDescriptionDraft] = useState<string | null>(null);
-  const [descEditing, setDescEditing] = useState(false);
   const [prevBugId, setPrevBugId] = useState(bug?.id);
   if (prevBugId !== bug?.id) {
     setPrevBugId(bug?.id);
     setDescriptionDraft(null);
-    setDescEditing(false);
   }
 
   if (!bugId) {
@@ -337,58 +334,23 @@ export function BugDetailPage() {
             </div>
           </div>
 
-          {/* Description: markdown 查看 / 点击编辑（模块标题形态与动态一致） */}
-          <div className="px-6 pt-4 pb-4 shrink-0 group/desc">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlignLeft className="size-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t('bugDetail.description')}
-                </span>
-              </div>
-              {!descEditing && (
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  title={t('common.edit')}
-                  className="opacity-0 transition-opacity group-hover/desc:opacity-100"
-                  onClick={() => setDescEditing(true)}
-                >
-                  <Pencil className="size-3" />
-                </Button>
-              )}
+          {/* Description: 块级所见即所得（点哪编哪、输入与渲染同屏，与任务详情页一致） */}
+          <div className="px-6 pt-4 pb-4 shrink-0">
+            <div className="mb-2 flex items-center gap-2">
+              <AlignLeft className="size-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('bugDetail.description')}
+              </span>
             </div>
-            {descEditing ? (
-              <MarkdownEditor
-                value={descriptionDraft ?? bug.description ?? ''}
-                onChange={(v) => {
-                  setDescriptionDraft(v);
-                  persistDescription(v);
-                }}
-                rows={4}
-                preview="live"
-                hint={t('markdownEditor.hint')}
-                className="w-full"
-                inputClassName="focus-visible:ring-0"
-              />
-            ) : bug.description ? (
-              <button
-                type="button"
-                onClick={() => setDescEditing(true)}
-                className="block w-full cursor-text rounded-lg text-left"
-                title={t('common.edit')}
-              >
-                <MarkdownView content={bug.description} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setDescEditing(true)}
-                className="block w-full cursor-text rounded-lg py-1 text-left text-sm text-muted-foreground/50 transition-colors hover:text-muted-foreground"
-              >
-                {t('bugDetail.addDescription')}
-              </button>
-            )}
+            <MarkdownLiveEditor
+              value={descriptionDraft ?? bug.description ?? ''}
+              onChange={(v) => {
+                setDescriptionDraft(v);
+                persistDescription(v);
+              }}
+              placeholder={t('bugDetail.addDescription')}
+              className="w-full"
+            />
           </div>
 
           {/* Bug specific info */}

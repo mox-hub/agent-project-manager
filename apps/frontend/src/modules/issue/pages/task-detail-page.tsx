@@ -9,7 +9,7 @@
  *
  * 动态与评论走 modules/activity（markdown + 表情回应），操作记录由服务端自动落库。
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/toast';
@@ -19,6 +19,7 @@ import {
   Blocks,
   Bot as BotIcon,
   CalendarIcon,
+  Check,
   CheckCircle2,
   ChevronDown,
   Diamond as DiamondIcon,
@@ -29,9 +30,12 @@ import {
   Pencil,
   Plus,
   SlidersHorizontal,
+  Sparkles,
+  Split,
   Tag,
   Trash2,
   User as UserIcon,
+  X,
 } from 'lucide-react';
 import {
   AnchorQaGhostButton,
@@ -43,7 +47,6 @@ import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
-import { MarkdownView } from '@/shared/components/markdown-view';
 import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/ui/right-sidebar';
 import { SidebarPanel } from '@/components/ui/sidebar-panel';
 import { Button } from '@/components/ui/button';
@@ -57,7 +60,7 @@ import {
 } from '@/components/ui/property-panel';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
-import { MarkdownEditor } from '@/shared/components/markdown-editor';
+import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor';
 import {
   TONE_TEXT_CLASS,
   PRIORITY_VISUALS,
@@ -71,18 +74,27 @@ import { useIssueTypes } from '../hooks/use-issue-types';
 import { CustomFieldsSection, formatCustomFieldValue } from '../components/custom-field-input';
 import { IssueTypeSwitcher } from '../components/issue-type-switcher';
 import { useAssigneeSync } from '../hooks/use-assignee-sync';
-import { type TaskPriority, type UpdateTaskRequest } from '../api/issue-api';
+import {
+  type TaskPriority,
+  type UpdateTaskRequest,
+  getIssueSplitProposal,
+  type IssueSplitProposal,
+} from '../api/issue-api';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useMembers } from '@/modules/team-member/hooks';
-import { MentionTextarea } from '@/modules/team-member/components/mention-textarea';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
 import { cn } from '@/lib/utils';
 import { useTabs } from '@/shared/tabs/tabs-context';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { useEntityNavigation } from '@/shared/hooks/use-entity-navigation';
 import { AiAssignDialog } from '../components/ai-assign-dialog';
+import {
+  useSilentIssueDecompose,
+  parseIssueDecompose,
+} from '@/modules/assistant/hooks/use-silent-ai';
 import { ExecutionItemsPanel } from '../components/execution-items-panel';
+import { TaskPromptPanel } from '../components/task-prompt-panel';
 import { useIssueExecutions } from '@/modules/execution/hooks/use-execution';
 import type { ExecutionStatus } from '@/modules/execution/api/execution-api';
 import { CompletionReview } from '../components/completion-review';
@@ -191,6 +203,8 @@ export function TaskDetailPage() {
 
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
+  // AI 静默子任务拆分（issue-decompose 场景）
+  const decompose = useSilentIssueDecompose();
 
   const statusOptions = useTaskStatusOptions();
   const priorityOptions = usePriorityOptions();
@@ -228,8 +242,11 @@ export function TaskDetailPage() {
     }
   }, 1500);
 
+  // AI 改写描述期间抑制防抖保存，避免旧草稿竞态回写覆盖改写内容（用户再次输入即解除）
+  const descSuppressRef = useRef(false);
   const persistDescription = useDebouncedCallback(async (value: string) => {
     if (!issueId) return;
+    if (descSuppressRef.current) return;
     if ((value || '') === (task?.description || '')) return;
     setMutationError(null);
     try {
@@ -240,15 +257,13 @@ export function TaskDetailPage() {
     }
   }, 1500);
 
-  // ── 描述的本地受控草稿 + 查看/编辑态
+  // ── 描述的本地受控草稿（块级所见即所得：输入与渲染同屏，无查看/编辑态切换）
   const [descriptionDraft, setDescriptionDraft] = useState<string | null>(null);
-  const [descEditing, setDescEditing] = useState(false);
   // 仅在切换任务时重置，避免查询刷新打断输入（渲染期间调整，避免 effect 内同步 setState）
   const [prevTaskId, setPrevTaskId] = useState(task?.id);
   if (prevTaskId !== task?.id) {
     setPrevTaskId(task?.id);
     setDescriptionDraft(null);
-    setDescEditing(false);
   }
 
   // ── Loading / not-found guards
@@ -350,6 +365,68 @@ export function TaskDetailPage() {
     }
   };
 
+  // ── AI 拆分子任务：建议批写入 metadata.splitProposal（子任务区「待确认」块消费），
+  //    描述去重改写随拆分直接生效；确认落库走既有 createSubTask（见 SubTaskSection）
+  const splitProposal = getIssueSplitProposal(task.metadata);
+  const handleDecompose = async () => {
+    if (splitProposal) {
+      const ok = await confirmDialog({
+        title: t('taskDetail.splitReplaceTitle'),
+        description: t('taskDetail.splitReplaceDesc'),
+        confirmText: t('taskDetail.splitReplaceConfirm'),
+      });
+      if (!ok) return;
+    }
+    descSuppressRef.current = true;
+    setDescriptionDraft(null);
+    try {
+      const res = await decompose.mutateAsync({
+        issueId: task.id,
+        projectId: task.projectId ?? undefined,
+      });
+      const parsed = parseIssueDecompose(res.data);
+      const descChanged =
+        !!parsed.revisedDescription &&
+        parsed.revisedDescription !== (task.description ?? '');
+      if (parsed.subtasks.length === 0 && !descChanged) {
+        toast.info(t('taskDetail.splitNoop'));
+        return;
+      }
+      await updateTask.mutateAsync({
+        issueId: task.id,
+        data: {
+          ...(descChanged ? { description: parsed.revisedDescription } : {}),
+          ...(parsed.subtasks.length > 0
+            ? {
+                metadata: {
+                  ...(task.metadata ?? {}),
+                  splitProposal: {
+                    batchId: `split-${Date.now()}`,
+                    createdAt: new Date().toISOString(),
+                    subtasks: parsed.subtasks,
+                  },
+                },
+              }
+            : {}),
+        },
+      });
+      if (parsed.subtasks.length > 0) {
+        toast.success(
+          t('taskDetail.splitDone', { count: parsed.subtasks.length }),
+        );
+      } else {
+        toast.success(t('taskDetail.splitDescOnly'));
+      }
+      invalidateActivities();
+    } catch (err) {
+      toast.error(
+        err instanceof Error && err.message
+          ? err.message
+          : t('taskDetail.splitFailed'),
+      );
+    }
+  };
+
   return (
     <PageShell aiPage="task.task-detail" className="overflow-hidden">
       {/* ─── SubPageToolbar：返回 + 面包屑 + 翻页器 + 侧栏开关 ─── */}
@@ -448,7 +525,8 @@ export function TaskDetailPage() {
             </div>
           </div>
 
-          {/* Description: markdown 查看 / 点击编辑（模块标题形态与子任务/动态一致） */}
+          {/* Description: 块级所见即所得（点哪编哪、输入与渲染同屏）；
+              右上 hover 显形「拆分」按钮 = AI 静默子任务拆分（编辑按钮已由就地编辑取代） */}
           <div className="px-6 pt-4 pb-4 shrink-0 group/desc">
             <div className="mb-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -457,60 +535,35 @@ export function TaskDetailPage() {
                   {t('taskDetail.description')}
                 </span>
               </div>
-              {!descEditing && (
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  title={t('common.edit')}
-                  className="opacity-0 transition-opacity group-hover/desc:opacity-100"
-                  onClick={() => setDescEditing(true)}
-                >
-                  <Pencil className="size-3" />
-                </Button>
-              )}
-            </div>
-            {descEditing ? (
-              <MarkdownEditor
-                value={descriptionDraft ?? task.description ?? ''}
-                onChange={(v) => {
-                  setDescriptionDraft(v);
-                  persistDescription(v);
-                }}
-                rows={4}
-                preview="live"
-                hint={t('markdownEditor.hint')}
-                className="w-full"
-                renderInput={(p) => (
-                  <MentionTextarea
-                    value={p.value}
-                    onChange={p.onChange}
-                    rows={p.rows}
-                    placeholder={p.placeholder}
-                    className={cn(
-                      p.className,
-                      '[&_textarea]:bg-transparent [&_textarea]:rounded-none [&_textarea]:border-0 [&_textarea]:px-0 [&_textarea]:focus-visible:border-0 [&_textarea]:focus-visible:ring-0',
-                    )}
-                  />
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                title={
+                  decompose.isPending
+                    ? t('taskDetail.splitRunning')
+                    : t('taskDetail.splitWithAi')
+                }
+                className="opacity-0 transition-opacity focus-visible:opacity-100 group-hover/desc:opacity-100"
+                disabled={decompose.isPending}
+                onClick={() => void handleDecompose()}
+              >
+                {decompose.isPending ? (
+                  <Spinner className="size-3 text-inherit" />
+                ) : (
+                  <Split className="size-3" />
                 )}
-              />
-            ) : task.description ? (
-              <button
-                type="button"
-                onClick={() => setDescEditing(true)}
-                className="block w-full cursor-text rounded-lg text-left"
-                title={t('common.edit')}
-              >
-                <MarkdownView content={task.description} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setDescEditing(true)}
-                className="block w-full cursor-text rounded-lg py-1 text-left text-sm text-muted-foreground/50 transition-colors hover:text-muted-foreground"
-              >
-                {t('taskDetail.addDescription')}
-              </button>
-            )}
+              </Button>
+            </div>
+            <MarkdownLiveEditor
+              value={descriptionDraft ?? task.description ?? ''}
+              onChange={(v) => {
+                descSuppressRef.current = false;
+                setDescriptionDraft(v);
+                persistDescription(v);
+              }}
+              placeholder={t('taskDetail.addDescription')}
+              className="w-full"
+            />
           </div>
 
           {/* 自定义字段（IssueType fieldSchema 驱动，key 挂任务 id 避免切换任务残留草稿；
@@ -539,13 +592,14 @@ export function TaskDetailPage() {
           {/* Execution items（4d：统一执行单位，主栏与子任务同级，置于其上方） */}
           <ExecutionItemsPanel issueId={task.id} projectId={task.projectId} />
 
-          {/* Sub-task section */}
+          {/* Sub-task section（metadata 供「AI 拆分待确认建议」块消费） */}
           <SubTaskSection
             parentIssueId={task.id}
             projectId={task.projectId}
             defaultStatus={task.status}
             defaultPriority={task.priority}
             defaultAssigneeId={task.assignee?.id}
+            metadata={task.metadata}
           />
 
           {/* Linked documents 已移至右侧栏 */}
@@ -767,6 +821,17 @@ export function TaskDetailPage() {
             </SidebarPanel>
           ) : null}
 
+          {/* ─── 任务提示词（CAP-A-24：metadata.taskPrompt 注入派发 prompt） ─── */}
+          <TaskPromptPanel
+            issueId={task.id}
+            metadata={task.metadata}
+            onSave={(value) =>
+              updateField({
+                metadata: { ...(task.metadata ?? {}), taskPrompt: value },
+              })
+            }
+          />
+
           {/* ─── 验收契约 ─── */}
           <SidebarPanel
             title={t('taskDetail.acceptanceContract')}
@@ -820,21 +885,31 @@ function SubTaskSection({
   defaultStatus,
   defaultPriority,
   defaultAssigneeId,
+  metadata,
 }: {
   parentIssueId: string;
   projectId: string | null | undefined;
   defaultStatus: string;
   defaultPriority: string;
   defaultAssigneeId?: string;
+  metadata?: Record<string, unknown> | null;
 }) {
   const { t } = useTranslation();
   const { data: subIssues = [], isLoading } = useSubTasks(parentIssueId);
-  const createSubTask = useCreateSubTask();
+  const createSubTask = useCreateSubTask({ silent: true });
+  const updateParent = useUpdateTask();
+  const proposal = getIssueSplitProposal(metadata);
   const [collapsed, setCollapsed] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
   const [subTitle, setSubTitle] = useState('');
   const [subDesc, setSubDesc] = useState('');
   const [mutationError, setMutationError] = useState<string | null>(null);
+
+  // 新拆分批到达自动展开分区（用户可能收着子任务区）
+  const proposalBatchId = proposal?.batchId;
+  useEffect(() => {
+    if (proposalBatchId) setCollapsed(false);
+  }, [proposalBatchId]);
 
   const doneCount = subIssues.filter((st) => st.status === 'done').length;
 
@@ -858,6 +933,76 @@ function SubTaskSection({
     } catch {
       setMutationError(t('taskDetail.createSubtaskFailed'));
     }
+  };
+
+  // ── AI 拆分建议批：确认=走既有 createSubTask 落库后出批；忽略=直接出批；清空=撤批。
+  //    批数据整体存父工单 metadata（不产生真实子任务行，不污染看板与进度统计）
+  const persistProposal = async (
+    next: IssueSplitProposal['subtasks'] | null,
+  ) => {
+    const nextMetadata = { ...(metadata ?? {}) };
+    if (proposal && next && next.length > 0) {
+      nextMetadata.splitProposal = { ...proposal, subtasks: next };
+    } else {
+      delete nextMetadata.splitProposal;
+    }
+    try {
+      await updateParent.mutateAsync({
+        issueId: parentIssueId,
+        data: { metadata: nextMetadata },
+      });
+    } catch {
+      setMutationError(t('taskDetail.splitUpdateFailed'));
+    }
+  };
+
+  const createFromProposal = (item: IssueSplitProposal['subtasks'][number]) =>
+    createSubTask.mutateAsync({
+      title: item.title,
+      description: item.description,
+      parentIssueId,
+      projectId: projectId ?? undefined,
+      type: 'task',
+      status: defaultStatus,
+      priority: defaultPriority as TaskPriority,
+      assigneeId: defaultAssigneeId,
+    });
+
+  const confirmProposalItem = async (index: number) => {
+    if (!proposal) return;
+    const remaining = proposal.subtasks.filter((_, i) => i !== index);
+    try {
+      await createFromProposal(proposal.subtasks[index]);
+    } catch {
+      setMutationError(t('taskDetail.splitCreateFailed'));
+      return;
+    }
+    await persistProposal(remaining);
+  };
+
+  const confirmAllProposals = async () => {
+    if (!proposal) return;
+    const remaining = [...proposal.subtasks];
+    while (remaining.length > 0) {
+      try {
+        await createFromProposal(remaining[0]);
+      } catch {
+        setMutationError(t('taskDetail.splitCreateFailed'));
+        await persistProposal(remaining);
+        return;
+      }
+      remaining.shift();
+    }
+    await persistProposal(null);
+  };
+
+  const dismissProposalItem = async (index: number) => {
+    if (!proposal) return;
+    await persistProposal(proposal.subtasks.filter((_, i) => i !== index));
+  };
+
+  const dismissAllProposals = async () => {
+    await persistProposal(null);
   };
 
   return (
@@ -907,6 +1052,78 @@ function SubTaskSection({
         )}
       >
         <div className="overflow-hidden">
+          {/* AI 拆分待确认建议批：确认/忽略逐条处理，清空自动撤批（不产生真实工单行） */}
+          {proposal && (
+            <div className="px-6 pb-2">
+              <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
+                <div className="flex items-center justify-between gap-2 px-3 py-2">
+                  <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Sparkles className="size-3.5 shrink-0 text-accent-purple" />
+                    {t('taskDetail.splitPendingTitle', { count: proposal.subtasks.length })}
+                  </span>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      disabled={createSubTask.isPending || updateParent.isPending}
+                      onClick={() => void confirmAllProposals()}
+                    >
+                      {t('taskDetail.splitAcceptAll')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      disabled={updateParent.isPending}
+                      onClick={() => void dismissAllProposals()}
+                    >
+                      {t('taskDetail.splitDismissAll')}
+                    </Button>
+                  </div>
+                </div>
+                {proposal.subtasks.map((item, index) => (
+                  <div
+                    key={`${proposal.batchId}-${index}`}
+                    className="group flex items-start gap-2 border-t border-border/60 px-3 py-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="break-words text-sm leading-relaxed">{item.title}</div>
+                      {item.description && (
+                        <div className="break-words text-xs text-muted-foreground">
+                          {item.description}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        title={t('taskDetail.splitAccept')}
+                        disabled={createSubTask.isPending}
+                        onClick={() => void confirmProposalItem(index)}
+                      >
+                        <Check className="size-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        title={t('taskDetail.splitDismiss')}
+                        disabled={updateParent.isPending}
+                        onClick={() => void dismissProposalItem(index)}
+                      >
+                        <X className="size-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {mutationError && (
+                  <div className="border-t border-border/60 px-3 py-2 text-xs text-destructive">
+                    {mutationError}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Sub-task list */}
           {isLoading ? (
             <div className="px-6 pb-2 text-xs text-muted-foreground">{t('common.loading')}</div>

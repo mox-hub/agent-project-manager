@@ -17,6 +17,7 @@ import { IssueModule } from '@/modules/issue/issue.module';
 import { ExecutionModule } from '@/modules/execution/execution.module';
 import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
 import { CliProviderModule } from '@/modules/cli-provider/cli-provider.module';
+import { SearchModule } from '@/modules/search/search.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CliProviderModule } from '@/modules/cli-provider/cli-provider.module';
     ExecutionModule,
     CliDispatchModule,
     CliProviderModule,
+    SearchModule,
   ],
   controllers: [McpServerController, McpServersController],
   providers: [

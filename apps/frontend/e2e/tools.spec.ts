@@ -63,16 +63,13 @@ test('S01 全局搜索-悬浮面板命中任务并按类型分组', async ({ pag
 })
 
 // ---------------------------------------------------------------------------
-// 决策收件箱（只读：无前端创建入口）
+// 决策收件箱（已取消：2026-09-25 起由通知中心替代承载，旧地址重定向兜底）
 // ---------------------------------------------------------------------------
 
-test('DC01 决策收件箱-计数与刷新', async ({ page }) => {
+test('DC01 决策收件箱已取消-旧地址重定向通知中心', async ({ page }) => {
   await page.goto('/app/decisions')
-  await page.waitForURL(/\/app\/decisions/, { timeout: 30_000 })
-  await expect(page.locator('body')).toContainText(/待决|阻断|咨询|暂无|决策/, { timeout: 60_000 })
-  const refresh = page.getByRole('button', { name: /刷新/ }).first()
-  if (await refresh.isVisible().catch(() => false)) await refresh.click()
-  await expect(page.locator('body')).toContainText(/待决|阻断|咨询|暂无|决策/, { timeout: 15_000 })
+  await page.waitForURL(/\/app\/notifications/, { timeout: 30_000 })
+  await expect(page.locator('body')).toContainText(/通知|暂无|没有|notification/i, { timeout: 60_000 })
 })
 
 // ---------------------------------------------------------------------------

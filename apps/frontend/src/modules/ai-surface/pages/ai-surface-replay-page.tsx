@@ -189,7 +189,7 @@ export function AiSurfaceReplayPage() {
           }}
           busyId={null}
           readOnly
-          readOnlyNote="回放中的数据是预置演示，这里不能拍板。真实拍板请在盯盘面的「该你了」，或去决策收件箱。"
+          readOnlyNote="回放中的数据是预置演示，这里不能拍板。真实拍板请在盯盘面的「该你了」，或去通知中心。"
           // 等待时长按**剧本时钟**算，否则一条刚出现的待办会显示"等了 4 天"（与全屏每一处都矛盾）
           waitingNowMs={storyAtMs + frame.atMs}
         />
