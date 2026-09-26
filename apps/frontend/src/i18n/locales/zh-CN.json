@@ -631,7 +631,16 @@
     "waitingApproval": "等待人工确认",
     "notePlaceholder": "审核备注（可选）",
     "approve": "批准并继续",
-    "reject": "拒绝"
+    "reject": "拒绝",
+    "engineV2": "v2 引擎",
+    "nodeTimeline": "节点执行账",
+    "runEvents": "事件流",
+    "nodeAttempt": "第 {{attempt}} 次",
+    "agentExecution": "执行项",
+    "cancelRun": "取消运行",
+    "cancelRunFailed": "取消失败",
+    "editor.jsonModeHint": "v2 节点树文法：8 型节点（llm/human/condition/action/agent/fan-out/loop/wait），容器嵌套，插值 {input.x}/{steps.y.z}",
+    "editor.jsonInvalid": "definition 不是合法 JSON 或 version 不是 2"
   },
   "aiSlot": {
     "badge": "AI 解释",

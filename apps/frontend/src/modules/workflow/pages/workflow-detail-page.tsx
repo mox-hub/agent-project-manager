@@ -30,6 +30,7 @@ import { StatusPill } from '@/components/ui/status-pill';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
+  useCancelWorkflow,
   useResumeWorkflow,
   useUpdateWorkflow,
   useWorkflow,
@@ -107,6 +108,9 @@ export function WorkflowDetailPage() {
   const [editing, setEditing] = useState(false);
   const [editSteps, setEditSteps] = useState<EditableStep[]>([]);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
+  // v2 节点树文法：画布（线性链）不适用，编辑走 JSON 源码模式（CAP-S-03 W3）
+  const [jsonDraft, setJsonDraft] = useState('');
+  const [jsonError, setJsonError] = useState<string | null>(null);
 
   const rawSteps = useMemo(() => {
     const defSteps =
@@ -127,7 +131,14 @@ export function WorkflowDetailPage() {
     [editing, editSteps, rawSteps],
   );
 
+  const isV2Doc =
+    (workflow?.definition as { version?: number } | undefined)?.version === 2;
+
   const startEditing = () => {
+    if (isV2Doc) {
+      setJsonDraft(JSON.stringify(workflow?.definition, null, 2));
+      setJsonError(null);
+    }
     setEditSteps(rawSteps.map((s) => ({ ...s })));
     setSelectedStepId(null);
     setEditing(true);
@@ -172,6 +183,20 @@ export function WorkflowDetailPage() {
   };
 
   const saveEditing = () => {
+    if (isV2Doc) {
+      // v2：JSON 原样保存（version 不得被降级覆写）
+      try {
+        const parsed = JSON.parse(jsonDraft) as Record<string, unknown>;
+        if (parsed.version !== 2) throw new Error('version');
+        updateMutation.mutate(
+          { definition: parsed },
+          { onSuccess: () => setEditing(false) },
+        );
+      } catch {
+        setJsonError(t('workflow.editor.jsonInvalid'));
+      }
+      return;
+    }
     const raw = (workflow?.definition ?? {}) as Record<string, unknown>;
     updateMutation.mutate(
       { definition: { ...raw, version: 1, steps: editSteps } },
@@ -209,7 +234,10 @@ export function WorkflowDetailPage() {
                   icon={Check}
                   label={t('workflow.editor.save')}
                   variant="primary"
-                  disabled={updateMutation.isPending || editSteps.length === 0}
+                  disabled={
+                    updateMutation.isPending ||
+                    (!isV2Doc && editSteps.length === 0)
+                  }
                   onClick={saveEditing}
                   data-ai-component="workflow.detail.save-definition"
                   data-ai-action="workflow.detail.save-definition.click"
@@ -242,7 +270,7 @@ export function WorkflowDetailPage() {
               {workflow.description || t('workflow.noDescription')}
             </p>
             <div className="flex min-h-0 flex-1 items-stretch gap-2">
-              {editing ? (
+              {editing && !isV2Doc ? (
                 <WorkflowNodePalette
                   actions={actions}
                   onAdd={(type, actionId) =>
@@ -256,13 +284,34 @@ export function WorkflowDetailPage() {
                   className="w-56 shrink-0 rounded-lg border border-border bg-card"
                 />
               ) : null}
-              <div className="min-w-0 flex-1">
-                <WorkflowCanvas
-                  steps={canvasSteps}
-                  selectedId={selectedStepId}
-                  onStepClick={editing ? setSelectedStepId : undefined}
-                />
-              </div>
+              {editing && isV2Doc ? (
+                <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+                  <p className="text-11 text-muted-foreground">
+                    {t('workflow.editor.jsonModeHint')}
+                  </p>
+                  <textarea
+                    value={jsonDraft}
+                    onChange={(e) => {
+                      setJsonDraft(e.target.value);
+                      setJsonError(null);
+                    }}
+                    spellCheck={false}
+                    className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-card p-3 font-mono text-xs leading-relaxed outline-none focus:border-primary/50"
+                    data-ai-component="workflow.detail.v2-json-editor"
+                  />
+                  {jsonError ? (
+                    <p className="text-xs text-destructive">{jsonError}</p>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="min-w-0 flex-1">
+                  <WorkflowCanvas
+                    steps={canvasSteps}
+                    selectedId={selectedStepId}
+                    onStepClick={editing && !isV2Doc ? setSelectedStepId : undefined}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -379,17 +428,46 @@ function RunRow({
   );
 }
 
+function NodeStatusIcon({ status }: { status: string }) {
+  const map: Record<string, { icon: typeof CheckCircle2; tone: string }> = {
+    succeeded: { icon: CheckCircle2, tone: 'text-accent-green' },
+    failed: { icon: XCircle, tone: 'text-accent-red' },
+    waiting: { icon: UserCheck, tone: 'text-accent-yellow' },
+    skipped: { icon: CircleDashed, tone: 'text-muted-foreground' },
+    running: { icon: CircleDashed, tone: 'text-accent-blue' },
+  };
+  const meta = map[status] ?? map.running;
+  const Icon = meta.icon;
+  return <Icon className={cn('size-3.5 shrink-0', meta.tone)} />;
+}
+
+const V2_NODE_TYPES = new Set([
+  'llm',
+  'human',
+  'condition',
+  'action',
+  'agent',
+  'fan-out',
+  'loop',
+  'wait',
+]);
+
 function RunDetailPanel({ runId }: { runId: string }) {
   const { t } = useTranslation();
   const { data: run, isLoading } = useWorkflowRun(runId);
 
   const resume = useResumeWorkflow();
+  const cancel = useCancelWorkflow();
   const [note, setNote] = useState('');
 
   if (isLoading || !run) return <Skeleton className="h-32 rounded-lg" />;
 
+  const isV2Run = run.engineVersion === 2;
   const waiting = run.waitingApproval;
   const output = run.output as { error?: string } | null | undefined;
+  const cancellable = isV2Run && ['running', 'suspended'].includes(run.status);
+  const nodeRuns = run.nodeRuns ?? [];
+  const events = run.events ?? [];
 
   return (
     <Card className="shrink-0">
@@ -398,7 +476,12 @@ function RunDetailPanel({ runId }: { runId: string }) {
           <StatusPill tone="info">
             <code className="text-11">{run.id.slice(0, 12)}…</code>
           </StatusPill>
-          <span className="text-11 text-muted-foreground">
+          <span className="flex items-center gap-2 text-11 text-muted-foreground">
+            {isV2Run ? (
+              <Badge variant="secondary" className="text-10">
+                {t('workflow.engineV2')}
+              </Badge>
+            ) : null}
             {t('workflow.triggerType')}: {run.triggerType}
           </span>
         </div>
@@ -425,7 +508,13 @@ function RunDetailPanel({ runId }: { runId: string }) {
                 disabled={resume.isPending}
                 onClick={() =>
                   resume.mutate(
-                    { runId, data: { resumeData: { approved: false, note } } },
+                    {
+                      runId,
+                      data: {
+                        resumeData: { approved: false, note },
+                        ...(waiting.nodeId ? { nodeId: waiting.nodeId } : {}),
+                      },
+                    },
                     { onSuccess: () => setNote('') },
                   )
                 }
@@ -438,7 +527,13 @@ function RunDetailPanel({ runId }: { runId: string }) {
                 disabled={resume.isPending}
                 onClick={() =>
                   resume.mutate(
-                    { runId, data: { resumeData: { approved: true, note } } },
+                    {
+                      runId,
+                      data: {
+                        resumeData: { approved: true, note },
+                        ...(waiting.nodeId ? { nodeId: waiting.nodeId } : {}),
+                      },
+                    },
                     { onSuccess: () => setNote('') },
                   )
                 }
@@ -448,6 +543,79 @@ function RunDetailPanel({ runId }: { runId: string }) {
               </Button>
             </div>
           </div>
+        ) : null}
+
+        {/* v2 journal 节点执行账：静态图 + 状态叠加（侧栏紧凑形态） */}
+        {isV2Run && nodeRuns.length > 0 ? (
+          <div className="space-y-1">
+            <h3 className="text-11 font-medium text-muted-foreground">
+              {t('workflow.nodeTimeline')}
+            </h3>
+            <ol className="space-y-1">
+              {nodeRuns.map((n) => (
+                <li
+                  key={n.id}
+                  className="flex items-start gap-2 rounded-md border border-border px-2 py-1.5"
+                >
+                  <NodeStatusIcon status={n.status} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <code className="truncate text-11 font-medium">{n.nodeId}</code>
+                      {V2_NODE_TYPES.has(n.nodeType) ? (
+                        <Badge variant="secondary" className="text-10">
+                          {n.nodeType}
+                        </Badge>
+                      ) : null}
+                      {n.attempt > 1 ? (
+                        <span className="text-10 text-muted-foreground">
+                          {t('workflow.nodeAttempt', { attempt: n.attempt })}
+                        </span>
+                      ) : null}
+                    </div>
+                    {n.executionRunId ? (
+                      <p className="truncate text-10 text-muted-foreground">
+                        {t('workflow.agentExecution')}: {n.executionRunId.slice(0, 12)}…
+                      </p>
+                    ) : null}
+                    {n.error?.message ? (
+                      <p className="text-10 text-destructive">{n.error.message}</p>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : null}
+
+        {cancellable ? (
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs text-destructive"
+              disabled={cancel.isPending}
+              onClick={() => cancel.mutate(runId)}
+              data-ai-component="workflow.detail.cancel-run"
+            >
+              {t('workflow.cancelRun')}
+            </Button>
+          </div>
+        ) : null}
+
+        {isV2Run && events.length > 0 ? (
+          <details className="rounded-md border border-border px-2 py-1.5">
+            <summary className="cursor-pointer text-11 text-muted-foreground">
+              {t('workflow.runEvents')} ({events.length})
+            </summary>
+            <ol className="mt-1 space-y-0.5">
+              {events.map((e) => (
+                <li key={e.id} className="text-10 text-muted-foreground">
+                  <span className="mr-1 font-mono">#{e.seq}</span>
+                  {e.type}
+                </li>
+              ))}
+            </ol>
+          </details>
         ) : null}
 
         {output?.error ? (

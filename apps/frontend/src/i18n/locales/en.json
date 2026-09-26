@@ -631,7 +631,16 @@
     "waitingApproval": "Waiting for your approval",
     "notePlaceholder": "Review note (optional)",
     "approve": "Approve & continue",
-    "reject": "Reject"
+    "reject": "Reject",
+    "engineV2": "v2 engine",
+    "nodeTimeline": "Node journal",
+    "runEvents": "Events",
+    "nodeAttempt": "Attempt {{attempt}}",
+    "agentExecution": "Execution",
+    "cancelRun": "Cancel run",
+    "cancelRunFailed": "Cancel failed",
+    "editor.jsonModeHint": "v2 node-tree grammar: 8 node types (llm/human/condition/action/agent/fan-out/loop/wait), nested containers, interpolation {input.x}/{steps.y.z}",
+    "editor.jsonInvalid": "definition is not valid JSON or version is not 2"
   },
   "aiSlot": {
     "badge": "AI Explain",

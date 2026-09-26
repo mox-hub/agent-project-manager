@@ -33,6 +33,7 @@ vi.mock('@/infrastructure/event-client', () => ({
 }));
 
 const hooksState: {
+  workflow?: Record<string, unknown>;
   workflows?: Array<Record<string, unknown>>;
   runs?: Array<Record<string, unknown>>;
   runDetail?: Record<string, unknown>;
@@ -42,7 +43,7 @@ vi.mock('../hooks/use-workflows', () => ({
   useWorkflowEvents: vi.fn(),
   useWorkflows: () => ({ data: hooksState.workflows, isLoading: false }),
   useWorkflow: () => ({
-    data: {
+    data: hooksState.workflow ?? {
       id: 'wf-1',
       key: 'project-brief-demo',
       name: '项目简介三步流',
@@ -67,18 +68,24 @@ vi.mock('../hooks/use-workflows', () => ({
     return { mutate, isPending: false };
   },
   useResumeWorkflow: () => ({
-    mutate: vi.fn((input: { data: { resumeData: Record<string, unknown> } }) => {
-      resumeLog.lastResume = input.data.resumeData;
+    mutate: vi.fn((input: { data: Record<string, unknown> }) => {
+      resumeLog.lastResume = input.data;
     }),
     isPending: false,
   }),
+  useCancelWorkflow: () => ({ mutate: vi.fn(), isPending: false }),
   useWorkflowActions: () => ({ data: [], isLoading: false }),
   useCreateWorkflow: () => ({ mutate: vi.fn(), isPending: false }),
-  useUpdateWorkflow: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateWorkflow: () => ({
+    mutate: vi.fn((input: { definition?: Record<string, unknown> }) => {
+      resumeLog.lastUpdate = input;
+    }),
+    isPending: false,
+  }),
 }));
 
 // hooksState 扩展槽：记录最近一次 resume / trigger 负载
-const resumeLog = hooksState as { lastResume?: unknown; lastTrigger?: unknown };
+const resumeLog = hooksState as { lastResume?: unknown; lastTrigger?: unknown; lastUpdate?: unknown };
 
 function renderWithProviders(ui: React.ReactElement, initialEntries?: string[]) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -158,7 +165,106 @@ describe('WorkflowDetailPage', () => {
     const approve = screen.getByRole('button', { name: /Approve & continue/ });
     fireEvent.click(approve);
     await waitFor(() => {
-      expect(resumeLog.lastResume).toEqual({ approved: true, note: '' });
+      expect(resumeLog.lastResume).toEqual({ resumeData: { approved: true, note: '' } });
     });
   });
 });
+
+describe('WorkflowDetailPage v2（CAP-S-03）', () => {
+  it('v2 运行渲染节点执行账与取消按钮，恢复携带 nodeId', async () => {
+    hooksState.runs = [
+      {
+        id: 'run-2',
+        workflowId: 'wf-1',
+        status: 'suspended',
+        triggerType: 'manual',
+        engineVersion: 2,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    hooksState.runDetail = {
+      id: 'run-2',
+      workflowId: 'wf-1',
+      status: 'suspended',
+      engineVersion: 2,
+      triggerType: 'manual',
+      createdAt: new Date().toISOString(),
+      waitingApproval: {
+        stepId: 'review',
+        nodeId: 'review',
+        mode: 'inline',
+        message: '请确认 {input.docTitle}',
+      },
+      nodeRuns: [
+        { id: 'n1', runId: 'run-2', nodeId: 'make-doc', nodeType: 'action', attempt: 1, status: 'succeeded' },
+        {
+          id: 'n2',
+          runId: 'run-2',
+          nodeId: 'dispatch-impl',
+          nodeType: 'agent',
+          attempt: 1,
+          status: 'failed',
+          executionRunId: 'exec-abc',
+          error: { code: 'agent_execution_failed', message: '执行项 failed', classification: 'agent_dispatch' },
+        },
+      ],
+      events: [
+        { id: 'e1', runId: 'run-2', seq: 1, type: 'run.started', createdAt: '' },
+      ],
+    };
+
+    renderWithProviders(<WorkflowDetailPage />, ['/app/workflows/wf-1?runId=run-2']);
+
+    await waitFor(() => {
+      expect(screen.getByText('make-doc')).toBeTruthy();
+      expect(screen.getByText('dispatch-impl')).toBeTruthy();
+    });
+    // v2 引擎徽标 + 取消按钮
+    expect(screen.getByText('workflow.engineV2')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /workflow.cancelRun/ })).toBeTruthy();
+
+    // 恢复携带 nodeId（v2 journal 精确到节点）
+    fireEvent.click(screen.getByRole('button', { name: /Approve & continue/ }));
+    await waitFor(() => {
+      const data = resumeLog.lastResume as { nodeId?: string };
+      expect(data.nodeId).toBe('review');
+    });
+  });
+
+  it('v2 定义编辑走 JSON 源码模式，保存保留 version 2', async () => {
+    hooksState.workflow = {
+      id: 'wf-2',
+      key: 'v2-custom-flow',
+      name: 'v2 自定义流',
+      version: 3,
+      description: '',
+      createdAt: '',
+      updatedAt: '',
+      definition: {
+        version: 2,
+        nodes: [{ id: 'make', type: 'action', action: 'document.create' }],
+      },
+    };
+    renderWithProviders(<WorkflowDetailPage />, ['/app/workflows/wf-2']);
+
+    // 进入编辑（画布不适用，出现 JSON 文本域）
+    fireEvent.click(screen.getByRole('button', { name: /workflow.editor.edit/ }));
+    const textarea = (await waitFor(() => screen.getByRole('textbox'))) as HTMLTextAreaElement;
+    expect(JSON.parse(textarea.value)).toMatchObject({ version: 2 });
+
+    // 非法 JSON 保存被拦截
+    fireEvent.change(textarea, { target: { value: '{ not json' } });
+    fireEvent.click(screen.getByRole('button', { name: /workflow.editor.save/ }));
+    expect(screen.getByText('workflow.editor.jsonInvalid')).toBeTruthy();
+
+    // 合法保存：version 2 原样保留（不得被降级覆写为 1）
+    const next = { version: 2, nodes: [{ id: 'make', type: 'action', action: 'document.create' }] };
+    fireEvent.change(textarea, { target: { value: JSON.stringify(next, null, 2) } });
+    fireEvent.click(screen.getByRole('button', { name: /workflow.editor.save/ }));
+    await waitFor(() => {
+      const update = resumeLog.lastUpdate as { definition?: { version?: number } } | undefined;
+      expect(update?.definition?.version).toBe(2);
+    });
+  });
+});
+

@@ -38,12 +38,41 @@ export interface WorkflowRun {
   input?: Record<string, unknown> | null;
   output?: Record<string, unknown> | null;
   stepsState?: Record<string, unknown> | null;
+  /** 引擎版本（CAP-S-03）：2 = v2 确定性引擎（journal 直出）；缺省 1 = Mastra 兼容层 */
+  engineVersion?: number;
   startedAt?: string | null;
   finishedAt?: string | null;
   createdBy?: string | null;
   createdAt: string;
   updatedAt: string;
   workflow?: { id: string; key: string; name: string };
+}
+
+/** v2 journal 节点行（engineVersion=2 时直出） */
+export interface WorkflowNodeRun {
+  id: string;
+  runId: string;
+  nodeId: string;
+  nodeType: string;
+  attempt: number;
+  status: string;
+  input?: Record<string, unknown> | null;
+  output?: Record<string, unknown> | null;
+  error?: { code?: string; message?: string; classification?: string } | null;
+  executionRunId?: string | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  createdAt: string;
+}
+
+/** v2 事件流行（seq 单调） */
+export interface WorkflowEventRow {
+  id: string;
+  runId: string;
+  seq: number;
+  type: string;
+  payload?: Record<string, unknown> | null;
+  createdAt: string;
 }
 
 export interface WorkflowRunsPage {
@@ -53,7 +82,12 @@ export interface WorkflowRunsPage {
 
 /** status=suspended 时的人工确认待办 */
 export interface WorkflowRunDetail extends WorkflowRun {
-  waitingApproval?: { stepId: string; title?: string; message: string } | null;
+  waitingApproval?: { stepId: string; title?: string; message: string; nodeId?: string; mode?: string } | null;
+  /** v2 journal 直出 */
+  nodeRuns?: WorkflowNodeRun[];
+  events?: WorkflowEventRow[];
+  /** v2 静态投影（确认卡/时间线同源） */
+  graphSummary?: Array<Record<string, unknown>> | null;
 }
 
 export interface TriggerWorkflowRequest {
@@ -65,6 +99,8 @@ export interface TriggerWorkflowRequest {
 
 export interface ResumeWorkflowRequest {
   resumeData: Record<string, unknown>;
+  /** v2 引擎按节点精确恢复；缺省时服务端推断唯一 waiting 节点 */
+  nodeId?: string;
 }
 
 /** 产品动作目录项（CAP-A-12 节点库，GET /workflows/actions） */
@@ -117,5 +153,11 @@ export const workflowApi = {
     api.post<{ workflowRunId: string; status: string }>(
       `/workflow-runs/${id}/resume`,
       data,
+    ),
+
+  cancelRun: (id: string) =>
+    api.post<{ workflowRunId: string; status: string }>(
+      `/workflow-runs/${id}/cancel`,
+      {},
     ),
 };
