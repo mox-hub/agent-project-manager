@@ -21,6 +21,10 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server+frontend | **内置流程整体 V1→V2 文法替换 + workflow 详情页运行面板（ZCode 工作流卡复刻）**：六条内置流程（项目简介流/需求转任务/需求承接/开发主线/发版管道/夜航巡检）从 v1 线性链改写 v2 节点树（human-confirm→human、闸门后步骤进 condition.then、插值口径不变），onModuleInit upsert 的 update 分支由空改覆写（内置模板以代码为真相源，重启即完成存量库替换；此前 update:{} 致 dev.db 永远停在 v1）；Mastra 注册表清空、compileFor demo 短路删除（v2 走自研确定性引擎，Mastra 仅存 v1 兼容层）。前端详情页主区分态：选中 run → 运行面板（阶段进度时间线：站=根层节点状态灯+settled/total 计数徽标+loop 轮数、站下 journal 执行药丸列（类型色瓦片+尾部状态图标）、种类词表头+「N 个阶段 · M 个执行中」、确认卡/文档回流产物行/事件流折叠/四格统计收据行）；v2 定义默认态 → 静态阶段预览卡（替代 v1 画布读 steps 的空画布）+ 工具栏运行入口；列表/详情徽标改显 grammarVersion（新增契约字段，文法版本与行版本分离）。参考实现：ZCode packages/ui workflow-timeline（功能复刻，样式按 APM 宪法 token 重写） | CAP-S-02 · CAP-S-03 | server workflow 59/59 + e2e 8/8（stepsSummary 断言更新 v2 口径）；frontend workflow 33/33（新增 v2 静态预览/运行面板渲染用例）；contract:check 零漂移（WorkflowSummaryDto.grammarVersion）；六项 lint 治理全过；dev.db 六条内置定义 definition.version=2 实机验证 | COMPONENTS.md 登记 WorkflowRunPanel/WorkflowRunTimeline/buildRunView；WorkflowSummaryDto 契约扩展（grammarVersion） |
+
 ## [0.7.4] - 2026-09-26
 
 ### v0.7.4 发版总览——夜航体验批：标签页全覆盖 + 悬浮卡片更新 + 右键菜单强化 + 列表内联编辑 + 全局搜索悬浮化
