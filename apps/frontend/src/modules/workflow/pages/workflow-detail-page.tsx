@@ -15,6 +15,7 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { RightSidebar } from '@/components/ui/right-sidebar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import {
@@ -31,6 +32,12 @@ import {
 } from '../components/workflow-step-editor';
 import { WorkflowNodePalette } from '../components/workflow-node-palette';
 import { WorkflowRunPanel } from '../components/workflow-run-panel';
+import { WorkflowRunTimeline } from '../components/workflow-run-timeline';
+import { WorkflowTriggerDialog } from '../components/workflow-trigger-dialog';
+import {
+  buildRunView,
+  type V2NodeSummary,
+} from '../components/run-view/build-run-view';
 import type { WorkflowRun } from '../api/workflow-api';
 
 const RUN_STATUS_META: Record<string, { icon: typeof Clock; tone: string; labelKey: string }> = {
@@ -196,6 +203,16 @@ export function WorkflowDetailPage() {
     setSearchParams(searchParams, { replace: true });
   };
 
+  // v2 默认态：静态阶段预览（graphSummary 投影 + 空 journal → 全 pending 站）+ 触发入口
+  const [triggerOpen, setTriggerOpen] = useState(false);
+  const staticStations = useMemo(
+    () =>
+      isV2Doc && workflow?.stepsSummary
+        ? buildRunView(workflow.stepsSummary as unknown as V2NodeSummary[], [], {}).stations
+        : [],
+    [isV2Doc, workflow?.stepsSummary],
+  );
+
   return (
     <PageShell className="overflow-hidden" aiPage="workflow.detail">
       <SubPageToolbar
@@ -208,8 +225,12 @@ export function WorkflowDetailPage() {
         actions={
           <>
             {workflow ? (
-              <Badge variant="secondary" className="shrink-0 text-10">
-                v{workflow.version}
+              <Badge
+                variant="secondary"
+                className="shrink-0 text-10"
+                title={t('workflow.grammarVersionBadge')}
+              >
+                v{workflow.grammarVersion ?? 1}
               </Badge>
             ) : null}
             {editing ? (
@@ -236,14 +257,24 @@ export function WorkflowDetailPage() {
                 />
               </>
             ) : (
-              <HeaderActionButton
-                icon={Pencil}
-                label={t('workflow.editor.edit')}
-                disabled={!workflow}
-                onClick={startEditing}
-                data-ai-component="workflow.detail.edit-toggle"
-                data-ai-action="workflow.detail.edit-toggle.click"
-              />
+              <>
+                <HeaderActionButton
+                  icon={Play}
+                  label={t('workflow.run')}
+                  disabled={!workflow}
+                  onClick={() => setTriggerOpen(true)}
+                  data-ai-component="workflow.detail.run-toggle"
+                  data-ai-action="workflow.detail.run-toggle.click"
+                />
+                <HeaderActionButton
+                  icon={Pencil}
+                  label={t('workflow.editor.edit')}
+                  disabled={!workflow}
+                  onClick={startEditing}
+                  data-ai-component="workflow.detail.edit-toggle"
+                  data-ai-action="workflow.detail.edit-toggle.click"
+                />
+              </>
             )}
           </>
         }
@@ -256,10 +287,31 @@ export function WorkflowDetailPage() {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 gap-0">
-          {/* 主区两态：选中 run → 运行面板；否则 → 描述 + 定义画布（编辑模式浮出节点库/JSON） */}
+          {/* 主区分态：选中 run → 运行面板；v2 定义 → 静态阶段预览；v1 → 定义画布（编辑模式浮出节点库/JSON） */}
           <div className="flex min-w-0 flex-1 flex-col gap-2 px-4 pb-3">
             {!editing && activeRunId ? (
               <WorkflowRunPanel runId={activeRunId} onClose={closeRun} />
+            ) : !editing && isV2Doc ? (
+              <Card className="min-h-0 flex-1 overflow-y-auto">
+                <CardContent className="flex flex-col gap-3 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {t('workflow.runPanel.previewTitle')}
+                    </span>
+                    <Badge
+                      variant="secondary"
+                      className="shrink-0 text-10"
+                      title={t('workflow.grammarVersionBadge')}
+                    >
+                      v2
+                    </Badge>
+                  </div>
+                  <WorkflowRunTimeline stations={staticStations} />
+                  <p className="text-11 leading-relaxed text-muted-foreground">
+                    {t('workflow.runPanel.previewHint')}
+                  </p>
+                </CardContent>
+              </Card>
             ) : (
               <>
                 <p className="line-clamp-1 text-xs text-muted-foreground">
@@ -354,6 +406,22 @@ export function WorkflowDetailPage() {
           </RightSidebar>
         </div>
       )}
+      <WorkflowTriggerDialog
+        open={triggerOpen}
+        target={
+          workflow
+            ? {
+                id: workflow.id,
+                key: workflow.key,
+                name: workflow.name,
+                description: workflow.description ?? null,
+                version: workflow.version,
+                grammarVersion: workflow.grammarVersion,
+              }
+            : null
+        }
+        onClose={() => setTriggerOpen(false)}
+      />
     </PageShell>
   );
 }

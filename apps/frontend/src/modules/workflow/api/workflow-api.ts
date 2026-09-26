@@ -10,13 +10,22 @@ export interface WorkflowSummary {
   key: string;
   name: string;
   description?: string | null;
+  /** 定义行版本（编辑自增） */
   version: number;
+  /** 文法版本（definition 内部 version：1=线性链，2=节点树）——徽标与 UI 分支以此为准 */
+  grammarVersion?: number;
 }
 
 export interface WorkflowStepSummary {
   id: string;
   type: string;
   title?: string;
+  /** v2 节点树投影：容器/分支子节点（server summarizeV2Definition） */
+  children?: WorkflowStepSummary[];
+  then?: WorkflowStepSummary[];
+  else?: WorkflowStepSummary[];
+  /** agent 节点派发声明 */
+  agent?: { provider: string; targetMode: string };
 }
 
 export interface WorkflowDetail extends WorkflowSummary {

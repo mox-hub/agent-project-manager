@@ -658,7 +658,10 @@
     "runPanel.stats.nodeExecs": "节点执行",
     "runPanel.stats.agents": "子代理",
     "runPanel.stats.duration": "{{m}} 分 {{s}} 秒",
-    "runPanel.stats.durationShort": "{{s}} 秒"
+    "runPanel.stats.durationShort": "{{s}} 秒",
+    "runPanel.previewTitle": "流程阶段",
+    "runPanel.previewHint": "以上为流程定义的静态阶段图。点击右上角「运行」发起一次执行，此处将实时展示各阶段进度、子代理状态与产物回流。",
+    "grammarVersionBadge": "文法版本（v1=线性链，v2=节点树）"
   },
   "aiSlot": {
     "badge": "AI 解释",

@@ -658,7 +658,10 @@
     "runPanel.stats.nodeExecs": "Node runs",
     "runPanel.stats.agents": "Subagents",
     "runPanel.stats.duration": "{{m}}m {{s}}s",
-    "runPanel.stats.durationShort": "{{s}}s"
+    "runPanel.stats.durationShort": "{{s}}s",
+    "runPanel.previewTitle": "Phases",
+    "runPanel.previewHint": "Static phase preview of the definition. Hit Run (top-right) to start an execution and watch live phase progress, subagent status and artifacts here.",
+    "grammarVersionBadge": "Grammar version (v1=linear chain, v2=node tree)"
   },
   "aiSlot": {
     "badge": "AI Explain",

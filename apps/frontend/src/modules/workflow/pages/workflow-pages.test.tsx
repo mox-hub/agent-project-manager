@@ -102,11 +102,18 @@ function renderWithProviders(ui: React.ReactElement, initialEntries?: string[]) 
 describe('WorkflowListPage', () => {
   it('渲染定义卡片并展示版本号', () => {
     hooksState.workflows = [
-      { id: 'wf-1', key: 'project-brief-demo', name: '项目简介三步流', version: 1 },
+      {
+        id: 'wf-1',
+        key: 'project-brief-demo',
+        name: '项目简介三步流',
+        version: 1,
+        grammarVersion: 2,
+      },
     ];
     renderWithProviders(<WorkflowListPage />);
     expect(screen.getByText('项目简介三步流')).toBeTruthy();
-    expect(screen.getByText('v1')).toBeTruthy();
+    // 徽标显示文法版本（CAP-S-03 V1→V2 替换后口径）
+    expect(screen.getByText('v2')).toBeTruthy();
   });
 
   it('空定义时显示空态', () => {
@@ -241,6 +248,36 @@ describe('WorkflowDetailPage', () => {
     expect(screen.getByText('演示报告')).toBeTruthy();
     // 四格统计：时间 4 分 45 秒
     expect(screen.getByText('4 分 45 秒')).toBeTruthy();
+  });
+
+  it('v2 定义默认态渲染静态阶段预览与运行入口（替代空画布）', async () => {
+    hooksState.runs = [];
+    hooksState.workflow = {
+      id: 'wf-v2',
+      key: 'v2-flow',
+      name: 'v2 自定义流',
+      version: 1,
+      grammarVersion: 2,
+      description: '',
+      createdAt: '',
+      updatedAt: '',
+      definition: { version: 2, nodes: [] },
+      stepsSummary: [
+        { id: 'prep', type: 'llm', title: '准备演示代码' },
+        { id: 'review', type: 'human', title: '人工确认' },
+      ],
+    };
+
+    renderWithProviders(<WorkflowDetailPage />, ['/app/workflows/wf-v2']);
+
+    // 预览卡：静态站列（graphSummary 投影）而非空画布
+    await waitFor(() => {
+      expect(screen.getByText('workflow.runPanel.previewTitle')).toBeTruthy();
+      expect(screen.getByText('准备演示代码')).toBeTruthy();
+      expect(screen.getByText('人工确认')).toBeTruthy();
+    });
+    // 触发入口（HeaderActionButton aria-label，i18n 表译为 Run）
+    expect(screen.getByRole('button', { name: /^Run$/ })).toBeTruthy();
   });
 });
 
