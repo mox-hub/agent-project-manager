@@ -172,7 +172,8 @@ export class CliExecutorService {
         APM_CONVERSATION_ID: conversationId || '',
         APM_PROJECT_ID: context.projectId,
       },
-      shell: true,
+      // adapter 显式 shell:false 时直启（zcode node 直启免 Windows cmd.exe 8K 上限）
+      shell: built.shell !== false,
     });
 
     // prompt 注入：adapter 返回 stdinData 时写入后关闭 stdin（claude-code stream-json NDJSON）
