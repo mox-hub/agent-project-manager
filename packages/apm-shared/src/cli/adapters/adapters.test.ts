@@ -331,19 +331,19 @@ describe('ZCodeAdapter（headless stream-json 协议校准，v0.16.9 实测采�
     });
 
   it('buildCommand：-p prompt + stream-json + 缺省 yolo 模式；无 stdin 通道', () => {
-    const built = new ZCodeAdapter().buildCommand(input('实现登录页'));
+    const built = new ZCodeAdapter().buildCommand(input('implement login page'));
     expect(built.cmd).toBe('zcode');
     expect(built.shell).toBeUndefined(); // PATH 命令名回退 shell 解析
     const i = built.args.indexOf('-p');
-    expect(built.args[i + 1]).toBe('实现登录页');
+    expect(built.args[i + 1]).toBe('implement login page');
     expect(built.args).toContain('--output-format');
     expect(built.args[built.args.indexOf('--output-format') + 1]).toBe('stream-json');
     expect(built.args).toContain('--mode');
     expect(built.args[built.args.indexOf('--mode') + 1]).toBe('yolo'); // zcode headless 自身默认
     expect(built.stdinData).toBeUndefined();
     // goal 派发 = -p 携带 /goal 命令（--target 与 -p 互斥，adapter 不需要分支）
-    const goal = new ZCodeAdapter().buildCommand(input('/goal 修复登录超时'));
-    expect(goal.args[goal.args.indexOf('-p') + 1]).toBe('/goal 修复登录超时');
+    const goal = new ZCodeAdapter().buildCommand(input('/goal fix login timeout'));
+    expect(goal.args[goal.args.indexOf('-p') + 1]).toBe('/goal fix login timeout');
   });
 
   it('buildCommand：permissionMode / sessionId 透传；--resume 复接会话', () => {
@@ -376,10 +376,21 @@ describe('ZCodeAdapter（headless stream-json 协议校准，v0.16.9 实测采�
     expect(attachIdx).toBeGreaterThan(-1);
     const attachFile = built.args[attachIdx + 1];
     expect(attachFile).toMatch(/apm-zcode-.+\.md$/);
-    expect(built.args[built.args.indexOf('-p') + 1]).toContain('附件');
+    expect(built.args[built.args.indexOf('-p') + 1]).toContain('attached file');
     expect(built.args[built.args.indexOf('-p') + 1].length).toBeLessThan(200);
     // 密文语义：原 prompt 不进 argv（8K/32K 限制与日志泄漏双防线）
     expect(built.args.join(' ')).not.toContain('xxxxx');
+  });
+
+  it('buildCommand：中文等非 ASCII prompt 走 --attach（实机采样：argv 编码损坏防线）', () => {
+    const built = new ZCodeAdapter().buildCommand(input('请修复登录超时问题'));
+    expect(built.args).toContain('--attach');
+    // argv 上只有 ASCII 引导语，原中文不进命令行
+    expect(built.args.join(' ')).not.toContain('请修复登录超时');
+    const i = built.args.indexOf('-p');
+    expect(built.args[i + 1]).toBe(
+      'Read the attached file and execute the full task instructions in it. The attachment contains ALL requirements; do not wait for further input.',
+    );
   });
 
   it('parseStream：session.created→session_init；text_delta→token；未知/非 JSON 行忽略', () => {
@@ -524,6 +535,24 @@ describe('ZCodeAdapter（headless stream-json 协议校准，v0.16.9 实测采�
     const res = a.parseFinalResult(stdout, 0);
     expect(res.status).toBe('failed');
     expect(res.error).toBe('Select a model before continuing');
+  });
+
+  it('parseFinalResult：command-center 裸 pretty summary（/goal 形态）→ completed', () => {
+    const a = new ZCodeAdapter();
+    // 实测形态：/goal 命令不产生事件流，stdout 是 pretty 多行 JSON（无 type 字段）
+    const stdout = JSON.stringify(
+      {
+        sessionId: 'sess_goal',
+        traceId: 'tr_9',
+        response: 'Goal active\nObjective: 了解目录\nUsage: 0 tokens / none\nTime: 0 seconds',
+      },
+      null,
+      2,
+    );
+    const res = a.parseFinalResult(stdout, 0);
+    expect(res.status).toBe('completed');
+    expect(res.output?.response).toContain('Goal active');
+    expect(res.output?.sessionId).toBe('sess_goal');
   });
 
   it('parseFinalResult：非零退出码 / 缺 result 终行 → failed 诚实落账', () => {
