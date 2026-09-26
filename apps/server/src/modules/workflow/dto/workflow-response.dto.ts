@@ -10,6 +10,11 @@ export class WorkflowSummaryDto {
   description?: string | null;
   @ApiProperty({ type: Number, description: '版本号' })
   version: number;
+  @ApiProperty({
+    type: Number,
+    description: '文法版本（definition 内部 version：1=线性链，2=节点树）',
+  })
+  grammarVersion: number;
 }
 
 /** GET /workflows/:id 返回（AIWorkflowDefinition 全行 + 解析后的步骤摘要） */

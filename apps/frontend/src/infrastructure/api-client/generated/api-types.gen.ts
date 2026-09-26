@@ -13350,6 +13350,8 @@ export interface components {
             description?: string | null;
             /** @description 版本号 */
             version: number;
+            /** @description 文法版本（definition 内部 version：1=线性链，2=节点树） */
+            grammarVersion: number;
         };
         WorkflowDetailDto: {
             id: string;
@@ -13360,6 +13362,8 @@ export interface components {
             description?: string | null;
             /** @description 版本号 */
             version: number;
+            /** @description 文法版本（definition 内部 version：1=线性链，2=节点树） */
+            grammarVersion: number;
             /** @description 工作流定义文法（workflow.definition.ts） */
             definition: {
                 [key: string]: unknown;

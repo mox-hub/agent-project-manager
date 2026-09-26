@@ -75067,13 +75067,18 @@
           "version": {
             "type": "number",
             "description": "版本号"
+          },
+          "grammarVersion": {
+            "type": "number",
+            "description": "文法版本（definition 内部 version：1=线性链，2=节点树）"
           }
         },
         "required": [
           "id",
           "key",
           "name",
-          "version"
+          "version",
+          "grammarVersion"
         ]
       },
       "WorkflowDetailDto": {
@@ -75098,6 +75103,10 @@
             "type": "number",
             "description": "版本号"
           },
+          "grammarVersion": {
+            "type": "number",
+            "description": "文法版本（definition 内部 version：1=线性链，2=节点树）"
+          },
           "definition": {
             "type": "object",
             "description": "工作流定义文法（workflow.definition.ts）",
@@ -75119,6 +75128,7 @@
           "key",
           "name",
           "version",
+          "grammarVersion",
           "definition",
           "createdAt",
           "updatedAt"

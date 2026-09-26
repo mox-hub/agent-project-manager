@@ -132,6 +132,10 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       name: w.name,
       description: w.description,
       version: w.version,
+      // 文法版本（definition JSON 内部 version，与行版本 version 区分；
+      // CAP-S-03 内置模板 V1→V2 替换后前端徽标以此为准）
+      grammarVersion:
+        (w.definition as { version?: number } | null)?.version ?? 1,
     }));
   }
 
