@@ -24,14 +24,9 @@ import {
   WorkflowV2DefinitionError,
 } from './workflow.definition.v2';
 import { listWorkflowActions } from './workflow-actions';
-import {
-  BUILTIN_WORKFLOW_TEMPLATES,
-  DEMO_WORKFLOW_DEFINITION,
-  DEMO_WORKFLOW_KEY,
-} from './workflow-builtin';
+import { BUILTIN_WORKFLOW_TEMPLATES } from './workflow-builtin';
 import {
   parseWorkflowDefinition,
-  summarizeDefinition,
   WorkflowDefinitionError,
 } from './workflow.definition';
 
@@ -89,7 +84,8 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       url: 'file:./data/mastra-workflows.db',
     });
 
-    // 内置模板（CAP-A-12 模板库）：遍历 upsert 产品侧定义账 + demo 注册进引擎注册表
+    // 内置模板（CAP-A-12 模板库，CAP-S-03 起 v2 文法）：遍历 upsert 产品侧定义账，
+    // update 覆写——内置模板以代码为真相源，重启即完成 V1→V2 替换；用户改造走「另存为副本」
     for (const template of BUILTIN_WORKFLOW_TEMPLATES) {
       await this.prisma.aIWorkflowDefinition.upsert({
         where: { key: template.key },
@@ -100,20 +96,23 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
           definition: template.definition as unknown as Prisma.InputJsonObject,
           createdBy: null,
         },
-        update: {},
+        update: {
+          name: template.name,
+          description: template.description,
+          definition: template.definition as unknown as Prisma.InputJsonObject,
+        },
       });
     }
 
+    // Mastra（v1 兼容层）注册表留空：内置模板已 v2 化走自研确定性引擎，
+    // v1 路径仅存历史定义的 compiler.compile 慢路径（历史运行只读兼容）
     this.mastra = new Mastra({
       storage: this.storage,
-      workflows: {
-        [DEMO_WORKFLOW_KEY]: this.compiler.compile(
-          DEMO_WORKFLOW_KEY,
-          DEMO_WORKFLOW_DEFINITION,
-        ),
-      },
+      workflows: {},
     });
-    this.logger.log('Workflow engine (Mastra + LibSQL) initialized');
+    this.logger.log(
+      'Workflow engine initialized (v2 deterministic engine; Mastra as v1 compat layer)',
+    );
   }
 
   async onModuleDestroy() {
@@ -495,12 +494,6 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
   >();
 
   private compileFor(key: string, definition: unknown): AnyWorkflow {
-    if (this.mastra && key === DEMO_WORKFLOW_KEY) {
-      // demo 走引擎注册表（享受 storage 快照路径）
-      return this.mastra.getWorkflow(
-        DEMO_WORKFLOW_KEY as never,
-      ) as unknown as AnyWorkflow;
-    }
     return this.compiler.compile(key, definition);
   }
 
