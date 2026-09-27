@@ -17,6 +17,8 @@
     "test:ui": "pnpm --filter \"./apps/frontend\" run test:ui",
     "test:e2e": "pnpm --filter \"./apps/server\" run test:e2e",
     "check:docs-sync": "node scripts/check-doc-sync.mjs",
+    "sync:skills": "node scripts/sync-skills.mjs",
+    "check:skills-sync": "node scripts/sync-skills.mjs --check",
     "check:doc-coverage": "node scripts/check-doc-coverage.mjs",
     "quality:gate": "pnpm type-check && pnpm lint && turbo run test && pnpm contract:check && pnpm --filter \"./apps/server\" run test:e2e && pnpm api:audit --min=95 && pnpm check:docs-sync",
     "gate:quick": "node scripts/gate.mjs",
