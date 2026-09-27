@@ -13,31 +13,51 @@ function run(cmd) {
 // 「`docs/` 永远命不中」是同一类缺陷，只是那次修的是枚举（`git ls-files -z`），
 // diff 这三处漏了；此处与 `-z` 等价地解决同一问题（保留换行切分，改动面最小）。
 // 实测缺陷来源：E 类批 4 交付时报回 `check:docs-sync` exit 1，复现确认。
-function getChangedFiles() {
+// ── 变更集口径（2026-09-27 修正：由「首个非空即返回」改为**三源并集**）──────────────
+// 旧实现是 `if (workingTree) return …` 的短路链：只要工作区有未提交改动，就**只看工作区**，
+// 而在 HEAD 里已提交的文档/CHANGELOG 一律看不见。后果（实测）：
+//   · 本仓既定工作流是「代理只改代码、文档/台账由协调方另行提交」（简报明文），
+//     代码提交与文档提交本就**分离到两个 commit**；
+//   · 多代理同工作区作业时，工作区里躺着别家在制的**纯代码**改动；
+//   两者叠加 → 本地 `check:docs-sync` **必然报红**，且报文说「no docs updated」**与事实相反**
+//   （文档明明已在 HEAD 里）。CI 走 `GITHUB_BASE_REF` 分支全量比对，故只有本地坏 →
+//   又是一次「本地与 CI 结论分歧」（本文件 B4 注释已把这类分歧列为最坏情况）。
+// 现口径 = 下列**三源并集**，与报文承诺的「in the same PR」一致，也与 CI 的分支级比对一致：
+//   ① `origin/<baseRef>...HEAD`（CI：整个 PR）② 工作区（pre-commit：我正要提交什么）
+//   ③ `HEAD~1...HEAD`（post-commit：我刚刚提交了什么）
+// 这只会**增加**文档侧来源，不删减代码侧来源——不会放过「改了代码」这件事；而「文档改了
+// 就算数」正是报文自己写的契约（同 PR）。若将来要收紧为「文档必须与代码同一 commit」，
+// 那是另一项需人裁决的口径变更，不在此处顺手做。
+// 逐条独立 try/catch：任一 git 调用失败（如初始提交无 HEAD~1）不得让并集整体塌成空集，
+// 否则会从「误报」变成「静默放行」。
+function listFrom(cmd) {
   try {
-    const baseRef = process.env.GITHUB_BASE_REF;
-    if (baseRef) {
-      try {
-        run(`git fetch origin ${baseRef} --depth=1`);
-      } catch {
-        // ignore fetch failure and fallback
-      }
-      const out = run(
-        `git -c core.quotePath=false diff --name-only --diff-filter=ACMRT origin/${baseRef}...HEAD`,
-      );
-      if (out) return out.split(/\r?\n/).filter(Boolean);
-    }
-
-    const workingTree = run('git -c core.quotePath=false diff --name-only --diff-filter=ACMRT');
-    if (workingTree) return workingTree.split(/\r?\n/).filter(Boolean);
-
-    const headRange = run(
-      'git -c core.quotePath=false diff --name-only --diff-filter=ACMRT HEAD~1...HEAD',
-    );
-    return headRange ? headRange.split(/\r?\n/).filter(Boolean) : [];
+    const out = run(cmd);
+    return out ? out.split(/\r?\n/).filter(Boolean) : [];
   } catch {
     return [];
   }
+}
+
+function getChangedFiles() {
+  const sets = [];
+
+  const baseRef = process.env.GITHUB_BASE_REF;
+  if (baseRef) {
+    try {
+      run(`git fetch origin ${baseRef} --depth=1`);
+    } catch {
+      // ignore fetch failure and fallback
+    }
+    sets.push(
+      listFrom(`git -c core.quotePath=false diff --name-only --diff-filter=ACMRT origin/${baseRef}...HEAD`),
+    );
+  }
+
+  sets.push(listFrom('git -c core.quotePath=false diff --name-only --diff-filter=ACMRT'));
+  sets.push(listFrom('git -c core.quotePath=false diff --name-only --diff-filter=ACMRT HEAD~1...HEAD'));
+
+  return [...new Set(sets.flat())];
 }
 
 /**
