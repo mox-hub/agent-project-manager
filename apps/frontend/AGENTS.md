@@ -1,9 +1,9 @@
 # AGENTS.md — 前端开发治理手册
 
 > **适用范围**：`apps/frontend`（React 19 + Vite + TypeScript）
-> **设计宪法（最高依据）**：`docs/design/PRINCIPLES.md`（v2.0，2026-09-27 语义化 token 层落地）——**本文档 §3 已降级为其摘要**，样式规则与宪法冲突时**一律以宪法为准**
-> **组件索引**：`COMPONENTS.md`（开发第一入口）；**页面模板**：`src/templates/`
-> **版本**：v1.3（2026-09-27：§3 降级为宪法摘要——字阶/字重/行高/动效/阴影全面语义 token 化并配 `lint:spacing` 机器强制，主题归一为 `default` 单套；v1.2 2026-08：Tailwind v4 @theme + shadcn CLI 官方管理 + base-ui 唯一基线，radix 清零）
+> **设计宪法（最高依据）**：`docs/design/PRINCIPLES.md`——**本文件不承载任何设计规则**（§3 为纯指针），样式规则一律以宪法为准；两者冲突时不静默覆盖，须提交 PR 删除冲突段落。按宪法《版本号规则》，此处**不抄写宪法版本号**。
+> **组件索引**：`COMPONENTS.md`（开发第一入口）
+> **版本**：v1.4（2026-09-27：§3 由「宪法摘要」改为**纯指针**（摘要会随宪法静默过期）、删 `src/templates/` 失效引用、删 `src/lib/design-tokens.ts` 空壳引用、页面开发流程改「同域最近似页面 + §6.2 骨架约定」；v1.3 同日：字阶/字重/行高/动效/阴影全面语义 token 化并配 `lint:spacing` 机器强制，主题归一为 `default` 单套；v1.2 2026-08：Tailwind v4 @theme + shadcn CLI 官方管理 + base-ui 唯一基线，radix 清零）
 
 ---
 
@@ -26,7 +26,7 @@ Agent Project Manager (APM) 是一个 AI 驱动的项目管理工具。前端为
 ### 设计还原来源（历史留档，2026-09-27 已失效）
 
 - `refers/APM/` 曾为设计还原参考（Figma 导出）：`theme.css` 定义设计变量、`src/app/components/` 定义组件与布局、`src/app/pages/` 定义页面。
-- **该链路已断开**：`figma` 主题预设与 `:root[data-theme-preset='figma']` 段已随主题归一删除，前端不再以 refer 设计为还原目标；现行基线为 `docs/design/PRINCIPLES.md` v2.0 的语义 token 体系。
+- **该链路已断开**：`figma` 主题预设与 `:root[data-theme-preset='figma']` 段已随主题归一删除，前端不再以 refer 设计为还原目标；现行基线为 `docs/design/PRINCIPLES.md` 的语义 token 体系。
 - **默认且唯一主题预设为 `default`**（`src/shared/theme/presets.ts`）；历史存量值（`figma`/`linear`/`notion`）与未知值一律回落 `default`。
 - `refers/APM/` 现仅作**结构意图参考**（§4.4 参考稿协议：参考稿是意图不是可粘贴代码）。
 
@@ -63,9 +63,8 @@ apps/frontend/
 │   │       └── index.ts            # 公共导出
 │   ├── infrastructure/             # api-client / event-client / store
 │   ├── hooks/                      # 通用 hooks（use-mobile/use-toast/useTranslation）
-│   ├── lib/                        # utils / design-tokens（规范文档）
+│   ├── lib/                        # 通用工具（cn 等）
 │   ├── i18n/                       # 国际化（locales/）
-│   ├── templates/                  # ★ 页面骨架模板（list/detail/form，开发复制起点）
 │   ├── test/  test-utils/          # 测试
 │   └── index.css                   # ★ 全局样式 + 主题变量 + @theme token（统一调整只改这里）
 ├── scripts/                            # 设计门禁脚本（逐项说明见 §6.4）
@@ -90,73 +89,50 @@ apps/frontend/
 
 ---
 
-## 3. 设计系统架构
+## 3. 设计系统
 
-### 3.1 设计变量（Token）
+> **本仓库的设计规范有且仅有一处真相源：[`docs/design/PRINCIPLES.md`](../../docs/design/PRINCIPLES.md)。**
+> 本文件**不承载任何设计规则**（色彩/字号/间距/圆角/阴影/动效/图标/组件治理均不在此）。
+> 本节曾是宪法摘要，2026-09-27 改为纯指针——**摘要同样会随宪法修订静默过期，等于第二真相源**，故只留导航。
 
-> ⚠️ **本节已降级为摘要。** 设计规则的**唯一权威是 `docs/design/PRINCIPLES.md`（v2.0）**——字号/字重/行高/间距/动效/阴影/颜色的全部档位定义、禁止项与豁免清单都在那里，且多由脚本机器强制。本节只保留「在哪找、怎么分层」的导航信息；**两者冲突时以宪法为准**。
+- 开工前必读宪法，并通过 `frontend-page` skill 流程（读索引 → 出 spec → 确认 → 实现 → 自检）
+- 组件索引：`COMPONENTS.md`（**只有组件名/路径/用途，无规则**）
+- 机器校验：`scripts/check-*.mjs`（宪法的可执行镜像；命令与逐项含义见 §6.4）
+- 若本文件与宪法冲突：**以宪法为准**，并请提交 PR 删除本文件中的冲突段落（不静默覆盖）
 
-设计变量分两层，全部集中在 `src/index.css`：
-
-1. **CSS 变量层**（`:root` / `.dark`）：`--background` `--foreground` `--primary` `--card` `--muted` `--accent` `--destructive` `--border` `--input` `--switch-background` `--radius` `--sidebar*` 等，负责**明暗两态的实际取值**。
-2. **`@theme` 注册层**：把上面这层包装成 Tailwind 能生成工具类的 `--color-*` / `--text-*` / `--spacing` / `--radius-*` / `--shadow-*` / `--transition-duration-*` / `--ease-*`。**只有注册进 `@theme` 的主题键才会生成对应工具类**——命名空间写错（如把 `duration-*` 的键写成 `--duration-*`）会导致类静默不生成，详见宪法 §7.1。
-
-> ⚠️ **语义化颜色**：业务代码禁止使用原始 Tailwind 色（`bg-emerald-500`、`text-violet-500` 等），统一使用语义 token：`bg-accent-blue/green/yellow/red/purple/orange(-light)`、`text-accent-*`、`bg-content-*`、`bg-sidebar-*`。详见 `src/lib/design-tokens.ts`、宪法 §5 与 `scripts/check-palette.mjs` / `scripts/check-semantic-classes.mjs`（**白名单逐项登记，未登记即拦截**——如 `text-content-text-tertiary` 已于 v2.0 删除，写回会被 `lint:semantic` 拦下）。
-
-### 3.2 排版
-
-- 字体：`Inter`（sans）+ `JetBrains Mono`（mono）+ `Noto Sans SC`（中文回落），由 `@fontsource-variable/*` **自托管分片 woff2 随构建打包**（`index.css` 顶部 `@import`，禁止 CDN）。字体链与用户自定义覆写见宪法 §2.1/§2.2。
-- 字号规范：**8 档语义阶梯 `text-3xs/2xs/xs/sm/base/lg/xl/2xl`**（宪法 §3.1），逐档角色固定。`text-sm`(14) 为全站基准；中文最小 `text-xs`(12)；**`text-3xs/2xs` 仅非中文**。禁止 px 直读档（`text-10`/`text-13` 等）与任意值（`text-[13px]`），`lint:spacing` / `lint:tokens` 拦截。
-- 标题默认 `font-medium`、行高 1.5；页面标题由 `PageHeader` 统一提供：**单行高度**（`py-2`），裸图标（`size-5`，与标题视觉同高）+ `text-lg font-semibold` 标题 + 收藏星标；无副标题/描述行，数量类信息用 `metrics` 计数胶囊（收藏星标之后，integration 页 StatusBadge 同款形态的小号版本）。
-
-### 3.3 间距 / 字号 / 圆角 / 阴影（token 体系）
-
-尺寸 token 全部固化在 `src/index.css` 的 `@theme` 块——**全站统一调整只改配置文件**；业务代码**禁止任意值**（`w-[260px]`、`text-[13px]` 等，`pnpm lint:tokens` 强制）。
-
-- **间距 / 宽高**：Tailwind v4 动态刻度 `calc(var(--spacing) * N)`（`--spacing` 为标量）——`p-4`=16px、`w-15`=60px、`max-w-150`=600px，任意整数/`.5` 档都成立，**无需预先扩展 config**。四分之一档（`0.75/1.25/2.75/3.25/4.25/5.25`）**冻结禁新增**（宪法 §4.1）。
-- **字号 / 字重 / 行高**：8 档语义字号（见 §3.2）；字重只许 `font-normal/medium/semibold`（400/500/600，禁 300/700）；行高只许语义档 `leading-none/tight/snug/normal/relaxed/loose`（**禁数值档** `leading-5`/`leading-8.5`，唯一结构性例外见宪法附录 A3）。
-- **弹窗 / 滚动区语义尺寸**：`h-dialog`=95vh、`w-dialog`=95vw、`w-dialog-wide`=90vw、`max-h-dialog`=80vh、`max-h-dialog-full`=90vh。
-- **圆角**：`rounded-md`（控件，`--radius-control`）/ `rounded-lg`（面板，`--radius`）/ `rounded-xl`（卡片）/ `rounded-full`（胶囊）/ `rounded-xs`（2px）/ `rounded-chip`。
-- **品牌色**：`brand-linear(-light/-deep/-darkest)`、`brand-atlassian(-dark/-darker)`，仅用于对应集成商标识。
-- **阴影**：**全站唯一投影档 `shadow-xs`**（`shadow-none` 为复位档）；其余具名档（`2xs/sm/md/lg/xl/2xl/inner`）与裸 `shadow` 一律封禁（宪法 §3.6 / D10）。**hover 不抬升阴影**，交互反馈改走边框/背景/位移/环色（宪法 §3.6 / D11）。
-- **动效**：时长三档 `duration-fast/normal/slow`（120/180/240ms）+ 缓动 `ease-standard/emphasis`；token 键必须是 `--transition-duration-*` 与 `--ease-*`，**写成 `--duration-*` 会静默不生效**（宪法 §7.1 命名空间陷阱）。
-- **确属无法 token 化的复杂值**（grid 模板、多段 calc、运行时 `var()`）：加入 `scripts/check-tailwind-arbitrary.mjs` 白名单并说明理由。
-
-### 3.4 组件分层
-
-```
-┌─ 页面层  modules/*/pages        （组合组件，不含裸样式堆叠）
-├─ 业务组件 modules/*/components   （领域组件，基于基础组件组合）
-├─ 共享组件 shared/components      （跨模块：Kanban/Gantt/错误边界）
-├─ 基础组件 components/ui/*        （★ 唯一允许写样式细节的层）
-└─ 原语     @base-ui/react（唯一） 
-```
-
-**规则**：样式细节只允许出现在 `components/ui/*`；页面与业务组件通过 props/variant/className 组合，不重复堆叠样式类。
+> **⚠️ 已知缺口：三族 token 目前没有宪法条文**（2026-09-27 清空本节时实测）。宪法有字阶/字重/行高/间距/颜色/图标/动效/阴影/三态，**但没有「圆角」节**，也没有下列两族的条文——它们此前只写在本文件 §3，删节后一度无家可归：
+>
+> | 族 | token | 现唯一出处 |
+> |---|---|---|
+> | 圆角 | `rounded-md`（控件）/ `rounded-lg`（面板）/ `rounded-xl`（卡片）/ `rounded-full`（胶囊）/ `rounded-xs` / `rounded-chip`（对应 `--radius-control` / `--radius` 等） | `src/index.css` 的 `@theme` |
+> | 弹窗/滚动区语义尺寸 | `h-dialog` / `w-dialog` / `w-dialog-wide` / `max-h-dialog` / `max-h-dialog-full` | 同上 |
+> | 集成商品牌色 | `brand-linear(-light/-deep/-darkest)` / `brand-atlassian(-dark/-darker)`（仅用于对应集成商标识） | 同上 |
+>
+> **在批 3 补条文（D1 圆角等）之前，不要据任何文档引用这三族的档位含义**——上表只说明「值定义在哪」，不构成规范。批 3 补条文后删除本表并回填宪法章节号。
 
 ---
 
 ## 4. 页面开发流程（spec 先行）
 
-> 目标：把设计决策前置到文本阶段，代码阶段没有自由发挥空间。完整流程已固化为项目 skill `frontend-page`（`.zcode/skills/frontend-page/`），开发/改造页面时优先调用。
+> 目标：把设计决策前置到文本阶段，代码阶段没有自由发挥空间。完整流程已固化为项目 skill `frontend-page`（源：`.zcode/skills/frontend-page/`；由 `scripts/sync-skills.mjs` 同步为 `.claude` / `.codex` / `.opencode` / `.cursor` 四份副本），开发/改造页面时优先调用。
 
 ### 4.1 必读入口（写代码前）
 
 1. `COMPONENTS.md` —— 组件总索引（组件路径/用途/关键 props/分类）
-2. `src/templates/` —— 页面骨架模板：`list-page.tsx` / `detail-page.tsx` / `form-page.tsx`
-3. 本文 §6.2 页面开发模板（PageHeader/ToolbarRow/SubPageToolbar 用法细则）
+2. 同域最近似页面 —— 直接读一个同类页面作结构参照（**原 `src/templates/` 骨架目录已于 2026-08 随剪枝删除，不存在可复制的模板**）
+3. 本文 §6.2 页面结构约定（PageHeader/ToolbarRow/SubPageToolbar 装配细则；设计规则一律见宪法）
 
 ### 4.2 两步流程
 
 1. **spec（不写代码，等确认）**：
-   - 模板选择（list / detail / form，或说明为何都不适用）
+   - 骨架选择（列表 / 详情 / 表单，或说明为何都不适用）——参照同域最近似页面与 §6.2
    - 区域划分：每区域用哪些组件——只能引用 `COMPONENTS.md` 已登记组件；需要新组件单独列出并说明现有组件为何不能满足
    - 数据来源（复用/新建的 api hooks）与路由注册点（router.tsx / page-registry）
-2. **实现**：复制模板骨架替换占位；页面结构不得偏离模板。
+2. **实现**：按 §6.2 的装配细则搭出页面结构；结构不得自由发挥。
 
 ### 4.3 改造现有页面
 
-现有页面结构偏离模板时，**默认按模板重写页面骨架并迁移数据逻辑**，禁止在旧结构上修修补补叠加样式。
+现有页面结构偏离骨架约定（§6.2）时，**默认重写页面骨架并迁移数据逻辑**，禁止在旧结构上修修补补叠加样式。
 
 ### 4.4 参考稿协议（Figma Make / Open Design 等）
 
@@ -202,7 +178,7 @@ apps/frontend/
    - 放置到 `components/ui/`（通用）或 `modules/{module}/components/`（领域）；
    - 基于 @base-ui/react 原语构建（禁止引入 radix），导出 `cn` 合并的 className；
    - 在 `src/modules/design-system/pages/design-system-page.tsx` 中补充展示用例；
-   - 遵循 `src/lib/design-tokens.ts` 的 token 规则。
+   - 遵循宪法 §5 的语义 token 规则（`lint:semantic` / `lint:palette` 强制）。
 4. **禁止**：
    - 页面中直接写裸 `<button>`/`<input>`/`<table>`（用 Button/Input/Table 组件）；
    - `from 'sonner'`（sonner 已删除；统一 `@/components/ui/toast` 的 `ToastProvider` + `toast()`，lint:ui-governance 强制）；
@@ -219,7 +195,7 @@ apps/frontend/
 - 修改基础组件默认样式会全局生效：改前评估所有调用点（可用 `Select-String` 全仓搜索），并在 Design System 页面验证。
 - 保留扩展变体：refer 对齐只调整默认样式，业务侧新增的 variant（如 `danger`、`warning`、`size="xs"`）不得删除。
 
-### 6.2 页面开发模板
+### 6.2 页面结构约定（骨架与装配）
 
 ```tsx
 import { PageHeader } from '@/components/ui/page-header'
@@ -268,7 +244,7 @@ useEffect(() => { toolbar.updateActiveSnapshot({ ...当前全部相关状态 }) 
 />
 ```
 
-> ToolbarRow 规则：自身**无上下分界线**（py-2 单行）；不放搜索框（搜索在筛选下拉内）；左侧视图胶囊由 `useToolbarViews` 持久化管理；居中样式切换用 `SegmentedControl variant="rect"`（delivery 风格圆角矩形滑块）；右侧按钮组复用 HeaderActionButton（默认 筛选/显示/下载 三个下拉按钮，`badge` 显示筛选数量红点角标）。
+> ToolbarRow 规则：自身**无上下分界线**（单行）；不放搜索框（搜索在筛选下拉内）；左侧视图胶囊由 `useToolbarViews` 持久化管理；居中样式切换用 `SegmentedControl variant="rect"`（delivery 风格圆角矩形滑块）；右侧按钮组复用 HeaderActionButton（默认 筛选/显示/下载 三个下拉按钮，`badge` 显示筛选数量红点角标）。
 
 二级子页面（详情页）用 `SubPageToolbar`（见 `/app/design-system#sub-page-toolbar`）放在 PageHeader 之上：
 
@@ -330,7 +306,7 @@ pnpm --filter frontend test -- --run        # 单测
 
 ### 6.7 页面级对齐约定（refer 还原）
 
-- **对齐原则**：页面只对齐展示形态（布局/间隔/颜色/字体/交互），不改变数据流；缺失真实数据的区块使用静态示例并标记 `data-mock="true"` + `// MOCK DATA` 注释，接入真实 API 后移除。
+- **对齐原则**：页面只对齐展示形态（布局/间隔/颜色/字体/交互），不改变数据流。**mock 数据的唯一来源是 msw 网络层**（宪法 §9，生产禁用）；页面内的 `data-mock="true"` + `// MOCK DATA` 只是**待替换区块的检索标记**，不是「允许写静态 mock 数据」的许可。
 - **组件复用**：页面必须基于 `components/ui/*` 组件组合；refer 中出现的复合组件（TaskDetailDialog→task-detail-drawer、MemberPicker→member-picker、DatePicker→calendar/popover、PriorityPicker/StatusPicker→select、NotificationPopover、AIAssistantPanel→ai-hub 组件）优先复用项目已有等价物，不新建相似组件。
 - **已还原页面**：
   - `modules/delivery`（dev-only）：交付树三视图 + 验收矩阵 + Agent 状态 + 列/视图配置 + 导出 + 标注（mock）
