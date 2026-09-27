@@ -78,7 +78,6 @@
   --color-content-text: hsl(var(--content-text));
   --color-content-text-secondary: hsl(var(--content-text-secondary));
   --color-content-text-muted: hsl(var(--content-text-muted));
-  --color-content-text-tertiary: hsl(var(--content-text-tertiary));
   --color-content-border: hsl(var(--content-border));
   --color-content-border-light: hsl(var(--content-border-light));
   --color-chart-1: hsl(var(--chart-1));
@@ -87,7 +86,6 @@
   --color-chart-4: hsl(var(--chart-4));
   --color-chart-5: hsl(var(--chart-5));
   --color-input-background: hsl(var(--input-background));
-  --color-switch-background: hsl(var(--switch-background));
 
   /* 圆角分级（CSS 变量驱动，随主题预设切换） */
   --radius-sm: calc(var(--radius-control) - 2px);
@@ -113,68 +111,37 @@
   --color-brand-atlassian-dark: #0b1a33;
   --color-brand-atlassian-darker: #172b4d;
 
-  /* 精确字号（px 直读）：text-10 = 10px，紧凑设计的微字号体系 */
-  --text-8: 8px;
-  --text-9: 9px;
-  --text-10: 10px;
-  --text-11: 11px;
-  --text-13: 13px;
-  --text-15: 15px;
-  --text-22: 22px;
-  --text-28: 28px;
-  --text-32: 32px;
+  /* 字号（语义档，宪法 §3.1）
+     text-3xs = 10px 徽标内数字 / 图表轴 / 微元数据（非中文）
+     text-2xs = 11px badge / 辅助标签 / 密集元数据（非中文正文）
+     xs / sm / base / lg / xl / 2xl 六档沿用 Tailwind 默认 theme（12/14/16/18/20/24）
+     不带 --line-height 配对 = 行高继承，与迁移前的 text-10/11 行为逐位一致 */
+  --text-3xs: 10px;
+  --text-2xs: 11px;
 
-  /* 圆角 px 直读 */
+  /* 圆角（语义档）：xs = 2px 最小档；sm/md/lg/xl/chip 见 @theme inline 桥接 */
   --radius-xs: 2px;
-  --radius-3: 3px;
-  --radius-5: 5px;
-  --radius-8: 8px;
-  --radius-10: 10px;
-  --radius-14: 14px;
 
-  /* 间距/宽高刻度（键 × 4px；显式固化常用档，动态刻度兜底其余数值） */
-  --spacing-0.75: 0.1875rem;
-  --spacing-1.25: 0.3125rem;
-  --spacing-2.75: 0.6875rem;
-  --spacing-3.25: 0.8125rem;
-  --spacing-4.25: 1.0625rem;
-  --spacing-4.5: 1.125rem;
-  --spacing-5.25: 1.3125rem;
-  --spacing-5.5: 1.375rem;
-  --spacing-10.5: 2.625rem;
-  --spacing-11.5: 2.875rem;
-  --spacing-13: 3.25rem;
-  --spacing-15: 3.75rem;
-  --spacing-17: 4.25rem;
-  --spacing-18: 4.5rem;
-  --spacing-22.5: 5.625rem;
-  --spacing-25: 6.25rem;
-  --spacing-27.5: 6.875rem;
-  --spacing-30: 7.5rem;
-  --spacing-32.5: 8.125rem;
-  --spacing-35: 8.75rem;
-  --spacing-37.5: 9.375rem;
-  --spacing-45: 11.25rem;
-  --spacing-47.5: 11.875rem;
-  --spacing-50: 12.5rem;
-  --spacing-52.5: 13.125rem;
-  --spacing-55: 13.75rem;
-  --spacing-65: 16.25rem;
-  --spacing-70: 17.5rem;
-  --spacing-75: 18.75rem;
-  --spacing-90: 22.5rem;
-  --spacing-100: 25rem;
-  --spacing-105: 26.25rem;
-  --spacing-120: 30rem;
-  --spacing-125: 31.25rem;
-  --spacing-130: 32.5rem;
-  --spacing-140: 35rem;
-  --spacing-150: 37.5rem;
-  --spacing-160: 40rem;
-  --spacing-170: 42.5rem;
-  --spacing-230: 57.5rem;
-  --spacing-240: 60rem;
-  --spacing-245: 61.25rem;
+  /* 阴影（宪法 §3.6）：全站唯一档，与 Tailwind 默认 shadow-xs 逐位同值（视觉零变化） */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+  /* 动效白名单（宪法 §7.1）：注册进 theme 才生成 duration- 与 ease- 工具类。
+     命名空间必须与 Tailwind 一致——`duration-<name>` 读的是 `--transition-duration-<name>`
+     （见 tailwindcss/dist/lib.mjs 的 valueThemeKeys），写成 `--duration-*` 会静默不生成类；
+     `ease-<name>` 读 `--ease-*`，故下面两条写法不同是刻意的，不是笔误。 */
+  --transition-duration-fast: 120ms;
+  --transition-duration-normal: 180ms;
+  --transition-duration-slow: 240ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 间距语义档（宪法 §4.3/§4.4 的常量 token 化）。
+     数值档不再显式声明：Tailwind v4 spacing 是动态刻度（calc(var(--spacing) * N)），
+     p-13 / w-65 / gap-3.5 等即使无显式定义也照常生成，且与原显式值逐位相等。 */
+  --spacing-cell-y: 0.375rem;
+  --spacing-gutter: 1rem;
+  --spacing-section: 1.5rem;
+  --spacing-page: 1.5rem;
 
   /* 弹窗/滚动区语义尺寸（w-/max-w- 共用键值） */
   --spacing-dialog: 95vw;
@@ -294,7 +261,6 @@
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --input-background: 240 6% 96%;
-    --switch-background: 240 5% 82%;
     --ring: 240 5.9% 10%;
     --radius: 0.75rem;
     --radius-control: 0.625rem;
@@ -312,8 +278,6 @@
     --sidebar-accent-foreground: 240 10% 3.9%;
     --sidebar-border: 240 6% 88%;
     --sidebar-ring: 216 42% 50%;
-    --content-background: 0 0% 100%;
-    --content-foreground: 240 10% 3.9%;
     --content-bg: 0 0% 100%;
     --content-bg-secondary: 240 6% 98%;
     --content-border: 240 5.9% 90%;
@@ -321,7 +285,6 @@
     --content-text: 240 10% 3.9%;
     --content-text-secondary: 240 4% 46%;
     --content-text-muted: 240 4% 62%;
-    --content-text-tertiary: 240 4% 62%;
     --interactive-primary: 217 91% 60%;
     --interactive-primary-hover: 221 83% 48%;
     --interactive-secondary: 240 5% 96%;
@@ -339,9 +302,6 @@
     --accent-red-light: 358 55% 94%;
     --accent-orange: 24 55% 48%;
     --accent-orange-light: 24 60% 93%;
-    --status-on-track: 156 38% 40%;
-    --status-at-risk: 38 52% 44%;
-    --status-off-track: 358 50% 48%;
     --scrollbar-thumb: 220 8% 72%;
     --scrollbar-thumb-hover: 220 8% 58%;
     --scrollbar-track: 220 14% 96%;
@@ -351,7 +311,6 @@
     --chart-3: 230 50% 42%;
     --chart-4: 60 75% 65%;
     --chart-5: 40 80% 60%;
-    --content-radius: 0.75rem;
   }
 
   :root.dark {
@@ -383,8 +342,6 @@
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 240 4% 14%;
     --sidebar-ring: 156 32% 46%;
-    --content-background: 240 10% 4%;
-    --content-foreground: 0 0% 95%;
     --content-bg: 240 10% 4%;
     --content-bg-secondary: 240 6% 10%;
     --content-border: 240 4% 16%;
@@ -392,7 +349,6 @@
     --content-text: 0 0% 95%;
     --content-text-secondary: 240 5% 65%;
     --content-text-muted: 240 5% 47%;
-    --content-text-tertiary: 240 5% 47%;
     --interactive-primary: 216 36% 58%;
     --interactive-primary-hover: 216 42% 64%;
     --interactive-secondary: 240 4% 16%;
@@ -414,8 +370,15 @@
     --scrollbar-thumb: 220 8% 34%;
     --scrollbar-thumb-hover: 220 8% 46%;
     --scrollbar-track: 220 10% 12%;
+    /* 图表序列色（宪法 §5 附录 A 豁免：序数即语义）：暗色下提亮，与 accent 系同法处理。
+       此前 :root.dark 无覆盖 → 暗色图表沿用浅色值，是既有 bug（A 类 §3.5 顺手修复） */
+    --chart-1: 25 74% 62%;
+    --chart-2: 190 60% 58%;
+    --chart-3: 230 55% 68%;
+    --chart-4: 60 70% 68%;
+    --chart-5: 40 75% 66%;
   }
-  /* 宪法 §5.6：figma/notion 主题预设已删除（2026-08-30），只保留 linear 基线（:root / :root.dark） */
+  /* 宪法 §5.6：figma/notion 主题预设已删除（2026-08-30），只保留 default 基线（:root / :root.dark） */
 }
 
 
