@@ -6,6 +6,44 @@ import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, CheckIcon } from "lucide-react"
 
+/*
+ * ⚠️ 双轨待收口件 —— 目标替代品是 ui/menu.tsx（coss 配方，2026-08 起的唯一菜单实现）。
+ *
+ * 2026-09-27 批 3 已按 E 类方案 §三 E6 / §七 决策 B 做**实物 API 比对**。结论：
+ * **差异大，不是可直接替换的重复件**，故**未做机械合流**（决策 B 明写「API 差异大则
+ * 先标记 + 限期迁移」，禁止硬合不兼容 API）。
+ *
+ * 差异清单（本件 → menu 并非 1:1 改名可迁）：
+ *   1. 内容层缺省位置不同：本件 Content 的 align 缺省 start；menu 的 MenuPopup 缺省 center
+ *      ⇒ 直接换名会让生产下拉整体位移。
+ *   2. 条目排版不同：本件条目 px-2 py-1.5 text-sm；menu 的 MENU_ITEM_BASE_CLASS 为
+ *      min-h-8 px-2 py-1 text-base（并在 sm 断点收敛）⇒ 行高与字号成体系地不同。
+ *   3. 缺省能力缺口：menu 的 MenuCheckboxItem / MenuRadioItem **不接收 inset**，
+ *      而本件两者都支持 ⇒ 迁移会收窄 API 面。
+ *   4. MenuShortcut 渲染 kbd 元素，本件 DropdownMenuShortcut 渲染 span
+ *      ⇒ 语义与字体继承不同。
+ *   5. 子菜单定位不同：MenuSubPopup 固定 side=inline-end 且 alignOffset 缺省 -5；
+ *      本件 SubContent 为 side=right 且缺省 -3。
+ *   6. **契约槽位不同且有生产依赖**：本件暴露 data-slot=dropdown-menu-content 与
+ *      dropdown-menu-sub-content，而 shared/lib/floating-layers.ts 的浮层登记表正按这两个
+ *      槽位识别本件弹出层 ⇒ 迁移必须同步改该表，否则浮层互斥（Esc / 滚动锁）失灵。
+ *
+ * 迁移指引（限期，逐消费方）：
+ *   - 真实消费方 5 处：modules/assistant/components/assistant-model-picker.tsx、
+ *     modules/issue/components/execution-items-panel.tsx、
+ *     modules/issue/components/issue-type-switcher.tsx、
+ *     modules/notification/components/inbox-item-row.tsx、
+ *     modules/notification/pages/notification-center-page.tsx。
+ *     另：ui/menubar.tsx 为原子层内部引用（standby 件），design-system 页为画廊引用。
+ *   - 步骤：① 先把 align / side 在调用处**显式写出**（消除缺省差异，视觉零变化）；
+ *     ② 改导入源为 ui/menu.tsx 的 Menu 族具名导出；③ 若用到 inset / Shortcut /
+ *     SubContent，须先给 menu 补齐对应能力（属 menu 的能力扩增，需另立批次评审）；
+ *     ④ 同步更新 floating-layers.ts 槽位表与 issue-type-switcher.test.tsx 的槽位选择器。
+ *   - 收口未完成前本件**保持可用**，不得删除（人类铁律：删除须先经 review 态公示 + 人工批准）。
+ *
+ * 登记状态见 src/modules/design-system/registry.ts 的 dropdown-menu 条目。
+ */
+
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 }

@@ -46,7 +46,7 @@
 | collapsible | `src/components/ui/collapsible.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | direction | `src/components/ui/direction.tsx` | 🔶 review | delete | 零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求 | 2026-10-31 |
 | drawer | `src/components/ui/drawer.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | 🔶 review | merge → menu | 与 ui/menu（coss 配方，唯一菜单实现）双轨；迁移完成前消费方仍需继续使用 | 2026-10-31 |
+| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | 🔶 review | merge → menu | 与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。故未机械合流（决策 B：差异大先标记后限期迁移）。因 scripts/gen-components-md.mjs 尚不解析 expiresAt，本件暂无法置 deprecated（实测会令 entry 被生成器丢弃并使 lint:registry 失败），故留在 review 限期；迁移指引见 ui/dropdown-menu.tsx 文件头。 | 2026-10-31 |
 | floating-dock | `src/components/ui/floating-dock.tsx` | 📦 standby | delete | 自研长尾：零引用（仅画廊），与 shared/components/bottom-dock 能力重叠 | 2026-10-31 |
 | input-otp | `src/components/ui/input-otp.tsx` | 📦 standby | keep | 官方注册表基线件（input-otp 库封装），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | menubar | `src/components/ui/menubar.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
@@ -104,7 +104,7 @@
 | dialog | `src/components/ui/dialog.tsx` | ✅ canonical | — | — |
 | direction | `src/components/ui/direction.tsx` | 🔶 review | — | 零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求 |
 | drawer | `src/components/ui/drawer.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
-| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | 🔶 review | — | 与 ui/menu（coss 配方，唯一菜单实现）双轨；迁移完成前消费方仍需继续使用 |
+| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | 🔶 review | — | 与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。故未机械合流（决策 B：差异大先标记后限期迁移）。因 scripts/gen-components-md.mjs 尚不解析 expiresAt，本件暂无法置 deprecated（实测会令 entry 被生成器丢弃并使 lint:registry 失败），故留在 review 限期；迁移指引见 ui/dropdown-menu.tsx 文件头。 |
 | field | `src/components/ui/field.tsx` | ✅ canonical | — | — |
 | form | `src/components/ui/form.tsx` | ✅ canonical | — | — |
 | hover-card | `src/components/ui/hover-card.tsx` | ✅ canonical | — | — |
