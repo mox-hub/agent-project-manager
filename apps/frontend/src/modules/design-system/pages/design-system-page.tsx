@@ -331,6 +331,8 @@ import { AgentHandoffCard } from '@/modules/office/components/agent-handoff-card
 import { DualTrackMetricPill } from '@/shared/components/dual-track-metric-pill'
 import { IssueTypePill } from '@/shared/components/issue-type-pill'
 import { AssistantToolCard } from '@/modules/assistant/components/assistant-tool-card'
+import { WorkflowRunTimeline } from '@/modules/workflow/components/workflow-run-timeline'
+import type { RunStation } from '@/modules/workflow/components/run-view/build-run-view'
 import { DecisionCardShell } from '@/shared/decision-card/decision-card-shell'
 import { MemberCard } from '@/modules/auth/components/member-card'
 import { ApmRefLink } from '@/shared/apm-ref/apm-ref-chip'
@@ -412,7 +414,54 @@ const SECTIONS = [
   { id: 'stat-cards', label: 'Stat Cards', group: 'App Components' },
   { id: 'loading-states', label: 'Loading & Empty', group: 'App Components' },
   { id: 'assembly-primitives', label: 'Assembly Primitives', group: 'App Components' },
+  { id: 'workflow-run-timeline', label: 'Workflow Run Timeline', group: 'App Components' },
   { id: 'ai-density-cards', label: 'AI High-Density Cards [AI]', group: 'AI Execution' },
+]
+
+const WORKFLOW_TIMELINE_STATIC: RunStation[] = [
+  {
+    id: 'prep', type: 'llm', title: '起草演示代码', status: 'pending', settled: 0, total: 0, rounds: 0,
+    pills: [{ key: 'prep:static:prep', nodeId: 'prep', label: '起草演示代码', type: 'llm', status: 'pending', attempt: 0 }],
+  },
+  {
+    id: 'review', type: 'fan-out', title: '逐个文件评审', status: 'pending', settled: 0, total: 0, rounds: 0,
+    pills: [
+      { key: 'review:static:rv-a', nodeId: 'rv-a', label: '评审员 math', type: 'llm', status: 'pending', attempt: 0 },
+      { key: 'review:static:rv-b', nodeId: 'rv-b', label: '评审员 string', type: 'llm', status: 'pending', attempt: 0 },
+      { key: 'review:static:rv-c', nodeId: 'rv-c', label: '复核员', type: 'agent', status: 'pending', attempt: 0 },
+    ],
+  },
+  {
+    id: 'report', type: 'agent', title: '汇总产出讲解报告', status: 'pending', settled: 0, total: 0, rounds: 0,
+    pills: [{ key: 'report:static:report', nodeId: 'report', label: '汇总产出讲解报告', type: 'agent', status: 'pending', attempt: 0 }],
+  },
+]
+
+const WORKFLOW_TIMELINE_RUNNING: RunStation[] = [
+  {
+    id: 'prep', type: 'llm', title: '起草演示代码', status: 'done', settled: 1, total: 1, rounds: 0,
+    pills: [{ key: 'prep', nodeId: 'prep', label: '起草演示代码', type: 'llm', status: 'succeeded', attempt: 1 }],
+  },
+  {
+    id: 'review', type: 'fan-out', title: '逐个文件评审', status: 'done', settled: 6, total: 6, rounds: 0,
+    pills: [
+      { key: 'rv-a@i0', nodeId: 'rv-a', label: '评审员 math', type: 'llm', status: 'succeeded', attempt: 1 },
+      { key: 'rv-b@i1', nodeId: 'rv-b', label: '评审员 string', type: 'llm', status: 'succeeded', attempt: 1 },
+      { key: 'rv-c@i2', nodeId: 'rv-c', label: '复核员 #1', type: 'agent', status: 'succeeded', attempt: 1 },
+      { key: 'rv-c@i3', nodeId: 'rv-c', label: '复核员 #2', type: 'agent', status: 'succeeded', attempt: 1 },
+    ],
+  },
+  {
+    id: 'fix', type: 'loop', title: '修复最关键的问题', status: 'failed', settled: 2, total: 3, rounds: 2,
+    pills: [
+      { key: 'fix@r1', nodeId: 'fix', label: '修复员', type: 'agent', status: 'failed', attempt: 1, error: 'agent_execution_failed' },
+      { key: 'fix@r2', nodeId: 'fix', label: '修复员 #2', type: 'agent', status: 'succeeded', attempt: 1 },
+    ],
+  },
+  {
+    id: 'report', type: 'agent', title: '汇总产出讲解报告', status: 'running', settled: 0, total: 1, rounds: 0,
+    pills: [{ key: 'report', nodeId: 'report', label: '汇报审阅员', type: 'agent', status: 'running', attempt: 1 }],
+  },
 ]
 
 function SortableDemo() {
@@ -6015,6 +6064,23 @@ export function DesignSystemPage() {
           </SectionAnchor>
 
           <Separator />
+
+          <SectionAnchor id="workflow-run-timeline">
+            <SectionTitle>Workflow Run Timeline</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              workflow v2 运行阶段时间线（modules/workflow，ZCode 工作流卡复刻）：站=根层节点（状态灯 done 绿 / failed 红 / running 黄脉冲 / pending 空心 + settled/total 计数徽标 + loop 轮数），站下执行药丸列（类型色瓦片 + 尾部状态图标）。未执行站回填静态模板药丸（灰态）。消费方：workflow 详情页运行面板 / v2 静态预览卡。
+            </p>
+            <div className="space-y-8">
+              <div>
+                <SubLabel>静态预览态 — 未执行站回填模板药丸（workflow 详情页默认态）</SubLabel>
+                <WorkflowRunTimeline stations={WORKFLOW_TIMELINE_STATIC} />
+              </div>
+              <div>
+                <SubLabel>运行态 — 混合状态（done / failed / running / pending + loop 轮数）</SubLabel>
+                <WorkflowRunTimeline stations={WORKFLOW_TIMELINE_RUNNING} />
+              </div>
+            </div>
+          </SectionAnchor>
 
           <SectionAnchor id="ai-density-cards">
             <SectionTitle>AI High-Density Cards [AI]</SectionTitle>
