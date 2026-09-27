@@ -702,12 +702,12 @@ const COLOR_GROUPS = [
 ]
 
 const RADIUS_VALUES = [
-  { label: 'sm', cls: 'rounded-sm', value: '~6px' },
-  { label: 'md', cls: 'rounded-md', value: '~8px' },
-  { label: 'lg', cls: 'rounded-lg', value: '0.625rem' },
-  { label: 'xl', cls: 'rounded-xl', value: '~14px' },
-  { label: '2xl', cls: 'rounded-2xl', value: '1rem' },
-  { label: 'full', cls: 'rounded-full', value: '9999px' },
+  { label: 'xs', cls: 'rounded-xs', value: '2px', usage: '标签内小标 / 热力格 / 勾选指示器' },
+  { label: 'sm', cls: 'rounded-sm', value: '8px', usage: '行内 code·kbd、小控件内嵌块、紧凑按钮' },
+  { label: 'md', cls: 'rounded-md', value: '10px', usage: '控件默认（按钮 / 输入 / 选择 / 触发器）' },
+  { label: 'lg', cls: 'rounded-lg', value: '12px', usage: '卡片 / 面板 / 区块容器' },
+  { label: 'xl', cls: 'rounded-xl', value: '16px', usage: '模态 / 浮层 / 大容器' },
+  { label: 'chip', cls: 'rounded-chip', value: '999px', usage: '胶囊（badge / pill / 头像 / 开关）' },
 ]
 
 const SHADOW_VALUES = [
@@ -2040,11 +2040,12 @@ export function DesignSystemPage() {
           <SectionAnchor id="radius">
             <SectionTitle>Border Radius</SectionTitle>
             <div className="flex flex-wrap gap-6">
-              {RADIUS_VALUES.map(({ cls, value }) => (
+              {RADIUS_VALUES.map(({ cls, value, usage }) => (
                 <div key={cls} className="flex flex-col items-center gap-2">
                   <div className={cn('w-16 h-16 bg-primary/15 border-2 border-primary/40', cls)} />
                   <code className="text-3xs text-foreground font-mono">{cls}</code>
                   <span className="text-3xs text-muted-foreground">{value}</span>
+                  <span className="text-3xs text-muted-foreground max-w-28 text-center">{usage}</span>
                 </div>
               ))}
             </div>

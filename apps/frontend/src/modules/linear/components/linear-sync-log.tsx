@@ -78,7 +78,7 @@ export function LinearSyncLog({
                     <span className="font-medium uppercase tracking-wide text-muted-foreground">
                       {log.action}
                     </span>
-                    <span className="rounded bg-muted/50 px-1 py-0.5 text-3xs font-mono">
+                    <span className="rounded-sm bg-muted/50 px-1 py-0.5 text-3xs font-mono">
                       {log.resourceType}
                     </span>
                   </div>

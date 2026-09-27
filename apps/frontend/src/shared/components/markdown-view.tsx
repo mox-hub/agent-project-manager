@@ -61,7 +61,7 @@ const components: Components = {
     }
     return (
       <code
-        className="rounded-xs bg-muted px-1 py-0.5 font-mono text-xs"
+        className="rounded-sm bg-muted px-1 py-0.5 font-mono text-xs"
         {...rest}
       >
         {children}

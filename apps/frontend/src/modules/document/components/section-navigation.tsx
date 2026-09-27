@@ -111,7 +111,7 @@ const SectionItemComponent = memo(function SectionItemComponent({
 
         <span
           className={cn(
-            'shrink-0 rounded px-1 text-3xs font-medium',
+            'shrink-0 rounded-sm px-1 text-3xs font-medium',
             section.level === 1
               ? 'bg-foreground/10 text-foreground'
               : section.level === 2
@@ -169,7 +169,7 @@ function highlightMatch(text: string, term: string): React.ReactNode {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="rounded bg-accent-yellow/30 px-0.5 text-foreground">
+      <mark className="rounded-sm bg-accent-yellow/30 px-0.5 text-foreground">
         {text.slice(idx, idx + needle.length)}
       </mark>
       {text.slice(idx + needle.length)}
@@ -272,7 +272,7 @@ export const SectionNavigation = memo(function SectionNavigation({
             <button
               type="button"
               onClick={() => setSearchTerm('')}
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
               aria-label="清除搜索"
             >
               <X size={12} />
@@ -284,7 +284,7 @@ export const SectionNavigation = memo(function SectionNavigation({
           <button
             type="button"
             onClick={allExpanded ? collapseAll : expandAll}
-            className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-muted"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-muted"
             disabled={allFlat.filter((s) => s.children?.length).length === 0}
           >
             {allCollapsed ? (

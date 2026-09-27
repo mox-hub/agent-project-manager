@@ -239,7 +239,7 @@ export default function MemberDetailPage() {
                 type="button"
                 onClick={() => copyToClipboard(member.shortId)}
                 title={t('memberDetail.copyId', '复制短 ID')}
-                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-3xs hover:bg-muted hover:text-foreground"
+                className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-3xs hover:bg-muted hover:text-foreground"
               >
                 <IdCard className="size-3" />
                 {member.shortId}
@@ -340,7 +340,7 @@ export default function MemberDetailPage() {
                       {(card?.projects ?? []).map((p) => (
                         <li
                           key={p.projectId}
-                          className="flex items-center justify-between rounded px-2 py-1.5 hover:bg-muted/30"
+                          className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/30"
                         >
                           <Link
                             to={`/app/projects/${p.projectId}`}
@@ -375,7 +375,7 @@ export default function MemberDetailPage() {
                       {availableProjects.slice(0, 10).map((p) => (
                         <li
                           key={p.id}
-                          className="flex items-center justify-between rounded px-2 py-1.5 hover:bg-muted/30"
+                          className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/30"
                         >
                           <div className="flex items-center gap-2 text-sm">
                             <span
@@ -411,7 +411,7 @@ export default function MemberDetailPage() {
                     {(card?.teams ?? []).map((tm) => (
                       <li
                         key={tm.teamId}
-                        className="flex items-center justify-between rounded px-2 py-1.5 hover:bg-muted/30"
+                        className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/30"
                       >
                         <Link
                           to={`/app/teams/${tm.teamId}`}

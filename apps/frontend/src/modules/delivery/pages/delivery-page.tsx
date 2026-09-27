@@ -178,7 +178,7 @@ function AcceptCell({ status, isPrimary, onSelect }: { status: AcceptStatus; isP
     <div ref={ref} className="relative flex items-center justify-center h-full">
       <button
         onClick={() => setOpen(v => !v)}
-        className={cn('w-full h-full flex items-center justify-center rounded transition-colors hover:bg-accent/60', isPrimary ? cfg.cell : 'text-muted-foreground/20')}
+        className={cn('w-full h-full flex items-center justify-center rounded-md transition-colors hover:bg-accent/60', isPrimary ? cfg.cell : 'text-muted-foreground/20')}
         title={cfg.label}
         data-ai-action="delivery.acceptance-cell.toggle"
       >
@@ -507,7 +507,7 @@ function TableRow({
         style={{ width: 260, minWidth: 260, paddingLeft: 12 + indent }}
       >
         <button onClick={onToggle}
-          className={cn('w-4 h-4 flex items-center justify-center rounded text-muted-foreground shrink-0 transition-colors',
+          className={cn('w-4 h-4 flex items-center justify-center rounded-md text-muted-foreground shrink-0 transition-colors',
             hasChildren ? 'hover:bg-accent hover:text-foreground' : 'opacity-0 pointer-events-none')}
           data-ai-action="delivery.node.toggle">
           {hasChildren && (expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />)}

@@ -72,8 +72,8 @@ export function DockMetricBadge({
             </span>
             <span className="text-border/80">|</span>
             <span className="text-3xs text-content-text-muted whitespace-nowrap shrink-0">
-              按 <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-3xs text-foreground">↵</kbd> 发送 ·{' '}
-              <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-3xs text-foreground">Esc</kbd> 收起
+              按 <kbd className="rounded-sm bg-muted px-1 py-0.5 font-mono text-3xs text-foreground">↵</kbd> 发送 ·{' '}
+              <kbd className="rounded-sm bg-muted px-1 py-0.5 font-mono text-3xs text-foreground">Esc</kbd> 收起
             </span>
           </motion.div>
         ) : (

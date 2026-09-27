@@ -458,7 +458,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                       />
                     </Form>
                   ) : (
-                    <span className="inline-block px-2 py-1 text-sm rounded bg-muted text-foreground capitalize">
+                    <span className="inline-block px-2 py-1 text-sm rounded-sm bg-muted text-foreground capitalize">
                       {task.status.replace('_', ' ')}
                     </span>
                   )}
@@ -489,7 +489,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                     </Form>
                   ) : (
                     <span
-                      className="inline-block px-2 py-1 text-sm rounded capitalize"
+                      className="inline-block px-2 py-1 text-sm rounded-sm capitalize"
                       style={{
                         backgroundColor: `${priorityOptions.find((p) => p.value === task.priority)?.color || '#6b7280'}20`,
                         color: priorityOptions.find((p) => p.value === task.priority)?.color || '#6b7280',
@@ -782,7 +782,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                     {task.todoItems.map((item) => (
                       <div key={item.id} className="flex items-start gap-2">
                         <div className={cn(
-                          'w-4 h-4 rounded border mt-0.5',
+                          'w-4 h-4 rounded-xs border mt-0.5',
                           item.completed ? 'bg-accent-green border-accent-green/30' : 'border-muted-foreground'
                         )}>
                           {item.completed && (
@@ -1038,7 +1038,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                     {task.issueTags.map(({ tag }) => (
                       <span
                         key={tag.id}
-                        className="inline-block px-2 py-1 rounded text-xs"
+                        className="inline-block px-2 py-1 rounded-sm text-xs"
                         style={{
                           backgroundColor: tag.color ? `${tag.color}20` : 'hsl(var(--muted))',
                           color: tag.color || 'hsl(var(--foreground))',
@@ -1313,7 +1313,7 @@ function TaskExecutionContent({ issueId }: { issueId: string }) {
         <div key={exec.id} className="rounded-md border p-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">{exec.agentName || t('task.detailDrawer.aiAgent')}</span>
-            <span className={`text-xs px-2 py-0.5 rounded ${
+            <span className={`text-xs px-2 py-0.5 rounded-sm ${
               exec.status === 'completed' ? 'bg-accent-green/10 text-accent-green' :
               exec.status === 'failed' ? 'bg-destructive/10 text-destructive' :
               exec.status === 'running' ? 'bg-accent-blue/10 text-accent-blue' :
@@ -1359,7 +1359,7 @@ function TaskApprovalsContent({ issueId }: { issueId: string }) {
         <div key={approval.id} className="rounded-md border p-2">
           <div className="flex items-center justify-between">
             <span className="text-sm">{approval.action || t('task.detailDrawer.pendingApproval')}</span>
-            <span className={`text-xs px-2 py-0.5 rounded ${
+            <span className={`text-xs px-2 py-0.5 rounded-sm ${
               approval.status === 'approved' ? 'bg-accent-green/10 text-accent-green' :
               approval.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
               'bg-accent-yellow/10 text-accent-yellow'
@@ -1469,7 +1469,7 @@ function TaskDocumentsContent({ issueId }: { issueId: string }) {
             </div>
             <span
               className={cn(
-                'rounded px-1.5 py-0.5 text-3xs font-medium',
+                'rounded-sm px-1.5 py-0.5 text-3xs font-medium',
                 LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
               )}
             >

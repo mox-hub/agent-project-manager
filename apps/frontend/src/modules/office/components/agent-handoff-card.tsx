@@ -37,19 +37,19 @@ export function AgentHandoffCard({
     switch (status) {
       case 'passed':
         return (
-          <span className="inline-flex items-center gap-1 rounded bg-accent-green-light px-1.5 py-0.5 text-3xs font-medium text-accent-green">
+          <span className="inline-flex items-center gap-1 rounded-sm bg-accent-green-light px-1.5 py-0.5 text-3xs font-medium text-accent-green">
             <CheckCircle2 className="size-3" /> {t('office.handoff.gatePassed')}
           </span>
         );
       case 'blocked':
         return (
-          <span className="inline-flex items-center gap-1 rounded bg-accent-red-light px-1.5 py-0.5 text-3xs font-medium text-accent-red">
+          <span className="inline-flex items-center gap-1 rounded-sm bg-accent-red-light px-1.5 py-0.5 text-3xs font-medium text-accent-red">
             <ShieldAlert className="size-3" /> {t('office.handoff.gateBlocked')}
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 rounded bg-muted/60 px-1.5 py-0.5 text-3xs font-medium text-content-text-muted">
+          <span className="inline-flex items-center gap-1 rounded-sm bg-muted/60 px-1.5 py-0.5 text-3xs font-medium text-content-text-muted">
             <Clock className="size-3" /> {t('office.handoff.gatePending')}
           </span>
         );
@@ -78,7 +78,7 @@ export function AgentHandoffCard({
             <span className="text-3xs text-content-text-muted">({toAgent.role})</span>
           </span>
         </div>
-        <span className="rounded bg-accent-blue-light/60 px-1.5 py-0.5 text-3xs font-medium text-accent-blue">
+        <span className="rounded-sm bg-accent-blue-light/60 px-1.5 py-0.5 text-3xs font-medium text-accent-blue">
           {t('office.handoff.badge')}
         </span>
       </div>
@@ -88,7 +88,7 @@ export function AgentHandoffCard({
         <div className="flex items-center gap-1.5 text-sm font-medium text-content-text">
           <FileCode className="size-4 shrink-0 text-accent-blue" />
           <span className="truncate">{artifact.title}</span>
-          <span className="rounded bg-muted/60 px-1 font-mono text-3xs text-content-text-muted">
+          <span className="rounded-sm bg-muted/60 px-1 font-mono text-3xs text-content-text-muted">
             {artifact.type}
           </span>
         </div>

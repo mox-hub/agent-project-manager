@@ -181,7 +181,7 @@ export function MemberCardPopover({
               type="button"
               onClick={copyShortId}
               title="复制短 ID"
-              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-3xs text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-3xs text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {card.shortId}
               {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}

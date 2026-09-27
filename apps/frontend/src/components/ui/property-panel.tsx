@@ -179,7 +179,7 @@ export function DateCapsuleField({
           <button
             type="button"
             onClick={() => onChange('')}
-            className="w-full text-xs text-muted-foreground hover:text-foreground py-1 px-2 rounded hover:bg-accent transition-colors"
+            className="w-full text-xs text-muted-foreground hover:text-foreground py-1 px-2 rounded-md hover:bg-accent transition-colors"
           >
             {clearLabel}
           </button>

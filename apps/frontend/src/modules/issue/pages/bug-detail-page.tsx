@@ -580,7 +580,7 @@ function LinkedDocsPanel({ issueId }: { issueId: string }) {
             </span>
             <span
               className={cn(
-                'shrink-0 rounded px-1.5 py-0.5 text-3xs font-medium',
+                'shrink-0 rounded-sm px-1.5 py-0.5 text-3xs font-medium',
                 LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
               )}
             >

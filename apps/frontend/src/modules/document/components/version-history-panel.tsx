@@ -303,11 +303,11 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
                 </div>
 
                 {isSelected && selectedVersion && (
-                  <div className="mt-2 rounded border border-border bg-background p-2 text-xs">
+                  <div className="mt-2 rounded-md border border-border bg-background p-2 text-xs">
                     <p className="text-muted-foreground">
                       由 {selectedVersion.createdBy} 于 {new Date(selectedVersion.createdAt).toLocaleString('zh-CN')} 创建
                     </p>
-                    <pre className="mt-2 max-h-40 overflow-auto rounded bg-muted/40 p-2 font-mono text-2xs leading-relaxed">
+                    <pre className="mt-2 max-h-40 overflow-auto rounded-sm bg-muted/40 p-2 font-mono text-2xs leading-relaxed">
                       {selectedVersion.content.slice(0, 800)}
                       {selectedVersion.content.length > 800 ? '\n...' : ''}
                     </pre>

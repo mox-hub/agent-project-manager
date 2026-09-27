@@ -84,7 +84,7 @@ export function ThinkingStream({
         <div className="space-y-1.5 border-t border-border/40 bg-content-bg-secondary/40 px-3 py-2 text-xs">
           {steps.map((item) => (
             <div key={item.step} className="flex items-start gap-2 leading-snug">
-              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded bg-muted/60 font-mono text-3xs text-content-text-muted">
+              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-xs bg-muted/60 font-mono text-3xs text-content-text-muted">
                 {item.step}
               </span>
               <div className="min-w-0 flex-1 space-y-0.5">

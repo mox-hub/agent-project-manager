@@ -595,7 +595,7 @@ function RiskTab() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-sm truncate">{item.title}</span>
-                    <span className={cn('text-3xs px-1.5 py-0.5 rounded font-medium', typeCfg.color)}>{typeCfg.label}</span>
+                    <span className={cn('text-3xs px-1.5 py-0.5 rounded-sm font-medium', typeCfg.color)}>{typeCfg.label}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">{item.projectName}</p>
                 </div>

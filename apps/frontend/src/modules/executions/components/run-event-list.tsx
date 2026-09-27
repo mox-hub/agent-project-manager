@@ -211,7 +211,7 @@ export function RunEventList({
                   type="button"
                   onClick={() => setKindFilter(active ? null : kind)}
                   className={cn(
-                    'flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs transition-colors',
+                    'flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs transition-colors',
                     active
                       ? cn('font-medium', KIND_ICON_CLASS[kind])
                       : 'text-content-text-muted hover:bg-muted/60 hover:text-content-text-secondary',

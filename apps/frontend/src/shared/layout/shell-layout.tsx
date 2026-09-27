@@ -579,7 +579,7 @@ export function ShellLayout() {
                                       {stageNumber && (
                                         <span
                                           className={cn(
-                                            'font-mono text-3xs font-medium px-1.5 py-0.5 rounded tabular-nums transition-colors',
+                                            'font-mono text-3xs font-medium px-1.5 py-0.5 rounded-sm tabular-nums transition-colors',
                                             active
                                               ? 'bg-sidebar-primary text-sidebar-primary-foreground font-semibold'
                                               : 'bg-sidebar-accent/70 text-sidebar-foreground/50',

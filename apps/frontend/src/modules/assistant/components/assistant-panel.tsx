@@ -204,7 +204,7 @@ export function AssistantPanel() {
       {/* 侧边堆叠决策卡片栏：不占用主对话空间，伴随式实体手卡卡片堆（保持高质感毛玻璃悬浮） */}
       {hasDecisions && showDecisionSide && (
         <div
-          className="assistant-decision-wing flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-xs backdrop-blur-xl shrink-0 animate-in fade-in-0 slide-in-from-right-2 duration-normal"
+          className="assistant-decision-wing flex flex-col overflow-hidden rounded-xl border border-border/80 bg-background/95 shadow-xs backdrop-blur-xl shrink-0 animate-in fade-in-0 slide-in-from-right-2 duration-normal"
           data-ai-component="assistant.decision-wing"
         >
           {/* 卡片堆顶部导航条 */}
@@ -262,7 +262,7 @@ export function AssistantPanel() {
           <button
             type="button"
             onClick={() => setShowDecisionSide(true)}
-            className="decision-deck-collapsed-tab group flex flex-col items-center justify-between w-11 py-3.5 rounded-2xl border border-border/80 bg-background/95 backdrop-blur-xl text-foreground cursor-pointer transition-all active:scale-95"
+            className="decision-deck-collapsed-tab group flex flex-col items-center justify-between w-11 py-3.5 rounded-xl border border-border/80 bg-background/95 backdrop-blur-xl text-foreground cursor-pointer transition-all active:scale-95"
             title={`展开待决卡片堆（共 ${stripItems.length} 项${hasBlocking ? '，含紧急阻断' : ''}）`}
             data-ai-action="assistant.decision.expand.click"
           >
@@ -301,7 +301,7 @@ export function AssistantPanel() {
       {/* 主对话框面板 */}
       <div
         className={cn(
-          'relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-xs backdrop-blur-xl',
+          'relative flex flex-col overflow-hidden rounded-xl border border-border/80 bg-background/95 shadow-xs backdrop-blur-xl',
           assistantExpanded
             ? 'flex-1 min-w-0'
             : 'w-120 max-w-[calc(100vw-2rem)]',

@@ -120,7 +120,7 @@ export function StorageSettings() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              <>{t('settings.storagePathFormatPrefix')}<code className="rounded bg-muted px-1.5 py-0.5">{`<id>_<slug>.{fileExtension}`}</code>{t('settings.storagePathFormatSuffix')}</>
+              <>{t('settings.storagePathFormatPrefix')}<code className="rounded-sm bg-muted px-1.5 py-0.5">{`<id>_<slug>.{fileExtension}`}</code>{t('settings.storagePathFormatSuffix')}</>
             </p>
           </div>
 

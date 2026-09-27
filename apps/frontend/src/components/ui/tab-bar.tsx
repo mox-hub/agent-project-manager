@@ -283,7 +283,7 @@ function TabItem({
               variant="ghost"
               size="icon-xs"
               className={cn(
-                'h-4 w-4 shrink-0 rounded opacity-0 group-hover/tab:opacity-100 transition-all p-0',
+                'h-4 w-4 shrink-0 rounded-md opacity-0 group-hover/tab:opacity-100 transition-all p-0',
                 isActive
                   ? 'text-foreground/50 hover:text-foreground hover:bg-foreground/10'
                   : 'text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent'

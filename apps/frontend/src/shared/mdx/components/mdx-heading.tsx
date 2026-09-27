@@ -144,7 +144,7 @@ function HeadingActions({ slug, title, level }: { slug: string; title: string; l
         <button
           type="button"
           onClick={handleToggleCollapse}
-          className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label={isCollapsed ? '展开子标题' : '折叠子标题'}
           title={isCollapsed ? '展开子标题' : '折叠子标题'}
         >
@@ -154,7 +154,7 @@ function HeadingActions({ slug, title, level }: { slug: string; title: string; l
       <button
         type="button"
         onClick={handleCopyAnchor}
-        className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
         aria-label="复制锚点链接"
         title="复制锚点链接"
       >
@@ -163,7 +163,7 @@ function HeadingActions({ slug, title, level }: { slug: string; title: string; l
       <button
         type="button"
         onClick={handleCopyMarkdown}
-        className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
         aria-label="复制为 Markdown"
         title="复制为 Markdown"
       >

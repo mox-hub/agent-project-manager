@@ -224,7 +224,7 @@ export function PropertyPillsBar({
                     onOpenAcceptance();
                     setMoreOpen(false);
                   }}
-                  className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-accent transition-colors text-left"
+                  className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-left"
                 >
                   <span className="text-foreground">{t('unifiedCreate.acceptanceTitle', { defaultValue: '验收标准门禁' })}</span>
                   {acceptanceCount > 0 && (

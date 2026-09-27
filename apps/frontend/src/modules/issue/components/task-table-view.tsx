@@ -195,7 +195,7 @@ export function TaskTableView({
                   aria-expanded={!isCollapsed}
                   aria-label={isCollapsed ? `Expand ${task.title}` : `Collapse ${task.title}`}
                   title={isCollapsed ? `Expand ${task.title}` : `Collapse ${task.title}`}
-                  className="flex size-4 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  className="flex size-4 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleCollapsed(task.id);

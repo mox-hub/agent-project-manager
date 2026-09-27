@@ -539,7 +539,7 @@ export function AcceptanceDetailPage() {
             </div>
             {/* 进度条 */}
             <div className="mt-3 flex items-center gap-3">
-              <div className="h-1.5 flex-1 overflow-hidden rounded bg-muted">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-xs bg-muted">
                 <div
                   className="h-full bg-accent-green transition-all"
                   style={{ width: `${progressPct}%` }}
@@ -619,7 +619,7 @@ export function AcceptanceDetailPage() {
                   {(blockedCount > 0 || suggestedCount > 0) && (
                     <span
                       className={cn(
-                        'ml-1.5 rounded px-1 text-3xs',
+                        'ml-1.5 rounded-md px-1 text-3xs',
                         blockedCount > 0
                           ? 'bg-accent-red/20 text-accent-red'
                           : 'bg-accent-yellow/20 text-accent-yellow',

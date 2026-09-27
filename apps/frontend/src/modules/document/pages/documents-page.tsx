@@ -227,7 +227,7 @@ export function DocumentsPage() {
               </div>
               <button
                 type="button"
-                className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted"
+                className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted"
                 onClick={() => setShowSyncBanner(false)}
                 aria-label={t('document.syncBanner.close')}
               >
@@ -541,7 +541,7 @@ function DocumentListItem({
           <h3 className="truncate text-sm font-medium text-foreground group-hover:text-primary transition-colors">
             {document.title}
           </h3>
-          <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0 text-3xs px-1.5 py-0.5 rounded">
+          <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0 text-3xs px-1.5 py-0.5 rounded-md">
             {t(statusConfig.labelKey)}
           </StatusPill>
           {document.docRole && (

@@ -30,7 +30,7 @@ export function AiExecutionBadge({
         title={`${execution.agentName}: ${execution.stepSummary || 'AI 正在执行'}`}
         onClick={onClick}
         className={cn(
-          'inline-flex items-center gap-1 rounded px-1 py-0.5 font-medium transition-colors',
+          'inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium transition-colors',
           isPending
             ? 'bg-accent-yellow-light/40 text-accent-yellow'
             : isBlocked
@@ -65,7 +65,7 @@ export function AiExecutionBadge({
       <div
         onClick={onClick}
         className={cn(
-          'flex items-center gap-2 rounded border px-2 py-1 text-xs transition-colors',
+          'flex items-center gap-2 rounded-sm border px-2 py-1 text-xs transition-colors',
           isPending
             ? 'border-accent-yellow/30 bg-accent-yellow-light/20 text-accent-yellow'
             : isBlocked

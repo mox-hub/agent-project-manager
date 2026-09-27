@@ -160,7 +160,7 @@ export function DecisionDeckStack({
   if (!currentDecision || currentIndex >= total) {
     return (
       <div className={cn('flex flex-col items-center justify-center p-8 text-center', className)}>
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-accent-green-light text-accent-green shadow-xs">
+        <div className="flex size-16 items-center justify-center rounded-xl bg-accent-green-light text-accent-green shadow-xs">
           <Sparkles className="size-8" />
         </div>
         <h3 className="mt-4 text-lg font-semibold text-foreground">

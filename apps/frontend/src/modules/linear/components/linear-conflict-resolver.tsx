@@ -68,7 +68,7 @@ export function LinearConflictResolver({
           >
             <button
               type="button"
-              className="flex w-full items-start gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-accent"
+              className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent"
               onClick={() => submit('use_linear')}
               disabled={resolve.isPending}
             >
@@ -80,7 +80,7 @@ export function LinearConflictResolver({
             </button>
             <button
               type="button"
-              className="flex w-full items-start gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-accent"
+              className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent"
               onClick={() => submit('use_local')}
               disabled={resolve.isPending}
             >
@@ -92,7 +92,7 @@ export function LinearConflictResolver({
             </button>
             <button
               type="button"
-              className="flex w-full items-start gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-accent"
+              className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent"
               onClick={() => submit('keep_both')}
               disabled={resolve.isPending}
             >

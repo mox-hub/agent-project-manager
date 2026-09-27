@@ -302,7 +302,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
   return (
     <div
       className={cn(
-        'rounded-2xl border transition-all duration-normal',
+        'rounded-xl border transition-all duration-normal',
         status === 'connected' ? 'border-border bg-card' : status === 'error' ? 'border-destructive/30 bg-card' : 'border-border/60 bg-card/60',
       )}
     >
@@ -505,7 +505,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
-              <span className="text-3xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+              <span className="text-3xs px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground shrink-0">
                 {t('settings.integration.soon')}
               </span>
             )}
@@ -774,7 +774,7 @@ export function IntegrationsSettingsSection() {
                       <p className="text-xs font-medium">{item.name}</p>
                       <p className="text-3xs text-muted-foreground truncate">{t(item.descKey)}</p>
                     </div>
-                    <span className="ml-auto text-3xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">{t('settings.integration.soon')}</span>
+                    <span className="ml-auto text-3xs px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground shrink-0">{t('settings.integration.soon')}</span>
                   </div>
                 ))}
               </div>

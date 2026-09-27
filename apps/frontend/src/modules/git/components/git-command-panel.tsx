@@ -153,7 +153,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 {history?.map((item) => (
                   <div
                     key={item.id}
-                    className="space-y-1 rounded border p-2 text-sm"
+                    className="space-y-1 rounded-md border p-2 text-sm"
                   >
                     <div className="flex items-center justify-between">
                       <p className="font-mono font-medium text-foreground">
@@ -187,7 +187,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 <AlertTitle>Command executed successfully</AlertTitle>
                 <AlertDescription>
                   {commandResult.stdout && (
-                    <pre className="mt-2 max-h-40 overflow-auto rounded bg-muted/50 p-2 text-xs">
+                    <pre className="mt-2 max-h-40 overflow-auto rounded-sm bg-muted/50 p-2 text-xs">
                       {commandResult.stdout}
                     </pre>
                   )}
@@ -203,7 +203,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                       <p className="text-muted-foreground">{commandResult.suggestion}</p>
                     )}
                     {commandResult.stderr && (
-                      <pre className="max-h-40 overflow-auto rounded bg-destructive/10 p-2 text-xs">
+                      <pre className="max-h-40 overflow-auto rounded-sm bg-destructive/10 p-2 text-xs">
                         {commandResult.stderr}
                       </pre>
                     )}

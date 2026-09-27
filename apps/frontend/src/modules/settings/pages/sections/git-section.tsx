@@ -171,7 +171,7 @@ function GitToolStatusCard() {
                   key={option.value}
                   type="button"
                   onClick={() => setGitPathInput(option.value)}
-                  className="block w-full rounded px-2 py-1 text-left font-mono text-xs hover:bg-muted/50"
+                  className="block w-full rounded-md px-2 py-1 text-left font-mono text-xs hover:bg-muted/50"
                 >
                   {option.label}
                 </button>

@@ -430,7 +430,7 @@ export function RadialWatchDeck({
         {/* 空态：三种"空"必须说清是哪种，且一律不用假人填版面（§4.7 不伪造） */}
         {stations.length === 0 && (
           <div
-            className="absolute rounded-2xl p-3.5 backdrop-blur-2xl border border-current/10"
+            className="absolute rounded-xl p-3.5 backdrop-blur-2xl border border-current/10"
             style={{
               left: `calc(50% + ${LEFT_STATION_GEOMETRY[0].cardLeft}px)`,
               top: `calc(50% + ${LEFT_STATION_GEOMETRY[0].cardTop}px)`,
@@ -473,7 +473,7 @@ export function RadialWatchDeck({
               onMouseEnter={() => setHoveredSideCard(station.memberId)}
               onMouseLeave={() => setHoveredSideCard(null)}
               className={cn(
-                'absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-slow border cursor-pointer select-text shadow-xs',
+                'absolute rounded-xl p-3.5 backdrop-blur-2xl transition-all duration-slow border cursor-pointer select-text shadow-xs',
                 isSelected ? '' : 'hover:opacity-95',
               )}
               style={{
@@ -525,7 +525,7 @@ export function RadialWatchDeck({
                     <div className="flex items-center gap-1.5">
                       <h4 className="font-semibold text-xs tracking-tight truncate">{station.displayName}</h4>
                       <span
-                        className="px-1.5 py-0.2 rounded font-mono font-semibold"
+                        className="px-1.5 py-0.2 rounded-sm font-mono font-semibold"
                         style={{
                           fontSize: 8.5,
                           background: isDark ? 'hsl(var(--accent-purple) / 0.2)' : 'hsl(var(--accent-purple) / 0.12)',
@@ -575,7 +575,7 @@ export function RadialWatchDeck({
 
               {/* 在干什么：当前执行（与办公室页 ColleagueCard 同规则：工单标题优先，退化到本次目标） */}
               <div
-                className="mb-1.5 px-2 py-1 rounded flex items-center gap-1.5 border border-current/10"
+                className="mb-1.5 px-2 py-1 rounded-sm flex items-center gap-1.5 border border-current/10"
                 style={{
                   fontSize: 8.5,
                   background: isDark ? 'hsl(var(--foreground) / 0.05)' : 'hsl(var(--foreground) / 0.04)',
@@ -700,7 +700,7 @@ export function RadialWatchDeck({
         <div
           onMouseEnter={() => setHoveredSideCard('right-score')}
           onMouseLeave={() => setHoveredSideCard(null)}
-          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
+          className="absolute rounded-xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
           style={{
             left: `calc(50% + ${RIGHT_CARDS_DATA[0].cardLeft}px)`,
             top: `calc(50% + ${RIGHT_CARDS_DATA[0].cardTop}px)`,
@@ -726,7 +726,7 @@ export function RadialWatchDeck({
         <div
           onMouseEnter={() => setHoveredSideCard('right-contract')}
           onMouseLeave={() => setHoveredSideCard(null)}
-          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
+          className="absolute rounded-xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
           style={{
             left: `calc(50% + ${RIGHT_CARDS_DATA[1].cardLeft}px)`,
             top: `calc(50% + ${RIGHT_CARDS_DATA[1].cardTop}px)`,
@@ -751,7 +751,7 @@ export function RadialWatchDeck({
         <div
           onMouseEnter={() => setHoveredSideCard('right-logic')}
           onMouseLeave={() => setHoveredSideCard(null)}
-          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
+          className="absolute rounded-xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
           style={{
             left: `calc(50% + ${RIGHT_CARDS_DATA[2].cardLeft}px)`,
             top: `calc(50% + ${RIGHT_CARDS_DATA[2].cardTop}px)`,
@@ -776,7 +776,7 @@ export function RadialWatchDeck({
         <div
           onMouseEnter={() => setHoveredSideCard('right-memory')}
           onMouseLeave={() => setHoveredSideCard(null)}
-          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
+          className="absolute rounded-xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
           style={{
             left: `calc(50% + ${RIGHT_CARDS_DATA[3].cardLeft}px)`,
             top: `calc(50% + ${RIGHT_CARDS_DATA[3].cardTop}px)`,
@@ -814,7 +814,7 @@ export function RadialWatchDeck({
                 key={atom.id}
                 type="button"
                 onClick={() => setActiveMemory(activeMemory?.id === atom.id ? null : atom)}
-                className="px-1.5 py-0.5 rounded font-mono transition-colors text-left cursor-pointer"
+                className="px-1.5 py-0.5 rounded-sm font-mono transition-colors text-left cursor-pointer"
                 style={{
                   fontSize: 8.5,
                   background:

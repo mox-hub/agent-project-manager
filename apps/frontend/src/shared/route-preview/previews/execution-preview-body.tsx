@@ -44,7 +44,7 @@ export function ExecutionPreviewBody({ id }: { id: string }) {
                 : `执行状态: ${run.status}`}
           </span>
           {isPendingApproval ? (
-            <span className="text-3xs font-mono px-1.5 py-0.5 rounded bg-accent-red/20 text-accent-red font-semibold">
+            <span className="text-3xs font-mono px-1.5 py-0.5 rounded-sm bg-accent-red/20 text-accent-red font-semibold">
               高风险拦截
             </span>
           ) : (

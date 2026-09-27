@@ -173,8 +173,8 @@ export function AppearanceSettingsSection() {
                       {/* 预览窗口 */}
                       <div className={`aspect-video w-full rounded-lg ${item.bg} ${item.border} border p-2 mb-3`}>
                         <div className={`h-full ${item.preview} rounded-md p-1.5`}>
-                          <div className={`h-2 w-3/4 rounded ${item.id === 'light' ? 'bg-muted' : 'bg-gray-700'} mb-1`} />
-                          <div className={`h-1.5 w-1/2 rounded ${item.id === 'light' ? 'bg-muted' : 'bg-muted'}`} />
+                          <div className={`h-2 w-3/4 rounded-xs ${item.id === 'light' ? 'bg-muted' : 'bg-gray-700'} mb-1`} />
+                          <div className={`h-1.5 w-1/2 rounded-xs ${item.id === 'light' ? 'bg-muted' : 'bg-muted'}`} />
                         </div>
                       </div>
                       <p className={`font-medium ${isActive ? item.text : 'text-foreground'}`}>{item.label}</p>

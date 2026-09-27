@@ -369,14 +369,14 @@ export function ChapterScrubber({
               : { right: peakLength + GAP }),
           }}
           className={cn(
-            "pointer-events-none absolute z-10 rounded-2xl border border-border bg-popover px-4 py-3.5 text-popover-foreground shadow-xs",
+            "pointer-events-none absolute z-10 rounded-xl border border-border bg-popover px-4 py-3.5 text-popover-foreground shadow-xs",
             resolvedSide === "right" ? "origin-left" : "origin-right",
           )}
         >
           {(chapters[activeIndex].meta || chapters[activeIndex].level) && (
             <div className="mb-1 flex items-center gap-1.5 text-xs font-medium tabular-nums text-muted-foreground">
               {chapters[activeIndex].level ? (
-                <span className="rounded bg-muted px-1 py-px text-3xs font-semibold">
+                <span className="rounded-sm bg-muted px-1 py-px text-3xs font-semibold">
                   H{chapters[activeIndex].level}
                 </span>
               ) : null}

@@ -469,7 +469,7 @@ export function TaskRowsList({
               ) : null}
               {onCreateTask ? (
                 <button
-                  className="ml-auto opacity-0 group-hover/status:opacity-100 p-1 rounded hover:bg-accent transition-colors"
+                  className="ml-auto opacity-0 group-hover/status:opacity-100 p-1 rounded-md hover:bg-accent transition-colors"
                   title={`Add task to ${cfg.label}`}
                   onClick={(e) => {
                     e.stopPropagation();

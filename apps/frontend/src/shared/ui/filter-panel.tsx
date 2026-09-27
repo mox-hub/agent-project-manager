@@ -293,7 +293,7 @@ export function FilterPanel({
                 {activeFilters.map((filter) => (
                   <div
                     key={`${filter.groupId}-${filter.optionId}`}
-                    className="flex items-center justify-between rounded px-2 py-1.5 hover:bg-muted/50"
+                    className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/50"
                   >
                     <div className="min-w-0 flex-1">
                       <span className="text-xs text-muted-foreground">{filter.groupLabel}: </span>
@@ -302,7 +302,7 @@ export function FilterPanel({
                     <button
                       type="button"
                       onClick={(e) => handleRemoveFilter(filter.groupId, filter.optionId, e)}
-                      className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                      className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
                       <X size={12} />
                     </button>
@@ -320,7 +320,7 @@ export function FilterPanel({
                   setIsOpen(true);
                   onAddFilter();
                 }}
-                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <Plus size={12} />
                 添加筛选条件
@@ -388,7 +388,7 @@ export function FilterPanel({
                       groupRefs.current[group.id] = el ?? undefined;
                     }}
                     onClick={(e) => handleGroupClick(group.id, e)}
-                    className={`${MENU_ITEM_CLASS} gap-2 cursor-pointer rounded px-2 py-1.5 ${
+                    className={`${MENU_ITEM_CLASS} gap-2 cursor-pointer rounded-md px-2 py-1.5 ${
                       isGroupOpen ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/50'
                     }`}
                   >
@@ -399,7 +399,7 @@ export function FilterPanel({
                     )}
                     <span className="flex-1 text-sm">{group.label}</span>
                     {selectedCount > 0 && (
-                      <span className="rounded bg-border px-1.5 py-0.5 text-xs text-muted-foreground">
+                      <span className="rounded-sm bg-border px-1.5 py-0.5 text-xs text-muted-foreground">
                         {selectedCount}
                       </span>
                     )}
@@ -455,14 +455,14 @@ export function FilterPanel({
                                 key={option.id}
                                 onClick={(e) => handleOptionClick(openGroup!.id, option, e)}
                                 className={cn(
-                                  'flex cursor-pointer items-center gap-2 rounded px-2 py-1.5',
+                                  'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5',
                                   isSelected ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/50',
                                 )}
                               >
                                 {(openGroup?.multiSelect ?? true) && (
                                   <div
                                     className={cn(
-                                      'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
+                                      'flex h-4 w-4 shrink-0 items-center justify-center rounded-xs border',
                                       isSelected
                                         ? 'border-accent-blue bg-accent-blue'
                                         : 'border-border',

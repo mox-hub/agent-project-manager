@@ -307,7 +307,7 @@ export function NotificationCenterPage() {
                   <SheetTitle className="sr-only">{selectedItem.title}</SheetTitle>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded border border-accent-yellow/20 bg-accent-yellow-light px-2 py-0.5 text-xs font-semibold text-accent-yellow">
+                      <span className="rounded-sm border border-accent-yellow/20 bg-accent-yellow-light px-2 py-0.5 text-xs font-semibold text-accent-yellow">
                         决策中心 · 就地拍板
                       </span>
                       <span className="text-xs text-content-text-muted">

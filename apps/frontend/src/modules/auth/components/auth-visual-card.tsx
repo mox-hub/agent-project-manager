@@ -129,7 +129,7 @@ export function AuthVisualCard({
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background p-4 sm:p-6 transition-colors duration-slow">
       {/* 现代双栏一体化大卡片 */}
-      <div className="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border/80 shadow-xs md:grid md:min-h-130 md:grid-cols-12 transition-colors duration-slow bg-card">
+      <div className="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-border/80 shadow-xs md:grid md:min-h-130 md:grid-cols-12 transition-colors duration-slow bg-card">
         {/* 桌面紧凑窗口拖动区：盖住卡片顶部品牌行（右上控制按钮组 z-30 在其上可点；
             -webkit-app-region 在浏览器端无效，不影响 web） */}
         <div
@@ -297,7 +297,7 @@ export function AuthVisualCard({
       {/* 无法登录 / 常见问题排查轻量弹窗 */}
       {helpDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
             <div className="flex items-center gap-2 text-primary font-semibold text-sm">
               <HelpCircle className="size-4" />
               <span>登录与服务排查指引</span>
@@ -306,14 +306,14 @@ export function AuthVisualCard({
             <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
               <p>
                 • <strong>本地运行</strong>：请确保后端已执行{' '}
-                <code className="rounded bg-muted px-1 py-0.5 text-foreground font-mono">
+                <code className="rounded-sm bg-muted px-1 py-0.5 text-foreground font-mono">
                   pnpm dev:server
                 </code>
                 ，端口处于 3000。
               </p>
               <p>
                 • <strong>初始账号</strong>：默认内置开发者账号为{' '}
-                <code className="rounded bg-muted px-1 py-0.5 text-foreground font-mono">
+                <code className="rounded-sm bg-muted px-1 py-0.5 text-foreground font-mono">
                   admin
                 </code>
                 ，首次安装请跑数据库迁移。

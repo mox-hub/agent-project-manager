@@ -42,7 +42,7 @@ export function LinearProviderCard({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border border-white/10',
+        'relative overflow-hidden rounded-xl border border-white/10',
         'bg-gradient-to-br from-brand-linear-darkest via-brand-linear-deep to-brand-linear',
         'p-6 text-white shadow-xs transition-all duration-normal',
         // hover:shadow-brand-linear/20 是幽灵类（--shadow-brand-linear 从未注册，不生成 CSS），

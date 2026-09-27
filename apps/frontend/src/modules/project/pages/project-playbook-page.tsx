@@ -178,7 +178,7 @@ export function ProjectPlaybookPage() {
                   {tp.stages.map((s) => (
                     <span
                       key={s.key}
-                      className="rounded bg-content-bg-secondary px-1.5 py-0.5 text-3xs text-content-text-secondary"
+                      className="rounded-sm bg-content-bg-secondary px-1.5 py-0.5 text-3xs text-content-text-secondary"
                     >
                       {s.name}
                     </span>

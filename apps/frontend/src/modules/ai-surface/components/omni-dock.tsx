@@ -172,7 +172,7 @@ export function OmniDock({
               <Minimize2 className="size-3" />
               <span>返回控制面</span>
               <kbd
-                className="px-1 py-0.2 rounded font-mono"
+                className="px-1 py-0.2 rounded-sm font-mono"
                 style={{
                   fontSize: 9,
                   background: isDark ? 'hsl(var(--background) / 0.5)' : 'hsl(var(--foreground) / 0.08)',
@@ -189,7 +189,7 @@ export function OmniDock({
       <form
         onSubmit={handleSubmit}
         className={cn(
-          'relative w-full rounded-2xl p-2 flex items-center gap-2 transition-all duration-slow backdrop-blur-2xl border',
+          'relative w-full rounded-xl p-2 flex items-center gap-2 transition-all duration-slow backdrop-blur-2xl border',
           !pulseActive && 'shadow-xs',
         )}
         style={{
@@ -224,7 +224,7 @@ export function OmniDock({
           {/* 模型弹出列表 */}
           {modelDropdownOpen && (
             <div
-              className="absolute bottom-full left-0 mb-2 w-56 rounded-2xl p-1.5 backdrop-blur-2xl shadow-xs flex flex-col gap-1 border animate-in fade-in zoom-in-95 duration-normal z-50"
+              className="absolute bottom-full left-0 mb-2 w-56 rounded-xl p-1.5 backdrop-blur-2xl shadow-xs flex flex-col gap-1 border animate-in fade-in zoom-in-95 duration-normal z-50"
               style={{
                 borderColor: isDark ? 'hsl(var(--foreground) / 0.1)' : 'hsl(var(--accent-purple) / 0.15)',
                 background: isDark ? 'hsl(var(--background) / 0.96)' : 'hsl(var(--card) / 0.98)',
@@ -255,7 +255,7 @@ export function OmniDock({
                 >
                   <span>{model.label}</span>
                   <span
-                    className="px-1.5 py-0.2 rounded font-mono"
+                    className="px-1.5 py-0.2 rounded-sm font-mono"
                     style={{
                       fontSize: 10,
                       background: isDark ? 'hsl(var(--foreground) / 0.08)' : 'hsl(var(--accent-purple) / 0.08)',

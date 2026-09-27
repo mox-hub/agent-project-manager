@@ -255,7 +255,7 @@ export function GanttChart({
                     type="button"
                     onClick={() => setScale(s)}
                     className={cn(
-                      'rounded px-1.5 py-0.5 text-3xs font-medium transition-colors',
+                      'rounded-md px-1.5 py-0.5 text-3xs font-medium transition-colors',
                       currentScale === s
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -342,7 +342,7 @@ export function GanttChart({
                     }}
                     onPointerDown={(event) => startDrag(event, item, 'move')}
                     className={cn(
-                      'absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded px-2 text-xs text-white shadow-xs transition-all',
+                      'absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded-md px-2 text-xs text-white shadow-xs transition-all',
                       isAi ? 'bg-accent-purple ring-1 ring-accent-purple/40 animate-pulse' : getBarColorClass(item),
                       readonly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
                     )}

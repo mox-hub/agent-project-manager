@@ -130,7 +130,7 @@ export function AuditReportPanel({ report, onApplySuggestions, loading }: Props)
             {passed.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-2 rounded bg-accent-green/10 p-2 text-sm"
+                className="flex items-center gap-2 rounded-md bg-accent-green/10 p-2 text-sm"
               >
                 <span className="text-accent-green">✓</span>
                 <span className="flex-1">{item.content}</span>

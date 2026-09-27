@@ -190,9 +190,15 @@ const ALLOWED_TOKENS = new Set([
   "scale-[calc(1-0.1*var(--nested-dialogs))]",
   "opacity-[calc(1-0.1*var(--nested-dialogs))]",
   "transition-[scale,opacity,translate]",
-  "rounded-[calc(var(--radius-2xl)-1px)]",
+  // ⚠️ 三条原为 `var(--radius-2xl)`，2026-09-27（批 5）改为 `var(--radius-xl)`：
+  //    宪法 §4.5 明文禁止 `rounded-2xl` 及以上档位，而 `--radius-2xl` 是 Tailwind
+  //    内置默认主题值（产物中为 `1rem`），本仓已对 sm/md/lg/xl 弃用该阶梯，唯独此处
+  //    仍引用它——属「规则在跑、档位越界」的残留。两者数值**等价**（`--radius-xl` =
+  //    `calc(0.75rem + 4px)` = 16px = `1rem`），故本次为零视觉差异的档位归一。
+  //    代价（如实登记）：与 coss 上游配方原文产生偏离，后续重生成需重新合并。
+  "rounded-[calc(var(--radius-xl)-1px)]",
   "rounded-t-[calc(var(--radius-xl)-1px)]",
-  "rounded-b-[calc(var(--radius-2xl)-1px)]",
+  "rounded-b-[calc(var(--radius-xl)-1px)]",
   "px-[0.3rem]",
   "py-[0.2rem]",
 ]);

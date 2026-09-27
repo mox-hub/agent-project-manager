@@ -458,7 +458,7 @@ function ProjectTasksBoard({
         <div className="min-w-0 flex-1">{taskCardRow3(task)}</div>
         <button
           type="button"
-          className="shrink-0 rounded p-1 text-accent-purple transition-colors hover:bg-accent-purple/20"
+          className="shrink-0 rounded-md p-1 text-accent-purple transition-colors hover:bg-accent-purple/20"
           onClick={(event) => {
             event.stopPropagation();
             onDispatchTask(task);

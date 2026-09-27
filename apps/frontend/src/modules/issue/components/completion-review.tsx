@@ -79,7 +79,7 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
           <span className="text-muted-foreground">{t('acceptance.evSkipped', { count: skipped })}</span>
           <span className="font-medium">{t('acceptance.evTotal', { count: total })}</span>
         </div>
-        <div className="h-1.5 rounded bg-muted overflow-hidden">
+        <div className="h-1.5 rounded-xs bg-muted overflow-hidden">
           <div
             className={failed > 0 ? 'h-full bg-accent-red' : 'h-full bg-accent-green'}
             style={{ width: `${passRate}%` }}
@@ -213,7 +213,7 @@ function AcceptanceCard({
       {/* criteria 进度 + 审计风险点 */}
       {criteria.length > 0 && (
         <div className="flex items-center gap-2 text-3xs text-muted-foreground">
-          <div className="h-1 flex-1 overflow-hidden rounded bg-muted">
+          <div className="h-1 flex-1 overflow-hidden rounded-xs bg-muted">
             <div
               className="h-full bg-accent-green"
               style={{ width: `${Math.round((passedCount / criteria.length) * 100)}%` }}

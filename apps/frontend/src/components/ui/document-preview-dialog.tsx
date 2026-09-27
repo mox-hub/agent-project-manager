@@ -176,7 +176,7 @@ export function DocumentPreviewDialog({
                         key={index}
                         onClick={() => handleScrollToSection(item.id)}
                         className={cn(
-                          'w-full text-left px-2 py-1.5 rounded text-xs transition-all truncate',
+                          'w-full text-left px-2 py-1.5 rounded-md text-xs transition-all truncate',
                           activeSection === item.id
                             ? 'bg-accent-blue/10 text-accent-blue font-medium'
                             : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'

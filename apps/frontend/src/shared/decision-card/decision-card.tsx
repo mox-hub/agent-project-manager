@@ -367,7 +367,7 @@ function buildAcceptanceSlots(decision: Decision, t: (k: string, o?: Record<stri
             {checks.passed}/{checks.total}
           </span>
           {checks.failed > 0 ? (
-            <span className="rounded bg-accent-red-light px-1.5 py-0.5 text-3xs text-accent-red">
+            <span className="rounded-sm bg-accent-red-light px-1.5 py-0.5 text-3xs text-accent-red">
               {t('decision.evidenceLabels.failedCount', { n: checks.failed })}
             </span>
           ) : null}
@@ -385,7 +385,7 @@ function buildAcceptanceSlots(decision: Decision, t: (k: string, o?: Record<stri
             {ev.prUrl}
           </a>
           {ev.state ? (
-            <span className="rounded bg-accent-blue-light px-1.5 py-0.5 text-3xs text-accent-blue">{ev.state}</span>
+            <span className="rounded-sm bg-accent-blue-light px-1.5 py-0.5 text-3xs text-accent-blue">{ev.state}</span>
           ) : null}
         </div>
       ) : null}
@@ -522,7 +522,7 @@ function buildAssignmentSlots(decision: Decision, t: TFunc): DecisionSlots {
           {a.trustScore != null ? (
             <span
               className={cn(
-                'shrink-0 rounded px-1.5 py-0.5 text-3xs',
+                'shrink-0 rounded-sm px-1.5 py-0.5 text-3xs',
                 a.trustScore >= 70
                   ? 'bg-accent-green-light text-accent-green'
                   : a.trustScore >= 40
@@ -672,7 +672,7 @@ function ClarifyBody({
                 </span>
                 <span className="font-semibold text-content-text">{c.label}</span>
                 {c.guess ? (
-                  <span className="rounded bg-accent-purple-light px-1.5 py-0.5 text-3xs text-accent-purple">
+                  <span className="rounded-sm bg-accent-purple-light px-1.5 py-0.5 text-3xs text-accent-purple">
                     {t('decision.clarify.aiGuess')}
                   </span>
                 ) : null}
@@ -771,7 +771,7 @@ function GateBody({ decision }: { decision: Decision }) {
           <div className="flex flex-wrap items-center gap-1.5" data-ai="gate-knowledge-terse">
             <Lightbulb className="size-3 shrink-0 text-content-text-muted" />
             {knowledge.map((k) => (
-              <span key={k.questionId ?? k.term} className="rounded bg-content-bg-secondary px-1.5 py-0.5 text-3xs text-content-text-secondary">
+              <span key={k.questionId ?? k.term} className="rounded-sm bg-content-bg-secondary px-1.5 py-0.5 text-3xs text-content-text-secondary">
                 {k.term}
               </span>
             ))}
@@ -1036,11 +1036,11 @@ function buildContractConflictSlots(decision: Decision, t: TFunc): DecisionSlots
           {p.filePath ?? '—'}
         </span>
         {derived ? (
-          <span className="shrink-0 rounded bg-accent-orange-light px-1.5 py-0.5 text-3xs text-accent-orange">
+          <span className="shrink-0 rounded-sm bg-accent-orange-light px-1.5 py-0.5 text-3xs text-accent-orange">
             {t('decision.conflict.derivedBadge')}
           </span>
         ) : (
-          <span className="shrink-0 rounded bg-content-bg-secondary px-1.5 py-0.5 text-3xs text-content-text-muted">
+          <span className="shrink-0 rounded-sm bg-content-bg-secondary px-1.5 py-0.5 text-3xs text-content-text-muted">
             {t('decision.conflict.managedBadge')}
           </span>
         )}

@@ -161,7 +161,7 @@ export function ReadinessDialog({
                       />
                       <span className="text-xs font-medium text-foreground">{g.item}</span>
                       {g.blocking && (
-                        <span className="rounded bg-accent-red-light px-1.5 py-0.5 text-3xs text-accent-red">
+                        <span className="rounded-sm bg-accent-red-light px-1.5 py-0.5 text-3xs text-accent-red">
                           {t('intake.readiness.blocking', '阻塞')}
                         </span>
                       )}

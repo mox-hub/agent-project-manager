@@ -371,7 +371,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
               setFormOpen((v) => !v);
             }}
             className={cn(
-              'inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+              'inline-flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
               formOpen && 'text-accent-blue',
             )}
             title={formOpen ? t('common.cancel') : t('taskDetail.execItemsAdd')}

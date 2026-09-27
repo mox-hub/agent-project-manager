@@ -564,7 +564,7 @@ function ViewEditorPanel({
                 setName(preset.label);
                 setIcon(preset.icon);
               }}
-              className="rounded border border-border bg-muted/30 px-1.5 py-0.5 text-2xs text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="rounded-md border border-border bg-muted/30 px-1.5 py-0.5 text-2xs text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {preset.label}
             </button>

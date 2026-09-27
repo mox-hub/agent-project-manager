@@ -205,7 +205,7 @@ export function AcceptanceCriteriaField({
               <button
                 type="button"
                 onClick={() => handleRemove(item.id)}
-                className="opacity-0 group-hover:opacity-100 size-5 inline-flex items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
+                className="opacity-0 group-hover:opacity-100 size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
                 title="删除要点"
               >
                 <Trash2 className="size-3" />

@@ -20,7 +20,7 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="rounded p-1 text-content-text-muted transition-colors hover:bg-muted hover:text-content-text"
+      className="rounded-md p-1 text-content-text-muted transition-colors hover:bg-muted hover:text-content-text"
     >
       {copied ? (
         <Check className="size-3.5 text-accent-green" />
@@ -103,7 +103,7 @@ export function StepDetailPanel({
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-content-text-muted transition-colors hover:bg-muted hover:text-content-text"
+            className="rounded-md p-1 text-content-text-muted transition-colors hover:bg-muted hover:text-content-text"
           >
             <X className="size-3.5" />
           </button>

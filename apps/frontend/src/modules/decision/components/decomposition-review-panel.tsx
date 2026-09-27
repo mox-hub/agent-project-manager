@@ -131,12 +131,12 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
               <div className="flex items-center gap-1.5 text-2xs">
                 <span className="font-mono text-content-text-muted">#{f.index + 1}</span>
                 {f.granularity !== 'ok' && (
-                  <span className="rounded bg-accent-yellow-light px-1.5 py-0.5 text-3xs text-accent-yellow">
+                  <span className="rounded-sm bg-accent-yellow-light px-1.5 py-0.5 text-3xs text-accent-yellow">
                     {t(`decision.decompReview.granularity.${f.granularity}`)}
                   </span>
                 )}
                 {f.testability === 'weak' && (
-                  <span className="rounded bg-accent-red-light px-1.5 py-0.5 text-3xs text-accent-red">
+                  <span className="rounded-sm bg-accent-red-light px-1.5 py-0.5 text-3xs text-accent-red">
                     {t('decision.decompReview.weakTestability')}
                   </span>
                 )}

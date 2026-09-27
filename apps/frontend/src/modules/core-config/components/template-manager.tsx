@@ -358,7 +358,7 @@ export function TemplateManager() {
                             <button
                               type="button"
                               onClick={() => handleProjectEdit(template)}
-                              className="rounded p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                               title={t('common.edit')}
                             >
                               <Pencil size={14} />
@@ -506,7 +506,7 @@ export function TemplateManager() {
                                 <button
                                   type="button"
                                   onClick={() => handleTaskEdit(template)}
-                                  className="rounded p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                   title={t('common.edit')}
                                 >
                                   <Pencil size={14} />
@@ -515,7 +515,7 @@ export function TemplateManager() {
                                   type="button"
                                   onClick={() => handleTaskDelete(template.id)}
                                   disabled={deleteTaskTemplate.isPending}
-                                  className="rounded p-1.5 text-accent-red hover:bg-accent-red-light"
+                                  className="rounded-md p-1.5 text-accent-red hover:bg-accent-red-light"
                                   title={t('common.delete')}
                                 >
                                   <Trash2 size={14} />

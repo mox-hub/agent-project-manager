@@ -233,7 +233,7 @@ function EntityRow({ toolName, output }: { toolName: string; output: unknown }) 
           : entity.title}
       </span>
       {entity.status ? (
-        <span className="shrink-0 rounded bg-accent-blue-light px-1.5 py-0.5 text-3xs text-accent-blue">
+        <span className="shrink-0 rounded-sm bg-accent-blue-light px-1.5 py-0.5 text-3xs text-accent-blue">
           {entity.status}
         </span>
       ) : null}

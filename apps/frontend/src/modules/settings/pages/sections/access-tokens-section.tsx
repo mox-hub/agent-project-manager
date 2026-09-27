@@ -284,7 +284,7 @@ export function AccessTokensSettingsSection() {
           <div className="space-y-4">
             <Alert variant="destructive">{t('settings.tokenCreatedWarn')}</Alert>
             <div className="flex items-center gap-2">
-              <code className="min-w-0 flex-1 truncate rounded bg-content-bg-secondary px-2 py-1.5 font-mono text-xs">
+              <code className="min-w-0 flex-1 truncate rounded-sm bg-content-bg-secondary px-2 py-1.5 font-mono text-xs">
                 {createdToken}
               </code>
               <Button

@@ -291,7 +291,7 @@ function SectionGroupCard({
           {group.links.map((link) => (
             <li
               key={link.id}
-              className="group/li flex items-center gap-2 rounded border border-border bg-background px-2 py-1.5"
+              className="group/li flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1.5"
             >
               {link.task?.title?.includes('[BUG]') || link.linkType === 'blocks' ? (
                 <Bug size={11} className="shrink-0 text-accent-red" />
@@ -333,7 +333,7 @@ function SectionGroupCard({
               <button
                 type="button"
                 onClick={() => remove.mutate(link.id)}
-                className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/li:opacity-100"
+                className="rounded-md p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/li:opacity-100"
                 aria-label="删除关联"
               >
                 <X size={11} />

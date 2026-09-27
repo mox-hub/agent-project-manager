@@ -186,7 +186,7 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
                 <button
                   type="button"
                   onClick={() => void handleRemove(root)}
-                  className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                   aria-label={`移除 ${root}`}
                 >
                   <Trash2 className="h-3.5 w-3.5" />

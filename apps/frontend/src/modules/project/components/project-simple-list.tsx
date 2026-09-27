@@ -306,9 +306,9 @@ export function ProjectSimpleList({
             )}
             {/* 进度（真实 progress 字段） */}
             <span className="flex shrink-0 items-center gap-2">
-              <span className="h-1.5 w-16 overflow-hidden rounded bg-muted/50">
+              <span className="h-1.5 w-16 overflow-hidden rounded-xs bg-muted/50">
                 <span
-                  className={cn('block h-full rounded', workflowVisual.tone === 'success' ? 'bg-accent-green' : 'bg-accent-blue')}
+                  className={cn('block h-full rounded-xs', workflowVisual.tone === 'success' ? 'bg-accent-green' : 'bg-accent-blue')}
                   style={{ width: `${progressValue}%` }}
                 />
               </span>

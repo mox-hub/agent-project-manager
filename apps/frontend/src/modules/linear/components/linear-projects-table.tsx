@@ -156,7 +156,7 @@ function ProjectRow({
               {teams.map((t) => (
                 <span
                   key={t.id}
-                  className="rounded bg-muted/60 px-1.5 py-0.5 font-mono"
+                  className="rounded-sm bg-muted/60 px-1.5 py-0.5 font-mono"
                 >
                   {t.key}
                 </span>

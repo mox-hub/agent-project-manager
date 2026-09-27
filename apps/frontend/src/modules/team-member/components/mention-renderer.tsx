@@ -42,7 +42,7 @@ export function MentionRenderer({
                 memberId={hit.id}
                 side="top"
                 trigger={
-                  <span className="cursor-pointer rounded bg-accent-blue/10 px-1 py-0.5 text-xs font-medium text-accent-blue hover:bg-accent-blue/20">
+                  <span className="cursor-pointer rounded-sm bg-accent-blue/10 px-1 py-0.5 text-xs font-medium text-accent-blue hover:bg-accent-blue/20">
                     @{hit.handle}
                   </span>
                 }

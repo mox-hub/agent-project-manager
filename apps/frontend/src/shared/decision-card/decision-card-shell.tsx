@@ -190,7 +190,7 @@ function ActionBar({
                 ? t('decision.action.cooldown', { n: cooldownLeft })
                 : t(def.label)}
             </span>
-            <span className="shrink-0 rounded border border-current/20 px-1 font-mono text-3xs opacity-50 whitespace-nowrap">
+            <span className="shrink-0 rounded-sm border border-current/20 px-1 font-mono text-3xs opacity-50 whitespace-nowrap">
               {index + 1}
             </span>
           </button>
@@ -525,7 +525,7 @@ export function DecisionCardShell({
               <Eye className="size-3.5 shrink-0" />
               <span className="whitespace-nowrap">{t('decision.action.evidence')}</span>
               {cooldownSecs && cooldownSecs > 0 ? (
-                <span className="shrink-0 rounded bg-accent-yellow-light px-1 text-3xs text-accent-yellow whitespace-nowrap">
+                <span className="shrink-0 rounded-sm bg-accent-yellow-light px-1 text-3xs text-accent-yellow whitespace-nowrap">
                   {cooldownSecs}s 冷却
                 </span>
               ) : null}
@@ -601,7 +601,7 @@ export function DecisionCardShell({
 
             {/* 背面第 2 行：决策编号（按要求移至第二行） */}
             <div className="flex items-center justify-between text-2xs text-muted-foreground">
-              <span className="rounded border border-border px-1.5 py-0.5 font-mono text-3xs uppercase tracking-wider text-muted-foreground/80 whitespace-nowrap shrink-0 select-all">
+              <span className="rounded-sm border border-border px-1.5 py-0.5 font-mono text-3xs uppercase tracking-wider text-muted-foreground/80 whitespace-nowrap shrink-0 select-all">
                 #{shortId}
               </span>
               <span className="text-3xs text-muted-foreground/60 whitespace-nowrap shrink-0">

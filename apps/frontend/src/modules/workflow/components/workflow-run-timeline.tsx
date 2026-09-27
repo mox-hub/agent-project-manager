@@ -98,7 +98,7 @@ function RunPillRow({ pill }: { pill: RunPill }) {
       data-ai-entity={`workflow-node:${pill.key}`}
     >
       <span
-        className={cn('flex size-4 shrink-0 items-center justify-center rounded', meta.tile)}
+        className={cn('flex size-4 shrink-0 items-center justify-center rounded-xs', meta.tile)}
         aria-hidden
       >
         <TileIcon className="size-2.5" />

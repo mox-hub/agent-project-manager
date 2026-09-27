@@ -24,7 +24,7 @@ export function AssistantDecisionStrip({
 
   if (loading) {
     return (
-      <div className="assistant-decision-loading flex w-full flex-col items-center justify-center space-y-3 rounded-2xl border border-border bg-muted/20 p-6">
+      <div className="assistant-decision-loading flex w-full flex-col items-center justify-center space-y-3 rounded-xl border border-border bg-muted/20 p-6">
         <SkeletonText lines={1} className="w-1/2" />
         <SkeletonText lines={3} className="w-full" />
         <SkeletonText lines={2} className="w-3/4" />

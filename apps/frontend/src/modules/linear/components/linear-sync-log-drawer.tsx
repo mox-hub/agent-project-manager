@@ -87,7 +87,7 @@ export function LinearSyncLogDrawer({
           <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/20 px-4 py-2 text-xs">
             <span className="text-muted-foreground">Integration:</span>
             <select
-              className="rounded border border-border bg-background px-2 py-0.5 text-xs"
+              className="rounded-sm border border-border bg-background px-2 py-0.5 text-xs"
               value={resolvedIntegrationId}
               onChange={(e) => setSelectedIntegration(e.target.value)}
             >

@@ -60,7 +60,7 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
       const count = getProjectExecutionCount?.(project.id) ?? 0;
       if (count <= 0) return null;
       return (
-        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-3xs font-medium bg-accent-purple/15 text-accent-purple border border-accent-purple/30 animate-pulse">
+        <span className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-3xs font-medium bg-accent-purple/15 text-accent-purple border border-accent-purple/30 animate-pulse">
           <Bot className="size-3" />
           <span>{count} 个任务 AI 执行中</span>
         </span>
@@ -76,7 +76,7 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
           {priorityVisual ? (
             <span
               className={cn(
-                'shrink-0 rounded px-1.5 py-0.5 text-3xs font-medium',
+                'shrink-0 rounded-sm px-1.5 py-0.5 text-3xs font-medium',
                 TONE_LIGHT_CLASS[priorityVisual.tone],
               )}
             >

@@ -45,7 +45,7 @@ export function AuthShell({ header, children, footer, visual, className }: AuthS
         <div className="flex items-center justify-between gap-4">{footer}</div>
       </div>
       <div className="hidden flex-1 p-4 pl-0 @min-[920px]:block">
-        <div className="bg-secondary relative h-full overflow-hidden rounded-2xl">
+        <div className="bg-secondary relative h-full overflow-hidden rounded-xl">
           {visual ?? <AuthVisual />}
         </div>
       </div>

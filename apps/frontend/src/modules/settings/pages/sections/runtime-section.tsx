@@ -182,13 +182,13 @@ function LocalDaemonCard() {
         ) : (
           <div className="space-y-1">
             {(daemonStatus?.workspaceRoots ?? []).map((root) => (
-              <div key={root} className="group flex items-center justify-between gap-2 rounded px-2 py-1 hover:bg-accent">
+              <div key={root} className="group flex items-center justify-between gap-2 rounded-md px-2 py-1 hover:bg-accent">
                 <span className="truncate font-mono text-xs">{root}</span>
                 <button
                   type="button"
                   disabled={isLoading}
                   onClick={() => void removeWorkspaceRoot(root)}
-                  className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                  className="shrink-0 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                   aria-label={t('settings.desktopDaemonRemoveRoot')}
                 >
                   <Trash2 className="size-3.5" />

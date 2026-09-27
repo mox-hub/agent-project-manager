@@ -720,7 +720,7 @@ function BugBoardView({
         {bug.projectId && onDispatchBug ? (
           <button
             type="button"
-            className="shrink-0 rounded p-1 text-accent-purple transition-colors hover:bg-accent-purple/20"
+            className="shrink-0 rounded-md p-1 text-accent-purple transition-colors hover:bg-accent-purple/20"
             onClick={(event) => {
               event.stopPropagation();
               onDispatchBug(bug, bug.projectId!);

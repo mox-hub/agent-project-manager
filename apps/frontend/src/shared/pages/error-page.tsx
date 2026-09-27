@@ -57,7 +57,7 @@ export function ErrorPage({ className }: ErrorPageProps) {
     >
       <div className="w-full max-w-md text-center space-y-6">
         {/* Icon */}
-        <div className={cn("inline-flex items-center justify-center rounded-2xl p-4", iconBgClass)}>
+        <div className={cn("inline-flex items-center justify-center rounded-xl p-4", iconBgClass)}>
           <ErrorIcon className={cn("size-10", iconColor)} />
         </div>
 

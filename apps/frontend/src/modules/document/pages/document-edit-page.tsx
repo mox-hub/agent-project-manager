@@ -296,7 +296,7 @@ function DocumentEditWorkspace({
                   <label className="mb-1.5 block text-xs font-medium text-foreground">标签 (只读, 来源 frontmatter)</label>
                   <div className="flex flex-wrap gap-1.5">
                     {tags.length === 0 && (
-                      <span className="text-2xs text-muted-foreground">暂无标签, 在 frontmatter 添加 <code className="rounded bg-muted px-1 font-mono text-3xs">tags: [a, b]</code></span>
+                      <span className="text-2xs text-muted-foreground">暂无标签, 在 frontmatter 添加 <code className="rounded-sm bg-muted px-1 font-mono text-3xs">tags: [a, b]</code></span>
                     )}
                     {tags.map((t) => (
                       <span

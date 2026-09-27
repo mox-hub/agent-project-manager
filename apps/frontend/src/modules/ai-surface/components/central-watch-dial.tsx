@@ -340,7 +340,7 @@ export function CentralWatchDial({
           {(activeTab === 'overview' || activeTab === 'contract') && (
             <div
               ref={card1Ref}
-              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
+              className="rounded-xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
               style={{
                 transform: `scale(${cardScales[0]})`,
                 opacity: cardOpacities[0],
@@ -355,7 +355,7 @@ export function CentralWatchDial({
                   <span className="font-semibold text-xs">主线任务拆解链 (CAP-P-01)</span>
                 </div>
                 <span
-                  className="font-mono font-medium px-1.5 py-0.2 rounded"
+                  className="font-mono font-medium px-1.5 py-0.2 rounded-sm"
                   style={{
                     fontSize: 9,
                     background: isDark ? 'hsl(var(--accent-purple) / 0.2)' : 'hsl(var(--accent-purple) / 0.12)',
@@ -403,7 +403,7 @@ export function CentralWatchDial({
                     </div>
                   </div>
                   <span
-                    className="px-1.5 py-0.2 rounded font-mono shrink-0 font-semibold"
+                    className="px-1.5 py-0.2 rounded-sm font-mono shrink-0 font-semibold"
                     style={{ fontSize: 8, background: 'hsl(var(--accent-green) / 0.15)', color: 'hsl(var(--accent-green))' }}
                   >
                     DONE
@@ -449,7 +449,7 @@ export function CentralWatchDial({
                     </div>
                   </div>
                   <span
-                    className="px-1.5 py-0.2 rounded font-mono shrink-0 font-semibold"
+                    className="px-1.5 py-0.2 rounded-sm font-mono shrink-0 font-semibold"
                     style={{ fontSize: 8, background: 'hsl(var(--accent-purple) / 0.15)', color: 'hsl(var(--accent-purple))' }}
                   >
                     RUNNING
@@ -505,7 +505,7 @@ export function CentralWatchDial({
                       以及「不开第二个拍板入口」（决策必须回决策收件箱 / 待办区的就地决策卡）。
                       S2-e 删除，不再提供任何看起来能拍板的东西。 */}
                   <span
-                    className="shrink-0 rounded px-1.5 py-0.2 font-mono"
+                    className="shrink-0 rounded-sm px-1.5 py-0.2 font-mono"
                     style={{ fontSize: 8, background: 'hsl(var(--foreground) / 0.08)' }}
                     title="示例条目；真实待拍板事项见页面上方「该你了」待办区"
                   >
@@ -520,7 +520,7 @@ export function CentralWatchDial({
           {(activeTab === 'overview' || activeTab === 'contract') && codeArtifact && (
             <div
               ref={card2Ref}
-              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
+              className="rounded-xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
               style={{
                 transform: `scale(${cardScales[1]})`,
                 opacity: cardOpacities[1],
@@ -538,7 +538,7 @@ export function CentralWatchDial({
                   <button
                     type="button"
                     onClick={() => handleCopy(codeArtifact.payload.codeSnippet!)}
-                    className="px-2 py-0.5 rounded text-muted-foreground hover:text-foreground font-mono transition-colors cursor-pointer"
+                    className="px-2 py-0.5 rounded-sm text-muted-foreground hover:text-foreground font-mono transition-colors cursor-pointer"
                     style={{ fontSize: 9, background: 'hsl(var(--foreground) / 0.08)' }}
                   >
                     {copiedDiff ? 'COPIED ✓' : 'COPY'}
@@ -567,7 +567,7 @@ export function CentralWatchDial({
           {(activeTab === 'overview' || activeTab === 'acceptance') && qaArtifact?.payload?.criteriaList && (
             <div
               ref={card3Ref}
-              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
+              className="rounded-xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
               style={{
                 transform: `scale(${cardScales[2]})`,
                 opacity: cardOpacities[2],
@@ -582,7 +582,7 @@ export function CentralWatchDial({
                   <span className="font-semibold text-xs">自动化验收准则与门禁审计 (Sentinel)</span>
                 </div>
                 <span
-                  className="font-mono px-1.5 py-0.2 rounded font-semibold"
+                  className="font-mono px-1.5 py-0.2 rounded-sm font-semibold"
                   style={{
                     fontSize: 8,
                     background: 'hsl(var(--accent-green) / 0.15)',
@@ -615,7 +615,7 @@ export function CentralWatchDial({
                     </span>
                     {crit.required && (
                       <span
-                        className="px-1 rounded font-mono shrink-0"
+                        className="px-1 rounded-sm font-mono shrink-0"
                         style={{
                           fontSize: 8,
                           background: 'hsl(var(--accent-red) / 0.15)',
@@ -635,7 +635,7 @@ export function CentralWatchDial({
           {(activeTab === 'overview' || activeTab === 'stream') && (
             <div
               ref={card4Ref}
-              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
+              className="rounded-xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
               style={{
                 transform: `scale(${cardScales[3]})`,
                 opacity: cardOpacities[3],
@@ -650,7 +650,7 @@ export function CentralWatchDial({
                   <span className="font-semibold text-xs">指挥官协同与认知流回响</span>
                 </div>
                 <span
-                  className="font-mono px-1.5 py-0.2 rounded font-semibold"
+                  className="font-mono px-1.5 py-0.2 rounded-sm font-semibold"
                   style={{
                     fontSize: 8,
                     background: isDark ? 'hsl(var(--accent-purple) / 0.2)' : 'hsl(var(--accent-purple) / 0.12)',

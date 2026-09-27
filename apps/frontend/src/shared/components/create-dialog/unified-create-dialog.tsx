@@ -1471,7 +1471,7 @@ export function UnifiedCreateDialog({
                     <span>{t(`unifiedCreate.title.${activeType}`)}</span>
                     <kbd
                       aria-hidden="true"
-                      className="inline-flex items-center px-1 py-0.5 rounded bg-primary-foreground/20 text-3xs font-mono opacity-80 ml-0.5"
+                      className="inline-flex items-center px-1 py-0.5 rounded-sm bg-primary-foreground/20 text-3xs font-mono opacity-80 ml-0.5"
                     >
                       Ctrl ↵
                     </kbd>

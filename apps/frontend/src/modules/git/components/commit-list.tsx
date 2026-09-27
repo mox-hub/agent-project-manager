@@ -67,7 +67,7 @@ function CommitRow({ commit }: { commit: Commit }) {
       <div className="flex shrink-0 items-center gap-2 text-xs">
         {additions > 0 && <span className="text-accent-green">+{additions}</span>}
         {deletions > 0 && <span className="text-accent-red">-{deletions}</span>}
-        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
+        <code className="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
           {commit.hash.slice(0, 7)}
         </code>
       </div>

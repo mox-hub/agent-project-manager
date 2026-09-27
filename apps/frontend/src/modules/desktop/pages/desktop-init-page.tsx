@@ -37,7 +37,7 @@ export function DesktopInitPage() {
     <div className="flex h-screen items-center justify-center bg-background">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-8 shadow-xs">
         <div className="mb-6 text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10">
             <svg
               className="h-8 w-8 text-primary"
               fill="none"

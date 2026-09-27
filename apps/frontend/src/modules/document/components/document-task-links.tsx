@@ -64,7 +64,7 @@ const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
         <div className="relative">
           <button
             type="button"
-            className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-accent-foreground group-hover:opacity-100"
+            className="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-accent-foreground group-hover:opacity-100"
             onClick={() => setShowMenu(!showMenu)}
           >
             <Icons.MoreHorizontal size={16} />

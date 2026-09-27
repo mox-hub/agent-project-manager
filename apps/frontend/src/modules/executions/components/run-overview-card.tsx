@@ -133,7 +133,7 @@ export function RunOverviewCard({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         keepDefaultWidth={false}
-        className="overflow-hidden rounded-2xl p-0"
+        className="overflow-hidden rounded-xl p-0"
       >
         {/* 状态色条 */}
         <div className={cn('h-1 w-full', STATUS_STRIP_CLASS[run.status] ?? 'bg-muted-foreground/40')} />

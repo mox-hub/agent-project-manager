@@ -172,7 +172,7 @@ export function InboxItemRow({
         {item.actionTag && (
           <span
             className={cn(
-              'shrink-0 rounded border px-1.5 py-0.5 text-3xs font-semibold leading-none shadow-xs',
+              'shrink-0 rounded-sm border px-1.5 py-0.5 text-3xs font-semibold leading-none shadow-xs',
               getActionTagClass(item.actionTag.tone),
             )}
           >

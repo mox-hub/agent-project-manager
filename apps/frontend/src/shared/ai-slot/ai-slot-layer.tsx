@@ -212,7 +212,7 @@ function AISlotAnswerCard({
           {insight?.title ? (
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={() => {
                 openAssistantWithDraft(
                   t('aiSlot.askDraft', { title: insight.title ?? '' }),
@@ -226,7 +226,7 @@ function AISlotAnswerCard({
           ) : null}
           <button
             type="button"
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
             title={t('aiSlot.close')}
             onClick={onClose}
           >
@@ -241,7 +241,7 @@ function AISlotAnswerCard({
             <p className="text-sm text-destructive">{t('aiSlot.error')}</p>
             <button
               type="button"
-              className="rounded border px-2 py-1 text-xs hover:bg-muted"
+              className="rounded-md border px-2 py-1 text-xs hover:bg-muted"
               onClick={() => explainCard({ kind, id })}
             >
               {t('aiSlot.retry')}
@@ -257,10 +257,10 @@ function AISlotAnswerCard({
 function AnswerSkeleton() {
   return (
     <div className="space-y-2 py-1" aria-hidden>
-      <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
-      <div className="h-3 w-full animate-pulse rounded bg-muted" />
-      <div className="h-3 w-5/6 animate-pulse rounded bg-muted" />
-      <div className="h-3 w-4/6 animate-pulse rounded bg-muted" />
+      <div className="h-4 w-1/2 animate-pulse rounded-sm bg-muted" />
+      <div className="h-3 w-full animate-pulse rounded-sm bg-muted" />
+      <div className="h-3 w-5/6 animate-pulse rounded-sm bg-muted" />
+      <div className="h-3 w-4/6 animate-pulse rounded-sm bg-muted" />
     </div>
   );
 }
