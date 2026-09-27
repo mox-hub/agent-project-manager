@@ -70,11 +70,9 @@ export function PageErrorFallback({ className }: PageErrorFallbackProps) {
               <RefreshCwIcon className="size-3 mr-1" />
               重试
             </Button>
-            <Button size="xs" variant="ghost" asChild>
-              <Link to="/app">
-                <HomeIcon className="size-3 mr-1" />
-                首页
-              </Link>
+            <Button size="xs" variant="ghost" render={<Link to="/app" />}>
+              <HomeIcon className="size-3 mr-1" />
+              首页
             </Button>
           </div>
         </AlertDescription>

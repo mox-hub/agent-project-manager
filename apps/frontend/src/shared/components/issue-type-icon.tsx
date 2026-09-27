@@ -87,6 +87,7 @@ function IssueTypeIconInner({
   const Icon = issueTypeIcon(meta?.icon);
   return createElement(Icon, {
     className: cn('size-3.5 shrink-0', className),
-    style: { color: meta?.color ?? '#5E6AD2' },
+    // 无类型色时的兜底：语义 accent token（原为内联品牌 hex 字面量，批 6b C3）
+    style: { color: meta?.color ?? 'hsl(var(--accent-blue))' },
   });
 }

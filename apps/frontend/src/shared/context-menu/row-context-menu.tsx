@@ -82,12 +82,13 @@ export const PRIORITY_CONFIG: Record<TaskPriority, { label: string; Icon: Elemen
   low: { label: 'Low', ...fromVisual(PRIORITY_VISUALS.low) },
 };
 
-/** 严重度用标准色标签渲染（无需图标组件） */
+/** 严重度用标准色标签渲染（无需图标组件）；色值一律走语义 accent token（§5.1），
+ *  与同文件的 `fromVisual`/TONE_TEXT_CLASS 口径一致（danger→red / warning→yellow / default→muted）。 */
 export const SEVERITY_CONFIG: Record<BugSeverity, { label: string; color: string }> = {
-  critical: { label: 'Critical', color: '#EF4444' },
-  high: { label: 'High', color: '#F97316' },
-  medium: { label: 'Medium', color: '#F59E0B' },
-  low: { label: 'Low', color: '#94A3B8' },
+  critical: { label: 'Critical', color: 'hsl(var(--accent-red))' },
+  high: { label: 'High', color: 'hsl(var(--accent-orange))' },
+  medium: { label: 'Medium', color: 'hsl(var(--accent-yellow))' },
+  low: { label: 'Low', color: 'hsl(var(--muted-foreground))' },
 };
 
 export interface AssigneeMenuOption {
@@ -137,7 +138,19 @@ function trail(cond: boolean): React.ReactNode {
   return cond ? <Check className="h-4 w-4 text-muted-foreground" /> : undefined;
 }
 
-const ASSIGNEE_PALETTE = ['#6366F1', '#F59E0B', '#EF4444', '#10B981', '#8B5CF6', '#06B6D4'];
+// 负责人头像色板：语义 accent token（§5.1/§5.3「分类」用例），与
+// modules/issue/components/task-rows.tsx 的 AVATAR_PALETTE 同法（读 CSS 变量而非字面量）
+const ASSIGNEE_PALETTE = [
+  'hsl(var(--accent-blue))',
+  'hsl(var(--accent-orange))',
+  'hsl(var(--accent-red))',
+  'hsl(var(--accent-green))',
+  'hsl(var(--accent-purple))',
+  'hsl(var(--accent-yellow))',
+];
+
+/** 无 handle / 无颜色的兜底灰（对应 muted-foreground token） */
+const FALLBACK_COLOR = 'hsl(var(--muted-foreground))';
 
 function assigneeColor(handle: string): string {
   let h = 0;
@@ -151,8 +164,8 @@ function AssignMenuAvatar({ name, handle }: { name?: string; handle?: string }) 
   const initial = (name || '').trim().charAt(0).toUpperCase() || '?';
   return (
     <span
-      className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-3xs font-semibold text-white"
-      style={{ backgroundColor: key ? assigneeColor(key) : '#94A3B8' }}
+      className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-3xs font-semibold text-background"
+      style={{ backgroundColor: key ? assigneeColor(key) : FALLBACK_COLOR }}
     >
       {initial}
     </span>
@@ -271,7 +284,7 @@ export function buildTaskRowMenu(opts: TaskRowMenuOptions): MenuItem[] {
         id: `tag-${tg.id}`,
         label: tg.name,
         searchText: tg.name,
-        icon: <span className="inline-block size-3 shrink-0 rounded-sm ring-1 ring-border/40" style={{ backgroundColor: tg.color || '#94A3B8' }} />,
+        icon: <span className="inline-block size-3 shrink-0 rounded-sm ring-1 ring-border/40" style={{ backgroundColor: tg.color || FALLBACK_COLOR }} />,
         trailing: trail(active),
         onClick: () => {
           const next = new Set(currentTagIds);

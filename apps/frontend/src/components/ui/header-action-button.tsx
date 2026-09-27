@@ -18,7 +18,7 @@ const headerActionButtonVariants = {
   ghost:
     "text-muted-foreground hover:bg-muted hover:text-foreground",
   danger:
-    "bg-destructive text-white hover:bg-destructive/90",
+    "bg-destructive text-destructive-foreground hover:bg-destructive/90",
 } as const;
 
 export interface HeaderActionButtonProps

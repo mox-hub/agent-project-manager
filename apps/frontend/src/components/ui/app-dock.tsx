@@ -46,37 +46,39 @@ export const AppDockItem = React.forwardRef<HTMLButtonElement, AppDockItemProps>
   ({ className, label, badge, badgeTone = 'destructive', active, children, ...props }, ref) => {
     return (
       <Tooltip>
-        <TooltipTrigger asChild>
-          <motion.button
-            ref={ref}
-            type="button"
-            whileHover={{ scale: 1.12, y: -2 }}
-            whileTap={{ scale: 0.92, y: 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className={cn(
-              'relative flex size-9 shrink-0 items-center justify-center rounded-full',
-              'text-muted-foreground hover:text-foreground transition-colors',
-              'hover:bg-accent/70 active:bg-accent',
-              active && 'bg-accent text-foreground shadow-xs',
-              className,
-            )}
-            {...props}
-          >
-            {children}
-            {badge !== undefined && badge !== null && (
-              <span
-                className={cn(
-                  'absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-3xs font-semibold tabular-nums ring-2 ring-popover',
-                  badgeTone === 'destructive' && 'bg-destructive text-destructive-foreground',
-                  badgeTone === 'primary' && 'bg-primary text-primary-foreground',
-                  badgeTone === 'warning' && 'bg-accent-yellow text-foreground',
-                )}
-              >
-                {badge}
-              </span>
-            )}
-          </motion.button>
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <motion.button
+              ref={ref}
+              type="button"
+              whileHover={{ scale: 1.12, y: -2 }}
+              whileTap={{ scale: 0.92, y: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className={cn(
+                'relative flex size-9 shrink-0 items-center justify-center rounded-full',
+                'text-muted-foreground hover:text-foreground transition-colors',
+                'hover:bg-accent/70 active:bg-accent',
+                active && 'bg-accent text-foreground shadow-xs',
+                className,
+              )}
+              {...props}
+            >
+              {children}
+              {badge !== undefined && badge !== null && (
+                <span
+                  className={cn(
+                    'absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-3xs font-semibold tabular-nums ring-2 ring-popover',
+                    badgeTone === 'destructive' && 'bg-destructive text-destructive-foreground',
+                    badgeTone === 'primary' && 'bg-primary text-primary-foreground',
+                    badgeTone === 'warning' && 'bg-accent-yellow text-foreground',
+                  )}
+                >
+                  {badge}
+                </span>
+              )}
+            </motion.button>
+          }
+        />
         <TooltipContent side="top" sideOffset={8}>
           {label}
         </TooltipContent>

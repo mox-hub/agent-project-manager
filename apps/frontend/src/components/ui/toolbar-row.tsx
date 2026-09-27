@@ -454,7 +454,7 @@ function ToolbarMenuButton({
         {...buttonProps}
       />
       {menu.badge && menu.badge > 0 ? (
-        <span className="pointer-events-none absolute -top-1 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-xs font-medium leading-none text-white">
+        <span className="pointer-events-none absolute -top-1 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-xs font-medium leading-none text-destructive-foreground">
           {menu.badge > 99 ? "99+" : menu.badge}
         </span>
       ) : null}

@@ -1,4 +1,3 @@
-import * as React from "react"
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 
 import { cn } from "@/lib/utils"
@@ -31,21 +30,13 @@ function Tooltip({
   )
 }
 
-// 兼容层：保留 asChild 用法（等价于官方 render={<Child/>}）
+// 组合方式：唯一走 base-ui 原生 `render` prop（宪法 §10.7）。
+// Radix 遗产 `asChild` 已于批 6b 移除（base-ui 不认该 prop，会透传到 DOM
+// 并另渲染一个自带 <button>，产生非法嵌套结构）。
 function TooltipTrigger({
-  asChild,
   children,
   ...props
-}: TooltipPrimitive.Trigger.Props & { asChild?: boolean }) {
-  if (asChild && React.isValidElement(children)) {
-    return (
-      <TooltipPrimitive.Trigger
-        data-slot="tooltip-trigger"
-        render={children}
-        {...props}
-      />
-    )
-  }
+}: TooltipPrimitive.Trigger.Props) {
   return (
     <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props}>
       {children}

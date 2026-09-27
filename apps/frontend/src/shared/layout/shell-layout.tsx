@@ -203,7 +203,7 @@ export function ShellLayout() {
             to: '/app/ai-surface',
             icon: Sparkles,
             label: t('nav.aiSurface'),
-            color: '#A855F7',
+            color: 'hsl(var(--accent-purple))',
             capsule: 'exp',
           },
           { to: '/app/analytics', icon: BarChart3, label: t('nav.analytics') },
@@ -415,41 +415,47 @@ export function ShellLayout() {
                 {!sidebarCollapsed && (
                   <div className="shrink-0 flex items-center gap-1">
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={() => window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))}
-                          className="relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                          aria-label={t('nav.search')}
-                        >
-                          <Search className="size-4" />
-                        </button>
-                      </TooltipTrigger>
+                      <TooltipTrigger
+                        render={
+                          <button
+                            type="button"
+                            onClick={() =>
+                              window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))
+                            }
+                            className="relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                            aria-label={t('nav.search')}
+                          >
+                            <Search className="size-4" />
+                          </button>
+                        }
+                      />
                       <TooltipContent side="bottom">
                         {t('nav.search')}
                       </TooltipContent>
                     </Tooltip>
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <NavLink
-                          to="/app/notifications"
-                          className={({ isActive }) =>
-                            cn(
-                              'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
-                              isActive && 'bg-sidebar-accent text-sidebar-foreground',
-                            )
-                          }
-                          aria-label={t('nav.notifications')}
-                        >
-                          <Bell className="size-4" />
-                          {unreadCount > 0 && (
-                            <span
-                              className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive ring-2 ring-sidebar"
-                              aria-hidden="true"
-                            />
-                          )}
-                        </NavLink>
-                      </TooltipTrigger>
+                      <TooltipTrigger
+                        render={
+                          <NavLink
+                            to="/app/notifications"
+                            className={({ isActive }) =>
+                              cn(
+                                'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                                isActive && 'bg-sidebar-accent text-sidebar-foreground',
+                              )
+                            }
+                            aria-label={t('nav.notifications')}
+                          >
+                            <Bell className="size-4" />
+                            {unreadCount > 0 && (
+                              <span
+                                className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive ring-2 ring-sidebar"
+                                aria-hidden="true"
+                              />
+                            )}
+                          </NavLink>
+                        }
+                      />
                       <TooltipContent side="bottom">
                         {t('nav.notifications')}
                       </TooltipContent>
@@ -538,8 +544,8 @@ export function ShellLayout() {
                               : label;
 
                             // NavLink 同时被两条路径消费：收藏项由 RoutePreviewTrigger 克隆
-                            // （base-ui render模式，事件/className/ref 组合合入 DOM），
-                            // 其余项由 Tooltip asChild 克隆——这里只负责产出元素
+                            // （base-ui render 模式，事件/className/ref 组合合入 DOM），
+                            // 其余项由 TooltipTrigger 的 render 消费——这里只负责产出元素
                             const renderLink = () => {
                               const active = isNavActive(to);
                               return (
@@ -637,7 +643,7 @@ export function ShellLayout() {
 
                             return (
                               <Tooltip key={navKey}>
-                                <TooltipTrigger asChild>{renderLink()}</TooltipTrigger>
+                                <TooltipTrigger render={renderLink()} />
                                 {sidebarCollapsed && (
                                   <TooltipContent side="right">{tooltipText}</TooltipContent>
                                 )}
@@ -656,56 +662,64 @@ export function ShellLayout() {
               {sidebarCollapsed && (
                 <div className="shrink-0 flex flex-col items-center gap-1.5 px-0 py-2">
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={() => window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))}
-                        className="relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                        aria-label={t('nav.search')}
-                      >
-                        <Search className="size-4" />
-                      </button>
-                    </TooltipTrigger>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          onClick={() =>
+                            window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))
+                          }
+                          className="relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                          aria-label={t('nav.search')}
+                        >
+                          <Search className="size-4" />
+                        </button>
+                      }
+                    />
                     <TooltipContent side="right">
                       {t('nav.search')}
                     </TooltipContent>
                   </Tooltip>
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <NavLink
-                        to="/app/notifications"
-                        className={({ isActive }) =>
-                          cn(
-                            'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
-                            isActive && 'bg-sidebar-accent text-sidebar-foreground',
-                          )
-                        }
-                        aria-label={t('nav.notifications')}
-                      >
-                        <Bell className="size-4" />
-                        {unreadCount > 0 && (
-                          <span
-                            className="absolute right-1 top-1 size-2 rounded-full bg-destructive ring-2 ring-sidebar"
-                            aria-hidden="true"
-                          />
-                        )}
-                      </NavLink>
-                    </TooltipTrigger>
+                    <TooltipTrigger
+                      render={
+                        <NavLink
+                          to="/app/notifications"
+                          className={({ isActive }) =>
+                            cn(
+                              'relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                              isActive && 'bg-sidebar-accent text-sidebar-foreground',
+                            )
+                          }
+                          aria-label={t('nav.notifications')}
+                        >
+                          <Bell className="size-4" />
+                          {unreadCount > 0 && (
+                            <span
+                              className="absolute right-1 top-1 size-2 rounded-full bg-destructive ring-2 ring-sidebar"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </NavLink>
+                      }
+                    />
                     <TooltipContent side="right">
                       {t('nav.notifications')}
                     </TooltipContent>
                   </Tooltip>
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={toggleSidebar}
-                        className="flex items-center justify-center size-10 rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground transition-colors"
-                        aria-label={t('shell.expandSidebar')}
-                      >
-                        <PanelLeftOpen className="size-4.5 shrink-0" />
-                      </button>
-                    </TooltipTrigger>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          onClick={toggleSidebar}
+                          className="flex items-center justify-center size-10 rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground transition-colors"
+                          aria-label={t('shell.expandSidebar')}
+                        >
+                          <PanelLeftOpen className="size-4.5 shrink-0" />
+                        </button>
+                      }
+                    />
                     <TooltipContent side="right">
                       {t('shell.expandSidebar')}
                     </TooltipContent>

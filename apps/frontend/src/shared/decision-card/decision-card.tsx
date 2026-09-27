@@ -668,7 +668,7 @@ function ClarifyBody({
                     selected === key ? 'border-accent-purple bg-accent-purple' : 'border-border',
                   )}
                 >
-                  {selected === key ? <span className="size-1.5 rounded-full bg-white" /> : null}
+                  {selected === key ? <span className="size-1.5 rounded-full bg-background" /> : null}
                 </span>
                 <span className="font-semibold text-content-text">{c.label}</span>
                 {c.guess ? (

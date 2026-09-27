@@ -68,11 +68,9 @@ export class ErrorBoundary extends Component<Props, State> {
                   <RefreshCwIcon className="size-3.5 mr-1.5" />
                   刷新页面
                 </Button>
-                <Button size="sm" variant="outline" asChild>
-                  <Link to="/app">
-                    <HomeIcon className="size-3.5 mr-1.5" />
-                    返回首页
-                  </Link>
+                <Button size="sm" variant="outline" render={<Link to="/app" />}>
+                  <HomeIcon className="size-3.5 mr-1.5" />
+                  返回首页
                 </Button>
               </div>
             </AlertDescription>

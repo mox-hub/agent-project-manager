@@ -342,7 +342,7 @@ export function GanttChart({
                     }}
                     onPointerDown={(event) => startDrag(event, item, 'move')}
                     className={cn(
-                      'absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded-md px-2 text-xs text-white shadow-xs transition-all',
+                      'absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded-md px-2 text-xs text-background shadow-xs transition-all',
                       isAi ? 'bg-accent-purple ring-1 ring-accent-purple/40 animate-pulse' : getBarColorClass(item),
                       readonly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
                     )}
@@ -355,7 +355,9 @@ export function GanttChart({
                         onPointerDown={(event) => startDrag(event, item, 'resize-start')}
                       />
                     ) : null}
-                    {isAi ? <Bot className="mr-1 size-3 shrink-0 animate-pulse text-white" /> : null}
+                    {isAi ? (
+                      <Bot className="mr-1 size-3 shrink-0 animate-pulse text-background" />
+                    ) : null}
                     <span className="truncate">{item.title}</span>
                     {!readonly ? (
                       <div

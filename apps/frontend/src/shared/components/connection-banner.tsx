@@ -28,7 +28,7 @@ export function ConnectionBanner() {
   if (!offline) return null;
   return (
     <div
-      className="fixed inset-x-0 top-0 z-banner flex h-7 items-center justify-center gap-2 bg-accent-orange text-xs font-medium text-white"
+      className="fixed inset-x-0 top-0 z-banner flex h-7 items-center justify-center gap-2 bg-accent-orange text-xs font-medium text-background"
       data-ai-component="shell.connection-banner"
       data-ai-role="status"
     >

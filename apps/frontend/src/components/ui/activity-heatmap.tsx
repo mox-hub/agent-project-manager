@@ -108,11 +108,16 @@ export function ActivityHeatmap({
                     <div key={cell.date} className="size-3 rounded-xs bg-transparent" />
                   ) : (
                     <Tooltip key={cell.date}>
-                      <TooltipTrigger asChild>
-                        <div
-                          className={cn('size-3 rounded-xs', LEVEL_CLASS[levelOf(cell.count, max)])}
-                        />
-                      </TooltipTrigger>
+                      <TooltipTrigger
+                        render={
+                          <div
+                            className={cn(
+                              'size-3 rounded-xs',
+                              LEVEL_CLASS[levelOf(cell.count, max)],
+                            )}
+                          />
+                        }
+                      />
                       <TooltipContent side="top" className="text-xs">
                         <p className="font-medium">{cell.date}</p>
                         <p className="text-muted-foreground">

@@ -37,7 +37,8 @@ export interface PageRegistryEntry {
   labelKey?: string;
   /** 无 i18n key 的静态名称（如 DEV 页面） */
   label?: string;
-  /** 收藏栏展示的强调色（hex），用于图标/背景色点缀 */
+  /** 收藏栏展示的强调色：语义 token 引用（`hsl(var(--accent-*))`），用于图标点缀。
+   *  批量清剿前是内联 hex（批 6b C3 P0，43 处 → accent-* token）。 */
   color?: string;
 }
 
@@ -49,53 +50,53 @@ export interface PageRegistryEntry {
  * 实体，保留 HardDrive。
  */
 export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
-  "/app/intake": { icon: getEntityIcon("document").icon, labelKey: "nav.intake", label: "需求承接", color: "#06B6D4" },
-  "/app/ai-surface": { icon: Sparkles, labelKey: "nav.aiSurface", color: "#8B5CF6" },
-  "/app/search": { icon: Search, labelKey: "nav.search", color: "#6366F1" },
-  "/app/notifications": { icon: Bell, labelKey: "nav.notifications", color: "#F59E0B" },
-  "/app/projects/dashboard": { icon: LayoutDashboard, labelKey: "nav.dashboard", color: "#10B981" },
-  "/app/projects": { icon: getEntityIcon("project").icon, labelKey: "nav.projects", color: "#8B5CF6" },
-  "/app/issues": { icon: getEntityIcon("issue").icon, labelKey: "nav.tasks", color: "#3B82F6" },
-  "/app/bugs": { icon: getEntityIcon("bug").icon, labelKey: "task.bug.title", color: "#EF4444" },
-  "/app/executions": { icon: getEntityIcon("execution").icon, labelKey: "nav.executions", label: "执行记录", color: "#3B82F6" },
-  "/app/workflows": { icon: getEntityIcon("workflow").icon, labelKey: "nav.workflow", color: "#8B5CF6" },
-  "/app/acceptance": { icon: getEntityIcon("acceptance").icon, labelKey: "nav.acceptance", color: "#10B981" },
-  "/app/documents": { icon: getEntityIcon("document").icon, labelKey: "document.title", color: "#06B6D4" },
-  "/app/analytics": { icon: BarChart3, labelKey: "nav.analytics", color: "#8B5CF6" },
-  "/app/repositories": { icon: getEntityIcon("repository").icon, labelKey: "git.title", color: "#EF4444" },
-  "/app/office": { icon: DoorOpen, labelKey: "nav.office", color: "#8B5CF6" },
-  "/app/members": { icon: getEntityIcon("member").icon, labelKey: "nav.members", color: "#F59E0B" },
-  "/app/teams": { icon: getEntityIcon("team").icon, labelKey: "nav.teams", color: "#10B981" },
-  "/app/settings": { icon: Settings, labelKey: "nav.settings", color: "#94A3B8" },
-  "/app/settings/profile": { icon: UserRound, labelKey: "settings.profile", color: "#3B82F6" },
+  "/app/intake": { icon: getEntityIcon("document").icon, labelKey: "nav.intake", label: "需求承接", color: "hsl(var(--accent-blue))" },
+  "/app/ai-surface": { icon: Sparkles, labelKey: "nav.aiSurface", color: "hsl(var(--accent-purple))" },
+  "/app/search": { icon: Search, labelKey: "nav.search", color: "hsl(var(--accent-blue))" },
+  "/app/notifications": { icon: Bell, labelKey: "nav.notifications", color: "hsl(var(--accent-yellow))" },
+  "/app/projects/dashboard": { icon: LayoutDashboard, labelKey: "nav.dashboard", color: "hsl(var(--accent-green))" },
+  "/app/projects": { icon: getEntityIcon("project").icon, labelKey: "nav.projects", color: "hsl(var(--accent-purple))" },
+  "/app/issues": { icon: getEntityIcon("issue").icon, labelKey: "nav.tasks", color: "hsl(var(--accent-blue))" },
+  "/app/bugs": { icon: getEntityIcon("bug").icon, labelKey: "task.bug.title", color: "hsl(var(--accent-red))" },
+  "/app/executions": { icon: getEntityIcon("execution").icon, labelKey: "nav.executions", label: "执行记录", color: "hsl(var(--accent-blue))" },
+  "/app/workflows": { icon: getEntityIcon("workflow").icon, labelKey: "nav.workflow", color: "hsl(var(--accent-purple))" },
+  "/app/acceptance": { icon: getEntityIcon("acceptance").icon, labelKey: "nav.acceptance", color: "hsl(var(--accent-green))" },
+  "/app/documents": { icon: getEntityIcon("document").icon, labelKey: "document.title", color: "hsl(var(--accent-blue))" },
+  "/app/analytics": { icon: BarChart3, labelKey: "nav.analytics", color: "hsl(var(--accent-purple))" },
+  "/app/repositories": { icon: getEntityIcon("repository").icon, labelKey: "git.title", color: "hsl(var(--accent-red))" },
+  "/app/office": { icon: DoorOpen, labelKey: "nav.office", color: "hsl(var(--accent-purple))" },
+  "/app/members": { icon: getEntityIcon("member").icon, labelKey: "nav.members", color: "hsl(var(--accent-yellow))" },
+  "/app/teams": { icon: getEntityIcon("team").icon, labelKey: "nav.teams", color: "hsl(var(--accent-green))" },
+  "/app/settings": { icon: Settings, labelKey: "nav.settings", color: "hsl(var(--muted-foreground))" },
+  "/app/settings/profile": { icon: UserRound, labelKey: "settings.profile", color: "hsl(var(--accent-blue))" },
   // 设置子路由（AI / 集成迁入设置页后的新路径，供收藏分区解析）
-  "/app/settings/ai": { icon: Brain, labelKey: "settings.aiManagement", color: "#F59E0B" },
-  "/app/settings/ai/executions": { icon: getEntityIcon("execution").icon, labelKey: "settings.aiExecutions", color: "#3B82F6" },
-  "/app/settings/integrations": { icon: Plug, labelKey: "settings.integrations", color: "#06B6D4" },
+  "/app/settings/ai": { icon: Brain, labelKey: "settings.aiManagement", color: "hsl(var(--accent-yellow))" },
+  "/app/settings/ai/executions": { icon: getEntityIcon("execution").icon, labelKey: "settings.aiExecutions", color: "hsl(var(--accent-blue))" },
+  "/app/settings/integrations": { icon: Plug, labelKey: "settings.integrations", color: "hsl(var(--accent-blue))" },
   // 设置其余子页（均有 PageHeader 可收藏，此前未登记会退化为 Star 兜底）
-  "/app/settings/appearance": { icon: Palette, labelKey: "settings.appearance", color: "#8B5CF6" },
-  "/app/settings/git": { icon: GitBranch, labelKey: "settings.git", color: "#EF4444" },
-  "/app/settings/terminal": { icon: TerminalSquare, labelKey: "settings.terminal", color: "#10B981" },
-  "/app/settings/labels": { icon: Tag, labelKey: "settings.labels", color: "#06B6D4" },
-  "/app/settings/statuses": { icon: ListChecks, labelKey: "settings.statuses", color: "#3B82F6" },
-  "/app/settings/issue-types": { icon: Shapes, labelKey: "settings.issueTypes", color: "#0EA5E9" },
-  "/app/settings/checklists": { icon: ClipboardCheck, labelKey: "settings.checklists", color: "#0EA5E9" },
+  "/app/settings/appearance": { icon: Palette, labelKey: "settings.appearance", color: "hsl(var(--accent-purple))" },
+  "/app/settings/git": { icon: GitBranch, labelKey: "settings.git", color: "hsl(var(--accent-red))" },
+  "/app/settings/terminal": { icon: TerminalSquare, labelKey: "settings.terminal", color: "hsl(var(--accent-green))" },
+  "/app/settings/labels": { icon: Tag, labelKey: "settings.labels", color: "hsl(var(--accent-blue))" },
+  "/app/settings/statuses": { icon: ListChecks, labelKey: "settings.statuses", color: "hsl(var(--accent-blue))" },
+  "/app/settings/issue-types": { icon: Shapes, labelKey: "settings.issueTypes", color: "hsl(var(--accent-blue))" },
+  "/app/settings/checklists": { icon: ClipboardCheck, labelKey: "settings.checklists", color: "hsl(var(--accent-blue))" },
   // 权限管理域非验收实体：ShieldCheck 三方重叠裁决改用 UserCog（规范 v0）
-  "/app/settings/roles": { icon: UserCog, labelKey: "settings.roles", color: "#F59E0B" },
-  "/app/settings/templates": { icon: LayoutTemplate, labelKey: "settings.templates", color: "#8B5CF6" },
-  "/app/settings/short-id": { icon: Hash, labelKey: "settings.shortId", color: "#94A3B8" },
-  "/app/settings/storage": { icon: HardDrive, labelKey: "settings.storage", color: "#6366F1" },
-  "/app/settings/shortcuts": { icon: Keyboard, labelKey: "settings.shortcuts", color: "#6366F1" },
-  "/app/settings/memory": { icon: Brain, labelKey: "settings.memory", color: "#F59E0B" },
-  "/app/settings/runtime": { icon: Server, labelKey: "settings.runtime", color: "#10B981" },
-  "/app/settings/tokens": { icon: KeyRound, labelKey: "settings.tokens", color: "#EF4444" },
-  "/app/help": { icon: HelpCircle, labelKey: "nav.help", color: "#06B6D4" },
+  "/app/settings/roles": { icon: UserCog, labelKey: "settings.roles", color: "hsl(var(--accent-yellow))" },
+  "/app/settings/templates": { icon: LayoutTemplate, labelKey: "settings.templates", color: "hsl(var(--accent-purple))" },
+  "/app/settings/short-id": { icon: Hash, labelKey: "settings.shortId", color: "hsl(var(--muted-foreground))" },
+  "/app/settings/storage": { icon: HardDrive, labelKey: "settings.storage", color: "hsl(var(--accent-blue))" },
+  "/app/settings/shortcuts": { icon: Keyboard, labelKey: "settings.shortcuts", color: "hsl(var(--accent-blue))" },
+  "/app/settings/memory": { icon: Brain, labelKey: "settings.memory", color: "hsl(var(--accent-yellow))" },
+  "/app/settings/runtime": { icon: Server, labelKey: "settings.runtime", color: "hsl(var(--accent-green))" },
+  "/app/settings/tokens": { icon: KeyRound, labelKey: "settings.tokens", color: "hsl(var(--accent-red))" },
+  "/app/help": { icon: HelpCircle, labelKey: "nav.help", color: "hsl(var(--accent-blue))" },
   // admin 域导航同上：UserCog（非验收实体）
-  "/app/admin": { icon: UserCog, labelKey: "nav.admin", color: "#EF4444" },
-  "/app/design-system": { icon: Palette, label: "Design System", color: "#8B5CF6" },
-  "/app/delivery": { icon: ListTree, labelKey: "nav.delivery", label: "交付视图", color: "#10B981" },
-  "/app/releases": { icon: Rocket, labelKey: "nav.releases", label: "发版交付", color: "#22C55E" },
-  "/app/releases/:id": { icon: Rocket, labelKey: "nav.releases", label: "发版详情", color: "#22C55E" },
+  "/app/admin": { icon: UserCog, labelKey: "nav.admin", color: "hsl(var(--accent-red))" },
+  "/app/design-system": { icon: Palette, label: "Design System", color: "hsl(var(--accent-purple))" },
+  "/app/delivery": { icon: ListTree, labelKey: "nav.delivery", label: "交付视图", color: "hsl(var(--accent-green))" },
+  "/app/releases": { icon: Rocket, labelKey: "nav.releases", label: "发版交付", color: "hsl(var(--accent-green))" },
+  "/app/releases/:id": { icon: Rocket, labelKey: "nav.releases", label: "发版详情", color: "hsl(var(--accent-green))" },
 };
 
 /** 收藏页面未命中注册表时的兜底图标 */

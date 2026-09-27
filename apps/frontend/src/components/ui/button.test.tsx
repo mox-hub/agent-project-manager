@@ -11,7 +11,7 @@ import { Spinner } from './spinner';
  * 范围声明：
  * - 断言到「语义 / 交互 / 可访问名」为止，**不断言 className**（§18.2）——
  *   8 个 variant × 8 个 size 的样式差异交人工评审/视觉回归；
- * - **不测 `asChild`**：批 6 正按 §10.7 把它迁到 `render`，这里只对
+ * - **不测 Radix 的 `asChild`**：批 6b 已按 §10.7 把它从 Button 移除，这里只对
  *   `render` API 立契约（组合方式的唯一真相是 `render`）；
  * - 「焦点可见」在 jsdom 无法验算 ring（§8.5 #5 属 CSS），改验「可聚焦且
  *   `document.activeElement` 正确落到按钮上」这一可机器观测的下限。

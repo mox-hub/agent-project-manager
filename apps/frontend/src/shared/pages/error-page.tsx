@@ -93,11 +93,9 @@ export function ErrorPage({ className }: ErrorPageProps) {
             <ArrowLeftIcon className="size-3.5 mr-1.5" />
             {t("error.actions.goBack")}
           </Button>
-          <Button size="sm" asChild>
-            <Link to="/app">
-              <HomeIcon className="size-3.5 mr-1.5" />
-              {t("error.actions.goHome")}
-            </Link>
+          <Button size="sm" render={<Link to="/app" />}>
+            <HomeIcon className="size-3.5 mr-1.5" />
+            {t("error.actions.goHome")}
           </Button>
           <Button
             size="sm"

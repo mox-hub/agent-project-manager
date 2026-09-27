@@ -146,14 +146,16 @@ export function HeartbeatMonitor({
           ))}
           {samples.map((sample) => (
             <Tooltip key={sample.at} delayDuration={120}>
-              <TooltipTrigger asChild>
-                <span
-                  className={cn(
-                    'h-7 w-1 shrink-0 cursor-default rounded-full motion-shift hover:scale-y-125',
-                    sample.up ? 'bg-accent-green' : 'bg-accent-red',
-                  )}
-                />
-              </TooltipTrigger>
+              <TooltipTrigger
+                render={
+                  <span
+                    className={cn(
+                      'h-7 w-1 shrink-0 cursor-default rounded-full motion-shift hover:scale-y-125',
+                      sample.up ? 'bg-accent-green' : 'bg-accent-red',
+                    )}
+                  />
+                }
+              />
               <TooltipContent className="w-52">
                 <p
                   className={cn(

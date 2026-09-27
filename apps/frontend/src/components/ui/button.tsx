@@ -1,4 +1,3 @@
-import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -21,7 +20,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         // 项目扩展变体（历史保留）
         primary: "bg-primary text-primary-foreground hover:bg-primary/90",
-        danger: "bg-destructive text-white hover:bg-destructive/90",
+        danger: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
       },
       size: {
         default:
@@ -44,33 +43,17 @@ const buttonVariants = cva(
   }
 )
 
-// 兼容层：保留 asChild 用法（等价于官方 render={<Child/>}，去除 radix Slot 依赖）
-// nativeButton 按子元素类型自动判定：包裹 <a>/<Link> 等非 button 元素时置 false，
-// 避免 base-ui "expected a native <button>" 告警。
+// 组合方式：唯一走 base-ui 原生 `render` prop（宪法 §10.7）。
+// Radix 遗产 `asChild` 已于批 6b 移除（radix 已退场，base-ui 不认该 prop）。
+// 用 `render` 换成 <a>/<Link> 等非 button 元素时，若 base-ui 告警
+// "expected a native <button>"，由调用方显式传 `nativeButton={false}`。
 function Button({
   className,
   variant = "default",
   size = "default",
-  asChild,
   children,
   ...props
-}: ButtonPrimitive.Props &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
-  if (asChild && React.isValidElement(children)) {
-    const isNativeButton =
-      (typeof children.type === "string" && children.type === "button") || children.type === "input"
-    return (
-      <ButtonPrimitive
-        data-slot="button"
-        className={cn(buttonVariants({ variant, size, className }))}
-        render={children}
-        nativeButton={props.nativeButton ?? isNativeButton}
-        {...props}
-      />
-    )
-  }
+}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
       data-slot="button"
