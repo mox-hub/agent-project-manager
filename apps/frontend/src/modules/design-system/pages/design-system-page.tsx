@@ -1342,7 +1342,7 @@ function ProgressRing({ done, total, size = 14 }: { done: number; total: number;
   const r = (size - 2.5) / 2
   const circ = 2 * Math.PI * r
   const ratio = total > 0 ? done / total : 0
-  const stroke = ratio === 1 ? 'var(--accent-green, #10B981)' : ratio > 0 ? 'var(--accent-blue, #3B82F6)' : 'var(--muted-foreground, #94A3B8)'
+  const stroke = ratio === 1 ? 'var(--color-accent-green, #10B981)' : ratio > 0 ? 'var(--color-accent-blue, #3B82F6)' : 'var(--color-muted-foreground, #94A3B8)'
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 -rotate-90">
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground/20" />
@@ -5077,8 +5077,8 @@ export function DesignSystemPage() {
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} />
                       <YAxis tick={{ fontSize: 10 }} />
-                      <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }} />
-                      <Bar dataKey="value" fill="var(--primary)" radius={[3, 3, 0, 0]} />
+                      <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-card)' }} />
+                      <Bar dataKey="value" fill="var(--color-primary)" radius={[3, 3, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -5093,15 +5093,15 @@ export function DesignSystemPage() {
                     <AreaChart data={CHART_DATA} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
                       <defs>
                         <linearGradient id="bugGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--destructive)" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="var(--destructive)" stopOpacity={0} />
+                          <stop offset="5%" stopColor="var(--color-destructive)" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="var(--color-destructive)" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} />
                       <YAxis tick={{ fontSize: 10 }} />
-                      <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }} />
-                      <Area type="monotone" dataKey="bugs" stroke="var(--destructive)" fill="url(#bugGrad)" strokeWidth={2} />
+                      <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-card)' }} />
+                      <Area type="monotone" dataKey="bugs" stroke="var(--color-destructive)" fill="url(#bugGrad)" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -5117,7 +5117,7 @@ export function DesignSystemPage() {
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} />
                       <YAxis tick={{ fontSize: 10 }} />
-                      <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }} />
+                      <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-card)' }} />
                       <Legend wrapperStyle={{ fontSize: 10 }} />
                       <Line type="monotone" dataKey="value" stroke="hsl(var(--chart-1, 25 80% 54%))" strokeWidth={2} dot={{ r: 3 }} name="Completed" />
                       <Line type="monotone" dataKey="bugs" stroke="hsl(var(--chart-2, 190 65% 48%))" strokeWidth={2} dot={{ r: 3 }} name="Bugs" />
@@ -5136,7 +5136,7 @@ export function DesignSystemPage() {
                       <Pie data={PIE_DATA} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
                         {PIE_DATA.map((entry, idx) => <Cell key={idx} fill={entry.fill} />)}
                       </Pie>
-                      <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }} />
+                      <RechartTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-card)' }} />
                     </PieChart>
                     <div className="space-y-2">
                       {PIE_DATA.map((e) => (
