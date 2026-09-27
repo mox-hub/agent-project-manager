@@ -21,6 +21,18 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——BCD 方案 · 批 1「门禁自修」（B4 / B9 / C7 前置）
+
+> 批 1 是 BCD 方案里唯一的「门禁自身修复」批次，按方案第四部分排序必须先做：后面所有批次的验收都要靠这几道闸门，
+> 而它们此前分别处于「永不可达」「静默跳过」「主动承认红灯」三种失效状态。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| scripts · docs | **B4 门禁自修 ①：`check-doc-sync.mjs` Check 2 由「本次改动」改为「全量受管文档」**。旧实现的输入是 `git diff --name-only` 的产物，过滤器却要求 `f.startsWith('docs/')`——`docs/` 在 `.gitignore` 里（`docs/design/` 是唯一例外），**该分支命中率≈0**，这道检查对 docs 整体形同不存在；叠加上游 `changed.length === 0` 提前 `exit 0`，「无变更上下文」直接退化为「跳过全部检查」。现改为直接枚举 `git ls-files`（`-z` 输出，避开中文文件名的引号转义）的受管文档，**无论本次改了什么、甚至什么都没改都完整校验一次**，本地与 CI 口径一致；并补上原错误信息早已宣称、代码却从未做过的**字段级校验**（`title`/`description`/`status` 缺一即报，含 BOM 与未闭合 frontmatter 处理），以及「枚举为空即报错」——不再允许「扫到 0 个文件然后通过」。范围只收**已入库**文档：`docs/` 下 80 余份未跟踪的历史文档不入库、不可评审，对它们强制元数据只会得到「本地永远红、CI 永远绿」的分歧，比没有检查更坏。配套为 4 份受管文档补 frontmatter（`api-contract-proposals` / `mock-inventory` / `page-inventory` / `decision-cards-roadmap`），全量受管文档 13 份一次到位。**实测闸门是活的**：删 `status` 字段 → exit 1；删整个 frontmatter 块 → exit 1；还原 → exit 0 | CAP-P-01 | `check:docs-sync` 通过（13 份受管文档）；3 次故意违规注入-回滚验证（两种违规各报 exit 1） | 4 份受管文档补 `title`/`description`/`status`；`修改方案-BCD类-2026-09-27.md` 新增「执行进度」滚动表 |
+| scripts | **B4 门禁自修 ②：删除 `check-doc-sync.mjs` Check 4「软删除候选状态一致性」**（裁决 B-2）。该检查读 `docs/reports/doc-cleanup-soft-delete-candidates-2026-04-04.md`——**文件不存在**，`catch {}` 把异常吞掉后由 `if (archivedPaths.length === 0) return;` 静默跳过，即「一道永远不执行的检查」：它唯一的效果是让门禁看起来是绿的。且「文档生命周期追踪」应由 APM 自家文档模块承担（自举原则），不该由 CI 脚本硬编码一份 2026-04 的过期清单路径。删除函数与调用点，原位留裁决理由；同时清掉自 Check 4 起就无人使用的 `statSync` / `readdirSync` / `node:path` 导入 | CAP-P-01 | 全仓 grep 确认零残留引用（仅剩说明性注释） | — |
+| .zcode/skills | **B9：废除「两个存量失败不算回归」测试基线条款**。`.zcode/skills/frontend-page/SKILL.md` 原文把「task-page.test 与 project-list-page.test 两个存量失败与本流程无关，不算回归」写成**规范条款**——这不是文档失效，是规范主动放弃测试门禁：它把红灯制度化，等于告诉后续每个会话「这两个失败是正常的」。**实测其前提也早已过期**：`task-page.test` 在当前树中已随旧任务页（`modules/issue/pages/task-page.tsx`，路由实际挂 `tasks-page.tsx`）一并被删除，全仓不存在该文件；`project-list-page.test.tsx` 单文件 1 用例通过。改为「**所有测试必须通过**；失败即回归，须修复或先撤销变更」，并注明条款废除日期与依据 | CAP-P-01 | 前端全量 **177 文件 / 1170 用例全绿**（exit 0）——这正是该条款原本要求的基线 | `.zcode/skills/frontend-page/SKILL.md` 特殊规则节 |
+| frontend | **C7 前置：修掉最后 2 例「写了不生成 CSS」的幽灵类，并补全检查的命名空间**。①`animate-spin-slow`（`shared/components/create-dialog/mode-shuttle-button.tsx:59`）——仓内从无 `--animate-spin-slow`，类名合法却生成 0 CSS、动画静默不转；按方案登记 `--animate-spin-slow: spin 2s linear infinite`（复用 Tailwind 默认 `spin` keyframes：默认档 1s，本档 2s）。②`ease-ease`（`components/ui/navigation-menu.tsx:116`）——vendor 配方残留的无意义类名，同元素上的 `ease-[cubic-bezier(0.22,1,0.36,1)]` 已在生效，故直接删除（零视觉影响）。③**`check-undefined-classes.mjs` 命名空间由 6 补到 10**（新增 `bg` / `animate` / `ease` / `z`）——此前漏掉 `animate-*` 与 `ease-*`，上面两例幽灵类正是从这道检查里逃逸出去的；补全后源码候选由 12695 增至 15696，**零未定义**（`bg` 这轮把近 3000 个候选全部比过、误报为 0，证实其可按封闭刻度族纳入）。C7 实测四例至此全部闭合（另两例 `bg-status-on-track/off-track` 与 `text-12` 已在 A 类 token 批次与门禁脚本批次处理） | CAP-P-01 | 构建产物实证：`.animate-spin-slow{animation:var(--animate-spin-slow)}`、`--animate-spin-slow:spin 2s linear infinite`、`@keyframes spin` 三者均在产物中；`ease-ease` 产物 0 命中；`lint:undefined` 过（已生成选择器 3419 / 候选 15696）；八门禁脚本全过；`tsc -b` 零错；touch 文件 eslint 0 错；`pnpm --filter frontend build` 成功 | `index.css` 动画 token 区补 1 条并注明根因 |
+
 ### 前端设计治理——A 类修改方案执行（语义化 token 层落地 + 机器强制）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
