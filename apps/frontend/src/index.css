@@ -135,9 +135,16 @@
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* 间距语义档（宪法 §4.3/§4.4 的常量 token 化）。
-     数值档不再显式声明：Tailwind v4 spacing 是动态刻度（calc(var(--spacing) * N)），
-     p-13 / w-65 / gap-3.5 等即使无显式定义也照常生成，且与原显式值逐位相等。 */
+  /* 间距语义档（宪法 §4.3/§4.4 的常量 token 化）。数值档不再显式声明：
+     Tailwind v4 spacing 是动态刻度（calc(var(--spacing) * N)），p-13 / w-65 / gap-3.5
+     等即使无显式定义也照常生成，且与原显式值逐位相等（实测：
+     `.p-13{padding:calc(var(--spacing) * 13)}`、`.w-65{width:calc(var(--spacing) * 65)}`）。
+     四分之一档冻结（§4.1）由 `lint:spacing` 的 BANNED_SPACING 拦截，与是否显式声明无关。
+     下列 4 档的值直接取自 §4.3 的常量，注释即依据：
+       cell-y  6px  = py-1.5，§4.3「单元格 py-1.5 ~ py-2」的下限（密集列表基线）
+       gutter  16px = px-4，§4.3「页面水平边距 px-4 ~ px-6（16-24px）」的下限
+       section 24px = space-y-6，§4.3「区块垂直间距 24px」逐字取值
+       page    24px = px-6，§4.3 页面水平边距上限，用作页面级留白（lg 基准态） */
   --spacing-cell-y: 0.375rem;
   --spacing-gutter: 1rem;
   --spacing-section: 1.5rem;
@@ -149,6 +156,25 @@
   --spacing-dialog-screen: 95vh;
   --spacing-dialog-scroll: 80vh;
   --spacing-dialog-full: 90vh;
+
+  /* 层级（z-index）七档（契约见宪法 §8.4）：工具类是 `z-base` … `z-toast`。
+     ⚠️ 命名空间必须写 `--z-index-<name>`，不是 `--z-<name>`——`z-<name>` 读的正是
+     `--z-index-<name>`（tailwindcss/dist/lib.mjs 里 z 工具的 themeKeys / valueThemeKeys
+     均为 `["--z-index"]`，实测确认）。写成 `--z-<name>` 会**静默不生成任何 CSS**：
+     类名合法、lint 不报、构建产物零命中（与宪法 §7.1 时长 token 同型的坑）。
+     注：宪法 §8.4 原稿把 token 列写作 `--z-base` / `--z-modal`，按字面落地即上面这个坑；
+     该节已随宪法 v2.3 修正（表列**类名**，键名规则记于该节「命名空间陷阱」注）。
+     实证（最小复现：单独调用 tailwind 编译器编译本文件，不走全量 build）：
+       同一条 @theme 里 `--z-x: 50` 与 `--z-index-x: 60` 并存 → 只有后者生成规则
+       `.z-x { z-index: var(--z-index-x) }`；浏览器 getComputedStyle 复核：
+       z-base/sticky/dropdown/banner/overlay/modal/toast → 0/10/20/30/40/50/70 全部生效 */
+  --z-index-base: 0;
+  --z-index-sticky: 10;
+  --z-index-dropdown: 20;
+  --z-index-banner: 30;
+  --z-index-overlay: 40;
+  --z-index-modal: 50;
+  --z-index-toast: 70;
 
   /* 动画 */
   --animate-accordion-down: accordion-down 0.2s ease-out;
