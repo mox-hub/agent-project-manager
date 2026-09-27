@@ -21,6 +21,51 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——BCD 方案 · 批 7a「门禁强制扩容」（C9 全页扫描 / C2·C3 全库化 / lint-staged 接入）
+
+> 提交 `0e48626e`（7 文件 / +306 / −49）；随后补 `e5880f61`（1 文件 / +64 / −1，**注释感知**修复，成因见下「扩面放大出的既有缺陷」）。
+> **本批不碰 `index.css`**——命名空间封闭（A 类 §4.2 `--*: initial`）依 A 类方案 §6「封闭永远单独一批，不与迁移混」**留在 7b**；事后实测 `index.css` 仍为**零条** `--*: initial`（即 §4.2 从未落地）。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` 门禁脚本 / 页面标注 / lint-staged | C9 覆盖率、C2 中性裸色、C3 内联裸色（宪法 §5 / §10.1） | 5 道设计门禁复跑 **全 exit 0**（palette / ui-governance / spacing / semantic-classes / icons）；C9 空集守卫、注释感知边界各做注入验证 | 本 CHANGELOG + 方案台账偏差 23/24/30/31 + 批 7 行重写 |
+
+**做了什么**：C9 由「4 页白名单」改 **glob `src/**/*-page.tsx`** 并加**空集守卫**（globbing 匹配 0 页即 exit 1——防「路径写错但门禁照过」这种静默失效）；C2/C3 **由 ai-surface 窄范围扩为全库**，同时按**性质**补 5 类具名豁免（`color-picker` 有意展示态 / `mocks` / `test-utils` / `brand/logo` / `chart.tsx` 的 recharts 属性选择器**假阳性** / 生成物）与两条 `file:token` **精确匹配** legacy 白名单（C2 24 键 28 处、C3 64 键 84 处）；`lint-staged.config.mjs` 的 pre-commit 由 1 个设计脚本扩为 **5 个**。
+
+**独立复现（协调方按源码逐条复算，与执行方自述逐项吻合）**：C2 非测试非豁免 **29 处 / 25 文件**（⊂ 具名 1 处、legacy 28 处 / 24 键）；C3 **130 处 / 14 文件**（⊂ 具名 46 处 / 6 文件、legacy 84 处 / 8 文件）。执行方自述的「84 = 130 − 58」是**量词标签滑笔**（58 含 12 处测试命中），正确恒等式为 `84 = 130 − 46`，**数字本身无误**。
+
+**执行方 3 处推翻协调方简报预期的实测**（简报错、代理对，均已独立复现）：① C9 换 glob **同时激活了其他规则**，暴露 **39 处新缺口**（29 页无 `data-ai-action` + 10 处 overlay 导入页）——代理**逐条登记进白名单而非缩窄规则**以迁就简报预期，处置正确；② `data-ai-page` 实为 **34 点号 / 17 kebab**（简报称 31/16——**漏算 19 页**：它们经 `CORE_AI_PAGE_IDS` 常量**间接**声明，按字面 grep 会漏）；③ `error-page.tsx` 的真实缺陷是 `:96` 缺 `nativeButton={false}`，而**协调方简报误称该文件含 `asChild`**（全仓 `asChild` 的代码用法早已为 0，残留仅中文注释）。
+
+**扩面放大出的既有缺陷（已就地修复 `e5880f61`）**：`check-palette.mjs` **不是注释感知的**（注释感知只存在于 `check-spacing-governance.mjs`）。C3 此前只在 `modules/ai-surface/` 内生效且**未进 pre-commit**，本批扩为全库 + 接入 pre-commit 后，「解释违规的注释」会**直接拦下提交**：`// 修复 #1234 的回归` 命中 C3 的 hex 正则，`// 原 bg-white 已换成 bg-muted` 命中 C2——而「写清原来错在哪、为什么这么改」正是「文档即契约」要求作者做的事。修法是移植 `check-spacing-governance.mjs` 的 `commentRanges`（该脚本注释自陈「实测已连续踩中 4 次」）到四条规则，**只跳过落在注释区间内的命中，字符串与代码照常扫描**（误判方向只会「多报」、不会「漏报」）。实测边界：同一行同时含注释提及与代码字面量 → **exit 1 且只报 1 处**；仅注释提及 → exit 0。**副作用（已记账、未静默）**：`api-types.gen.ts` 的 4 处 `@example` 色值本来就在 JSDoc 里，补注释感知后 `GENERATED_EXEMPT` 成为**零命中的死条目**——保留并就地注明理由（生成物下一轮 openapi 生成即覆盖，无法用 `file:token` 维护，删掉等于不留逃逸口），属裁决项。
+
+**7b 挂起（三项人裁决，详见方案台账偏差 26/27）**：① 字阶**冻结现值** vs **采纳 §3.2 新字阶**——§3.2 的 8 档**非视觉中性**（字号与现值一致，但 **5/6 档行高改变**，涉全站 **2613 处**垂直节奏）；② `--ease-*` 封闭**缺一步迁移**（§3.9 只排了 `duration-*` 97 处，封闭会杀死 **13 处 TSX 工具类**；`.css` 内 13 处简写属性值与 1 处任意值**不受影响**）；③ `--shadow-*` 封闭须先迁 §3.6 的 104 + 48 处。**逐族实测**：`--radius-*` / `--duration-*` 封闭**安全**（静态字面量 / bare-value 路径）；`--shadow-*` / `--ease-*` / `--text-*` **不安全**（主题命名空间**构建期内联**或 `var()` 引用）。**另**：43 处 hex 去饱和（偏差 21）与 Canvas 豁免（偏差 22）两项存量裁决仍未决，**裁决前不得把 `prism-canvas`/`blueprint-canvas` 列入技术豁免白名单**。
+
+**协调方操作事故（已回退，见台账偏差 31）**：为上述修复提交时只 `git add` 了自己的脚本，但并行代理已 `git add` 的 5 个文件仍在索引里，`git commit` 提交的是**整个索引**，故把并行代理**尚未核验的在制品**一并提交（`7971d38d`，6 文件，信息与内容不符）。已 `git reset --soft HEAD~1` 回退并**以显式路径**只重提 `check-palette.mjs`（`e5880f61`）。**教训：并行代理同仓作业时提交必须带 `git commit -- <paths>`。**
+
+### 前端设计治理——批 9b · D11 无障碍阶段 1（`jsx-a11y` 接入）
+
+> 提交 `c4b743ef`（6 文件 / +612 / −3）。依据 `docs/design/审计-D10断点与D11无障碍-2026-09-27.md` §3.3 阶段 1。
+> **关键澄清**：此前台账记「批 9 待 `jsx-a11y` 分级档位裁决」——经复核为**过度解读**：审计 §3.3 **阶段 1 已给出可直接执行的分级**（18 条低误报规则直接开 `error`），被裁决卡住的是**阶段 2/3/4**（见下存疑 S-D）。审计 §3.4「不要现在改 `eslint.config.js`」是**其只读产出的自律，不是人裁决**。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` eslint 配置 / 依赖 | D11 无障碍（宪法 §8.5） | 红灯 **2 条 → 0**；`lint` exit 0、`type-check` exit 0、`markdown-view`+`mdx` 10 用例全绿；探针命中 **6 条不同规则**证明插件真在生效 | 本 CHANGELOG + 方案台账偏差 28 |
+
+**做了什么**：`pnpm-workspace.yaml` catalog + `apps/frontend/package.json` 加 `eslint-plugin-jsx-a11y: ^6.10.2`（版本取自 registry 实测；两条目按字母序插入邻居之间）；`eslint.config.js` 以 `plugins: { 'jsx-a11y': … }` + 逐条覆写接 **18 条 `error`**，**未**用 `flatConfigs.recommended`（审计 §3.4#2：一次开 recommended 预估 300~500 条红灯会立刻弄红 `quality:gate`），**未**降级为 `warn` 充数。
+
+**实测红灯 2 条（审计静态预估 2~8 条，落在区间内）**，均为 `jsx-a11y/alt-text`，用**真实语义修复**清掉、**零 `eslint-disable`**：
+- `src/shared/components/markdown-view.tsx:108`、`src/shared/mdx/mdx-provider.tsx:47` —— 两处都是 **react-markdown / MDX 的 `img` 覆写**。修法是补 `alt=""` 并**置于 `{...props}` 展开之前**：给「无 alt 的渲染路径」显式装饰性兜底（屏幕阅读器跳过而非朗读文件名），而 react-markdown 透传的真实 alt 仍然优先。**属性顺序即语义**——写在展开之后就成了「夺权」。
+
+**审计预估未复现（口径偏差，非缺陷）**：`anchor-is-valid` 预估 2 处（`pagination.tsx:54`、`mdx-provider.tsx:38`），实测两处 `<a>` 均带 `{...props}` 展开，规则**无法静态判定 href 缺失**（`pagination.tsx` 那处已在 `<Button nativeButton={false} render={<a aria-current=… {...props}/>}/>` 内，运行时 href 由调用方传入）。**故未改这两处**——属审计 §3.2 自陈的「静态近似」，阶段 2/3 的静态近似数字（如 `click-events-have-key-events` 33 vs 369）同样**须以实测为准**。
+
+**存疑（交回裁决）**：
+- **S-D（阶段 2/3 的硬前置）**：审计 §3.3 末尾的**豁免机制（override）尚未建立**（`modules/design-system/**`、`drawer.tsx`/`navigation-menu.tsx`、测试夹具三类）。阶段 1 的 18 条实测 0 红灯故暂不需要，但**开阶段 2/3 前必须先建**，否则噪声立刻上来。
+- **S-C**：E 类批 5 将再改 `eslint.config.js`（设计门禁），**与 D11 必须串行**；已在该文件规则块上方留痕（注明依据与阶段 2/3 待开规则名）。
+- **S-A**：`renovate.json` 的 eslint 分组 `matchPackagePatterns` **已自动覆盖**新插件（行为正确、无需改），仅 `groupName` 字面陈旧（未提 jsx-a11y），纯文案问题、**未改**。
+- **S-B**：`pnpm knip` 仍 exit 1，但成因为 ~800 行**既有**的 server/desktop/cli 未用导出与 `knip.json` 冗余 entry，**与本批无关**（本批只加一个前端 devDependency 与两个 `alt`）。**既有红门禁，建议单独立项**。
+- **S-G（协调方简报的错，已由执行方纠正）**：简报给的路径 `src/shared/mdx/components/markdown-view.tsx` **不存在**，实际是 `src/shared/components/markdown-view.tsx`（`src/shared/mdx/components/` 下只有 `blockquote/code-block/heading/table`）。**属协调方凭空补全目录、未回库核对**。
+- **未做**：运行时无障碍验证（无 axe / Lighthouse / 屏幕阅读器）；阶段 2/3/4 规则；§8.5#4/#5/#6（颜色/焦点环/焦点管理，按审计 §3.4#5 应走自建 `check-*.mjs`）。**零组件/功能删除，零 `any`。**
+
 ### 前端设计治理——BCD 方案 · 批 6b「存量清剿」（D6/D7/C1-C3）
 
 > 按**子树**拆两条并行线（线 M = `src/modules/**`；线 C = `src/components/**` + `src/shared/**` + 其余），每条线在自己子树内做完全部规则——**边界即子树，零重叠**。理由：四个工作面在同批文件上高度重叠（实测 `C2∩C3 = 13 文件`），按关注点拆会把同一文件派给两个 agent。
