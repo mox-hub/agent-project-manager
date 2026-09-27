@@ -30,6 +30,8 @@ import { AcceptanceService } from '../../acceptance/acceptance.service';
 import { IssueAssigneeService } from '../../team/issue-assignee.service';
 import { MemoryService } from '../../memory/memory.service';
 import { CollaborationService } from '../../collaboration/collaboration.service';
+import { SearchService } from '../../search/search.service';
+import type { SearchQueryDto } from '../../search/dto/search.dto';
 import { SYSTEM_ASSISTANT_HANDLE } from '../../team/member.service';
 
 export interface AssistantToolCatalogEntry {
@@ -44,6 +46,18 @@ export interface AssistantToolCatalogEntry {
 
 /** 系统接口目录（CLI prompt 注入与 GET /ai/assistant/tools 同源） */
 export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
+  // 全局（跨实体）
+  {
+    name: 'search_entities',
+    description:
+      '全局搜索任务/Bug/文档/项目（标题/短号/描述模糊匹配，项目成员可见性口径），' +
+      '命中带 apmRef（apm://{projectCode}/{kind}/{shortId} 实体引用串，生成 markdown 引用时使用）',
+    http: {
+      method: 'GET',
+      path: '/_api/search?q=:query&limit=10',
+      params: { query: '搜索关键词' },
+    },
+  },
   // 任务 / 缺陷
   {
     name: 'get_task',
@@ -755,6 +769,7 @@ export class AssistantToolsService {
     private readonly issueAssigneeService: IssueAssigneeService,
     private readonly memoryService: MemoryService,
     private readonly collaborationService: CollaborationService,
+    private readonly searchService: SearchService,
   ) {}
 
   /** 目录（GET /ai/assistant/tools 用） */
@@ -778,6 +793,9 @@ export class AssistantToolsService {
       '你可以调用 APM 系统接口查询与操作项目数据（请求头带 x-workspace-id 与 Bearer 访问 Token；未配置 Token 时把结果写进最终输出即可）：',
       ...lines,
       '注意：删除/停用/归档等不可恢复操作必须先向用户确认后再执行。',
+      '实体引用协议：apm://{projectCode}/{kind}/{shortId}（kind=doc/issue/bug/member/team/acceptance/release）。' +
+        '生成 markdown 引用实体时用 [标题](apm://…) 形态携带引用入口，' +
+        '短号与项目代码一律取自 search_entities 命中的 apmRef，禁止杜撰；查不到就写明文名称。',
       ...(projectId ? [`当前项目 ID：${projectId}`] : []),
     ].join('\n');
   }
@@ -873,6 +891,44 @@ export class AssistantToolsService {
       );
 
     return {
+      // ============ 全局（跨实体） ============
+      search_entities: tool({
+        description:
+          '全局搜索任务/Bug/文档/项目（标题/短号/描述模糊匹配，项目成员可见性口径）。' +
+          '命中带 apmRef（apm://{projectCode}/{kind}/{shortId} 实体引用串）——' +
+          '生成 markdown 引用实体时以 [标题](apmRef) 形态写入文本，短号一律取自查询结果、禁止杜撰。',
+        inputSchema: z.object({
+          q: z.string().describe('搜索关键词（标题/短号/描述）'),
+          types: z
+            .array(z.enum(['task', 'bug', 'document', 'project']))
+            .optional()
+            .describe('类型过滤，缺省查全部'),
+          limit: z
+            .number()
+            .int()
+            .optional()
+            .describe('每类返回上限（默认 10，封顶 10）'),
+        }),
+        execute: async ({ q, types, limit }) => {
+          const uid = userId ?? '';
+          if (!uid) {
+            return { error: '缺少执行者身份（userId），无法确定可见性范围' };
+          }
+          try {
+            return jsonSafe(
+              await this.searchService.search(
+                { q, types, limit } as SearchQueryDto,
+                uid,
+              ),
+            );
+          } catch (error) {
+            return {
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
+        },
+      }),
+
       // ============ 任务 / 缺陷 ============
       get_task: tool({
         description:

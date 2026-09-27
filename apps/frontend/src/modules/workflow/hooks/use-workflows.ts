@@ -98,6 +98,17 @@ export function useResumeWorkflow() {
   });
 }
 
+export function useCancelWorkflow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (runId: string) => workflowApi.cancelRun(runId),
+    onSuccess: (_res, runId) => {
+      queryClient.invalidateQueries({ queryKey: workflowKeys.run(runId) });
+      queryClient.invalidateQueries({ queryKey: workflowKeys.runs() });
+    },
+  });
+}
+
 /** 产品动作目录（节点库下拉与 AI 草拟共用） */
 export function useWorkflowActions() {
   return useQuery({

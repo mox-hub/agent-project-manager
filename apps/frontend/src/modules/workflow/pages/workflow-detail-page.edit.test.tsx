@@ -66,6 +66,7 @@ vi.mock('../hooks/use-workflows', () => ({
   useWorkflowRuns: () => ({ data: { data: [], meta: {} }, isLoading: false }),
   useWorkflowRun: () => ({ data: undefined, isLoading: false }),
   useResumeWorkflow: () => ({ mutate: vi.fn(), isPending: false }),
+  useTriggerWorkflow: () => ({ mutate: vi.fn(), isPending: false }),
   useWorkflowActions: () => ({ data: ACTIONS, isLoading: false }),
   useUpdateWorkflow: () => ({
     // 同步记录载荷并回调 onSuccess（模拟保存成功路径）

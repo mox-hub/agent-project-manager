@@ -2,7 +2,15 @@
  * CLI Dispatch Controller
  */
 
-import { Controller, Post, Get, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -30,6 +38,7 @@ import {
   DetectedCliProvidersResponseDto,
   ExecutionStatusResponseDto,
 } from './dto/cli-provider-response.dto';
+import { PromptPreviewResponseDto } from '@/modules/prompt/dto/prompt.dto';
 import { RetryExecutionDto } from './dto/retry-execution.dto';
 
 class DispatchCliDto {
@@ -95,6 +104,29 @@ export class CliDispatchController {
       timeout: dto.timeout,
       executionId: dto.executionId,
     });
+  }
+
+  @Get('issues/:issueId/prompt-preview')
+  @ApiOperation({
+    summary:
+      'Dry-run prompt preview: assemble the complete dispatch prompt via the same assembly chain as dispatch (no dispatch, no execution created)',
+  })
+  @ApiParam({ name: 'issueId', description: 'Work item ID' })
+  @ApiOkResponse({
+    type: PromptPreviewResponseDto,
+    description:
+      'Complete prompt + segment-by-segment breakdown + toggle comparison (same source as actual dispatch)',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  async previewPrompt(
+    @Param('issueId') issueId: string,
+    @Query('memberId') memberId?: string,
+  ) {
+    return this.dispatchService.previewTaskPrompt(
+      issueId,
+      memberId || undefined,
+    );
   }
 
   @Get('cli-providers')

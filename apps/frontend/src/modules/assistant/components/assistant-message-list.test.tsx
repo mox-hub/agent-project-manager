@@ -6,6 +6,8 @@ import { AssistantMessageList } from './assistant-message-list';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+  // MarkdownView 链会加载 @/i18n 实例（CAP-A-23），i18n.init 需要 initReactI18next
+  initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
 function renderList(messages: AssistantChatMessage[]) {

@@ -112,6 +112,11 @@ export function makeSearchResults(): SearchHit[] {
     subtitle,
     path,
     updatedAt: daysAgo(i % 20),
+    projectId: path.startsWith('/app/projects/')
+      ? path.split('/')[3]
+      : null,
+    // mock 检索不产 apmRef（引用串需短号 + 项目代码，MSW 层不造假）
+    apmRef: null,
   }));
 }
 

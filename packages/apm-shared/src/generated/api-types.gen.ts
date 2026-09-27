@@ -2528,6 +2528,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/ai/issues/{issueId}/prompt-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dry-run prompt preview: assemble the complete dispatch prompt via the same assembly chain as dispatch (no dispatch, no execution created) */
+        get: operations["CliDispatchController_previewPrompt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/ai/cli-providers": {
         parameters: {
             query?: never;
@@ -5220,6 +5237,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 全局搜索（工单/文档/项目，按项目成员可见性过滤） */
+        get: operations["SearchController_search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/admin/users": {
         parameters: {
             query?: never;
@@ -6586,6 +6620,128 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/prompts/system": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 系统提示词列表（内置只读） */
+        get: operations["PromptController_listSystemPrompts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/prompts/system/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 系统提示词详情（只读全文） */
+        get: operations["PromptController_getSystemPrompt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/prompts/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 提示词注入配置（开关 + 项目提示词 + AGENTS.md 状态） */
+        get: operations["PromptController_getConfig"];
+        /** 更新注入开关 / 项目级提示词（物化 AGENTS.md） */
+        put: operations["PromptController_updateConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/prompts/usage-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 注入率统计（最近执行载荷按段头解析） */
+        get: operations["PromptController_getUsageStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/prompts/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 提示词模板库（内置 + 自定义） */
+        get: operations["PromptController_listTemplates"];
+        put?: never;
+        /** 新建提示词模板 */
+        post: operations["PromptController_createTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/prompts/templates/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 模板插值干跑（按任务事实） */
+        post: operations["PromptController_previewTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/prompts/templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 更新自定义模板 */
+        put: operations["PromptController_updateTemplate"];
+        post?: never;
+        /** 删除自定义模板（内置模板不在表内不可删） */
+        delete: operations["PromptController_deleteTemplate"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/projects/{projectId}/roles": {
         parameters: {
             query?: never;
@@ -6699,23 +6855,6 @@ export interface paths {
         };
         /** 剧本健康卡（阶段通过/跳过率/退回率，全派生） */
         get: operations["DashboardController_getPlaybookHealth"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 全局搜索（工单/文档/项目，按项目成员可见性过滤） */
-        get: operations["SearchController_search"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8826,6 +8965,10 @@ export interface components {
             milestoneId?: string;
             /** @description Todo items (for task checklist) */
             todoItems?: components["schemas"]["TodoItemDto"][];
+            /** @description 扩展元数据（整体提交，键集由调用方约定） */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
         };
         AssignIssueAgentDto: {
             /**
@@ -9705,6 +9848,8 @@ export interface components {
             estimate?: number;
             /** @description 父条目 ID（模板内层级） */
             parentItemId?: string;
+            /** @description 任务级提示词模板（含 {{issue.*}} 变量）；应用模板建任务时落 metadata.taskPrompt */
+            promptHint?: string;
         };
         CreateIssueTemplateDto: {
             /** @description 模板名称 */
@@ -9735,6 +9880,8 @@ export interface components {
             estimate: number | null;
             /** @description 父条目 ID（模板内层级） */
             parentItemId: string | null;
+            /** @description 任务级提示词模板 */
+            promptHint: string | null;
         };
         IssueTemplateResponseDto: {
             /** @description 模板 ID */
@@ -10598,6 +10745,39 @@ export interface components {
             displayName?: string;
         };
         DispatchCliDto: Record<string, never>;
+        PromptInjectionTogglesDto: {
+            /** @description 系统提示词段（内置规范） */
+            system: boolean;
+            /** @description 项目级提示词段 */
+            project: boolean;
+            /** @description 执行者段（角色 promptHint 继承 + 成员个人提示词 + 思考强度，合一段） */
+            executor: boolean;
+            /** @description 团队规则段（teamPrompt） */
+            team: boolean;
+            /** @description 任务级自定义提示词段（metadata.taskPrompt） */
+            task: boolean;
+            /** @description 项目技能段（与 dispatch.skillsEnabled 项目开关叠加） */
+            skills: boolean;
+            /** @description 上下文 JSON 段 */
+            context: boolean;
+        };
+        PromptPreviewSectionDto: {
+            /** @description 段落标识：system/executor/team/project/task/skills/taskBody/context/closing */
+            key: string;
+            /** @description 该段是否实际注入 */
+            injected: boolean;
+            /** @description 段落内容（未注入为 null） */
+            content: string | null;
+        };
+        PromptPreviewResponseDto: {
+            issueId: string;
+            /** @description 组装后的完整派发 prompt（与实际派发同源） */
+            prompt: string;
+            charCount: number;
+            toggles: components["schemas"]["PromptInjectionTogglesDto"];
+            /** @description 逐段拆解（设置页/排查用） */
+            sections: components["schemas"]["PromptPreviewSectionDto"][];
+        };
         CliProviderSummaryDto: {
             providerId: string;
             available: boolean;
@@ -13166,6 +13346,33 @@ export interface components {
             /** @description 生效档案原子 */
             atoms: components["schemas"]["ProfileAtomDto"][];
         };
+        SearchHitDto: {
+            /** @description 命中对象 ID */
+            id: string;
+            /**
+             * @description 命中类别
+             * @enum {string}
+             */
+            type: "task" | "bug" | "document" | "project";
+            /** @description 标题 */
+            title: string;
+            /** @description 副标题（展示用：项目/编号/状态摘要） */
+            subtitle: string;
+            /** @description 前端路由路径（/app/...） */
+            path: string;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+            /** @description 所属项目 ID（项目命中时为 null） */
+            projectId?: Record<string, never> | null;
+            /** @description apm:// 实体引用串（apm://{projectCode}/{kind}/{shortId}，全局引用系统插入用）；缺 projectCode/shortId 时为 null——调用方不得自行拼装 */
+            apmRef?: Record<string, never> | null;
+        };
+        SearchResponseDto: {
+            /** @description 扁平命中列表（前端按 type 分组渲染） */
+            items: components["schemas"]["SearchHitDto"][];
+            /** @description 命中总数（= items.length） */
+            total: number;
+        };
         AdminRoleItemDto: {
             /** @description RoleAssignment ID */
             id: string;
@@ -14798,6 +15005,132 @@ export interface components {
             /** @description 删除成功 */
             deleted: boolean;
         };
+        SystemPromptMetaDto: {
+            /** @description 稳定标识 */
+            key: string;
+            title: string;
+            /** @description 用途说明 */
+            description: string;
+            /** @description 正文字符数 */
+            charCount: number;
+        };
+        SystemPromptListResponseDto: {
+            items: components["schemas"]["SystemPromptMetaDto"][];
+        };
+        SystemPromptDetailDto: {
+            /** @description 稳定标识 */
+            key: string;
+            title: string;
+            /** @description 用途说明 */
+            description: string;
+            /** @description 正文字符数 */
+            charCount: number;
+            /** @description markdown 正文（只读） */
+            content: string;
+        };
+        PromptConfigResponseDto: {
+            toggles: components["schemas"]["PromptInjectionTogglesDto"];
+            /** @description 项目级提示词全文（传 projectId 时返回；未配置为 null） */
+            projectPrompt: string | null;
+            /** @description AGENTS.md 文件侧状态（传 projectId 时返回）：fileExists/blockContent/drifted */
+            agentsFile: Record<string, never> | null;
+        };
+        UpdatePromptConfigDto: {
+            system?: boolean;
+            project?: boolean;
+            executor?: boolean;
+            team?: boolean;
+            task?: boolean;
+            skills?: boolean;
+            context?: boolean;
+            /** @description 项目级提示词编辑目标项目；与 projectPrompt 搭配使用 */
+            projectId?: string;
+            /** @description 项目级提示词全文；空串清空（删除配置）。保存后物化到 AGENTS.md 受管区块 */
+            projectPrompt?: string;
+        };
+        PromptAgentsSyncResultDto: {
+            /** @description AGENTS.md 是否成功写入（无工作区/IO 失败为 false） */
+            synced: boolean;
+            /** @description 未同步原因（synced=false 时给人看） */
+            reason: string | null;
+        };
+        PromptConfigUpdateResponseDto: {
+            toggles: components["schemas"]["PromptInjectionTogglesDto"];
+            /** @description 项目级提示词全文（传 projectId 时返回） */
+            projectPrompt: string | null;
+            /** @description AGENTS.md 物化结果（未涉及项目提示词保存时为 null） */
+            agentsSync: components["schemas"]["PromptAgentsSyncResultDto"] | null;
+        };
+        PromptSectionUsageDto: {
+            /** @description 段标识 */
+            key: string;
+            /** @description 样本中出现次数 */
+            count: number;
+            /** @description 注入率（0~1） */
+            ratio: number;
+            /** @description 平均字符数 */
+            avgChars: number;
+        };
+        PromptUsageStatsResponseDto: {
+            /** @description 采样执行条数上限 */
+            sampleSize: number;
+            /** @description 其中带完整 prompt 载荷的条数（0 = 无样本） */
+            promptCount: number;
+            /** @description 平均整条 prompt 字符数 */
+            avgPromptChars: number;
+            sections: components["schemas"]["PromptSectionUsageDto"][];
+        };
+        PromptTemplateDto: {
+            /** @description 内置模板为 builtin: 前缀 key */
+            id: string;
+            name: string;
+            description: string;
+            /** @enum {string} */
+            target: "task" | "project" | "role" | "member";
+            /** @enum {string} */
+            scope: "workspace" | "project";
+            projectId: string | null;
+            /** @description markdown 正文（含 {{变量}}） */
+            body: string;
+            /** @description 内置模板只读不可删 */
+            builtIn: boolean;
+            /** @description 正文中的插值变量 */
+            variables: string[];
+        };
+        PromptTemplateListResponseDto: {
+            items: components["schemas"]["PromptTemplateDto"][];
+        };
+        CreatePromptTemplateDto: {
+            name: string;
+            description?: string;
+            /** @enum {string} */
+            target: "task" | "project" | "role" | "member";
+            /** @enum {string} */
+            scope: "workspace" | "project";
+            /** @description scope=project 时必填 */
+            projectId?: string;
+            body: string;
+        };
+        PromptTemplatePreviewRequestDto: {
+            /** @description 模板正文（含 {{变量}}） */
+            body: string;
+            /** @description 插值事实来源工单 */
+            issueId: string;
+        };
+        PromptTemplatePreviewResponseDto: {
+            issueId: string;
+            /** @description 模板原文 */
+            body: string;
+            /** @description 插值后的正文 */
+            text: string;
+            /** @description 事实缺失保留占位的变量清单 */
+            missingVars: string[];
+        };
+        UpdatePromptTemplateDto: {
+            name?: string;
+            description?: string;
+            body?: string;
+        };
         ProjectRoleResponseDto: {
             /** @description 角色 ID */
             id: string;
@@ -15067,31 +15400,6 @@ export interface components {
             mountedProjects: number;
             /** @description 生成时间（ISO） */
             generatedAt: string;
-        };
-        SearchHitDto: {
-            /** @description 命中对象 ID */
-            id: string;
-            /**
-             * @description 命中类别
-             * @enum {string}
-             */
-            type: "task" | "bug" | "document" | "project";
-            /** @description 标题 */
-            title: string;
-            /** @description 副标题（展示用：项目/编号/状态摘要） */
-            subtitle: string;
-            /** @description 前端路由路径（/app/...） */
-            path: string;
-            /** @description 更新时间（ISO） */
-            updatedAt: string;
-            /** @description 所属项目 ID（项目命中时为 null） */
-            projectId?: Record<string, never> | null;
-        };
-        SearchResponseDto: {
-            /** @description 扁平命中列表（前端按 type 分组渲染） */
-            items: components["schemas"]["SearchHitDto"][];
-            /** @description 命中总数（= items.length） */
-            total: number;
         };
         OfficeCapacityDto: {
             /** @description 在途执行数（planned/in_progress/pending_approval） */
@@ -27497,6 +27805,45 @@ export interface operations {
             };
         };
     };
+    CliDispatchController_previewPrompt: {
+        parameters: {
+            query: {
+                memberId: string;
+            };
+            header?: never;
+            path: {
+                /** @description Work item ID */
+                issueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Complete prompt + segment-by-segment breakdown + toggle comparison (same source as actual dispatch) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptPreviewResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Task not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     CliDispatchController_getCliProviders: {
         parameters: {
             query?: never;
@@ -39822,6 +40169,88 @@ export interface operations {
             };
         };
     };
+    SearchController_search: {
+        parameters: {
+            query: {
+                /** @description 搜索关键词（title/shortId/description/name contains，大小写不敏感） */
+                q: string;
+                /** @description 类型过滤，可省略；可重复传（types=task&types=bug）或数组风格（types[]=task）；milestone/acceptance 为前端契约保留类别，后端暂不产出命中（返回空分组） */
+                types?: ("task" | "bug" | "document" | "project" | "milestone" | "acceptance")[];
+                /** @description 每类返回上限（默认 10，封顶 10） */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 扁平命中列表（前端按 type 分组渲染） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
     AdminController_listUsers: {
         parameters: {
             query?: never;
@@ -46316,6 +46745,312 @@ export interface operations {
             };
         };
     };
+    PromptController_listSystemPrompts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 内置系统提示词元数据（无写端点，升级随版本发布） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemPromptListResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PromptController_getSystemPrompt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 系统提示词 markdown 全文 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemPromptDetailDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description System prompt not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PromptController_getConfig: {
+        parameters: {
+            query: {
+                projectId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 注入开关（缺省全开）、项目级提示词（未配置 null）与 AGENTS.md 文件侧状态 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptConfigResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PromptController_updateConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePromptConfigDto"];
+            };
+        };
+        responses: {
+            /** @description 更新后的配置；agentsSync 反映 AGENTS.md 物化结果（未绑定工作区/IO 失败为未同步降级） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptConfigUpdateResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PromptController_getUsageStats: {
+        parameters: {
+            query: {
+                sampleSize: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 各治理段实际注入率与平均字符开销；无样本时 promptCount=0 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptUsageStatsResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PromptController_listTemplates: {
+        parameters: {
+            query: {
+                target: string;
+                scope: string;
+                projectId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptTemplateListResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PromptController_createTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePromptTemplateDto"];
+            };
+        };
+        responses: {
+            /** @description scope=project 缺 projectId 等 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PromptController_previewTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptTemplatePreviewRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptTemplatePreviewResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Task not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PromptController_updateTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePromptTemplateDto"];
+            };
+        };
+        responses: {
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Prompt template not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PromptController_deleteTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Prompt template not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProjectRoleDefinitionController_list: {
         parameters: {
             query?: never;
@@ -46969,88 +47704,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlaybookHealthResponseDto"];
-                };
-            };
-            /** @description 请求参数错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 资源不存在 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-        };
-    };
-    SearchController_search: {
-        parameters: {
-            query: {
-                /** @description 搜索关键词（title/shortId/description/name contains，大小写不敏感） */
-                q: string;
-                /** @description 类型过滤，可省略；可重复传（types=task&types=bug）或数组风格（types[]=task）；milestone/acceptance 为前端契约保留类别，后端暂不产出命中（返回空分组） */
-                types?: ("task" | "bug" | "document" | "project" | "milestone" | "acceptance")[];
-                /** @description 每类返回上限（默认 10，封顶 10） */
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 扁平命中列表（前端按 type 分组渲染） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SearchResponseDto"];
                 };
             };
             /** @description 请求参数错误 */

@@ -97,7 +97,7 @@ describe('Workflow (e2e)', () => {
   });
 
   describe('GET /_api/workflows/:id', () => {
-    it('支持按 key 取详情，并回填步骤摘要（四步：llm/human-confirm/condition/llm）', async () => {
+    it('支持按 key 取详情，并回填节点摘要（v2 文法：llm/human/condition→then）', async () => {
       const res = await wsHttp
         .get(`/_api/workflows/${DEMO_WORKFLOW_KEY}`)
         .set('Authorization', `Bearer ${accessToken}`)
@@ -106,9 +106,13 @@ describe('Workflow (e2e)', () => {
       expect(res.body.data.key).toBe(DEMO_WORKFLOW_KEY);
       expect(res.body.data.stepsSummary).toEqual([
         { id: 'draft', type: 'llm', title: '起草项目简介' },
-        { id: 'review', type: 'human-confirm', title: '人工确认简介' },
-        { id: 'gate', type: 'condition', title: '确认通过闸门' },
-        { id: 'acceptance', type: 'llm', title: '生成验收要点' },
+        { id: 'review', type: 'human', title: '人工确认简介' },
+        {
+          id: 'gate',
+          type: 'condition',
+          title: '确认通过闸门',
+          then: [{ id: 'acceptance', type: 'llm', title: '生成验收要点' }],
+        },
       ]);
     });
 

@@ -631,7 +631,49 @@
     "waitingApproval": "Waiting for your approval",
     "notePlaceholder": "Review note (optional)",
     "approve": "Approve & continue",
-    "reject": "Reject"
+    "reject": "Reject",
+    "engineV2": "v2 engine",
+    "nodeTimeline": "Node journal",
+    "runEvents": "Events",
+    "nodeAttempt": "Attempt {{attempt}}",
+    "agentExecution": "Execution",
+    "cancelRun": "Cancel run",
+    "cancelRunFailed": "Cancel failed",
+    "editor.jsonModeHint": "v2 node-tree grammar: 8 node types (llm/human/condition/action/agent/fan-out/loop/wait), nested containers, interpolation {input.x}/{steps.y.z}",
+    "editor.jsonInvalid": "definition is not valid JSON or version is not 2",
+    "runPanel.kindRunning": "Workflow running",
+    "runPanel.kindSucceeded": "Workflow completed",
+    "runPanel.kindFailed": "Workflow failed",
+    "runPanel.kindSuspended": "Workflow awaiting confirmation",
+    "runPanel.kindCancelled": "Workflow cancelled",
+    "runPanel.phasesDetail": "{{count}} phases",
+    "runPanel.agentsDetail": "{{count}} subagents",
+    "runPanel.activeDetail": "{{count}} active",
+    "runPanel.close": "Close",
+    "runPanel.outputTitle": "Run artifacts",
+    "runPanel.artifactDocument": "Document",
+    "runPanel.outputDetail": "Output details",
+    "runPanel.loopRounds": "Looped {{count}} rounds",
+    "runPanel.stats.time": "Time",
+    "runPanel.stats.phases": "Phases",
+    "runPanel.stats.nodeExecs": "Node runs",
+    "runPanel.stats.agents": "Subagents",
+    "runPanel.stats.duration": "{{m}}m {{s}}s",
+    "runPanel.stats.durationShort": "{{s}}s",
+    "runPanel.previewTitle": "Phases",
+    "runPanel.previewHint": "Static phase preview of the definition. Hit Run (top-right) to start an execution and watch live phase progress, subagent status and artifacts here.",
+    "grammarVersionBadge": "Grammar version (v1=linear chain, v2=node tree)",
+    "nodeType.llm": "AI step",
+    "nodeType.agent": "Subagent",
+    "nodeType.human": "Confirmation",
+    "nodeType.human-confirm": "Confirmation",
+    "nodeType.action": "Action",
+    "nodeType.condition": "Condition",
+    "nodeType.fan-out": "Fan-out",
+    "nodeType.loop": "Loop",
+    "nodeType.wait": "Wait",
+    "nodeType.http": "HTTP request",
+    "nodeType.unknown": "Step"
   },
   "aiSlot": {
     "badge": "AI Explain",
@@ -782,6 +824,12 @@
   },
   "runDetails": {
     "title": "Run details",
+    "tabFullPrompt": "Full prompt",
+    "fullPromptChars": "{{count}} characters",
+    "fullPromptCopy": "Copy",
+    "fullPromptCopied": "Copied",
+    "fullPromptEmptyTitle": "No prompt persisted for this run",
+    "fullPromptEmptyDesc": "Prompt persistence ships with the prompt governance update; runs dispatched before it have no full prompt on record.",
     "diagnosis": {
       "title": "Failure diagnosis",
       "mechanicalLabel": "Initial read",
@@ -2820,6 +2868,7 @@
     "storageRefreshHint": "Click \"Refresh\" to load the file list",
     "storageNoFiles": "No files synced yet",
     "memory": "Memory",
+    "prompts": "Prompts",
     "issueTypes": "Issue Types",
     "issueTypesPageDesc": "Manage all task types in this space.",
     "addIssueType": "Add Type",
@@ -3118,6 +3167,11 @@
     "parentTaskLabel": "Parent task"
   },
   "taskDetail": {
+    "promptPanel": "Task prompt",
+    "promptPlaceholder": "Custom instructions for AI executing this task (injected as 'Task Instructions')...",
+    "promptPickTemplate": "Pick from templates",
+    "promptSave": "Save",
+    "promptRevert": "Revert",
     "notExists": "Task does not exist",
     "switchType": "Switch issue type",
     "manageTypes": "Manage issue types",
@@ -3219,7 +3273,23 @@
     "customFields": "Fields",
     "drawerNoAgents": "No AI members are available to assign yet. Create one in member management first.",
     "aiGoalTemplate": "Generate a next-step execution plan for \"{{title}}\" and prepare a status write-back",
-    "approvalReasonWrite": "This execution writes back task status or results and requires human confirmation"
+    "approvalReasonWrite": "This execution writes back task status or results and requires human confirmation",
+    "splitWithAi": "Split into subtasks with AI",
+    "splitRunning": "Splitting…",
+    "splitDone": "AI proposed {{count}} subtasks — confirm them below",
+    "splitDescOnly": "Description tidied up per the AI split suggestion",
+    "splitNoop": "AI considers this task simple enough — no split needed",
+    "splitFailed": "Split failed",
+    "splitReplaceTitle": "Split again?",
+    "splitReplaceDesc": "There are pending split suggestions. Splitting again replaces them (already confirmed subtasks are not affected)",
+    "splitReplaceConfirm": "Split again",
+    "splitPendingTitle": "AI split suggestions · {{count}} pending",
+    "splitAccept": "Add as subtask",
+    "splitAcceptAll": "Add all",
+    "splitDismiss": "Dismiss",
+    "splitDismissAll": "Dismiss all",
+    "splitCreateFailed": "Failed to create the subtask; remaining suggestions are kept",
+    "splitUpdateFailed": "Failed to save split suggestions"
   },
   "activity": {
     "title": "Activity",
@@ -4950,6 +5020,29 @@
   "projectSettings": {
     "loading": "Loading project settings...",
     "sidebarTitle": "Project Settings",
+    "ai": {
+      "title": "AI Prompt",
+      "desc": "Project-level instructions injected into every dispatch prompt of this project (as 'Project Instructions')"
+    },
+    "prompt": {
+      "title": "Project prompt",
+      "desc": "Markdown supported; applies to the next dispatch after saving and is materialized into the workspace AGENTS.md managed block. Leave empty to disable injection.",
+      "placeholder": "e.g. Tech stack conventions, coding standards, domain background...",
+      "save": "Save",
+      "revert": "Revert",
+      "saved": "Project prompt saved",
+      "agentsSynced": "Saved and synced to AGENTS.md",
+      "agentsUnsynced": "Saved in APM (AGENTS.md not synced: {{reason}})",
+      "adopted": "Adopted the AGENTS.md file-side content",
+      "drifted": "The managed block in AGENTS.md differs from the APM-side config (it may have been edited directly in the workspace).",
+      "adoptFile": "Adopt file side",
+      "previewPickTask": "Pick a sample task to preview injection…",
+      "previewRun": "Preview with this task",
+      "previewHint": "Shows the full segmented dispatch prompt for any task in this project (what you see is what gets dispatched).",
+      "previewTitle": "Dispatch prompt preview",
+      "previewDesc": "Assembled from the same source as real dispatch, {{chars}} chars in total",
+      "previewLoading": "Dry-running assembly…"
+    },
     "contract": {
       "title": "Contract Files",
       "desc": "Binding status, seeding and alignment management for project contract files",
@@ -4960,6 +5053,7 @@
     },
     "tabs": {
       "general": "General",
+      "ai": "AI Prompt",
       "team": "Team",
       "playbook": "Pipeline Playbook",
       "gitTerminal": "Git & Terminal",
@@ -5316,6 +5410,18 @@
     "hint": "Markdown supported",
     "nothingToPreview": "Nothing to preview"
   },
+  "entityRef": {
+    "slash": {
+      "hint": "Keep typing to filter tasks / bugs / docs / members",
+      "searching": "Searching…",
+      "empty": "No matches",
+      "filterAll": "All",
+      "filterTask": "Tasks",
+      "filterBug": "Bugs",
+      "filterDocument": "Docs",
+      "filterMember": "Members"
+    }
+  },
   "office": {
     "title": "Office",
     "handoff": {
@@ -5532,5 +5638,124 @@
     "adjustDesc": "Choose a trust tier for this AI member; the tier governs what it may do automatically.",
     "adjustSaved": "Trust tier updated",
     "adjustFailed": "Failed to update trust tier"
+  },
+  "promptEditor": {
+    "empty": "No content yet",
+    "charCount": "{{count}} characters",
+    "draft": "AI draft",
+    "draftTitle": "AI draft comparison",
+    "draftDesc": "Current content on the left, AI draft on the right; clicking \"Apply\" writes it into the editor — saving still requires your confirmation.",
+    "draftCurrent": "Current content",
+    "draftSuggestion": "AI draft",
+    "draftLoading": "Generating draft…",
+    "draftFailed": "Draft generation failed, you can retry",
+    "draftEmpty": "AI returned no draft (possibly insufficient information)",
+    "draftRegenerate": "Regenerate",
+    "draftApply": "Apply draft"
+  },
+  "prompt": {
+    "sections": {
+      "system": "System guide",
+      "executor": "Executor (role + personal)",
+      "team": "Team rules",
+      "project": "Project prompt",
+      "task": "Task prompt",
+      "skills": "Project skills",
+      "taskBody": "Task body",
+      "context": "Context JSON",
+      "closing": "Fixed closing",
+      "unknown": "Unknown section"
+    },
+    "templatePicker": {
+      "title": "Pick from templates",
+      "desc": "The selected template is previewed with real task facts; \"Apply\" writes it into the editor — saving still requires your confirmation.",
+      "empty": "No templates of this type",
+      "builtin": "Built-in",
+      "preview": "Interpolated preview",
+      "previewing": "Interpolating preview…",
+      "missingVars": "These variables have no facts yet and stay as placeholders; they are honestly annotated at dispatch: {{vars}}",
+      "cancel": "Cancel",
+      "apply": "Apply"
+    },
+    "templateEditor": {
+      "createTitle": "New prompt template",
+      "editTitle": "Edit template",
+      "desc": "Template bodies support {{issue.title}}, {{issue.acceptanceItems}} and other variables, interpolated per-issue facts at dispatch.",
+      "namePlaceholder": "Template name",
+      "descPlaceholder": "What it's for (optional)",
+      "bodyPlaceholder": "Template body (Markdown)",
+      "variableHint": "Available variables: issue.title / issue.description / issue.priority / issue.acceptanceItems / project.name / today, etc.; missing variables keep placeholders instead of being silently dropped.",
+      "untitled": "Untitled template",
+      "cancel": "Cancel",
+      "save": "Save template"
+    },
+    "target": {
+      "task": "Task",
+      "project": "Project",
+      "role": "Role",
+      "member": "Member"
+    }
+  },
+  "prompts": {
+    "toggles": {
+      "title": "Prompt injection switches",
+      "desc": "Control which sections are injected into dispatch prompts. Changes apply to the next dispatch; switching everything off still dispatches with the minimal task prompt."
+    },
+    "toggle": {
+      "system": "System guide",
+      "systemDesc": "Built-in APM collaboration baseline & reporting spec (read-only assets)",
+      "project": "Project prompt",
+      "projectDesc": "Project-level instructions, edited in project settings (synced to the workspace AGENTS.md on save)",
+      "executor": "Executor (role + personal)",
+      "executorDesc": "Role conventions and member personal prompt merged into one executor section (incl. reasoning effort)",
+      "role": "Role hint",
+      "roleDesc": "Project role promptHint (## Your Role)",
+      "team": "Team rules",
+      "teamDesc": "Active teams' teamPrompt of the dispatched member (## Team Rules)",
+      "member": "Member instructions",
+      "memberDesc": "Member personalPrompt and reasoning effort",
+      "task": "Task prompt",
+      "taskDesc": "Issue-level custom prompt, edited in task detail (## Task Instructions)",
+      "taskBody": "Task body",
+      "taskBodyDesc": "Task title and description (minimal dispatch payload, not gated by switches)",
+      "skills": "Project skills",
+      "skillsDesc": "Enabled skills section (also gated by the project-level skills toggle)",
+      "context": "Context JSON",
+      "contextDesc": "Task execution context pack (issue facts, acceptance criteria, related data)"
+    },
+    "usage": {
+      "title": "Injection stats",
+      "desc": "Recent real dispatch payloads analyzed per section — see at a glance whether your prompts actually took effect and what they cost.",
+      "empty": "No dispatch records to analyze yet",
+      "emptyDesc": "Dispatch a task and this panel will show each section's actual injection rate and size.",
+      "sample": "Based on the latest {{count}} dispatches · {{chars}} chars on average",
+      "row": "{{ratio}}% · {{chars}} chars avg"
+    },
+    "system": {
+      "title": "System prompts",
+      "desc": "Built-in prompts that standardize how AI agents understand and work within APM. Read-only: upgrades ship with releases, no manual editing.",
+      "builtin": "Built-in",
+      "empty": "No system prompts",
+      "charCount": "{{count}} characters"
+    },
+    "templates": {
+      "title": "Prompt template library",
+      "desc": "Reusable prompt assets: built-in templates ship with releases (read-only, duplicable), custom templates are maintained here.",
+      "hint": "Pick templates inline in task/project prompt editors; task-level templates interpolate per issue facts.",
+      "create": "New template",
+      "empty": "No templates",
+      "builtin": "Built-in",
+      "edit": "Edit",
+      "duplicate": "Duplicate as custom"
+    },
+    "where": {
+      "title": "Where layered prompts are edited",
+      "desc": "System level is read-only here; other layers are edited in their management surfaces",
+      "project": "Project prompt — Project settings → AI Prompt (synced to AGENTS.md on save)",
+      "task": "Task prompt — Task detail right sidebar → Task prompt (template picker & AI draft)",
+      "executor": "Executor prompt — Member profile (personal) + Role management (shared conventions)",
+      "role": "Role hint — Workspace settings → Roles → edit role",
+      "member": "Member personal prompt — Team member profile (existing entry)"
+    }
   }
 }

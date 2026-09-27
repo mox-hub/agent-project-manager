@@ -70,6 +70,8 @@ export interface CliExecutionInput {
   allowedTools?: string[];
   maxTokens?: number;
   timeout?: number;
+  /** 权限模式透传（zcode: build|edit|plan|yolo，headless 缺省 yolo；其余 adapter 忽略） */
+  permissionMode?: string;
 }
 
 export interface DetectResult {
@@ -87,6 +89,13 @@ export interface CommandBuildResult {
    * process-runner 会写入子进程 stdin 后关闭；避免 prompt 未送达的缺陷。
    */
   stdinData?: string;
+  /**
+   * false = 绕过 shell 直启（spawn 免 shell）。Windows cmd.exe shell 路径有 ~8K
+   * 命令行上限且引号/换行/百分号会被改写；prompt 走 argv 的 adapter（如 zcode，
+   * 无 stdin 通道）在长 prompt 下必须直启（CreateProcess 上限 32K）。
+   * 缺省 true，保持既有 spawn(shell:true) 行为。
+   */
+  shell?: boolean;
 }
 
 export interface ParseResult {
@@ -176,8 +185,10 @@ export const CLI_ADAPTER_CAPABILITIES: Record<ProviderId, CliAdapterCapabilities
   'claude-code': { allowedTools: true, usage: true, approval: true, mcpTools: true },
   // codex：usage 无任何提取路径；--non-interactive 排除交互审批（approval_required 分支不可达）
   codex: { allowedTools: true, usage: false, approval: false, mcpTools: true },
-  // zcode：配置驱动骨架（协议待校准），buildCommand 不消费 allowedTools，usage/approval 为未验证的乐观映射
-  zcode: { allowedTools: false, usage: false, approval: false, mcpTools: true },
+  // zcode：headless stream-json 协议已校准（v0.16.9 实测采样+源码对照）——result 终行自带
+  // usage；allowedTools 无对应旗标（--disallowed-tools 是 denylist 语义，不消费该字段）；
+  // headless 无交互审批面（permission.requested 只作时间线记录，approval 通道保持 false）
+  zcode: { allowedTools: false, usage: true, approval: false, mcpTools: true },
   // opencode：buildCommand 不消费 allowedTools（权限走全局配置）；usage 经 step_finish 实跑采样校准；无审批事件
   opencode: { allowedTools: false, usage: true, approval: false, mcpTools: true },
 };

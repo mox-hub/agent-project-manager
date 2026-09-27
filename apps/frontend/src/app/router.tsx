@@ -34,6 +34,7 @@ import { IssueTypeDetailSection } from '@/modules/settings/pages/sections/issue-
 import { ChecklistsSettingsSection } from '@/modules/settings/pages/sections/checklists-section';
 import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
 import { MemorySection } from '@/modules/settings/pages/sections/memory-section';
+import { PromptsSettingsSection } from '@/modules/settings/pages/sections/prompts-section';
 import { RuntimeSettingsSection } from '@/modules/settings/pages/sections/runtime-section';
 import { RuntimeMachineDetailSection } from '@/modules/settings/pages/sections/runtime-machine-detail-section';
 import { AccessTokensSettingsSection } from '@/modules/settings/pages/sections/access-tokens-section';
@@ -166,12 +167,6 @@ const TeamDetailPage = lazy(() =>
 const AdminPage = lazy(() =>
   import('@/modules/admin/pages/admin-page').then((m) => ({
     default: m.AdminPage,
-  })),
-);
-
-const DecisionInboxPage = lazy(() =>
-  import('@/modules/decision/pages/decision-inbox-page').then((m) => ({
-    default: m.DecisionInboxPage,
   })),
 );
 
@@ -536,13 +531,10 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        handle: { selfScroll: true },
+        // 决策收件箱页面已取消（2026-09-25 用户裁决，通知中心替代承载）：
+        // 旧链接与存量收藏经此重定向兜底
         path: 'decisions',
-        element: (
-          <Suspense fallback={null}>
-            <DecisionInboxPage />
-          </Suspense>
-        ),
+        element: <Navigate to="/app/notifications" replace />,
         errorElement: <ErrorPage />,
       },
       {
@@ -705,6 +697,7 @@ export const router = createBrowserRouter([
       // 设置「AI 用量」页已迁入 /app/analytics 成本 Tab（CAP-C-06，2026-09-19）；旧路径重定向保书签
       { path: 'ai/usage', element: <Navigate to="/app/analytics?tab=cost" replace /> },
       { path: 'memory', element: <MemorySection />, errorElement: <ErrorPage /> },
+      { path: 'prompts', element: <PromptsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'runtime', element: <RuntimeSettingsSection />, errorElement: <ErrorPage /> },
       {
         path: 'runtime/:runtimeId',

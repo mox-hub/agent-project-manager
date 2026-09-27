@@ -37,6 +37,14 @@ export class CreateIssueTemplateItemDto {
   @IsString()
   @IsOptional()
   parentItemId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      '任务级提示词模板（含 {{issue.*}} 变量）；应用模板建任务时落 metadata.taskPrompt',
+  })
+  @IsString()
+  @IsOptional()
+  promptHint?: string;
 }
 
 export class CreateIssueTemplateDto {
@@ -132,6 +140,13 @@ export class IssueTemplateItemResponseDto {
     type: String,
   })
   parentItemId: string | null;
+
+  @ApiProperty({
+    description: '任务级提示词模板',
+    nullable: true,
+    type: String,
+  })
+  promptHint: string | null;
 }
 
 export class IssueTemplateResponseDto {

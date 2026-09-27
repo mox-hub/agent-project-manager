@@ -189,7 +189,7 @@ export function AgentPresenceBanner({
               <Shield className="size-3.5 text-accent-yellow shrink-0" />
               <div className="flex flex-col">
                 <span>{t('unifiedCreate.dispatchStrategy.approval', { defaultValue: '需审批' })}</span>
-                <span className="text-10 text-muted-foreground">进入决策收件箱审批</span>
+                <span className="text-10 text-muted-foreground">进入通知中心审批</span>
               </div>
             </button>
             <button

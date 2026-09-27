@@ -25,6 +25,7 @@ export class IssueTemplateService {
                 priority: item.priority,
                 estimate: item.estimate,
                 parentItemId: item.parentItemId,
+                promptHint: item.promptHint,
               })),
             }
           : undefined,
@@ -87,6 +88,7 @@ export class IssueTemplateService {
                   priority: item.priority,
                   estimate: item.estimate,
                   parentItemId: item.parentItemId,
+                  promptHint: item.promptHint,
                 })),
               }
             : undefined,
@@ -159,6 +161,11 @@ export class IssueTemplateService {
             priority: item.priority || 'medium',
             estimate: item.estimate,
             reporterId: userId,
+            // 增强 A：模板条目带任务提示词时落 metadata.taskPrompt
+            // （派发面组装时按当单事实插值）
+            ...(item.promptHint
+              ? { metadata: { taskPrompt: item.promptHint } }
+              : {}),
           },
         });
       }),

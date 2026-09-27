@@ -306,8 +306,8 @@ export default function MemberDetailPage() {
 
                 {isAI && (
                   <SectionCard
-                    title={t('memberDetail.personalPrompt', '个人提示词')}
-                    description={t('memberDetail.personalPromptDesc', '注入任务派发与聊天上下文的个人指令')}
+                    title={t('memberDetail.personalPrompt', '个人提示词（执行者个人补充）')}
+                                      description={t('memberDetail.personalPromptDesc', '与所属角色的共享约定合并为一个「执行者段」注入派发 prompt')}
                   >
                     <pre className="whitespace-pre-wrap rounded-md bg-muted/50 p-2 font-mono text-xs">
                       {member.personalPrompt ?? t('memberDetail.personalPromptEmpty', '（未配置）')}

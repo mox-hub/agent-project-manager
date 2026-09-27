@@ -100,15 +100,16 @@ describe('NotificationCenterPage', () => {
       </QueryClientProvider>,
     );
 
-    expect(await screen.findByRole('heading', { name: 'Notifications' })).toBeTruthy();
+    // 标题走 i18n（测试桩返回键名，实机 zh-CN 显示「通知」）
+    expect(await screen.findByRole('heading', { name: 'notification.title' })).toBeTruthy();
     // 渲染了重要标签页
     expect(screen.getByText('重要')).toBeTruthy();
     expect(screen.getByText('其他')).toBeTruthy();
     expect(screen.getByText('稍后')).toBeTruthy();
     expect(screen.getByText('已清理')).toBeTruthy();
 
-    // 渲染了待办决策和通知项（决策首项自动选中，列表行+详情面板双渲染，用 getAllByText 断言存在）
-    expect(screen.getAllByText('等待批准敏感指令执行').length).toBeGreaterThan(0);
+    // 渲染了待办决策和通知项（列表铺满全宽，详情不再常驻右栏，仅列表单渲染）
+    expect(screen.getByText('等待批准敏感指令执行')).toBeTruthy();
     expect(screen.getByText('Task assigned to you')).toBeTruthy();
 
     // 渲染了关键行动标签
@@ -117,6 +118,48 @@ describe('NotificationCenterPage', () => {
 
     // 渲染了快速审阅按钮
     expect(screen.getByRole('button', { name: /快速审阅/ })).toBeTruthy();
+
+    // 详情 Sheet 初始不打开
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('opens decision sheet when clicking a decision row and closes it', async () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <NotificationCenterPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // 点击决策行 → Sheet 打开，出现就地拍板决策卡
+    fireEvent.click(await screen.findByText('等待批准敏感指令执行'));
+    const dialog = await screen.findByRole('dialog', { name: '等待批准敏感指令执行' });
+    expect(dialog).toBeTruthy();
+    expect(screen.getByText('决策中心 · 就地拍板')).toBeTruthy();
+
+    // 点击关闭按钮 → Sheet 收起
+    fireEvent.click(screen.getByRole('button', { name: /close/i }));
+    await vi.waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+  });
+
+  it('opens notification detail sheet with archive action when clicking a notification row', async () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <NotificationCenterPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByText('Task assigned to you'));
+    const dialog = await screen.findByRole('dialog', { name: 'Task assigned to you' });
+    expect(dialog).toBeTruthy();
+    // 通知详情正文与清理归档动作保留（功能不变，仅容器改 Sheet）
+    expect(screen.getByText('You have a new task to do')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /清理归档/ })).toBeTruthy();
   });
 
   it('switches to other tab and cleared tab', async () => {

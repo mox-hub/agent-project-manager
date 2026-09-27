@@ -32,7 +32,7 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 ### 3. 按模板实现
 
 - 复制模板骨架，替换占位内容；页面结构（PageHeader / ToolbarRow / SubPageToolbar / 内容区）不得偏离模板。
-- 样式规则：严格遵守 `docs/design/PRINCIPLES.md`（宪法 v1.0）——唯一字阶 8 档（§3）、中文最小 text-xs（§2.4）、字重 400/500/600（§2.3）、间距 4px 网格禁冻结档（§4）、语义色 token（§5）、lucide 唯一 UI 图标（§6）、动效白名单 120/180/240ms（§7）、hover/selected/focus 三态 token（§8）；**禁止任意值**（`w-[260px]`、`text-[13px]` 等）与 px 直读长尾字阶（text-8/9/13/15/22/28/32）。基础组件一律用 `components/ui/` 现有官方组件或经 `shadcn add` 引入（流程见 AGENTS.md §4.5），**禁止引入 radix**（基线唯一 @base-ui/react）。
+- 样式规则：严格遵守 `docs/design/PRINCIPLES.md`（宪法 v1.1）——唯一字阶 8 档（§3）、中文最小 text-xs（§2.4）、字重 400/500/600（§2.3）、间距 4px 网格禁冻结档（§4）、语义色 token（§5）、lucide 唯一 UI 图标（§6）、动效白名单 120/180/240ms（§7）、hover/selected/focus 三态 token（§8）；**禁止任意值**（`w-[260px]`、`text-[13px]` 等）与 px 直读长尾字阶（text-8/9/13/15/22/28/32）。基础组件一律用 `components/ui/` 现有官方组件或经 `shadcn add` 引入（流程见 AGENTS.md §4.5），**禁止引入 radix**（基线唯一 @base-ui/react）。
 - i18n：文案进 locales JSON 时用文本行插入，禁止程序化整体重写（JSON 有重复键风险）。
 
 ### 4. 自检清单（实现完成必须逐项核对并在回复中列出结果）

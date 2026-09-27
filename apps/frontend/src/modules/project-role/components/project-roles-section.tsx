@@ -3,7 +3,6 @@ import { Plus, Pencil, RefreshCw, Terminal, Trash2 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/section-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { SkeletonList } from '@/components/ui/skeleton';
@@ -23,6 +22,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useConfirm } from '@/shared/confirm/confirm-provider';
+import { PromptEditor } from '@/shared/components/prompt-editor';
+import { useSilentPromptDraft } from '@/modules/assistant/hooks/use-silent-ai';
 import {
   useCreateProjectRole,
   useProjectRoles,
@@ -269,6 +270,7 @@ function RoleEditDialog({
   );
   const [promptHint, setPromptHint] = useState(role?.promptHint ?? '');
   const [submitting, setSubmitting] = useState(false);
+  const draft = useSilentPromptDraft();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -368,12 +370,25 @@ function RoleEditDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">Prompt 提示（注入到 CLI）</label>
-            <Textarea
+            <label className="text-xs font-medium">
+              角色约定（该角色成员的 AI 执行者继承）
+            </label>
+            <PromptEditor
               value={promptHint}
-              onChange={(e) => setPromptHint(e.target.value)}
-              placeholder="如: 你是负责编码的 AI 员工..."
+              onChange={setPromptHint}
+              placeholder="如: 提交前跑 lint 与测试、按团队规范命名..."
               rows={4}
+              onDraft={async () => {
+                const result = await draft.mutateAsync({
+                  scenario: 'prompt-draft-role',
+                  context: {
+                    roleName: name || '未命名角色',
+                    roleDuty: description,
+                    executionRole,
+                  },
+                });
+                return result;
+              }}
             />
           </div>
           <DialogFooter>

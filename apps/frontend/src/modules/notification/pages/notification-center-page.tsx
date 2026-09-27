@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  Archive,
   Bell,
   Check,
   CheckCheck,
@@ -29,13 +28,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
 import { DecisionCard } from '@/shared/decision-card/decision-card';
 import { DecisionReviewModal } from '@/modules/decision/components/decision-review-modal';
 import { NotificationSettingsDialog } from '../components/notification-settings-dialog';
 import { InboxItemRow } from '../components/inbox-item-row';
+import { DecompositionReviewPanel } from '@/modules/decision/components/decomposition-review-panel';
 import { useActionableInbox } from '../hooks/use-actionable-inbox';
 import type { ActionableInboxItem, InboxTab } from '../types/inbox';
 
@@ -48,7 +53,6 @@ export function NotificationCenterPage() {
     setActiveTab,
     searchQuery,
     setSearchQuery,
-    typeFilter,
     setTypeFilter,
     items,
     counts,
@@ -69,14 +73,18 @@ export function NotificationCenterPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
-  // 当前选中的条目
+  // 当前选中的条目（点击行打开详情 Sheet，不再回退首项自动选中）
   const selectedItem = useMemo(() => {
-    if (!selectedId) return items[0] || null;
-    return items.find((i) => i.id === selectedId) || items[0] || null;
+    if (!selectedId) return null;
+    return items.find((i) => i.id === selectedId) || null;
   }, [items, selectedId]);
 
   const handleSelectItem = (item: ActionableInboxItem) => {
     setSelectedId(item.id);
+  };
+
+  const handleSheetOpenChange = (open: boolean) => {
+    if (!open) setSelectedId(null);
   };
 
   const tabs: { key: InboxTab; label: string; icon: typeof Star; count?: number }[] = [
@@ -87,52 +95,49 @@ export function NotificationCenterPage() {
   ];
 
   return (
-    <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.notificationCenter}>
+    <PageShell
+      className="overflow-hidden p-0"
+      aiPage={CORE_AI_PAGE_IDS.notificationCenter}
+      title={t('notification.title')}
+      icon={Bell}
+      actions={
+        <>
+          {/* 快速审阅弹窗按钮（保留用户强诉求的决策卡批量审阅功能） */}
+          {rawDecisions.length > 0 && (
+            <Button
+              variant="default"
+              size="sm"
+              className="h-7 gap-1.5 rounded-full px-2.5 text-xs font-semibold shadow-xs"
+              onClick={() => setReviewModalOpen(true)}
+              title="快速审阅待办决策"
+            >
+              <Layers className="size-3.5" />
+              <span>快速审阅</span>
+              <span className="rounded-full bg-primary-foreground/25 px-1.5 py-0.2 font-mono text-10 leading-none">
+                {rawDecisions.length}
+              </span>
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 rounded-full"
+            aria-label="通知设置"
+            title="通知设置"
+            data-ai-component="notification.settings-button"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Settings2 size={14} className="text-muted-foreground" />
+          </Button>
+        </>
+      }
+    >
+      <NotificationSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
       <div className="flex min-h-0 flex-1">
-        {/* ── 左栏：分类 Tab + 工具栏 + 高密度收件箱列表 ── */}
-        <aside className="flex w-120 shrink-0 flex-col border-r border-border bg-background">
-          {/* 1. 顶部标题栏 */}
-          <div className="border-b border-border px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-semibold text-foreground">Notifications</h1>
-                <FavoriteToggle label="Notifications" />
-              </div>
-              <div className="flex items-center gap-1">
-                {/* 快速审阅弹窗按钮（保留用户强诉求的决策卡批量审阅功能） */}
-                {rawDecisions.length > 0 && (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="h-7 gap-1.5 rounded-full px-2.5 text-xs font-semibold shadow-xs"
-                    onClick={() => setReviewModalOpen(true)}
-                    title="快速审阅待办决策"
-                  >
-                    <Layers className="size-3.5" />
-                    <span>快速审阅</span>
-                    <span className="rounded-full bg-primary-foreground/25 px-1.5 py-0.2 font-mono text-10 leading-none">
-                      {rawDecisions.length}
-                    </span>
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-8 rounded-full"
-                  aria-label="通知设置"
-                  title="通知设置"
-                  data-ai-component="notification.settings-button"
-                  onClick={() => setSettingsOpen(true)}
-                >
-                  <Settings2 size={14} className="text-muted-foreground" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <NotificationSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-
-          {/* 2. 顶栏四大 GTD 分类 Tab（重要 / 其他 / 稍后 / 已清理） */}
+        {/* ── 收件箱列表（铺满全宽）：分类 Tab + 工具栏 + 高密度列表 ── */}
+        <aside className="flex min-w-0 flex-1 flex-col bg-background">
+          {/* 1. 顶栏四大 GTD 分类 Tab（重要 / 其他 / 稍后 / 已清理） */}
           <div className="flex items-center border-b border-border px-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -171,7 +176,7 @@ export function NotificationCenterPage() {
             })}
           </div>
 
-          {/* 3. 工具栏（搜索、筛选、一键清理、全部已读） */}
+          {/* 2. 工具栏（搜索、筛选、一键清理、全部已读） */}
           <div className="flex items-center justify-between gap-2 border-b border-border/80 px-3 py-2 bg-muted/20">
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               {/* 筛选菜单 */}
@@ -237,7 +242,7 @@ export function NotificationCenterPage() {
             </div>
           </div>
 
-          {/* 4. 高密度列表区 */}
+          {/* 3. 高密度列表区 */}
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
             {isLoading ? (
               <div className="flex flex-col gap-2 p-3">
@@ -283,7 +288,7 @@ export function NotificationCenterPage() {
             )}
           </div>
 
-          {/* 5. 底部产品核心心智横幅（对应截图字幕） */}
+          {/* 4. 底部产品核心心智横幅（对应截图字幕） */}
           <div className="border-t border-border/70 px-4 py-2 bg-muted/15 flex items-center justify-between text-xs text-content-text-muted">
             <span className="flex items-center gap-1.5">
               <span className="size-1.5 rounded-full bg-accent-green animate-pulse" />
@@ -293,52 +298,56 @@ export function NotificationCenterPage() {
           </div>
         </aside>
 
-        {/* ── 右栏：选中项的就地拍板决策卡 / 通知详情联动 ── */}
-        <section className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-muted/10">
-          {selectedItem?.sourceKind === 'decision' && selectedItem.rawDecision ? (
-            <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-6 py-6">
-              <div className="mb-4 flex w-full items-center justify-between border-b border-border/60 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="rounded bg-accent-yellow-light text-accent-yellow px-2 py-0.5 text-xs font-semibold border border-accent-yellow/20">
-                    决策中心 · 就地拍板
-                  </span>
-                  <span className="text-xs text-content-text-muted">
-                    审核完毕将自动归入「已清理」
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setReviewModalOpen(true)}
-                  className="h-7 gap-1.5 text-xs text-primary hover:text-primary"
-                >
-                  <Layers className="size-3.5" />
-                  <span>多卡集中批阅</span>
-                </Button>
-              </div>
+        {/* ── 详情 Sheet：选中条目的就地拍板决策卡 / 通知详情（Overlays 抽屉形态） ── */}
+        <Sheet open={!!selectedItem} onOpenChange={handleSheetOpenChange}>
+          <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-2xl">
+            {selectedItem?.sourceKind === 'decision' && selectedItem.rawDecision ? (
+              <>
+                <SheetHeader className="border-b border-border/60 p-4 pr-12">
+                  <SheetTitle className="sr-only">{selectedItem.title}</SheetTitle>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded border border-accent-yellow/20 bg-accent-yellow-light px-2 py-0.5 text-xs font-semibold text-accent-yellow">
+                        决策中心 · 就地拍板
+                      </span>
+                      <span className="text-xs text-content-text-muted">
+                        审核完毕将自动归入「已清理」
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setReviewModalOpen(true)}
+                      className="h-7 gap-1.5 text-xs text-primary hover:text-primary"
+                    >
+                      <Layers className="size-3.5" />
+                      <span>多卡集中批阅</span>
+                    </Button>
+                  </div>
+                </SheetHeader>
 
-              {/* 核心现实卡片直接渲染（五段式文法就地拍板） */}
-              <div className="w-full">
-                <DecisionCard
-                  decision={selectedItem.rawDecision}
-                  busy={busyDecisionId === selectedItem.rawDecision.id}
-                  onAction={handleDecisionAction}
-                  variant="vertical"
-                />
-              </div>
-            </div>
-          ) : selectedItem ? (
-            <div className="mx-auto w-full max-w-2xl px-6 py-8">
-              <div className="rounded-xl border border-border/80 bg-background p-6 shadow-xs">
-                <div className="flex items-start justify-between gap-4">
+                {/* 核心现实卡片直接渲染（五段式文法就地拍板）；plan 卡下方随挂拆解质量评估（原决策收件箱右栏承载，CAP-P-01 切片 3） */}
+                <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                  <DecisionCard
+                    decision={selectedItem.rawDecision}
+                    busy={busyDecisionId === selectedItem.rawDecision.id}
+                    onAction={handleDecisionAction}
+                    variant="vertical"
+                  />
+                  <DecompositionReviewPanel decision={selectedItem.rawDecision} />
+                </div>
+              </>
+            ) : selectedItem ? (
+              <>
+                <SheetHeader className="border-b border-border/60 p-4 pr-12">
                   <div className="flex items-start gap-3">
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-blue-light text-accent-blue">
                       <Bell className="size-5 text-accent-blue" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-foreground">
+                    <div className="min-w-0">
+                      <SheetTitle className="text-lg font-semibold text-foreground">
                         {selectedItem.title}
-                      </h2>
+                      </SheetTitle>
                       <div className="mt-1 flex items-center gap-2 text-xs text-content-text-muted">
                         <span>{selectedItem.actor?.name || '系统动态'}</span>
                         <span>·</span>
@@ -346,8 +355,37 @@ export function NotificationCenterPage() {
                       </div>
                     </div>
                   </div>
+                </SheetHeader>
 
-                  <div className="flex items-center gap-1.5">
+                <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-4">
+                  {selectedItem.subtitle && (
+                    <div className="rounded-lg bg-muted/40 p-4 text-sm leading-relaxed text-foreground/90">
+                      {selectedItem.subtitle}
+                    </div>
+                  )}
+
+                  {/* 关联上下文卡片 */}
+                  {selectedItem.issueId && (
+                    <div className="flex items-center justify-between rounded-lg border border-border/80 bg-muted/10 p-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-content-text-muted">关联工单：</span>
+                        <span className="text-xs font-medium text-foreground">
+                          {selectedItem.issueTitle || selectedItem.issueId}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-xs text-primary hover:text-primary"
+                        onClick={() => navigate(`/app/tasks/${selectedItem.issueId}`)}
+                      >
+                        <span>打开工单</span>
+                        <ExternalLink className="size-3" />
+                      </Button>
+                    </div>
+                  )}
+
+                  <div className="mt-auto flex justify-end">
                     <Button
                       variant="outline"
                       size="sm"
@@ -359,44 +397,10 @@ export function NotificationCenterPage() {
                     </Button>
                   </div>
                 </div>
-
-                {selectedItem.subtitle && (
-                  <div className="mt-6 rounded-lg bg-muted/40 p-4 text-sm text-foreground/90 leading-relaxed">
-                    {selectedItem.subtitle}
-                  </div>
-                )}
-
-                {/* 关联上下文卡片 */}
-                {selectedItem.issueId && (
-                  <div className="mt-6 flex items-center justify-between rounded-lg border border-border/80 p-3 bg-muted/10">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-content-text-muted">关联工单：</span>
-                      <span className="text-xs font-medium text-foreground">
-                        {selectedItem.issueTitle || selectedItem.issueId}
-                      </span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 text-xs text-primary hover:text-primary"
-                      onClick={() => navigate(`/app/tasks/${selectedItem.issueId}`)}
-                    >
-                      <span>打开工单</span>
-                      <ExternalLink className="size-3" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-1 items-center justify-center p-8">
-              <EmptyState
-                title="选择一项查看详情"
-                description="点击左侧列表中的任意条目，右侧将展开决策卡片或关联上下文。"
-              />
-            </div>
-          )}
-        </section>
+              </>
+            ) : null}
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* 全屏多卡集中快速审阅弹窗（保留现有的决策卡快速审阅功能） */}

@@ -110,7 +110,6 @@ export const commandEntries: CommandEntry[] = [
   // —— 工作流与治理 ——
   { id: 'cmd-workflows', labelKey: 'shell.openWorkflows', to: '/app/workflows', group: 'workflow', entity: 'workflow', keywords: ['workflow', '工作流', '流'] },
   { id: 'cmd-acceptance', labelKey: 'shell.openAcceptance', to: '/app/acceptance', group: 'workflow', entity: 'acceptance', keywords: ['acceptance', '验收', '门禁'] },
-  { id: 'cmd-decisions', labelKey: 'shell.openDecisions', to: '/app/decisions', group: 'workflow', entity: 'decision', keywords: ['decision', '决策', '收件箱', 'inbox'] },
   { id: 'cmd-executions', labelKey: 'shell.openExecutions', to: '/app/executions', group: 'workflow', entity: 'execution', keywords: ['execution', '执行', 'run', '运行'] },
   { id: 'cmd-releases', labelKey: 'nav.releases', to: '/app/releases', group: 'workflow', icon: Rocket, keywords: ['release', '发版', '交付', 'changelog'] },
   { id: 'cmd-intake', labelKey: 'nav.intake', to: '/app/intake', group: 'workflow', entity: 'document', keywords: ['intake', '需求', '承接'] },
@@ -118,7 +117,8 @@ export const commandEntries: CommandEntry[] = [
   // —— 协作与工具 ——
   { id: 'cmd-office', labelKey: 'shell.openOffice', to: '/app/office', group: 'collaboration', icon: Building2, keywords: ['office', '办公', '办公室'] },
   { id: 'cmd-repositories', labelKey: 'shell.openRepositories', to: '/app/repositories', group: 'collaboration', entity: 'repository', keywords: ['repository', 'repo', 'git', '仓库', '代码'] },
-  { id: 'cmd-notifications', labelKey: 'shell.openNotifications', to: '/app/notifications', group: 'collaboration', icon: Bell, keywords: ['notification', '通知', '消息', 'message'] },
+  // 决策收件箱命令已取消（页面并入通知中心）：决策/收件箱关键词迁到通知命令保证可达
+  { id: 'cmd-notifications', labelKey: 'shell.openNotifications', to: '/app/notifications', group: 'collaboration', icon: Bell, keywords: ['notification', '通知', '消息', 'message', 'decision', '决策', '收件箱', 'inbox'] },
   // 全局搜索（v0.7.4 悬浮化）：不再跳 /app/search 页面，命令即开搜索面板
   {
     id: 'cmd-search',

@@ -1,23 +1,14 @@
 /**
- * Workflow 详情页（CAP-A-12）——SubPageToolbar 标准头 + 画布主区占满 + 右侧栏。
- * 非编辑：右栏 = 运行历史 + run 详情（suspended 确认卡批准/拒绝即 resume）。
- * 编辑：右栏 = 选中步骤属性面板，主区左侧浮出节点库（分类待选组件）。
+ * Workflow 详情页（CAP-A-12 / CAP-S-03 呈现层复刻）——SubPageToolbar 标准头
+ * + 主区两态 + 右侧栏。主区：选中 run 时渲染运行面板（ZCode 工作流卡形态：
+ * 种类词表头+阶段时间线+确认卡+产物+统计），未选中时为定义画布。
+ * 编辑：主区左侧浮出节点库（v1）或 JSON 源码模式（v2 节点树文法）。
  * 进度失效经 socket 推送 + suspended/running 时 5s 轮询兜底双通道。
  */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import {
-  Check,
-  CheckCircle2,
-  CircleDashed,
-  Clock,
-  PauseCircle,
-  Pencil,
-  Play,
-  UserCheck,
-  XCircle,
-} from 'lucide-react';
+import { Check, CircleDashed, Clock, Pencil, Play, XCircle, CheckCircle2, PauseCircle } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -26,16 +17,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { StatusPill } from '@/components/ui/status-pill';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
-  useResumeWorkflow,
   useUpdateWorkflow,
   useWorkflow,
   useWorkflowActions,
   useWorkflowEvents,
-  useWorkflowRun,
   useWorkflowRuns,
 } from '../hooks/use-workflows';
 import { WorkflowCanvas, type CanvasStep } from '../components/workflow-canvas';
@@ -44,10 +31,17 @@ import {
   type EditableStep,
 } from '../components/workflow-step-editor';
 import { WorkflowNodePalette } from '../components/workflow-node-palette';
+import { WorkflowRunPanel } from '../components/workflow-run-panel';
+import { WorkflowRunTimeline } from '../components/workflow-run-timeline';
+import { WorkflowTriggerDialog } from '../components/workflow-trigger-dialog';
+import {
+  buildRunView,
+  type V2NodeSummary,
+} from '../components/run-view/build-run-view';
 import type { WorkflowRun } from '../api/workflow-api';
 
 const RUN_STATUS_META: Record<string, { icon: typeof Clock; tone: string; labelKey: string }> = {
-  running: { icon: CircleDashed, tone: 'text-accent-blue', labelKey: 'workflow.status.running' },
+  running: { icon: CircleDashed, tone: 'text-accent-yellow', labelKey: 'workflow.status.running' },
   succeeded: { icon: CheckCircle2, tone: 'text-accent-green', labelKey: 'workflow.status.succeeded' },
   failed: { icon: XCircle, tone: 'text-accent-red', labelKey: 'workflow.status.failed' },
   suspended: { icon: PauseCircle, tone: 'text-accent-yellow', labelKey: 'workflow.status.suspended' },
@@ -107,6 +101,9 @@ export function WorkflowDetailPage() {
   const [editing, setEditing] = useState(false);
   const [editSteps, setEditSteps] = useState<EditableStep[]>([]);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
+  // v2 节点树文法：画布（线性链）不适用，编辑走 JSON 源码模式（CAP-S-03 W3）
+  const [jsonDraft, setJsonDraft] = useState('');
+  const [jsonError, setJsonError] = useState<string | null>(null);
 
   const rawSteps = useMemo(() => {
     const defSteps =
@@ -127,7 +124,14 @@ export function WorkflowDetailPage() {
     [editing, editSteps, rawSteps],
   );
 
+  const isV2Doc =
+    (workflow?.definition as { version?: number } | undefined)?.version === 2;
+
   const startEditing = () => {
+    if (isV2Doc) {
+      setJsonDraft(JSON.stringify(workflow?.definition, null, 2));
+      setJsonError(null);
+    }
     setEditSteps(rawSteps.map((s) => ({ ...s })));
     setSelectedStepId(null);
     setEditing(true);
@@ -172,12 +176,46 @@ export function WorkflowDetailPage() {
   };
 
   const saveEditing = () => {
+    if (isV2Doc) {
+      // v2：JSON 原样保存（version 不得被降级覆写）
+      try {
+        const parsed = JSON.parse(jsonDraft) as Record<string, unknown>;
+        if (parsed.version !== 2) throw new Error('version');
+        updateMutation.mutate(
+          { definition: parsed },
+          { onSuccess: () => setEditing(false) },
+        );
+      } catch {
+        setJsonError(t('workflow.editor.jsonInvalid'));
+      }
+      return;
+    }
     const raw = (workflow?.definition ?? {}) as Record<string, unknown>;
     updateMutation.mutate(
       { definition: { ...raw, version: 1, steps: editSteps } },
       { onSuccess: () => setEditing(false) },
     );
   };
+
+  const closeRun = () => {
+    setSelectedRunId(null);
+    searchParams.delete('runId');
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  // v2 默认态：静态阶段预览（graphSummary 投影 + 空 journal → 全 pending 站）+ 触发入口
+  const [triggerOpen, setTriggerOpen] = useState(false);
+  const staticView = useMemo(
+    () =>
+      isV2Doc && workflow?.stepsSummary
+        ? buildRunView(workflow.stepsSummary as unknown as V2NodeSummary[], [], {})
+        : null,
+    [isV2Doc, workflow?.stepsSummary],
+  );
+  const staticStations = staticView?.stations ?? [];
+  const staticAgentCount = new Set(
+    staticStations.flatMap((s) => s.pills).filter((p) => p.type === 'agent').map((p) => p.nodeId),
+  ).size;
 
   return (
     <PageShell className="overflow-hidden" aiPage="workflow.detail">
@@ -191,8 +229,12 @@ export function WorkflowDetailPage() {
         actions={
           <>
             {workflow ? (
-              <Badge variant="secondary" className="shrink-0 text-10">
-                v{workflow.version}
+              <Badge
+                variant="secondary"
+                className="shrink-0 text-10"
+                title={t('workflow.grammarVersionBadge')}
+              >
+                v{workflow.grammarVersion ?? 1}
               </Badge>
             ) : null}
             {editing ? (
@@ -209,21 +251,34 @@ export function WorkflowDetailPage() {
                   icon={Check}
                   label={t('workflow.editor.save')}
                   variant="primary"
-                  disabled={updateMutation.isPending || editSteps.length === 0}
+                  disabled={
+                    updateMutation.isPending ||
+                    (!isV2Doc && editSteps.length === 0)
+                  }
                   onClick={saveEditing}
                   data-ai-component="workflow.detail.save-definition"
                   data-ai-action="workflow.detail.save-definition.click"
                 />
               </>
             ) : (
-              <HeaderActionButton
-                icon={Pencil}
-                label={t('workflow.editor.edit')}
-                disabled={!workflow}
-                onClick={startEditing}
-                data-ai-component="workflow.detail.edit-toggle"
-                data-ai-action="workflow.detail.edit-toggle.click"
-              />
+              <>
+                <HeaderActionButton
+                  icon={Play}
+                  label={t('workflow.run')}
+                  disabled={!workflow}
+                  onClick={() => setTriggerOpen(true)}
+                  data-ai-component="workflow.detail.run-toggle"
+                  data-ai-action="workflow.detail.run-toggle.click"
+                />
+                <HeaderActionButton
+                  icon={Pencil}
+                  label={t('workflow.editor.edit')}
+                  disabled={!workflow}
+                  onClick={startEditing}
+                  data-ai-component="workflow.detail.edit-toggle"
+                  data-ai-action="workflow.detail.edit-toggle.click"
+                />
+              </>
             )}
           </>
         }
@@ -236,34 +291,90 @@ export function WorkflowDetailPage() {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 gap-0">
-          {/* 主区：描述行 + 画布（编辑模式左侧浮出节点库） */}
+          {/* 主区分态：选中 run → 运行面板；v2 定义 → 静态阶段预览；v1 → 定义画布（编辑模式浮出节点库/JSON） */}
           <div className="flex min-w-0 flex-1 flex-col gap-2 px-4 pb-3">
-            <p className="line-clamp-1 text-xs text-muted-foreground">
-              {workflow.description || t('workflow.noDescription')}
-            </p>
-            <div className="flex min-h-0 flex-1 items-stretch gap-2">
-              {editing ? (
-                <WorkflowNodePalette
-                  actions={actions}
-                  onAdd={(type, actionId) =>
-                    insertAfter(
-                      selectedIndex,
-                      actionId
-                        ? { type: 'action', action: actionId }
-                        : { type },
-                    )
-                  }
-                  className="w-56 shrink-0 rounded-lg border border-border bg-card"
-                />
-              ) : null}
-              <div className="min-w-0 flex-1">
-                <WorkflowCanvas
-                  steps={canvasSteps}
-                  selectedId={selectedStepId}
-                  onStepClick={editing ? setSelectedStepId : undefined}
-                />
-              </div>
-            </div>
+            {!editing && activeRunId ? (
+              <WorkflowRunPanel runId={activeRunId} onClose={closeRun} />
+            ) : !editing && isV2Doc ? (
+              <Card className="min-h-0 flex-1 overflow-y-auto">
+                <CardContent className="flex flex-col gap-3 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {t('workflow.runPanel.previewTitle')}
+                    </span>
+                    <Badge
+                      variant="secondary"
+                      className="shrink-0 text-10"
+                      title={t('workflow.grammarVersionBadge')}
+                    >
+                      v2
+                    </Badge>
+                    <span className="ml-auto text-11 text-muted-foreground">
+                      {staticView
+                        ? t('workflow.runPanel.phasesDetail', { count: staticView.stats.phases })
+                        : ''}
+                      {staticView && staticAgentCount > 0
+                        ? ` · ${t('workflow.runPanel.agentsDetail', { count: staticAgentCount })}`
+                        : ''}
+                    </span>
+                  </div>
+                  <WorkflowRunTimeline stations={staticStations} />
+                  <p className="text-11 leading-relaxed text-muted-foreground">
+                    {t('workflow.runPanel.previewHint')}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <p className="line-clamp-1 text-xs text-muted-foreground">
+                  {workflow.description || t('workflow.noDescription')}
+                </p>
+                <div className="flex min-h-0 flex-1 items-stretch gap-2">
+                  {editing && !isV2Doc ? (
+                    <WorkflowNodePalette
+                      actions={actions}
+                      onAdd={(type, actionId) =>
+                        insertAfter(
+                          selectedIndex,
+                          actionId
+                            ? { type: 'action', action: actionId }
+                            : { type },
+                        )
+                      }
+                      className="w-56 shrink-0 rounded-lg border border-border bg-card"
+                    />
+                  ) : null}
+                  {editing && isV2Doc ? (
+                    <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+                      <p className="text-11 text-muted-foreground">
+                        {t('workflow.editor.jsonModeHint')}
+                      </p>
+                      <textarea
+                        value={jsonDraft}
+                        onChange={(e) => {
+                          setJsonDraft(e.target.value);
+                          setJsonError(null);
+                        }}
+                        spellCheck={false}
+                        className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-card p-3 font-mono text-xs leading-relaxed outline-none focus:border-primary/50"
+                        data-ai-component="workflow.detail.v2-json-editor"
+                      />
+                      {jsonError ? (
+                        <p className="text-xs text-destructive">{jsonError}</p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="min-w-0 flex-1">
+                      <WorkflowCanvas
+                        steps={canvasSteps}
+                        selectedId={selectedStepId}
+                        onStepClick={editing && !isV2Doc ? setSelectedStepId : undefined}
+                      />
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* 右侧栏：非编辑=运行历史；编辑=选中步骤属性面板 */}
@@ -295,13 +406,34 @@ export function WorkflowDetailPage() {
                 activeRunId={activeRunId}
                 onSelect={(runId) => {
                   setSelectedRunId(runId);
-                  setSearchParams({ runId }, { replace: true });
+                  if (runId) {
+                    setSearchParams({ runId }, { replace: true });
+                  } else {
+                    searchParams.delete('runId');
+                    setSearchParams(searchParams, { replace: true });
+                  }
                 }}
               />
             )}
           </RightSidebar>
         </div>
       )}
+      <WorkflowTriggerDialog
+        open={triggerOpen}
+        target={
+          workflow
+            ? {
+                id: workflow.id,
+                key: workflow.key,
+                name: workflow.name,
+                description: workflow.description ?? null,
+                version: workflow.version,
+                grammarVersion: workflow.grammarVersion,
+              }
+            : null
+        }
+        onClose={() => setTriggerOpen(false)}
+      />
     </PageShell>
   );
 }
@@ -315,7 +447,8 @@ function RunsPanel({
   runsPage: { data: WorkflowRun[]; meta: { total: number } } | undefined;
   runsLoading: boolean;
   activeRunId: string | null;
-  onSelect: (runId: string) => void;
+  /** 点击 run：未选中则选中，已选中则取消（回定义视图） */
+  onSelect: (runId: string | null) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -334,12 +467,11 @@ function RunsPanel({
               key={run.id}
               run={run}
               active={run.id === activeRunId}
-              onClick={() => onSelect(run.id)}
+              onClick={() => onSelect(run.id === activeRunId ? null : run.id)}
             />
           ))
         )}
       </div>
-      {activeRunId ? <RunDetailPanel runId={activeRunId} /> : null}
     </div>
   );
 }
@@ -376,90 +508,5 @@ function RunRow({
         <Play className="size-3 shrink-0 text-content-text-muted" aria-hidden />
       ) : null}
     </button>
-  );
-}
-
-function RunDetailPanel({ runId }: { runId: string }) {
-  const { t } = useTranslation();
-  const { data: run, isLoading } = useWorkflowRun(runId);
-
-  const resume = useResumeWorkflow();
-  const [note, setNote] = useState('');
-
-  if (isLoading || !run) return <Skeleton className="h-32 rounded-lg" />;
-
-  const waiting = run.waitingApproval;
-  const output = run.output as { error?: string } | null | undefined;
-
-  return (
-    <Card className="shrink-0">
-      <CardContent className="space-y-3 p-3">
-        <div className="flex items-center justify-between">
-          <StatusPill tone="info">
-            <code className="text-11">{run.id.slice(0, 12)}…</code>
-          </StatusPill>
-          <span className="text-11 text-muted-foreground">
-            {t('workflow.triggerType')}: {run.triggerType}
-          </span>
-        </div>
-
-        {waiting ? (
-          <div className="space-y-2 rounded-md border border-accent-yellow/40 bg-accent-yellow/5 p-3">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-accent-yellow">
-              {/* 等待人工确认提示：图标与 human-confirm 节点同口径=UserCheck（裁决见 entity-icons.tsx） */}
-              <UserCheck className="size-3.5" />
-              {waiting.title || t('workflow.waitingApproval')}
-            </div>
-            <p className="whitespace-pre-wrap text-xs leading-relaxed">{waiting.message}</p>
-            <Input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder={t('workflow.notePlaceholder')}
-              className="h-7 text-xs"
-            />
-            <div className="flex justify-end gap-1.5">
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs"
-                disabled={resume.isPending}
-                onClick={() =>
-                  resume.mutate(
-                    { runId, data: { resumeData: { approved: false, note } } },
-                    { onSuccess: () => setNote('') },
-                  )
-                }
-              >
-                {t('workflow.reject')}
-              </Button>
-              <Button
-                size="sm"
-                className="h-7 text-xs"
-                disabled={resume.isPending}
-                onClick={() =>
-                  resume.mutate(
-                    { runId, data: { resumeData: { approved: true, note } } },
-                    { onSuccess: () => setNote('') },
-                  )
-                }
-              >
-                <CheckCircle2 className="mr-1 size-3" />
-                {t('workflow.approve')}
-              </Button>
-            </div>
-          </div>
-        ) : null}
-
-        {output?.error ? (
-          <p className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">{output.error}</p>
-        ) : null}
-
-        {run.output && !output?.error ? (
-          <pre className="max-h-48 overflow-auto rounded-md bg-muted/50 p-2 text-11 leading-relaxed">
-            {JSON.stringify(run.output, null, 2)}
-          </pre>
-        ) : null}
-      </CardContent>
-    </Card>
   );
 }

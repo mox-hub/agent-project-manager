@@ -285,7 +285,7 @@ export function InterviewDialog({
                 {t('common.close')}
               </Button>
               <Button asChild data-ai="playbook.interview.gotoInbox" className={cn('gap-1.5')}>
-                <Link to="/app/decisions">
+                <Link to="/app/notifications">
                   <Inbox className="size-3.5" />
                   {t('project.playbookPage.interview.goInbox')}
                 </Link>

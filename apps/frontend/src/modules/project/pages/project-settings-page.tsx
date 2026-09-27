@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings2, GitBranch, Cloud, BookOpen, Archive, ScrollText, Route, Users } from 'lucide-react';
+import { Settings2, GitBranch, Cloud, BookOpen, Archive, ScrollText, Route, Users, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { useUpdateProject, useArchiveProject } from '../hooks/use-project-mutations';
@@ -32,8 +32,9 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 import { ProjectTeamSettingsPanel } from '../components/settings/project-team-settings-panel';
 import { ProjectPlaybookSettingsPanel } from '../components/settings/project-playbook-settings-panel';
+import { ProjectPromptSettingsPanel } from '../components/settings/project-prompt-settings-panel';
 
-type SettingsTab = 'general' | 'team' | 'playbook' | 'git' | 'contract' | 'cloud' | 'docs';
+type SettingsTab = 'general' | 'ai' | 'team' | 'playbook' | 'git' | 'contract' | 'cloud' | 'docs';
 
 const SETTINGS_TABS: Array<{
   id: SettingsTab;
@@ -41,6 +42,8 @@ const SETTINGS_TABS: Array<{
   icon: typeof Settings2;
 }> = [
   { id: 'general', label: 'projectSettings.tabs.general', icon: Settings2 },
+  // CAP-A-24：项目级提示词（注入该项目全部派发 prompt）
+  { id: 'ai', label: 'projectSettings.tabs.ai', icon: Sparkles },
   // CAP-P-01 五期 IA 降级（2026-09-22）：team/playbook 自项目详情导航移入设置分页
   { id: 'team', label: 'projectSettings.tabs.team', icon: Users },
   { id: 'playbook', label: 'projectSettings.tabs.playbook', icon: Route },
@@ -407,6 +410,22 @@ export function ProjectSettingsPage() {
                 </Card>
               </div>
             )}
+
+            {activeTab === 'ai' && projectId ? (
+              <div
+                className="space-y-4"
+                data-ai-component="project.project-settings.ai"
+                data-ai-role="content"
+              >
+                <div>
+                  <h2 className="text-base font-semibold">{t('projectSettings.ai.title')}</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {t('projectSettings.ai.desc')}
+                  </p>
+                </div>
+                <ProjectPromptSettingsPanel projectId={projectId} />
+              </div>
+            ) : null}
 
             {activeTab === 'team' && projectId ? (
               <ProjectTeamSettingsPanel projectId={projectId} />

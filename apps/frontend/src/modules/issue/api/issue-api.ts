@@ -135,6 +135,44 @@ export interface Task {
   localUpdatedAt?: string | null;
   /** 自定义字段（键集 = 所属 IssueType.fieldSchema；适配引擎二期） */
   customFields?: Record<string, unknown> | null;
+  /** 扩展元数据（AI 拆分建议批 splitProposal 等扩展存放处） */
+  metadata?: Record<string, unknown> | null;
+}
+
+/** AI 拆分建议批（存父工单 metadata.splitProposal；确认一条少一条，清空即撤批） */
+export interface IssueSplitProposal {
+  batchId: string;
+  createdAt: string;
+  subtasks: { title: string; description?: string }[];
+}
+
+/** 从工单 metadata 读取拆分建议批（畸形/空批返回 null，不渲染） */
+export function getIssueSplitProposal(
+  metadata: Record<string, unknown> | null | undefined,
+): IssueSplitProposal | null {
+  const raw = metadata?.splitProposal;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.batchId !== 'string' || !Array.isArray(r.subtasks)) return null;
+  const subtasks = r.subtasks
+    .filter(
+      (it): it is Record<string, unknown> =>
+        !!it && typeof it === 'object' && !Array.isArray(it),
+    )
+    .filter((it) => typeof it.title === 'string' && it.title.trim().length > 0)
+    .map((it) => ({
+      title: (it.title as string).trim(),
+      description:
+        typeof it.description === 'string' && it.description.trim()
+          ? it.description.trim()
+          : undefined,
+    }));
+  if (subtasks.length === 0) return null;
+  return {
+    batchId: r.batchId,
+    createdAt: typeof r.createdAt === 'string' ? r.createdAt : '',
+    subtasks,
+  };
 }
 
 export interface TaskListParams {
@@ -275,6 +313,8 @@ export interface UpdateTaskRequest {
   bugActualResult?: string;
   /** 自定义字段整体提交（顶层键合并、null 删除；需提交完整键集） */
   customFields?: Record<string, unknown> | null;
+  /** 扩展元数据（整体提交；AI 拆分建议批 splitProposal 存放处） */
+  metadata?: Record<string, unknown> | null;
   /** 4d 关单软强制：置终态存在未完成执行项时，force=true 显式放行 */
   force?: boolean;
 }

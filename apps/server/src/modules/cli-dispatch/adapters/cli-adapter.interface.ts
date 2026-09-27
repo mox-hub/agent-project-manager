@@ -33,7 +33,9 @@ export const CLI_ADAPTER_CAPABILITIES: Record<
     mcpTools: true,
   },
   codex: { allowedTools: true, usage: false, approval: false, mcpTools: true },
-  zcode: { allowedTools: false, usage: false, approval: false, mcpTools: true },
+  // zcode：headless stream-json 协议已校准（v0.16.9 实测采样+源码对照）——result 终行自带 usage；
+  // allowedTools 无对应旗标；headless 无交互审批面，approval 通道保持 false
+  zcode: { allowedTools: false, usage: true, approval: false, mcpTools: true },
   opencode: {
     allowedTools: false,
     usage: true,
@@ -168,6 +170,8 @@ export interface CliExecutionInput {
   allowedTools?: string[];
   maxTokens?: number;
   timeout?: number;
+  /** 权限模式透传（zcode: build|edit|plan|yolo，headless 缺省 yolo；其余 adapter 忽略） */
+  permissionMode?: string;
 }
 
 export interface DetectResult {
@@ -182,6 +186,13 @@ export interface CommandBuildResult {
   env: Record<string, string>;
   /** prompt 经 stdin 注入时的载荷（如 claude-code stream-json 的 NDJSON user message） */
   stdinData?: string;
+  /**
+   * false = 绕过 shell 直启（spawn 免 shell）。Windows cmd.exe shell 路径有 ~8K
+   * 命令行上限且引号/换行/百分号会被改写；prompt 走 argv 的 adapter（如 zcode，
+   * 无 stdin 通道）在长 prompt 下必须直启（CreateProcess 上限 32K）。
+   * 缺省 true，保持既有 spawn(shell:true) 行为。
+   */
+  shell?: boolean;
 }
 
 export interface ParseResult {

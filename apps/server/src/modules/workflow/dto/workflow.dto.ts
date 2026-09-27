@@ -96,6 +96,15 @@ export class ResumeWorkflowDto {
   })
   @IsObject()
   resumeData!: Record<string, unknown>;
+
+  @ApiProperty({
+    description:
+      '目标节点 id（v2 引擎 journal 精确到节点；缺省时推断唯一 waiting 节点）',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  nodeId?: string;
 }
 
 export class ListWorkflowRunsQuery {

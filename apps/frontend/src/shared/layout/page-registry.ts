@@ -51,7 +51,6 @@ export interface PageRegistryEntry {
 export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
   "/app/intake": { icon: getEntityIcon("document").icon, labelKey: "nav.intake", label: "需求承接", color: "#06B6D4" },
   "/app/ai-surface": { icon: Sparkles, labelKey: "nav.aiSurface", color: "#8B5CF6" },
-  "/app/decisions": { icon: getEntityIcon("decision").icon, labelKey: "nav.decisions", color: "#F97316" },
   "/app/search": { icon: Search, labelKey: "nav.search", color: "#6366F1" },
   "/app/notifications": { icon: Bell, labelKey: "nav.notifications", color: "#F59E0B" },
   "/app/projects/dashboard": { icon: LayoutDashboard, labelKey: "nav.dashboard", color: "#10B981" },

@@ -1,8 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RunDetailsDialog } from './run-details-dialog';
 import type { ExecutionRunDetail } from '../api/execution-api';
+
+vi.mock('@/hooks/use-copy-to-clipboard', () => ({
+  useCopyToClipboard: () => ({
+    copyToClipboard: vi.fn(),
+    isCopied: false,
+  }),
+}));
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -120,5 +127,27 @@ describe('RunDetailsDialog', () => {
     renderDialog();
     expect(screen.getByText('runDetails.outputsFiles:2')).toBeTruthy();
     expect(screen.getByText('runDetails.outputsCommands:1')).toBeTruthy();
+  });
+
+  it('完整 Prompt 页签：无持久化载荷时空态说明，不报错', () => {
+    mockState.isLoading = false;
+    mockState.detail = makeDetail();
+    renderDialog();
+    fireEvent.click(screen.getByText('runDetails.tabFullPrompt'));
+    expect(screen.getByText('runDetails.fullPromptEmptyTitle')).toBeTruthy();
+    expect(screen.getByText('runDetails.fullPromptEmptyDesc')).toBeTruthy();
+  });
+
+  it('完整 Prompt 页签：展示派发真实载荷全文与字数', () => {
+    mockState.isLoading = false;
+    mockState.detail = makeDetail({
+      input: { prompt: '# Task\n实现登录页' },
+    });
+    renderDialog();
+    fireEvent.click(screen.getByText('runDetails.tabFullPrompt'));
+    expect(screen.getByText(/# Task/)).toBeTruthy();
+    expect(screen.getByText(/实现登录页/)).toBeTruthy();
+    expect(screen.getByText('runDetails.fullPromptChars:12')).toBeTruthy();
+    expect(screen.getByText('runDetails.fullPromptCopy')).toBeTruthy();
   });
 });

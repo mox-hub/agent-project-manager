@@ -181,6 +181,29 @@ export class WorkflowController {
     @Body() dto: ResumeWorkflowDto,
     @Request() req: { user: { id: string } },
   ): Promise<WorkflowRunTriggerResponseDto> {
-    return this.workflowService.resumeRun(id, dto.resumeData, req.user.id);
+    return this.workflowService.resumeRun(
+      id,
+      dto.resumeData,
+      req.user.id,
+      dto.nodeId,
+    );
+  }
+
+  @Post('workflow-runs/:id/cancel')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: '取消工作流运行（v2 引擎；running/suspended 可取消）',
+  })
+  @ApiParam({ name: 'id', description: 'Workflow run ID' })
+  @ApiOkResponse({
+    type: WorkflowRunTriggerResponseDto,
+    description: '取消结果',
+  })
+  @ApiStandardErrors()
+  async cancelRun(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+  ): Promise<WorkflowRunTriggerResponseDto> {
+    return this.workflowService.cancelRun(id, req.user.id);
   }
 }

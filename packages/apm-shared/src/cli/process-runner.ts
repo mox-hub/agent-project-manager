@@ -73,7 +73,8 @@ export function runCliProcess(
   const proc = spawn(cmd, args, {
     cwd: input.workspaceRoot,
     env: { ...env, ...(callbacks.env ?? {}) },
-    shell: true,
+    // adapter 显式 shell:false 时直启（zcode node 直启免 Windows cmd.exe 8K 上限）
+    shell: built.shell !== false,
   });
 
   let stdout = '';

@@ -55,7 +55,7 @@ export function DecisionQueuePanel() {
       queue={queue}
       isPending={isPending}
       isError={isError}
-      sourceNote="来自决策收件箱同一端点"
+      sourceNote="来自通知中心同一端点"
       onAction={handleAction}
       busyId={busyId}
     />

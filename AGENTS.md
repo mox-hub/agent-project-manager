@@ -4,9 +4,9 @@ description: 仓库统一 AI 指令入口（AGENTS.md 标准）——会话启�
 id: ROOT-001
 category: meta
 status: active
-version: 1.2.0
+version: 1.3.0
 created: '2026-09-07'
-modified: '2026-09-19'
+modified: '2026-09-26'
 scope: AI 会话（Claude Code / Codex / Cursor / opencode 等跨工具入口）
 ai-session-types: all
 ai-priority: critical
@@ -122,8 +122,8 @@ pnpm build:template-db   # 重建工作区模板库
 ## 六、模块地图（v4，术语一律用新口径）
 
 > 前后端模块结构、真实目录与模块注册顺序见
-> `docs/02-架构设计/architecture/backend/modules.md`（40 目录 / 42 Module 类，v4.1.0）
-> 与 `frontend/modules.md`（38 模块目录，intake 为 2026-09-13 增量）。下为高层地图。
+> `docs/02-架构设计/architecture/backend/modules.md`（41 目录 / 43 Module 类，v4.2.0）
+> 与 `frontend/modules.md`（39 模块目录，`intake` 2026-09-13、`prompt` 2026-09-26 增量）。下为高层地图。
 
 **域分组（后端 = 前端对齐口径）**
 
@@ -134,14 +134,14 @@ pnpm build:template-db   # 重建工作区模板库
 | 项目与工作区 | `project`·`workspace`·`metadata`·`config` | `project`·`workspace`·`config`·`core-config` |
 | 工单域（Task/Bug 统一）| `issue`·`issue-type`·`issue-template`·`iteration` | `issue`·`task-template`·`intake` |
 | 文档与知识 | `document`（+`document-enhance`）·`activity`·`subscription` | `document`·`activity` |
-| AI 执行编排 | `ai-hub`·`execution`·`runtime`·`cli-dispatch`·`cli-provider`·`skills`·`context` | `ai-hub`·`assistant`·`execution`·`executions`·`runtime`·`skills` |
+| AI 执行编排 | `ai-hub`·`execution`·`runtime`·`cli-dispatch`·`cli-provider`·`skills`·`prompt`·`context` | `ai-hub`·`assistant`·`execution`·`executions`·`runtime`·`skills`·`prompt` |
 | 治理与验收 | `acceptance`·`trust`·`decision` | `acceptance`·`decision` |
 | 协作与记忆 | `collaboration`·`memory`·`office`·`dashboard`·`profile`·`playbook` | `office`·`delivery`·`desktop`·`onboarding` |
 | 契约知识 | `contract`·`release` | `contract` |
 | 集成与能力 | `integration`·`git`·`mail`·`mcp-server`·`notification`·`plugins`·`admin` | `integration`·`github`·`linear`·`mcp-server`·`notification`·`git`·`admin` |
 | 系统/辅助 | — | `analytics`·`boot`·`search`·`settings`·`help`·`design-system` |
 
-> 后端共 **40 目录 / 42 业务 Module 类**（`auth` 拆 `access-token`、`document` 拆 `document-enhance`；`contract`/`release`/`profile`/`playbook` 为 2026-09 增量）；前端共 **38 模块目录**（`intake` 为 2026-09-13 增量）。能力级归类与供血关系见 `docs/01-需求/能力清单-v1.md`。
+> 后端共 **41 目录 / 43 业务 Module 类**（`auth` 拆 `access-token`、`document` 拆 `document-enhance`；`contract`/`release`/`profile`/`playbook`/`prompt` 为 2026-09 增量）；前端共 **39 模块目录**（`intake` 2026-09-13、`prompt` 2026-09-26 增量）。能力级归类与供血关系见 `docs/01-需求/能力清单-v1.md`。
 
 **主线对象（数据模型）**
 
