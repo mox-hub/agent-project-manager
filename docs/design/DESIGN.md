@@ -5,7 +5,7 @@ status: pointer
 superseded_by: docs/design/PRINCIPLES.md
 created: "2026-09-10"
 scope: apps/frontend, apps/desktop
-governance: "宪法为 docs/design/PRINCIPLES.md（v2.0）；参考规格正文在根 DESIGN.md"
+governance: "宪法为 docs/design/PRINCIPLES.md（版本号只在宪法头部声明一处）；参考规格正文在根 DESIGN.md"
 ---
 
 # DESIGN.md — 指针页（正文已收口至仓库根）
@@ -16,7 +16,7 @@ governance: "宪法为 docs/design/PRINCIPLES.md（v2.0）；参考规格正文�
 
 | 要读什么 | 去哪 |
 |---------|------|
-| **前端设计宪法（最高依据）** | [`docs/design/PRINCIPLES.md`](./PRINCIPLES.md) —— v2.0，配 `lint:spacing` / `lint:palette` / `lint:semantic` / `lint:undefined` 机器强制 |
+| **前端设计宪法（最高依据）** | [`docs/design/PRINCIPLES.md`](./PRINCIPLES.md) —— 版本号只在宪法头部声明一处，配 `lint:spacing` / `lint:palette` / `lint:semantic` / `lint:undefined` 机器强制 |
 | 《APM 全局设计系统规范与组件架构标准 v2.0》正文 | 仓库根 [`DESIGN.md`](../../DESIGN.md) —— 已降级为**参考规格（Reference Spec）**，其文首「地位勘正」列出与宪法的全部已知偏差 |
 | A/B/C/D/E 类修改方案与规范调研 | `docs/design/修改方案-*.md`、`docs/design/规范调研报告-2026-09-27.md` |
 

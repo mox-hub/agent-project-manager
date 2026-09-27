@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 // 任务（worker 进程的 cwd 不受控）。依赖 cwd 会在后者下扫空目录或直接报错。
 const PKG_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-// 设计宪法刻度治理（docs/design/PRINCIPLES.md v2.0「语义化 token 层」）：
+// 设计宪法刻度治理（docs/design/PRINCIPLES.md「语义化 token 层」）：
 // 1) §3 字阶——合法档只剩 3xs/2xs/xs/sm/base/lg/xl/2xl 八档：旧「数字直读」档
 //    （8/9/10/11/13/15/22/28/32，含刚迁走的 text-10/11）禁回流，3xl 及以上越界档一并封禁
 // 2) §4.1 间距——4px 网格：整数档与 .5 档合法；四分之一档（.25/.75 结尾）冻结

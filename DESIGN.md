@@ -6,16 +6,16 @@ status: reference-spec
 superseded_by: docs/design/PRINCIPLES.md
 created: "2026-09-10"
 scope: apps/frontend, apps/desktop
-governance: "宪法为 docs/design/PRINCIPLES.md（v2.0）；本文件为其下位参考规格，冲突以宪法为准"
+governance: "宪法为 docs/design/PRINCIPLES.md（版本号只在宪法头部声明一处）；本文件为其下位参考规格，冲突以宪法为准"
 ---
 
 # APM 全局设计系统规范与组件架构标准 (v2.0)
 
-> ## ⚠️ 地位勘正（2026-09-27，随 PRINCIPLES v2.0 落地）
+> ## ⚠️ 地位勘正（2026-09-27，随 PRINCIPLES 语义化 token 层落地）
 >
-> **本文件不是宪法，是参考规格（Reference Spec）。** 全仓前端设计的**最高依据是 `docs/design/PRINCIPLES.md`（v2.0）**；本文件与宪法冲突之处，一律以宪法为准，且**不得据本文件推翻宪法**。
+> **本文件不是宪法，是参考规格（Reference Spec）。** 全仓前端设计的**最高依据是 `docs/design/PRINCIPLES.md`**（版本号只在宪法头部声明一处，此处不抄写）；本文件与宪法冲突之处，一律以宪法为准，且**不得据本文件推翻宪法**。
 >
-> 本文件 frontmatter 原写 `governance: "docs/design/PRINCIPLES.md 并入升级为本文件"`、正文原写"全仓唯一最高权威标准"——该表述**已被推翻**：PRINCIPLES.md 并未并入本文件，而是在 2026-09-27 升为 v2.0 并成为唯一宪法（配 `lint:spacing` / `lint:palette` / `lint:semantic` / `lint:undefined` 等机器强制）。本文件状态从未越过 `proposal-for-approval`，其设计意图**部分落地、部分被取代**（见下方偏差清单），故保留为**设计意图与数值的存档参考**，不再具备规范效力。
+> 本文件 frontmatter 原写 `governance: "docs/design/PRINCIPLES.md 并入升级为本文件"`、正文原写"全仓唯一最高权威标准"——该表述**已被推翻**：PRINCIPLES.md 并未并入本文件，而是在 2026-09-27 升版并成为唯一宪法（配 `lint:spacing` / `lint:palette` / `lint:semantic` / `lint:undefined` 等机器强制）。本文件状态从未越过 `proposal-for-approval`，其设计意图**部分落地、部分被取代**（见下方偏差清单），故保留为**设计意图与数值的存档参考**，不再具备规范效力。
 >
 > **本文件仍然有效的部分**（宪法未覆盖，可继续引用）：§二 低饱和多色域灰调色阶的具体色相数值、§六.1 五类 AI 高信息密度卡片矩阵、§三 外舒内紧卡片体系、§七 组件整改路线（与 `修改方案-BCD类-2026-09-27.md` 同源，以方案文档为准）。
 >
@@ -361,7 +361,7 @@ APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主�
 | **数据表格原语** | `DataTable` / `DataTableShell` [HUMAN] | `ui/data-table.tsx` | 支持排序、筛选、分页的高密表格容器。 |
 | **条件筛选条** | `FilterChipsRow` [HUMAN] | `ui/filter-chips.tsx` | Linear 风格条件条（`[字段 ｜ 算子 ｜ 值 ｜ ×]` 拼接 Chip）。 |
 | **属性面板** | `PropertyPanel` [HUMAN] | `ui/property-panel.tsx` | 改造后的矩形微控件面板，专用于工单详情右侧属性编辑。 |
-| **创建弹窗** | `UnifiedCreateDialog` [HUMAN] | `ui/unified-create-dialog.tsx` | 工单/缺陷/文档统一创建入口（后续按模块拆分瘦身）。 |
+| **创建弹窗** | `UnifiedCreateDialog` [HUMAN] | `shared/components/create-dialog/unified-create-dialog.tsx` | 工单/缺陷/文档统一创建入口（后续按模块拆分瘦身）。 |
 
 ### 6.3 双表面治理交汇组件 [HYBRID]
 
@@ -386,7 +386,7 @@ APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主�
 | **`Empty` (官方) 双轨**<br>([empty.tsx](file:///D:/workspace/agent-project-manager/apps/frontend/src/components/ui/empty.tsx)) | 官方 5 插槽虚线大框组件无生产页面消费，与自研轻量 `EmptyState` 形成双轨。 | **删除 `empty.tsx`**：全站彻底收敛为统一的 `EmptyState`。 | P1 |
 | **`FloatingDock` & `ChapterScrubber`**<br>([floating-dock.tsx](file:///D:/workspace/agent-project-manager/apps/frontend/src/components/ui/floating-dock.tsx)) | 带有浓厚的 macOS 磁性放大动效与拟物阴影，与 Linear 极简工程风不符。 | 从生产组件目录剥离，不再作为标准件推荐。 | P2 |
 | **错误页双轨**<br>(`error-page` vs `page-error-fallback`) | 路由级大插画错误页与局部轻量错误条视觉不一致。 | 二合一收敛为统一的轻量卡片式错误降级组件。 | P2 |
-| **`UnifiedCreateDialog` 内部样式**<br>([unified-create-dialog.tsx](file:///D:/workspace/agent-project-manager/apps/frontend/src/components/ui/unified-create-dialog.tsx)) | 1730 行庞大单文件，内嵌了大量老旧边框与大间距。 | 内边距统一紧凑化至 `p-3.5`，后续按业务类型拆分下沉。 | P2 |
+| **`UnifiedCreateDialog` 内部样式**<br>([unified-create-dialog.tsx](file:///D:/workspace/agent-project-manager/apps/frontend/src/shared/components/create-dialog/unified-create-dialog.tsx)) | 1730 行庞大单文件，内嵌了大量老旧边框与大间距。 | 内边距统一紧凑化至 `p-3.5`，后续按业务类型拆分下沉。 | P2 |
 
 ---
 
