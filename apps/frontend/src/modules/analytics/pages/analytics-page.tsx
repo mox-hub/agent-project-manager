@@ -45,7 +45,7 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 
 // Overview 数据：GET /dashboard/overview（真实端点）；其余 Tab 形态数据走 msw mock（见 use-analytics-overview 注释）
-const TOOLTIP_STYLE = { fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' };
+const TOOLTIP_STYLE = { fontSize: 11, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-card)' };
 
 
 
@@ -508,7 +508,7 @@ function QualityTab() {
           <CardContent className="px-2 pb-3">
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={ov?.qualityTrend ?? []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="week" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={TOOLTIP_STYLE} />
@@ -638,7 +638,7 @@ function TeamActivityTab() {
           <CardContent className="px-2 pb-3">
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={ov?.activityTimeline ?? []} layout="horizontal">
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="time" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={TOOLTIP_STYLE} />

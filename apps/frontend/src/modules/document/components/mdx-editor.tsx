@@ -37,11 +37,11 @@ const mdxHighlight = HighlightStyle.define([
   { tag: t.link, class: 'cm-link', textDecoration: 'underline' },
   { tag: t.url, class: 'cm-url' },
   { tag: t.monospace, class: 'cm-monospace', fontFamily: 'monospace' },
-  { tag: t.quote, class: 'cm-quote', fontStyle: 'italic', color: 'var(--muted-foreground)' },
+  { tag: t.quote, class: 'cm-quote', fontStyle: 'italic', color: 'var(--color-muted-foreground)' },
   { tag: t.list, class: 'cm-list' },
   { tag: t.meta, class: 'cm-meta' },
   { tag: t.processingInstruction, class: 'cm-meta' },
-  { tag: t.contentSeparator, class: 'cm-separator', color: 'var(--muted-foreground)' },
+  { tag: t.contentSeparator, class: 'cm-separator', color: 'var(--color-muted-foreground)' },
 ]);
 
 const customTheme = EditorView.theme(
@@ -49,7 +49,7 @@ const customTheme = EditorView.theme(
     '&': {
       height: '100%',
       backgroundColor: 'transparent',
-      color: 'var(--foreground)',
+      color: 'var(--color-foreground)',
       fontSize: '13px',
     },
     '.cm-scroller': {
@@ -58,26 +58,26 @@ const customTheme = EditorView.theme(
     },
     '.cm-content': {
       padding: '12px 16px',
-      caretColor: 'var(--foreground)',
+      caretColor: 'var(--color-foreground)',
     },
     '.cm-gutters': {
       backgroundColor: 'transparent',
-      borderRight: '1px solid var(--border)',
-      color: 'var(--muted-foreground)',
+      borderRight: '1px solid var(--color-border)',
+      color: 'var(--color-muted-foreground)',
     },
     '.cm-activeLineGutter': {
-      backgroundColor: 'var(--muted)',
+      backgroundColor: 'var(--color-muted)',
     },
     '.cm-activeLine': {
-      backgroundColor: 'var(--muted)',
+      backgroundColor: 'var(--color-muted)',
     },
     '.cm-selectionBackground, ::selection': {
-      backgroundColor: 'var(--accent) !important',
+      backgroundColor: 'var(--color-accent) !important',
     },
     '.cm-foldPlaceholder': {
-      backgroundColor: 'var(--muted)',
-      border: '1px solid var(--border)',
-      color: 'var(--muted-foreground)',
+      backgroundColor: 'var(--color-muted)',
+      border: '1px solid var(--color-border)',
+      color: 'var(--color-muted-foreground)',
     },
   },
   { dark: false },
@@ -87,11 +87,11 @@ const darkTheme = EditorView.theme(
   {
     '&': {
       backgroundColor: 'transparent',
-      color: 'var(--foreground)',
+      color: 'var(--color-foreground)',
     },
     '.cm-gutters': {
       backgroundColor: 'transparent',
-      color: 'var(--muted-foreground)',
+      color: 'var(--color-muted-foreground)',
     },
   },
   { dark: true },

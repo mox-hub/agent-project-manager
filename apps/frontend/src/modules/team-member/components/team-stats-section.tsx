@@ -99,7 +99,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={stats.tokenUsage.daily}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} />
                 <YAxis tick={{ fontSize: 10 }} tickLine={false} width={40} />
                 <Tooltip
@@ -111,14 +111,14 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                 <Line
                   type="monotone"
                   dataKey="promptTokens"
-                  stroke="var(--accent-blue)"
+                  stroke="var(--color-accent-blue)"
                   strokeWidth={1.5}
                   dot={false}
                 />
                 <Line
                   type="monotone"
                   dataKey="completionTokens"
-                  stroke="var(--accent-green)"
+                  stroke="var(--color-accent-green)"
                   strokeWidth={1.5}
                   dot={false}
                 />
