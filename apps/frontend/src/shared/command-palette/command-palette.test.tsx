@@ -125,11 +125,10 @@ describe('command palette registry (commands.ts)', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('包含新增一级命令 workflows / acceptance / decisions 且路由与 router.tsx 对齐', () => {
+  it('包含一级命令 workflows / acceptance / notifications 且路由与 router.tsx 对齐', () => {
     const byId = new Map(commandEntries.map((entry) => [entry.id, entry]));
     expect(byId.get('cmd-workflows')?.to).toBe('/app/workflows');
     expect(byId.get('cmd-acceptance')?.to).toBe('/app/acceptance');
-    expect(byId.get('cmd-decisions')?.to).toBe('/app/decisions');
     expect(byId.get('cmd-office')?.to).toBe('/app/office');
     expect(byId.get('cmd-executions')?.to).toBe('/app/executions');
     expect(byId.get('cmd-repositories')?.to).toBe('/app/repositories');
@@ -138,6 +137,14 @@ describe('command palette registry (commands.ts)', () => {
     expect(byId.get('cmd-search')?.to).toBeUndefined();
     expect(byId.get('cmd-search')?.action).toBe('openGlobalSearch');
     expect(byId.get('cmd-profile')?.to).toBe('/app/settings/profile');
+  });
+
+  it('决策收件箱命令已取消：cmd-decisions 不存在，决策关键词由通知命令承接', () => {
+    const ids = commandEntries.map((entry) => entry.id);
+    expect(ids).not.toContain('cmd-decisions');
+    const notifications = commandEntries.find((entry) => entry.id === 'cmd-notifications');
+    expect(notifications?.keywords).toContain('决策');
+    expect(notifications?.keywords).toContain('收件箱');
   });
 
   it('已删除与 cmd-ai 重复的 cmd-ai-management', () => {
@@ -323,6 +330,8 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
           subtitle: 'BUG-1 · 高',
           path: '/app/issues/issue-1',
           updatedAt: '2026-09-18T00:00:00.000Z',
+          projectId: 'project-1',
+          apmRef: 'apm://apm/issue/BUG-1',
         },
         {
           id: 'project-1',
@@ -331,6 +340,8 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
           subtitle: '3 个进行中工单',
           path: '/app/projects/project-1',
           updatedAt: '2026-09-19T00:00:00.000Z',
+          projectId: null,
+          apmRef: null,
         },
       ],
       total: 2,

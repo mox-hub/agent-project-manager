@@ -12,6 +12,7 @@ import { AcceptanceService } from '../../acceptance/acceptance.service';
 import { IssueAssigneeService } from '../../team/issue-assignee.service';
 import { MemoryService } from '../../memory/memory.service';
 import { CollaborationService } from '../../collaboration/collaboration.service';
+import { SearchService } from '../../search/search.service';
 
 describe('AssistantToolsService', () => {
   let service: AssistantToolsService;
@@ -77,6 +78,10 @@ describe('AssistantToolsService', () => {
   };
   // P1-10：决策卡直写后广播 decision.proposal.created（通知订阅链感知）
   const mockMessageBus = { publish: vi.fn() };
+  // CAP-A-23：apm:// 协议查询面（全局搜索命中带 apmRef）
+  const mockSearchService = {
+    search: vi.fn().mockResolvedValue({ items: [], total: 0 }),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -92,6 +97,7 @@ describe('AssistantToolsService', () => {
       mockIssueAssigneeService as unknown as IssueAssigneeService,
       mockMemoryService as unknown as MemoryService,
       mockCollaborationService as unknown as CollaborationService,
+      mockSearchService as unknown as SearchService,
     );
   });
 
@@ -109,6 +115,72 @@ describe('AssistantToolsService', () => {
   it('describeTools 与目录同源', () => {
     const { tools } = service.describeTools();
     expect(tools).toHaveLength(ASSISTANT_TOOL_CATALOG.length);
+  });
+
+  it('search_entities 透传 SearchService（命中带 apmRef）；目录与 prompt 携带引用协议指引（CAP-A-23）', async () => {
+    const tools = service.buildTools({
+      projectId: 'p1',
+      userId: 'u1',
+    }) as unknown as Record<
+      string,
+      { execute: (args: unknown) => Promise<unknown> }
+    >;
+    mockSearchService.search.mockResolvedValueOnce({
+      items: [
+        {
+          id: 'i1',
+          type: 'task',
+          title: '修复登录超时',
+          apmRef: 'apm://APM/issue/APM-PF-001',
+        },
+      ],
+      total: 1,
+    });
+
+    const result = (await tools.search_entities.execute({
+      q: '登录',
+      types: ['task'],
+    })) as { total: number };
+
+    expect(mockSearchService.search).toHaveBeenCalledWith(
+      { q: '登录', types: ['task'], limit: undefined },
+      'u1',
+    );
+    expect(result.total).toBe(1);
+
+    const names = ASSISTANT_TOOL_CATALOG.map((t) => t.name);
+    expect(names).toContain('search_entities');
+    const entry = ASSISTANT_TOOL_CATALOG.find(
+      (t) => t.name === 'search_entities',
+    );
+    expect(entry?.http.path).toContain('/_api/search?q=:query');
+    const prompt = service.renderCatalogForPrompt('p1');
+    expect(prompt).toContain('search_entities');
+    expect(prompt).toContain('apmRef');
+    expect(prompt).toContain('禁止杜撰');
+  });
+
+  it('search_entities 异常转可读 error；缺 userId 拒绝查询', async () => {
+    const tools = service.buildTools({
+      userId: 'u1',
+    }) as unknown as Record<
+      string,
+      { execute: (args: unknown) => Promise<unknown> }
+    >;
+    mockSearchService.search.mockRejectedValueOnce(new Error('db down'));
+    const failed = (await tools.search_entities.execute({ q: 'x' })) as {
+      error: string;
+    };
+    expect(failed.error).toContain('db down');
+
+    const anon = service.buildTools({}) as unknown as Record<
+      string,
+      { execute: (args: unknown) => Promise<unknown> }
+    >;
+    const denied = (await anon.search_entities.execute({ q: 'x' })) as {
+      error: string;
+    };
+    expect(denied.error).toContain('userId');
   });
 
   it('assign_member_to_task 走 IssueAssigneeService（含异常转可读 error）', async () => {

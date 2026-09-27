@@ -301,5 +301,16 @@ export class UpdateIssueDto {
   @IsOptional()
   todoItems?: TodoItemDto[];
 
+  // 扩展元数据（整体提交；AI 拆分建议批 splitProposal 等扩展存放处，无独立表）
+  @ApiPropertyOptional({
+    description: '扩展元数据（整体提交，键集由调用方约定）',
+    type: Object,
+    additionalProperties: true,
+    nullable: true,
+  })
+  @IsObject()
+  @IsOptional()
+  metadata?: Record<string, unknown> | null;
+
   // AI Execution 字段
 }

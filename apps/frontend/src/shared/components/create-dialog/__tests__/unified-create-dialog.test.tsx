@@ -12,6 +12,9 @@ import { UnifiedCreateDialog } from '../unified-create-dialog';
 // vitest 环境无 i18next 实例：t() 直通返回 key
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+  // MarkdownView → apm-ref-chip → route-preview 链会加载 @/i18n 实例
+  // （CAP-A-23 起 markdown-view 引用胶囊化），i18n.init 需要 initReactI18next
+  initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
 const {

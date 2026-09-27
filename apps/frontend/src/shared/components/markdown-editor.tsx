@@ -4,15 +4,16 @@
  * - preview="live"：输入区与渲染预览左右分栏实时预览（适合宽容器，如详情页描述）
  * - preview="toggle"：编辑/预览页签切换（适合窄容器，如评论框）
  * - preview="none"：纯输入（调用方自行处理展示）
- * - 输入区默认 AutoSizeTextarea；协议兼容的输入件（如 MentionTextarea）可通过
- *   renderInput 替换，协议：{ value, onChange(string), placeholder, rows, autoFocus, onKeyDown, className, ref }
+ * - 输入区默认 SlashRefTextarea（`/` 触发全局实体引用补全，CAP-A-23）；
+ *   协议兼容的输入件可通过 renderInput 替换，协议：
+ *   { value, onChange(string), placeholder, rows, autoFocus, onKeyDown, className, ref }
  * - 底栏左侧为页签/提示文案，右侧为 actions（表情、发送按钮等调用方自定义动作）
  */
 import { useState, type ReactElement, type ReactNode, type KeyboardEvent, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { AutoSizeTextarea } from '@/components/ui/property-panel';
+import { SlashRefTextarea } from '@/shared/entity-ref/slash-ref-textarea';
 import { Button } from '@/components/ui/button';
 import { MarkdownView } from './markdown-view';
 
@@ -60,7 +61,7 @@ export function MarkdownEditor({
 }) {
   const { t } = useTranslation();
   const [showPreview, setShowPreview] = useState(false);
-  const Input = renderInput ?? DefaultInput;
+  const Input = renderInput ?? SlashRefTextarea;
   const showLive = preview === 'live' && value.trim() !== '';
   const showToggledPreview = preview === 'toggle' && showPreview;
 
@@ -147,9 +148,4 @@ export function MarkdownEditor({
       )}
     </div>
   );
-}
-
-function DefaultInput(props: MarkdownInputProps) {
-  const { onChange, ...rest } = props;
-  return <AutoSizeTextarea {...rest} onChange={(e) => onChange(e.target.value)} />;
 }

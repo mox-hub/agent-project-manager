@@ -461,6 +461,244 @@ ${documents.length ? `需求侧工件（覆盖度对照的依据）：\n${JSON.s
 只输出 JSON：{"tasks": [{"index": 0, "granularity": "ok", "reason": "...", "suggestion": "", "testability": "ok"}], "coverage": {"uncovered": ["..."], "orphans": [0]}, "verdict": "healthy", "summary": "..."}`;
     },
   },
+  'prompt-draft-project': {
+    description:
+      '项目提示词 AI 起草（CAP-A-24 增强 B）：按项目事实（名称/描述/类型/角色分工/团队规则）生成项目协作约定草稿；草稿进编辑框由人确认保存，不直接生效',
+    prepareContext: async (context, { prisma }) => {
+      const projectId =
+        typeof context.projectId === 'string' ? context.projectId.trim() : '';
+      if (!projectId) {
+        throw new BadRequestException('项目提示词起草缺少 projectId');
+      }
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: {
+          name: true,
+          description: true,
+          type: true,
+          priority: true,
+        },
+      });
+      if (!project) {
+        throw new BadRequestException('项目不存在');
+      }
+      // ProjectRoleDefinition 与 Project 无 Prisma relation（projectId 直列），独立查
+      const roles = await prisma.projectRoleDefinition.findMany({
+        where: { projectId },
+        select: { name: true, description: true, executionRole: true },
+        orderBy: { name: 'asc' },
+      });
+      const teamRules = await prisma.team.findMany({
+        where: { status: 'active', teamPrompt: { not: null } },
+        select: { name: true, teamPrompt: true },
+        take: 3,
+      });
+      return {
+        project: {
+          name: project.name,
+          description: project.description ?? '',
+          type: project.type,
+          priority: project.priority,
+          roles: roles.map((r) => ({
+            name: r.name,
+            duty: r.description ?? '',
+            executionRole: r.executionRole,
+          })),
+          teamRules: teamRules
+            .map((t) => ({ name: t.name, rule: t.teamPrompt ?? '' }))
+            .filter((t) => t.rule.trim()),
+        },
+      };
+    },
+    buildInstructions: (context) => {
+      const project =
+        typeof context.project === 'object' && context.project !== null
+          ? (context.project as Record<string, unknown>)
+          : null;
+      if (!project?.name) {
+        throw new BadRequestException('项目提示词起草缺少项目事实');
+      }
+      return `你是项目管理系统的主 AI 助理「小周」。用户请你在项目设置里起草「项目级提示词」——这段文字会注入给该项目每一个 AI 执行者（作为 Project Instructions 段），并同步物化到工作区 AGENTS.md。请基于下面给定的项目事实代写草稿；草稿会先呈现给用户确认修改后才保存生效——你只代写，不落库。
+项目事实（权威，来自数据库）：
+${JSON.stringify(project)}
+
+写法要求：
+- 用 Markdown，150~400 字：开头 1~2 句项目定位，然后 3~6 条协作约定（编码规范入口、验收要求、汇报方式、禁区等），条目具体可执行，不写空话。
+- 只写「项目级、所有执行者都适用」的约定；某个角色私有的规矩不要写进来（那属于角色提示词）。
+- 事实里没有的信息（如编码规范的具体内容）写「参照 <仓库内文档路径>」引导，不要编造具体规范条文。
+只输出 JSON：{"draft": "..."}`;
+    },
+  },
+  'prompt-draft-task': {
+    description:
+      '任务提示词 AI 起草（CAP-A-24 增强 B）：按工单事实（描述/类型/验收标准）生成任务执行指令草稿；草稿进任务提示词编辑框由人确认保存',
+    prepareContext: async (context, { prisma }) => {
+      const issueId =
+        typeof context.issueId === 'string' ? context.issueId.trim() : '';
+      if (!issueId) {
+        throw new BadRequestException('任务提示词起草缺少 issueId');
+      }
+      const issue = await prisma.issue.findUnique({
+        where: { id: issueId },
+        select: {
+          title: true,
+          description: true,
+          status: true,
+          priority: true,
+          type: true,
+          issueType: { select: { name: true } },
+          project: { select: { name: true } },
+          acceptances: {
+            select: { criteria: { select: { content: true }, take: 8 } },
+          },
+        },
+      });
+      if (!issue) {
+        throw new BadRequestException('工单不存在');
+      }
+      return {
+        issue: {
+          title: issue.title,
+          description: issue.description ?? '',
+          status: issue.status,
+          priority: issue.priority,
+          type: issue.issueType?.name ?? issue.type,
+          project: issue.project?.name ?? '',
+          acceptanceCriteria: issue.acceptances.flatMap((a) =>
+            a.criteria.map((c) => c.content),
+          ),
+        },
+      };
+    },
+    buildInstructions: (context) => {
+      const issue =
+        typeof context.issue === 'object' && context.issue !== null
+          ? (context.issue as Record<string, unknown>)
+          : null;
+      if (!issue?.title) {
+        throw new BadRequestException('任务提示词起草缺少工单事实');
+      }
+      return `你是项目管理系统的主 AI 助理「小周」。用户请你在任务详情页起草「任务级提示词」——这段文字会作为 Task Instructions 段注入给执行这条工单的 AI（支持 {{issue.title}} / {{issue.acceptanceItems}} 等变量，派发时按事实插值）。请基于工单事实代写草稿；草稿会先呈现给用户确认后才保存生效——你只代写，不落库。
+工单事实（权威，来自数据库）：
+${JSON.stringify(issue)}
+
+写法要求：
+- 用 Markdown，80~200 字：只写「执行这条工单时的专门要求」（步骤顺序、验证方式、注意事项、完成定义），不复读标题描述；工单描述已说清且无特殊要求时，草稿可以很短甚至只写验收提醒。
+- 需要引用验收标准时写 {{issue.acceptanceItems}} 变量（派发时自动展开为标准清单），不要复制标准原文。
+- 宁缺毋假：工单事实里没有的信息不编造。
+只输出 JSON：{"draft": "..."}`;
+    },
+  },
+  'prompt-draft-role': {
+    description:
+      '角色提示词 AI 起草（CAP-A-24 增强 B）：按角色名与职责描述生成角色共享约定草稿（该角色成员继承）；草稿由人确认后生效',
+    buildInstructions: (context) => {
+      const roleName = String(context.roleName ?? '').trim();
+      if (!roleName) {
+        throw new BadRequestException('角色提示词起草缺少 roleName');
+      }
+      const duty = String(context.roleDuty ?? '').trim();
+      const executionRole = String(context.executionRole ?? '').trim();
+      return `你是项目管理系统的主 AI 助理「小周」。用户正在创建/编辑项目角色「${roleName}」${executionRole ? `（执行分工：${executionRole}）` : ''}，请你起草「角色提示词」——这段文字是该角色的共享约定模板，会注入给绑定了该角色的每一个 AI 执行者（作为执行者段的 Role Conventions 小节）。草稿会先呈现给用户确认后才保存——你只代写，不落库。
+${duty ? `角色职责描述：${duty}` : '用户没有提供职责描述，请按角色名的常见语义起草，并注明「请按团队实际调整」。'}
+
+写法要求：
+- 用 Markdown，60~180 字：3~5 条该角色执行任务时的通用约定（技术栈/质量要求/输出物形态/协作边界），条目具体可执行。
+- 只写「该角色通用」的内容；具体某条任务的专门要求不要写（那属于任务提示词）。
+只输出 JSON：{"draft": "..."}`;
+    },
+  },
+  'prompt-improve': {
+    description:
+      '既有提示词 AI 改写（CAP-A-24 增强 B）：对用户已有的提示词文本按目标层级做优化改写；改写稿由人对照确认后替换',
+    buildInstructions: (context) => {
+      const text = String(context.text ?? '').trim();
+      if (!text) {
+        throw new BadRequestException('提示词改写缺少 text');
+      }
+      const layerLabels: Record<string, string> = {
+        project: '项目级提示词（注入给项目所有 AI 执行者，并物化到 AGENTS.md）',
+        task: '任务级提示词（注入给执行该工单的 AI）',
+        role: '角色提示词（该角色成员共享的约定模板）',
+        member: '成员个人提示词（该成员的 AI 执行者私有约定）',
+      };
+      const layer = String(context.layer ?? 'project');
+      const layerLabel = layerLabels[layer] ?? layerLabels.project;
+      return `你是项目管理系统的主 AI 助理「小周」。用户写了一段${layerLabel}，请你优化改写。改写稿会与原文对照呈现给用户确认后才替换——你只代写，不落库。
+原文：
+${text}
+
+改写要求：
+- 保留原文的所有真实约束与意图，不改写语义只改善表达；拿不准是否有意为之的内容原样保留。
+- 结构化：条目化、祈使句、可执行；删除空话与重复；控制在原文长度或更短。
+- 原文含 {{issue.*}} 变量的，变量原样保留不展开。
+只输出 JSON：{"draft": "..."}`;
+    },
+  },
+  'issue-decompose': {
+    description:
+      '工单拆子任务建议：按工单事实（描述/类型/已有子任务/验收标准）生成子任务拆分建议与描述去重改写，前端以「待确认」清单逐条人确认后走既有 createSubTask 落库，描述改写随拆分生效（CAP-A-04 增强切片）',
+    prepareContext: async (context, { prisma }) => {
+      const issueId =
+        typeof context.issueId === 'string' ? context.issueId.trim() : '';
+      if (!issueId) {
+        throw new BadRequestException('工单拆分缺少 issueId');
+      }
+      const issue = await prisma.issue.findUnique({
+        where: { id: issueId },
+        select: {
+          title: true,
+          description: true,
+          status: true,
+          priority: true,
+          type: true,
+          issueType: { select: { name: true } },
+          project: { select: { name: true } },
+          subIssues: { select: { title: true, status: true } },
+          acceptances: {
+            select: { criteria: { select: { content: true }, take: 8 } },
+          },
+        },
+      });
+      if (!issue) {
+        throw new BadRequestException('工单不存在');
+      }
+      return {
+        issue: {
+          title: issue.title,
+          description: issue.description ?? '',
+          status: issue.status,
+          priority: issue.priority,
+          type: issue.issueType?.name ?? issue.type,
+          project: issue.project?.name ?? '',
+          existingSubtasks: issue.subIssues.map((s) => s.title),
+          acceptanceCriteria: issue.acceptances.flatMap((a) =>
+            a.criteria.map((c) => c.content),
+          ),
+        },
+      };
+    },
+    buildInstructions: (context) => {
+      const issue =
+        typeof context.issue === 'object' && context.issue !== null
+          ? (context.issue as Record<string, unknown>)
+          : null;
+      if (!issue?.title) {
+        throw new BadRequestException('工单拆分缺少工单事实');
+      }
+      return `你是项目管理系统的主 AI 助理「小周」。用户在工单详情页按下了「拆分」，请把这条工单分解为可执行的子任务建议。拆分结果会以「待确认」清单呈现，用户逐条确认后才会落库为真正的子任务——你只代写建议，不落库。
+工单事实（权威，来自数据库）：
+${JSON.stringify(issue)}
+
+拆分要求：
+- 按可独立交付、可独立验证的步骤拆，通常 2~6 条；工单本身已足够简单（一步能做完）时给空数组，不硬拆。
+- 每条：title 一句话祈使句（不超过 30 字）；description 1~2 句说清做什么、怎么算完成，不复读工单原文。
+- 子任务合起来要覆盖工单目标：不遗漏交付物，也不做工单没要求的事；「已有子任务」里列出的不要再拆。
+- revisedDescription：把描述中已被子任务覆盖的步骤清单部分收拢成一句概述或移除，保留目标、背景、约束与验收相关信息；若原描述没有可收拢的内容，原样返回。
+- 宁缺毋假：工单事实里没有的细节不要编造；信息不足的子任务在 description 里注明「待澄清：…」。
+只输出 JSON：{"subtasks": [{"title": "...", "description": "..."}], "revisedDescription": "..."}`;
+    },
+  },
   'failure-diagnosis': {
     description:
       '执行失败诊断（批一 P0 切片 3，2026-09-17 裁决 D 的按需 LLM 半）：读失败/阻塞执行现场（错误留痕/血缘/验收契约），输出结构化诊断（归类/原因/建议/下一步动作/缺失信息）；执行详情「AI 诊断」按钮按需触发，AIUsageLog 记账；零 token 的机械归类见 execution/failure-classifier',

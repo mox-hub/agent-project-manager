@@ -192,7 +192,7 @@ export function ContractBindingsPanel({
                       </span>
                     ) : (
                       <Button size="xs" variant="ghost" asChild>
-                        <Link to="/app/decisions">
+                        <Link to="/app/notifications">
                           {t('contract.action.viewProposal')}
                         </Link>
                       </Button>
@@ -281,7 +281,7 @@ export function ContractBindingsPanel({
               </Badge>
               {report.state === 'conflicted' && (
                 <Link
-                  to="/app/decisions"
+                  to="/app/notifications"
                   className="text-xs text-accent-blue hover:underline"
                 >
                   {t('contract.action.viewProposal')}

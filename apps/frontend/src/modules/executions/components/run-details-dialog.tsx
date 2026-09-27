@@ -6,7 +6,7 @@
  */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Coins, FolderKanban, Info, TriangleAlert } from 'lucide-react';
+import { Check, Copy, Coins, FolderKanban, Info, ScrollText, TriangleAlert } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,9 @@ import {
 import { StatusPill } from '@/components/ui/status-pill';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { cn } from '@/lib/utils';
 import {
   isTerminalRunStatus,
@@ -82,6 +85,9 @@ interface PanelView {
 
 const NO_PANEL: PanelView = { runId: '', kind: 'none', entry: null };
 
+/** 主区视图：事件流 / 原始日志 / 完整 Prompt。随 runId 记忆。 */
+type MainViewMode = 'events' | 'raw' | 'prompt';
+
 export function RunDetailsDialog({
   runId,
   open,
@@ -93,9 +99,9 @@ export function RunDetailsDialog({
 }) {
   const { t } = useTranslation();
   // 视图随 runId 记忆：切换到别的 run 时回落事件流（渲染期禁 effect setState，用比较推导）
-  const [rawView, setRawView] = useState<{ runId: string; on: boolean }>({
+  const [view, setView] = useState<{ runId: string; mode: MainViewMode }>({
     runId: '',
-    on: false,
+    mode: 'events',
   });
   const [panel, setPanel] = useState<PanelView>(NO_PANEL);
   // 非终态 5s 轮询兜底（socket 失效为主）：此前 detail 不轮询，弹窗内 run 到
@@ -109,7 +115,9 @@ export function RunDetailsDialog({
   const run = detail.data;
   const stillActive = !run || !isTerminalRunStatus(run.status);
   const events = useExecutionRunEvents(runId, open && stillActive);
-  const showRaw = rawView.runId === runId && rawView.on;
+  const activeMode: MainViewMode = view.runId === runId ? view.mode : 'events';
+  const showRaw = activeMode === 'raw';
+  const showPrompt = activeMode === 'prompt';
   const logs = useExecutionRunLogs(open && showRaw ? runId : null, stillActive);
 
   const data: RunDetailsData | null = useMemo(
@@ -161,6 +169,9 @@ export function RunDetailsDialog({
   const provider = data?.bindings?.[0]?.providerId ?? null;
   const runError = data ? extractRunError(data) : undefined;
   const hasTimeline = timelineSteps.length > 0 && !!windowStart && !!windowEnd;
+  // CAP-A-24：派发完整 prompt（随执行持久化的真实载荷，非展示侧另拼）
+  const fullPrompt =
+    typeof data?.input?.prompt === 'string' ? data.input.prompt : null;
 
   // 右栏只对当前 run 生效
   const activePanel: PanelView =
@@ -302,26 +313,29 @@ export function RunDetailsDialog({
               </div>
             ) : null}
 
-            {/* 事件流 / 原始日志 视图切换 */}
+            {/* 事件流 / 原始日志 / 完整 Prompt 视图切换 */}
             <div className="flex shrink-0 items-center gap-1 border-b px-4 py-1.5">
               {(
                 [
                   ['events', t('runDetails.tabEvents')],
                   ['raw', t('runDetails.tabRawLog')],
+                  ['prompt', t('runDetails.tabFullPrompt')],
                 ] as const
               ).map(([key, label]) => {
-                const active = (key === 'raw') === showRaw;
+                const active = activeMode === key;
                 return (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setRawView({ runId: runId ?? '', on: key === 'raw' })}
+                    onClick={() => setView({ runId: runId ?? '', mode: key })}
                     className={cn(
                       'rounded-md px-2 py-0.5 text-11 transition-colors',
                       active
                         ? 'bg-muted font-medium text-foreground'
                         : 'text-muted-foreground hover:bg-muted/60',
                     )}
+                    data-ai-component={`executions.run-details.tab.${key}`}
+                    data-ai-action={`executions.run-details.tab.${key}.click`}
                   >
                     {label}
                   </button>
@@ -338,7 +352,9 @@ export function RunDetailsDialog({
             {/* 主区：左列表 + 右详情/信息面板 */}
             <div className="flex min-h-0 flex-1 overflow-hidden">
               <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                {showRaw ? (
+                {showPrompt ? (
+                  <FullPromptPanel prompt={fullPrompt} />
+                ) : showRaw ? (
                   <div className="min-h-0 flex-1 overflow-auto bg-muted/30 p-3">
                     {(logs.data?.length ?? 0) === 0 ? (
                       <p className="text-xs text-content-text-muted">
@@ -393,4 +409,46 @@ function entryOffsetLabel(
 ): string | null {
   if (!entry.at || !windowStart) return null;
   return formatOffset(entry.at, windowStart);
+}
+
+/** 完整 Prompt 页签（CAP-A-24）：派发真实载荷只读展示 + 复制；历史执行无持久化时给空态说明 */
+function FullPromptPanel({ prompt }: { prompt: string | null }) {
+  const { t } = useTranslation();
+  const { copyToClipboard, isCopied } = useCopyToClipboard();
+
+  if (!prompt) {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4">
+        <EmptyState
+          variant="card"
+          icon={ScrollText}
+          title={t('runDetails.fullPromptEmptyTitle')}
+          description={t('runDetails.fullPromptEmptyDesc')}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex shrink-0 items-center justify-between gap-2 px-3 pt-2">
+        <span className="text-xs text-content-text-muted">
+          {t('runDetails.fullPromptChars', { count: prompt.length })}
+        </span>
+        <Button variant="ghost" size="xs" onClick={() => copyToClipboard(prompt)}>
+          {isCopied ? (
+            <Check className="size-3" />
+          ) : (
+            <Copy className="size-3" />
+          )}
+          {isCopied ? t('runDetails.fullPromptCopied') : t('runDetails.fullPromptCopy')}
+        </Button>
+      </div>
+      <div className="min-h-0 flex-1 overflow-auto bg-muted/30 p-3">
+        <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-content-text">
+          {prompt}
+        </pre>
+      </div>
+    </div>
+  );
 }

@@ -125,7 +125,7 @@ describe('AgentPresenceBanner (CAP-A-18 V2)', () => {
       />,
     );
     fireEvent.click(screen.getByText('立即执行'));
-    const approvalOption = screen.getByText('进入决策收件箱审批');
+    const approvalOption = screen.getByText('进入通知中心审批');
     expect(approvalOption).toBeInTheDocument();
     fireEvent.click(approvalOption);
     expect(onStrategyChange).toHaveBeenCalledWith('approval');

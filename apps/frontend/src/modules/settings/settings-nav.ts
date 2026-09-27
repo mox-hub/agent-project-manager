@@ -20,6 +20,7 @@ import {
   Github,
   LayoutList,
   Keyboard,
+  ScrollText,
 } from 'lucide-react';
 
 export interface SettingsNavItem {
@@ -79,6 +80,7 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
       { to: '/app/settings/ai', labelKey: 'settings.aiManagement', icon: Brain },
       { to: '/app/settings/ai/executions', labelKey: 'settings.aiExecutions', icon: Play },
       { to: '/app/settings/memory', labelKey: 'settings.memory', icon: Brain },
+      { to: '/app/settings/prompts', labelKey: 'settings.prompts', icon: ScrollText },
       { to: '/app/settings/runtime', labelKey: 'settings.runtime', icon: Server },
     ],
   },

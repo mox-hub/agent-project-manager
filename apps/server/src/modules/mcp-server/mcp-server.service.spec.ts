@@ -14,6 +14,9 @@ const CTX: McpToolContext = { userId: 'user-1' };
 
 function buildService(prisma: Record<string, unknown>) {
   const auditService = { log: vi.fn().mockResolvedValue(undefined) };
+  const searchService = {
+    search: vi.fn().mockResolvedValue({ items: [], total: 0 }),
+  };
   const service = new McpServerService(
     { completeExecution: vi.fn().mockResolvedValue(undefined) },
     { createApprovalRequest: vi.fn().mockResolvedValue({ id: 'apr-1' }) },
@@ -29,8 +32,9 @@ function buildService(prisma: Record<string, unknown>) {
       healthCheck: vi.fn().mockResolvedValue({ ok: true }),
     },
     auditService,
+    searchService as never,
   );
-  return { service, auditService };
+  return { service, auditService, searchService };
 }
 
 describe('McpServerService - 会话与 claim 校验（P0-6）', () => {
@@ -175,6 +179,7 @@ describe('McpServerService - 会话与 claim 校验（P0-6）', () => {
       prisma as never,
       {} as never,
       auditService,
+      { search: vi.fn().mockResolvedValue({ items: [], total: 0 }) } as never,
     );
 
     await (
@@ -193,5 +198,49 @@ describe('McpServerService - 会话与 claim 校验（P0-6）', () => {
         resourceId: 'issue-2',
       }),
     );
+  });
+
+  it('search_entities：空 q 报错；无 PAT 用户拒绝；合法请求透传 apmRef 结果（CAP-A-23）', async () => {
+    const { service, searchService } = buildService({});
+
+    const empty = (await (
+      service as never as Record<
+        string,
+        (...a: unknown[]) => Promise<{ isError?: boolean }>
+      >
+    )['searchEntities'](CTX, { q: '  ' })) as { isError?: boolean };
+    expect(empty.isError).toBe(true);
+    expect(searchService.search).not.toHaveBeenCalled();
+
+    const anonymous = await (
+      service as never as Record<
+        string,
+        (...a: unknown[]) => Promise<{ isError?: boolean }>
+      >
+    )['searchEntities']({ userId: null }, { q: '登录' });
+    expect(anonymous.isError).toBe(true);
+    expect(searchService.search).not.toHaveBeenCalled();
+
+    searchService.search.mockResolvedValueOnce({
+      items: [
+        {
+          id: 'i1',
+          type: 'task',
+          title: '修复登录超时',
+          apmRef: 'apm://APM/issue/APM-PF-001',
+        },
+      ],
+      total: 1,
+    });
+    const ok = (await (
+      service as never as Record<string, (...a: unknown[]) => Promise<unknown>>
+    )['searchEntities'](CTX, { q: '登录', types: ['task'], limit: 5 })) as {
+      content: { text: string }[];
+    };
+    expect(searchService.search).toHaveBeenCalledWith(
+      { q: '登录', types: ['task'], limit: 5 },
+      'user-1',
+    );
+    expect(ok.content[0].text).toContain('apm://APM/issue/APM-PF-001');
   });
 });

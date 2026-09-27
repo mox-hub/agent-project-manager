@@ -235,7 +235,7 @@ describe('InterviewDialog（对照翻译访谈向导）', () => {
     expect(screen.getByText(/目标用户画像/)).toBeTruthy();
     // base-ui Button render prop 会给 Link 强制 role="button"，按名字取按钮再校验 href
     const inboxBtn = screen.getByRole('button', { name: /Decide/i }) as HTMLAnchorElement;
-    expect(inboxBtn.getAttribute('href')).toBe('/app/decisions');
+    expect(inboxBtn.getAttribute('href')).toBe('/app/notifications');
   });
 
   it('直接填写形态：AI 预填点按钮携带问题组调用，成功后只填空字段不覆盖已填', async () => {

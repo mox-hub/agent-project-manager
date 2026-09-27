@@ -806,81 +806,96 @@ export class IssueService {
     return !!task;
   }
 
+  /** findOne 详情装载（id / shortId 两入口共用同一 include） */
+  private readonly issueDetailInclude = {
+    assignee: {
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+      },
+    },
+    reporter: {
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+      },
+    },
+    parentIssue: {
+      select: {
+        id: true,
+        title: true,
+        status: true,
+      },
+    },
+    subIssues: {
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        priority: true,
+      },
+    },
+    issueTags: {
+      include: {
+        tag: true,
+      },
+    },
+    dependencies: {
+      include: {
+        dependsOnIssue: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+          },
+        },
+      },
+    },
+    blockedBy: {
+      include: {
+        issue: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+          },
+        },
+      },
+    },
+    iteration: {
+      select: {
+        id: true,
+        name: true,
+        status: true,
+      },
+    },
+  };
+
   async findOne(id: string, userId: string) {
     // 任务可能没有 projectId (未绑定项目 / inbox), 此时改用 reporterId/assigneeId 校验权限
-    const task = await this.prisma.issue.findFirst({
+    let task = await this.prisma.issue.findFirst({
       where: {
         id,
         OR: this.visibilityOr(userId),
       },
-      include: {
-        assignee: {
-          select: {
-            id: true,
-            username: true,
-            displayName: true,
-            avatarUrl: true,
-          },
-        },
-        reporter: {
-          select: {
-            id: true,
-            username: true,
-            displayName: true,
-            avatarUrl: true,
-          },
-        },
-        parentIssue: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
-          },
-        },
-        subIssues: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            priority: true,
-          },
-        },
-        issueTags: {
-          include: {
-            tag: true,
-          },
-        },
-        dependencies: {
-          include: {
-            dependsOnIssue: {
-              select: {
-                id: true,
-                title: true,
-                status: true,
-              },
-            },
-          },
-        },
-        blockedBy: {
-          include: {
-            issue: {
-              select: {
-                id: true,
-                title: true,
-                status: true,
-              },
-            },
-          },
-        },
-        iteration: {
-          select: {
-            id: true,
-            name: true,
-            status: true,
-          },
-        },
-      },
+      include: this.issueDetailInclude,
     });
+
+    // cuid 未命中回落 shortId：apm:// 引用与胶囊路径段是短号
+    // （v2 纪要 §13「后端逐域兼容」缺口，apm-ref-chip hover 预览/点击直达依赖）
+    if (!task) {
+      task = await this.prisma.issue.findFirst({
+        where: {
+          shortId: id,
+          OR: this.visibilityOr(userId),
+        },
+        include: this.issueDetailInclude,
+      });
+    }
 
     if (!task) {
       throw new NotFoundException(`Task ${id} not found`);

@@ -1014,4 +1014,47 @@ describe('IssueService', () => {
       );
     });
   });
+
+  // -------------------------------------------------------------------------
+  // findOne 短号回落（CAP-A-23 全局引用系统：apm:// 引用路径段是短号）
+  // -------------------------------------------------------------------------
+  describe('findOne（短号回落）', () => {
+    const detailTask = {
+      id: 'issue-1',
+      title: '引用目标工单',
+      aiAgentId: null,
+      milestoneId: null,
+      projectId: 'project-1',
+    };
+
+    it('cuid 未命中回落 shortId 查询（可见性口径 OR 不变）', async () => {
+      mockPrismaService.issue.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(detailTask);
+
+      const result = await service.findOne('APM-PF-001', 'user-1');
+
+      expect(result).toMatchObject({ id: 'issue-1', title: '引用目标工单' });
+      const secondCall = mockPrismaService.issue.findFirst.mock.calls[1][0];
+      expect(secondCall.where.shortId).toBe('APM-PF-001');
+      expect(Array.isArray(secondCall.where.OR)).toBe(true);
+    });
+
+    it('cuid 直接命中不触发短号二次查询', async () => {
+      mockPrismaService.issue.findFirst.mockResolvedValueOnce(detailTask);
+
+      await service.findOne('issue-1', 'user-1');
+
+      expect(mockPrismaService.issue.findFirst).toHaveBeenCalledTimes(1);
+    });
+
+    it('两入口都未命中抛 NotFoundException', async () => {
+      mockPrismaService.issue.findFirst.mockResolvedValue(null);
+
+      await expect(service.findOne('nope', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockPrismaService.issue.findFirst).toHaveBeenCalledTimes(2);
+    });
+  });
 });

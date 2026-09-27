@@ -375,11 +375,11 @@ export function MemberCreateDialog({
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs">个人提示词（注入任务派发与聊天上下文）</label>
+                <label className="text-xs">个人提示词（与所属角色的共享约定合并注入派发 prompt）</label>
                 <textarea
                   value={personalPrompt}
                   onChange={(e) => setPersonalPrompt(e.target.value)}
-                  placeholder="如: 你是一名全栈工程师，偏好简洁实现与充分测试..."
+                  placeholder="该成员 AI 执行者的私有偏好与补充约定，如: 偏好简洁实现与充分测试..."
                   className="w-full h-20 px-2 py-1.5 rounded-md border border-input bg-background text-sm resize-none"
                 />
               </div>

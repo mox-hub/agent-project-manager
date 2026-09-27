@@ -111,7 +111,7 @@ describe('ContractBindingsPanel', () => {
     ).toBe(true);
   });
 
-  it('冲突绑定渲染冲突徽章并链接决策收件箱', () => {
+  it('冲突绑定渲染冲突徽章并链接通知中心', () => {
     mockBindings({
       workspaceRoot: '/ws/demo',
       bindings: [makeBinding({ conflictState: 'conflicted' })],
@@ -122,7 +122,7 @@ describe('ContractBindingsPanel', () => {
     const link = screen
       .getByText('contract.action.viewProposal')
       .closest('a');
-    expect(link?.getAttribute('href')).toBe('/app/decisions');
+    expect(link?.getAttribute('href')).toBe('/app/notifications');
   });
 
   it('未绑工作区渲染引导提示；无绑定渲染空态且种生按钮禁用', () => {

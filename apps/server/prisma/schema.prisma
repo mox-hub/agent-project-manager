@@ -452,6 +452,7 @@ model Project {
   activityLogs        Activity[]
   contractFileBindings ContractFileBinding[]
   releases            Release[]
+  promptTemplates     PromptTemplate[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -688,10 +689,31 @@ model IssueTemplateItem {
   priority     String?
   estimate     Float?
   parentItemId String? // For hierarchical templates
+  promptHint   String? // 任务级提示词模板（{{issue.*}} 变量），建单时落 metadata.taskPrompt
 
   template IssueTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@index([templateId], name: "idx_issue_template_items_template_id")
+}
+
+// 提示词模板库（CAP-A-24 增强 A）：可复用提示词资产，body 含 {{issue.*}} 变量，
+// 派发组装时按当单事实插值——模板存原文跨任务复用。
+model PromptTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  scope       String   @default("workspace") // workspace | project
+  projectId   String?
+  target      String   @default("task") // task | project | role | member
+  body        String
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId], name: "idx_prompt_templates_project_id")
+  @@index([target], name: "idx_prompt_templates_target")
 }
 
 // Phase3 AIHub models

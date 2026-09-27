@@ -26,6 +26,7 @@ import { DocumentModule } from '../document/document.module';
 import { DocumentEnhanceModule } from '../document/document-enhance.module';
 import { TeamModule } from '../team/team.module';
 import { AcceptanceModule } from '../acceptance/acceptance.module';
+import { SearchModule } from '../search/search.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { AcceptanceModule } from '../acceptance/acceptance.module';
     MemoryModule,
     CollaborationModule,
     forwardRef(() => ProfileModule),
+    SearchModule,
   ],
   controllers: [AiHubController, AssistantController],
   providers: [
