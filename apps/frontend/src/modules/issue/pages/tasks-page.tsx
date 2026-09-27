@@ -51,7 +51,7 @@ import { ImportModal } from '../components/task-import-export';
 import { useIterationNameMap } from '../hooks/use-iteration-name-map';
 import { TaskGantt } from '../components/task-gantt';
 import { useActiveExecutionsMap, type ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
-import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
+import { AiExecutionBadge } from '@/components/ui/ai-execution-badge';
 import { ListActionButton } from '@/components/ui/data-list';
 import {
   Pagination,

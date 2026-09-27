@@ -67,8 +67,8 @@ import {
 } from '@/modules/project/components/dashboard/project-sidebar-context';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
-import { ErrorBoundary } from '@/shared/components/error-boundary';
-import { PageErrorFallback } from '@/shared/components/page-error-fallback';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { PageErrorFallback } from '@/components/ui/page-error-fallback';
 import { AssistantFab } from '@/modules/assistant';
 import { ConnectionBanner } from '@/shared/components/connection-banner';
 import { useGlobalHotkey } from '@/shared/hotkeys/use-global-hotkey';

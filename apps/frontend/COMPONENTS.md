@@ -145,11 +145,14 @@
 
 ### App Components（246）
 
-#### UI 原子层 `src/components/ui/`（34）
+#### UI 原子层 `src/components/ui/`（40）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
 | activity-heatmap | `src/components/ui/activity-heatmap.tsx` | ✅ canonical | — | — |
+| ai-agent-badge | `src/components/ui/ai-agent-badge.tsx` | ✅ canonical | — | — |
+| ai-context-summary | `src/components/ui/ai-context-summary.tsx` | ✅ canonical | — | — |
+| ai-execution-badge | `src/components/ui/ai-execution-badge.tsx` | ✅ canonical | — | — |
 | app-dock | `src/components/ui/app-dock.tsx` | 📦 standby | — | 自研长尾：消费方 1（bottom-dock），与 shared/components/bottom-dock 能力重叠 |
 | async-state | `src/components/ui/async-state.tsx` | ✅ canonical | — | — |
 | chart | `src/components/ui/chart.tsx` | ✅ canonical | — | — |
@@ -158,7 +161,9 @@
 | data-table | `src/components/ui/data-table.tsx` | ✅ canonical | — | — |
 | data-table-shell | `src/components/ui/data-table-shell.tsx` | ✅ canonical | — | — |
 | document-preview-dialog | `src/components/ui/document-preview-dialog.tsx` | ✅ canonical | — | — |
+| dual-track-metric-pill | `src/components/ui/dual-track-metric-pill.tsx` | ✅ canonical | — | — |
 | empty-state | `src/components/ui/empty-state.tsx` | ✅ canonical | — | — |
+| error-boundary | `src/components/ui/error-boundary.tsx` | ✅ canonical | — | — |
 | filter-chips | `src/components/ui/filter-chips.tsx` | ✅ canonical | — | — |
 | floating-dock | `src/components/ui/floating-dock.tsx` | 📦 standby | — | 自研长尾：零引用（仅画廊），与 shared/components/bottom-dock 能力重叠 |
 | global-loading-state | `src/components/ui/global-loading-state.tsx` | ✅ canonical | — | — |
@@ -167,6 +172,7 @@
 | item | `src/components/ui/item.tsx` | ✅ canonical | — | — |
 | loading-overlay | `src/components/ui/loading-overlay.tsx` | ✅ canonical | — | — |
 | mock-badge | `src/components/ui/mock-badge.tsx` | ✅ canonical | — | — |
+| page-error-fallback | `src/components/ui/page-error-fallback.tsx` | ✅ canonical | — | — |
 | page-header | `src/components/ui/page-header.tsx` | ✅ canonical | — | — |
 | page-shell | `src/components/ui/page-shell.tsx` | ✅ canonical | — | — |
 | property-panel | `src/components/ui/property-panel.tsx` | ✅ canonical | — | — |
@@ -190,13 +196,10 @@
 |---|---|---|---|---|
 | filter-panel | `src/shared/ui/filter-panel.tsx` | 🔶 review | — | 零引用（实测）——唯一引用是 project-list-page.test.tsx 的 vi.mock；且构成第二个 ui 命名空间 |
 
-#### 跨模块业务组件 `src/shared/components/`（34）
+#### 跨模块业务组件 `src/shared/components/`（28）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
-| ai-agent-badge | `src/shared/components/ai-agent-badge.tsx` | ✅ canonical | — | — |
-| ai-context-summary | `src/shared/components/ai-context-summary.tsx` | ✅ canonical | — | — |
-| ai-execution-badge | `src/shared/components/ai-execution-badge.tsx` | ✅ canonical | — | — |
 | board-view | `src/shared/components/board-view/board-view.tsx` | ✅ canonical | — | — |
 | bottom-dock | `src/shared/components/bottom-dock/bottom-dock.tsx` | ✅ canonical | — | — |
 | dock-metric-badge | `src/shared/components/bottom-dock/dock-metric-badge.tsx` | ✅ canonical | — | — |
@@ -213,9 +216,7 @@
 | property-pills-bar | `src/shared/components/create-dialog/property-pills-bar.tsx` | ✅ canonical | — | — |
 | suggestions-card | `src/shared/components/create-dialog/suggestions-card.tsx` | ✅ canonical | — | — |
 | unified-create-dialog | `src/shared/components/create-dialog/unified-create-dialog.tsx` | ✅ canonical | — | — |
-| dual-track-metric-pill | `src/shared/components/dual-track-metric-pill.tsx` | ✅ canonical | — | — |
 | emoji-picker | `src/shared/components/emoji-picker/emoji-picker.tsx` | ✅ canonical | — | — |
-| error-boundary | `src/shared/components/error-boundary.tsx` | ✅ canonical | — | — |
 | favorite-toggle | `src/shared/components/favorite-toggle.tsx` | ✅ canonical | — | — |
 | gantt-chart | `src/shared/components/gantt-chart.tsx` | ✅ canonical | — | — |
 | global-create-dialog | `src/shared/components/global-create-dialog.tsx` | ✅ canonical | — | — |
@@ -225,7 +226,6 @@
 | markdown-editor | `src/shared/components/markdown-editor.tsx` | ✅ canonical | — | — |
 | markdown-live-editor | `src/shared/components/markdown-live-editor.tsx` | ✅ canonical | — | — |
 | markdown-view | `src/shared/components/markdown-view.tsx` | ✅ canonical | — | — |
-| page-error-fallback | `src/shared/components/page-error-fallback.tsx` | ✅ canonical | — | — |
 | prompt-editor | `src/shared/components/prompt-editor.tsx` | ✅ canonical | — | — |
 | view-switcher | `src/shared/components/view-switcher.tsx` | ✅ canonical | — | — |
 

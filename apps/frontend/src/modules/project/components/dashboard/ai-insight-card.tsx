@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { AiContextSummary, type ProjectAIContextData } from '@/shared/components/ai-context-summary';
+import { AiContextSummary, type ProjectAIContextData } from '@/components/ui/ai-context-summary';
 import { formatDateTime } from '@/shared/lib/date-format';
 import type { AiDetailBreakdown } from '../../api/project-api';
 

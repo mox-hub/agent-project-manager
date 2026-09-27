@@ -38,7 +38,7 @@ import { BugSimpleList } from '../components/bug-simple-list';
 import { TaskTableView } from '../components/task-table-view';
 import { TaskGantt } from '../components/task-gantt';
 import { useActiveExecutionsMap } from '@/modules/execution/hooks/use-active-executions-map';
-import { AiExecutionBadge, type IssueAiExecutionState } from '@/shared/components/ai-execution-badge';
+import { AiExecutionBadge, type IssueAiExecutionState } from '@/components/ui/ai-execution-badge';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';

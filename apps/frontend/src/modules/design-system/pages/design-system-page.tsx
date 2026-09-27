@@ -328,7 +328,7 @@ import {
 } from 'recharts'
 import { ThinkingStream } from '@/modules/assistant/components/thinking-stream'
 import { AgentHandoffCard } from '@/modules/office/components/agent-handoff-card'
-import { DualTrackMetricPill } from '@/shared/components/dual-track-metric-pill'
+import { DualTrackMetricPill } from '@/components/ui/dual-track-metric-pill'
 import { IssueTypePill } from '@/shared/components/issue-type-pill'
 import { AssistantToolCard } from '@/modules/assistant/components/assistant-tool-card'
 import { WorkflowRunTimeline } from '@/modules/workflow/components/workflow-run-timeline'

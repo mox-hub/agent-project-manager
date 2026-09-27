@@ -51,7 +51,7 @@ import {
   useCreateTaskExecution,
   useConfirmTaskExecution,
 } from '../hooks/use-project-tasks';
-import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
+import { AiAgentBadge } from '@/components/ui/ai-agent-badge';
 import { AiAssignDialog } from './ai-assign-dialog';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';

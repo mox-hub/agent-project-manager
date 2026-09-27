@@ -24,7 +24,7 @@ import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
 import { IssueTypePill } from '@/shared/components/issue-type-pill';
 import { cn } from '@/lib/utils';
-import { AiExecutionBadge } from '@/shared/components/ai-execution-badge';
+import { AiExecutionBadge } from '@/components/ui/ai-execution-badge';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
 import { StatusCell, PriorityCell, AssigneeCell, MilestoneCell, IssueTypeCell } from './cell-editors';
 
