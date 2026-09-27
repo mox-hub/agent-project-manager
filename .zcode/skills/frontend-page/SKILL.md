@@ -1,6 +1,6 @@
 ---
 name: frontend-page
-description: 开发或改造 apps/frontend 页面（新页面、页面改版、页面级 UI 重构）时必须使用。强制执行「读组件索引 → 出页面 spec → 确认 → 按模板实现 → 自检清单」流程，保证组件复用与设计一致性，禁止自由发挥。
+description: 开发或改造 apps/frontend 页面（新页面、页面改版、页面级 UI 重构）时必须使用。强制执行「读组件索引 → 出页面 spec → 确认 → 按骨架实现 → 自检清单」流程，保证组件复用与设计一致性，禁止自由发挥。
 ---
 
 # 前端页面开发流程
@@ -10,28 +10,28 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 
 ## 流程（按顺序，禁止跳步）
 
-### 1. 读索引与模板
+### 1. 读索引与骨架参照
 
 动手前必须先读：
 
 - `docs/design/PRINCIPLES.md` —— **设计宪法（最高样式依据，冲突时以其为准）**：分区策略、唯一字阶、间距/圆角/颜色/图标/动效/三态规则
 - `apps/frontend/COMPONENTS.md` —— 组件清单（组件名/路径/用途/关键 props/分类）
-- `apps/frontend/templates/` 下与本任务最接近的模板（`list-page.tsx` / `detail-page.tsx` / `form-page.tsx`）
-- `apps/frontend/AGENTS.md` §6.2 页面开发模板与 §3 设计变量规范
+- **同域最近似页面** —— 直接读一个同类页面作结构参照（**原 `apps/frontend/src/templates/` 骨架目录已于 2026-08 随剪枝删除，不存在可复制的模板**）
+- `apps/frontend/AGENTS.md` §6.2 页面结构约定（PageHeader / ToolbarRow / SubPageToolbar 的装配细则；设计规则一律见宪法）
 
 ### 2. 出 spec，等确认
 
 不动代码。输出页面 spec 并等待用户确认：
 
 - **分区判断**：页面属于宪法 §1 的极简区还是高密区，密度基调由此决定
-- **模板选择**：list / detail / form 哪个骨架，或明确说明为何都不适用
+- **骨架选择**：列表 / 详情 / 表单哪一类骨架（参照同域最近似页面与 `AGENTS.md` §6.2），或明确说明为何都不适用
 - **区域划分**：页面分几个区域，每个区域用哪些组件（只能引用 COMPONENTS.md 中存在的组件名；需要新组件必须单独列出并说明为何现有组件不能满足）
 - **数据来源**：复用哪个模块的 api hook，需要新建哪些
 - **路由注册**：router.tsx 挂载点、page-registry 侧栏入口（如有）
 
-### 3. 按模板实现
+### 3. 按骨架实现
 
-- 复制模板骨架，替换占位内容；页面结构（PageHeader / ToolbarRow / SubPageToolbar / 内容区）不得偏离模板。
+- 按 `AGENTS.md` §6.2 的装配细则搭出页面结构（PageHeader / ToolbarRow / SubPageToolbar / 内容区），与同域最近似页面保持一致；结构不得自由发挥。
 - 样式规则：严格遵守 `docs/design/PRINCIPLES.md`（**设计宪法，最高依据，不在此处钉版本号**）——8 档**语义**字阶 `text-3xs/2xs/xs/sm/base/lg/xl/2xl`（§3.1，**名字与 px 解耦**）、中文最小 `text-xs`（§2.4）、字重 400/500/600（§2.3）、**行高只许语义档**（§3.4）、间距 4px 网格且四分之一档冻结（§4）、语义色 token（§5）、**全站唯一阴影档 `shadow-xs`**（§3.6）、**hover 不抬升阴影**（§3.6）、动效 `duration-fast/normal/slow` = 120/180/240ms（§7.1）、hover/selected/focus 三态 token（§8）。
   **禁止**：任意值（`w-[260px]`、`text-[13px]` 等）；px 直读字阶（`text-8/9/10/11/12/13/15/22/28/32` 与 `text-3xl` 及以上）；具名阴影档（`shadow-2xs/sm/md/lg/xl/2xl/inner`）与裸 `shadow`；数值行高（`leading-5` 等）；白名单外时长（`duration-100/150/200/250/300/500/…`）。
   **改 token 时的坑**：Tailwind v4 的 `duration-<name>` 读 `--transition-duration-<name>`（写成 `--duration-*` 会静默不生成 CSS），`ease-<name>` 读 `--ease-*`（§7.1）。
@@ -58,7 +58,7 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 
 ## 特殊规则
 
-- **改造现有页面**：若现有页面结构偏离模板，默认按模板**重写页面骨架并迁移数据逻辑**，禁止在旧结构上修修补补叠加样式。
+- **改造现有页面**：若现有页面结构偏离骨架约定（`AGENTS.md` §6.2），默认**重写页面骨架并迁移数据逻辑**，禁止在旧结构上修修补补叠加样式。
 - **参考稿处理**（Figma Make 的 TSX / Open Design 的 HTML 等）：视为**结构意图参考，不是可粘贴代码**。做法：保留其布局结构意图 → 把它的组件映射为本地同位组件（查 COMPONENTS.md）→ 颜色/间距/字号一律替换为本项目 token。禁止直接复制参考稿代码。
 - **测试基线**：**所有测试必须通过**；失败即回归，须修复或先撤销变更。（原「task-page.test 与 project-list-page.test 两个存量失败不算回归」条款已于 2026-09-27 废除——把红灯写成规范等于放弃测试门禁，见 `docs/design/修改方案-BCD类-2026-09-27.md` §B9。）
 
