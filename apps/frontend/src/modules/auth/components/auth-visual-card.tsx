@@ -133,12 +133,12 @@ export function AuthVisualCard({
         {/* 桌面紧凑窗口拖动区：盖住卡片顶部品牌行（右上控制按钮组 z-30 在其上可点；
             -webkit-app-region 在浏览器端无效，不影响 web） */}
         <div
-          className="absolute inset-x-0 top-0 z-20 h-10"
+          className="absolute inset-x-0 top-0 z-dropdown h-10"
           style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
         />
 
         {/* 右上角圆形悬浮控制按钮组 (反转卡片 + 日夜间切换) */}
-        <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+        <div className="absolute top-4 right-4 z-banner flex items-center gap-2">
           {/* 1. 双表面反转圆形按钮 (role="switch") */}
           <button
             type="button"
@@ -296,7 +296,7 @@ export function AuthVisualCard({
 
       {/* 无法登录 / 常见问题排查轻量弹窗 */}
       {helpDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
           <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
             <div className="flex items-center gap-2 text-primary font-semibold text-sm">
               <HelpCircle className="size-4" />

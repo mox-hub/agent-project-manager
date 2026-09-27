@@ -72,8 +72,8 @@ const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
 
           {showMenu && (
             <>
-              <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-              <div className="absolute right-0 top-full z-20 mt-1 w-36 rounded-md border border-border bg-popover p-1 shadow-xs">
+              <div className="fixed inset-0 z-sticky" onClick={() => setShowMenu(false)} />
+              <div className="absolute right-0 top-full z-dropdown mt-1 w-36 rounded-md border border-border bg-popover p-1 shadow-xs">
                 <button
                   type="button"
                   className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"

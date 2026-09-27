@@ -71,7 +71,7 @@ export function OmniDock({
 
   return (
     <div
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 select-none"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-modal flex flex-col items-center gap-2 select-none"
       style={{ width: 'min(92vw, 780px)' }}
     >
       {/* 顶部悬浮快捷建议条与切换返回提示 */}
@@ -224,7 +224,7 @@ export function OmniDock({
           {/* 模型弹出列表 */}
           {modelDropdownOpen && (
             <div
-              className="absolute bottom-full left-0 mb-2 w-56 rounded-xl p-1.5 backdrop-blur-2xl shadow-xs flex flex-col gap-1 border animate-in fade-in zoom-in-95 duration-normal z-50"
+              className="absolute bottom-full left-0 mb-2 w-56 rounded-xl p-1.5 backdrop-blur-2xl shadow-xs flex flex-col gap-1 border animate-in fade-in zoom-in-95 duration-normal z-modal"
               style={{
                 borderColor: isDark ? 'hsl(var(--foreground) / 0.1)' : 'hsl(var(--accent-purple) / 0.15)',
                 background: isDark ? 'hsl(var(--background) / 0.96)' : 'hsl(var(--card) / 0.98)',

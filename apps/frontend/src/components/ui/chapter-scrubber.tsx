@@ -369,7 +369,7 @@ export function ChapterScrubber({
               : { right: peakLength + GAP }),
           }}
           className={cn(
-            "pointer-events-none absolute z-10 rounded-xl border border-border bg-popover px-4 py-3.5 text-popover-foreground shadow-xs",
+            "pointer-events-none absolute z-sticky rounded-xl border border-border bg-popover px-4 py-3.5 text-popover-foreground shadow-xs",
             resolvedSide === "right" ? "origin-left" : "origin-right",
           )}
         >

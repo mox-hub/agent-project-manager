@@ -245,7 +245,7 @@ export function GanttChart({
     >
       <div className="overflow-x-auto">
         <div className="min-w-230">
-          <div className="sticky top-0 z-20 flex border-b border-border bg-background">
+          <div className="sticky top-0 z-dropdown flex border-b border-border bg-background">
             <div className="flex w-60 min-w-60 items-center justify-between border-r border-border bg-muted/50 px-3 py-2 text-sm font-semibold text-foreground">
               <span>{leftColumnTitle}</span>
               <div className="flex items-center gap-1">
@@ -283,7 +283,7 @@ export function GanttChart({
               </div>
               {todayOffset >= 0 && todayOffset <= timeline.days.length ? (
                 <div
-                  className="pointer-events-none absolute bottom-0 top-0 z-10 w-px bg-accent-red"
+                  className="pointer-events-none absolute bottom-0 top-0 z-sticky w-px bg-accent-red"
                   style={{ left: `${todayOffset * dayWidth}px` }}
                 />
               ) : null}

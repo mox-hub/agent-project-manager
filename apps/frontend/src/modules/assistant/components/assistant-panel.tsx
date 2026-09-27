@@ -258,7 +258,7 @@ export function AssistantPanel() {
 
       {/* 当存在决策且侧栏收起时：高质感现实实体手卡折叠夹槽手柄（伴随左侧悬浮） */}
       {hasDecisions && !showDecisionSide && (
-        <div className="flex flex-col justify-center shrink-0 z-20">
+        <div className="flex flex-col justify-center shrink-0 z-dropdown">
           <button
             type="button"
             onClick={() => setShowDecisionSide(true)}

@@ -234,7 +234,7 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
         // 预览态需保留定位上下文：上方指标徽章以 absolute bottom-full 锚定于此
         preview
           ? 'relative mx-auto w-fit'
-          : 'fixed bottom-4 left-1/2 -translate-x-1/2 z-40',
+          : 'fixed bottom-4 left-1/2 -translate-x-1/2 z-overlay',
         // 收起态整棵子树退出命中测试：根节点盒（=胶囊布局盒，opacity-0 但仍占位）
         // 仍压在底部中央，若不关命中，这层 z-40 的隐形条带会拦截下方元素的首次点击。
         // 浮出判定走 document mousemove 坐标，不受 pointer-events 影响。

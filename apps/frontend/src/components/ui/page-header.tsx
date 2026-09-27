@@ -58,7 +58,7 @@ export function PageHeader({
     <header
       className={cn(
         // sticky：页面滚动时标题行吸附在滚动容器顶部（内容区从其下滚过）
-        "sticky top-0 z-20 flex h-10 w-full shrink-0 items-center gap-2 border-b border-border bg-background px-6 md:px-7",
+        "sticky top-0 z-dropdown flex h-10 w-full shrink-0 items-center gap-2 border-b border-border bg-background px-6 md:px-7",
         className,
       )}
       data-ai-component={aiId ? `${aiId}.header` : "ui.page-header"}

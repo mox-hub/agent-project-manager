@@ -60,7 +60,7 @@ export function AiSurfaceReplayPage() {
   // 剧本自身坏了（格式不合、帧缺站）：**必须说出来**，否则"少了一幕"看起来像本该如此
   if (!screenplay || !frame || !facts) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-content-bg p-8 text-center text-foreground">
+      <div className="fixed inset-0 z-modal flex flex-col items-center justify-center gap-3 bg-content-bg p-8 text-center text-foreground">
         <p className="text-sm font-semibold">回放演示读不出来，无法播放</p>
         <ul className="max-w-lg space-y-1 text-2xs text-muted-foreground">
           {PARSED.drops.map((drop) => (
@@ -80,9 +80,9 @@ export function AiSurfaceReplayPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex h-screen w-screen flex-col overflow-x-hidden overflow-y-auto bg-content-bg font-sans text-foreground select-none">
+    <div className="fixed inset-0 z-modal flex h-screen w-screen flex-col overflow-x-hidden overflow-y-auto bg-content-bg font-sans text-foreground select-none">
       {/* 1. 页头：与盯盘面同构，但把「实时连接态」换成「回放」 */}
-      <header className="sticky top-0 z-40 flex w-full items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
+      <header className="sticky top-0 z-overlay flex w-full items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -128,7 +128,7 @@ export function AiSurfaceReplayPage() {
       </header>
 
       {/* 2. 剧本说明 + 控制条。说明放在最前：看的人先要知道"这不是真的在跑" */}
-      <div className="relative z-10 mx-auto w-full max-w-[1100px] space-y-2 px-6 pt-1">
+      <div className="relative z-sticky mx-auto w-full max-w-[1100px] space-y-2 px-6 pt-1">
         <p
           className="rounded-xl border border-accent-purple/20 bg-accent-purple/5 px-3 py-2 text-2xs leading-relaxed text-muted-foreground"
           data-ai-component="ai-surface.replay.about"
@@ -156,7 +156,7 @@ export function AiSurfaceReplayPage() {
       </div>
 
       {/* 3. 顶栏一句话总述：与盯盘面同一组件，数据取自当前帧的剧本叙述 */}
-      <div className="relative z-10 mx-auto w-full max-w-[1100px] px-6 pt-2">
+      <div className="relative z-sticky mx-auto w-full max-w-[1100px] px-6 pt-2">
         <SurfaceNarrationBar
           narration={frame.narration}
           state="ready"
@@ -167,7 +167,7 @@ export function AiSurfaceReplayPage() {
       </div>
 
       {/* 4. 态势带：泳道 + 待办，均为与实况同一个 View，只换数据与出处注脚 */}
-      <div className="relative z-10 mx-auto grid w-full max-w-[1100px] gap-4 px-6 pb-2 pt-2 lg:grid-cols-[2fr_1fr]">
+      <div className="relative z-sticky mx-auto grid w-full max-w-[1100px] gap-4 px-6 pb-2 pt-2 lg:grid-cols-[2fr_1fr]">
         <PipelineLaneStripView
           lanes={facts.lanes}
           scopeNote="回放演示"
@@ -196,7 +196,7 @@ export function AiSurfaceReplayPage() {
       </div>
 
       {/* 5. 空间主视界：工位卡复用盯盘面的表盘（同一组件、同一适配器） */}
-      <main className="no-scrollbar relative z-10 mx-auto flex w-full flex-1 flex-col items-center justify-center overflow-x-auto px-4 pb-24">
+      <main className="no-scrollbar relative z-sticky mx-auto flex w-full flex-1 flex-col items-center justify-center overflow-x-auto px-4 pb-24">
         <RadialWatchDeck
           stations={facts.stations}
           stationsStatus="ready"
@@ -212,7 +212,7 @@ export function AiSurfaceReplayPage() {
       </main>
 
       {/* 6. 页脚：出口明确指回盯盘面 */}
-      <footer className="relative z-10 mx-auto mb-6 w-full max-w-[1100px] px-6">
+      <footer className="relative z-sticky mx-auto mb-6 w-full max-w-[1100px] px-6">
         <button
           type="button"
           onClick={() => navigate('/app/ai-surface')}

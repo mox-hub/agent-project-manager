@@ -97,7 +97,7 @@ export function TabBar({ className }: TabBarProps) {
         <Button
           variant="ghost"
           size="icon-xs"
-          className="absolute left-1 z-10 size-7 shrink-0 bg-background/80 hover:bg-background text-foreground/80 rounded-md border border-border/50 shadow-xs backdrop-blur-xs"
+          className="absolute left-1 z-sticky size-7 shrink-0 bg-background/80 hover:bg-background text-foreground/80 rounded-md border border-border/50 shadow-xs backdrop-blur-xs"
           onClick={() => scroll('left')}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -146,7 +146,7 @@ export function TabBar({ className }: TabBarProps) {
         <Button
           variant="ghost"
           size="icon-xs"
-          className="absolute right-10 z-10 size-7 shrink-0 bg-background/80 hover:bg-background text-foreground/80 rounded-md border border-border/50 shadow-xs backdrop-blur-xs"
+          className="absolute right-10 z-sticky size-7 shrink-0 bg-background/80 hover:bg-background text-foreground/80 rounded-md border border-border/50 shadow-xs backdrop-blur-xs"
           onClick={() => scroll('right')}
         >
           <ChevronRight className="h-4 w-4" />
@@ -157,7 +157,7 @@ export function TabBar({ className }: TabBarProps) {
       <Button
         variant="ghost"
         size="icon-xs"
-        className="absolute right-1.5 z-10 size-7 shrink-0 bg-sidebar-accent/50 hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground rounded-md border border-sidebar-border/40 transition-colors"
+        className="absolute right-1.5 z-sticky size-7 shrink-0 bg-sidebar-accent/50 hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground rounded-md border border-sidebar-border/40 transition-colors"
         onClick={handleAddTab}
         title={t('tabs.add', 'Add tab')}
       >

@@ -1172,7 +1172,7 @@ export function ModelsTab() {
               </label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Key className="absolute left-3 top-1/2 z-10 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Key className="absolute left-3 top-1/2 z-sticky -translate-y-1/2 size-4 text-muted-foreground" />
                   <PasswordInput
                     placeholder={selectedProvider.hasApiKey ? t('aiHub.apiKeySavedPlaceholder') : t('aiHub.apiKeyNewPlaceholder')}
                     className="pr-28 pl-9"

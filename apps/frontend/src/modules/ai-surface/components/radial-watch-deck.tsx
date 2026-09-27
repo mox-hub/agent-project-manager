@@ -263,7 +263,7 @@ export function RadialWatchDeck({
         {/* 1. 科技总线曲折线 SVG 连线层 (Stepped Circuit Zig-Zag Cables) */}
         {/* ============================================================ */}
         <svg
-          className="pointer-events-none absolute inset-0 size-full overflow-visible z-10"
+          className="pointer-events-none absolute inset-0 size-full overflow-visible z-sticky"
           viewBox="-760 -380 1520 760"
         >
           <defs>
@@ -685,7 +685,7 @@ export function RadialWatchDeck({
         {/* ============================================================ */}
         {/* 3. 中间圆形精密手表表盘 (放大至 720px Central Watch Dial) */}
         {/* ============================================================ */}
-        <div className="z-20">
+        <div className="z-dropdown">
           <CentralWatchDial
             artifacts={artifacts}
             messages={messages}

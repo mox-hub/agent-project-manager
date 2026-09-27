@@ -97,7 +97,7 @@ export function ProjectDetailFrame({
           <div className="mx-auto w-full max-w-7xl px-6 pb-8 pt-5 sm:px-8 lg:px-10">
             {!hideHeader ? (
               /* sticky 头部卡片：负 margin 抵消容器左右 padding，背景铺满横向防止内容穿缝 */
-              <div className="sticky top-0 z-20 -mx-6 bg-content-bg px-6 pb-4 sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10">
+              <div className="sticky top-0 z-dropdown -mx-6 bg-content-bg px-6 pb-4 sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10">
                 <ProjectDetailHeaderCard title={title} description={description} actions={actions} className="mb-0" />
               </div>
             ) : null}

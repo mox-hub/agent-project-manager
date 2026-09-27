@@ -51,7 +51,7 @@ export function CommandDialogBackdrop({
   return (
     <CommandDialogPrimitive.Backdrop
       className={cn(
-        "fixed inset-0 z-50 bg-black/32 backdrop-blur-sm transition-all duration-normal data-ending-style:opacity-0 data-starting-style:opacity-0",
+        "fixed inset-0 z-modal bg-black/32 backdrop-blur-sm transition-all duration-normal data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       data-slot="command-dialog-backdrop"
@@ -67,7 +67,7 @@ export function CommandDialogViewport({
   return (
     <CommandDialogPrimitive.Viewport
       className={cn(
-        "fixed inset-0 z-50 flex flex-col items-center px-4 py-[max(--spacing(4),4vh)] sm:py-[10vh]",
+        "fixed inset-0 z-modal flex flex-col items-center px-4 py-[max(--spacing(4),4vh)] sm:py-[10vh]",
         className
       )}
       data-slot="command-dialog-viewport"

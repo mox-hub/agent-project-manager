@@ -843,7 +843,7 @@ export function ToolbarRow({
   return (
     <header
       className={cn(
-        "sticky top-10 z-10 grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border bg-background px-6 py-2 md:px-7",
+        "sticky top-10 z-sticky grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border bg-background px-6 py-2 md:px-7",
         className,
       )}
       data-ai-component={aiId ? `${aiId}.context-bar` : "ui.toolbar-row"}

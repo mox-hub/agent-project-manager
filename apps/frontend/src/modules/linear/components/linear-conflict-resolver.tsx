@@ -63,7 +63,7 @@ export function LinearConflictResolver({
         </Button>
         {openMenu ? (
           <div
-            className="absolute right-0 top-full z-50 mt-1 w-56 rounded-md border border-border bg-background p-1 shadow-xs"
+            className="absolute right-0 top-full z-modal mt-1 w-56 rounded-md border border-border bg-background p-1 shadow-xs"
             onMouseLeave={() => setOpenMenu(false)}
           >
             <button

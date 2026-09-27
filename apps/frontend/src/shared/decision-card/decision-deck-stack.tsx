@@ -206,7 +206,7 @@ export function DecisionDeckStack({
           const isTop = stackOffset === 0;
           const stackClass =
             stackOffset === 0
-              ? 'decision-deck-card-top relative z-30'
+              ? 'decision-deck-card-top relative z-banner'
               : stackOffset === 1
                 ? 'decision-deck-card-under-1'
                 : 'decision-deck-card-under-2';

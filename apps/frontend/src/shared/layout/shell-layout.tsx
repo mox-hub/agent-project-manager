@@ -373,7 +373,7 @@ export function ShellLayout() {
           {mobileSidebarOpen ? (
             <button
               type="button"
-              className="fixed inset-0 z-30 bg-black/40 md:hidden"
+              className="fixed inset-0 z-banner bg-black/40 md:hidden"
               onClick={() => setMobileSidebarOpen(false)}
               aria-label={t('shell.closeSidebar')}
             />

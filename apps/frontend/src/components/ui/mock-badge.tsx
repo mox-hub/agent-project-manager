@@ -5,7 +5,7 @@ import { isMockModeEnabled } from '@/mocks';
 export function MockBadge() {
   if (!isMockModeEnabled()) return null;
   return (
-    <div className="fixed bottom-3 left-3 z-50 inline-flex items-center gap-1.5 rounded-full border border-accent-yellow/40 bg-accent-yellow/10 px-2.5 py-1 text-2xs font-medium text-accent-yellow shadow-xs">
+    <div className="fixed bottom-3 left-3 z-modal inline-flex items-center gap-1.5 rounded-full border border-accent-yellow/40 bg-accent-yellow/10 px-2.5 py-1 text-2xs font-medium text-accent-yellow shadow-xs">
       <FlaskConical className="h-3 w-3" />
       MOCK
     </div>

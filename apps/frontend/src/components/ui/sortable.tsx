@@ -263,7 +263,7 @@ function Sortable<T>({
       if (isValidElement(child) && (child.props as any).value === activeId) {
         result = cloneElement(child as ReactElement<any>, {
           ...(child.props as any),
-          className: cn((child.props as any).className, 'z-50'),
+          className: cn((child.props as any).className, 'z-modal'),
         });
       }
     });
@@ -296,7 +296,7 @@ function Sortable<T>({
             <DragOverlay
               dropAnimation={dropAnimationConfig}
               modifiers={modifiers}
-              className={cn('z-50', activeId && 'cursor-grabbing')}
+              className={cn('z-modal', activeId && 'cursor-grabbing')}
             >
               <IsOverlayContext.Provider value={true}>
                 {overlayContent}
@@ -358,7 +358,7 @@ function SortableItem({
         style,
         ...attributes,
         className: cn(
-          isSortableDragging && 'opacity-50 z-50',
+          isSortableDragging && 'opacity-50 z-modal',
           disabled && 'opacity-50',
           className
         ),
@@ -444,7 +444,7 @@ function SortableOverlay({
     <DragOverlay
       dropAnimation={dropAnimationConfig}
       modifiers={modifiers}
-      className={cn('z-50', activeId && 'cursor-grabbing', className)}
+      className={cn('z-modal', activeId && 'cursor-grabbing', className)}
       {...props}
     >
       <IsOverlayContext.Provider value={true}>

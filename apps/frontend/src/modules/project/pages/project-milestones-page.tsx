@@ -358,7 +358,7 @@ function TimelineRow({
       <div className="relative flex w-4 shrink-0 flex-col items-center">
         <span
           className={cn(
-            'z-10 mt-3 flex size-4 items-center justify-center rounded-full border bg-card',
+            'z-sticky mt-3 flex size-4 items-center justify-center rounded-full border bg-card',
             iconClass,
           )}
         >

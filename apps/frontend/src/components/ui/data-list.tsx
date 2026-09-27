@@ -428,7 +428,7 @@ function SelectionBar<T extends DataListItem>({
       : t('dataTable.selected', { count });
 
   return (
-    <div className="pointer-events-none fixed bottom-28 left-1/2 z-50 -translate-x-1/2 transition-all duration-normal">
+    <div className="pointer-events-none fixed bottom-28 left-1/2 z-modal -translate-x-1/2 transition-all duration-normal">
       <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-2 shadow-xs">
         <span className="px-2 text-sm font-semibold tabular-nums">{summaryText}</span>
         {actions ? <div className="flex items-center gap-1">{actions(selected, onClose)}</div> : null}
@@ -698,7 +698,7 @@ export function DataList<T extends DataListItem>({
                 className={cn('rounded-lg border border-border bg-background transition-all', isCollapsed && '')}
                 data-group={meta.key}
               >
-                <div className="group sticky top-0 z-10 rounded-t-lg bg-background/95 backdrop-blur-xs border-b border-border/40 shadow-xs transition-shadow">
+                <div className="group sticky top-0 z-sticky rounded-t-lg bg-background/95 backdrop-blur-xs border-b border-border/40 shadow-xs transition-shadow">
                   <GroupBar
                     meta={meta}
                     count={list.length}

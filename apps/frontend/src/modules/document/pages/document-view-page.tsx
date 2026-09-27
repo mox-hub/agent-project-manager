@@ -312,7 +312,7 @@ export function DocumentViewPage() {
             />
 
             {menuOpen ? (
-              <div className={`absolute right-0 top-10.5 z-30 w-47.5 p-1 motion-enter ${MENU_SURFACE_CLASS}`}>
+              <div className={`absolute right-0 top-10.5 z-banner w-47.5 p-1 motion-enter ${MENU_SURFACE_CLASS}`}>
                 <button type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
                   <Share2 size={14} /> 分享
                 </button>

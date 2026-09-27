@@ -261,7 +261,7 @@ export function FilterPanel({
       {isHovered && buttonRect && !isOpen && (
         <div
           ref={hoverCardRef}
-          className={`fixed z-50 ${MENU_SURFACE_CLASS}`}
+          className={`fixed z-modal ${MENU_SURFACE_CLASS}`}
           style={{
             left: `${buttonRect.left}px`,
             top: `${buttonRect.bottom + 8}px`,
@@ -334,7 +334,7 @@ export function FilterPanel({
       {isOpen && buttonRect && (
         <div
           ref={dropdownRef}
-          className={`fixed z-1000 flex flex-col ${MENU_SURFACE_CLASS}`}
+          className={`fixed z-dropdown flex flex-col ${MENU_SURFACE_CLASS}`}
           style={(() => {
             const viewportWidth = viewportSize.visualWidth;
             const viewportHeight = viewportSize.visualHeight;
@@ -414,7 +414,7 @@ export function FilterPanel({
                   {/* 二级菜单 */}
                   {isGroupOpen && openGroupRect && (
                     <div
-                      className={`fixed z-1001 flex flex-col rounded-lg border border-border bg-popover p-1.5 shadow-xs ${
+                      className={`fixed z-dropdown flex flex-col rounded-lg border border-border bg-popover p-1.5 shadow-xs ${
                         openGroup?.searchable ? 'min-w-55' : 'min-w-40'
                       }`}
                       style={{

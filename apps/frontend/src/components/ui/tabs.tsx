@@ -54,7 +54,7 @@ function TabsList({
       {variant === "segmented" && (
         <TabsPrimitive.Indicator
           data-slot="tabs-indicator"
-          className="pointer-events-none absolute z-0 rounded-full bg-muted/60 shadow-xs transition-[left,top,width,height] duration-slow ease-out left-[var(--active-tab-left)] top-[var(--active-tab-top)] w-[var(--active-tab-width)] h-[var(--active-tab-height)]"
+          className="pointer-events-none absolute z-base rounded-full bg-muted/60 shadow-xs transition-[left,top,width,height] duration-slow ease-out left-[var(--active-tab-left)] top-[var(--active-tab-top)] w-[var(--active-tab-width)] h-[var(--active-tab-height)]"
         />
       )}
       {props.children}

@@ -17,7 +17,7 @@ export function AppDock({ className, children, ...props }: AppDockProps) {
         role="toolbar"
         aria-label="Application Dock"
         className={cn(
-          'fixed bottom-4 left-1/2 -translate-x-1/2 z-40',
+          'fixed bottom-4 left-1/2 -translate-x-1/2 z-overlay',
           'flex h-12 items-center gap-1 px-2.5 py-1 rounded-full',
           'bg-popover/85 backdrop-blur-xl border border-border/70 shadow-xs',
           'transition-all duration-normal select-none',

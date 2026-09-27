@@ -169,7 +169,7 @@ export function AISlotLayer() {
       data-testid="ai-slot-overlay"
       // 与 AI 对话浮窗同属一个交互面：点它不应触发外层「点击外部关闭」
       data-ai-component="assistant.inline-slot"
-      className="fixed z-50"
+      className="fixed z-modal"
       style={{
         top: target.rect.top,
         left: target.rect.left,

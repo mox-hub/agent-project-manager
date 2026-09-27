@@ -161,7 +161,7 @@ export function MentionTextarea({
         )}
       />
       {query !== null && list.length > 0 && (
-        <div className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-xs overflow-hidden">
+        <div className="absolute z-modal left-0 right-0 top-full mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-xs overflow-hidden">
           <ul className="max-h-56 overflow-y-auto py-1">
             {list.map((candidate, i) => (
               <li key={`${candidate.kind}-${candidate.id}`}>

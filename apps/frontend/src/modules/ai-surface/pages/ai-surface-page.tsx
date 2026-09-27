@@ -166,9 +166,9 @@ export function AiSurfacePage() {
   }, [navigate]);
 
   return (
-    <div className="fixed inset-0 z-50 h-screen w-screen flex flex-col overflow-x-hidden overflow-y-auto bg-content-bg font-sans text-foreground select-none">
+    <div className="fixed inset-0 z-modal h-screen w-screen flex flex-col overflow-x-hidden overflow-y-auto bg-content-bg font-sans text-foreground select-none">
       {/* 1. 顶部全屏微型全息导航条 (极其克制、通透) */}
-      <header className="sticky top-0 z-40 flex w-full items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
+      <header className="sticky top-0 z-overlay flex w-full items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -248,7 +248,7 @@ export function AiSurfacePage() {
       {/* 2. 顶栏 AI 一句话总述（S3-e，§3.1「顶栏：AI 一句话总述」）。
           叙述读的就是下面两块面板此刻同屏的事实（同一份缓存），
           只做翻译、不做计算；AI 不可用时就地降级为规则摘要并**标注出来**。 */}
-      <div className="relative z-10 mx-auto w-full max-w-[1100px] px-6 pt-1">
+      <div className="relative z-sticky mx-auto w-full max-w-[1100px] px-6 pt-1">
         <SurfaceNarrationBar
           narration={narrationView}
           state={narrationState}
@@ -262,13 +262,13 @@ export function AiSurfacePage() {
       {/* 3. 态势带：左「六站管道泳道」全局位置（S2-c）· 右「该你了」待办（S2-d）。
           两者都取自既有服务，取代了原先表盘上方那块**全编造**的遥测 HUD——
           真数据进来，假数据就必须走。 */}
-      <div className="relative z-10 mx-auto grid w-full max-w-[1100px] gap-4 px-6 pb-2 lg:grid-cols-[2fr_1fr]">
+      <div className="relative z-sticky mx-auto grid w-full max-w-[1100px] gap-4 px-6 pb-2 lg:grid-cols-[2fr_1fr]">
         <PipelineLaneStrip />
         <DecisionQueuePanel />
       </div>
 
       {/* 4. 空间主视界：中间手表圆形表盘 + 左右水平环绕卡片 */}
-      <main className="no-scrollbar relative z-10 mx-auto flex w-full flex-1 flex-col items-center justify-center overflow-x-auto px-4 pb-32">
+      <main className="no-scrollbar relative z-sticky mx-auto flex w-full flex-1 flex-col items-center justify-center overflow-x-auto px-4 pb-32">
         <RadialWatchDeck
           stations={stations}
           stationsStatus={stationsStatus}

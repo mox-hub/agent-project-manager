@@ -419,7 +419,7 @@ function DocumentCard({
               </Button>
               {menuOpen === document.id && (
                 <div
-                  className={`absolute right-0 top-full z-20 mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
+                  className={`absolute right-0 top-full z-dropdown mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Link
@@ -594,7 +594,7 @@ function DocumentListItem({
           </Button>
           {menuOpen === document.id && (
             <div
-              className={`absolute right-0 top-full z-20 mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
+              className={`absolute right-0 top-full z-dropdown mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
               onClick={(e) => e.stopPropagation()}
             >
               <button

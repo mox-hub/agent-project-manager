@@ -144,7 +144,7 @@ export function CentralWatchDial({
     >
       {/* 1. 表盘外表圈刻度与金属边框 SVG (Watch Bezel Frame) */}
       <svg
-        className="pointer-events-none absolute inset-0 size-full overflow-visible z-10"
+        className="pointer-events-none absolute inset-0 size-full overflow-visible z-sticky"
         viewBox="0 0 720 720"
       >
         <defs>
@@ -262,7 +262,7 @@ export function CentralWatchDial({
       >
         {/* 常驻 HUD (顶部固定仪表盘，不随卡片滚动) */}
         <div
-          className="absolute top-0 inset-x-0 z-30 pt-5 pb-2 px-8 flex flex-col items-center gap-1.5 backdrop-blur-md pointer-events-auto select-none"
+          className="absolute top-0 inset-x-0 z-banner pt-5 pb-2 px-8 flex flex-col items-center gap-1.5 backdrop-blur-md pointer-events-auto select-none"
           style={{
             background: isDark
               ? 'linear-gradient(180deg, hsl(var(--background) / 0.92) 0%, hsl(var(--background) / 0.65) 75%, transparent 100%)'

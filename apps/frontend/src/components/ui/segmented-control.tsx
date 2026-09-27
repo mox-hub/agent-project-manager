@@ -88,7 +88,7 @@ export function SegmentedControl<T extends string>({
           type="button"
           onClick={() => onChange(option.value)}
           className={cn(
-            "relative z-10 flex items-center justify-center gap-1 px-3 py-1.5 text-sm transition-colors",
+            "relative z-sticky flex items-center justify-center gap-1 px-3 py-1.5 text-sm transition-colors",
             isRect && "rounded-sm",
             value === option.value
               ? isRect

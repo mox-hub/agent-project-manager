@@ -83,12 +83,12 @@ export function AnchoredMenu({ open, onClose, anchor, align = "end", children, c
 
   return createPortal(
     <>
-      <div className="fixed inset-0 z-40" onClick={onClose} aria-hidden="true" />
+      <div className="fixed inset-0 z-overlay" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
         role="menu"
         style={style}
-        className={cn(MENU_SURFACE_CLASS, "z-50 p-1", className)}
+        className={cn(MENU_SURFACE_CLASS, "z-modal p-1", className)}
       >
         {children}
       </div>

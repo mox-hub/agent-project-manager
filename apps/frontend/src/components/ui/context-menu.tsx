@@ -51,7 +51,7 @@ function ContextMenuContent({
   return (
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Positioner
-        className="z-50 outline-none"
+        className="z-modal outline-none"
         sideOffset={4}
       >
         <ContextMenuPrimitive.Popup
@@ -142,7 +142,7 @@ function ContextMenuSubContent({
   return (
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Positioner
-        className="z-50 outline-none"
+        className="z-modal outline-none"
         side="inline-end"
         sideOffset={0}
         align="start"

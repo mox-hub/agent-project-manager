@@ -186,7 +186,7 @@ function AcceptCell({ status, isPrimary, onSelect }: { status: AcceptStatus; isP
           style={status === 'in_progress' ? { animationDuration: '2s' } : undefined} />
       </button>
       {open && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-popover border border-border rounded-xl shadow-xs py-1 min-w-30">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-modal bg-popover border border-border rounded-xl shadow-xs py-1 min-w-30">
           {ALL_STATUSES.map(s => {
             const c = STATUS_CFG[s]; const SIcon = c.icon;
             return (
@@ -237,7 +237,7 @@ function AnnotationPanel({
   }, [onClose]);
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-1 z-50 w-72 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
+    <div ref={ref} className="absolute right-0 top-full mt-1 z-modal w-72 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30">
         <p className="text-xs font-semibold truncate max-w-45">{nodeTitle}</p>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground" data-ai-action="delivery.annotation.close">
@@ -330,7 +330,7 @@ function ColumnPicker({
   const groups = Array.from(new Set(COL_DEFS.map(c => c.group)));
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-2 z-50 w-64 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
+    <div ref={ref} className="absolute right-0 top-full mt-2 z-modal w-64 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-muted/30">
         <p className="text-xs font-semibold">显示列配置</p>
         <button onClick={onClose} data-ai-action="delivery.col-picker.close"><X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" /></button>
@@ -385,7 +385,7 @@ function ViewConfigPanel({
   }, [onClose]);
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-2 z-50 w-72 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
+    <div ref={ref} className="absolute right-0 top-full mt-2 z-modal w-72 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-muted/30">
         <p className="text-xs font-semibold flex items-center gap-1.5"><Settings2 className="w-3.5 h-3.5" />视图配置</p>
         <button onClick={onClose} data-ai-action="delivery.view-config.close"><X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" /></button>
@@ -439,7 +439,7 @@ function ExportMenu({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-2 z-50 w-52 bg-popover border border-border rounded-xl shadow-xs py-1">
+    <div ref={ref} className="absolute right-0 top-full mt-2 z-modal w-52 bg-popover border border-border rounded-xl shadow-xs py-1">
       <p className="text-3xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-1.5">导出选项</p>
       {options.map(opt => {
         const Icon = opt.icon;
@@ -503,7 +503,7 @@ function TableRow({
     <div className={cn('flex items-center min-h-9 border-b border-border/50 hover:bg-accent/20 transition-colors group', LEVEL_STYLE[node.level])}>
       {/* ── Sticky first column ── */}
       <div
-        className="sticky left-0 z-10 bg-inherit flex items-center gap-1.5 shrink-0 px-3 py-1.5 border-r border-border/40"
+        className="sticky left-0 z-sticky bg-inherit flex items-center gap-1.5 shrink-0 px-3 py-1.5 border-r border-border/40"
         style={{ width: 260, minWidth: 260, paddingLeft: 12 + indent }}
       >
         <button onClick={onToggle}
@@ -653,8 +653,8 @@ function TableHeader({ viewMode, visibleCols }: { viewMode: ViewMode; visibleCol
   const colW = (id: ColId) => COL_DEFS.find(c => c.id === id)!.width;
 
   return (
-    <div className="flex items-center h-9 bg-muted/50 border-b border-border text-3xs font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 z-20">
-      <div className="sticky left-0 z-20 bg-muted/50 flex items-center px-3 border-r border-border/40 shrink-0" style={{ width: 260, minWidth: 260 }}>
+    <div className="flex items-center h-9 bg-muted/50 border-b border-border text-3xs font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 z-dropdown">
+      <div className="sticky left-0 z-dropdown bg-muted/50 flex items-center px-3 border-r border-border/40 shrink-0" style={{ width: 260, minWidth: 260 }}>
         交付项目
       </div>
       {vis('progress')      && <div style={{ width: colW('progress'), minWidth: colW('progress') }} className="shrink-0 px-2">进度</div>}

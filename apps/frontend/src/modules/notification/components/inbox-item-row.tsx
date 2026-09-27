@@ -207,7 +207,7 @@ export function InboxItemRow({
       {/* 7. 悬停快捷浮动工具条（Hover Actions） */}
       <div
         className={cn(
-          'absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 transition-opacity pointer-events-none z-10',
+          'absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 transition-opacity pointer-events-none z-sticky',
           'group-hover:opacity-100 group-hover:pointer-events-auto',
           snoozeMenuOpen && 'opacity-100 pointer-events-auto',
         )}

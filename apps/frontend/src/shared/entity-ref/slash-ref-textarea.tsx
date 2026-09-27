@@ -253,7 +253,7 @@ export function SlashRefTextarea({
         style={style}
       />
       {menuVisible && (
-        <div className="absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-xs">
+        <div className="absolute inset-x-0 top-full z-modal mt-1 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-xs">
           <div className="flex items-center gap-0.5 overflow-x-auto border-b border-border/60 px-1.5 py-1">
             {FILTERS.map((f) => (
               <button
