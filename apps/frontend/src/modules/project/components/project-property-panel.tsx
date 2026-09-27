@@ -112,7 +112,7 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
       icon: (
         <Avatar className="h-4 w-4">
           {m.avatarUrl ? <AvatarImage src={m.avatarUrl} alt="" /> : null}
-          <AvatarFallback className="text-10">
+          <AvatarFallback className="text-3xs">
             {(m.displayName || '?').slice(0, 1).toUpperCase()}
           </AvatarFallback>
         </Avatar>
@@ -203,7 +203,7 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
             placeholder="—"
             clearLabel={t('common.clear')}
           />
-          <span className="text-11 text-muted-foreground">→</span>
+          <span className="text-2xs text-muted-foreground">→</span>
           <DateCapsuleField
             value={project.targetDate ? project.targetDate.split('T')[0] : ''}
             onChange={(v) => updateDate('targetDate', v)}

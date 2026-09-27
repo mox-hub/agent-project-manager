@@ -61,7 +61,7 @@ function KpiCard({
 }: KpiCardProps) {
   return (
     <Card
-      className="cursor-pointer hover:ring-2 hover:ring-ring/30 hover:shadow-md transition-all group py-0"
+      className="cursor-pointer hover:ring-2 hover:ring-ring/30 transition-all group py-0"
       onClick={onClick}
     >
       <CardContent className="p-3.5">
@@ -514,7 +514,7 @@ export function DashboardPage() {
                           <div className="w-full flex-1 flex items-end">
                             <div className="w-full bg-accent-green/70 rounded-t-sm" style={{ height: `${item.score}%` }} />
                           </div>
-                          <span className="text-10 text-muted-foreground">{item.week}</span>
+                          <span className="text-3xs text-muted-foreground">{item.week}</span>
                         </div>
                       ))}
                     </div>

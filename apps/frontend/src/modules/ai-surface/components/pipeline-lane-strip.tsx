@@ -71,10 +71,10 @@ export function PipelineLaneStripView({
     >
       <div className="mb-2 flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-11 font-semibold tracking-tight text-foreground">六站管道</h2>
-          <span className="font-mono text-10 text-muted-foreground">{scopeNote}</span>
+          <h2 className="text-2xs font-semibold tracking-tight text-foreground">六站管道</h2>
+          <span className="font-mono text-3xs text-muted-foreground">{scopeNote}</span>
         </div>
-        <span className="font-mono text-10 text-muted-foreground">{statusNote}</span>
+        <span className="font-mono text-3xs text-muted-foreground">{statusNote}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-6">
@@ -91,19 +91,19 @@ export function PipelineLaneStripView({
             data-ai-action={`ai-surface.pipeline.${lane.stageNumber}.click`}
           >
             <div className="flex items-center gap-1.5">
-              <span className="font-mono text-10 text-muted-foreground">{lane.stageNumber}</span>
-              <span className="truncate text-11 font-semibold text-foreground">{lane.label}</span>
+              <span className="font-mono text-3xs text-muted-foreground">{lane.stageNumber}</span>
+              <span className="truncate text-2xs font-semibold text-foreground">{lane.label}</span>
             </div>
 
             <div className="flex items-baseline justify-between gap-1">
               {/* count === null → 破折号（无口径/未取到），绝不当 0 渲染 */}
-              <span className="font-mono text-sm font-bold text-foreground">
+              <span className="font-mono text-sm font-semibold text-foreground">
                 {lane.count ?? '—'}
               </span>
               <BlockedBadge lane={lane} />
             </div>
 
-            <span className="truncate font-mono text-10 text-muted-foreground">{lane.hint}</span>
+            <span className="truncate font-mono text-3xs text-muted-foreground">{lane.hint}</span>
           </button>
         ))}
       </div>
@@ -116,7 +116,7 @@ function BlockedBadge({ lane }: { lane: PipelineLane }) {
   if (lane.blocked === null) {
     return (
       <span
-        className="font-mono text-10 text-muted-foreground"
+        className="font-mono text-3xs text-muted-foreground"
         title={`无阻塞计数口径：${lane.blockedNote ?? '未接入'}（这不等于"无阻塞"）`}
       >
         阻塞 —
@@ -128,7 +128,7 @@ function BlockedBadge({ lane }: { lane: PipelineLane }) {
   return (
     <span
       className={cn(
-        'rounded-full px-1.5 py-0.5 font-mono text-10',
+        'rounded-full px-1.5 py-0.5 font-mono text-3xs',
         lane.blocked > 0 ? TONE_LIGHT_CLASS.danger : TONE_LIGHT_CLASS.success,
       )}
       title={`阻塞 ${lane.blocked}${scope} · 来源 ${lane.source}`}

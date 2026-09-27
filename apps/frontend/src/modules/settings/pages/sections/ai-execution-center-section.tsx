@@ -495,7 +495,7 @@ function ApprovalCenterTab() {
       </Card>
 
       {batchMode && selectedApprovals.size > 0 && (
-        <div className="sticky bottom-4 rounded-lg border bg-background p-3 shadow-lg">
+        <div className="sticky bottom-4 rounded-lg border bg-background p-3 shadow-xs">
           <p className="mb-2 text-sm">{t('settings.aiExecutionCenter.selectedCount', { count: selectedApprovals.size })}</p>
           <div className="flex gap-2">
             <Button size="sm" variant="default">
@@ -703,7 +703,7 @@ function TrustTierCard({ tier }: { tier: MemberTrustTierDef }) {
       <CardContent>
         <p className="text-xs text-muted-foreground">{t(tier.descKey)}</p>
         <div className="mt-3 space-y-1.5">
-          <h4 className="text-10 font-medium uppercase tracking-wider text-muted-foreground">
+          <h4 className="text-3xs font-medium uppercase tracking-wider text-muted-foreground">
             {t('trust.delegationTitle')}
           </h4>
           {tier.allowKeys.map((key) => (
@@ -738,7 +738,7 @@ function TrustRedlineNote() {
           <span key={key}>· {t(key)}</span>
         ))}
       </div>
-      <p className="mt-2 text-10 text-muted-foreground/80">{t('trust.redlineNote')}</p>
+      <p className="mt-2 text-3xs text-muted-foreground/80">{t('trust.redlineNote')}</p>
     </div>
   );
 }
@@ -816,7 +816,7 @@ function AdjustTrustDialog({
             );
           })}
         </div>
-        <p className="text-10 text-muted-foreground">{t('trust.redlineNote')}</p>
+        <p className="text-3xs text-muted-foreground">{t('trust.redlineNote')}</p>
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             {t('common.cancel')}
@@ -850,7 +850,7 @@ function AgentTrustCard({ profile }: { profile: AgentTrustProfile }) {
       </CardHeader>
       <CardContent>
         <div className="mb-4">
-          <p className="text-10 font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="text-3xs font-medium uppercase tracking-wider text-muted-foreground">
             {t('trust.currentTier')}
           </p>
           <p className="mt-1 text-sm font-medium text-foreground">

@@ -59,7 +59,7 @@ export function TaskLinearPanel({ issueId, task, projectId }: TaskLinearPanelPro
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-11"
+            className="h-6 px-2 text-2xs"
             disabled={pushCreate.isPending}
             onClick={() => setPushConfirmOpen(true)}
             data-ai-component="task.linear.push-create"
@@ -127,7 +127,7 @@ export function TaskLinearPanel({ issueId, task, projectId }: TaskLinearPanelPro
           href={task.externalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-11 text-brand-linear underline-offset-2 hover:underline"
+          className="inline-flex items-center gap-1 text-2xs text-brand-linear underline-offset-2 hover:underline"
         >
           <ExternalLink className="size-3" /> {t('linearSync.openInLinear')}
         </a>
@@ -137,7 +137,7 @@ export function TaskLinearPanel({ issueId, task, projectId }: TaskLinearPanelPro
         <Button
           variant="outline"
           size="sm"
-          className="h-6 flex-1 px-2 text-11"
+          className="h-6 flex-1 px-2 text-2xs"
           disabled={syncTasks.isPending}
           onClick={handleSyncThis}
         >
@@ -156,7 +156,7 @@ export function TaskLinearPanel({ issueId, task, projectId }: TaskLinearPanelPro
       </div>
 
       {task.lastExternalSyncAt ? (
-        <div className="text-10 text-muted-foreground">
+        <div className="text-3xs text-muted-foreground">
           {t('linearSync.lastSync', { time: new Date(task.lastExternalSyncAt).toLocaleString() })}
         </div>
       ) : null}
@@ -165,7 +165,7 @@ export function TaskLinearPanel({ issueId, task, projectId }: TaskLinearPanelPro
         <TooltipProvider>
           <Tooltip delayDuration={150}>
             <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1 text-11 text-destructive">
+              <div className="inline-flex items-center gap-1 text-2xs text-destructive">
                 <AlertCircle className="size-3" /> {t('linearSync.error')}
               </div>
             </TooltipTrigger>

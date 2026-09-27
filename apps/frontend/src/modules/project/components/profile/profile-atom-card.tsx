@@ -141,7 +141,7 @@ export function ProfileAtomCard({
             {isAi && (
               <Badge
                 variant="outline"
-                className="h-4 gap-0.5 border-accent-blue/30 bg-accent-blue-light/60 px-1 text-10 text-accent-blue"
+                className="h-4 gap-0.5 border-accent-blue/30 bg-accent-blue-light/60 px-1 text-3xs text-accent-blue"
               >
                 <Sparkles size={9} />
                 {t('project.profilePage.aiDraft')}
@@ -152,7 +152,7 @@ export function ProfileAtomCard({
                 <Button
                   size="sm"
                   variant="default"
-                  className="h-5 px-1.5 text-10"
+                  className="h-5 px-1.5 text-3xs"
                   disabled={busy}
                   onClick={() => onApprove?.(atom.id)}
                 >
@@ -162,7 +162,7 @@ export function ProfileAtomCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-5 px-1.5 text-10"
+                  className="h-5 px-1.5 text-3xs"
                   disabled={busy}
                   onClick={() => onReject?.(atom.id)}
                 >
@@ -173,7 +173,7 @@ export function ProfileAtomCard({
             )}
             {atom.sourceEventId && !isDraft && (
               <span
-                className="inline-flex items-center gap-0.5 text-10 text-muted-foreground"
+                className="inline-flex items-center gap-0.5 text-3xs text-muted-foreground"
                 title={`${t('project.profilePage.source')}: ${atom.sourceEventId}`}
               >
                 <Link2 size={9} />

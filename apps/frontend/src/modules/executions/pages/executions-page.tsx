@@ -305,7 +305,7 @@ export function ExecutionsPage() {
     return (
       <>
         {run.providerId ? (
-          <span className="rounded-full bg-muted/60 px-2 py-0.5 font-mono text-11 text-muted-foreground">
+          <span className="rounded-full bg-muted/60 px-2 py-0.5 font-mono text-2xs text-muted-foreground">
             {run.providerId}
           </span>
         ) : null}

@@ -196,7 +196,7 @@ function InputDetails({ input }: { input: unknown }) {
   const o = asRecord(input);
   if (!o || Object.keys(o).length === 0) return null;
   return (
-    <div className="space-y-0.5 font-mono text-11 text-content-text-secondary">
+    <div className="space-y-0.5 font-mono text-2xs text-content-text-secondary">
       {Object.entries(o).map(([key, value]) => (
         <p key={key} className="break-all">
           <span className="text-content-text-muted">{key}</span>
@@ -211,7 +211,7 @@ function InputDetails({ input }: { input: unknown }) {
 /** 结果行：可读错误（红色，常显） */
 function ErrorLine({ message }: { message: string }) {
   return (
-    <p className="flex items-start gap-1 break-all text-11 text-accent-red">
+    <p className="flex items-start gap-1 break-all text-2xs text-accent-red">
       <AlertCircle className="mt-0.5 size-3 shrink-0" />
       {message}
     </p>
@@ -225,7 +225,7 @@ function EntityRow({ toolName, output }: { toolName: string; output: unknown }) 
   if (!entity) return null;
   const Icon = entity.icon;
   return (
-    <div className="flex items-center gap-1.5 rounded-md bg-content-bg-secondary/60 px-2 py-1 text-11">
+    <div className="flex items-center gap-1.5 rounded-md bg-content-bg-secondary/60 px-2 py-1 text-2xs">
       <Icon className="size-3.5 shrink-0 text-accent-purple" />
       <span className="min-w-0 flex-1 truncate font-medium text-content-text">
         {(output as { deleted?: boolean } | null)?.deleted === true
@@ -233,7 +233,7 @@ function EntityRow({ toolName, output }: { toolName: string; output: unknown }) 
           : entity.title}
       </span>
       {entity.status ? (
-        <span className="shrink-0 rounded bg-accent-blue-light px-1.5 py-0.5 text-10 text-accent-blue">
+        <span className="shrink-0 rounded bg-accent-blue-light px-1.5 py-0.5 text-3xs text-accent-blue">
           {entity.status}
         </span>
       ) : null}
@@ -255,7 +255,7 @@ function ListSamples({ output }: { output: unknown }) {
   const list = listView(output);
   if (!list) return null;
   return (
-    <div className="space-y-0.5 text-11 text-content-text-secondary">
+    <div className="space-y-0.5 text-2xs text-content-text-secondary">
       <p>{t('assistant.tool.resultCount', { count: list.count })}</p>
       {list.samples.map((sample) => (
         <p key={sample} className="truncate pl-2 text-content-text-muted">
@@ -271,7 +271,7 @@ function RawOutputPreview({ output }: { output: unknown }) {
   const text = JSON.stringify(output);
   if (!text || text === '{}') return null;
   return (
-    <p className="break-all font-mono text-11 text-content-text-muted">
+    <p className="break-all font-mono text-2xs text-content-text-muted">
       {text.slice(0, 300)}
       {text.length > 300 ? '…' : ''}
     </p>
@@ -382,7 +382,7 @@ export function AssistantToolCard({ part }: { part: AssistantToolPart }) {
       <button
         type="button"
         onClick={() => hasBody && setOpen((v) => !v)}
-        className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left text-11"
+        className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left text-2xs"
         aria-expanded={open}
       >
         {done ? (

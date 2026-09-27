@@ -54,7 +54,7 @@ export function ProfileCompletenessRing({
           stroke="currentColor"
         />
       </svg>
-      <span className="absolute text-11 font-semibold tabular-nums">
+      <span className="absolute text-2xs font-semibold tabular-nums">
         {filled}/{total}
       </span>
     </div>

@@ -64,11 +64,11 @@ export function RunTimeline({
       {rows.map((row) => (
         <div key={row.key} className="flex items-center gap-3">
           <div className="w-10 shrink-0 text-right">
-            <p className="text-11 text-content-text-secondary">
+            <p className="text-2xs text-content-text-secondary">
               {t(ROW_LABEL_KEY[row.key])}
             </p>
             {row.totalMs > 0 ? (
-              <p className="text-10 text-content-text-muted">
+              <p className="text-3xs text-content-text-muted">
                 {formatDurationMs(row.totalMs)}
               </p>
             ) : null}

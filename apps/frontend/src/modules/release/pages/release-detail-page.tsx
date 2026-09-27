@@ -121,7 +121,7 @@ export function ReleaseDetailPage() {
           release ? (
             <Badge
               variant="secondary"
-              className={cn('shrink-0 text-10', RELEASE_STATUS_TONE[release.status])}
+              className={cn('shrink-0 text-3xs', RELEASE_STATUS_TONE[release.status])}
             >
               {t(statusLabelKey(release.status))}
             </Badge>
@@ -156,7 +156,7 @@ export function ReleaseDetailPage() {
                           loading={release.status === 'publishing' && s === 'publishing'}
                         >
                           <div className="flex items-center gap-2">
-                            <StepperIndicator className="size-5 text-10 font-medium">
+                            <StepperIndicator className="size-5 text-3xs font-medium">
                               {i + 1}
                             </StepperIndicator>
                             <StepperTitle className="text-xs whitespace-nowrap">
@@ -169,7 +169,7 @@ export function ReleaseDetailPage() {
                     </StepperNav>
                   </Stepper>
                   {release.status === 'failed' ? (
-                    <Badge variant="secondary" className={cn('shrink-0 text-10', RELEASE_STATUS_TONE.failed)}>
+                    <Badge variant="secondary" className={cn('shrink-0 text-3xs', RELEASE_STATUS_TONE.failed)}>
                       {t(statusLabelKey('failed'))}
                     </Badge>
                   ) : null}
@@ -254,7 +254,7 @@ export function ReleaseDetailPage() {
                       {t('release.detail.noNotes')}
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-4 border-t border-border pt-3 text-11 text-content-text-muted">
+                  <div className="flex flex-wrap gap-4 border-t border-border pt-3 text-2xs text-content-text-muted">
                     {release.project ? (
                       <span className="flex items-center gap-1">
                         <FolderKanban className="size-3" />
@@ -393,7 +393,7 @@ function GateCard({
       </CardHeader>
       <CardContent className="space-y-2">
         {ranAt ? (
-          <p className="text-11 text-content-text-muted">
+          <p className="text-2xs text-content-text-muted">
             {t('release.gate.ranAt')} {new Date(ranAt).toLocaleString()}
           </p>
         ) : (

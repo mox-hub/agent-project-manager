@@ -114,7 +114,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
                   type="button"
                   title={team.name}
                   onClick={() => navigate(`/app/teams/${team.id}`)}
-                  className="inline-flex h-5 max-w-full items-center gap-1 rounded-full border border-border px-1.5 text-10 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                  className="inline-flex h-5 max-w-full items-center gap-1 rounded-full border border-border px-1.5 text-3xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
                 >
                   <span
                     className="size-1.5 shrink-0 rounded-full"
@@ -148,7 +148,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
                 <AlertCircle className="size-3 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-foreground truncate">{activity.summary}</p>
-                  <p className="text-10 text-muted-foreground">
+                  <p className="text-3xs text-muted-foreground">
                     {new Date(activity.timestamp).toLocaleDateString()} · {activity.source}
                   </p>
                 </div>
@@ -216,7 +216,7 @@ export function ProjectRightSidebar({ projectId, hidden, width }: ProjectRightSi
       {/* 头部按钮操作区：Linear 来源/同步状态徽章（仅 Linear 同步项目） */}
       {isLinearLinked ? (
         <SidebarButtonGroup className="px-1" data-ai-component="project.right-sidebar.linear-status" data-ai-role="status">
-          <LinearSourceBadge source="linear" className="h-6 shrink-0 rounded-full px-2.5 text-10" />
+          <LinearSourceBadge source="linear" className="h-6 shrink-0 rounded-full px-2.5 text-3xs" />
           <LinearSyncStatusBadge status={project?.syncStatus} pill />
         </SidebarButtonGroup>
       ) : null}

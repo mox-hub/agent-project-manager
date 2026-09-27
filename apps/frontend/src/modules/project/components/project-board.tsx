@@ -60,7 +60,7 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
       const count = getProjectExecutionCount?.(project.id) ?? 0;
       if (count <= 0) return null;
       return (
-        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-10 font-medium bg-accent-purple/15 text-accent-purple border border-accent-purple/30 animate-pulse">
+        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-3xs font-medium bg-accent-purple/15 text-accent-purple border border-accent-purple/30 animate-pulse">
           <Bot className="size-3" />
           <span>{count} 个任务 AI 执行中</span>
         </span>
@@ -76,7 +76,7 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
           {priorityVisual ? (
             <span
               className={cn(
-                'shrink-0 rounded px-1.5 py-0.5 text-10 font-medium',
+                'shrink-0 rounded px-1.5 py-0.5 text-3xs font-medium',
                 TONE_LIGHT_CLASS[priorityVisual.tone],
               )}
             >
@@ -88,8 +88,8 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
     },
     row1: (project) => (
       <>
-        <Badge variant="outline" className="text-10">{t(`project.type.${project.type}`)}</Badge>
-        <Badge variant="secondary" className="text-10">{t(`project.visibility.${project.visibility}`)}</Badge>
+        <Badge variant="outline" className="text-3xs">{t(`project.type.${project.type}`)}</Badge>
+        <Badge variant="secondary" className="text-3xs">{t(`project.visibility.${project.visibility}`)}</Badge>
       </>
     ),
     dataEntity: (project) => `project:${project.id}`,
@@ -101,7 +101,7 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
         {typeof project.progress === 'number' && project.progress > 0 ? (
           <div className="space-y-1">
             <Progress value={project.progress} className="h-1.5" />
-            <span className="text-10 text-muted-foreground">{project.progress}%</span>
+            <span className="text-3xs text-muted-foreground">{project.progress}%</span>
           </div>
         ) : null}
         <div className="flex items-center justify-between">
@@ -137,7 +137,7 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
           {project.owner ? (
             <Avatar className="h-5 w-5">
               <AvatarImage src={project.owner.avatarUrl ?? undefined} />
-              <AvatarFallback className="text-10">
+              <AvatarFallback className="text-3xs">
                 {(project.owner.displayName || project.owner.username || 'U').slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>

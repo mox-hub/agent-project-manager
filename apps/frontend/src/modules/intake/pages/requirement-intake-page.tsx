@@ -143,7 +143,7 @@ export function RequirementIntakePage() {
               <div className="flex items-center gap-2">
                 <step.icon size={16} className="text-content-text-secondary" />
                 <span className="text-sm font-medium text-foreground">{step.title}</span>
-                <span className="ml-auto font-mono text-10 text-content-text-muted">
+                <span className="ml-auto font-mono text-3xs text-content-text-muted">
                   {String(index + 1).padStart(2, '0')}
                 </span>
               </div>

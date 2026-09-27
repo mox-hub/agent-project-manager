@@ -102,7 +102,7 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
         </div>
         <div className="space-y-3 rounded-lg border border-border bg-content-bg-secondary/30 p-3">
           <label className="block space-y-1.5">
-            <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">项目名</span>
+            <span className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground">项目名</span>
             <Input
               value={summary.name}
               onChange={(e) => setSummary({ ...summary, name: e.target.value })}
@@ -110,7 +110,7 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
             />
           </label>
           <label className="block space-y-1.5">
-            <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">一句话介绍</span>
+            <span className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground">一句话介绍</span>
             <Textarea
               rows={2}
               value={summary.description}
@@ -197,7 +197,7 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
                       className="h-7 rounded-full border border-border px-2.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
                     >
                       {choice.label}
-                      {choice.guess ? <span className="ml-1 text-10 text-muted-foreground">猜</span> : null}
+                      {choice.guess ? <span className="ml-1 text-3xs text-muted-foreground">猜</span> : null}
                     </button>
                   ))}
                 </div>
@@ -224,7 +224,7 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
         ) : null}
 
         <div className="flex items-center">
-          <span className="text-10 text-muted-foreground">{turns.length} 问已答</span>
+          <span className="text-3xs text-muted-foreground">{turns.length} 问已答</span>
           <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground" onClick={onFallback}>
             跳过，改用手动填写
           </Button>
@@ -286,7 +286,7 @@ function SummaryList({
   if (items.length === 0) return null;
   return (
     <div className="space-y-1">
-      <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
+      <span className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
       <div className="space-y-1">
         {items.map((item, i) => (
           <div key={i} className="group flex items-center gap-1.5">
@@ -294,7 +294,7 @@ function SummaryList({
             <button
               type="button"
               aria-label="移除"
-              className="text-10 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-red"
+              className="text-3xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-red"
               onClick={() => onChange(items.filter((_, j) => j !== i))}
             >
               移除

@@ -44,8 +44,10 @@ export function LinearProviderCard({
       className={cn(
         'relative overflow-hidden rounded-2xl border border-white/10',
         'bg-gradient-to-br from-brand-linear-darkest via-brand-linear-deep to-brand-linear',
-        'p-6 text-white shadow-2xl transition-all duration-200',
-        'hover:border-white/20 hover:shadow-brand-linear/20 hover:shadow-2xl',
+        'p-6 text-white shadow-xs transition-all duration-normal',
+        // hover:shadow-brand-linear/20 是幽灵类（--shadow-brand-linear 从未注册，不生成 CSS），
+        // hover:shadow-xs 与静置同值属冗余；悬停反馈由 hover:border-white/20 承载（宪法 §3.6）
+        'hover:border-white/20',
       )}
     >
       <div
@@ -63,7 +65,7 @@ export function LinearProviderCard({
               <Badge
                 variant="secondary"
                 className={cn(
-                  'border-0 text-10 font-medium uppercase tracking-wider',
+                  'border-0 text-3xs font-medium uppercase tracking-wider',
                   statusColor,
                 )}
               >

@@ -109,7 +109,7 @@ export function WorkflowStepEditor({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-11 text-content-text-muted">
+        <Label className="text-2xs text-content-text-muted">
           {t('workflow.editor.stepId')}
         </Label>
         <Input
@@ -119,7 +119,7 @@ export function WorkflowStepEditor({
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-11 text-content-text-muted">
+        <Label className="text-2xs text-content-text-muted">
           {t('workflow.editor.stepName')}
         </Label>
         <Input
@@ -132,7 +132,7 @@ export function WorkflowStepEditor({
       {type === 'llm' ? (
         <>
           <div className="space-y-1.5">
-            <Label className="text-11 text-content-text-muted">
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.system')}
             </Label>
             <Textarea
@@ -143,7 +143,7 @@ export function WorkflowStepEditor({
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-11 text-content-text-muted">
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.prompt')}
             </Label>
             <Textarea
@@ -159,7 +159,7 @@ export function WorkflowStepEditor({
       {type === 'http' ? (
         <>
           <div className="space-y-1.5">
-            <Label className="text-11 text-content-text-muted">
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.url')}
             </Label>
             <Input
@@ -169,7 +169,7 @@ export function WorkflowStepEditor({
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-11 text-content-text-muted">
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.method')}
             </Label>
             <NativeSelect
@@ -185,7 +185,7 @@ export function WorkflowStepEditor({
             </NativeSelect>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-11 text-content-text-muted">
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.bodyJson')}
             </Label>
             <Textarea
@@ -200,7 +200,7 @@ export function WorkflowStepEditor({
 
       {type === 'human-confirm' ? (
         <div className="space-y-1.5">
-          <Label className="text-11 text-content-text-muted">
+          <Label className="text-2xs text-content-text-muted">
             {t('workflow.editor.message')}
           </Label>
           <Textarea
@@ -215,7 +215,7 @@ export function WorkflowStepEditor({
       {type === 'condition' ? (
         <>
           <div className="space-y-1.5">
-            <Label className="text-11 text-content-text-muted">
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.left')}
             </Label>
             <Input
@@ -226,7 +226,7 @@ export function WorkflowStepEditor({
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <Label className="text-11 text-content-text-muted">
+              <Label className="text-2xs text-content-text-muted">
                 {t('workflow.editor.op')}
               </Label>
               <NativeSelect
@@ -242,7 +242,7 @@ export function WorkflowStepEditor({
               </NativeSelect>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-11 text-content-text-muted">
+              <Label className="text-2xs text-content-text-muted">
                 {t('workflow.editor.right')}
               </Label>
               <Input
@@ -258,7 +258,7 @@ export function WorkflowStepEditor({
       {type === 'action' ? (
         <>
           <div className="space-y-1.5">
-            <Label className="text-11 text-content-text-muted">
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.action')}
             </Label>
             <NativeSelect
@@ -273,13 +273,13 @@ export function WorkflowStepEditor({
               ))}
             </NativeSelect>
             {actions.find((a) => a.id === step.action)?.description ? (
-              <p className="text-11 leading-relaxed text-content-text-muted">
+              <p className="text-2xs leading-relaxed text-content-text-muted">
                 {actions.find((a) => a.id === step.action)?.description}
               </p>
             ) : null}
           </div>
           <div className="space-y-1.5">
-            <Label className="text-11 text-content-text-muted">
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.paramsJson')}
             </Label>
             <Textarea
@@ -297,7 +297,7 @@ export function WorkflowStepEditor({
           <Plus className="mr-1 size-3" />
           {t('workflow.editor.insertAfter')}
         </Button>
-        <span className="text-11 text-content-text-muted">
+        <span className="text-2xs text-content-text-muted">
           {t(`workflow.canvas.step.${type === 'human-confirm' ? 'humanConfirm' : type}`, {
             defaultValue: t('workflow.canvas.step.unknown'),
           })}

@@ -48,7 +48,7 @@ export function AssistantFab() {
       role="dialog"
       aria-label={t('assistant.personaName')}
       className={cn(
-        'fixed bottom-28 left-1/2 -translate-x-1/2 z-50 pointer-events-auto transition-all duration-200',
+        'fixed bottom-28 left-1/2 -translate-x-1/2 z-50 pointer-events-auto transition-all duration-normal',
         assistantExpanded
           ? 'h-[85vh] w-[min(96vw,1000px)]'
           : 'h-[560px] w-auto max-w-[calc(100vw-2rem)]',

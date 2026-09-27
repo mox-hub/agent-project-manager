@@ -132,7 +132,7 @@ export function InboxItemRow({
       className={cn(
         'group relative flex items-center gap-2.5 border-b border-border/60 px-3 py-2.5 text-left transition-colors cursor-pointer select-none',
         'hover:bg-accent/60',
-        isSelected && 'bg-accent text-accent-foreground shadow-2xs',
+        isSelected && 'bg-accent text-accent-foreground shadow-xs',
         item.isUnread && !isSelected && 'bg-accent/15',
       )}
     >
@@ -172,7 +172,7 @@ export function InboxItemRow({
         {item.actionTag && (
           <span
             className={cn(
-              'shrink-0 rounded border px-1.5 py-0.5 text-10 font-semibold leading-none shadow-2xs',
+              'shrink-0 rounded border px-1.5 py-0.5 text-3xs font-semibold leading-none shadow-xs',
               getActionTagClass(item.actionTag.tone),
             )}
           >
@@ -186,7 +186,7 @@ export function InboxItemRow({
         <div className="hidden shrink-0 items-center gap-1.5 text-xs text-muted-foreground sm:flex max-w-60 truncate">
           <div
             className={cn(
-              'flex size-4 shrink-0 items-center justify-center rounded-full text-10',
+              'flex size-4 shrink-0 items-center justify-center rounded-full text-3xs',
               item.actor.isAgent ? 'bg-accent-purple/15 text-accent-purple' : 'bg-muted text-muted-foreground',
             )}
           >

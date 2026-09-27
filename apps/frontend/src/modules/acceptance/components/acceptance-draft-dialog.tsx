@@ -171,11 +171,11 @@ export function AcceptanceDraftDialog({
                 <span className="flex shrink-0 flex-col items-end gap-0.5">
                   <Badge
                     variant="outline"
-                    className={`border-transparent px-1 text-10 ${SEVERITY_TONE[item.severity] ?? SEVERITY_TONE.medium}`}
+                    className={`border-transparent px-1 text-3xs ${SEVERITY_TONE[item.severity] ?? SEVERITY_TONE.medium}`}
                   >
                     {item.severity}
                   </Badge>
-                  <span className="text-10 text-muted-foreground">
+                  <span className="text-3xs text-muted-foreground">
                     {item.criteriaType === 'technical'
                       ? t('acceptance.draft.technical', '技术')
                       : t('acceptance.draft.functional', '功能')}

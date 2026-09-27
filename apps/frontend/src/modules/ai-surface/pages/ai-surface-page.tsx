@@ -187,7 +187,7 @@ export function AiSurfacePage() {
             <span className="text-sm font-semibold tracking-tight text-foreground">
               APM SYNTHETIC COGNITIVE SURFACE
             </span>
-            <span className="ml-1 rounded-full bg-accent-purple/15 px-2 py-0.5 font-mono text-10 font-medium text-accent-purple">
+            <span className="ml-1 rounded-full bg-accent-purple/15 px-2 py-0.5 font-mono text-3xs font-medium text-accent-purple">
               DUAL-SURFACE V4
             </span>
             {/* 页头不再挂「示例」徽标（S2-e）。S2-b 起它已收窄为「部分区域示例」，
@@ -204,7 +204,7 @@ export function AiSurfacePage() {
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-11 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-2xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title={isDark ? '切换至日间模式' : '切换至夜间模式'}
           >
             {isDark ? (
@@ -221,7 +221,7 @@ export function AiSurfacePage() {
           <button
             type="button"
             onClick={() => navigate('/app/ai-surface/replay')}
-            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-11 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-2xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title="回放一段预置演示：从一句需求到交付，不需要 runtime、不需要 API key"
             data-ai-action="ai-surface.replay.enter"
           >
@@ -233,7 +233,7 @@ export function AiSurfacePage() {
           <button
             type="button"
             onClick={handleToggleFullscreen}
-            className="hidden cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-11 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex"
+            className="hidden cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-2xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex"
             title={isFullscreen ? '退出全屏模式' : '进入真正全屏模式'}
           >
             {isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}

@@ -198,20 +198,20 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
                 className="space-y-1 rounded-md border border-border p-3"
               >
                 <p className="text-xs font-medium">{item.name}</p>
-                <p className="text-11 text-content-text-muted">
+                <p className="text-2xs text-content-text-muted">
                   {t('release.deliverables.field.location')}:{' '}
                   <span className="font-mono">{item.location}</span>
                 </p>
-                <p className="text-11 text-content-text-muted">
+                <p className="text-2xs text-content-text-muted">
                   {t('release.deliverables.field.howToVerify')}: {item.howToVerify}
                 </p>
                 {item.limitations ? (
-                  <p className="text-11 text-content-text-muted">
+                  <p className="text-2xs text-content-text-muted">
                     {t('release.deliverables.field.limitations')}: {item.limitations}
                   </p>
                 ) : null}
                 {item.receiver ? (
-                  <p className="text-11 text-content-text-muted">
+                  <p className="text-2xs text-content-text-muted">
                     {t('release.deliverables.field.receiver')}: {item.receiver}
                   </p>
                 ) : null}

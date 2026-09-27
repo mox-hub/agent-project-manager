@@ -122,7 +122,7 @@ export function IterationDetailDialog({
                       </span>
                       <Badge
                         className={cn(
-                          'shrink-0 text-10',
+                          'shrink-0 text-3xs',
                           ISSUE_STATUS_BADGE[issue.status] ??
                             ISSUE_STATUS_BADGE.todo,
                         )}

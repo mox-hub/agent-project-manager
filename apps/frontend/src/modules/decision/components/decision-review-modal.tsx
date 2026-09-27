@@ -60,7 +60,7 @@ export function DecisionReviewModal({
       role="dialog"
       aria-modal="true"
       aria-label={t('decision.review.modalTitle')}
-      className="fixed inset-0 z-50 flex flex-col bg-background/85 backdrop-blur-md transition-all duration-200"
+      className="fixed inset-0 z-50 flex flex-col bg-background/85 backdrop-blur-md transition-all duration-normal"
     >
       {/* ── 顶部导航条 ── */}
       <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/60 px-6">
@@ -81,7 +81,7 @@ export function DecisionReviewModal({
               </span>
               <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full bg-primary transition-all duration-300"
+                  className="h-full bg-primary transition-all duration-slow"
                   style={{ width: `${percent}%` }}
                 />
               </div>

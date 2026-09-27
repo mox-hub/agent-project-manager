@@ -187,12 +187,12 @@ export function WorkflowListPage() {
                         </span>
                         <Badge
                           variant="secondary"
-                          className="shrink-0 text-10"
+                          className="shrink-0 text-3xs"
                           title={t('workflow.grammarVersionBadge')}
                         >
                           v{wf.grammarVersion ?? 1}
                         </Badge>
-                        <code className="font-mono text-11 text-muted-foreground/60">
+                        <code className="font-mono text-2xs text-muted-foreground/60">
                           {wf.key}
                         </code>
                       </div>
@@ -256,7 +256,7 @@ export function WorkflowListPage() {
                     </p>
                   </button>
                   <div className="mt-auto flex items-center justify-between pt-1">
-                    <code className="truncate text-11 text-muted-foreground/60">{wf.key}</code>
+                    <code className="truncate text-2xs text-muted-foreground/60">{wf.key}</code>
                     <Button
                       size="sm"
                       variant="outline"
@@ -379,7 +379,7 @@ function CreateWorkflowDialog({
               data-ai="workflow.aiPrompt"
             />
             <div className="flex items-center justify-between">
-              <span className="text-11 text-content-text-muted">
+              <span className="text-2xs text-content-text-muted">
                 {aiSteps.length > 0
                   ? t('workflow.createDialog.draftedSteps', { count: aiSteps.length })
                   : t('workflow.createDialog.aiHint')}

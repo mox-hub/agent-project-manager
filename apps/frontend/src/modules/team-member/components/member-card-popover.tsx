@@ -159,7 +159,7 @@ export function MemberCardPopover({
                   </>
                 )}
               </div>
-              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-11 text-muted-foreground">
+              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-2xs text-muted-foreground">
                 <span
                   className={cn(
                     'h-1.5 w-1.5 rounded-full',
@@ -181,7 +181,7 @@ export function MemberCardPopover({
               type="button"
               onClick={copyShortId}
               title="复制短 ID"
-              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-10 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-3xs text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {card.shortId}
               {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -198,7 +198,7 @@ export function MemberCardPopover({
               {card.tags.map((t) => (
                 <span
                   key={t}
-                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-10 font-medium bg-muted text-muted-foreground"
+                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-3xs font-medium bg-muted text-muted-foreground"
                 >
                   <Tag className="h-2.5 w-2.5" />
                   {t}
@@ -208,7 +208,7 @@ export function MemberCardPopover({
           )}
 
           {/* Contact / AI Model */}
-          <div className="space-y-1 text-11">
+          <div className="space-y-1 text-2xs">
             {card.type === 'human' && card.email && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <Mail className="h-3 w-3" />
@@ -251,7 +251,7 @@ export function MemberCardPopover({
 
           {/* Load */}
           {card.load.total > 0 && (
-            <div className="flex items-center gap-3 text-11 pt-1 border-t border-border/60">
+            <div className="flex items-center gap-3 text-2xs pt-1 border-t border-border/60">
               <span className="text-muted-foreground">负载</span>
               <span className="text-accent-yellow">
                 待办 <b>{card.load.todo}</b>
@@ -268,7 +268,7 @@ export function MemberCardPopover({
           {/* Projects */}
           {card.projects.length > 0 && (
             <div className="space-y-1 pt-1 border-t border-border/60">
-              <div className="text-10 font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <div className="text-3xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                 <Folder className="h-2.5 w-2.5" />
                 参与项目
               </div>
@@ -277,7 +277,7 @@ export function MemberCardPopover({
                   <Link
                     key={p.projectId}
                     to={`/app/projects/${p.projectId}`}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-10 bg-muted text-foreground hover:bg-muted/70"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs bg-muted text-foreground hover:bg-muted/70"
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full"
@@ -294,7 +294,7 @@ export function MemberCardPopover({
           {/* Teams */}
           {card.teams.length > 0 && (
             <div className="space-y-1 pt-1 border-t border-border/60">
-              <div className="text-10 font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <div className="text-3xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                 <Users className="h-2.5 w-2.5" />
                 所属团队
               </div>
@@ -302,7 +302,7 @@ export function MemberCardPopover({
                 {card.teams.slice(0, 4).map((t) => (
                   <span
                     key={t.teamId}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-10 bg-accent-purple/10 text-accent-purple"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-3xs bg-accent-purple/10 text-accent-purple"
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full"
@@ -319,17 +319,17 @@ export function MemberCardPopover({
           {/* Recent activities */}
           {card.recentActivities.length > 0 && (
             <div className="space-y-1 pt-1 border-t border-border/60">
-              <div className="text-10 font-medium text-muted-foreground uppercase tracking-wider">
+              <div className="text-3xs font-medium text-muted-foreground uppercase tracking-wider">
                 最近活动
               </div>
               <ul className="space-y-0.5">
                 {card.recentActivities.slice(0, 3).map((a) => (
                   <li
                     key={a.id}
-                    className="text-11 text-muted-foreground flex items-center justify-between gap-2"
+                    className="text-2xs text-muted-foreground flex items-center justify-between gap-2"
                   >
                     <span className="truncate">{activityLabel(a.type)}</span>
-                    <span className="text-10 shrink-0">
+                    <span className="text-3xs shrink-0">
                       {formatTime(a.createdAt)}
                     </span>
                   </li>
@@ -344,7 +344,7 @@ export function MemberCardPopover({
               <button
                 type="button"
                 onClick={injectToAi}
-                className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-11 text-muted-foreground transition-colors hover:border-accent-purple hover:text-accent-purple"
+                className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-2xs text-muted-foreground transition-colors hover:border-accent-purple hover:text-accent-purple"
               >
                 <Sparkles className="h-3 w-3" />
                 注入 AI 上下文
@@ -352,7 +352,7 @@ export function MemberCardPopover({
               <button
                 type="button"
                 onClick={dispatchTask}
-                className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-11 text-muted-foreground transition-colors hover:border-accent-blue hover:text-accent-blue"
+                className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-2xs text-muted-foreground transition-colors hover:border-accent-blue hover:text-accent-blue"
               >
                 <ListTodo className="h-3 w-3" />
                 派发任务
@@ -360,7 +360,7 @@ export function MemberCardPopover({
             </div>
             <Link
               to={`/app/members/${card.id}`}
-              className="text-11 text-primary hover:underline"
+              className="text-2xs text-primary hover:underline"
             >
               查看完整档案 →
             </Link>

@@ -28,7 +28,7 @@ export function AssistantContextChip() {
 
   return (
     <div
-      className="flex items-center gap-1.5 rounded-md border border-border bg-content-bg-secondary px-2 py-1 text-11 text-content-text-muted"
+      className="flex items-center gap-1.5 rounded-md border border-border bg-content-bg-secondary px-2 py-1 text-2xs text-content-text-muted"
       data-ai-component="assistant.context-chip"
     >
       <Eye className="size-3 shrink-0 text-accent-purple" />

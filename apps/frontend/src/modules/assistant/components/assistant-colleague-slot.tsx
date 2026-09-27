@@ -50,12 +50,12 @@ export function AssistantColleagueSlot({ collapsed }: { collapsed: boolean }) {
         <span className="block truncate text-sm font-medium text-sidebar-foreground">
           {t('assistant.personaName')}
         </span>
-        <span className={cn('block truncate text-11', STATE_TEXT[status.state])}>
+        <span className={cn('block truncate text-2xs', STATE_TEXT[status.state])}>
           {statusLabel}
         </span>
       </span>
       {active && status.pending > 0 && (
-        <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-10 font-semibold text-primary-foreground tabular-nums">
+        <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-3xs font-semibold text-primary-foreground tabular-nums">
           {status.pending > 99 ? '99+' : status.pending}
         </span>
       )}

@@ -424,7 +424,7 @@ export function ProjectListPage() {
         {/* Pagination */}
         {total > 0 && (
           <div className="flex shrink-0 items-center justify-between gap-4 border-t border-border pt-2.5">
-            <p className="text-11 text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               {t('project.messages.pageShowing', { from, to, total })}
             </p>
             {totalPages > 1 && (

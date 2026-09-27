@@ -24,7 +24,7 @@ export function BlueprintCanvas({ isDark }: BlueprintCanvasProps) {
     <div className="relative h-full w-full overflow-hidden select-none">
       {/* 背景氛围渐变 */}
       <div
-        className="absolute inset-0 transition-colors duration-500"
+        className="absolute inset-0 transition-colors duration-slow"
         style={{
           background: `radial-gradient(circle at 50% 45%, ${bgGradientEnd} 0%, ${bgGradientStart} 100%)`,
         }}

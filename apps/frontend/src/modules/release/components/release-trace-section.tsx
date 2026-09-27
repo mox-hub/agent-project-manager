@@ -276,7 +276,7 @@ function TraceIssueRow({
             <>
               {/* 验收单段 */}
               <div>
-                <p className="mb-1.5 flex items-center gap-1 text-10 font-medium uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1.5 flex items-center gap-1 text-3xs font-medium uppercase tracking-wider text-muted-foreground">
                   <ShieldCheck className="size-3" />
                   {t('release.trace.acceptanceSection')}
                 </p>
@@ -297,7 +297,7 @@ function TraceIssueRow({
                             {a.title || t('release.trace.unnamedAcceptance')}
                           </span>
                           {a.auditReport?.riskLevel ? (
-                            <Badge variant="secondary" className="text-10">
+                            <Badge variant="secondary" className="text-3xs">
                               {a.auditReport.riskLevel}
                             </Badge>
                           ) : null}
@@ -309,7 +309,7 @@ function TraceIssueRow({
               </div>
               {/* 执行运行记录段 */}
               <div>
-                <p className="mb-1.5 flex items-center gap-1 text-10 font-medium uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1.5 flex items-center gap-1 text-3xs font-medium uppercase tracking-wider text-muted-foreground">
                   <SquareTerminal className="size-3" />
                   {t('release.trace.runSection')}
                 </p>
@@ -331,10 +331,10 @@ function TraceIssueRow({
                             <RunStatusBadge status={run.status} />
                             <span className="min-w-0 flex-1 truncate">{run.goal}</span>
                             {duration ? (
-                              <span className="shrink-0 text-11 text-muted-foreground">{duration}</span>
+                              <span className="shrink-0 text-2xs text-muted-foreground">{duration}</span>
                             ) : null}
                             {run.totalCost ? (
-                              <span className="shrink-0 text-11 text-muted-foreground">
+                              <span className="shrink-0 text-2xs text-muted-foreground">
                                 {formatCost(run.totalCost)}
                               </span>
                             ) : null}

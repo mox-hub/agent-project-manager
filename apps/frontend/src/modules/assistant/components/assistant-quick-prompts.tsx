@@ -29,7 +29,7 @@ export function AssistantQuickPrompts({
   return (
     <div className="flex flex-wrap gap-1.5" data-ai-component="assistant.quick-prompts" data-source={fromAi ? 'ai' : 'static'}>
       {fromAi ? (
-        <span className="flex items-center text-11 text-accent-purple" aria-hidden="true">
+        <span className="flex items-center text-2xs text-accent-purple" aria-hidden="true">
           <Sparkles className="size-3" />
         </span>
       ) : null}
@@ -40,7 +40,7 @@ export function AssistantQuickPrompts({
           variant="outline"
           disabled={disabled}
           onClick={() => onSend(prompt)}
-          className="h-6 rounded-full px-2.5 text-11 font-normal text-content-text-secondary"
+          className="h-6 rounded-full px-2.5 text-2xs font-normal text-content-text-secondary"
         >
           {prompt}
         </Button>

@@ -78,7 +78,7 @@ const SectionItemComponent = memo(function SectionItemComponent({
         tabIndex={0}
         className={cn(
           'group flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5',
-          'transition-colors duration-100',
+          'transition-colors duration-fast',
           isActive
             ? 'bg-accent text-accent-foreground'
             : matches
@@ -111,7 +111,7 @@ const SectionItemComponent = memo(function SectionItemComponent({
 
         <span
           className={cn(
-            'shrink-0 rounded px-1 text-10 font-medium',
+            'shrink-0 rounded px-1 text-3xs font-medium',
             section.level === 1
               ? 'bg-foreground/10 text-foreground'
               : section.level === 2
@@ -133,7 +133,7 @@ const SectionItemComponent = memo(function SectionItemComponent({
         </span>
 
         {section.wordCount > 0 && (
-          <span className="shrink-0 text-10 text-muted-foreground">
+          <span className="shrink-0 text-3xs text-muted-foreground">
             {section.wordCount}
           </span>
         )}
@@ -279,7 +279,7 @@ export const SectionNavigation = memo(function SectionNavigation({
             </button>
           )}
         </div>
-        <div className="flex items-center justify-between text-10 text-muted-foreground">
+        <div className="flex items-center justify-between text-3xs text-muted-foreground">
           <span>{allFlat.length} 章节</span>
           <button
             type="button"
@@ -360,12 +360,12 @@ export function FlatSectionList({
             key={section.id}
             type="button"
             className={cn(
-              'flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left transition-colors duration-100',
+              'flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left transition-colors duration-fast',
               isActive ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50',
             )}
             onClick={() => onSelectSection?.(section)}
           >
-            <span className="text-10 font-medium text-muted-foreground">
+            <span className="text-3xs font-medium text-muted-foreground">
               H{section.level}
             </span>
             <span

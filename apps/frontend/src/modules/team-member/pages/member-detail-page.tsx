@@ -229,7 +229,7 @@ export default function MemberDetailPage() {
                 rows={1}
                 placeholder={t('memberDetail.unnamedTitle', '未命名成员')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-2xl font-bold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                className="w-full text-2xl font-semibold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
               />
             </div>
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
@@ -239,7 +239,7 @@ export default function MemberDetailPage() {
                 type="button"
                 onClick={() => copyToClipboard(member.shortId)}
                 title={t('memberDetail.copyId', '复制短 ID')}
-                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-10 hover:bg-muted hover:text-foreground"
+                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-3xs hover:bg-muted hover:text-foreground"
               >
                 <IdCard className="size-3" />
                 {member.shortId}
@@ -260,7 +260,7 @@ export default function MemberDetailPage() {
               {(member.tags ?? []).length > 0 && (
                 <span className="flex flex-wrap items-center gap-1">
                   {(member.tags ?? []).map((tag) => (
-                    <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-10">
+                    <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-3xs">
                       {tag}
                     </Badge>
                   ))}
@@ -271,7 +271,7 @@ export default function MemberDetailPage() {
 
           {/* 描述区：热编辑 */}
           <div className="shrink-0 border-b px-6 pb-4 pt-4">
-            <label className="mb-2 block text-10 font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-2 block text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t('memberDetail.description', '描述')}
             </label>
             <AutoSizeTextarea
@@ -353,11 +353,11 @@ export default function MemberDetailPage() {
                             {p.projectName}
                           </Link>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-10">{p.role}</Badge>
+                            <Badge variant="outline" className="text-3xs">{p.role}</Badge>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-5 px-1.5 text-10 text-accent-red"
+                              className="h-5 px-1.5 text-3xs text-accent-red"
                               onClick={() => unbind.mutate(p.projectId)}
                             >
                               {t('memberDetail.unbind', '解除')}
@@ -387,7 +387,7 @@ export default function MemberDetailPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-5 px-1.5 text-10"
+                            className="h-5 px-1.5 text-3xs"
                             onClick={() => bind.mutate({ projectId: p.id, role: 'member' })}
                           >
                             {t('memberDetail.bind', '绑定')}
@@ -423,7 +423,7 @@ export default function MemberDetailPage() {
                           />
                           {tm.teamName}
                         </Link>
-                        <Badge variant="outline" className="text-10">{tm.role}</Badge>
+                        <Badge variant="outline" className="text-3xs">{tm.role}</Badge>
                       </li>
                     ))}
                   </ul>
@@ -475,7 +475,7 @@ export default function MemberDetailPage() {
               />
             )}
             {isSystemAssistantMember(member) && (
-              <p className="px-2 text-11 text-content-text-muted">
+              <p className="px-2 text-2xs text-content-text-muted">
                 {t('members.systemAssistantProtected', '系统内置 AI 助理：可修改信息，不可删除或停用')}
               </p>
             )}
@@ -560,7 +560,7 @@ export default function MemberDetailPage() {
             >
               {(card?.projects ?? []).map((p) => (
                 <PropertyRow key={p.projectId} icon={<Folder className="size-3.5" />} label={p.projectName}>
-                  <Badge variant="outline" className="text-10">{p.role}</Badge>
+                  <Badge variant="outline" className="text-3xs">{p.role}</Badge>
                 </PropertyRow>
               ))}
             </PropsCard>
@@ -574,7 +574,7 @@ export default function MemberDetailPage() {
             >
               {(card?.teams ?? []).map((tm) => (
                 <PropertyRow key={tm.teamId} icon={<Users className="size-3.5" />} label={tm.teamName}>
-                  <Badge variant="outline" className="text-10">{tm.role}</Badge>
+                  <Badge variant="outline" className="text-3xs">{tm.role}</Badge>
                 </PropertyRow>
               ))}
             </PropsCard>

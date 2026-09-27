@@ -273,7 +273,7 @@ export function DocumentNewPage() {
                   预览
                 </div>
                 <article className="mx-auto w-full max-w-245 px-6 py-8">
-                  {title && <h1 className="mb-4 text-3xl font-bold">{title}</h1>}
+                  {title && <h1 className="mb-4 text-2xl font-semibold">{title}</h1>}
                   <MdxRenderer source={content} />
                 </article>
               </div>

@@ -118,7 +118,7 @@ export function ProjectTeamBindings({ projectId }: { projectId: string }) {
                       style={{ backgroundColor: team.color || '#5E6AD2' }}
                     />
                     <span className="truncate">{team.name}</span>
-                    <span className="ml-auto shrink-0 text-10 text-muted-foreground">
+                    <span className="ml-auto shrink-0 text-3xs text-muted-foreground">
                       {t('project.sidebar.memberCount', { count: team.memberCount ?? 0 })}
                     </span>
                   </button>

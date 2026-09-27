@@ -118,7 +118,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
 
           {/* 快捷预设 */}
           <div className="flex items-center gap-2">
-            <span className="text-11 text-muted-foreground">常用预设:</span>
+            <span className="text-2xs text-muted-foreground">常用预设:</span>
             <Button
               type="button"
               variant="outline"

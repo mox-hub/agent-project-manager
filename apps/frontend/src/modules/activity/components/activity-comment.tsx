@@ -65,9 +65,9 @@ export function ActivityComment({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{authorName}</span>
-          <span className="text-11 text-muted-foreground">{relativeTime}</span>
+          <span className="text-2xs text-muted-foreground">{relativeTime}</span>
           {edited && (
-            <span className="text-10 text-muted-foreground/70">
+            <span className="text-3xs text-muted-foreground/70">
               ({t('activity.comment.edited')})
             </span>
           )}

@@ -81,7 +81,7 @@ export function AcceptanceCriteriaPreview({
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <CheckCircle2 className="size-3.5" />
           <span>{t('taskDetail.acceptanceContract')}</span>
-          <span className="text-10 font-normal normal-case tabular-nums">
+          <span className="text-3xs font-normal normal-case tabular-nums">
             {passedCount}/{totalCount}
           </span>
         </div>
@@ -90,7 +90,7 @@ export function AcceptanceCriteriaPreview({
             <button
               type="button"
               onClick={onOpenEditor}
-              className="inline-flex h-5 items-center rounded-md px-1 text-10 font-normal normal-case text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="inline-flex h-5 items-center rounded-md px-1 text-3xs font-normal normal-case text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               title={t('common.edit')}
             >
               {t('common.edit')}
@@ -113,7 +113,7 @@ export function AcceptanceCriteriaPreview({
       {/* 分区内容：grid-rows 动画展开 / 收起（与正文其他分区同一手势） */}
       <div
         className={cn(
-          'grid transition-[grid-template-rows] duration-300 ease-out',
+          'grid transition-[grid-template-rows] duration-slow ease-out',
           collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
         )}
       >
@@ -136,7 +136,7 @@ export function AcceptanceCriteriaPreview({
                     </span>
                     <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
                   </Link>
-                  <span className="shrink-0 text-10 text-muted-foreground">
+                  <span className="shrink-0 text-3xs text-muted-foreground">
                     {t(`acceptance.status.${acceptance.status}`)}
                   </span>
                 </div>
@@ -152,7 +152,7 @@ export function AcceptanceCriteriaPreview({
                         <span className="min-w-0 flex-1 break-words text-foreground">
                           {c.content}
                         </span>
-                        <span className={cn('shrink-0 mt-0.5 text-10', tone)}>
+                        <span className={cn('shrink-0 mt-0.5 text-3xs', tone)}>
                           {t(`acceptance.criterionStatus.${c.status}`)}
                         </span>
                       </li>

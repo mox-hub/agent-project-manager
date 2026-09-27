@@ -391,7 +391,7 @@ function DocumentCard({
   return (
     <div
       onClick={() => onPreview(document)}
-      className="group flex flex-col justify-between rounded-xl border border-border bg-card p-4 transition-all hover:border-border/80 hover:shadow-md cursor-pointer space-y-3"
+      className="group flex flex-col justify-between rounded-xl border border-border bg-card p-4 transition-all hover:border-border/80 cursor-pointer space-y-3"
       data-ai-component={`document.document-list.card.${document.id}`}
     >
       <div className="space-y-3">
@@ -401,7 +401,7 @@ function DocumentCard({
             <CatIcon className={cn('size-4', catConfig.color)} />
           </div>
           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-            <StatusPill tone={DOC_STATUS_TONE[document.status]} className="text-11 px-1.5 py-0.5 rounded-md">
+            <StatusPill tone={DOC_STATUS_TONE[document.status]} className="text-2xs px-1.5 py-0.5 rounded-md">
               {t(statusConfig.labelKey)}
             </StatusPill>
             <div className="relative">
@@ -464,7 +464,7 @@ function DocumentCard({
           <h3 className="text-sm font-medium text-foreground line-clamp-2 transition-colors group-hover:text-primary">
             {document.title}
           </h3>
-          <p className={cn('text-10 font-medium mt-1', catConfig.color)}>
+          <p className={cn('text-3xs font-medium mt-1', catConfig.color)}>
             {t(catConfig.labelKey)}
           </p>
         </div>
@@ -472,12 +472,12 @@ function DocumentCard({
         {/* 标签或短 ID */}
         <div className="flex flex-wrap items-center gap-1">
           {document.shortId && (
-            <span className="font-mono text-10 px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground">
+            <span className="font-mono text-3xs px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground">
               {document.shortId}
             </span>
           )}
           {document.docRole && (
-            <Badge variant="outline" className="text-10 font-normal px-1.5 py-0">
+            <Badge variant="outline" className="text-3xs font-normal px-1.5 py-0">
               {document.docRole}
             </Badge>
           )}
@@ -485,7 +485,7 @@ function DocumentCard({
       </div>
 
       {/* 底部信息栏 */}
-      <div className="flex items-center justify-between text-10 text-muted-foreground pt-2 border-t border-border/50">
+      <div className="flex items-center justify-between text-3xs text-muted-foreground pt-2 border-t border-border/50">
         <span className="truncate max-w-32">
           {document.project?.name ?? t('document.publicDoc')}
         </span>
@@ -529,7 +529,7 @@ function DocumentListItem({
   return (
     <div
       onClick={() => onPreview(document)}
-      className="group flex items-center gap-3.5 rounded-xl border border-border bg-card px-4 py-3 transition-all hover:border-border/80 hover:shadow-2xs cursor-pointer"
+      className="group flex items-center gap-3.5 rounded-xl border border-border bg-card px-4 py-3 transition-all hover:border-border/80 cursor-pointer"
       data-ai-component={`document.document-list.list-item.${document.id}`}
     >
       <div className={cn('size-9 rounded-lg flex items-center justify-center shrink-0', catConfig.bg)}>
@@ -541,21 +541,21 @@ function DocumentListItem({
           <h3 className="truncate text-sm font-medium text-foreground group-hover:text-primary transition-colors">
             {document.title}
           </h3>
-          <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0 text-10 px-1.5 py-0.5 rounded">
+          <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0 text-3xs px-1.5 py-0.5 rounded">
             {t(statusConfig.labelKey)}
           </StatusPill>
           {document.docRole && (
-            <Badge variant="outline" className="shrink-0 font-normal text-10 px-1.5 py-0">
+            <Badge variant="outline" className="shrink-0 font-normal text-3xs px-1.5 py-0">
               {document.docRole}
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-3 text-11 text-muted-foreground">
+        <div className="flex items-center gap-3 text-2xs text-muted-foreground">
           <span className={catConfig.color}>{t(catConfig.labelKey)}</span>
           <span className="truncate max-w-36">{document.project?.name ?? t('document.publicDoc')}</span>
           <span>{new Date(document.updatedAt).toLocaleDateString(i18n.language)}</span>
           {document.shortId && (
-            <span className="font-mono text-10 text-muted-foreground/70">{document.shortId}</span>
+            <span className="font-mono text-3xs text-muted-foreground/70">{document.shortId}</span>
           )}
         </div>
       </div>

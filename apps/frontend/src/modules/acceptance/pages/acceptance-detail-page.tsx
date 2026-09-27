@@ -316,7 +316,7 @@ export function AcceptanceDetailPage() {
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </h3>
-        <span className="text-10 text-muted-foreground">
+        <span className="text-3xs text-muted-foreground">
           {t('acceptanceDetail.criteria.progress', {
             passed: items.filter((c) => c.status === 'passed').length,
             total: items.length,
@@ -354,22 +354,22 @@ export function AcceptanceDetailPage() {
                 </button>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm">{c.content}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-10 text-muted-foreground">
-                    <Badge variant="outline" className="text-10 py-0">
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-3xs text-muted-foreground">
+                    <Badge variant="outline" className="text-3xs py-0">
                       {t(`acceptance.severity.${c.severity}`, c.severity)}
                     </Badge>
                     <span>{t(`acceptance.criterionStatus.${c.status}`, c.status)}</span>
                     {typeof c.revision === 'number' && c.revision > 1 && (
                       <Badge
                         variant="outline"
-                        className="text-10 py-0"
+                        className="text-3xs py-0"
                         title={c.revisedAt ? new Date(c.revisedAt).toLocaleString() : undefined}
                       >
                         v{c.revision}
                       </Badge>
                     )}
                     {hasStaleEvidenceOnly(c) && (
-                      <Badge className="border-accent-yellow/50 bg-accent-yellow/15 py-0 text-10 text-accent-yellow">
+                      <Badge className="border-accent-yellow/50 bg-accent-yellow/15 py-0 text-3xs text-accent-yellow">
                         <AlertTriangle className="mr-0.5 size-2.5" />
                         {t('acceptanceDetail.criteria.evidenceStale')}
                       </Badge>
@@ -393,8 +393,8 @@ export function AcceptanceDetailPage() {
                             ? ev.metadata.htmlUrl
                             : ev.storageRef;
                         return (
-                          <li key={ev.id} className="flex items-center gap-1.5 text-10 text-muted-foreground">
-                            <Badge variant="outline" className="text-10 py-0">
+                          <li key={ev.id} className="flex items-center gap-1.5 text-3xs text-muted-foreground">
+                            <Badge variant="outline" className="text-3xs py-0">
                               {t(`acceptanceDetail.evidenceType.${ev.evidenceType}`, ev.evidenceType)}
                             </Badge>
                             <span className="truncate">{ev.content ?? ev.evidenceType}</span>
@@ -494,7 +494,7 @@ export function AcceptanceDetailPage() {
               <ul className="mt-2 space-y-1">
                 {acceptFailures.map((f, i) => (
                   <li key={i} className="text-xs text-foreground/80">
-                    <span className="mr-1.5 font-mono text-10 text-muted-foreground">
+                    <span className="mr-1.5 font-mono text-3xs text-muted-foreground">
                       [{f.check}]
                     </span>
                     {f.reason}
@@ -530,7 +530,7 @@ export function AcceptanceDetailPage() {
                     </Link>
                   )}
                   {active && (
-                    <Badge variant="secondary" className="text-10">
+                    <Badge variant="secondary" className="text-3xs">
                       {t('acceptance.activeBadge')}
                     </Badge>
                   )}
@@ -612,14 +612,14 @@ export function AcceptanceDetailPage() {
               <TabsList className="h-8 text-xs">
                 <TabsTrigger value="criteria" className="text-xs">
                   {t('acceptanceDetail.tabs.criteria')}
-                  <span className="ml-1.5 rounded-md bg-muted px-1 text-10">{criteria.length}</span>
+                  <span className="ml-1.5 rounded-md bg-muted px-1 text-3xs">{criteria.length}</span>
                 </TabsTrigger>
                 <TabsTrigger value="audit" className="text-xs">
                   {t('acceptanceDetail.tabs.audit')}
                   {(blockedCount > 0 || suggestedCount > 0) && (
                     <span
                       className={cn(
-                        'ml-1.5 rounded px-1 text-10',
+                        'ml-1.5 rounded px-1 text-3xs',
                         blockedCount > 0
                           ? 'bg-accent-red/20 text-accent-red'
                           : 'bg-accent-yellow/20 text-accent-yellow',
@@ -631,7 +631,7 @@ export function AcceptanceDetailPage() {
                 </TabsTrigger>
                 <TabsTrigger value="executions" className="text-xs">
                   {t('acceptanceDetail.tabs.executions')}
-                  <span className="ml-1.5 rounded-md bg-muted px-1 text-10">
+                  <span className="ml-1.5 rounded-md bg-muted px-1 text-3xs">
                     {acceptance.executions?.length ?? 0}
                   </span>
                 </TabsTrigger>
@@ -801,12 +801,12 @@ export function AcceptanceDetailPage() {
                                 <span className="truncate text-xs font-medium">
                                   {e.goal || e.id}
                                 </span>
-                                <span className="text-10 text-muted-foreground">
+                                <span className="text-3xs text-muted-foreground">
                                   {e.createdAt
                                     ? new Date(e.createdAt).toLocaleString()
                                     : ''}
                                 </span>
-                                <span className="ml-auto flex items-center gap-2 text-10 text-muted-foreground">
+                                <span className="ml-auto flex items-center gap-2 text-3xs text-muted-foreground">
                                   {typeof e.totalCost === 'number' && e.totalCost > 0 && (
                                     <span className="flex items-center gap-0.5">
                                       <DollarSign className="size-3" />
@@ -1024,7 +1024,7 @@ export function AcceptanceDetailPage() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          'text-10 py-0 shrink-0',
+                          'text-3xs py-0 shrink-0',
                           acceptance.completionEvidence.state === 'merged' && 'text-accent-green',
                           acceptance.completionEvidence.state === 'closed' && 'text-accent-red',
                           acceptance.completionEvidence.state === 'open' && 'text-accent-blue',

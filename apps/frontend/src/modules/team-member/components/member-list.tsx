@@ -109,7 +109,7 @@ export function MemberList({
                 : t('members.status.active', '活跃')
               : member.status}
           </span>
-          <span className="shrink-0 font-mono text-10 text-muted-foreground/70">
+          <span className="shrink-0 font-mono text-3xs text-muted-foreground/70">
             {member.shortId}
           </span>
         </>

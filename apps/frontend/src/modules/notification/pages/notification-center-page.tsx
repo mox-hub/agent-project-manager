@@ -113,7 +113,7 @@ export function NotificationCenterPage() {
             >
               <Layers className="size-3.5" />
               <span>快速审阅</span>
-              <span className="rounded-full bg-primary-foreground/25 px-1.5 py-0.2 font-mono text-10 leading-none">
+              <span className="rounded-full bg-primary-foreground/25 px-1.5 py-0.2 font-mono text-3xs leading-none">
                 {rawDecisions.length}
               </span>
             </Button>
@@ -162,7 +162,7 @@ export function NotificationCenterPage() {
                   {tab.count !== undefined && tab.count > 0 && (
                     <span
                       className={cn(
-                        'ml-0.5 rounded-full px-1.5 py-0.2 font-mono text-10 leading-tight',
+                        'ml-0.5 rounded-full px-1.5 py-0.2 font-mono text-3xs leading-tight',
                         tab.key === 'important'
                           ? 'bg-accent-red text-white'
                           : 'bg-muted text-content-text-muted',
@@ -231,7 +231,7 @@ export function NotificationCenterPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 gap-1 px-2 text-xs font-medium border-border/80 shadow-2xs hover:bg-muted"
+                  className="h-7 gap-1 px-2 text-xs font-medium border-border/80 shadow-xs hover:bg-muted"
                   onClick={clearAllCurrent}
                   title="全部清理当前视图"
                 >

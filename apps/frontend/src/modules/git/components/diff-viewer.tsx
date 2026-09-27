@@ -40,7 +40,7 @@ function DiffFile({ path, status, additions = 0, deletions = 0, changes = 0 }: D
   return (
     <div className="mb-2 rounded border border-border bg-background p-3">
       <div className="mb-2 flex items-center">
-        <span className={cn('mr-2 flex h-5 w-5 items-center justify-center rounded text-base font-bold text-white', statusColorClass)}>
+        <span className={cn('mr-2 flex h-5 w-5 items-center justify-center rounded text-base font-semibold text-white', statusColorClass)}>
           {getStatusIcon(status)}
         </span>
         <span className="font-mono text-xs text-foreground">

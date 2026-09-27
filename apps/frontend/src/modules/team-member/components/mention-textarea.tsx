@@ -161,7 +161,7 @@ export function MentionTextarea({
         )}
       />
       {query !== null && list.length > 0 && (
-        <div className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-md overflow-hidden">
+        <div className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-xs overflow-hidden">
           <ul className="max-h-56 overflow-y-auto py-1">
             {list.map((candidate, i) => (
               <li key={`${candidate.kind}-${candidate.id}`}>
@@ -191,7 +191,7 @@ export function MentionTextarea({
                         showBadge={false}
                       />
                       <span className="truncate">{candidate.displayName}</span>
-                      <span className="text-11 text-muted-foreground truncate">
+                      <span className="text-2xs text-muted-foreground truncate">
                         @{candidate.handle}
                       </span>
                       {candidate.memberType === 'ai_agent' && (
@@ -202,7 +202,7 @@ export function MentionTextarea({
                     <>
                       <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <span className="truncate">{candidate.title}</span>
-                      <span className="text-11 text-muted-foreground ml-auto shrink-0">
+                      <span className="text-2xs text-muted-foreground ml-auto shrink-0">
                         文档
                       </span>
                     </>

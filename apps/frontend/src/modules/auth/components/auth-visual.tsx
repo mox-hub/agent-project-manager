@@ -35,7 +35,7 @@ export function AuthVisual({ className }: { className?: string }) {
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="relative h-105 w-105">
           {/* 工单卡 */}
-          <div className="absolute left-0 top-10 w-62 -rotate-2 rounded-lg border border-border bg-card p-4 shadow-md">
+          <div className="absolute left-0 top-10 w-62 -rotate-2 rounded-lg border border-border bg-card p-4 shadow-xs">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-blue/10 px-2 py-0.5 text-xs font-medium text-accent-blue">
               <CircleDot className="size-3.5" />
               {t('auth.visualIssueStatus')}
@@ -50,7 +50,7 @@ export function AuthVisual({ className }: { className?: string }) {
           </div>
 
           {/* 决策卡 */}
-          <div className="absolute right-0 top-0 w-58 rotate-1 rounded-lg border border-border bg-card p-4 shadow-md">
+          <div className="absolute right-0 top-0 w-58 rotate-1 rounded-lg border border-border bg-card p-4 shadow-xs">
             <span className="inline-flex items-center rounded-full bg-accent-purple/10 px-2 py-0.5 text-xs font-medium text-accent-purple">
               {t('auth.visualDecisionTag')}
             </span>
@@ -68,7 +68,7 @@ export function AuthVisual({ className }: { className?: string }) {
           </div>
 
           {/* AI 同事卡 */}
-          <div className="absolute bottom-8 left-14 w-64 rotate-1 rounded-lg border border-border bg-card p-4 shadow-md">
+          <div className="absolute bottom-8 left-14 w-64 rotate-1 rounded-lg border border-border bg-card p-4 shadow-xs">
             <div className="flex items-center gap-3">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-green/10 text-accent-green">
                 <Bot className="size-4" />

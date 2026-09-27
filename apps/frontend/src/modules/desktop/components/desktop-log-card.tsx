@@ -147,7 +147,7 @@ export function DesktopLogCard() {
 
       <div
         ref={listRef}
-        className="max-h-80 overflow-y-auto rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs leading-5"
+        className="max-h-80 overflow-y-auto rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs leading-relaxed"
       >
         {shown === 0 ? (
           <p className="py-6 text-center text-muted-foreground">

@@ -31,7 +31,8 @@ const SYNC_MODES = ['managed', 'synced', 'detached'] as const;
 const syncModeTone: Record<string, string> = {
   managed: 'text-accent-blue',
   synced: 'text-accent-green',
-  detached: 'text-content-muted',
+  // 原为 text-content-muted（幽灵类：@theme 里真实 token 是 --color-content-text-muted，不生成 CSS）
+  detached: 'text-content-text-muted',
 };
 
 export interface ContractBindingsPanelProps {
@@ -170,12 +171,12 @@ export function ContractBindingsPanel({
                     <span>{t(`contract.fileType.${binding.fileType}`)}</span>
                     <Badge
                       variant="outline"
-                      className={cn('text-10', syncModeTone[binding.syncMode])}
+                      className={cn('text-3xs', syncModeTone[binding.syncMode])}
                     >
                       {t(`contract.syncMode.${binding.syncMode}`)}
                     </Badge>
                     {conflicted && (
-                      <Badge variant="destructive" className="text-10">
+                      <Badge variant="destructive" className="text-3xs">
                         {t('contract.state.conflicted')}
                       </Badge>
                     )}
@@ -258,7 +259,7 @@ export function ContractBindingsPanel({
               <span className="font-mono">{file.path}</span>
               <Badge
                 variant={file.action === 'created' || file.action === 'updated' ? 'secondary' : 'outline'}
-                className="text-10"
+                className="text-3xs"
               >
                 {t(`contract.seedAction.${file.action}`)}
               </Badge>
@@ -275,7 +276,7 @@ export function ContractBindingsPanel({
               <span>{t(`contract.fileType.${report.fileType}`)}</span>
               <Badge
                 variant={report.state === 'aligned' ? 'secondary' : report.state === 'conflicted' ? 'destructive' : 'outline'}
-                className="text-10"
+                className="text-3xs"
               >
                 {t(`contract.checkState.${report.state}`)}
               </Badge>

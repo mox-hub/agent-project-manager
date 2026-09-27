@@ -70,7 +70,7 @@ export function ScreenplayControls({
         <button
           type="button"
           onClick={player.toggle}
-          className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-accent-purple/15 px-2.5 py-1 text-11 font-semibold text-accent-purple transition-colors hover:bg-accent-purple/25"
+          className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-accent-purple/15 px-2.5 py-1 text-2xs font-semibold text-accent-purple transition-colors hover:bg-accent-purple/25"
           data-ai-action="ai-surface.replay.toggle"
           title={player.playing ? '暂停（看清楚这一帧）' : '继续播放'}
         >
@@ -82,7 +82,7 @@ export function ScreenplayControls({
           type="button"
           onClick={player.stepBack}
           disabled={player.index === 0}
-          className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-11 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
           data-ai-action="ai-surface.replay.step-back"
           title="上一帧（会自动暂停）"
         >
@@ -94,7 +94,7 @@ export function ScreenplayControls({
           type="button"
           onClick={player.stepForward}
           disabled={player.atEnd}
-          className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-11 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
           data-ai-action="ai-surface.replay.step-forward"
           title="下一帧（会自动暂停）"
         >
@@ -105,7 +105,7 @@ export function ScreenplayControls({
         <button
           type="button"
           onClick={player.restart}
-          className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-11 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+          className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
           data-ai-action="ai-surface.replay.restart"
           title="从第一帧重放"
         >
@@ -113,7 +113,7 @@ export function ScreenplayControls({
           <span>重头放</span>
         </button>
 
-        <span className="ml-auto font-mono text-10 text-muted-foreground">
+        <span className="ml-auto font-mono text-3xs text-muted-foreground">
           {`第 ${player.index + 1}/${player.frameCount} 帧 · ${formatReplayClock(player.elapsedMs)} / ${formatReplayClock(player.totalMs)}`}
         </span>
       </div>
@@ -130,14 +130,14 @@ export function ScreenplayControls({
         {/* 过渡时长与回放步长（100ms）同量级：进度条会平滑地连成一格一格，
             而不是每拍硬跳一下——但它只是"看起来连续"，读数仍以 aria-valuenow 为准 */}
         <div
-          className="h-full rounded-full bg-accent-purple transition-[left,top,width,height] duration-100"
+          className="h-full rounded-full bg-accent-purple transition-[left,top,width,height] duration-fast"
           style={{ width: `${progressPct}%` }}
         />
       </div>
 
       {/* 跳站：六站平铺，当前站在哪一目了然（站清单取自唯一定义源） */}
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <span className="text-10 text-muted-foreground">跳站</span>
+        <span className="text-3xs text-muted-foreground">跳站</span>
         {PIPELINE_STAGES.map((stage) => {
           const active = stage.stageNumber === currentStageNumber;
           return (
@@ -146,7 +146,7 @@ export function ScreenplayControls({
               type="button"
               onClick={() => player.jumpToStage(stage.stageNumber)}
               className={cn(
-                'cursor-pointer rounded-full px-2 py-0.5 font-mono text-10 transition-colors',
+                'cursor-pointer rounded-full px-2 py-0.5 font-mono text-3xs transition-colors',
                 active
                   ? 'bg-accent-purple/20 text-accent-purple'
                   : 'bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground',
@@ -161,7 +161,7 @@ export function ScreenplayControls({
       </div>
 
       <p
-        className="mt-2 text-11 leading-relaxed text-foreground"
+        className="mt-2 text-2xs leading-relaxed text-foreground"
         data-ai-component="ai-surface.replay.frame-title"
       >
         {frameTitle}

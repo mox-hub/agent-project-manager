@@ -110,7 +110,7 @@ export function WorkflowNodePalette({
     >
       {groups.map((group) => (
         <section key={group.labelKey} className="space-y-1.5">
-          <h4 className="text-11 font-medium text-content-text-muted">
+          <h4 className="text-2xs font-medium text-content-text-muted">
             {t(group.labelKey)}
           </h4>
           <div className="space-y-1.5">
@@ -128,7 +128,7 @@ export function WorkflowNodePalette({
                     {item.label}
                   </span>
                   {item.desc ? (
-                    <span className="mt-0.5 block line-clamp-2 text-11 leading-relaxed text-content-text-muted">
+                    <span className="mt-0.5 block line-clamp-2 text-2xs leading-relaxed text-content-text-muted">
                       {item.desc}
                     </span>
                   ) : null}

@@ -142,7 +142,7 @@ function ProjectRow({
             <div className="flex items-center gap-2">
               <h4 className="truncate font-medium">{project.name}</h4>
               {project.state ? (
-                <Badge variant="secondary" className="text-10">
+                <Badge variant="secondary" className="text-3xs">
                   {project.state}
                 </Badge>
               ) : null}
@@ -152,7 +152,7 @@ function ProjectRow({
                 {project.description}
               </p>
             ) : null}
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-11 text-muted-foreground">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-2xs text-muted-foreground">
               {teams.map((t) => (
                 <span
                   key={t.id}

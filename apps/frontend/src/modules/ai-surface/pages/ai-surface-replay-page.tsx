@@ -62,7 +62,7 @@ export function AiSurfaceReplayPage() {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-content-bg p-8 text-center text-foreground">
         <p className="text-sm font-semibold">回放演示读不出来，无法播放</p>
-        <ul className="max-w-lg space-y-1 text-11 text-muted-foreground">
+        <ul className="max-w-lg space-y-1 text-2xs text-muted-foreground">
           {PARSED.drops.map((drop) => (
             <li key={`${drop.where}:${drop.why}`}>{`${drop.where}：${drop.why}`}</li>
           ))}
@@ -71,7 +71,7 @@ export function AiSurfaceReplayPage() {
         <button
           type="button"
           onClick={() => navigate('/app/ai-surface')}
-          className="mt-2 cursor-pointer rounded-lg bg-foreground/10 px-3 py-1.5 text-11 hover:bg-foreground/20"
+          className="mt-2 cursor-pointer rounded-lg bg-foreground/10 px-3 py-1.5 text-2xs hover:bg-foreground/20"
         >
           返回盯盘面
         </button>
@@ -102,7 +102,7 @@ export function AiSurfaceReplayPage() {
             </span>
             {/* 回放是这一屏**最主要**的事实，故用与实时徽标同级的位置与权重标注 */}
             <span
-              className="ml-1 rounded-full bg-accent-purple/15 px-2 py-0.5 font-mono text-10 font-medium text-accent-purple"
+              className="ml-1 rounded-full bg-accent-purple/15 px-2 py-0.5 font-mono text-3xs font-medium text-accent-purple"
               title="这是预置演示的回放，不是现场执行；每一格数字都标了来源"
             >
               回放
@@ -114,7 +114,7 @@ export function AiSurfaceReplayPage() {
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-11 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-2xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title={isDark ? '切换至日间模式' : '切换至夜间模式'}
           >
             {isDark ? (
@@ -130,7 +130,7 @@ export function AiSurfaceReplayPage() {
       {/* 2. 剧本说明 + 控制条。说明放在最前：看的人先要知道"这不是真的在跑" */}
       <div className="relative z-10 mx-auto w-full max-w-[1100px] space-y-2 px-6 pt-1">
         <p
-          className="rounded-xl border border-accent-purple/20 bg-accent-purple/5 px-3 py-2 text-11 leading-relaxed text-muted-foreground"
+          className="rounded-xl border border-accent-purple/20 bg-accent-purple/5 px-3 py-2 text-2xs leading-relaxed text-muted-foreground"
           data-ai-component="ai-surface.replay.about"
         >
           {screenplay.about}
@@ -147,7 +147,7 @@ export function AiSurfaceReplayPage() {
             故在此显式暴露。正常剧本此处恒不渲染。 */}
         {facts.droppedEvents.length > 0 && (
           <p
-            className="rounded-xl border border-accent-yellow/30 bg-accent-yellow/5 px-3 py-2 font-mono text-10 text-muted-foreground"
+            className="rounded-xl border border-accent-yellow/30 bg-accent-yellow/5 px-3 py-2 font-mono text-3xs text-muted-foreground"
             data-ai-component="ai-surface.replay.dropped-events"
           >
             {`本帧有 ${facts.droppedEvents.length} 条事件没能进入投影层（事件名或载荷不被识别）：${facts.droppedEvents.join('、')}`}
@@ -216,7 +216,7 @@ export function AiSurfaceReplayPage() {
         <button
           type="button"
           onClick={() => navigate('/app/ai-surface')}
-          className="w-full cursor-pointer rounded-xl border border-foreground/10 bg-foreground/5 px-3 py-2.5 text-11 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+          className="w-full cursor-pointer rounded-xl border border-foreground/10 bg-foreground/5 px-3 py-2.5 text-2xs text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
           data-ai-action="ai-surface.replay.exit"
         >
           看完了，回到盯盘面 —— 那里的数字是真实项目里的

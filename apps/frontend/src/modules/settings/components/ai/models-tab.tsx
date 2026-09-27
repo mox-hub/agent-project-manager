@@ -170,7 +170,7 @@ function ProviderBalanceCard({
           <span className="text-muted-foreground">
             {t('aiHub.balanceRemainingLabel')}
             {data.isAvailable === false && (
-              <Badge variant="destructive" className="ml-2 h-4 px-1.5 text-10">
+              <Badge variant="destructive" className="ml-2 h-4 px-1.5 text-3xs">
                 {t('aiHub.balanceUnavailable')}
               </Badge>
             )}
@@ -318,7 +318,7 @@ function PricingSourceCard() {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {data?.stale && (
-              <Badge variant="outline" className="h-5 px-1.5 text-10">
+              <Badge variant="outline" className="h-5 px-1.5 text-3xs">
                 {t('aiHub.pricingSourceStale')}
               </Badge>
             )}
@@ -939,7 +939,7 @@ export function ModelsTab() {
                         <CardTitle className="text-sm">{nameOf(provider)}</CardTitle>
                         {multiSlotProviderKeys.has(provider.provider) && (
                           <p
-                            className="mt-0.5 w-full truncate text-center text-10 text-muted-foreground"
+                            className="mt-0.5 w-full truncate text-center text-3xs text-muted-foreground"
                             title={
                               provider.baseUrl ||
                               PROVIDER_DEFAULT_BASE_URL[provider.provider] ||

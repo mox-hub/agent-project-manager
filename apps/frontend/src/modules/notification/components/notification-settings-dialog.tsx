@@ -128,7 +128,7 @@ export function NotificationSettingsDialog({
             SETTING_SECTIONS.map((section) => (
               <section key={section.key}>
                 <h3 className="text-sm font-semibold text-foreground">{section.title}</h3>
-                <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{section.description}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{section.description}</p>
                 <div className="mt-3 divide-y divide-border overflow-hidden rounded-xl border border-border">
                   {section.items.map((item) => {
                     const enabled = enabledFor(item.eventType);
@@ -141,7 +141,7 @@ export function NotificationSettingsDialog({
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-foreground">{item.title}</p>
-                          <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{item.description}</p>
+                          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{item.description}</p>
                         </div>
                         <Switch
                           checked={enabled}

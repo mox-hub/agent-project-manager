@@ -186,7 +186,7 @@ function AcceptCell({ status, isPrimary, onSelect }: { status: AcceptStatus; isP
           style={status === 'in_progress' ? { animationDuration: '2s' } : undefined} />
       </button>
       {open && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-popover border border-border rounded-xl shadow-xl py-1 min-w-30">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-popover border border-border rounded-xl shadow-xs py-1 min-w-30">
           {ALL_STATUSES.map(s => {
             const c = STATUS_CFG[s]; const SIcon = c.icon;
             return (
@@ -237,7 +237,7 @@ function AnnotationPanel({
   }, [onClose]);
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-1 z-50 w-72 bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
+    <div ref={ref} className="absolute right-0 top-full mt-1 z-50 w-72 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30">
         <p className="text-xs font-semibold truncate max-w-45">{nodeTitle}</p>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground" data-ai-action="delivery.annotation.close">
@@ -254,8 +254,8 @@ function AnnotationPanel({
               <div key={ann.id} className="px-3 py-2">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', tc.color)} />
-                  <span className={cn('text-10 font-medium', tc.text)}>{tc.label}</span>
-                  <span className="text-10 text-muted-foreground/50 ml-auto">{ann.author} · {ann.timestamp}</span>
+                  <span className={cn('text-3xs font-medium', tc.text)}>{tc.label}</span>
+                  <span className="text-3xs text-muted-foreground/50 ml-auto">{ann.author} · {ann.timestamp}</span>
                 </div>
                 <p className="text-xs text-foreground leading-relaxed">{ann.content}</p>
               </div>
@@ -274,7 +274,7 @@ function AnnotationPanel({
             const tc = ANN_TAG_CFG[t];
             return (
               <button key={t} onClick={() => setTag(t)}
-                className={cn('text-10 px-2 py-0.5 rounded-full border transition-colors font-medium',
+                className={cn('text-3xs px-2 py-0.5 rounded-full border transition-colors font-medium',
                   tag === t ? cn(tc.text, tc.color.replace('bg-', 'bg-').replace('500', '100/20')) : 'border-border text-muted-foreground hover:border-border')}>
                 {tc.label}
               </button>
@@ -330,7 +330,7 @@ function ColumnPicker({
   const groups = Array.from(new Set(COL_DEFS.map(c => c.group)));
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-2 z-50 w-64 bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
+    <div ref={ref} className="absolute right-0 top-full mt-2 z-50 w-64 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-muted/30">
         <p className="text-xs font-semibold">显示列配置</p>
         <button onClick={onClose} data-ai-action="delivery.col-picker.close"><X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" /></button>
@@ -340,7 +340,7 @@ function ColumnPicker({
           const cols = COL_DEFS.filter(c => c.group === group);
           return (
             <div key={group} className="mb-3">
-              <p className="text-10 font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1">{GROUP_LABELS[group]}</p>
+              <p className="text-3xs font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1">{GROUP_LABELS[group]}</p>
               {cols.map(col => {
                 const visible = visibleCols.has(col.id);
                 return (
@@ -349,7 +349,7 @@ function ColumnPicker({
                     data-ai-action="delivery.col-picker.toggle">
                     {visible ? <CheckSquare className="w-3.5 h-3.5 text-primary shrink-0" /> : <Square className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />}
                     <span className={visible ? 'text-foreground' : 'text-muted-foreground'}>{col.label}</span>
-                    <span className="ml-auto text-10 text-muted-foreground/40">{col.width}px</span>
+                    <span className="ml-auto text-3xs text-muted-foreground/40">{col.width}px</span>
                   </button>
                 );
               })}
@@ -359,9 +359,9 @@ function ColumnPicker({
       </div>
       <div className="px-3 py-2 border-t border-border bg-muted/10 flex gap-2">
         <button onClick={() => COL_DEFS.forEach(c => !visibleCols.has(c.id) && onToggle(c.id))}
-          className="text-11 text-primary hover:underline">全选</button>
+          className="text-2xs text-primary hover:underline">全选</button>
         <button onClick={() => COL_DEFS.forEach(c => visibleCols.has(c.id) && onToggle(c.id))}
-          className="text-11 text-muted-foreground hover:text-foreground hover:underline">清空</button>
+          className="text-2xs text-muted-foreground hover:text-foreground hover:underline">清空</button>
       </div>
     </div>
   );
@@ -385,12 +385,12 @@ function ViewConfigPanel({
   }, [onClose]);
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-2 z-50 w-72 bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
+    <div ref={ref} className="absolute right-0 top-full mt-2 z-50 w-72 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-muted/30">
         <p className="text-xs font-semibold flex items-center gap-1.5"><Settings2 className="w-3.5 h-3.5" />视图配置</p>
         <button onClick={onClose} data-ai-action="delivery.view-config.close"><X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" /></button>
       </div>
-      <p className="text-10 text-muted-foreground px-3 pt-2 pb-1">选择显示的项目和里程碑</p>
+      <p className="text-3xs text-muted-foreground px-3 pt-2 pb-1">选择显示的项目和里程碑</p>
       <div className="max-h-64 overflow-y-auto px-2 pb-2">
         {data.map(project => (
           <div key={project.id}>
@@ -439,8 +439,8 @@ function ExportMenu({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <div ref={ref} className="absolute right-0 top-full mt-2 z-50 w-52 bg-popover border border-border rounded-xl shadow-xl py-1">
-      <p className="text-10 font-semibold text-muted-foreground uppercase tracking-wider px-3 py-1.5">导出选项</p>
+    <div ref={ref} className="absolute right-0 top-full mt-2 z-50 w-52 bg-popover border border-border rounded-xl shadow-xs py-1">
+      <p className="text-3xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-1.5">导出选项</p>
       {options.map(opt => {
         const Icon = opt.icon;
         return (
@@ -464,7 +464,7 @@ function ProgressBar({ value }: { value: number }) {
       <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
         <div className={cn('h-full rounded-full transition-all', color)} style={{ width: `${value}%` }} />
       </div>
-      <span className="text-10 tabular-nums text-muted-foreground w-7 text-right">{value}%</span>
+      <span className="text-3xs tabular-nums text-muted-foreground w-7 text-right">{value}%</span>
     </div>
   );
 }
@@ -529,21 +529,21 @@ function TableRow({
         <div style={{ width: colW('testCoverage'), minWidth: colW('testCoverage') }} className="shrink-0 flex items-center justify-center">
           {node.testCoverage != null
             ? <span className={cn('text-xs font-mono font-medium', node.testCoverage >= 80 ? 'text-accent-green' : node.testCoverage >= 60 ? 'text-accent-yellow' : 'text-destructive')}>{node.testCoverage}%</span>
-            : <span className="text-10 text-muted-foreground/30">—</span>}
+            : <span className="text-3xs text-muted-foreground/30">—</span>}
         </div>
       )}
       {vis('bugCount') && (
         <div style={{ width: colW('bugCount'), minWidth: colW('bugCount') }} className="shrink-0 flex items-center justify-center">
           {(node.bugCount ?? 0) > 0
-            ? <span className="inline-flex items-center gap-1 text-10 px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/30 font-medium"><AlertTriangle className="w-2.5 h-2.5" />{node.bugCount}</span>
-            : <span className="text-10 text-muted-foreground/30">—</span>}
+            ? <span className="inline-flex items-center gap-1 text-3xs px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/30 font-medium"><AlertTriangle className="w-2.5 h-2.5" />{node.bugCount}</span>
+            : <span className="text-3xs text-muted-foreground/30">—</span>}
         </div>
       )}
       {vis('openPRs') && (
         <div style={{ width: colW('openPRs'), minWidth: colW('openPRs') }} className="shrink-0 flex items-center justify-center">
           {(node.openPRs ?? 0) > 0
-            ? <span className="inline-flex items-center gap-1 text-10 text-accent-blue font-medium"><GitPullRequest className="w-2.5 h-2.5" />{node.openPRs}</span>
-            : <span className="text-10 text-muted-foreground/30">—</span>}
+            ? <span className="inline-flex items-center gap-1 text-3xs text-accent-blue font-medium"><GitPullRequest className="w-2.5 h-2.5" />{node.openPRs}</span>
+            : <span className="text-3xs text-muted-foreground/30">—</span>}
         </div>
       )}
 
@@ -551,16 +551,16 @@ function TableRow({
       {vis('riskLevel') && (
         <div style={{ width: colW('riskLevel'), minWidth: colW('riskLevel') }} className="shrink-0 flex items-center justify-center">
           {node.riskLevel ? (() => { const rc = RISK_CFG[node.riskLevel!]; const RI = rc.icon; return (
-            <span className={cn('inline-flex items-center gap-1 text-10 px-1.5 py-0.5 rounded-full border font-medium', rc.bg, rc.color, rc.border)}>
+            <span className={cn('inline-flex items-center gap-1 text-3xs px-1.5 py-0.5 rounded-full border font-medium', rc.bg, rc.color, rc.border)}>
               <RI className="w-2.5 h-2.5" />{rc.label}
-            </span>); })() : <span className="text-10 text-muted-foreground/30">—</span>}
+            </span>); })() : <span className="text-3xs text-muted-foreground/30">—</span>}
         </div>
       )}
       {vis('reqCoverage') && (
         <div style={{ width: colW('reqCoverage'), minWidth: colW('reqCoverage') }} className="shrink-0 flex items-center justify-center">
           {node.reqCoverage != null
             ? <span className={cn('text-xs font-mono font-medium', node.reqCoverage >= 90 ? 'text-accent-green' : node.reqCoverage >= 70 ? 'text-accent-yellow' : 'text-destructive')}>{node.reqCoverage}%</span>
-            : <span className="text-10 text-muted-foreground/30">—</span>}
+            : <span className="text-3xs text-muted-foreground/30">—</span>}
         </div>
       )}
 
@@ -572,15 +572,15 @@ function TableRow({
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className={cn('w-2 h-2 rounded-sm', i < bc.stars ? bc.bg : 'bg-muted')} />
               ))}
-              <span className={cn('text-10 ml-1 font-medium', bc.color)}>{bc.label}</span>
-            </div>); })() : <span className="text-10 text-muted-foreground/30">—</span>}
+              <span className={cn('text-3xs ml-1 font-medium', bc.color)}>{bc.label}</span>
+            </div>); })() : <span className="text-3xs text-muted-foreground/30">—</span>}
         </div>
       )}
       {vis('feedback') && (
         <div style={{ width: colW('feedback'), minWidth: colW('feedback') }} className="shrink-0 overflow-hidden px-2">
           {node.feedback
-            ? <p className="text-11 text-muted-foreground truncate" title={node.feedback}>{node.feedback}</p>
-            : <span className="text-10 text-muted-foreground/30">暂无反馈</span>}
+            ? <p className="text-2xs text-muted-foreground truncate" title={node.feedback}>{node.feedback}</p>
+            : <span className="text-3xs text-muted-foreground/30">暂无反馈</span>}
         </div>
       )}
 
@@ -605,7 +605,7 @@ function TableRow({
       {/* ── Due date ── */}
       {vis('dueDate') && (
         <div style={{ width: colW('dueDate'), minWidth: colW('dueDate') }} className="shrink-0 px-2 border-l border-border/30">
-          <div className={cn('flex items-center gap-1 text-11 whitespace-nowrap', isOverdue ? 'text-destructive' : 'text-muted-foreground')}>
+          <div className={cn('flex items-center gap-1 text-2xs whitespace-nowrap', isOverdue ? 'text-destructive' : 'text-muted-foreground')}>
             <Clock className="w-3 h-3 shrink-0" />
             {new Date(node.dueDate).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}
           </div>
@@ -614,7 +614,7 @@ function TableRow({
 
       {/* ── Owner ── */}
       {vis('owner') && (
-        <div style={{ width: colW('owner'), minWidth: colW('owner') }} className="shrink-0 px-2 text-11 text-muted-foreground truncate border-l border-border/30">
+        <div style={{ width: colW('owner'), minWidth: colW('owner') }} className="shrink-0 px-2 text-2xs text-muted-foreground truncate border-l border-border/30">
           {node.owner}
         </div>
       )}
@@ -628,7 +628,7 @@ function TableRow({
             data-ai-action="delivery.annotation.open">
             <MessageSquare className="w-3.5 h-3.5" />
             {nodeAnns.length > 0 && (
-              <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-accent-yellow text-10 text-white flex items-center justify-center font-bold leading-none">
+              <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-accent-yellow text-3xs text-white flex items-center justify-center font-semibold leading-none">
                 {nodeAnns.length}
               </span>
             )}
@@ -653,7 +653,7 @@ function TableHeader({ viewMode, visibleCols }: { viewMode: ViewMode; visibleCol
   const colW = (id: ColId) => COL_DEFS.find(c => c.id === id)!.width;
 
   return (
-    <div className="flex items-center h-9 bg-muted/50 border-b border-border text-10 font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 z-20">
+    <div className="flex items-center h-9 bg-muted/50 border-b border-border text-3xs font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 z-20">
       <div className="sticky left-0 z-20 bg-muted/50 flex items-center px-3 border-r border-border/40 shrink-0" style={{ width: 260, minWidth: 260 }}>
         交付项目
       </div>
@@ -668,7 +668,7 @@ function TableHeader({ viewMode, visibleCols }: { viewMode: ViewMode; visibleCol
       {/* Agent cols */}
       {AGENT_KEYS.map(ak => vis(ak as ColId) && (
         <div key={ak} style={{ width: colW(ak as ColId), minWidth: colW(ak as ColId) }} className="shrink-0 flex flex-col items-center justify-center border-l border-border/30 gap-0.5 h-full px-1">
-          {(() => { const ac = AGENT_CFG[ak]; const AI = ac.icon; return (<><AI className={cn('w-3 h-3', ac.color)} /><span className="text-10">{COL_DEFS.find(c => c.id === ak)?.shortLabel}</span></>); })()}
+          {(() => { const ac = AGENT_CFG[ak]; const AI = ac.icon; return (<><AI className={cn('w-3 h-3', ac.color)} /><span className="text-3xs">{COL_DEFS.find(c => c.id === ak)?.shortLabel}</span></>); })()}
         </div>
       ))}
       {/* Stage cols */}
@@ -678,7 +678,7 @@ function TableHeader({ viewMode, visibleCols }: { viewMode: ViewMode; visibleCol
         const isPrimary = (STAGE_PRIMARY[sk] as ViewMode[]).includes(viewMode);
         return (
           <div key={sk} style={{ width: colW(sk as ColId), minWidth: colW(sk as ColId) }} className={cn('flex flex-col items-center justify-center border-l border-border/30 shrink-0 h-full gap-0.5 px-1', !isPrimary && 'opacity-40')}>
-            <Icon className="w-3 h-3" /><span className="text-10">{col.shortLabel}</span>
+            <Icon className="w-3 h-3" /><span className="text-3xs">{col.shortLabel}</span>
           </div>
         );
       })())}
@@ -693,7 +693,7 @@ function TableHeader({ viewMode, visibleCols }: { viewMode: ViewMode; visibleCol
 
 function LegendBar() {
   return (
-    <div className="flex items-center gap-5 px-4 py-1.5 bg-muted/20 border-b border-border text-10 text-muted-foreground">
+    <div className="flex items-center gap-5 px-4 py-1.5 bg-muted/20 border-b border-border text-3xs text-muted-foreground">
       <span className="font-semibold">验收：</span>
       {ALL_STATUSES.map(s => { const c = STATUS_CFG[s]; const Icon = c.icon; return (
         <span key={s} className="flex items-center gap-1"><Icon className={cn('w-3 h-3', c.cell)} />{c.label}</span>
@@ -730,8 +730,8 @@ function SummaryBar({ data, viewMode }: { data: DeliveryNode[]; viewMode: ViewMo
               <s.Icon className="w-3.5 h-3.5 text-muted-foreground" />
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-10 text-muted-foreground">{s.label}</span>
-                  <span className={cn('text-11 font-semibold tabular-nums', pct === 100 ? 'text-accent-green' : pct >= 60 ? 'text-accent-blue' : 'text-muted-foreground')}>{s.passed}/{s.total}</span>
+                  <span className="text-3xs text-muted-foreground">{s.label}</span>
+                  <span className={cn('text-2xs font-semibold tabular-nums', pct === 100 ? 'text-accent-green' : pct >= 60 ? 'text-accent-blue' : 'text-muted-foreground')}>{s.passed}/{s.total}</span>
                 </div>
                 <div className="w-14 h-1 rounded-full bg-muted overflow-hidden mt-0.5">
                   <div className={cn('h-full rounded-full', pct === 100 ? 'bg-accent-green' : pct >= 60 ? 'bg-accent-blue' : 'bg-muted-foreground/40')} style={{ width: `${pct}%` }} />
@@ -743,13 +743,13 @@ function SummaryBar({ data, viewMode }: { data: DeliveryNode[]; viewMode: ViewMo
       </div>
       <div className="w-px h-6 bg-border shrink-0" />
       <div className="flex items-center gap-4 shrink-0">
-        <span className="text-10 text-muted-foreground font-semibold">Agent活跃度</span>
+        <span className="text-3xs text-muted-foreground font-semibold">Agent活跃度</span>
         {agentStats.map(a => {
           const ac = AGENT_CFG[a.key as AgentKey];
           return (
             <div key={a.key} className="flex items-center gap-1">
-              <span className={cn('text-10 font-medium', ac.color)}>{a.label}</span>
-              <span className="text-10 text-muted-foreground">{a.active}/{a.total}</span>
+              <span className={cn('text-3xs font-medium', ac.color)}>{a.label}</span>
+              <span className="text-3xs text-muted-foreground">{a.active}/{a.total}</span>
             </div>
           );
         })}
@@ -888,7 +888,7 @@ export function DeliveryPage() {
               <h1 className="text-sm font-semibold flex items-center gap-2">
                 <ListTree className="w-4 h-4 text-primary" />交付视图
               </h1>
-              <p className="text-11 text-muted-foreground mt-0.5">项目目标 → 里程碑 → 功能点 的层级验收追踪</p>
+              <p className="text-2xs text-muted-foreground mt-0.5">项目目标 → 里程碑 → 功能点 的层级验收追踪</p>
             </div>
           </div>
 
@@ -927,7 +927,7 @@ export function DeliveryPage() {
                   viewConfigOpen ? 'bg-accent border-border text-foreground' : 'border-border text-muted-foreground hover:text-foreground hover:bg-accent')}
                 data-ai-action="delivery.view-config.open">
                 <Filter className="w-3.5 h-3.5" />视图配置
-                {hiddenNodes.size > 0 && <span className="ml-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-10 flex items-center justify-center font-bold">{hiddenNodes.size}</span>}
+                {hiddenNodes.size > 0 && <span className="ml-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-3xs flex items-center justify-center font-semibold">{hiddenNodes.size}</span>}
               </button>
               {viewConfigOpen && <ViewConfigPanel data={DELIVERY_DATA} hiddenNodes={hiddenNodes} onToggleNode={toggleNode} onClose={() => setViewConfigOpen(false)} />}
             </div>

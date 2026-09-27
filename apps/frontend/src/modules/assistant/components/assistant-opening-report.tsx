@@ -39,7 +39,7 @@ export function AssistantOpeningReport({
           <span
             key={stat.label}
             className={cn(
-              'inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-11 tabular-nums',
+              'inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-2xs tabular-nums',
               stat.tone,
             )}
           >

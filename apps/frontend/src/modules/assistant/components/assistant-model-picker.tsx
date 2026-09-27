@@ -24,7 +24,7 @@ function ModelItemLabel({ option }: { option: AssistantModelOption }) {
       <span className="truncate">
         {option.label}
         {option.model ? (
-          <span className="ml-1 text-11 text-content-text-muted">{option.model}</span>
+          <span className="ml-1 text-2xs text-content-text-muted">{option.model}</span>
         ) : null}
       </span>
     );
@@ -63,7 +63,7 @@ export function AssistantModelPicker({
     <DropdownMenu>
       <DropdownMenuTrigger
         type="button"
-        className="inline-flex h-7 max-w-30 shrink-0 items-center gap-1 rounded-md px-2 text-11 text-content-text-muted transition-colors hover:bg-accent hover:text-content-text"
+        className="inline-flex h-7 max-w-30 shrink-0 items-center gap-1 rounded-md px-2 text-2xs text-content-text-muted transition-colors hover:bg-accent hover:text-content-text"
         data-ai-action="assistant.model.open"
       >
         <Cpu className="size-3 shrink-0" />
@@ -90,7 +90,7 @@ export function AssistantModelPicker({
               }
             />
             {!projectId ? (
-              <span className="ml-auto text-11 text-content-text-muted">
+              <span className="ml-auto text-2xs text-content-text-muted">
                 {t('assistant.model.cliNeedsProject')}
               </span>
             ) : value === 'cli' ? (

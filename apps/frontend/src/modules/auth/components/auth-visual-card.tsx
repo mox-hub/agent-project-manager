@@ -127,9 +127,9 @@ export function AuthVisualCard({
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4 sm:p-6 transition-colors duration-500">
+    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4 sm:p-6 transition-colors duration-slow">
       {/* 现代双栏一体化大卡片 */}
-      <div className="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border/80 shadow-xl md:grid md:min-h-130 md:grid-cols-12 transition-colors duration-500 bg-card">
+      <div className="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-border/80 shadow-xs md:grid md:min-h-130 md:grid-cols-12 transition-colors duration-slow bg-card">
         {/* 桌面紧凑窗口拖动区：盖住卡片顶部品牌行（右上控制按钮组 z-30 在其上可点；
             -webkit-app-region 在浏览器端无效，不影响 web） */}
         <div
@@ -151,7 +151,7 @@ export function AuthVisualCard({
           >
             <RotateCw
               className={cn(
-                'size-4 transition-transform duration-500',
+                'size-4 transition-transform duration-slow',
                 isAi
                   ? 'rotate-180 text-accent-blue'
                   : 'text-primary group-hover:rotate-180',
@@ -180,7 +180,7 @@ export function AuthVisualCard({
         {/* 左侧：人机交互、品牌叙事与表单操作区 (背景色随右侧模式联动自适应) */}
         <div
           style={leftBgStyle}
-          className="flex flex-col justify-between p-6 sm:p-8 md:col-span-6 lg:col-span-5 transition-colors duration-500"
+          className="flex flex-col justify-between p-6 sm:p-8 md:col-span-6 lg:col-span-5 transition-colors duration-slow"
         >
           <div>
             {/* 品牌 Logo 与当前表面角标 */}
@@ -190,7 +190,7 @@ export function AuthVisualCard({
                 variant="framed"
                 ariaLabel="Agent Project Manager"
               />
-              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-11 font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-2xs font-medium text-muted-foreground">
                 <span
                   className={cn(
                     'size-1.5 rounded-full transition-colors',
@@ -203,7 +203,7 @@ export function AuthVisualCard({
 
             {/* 标题与欢迎诗意文案 (去除多余的 emoji 和图标，纯粹自然) */}
             <div className="mt-5 space-y-2">
-              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+              <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
                 欢迎你，我的朋友
               </h1>
 
@@ -297,7 +297,7 @@ export function AuthVisualCard({
       {/* 无法登录 / 常见问题排查轻量弹窗 */}
       {helpDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl space-y-4">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
             <div className="flex items-center gap-2 text-primary font-semibold text-sm">
               <HelpCircle className="size-4" />
               <span>登录与服务排查指引</span>

@@ -678,19 +678,19 @@ export function TaskDetailPage() {
               {showExecutionSignal && (
                 <div className="mt-1 flex flex-col items-end gap-1">
                   {activeExecutionCount > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-accent-orange/10 px-2 py-0.5 text-10 text-accent-orange">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-accent-orange/10 px-2 py-0.5 text-3xs text-accent-orange">
                       <ListChecks className="size-3 shrink-0" />
                       {t('taskDetail.execItemsActive', { count: activeExecutionCount })}
                     </span>
                   )}
                   {activeExecutionCount === 0 && allExecutionsCompleted && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-accent-green/10 px-2 py-0.5 text-10 text-accent-green">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-accent-green/10 px-2 py-0.5 text-3xs text-accent-green">
                       <CheckCircle2 className="size-3 shrink-0" />
                       {t('taskDetail.execItemsReadyToClose')}
                     </span>
                   )}
                   {forceCloseStatus && (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-10 text-destructive">
+                    <span className="inline-flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-3xs text-destructive">
                       <span className="max-w-40 truncate">
                         {t('taskDetail.execItemsForceCloseHint')}
                       </span>
@@ -840,7 +840,7 @@ export function TaskDetailPage() {
             iconClassName="text-accent-purple"
             action={
               acceptances.length > 0 ? (
-                <span className="text-10 text-muted-foreground">({acceptances.length})</span>
+                <span className="text-3xs text-muted-foreground">({acceptances.length})</span>
               ) : undefined
             }
           >
@@ -1014,7 +1014,7 @@ function SubTaskSection({
           <ListChecks className="size-3.5" />
           {t('taskDetail.subtasks')}
           {subIssues.length > 0 && (
-            <span className="text-10 font-normal normal-case tabular-nums">
+            <span className="text-3xs font-normal normal-case tabular-nums">
               {doneCount}/{subIssues.length}
             </span>
           )}
@@ -1048,7 +1048,7 @@ function SubTaskSection({
       {/* 分区内容：子任务列表 + 新增表单（grid-rows 动画展开 / 收起） */}
       <div
         className={cn(
-          'grid transition-[grid-template-rows] duration-300 ease-out',
+          'grid transition-[grid-template-rows] duration-slow ease-out',
           collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
         )}
       >
@@ -1150,7 +1150,7 @@ function SubTaskSection({
                       {st.title}
                     </span>
                     {firstTag && (
-                      <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-11 text-muted-foreground shrink-0">
+                      <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-2xs text-muted-foreground shrink-0">
                         {firstTag.color && (
                           <span className="size-1.5 rounded-full" style={{ backgroundColor: firstTag.color }} />
                         )}
@@ -1161,7 +1161,7 @@ function SubTaskSection({
                       <priorityVisual.icon className={cn('size-3.5 shrink-0', TONE_TEXT_CLASS[priorityVisual.tone])} />
                     )}
                     {st.dueDate && (
-                      <span className="text-10 text-muted-foreground shrink-0">
+                      <span className="text-3xs text-muted-foreground shrink-0">
                         {new Date(st.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     )}
@@ -1272,7 +1272,7 @@ function CustomFieldsPanel({
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <ListTree className="size-3" />
           {t('taskDetail.customFields')}
-          <span className="text-10 font-normal">({schema.length})</span>
+          <span className="text-3xs font-normal">({schema.length})</span>
         </div>
         <div className="flex items-center gap-0.5">
           {!editing && (
@@ -1297,7 +1297,7 @@ function CustomFieldsPanel({
       {/* 分区内容：grid-rows 动画展开 / 收起（与 SidebarPanel 同一手势） */}
       <div
         className={cn(
-          'grid transition-[grid-template-rows] duration-300 ease-out',
+          'grid transition-[grid-template-rows] duration-slow ease-out',
           collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
         )}
       >
@@ -1353,7 +1353,7 @@ function LinkedDocsPanel({ issueId }: { issueId: string }) {
       icon={<FileText className="size-3" />}
       action={
         links.length > 0 ? (
-          <span className="text-10 text-muted-foreground">({links.length})</span>
+          <span className="text-3xs text-muted-foreground">({links.length})</span>
         ) : undefined
       }
     >
@@ -1374,14 +1374,14 @@ function LinkedDocsPanel({ issueId }: { issueId: string }) {
                 {link.document?.title || t('taskDetail.documentFallback', { id: link.documentId })}
               </span>
               {link.section && (
-                <span className="block truncate text-10">
+                <span className="block truncate text-3xs">
                   {t('taskDetail.sectionLabel', { title: link.section.title })}
                 </span>
               )}
             </span>
             <span
               className={cn(
-                'shrink-0 rounded px-1.5 py-0.5 text-10 font-medium',
+                'shrink-0 rounded px-1.5 py-0.5 text-3xs font-medium',
                 LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
               )}
             >

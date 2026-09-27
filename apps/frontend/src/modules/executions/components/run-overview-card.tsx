@@ -86,8 +86,8 @@ function StatCell({
 }) {
   return (
     <div className="rounded-xl bg-muted/40 px-3 py-2.5 text-center">
-      <div className={cn('text-sm font-bold', accent)}>{value}</div>
-      <div className="mt-0.5 text-10 text-content-text-muted">{label}</div>
+      <div className={cn('text-sm font-semibold', accent)}>{value}</div>
+      <div className="mt-0.5 text-3xs text-content-text-muted">{label}</div>
     </div>
   );
 }
@@ -144,12 +144,12 @@ export function RunOverviewCard({
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex items-center gap-2">
                 <StatusPillFor status={run.status} />
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-11 text-content-text-muted">
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-2xs text-content-text-muted">
                   {t(triggerKey)}
                 </span>
               </div>
               <h3 className="truncate text-sm font-semibold">{run.goal}</h3>
-              <p className="mt-0.5 text-12 text-content-text-muted">
+              <p className="mt-0.5 text-xs text-content-text-muted">
                 {run.project?.name ? `${run.project.name} · ` : ''}
                 {duration ? `${t('runDetails.duration')} ${duration}` : ''}
               </p>
@@ -168,11 +168,11 @@ export function RunOverviewCard({
             <span className="flex size-7 items-center justify-center rounded-full bg-accent-purple-light text-accent-purple">
               <Bot className="size-3.5" />
             </span>
-            <span className="text-12">
+            <span className="text-xs">
               {run.subjectName ?? t(`runDetails.subject.${run.subjectType}`)}
             </span>
             {provider ? (
-              <span className="rounded-full bg-muted/60 px-2 py-0.5 font-mono text-10 text-content-text-muted">
+              <span className="rounded-full bg-muted/60 px-2 py-0.5 font-mono text-3xs text-content-text-muted">
                 {provider}
               </span>
             ) : null}
@@ -197,7 +197,7 @@ export function RunOverviewCard({
           {/* 步骤构成条 */}
           {kinds.length > 0 ? (
             <div>
-              <p className="mb-1.5 text-11 text-content-text-muted">
+              <p className="mb-1.5 text-2xs text-content-text-muted">
                 {t('runDetails.card.breakdown')}
               </p>
               <div className="flex h-2 items-center gap-0.5 overflow-hidden rounded-full">
@@ -213,7 +213,7 @@ export function RunOverviewCard({
                 {kinds.map(({ kind, count }) => (
                   <div key={kind} className="flex items-center gap-1">
                     <span className={cn('size-2 rounded-full', KIND_BAR_CLASS[kind])} />
-                    <span className="text-10 text-content-text-muted">
+                    <span className="text-3xs text-content-text-muted">
                       {KIND_LABEL_KEY[kind]
                         ? t(KIND_LABEL_KEY[kind] as string)
                         : t(`runDetails.event.${kind}`)}{' '}
@@ -224,7 +224,7 @@ export function RunOverviewCard({
               </div>
             </div>
           ) : stepCount === 0 && stillActive ? (
-            <div className="flex items-center gap-2 text-11 text-content-text-muted">
+            <div className="flex items-center gap-2 text-2xs text-content-text-muted">
               <Skeleton className="h-2 w-40" />
               <span className="flex items-center gap-1">
                 <Link2 className="size-3" />
@@ -234,7 +234,7 @@ export function RunOverviewCard({
           ) : null}
 
           {/* 页脚 */}
-          <div className="flex items-center justify-between border-t pt-3 text-11 text-content-text-muted">
+          <div className="flex items-center justify-between border-t pt-3 text-2xs text-content-text-muted">
             <span className="truncate font-mono">{run.id}</span>
             <span className="shrink-0">
               {provider ?? '—'} ·{' '}

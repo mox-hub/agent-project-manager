@@ -167,7 +167,7 @@ function NewWorkspaceContent() {
         <div className="flex-1 overflow-y-auto px-4 py-4" data-ai-component="workspace.new.guide">
           {/* 当前工作区 */}
           <div className="mb-5 rounded-lg border border-border bg-background p-3">
-            <p className="text-11 font-semibold uppercase tracking-wider text-muted-foreground/60">
+            <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60">
               {t('workspace.currentWorkspace', '当前工作区')}
             </p>
             <div className="mt-1.5 flex items-center gap-2">
@@ -361,7 +361,7 @@ function NewWorkspaceContent() {
                             />
                           </div>
                           {pathInput && !pathValid ? (
-                            <p className="text-11 text-accent-red">
+                            <p className="text-2xs text-accent-red">
                               {t(
                                 'workspace.pathInvalid',
                                 '请输入绝对路径（如 C:\\dir 或 /home/user/dir）',

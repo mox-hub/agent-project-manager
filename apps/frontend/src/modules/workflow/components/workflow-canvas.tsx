@@ -162,7 +162,7 @@ function TerminalNode({ data }: NodeProps) {
   return (
     <div className="flex flex-col items-center">
       <StepHandles handleClass={NEUTRAL_STYLE.handleClass} />
-      <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-3 py-1 text-11 text-muted-foreground">
+      <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-3 py-1 text-2xs text-muted-foreground">
         {data.id === CANVAS_TERMINAL_START ? (
           <PlayCircle className="size-3" />
         ) : (
@@ -182,7 +182,8 @@ function StepNode({ data }: NodeProps) {
   return (
     <div
       className={cn(
-        'group flex w-64 items-start gap-2.5 rounded-lg border px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md',
+        // 悬停反馈用 ring 而非边框色：style.className 的 border-* 承载节点类型语义，改边框会抹掉类型色
+        'group flex w-64 items-start gap-2.5 rounded-lg border px-3 py-2.5 shadow-xs transition-shadow hover:ring-2 hover:ring-ring/30',
         style.className,
         data.selected && 'ring-2 ring-ring ring-offset-1',
       )}
@@ -192,9 +193,9 @@ function StepNode({ data }: NodeProps) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-medium">{step.title || step.id}</p>
         {step.desc ? (
-          <p className="mt-0.5 line-clamp-2 text-11 leading-relaxed opacity-75">{step.desc}</p>
+          <p className="mt-0.5 line-clamp-2 text-2xs leading-relaxed opacity-75">{step.desc}</p>
         ) : (
-          <p className="mt-0.5 text-11 opacity-75">{t(style.labelKey)}</p>
+          <p className="mt-0.5 text-2xs opacity-75">{t(style.labelKey)}</p>
         )}
       </div>
     </div>

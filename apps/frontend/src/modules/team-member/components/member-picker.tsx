@@ -185,7 +185,7 @@ export function MemberPicker({
                     />
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{m.displayName}</div>
-                      <div className="text-10 text-muted-foreground truncate">
+                      <div className="text-3xs text-muted-foreground truncate">
                         @{m.handle}
                         {m.user?.username ? ` · ${m.user.username}` : ''}
                         {m.aiModelConfig ? ` · ${m.aiModelConfig.name}` : ''}

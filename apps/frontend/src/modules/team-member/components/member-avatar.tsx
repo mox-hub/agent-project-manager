@@ -27,8 +27,8 @@ const NUMERIC_SIZES = {
 };
 
 const SIZE_CLASSES = {
-  xs: 'h-5 w-5 text-10',
-  sm: 'h-6 w-6 text-10',
+  xs: 'h-5 w-5 text-3xs',
+  sm: 'h-6 w-6 text-3xs',
   md: 'h-8 w-8 text-xs',
   lg: 'h-10 w-10 text-sm',
   xl: 'h-14 w-14 text-base',

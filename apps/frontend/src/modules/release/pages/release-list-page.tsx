@@ -285,7 +285,7 @@ export function ReleaseListPage() {
                       <TableCell>
                         <Badge
                           variant="secondary"
-                          className={cn('text-10', RELEASE_STATUS_TONE[r.status])}
+                          className={cn('text-3xs', RELEASE_STATUS_TONE[r.status])}
                         >
                           {t(statusLabelKey(r.status))}
                         </Badge>
@@ -293,10 +293,10 @@ export function ReleaseListPage() {
                       <TableCell className="text-xs text-content-text-secondary">
                         {r.milestone?.name || '—'}
                       </TableCell>
-                      <TableCell className="font-mono text-11 text-content-text-muted">
+                      <TableCell className="font-mono text-2xs text-content-text-muted">
                         {r.gitTag || '—'}
                       </TableCell>
-                      <TableCell className="text-11 text-content-text-muted">
+                      <TableCell className="text-2xs text-content-text-muted">
                         {r.releasedAt
                           ? new Date(r.releasedAt).toLocaleDateString()
                           : '—'}
@@ -430,7 +430,7 @@ function CreateReleaseDialog({
               </Button>
             </div>
             {basis ? (
-              <p className="text-11 text-content-text-muted">{basis}</p>
+              <p className="text-2xs text-content-text-muted">{basis}</p>
             ) : null}
           </div>
           <div className="space-y-1.5">

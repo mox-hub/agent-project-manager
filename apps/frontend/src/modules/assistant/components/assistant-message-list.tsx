@@ -131,7 +131,7 @@ export function AssistantMessageList() {
             <button
               type="button"
               onClick={() => clearError()}
-              className="mt-1 text-11 underline-offset-2 hover:underline"
+              className="mt-1 text-2xs underline-offset-2 hover:underline"
             >
               {t('assistant.chat.dismissError')}
             </button>

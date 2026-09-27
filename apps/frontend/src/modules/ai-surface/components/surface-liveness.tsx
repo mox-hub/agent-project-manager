@@ -23,7 +23,7 @@ export function SurfaceLiveness() {
     <div className="flex items-center gap-2">
       <div
         className={cn(
-          'flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-11',
+          'flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-2xs',
           TONE_LIGHT_CLASS[tone],
         )}
         title={
@@ -40,7 +40,7 @@ export function SurfaceLiveness() {
       {staleDropped > 0 && (
         <span
           className={cn(
-            'rounded-full px-2 py-0.5 font-mono text-10',
+            'rounded-full px-2 py-0.5 font-mono text-3xs',
             TONE_LIGHT_CLASS.warning,
           )}
           title="乱序（迟到）事件已被丢弃，未覆盖较新的状态；此处为累计条数"
@@ -52,7 +52,7 @@ export function SurfaceLiveness() {
       {/* 断开时**不**显示新鲜度：那会让"最后一次事件很新"读成"现在是活的"，属误导 */}
       {connected && lastEventAt !== null && (
         <span
-          className="font-mono text-10 text-muted-foreground"
+          className="font-mono text-3xs text-muted-foreground"
           title="最近一次收到实时事件的时刻"
         >
           {`最近事件 ${formatRelativeTime(new Date(lastEventAt))}`}

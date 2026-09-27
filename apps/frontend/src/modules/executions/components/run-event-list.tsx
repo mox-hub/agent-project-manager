@@ -142,7 +142,7 @@ function EntryBody({ entry }: { entry: RunEventEntry }) {
         isProse ? (
           <MarkdownView content={entry.text} className="mt-1 text-xs" />
         ) : (
-          <p className="mt-0.5 truncate font-mono text-11 text-content-text-muted">
+          <p className="mt-0.5 truncate font-mono text-2xs text-content-text-muted">
             {entry.text}
           </p>
         )
@@ -198,7 +198,7 @@ export function RunEventList({
             className="pl-8 text-xs"
           />
         </div>
-        <span className="shrink-0 whitespace-nowrap text-11 text-content-text-muted">
+        <span className="shrink-0 whitespace-nowrap text-2xs text-content-text-muted">
           {t('runDetails.stepCount', { count: filtered.length })}
         </span>
         {kindCounts.length > 0 ? (
@@ -211,7 +211,7 @@ export function RunEventList({
                   type="button"
                   onClick={() => setKindFilter(active ? null : kind)}
                   className={cn(
-                    'flex items-center gap-1 rounded px-1.5 py-0.5 text-11 transition-colors',
+                    'flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs transition-colors',
                     active
                       ? cn('font-medium', KIND_ICON_CLASS[kind])
                       : 'text-content-text-muted hover:bg-muted/60 hover:text-content-text-secondary',
@@ -253,7 +253,7 @@ export function RunEventList({
                     }}
                   >
                     {windowStart && entry.at ? (
-                      <span className="w-12 shrink-0 pt-1 font-mono text-10 text-content-text-muted">
+                      <span className="w-12 shrink-0 pt-1 font-mono text-3xs text-content-text-muted">
                         {formatOffset(entry.at, windowStart)}
                       </span>
                     ) : (
@@ -262,7 +262,7 @@ export function RunEventList({
                     <EntryIcon entry={entry} />
                     <EntryBody entry={entry} />
                     {entry.durationMs != null ? (
-                      <span className="shrink-0 pt-1 text-10 text-content-text-muted">
+                      <span className="shrink-0 pt-1 text-3xs text-content-text-muted">
                         {formatDurationMs(entry.durationMs)}
                       </span>
                     ) : null}

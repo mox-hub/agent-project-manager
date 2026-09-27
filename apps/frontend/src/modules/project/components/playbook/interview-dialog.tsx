@@ -258,12 +258,12 @@ export function InterviewDialog({
               </div>
               {result.mappings.length > 0 ? (
                 <div className="rounded-lg border border-border bg-content-bg-secondary/40 p-3">
-                  <p className="mb-2 text-11 font-medium text-content-text-muted">
+                  <p className="mb-2 text-2xs font-medium text-content-text-muted">
                     {t('project.playbookPage.interview.mappingTitle')}
                   </p>
                   <div className="space-y-1.5">
                     {result.mappings.map((m) => (
-                      <div key={m.questionId} className="text-11 leading-relaxed">
+                      <div key={m.questionId} className="text-2xs leading-relaxed">
                         <span className="text-content-text-muted">「{m.answerExcerpt}」</span>
                         {m.term ? (
                           <>

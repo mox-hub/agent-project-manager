@@ -58,14 +58,14 @@ export function ProfileSlotSection({
           {group.filled ? (
             <Badge
               variant="outline"
-              className="h-4 border-accent-green/30 bg-accent-green-light/50 px-1 text-10 text-accent-green"
+              className="h-4 border-accent-green/30 bg-accent-green-light/50 px-1 text-3xs text-accent-green"
             >
               {t('project.profilePage.filled')}
             </Badge>
           ) : (
             <Badge
               variant="outline"
-              className="h-4 border-dashed px-1 text-10 text-muted-foreground"
+              className="h-4 border-dashed px-1 text-3xs text-muted-foreground"
             >
               {t('project.profilePage.notFilled')}
             </Badge>
@@ -103,7 +103,7 @@ export function ProfileSlotSection({
       <div className="space-y-1.5">
         {group.drafts.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-11 font-medium text-accent-blue">
+            <p className="text-2xs font-medium text-accent-blue">
               {t('project.profilePage.draftArea', { count: group.drafts.length })}
             </p>
             {group.drafts.map(renderAtom)}

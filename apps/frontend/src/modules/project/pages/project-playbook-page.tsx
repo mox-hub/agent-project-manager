@@ -138,7 +138,7 @@ export function ProjectPlaybookPage() {
       description={t('project.playbookPage.description')}
       actions={
         mounted ? (
-          <Badge variant="outline" className="gap-1.5 text-11">
+          <Badge variant="outline" className="gap-1.5 text-2xs">
             <BookOpen className="size-3" />
             {status?.template?.name}
           </Badge>
@@ -168,7 +168,7 @@ export function ProjectPlaybookPage() {
                       {tp.description}
                     </p>
                   </div>
-                  <Badge variant="outline" className="shrink-0 text-10">
+                  <Badge variant="outline" className="shrink-0 text-3xs">
                     {tp.audience === 'novice'
                       ? t('project.playbookPage.audienceNovice')
                       : t('project.playbookPage.audienceMaintenance')}
@@ -178,7 +178,7 @@ export function ProjectPlaybookPage() {
                   {tp.stages.map((s) => (
                     <span
                       key={s.key}
-                      className="rounded bg-content-bg-secondary px-1.5 py-0.5 text-10 text-content-text-secondary"
+                      className="rounded bg-content-bg-secondary px-1.5 py-0.5 text-3xs text-content-text-secondary"
                     >
                       {s.name}
                     </span>
@@ -223,24 +223,24 @@ export function ProjectPlaybookPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-content-text">{stage.name}</p>
                     {stage.status === 'done' ? (
-                      <Badge className="gap-1 rounded-full bg-accent-green-light text-10 text-accent-green">
+                      <Badge className="gap-1 rounded-full bg-accent-green-light text-3xs text-accent-green">
                         <Check className="size-3" />
                         {t('project.playbookPage.statusDone')}
                       </Badge>
                     ) : null}
                     {stage.status === 'active' ? (
-                      <Badge className="gap-1 rounded-full bg-accent-blue-light text-10 text-accent-blue">
+                      <Badge className="gap-1 rounded-full bg-accent-blue-light text-3xs text-accent-blue">
                         <Clock className="size-3" />
                         {t('project.playbookPage.statusActive')}
                       </Badge>
                     ) : null}
                     {stage.status === 'skipped' ? (
-                      <Badge className="rounded-full bg-muted text-10 text-content-text-muted">
+                      <Badge className="rounded-full bg-muted text-3xs text-content-text-muted">
                         {t('project.playbookPage.statusSkipped')}
                       </Badge>
                     ) : null}
                     {stage.gateRejections > 0 ? (
-                      <span className="text-10 text-accent-red">
+                      <span className="text-3xs text-accent-red">
                         {t('project.playbookPage.gateRejections', { n: stage.gateRejections })}
                       </span>
                     ) : null}
@@ -249,12 +249,12 @@ export function ProjectPlaybookPage() {
                     {stage.purpose}
                   </p>
                   {stage.skippedReason ? (
-                    <p className="mt-1 text-11 text-content-text-muted">
+                    <p className="mt-1 text-2xs text-content-text-muted">
                       {t('project.playbookPage.skippedReason', { reason: stage.skippedReason })}
                     </p>
                   ) : null}
                   {stage.documentTitle ? (
-                    <p className="mt-1 flex items-center gap-1.5 text-11 text-content-text-secondary">
+                    <p className="mt-1 flex items-center gap-1.5 text-2xs text-content-text-secondary">
                       <FileText className="size-3 shrink-0 text-accent-blue" />
                       {stage.documentTitle}
                     </p>
@@ -264,7 +264,7 @@ export function ProjectPlaybookPage() {
                     <div className="mt-2.5 flex flex-wrap items-center gap-2">
                       {activeGatePending ? (
                         <>
-                          <Badge className="gap-1 rounded-full bg-accent-purple-light text-10 text-accent-purple">
+                          <Badge className="gap-1 rounded-full bg-accent-purple-light text-3xs text-accent-purple">
                             <ListChecks className="size-3" />
                             {t('project.playbookPage.gatePending')}
                           </Badge>
@@ -342,7 +342,7 @@ export function ProjectPlaybookPage() {
                 )}
               </div>
               {intake.isError ? (
-                <p className="mt-2 text-11 text-accent-red">
+                <p className="mt-2 text-2xs text-accent-red">
                   {t('project.playbookPage.intake.failed', {
                     reason: intake.error instanceof Error ? intake.error.message : '',
                   })}

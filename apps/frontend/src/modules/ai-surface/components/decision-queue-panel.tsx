@@ -125,9 +125,9 @@ export function DecisionQueuePanelView({
     >
       <div className="mb-2 flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-11 font-semibold tracking-tight text-foreground">该你了</h2>
+          <h2 className="text-2xs font-semibold tracking-tight text-foreground">该你了</h2>
           {!isPending && !isError && (
-            <span className="flex items-center gap-1 font-mono text-10">
+            <span className="flex items-center gap-1 font-mono text-3xs">
               <span
                 className={cn(
                   'rounded-full px-1.5 py-0.5',
@@ -146,19 +146,19 @@ export function DecisionQueuePanelView({
             </span>
           )}
         </div>
-        <span className="font-mono text-10 text-muted-foreground">{statusText}</span>
+        <span className="font-mono text-3xs text-muted-foreground">{statusText}</span>
       </div>
 
       {isError ? (
-        <p className="rounded-xl border border-foreground/10 bg-foreground/5 px-3 py-3 text-11 text-muted-foreground">
+        <p className="rounded-xl border border-foreground/10 bg-foreground/5 px-3 py-3 text-2xs text-muted-foreground">
           待你拍板的事项读取失败。不显示占位条目，以免被当成真实待办；请检查网络或稍后重试。
         </p>
       ) : isPending ? (
-        <p className="rounded-xl border border-foreground/10 bg-foreground/5 px-3 py-3 text-11 text-muted-foreground">
+        <p className="rounded-xl border border-foreground/10 bg-foreground/5 px-3 py-3 text-2xs text-muted-foreground">
           正在读取待办…
         </p>
       ) : queue.items.length === 0 ? (
-        <p className="rounded-xl border border-foreground/10 bg-foreground/5 px-3 py-3 text-11 text-muted-foreground">
+        <p className="rounded-xl border border-foreground/10 bg-foreground/5 px-3 py-3 text-2xs text-muted-foreground">
           没有待你拍板的事项
         </p>
       ) : (
@@ -182,7 +182,7 @@ export function DecisionQueuePanelView({
       )}
 
       {queue.hiddenCount > 0 && (
-        <p className="mt-1.5 px-1 font-mono text-10 text-muted-foreground">
+        <p className="mt-1.5 px-1 font-mono text-3xs text-muted-foreground">
           {`另有 ${queue.hiddenCount} 项未显示（本次取出 ${queue.items.length} / 共 ${queue.total}）`}
         </p>
       )}
@@ -240,21 +240,21 @@ function QueueRow({
         )}
         <span
           className={cn(
-            'shrink-0 rounded-full px-1.5 py-0.5 font-mono text-10',
+            'shrink-0 rounded-full px-1.5 py-0.5 font-mono text-3xs',
             isBlocking ? TONE_LIGHT_CLASS.danger : TONE_LIGHT_CLASS.default,
           )}
         >
           {decision.kind}
         </span>
-        <span className="min-w-0 flex-1 truncate text-11 text-foreground">{decision.title}</span>
+        <span className="min-w-0 flex-1 truncate text-2xs text-foreground">{decision.title}</span>
         {decision.projectName ? (
-          <span className="shrink-0 font-mono text-10 text-muted-foreground">
+          <span className="shrink-0 font-mono text-3xs text-muted-foreground">
             {decision.projectName}
           </span>
         ) : null}
         {/* 等待时长由真实 createdAt 推出；不可解析时给破折号，不猜 */}
         <span
-          className="shrink-0 font-mono text-10 text-muted-foreground"
+          className="shrink-0 font-mono text-3xs text-muted-foreground"
           title={`创建于 ${decision.createdAt}`}
         >
           {waiting ?? '—'}

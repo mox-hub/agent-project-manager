@@ -47,7 +47,7 @@ export function ProfileHealthChips({ profile }: { profile: ProfileResponse }) {
       {avgConfidence !== null ? (
         <Badge
           variant="outline"
-          className="gap-1 text-10"
+          className="gap-1 text-3xs"
           title={t('project.profilePage.avgConfidence')}
         >
           <Percent className="size-3" />
@@ -56,7 +56,7 @@ export function ProfileHealthChips({ profile }: { profile: ProfileResponse }) {
       ) : null}
       {staleSlots > 0 ? (
         <Badge
-          className="gap-1 rounded-full border border-accent-yellow/40 bg-accent-yellow-light text-10 text-accent-yellow"
+          className="gap-1 rounded-full border border-accent-yellow/40 bg-accent-yellow-light text-3xs text-accent-yellow"
           title={t('project.profilePage.staleHint')}
         >
           <Clock3 className="size-3" />

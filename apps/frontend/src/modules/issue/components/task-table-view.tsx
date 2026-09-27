@@ -216,7 +216,7 @@ export function TaskTableView({
                 {task.title}
               </span>
               {todoTotal > 0 ? (
-                <span className="shrink-0 rounded-full border border-border bg-muted/60 px-1.5 py-0.2 text-10 text-muted-foreground">
+                <span className="shrink-0 rounded-full border border-border bg-muted/60 px-1.5 py-0.2 text-3xs text-muted-foreground">
                   {todoDone}/{todoTotal}
                 </span>
               ) : null}
@@ -354,13 +354,13 @@ export function TaskTableView({
               {tags.slice(0, 2).map(({ tag }) => (
                 <span
                   key={tag.id}
-                  className="shrink-0 rounded-full border border-border bg-muted/50 px-1.5 py-0.2 text-10 text-muted-foreground"
+                  className="shrink-0 rounded-full border border-border bg-muted/50 px-1.5 py-0.2 text-3xs text-muted-foreground"
                 >
                   {tag.name}
                 </span>
               ))}
               {tags.length > 2 ? (
-                <span className="shrink-0 text-10 text-muted-foreground">+{tags.length - 2}</span>
+                <span className="shrink-0 text-3xs text-muted-foreground">+{tags.length - 2}</span>
               ) : null}
             </div>
           );

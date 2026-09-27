@@ -59,7 +59,7 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
         {result ? (
           <span
             className={cn(
-              'rounded-full border px-2 py-0.5 text-10 font-medium',
+              'rounded-full border px-2 py-0.5 text-3xs font-medium',
               VERDICT_STYLE[result.verdict],
             )}
           >
@@ -85,7 +85,7 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
       </div>
 
       {review.isError && (
-        <p className="mt-2 text-10 text-destructive">
+        <p className="mt-2 text-3xs text-destructive">
           {(review.error as Error | null)?.message ??
             t('decision.decompReview.failed')}
         </p>
@@ -94,13 +94,13 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
       {result && (
         <div className="mt-2 space-y-1.5">
           {result.summary && (
-            <p className="text-11 leading-relaxed text-content-text-secondary">
+            <p className="text-2xs leading-relaxed text-content-text-secondary">
               {result.summary}
             </p>
           )}
 
           {(result.coverage.uncovered.length > 0 || result.coverage.orphans.length > 0) && (
-            <div className="rounded-lg border border-accent-yellow/40 bg-accent-yellow-light/40 px-2.5 py-1.5 text-11 text-content-text-secondary">
+            <div className="rounded-lg border border-accent-yellow/40 bg-accent-yellow-light/40 px-2.5 py-1.5 text-2xs text-content-text-secondary">
               <AlertTriangle size={11} className="mr-1 inline shrink-0 text-accent-yellow" />
               {result.coverage.uncovered.length > 0 && (
                 <span>
@@ -128,15 +128,15 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
               key={f.index}
               className="rounded-lg border border-border bg-background px-2.5 py-1.5"
             >
-              <div className="flex items-center gap-1.5 text-11">
+              <div className="flex items-center gap-1.5 text-2xs">
                 <span className="font-mono text-content-text-muted">#{f.index + 1}</span>
                 {f.granularity !== 'ok' && (
-                  <span className="rounded bg-accent-yellow-light px-1.5 py-0.5 text-10 text-accent-yellow">
+                  <span className="rounded bg-accent-yellow-light px-1.5 py-0.5 text-3xs text-accent-yellow">
                     {t(`decision.decompReview.granularity.${f.granularity}`)}
                   </span>
                 )}
                 {f.testability === 'weak' && (
-                  <span className="rounded bg-accent-red-light px-1.5 py-0.5 text-10 text-accent-red">
+                  <span className="rounded bg-accent-red-light px-1.5 py-0.5 text-3xs text-accent-red">
                     {t('decision.decompReview.weakTestability')}
                   </span>
                 )}
@@ -145,7 +145,7 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
                 </span>
               </div>
               {f.suggestion && (
-                <p className="mt-0.5 pl-6 text-10 text-content-text-muted">
+                <p className="mt-0.5 pl-6 text-3xs text-content-text-muted">
                   {t('decision.decompReview.suggestion')}: {f.suggestion}
                 </p>
               )}
@@ -157,14 +157,14 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
               (f) => f.granularity === 'ok' && f.testability === 'ok',
             ).length;
             return okCount > 0 ? (
-              <div className="flex items-center gap-1.5 px-1 text-10 text-content-text-muted">
+              <div className="flex items-center gap-1.5 px-1 text-3xs text-content-text-muted">
                 <CheckCircle2 size={11} className="shrink-0 text-accent-green" />
                 {t('decision.decompReview.okSummary', { count: okCount })}
               </div>
             ) : null;
           })()}
 
-          <p className="pt-0.5 text-10 text-content-text-muted">
+          <p className="pt-0.5 text-3xs text-content-text-muted">
             {t('decision.decompReview.disclaimer')}
           </p>
         </div>

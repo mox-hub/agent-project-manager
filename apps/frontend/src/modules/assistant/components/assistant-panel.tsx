@@ -112,7 +112,7 @@ function AssistantChatFooter({
       {(runEntries ?? []).map((entry) => (
         <AssistantRunLine key={entry.runId} entry={entry} projectId={projectId} />
       ))}
-      <div className="flex items-center gap-2 text-11 text-content-text-muted">
+      <div className="flex items-center gap-2 text-2xs text-content-text-muted">
         <Clock className="size-3 shrink-0" />
         <span className="truncate">{t('decision.digestNote')}</span>
       </div>
@@ -204,13 +204,13 @@ export function AssistantPanel() {
       {/* 侧边堆叠决策卡片栏：不占用主对话空间，伴随式实体手卡卡片堆（保持高质感毛玻璃悬浮） */}
       {hasDecisions && showDecisionSide && (
         <div
-          className="assistant-decision-wing flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-2xl backdrop-blur-xl shrink-0 animate-in fade-in-0 slide-in-from-right-2 duration-150"
+          className="assistant-decision-wing flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-xs backdrop-blur-xl shrink-0 animate-in fade-in-0 slide-in-from-right-2 duration-normal"
           data-ai-component="assistant.decision-wing"
         >
           {/* 卡片堆顶部导航条 */}
           <div className="flex h-12 shrink-0 items-center justify-between border-b border-border/60 px-4 bg-muted/20">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-accent-purple-light text-accent-purple shadow-2xs">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-accent-purple-light text-accent-purple shadow-xs">
                 <Layers className="size-3.5" />
               </span>
               <span className="text-xs font-semibold text-foreground truncate">
@@ -218,7 +218,7 @@ export function AssistantPanel() {
               </span>
               <span
                 className={cn(
-                  'rounded-full px-1.5 py-0.2 text-10 font-bold tabular-nums shrink-0',
+                  'rounded-full px-1.5 py-0.2 text-3xs font-semibold tabular-nums shrink-0',
                   hasBlocking
                     ? 'bg-accent-red text-primary-foreground animate-pulse'
                     : 'bg-accent-purple-light text-accent-purple',
@@ -229,7 +229,7 @@ export function AssistantPanel() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-10 text-muted-foreground font-mono tabular-nums">
+              <span className="text-3xs text-muted-foreground font-mono tabular-nums">
                 {deckProgress.current} / {stripItems.length}
               </span>
               <button
@@ -267,7 +267,7 @@ export function AssistantPanel() {
             data-ai-action="assistant.decision.expand.click"
           >
             {/* 顶部：立体层叠卡片图标 */}
-            <div className="flex size-7 items-center justify-center rounded-lg bg-accent-purple-light text-accent-purple shadow-2xs group-hover:scale-110 transition-transform">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-accent-purple-light text-accent-purple shadow-xs group-hover:scale-110 transition-transform">
               <Layers className="size-4" />
             </div>
 
@@ -275,7 +275,7 @@ export function AssistantPanel() {
             <div className="my-2.5 flex flex-col items-center gap-2">
               <span
                 className={cn(
-                  'flex size-5 items-center justify-center rounded-full text-10 font-bold tabular-nums shadow-xs',
+                  'flex size-5 items-center justify-center rounded-full text-3xs font-semibold tabular-nums shadow-xs',
                   hasBlocking
                     ? 'bg-accent-red text-primary-foreground animate-pulse'
                     : 'bg-accent-purple text-primary-foreground',
@@ -285,7 +285,7 @@ export function AssistantPanel() {
               </span>
 
               {/* 竖排精致文字：「待 决 卡 片」 */}
-              <span className="vertical-writing-mode text-11 font-medium tracking-widest text-muted-foreground group-hover:text-foreground transition-colors select-none py-1">
+              <span className="vertical-writing-mode text-2xs font-medium tracking-widest text-muted-foreground group-hover:text-foreground transition-colors select-none py-1">
                 待决卡片
               </span>
             </div>
@@ -301,7 +301,7 @@ export function AssistantPanel() {
       {/* 主对话框面板 */}
       <div
         className={cn(
-          'relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-2xl backdrop-blur-xl',
+          'relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-background/95 shadow-xs backdrop-blur-xl',
           assistantExpanded
             ? 'flex-1 min-w-0'
             : 'w-120 max-w-[calc(100vw-2rem)]',
@@ -316,7 +316,7 @@ export function AssistantPanel() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-content-text">{personaName}</p>
-            <p className="flex items-center gap-1.5 truncate text-11 text-content-text-muted">
+            <p className="flex items-center gap-1.5 truncate text-2xs text-content-text-muted">
               <AssistantStatusDot state={status.state} />
               <span className={STATE_TEXT[status.state]}>{t(`assistant.status.${status.state}`)}</span>
               <span aria-hidden="true">·</span>
@@ -338,7 +338,7 @@ export function AssistantPanel() {
               title={showDecisionSide ? '收起决策侧栏' : '重新展开待办决策侧栏'}
             >
               <Inbox className="size-3.5 text-accent-purple shrink-0" />
-              <span className="text-10 leading-none tabular-nums">
+              <span className="text-3xs leading-none tabular-nums">
                 {showDecisionSide ? '收起待办' : `待办 ${stripItems.length}`}
               </span>
             </button>

@@ -320,14 +320,14 @@ export default function TeamDetailPage() {
                 rows={1}
                 placeholder={t('teamDetail.unnamedTitle', '未命名团队')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-2xl font-bold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                className="w-full text-2xl font-semibold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
               />
             </div>
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
               <span className="font-mono">@{team.slug}</span>
               <span className="opacity-50">•</span>
               {team.status === 'archived' ? (
-                <Badge variant="secondary" className="text-10">
+                <Badge variant="secondary" className="text-3xs">
                   {t('teams.status.archived', '已归档')}
                 </Badge>
               ) : (
@@ -347,7 +347,7 @@ export default function TeamDetailPage() {
               {(team.tags ?? []).length > 0 && (
                 <span className="flex flex-wrap items-center gap-1">
                   {(team.tags ?? []).map((tag) => (
-                    <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-10">
+                    <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-3xs">
                       {tag}
                     </Badge>
                   ))}
@@ -358,7 +358,7 @@ export default function TeamDetailPage() {
 
           {/* 描述区：热编辑 */}
           <div className="shrink-0 border-b px-6 pb-4 pt-4">
-            <label className="mb-2 block text-10 font-semibold uppercase tracking-wider text-muted-foreground">
+            <label className="mb-2 block text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t('teamDetail.description', '描述')}
             </label>
             <AutoSizeTextarea
@@ -449,7 +449,7 @@ export default function TeamDetailPage() {
                                       <div className="truncate text-sm font-medium">
                                         {tm.member?.displayName}
                                       </div>
-                                      <div className="truncate text-10 text-muted-foreground">
+                                      <div className="truncate text-3xs text-muted-foreground">
                                         @{tm.member?.handle}
                                       </div>
                                     </div>
@@ -459,15 +459,15 @@ export default function TeamDetailPage() {
                             </TableCell>
                             <TableCell className="p-2">
                               {tm.member?.type === 'ai_agent' ? (
-                                <Badge variant="secondary" className="text-10">AI</Badge>
+                                <Badge variant="secondary" className="text-3xs">AI</Badge>
                               ) : (
-                                <Badge variant="outline" className="text-10">
+                                <Badge variant="outline" className="text-3xs">
                                   {t('members.filter.human', '人类')}
                                 </Badge>
                               )}
                             </TableCell>
                             <TableCell className="p-2">
-                              <Badge variant="outline" className="text-10">{tm.role}</Badge>
+                              <Badge variant="outline" className="text-3xs">{tm.role}</Badge>
                             </TableCell>
                             <TableCell className="p-2 text-xs text-muted-foreground">
                               {new Date(tm.joinedAt).toLocaleDateString()}
@@ -740,17 +740,17 @@ export default function TeamDetailPage() {
                             <TableRow key={inv.id}>
                               <TableCell className="p-2">{inv.email || '—'}</TableCell>
                               <TableCell className="p-2">
-                                <Badge variant="outline" className="text-10">{inv.role}</Badge>
+                                <Badge variant="outline" className="text-3xs">{inv.role}</Badge>
                               </TableCell>
                               <TableCell className="p-2">
                                 <Badge
                                   variant="secondary"
                                   className={
                                     inv.status === 'accepted'
-                                      ? 'text-10 bg-accent-green/10 text-accent-green'
+                                      ? 'text-3xs bg-accent-green/10 text-accent-green'
                                       : dead
-                                        ? 'text-10 bg-muted text-muted-foreground'
-                                        : 'text-10 bg-accent-yellow/10 text-accent-yellow'
+                                        ? 'text-3xs bg-muted text-muted-foreground'
+                                        : 'text-3xs bg-accent-yellow/10 text-accent-yellow'
                                   }
                                 >
                                   {inv.status}
@@ -768,7 +768,7 @@ export default function TeamDetailPage() {
                                       navigator.clipboard.writeText(link);
                                       toast.success(t('teamDetail.invites.linkCopied', '邀请链接已复制'));
                                     }}
-                                    className="block max-w-55 truncate text-left font-mono text-11 text-accent-blue hover:underline"
+                                    className="block max-w-55 truncate text-left font-mono text-2xs text-accent-blue hover:underline"
                                   >
                                     /invite/{inv.token.slice(0, 10)}…
                                   </button>
@@ -779,7 +779,7 @@ export default function TeamDetailPage() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 px-2 text-11 text-accent-red"
+                                    className="h-6 px-2 text-2xs text-accent-red"
                                     onClick={async () => {
                                       await revokeTeamInvite(teamId!, inv.id);
                                       refetchInvites();

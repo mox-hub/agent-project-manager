@@ -431,10 +431,10 @@ export function DocumentViewPage() {
             <div className="flex items-start justify-between gap-4 px-6 py-5">
               <div className="min-w-0">
                 <div className="mb-3 flex items-center gap-3">
-                <h1 className="truncate text-3xl font-semibold leading-tight text-foreground">{document.title}</h1>
+                <h1 className="truncate text-2xl font-semibold leading-tight text-foreground">{document.title}</h1>
                 <ApprovalStatus status={document.status as 'pending' | 'approved' | 'rejected' | 'draft' | 'reviewing' | 'published'} />
                 {document.docRole && (
-                  <Badge variant="outline" className="shrink-0 font-normal text-11">
+                  <Badge variant="outline" className="shrink-0 font-normal text-2xs">
                     {document.docRole}
                   </Badge>
                 )}
@@ -444,7 +444,7 @@ export function DocumentViewPage() {
                     onClick={() => copyToClipboard(apmAddress)}
                     title="复制 apm:// 地址"
                     data-ai-component="document.document-view.apm-address"
-                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 font-mono text-11 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 font-mono text-2xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
                     {isCopied ? <Check size={12} /> : <Copy size={12} />}
                     {apmAddress}

@@ -965,7 +965,7 @@ export function TasksPage() {
             onClick={toggleAiFilter}
             aria-pressed={isAiFiltering}
             className={cn(
-              "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-all select-none shadow-2xs",
+              "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-all select-none shadow-xs",
               isAiFiltering
                 ? "border border-accent-purple bg-accent-purple text-white shadow-xs font-semibold"
                 : totalActiveAiCount > 0

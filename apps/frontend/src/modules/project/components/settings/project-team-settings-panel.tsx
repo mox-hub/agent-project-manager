@@ -85,7 +85,7 @@ export function ProjectTeamSettingsPanel({ projectId }: { projectId: string }) {
                   />
                   <span
                     className={cn(
-                      'w-10 text-right font-mono text-10 font-medium',
+                      'w-10 text-right font-mono text-3xs font-medium',
                       workloadColor(member.percentage),
                     )}
                   >

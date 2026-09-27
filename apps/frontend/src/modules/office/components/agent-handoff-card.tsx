@@ -37,19 +37,19 @@ export function AgentHandoffCard({
     switch (status) {
       case 'passed':
         return (
-          <span className="inline-flex items-center gap-1 rounded bg-accent-green-light px-1.5 py-0.5 text-10 font-medium text-accent-green">
+          <span className="inline-flex items-center gap-1 rounded bg-accent-green-light px-1.5 py-0.5 text-3xs font-medium text-accent-green">
             <CheckCircle2 className="size-3" /> {t('office.handoff.gatePassed')}
           </span>
         );
       case 'blocked':
         return (
-          <span className="inline-flex items-center gap-1 rounded bg-accent-red-light px-1.5 py-0.5 text-10 font-medium text-accent-red">
+          <span className="inline-flex items-center gap-1 rounded bg-accent-red-light px-1.5 py-0.5 text-3xs font-medium text-accent-red">
             <ShieldAlert className="size-3" /> {t('office.handoff.gateBlocked')}
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 rounded bg-muted/60 px-1.5 py-0.5 text-10 font-medium text-content-text-muted">
+          <span className="inline-flex items-center gap-1 rounded bg-muted/60 px-1.5 py-0.5 text-3xs font-medium text-content-text-muted">
             <Clock className="size-3" /> {t('office.handoff.gatePending')}
           </span>
         );
@@ -70,15 +70,15 @@ export function AgentHandoffCard({
           <span className="inline-flex items-center gap-1 rounded-md bg-muted/50 px-2 py-0.5 font-medium text-content-text">
             <Sparkles className="size-3 text-accent-purple" />
             {fromAgent.name}
-            <span className="text-10 text-content-text-muted">({fromAgent.role})</span>
+            <span className="text-3xs text-content-text-muted">({fromAgent.role})</span>
           </span>
           <ArrowRight className="size-3 text-content-text-muted shrink-0" />
           <span className="inline-flex items-center gap-1 rounded-md bg-muted/50 px-2 py-0.5 font-medium text-content-text">
             {toAgent.name}
-            <span className="text-10 text-content-text-muted">({toAgent.role})</span>
+            <span className="text-3xs text-content-text-muted">({toAgent.role})</span>
           </span>
         </div>
-        <span className="rounded bg-accent-blue-light/60 px-1.5 py-0.5 text-10 font-medium text-accent-blue">
+        <span className="rounded bg-accent-blue-light/60 px-1.5 py-0.5 text-3xs font-medium text-accent-blue">
           {t('office.handoff.badge')}
         </span>
       </div>
@@ -88,7 +88,7 @@ export function AgentHandoffCard({
         <div className="flex items-center gap-1.5 text-sm font-medium text-content-text">
           <FileCode className="size-4 shrink-0 text-accent-blue" />
           <span className="truncate">{artifact.title}</span>
-          <span className="rounded bg-muted/60 px-1 font-mono text-10 text-content-text-muted">
+          <span className="rounded bg-muted/60 px-1 font-mono text-3xs text-content-text-muted">
             {artifact.type}
           </span>
         </div>
@@ -100,8 +100,8 @@ export function AgentHandoffCard({
       </div>
 
       {/* 治理门禁横排 */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg bg-content-bg-secondary/40 p-2 text-11">
-        <span className="text-10 font-semibold text-content-text-muted uppercase">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg bg-content-bg-secondary/40 p-2 text-2xs">
+        <span className="text-3xs font-semibold text-content-text-muted uppercase">
           {t('office.handoff.gates')}
         </span>
         {gates.map((g) => (

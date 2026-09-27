@@ -21,8 +21,10 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
   const { t } = useTranslation();
   const memberCount = team.memberCount ?? team._count?.members ?? 0;
 
+  // 悬停反馈用 ring 而非阴影（宪法 §3.6：全站唯一阴影档 shadow-xs）：
+  // Card 自带 ring-1 ring-border/50，悬停把环色加深即可，无需新增阴影。
   return (
-    <Card className="group transition-shadow hover:shadow-md" data-ai-entity={`team:${team.id}`}>
+    <Card className="group transition-shadow hover:ring-border" data-ai-entity={`team:${team.id}`}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex min-w-0 items-center gap-3">
@@ -49,7 +51,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
             </div>
           </div>
           {team.status === 'archived' && (
-            <Badge variant="secondary" className="text-10">
+            <Badge variant="secondary" className="text-3xs">
               {t('teams.status.archived', '已归档')}
             </Badge>
           )}
@@ -62,7 +64,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
         {(team.tags ?? []).length > 0 && (
           <div className="mb-3 flex flex-wrap gap-1">
             {(team.tags ?? []).slice(0, 4).map((tag) => (
-              <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-10">
+              <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-3xs">
                 {tag}
               </Badge>
             ))}
@@ -78,7 +80,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 px-2 text-10"
+                className="h-6 px-2 text-3xs"
                 title={t('teams.archive', '归档')}
                 onClick={() => onArchive(team)}
               >

@@ -105,7 +105,7 @@ function ExecutionStatusBadge({ status }: { status: ExecutionStatus }) {
   return (
     <Badge
       variant="outline"
-      className={cn('shrink-0 border-transparent px-1.5 text-10 font-medium', STATUS_BADGE[status])}
+      className={cn('shrink-0 border-transparent px-1.5 text-3xs font-medium', STATUS_BADGE[status])}
     >
       {t(STATUS_LABEL_KEY[status])}
     </Badge>
@@ -190,7 +190,7 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
           </DropdownMenu>
         )}
       </div>
-      <div className="mt-1 flex items-center gap-2 pl-6 text-11 text-muted-foreground">
+      <div className="mt-1 flex items-center gap-2 pl-6 text-2xs text-muted-foreground">
         {subjectName && <span className="truncate">{subjectName}</span>}
         {subjectName && (estimate || actual) && <span className="opacity-50">·</span>}
         {estimate && <span className="shrink-0">{t('taskDetail.execItemsEstimateShort', { value: estimate })}</span>}
@@ -212,7 +212,7 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
           <Button
             variant="secondary"
             size="xs"
-            className="h-5 px-1.5 text-10"
+            className="h-5 px-1.5 text-3xs"
             disabled={disabled}
             onClick={() => onTransition(execution, primary)}
           >
@@ -349,7 +349,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
           <ListChecks className="size-3" />
           {t('taskDetail.executionItemsSection')}
           {executions.length > 0 && (
-            <span className="text-10 font-normal">({executions.length})</span>
+            <span className="text-3xs font-normal">({executions.length})</span>
           )}
         </div>
         <div className="flex items-center gap-0.5">
@@ -384,7 +384,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
       {/* 分区内容：添加表单 + 执行项列表（grid-rows 动画展开 / 收起） */}
       <div
         className={cn(
-          'grid transition-[grid-template-rows] duration-300 ease-out',
+          'grid transition-[grid-template-rows] duration-slow ease-out',
           collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
         )}
       >

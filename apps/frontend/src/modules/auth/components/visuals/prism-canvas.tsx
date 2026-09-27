@@ -26,7 +26,7 @@ export function PrismCanvas({ isDark }: PrismCanvasProps) {
     <div className="relative h-full w-full overflow-hidden select-none">
       {/* 极简深邃/高透背景 */}
       <div
-        className="absolute inset-0 transition-colors duration-500"
+        className="absolute inset-0 transition-colors duration-slow"
         style={{
           background: `radial-gradient(circle at 45% 50%, ${bgGradientEnd} 0%, ${bgGradientStart} 100%)`,
         }}
@@ -182,7 +182,7 @@ export function PrismCanvas({ isDark }: PrismCanvasProps) {
 
         {/* 3. 大幅放大的 3D 光学三棱柱 (透视饱满，晶莹剔透) */}
         <g
-          className="transition-transform duration-700 hover:scale-105"
+          className="transition-transform duration-slow hover:scale-105"
           style={{ transformOrigin: '215px 225px' }}
         >
           {/* 背侧暗部投影 */}

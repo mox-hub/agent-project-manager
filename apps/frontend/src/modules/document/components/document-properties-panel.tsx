@@ -240,7 +240,7 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
         icon={<SlidersHorizontal size={14} />}
         action={
           properties.length > 0 ? (
-            <span className="text-10 text-muted-foreground">({properties.length})</span>
+            <span className="text-3xs text-muted-foreground">({properties.length})</span>
           ) : undefined
         }
       >

@@ -26,7 +26,7 @@ function formatJoinDate(iso: string): string {
  * 「AGENT PROJECT MANAGER · PEOPLE + AI COLLEAGUES」绕品牌 logo，
  * 下承显示名 / 成员编号 / 入职日期 / 手写体签名。
  * 纯展示仪式件（CAP-A-22 裁决 D2：下载/复制/分享进候补）；
- * 环形文字与编号为纯 Latin（text-11 档豁免见宪法 §2.4）。
+ * 环形文字与编号为纯 Latin（text-2xs 档豁免见宪法 §2.4）。
  */
 export function MemberCard({ displayName, memberNo, joinedAt, className }: MemberCardProps) {
   const { t } = useTranslation();
@@ -35,7 +35,7 @@ export function MemberCard({ displayName, memberNo, joinedAt, className }: Membe
   return (
     <div
       className={cn(
-        'bg-card relative w-84 overflow-hidden rounded-xl border border-border shadow-md',
+        'bg-card relative w-84 overflow-hidden rounded-xl border border-border shadow-xs',
         className,
       )}
     >
@@ -80,11 +80,11 @@ export function MemberCard({ displayName, memberNo, joinedAt, className }: Membe
         <div className="mt-7 w-full space-y-1.5 border-t border-border pt-5">
           <div className="truncate text-xl font-semibold text-foreground">{displayName}</div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-11 tracking-wide text-muted-foreground">
+            <span className="font-mono text-2xs tracking-wide text-muted-foreground">
               {t('auth.badgeNoLabel')} {memberNo}
             </span>
             {joinDate && (
-              <span className="font-mono text-11 text-muted-foreground">
+              <span className="font-mono text-2xs text-muted-foreground">
                 {t('auth.badgeTimeLabel')} {joinDate}
               </span>
             )}

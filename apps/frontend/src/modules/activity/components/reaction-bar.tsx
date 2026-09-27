@@ -86,7 +86,7 @@ function ReactionChip({
       )}
     >
       <span className="text-sm leading-none">{group.emoji}</span>
-      {group.count > 1 && <span className="text-11 font-medium">{group.count}</span>}
+      {group.count > 1 && <span className="text-2xs font-medium">{group.count}</span>}
       <span className="sr-only">{t('activity.reaction.reacted', { count: group.count })}</span>
     </button>
   );

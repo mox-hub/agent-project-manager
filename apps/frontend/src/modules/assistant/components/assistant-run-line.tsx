@@ -118,16 +118,16 @@ export function AssistantRunLine({
               ? t('assistant.run.failed')
               : t('assistant.run.completed')}
         </p>
-        <p className="mt-0.5 line-clamp-2 text-11 text-content-text-muted">{entry.content}</p>
+        <p className="mt-0.5 line-clamp-2 text-2xs text-content-text-muted">{entry.content}</p>
         {isFailed && data?.error ? (
-          <p className="mt-0.5 break-words text-11">{data.error}</p>
+          <p className="mt-0.5 break-words text-2xs">{data.error}</p>
         ) : null}
         <div className="mt-1 flex items-center gap-1">
           <Button
             type="button"
             variant="ghost"
             onClick={() => setDetailOpen(true)}
-            className="h-5 gap-1 px-1 text-11 text-accent-blue underline-offset-2 hover:underline"
+            className="h-5 gap-1 px-1 text-2xs text-accent-blue underline-offset-2 hover:underline"
           >
             <FileText className="size-3" />
             {t('runDetails.viewDetail')}
@@ -136,7 +136,7 @@ export function AssistantRunLine({
             type="button"
             variant="ghost"
             onClick={() => navigate('/app/executions')}
-            className="h-5 gap-1 px-1 text-11 text-content-text-muted underline-offset-2 hover:underline"
+            className="h-5 gap-1 px-1 text-2xs text-content-text-muted underline-offset-2 hover:underline"
           >
             <ExternalLink className="size-3" />
             {t('assistant.run.viewDetail')}
@@ -147,7 +147,7 @@ export function AssistantRunLine({
               variant="ghost"
               disabled={retry.isPending}
               onClick={() => retry.mutate()}
-              className="ml-auto h-5 gap-1 px-1 text-11 underline-offset-2 hover:underline"
+              className="ml-auto h-5 gap-1 px-1 text-2xs underline-offset-2 hover:underline"
             >
               {retry.isPending ? (
                 <Spinner size="sm" className="size-3" />

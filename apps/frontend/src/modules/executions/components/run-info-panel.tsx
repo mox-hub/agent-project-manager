@@ -33,7 +33,7 @@ function InfoRow({
       <span
         className={cn(
           'min-w-0 flex-1 text-content-text',
-          mono && 'font-mono text-11',
+          mono && 'font-mono text-2xs',
           wrap && 'break-all leading-relaxed',
           hl && 'font-mono font-medium text-accent-green',
         )}
@@ -122,11 +122,11 @@ export function RunInfoPanel({
 
       {modelRows.length > 0 ? (
         <Section>
-          <p className="text-10 font-semibold uppercase tracking-wider text-content-text-muted">
+          <p className="text-3xs font-semibold uppercase tracking-wider text-content-text-muted">
             {t('runDetails.byModel')}
           </p>
           {modelRows.map(([model, stat]) => (
-            <div key={model} className="flex items-center justify-between gap-2 text-11">
+            <div key={model} className="flex items-center justify-between gap-2 text-2xs">
               <span className="min-w-0 truncate font-mono text-content-text-secondary">{model}</span>
               <span className="shrink-0 font-mono text-content-text-muted">
                 {formatTokens(stat.tokens) ?? '0'} · {formatCost(stat.cost) ?? '$0.00'}

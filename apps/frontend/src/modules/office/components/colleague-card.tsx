@@ -77,7 +77,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
             </p>
             <TrustLevelBadge level={colleague.trustLevel} />
           </div>
-          <p className="flex items-center gap-1.5 truncate text-11 text-content-text-muted">
+          <p className="flex items-center gap-1.5 truncate text-2xs text-content-text-muted">
             <span className={cn('inline-block size-1.5 rounded-full', STATE_DOT[colleague.status])} />
             <span className={STATE_TEXT[colleague.status]}>
               {t(`office.status.${colleague.status}`)}
@@ -93,7 +93,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
         {/* 待决数：blocking 优先展示 */}
         {colleague.blocking > 0 && (
           <span
-            className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-red px-1.5 text-10 font-semibold text-white tabular-nums"
+            className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-red px-1.5 text-3xs font-semibold text-white tabular-nums"
             title={t('office.card.blockingTitle')}
           >
             {colleague.blocking}
@@ -115,7 +115,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
             {t('office.card.noActiveRun')}
           </p>
         )}
-        <p className="mt-0.5 truncate text-10 text-content-text-muted">
+        <p className="mt-0.5 truncate text-3xs text-content-text-muted">
           {colleague.lastRunAt
             ? t('office.card.lastRun', {
                 time: formatRelativeTime(colleague.lastRunAt, t),
@@ -129,7 +129,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
 
       {/* 还能接多少活：容量条 + 可接活度 */}
       <div>
-        <div className="flex items-center justify-between text-11 text-content-text-muted">
+        <div className="flex items-center justify-between text-2xs text-content-text-muted">
           <span>
             {t('office.card.capacity', {
               active: capacity.activeRuns,
@@ -151,7 +151,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
             style={{ width: `${Math.max(4, capacity.loadPct)}%` }}
           />
         </div>
-        <p className="mt-1 text-10 text-content-text-muted">
+        <p className="mt-1 text-3xs text-content-text-muted">
           {t('office.card.weeklyUsage', {
             tokens: capacity.weeklyTokens.toLocaleString(),
             cost: capacity.weeklyCostUsd.toFixed(2),
@@ -164,7 +164,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
 
       {/* 待决摘要 + 动作 */}
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-11 text-content-text-muted">
+        <p className="truncate text-2xs text-content-text-muted">
           {t('office.card.decisions', { blocking: colleague.blocking, advisory: colleague.advisory })}
         </p>
         <div className="flex shrink-0 items-center gap-1.5">

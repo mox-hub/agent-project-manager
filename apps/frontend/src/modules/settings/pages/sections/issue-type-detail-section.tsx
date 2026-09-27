@@ -667,7 +667,7 @@ function StatusesTab() {
                     <Badge variant="secondary">{t('settings.defaultType', '默认')}</Badge>
                   ) : null}
                   <span className="flex-1" />
-                  <span className="font-mono text-10 text-content-text-muted">{status.key}</span>
+                  <span className="font-mono text-3xs text-content-text-muted">{status.key}</span>
                   {status.isFinal ? (
                     <Badge variant="outline">{t('settings.statusFinalBadge', '终态')}</Badge>
                   ) : null}

@@ -137,7 +137,7 @@ export function InterviewChat({
               key={choice}
               variant="outline"
               size="xs"
-              className="h-6 px-2 text-11"
+              className="h-6 px-2 text-2xs"
               disabled={reachedMaxTurns}
               onClick={() => send(choice)}
             >

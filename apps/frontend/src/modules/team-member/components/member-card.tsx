@@ -26,8 +26,10 @@ export interface MemberCardProps {
 export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
   const { t } = useTranslation();
 
+  // 悬停反馈用 ring 而非阴影（宪法 §3.6：全站唯一阴影档 shadow-xs）：
+  // Card 自带 ring-1 ring-border/50，悬停把环色加深即可，无需新增阴影。
   return (
-    <Card className="gap-0 py-0 transition-shadow hover:shadow-md" data-ai-entity={`member:${member.id}`}>
+    <Card className="gap-0 py-0 transition-shadow hover:ring-border" data-ai-entity={`member:${member.id}`}>
       <CardContent className="px-3.5 py-2.5">
         <div className="flex items-start gap-3">
           <MemberCardPopover
@@ -52,7 +54,7 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
                 <Bot className="size-3.5 shrink-0 text-accent-purple" />
               )}
             </div>
-            <p className="truncate text-11 text-muted-foreground">
+            <p className="truncate text-2xs text-muted-foreground">
               @{member.handle}
               {member.title ? ` · ${member.title}` : ''}
             </p>
@@ -60,14 +62,14 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
               {member.isOnline && (
                 <span className="size-1.5 rounded-full bg-accent-green" />
               )}
-              <span className="text-10 text-muted-foreground">
+              <span className="text-3xs text-muted-foreground">
                 {member.status === 'active'
                   ? member.isOnline
                     ? t('members.status.online', '在线')
                     : t('members.status.active', '活跃')
                   : member.status}
               </span>
-              <span className="font-mono text-10 text-muted-foreground/70">
+              <span className="font-mono text-3xs text-muted-foreground/70">
                 {member.shortId}
               </span>
             </div>
@@ -83,13 +85,13 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
 
         <div className="mt-2 flex flex-wrap gap-1">
           {(member.tags ?? []).slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-10">
+            <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-3xs">
               {tag}
             </Badge>
           ))}
         </div>
 
-        <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2 text-11">
+        <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2 text-2xs">
           <span className="truncate text-muted-foreground">
             {member.type === 'human'
               ? member.user?.username ?? t('members.standaloneUser', '独立用户')
@@ -99,7 +101,7 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-5 px-1.5 text-10 text-accent-red hover:text-accent-red"
+              className="h-5 px-1.5 text-3xs text-accent-red hover:text-accent-red"
               onClick={() => onDeactivate?.(member)}
             >
               {t('members.deactivate', '停用')}

@@ -233,7 +233,7 @@ export function HelpPage() {
               >
                 ← {t('help.backTo', { section: currentSection ? t(`help.sections.${currentSection.id}`) : '' })}
               </button>
-              <h2 className="text-2xl font-bold mb-2">
+              <h2 className="text-2xl font-semibold mb-2">
                 {t(articleKey(currentSection?.id ?? '', currentArticle.id, 'title'))}
               </h2>
               <p className="text-muted-foreground mb-6">
@@ -247,7 +247,7 @@ export function HelpPage() {
             </div>
           ) : currentSection ? (
             <div>
-              <h2 className="text-xl font-bold mb-2">{t(`help.sections.${currentSection.id}`)}</h2>
+              <h2 className="text-xl font-semibold mb-2">{t(`help.sections.${currentSection.id}`)}</h2>
               <p className="text-muted-foreground mb-6">
                 {t(`help.sectionDescriptions.${currentSection.id}`)}
               </p>

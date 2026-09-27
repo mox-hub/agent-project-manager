@@ -62,7 +62,7 @@ export function AssistantHistoryList({
         {t('assistant.history.new')}
       </Button>
       {isLoading ? null : conversations.length === 0 ? (
-        <p className="px-2 py-3 text-11 text-content-text-muted">
+        <p className="px-2 py-3 text-2xs text-content-text-muted">
           {t('assistant.history.empty')}
         </p>
       ) : (
@@ -88,7 +88,7 @@ export function AssistantHistoryList({
                 <span className="min-w-0 flex-1 truncate text-xs text-content-text">
                   {title}
                 </span>
-                <span className="shrink-0 text-11 text-content-text-muted">
+                <span className="shrink-0 text-2xs text-content-text-muted">
                   {rel
                     ? t(rel.key, rel.n !== undefined ? { n: rel.n } : {})
                     : new Date(conversation.updatedAt).toLocaleDateString()}

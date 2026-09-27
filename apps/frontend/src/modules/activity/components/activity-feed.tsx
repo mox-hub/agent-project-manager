@@ -52,7 +52,7 @@ export function ActivityFeed({
             {t('activity.title')}
           </span>
           {activities.length > 0 && (
-            <span className="text-10 text-muted-foreground/60">({activities.length})</span>
+            <span className="text-3xs text-muted-foreground/60">({activities.length})</span>
           )}
         </div>
         <button
@@ -71,7 +71,7 @@ export function ActivityFeed({
       {/* 动态时间线 + 评论输入（grid-rows 动画展开 / 收起） */}
       <div
         className={cn(
-          'grid transition-[grid-template-rows] duration-300 ease-out',
+          'grid transition-[grid-template-rows] duration-slow ease-out',
           collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
         )}
       >
@@ -145,7 +145,7 @@ function ActivityEventRow({ activity }: { activity: ActivityItem }) {
             entityType={activity.entityType as ActivityEntityType}
           />
         ))}
-        <span className="ml-auto whitespace-nowrap text-11 text-muted-foreground/60">
+        <span className="ml-auto whitespace-nowrap text-2xs text-muted-foreground/60">
           {relativeTime}
         </span>
       </div>
@@ -189,7 +189,7 @@ function ChangeChip({
   const to = renderValue(newValue);
 
   return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-muted/50 px-1.5 py-0.5 text-11">
+    <span className="inline-flex items-center gap-1 rounded-md bg-muted/50 px-1.5 py-0.5 text-2xs">
       <span className="text-muted-foreground">{label}</span>
       {from !== null && (
         <>

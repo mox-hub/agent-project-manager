@@ -127,7 +127,7 @@ function StationHead({ station }: { station: RunStation }) {
       <span className="min-w-0 flex-1 truncate text-xs font-medium">{station.title}</span>
       {station.rounds > 0 ? (
         <span
-          className="flex shrink-0 items-center gap-0.5 text-10 font-mono tabular-nums text-muted-foreground"
+          className="flex shrink-0 items-center gap-0.5 text-3xs font-mono tabular-nums text-muted-foreground"
           title={t('workflow.runPanel.loopRounds', { count: station.rounds })}
         >
           <Repeat className="size-3" aria-hidden />
@@ -135,7 +135,7 @@ function StationHead({ station }: { station: RunStation }) {
         </span>
       ) : null}
       {station.total > 0 ? (
-        <span className="shrink-0 text-10 font-mono tabular-nums text-muted-foreground">
+        <span className="shrink-0 text-3xs font-mono tabular-nums text-muted-foreground">
           {station.settled}/{station.total}
         </span>
       ) : null}

@@ -23,7 +23,7 @@ export function SampleTag({ className, title }: { className?: string; title?: st
     <span
       data-ai-component="ai-surface.sample-tag"
       className={cn(
-        'shrink-0 rounded-full bg-accent-yellow/15 px-1.5 py-0.5 font-mono text-10 font-medium text-accent-yellow',
+        'shrink-0 rounded-full bg-accent-yellow/15 px-1.5 py-0.5 font-mono text-3xs font-medium text-accent-yellow',
         className,
       )}
       title={title ?? '本区域内容为示例演示，尚未接入真实数据源'}

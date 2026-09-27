@@ -248,7 +248,7 @@ export function AnalysisDraftDialog({
                     <li key={r.risk} className="flex items-start gap-1.5">
                       <Badge
                         variant="secondary"
-                        className="mt-0.5 shrink-0 font-mono text-10"
+                        className="mt-0.5 shrink-0 font-mono text-3xs"
                       >
                         {r.severity}
                       </Badge>

@@ -61,7 +61,7 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
         <IconStack aria-hidden="true" className="mx-auto mb-4 text-primary">
           <Rocket className="size-4 text-primary" />
         </IconStack>
-        <h2 className="text-2xl font-bold">欢迎使用 APM</h2>
+        <h2 className="text-2xl font-semibold">欢迎使用 APM</h2>
         <p className="mt-2 text-muted-foreground">
           AI 驱动的项目管理平台，让团队协作更高效
         </p>
@@ -412,7 +412,7 @@ function CompleteStep({
         <IconStack aria-hidden="true" className="mx-auto mb-4 text-accent-green">
           <CheckCircle className="size-4 text-accent-green" />
         </IconStack>
-        <h2 className="text-2xl font-bold">设置完成！</h2>
+        <h2 className="text-2xl font-semibold">设置完成！</h2>
         {/* 原来这里写的是「您已准备好开始使用 APM」——一句没有依据的断言：
             上一步「配置 AI」是**可跳过**的，跳过之后这条链路一步也跑不起来。
             改为说清"现在能做什么、还差什么"，而"还差什么"由下方那张卡自己去说 */}
@@ -545,7 +545,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
                   disabled={i > state.currentStep}
                   className="gap-1.5"
                 >
-                  <StepperIndicator className="size-5 text-10 font-medium">
+                  <StepperIndicator className="size-5 text-3xs font-medium">
                     {step.status === 'completed' ? (
                       <Check className="size-3" />
                     ) : step.status === 'skipped' ? (

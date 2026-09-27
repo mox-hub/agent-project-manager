@@ -81,7 +81,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
             <div className="text-xl font-semibold">
               {fenToYuan(stats.personDays.totalCostCents)}
               {anyDefaultRate && (
-                <span className="ml-1.5 text-10 text-muted-foreground">部分按默认费率</span>
+                <span className="ml-1.5 text-3xs text-muted-foreground">部分按默认费率</span>
               )}
             </div>
           </CardContent>
@@ -145,7 +145,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
             <CardTitle className="text-sm">
               人天成本
               {anyDefaultRate && (
-                <span className="ml-2 text-10 font-normal text-muted-foreground" data-mock="true">
+                <span className="ml-2 text-3xs font-normal text-muted-foreground" data-mock="true">
                   未设费率成员按默认 ¥{(stats.personDays.defaultRateCents / 100).toFixed(0)}/天 估算
                 </span>
               )}
@@ -169,7 +169,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                     <TableCell className="p-2 text-right">
                       {fenToYuan(r.rateCents)}
                       {r.rateIsDefault && (
-                        <Badge variant="secondary" className="ml-1 text-10">默认</Badge>
+                        <Badge variant="secondary" className="ml-1 text-3xs">默认</Badge>
                       )}
                     </TableCell>
                     <TableCell className="p-2 text-right font-medium">
@@ -208,7 +208,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                   <TableRow key={r.memberId} className="border-b border-border/50 last:border-0">
                     <TableCell className="p-2">{r.name}</TableCell>
                     <TableCell className="p-2">
-                      <Badge variant="outline" className="text-10">
+                      <Badge variant="outline" className="text-3xs">
                         {r.type === 'ai_agent' ? 'AI' : '人类'}
                       </Badge>
                     </TableCell>
@@ -297,7 +297,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                         </Link>
                       </TableCell>
                       <TableCell className="p-2">
-                        <Badge variant="outline" className="text-10">
+                        <Badge variant="outline" className="text-3xs">
                           {t(`project.sidebar.statusLabel.${p.status}`, p.status)}
                         </Badge>
                       </TableCell>

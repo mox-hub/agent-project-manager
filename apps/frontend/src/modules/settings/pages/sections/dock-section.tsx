@@ -137,7 +137,7 @@ function DockPreviewCard() {
         {/*
           内嵌真实 Dock（preview 态仅换定位）：上方留出 pt-14 容纳悬浮指标徽章
           （它以 absolute bottom-full 锚定在 Dock 容器顶部之外）。
-          不设 overflow-hidden——Dock 胶囊带 shadow-2xl，裁切会削掉磨砂投影。
+          不设 overflow-hidden——Dock 胶囊带投影（宪法 §3.6 唯一档 shadow-xs），裁切会削掉磨砂投影。
         */}
         <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 pb-6 pt-14">
           <BottomDock preview />
@@ -322,7 +322,7 @@ function DockAiColleaguesCard() {
                         {colleague.name}
                         {locked && (
                           <span
-                            className="shrink-0 rounded-full bg-accent-purple-light px-1.5 text-10 font-semibold text-accent-purple"
+                            className="shrink-0 rounded-full bg-accent-purple-light px-1.5 text-3xs font-semibold text-accent-purple"
                             title={t('settings.dockAiDefaultLocked')}
                             data-testid={`dock-ai-default-badge-${colleague.id}`}
                           >

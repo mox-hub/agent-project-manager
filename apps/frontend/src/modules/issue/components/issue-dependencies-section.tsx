@@ -111,7 +111,7 @@ export function IssueDependenciesSection({
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Link2 className="size-3.5" />
           <span>{t('task.detailDrawer.dependencies')}</span>
-          <span className="text-10 font-normal normal-case tabular-nums">({totalCount})</span>
+          <span className="text-3xs font-normal normal-case tabular-nums">({totalCount})</span>
         </div>
         <button
           type="button"
@@ -129,7 +129,7 @@ export function IssueDependenciesSection({
       {/* 分区内容：grid-rows 动画展开 / 收起（与正文其他分区同一手势） */}
       <div
         className={cn(
-          'grid transition-[grid-template-rows] duration-300 ease-out',
+          'grid transition-[grid-template-rows] duration-slow ease-out',
           collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
         )}
       >
@@ -137,7 +137,7 @@ export function IssueDependenciesSection({
           <div className="px-6 pb-3 flex flex-col gap-2">
             {upstream.length > 0 ? (
               <div className="rounded-lg border border-border bg-card px-2 py-2">
-                <div className="px-1 pb-1 text-10 font-medium text-muted-foreground">
+                <div className="px-1 pb-1 text-3xs font-medium text-muted-foreground">
                   {t('task.detailDrawer.blockedBy')}
                   <span className="ml-1 tabular-nums">({upstream.length})</span>
                 </div>
@@ -146,7 +146,7 @@ export function IssueDependenciesSection({
             ) : null}
             {downstream.length > 0 ? (
               <div className="rounded-lg border border-border bg-card px-2 py-2">
-                <div className="px-1 pb-1 text-10 font-medium text-muted-foreground">
+                <div className="px-1 pb-1 text-3xs font-medium text-muted-foreground">
                   {t('document.linkType.blocks')}
                   <span className="ml-1 tabular-nums">({downstream.length})</span>
                 </div>

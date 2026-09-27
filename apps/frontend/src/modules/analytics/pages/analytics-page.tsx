@@ -532,7 +532,7 @@ function QualityTab() {
                   <span className="text-xs truncate">{p.name}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium">{p.score}</span>
-                    <span className="text-10 text-muted-foreground">{t('analytics.quality.covLabel', '覆盖率')}: {p.testCoverage}%</span>
+                    <span className="text-3xs text-muted-foreground">{t('analytics.quality.covLabel', '覆盖率')}: {p.testCoverage}%</span>
                   </div>
                 </div>
                 <div className="flex gap-1">
@@ -542,8 +542,8 @@ function QualityTab() {
               </div>
             ))}
             <div className="flex items-center gap-4 pt-1">
-              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary/70" />{t('analytics.quality.legendQuality', '质量')}</span>
-              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary/30" />{t('analytics.quality.legendCoverage', '覆盖率')}</span>
+              <span className="flex items-center gap-1.5 text-3xs text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary/70" />{t('analytics.quality.legendQuality', '质量')}</span>
+              <span className="flex items-center gap-1.5 text-3xs text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary/30" />{t('analytics.quality.legendCoverage', '覆盖率')}</span>
             </div>
           </CardContent>
         </Card>
@@ -595,7 +595,7 @@ function RiskTab() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-sm truncate">{item.title}</span>
-                    <span className={cn('text-10 px-1.5 py-0.5 rounded font-medium', typeCfg.color)}>{typeCfg.label}</span>
+                    <span className={cn('text-3xs px-1.5 py-0.5 rounded font-medium', typeCfg.color)}>{typeCfg.label}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">{item.projectName}</p>
                 </div>
@@ -660,13 +660,13 @@ function TeamActivityTab() {
           <CardContent className="px-4 pb-4 space-y-3">
             {(ov?.memberActivity ?? []).map(m => (
               <div key={m.name} className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-10 font-semibold shrink-0" style={{ backgroundColor: m.color }}>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-3xs font-semibold shrink-0" style={{ backgroundColor: m.color }}>
                   {m.initials}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-0.5">
                     <span className="text-xs font-medium">{m.name}</span>
-                    <span className="text-11 text-muted-foreground">
+                    <span className="text-2xs text-muted-foreground">
                       {m.executions} {t('analytics.team.unitRuns', '次执行')} · {m.aiHoursUsed}h · {m.acceptancesOwned} {t('analytics.team.unitAcceptances', '个验收')}
                     </span>
                   </div>

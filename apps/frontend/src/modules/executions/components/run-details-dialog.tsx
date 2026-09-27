@@ -228,7 +228,7 @@ export function RunDetailsDialog({
                   {data.goal}
                 </DialogTitle>
               </div>
-              <div className="flex items-center gap-3 text-11 text-content-text-muted">
+              <div className="flex items-center gap-3 text-2xs text-content-text-muted">
                 {subjectLabel ? (
                   <span className="flex items-center gap-1">
                     <FolderKanban className="size-3" />
@@ -248,23 +248,23 @@ export function RunDetailsDialog({
                 ) : null}
                 <span className="ml-auto flex items-center gap-2">
                   {artifactSummary && artifactSummary.files > 0 ? (
-                    <span className="hidden whitespace-nowrap text-11 md:inline">
+                    <span className="hidden whitespace-nowrap text-2xs md:inline">
                       {t('runDetails.outputsFiles', { count: artifactSummary.files })}
                     </span>
                   ) : null}
                   {artifactSummary && artifactSummary.commands > 0 ? (
-                    <span className="hidden whitespace-nowrap text-11 md:inline">
+                    <span className="hidden whitespace-nowrap text-2xs md:inline">
                       {t('runDetails.outputsCommands', { count: artifactSummary.commands })}
                     </span>
                   ) : null}
                   {tokens ? (
-                    <span className="flex items-center gap-1 rounded-full bg-accent-orange-light px-2 py-0.5 text-11 font-semibold text-accent-orange">
+                    <span className="flex items-center gap-1 rounded-full bg-accent-orange-light px-2 py-0.5 text-2xs font-semibold text-accent-orange">
                       <Coins className="size-3" />
                       {tokens}
                     </span>
                   ) : null}
                   {cost ? (
-                    <span className="rounded-full bg-accent-green-light px-2 py-0.5 text-11 font-semibold text-accent-green">
+                    <span className="rounded-full bg-accent-green-light px-2 py-0.5 text-2xs font-semibold text-accent-green">
                       {cost}
                     </span>
                   ) : null}
@@ -289,7 +289,7 @@ export function RunDetailsDialog({
             {runError ? (
               <div className="flex shrink-0 items-start gap-2 border-b bg-accent-red-light/60 px-4 py-2">
                 <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-accent-red" />
-                <p className="min-w-0 break-all font-mono text-11 text-accent-red">
+                <p className="min-w-0 break-all font-mono text-2xs text-accent-red">
                   {runError}
                 </p>
               </div>
@@ -329,7 +329,7 @@ export function RunDetailsDialog({
                     type="button"
                     onClick={() => setView({ runId: runId ?? '', mode: key })}
                     className={cn(
-                      'rounded-md px-2 py-0.5 text-11 transition-colors',
+                      'rounded-md px-2 py-0.5 text-2xs transition-colors',
                       active
                         ? 'bg-muted font-medium text-foreground'
                         : 'text-muted-foreground hover:bg-muted/60',
@@ -342,7 +342,7 @@ export function RunDetailsDialog({
                 );
               })}
               {showRaw && stillActive ? (
-                <span className="ml-auto flex items-center gap-1 text-10 text-content-text-muted">
+                <span className="ml-auto flex items-center gap-1 text-3xs text-content-text-muted">
                   <Spinner className="size-3" />
                   {t('runDetails.rawLogStreaming')}
                 </span>
@@ -361,7 +361,7 @@ export function RunDetailsDialog({
                         {t('runDetails.rawLogEmpty')}
                       </p>
                     ) : (
-                      <pre className="whitespace-pre-wrap break-words font-mono text-11 leading-relaxed text-content-text">
+                      <pre className="whitespace-pre-wrap break-words font-mono text-2xs leading-relaxed text-content-text">
                         {(logs.data ?? [])
                           .map((l) =>
                             l.stream === 'stderr' ? `[stderr] ${l.summary}` : l.summary,

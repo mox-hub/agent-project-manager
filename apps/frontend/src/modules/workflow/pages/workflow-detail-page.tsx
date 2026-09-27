@@ -231,7 +231,7 @@ export function WorkflowDetailPage() {
             {workflow ? (
               <Badge
                 variant="secondary"
-                className="shrink-0 text-10"
+                className="shrink-0 text-3xs"
                 title={t('workflow.grammarVersionBadge')}
               >
                 v{workflow.grammarVersion ?? 1}
@@ -304,12 +304,12 @@ export function WorkflowDetailPage() {
                     </span>
                     <Badge
                       variant="secondary"
-                      className="shrink-0 text-10"
+                      className="shrink-0 text-3xs"
                       title={t('workflow.grammarVersionBadge')}
                     >
                       v2
                     </Badge>
-                    <span className="ml-auto text-11 text-muted-foreground">
+                    <span className="ml-auto text-2xs text-muted-foreground">
                       {staticView
                         ? t('workflow.runPanel.phasesDetail', { count: staticView.stats.phases })
                         : ''}
@@ -319,7 +319,7 @@ export function WorkflowDetailPage() {
                     </span>
                   </div>
                   <WorkflowRunTimeline stations={staticStations} />
-                  <p className="text-11 leading-relaxed text-muted-foreground">
+                  <p className="text-2xs leading-relaxed text-muted-foreground">
                     {t('workflow.runPanel.previewHint')}
                   </p>
                 </CardContent>
@@ -346,7 +346,7 @@ export function WorkflowDetailPage() {
                   ) : null}
                   {editing && isV2Doc ? (
                     <div className="flex min-h-0 flex-1 flex-col gap-1.5">
-                      <p className="text-11 text-muted-foreground">
+                      <p className="text-2xs text-muted-foreground">
                         {t('workflow.editor.jsonModeHint')}
                       </p>
                       <textarea
@@ -500,7 +500,7 @@ function RunRow({
     >
       <Icon className={cn('size-4 shrink-0', meta.tone, run.status === 'running' && 'animate-spin')} />
       <span className="text-xs font-medium">{t(meta.labelKey)}</span>
-      <span className="ml-auto flex items-center gap-2 text-11 text-muted-foreground">
+      <span className="ml-auto flex items-center gap-2 text-2xs text-muted-foreground">
         <Clock className="size-3" />
         {new Date(run.createdAt).toLocaleString()}
       </span>

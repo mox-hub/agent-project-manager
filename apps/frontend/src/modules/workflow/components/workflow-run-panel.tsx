@@ -95,7 +95,7 @@ function StatsRow({
     <div className="grid grid-cols-4 gap-4 border-t border-border pt-3" data-ai="workflow.run.stats">
       {cells.map((cell) => (
         <div key={cell.label}>
-          <p className="text-lg font-semibold leading-6">{cell.value}</p>
+          <p className="text-lg font-semibold leading-snug">{cell.value}</p>
           <p className="text-xs text-muted-foreground">{cell.label}</p>
         </div>
       ))}
@@ -154,14 +154,14 @@ export function WorkflowRunPanel({
           {run.workflow?.name ?? ''}
         </span>
         <StatusPill tone="default">
-          <code className="text-10">{run.id.slice(0, 12)}…</code>
+          <code className="text-3xs">{run.id.slice(0, 12)}…</code>
         </StatusPill>
         {isV2Run ? (
-          <Badge variant="secondary" className="shrink-0 text-10">
+          <Badge variant="secondary" className="shrink-0 text-3xs">
             {t('workflow.engineV2')}
           </Badge>
         ) : null}
-        <span className="ml-auto shrink-0 text-11 text-muted-foreground">
+        <span className="ml-auto shrink-0 text-2xs text-muted-foreground">
           {view.stats.phases > 0
             ? t('workflow.runPanel.phasesDetail', { count: view.stats.phases })
             : ''}
@@ -280,7 +280,7 @@ export function WorkflowRunPanel({
               <span className="min-w-0 flex-1 truncate text-xs font-medium">
                 {artifact.title}
               </span>
-              <span className="shrink-0 text-11 text-muted-foreground">
+              <span className="shrink-0 text-2xs text-muted-foreground">
                 {t('workflow.runPanel.artifactDocument')}
               </span>
             </div>
@@ -292,12 +292,12 @@ export function WorkflowRunPanel({
       <div className="flex flex-wrap items-center gap-2">
         {isV2Run && events.length > 0 ? (
           <details className="rounded-md border border-border px-2 py-1.5">
-            <summary className="cursor-pointer text-11 text-muted-foreground">
+            <summary className="cursor-pointer text-2xs text-muted-foreground">
               {t('workflow.runEvents')} ({events.length})
             </summary>
             <ol className="mt-1 space-y-0.5">
               {events.map((e) => (
-                <li key={e.id} className="text-10 text-muted-foreground">
+                <li key={e.id} className="text-3xs text-muted-foreground">
                   <span className="mr-1 font-mono">#{e.seq}</span>
                   {e.type}
                 </li>
@@ -307,10 +307,10 @@ export function WorkflowRunPanel({
         ) : null}
         {run.output && !output?.error ? (
           <details className="rounded-md border border-border px-2 py-1.5">
-            <summary className="cursor-pointer text-11 text-muted-foreground">
+            <summary className="cursor-pointer text-2xs text-muted-foreground">
               {t('workflow.runPanel.outputDetail')}
             </summary>
-            <pre className="mt-1 max-h-48 max-w-140 overflow-auto text-11 leading-relaxed">
+            <pre className="mt-1 max-h-48 max-w-140 overflow-auto text-2xs leading-relaxed">
               {JSON.stringify(stepsOutput ?? run.output, null, 2)}
             </pre>
           </details>

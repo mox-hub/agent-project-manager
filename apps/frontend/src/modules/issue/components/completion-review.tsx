@@ -85,7 +85,7 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
             style={{ width: `${passRate}%` }}
           />
         </div>
-        <div className="text-10 text-muted-foreground">
+        <div className="text-3xs text-muted-foreground">
           {t('acceptance.passRate', { rate: passRate.toFixed(1), source: String(report.source ?? '?') })}
           {report.coverage ? (
             <>
@@ -114,8 +114,8 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
             {String(ev.prUrl)}
           </a>
         ) : null}
-        <div className="text-10 text-muted-foreground">
-          {t('acceptance.prState')} <Badge variant="outline" className="text-10 py-0">{String(ev.state ?? '?')}</Badge>
+        <div className="text-3xs text-muted-foreground">
+          {t('acceptance.prState')} <Badge variant="outline" className="text-3xs py-0">{String(ev.state ?? '?')}</Badge>
         </div>
       </div>
     );
@@ -195,14 +195,14 @@ function AcceptanceCard({
             </span>
             <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
           </Link>
-          <div className="text-10 text-muted-foreground flex items-center gap-1.5">
+          <div className="text-3xs text-muted-foreground flex items-center gap-1.5">
             <span>{t(`acceptance.completionType.${acceptance.completionType}`)}</span>
             <span>·</span>
             <span className={statusColor}>
               {t(`acceptance.status.${acceptance.status}`)}
             </span>
             {isActiveAcceptance(acceptance) && (
-              <Badge variant="secondary" className="text-10 px-1 py-0">
+              <Badge variant="secondary" className="text-3xs px-1 py-0">
                 {t('acceptance.activeBadge')}
               </Badge>
             )}
@@ -212,7 +212,7 @@ function AcceptanceCard({
 
       {/* criteria 进度 + 审计风险点 */}
       {criteria.length > 0 && (
-        <div className="flex items-center gap-2 text-10 text-muted-foreground">
+        <div className="flex items-center gap-2 text-3xs text-muted-foreground">
           <div className="h-1 flex-1 overflow-hidden rounded bg-muted">
             <div
               className="h-full bg-accent-green"
@@ -231,13 +231,13 @@ function AcceptanceCard({
       <EvidencePreview acceptance={acceptance} />
 
       {acceptance.rejectionReason && (
-        <div className="text-11 text-accent-red flex gap-1 items-start">
+        <div className="text-2xs text-accent-red flex gap-1 items-start">
           <AlertCircle size={12} className="shrink-0 mt-0.5" />
           <span>{t('acceptance.rejectionReason', { reason: acceptance.rejectionReason })}</span>
         </div>
       )}
       {acceptance.waiverReason && (
-        <div className="text-11 text-muted-foreground flex gap-1 items-start">
+        <div className="text-2xs text-muted-foreground flex gap-1 items-start">
           <span>{t('acceptance.waiverReason', { reason: acceptance.waiverReason })}</span>
         </div>
       )}
@@ -268,7 +268,7 @@ function AcceptanceCard({
       )}
 
       {acceptance.status === 'passed' && (
-        <div className="flex items-center gap-1 text-11 text-accent-green">
+        <div className="flex items-center gap-1 text-2xs text-accent-green">
           <CheckCircle2 size={12} />
           {t('acceptance.acceptedAt', {
             time: acceptance.completedAt ? new Date(acceptance.completedAt).toLocaleString() : '',
@@ -276,7 +276,7 @@ function AcceptanceCard({
         </div>
       )}
       {acceptance.status === 'failed' && (
-        <div className="flex items-center gap-1 text-11 text-accent-red">
+        <div className="flex items-center gap-1 text-2xs text-accent-red">
           <XCircle size={12} />
           {t('acceptance.rejectedAt', {
             time: acceptance.rejectedAt ? new Date(acceptance.rejectedAt).toLocaleString() : '',
@@ -418,7 +418,7 @@ export function CompletionReview({ issueId, acceptances }: CompletionReviewProps
           <ul className="space-y-1.5 py-1">
             {acceptFailures?.map((f, i) => (
               <li key={i} className="text-sm">
-                <span className="mr-1.5 font-mono text-10 text-muted-foreground">
+                <span className="mr-1.5 font-mono text-3xs text-muted-foreground">
                   [{f.check}]
                 </span>
                 {f.reason}

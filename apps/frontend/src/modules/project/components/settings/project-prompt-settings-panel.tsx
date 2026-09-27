@@ -276,7 +276,7 @@ function PromptLivePreview({
                     <p className="text-xs font-medium">
                       {t(SECTION_LABEL_KEYS[section.key] ?? 'prompt.sections.unknown')}
                     </p>
-                    <span className="text-10 text-muted-foreground/70 tabular-nums">
+                    <span className="text-3xs text-muted-foreground/70 tabular-nums">
                       {section.content?.length ?? 0}
                     </span>
                   </div>

@@ -188,7 +188,7 @@ function PipelineCardInner({
           onClick={onOpenReadiness}
           title={t('intake.pipelineCards.assessHint')}
           className={cn(
-            'flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-10 transition-colors hover:bg-accent',
+            'flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-3xs transition-colors hover:bg-accent',
             readinessResult
               ? VERDICT_BADGE[readinessResult.verdict]
               : 'border-border bg-muted/40 text-content-text-muted',
@@ -220,7 +220,7 @@ function PipelineCardInner({
               data-stage-status={stage.status}
             />
           ))}
-          <span className="ml-1 text-10 text-content-text-muted">
+          <span className="ml-1 text-3xs text-content-text-muted">
             {activeStage
               ? t('intake.pipelineCards.activeStage', { stage: activeStage.name })
               : t('intake.pipelineCards.allStagesDone')}

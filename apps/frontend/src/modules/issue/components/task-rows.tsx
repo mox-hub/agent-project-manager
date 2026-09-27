@@ -168,7 +168,7 @@ function MilestoneSlot({ name, idx = 0 }: { name?: string | null; idx?: number }
   const c = MILESTONE_COLORS[idx % 4];
   return (
     <span className="w-27.5 shrink-0 overflow-hidden">
-      <span className={cn('inline-flex items-center text-11 font-medium px-2 py-0.5 rounded-full border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
+      <span className={cn('inline-flex items-center text-2xs font-medium px-2 py-0.5 rounded-full border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
         {name}
       </span>
     </span>
@@ -178,7 +178,7 @@ function MilestoneSlot({ name, idx = 0 }: { name?: string | null; idx?: number }
 function LabelChip({ name, color }: { name: string; color?: string | null }) {
   return (
     <span
-      className="inline-flex items-center text-10 px-1.5 py-0.5 rounded-sm font-medium whitespace-nowrap"
+      className="inline-flex items-center text-3xs px-1.5 py-0.5 rounded-sm font-medium whitespace-nowrap"
       style={color ? { backgroundColor: `${color}22`, color } : undefined}
     >
       {name}
@@ -210,7 +210,7 @@ function ProgressRing({ done, total, size = 14 }: { done: number; total: number;
 
 function SubtaskBadge({ done, total }: { done: number; total: number }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border bg-muted/60 text-10 font-medium text-muted-foreground shrink-0 ml-1.5">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border bg-muted/60 text-3xs font-medium text-muted-foreground shrink-0 ml-1.5">
       <ProgressRing done={done} total={total} />
       <span>{done}/{total}</span>
     </span>
@@ -227,7 +227,7 @@ function AssigneeAvatar({ initials, color }: { initials?: string; color?: string
   }
   return (
     <div
-      className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-white text-10 font-semibold shrink-0"
+      className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-white text-3xs font-semibold shrink-0"
       style={{ backgroundColor: color || '#6366F1' }}
     >
       {initials}
@@ -279,19 +279,19 @@ function TaskRowItem({ task, milestoneIdx, nameOf, onTaskClick }: TaskRowItemPro
           <div className={cn('w-1 h-5 rounded-full shrink-0', SEVERITY_BAR[task.severity])} title={`Severity: ${task.severity}`} />
         ) : null}
         <StatusChip status={status} />
-        <span className="w-15 shrink-0 text-11 font-mono text-muted-foreground/50 truncate">{idLabel}</span>
+        <span className="w-15 shrink-0 text-2xs font-mono text-muted-foreground/50 truncate">{idLabel}</span>
         <PriorityIcon priority={priority} />
         <p className={cn('flex-1 text-xs truncate min-w-0', isDone ? 'text-muted-foreground' : 'text-foreground')}>{task.title}</p>
         {todoTotal > 0 ? <SubtaskBadge done={todoDone} total={todoTotal} /> : null}
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="w-20 text-11 text-muted-foreground truncate">{secondaryName ?? ''}</span>
+        <span className="w-20 text-2xs text-muted-foreground truncate">{secondaryName ?? ''}</span>
         <div className="w-35 flex gap-1 overflow-hidden">
           {task.issueTags?.map(({ tag }) => <LabelChip key={tag.id} name={tag.name} color={tag.color} />)}
         </div>
         <MilestoneSlot name={task.milestone?.name} idx={milestoneIdx} />
         {task.dueDate ? (
-          <div className={cn('w-18 flex items-center gap-1 text-11', overdue ? 'text-accent-red' : 'text-muted-foreground')}>
+          <div className={cn('w-18 flex items-center gap-1 text-2xs', overdue ? 'text-accent-red' : 'text-muted-foreground')}>
             <Clock className="w-3 h-3 shrink-0" />
             <span className="truncate">{formatDue(task.dueDate)}</span>
           </div>
@@ -325,12 +325,12 @@ function SubTaskRowItem({ task, milestoneIdx, nameOf, onTaskClick }: TaskRowItem
       <div className="flex items-center gap-2 flex-1 min-w-0 pl-5">
         <span className="w-4 h-4 shrink-0" />
         <StatusChip status={status} />
-        <span className="w-15 shrink-0 text-11 font-mono text-muted-foreground/40 truncate">{idLabel}</span>
+        <span className="w-15 shrink-0 text-2xs font-mono text-muted-foreground/40 truncate">{idLabel}</span>
         <PriorityIcon priority={priority} />
         <p className="flex-1 text-xs text-muted-foreground truncate min-w-0">{task.title}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="w-20 text-11 text-muted-foreground truncate">{secondaryName ?? ''}</span>
+        <span className="w-20 text-2xs text-muted-foreground truncate">{secondaryName ?? ''}</span>
         <div className="w-35" />
         <MilestoneSlot name={task.milestone?.name} idx={milestoneIdx} />
         <div className="w-18" />
@@ -455,7 +455,7 @@ export function TaskRowsList({
                 />
               </div>
               <span className="text-xs font-semibold text-muted-foreground">{cfg.label}</span>
-              <span className="text-11 text-muted-foreground/50 font-mono">{groupTaskCount}</span>
+              <span className="text-2xs text-muted-foreground/50 font-mono">{groupTaskCount}</span>
               {subTotal > 0 ? (
                 <div className="flex items-center gap-2 flex-1 max-w-45">
                   <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
@@ -464,7 +464,7 @@ export function TaskRowsList({
                       style={{ width: `${Math.round((subDone / subTotal) * 100)}%` }}
                     />
                   </div>
-                  <span className="text-10 text-muted-foreground shrink-0">{subDone}/{subTotal}</span>
+                  <span className="text-3xs text-muted-foreground shrink-0">{subDone}/{subTotal}</span>
                 </div>
               ) : null}
               {onCreateTask ? (

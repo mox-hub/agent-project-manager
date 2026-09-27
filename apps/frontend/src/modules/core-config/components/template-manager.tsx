@@ -335,7 +335,7 @@ export function TemplateManager() {
                     {projectTemplates.map((template, i) => (
                       <div
                         key={template.id}
-                        className="overflow-hidden rounded-lg border border-border bg-card shadow-xs transition-shadow hover:shadow-md"
+                        className="overflow-hidden rounded-lg border border-border bg-card shadow-xs transition-colors hover:border-border/80"
                       >
                         <div className={`flex h-20 items-center justify-center ${CARD_ACCENTS[i % CARD_ACCENTS.length]}`}>
                           <FolderKanban size={32} strokeWidth={1.5} />
@@ -476,7 +476,7 @@ export function TemplateManager() {
                       return (
                         <div
                           key={template.id}
-                          className="overflow-hidden rounded-lg border border-border bg-card shadow-xs transition-shadow hover:shadow-md"
+                          className="overflow-hidden rounded-lg border border-border bg-card shadow-xs transition-colors hover:border-border/80"
                         >
                           <div className={`flex h-20 items-center justify-center ${CARD_ACCENTS[i % CARD_ACCENTS.length]}`}>
                             <ListTodo size={32} strokeWidth={1.5} />

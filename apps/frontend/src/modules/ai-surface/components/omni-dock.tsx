@@ -189,7 +189,7 @@ export function OmniDock({
       <form
         onSubmit={handleSubmit}
         className={cn(
-          'relative w-full rounded-2xl p-2 flex items-center gap-2 transition-all duration-300 backdrop-blur-2xl border',
+          'relative w-full rounded-2xl p-2 flex items-center gap-2 transition-all duration-slow backdrop-blur-2xl border',
           !pulseActive && 'shadow-xs',
         )}
         style={{
@@ -224,7 +224,7 @@ export function OmniDock({
           {/* 模型弹出列表 */}
           {modelDropdownOpen && (
             <div
-              className="absolute bottom-full left-0 mb-2 w-56 rounded-2xl p-1.5 backdrop-blur-2xl shadow-xs flex flex-col gap-1 border animate-in fade-in zoom-in-95 duration-150 z-50"
+              className="absolute bottom-full left-0 mb-2 w-56 rounded-2xl p-1.5 backdrop-blur-2xl shadow-xs flex flex-col gap-1 border animate-in fade-in zoom-in-95 duration-normal z-50"
               style={{
                 borderColor: isDark ? 'hsl(var(--foreground) / 0.1)' : 'hsl(var(--accent-purple) / 0.15)',
                 background: isDark ? 'hsl(var(--background) / 0.96)' : 'hsl(var(--card) / 0.98)',
@@ -286,7 +286,7 @@ export function OmniDock({
           type="submit"
           disabled={!input.trim()}
           className={cn(
-            'flex items-center justify-center size-9 rounded-xl transition-all duration-200 shrink-0',
+            'flex items-center justify-center size-9 rounded-xl transition-all duration-normal shrink-0',
             // 文字色随底走：可用态底是 accent-purple 渐变（→ primary-foreground），
             // 禁用态底是 foreground/0.1 中性微叠层（→ muted-foreground，用 primary
             // 反而会在明眸主题变成近白字叠浅灰底 → 不可见）

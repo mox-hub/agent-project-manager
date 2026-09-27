@@ -89,12 +89,12 @@ function ChecklistRow({
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium">{checklist.name}</span>
             {checklist.isSystem ? (
-              <Badge variant="secondary" className="gap-1 text-11">
+              <Badge variant="secondary" className="gap-1 text-2xs">
                 <Lock className="size-3" />
                 {t('settings.checklistsSystemBadge')}
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-11">
+              <Badge variant="outline" className="text-2xs">
                 v{checklist.version}
               </Badge>
             )}
@@ -103,10 +103,10 @@ function ChecklistRow({
             <p className="text-xs text-muted-foreground">{checklist.description}</p>
           )}
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="outline" className="font-mono text-11">
+            <Badge variant="outline" className="font-mono text-2xs">
               {checklist.projectType}
             </Badge>
-            <Badge variant="outline" className="font-mono text-11">
+            <Badge variant="outline" className="font-mono text-2xs">
               {checklist.techStack}
             </Badge>
             <span className="text-xs text-muted-foreground">

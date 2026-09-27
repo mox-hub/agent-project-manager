@@ -352,7 +352,7 @@ function TimelineRow({
   const Icon = icon;
   return (
     <div className="flex gap-3">
-      <div className="w-24 shrink-0 pt-3 text-right text-11 text-muted-foreground">
+      <div className="w-24 shrink-0 pt-3 text-right text-2xs text-muted-foreground">
         {dateLabel}
       </div>
       <div className="relative flex w-4 shrink-0 flex-col items-center">
@@ -409,7 +409,7 @@ function TimelineIterationRow({
           {iteration.name}
         </span>
         <Badge className={tone.badgeClass}>{t(tone.labelKey)}</Badge>
-        <span className="ml-auto inline-flex items-center gap-1.5 text-11 text-muted-foreground">
+        <span className="ml-auto inline-flex items-center gap-1.5 text-2xs text-muted-foreground">
           <CalendarRange size={11} />
           {formatDate(iteration.startDate, '—')} →{' '}
           {formatDate(iteration.endDate, '—')}
@@ -448,12 +448,12 @@ function TimelineMilestoneRow({
             {milestone.name}
           </span>
           <Badge className={tone.badgeClass}>{t(tone.labelKey)}</Badge>
-          <span className="text-11 text-muted-foreground">
+          <span className="text-2xs text-muted-foreground">
             {t('project.milestonesPage.targetDate')}
             {dateLabel}
           </span>
           {milestone.taskCount !== undefined && milestone.taskCount > 0 && (
-            <span className="ml-auto inline-flex items-center gap-1 text-11 text-muted-foreground">
+            <span className="ml-auto inline-flex items-center gap-1 text-2xs text-muted-foreground">
               <ListTodo size={11} />
               {t('project.milestonesPage.taskCount', {
                 count: milestone.taskCount,
@@ -471,7 +471,7 @@ function TimelineMilestoneRow({
             {milestone.releases.map((release) => (
               <span
                 key={release.id}
-                className="inline-flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-11"
+                className="inline-flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-2xs"
               >
                 <Rocket size={11} className="text-accent-green" />
                 <span className="font-mono font-medium text-foreground">
@@ -479,7 +479,7 @@ function TimelineMilestoneRow({
                 </span>
                 <Badge
                   className={cn(
-                    'text-10',
+                    'text-3xs',
                     RELEASE_TONE[release.status] ??
                       RELEASE_TONE.draft,
                   )}

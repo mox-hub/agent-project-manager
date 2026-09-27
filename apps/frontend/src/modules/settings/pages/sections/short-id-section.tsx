@@ -106,20 +106,20 @@ function ShortIdSettingsCard() {
           ) : stats ? (
             <div className="grid grid-cols-3 gap-4">
               <div className="rounded-lg border border-border bg-muted/30 p-4 text-center">
-                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-2xl font-semibold text-foreground">{stats.total}</p>
                 <p className="text-xs text-muted-foreground">{t('settings.shortIdStatTotal')}</p>
               </div>
               <div className="rounded-lg border border-accent-green/30 bg-accent-green/5 p-4 text-center">
                 <div className="flex items-center justify-center gap-1">
                   <CheckCircle size={16} className="text-accent-green" />
-                  <p className="text-2xl font-bold text-accent-green">{stats.withShortId}</p>
+                  <p className="text-2xl font-semibold text-accent-green">{stats.withShortId}</p>
                 </div>
                 <p className="text-xs text-muted-foreground">{t('settings.shortIdStatWith')}</p>
               </div>
               <div className="rounded-lg border border-accent-yellow/30 bg-accent-yellow/5 p-4 text-center">
                 <div className="flex items-center justify-center gap-1">
                   <AlertCircle size={16} className="text-accent-yellow" />
-                  <p className="text-2xl font-bold text-accent-yellow">{stats.withoutShortId}</p>
+                  <p className="text-2xl font-semibold text-accent-yellow">{stats.withoutShortId}</p>
                 </div>
                 <p className="text-xs text-muted-foreground">{t('settings.shortIdStatWithout')}</p>
               </div>

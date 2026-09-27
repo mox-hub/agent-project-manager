@@ -95,11 +95,11 @@ export function ProjectPlaybookSettingsPanel({ projectId }: { projectId: string 
                   <div className="min-w-0 flex-1 pb-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-foreground">{stage.name}</span>
-                      <span className="text-10 uppercase tracking-wide text-muted-foreground">
+                      <span className="text-3xs uppercase tracking-wide text-muted-foreground">
                         {t(`projectSettings.playbook.stageStatus.${stage.status}`)}
                       </span>
                       {stage.gateStatus === 'pending' && (
-                        <span className="rounded-full bg-accent-purple-light px-2 py-0.5 text-10 font-medium text-accent-purple">
+                        <span className="rounded-full bg-accent-purple-light px-2 py-0.5 text-3xs font-medium text-accent-purple">
                           {t('projectSettings.playbook.gatePending')}
                         </span>
                       )}

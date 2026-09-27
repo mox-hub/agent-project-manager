@@ -43,7 +43,7 @@ const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium">{link.task?.title || `任务 ${link.issueId}`}</span>
             {link.task?.shortId && (
-              <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-10 text-muted-foreground">
+              <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-3xs text-muted-foreground">
                 {link.task.shortId}
               </span>
             )}
@@ -73,7 +73,7 @@ const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
           {showMenu && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-              <div className="absolute right-0 top-full z-20 mt-1 w-36 rounded-md border border-border bg-popover p-1 shadow-lg">
+              <div className="absolute right-0 top-full z-20 mt-1 w-36 rounded-md border border-border bg-popover p-1 shadow-xs">
                 <button
                   type="button"
                   className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"

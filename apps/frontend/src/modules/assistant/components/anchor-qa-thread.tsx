@@ -106,7 +106,7 @@ export function AnchorQaThread({
       {/* 已有问答（最新在下） */}
       {entries.map((entry, index) => (
         <div key={index} className="mb-2 border-b border-border/60 pb-2 last:mb-0 last:border-0 last:pb-0">
-          <p className="truncate text-11 font-medium text-content-text" title={entry.question}>
+          <p className="truncate text-2xs font-medium text-content-text" title={entry.question}>
             {entry.question}
           </p>
           <div className="mt-1 text-xs leading-relaxed text-content-text">
@@ -121,7 +121,7 @@ export function AnchorQaThread({
                     key={action.action}
                     variant="outline"
                     size="sm"
-                    className="h-6 px-2 text-11"
+                    className="h-6 px-2 text-2xs"
                     disabled={applied || applying !== null || !onApplyAction}
                     onClick={() => applyAction(index, action)}
                     data-ai-action="assistant.anchor-qa.apply.click"
@@ -138,12 +138,12 @@ export function AnchorQaThread({
 
       {/* 加载中：答案骨架先出 */}
       {anchorQa.isPending && (
-        <p className="mb-2 animate-pulse text-11 text-accent-purple">
+        <p className="mb-2 animate-pulse text-2xs text-accent-purple">
           {t('assistant.anchorQa.thinking')}
         </p>
       )}
       {anchorQa.isError && (
-        <p className="mb-2 text-11 text-accent-red">{t('assistant.anchorQa.failed')}</p>
+        <p className="mb-2 text-2xs text-accent-red">{t('assistant.anchorQa.failed')}</p>
       )}
 
       {/* 输入行 */}
@@ -187,7 +187,7 @@ export function AnchorQaThread({
         <button
           type="button"
           onClick={escalateToPanel}
-          className="flex items-center gap-1 text-11 text-accent-purple hover:underline"
+          className="flex items-center gap-1 text-2xs text-accent-purple hover:underline"
           data-ai-action="assistant.anchor-qa.escalate-panel.click"
         >
           <ArrowUpRight className="size-3" />
@@ -196,7 +196,7 @@ export function AnchorQaThread({
         <button
           type="button"
           onClick={() => navigate('/app/office')}
-          className="flex items-center gap-1 text-11 text-content-text-muted hover:underline"
+          className="flex items-center gap-1 text-2xs text-content-text-muted hover:underline"
           data-ai-action="assistant.anchor-qa.escalate-office.click"
         >
           <DoorOpen className="size-3" />
@@ -221,7 +221,7 @@ export function AnchorQaGhostButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex h-7 items-center gap-1 rounded-full px-2 text-11 text-accent-purple/70 transition-opacity',
+        'flex h-7 items-center gap-1 rounded-full px-2 text-2xs text-accent-purple/70 transition-opacity',
         'opacity-0 group-hover/sidebar:opacity-100 focus-visible:opacity-100',
         'hover:bg-accent-purple/10 hover:text-accent-purple',
         open && 'opacity-100 bg-accent-purple/10 text-accent-purple',

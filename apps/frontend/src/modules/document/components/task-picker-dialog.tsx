@@ -155,11 +155,11 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="truncate font-medium">{t.title}</div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-11 text-muted-foreground">
-                          <Badge variant="outline" className="text-10">
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-2xs text-muted-foreground">
+                          <Badge variant="outline" className="text-3xs">
                             {t.status}
                           </Badge>
-                          <Badge variant="outline" className="text-10">
+                          <Badge variant="outline" className="text-3xs">
                             {t.priority}
                           </Badge>
                           {t.assignee?.displayName && (

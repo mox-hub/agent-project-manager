@@ -185,7 +185,7 @@ export function ProjectSimpleList({
             {/* 名称（完整展示，不截断）+ 来源徽标 */}
             <span className="min-w-0 shrink-0 whitespace-nowrap text-sm font-medium text-foreground">{project.name}</span>
             {activeCount > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-md bg-accent-purple/15 px-1.5 py-0.5 text-11 font-medium text-accent-purple border border-accent-purple/30 animate-pulse">
+              <span className="inline-flex items-center gap-1 rounded-md bg-accent-purple/15 px-1.5 py-0.5 text-2xs font-medium text-accent-purple border border-accent-purple/30 animate-pulse">
                 <Bot className="size-3" />
                 {activeCount} AI 执行中
               </span>
@@ -288,7 +288,7 @@ export function ProjectSimpleList({
                 />
               ))}
               {members.length > 3 ? (
-                <span className="inline-flex size-6 items-center justify-center rounded-full border border-background bg-muted text-10 font-medium text-muted-foreground">
+                <span className="inline-flex size-6 items-center justify-center rounded-full border border-background bg-muted text-3xs font-medium text-muted-foreground">
                   +{members.length - 3}
                 </span>
               ) : null}

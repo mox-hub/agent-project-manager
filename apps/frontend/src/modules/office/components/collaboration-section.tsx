@@ -51,7 +51,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
           <p className="truncate text-sm font-medium text-content-text" title={card.title}>
             {card.title}
           </p>
-          <p className="truncate text-11 text-content-text-muted">
+          <p className="truncate text-2xs text-content-text-muted">
             {card.requesterName ?? card.requesterMemberId}
             {' → '}
             {card.providerName ?? card.providerMemberId}
@@ -70,7 +70,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
             <Button
               variant="outline"
               size="sm"
-              className="h-7 px-2 text-11"
+              className="h-7 px-2 text-2xs"
               disabled={verify.isPending}
               onClick={() =>
                 verify.mutate({ id: card.id, verdict: 'changes_requested' })
@@ -81,7 +81,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
             </Button>
             <Button
               size="sm"
-              className="h-7 px-2 text-11"
+              className="h-7 px-2 text-2xs"
               disabled={verify.isPending}
               onClick={() => verify.mutate({ id: card.id, verdict: 'verified' })}
               data-ai-action="office.collaboration.verify.click"
@@ -94,7 +94,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-11 text-muted-foreground"
+            className="h-7 px-2 text-2xs text-muted-foreground"
             disabled={cancel.isPending}
             onClick={() => cancel.mutate(card.id)}
             data-ai-action="office.collaboration.cancel.click"
@@ -105,7 +105,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
         {card.status === 'escalated' && (
           <Link
             to="/app/notifications"
-            className="flex items-center gap-1 text-11 text-accent-red hover:underline"
+            className="flex items-center gap-1 text-2xs text-accent-red hover:underline"
             data-ai-action="office.collaboration.to-decisions.click"
           >
             <ExternalLink className="size-3" />
@@ -118,21 +118,21 @@ function CardRow({ card }: { card: CollaborationCard }) {
       {expanded && (
         <div className="mt-2 space-y-2 rounded-md bg-muted/40 p-2.5">
           <div>
-            <p className="text-10 font-medium text-content-text-muted">
+            <p className="text-3xs font-medium text-content-text-muted">
               {t('office.collaboration.payload')}
             </p>
-            <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all text-10 leading-relaxed text-content-text">
+            <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all text-3xs leading-relaxed text-content-text">
               {JSON.stringify(card.payload, null, 2)}
             </pre>
           </div>
           {card.events && card.events.length > 0 && (
             <div>
-              <p className="text-10 font-medium text-content-text-muted">
+              <p className="text-3xs font-medium text-content-text-muted">
                 {t('office.collaboration.timeline')}
               </p>
               <ol className="mt-1 space-y-0.5">
                 {card.events.map((event, index) => (
-                  <li key={index} className="text-10 text-content-text-muted">
+                  <li key={index} className="text-3xs text-content-text-muted">
                     <span className="font-medium text-content-text">
                       {t(`office.collaboration.status.${event.status}`)}
                     </span>
@@ -160,7 +160,7 @@ export function CollaborationSection({ projectId }: { projectId?: string }) {
         <h2 className="text-sm font-semibold text-content-text">
           {t('office.collaboration.title')}
         </h2>
-        <span className="text-11 text-content-text-muted">
+        <span className="text-2xs text-content-text-muted">
           {t('office.collaboration.subtitle', { n: items.length })}
         </span>
       </div>

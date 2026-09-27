@@ -538,7 +538,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                           <span className="text-sm">
                             {primaryAssignee.member.displayName}
                             {primaryAssignee.member.type === 'ai_agent' ? (
-                              <Badge variant="outline" className="ml-1 text-10">
+                              <Badge variant="outline" className="ml-1 text-3xs">
                                 AI
                               </Badge>
                             ) : null}
@@ -962,7 +962,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                               <span className="text-sm font-medium text-foreground">
                                 {execution.goal}
                               </span>
-                              <span className="inline-flex rounded-full bg-muted px-2 py-1 text-11 capitalize text-foreground">
+                              <span className="inline-flex rounded-full bg-muted px-2 py-1 text-2xs capitalize text-foreground">
                                 {execution.status.replace('_', ' ')}
                               </span>
                             </div>
@@ -1462,14 +1462,14 @@ function TaskDocumentsContent({ issueId }: { issueId: string }) {
                 {link.document?.title || t('taskDetail.documentFallback', { id: link.documentId })}
               </div>
               {link.section && (
-                <div className="truncate text-11 text-muted-foreground">
+                <div className="truncate text-2xs text-muted-foreground">
                   {t('taskDetail.sectionLabel', { title: link.section.title })}
                 </div>
               )}
             </div>
             <span
               className={cn(
-                'rounded px-1.5 py-0.5 text-10 font-medium',
+                'rounded px-1.5 py-0.5 text-3xs font-medium',
                 LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
               )}
             >

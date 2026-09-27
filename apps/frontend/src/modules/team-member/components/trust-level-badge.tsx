@@ -38,7 +38,7 @@ export function TrustLevelBadge({ level, size = 'sm', className }: TrustLevelBad
       <span
         className={cn(
           'inline-flex items-center gap-1 rounded-full bg-muted text-muted-foreground',
-          size === 'sm' ? 'h-5 px-1.5 text-10' : 'h-6 px-2 text-xs',
+          size === 'sm' ? 'h-5 px-1.5 text-3xs' : 'h-6 px-2 text-xs',
           className,
         )}
       >
@@ -57,7 +57,7 @@ export function TrustLevelBadge({ level, size = 'sm', className }: TrustLevelBad
       className={cn(
         'inline-flex items-center gap-1 rounded-full font-medium',
         TIER_STYLE[tier],
-        size === 'sm' ? 'h-5 px-1.5 text-10' : 'h-6 px-2 text-xs',
+        size === 'sm' ? 'h-5 px-1.5 text-3xs' : 'h-6 px-2 text-xs',
         className,
       )}
     >

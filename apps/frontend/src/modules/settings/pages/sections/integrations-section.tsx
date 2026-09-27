@@ -215,10 +215,10 @@ const INTEGRATION_CATALOG: Array<{
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 function LogoBadge({ logo, color, size = 'md' }: { logo: string; color: string; size?: 'sm' | 'md' | 'lg' }) {
-  const dim = size === 'lg' ? 'w-12 h-12 text-base' : size === 'sm' ? 'w-7 h-7 text-10' : 'w-10 h-10 text-xs';
+  const dim = size === 'lg' ? 'w-12 h-12 text-base' : size === 'sm' ? 'w-7 h-7 text-3xs' : 'w-10 h-10 text-xs';
   return (
     <div
-      className={cn('rounded-xl font-bold text-white flex items-center justify-center shrink-0', dim)}
+      className={cn('rounded-xl font-semibold text-white flex items-center justify-center shrink-0', dim)}
       style={{ backgroundColor: color }}
     >
       {logo}
@@ -258,17 +258,17 @@ function FeatureToggle({ feature }: { feature: IntegrationFeature }) {
       <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium">{t(feature.labelKey)}</p>
-        <p className="text-11 text-muted-foreground mt-0.5 leading-relaxed">{t(feature.descKey)}</p>
+        <p className="text-2xs text-muted-foreground mt-0.5 leading-relaxed">{t(feature.descKey)}</p>
       </div>
       <div
         className={cn(
-          'relative shrink-0 w-8 h-4.5 rounded-full border transition-all duration-200 mt-0.5',
+          'relative shrink-0 w-8 h-4.5 rounded-full border transition-all duration-normal mt-0.5',
           feature.enabled ? 'bg-primary border-primary' : 'bg-transparent border-border',
         )}
       >
         <span
           className={cn(
-            'absolute top-0.5 w-3.5 h-3.5 rounded-full shadow-xs transition-all duration-200',
+            'absolute top-0.5 w-3.5 h-3.5 rounded-full shadow-xs transition-all duration-normal',
             feature.enabled ? 'left-4 bg-white' : 'left-0.5 bg-muted-foreground/40',
           )}
         />
@@ -302,7 +302,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
   return (
     <div
       className={cn(
-        'rounded-2xl border transition-all duration-200',
+        'rounded-2xl border transition-all duration-normal',
         status === 'connected' ? 'border-border bg-card' : status === 'error' ? 'border-destructive/30 bg-card' : 'border-border/60 bg-card/60',
       )}
     >
@@ -320,7 +320,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
 
             {/* Connected meta */}
             {status === 'connected' && connectedAs && (
-              <div className="flex items-center gap-3 mt-2 text-11 text-muted-foreground">
+              <div className="flex items-center gap-3 mt-2 text-2xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Check className="w-3 h-3 text-accent-green" />
                   {connectedAs}
@@ -336,7 +336,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
 
             {/* Error state */}
             {status === 'error' && (
-              <div className="flex items-center gap-1.5 mt-2 text-11 text-destructive">
+              <div className="flex items-center gap-1.5 mt-2 text-2xs text-destructive">
                 <AlertTriangle className="w-3 h-3" />
                 {t('settings.integration.errorConnectionLost')} · {lastSync ?? t('settings.integration.errorCheckProvider')}
               </div>
@@ -421,7 +421,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
             <div className="p-5">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('settings.integration.features')}</p>
-                <span className="text-11 text-muted-foreground">
+                <span className="text-2xs text-muted-foreground">
                   {t('settings.integration.featuresActive', { active: enabledCount, total: integration.features.length })}
                 </span>
               </div>
@@ -440,18 +440,18 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
               <div className="rounded-xl bg-muted/40 border border-border p-3 space-y-2">
                 {connectedAs && (
                   <div className="flex items-center justify-between">
-                    <span className="text-11 text-muted-foreground">{t('settings.integration.account')}</span>
+                    <span className="text-2xs text-muted-foreground">{t('settings.integration.account')}</span>
                     <span className="text-xs font-medium">{connectedAs}</span>
                   </div>
                 )}
                 {lastSync && (
                   <div className="flex items-center justify-between">
-                    <span className="text-11 text-muted-foreground">{t('settings.integration.lastSync')}</span>
+                    <span className="text-2xs text-muted-foreground">{t('settings.integration.lastSync')}</span>
                     <span className="text-xs text-accent-green">{lastSync}</span>
                   </div>
                 )}
                 {!connectedAs && !lastSync && (
-                  <span className="text-11 text-muted-foreground">{t('settings.integration.noConnectionDetails')}</span>
+                  <span className="text-2xs text-muted-foreground">{t('settings.integration.noConnectionDetails')}</span>
                 )}
               </div>
 
@@ -481,14 +481,14 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
             {integration.features.slice(0, 4).map((f) => {
               const Icon = f.icon;
               return (
-                <div key={f.labelKey} className="flex items-center gap-2 text-11 text-muted-foreground/60">
+                <div key={f.labelKey} className="flex items-center gap-2 text-2xs text-muted-foreground/60">
                   <Icon className="w-3 h-3 shrink-0" />
                   {t(f.labelKey)}
                 </div>
               );
             })}
             {integration.features.length > 4 && (
-              <div className="text-11 text-muted-foreground/40">
+              <div className="text-2xs text-muted-foreground/40">
                 {t('settings.integration.moreFeatures', { count: integration.features.length - 4 })}
               </div>
             )}
@@ -505,7 +505,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
-              <span className="text-10 px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+              <span className="text-3xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
                 {t('settings.integration.soon')}
               </span>
             )}
@@ -665,7 +665,7 @@ export function IntegrationsSettingsSection() {
                     {t(CATEGORY_LABEL_KEYS[cat as IntegrationCategory])}
                   </h2>
                   <div className="flex-1 h-px bg-border" />
-                  <span className="text-11 text-muted-foreground/60">
+                  <span className="text-2xs text-muted-foreground/60">
                     {t('settings.integration.count', { count: items.length })}
                   </span>
                 </div>
@@ -765,16 +765,16 @@ export function IntegrationsSettingsSection() {
                     className="flex items-center gap-3 p-3.5 rounded-xl border border-dashed border-border/60 bg-muted/20 opacity-60"
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold text-white shrink-0"
                       style={{ backgroundColor: item.color === '#000000' ? '#374151' : item.color }}
                     >
                       {item.logo}
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-medium">{item.name}</p>
-                      <p className="text-10 text-muted-foreground truncate">{t(item.descKey)}</p>
+                      <p className="text-3xs text-muted-foreground truncate">{t(item.descKey)}</p>
                     </div>
-                    <span className="ml-auto text-10 px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">{t('settings.integration.soon')}</span>
+                    <span className="ml-auto text-3xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">{t('settings.integration.soon')}</span>
                   </div>
                 ))}
               </div>

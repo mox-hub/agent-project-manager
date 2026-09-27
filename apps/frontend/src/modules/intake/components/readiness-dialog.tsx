@@ -130,7 +130,7 @@ export function ReadinessDialog({
                       {READINESS_DIMENSION_LABELS[d.key] ?? d.key}
                     </div>
                     {(d.gap || d.evidence) && (
-                      <div className="mt-0.5 line-clamp-2 text-10 text-content-text-muted">
+                      <div className="mt-0.5 line-clamp-2 text-3xs text-content-text-muted">
                         {d.gap || d.evidence}
                       </div>
                     )}
@@ -161,18 +161,18 @@ export function ReadinessDialog({
                       />
                       <span className="text-xs font-medium text-foreground">{g.item}</span>
                       {g.blocking && (
-                        <span className="rounded bg-accent-red-light px-1.5 py-0.5 text-10 text-accent-red">
+                        <span className="rounded bg-accent-red-light px-1.5 py-0.5 text-3xs text-accent-red">
                           {t('intake.readiness.blocking', '阻塞')}
                         </span>
                       )}
                     </div>
                     {g.why && (
-                      <div className="mt-1 text-10 text-content-text-muted">
+                      <div className="mt-1 text-3xs text-content-text-muted">
                         {t('intake.readiness.why', '为什么')}: {g.why}
                       </div>
                     )}
                     {g.howToFill && (
-                      <div className="mt-0.5 text-10 text-content-text-muted">
+                      <div className="mt-0.5 text-3xs text-content-text-muted">
                         {t('intake.readiness.howToFill', '怎么补')}: {g.howToFill}
                       </div>
                     )}
@@ -185,7 +185,7 @@ export function ReadinessDialog({
 
         <DialogFooter>
           <div className="flex w-full items-center justify-between gap-2">
-            <span className="text-10 text-content-text-muted">
+            <span className="text-3xs text-content-text-muted">
               {t('intake.readiness.disclaimer', 'AI 评估仅供人审，不作为开工依据')}
             </span>
             <div className="flex items-center gap-2">

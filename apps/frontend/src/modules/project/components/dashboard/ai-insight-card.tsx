@@ -92,7 +92,7 @@ export function AiInsightCard({
 
         {/* AI Summary text */}
         {summary && (
-          <p className="text-xs leading-5 text-muted-foreground italic">
+          <p className="text-xs leading-relaxed text-muted-foreground italic">
             "{summary.length > 160 ? `${summary.slice(0, 160)}...` : summary}"
           </p>
         )}

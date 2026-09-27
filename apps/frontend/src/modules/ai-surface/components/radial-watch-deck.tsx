@@ -437,7 +437,7 @@ export function RadialWatchDeck({
               width: 295,
             }}
           >
-            <p className="mb-1 text-xs font-bold tracking-tight">
+            <p className="mb-1 text-xs font-semibold tracking-tight">
               {stationsStatus === 'loading'
                 ? '正在读取同事状态…'
                 : stationsStatus === 'error'
@@ -473,7 +473,7 @@ export function RadialWatchDeck({
               onMouseEnter={() => setHoveredSideCard(station.memberId)}
               onMouseLeave={() => setHoveredSideCard(null)}
               className={cn(
-                'absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-300 border cursor-pointer select-text shadow-xs',
+                'absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-slow border cursor-pointer select-text shadow-xs',
                 isSelected ? '' : 'hover:opacity-95',
               )}
               style={{
@@ -523,7 +523,7 @@ export function RadialWatchDeck({
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <h4 className="font-bold text-xs tracking-tight truncate">{station.displayName}</h4>
+                      <h4 className="font-semibold text-xs tracking-tight truncate">{station.displayName}</h4>
                       <span
                         className="px-1.5 py-0.2 rounded font-mono font-semibold"
                         style={{
@@ -550,7 +550,7 @@ export function RadialWatchDeck({
                 <div className="text-right shrink-0">
                   {/* 服务端没给信度分就是没有——显示破折号，不落回写死的高分 */}
                   <span
-                    className="font-mono font-bold block"
+                    className="font-mono font-semibold block"
                     style={{
                       fontSize: 11,
                       color:
@@ -700,7 +700,7 @@ export function RadialWatchDeck({
         <div
           onMouseEnter={() => setHoveredSideCard('right-score')}
           onMouseLeave={() => setHoveredSideCard(null)}
-          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-300 border select-text"
+          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
           style={{
             left: `calc(50% + ${RIGHT_CARDS_DATA[0].cardLeft}px)`,
             top: `calc(50% + ${RIGHT_CARDS_DATA[0].cardTop}px)`,
@@ -713,7 +713,7 @@ export function RadialWatchDeck({
           }}
         >
           <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="font-bold text-xs tracking-tight">项目信度总分</span>
+            <span className="font-semibold text-xs tracking-tight">项目信度总分</span>
           </div>
 
           <NoMetricNote
@@ -726,7 +726,7 @@ export function RadialWatchDeck({
         <div
           onMouseEnter={() => setHoveredSideCard('right-contract')}
           onMouseLeave={() => setHoveredSideCard(null)}
-          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-300 border select-text"
+          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
           style={{
             left: `calc(50% + ${RIGHT_CARDS_DATA[1].cardLeft}px)`,
             top: `calc(50% + ${RIGHT_CARDS_DATA[1].cardTop}px)`,
@@ -739,7 +739,7 @@ export function RadialWatchDeck({
           }}
         >
           <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="font-bold text-xs">契约合规率 (OpenAPI)</span>
+            <span className="font-semibold text-xs">契约合规率 (OpenAPI)</span>
           </div>
           <NoMetricNote
             reason="契约漂移由 CI 的 contract:check 判定，其结果没有开放接口，故此处不显示百分比。"
@@ -751,7 +751,7 @@ export function RadialWatchDeck({
         <div
           onMouseEnter={() => setHoveredSideCard('right-logic')}
           onMouseLeave={() => setHoveredSideCard(null)}
-          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-300 border select-text"
+          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
           style={{
             left: `calc(50% + ${RIGHT_CARDS_DATA[2].cardLeft}px)`,
             top: `calc(50% + ${RIGHT_CARDS_DATA[2].cardTop}px)`,
@@ -764,7 +764,7 @@ export function RadialWatchDeck({
           }}
         >
           <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="font-bold text-xs">逻辑完备度 / Token 产出比</span>
+            <span className="font-semibold text-xs">逻辑完备度 / Token 产出比</span>
           </div>
           <NoMetricNote
             reason="两项评测类指标尚未实装（服务端无对应口径），故此处不显示百分比。"
@@ -776,7 +776,7 @@ export function RadialWatchDeck({
         <div
           onMouseEnter={() => setHoveredSideCard('right-memory')}
           onMouseLeave={() => setHoveredSideCard(null)}
-          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-300 border select-text"
+          className="absolute rounded-2xl p-3.5 backdrop-blur-2xl transition-all duration-slow border select-text"
           style={{
             left: `calc(50% + ${RIGHT_CARDS_DATA[3].cardLeft}px)`,
             top: `calc(50% + ${RIGHT_CARDS_DATA[3].cardTop}px)`,
@@ -791,7 +791,7 @@ export function RadialWatchDeck({
           <div className="flex items-center justify-between gap-1 mb-1.5">
             <div className="flex items-center gap-1.5">
               <Database className="size-3 text-accent-purple" />
-              <span className="font-bold text-xs">治理记忆星云原子</span>
+              <span className="font-semibold text-xs">治理记忆星云原子</span>
               {/* 条目内容是**示例剧本**（真记忆原子在「设置 · 记忆」，走 /memory 既有服务）；
                   故就地标注，不靠页头那枚隔着整屏的徽标。 */}
               <SampleTag title="以下条目为示例内容；真实记忆原子见「设置 · 记忆」（GET /memory）" />
@@ -840,7 +840,7 @@ export function RadialWatchDeck({
           {/* 点击展开的记忆原子详情 */}
           {activeMemory && (
             <div
-              className="mt-1.5 p-1.5 rounded-lg leading-relaxed border border-current/10 animate-in fade-in duration-150"
+              className="mt-1.5 p-1.5 rounded-lg leading-relaxed border border-current/10 animate-in fade-in duration-normal"
               style={{
                 fontSize: 8.5,
                 background: isDark ? 'hsl(var(--background) / 0.5)' : 'hsl(var(--background) / 0.9)',

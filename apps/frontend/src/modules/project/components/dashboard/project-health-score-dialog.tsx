@@ -30,11 +30,11 @@ function getMetricStatusLabel(status: HealthDetailMetric['status']) {
 }
 
 function getProgressColor(status: HealthDetailMetric['status']) {
-  if (status === 'on_track') return 'bg-status-on-track';
+  if (status === 'on_track') return 'bg-accent-green';
   if (status === 'stable') return 'bg-accent-blue';
   if (status === 'high') return 'bg-accent-yellow';
   if (status === 'pending') return 'bg-muted-foreground';
-  return 'bg-status-off-track';
+  return 'bg-accent-red';
 }
 
 export function ProjectHealthScoreDialog({
@@ -70,7 +70,7 @@ export function ProjectHealthScoreDialog({
         <div className="space-y-5 p-5">
           <div className="rounded-xl bg-muted/50 p-4">
             <div className="flex items-end gap-4">
-              <p className="text-5xl font-bold text-foreground">{score}</p>
+              <p className="text-2xl font-semibold text-foreground">{score}</p>
               <div className="pb-1">
                 <p className="text-base font-semibold text-foreground">{getScoreLabel(score)}</p>
                 <p className="text-sm text-muted-foreground">

@@ -552,7 +552,7 @@ function LinkedDocsPanel({ issueId }: { issueId: string }) {
       icon={<FileText className="size-3" />}
       action={
         links.length > 0 ? (
-          <span className="text-10 text-muted-foreground">({links.length})</span>
+          <span className="text-3xs text-muted-foreground">({links.length})</span>
         ) : undefined
       }
     >
@@ -573,14 +573,14 @@ function LinkedDocsPanel({ issueId }: { issueId: string }) {
                 {link.document?.title || t('bugDetail.documentFallback', { id: link.documentId })}
               </span>
               {link.section && (
-                <span className="block truncate text-10">
+                <span className="block truncate text-3xs">
                   {t('bugDetail.sectionLabel', { title: link.section.title })}
                 </span>
               )}
             </span>
             <span
               className={cn(
-                'shrink-0 rounded px-1.5 py-0.5 text-10 font-medium',
+                'shrink-0 rounded px-1.5 py-0.5 text-3xs font-medium',
                 LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
               )}
             >

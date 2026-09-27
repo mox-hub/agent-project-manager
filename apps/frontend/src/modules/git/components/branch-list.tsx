@@ -301,7 +301,7 @@ function BranchItem({
           </span>
         )}
         {remote && (
-          <span className="shrink-0 text-10 text-muted-foreground">
+          <span className="shrink-0 text-3xs text-muted-foreground">
             ({remote})
           </span>
         )}

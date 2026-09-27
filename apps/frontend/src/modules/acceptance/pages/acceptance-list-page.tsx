@@ -268,7 +268,7 @@ function AuditRiskCard({
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
           {t('acceptance.filter.risk')}
           {redCount > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-accent-red/40 bg-accent-red/10 px-1.5 py-0.5 text-10 font-medium text-accent-red">
+            <span className="inline-flex items-center gap-1 rounded-full border border-accent-red/40 bg-accent-red/10 px-1.5 py-0.5 text-3xs font-medium text-accent-red">
               <AlertTriangle className="size-2.5" />
               {redCount}
             </span>
@@ -436,7 +436,7 @@ export function AcceptanceListPage() {
           <span className="flex max-w-60 items-center gap-1.5 truncate">
             <span className="truncate">{row.original.title || t('acceptance.title')}</span>
             {isActiveAcceptance(row.original) && (
-              <Badge variant="secondary" className="shrink-0 text-10">
+              <Badge variant="secondary" className="shrink-0 text-3xs">
                 {t('acceptance.activeBadge')}
               </Badge>
             )}
@@ -797,7 +797,7 @@ export function AcceptanceListPage() {
                   </span>
                   <StatusBadge status={acceptance.status} />
                   {isActiveAcceptance(acceptance) && (
-                    <Badge variant="secondary" className="shrink-0 text-10">
+                    <Badge variant="secondary" className="shrink-0 text-3xs">
                       {t('acceptance.activeBadge')}
                     </Badge>
                   )}
@@ -837,7 +837,7 @@ export function AcceptanceListPage() {
                   <div className="hidden w-28 shrink-0 flex-col items-end gap-1 sm:flex">
                     <div className="flex w-full items-center gap-1.5">
                       <Progress value={progressPct} className="h-1.5 flex-1" />
-                      <span className="w-10 text-right text-11 tabular-nums text-muted-foreground">
+                      <span className="w-10 text-right text-2xs tabular-nums text-muted-foreground">
                         {passedCriteria}/{totalCriteria}
                       </span>
                     </div>

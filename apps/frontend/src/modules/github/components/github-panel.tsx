@@ -76,7 +76,7 @@ export function GithubPanel({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-mono text-10">
+            <Badge variant="outline" className="font-mono text-3xs">
               V3 Stage 2
             </Badge>
           </div>
@@ -258,7 +258,7 @@ function PrRow({ pr }: { pr: Pr }) {
         )}
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium truncate">{pr.title}</div>
-          <div className="flex items-center gap-2 text-11 text-muted-foreground">
+          <div className="flex items-center gap-2 text-2xs text-muted-foreground">
             <span className="font-mono">#{pr.number}</span>
             <span>
               {pr.head.ref} → {pr.base.ref}
@@ -491,7 +491,7 @@ function EmbeddedPrRow({ pr }: { pr: Pr }) {
         <GitPullRequest className="size-3.5 shrink-0 text-accent-green" />
       )}
       <span className="min-w-0 flex-1 truncate">{pr.title}</span>
-      <span className="shrink-0 font-mono text-10 text-muted-foreground">#{pr.number}</span>
+      <span className="shrink-0 font-mono text-3xs text-muted-foreground">#{pr.number}</span>
       <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
     </a>
   );

@@ -56,7 +56,7 @@ export function SurfaceNarrationBar({
     >
       <div className="rounded-xl border border-foreground/10 bg-foreground/5 px-3 py-2.5">
         {state === 'pending' || !narration ? (
-          <p className="text-11 text-muted-foreground">正在读盘…</p>
+          <p className="text-2xs text-muted-foreground">正在读盘…</p>
         ) : (
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-3">
@@ -98,7 +98,7 @@ export function SurfaceNarrationBar({
             {narration.highlights.length > 0 && (
               <ul className="space-y-0.5 pl-5.5">
                 {narration.highlights.map((line) => (
-                  <li key={line} className="text-11 text-muted-foreground">
+                  <li key={line} className="text-2xs text-muted-foreground">
                     · {line}
                   </li>
                 ))}
@@ -110,7 +110,7 @@ export function SurfaceNarrationBar({
                 {narration.blockers.map((blocker) => (
                   <li
                     key={`${blocker.what}-${blocker.who ?? ''}`}
-                    className="text-11 text-muted-foreground"
+                    className="text-2xs text-muted-foreground"
                   >
                     <span className="text-accent-red">▲</span> {blocker.what}
                     {blocker.who ? `（${blocker.who}）` : ''}
@@ -124,7 +124,7 @@ export function SurfaceNarrationBar({
             {narration.needsYou.length > 0 && (
               <ul className="space-y-0.5 pl-5.5">
                 {narration.needsYou.slice(0, 2).map((item) => (
-                  <li key={item.decisionId} className="text-11 text-muted-foreground">
+                  <li key={item.decisionId} className="text-2xs text-muted-foreground">
                     <span className="text-accent-purple">■</span> 等你拍板：
                     {item.oneLineWhy ?? item.decisionId}
                   </li>
@@ -135,7 +135,7 @@ export function SurfaceNarrationBar({
             {narration.honestGaps.length > 0 && (
               <ul className="space-y-0.5 pl-5.5">
                 {narration.honestGaps.map((gap) => (
-                  <li key={gap} className="font-mono text-10 text-muted-foreground/80">
+                  <li key={gap} className="font-mono text-3xs text-muted-foreground/80">
                     ⓘ {gap}
                   </li>
                 ))}
@@ -166,7 +166,7 @@ function NarrationProvenance({
   if (source === 'template') {
     return (
       <span
-        className="flex items-center gap-1 font-mono text-10"
+        className="flex items-center gap-1 font-mono text-3xs"
         title={degradedNote ?? '以下为规则生成的摘要'}
         data-ai-component="ai-surface.narration.degraded-tag"
       >
@@ -179,7 +179,7 @@ function NarrationProvenance({
   }
 
   return (
-    <span className="flex items-center gap-1 font-mono text-10 text-muted-foreground">
+    <span className="flex items-center gap-1 font-mono text-3xs text-muted-foreground">
       <span title="本段由 AI 依据同屏事实翻译生成，未做任何计算">AI 读盘</span>
       {age ? <span title={timeTitle}>{age}</span> : null}
     </span>

@@ -87,7 +87,7 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               {ROLE_LABEL[role] ?? role}
-              <Badge variant="secondary" className="text-10">{rows.length}</Badge>
+              <Badge variant="secondary" className="text-3xs">{rows.length}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -124,13 +124,13 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
                         <User className="h-3.5 w-3.5 shrink-0 text-accent-blue" />
                       )}
                     </div>
-                    <p className="truncate text-11 text-muted-foreground">
+                    <p className="truncate text-2xs text-muted-foreground">
                       @{row.member?.handle || '—'}
                       {row.member?.title ? ` · ${row.member.title}` : ''}
                     </p>
                     <div className="mt-1 flex items-center gap-1.5">
                       <TrustLevelBadge level={row.member?.trustLevel ?? null} />
-                      <span className="font-mono text-10 text-muted-foreground/70">
+                      <span className="font-mono text-3xs text-muted-foreground/70">
                         {row.member?.shortId}
                       </span>
                     </div>
@@ -168,7 +168,7 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
                   className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2"
                 >
                   <span className="text-sm font-medium">{w.name}</span>
-                  <Badge variant="outline" className="text-10">v{w.version}</Badge>
+                  <Badge variant="outline" className="text-3xs">v{w.version}</Badge>
                   {w.description && (
                     <span className="text-xs text-muted-foreground truncate max-w-60">
                       {w.description}
@@ -180,7 +180,7 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
                         <Badge
                           key={`${s}-${i}`}
                           variant="secondary"
-                          className="bg-accent-purple/10 text-10 text-accent-purple"
+                          className="bg-accent-purple/10 text-3xs text-accent-purple"
                         >
                           {i + 1}. {s}
                         </Badge>

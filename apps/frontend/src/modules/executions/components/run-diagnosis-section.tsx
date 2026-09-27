@@ -121,21 +121,21 @@ export function RunDiagnosisSection({
     >
       <div className="flex items-center gap-2">
         <Stethoscope className="size-3.5 text-accent-blue" />
-        <span className="text-11 font-medium">
+        <span className="text-2xs font-medium">
           {t('runDetails.diagnosis.title')}
         </span>
       </div>
 
       {classification ? (
         <p
-          className="flex items-start gap-1.5 text-11 text-content-text"
+          className="flex items-start gap-1.5 text-2xs text-content-text"
           data-testid="run-diagnosis-hint"
         >
           <span className="font-medium text-content-text-muted">
             {t('runDetails.diagnosis.mechanicalLabel')}
           </span>
           <span>{classification.hint}</span>
-          <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-10 text-content-text-muted">
+          <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-3xs text-content-text-muted">
             {t(CATEGORY_KEYS[classification.category] ?? CATEGORY_KEYS.unknown)}
           </span>
         </p>
@@ -147,12 +147,12 @@ export function RunDiagnosisSection({
           data-testid="run-diagnosis-result"
         >
           {categoryKey ? (
-            <span className="inline-block rounded-full bg-accent-blue-light px-2 py-0.5 text-10 font-medium text-accent-blue">
+            <span className="inline-block rounded-full bg-accent-blue-light px-2 py-0.5 text-3xs font-medium text-accent-blue">
               {t(categoryKey)}
             </span>
           ) : null}
           {result.reason ? (
-            <p className="text-11 leading-relaxed text-content-text">
+            <p className="text-2xs leading-relaxed text-content-text">
               <span className="font-medium text-content-text-muted">
                 {t('runDetails.diagnosis.reasonLabel')}
               </span>{' '}
@@ -160,7 +160,7 @@ export function RunDiagnosisSection({
             </p>
           ) : null}
           {result.recommendation ? (
-            <p className="text-11 leading-relaxed text-content-text">
+            <p className="text-2xs leading-relaxed text-content-text">
               <span className="font-medium text-content-text-muted">
                 {t('runDetails.diagnosis.recommendationLabel')}
               </span>{' '}
@@ -168,12 +168,12 @@ export function RunDiagnosisSection({
             </p>
           ) : null}
           {result.action && ACTION_KEYS[result.action] ? (
-            <p className="text-11 text-content-text-muted">
+            <p className="text-2xs text-content-text-muted">
               {t(ACTION_KEYS[result.action])}
             </p>
           ) : null}
           {missingInfo.length > 0 ? (
-            <p className="flex items-start gap-1 text-11 text-content-text-muted">
+            <p className="flex items-start gap-1 text-2xs text-content-text-muted">
               <CircleHelp className="mt-0.5 size-3 shrink-0" />
               <span>
                 {t('runDetails.diagnosis.missingInfoLabel')}

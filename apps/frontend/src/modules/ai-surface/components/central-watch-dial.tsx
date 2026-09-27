@@ -210,7 +210,7 @@ export function CentralWatchDial({
                 textAnchor="middle"
                 dominantBaseline="central"
                 fill={isDark ? 'hsl(var(--foreground) / 0.6)' : 'hsl(var(--foreground) / 0.6)'}
-                className="font-mono font-bold"
+                className="font-mono font-semibold"
                 style={{ fontSize: 9 }}
               >
                 {tick.label}
@@ -286,7 +286,7 @@ export function CentralWatchDial({
               >
                 <Activity className="size-3" />
               </div>
-              <span className="font-bold text-xs tracking-tight">中央视界</span>
+              <span className="font-semibold text-xs tracking-tight">中央视界</span>
               <SampleTag title="表盘内四张卡片（拆解链 / 契约 Diff / 验收清单 / 认知共鸣）为示例演示，尚未接入真实数据源" />
             </div>
           </div>
@@ -340,7 +340,7 @@ export function CentralWatchDial({
           {(activeTab === 'overview' || activeTab === 'contract') && (
             <div
               ref={card1Ref}
-              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-200 border border-current/10 shadow-xs"
+              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
               style={{
                 transform: `scale(${cardScales[0]})`,
                 opacity: cardOpacities[0],
@@ -352,7 +352,7 @@ export function CentralWatchDial({
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-current/10">
                 <div className="flex items-center gap-1.5">
                   <Zap className="size-3.5" style={{ color: 'hsl(var(--accent-yellow))' }} />
-                  <span className="font-bold text-xs">主线任务拆解链 (CAP-P-01)</span>
+                  <span className="font-semibold text-xs">主线任务拆解链 (CAP-P-01)</span>
                 </div>
                 <span
                   className="font-mono font-medium px-1.5 py-0.2 rounded"
@@ -378,7 +378,7 @@ export function CentralWatchDial({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div
-                      className="flex items-center justify-center size-5 rounded-md font-mono font-bold shrink-0"
+                      className="flex items-center justify-center size-5 rounded-md font-mono font-semibold shrink-0"
                       style={{ fontSize: 10, color: 'hsl(var(--accent-green))', background: 'hsl(var(--accent-green) / 0.12)' }}
                     >
                       ✓
@@ -403,7 +403,7 @@ export function CentralWatchDial({
                     </div>
                   </div>
                   <span
-                    className="px-1.5 py-0.2 rounded font-mono shrink-0 font-bold"
+                    className="px-1.5 py-0.2 rounded font-mono shrink-0 font-semibold"
                     style={{ fontSize: 8, background: 'hsl(var(--accent-green) / 0.15)', color: 'hsl(var(--accent-green))' }}
                   >
                     DONE
@@ -424,7 +424,7 @@ export function CentralWatchDial({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div
-                      className="flex items-center justify-center size-5 rounded-md font-mono font-bold shrink-0"
+                      className="flex items-center justify-center size-5 rounded-md font-mono font-semibold shrink-0"
                       style={{ fontSize: 10, color: 'hsl(var(--accent-purple))', background: 'hsl(var(--accent-purple) / 0.12)' }}
                     >
                       ⚡
@@ -449,7 +449,7 @@ export function CentralWatchDial({
                     </div>
                   </div>
                   <span
-                    className="px-1.5 py-0.2 rounded font-mono shrink-0 font-bold"
+                    className="px-1.5 py-0.2 rounded font-mono shrink-0 font-semibold"
                     style={{ fontSize: 8, background: 'hsl(var(--accent-purple) / 0.15)', color: 'hsl(var(--accent-purple))' }}
                   >
                     RUNNING
@@ -475,7 +475,7 @@ export function CentralWatchDial({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div
-                      className="flex items-center justify-center size-5 rounded-md font-mono font-bold shrink-0"
+                      className="flex items-center justify-center size-5 rounded-md font-mono font-semibold shrink-0"
                       style={{ fontSize: 10, color: 'hsl(var(--accent-yellow))', background: 'hsl(var(--accent-yellow) / 0.12)' }}
                     >
                       ⏸
@@ -520,7 +520,7 @@ export function CentralWatchDial({
           {(activeTab === 'overview' || activeTab === 'contract') && codeArtifact && (
             <div
               ref={card2Ref}
-              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-200 border border-current/10 shadow-xs"
+              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
               style={{
                 transform: `scale(${cardScales[1]})`,
                 opacity: cardOpacities[1],
@@ -532,7 +532,7 @@ export function CentralWatchDial({
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-current/10">
                 <div className="flex items-center gap-1.5">
                   <FileCode className="size-3.5" style={{ color: 'hsl(var(--accent-green))' }} />
-                  <span className="font-bold text-xs">Prisma / OpenAPI 契约 Diff</span>
+                  <span className="font-semibold text-xs">Prisma / OpenAPI 契约 Diff</span>
                 </div>
                 {codeArtifact.payload.codeSnippet && (
                   <button
@@ -567,7 +567,7 @@ export function CentralWatchDial({
           {(activeTab === 'overview' || activeTab === 'acceptance') && qaArtifact?.payload?.criteriaList && (
             <div
               ref={card3Ref}
-              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-200 border border-current/10 shadow-xs"
+              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
               style={{
                 transform: `scale(${cardScales[2]})`,
                 opacity: cardOpacities[2],
@@ -579,10 +579,10 @@ export function CentralWatchDial({
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-current/10">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="size-3.5" style={{ color: 'hsl(var(--accent-green))' }} />
-                  <span className="font-bold text-xs">自动化验收准则与门禁审计 (Sentinel)</span>
+                  <span className="font-semibold text-xs">自动化验收准则与门禁审计 (Sentinel)</span>
                 </div>
                 <span
-                  className="font-mono px-1.5 py-0.2 rounded font-bold"
+                  className="font-mono px-1.5 py-0.2 rounded font-semibold"
                   style={{
                     fontSize: 8,
                     background: 'hsl(var(--accent-green) / 0.15)',
@@ -635,7 +635,7 @@ export function CentralWatchDial({
           {(activeTab === 'overview' || activeTab === 'stream') && (
             <div
               ref={card4Ref}
-              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-200 border border-current/10 shadow-xs"
+              className="rounded-2xl p-3.5 backdrop-blur-xl transition-all duration-normal border border-current/10 shadow-xs"
               style={{
                 transform: `scale(${cardScales[3]})`,
                 opacity: cardOpacities[3],
@@ -647,10 +647,10 @@ export function CentralWatchDial({
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-current/10">
                 <div className="flex items-center gap-1.5">
                   <Sparkles className="size-3.5 text-accent-purple" />
-                  <span className="font-bold text-xs">指挥官协同与认知流回响</span>
+                  <span className="font-semibold text-xs">指挥官协同与认知流回响</span>
                 </div>
                 <span
-                  className="font-mono px-1.5 py-0.2 rounded font-bold"
+                  className="font-mono px-1.5 py-0.2 rounded font-semibold"
                   style={{
                     fontSize: 8,
                     background: isDark ? 'hsl(var(--accent-purple) / 0.2)' : 'hsl(var(--accent-purple) / 0.12)',

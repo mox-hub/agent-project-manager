@@ -271,7 +271,7 @@ export function bugCardRow1(
         </span>
         <span
           className={cn(
-            'inline-flex items-center rounded-sm border px-1 py-0 text-10 font-medium uppercase leading-tight',
+            'inline-flex items-center rounded-sm border px-1 py-0 text-3xs font-medium uppercase leading-tight',
             SEVERITY_BADGE_CLASS[sevKey] ?? SEVERITY_BADGE_CLASS.low,
           )}
         >
@@ -304,7 +304,7 @@ export function bugCardRow3(bug: Task, projectName?: string, t?: Translate): Rea
 
   return (
     <div className="flex items-center justify-between gap-2 pt-0.5">
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-11 text-muted-foreground">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-2xs text-muted-foreground">
         {dueDate ? (
           <span
             className={cn(
@@ -319,7 +319,7 @@ export function bugCardRow3(bug: Task, projectName?: string, t?: Translate): Rea
         ) : null}
         {projectName ? (
           <span
-            className="max-w-20 truncate rounded-sm bg-muted/50 px-1 py-0.2 text-10 font-medium text-muted-foreground"
+            className="max-w-20 truncate rounded-sm bg-muted/50 px-1 py-0.2 text-3xs font-medium text-muted-foreground"
             title={projectName}
           >
             {projectName}
@@ -339,17 +339,17 @@ export function bugCardRow3(bug: Task, projectName?: string, t?: Translate): Rea
         ) : null}
       </div>
       {bug.assignee ? (
-        <Avatar className="size-5 shrink-0 border border-background shadow-2xs">
+        <Avatar className="size-5 shrink-0 border border-background shadow-xs">
           {bug.assignee.avatarUrl ? (
             <AvatarImage src={bug.assignee.avatarUrl} alt={bug.assignee.displayName} />
           ) : null}
-          <AvatarFallback className="text-10">
+          <AvatarFallback className="text-3xs">
             {(bug.assignee.displayName || bug.assignee.username).slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
       ) : (
         <span
-          className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-muted/60 text-10 font-semibold text-muted-foreground/60"
+          className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-muted/60 text-3xs font-semibold text-muted-foreground/60"
           title="Unassigned"
         >
           ?

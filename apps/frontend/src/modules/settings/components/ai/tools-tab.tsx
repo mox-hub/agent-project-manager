@@ -101,7 +101,7 @@ function CliToolCard({
           </Button>
         </div>
         <div>
-          <p className="mb-1 text-11 font-medium text-muted-foreground">{t('aiHub.install')}</p>
+          <p className="mb-1 text-2xs font-medium text-muted-foreground">{t('aiHub.install')}</p>
           <CopyableCode text={INSTALL_HINTS[provider.providerId] ?? provider.commandPath} />
         </div>
       </CardContent>

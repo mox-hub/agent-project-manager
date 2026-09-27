@@ -14,8 +14,8 @@ export interface MemberChipProps {
 }
 
 const CONTAINER_SIZES = {
-  xs: 'h-5 px-1.5 text-10 gap-1',
-  sm: 'h-6 px-2 text-11 gap-1.5',
+  xs: 'h-5 px-1.5 text-3xs gap-1',
+  sm: 'h-6 px-2 text-2xs gap-1.5',
   md: 'h-7 px-2.5 text-xs gap-1.5',
 };
 

@@ -239,17 +239,17 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
                         </>
                       )}
                       {isLatest && (
-                        <span className="rounded-full bg-accent-blue/10 px-1.5 py-0 text-10 font-medium text-accent-blue">
+                        <span className="rounded-full bg-accent-blue/10 px-1.5 py-0 text-3xs font-medium text-accent-blue">
                           最新
                         </span>
                       )}
                       {isCompareBase && (
-                        <span className="rounded-full bg-accent-yellow/10 px-1.5 py-0 text-10 font-medium text-accent-yellow">
+                        <span className="rounded-full bg-accent-yellow/10 px-1.5 py-0 text-3xs font-medium text-accent-yellow">
                           基准
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 flex items-center gap-2 text-11 text-muted-foreground">
+                    <div className="mt-1 flex items-center gap-2 text-2xs text-muted-foreground">
                       <span>{new Date(version.createdAt).toLocaleString('zh-CN')}</span>
                       <span>·</span>
                       <span>{version.wordCount} 字</span>
@@ -307,7 +307,7 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
                     <p className="text-muted-foreground">
                       由 {selectedVersion.createdBy} 于 {new Date(selectedVersion.createdAt).toLocaleString('zh-CN')} 创建
                     </p>
-                    <pre className="mt-2 max-h-40 overflow-auto rounded bg-muted/40 p-2 font-mono text-11 leading-relaxed">
+                    <pre className="mt-2 max-h-40 overflow-auto rounded bg-muted/40 p-2 font-mono text-2xs leading-relaxed">
                       {selectedVersion.content.slice(0, 800)}
                       {selectedVersion.content.length > 800 ? '\n...' : ''}
                     </pre>
