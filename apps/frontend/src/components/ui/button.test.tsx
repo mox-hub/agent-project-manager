@@ -25,9 +25,25 @@ const VARIANTS = [
   'link',
   'primary',
   'danger',
+  // E 类批 0 增补（2026-09-27）：裸 <button> 形态聚类补出的三档
+  'quiet',
+  'subtle',
+  'ghost-danger',
 ] as const;
 
-const SIZES = ['default', 'xs', 'sm', 'lg', 'icon', 'icon-xs', 'icon-sm', 'icon-lg'] as const;
+const SIZES = [
+  'default',
+  'xs',
+  'sm',
+  'lg',
+  'icon',
+  'icon-xs',
+  'icon-sm',
+  'icon-lg',
+  // E 类批 0 增补：补上 20px / 28px 两个空档
+  'icon-2xs',
+  'icon-2sm',
+] as const;
 
 describe('Button 渲染矩阵（§18.2 全 variant × 全 size）', () => {
   it.each(VARIANTS)('variant=%s 渲染为可点击 button 并保留文本', (variant) => {
@@ -48,6 +64,58 @@ describe('Button 渲染矩阵（§18.2 全 variant × 全 size）', () => {
 
     expect(screen.getByRole('button', { name: '确定' })).toBeInTheDocument();
   });
+});
+
+/**
+ * E 类批 0 增补档（2026-09-27，纯增补：既有 8 variant × 8 size 的类值一字未动）。
+ *
+ * 验收口径与既有用例一致——§18.2 明令**不断言 className**，jsdom 也不执行 Tailwind，
+ * 故这里只断言「档位不改变语义 / 交互 / 可访问名」：若新档误吞 children、改了 role
+ * 或让按钮失去可聚焦性，下面的用例会红。纯视觉差异（色值/尺寸）交视觉回归。
+ */
+describe('Button 批 0 增补档（语义与既有档一致）', () => {
+  it.each(['quiet', 'subtle', 'ghost-danger'] as const)(
+    'variant=%s 保留文字可访问名且点击照常冒泡',
+    async (variant) => {
+      const onClick = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <Button variant={variant} onClick={onClick}>
+          重命名
+        </Button>,
+      );
+
+      await user.click(screen.getByRole('button', { name: '重命名' }));
+
+      expect(onClick).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('ghost-danger 的「危险」不只靠颜色传达：文字可访问名完整保留（§8.5 #4）', () => {
+    render(<Button variant="ghost-danger">删除工单</Button>);
+
+    expect(
+      screen.getByRole('button', { name: '删除工单' }),
+    ).toBeInTheDocument();
+  });
+
+  it.each(['icon-2xs', 'icon-2sm'] as const)(
+    'size=%s 仍是可聚焦的图标钮，且无文字时 aria-label 即可访问名（§8.5 #1）',
+    async (size) => {
+      const user = userEvent.setup();
+      render(
+        <Button size={size} aria-label="关闭面板">
+          <Plus />
+        </Button>,
+      );
+
+      const btn = screen.getByRole('button', { name: '关闭面板' });
+      expect(btn).toBeEnabled();
+
+      await user.tab();
+      expect(btn).toHaveFocus();
+    },
+  );
 });
 
 describe('Button 交互（§18.2 点击/键盘/受控回调）', () => {
