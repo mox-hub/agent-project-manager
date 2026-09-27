@@ -140,6 +140,13 @@ jobs:
       - name: 前端单测（全量）
         if: needs.changes.outputs.full == 'true'
         run: pnpm --filter "./apps/frontend" run test
+      # 幽灵类检查依赖构建产物（比对「源码里写了什么」与「CSS 里生成了什么」），
+      # 故必须排在 build 之后；它抓的是「写了类名但 Tailwind 压根没生成」这类静默失效
+      # （本轮已实测抓到 text-12、text-content-muted、--duration-* 命名空间错写三种）。
+      - name: 前端构建
+        run: pnpm --filter "./apps/frontend" run build
+      - name: 幽灵类检查（源码类名 ↔ 构建产物选择器）
+        run: pnpm --filter "./apps/frontend" run lint:undefined
 
   test-backend:
     needs: changes
