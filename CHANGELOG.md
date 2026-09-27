@@ -21,6 +21,37 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——E 类 · 批 4「组件裁决面落地」（registry 的 `review`/`standby` 标记首次呈到页面，零删除）
+
+> 提交 `af237f9e`（5 文件 / +488 / −3）。依据 E 类方案 §5.2/§5.4，兑现人类铁律第 ① 步「组件不删除，但要在 design-system 页面标记」。
+> **修复的是一处从未生效的三步走卡点**：改造前 `design-system-page.tsx` 全文无 `registry` 字样，18 条 `review` 只躺在 `registry.ts` 内部、页面上**一眼看不到**，因此「我看过后再删」在物理上无法进行（见方案台账偏差 29）。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend/design-system` 裁决面 + registry 门禁 | 组件债务清退前置（E 类 §5.2/§5.4） | 定向 vitest **2 文件 / 7 用例全 passed**（board 6 + 整页 1，125s，协调方复跑）；`check-component-registry` passed（334 条五态校验 + review 18 条元数据完整）；负向测试 A/B 各 exit 1、恢复后 exit 0 | 本 CHANGELOG + 方案台账偏差 29/32 |
+
+**做了什么**：新增 `modules/design-system/sections/component-review-board.tsx`（只读裁决面，E 类方案 `sections/<section>.tsx` 结构的首个落点，避免继续加厚已 6243 行的页面文件）；页面接入为 `Governance` 分组下的首个分区、位于**第一屏**；数据**只读 `COMPONENT_REGISTRY`**，逐条展示组件名 / 状态 / `reviewBy` / `expiresAt` / 理由 / `proposal`，五态计数**实时统计不写死**；含「只看待裁决」筛选。`check-component-registry.mjs` 补 **§② 元数据完整性**：`review` 必带 `reviewBy`、`deprecated` 必带 `expiresAt`、status 须在五态词表内，并做**解析对账**（按单行字面量解出的条数须等于 `status: '…'` 出现次数，防格式漂移后静默少校验）；原有 COMPONENTS.md ↔ `ui/*.tsx` 双向对账原样保留。
+
+**协调方独立核验（逐项复现）**：numstat 与自述**逐行吻合**（+126/−1、+15/0、+14/−2、+94/0、+239/0）；**3 处删除行全部是原地替换**（`console.log` 扩为多段输出、`SECTION_GROUPS` 首位加 `Governance`、默认分区 `colors` → `component-review`），**无任何组件/测试/导出被删**；`components/ui/*.tsx` 仍 **121** 个；`registry.ts` **未被修改**（未偷改归属、未新增 `deprecated`）；未碰 `eslint.config.js` / 根 `lint-staged` / `src/index.css` / `docs/**` / `CHANGELOG.md` / `openapi.json`。测试**由协调方复跑**（非采信自述）：2 文件 / 7 用例 passed。
+
+**有意未做（报回裁决，非漏做）**：① **`review` 逾期 → CI 失败**未实现——该口径会**向删除施压**，而删除已被人类叫停，故不做并写进脚本注释与页面脚注；② `component-review-decisions.json` 与**写回路径**未做（本批只读），即「②人看 → ③删」之间**最后一格仍未接上**——页面看完后的结论目前仍需人工转达；③ 6243 行页面整体拆分未做。**另**：E 类文档中的「删除/清退」候选（≈16 个组件）与 registry 实际登记（18 `review` + 3 `standby` 建议清退）**无法一一对应**，只报告未改登记。
+
+### 前端设计治理——治理脚本修复：非 ASCII 路径被 git 引号转义，「`docs/` 前缀匹配」三处失效
+
+> 提交 `0262de98`（3 文件 / +34 / −6）。**由 E 类批 4 交付时报回的 `check:docs-sync` exit 1 顺藤查出**——不是代理的过错，是三个脚本共有的同一缺陷。
+
+git 默认 `core.quotePath=true`，非 ASCII 文件名输出为 `"docs/design/\344\277\256..."`（**带引号 + 八进制转义**），而三处都用 `f.startsWith('docs/')` 判定文档改动 → 首字符是引号，**恒为 false**。本仓 `docs/02-架构设计/`、`docs/design/` 下文档**几乎全是中文名**，故该前缀匹配系统性失效。
+
+| 站点 | 后果 | 证据 |
+|---|---|---|
+| `scripts/check-doc-sync.mjs` | **误拦合法提交**（代码+中文文档同改 → 判成「没改文档」） | 同一工作区 A/B 跑**真实脚本**：修复前 **exit 1** / 修复后 **exit 0** |
+| `scripts/gate.mjs` | **`docs` bucket 恒不命中** → 只改中文文档的提交**恰好跳过最该跑的 `check:docs-sync`** | 唯一改动=一个中文名文档：修复前 `BUCKETS.docs=false` / 修复后 `=true` |
+| `scripts/generate-weekly-governance-report.mjs` | `docFiles` 少算 → `codeFiles/docFiles` 比值被抬高 | 同机制推定，未单独跑该报告 |
+
+**修法**：三处取路径的 git 调用统一加 `-c core.quotePath=false`。与 `check-doc-sync.mjs` 自身 B4 改造对**枚举**用的 `git ls-files -z` 等价——那次只修了枚举，喂 `docChanged`/`governanceChanged` 的 diff 三处漏了，本提交补齐。**不改任何规则语义与阈值**。
+
+**双向实测**：真实仓库 `pnpm check:docs-sync` **exit 0**（14 份受管文档）；「仅代码改动」仍 **exit 1**（门禁未被改坏）。**注意**：本会话早前 `check:docs-sync` 的通过属**侥幸**——当时改动里恰有 ASCII 名文件 `CHANGELOG.md` 顶替，中文文档的改动一直不可见。
+
 ### 前端设计治理——BCD 方案 · 批 7a「门禁强制扩容」（C9 全页扫描 / C2·C3 全库化 / lint-staged 接入）
 
 > 提交 `0e48626e`（7 文件 / +306 / −49）；随后补 `e5880f61`（1 文件 / +64 / −1，**注释感知**修复，成因见下「扩面放大出的既有缺陷」）。
