@@ -21,6 +21,23 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——裸三元组当色值收口（21 处 `var(--x)` → `var(--color-x)`，3 文件）
+
+> 提交 `59f799e5`（3 文件 / +20 / −20）。依据 BCD 方案台账偏差 25（第 114 行）「建议批 7 顺手机械修」。
+> `--border`/`--muted-foreground` 等是 HSL **分量**（如 `240 5.9% 90%`）而非合法 CSS 颜色，直接当色值用会被浏览器**静默丢弃** —— 受影响的样式（Recharts 的 `stroke`/`fill`、CodeMirror 主题的 `color`/`backgroundColor`）**从未生效**。本次全部改用 `@theme inline` 暴露的 `--color-*` 别名。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` analytics / team-member / document | 台账偏差 25（批 7 顺手机械修） | **产物级 A/B**：修复前 `dist` 缺 3 个别名 → 重建后 8 个目标 token 齐备；`type-check` exit 0；7 个设计门禁脚本全 exit 0；3 文件残留扫描为空（余下均为合法 `hsl(var(--x))` / `var(--color-x)`）；diff 逐行纯净 20/20 | 本 CHANGELOG + 方案台账偏差 25 收口记录 |
+
+**分布**：`analytics-page.tsx` 4 处 / 3 行、`team-stats-section.tsx` 3 处、`mdx-editor.tsx` 14 处——**较方案的「18 处 / mdx-editor 12」多 2 处**：方案聚类时按 `stroke/fill/color/background` 关键词取面，漏掉 `borderRight: '1px solid var(--border)'` 与 `border: '1px solid var(--border)'` 两行（协调方首次复算踩了同一个坑，改按「先列出全部 `var(--` 行再逐行分类」才暴露）。
+
+**性质须显式记录（非等价替换）**：修复后**渲染会改变**（此前落到 Recharts/CodeMirror 的默认值），属**视觉变更**，且无快照测试覆盖。
+
+**产物级复核（A/B，非推断）**：修复前 `dist/assets/*.css` **缺** `--color-foreground` / `--color-accent` / `--color-accent-blue` 三个别名；仅把源码改为 `var(--color-x)` 后重建，三者**全部落盘**。机制已定位：Tailwind 4 按**源码引用**树摇主题变量——修复前全仓唯一引用 `var(--color-border)` 的是 `shared/decision-card/decision-card.css`，故仅它幸存。**由此建议（需人裁决）**：`hsl(var(--x))`（存量 437 处，是 `var(--color-x)` 69 处的 6 倍）只依赖 `:root` 定义、**不依赖树摇**，后续新代码宜优先采用；69 处存量 `var(--color-x)` 记为「引用驱动才存活」的技术债。本条原建议的 `--color-x` 已落地并**验证可用**，故不推翻、只作倾向性建议。
+
+**有意未做（报回裁决，非漏做）**：① `analytics-page.tsx:409` 的 `fill="var(--color-cost)"` —— `--color-cost` **全仓零定义**（`index.css` 无、产物 CSS 无），fill 被丢弃；属**独立缺陷**（未定义 token，非裸三元组），修它需选配色＝设计决策，故不自造；② `design-system-page.tsx` 同类裸三元组 **12 处 / 9 行**（4 处 `RechartTooltip` 的 `border`+`background`、`stopColor`/`Area` 的 `--destructive`、`Bar` 的 `--primary`；第 1345 行 `var(--accent-green, #10B981)` 虽带 hex 回退但 `--accent-green` 已定义故回退不生效、仍被丢弃）——该页属 palette 豁免面、不在偏差 25 范围，且交付时正被并行代理改动，只报不改。
+
 ### 前端设计治理——E 类 · 批 4「组件裁决面落地」（registry 的 `review`/`standby` 标记首次呈到页面，零删除）
 
 > 提交 `af237f9e`（5 文件 / +488 / −3）。依据 E 类方案 §5.2/§5.4，兑现人类铁律第 ① 步「组件不删除，但要在 design-system 页面标记」。
