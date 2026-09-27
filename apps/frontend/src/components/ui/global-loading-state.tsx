@@ -52,14 +52,9 @@ function GlobalLoadingState() {
     return unsubscribe
   }, [queryClient, addPending, removePending])
 
-  return (
-    <LoadingOverlay
-      visible={isLoading}
-      mode={mode}
-      message="加载中"
-      description="正在获取数据，请稍候..."
-    />
-  )
+  // bar 模式（main.tsx 的 defaultMode）下 message 仅作 aria-label、description 不渲染；
+  // 不写「请稍候」——§16.6 禁用词，且本组件是非阻塞顶部进度条而非阻塞遮罩（§10.6）。
+  return <LoadingOverlay visible={isLoading} mode={mode} message="加载中" />
 }
 
 export { GlobalLoadingState }

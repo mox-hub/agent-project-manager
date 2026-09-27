@@ -302,7 +302,7 @@ export function McpTab() {
             disabled={refreshAllServersMutation.isPending || servers.length === 0}
             className="gap-1.5"
           >
-            <RefreshCw size={14} className={refreshAllServersMutation.isPending ? 'animate-spin' : ''} />
+            {refreshAllServersMutation.isPending ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={14} />}
             {t('aiHub.refreshAll')}
           </Button>
           <Button size="sm" onClick={() => { setEditingServer(null); setServerDialogOpen(true); }} className="gap-1.5">

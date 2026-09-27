@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Search, Plus, CheckSquare, Bug } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { AsyncState } from '@/components/ui/async-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -124,22 +125,27 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
 
           {/* 任务列表 */}
           <div className="max-h-100 overflow-y-auto rounded-lg border border-border">
-            {isLoading ? (
-              <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-                <Spinner className="h-4 w-4 text-inherit" />
-                正在加载任务…
-              </div>
-            ) : error ? (
-              <div className="p-6 text-center text-sm text-destructive">
-                加载任务失败: {(error as Error)?.message ?? '未知错误'}
-              </div>
-            ) : tasks.length === 0 ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                {search || filterType !== 'all'
-                  ? '未找到匹配的任务, 试试调整过滤条件'
-                  : '当前项目下还没有任务可关联, 请先在任务模块创建'}
-              </div>
-            ) : (
+            <AsyncState
+              isLoading={isLoading}
+              error={error ? ((error as Error)?.message ?? '未知错误') : null}
+              isEmpty={tasks.length === 0}
+              loadingFallback={
+                <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
+                  <Spinner className="h-4 w-4 text-inherit" />
+                  正在加载任务…
+                </div>
+              }
+              emptyTitle={
+                search || filterType !== 'all'
+                  ? '未找到匹配的任务'
+                  : '当前项目下还没有任务可关联'
+              }
+              emptyDescription={
+                search || filterType !== 'all'
+                  ? '试试调整过滤条件'
+                  : '先在任务模块创建任务，再回到这里关联'
+              }
+            >
               <ul className="divide-y divide-border">
                 {tasks.map((t) => (
                   <li key={t.id}>
@@ -172,7 +178,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
                   </li>
                 ))}
               </ul>
-            )}
+            </AsyncState>
           </div>
         </div>
 

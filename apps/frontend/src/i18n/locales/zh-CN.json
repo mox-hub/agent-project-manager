@@ -3424,7 +3424,8 @@
     "memberTeams": "所属团队",
     "noTeams": "不在任何团队",
     "recentActivities": "活动记录",
-    "noActivities": "暂无活动记录",
+    "noActivities": "还没有活动记录",
+    "noActivitiesDesc": "该成员产生操作后，记录会出现在这里",
     "properties": "属性",
     "fields": {
       "type": "类型",
@@ -3508,7 +3509,8 @@
       "member": "成员",
       "type": "类型",
       "joinedAt": "加入时间",
-      "empty": "暂无成员"
+      "empty": "还没有成员",
+      "emptyDesc": "邀请成员加入后，他们会出现在这里"
     },
     "projects": {
       "project": "项目",
@@ -3560,9 +3562,11 @@
       "copyLink": "复制邀请链接",
       "linkCopied": "邀请链接已复制",
       "revoke": "撤销",
-      "empty": "暂无邀请记录",
+      "empty": "还没有邀请记录",
+      "emptyDesc": "发出邀请后，记录会出现在这里",
       "outbox": "邮件发件箱（Outbox）",
-      "outboxEmpty": "暂无待发邮件",
+      "outboxEmpty": "还没有待发邮件",
+      "outboxEmptyDesc": "系统发出的通知邮件会先排在这里",
       "outboxTo": "收件人 {{to}}",
       "sent": "已发送",
       "failed": "失败",
@@ -4612,7 +4616,8 @@
     "createFailed": "创建失败：{{message}}",
     "cliToolsDesc": "本机检测到的本地 Agent CLI。可启用/禁用提供商，或探测其在线状态。",
     "skillsRegistryDesc": "Agent 技能注册表 — 开关与指令正文会持久化到服务端。",
-    "skillEmpty": "暂无技能，可新建或从本地导入",
+    "skillEmpty": "还没有技能",
+    "skillEmptyDesc": "从本地导入已有技能，或手动新建一个",
     "skillCreate": "新建技能",
     "skillImport": "从本地导入",
     "skillCreateTitle": "新建技能",
@@ -4922,7 +4927,8 @@
     },
     "sectionLinks": {
       "loadFailed": "段落任务关联加载失败，请稍后重试",
-      "noSections": "文档尚未解析出章节，无法添加段落关联"
+      "noSections": "文档尚未解析出章节",
+      "noSectionsDesc": "文档解析完成后即可在这里关联段落任务"
     }
   },
   "linearSync": {

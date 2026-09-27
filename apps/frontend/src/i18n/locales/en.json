@@ -3425,6 +3425,7 @@
     "noTeams": "Not in any team",
     "recentActivities": "Activity log",
     "noActivities": "No activity yet",
+    "noActivitiesDesc": "Activity shows up here once this member takes action",
     "properties": "Properties",
     "fields": {
       "type": "Type",
@@ -3508,7 +3509,8 @@
       "member": "Member",
       "type": "Type",
       "joinedAt": "Joined",
-      "empty": "No members yet"
+      "empty": "No members yet",
+      "emptyDesc": "Invite members and they will show up here"
     },
     "projects": {
       "project": "Project",
@@ -3561,8 +3563,10 @@
       "linkCopied": "Invite link copied",
       "revoke": "Revoke",
       "empty": "No invites yet",
+      "emptyDesc": "Sent invites will show up here",
       "outbox": "Mail outbox",
       "outboxEmpty": "No pending emails",
+      "outboxEmptyDesc": "Notification emails queue here before they are sent",
       "outboxTo": "To {{to}}",
       "sent": "Sent",
       "failed": "Failed",
@@ -4612,7 +4616,8 @@
     "createFailed": "Create failed: {{message}}",
     "cliToolsDesc": "Local agent CLIs detected on this machine. Enable/disable providers, or probe one to test its online status.",
     "skillsRegistryDesc": "Agent skill registry — toggles and instruction content are persisted on the server.",
-    "skillEmpty": "No skills yet — create one or import from local",
+    "skillEmpty": "No skills yet",
+    "skillEmptyDesc": "Import existing skills from local, or create one manually",
     "skillCreate": "New Skill",
     "skillImport": "Import from Local",
     "skillCreateTitle": "New Skill",
@@ -4922,7 +4927,8 @@
     },
     "sectionLinks": {
       "loadFailed": "Failed to load section task links. Please retry.",
-      "noSections": "No sections parsed for this document. Section links unavailable."
+      "noSections": "No sections parsed for this document",
+      "noSectionsDesc": "Section task links become available once the document parses"
     }
   },
   "linearSync": {

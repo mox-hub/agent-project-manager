@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink, RefreshCw, AlertCircle, GitBranch, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,6 @@ import {
   useSyncTasks,
 } from '../hooks/use-linear-sync';
 import type { SyncDirection } from '../api/linear-api';
-import { cn } from '@/lib/utils';
 
 interface TaskLinearPanelProps {
   issueId: string;
@@ -141,12 +141,11 @@ export function TaskLinearPanel({ issueId, task, projectId }: TaskLinearPanelPro
           disabled={syncTasks.isPending}
           onClick={handleSyncThis}
         >
-          <RefreshCw
-            className={cn(
-              'mr-1 size-3',
-              syncTasks.isPending && 'animate-spin',
-            )}
-          />
+          {syncTasks.isPending ? (
+            <Spinner className="mr-1 size-3 text-inherit" />
+          ) : (
+            <RefreshCw className="mr-1 size-3" />
+          )}
           {t('linearSync.syncNow')}
         </Button>
 

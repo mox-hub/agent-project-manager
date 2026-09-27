@@ -179,8 +179,12 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                 ))}
                 {stats.personDays.rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="p-6 text-center text-sm text-muted-foreground">
-                      暂无成员
+                    <TableCell colSpan={4} className="p-2">
+                      <EmptyState
+                        title="还没有成员"
+                        description="成员加入团队并产生活跃记录后，用量会在这里统计"
+                        className="min-h-0 border-0 py-4"
+                      />
                     </TableCell>
                   </TableRow>
                 )}

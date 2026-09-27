@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, type ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { Filter, Search, ChevronDown, X, Plus, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -285,9 +286,11 @@ export function FilterPanel({
           </div>
           <div className="max-h-50 overflow-y-auto p-2">
             {activeFilters.length === 0 ? (
-              <div className="py-4 text-center text-xs text-muted-foreground">
-                暂无筛选条件
-              </div>
+              <EmptyState
+                title="还没有筛选条件"
+                description="在上方选择筛选项后，条件会列在这里"
+                className="min-h-0 border-0 py-4"
+              />
             ) : (
               <div className="space-y-1">
                 {activeFilters.map((filter) => (

@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/data-list';
 import { AsyncState } from '@/components/ui/async-state';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Spinner } from '@/components/ui/spinner';
 import { IconStack } from '@/components/ui/icon-stack';
 import { Button } from '@/components/ui/button';
 import type { MenuItem } from '@/components/ui/context-menu';
@@ -427,7 +428,7 @@ function GitStatusPill({ status, isLoading, onSettingsClick }: GitStatusPillProp
   if (isLoading) {
     return (
       <span className="flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
-        <RefreshCw className="size-3 animate-spin" />
+        <Spinner className="size-3" />
         <span>Git…</span>
       </span>
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 export interface SyncProgress {
   phase: 'fetching' | 'syncing' | 'completed' | 'error';
@@ -51,7 +52,7 @@ export function SyncProgressDialog({
     if (isSuccess) return <CheckCircle className="w-5 h-5 text-accent-green" />;
     if (isError) return <XCircle className="w-5 h-5 text-destructive" />;
     if (isCompleted) return <CheckCircle className="w-5 h-5 text-accent-green" />;
-    return <RefreshCw className="w-5 h-5 animate-spin text-accent-blue" />;
+    return <Spinner size="md" className="text-accent-blue" />;
   };
 
   const getStatusText = () => {

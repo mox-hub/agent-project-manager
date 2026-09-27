@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AsyncState } from '@/components/ui/async-state';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -65,22 +66,20 @@ export function LinearProjectsTable({
         </DialogHeader>
 
         <div className="max-h-[60vh] overflow-y-auto rounded-md border">
-          {isLoading ? (
-            <div className="space-y-2 p-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full" />
-              ))}
-            </div>
-          ) : error ? (
-            <div className="p-6 text-sm text-destructive">
-              Failed to load Linear projects:{' '}
-              {error instanceof Error ? error.message : 'Unknown error'}
-            </div>
-          ) : !data || data.length === 0 ? (
-            <div className="p-6 text-sm text-muted-foreground">
-              No projects visible with this API key.
-            </div>
-          ) : (
+          <AsyncState
+            isLoading={isLoading}
+            error={error ? (error instanceof Error ? error.message : 'Unknown error') : null}
+            isEmpty={!data || data.length === 0}
+            loadingFallback={
+              <div className="space-y-2 p-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-14 w-full" />
+                ))}
+              </div>
+            }
+            emptyTitle="No projects visible"
+            emptyDescription="Check that this API key can see at least one Linear project."
+          >
             <ul className="divide-y">
               {data.map((proj) => (
                 <ProjectRow
@@ -91,7 +90,7 @@ export function LinearProjectsTable({
                 />
               ))}
             </ul>
-          )}
+          </AsyncState>
         </div>
 
         <DialogFooter>

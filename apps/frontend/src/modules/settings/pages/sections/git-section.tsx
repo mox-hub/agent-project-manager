@@ -9,6 +9,7 @@ import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { PageShell } from '@/components/ui/page-shell';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { Spinner } from '@/components/ui/spinner';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-tool';
 import { GitBranch, RefreshCw, CheckCircle2, XCircle, Save, Settings2 } from 'lucide-react';
@@ -86,7 +87,7 @@ function GitToolStatusCard() {
             disabled={testing || isLoading}
             className="gap-1.5"
           >
-            <RefreshCw size={14} className={testing ? 'animate-spin' : ''} />
+            {testing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={14} />}
             {testing ? t('settings.gitTesting') : t('settings.gitTest')}
           </Button>
         </div>
@@ -95,7 +96,7 @@ function GitToolStatusCard() {
       <CardContent className="space-y-4">
         {isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
-            <RefreshCw size={16} className="animate-spin" />
+            <Spinner size="sm" />
             <span>{t('settings.gitChecking')}</span>
           </div>
         ) : gitStatus?.available ? (
@@ -148,7 +149,7 @@ function GitToolStatusCard() {
               className="shrink-0"
             >
               {setGitPath.isPending ? (
-                <RefreshCw size={14} className="animate-spin" />
+                <Spinner className="size-3.5 text-inherit" />
               ) : (
                 t('settings.gitPathSave')
               )}

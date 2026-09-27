@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/ui/page-shell';
+import { Spinner } from '@/components/ui/spinner';
 import { useUpdateShortIdPrefix, useShortIdPrefix } from '@/modules/config/hooks/use-global-config';
 import { useBackfillShortIds, useShortIdStats } from '@/modules/issue/hooks/use-project-tasks';
 import { Hash, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
@@ -90,7 +91,7 @@ function ShortIdSettingsCard() {
               onClick={() => refetchStats()}
               disabled={statsLoading}
             >
-              <RefreshCw size={14} className={statsLoading ? 'animate-spin' : ''} />
+              {statsLoading ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={14} />}
             </Button>
           </div>
           <CardDescription>
@@ -100,7 +101,7 @@ function ShortIdSettingsCard() {
         <CardContent>
           {statsLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <RefreshCw size={14} className="animate-spin" />
+              <Spinner className="size-3.5" />
               {t('common.loading')}
             </div>
           ) : stats ? (
@@ -146,7 +147,7 @@ function ShortIdSettingsCard() {
               >
                 {backfillMutation.isPending ? (
                   <>
-                    <RefreshCw size={14} className="animate-spin" />
+                    <Spinner className="size-3.5 text-inherit" />
                     {t('settings.backfillRunning')}
                   </>
                 ) : (

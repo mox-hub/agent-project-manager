@@ -10,6 +10,7 @@ import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -259,13 +260,16 @@ export function SkillsTab() {
           ))}
         </div>
       ) : skills.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-10 text-center">
-          <Zap size={20} className="mb-2 text-muted-foreground/50" />
-          <p className="text-sm text-muted-foreground">{t('aiHub.skillEmpty', '暂无技能，可新建或从本地导入')}</p>
-          <Button size="sm" variant="outline" className="mt-3" onClick={() => setSkillDialog({ mode: 'create', skill: null })}>
-            <Plus size={14} className="mr-1" /> {t('aiHub.skillCreate')}
-          </Button>
-        </div>
+        <EmptyState
+          icon={Zap}
+          title={t('aiHub.skillEmpty', '还没有技能')}
+          description={t('aiHub.skillEmptyDesc', '从本地导入已有技能，或手动新建一个')}
+          action={
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setSkillDialog({ mode: 'create', skill: null })}>
+              <Plus size={14} /> {t('aiHub.skillCreate')}
+            </Button>
+          }
+        />
       ) : (
         <div className="space-y-5">
           {Object.entries(

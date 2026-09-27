@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { PageShell } from '@/components/ui/page-shell';
+import { Spinner } from '@/components/ui/spinner';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useTerminalStatus, useTestShell } from '@/modules/runtime/hooks/use-terminal-status';
@@ -82,7 +83,7 @@ function TerminalToolStatusCard() {
             disabled={testing || isLoading}
             className="gap-1.5"
           >
-            <RefreshCw size={14} className={testing ? 'animate-spin' : ''} />
+            {testing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={14} />}
             {testing ? t('settings.terminalTesting') : t('settings.terminalTest')}
           </Button>
         </div>
@@ -91,7 +92,7 @@ function TerminalToolStatusCard() {
       <CardContent className="space-y-4">
         {isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
-            <RefreshCw size={16} className="animate-spin" />
+            <Spinner size="sm" />
             <span>{t('settings.terminalChecking')}</span>
           </div>
         ) : terminalStatus?.available ? (

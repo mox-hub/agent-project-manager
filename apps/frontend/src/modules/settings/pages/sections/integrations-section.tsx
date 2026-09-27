@@ -35,6 +35,7 @@ import { cn } from '@/lib/utils';
 import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
+import { Spinner } from '@/components/ui/spinner';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useIntegrations, useDeleteIntegration } from '@/modules/integration/hooks/use-integrations';
 import type { IntegrationConfig } from '@/modules/integration/api/integration-api';
@@ -359,7 +360,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
                 disabled
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground cursor-not-allowed"
               >
-                <RefreshCw className="w-3 h-3 animate-spin" />
+                <Spinner className="size-3 text-inherit" />
                 {t('settings.integration.connecting')}
               </button>
             )}

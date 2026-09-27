@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   AutoSizeTextarea,
   CapsuleSelect,
@@ -486,8 +487,13 @@ export default function TeamDetailPage() {
                         ))}
                         {((members ?? []) as TeamMember[]).length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={5} className="p-6 text-center text-sm text-muted-foreground">
-                              {t('teamDetail.members.empty', '暂无成员')}
+                            <TableCell colSpan={5} className="p-2">
+                              <EmptyState
+                                variant="card"
+                                title={t('teamDetail.members.empty', '还没有成员')}
+                                description={t('teamDetail.members.emptyDesc', '邀请成员加入后，他们会出现在这里')}
+                                className="min-h-0 border-0"
+                              />
                             </TableCell>
                           </TableRow>
                         )}
@@ -794,8 +800,13 @@ export default function TeamDetailPage() {
                         })}
                         {(invites ?? []).length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={6} className="p-6 text-center text-sm text-muted-foreground">
-                              {t('teamDetail.invites.empty', '暂无邀请记录')}
+                            <TableCell colSpan={6} className="p-2">
+                              <EmptyState
+                                variant="card"
+                                title={t('teamDetail.invites.empty', '还没有邀请记录')}
+                                description={t('teamDetail.invites.emptyDesc', '发出邀请后，记录会出现在这里')}
+                                className="min-h-0 border-0"
+                              />
                             </TableCell>
                           </TableRow>
                         )}
@@ -811,9 +822,12 @@ export default function TeamDetailPage() {
                       {t('teamDetail.invites.outbox', '邮件发件箱（Outbox）')}
                     </div>
                     {(outbox ?? []).length === 0 ? (
-                      <p className="text-xs text-muted-foreground">
-                        {t('teamDetail.invites.outboxEmpty', '暂无待发邮件')}
-                      </p>
+                      <EmptyState
+                        variant="card"
+                        title={t('teamDetail.invites.outboxEmpty', '还没有待发邮件')}
+                        description={t('teamDetail.invites.outboxEmptyDesc', '系统发出的通知邮件会先排在这里')}
+                        className="min-h-0 border-0 py-4"
+                      />
                     ) : (
                       <ul className="space-y-1.5">
                         {(outbox ?? []).map((m) => (

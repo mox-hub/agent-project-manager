@@ -12,7 +12,7 @@
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Eye, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,6 +24,7 @@ import {
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { SectionCard } from '@/components/ui/section-card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
 import { PromptEditor } from '@/shared/components/prompt-editor';
 import { useProjectTasks } from '@/modules/issue/hooks/use-project-tasks';
@@ -262,7 +263,7 @@ function PromptLivePreview({
           </DialogHeader>
           {preview.isLoading ? (
             <p className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-              <RefreshCw className="size-3.5 animate-spin" />
+              <Spinner className="size-3.5" />
               {t('projectSettings.prompt.previewLoading')}
             </p>
           ) : (

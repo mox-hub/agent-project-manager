@@ -21,6 +21,23 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——BCD 方案 · 批 6a「三态收口」（D5）
+
+> 批 6 按**关注点**拆为 6a/6b 串行。6a 收口「加载 / 空 / 错误」三态的**写法**（宪法 §10.6 三态选型决策树 + §10.1 唯一实现），**不改任何公共组件的对外 API**。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **四步三态收口，共 25 个源文件**（+2 个 i18n）。①**手写 `animate-spin` → `ui/spinner`（12 文件）**：`sync-progress-dialog` / `task-linear-panel` / `project-linear-sync-status` / `project-prompt-settings-panel` / `project-roles-section` / `storage-settings`(4 处) / `git-section`(3) / `integrations-section` / `short-id-section`(3) / `terminal-section`(2) / `repository-list-page` / `mcp-tab`。②**内联「暂无XX」→ `EmptyState`（7 文件）**：`skills-tab`（手写 dashed 块整体替换，带 `action`）/ `team-detail-page`(3 处含 colSpan 表格行) / `member-detail-page` / `team-stats-section` / `iteration-detail-dialog` / `delivery-page`（原无空态）/ `shared/ui/filter-panel`。③**遮罩语义收敛（1 文件）**：`global-loading-state.tsx` 收敛为非阻塞顶部进度条，去掉 `description`（原文案含 §16.6 禁用词「请稍候」）。④**`AsyncState` 作为数据组件默认入口（3 文件）**：`task-picker-dialog`（4 路三元链 → AsyncState，保留原 Spinner 为 `loadingFallback`）/ `linear-projects-table`（4 骨架行保留为 `loadingFallback`）/ `section-task-links-list`（3 处提前返回守卫 → 单个 AsyncState，带 `onRetry`）。i18n：新增/改写 6 组空态 title+description 键（zh-CN + en） | CAP-P-01 | **协调方独立复现（不采信自报）**：改动文件数 **25 ✓**（与自报一致）；`tsc -b` **exit 0**；八道设计门禁全 **EXIT=0**；子代理自跑 **56 个测试文件 / 317 个测试 0 失败**。四步数字复核（我的口径 vs 自报，**全部落在 ±1 内**）：`animate-spin` 子串 18/17 文件、词边界去注释 17/16、非豁免 15/14；「暂无」**全量 45/45 完全吻合**、非测试+去注释 26/25；`AsyncState` 消费方 27/26（非测试 26/26）；遮罩三组消费方**逐项吻合**（`LoadingOverlay` 应用侧 0、`GlobalLoadingState` 仅 `main.tsx`、`ErrorOverlay`/`useLoading` 零消费者） | 无契约变更；i18n 键取值变化（已 grep 确认每键仅一处引用）；`PRINCIPLES.md` §10.6 无需改（本次是其落地执行） |
+
+> **批 6a 执行偏差记录（3 处，方案的 D5 数字高估）**：
+> 20. **第 1 步「30 个文件」高估约 2 倍——真正需要处理的加载指示只有 14 处**。方案的 30 是**子串口径**，把三类非「加载指示」的命中一并计入：① **状态旋转 10 处**（`in_progress`/`running`/`s.spin` 等，语义是「状态」不是「加载」）；② **vendored 配方 1 处**（`ui/toast.tsx` 的 coss 官方配方，按 A2 豁免面不手改）；③ **装饰动画 1 处**（`blueprint-canvas` 20s 缓慢旋转）。另 1 处仅命中 JSDoc 注释（`header-action-button.tsx:34` 注释里写着「如 animate-spin」）。故**方案的工作量按 30 记会多派一倍人力**。
+> 21. **第 3 步「2 处」不成立——应用侧 `LoadingOverlay` 消费点为 0**。方案若指「两个组件本身」则成立；若指「两处需厘清的调用点」则不成立：`LoadingOverlay` 在应用侧**零消费**，`ErrorOverlay` / `useLoading` 同样是**零消费者的死表面**（§10.1 删除候选）。**且全屏阻塞场景（导出/切库）当前没有任何一处使用 `LoadingOverlay`，故无「误用」可修正**。因「组件不删、先标记」的裁决，死表面原样保留。
+> 22. **第 4 步不存在方案所称的「待盘」数字，且宽口径严重虚高**：严格三态三元链实测 **4 处 → 1 处**，提前返回式守卫 **1 → 0**；但「同文件同现 isLoading + error + 空判」的**宽口径得 66 个文件，该口径对「是否已收口」不敏感**（转换后 `isLoading`/`error`/`isEmpty` 只是变成 `AsyncState` 的 props，仍命中），**不能当工作量**。真实可无损转换的只有 3 处，其余被 `AsyncState` 的 API 缺口挡住（见存疑 2）。
+>
+> **交回的 8 项存疑（供人裁决，均未擅自实现）**：① **`HeaderActionButton` 的 `icon: LucideIcon` 槽装不下 `Spinner`——阻塞 2 处加载指示**（`shell-layout.tsx:984`、`project-team-page.tsx:104`）。`Spinner` 是普通函数组件，赋值报 `TS2741: Property '$$typeof' is missing`（已实测复现）。建议加 `loading?: boolean`（§10.7 命名已预留），**属改公共组件 API，未自行改** · ② **`AsyncState` API 缺口——阻塞第 4 步大部分转换**：缺 `emptyAction`（空态要挂按钮，宽口径 66 个文件绝大多数卡在此）、缺自定义 error 节点/`errorTitle`、缺 `className` · ③ **`async-state.tsx:63` 的默认 `emptyTitle = t("common.noData","暂无数据")` 是「暂无」文案最大的扩散源**——每个不传 `emptyTitle` 的调用点都渲染它；改它等于改公共组件对外契约，**未动** · ④ **第 2 步剩余 6 个未承载点**（`activity-heatmap` 的 `emptyLabel` 是公共 prop 默认值，改 EmptyState 会把卡片内一行小字升级成 `min-h-40 border-dashed` 块致视觉密度失衡；`station-context.ts` 是 adapter 字符串非 JSX；`radial-watch-deck.tsx` 受 ai-surface「宁可显示无数据，不显示像数据的假话」约定，是否纳入 §16 需产品裁决；`delivery-page.tsx:589` 与 `document-edit-page.tsx:299` 是**单元格/字段级**占位，换 EmptyState 会撑高行高）· ⑤ **19 处已在 EmptyState/AsyncState 内但标题仍是「暂无XX」**——结构合规、文案待收口，建议单独一批；**且多处有测试锁死文案**（`project-gantt.test.tsx:51`、`tasks-page.test.tsx`、`project-milestones-page.test.tsx`），改文案须与测试 owner 协同 · ⑥ `ui/toast.tsx:157,246` 的 `in-data-[type=loading]:animate-spin` 是 vendored coss 配方，按 A2 保留 · ⑦ `ErrorOverlay`/`useLoading`/`LoadingOverlay` 的 `overlay`/`inline` 模式应用侧零消费——§10.1 删除候选，因「不许删文件」未处理 · ⑧ **测试资产里就写着「暂无数据」「暂无工单」**（`async-state.test.tsx:62`、`empty-state.test.tsx`），若后续统一文案需同步。
+>
+> **口径诚实性说明（子代理自陈，予以保留）**：该代理在一次扫描中用过更窄口径（第 1 步 29/27、第 2 步 34 文件、第 4 步严格链 4/宽口径 15），与收尾全树复测口径**不同、两次数值不可直接相减**；其所报「前」值是按「收尾口径 = 后值 + 已知被清空的文件数」重建的。**此说明值得保留——它把口径不一致主动讲清楚了，而非拼接出一个好看的数字。**
+
 ### 前端设计治理——BCD 方案 · 批 9a「D10/D11 只读审计」（前置审计，未改产品代码）
 
 > 批 9 的**前置审计**：把 D10（响应式断点）与 D11（无障碍）的现状做成**只读事实底账**，供后续代码改造排期。**本批零产品代码改动**，产出单篇报告 `docs/design/审计-D10断点与D11无障碍-2026-09-27.md`（74KB，含逐文件行号清单与 jsx-a11y 分级接入方案）。

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { SkeletonList } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useProjectTasks } from '../hooks/use-project-tasks';
 import type { IterationRef } from '../api/issue-api';
 import {
@@ -105,12 +106,15 @@ export function IterationDetailDialog({
                 {isLoading ? (
                   <SkeletonList count={3} />
                 ) : issues.length === 0 ? (
-                  <p className="py-6 text-center text-xs text-muted-foreground">
-                    {t(
-                      'project.milestonesPage.iterationEmptyIssues',
-                      '该迭代暂无工单，可在任务工作台把工单归入此迭代。',
+                  <EmptyState
+                    variant="card"
+                    title={t('project.milestonesPage.iterationEmptyIssues', '这个迭代还没有工单')}
+                    description={t(
+                      'project.milestonesPage.iterationEmptyIssuesDesc',
+                      '在任务工作台把工单的迭代字段设为本迭代',
                     )}
-                  </p>
+                    className="min-h-0 border-0 py-6"
+                  />
                 ) : (
                   issues.map((issue) => (
                     <div

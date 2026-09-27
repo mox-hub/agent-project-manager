@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckSquare, Bug, ExternalLink, Plus, X, Link2, AlertCircle } from 'lucide-react';
+import { CheckSquare, Bug, ExternalLink, Plus, X, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AsyncState } from '@/components/ui/async-state';
 import { cn } from '@/lib/utils';
 import type { DocumentTaskLink } from '@/modules/document/api/document-task-link-api';
 import {
@@ -65,7 +66,7 @@ interface PickerState {
 
 export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinksListProps) {
   const { t } = useTranslation();
-  const { data: groupsRaw, isLoading, isError } = useSectionTaskLinksByDoc(documentId);
+  const { data: groupsRaw, isLoading, isError, refetch } = useSectionTaskLinksByDoc(documentId);
   const groups = unwrapList<SectionGroup>(groupsRaw);
   const [picker, setPicker] = useState<PickerState | null>(null);
   const [highlightedSectionId, setHighlightedSectionId] = useState<string | null>(null);
@@ -130,34 +131,22 @@ export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinks
     }
   }, [groups, projectId, documentId]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-6 text-xs text-muted-foreground">
-        加载段落关联中...
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-        <AlertCircle size={14} className="mx-auto mb-1 text-muted-foreground/60" />
-        {t('document.sectionLinks.loadFailed', '段落任务关联加载失败，请稍后重试')}
-      </div>
-    );
-  }
-
-  if (groups.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-        <Link2 size={14} className="mx-auto mb-1 text-muted-foreground/60" />
-        {t('document.sectionLinks.noSections', '文档尚未解析出章节, 无法添加段落关联')}
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-3">
+    <AsyncState
+      isLoading={isLoading}
+      error={isError ? t('document.sectionLinks.loadFailed', '段落任务关联加载失败，请稍后重试') : null}
+      onRetry={() => refetch()}
+      isEmpty={groups.length === 0}
+      loadingFallback={
+        <div className="flex items-center justify-center py-6 text-xs text-muted-foreground">
+          加载段落关联中...
+        </div>
+      }
+      emptyIcon={Link2}
+      emptyTitle={t('document.sectionLinks.noSections', '文档尚未解析出章节')}
+      emptyDescription={t('document.sectionLinks.noSectionsDesc', '文档解析完成后即可在这里关联段落任务')}
+    >
+      <div className="space-y-3">
       {groups.map((group) => (
         <SectionGroupCard
           key={group.sectionId}
@@ -198,7 +187,8 @@ export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinks
           }}
         />
       ) : null}
-    </div>
+      </div>
+    </AsyncState>
   );
 }
 

@@ -21,6 +21,7 @@ import {
   FileSpreadsheet, FileJson, Copy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from '@/components/ui/toast';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -264,7 +265,12 @@ function AnnotationPanel({
         </div>
       )}
       {nodeAnns.length === 0 && (
-        <p className="text-xs text-muted-foreground/50 text-center py-3">暂无标注</p>
+        <EmptyState
+          variant="card"
+          title="还没有标注"
+          description="在下方输入框添加第一条标注"
+          className="min-h-0 border-0 py-3"
+        />
       )}
 
       {/* Add new */}

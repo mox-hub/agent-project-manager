@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Lock, ExternalLink, AlertCircle, Unlink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Tooltip,
   TooltipContent,
@@ -153,12 +154,11 @@ export function ProjectLinearSyncStatus({
                 disabled={syncTasks.isPending}
                 onClick={() => handleSyncTasks('two-way')}
               >
-                <RefreshCw
-                  className={cn(
-                    'mr-1.5 size-3.5',
-                    syncTasks.isPending && 'animate-spin',
-                  )}
-                />
+                {syncTasks.isPending ? (
+                  <Spinner className="mr-1.5 size-3.5 text-inherit" />
+                ) : (
+                  <RefreshCw className="mr-1.5 size-3.5" />
+                )}
                 Sync tasks
               </Button>
             ) : null}

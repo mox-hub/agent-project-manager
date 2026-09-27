@@ -34,6 +34,7 @@ import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/ui/section-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { StatsCard } from '@/components/ui/stats-card';
 import {
   AutoSizeTextarea,
@@ -434,9 +435,12 @@ export default function MemberDetailPage() {
             {activeTab === 'activities' && (
               <SectionCard title={t('memberDetail.recentActivities', '活动记录')}>
                 {(card?.recentActivities ?? []).length === 0 ? (
-                  <p className="py-4 text-center text-sm text-muted-foreground">
-                    {t('memberDetail.noActivities', '暂无活动记录')}
-                  </p>
+                  <EmptyState
+                    variant="card"
+                    title={t('memberDetail.noActivities', '还没有活动记录')}
+                    description={t('memberDetail.noActivitiesDesc', '该成员产生操作后，记录会出现在这里')}
+                    className="min-h-0 border-0"
+                  />
                 ) : (
                   <ul className="space-y-2">
                     {(card?.recentActivities ?? []).map((a) => (

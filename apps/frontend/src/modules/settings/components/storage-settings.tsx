@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
 import {
   useStorageConfig,
@@ -76,7 +77,7 @@ export function StorageSettings() {
     return (
       <Card className="border-border shadow-none">
         <CardContent className="flex items-center gap-2 p-6 text-muted-foreground">
-          <RefreshCw className="h-4 w-4 animate-spin" />
+          <Spinner size="sm" />
           {t('settings.storageLoading')}
         </CardContent>
       </Card>
@@ -113,7 +114,7 @@ export function StorageSettings() {
                 disabled={detectDefault.isFetching}
               >
                 {detectDefault.isFetching ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <Spinner className="text-inherit" />
                 ) : (
                   t('settings.detectDefault')
                 )}
@@ -194,7 +195,7 @@ export function StorageSettings() {
           <div className="flex justify-end pt-2">
             <Button onClick={handleSave} disabled={updateConfig.isPending} className="gap-2">
               {updateConfig.isPending ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
+                <Spinner className="text-inherit" />
               ) : (
                 <Save className="h-4 w-4" />
               )}
@@ -219,7 +220,7 @@ export function StorageSettings() {
               disabled={filesFetching}
               className="gap-1.5"
             >
-              <RefreshCw className={cn('h-4 w-4', filesFetching && 'animate-spin')} />
+              {filesFetching ? <Spinner className="text-inherit" /> : <RefreshCw className="h-4 w-4" />}
               {t('common.refresh')}
             </Button>
           </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Pencil, RefreshCw, Terminal, Trash2 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/section-card';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -89,10 +90,11 @@ export function ProjectRolesSection({ projectId }: { projectId: string }) {
               onClick={handleSeed}
               disabled={seed.isPending}
             >
-              <RefreshCw
-                size={13}
-                className={seed.isPending ? 'animate-spin' : undefined}
-              />
+              {seed.isPending ? (
+                <Spinner className="size-3.5 text-inherit" />
+              ) : (
+                <RefreshCw size={13} />
+              )}
               从全局模板同步
             </Button>
             <Button
