@@ -3,8 +3,10 @@
  * lint-staged 传入的是绝对路径，server(eslintrc) 按文件位置解析配置、
  * frontend(flat config) 按 pnpm --filter exec 切换后的 cwd 解析配置，均不受根目录影响。
  * 全量 type-check + lint 已移至 .husky/pre-push。
- * 设计宪法（docs/design/PRINCIPLES.md）的四个治理脚本同样在 pre-commit 把关：
- * 它们都是纯文本全库扫描（单个 0.2~0.6s，四个合计约 1.5s），能跟上提交节奏。
+ * 设计宪法（docs/design/PRINCIPLES.md）的五个治理脚本同样在 pre-commit 把关：
+ * 它们都是纯文本全库扫描（单个 0.2~0.6s，五个合计约 2s 内），能跟上提交节奏。
+ * （批 7a 起 `check-ui-governance.mjs` 也接入——它的页面型文件已由硬编码 4 页改为
+ *   glob 扫描全部页面型文件，配合 `data-ai-page` 全量覆盖，新增页面漏声明会当场拦住。）
  *
  * ⚠️ eslint 一律带 `--no-error-on-unmatched-pattern`。触发条件经**成对实测**厘清如下：
  *
@@ -55,5 +57,6 @@ export default {
       designCheck('check-palette.mjs'),
       designCheck('check-component-registry.mjs'),
       designCheck('check-semantic-classes.mjs'),
+      designCheck('check-ui-governance.mjs'),
     ].join(' && '),
 };

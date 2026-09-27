@@ -45,8 +45,10 @@ const buttonVariants = cva(
 
 // 组合方式：唯一走 base-ui 原生 `render` prop（宪法 §10.7）。
 // Radix 遗产 `asChild` 已于批 6b 移除（radix 已退场，base-ui 不认该 prop）。
-// 用 `render` 换成 <a>/<Link> 等非 button 元素时，若 base-ui 告警
-// "expected a native <button>"，由调用方显式传 `nativeButton={false}`。
+// 用 `render` 换成 <a>/<Link> 等非 button 元素时，**必须**由调用方显式传
+// `nativeButton={false}`——不是可选优化。实测不传时渲染出的是 `<a type="button" href>`
+// 且 role 为空：语义错乱，读屏与测试都无法识别为链接。
+// 既有正确用法见 components/ui/pagination.tsx 的 PaginationLink。
 function Button({
   className,
   variant = "default",

@@ -54,6 +54,7 @@ export function ErrorPage({ className }: ErrorPageProps) {
         "bg-background",
         className
       )}
+      data-ai-page="error"
     >
       <div className="w-full max-w-md text-center space-y-6">
         {/* Icon */}
@@ -93,7 +94,10 @@ export function ErrorPage({ className }: ErrorPageProps) {
             <ArrowLeftIcon className="size-3.5 mr-1.5" />
             {t("error.actions.goBack")}
           </Button>
-          <Button size="sm" render={<Link to="/app" />}>
+          {/* render 换成 <Link>（即 <a>）时必须显式传 nativeButton={false}：
+              否则 base-ui 渲染出 <a type="button" href> 且 role 为空，读屏/测试都无法识别为链接。
+              口径见 components/ui/pagination.tsx 的 PaginationLink。 */}
+          <Button size="sm" nativeButton={false} render={<Link to="/app" />}>
             <HomeIcon className="size-3.5 mr-1.5" />
             {t("error.actions.goHome")}
           </Button>

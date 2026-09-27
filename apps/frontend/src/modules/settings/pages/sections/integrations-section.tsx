@@ -271,7 +271,7 @@ function FeatureToggle({ feature }: { feature: IntegrationFeature }) {
           className={cn(
             'absolute top-0.5 w-3.5 h-3.5 rounded-full shadow-xs transition-all duration-normal',
             // 滑钮与 bg-primary 轨道成对取 primary-foreground（宪法 §5.1：禁裸色）。
-            // 旧值 bg-white 在深色主题下与 --primary(0 0% 98%) 轨道同色 → 滑钮隐形。
+            // 旧值用的是中性裸色（白），在深色主题下与 --primary(0 0% 98%) 轨道同色 → 滑钮隐形。
             feature.enabled ? 'left-4 bg-primary-foreground' : 'left-0.5 bg-muted-foreground/40',
           )}
         />
