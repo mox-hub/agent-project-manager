@@ -21,6 +21,14 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——E 类批 3 唯一实现收口（①②④⑤ 已交付）：`native-select` 改名 `select-field` + 两处「不合流」实物比对结论
+
+> 三笔提交（均显式路径、未 push）：`3f84855e`（40 文件 / +326 −326，纯改名）、`4e22154c`（3 文件 / +41 −3，注释 + registry reason + 生成物）、`ee5c0da4`（1 文件 / +26 −0，纯注释）。**零删除**（`--diff-filter=D` 为空，仅 2 处 `git mv`）；④ `view-switcher` **零改动无 commit**（实测早已是 `SegmentedControl` 薄封装）。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` 设计系统（`components/ui/select-field.tsx` / `dropdown-menu.tsx` / `shared/components/issue-type-icon.tsx`） | E 类方案批 3（E4 改名 / E6 合流裁决 / E8 合流裁决）；能力清单 B 治理线 | **旧名残留 0**（`native-select`/`NativeSelect`/`native_select` 全库零命中，含被生产测试消费的 `data-slot` 字符串；命名组 `group/select-field` 无跨文件引用 ⇒ **无静默失配**）。**三重一致**：文件名 = 导出三件（`:228`）= registry `name`+`file`（`:107`）。**纯改名无漂移**：`+326/−326` 完全对称，提交内 39 个 `src` 文件 + 生成物 `COMPONENTS.md`。**六项门禁全 exit 0**；`select*` 测试 **16/16**；**生成器重跑不改生成物**（确定性再生）。另两笔**非注释改动行 = 0**（纯注释、零行为风险）。**E6/E8 承重断言经复核成立**：`menu.tsx` 的 `MenuCheckboxItem`/`MenuRadioItem` 确无 `inset` 且 `:350+` 确有整套 `DropdownMenu*` 别名桥；`issue-type-icon.tsx:117` 确走 `IssueType.color` 内联上色、`EntityKind` 为封闭联合而 `ISSUE_TYPE_ICONS` 为开放 26 键。**协调方更正一处**：代理称两处惰性 mock「均不可解析」——实测 `@/components/view-switcher` 确失效，`@/shared/ui/filter-panel` **模块在位、可解析**（应为「一处失效、一处生效」）。**新增待裁 3 项**：`deprecated+expiresAt` 工具互斥（`check-component-registry:164-166` 强制要求 vs `gen-components-md:37` 正则无该槽位 ⇒ 须先改 `scripts/`，本轮改采 `review + reviewBy: 2026-10-31`）/ 失效 mock 去留 / 委托视觉等价不可取证（本批未改该文件，无新增风险） | 本 CHANGELOG + E 类方案「批 3 交付与核验」小节（含 3 项待裁与「③ `tone.ts` 建议并入批 0b」） |
+
 ### 前端设计治理——E 类批 6 开工前复核：无损可迁移率 ≈ 0.6%–1.0%，批 6 判定为「能力补档工程」而非替换工程
 
 > 本次**无代码交付**（零提交零改动，代理亦为零改动返回）。派工前按批 0 同一铁律（不能造出「禁了但没得用」）实测，**证否方案对批 6 的规模前提**，故本轮不派替换工；结论与人审项落 E 类方案新增小节「批 6 开工前可行性复核」。
