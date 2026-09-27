@@ -3,7 +3,7 @@
 > **适用范围**：`apps/frontend`（React 19 + Vite + TypeScript）
 > **设计宪法（最高依据）**：`docs/design/PRINCIPLES.md`——**本文件不承载任何设计规则**（§3 为纯指针），样式规则一律以宪法为准；两者冲突时不静默覆盖，须提交 PR 删除冲突段落。按宪法《版本号规则》，此处**不抄写宪法版本号**。
 > **组件索引**：`COMPONENTS.md`（开发第一入口）
-> **版本**：v1.4（2026-09-27：§3 由「宪法摘要」改为**纯指针**（摘要会随宪法静默过期）、删 `src/templates/` 失效引用、删 `src/lib/design-tokens.ts` 空壳引用、页面开发流程改「同域最近似页面 + §6.2 骨架约定」；v1.3 同日：字阶/字重/行高/动效/阴影全面语义 token 化并配 `lint:spacing` 机器强制，主题归一为 `default` 单套；v1.2 2026-08：Tailwind v4 @theme + shadcn CLI 官方管理 + base-ui 唯一基线，radix 清零）
+> **版本**：v1.5（2026-09-27：§3「已知缺口」表由**三族**收为**两族**——圆角已由宪法 §4.5 覆盖，表内改为指向该节；§6.1 移除 `components/ui/README.md` 引用（该文件已删，组件索引单点收敛到 `COMPONENTS.md`）；v1.4 同日：§3 由「宪法摘要」改为**纯指针**（摘要会随宪法静默过期）、删 `src/templates/` 失效引用、删 `src/lib/design-tokens.ts` 空壳引用、页面开发流程改「同域最近似页面 + §6.2 骨架约定」；v1.3 同日：字阶/字重/行高/动效/阴影全面语义 token 化并配 `lint:spacing` 机器强制，主题归一为 `default` 单套；v1.2 2026-08：Tailwind v4 @theme + shadcn CLI 官方管理 + base-ui 唯一基线，radix 清零）
 
 ---
 
@@ -100,15 +100,16 @@ apps/frontend/
 - 机器校验：`scripts/check-*.mjs`（宪法的可执行镜像；命令与逐项含义见 §6.4）
 - 若本文件与宪法冲突：**以宪法为准**，并请提交 PR 删除本文件中的冲突段落（不静默覆盖）
 
-> **⚠️ 已知缺口：三族 token 目前没有宪法条文**（2026-09-27 清空本节时实测）。宪法有字阶/字重/行高/间距/颜色/图标/动效/阴影/三态，**但没有「圆角」节**，也没有下列两族的条文——它们此前只写在本文件 §3，删节后一度无家可归：
+> **⚠️ 已知缺口：两族 token 目前没有宪法条文**（2026-09-27 实测）。宪法有字阶/字重/行高/间距/颜色/图标/动效/阴影/层级/三态/a11y，**圆角已由宪法 §4.5 补上条文**，但仍无下列两族的条文——它们此前只写在本文件 §3，删节后一度无家可归：
 >
 > | 族 | token | 现唯一出处 |
 > |---|---|---|
-> | 圆角 | `rounded-md`（控件）/ `rounded-lg`（面板）/ `rounded-xl`（卡片）/ `rounded-full`（胶囊）/ `rounded-xs` / `rounded-chip`（对应 `--radius-control` / `--radius` 等） | `src/index.css` 的 `@theme` |
-> | 弹窗/滚动区语义尺寸 | `h-dialog` / `w-dialog` / `w-dialog-wide` / `max-h-dialog` / `max-h-dialog-full` | 同上 |
+> | 弹窗/滚动区语义尺寸 | `h-dialog` / `w-dialog` / `w-dialog-wide` / `max-h-dialog` / `max-h-dialog-full` | `src/index.css` 的 `@theme` |
 > | 集成商品牌色 | `brand-linear(-light/-deep/-darkest)` / `brand-atlassian(-dark/-darker)`（仅用于对应集成商标识） | 同上 |
 >
-> **在批 3 补条文（D1 圆角等）之前，不要据任何文档引用这三族的档位含义**——上表只说明「值定义在哪」，不构成规范。批 3 补条文后删除本表并回填宪法章节号。
+> **圆角**（`rounded-md` 控件 / `rounded-lg` 面板 / `rounded-xl` 模态浮层 / `rounded-full`·`rounded-chip` 胶囊等）**不再登记于本表**：其档位含义已达条文，一律以宪法 §4.5「圆角五档 + 胶囊」为准（`docs/design/PRINCIPLES.md`）。
+>
+> **不要据任何文档引用上表这两族的档位含义**——它只说明「值定义在哪」，不构成规范；补条文后再删除本表并回填宪法章节号。
 
 ---
 
@@ -191,7 +192,7 @@ apps/frontend/
 
 ### 6.1 新增/修改组件
 
-- 先查 `COMPONENTS.md` 组件索引确认是否已有组件，必要时再看 `components/ui/README.md`。
+- 先查 `COMPONENTS.md` 组件索引确认是否已有组件。
 - 修改基础组件默认样式会全局生效：改前评估所有调用点（可用 `Select-String` 全仓搜索），并在 Design System 页面验证。
 - 保留扩展变体：refer 对齐只调整默认样式，业务侧新增的 variant（如 `danger`、`warning`、`size="xs"`）不得删除。
 
