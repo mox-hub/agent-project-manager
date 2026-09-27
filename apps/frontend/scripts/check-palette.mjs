@@ -1,11 +1,23 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, sep, extname } from "node:path";
+import { dirname, join, relative, sep, extname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// 根目录锚定「脚本自身位置」而非 process.cwd()：脚本有两条调用路径——
+// `pnpm --filter frontend run lint:*`（cwd = app 根）与 lint-staged 的 pre-commit
+// 任务（worker 进程的 cwd 不受控）。依赖 cwd 会在后者下扫空目录或直接报错。
+const PKG_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // 原生类治理（宪法 §5 语义色 + §10.1 唯一实现）：
 // 1) 原生 Tailwind 色板类禁止——颜色一律走语义 token（accent-*/status-*/content-* 等）
 // 2) Loader2/Loader2Icon 的 JSX 用法禁止——加载指示唯一入口 ui/spinner（状态图标引用
 //    走 status-visuals 的 icon 值引用，不受限）
-const ROOT = join(process.cwd(), "src");
+//
+// 职责边界（2026-09-27 裁决）：本脚本只管**颜色**。
+// 阴影曾在此处另写一份与 check-spacing-governance.mjs 逐字相同的正则，同一条违规
+// 每次报两遍；且这里只有「整文件 EXEMPT」、没有「按规则 id 放行」的能力，无法表达
+// 「vendored 原语只豁免 shadow、不豁免 motion」这类裁决，只能把豁免写宽。
+// 故刻度类 token（字阶/间距/行高/字重/动效/阴影）统一归 check-spacing-governance.mjs 单点治理。
+const ROOT = join(PKG_ROOT, "src");
 const TARGET_EXT = new Set([".ts", ".tsx"]);
 
 const RAW_PALETTE =
@@ -26,13 +38,10 @@ const INLINE_COLOR = /#[0-9a-fA-F]{3,8}\b|\brgba?\([^)]*\)/g;
 //    只匹配带编号的色板（slate-500 等），white/black 无编号故绕过。危害不止
 //    「硬编码」：明眸主题下 `--background` 恰为 `0 0% 100%`，`bg-white` 做激活
 //    胶囊底色会与背景**完全同色 → 选中态隐形**（2026-09-14 实测）。
-// 2) 超出 `shadow-xs` 的阴影类——DESIGN.md §3.2：全系统仅保留
-//    `shadow-xs: 0 1px 2px 0 rgba(0,0,0,0.05)`，「取消厚重投影」。故
-//    shadow-sm/md/lg/xl/2xl/inner 一律违规（悬浮层亦只允许 shadow-xs）。
 const RAW_NEUTRAL = /\b(?:bg|text|border|fill|stroke)-(?:white|black)\b/g;
-const RAW_SHADOW = /\bshadow-(?:sm|md|lg|xl|2xl|inner)\b/g;
-// 范围：窄起步，只对 ai-surface 强制；其余存量（page-registry 导航色、
-// design-system 展示页等）属设计上可解释的用例，待白名单机制后再宽扫。
+
+// 范围：ai-surface 专属的另两条其余规则（裸白/黑中性色、内联裸色）仍按窄范围收口；
+// 其余存量（page-registry 导航色、design-system 展示页等）属设计上可解释的用例。
 const inlineScope = (relUnix) => relUnix.includes("modules/ai-surface/");
 
 // 豁免：linear 品牌色、design-system 展示页、外观设置的主题预览缩略图（预览即字面色）
@@ -86,13 +95,6 @@ for (const file of walk(ROOT)) {
         rule: "无编号中性裸色类 → 语义 token（bg-muted / bg-card / text-foreground；明眸主题下 bg-white 与 --background 同色会使选中态隐形）",
       });
     }
-    for (const match of text.matchAll(RAW_SHADOW)) {
-      offenders.push({
-        file,
-        token: match[0],
-        rule: "超规格阴影类 → shadow-xs（DESIGN.md §3.2：全系统唯一阴影为 shadow-xs，取消厚重投影）",
-      });
-    }
     for (const match of text.matchAll(INLINE_COLOR)) {
       offenders.push({
         file,
@@ -111,5 +113,5 @@ if (offenders.length > 0) {
   process.exit(1);
 }
 console.log(
-  "✓ 原生类治理通过（无原生色板类、无 Loader2 JSX 直用；ai-surface 无内联裸色、无白/黑裸色类、无超规格阴影）",
+  "✓ 原生类治理通过（无原生色板类、无 Loader2 JSX 直用；ai-surface 无内联裸色、无白/黑裸色类）",
 );

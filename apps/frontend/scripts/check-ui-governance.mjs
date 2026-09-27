@@ -1,8 +1,14 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { readdirSync, statSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-const ROOT = process.cwd();
+// 根目录锚定「脚本自身位置」而非 process.cwd()：脚本有两条调用路径——
+// `pnpm --filter frontend run lint:*`（cwd = app 根）与 lint-staged 的 pre-commit
+// 任务（worker 进程的 cwd 不受控）。依赖 cwd 会在后者下扫空目录或直接报错。
+const PKG_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+const ROOT = PKG_ROOT;
 
 const CORE_PAGES = [
   "src/modules/project/pages/project-list-page.tsx",

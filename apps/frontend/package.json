@@ -13,6 +13,7 @@
     "lint:tokens": "node ./scripts/check-tailwind-arbitrary.mjs",
     "lint:registry": "node ./scripts/check-component-registry.mjs",
     "lint:spacing": "node ./scripts/check-spacing-governance.mjs",
+    "lint:undefined": "node ./scripts/check-undefined-classes.mjs",
     "lint:icons": "node ./scripts/check-icons.mjs",
     "type-check": "tsc -b --pretty false",
     "preview": "vite preview",
