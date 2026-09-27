@@ -21,6 +21,20 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——E 类 · 批 2「命名空间收敛」（6 个错位原子件由 `shared/components/` 迁入 `components/ui/`，零删除）
+
+> 提交 `7bc4945a`（21 文件 / +28 / −28）。依据 E 类方案 §2.2 分拣表；**迁移清单严格 6 个**，分拣表标「留 `shared/`」的 11 组一律未动。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` UI 原子层归位 | E 类 §2.2（批 2） | 6 件 `git mv` **sha256 逐字节未变**（`--numstat` 全 `0 0`）、**零删除**；旧路径残留 grep 为空；`COMPONENTS.md` **再跑生成器零 diff**（生成物非手改）；registry 门禁 exit 0（334 条 / review 18 / deprecated 0）；type-check exit 0；**4 文件 / 40 用例由协调方亲自复跑 passed** | 本 CHANGELOG + E 类方案批 2 行 |
+
+**迁移**：`dual-track-metric-pill` / `error-boundary` / `page-error-fallback` / `ai-agent-badge` / `ai-context-summary` / `ai-execution-badge`（内容零改动，仅移动）。**importer 更新**：14 处 import / 13 文件（`shell-layout.tsx` 占 2 处），每件真 importer 1:1 全覆盖；无 `*.stories.*`、无 `vi.mock`、无动态 `import()`/`lazy()` 引用（逐一 grep 确认为空）。`registry.ts` 6 行仅改 `file:` 字段（`shared/components/` → `ui/`），status 仍为 `canonical`。
+
+**方案预警前提已过期（须记）**：§2.2 称「迁入 `components/ui/` 会触发 palette 门禁，因 `ui/` 无豁免」——但**批 7a 已把 C2/C3 由 `modules/ai-surface/` 窄范围扩为全库生效**，这 6 件在 `shared/components/` 时**本就在扫查面内**，故迁移不改变任何命中（实测零内联色，`check-palette` 迁前/迁后均 exit 0）⇒ **未做任何语义 token 替换**，即「为过门禁改类值」清单为**空**。
+
+**遗留（报回裁决，非漏做）**：`components/ui/ai-execution-badge.tsx:4` 仍是 type-only 依赖 `@/modules/execution/hooks/use-active-executions-map`——当前无门禁冲突（`ui/` 内已有 3 个同例：`data-list` / `document-preview-dialog` / `property-panel`），但**批 5 的 `lint:layers`（分层倒置）若落地会点名这 4 件**。
+
 ### 治理脚本修复——`check:docs-sync` 变更集改三源并集（修「工作区有代码在制品时看不见 HEAD 里的文档」误拦）
 
 > 提交 `c126d77e`（1 文件 / +40 / −20）。偏差 25 收口入账时 `check:docs-sync` 报 exit 1「code changed but no docs/governance files were updated」——**而该提交本身就是 `CHANGELOG.md` + 设计台账**，报文与事实相反。
