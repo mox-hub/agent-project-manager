@@ -17,14 +17,6 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { IconStack } from '@/components/ui/icon-stack';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import {
@@ -33,7 +25,16 @@ import {
   useWorkflowEvents,
   useWorkflows,
 } from '../hooks/use-workflows';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useWorkflowDraft } from '../hooks/use-workflow-draft';
+import { WorkflowTriggerDialog } from '../components/workflow-trigger-dialog';
 import type { WorkflowSummary } from '../api/workflow-api';
 
 type WorkflowViewMode = 'grid' | 'list';
@@ -184,8 +185,12 @@ export function WorkflowListPage() {
                         <span className="truncate text-sm font-medium hover:underline">
                           {wf.name}
                         </span>
-                        <Badge variant="secondary" className="shrink-0 text-10">
-                          v{wf.version}
+                        <Badge
+                          variant="secondary"
+                          className="shrink-0 text-10"
+                          title={t('workflow.grammarVersionBadge')}
+                        >
+                          v{wf.grammarVersion ?? 1}
                         </Badge>
                         <code className="font-mono text-11 text-muted-foreground/60">
                           {wf.key}
@@ -233,8 +238,12 @@ export function WorkflowListPage() {
                         {wf.name}
                       </span>
                     </button>
-                    <Badge variant="secondary" className="shrink-0">
-                      v{wf.version}
+                    <Badge
+                      variant="secondary"
+                      className="shrink-0"
+                      title={t('workflow.grammarVersionBadge')}
+                    >
+                      v{wf.grammarVersion ?? 1}
                     </Badge>
                   </div>
                   <button
@@ -265,7 +274,10 @@ export function WorkflowListPage() {
         )}
       </div>
 
-      <TriggerDialog target={triggerTarget} onClose={() => setTriggerTarget(null)} />
+      <WorkflowTriggerDialog
+        target={triggerTarget}
+        onClose={() => setTriggerTarget(null)}
+      />
       <CreateWorkflowDialog open={createOpen} onClose={() => setCreateOpen(false)} />
     </PageShell>
   );
@@ -441,72 +453,6 @@ function CreateWorkflowDialog({
             data-ai="workflow.createSave"
           >
             {t('workflow.createDialog.save')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function TriggerDialog({
-  target,
-  onClose,
-}: {
-  target: WorkflowSummary | null;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [parametersText, setParametersText] = useState('{}');
-  const trigger = useTriggerWorkflow(target?.id ?? '');
-
-  const handleRun = () => {
-    if (!target) return;
-    let parameters: Record<string, unknown> = {};
-    const trimmed = parametersText.trim();
-    if (trimmed) {
-      try {
-        parameters = JSON.parse(trimmed) as Record<string, unknown>;
-      } catch {
-        toast(t('workflow.invalidJson'));
-        return;
-      }
-    }
-    trigger.mutate(
-      { parameters },
-      {
-        onSuccess: (res) => {
-          toast(t('workflow.triggered'));
-          onClose();
-          navigate(`/app/workflows/${target.id}?runId=${res.workflowRunId}`);
-        },
-          onError: () => toast(t('workflow.triggerFailed')),
-      },
-    );
-  };
-
-  return (
-    <Dialog open={Boolean(target)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('workflow.runDialogTitle', { name: target?.name ?? '' })}</DialogTitle>
-          <DialogDescription>{t('workflow.runDialogHint')}</DialogDescription>
-        </DialogHeader>
-        <textarea
-          value={parametersText}
-          onChange={(e) => setParametersText(e.target.value)}
-          rows={5}
-          spellCheck={false}
-          className="w-full rounded-md border border-border bg-transparent p-2 font-mono text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          placeholder='{ "topic": "..." }'
-        />
-        <DialogFooter>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button size="sm" onClick={handleRun} disabled={trigger.isPending}>
-            <Play className="mr-1 size-3" />
-            {t('workflow.run')}
           </Button>
         </DialogFooter>
       </DialogContent>

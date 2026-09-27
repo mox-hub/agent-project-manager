@@ -32,10 +32,11 @@ describe('adapter 治理语义能力位（P1-22a）', () => {
       approval: false,
       mcpTools: true,
     });
-    // zcode：协议未校准骨架，allowedTools/usage/approval 均保守声明不支持
+    // zcode：headless stream-json 协议已校准（v0.16.9 实测采样）——result 终行自带 usage；
+    // allowedTools 无对应旗标；headless 无交互审批面
     expect(CLI_ADAPTER_CAPABILITIES.zcode).toEqual({
       allowedTools: false,
-      usage: false,
+      usage: true,
       approval: false,
       mcpTools: true,
     });
@@ -315,16 +316,250 @@ describe('CodexAdapter', () => {
   });
 });
 
-describe('ZCodeAdapter（骨架行为锁）', () => {
-  it('buildCommand 基础参数；parseStream assistant → token', () => {
-    const a = new ZCodeAdapter();
-    const built = a.buildCommand(input());
-    expect(built.cmd).toBe('zcode');
-    expect(built.args).toContain('--no-interactive');
+describe('ZCodeAdapter（headless stream-json 协议校准，v0.16.9 实测采样）', () => {
+  /** 真实信封形态（采样自 zcode headless 实跑输出）：{type,eventId,sessionId,seq,timestamp,traceId,turnId?,payload} */
+  const envelope = (type: string, payload: Record<string, unknown>, turnId?: string) =>
+    JSON.stringify({
+      type,
+      eventId: 'evt_1',
+      sessionId: 'sess_abc',
+      seq: 1,
+      timestamp: 1758870000000,
+      traceId: 'tr_1',
+      ...(turnId ? { turnId } : {}),
+      payload,
+    });
 
-    const { emit, token } = makeEmit();
-    a.parseStream(JSON.stringify({ type: 'assistant', content: 'z' }), emit);
-    expect(token).toHaveBeenCalledWith('z');
+  it('buildCommand：-p prompt + stream-json + 缺省 yolo 模式；无 stdin 通道', () => {
+    const built = new ZCodeAdapter().buildCommand(input('implement login page'));
+    expect(built.cmd).toBe('zcode');
+    expect(built.shell).toBeUndefined(); // PATH 命令名回退 shell 解析
+    const i = built.args.indexOf('-p');
+    expect(built.args[i + 1]).toBe('implement login page');
+    expect(built.args).toContain('--output-format');
+    expect(built.args[built.args.indexOf('--output-format') + 1]).toBe('stream-json');
+    expect(built.args).toContain('--mode');
+    expect(built.args[built.args.indexOf('--mode') + 1]).toBe('yolo'); // zcode headless 自身默认
+    expect(built.stdinData).toBeUndefined();
+    // goal 派发 = -p 携带 /goal 命令（--target 与 -p 互斥，adapter 不需要分支）
+    const goal = new ZCodeAdapter().buildCommand(input('/goal fix login timeout'));
+    expect(goal.args[goal.args.indexOf('-p') + 1]).toBe('/goal fix login timeout');
+  });
+
+  it('buildCommand：permissionMode / sessionId 透传；--resume 复接会话', () => {
+    const built = new ZCodeAdapter().buildCommand({
+      ...input('继续'),
+      permissionMode: 'plan',
+      sessionId: 'sess_abc',
+    });
+    expect(built.args[built.args.indexOf('--mode') + 1]).toBe('plan');
+    expect(built.args).toContain('--resume');
+    expect(built.args[built.args.indexOf('--resume') + 1]).toBe('sess_abc');
+  });
+
+  it('buildCommand：ZCODE_ENTRY=.cjs 时 node 直启（shell:false 免 cmd.exe 8K 上限）', () => {
+    vi.stubEnv('ZCODE_ENTRY', 'D:/Software/ZCode/resources/glm/zcode.cjs');
+    try {
+      const built = new ZCodeAdapter().buildCommand(input('你好'));
+      expect(built.cmd).toBe(process.execPath);
+      expect(built.args[0]).toBe('D:/Software/ZCode/resources/glm/zcode.cjs');
+      expect(built.shell).toBe(false);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('buildCommand：超长 prompt（>24K）转投 --attach 临时文件，-p 只携带引导语', () => {
+    const longPrompt = 'x'.repeat(24_001);
+    const built = new ZCodeAdapter().buildCommand(input(longPrompt));
+    const attachIdx = built.args.indexOf('--attach');
+    expect(attachIdx).toBeGreaterThan(-1);
+    const attachFile = built.args[attachIdx + 1];
+    expect(attachFile).toMatch(/apm-zcode-.+\.md$/);
+    expect(built.args[built.args.indexOf('-p') + 1]).toContain('attached file');
+    expect(built.args[built.args.indexOf('-p') + 1].length).toBeLessThan(200);
+    // 密文语义：原 prompt 不进 argv（8K/32K 限制与日志泄漏双防线）
+    expect(built.args.join(' ')).not.toContain('xxxxx');
+  });
+
+  it('buildCommand：中文等非 ASCII prompt 走 --attach（实机采样：argv 编码损坏防线）', () => {
+    const built = new ZCodeAdapter().buildCommand(input('请修复登录超时问题'));
+    expect(built.args).toContain('--attach');
+    // argv 上只有 ASCII 引导语，原中文不进命令行
+    expect(built.args.join(' ')).not.toContain('请修复登录超时');
+    const i = built.args.indexOf('-p');
+    expect(built.args[i + 1]).toBe(
+      'Read the attached file and execute the full task instructions in it. The attachment contains ALL requirements; do not wait for further input.',
+    );
+  });
+
+  it('parseStream：session.created→session_init；text_delta→token；未知/非 JSON 行忽略', () => {
+    const a = new ZCodeAdapter();
+    const { emit, token, step } = makeEmit();
+
+    a.parseStream(envelope('session.created', {}), emit);
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepType: 'observation',
+        name: 'session_init',
+        output: { sessionId: 'sess_abc', resumed: false },
+      }),
+    );
+
+    a.parseStream(
+      envelope('model.streaming', { kind: 'text_delta', delta: '正在' }, 'turn_1'),
+      emit,
+    );
+    expect(token).toHaveBeenCalledWith('正在');
+
+    // reasoning_delta 不进 token 流
+    token.mockClear();
+    a.parseStream(
+      envelope('model.streaming', { kind: 'reasoning_delta', delta: '思考' }, 'turn_1'),
+      emit,
+    );
+    expect(token).not.toHaveBeenCalled();
+
+    // 非 JSON 行 / 空 行：不崩不猜
+    step.mockClear();
+    expect(() => a.parseStream('plain line', emit)).not.toThrow();
+    expect(() => a.parseStream('  ', emit)).not.toThrow();
+    expect(token).not.toHaveBeenCalled();
+    expect(step).not.toHaveBeenCalled();
+  });
+
+  it('parseStream：tool.updated started/result/error 三态映射', () => {
+    const a = new ZCodeAdapter();
+    const { emit, step } = makeEmit();
+
+    a.parseStream(
+      envelope('tool.updated', { kind: 'started', toolCallId: 'c1', toolName: 'Read' }, 'turn_1'),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'tool_call', name: 'Read', status: 'running' }),
+    );
+
+    a.parseStream(
+      envelope('tool.updated', { kind: 'result', toolCallId: 'c1', toolName: 'Read', output: 'file body' }, 'turn_1'),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepType: 'observation',
+        name: 'Read',
+        output: { output: 'file body' },
+        status: 'completed',
+      }),
+    );
+
+    a.parseStream(
+      envelope('tool.updated', { kind: 'error', toolCallId: 'c2', toolName: 'Bash', error: 'boom' }, 'turn_1'),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'error', name: 'Bash', status: 'failed' }),
+    );
+  });
+
+  it('parseStream：turn.completed 成功态 + usage；turn.failed 映射 error step', () => {
+    const a = new ZCodeAdapter();
+    const { emit, step, usage } = makeEmit();
+
+    a.parseStream(
+      envelope(
+        'turn.completed',
+        {
+          response: '完成',
+          tokenCount: 120,
+          resultType: 'success',
+          usage: { inputTokens: 100, outputTokens: 20, totalTokens: 120, source: 'provider' },
+        },
+        'turn_1',
+      ),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'result', name: 'turn_completed', status: 'completed' }),
+    );
+    expect(usage).toHaveBeenCalledWith(
+      expect.objectContaining({ promptTokens: 100, completionTokens: 20, totalTokens: 120 }),
+    );
+
+    // 实机观测形态：model_creation 阶段失败（standalone 无可选模型）
+    step.mockClear();
+    a.parseStream(
+      envelope('turn.failed', { error: { message: 'Select a model before continuing' }, turnPhase: 'model_creation' }, 'turn_1'),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepType: 'error',
+        name: 'turn_failed',
+        input: { message: 'Select a model before continuing', turnPhase: 'model_creation' },
+        status: 'failed',
+      }),
+    );
+  });
+
+  it('parseFinalResult：result 终行取 response/usage/sessionId/projection', () => {
+    const a = new ZCodeAdapter();
+    const stdout = [
+      envelope('session.created', {}),
+      JSON.stringify({
+        type: 'result',
+        sessionId: 'sess_abc',
+        traceId: 'tr_1',
+        response: '任务完成',
+        usage: { inputTokens: 500, outputTokens: 80, totalTokens: 580 },
+        eventCount: 12,
+        projection: { status: 'completed', turnCount: 1, totalTokenCount: 580, contextUsed: 900, contextWindow: 200000 },
+      }),
+    ].join('\n');
+    const res = a.parseFinalResult(stdout, 0);
+    expect(res.status).toBe('completed');
+    expect(res.usage?.totalTokens).toBe(580);
+    expect(res.artifacts).toContainEqual(
+      expect.objectContaining({ name: 'execution_summary', content: '任务完成' }),
+    );
+    expect(res.output?.response).toBe('任务完成');
+    expect(res.output?.sessionId).toBe('sess_abc');
+  });
+
+  it('parseFinalResult：exit 0 + 流内 turn.failed → failed（实机观测：model_creation 阶段失败）', () => {
+    const a = new ZCodeAdapter();
+    const stdout = [
+      envelope('session.created', {}),
+      envelope('turn.failed', { error: { message: 'Select a model before continuing' }, turnPhase: 'model_creation' }),
+    ].join('\n');
+    const res = a.parseFinalResult(stdout, 0);
+    expect(res.status).toBe('failed');
+    expect(res.error).toBe('Select a model before continuing');
+  });
+
+  it('parseFinalResult：command-center 裸 pretty summary（/goal 形态）→ completed', () => {
+    const a = new ZCodeAdapter();
+    // 实测形态：/goal 命令不产生事件流，stdout 是 pretty 多行 JSON（无 type 字段）
+    const stdout = JSON.stringify(
+      {
+        sessionId: 'sess_goal',
+        traceId: 'tr_9',
+        response: 'Goal active\nObjective: 了解目录\nUsage: 0 tokens / none\nTime: 0 seconds',
+      },
+      null,
+      2,
+    );
+    const res = a.parseFinalResult(stdout, 0);
+    expect(res.status).toBe('completed');
+    expect(res.output?.response).toContain('Goal active');
+    expect(res.output?.sessionId).toBe('sess_goal');
+  });
+
+  it('parseFinalResult：非零退出码 / 缺 result 终行 → failed 诚实落账', () => {
+    const a = new ZCodeAdapter();
+    expect(a.parseFinalResult('', 1).status).toBe('failed');
+    expect(a.parseFinalResult(envelope('session.created', {}), 0).status).toBe('failed');
+    expect(a.parseFinalResult(envelope('session.created', {}), 0).error).toContain('缺少 result 终行');
   });
 });
 

@@ -16,15 +16,17 @@ import type { AnyWorkflow, Run } from '@mastra/core/workflows';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { WorkflowCompilerService } from './workflow-compiler.service';
-import { listWorkflowActions } from './workflow-actions';
+import { WorkflowV2EngineService } from './workflow-v2.engine.service';
 import {
-  BUILTIN_WORKFLOW_TEMPLATES,
-  DEMO_WORKFLOW_DEFINITION,
-  DEMO_WORKFLOW_KEY,
-} from './workflow-builtin';
+  isV2Definition,
+  parseWorkflowDefinitionV2,
+  summarizeV2Definition,
+  WorkflowV2DefinitionError,
+} from './workflow.definition.v2';
+import { listWorkflowActions } from './workflow-actions';
+import { BUILTIN_WORKFLOW_TEMPLATES } from './workflow-builtin';
 import {
   parseWorkflowDefinition,
-  summarizeDefinition,
   WorkflowDefinitionError,
 } from './workflow.definition';
 
@@ -71,6 +73,7 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
     private readonly compiler: WorkflowCompilerService,
+    private readonly engineV2: WorkflowV2EngineService,
   ) {}
 
   async onModuleInit() {
@@ -81,7 +84,8 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       url: 'file:./data/mastra-workflows.db',
     });
 
-    // 内置模板（CAP-A-12 模板库）：遍历 upsert 产品侧定义账 + demo 注册进引擎注册表
+    // 内置模板（CAP-A-12 模板库，CAP-S-03 起 v2 文法）：遍历 upsert 产品侧定义账，
+    // update 覆写——内置模板以代码为真相源，重启即完成 V1→V2 替换；用户改造走「另存为副本」
     for (const template of BUILTIN_WORKFLOW_TEMPLATES) {
       await this.prisma.aIWorkflowDefinition.upsert({
         where: { key: template.key },
@@ -92,20 +96,23 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
           definition: template.definition as unknown as Prisma.InputJsonObject,
           createdBy: null,
         },
-        update: {},
+        update: {
+          name: template.name,
+          description: template.description,
+          definition: template.definition as unknown as Prisma.InputJsonObject,
+        },
       });
     }
 
+    // Mastra（v1 兼容层）注册表留空：内置模板已 v2 化走自研确定性引擎，
+    // v1 路径仅存历史定义的 compiler.compile 慢路径（历史运行只读兼容）
     this.mastra = new Mastra({
       storage: this.storage,
-      workflows: {
-        [DEMO_WORKFLOW_KEY]: this.compiler.compile(
-          DEMO_WORKFLOW_KEY,
-          DEMO_WORKFLOW_DEFINITION,
-        ),
-      },
+      workflows: {},
     });
-    this.logger.log('Workflow engine (Mastra + LibSQL) initialized');
+    this.logger.log(
+      'Workflow engine initialized (v2 deterministic engine; Mastra as v1 compat layer)',
+    );
   }
 
   async onModuleDestroy() {
@@ -125,6 +132,10 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       name: w.name,
       description: w.description,
       version: w.version,
+      // 文法版本（definition JSON 内部 version，与行版本 version 区分；
+      // CAP-S-03 内置模板 V1→V2 替换后前端徽标以此为准）
+      grammarVersion:
+        (w.definition as { version?: number } | null)?.version ?? 1,
     }));
   }
 
@@ -136,12 +147,7 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     // 定义文法结构校验（编辑过的脏数据在此暴露）；摘要供前端列表/详情直读
     let stepsSummary: Array<Record<string, unknown>> = [];
     try {
-      const doc = parseWorkflowDefinition(workflow.definition);
-      stepsSummary = doc.steps.map((s) => ({
-        id: s.id,
-        type: s.type,
-        title: s.title,
-      }));
+      stepsSummary = this.summarizeByDocVersion(workflow.definition);
     } catch (err) {
       this.logger.warn(
         `Definition ${workflow.key} 文法校验失败：${err instanceof Error ? err.message : String(err)}`,
@@ -162,10 +168,10 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     userId: string,
   ) {
     try {
-      parseWorkflowDefinition(dto.definition);
+      this.validateDefinition(dto.definition);
     } catch (err) {
       throw new BadRequestException(
-        `definition 文法非法：${err instanceof WorkflowDefinitionError ? err.message : String(err)}`,
+        `definition 文法非法：${err instanceof WorkflowDefinitionError || err instanceof WorkflowV2DefinitionError ? err.message : String(err)}`,
       );
     }
     const existing = await this.prisma.aIWorkflowDefinition.findUnique({
@@ -202,10 +208,10 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     if (!workflow) throw new NotFoundException('Workflow not found');
     if (dto.definition !== undefined) {
       try {
-        parseWorkflowDefinition(dto.definition);
+        this.validateDefinition(dto.definition);
       } catch (err) {
         throw new BadRequestException(
-          `definition 文法非法：${err instanceof WorkflowDefinitionError ? err.message : String(err)}`,
+          `definition 文法非法：${err instanceof WorkflowDefinitionError || err instanceof WorkflowV2DefinitionError ? err.message : String(err)}`,
         );
       }
     }
@@ -228,9 +234,9 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       id: updated.id,
       key: updated.key,
       version: updated.version,
-      stepsSummary: summarizeDefinition(
-        parseWorkflowDefinition(updated.definition),
-      ),
+      stepsSummary: this.summarizeByDocVersion(
+        updated.definition,
+      ) as unknown as Array<{ id: string; type: string; title?: string }>,
     };
   }
 
@@ -255,6 +261,16 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       where: { OR: [{ id: idOrKey }, { key: idOrKey }] },
     });
     if (!definition) throw new NotFoundException('Workflow not found');
+
+    // v1/v2 双栈路由（CAP-S-03）：version:2 文法走自研确定性引擎，v1 走 Mastra 兼容层
+    if (isV2Definition(definition.definition)) {
+      return this.engineV2.startRun(
+        { id: definition.id, key: definition.key },
+        definition.definition,
+        dto,
+        userId,
+      );
+    }
 
     const workflow = this.compileFor(definition.key, definition.definition);
 
@@ -284,12 +300,29 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
   async resumeRun(
     runId: string,
     resumeData: Record<string, unknown>,
-    _userId: string,
+    userId: string,
+    nodeId?: string,
   ) {
     const record = await this.prisma.aIWorkflowRun.findUnique({
       where: { id: runId },
     });
     if (!record) throw new NotFoundException('Workflow run not found');
+
+    // v2：按节点恢复（journal 精确到节点；human inline 恢复）
+    if (record.engineVersion === 2) {
+      const waiting = await this.prisma.workflowNodeRun.findFirst({
+        where: { runId, status: 'waiting' },
+        orderBy: { attempt: 'desc' },
+      });
+      const target = nodeId ?? waiting?.nodeId;
+      if (!target) {
+        throw new BadRequestException(
+          '恢复 v2 运行需要 nodeId（无 waiting 节点可推断）',
+        );
+      }
+      return this.engineV2.resumeHuman(runId, target, resumeData, userId);
+    }
+
     if (record.status !== 'suspended') {
       throw new BadRequestException(
         `仅 suspended 状态的运行可恢复（当前：${record.status}）`,
@@ -368,6 +401,45 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     });
     if (!run) throw new NotFoundException('Workflow run not found');
 
+    // v2：journal 双层账直出（节点行 + 事件流）+ 快照投影 + waiting 节点信息
+    if (run.engineVersion === 2) {
+      const [nodeRuns, events] = await Promise.all([
+        this.prisma.workflowNodeRun.findMany({
+          where: { runId: id },
+          orderBy: [{ createdAt: 'asc' as const }, { attempt: 'asc' as const }],
+        }),
+        this.prisma.workflowEvent.findMany({
+          where: { runId: id },
+          orderBy: { seq: 'asc' },
+        }),
+      ]);
+      const waitingNode = nodeRuns.find((n) => n.status === 'waiting') ?? null;
+      const waitingInput = (waitingNode?.input ?? null) as {
+        message?: string;
+        mode?: string;
+      } | null;
+      let graphSummary: unknown = null;
+      if (isV2Definition(run.graphSnapshot)) {
+        graphSummary = summarizeV2Definition(
+          run.graphSnapshot as unknown as import('./workflow.definition.v2').V2WorkflowDoc,
+        );
+      }
+      return {
+        ...run,
+        waitingApproval: waitingNode
+          ? {
+              stepId: waitingNode.nodeId,
+              nodeId: waitingNode.nodeId,
+              message: waitingInput?.message ?? '',
+              mode: waitingInput?.mode ?? 'inline',
+            }
+          : null,
+        nodeRuns,
+        events,
+        graphSummary,
+      };
+    }
+
     const stepsState = this.readStepsState(run.stepsState);
     let waitingApproval: {
       stepId: string;
@@ -391,6 +463,34 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
 
   // ── 内部 ──
 
+  /** 定义文法校验按版本路由：version:2 → v2 节点树文法；其余 → v1 线性链文法 */
+  private validateDefinition(raw: Record<string, unknown>) {
+    if (isV2Definition(raw)) {
+      parseWorkflowDefinitionV2(raw);
+      return;
+    }
+    parseWorkflowDefinition(raw);
+  }
+
+  /** 摘要投影按版本路由（v1 步骤清单 / v2 节点树摘要共用一个出口） */
+  private summarizeByDocVersion(raw: unknown): Array<Record<string, unknown>> {
+    if (isV2Definition(raw)) {
+      return summarizeV2Definition(
+        parseWorkflowDefinitionV2(raw),
+      ) as unknown as Array<Record<string, unknown>>;
+    }
+    return parseWorkflowDefinition(raw).steps.map((s) => ({
+      id: s.id,
+      type: s.type,
+      ...(s.title ? { title: s.title } : {}),
+    }));
+  }
+
+  /** v2 运行取消（v1 Mastra 基座无取消语义，仅 v2 提供） */
+  async cancelRun(runId: string, userId: string) {
+    return this.engineV2.cancelRun(runId, userId);
+  }
+
   /** 编译并缓存（key+version 维度；定义更新后版本号变化自动重编译） */
   private compileCache = new Map<
     string,
@@ -398,12 +498,6 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
   >();
 
   private compileFor(key: string, definition: unknown): AnyWorkflow {
-    if (this.mastra && key === DEMO_WORKFLOW_KEY) {
-      // demo 走引擎注册表（享受 storage 快照路径）
-      return this.mastra.getWorkflow(
-        DEMO_WORKFLOW_KEY as never,
-      ) as unknown as AnyWorkflow;
-    }
     return this.compiler.compile(key, definition);
   }
 

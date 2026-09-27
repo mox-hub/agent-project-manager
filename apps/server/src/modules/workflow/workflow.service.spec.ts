@@ -1,8 +1,7 @@
 /**
  * WorkflowService 单元测试（GAP-T-14 清偿）——
- * ① onModuleInit 模板库 upsert（CAP-A-12）：遍历 BUILTIN_WORKFLOW_TEMPLATES
- *   逐个 upsert 产品侧定义账（create 载荷完整 / update 幂等空对象 / where 按 key），
- *   demo 定义同时经 compiler 注册进 Mastra 引擎注册表。
+ * ① onModuleInit 模板库 upsert（CAP-A-12 / CAP-S-03 v2 化）：遍历 BUILTIN_WORKFLOW_TEMPLATES
+ *   逐个 upsert 产品侧定义账（create 载荷完整 / update 覆写以代码为真相源 / where 按 key）。
  * ② 编辑回写 server 语义：createDefinition / updateDefinition 的文法校验拒绝、
  *   key 冲突、version 自增与 stepsSummary 返回。
  * @mastra/libsql 与 @mastra/core 整体 mock（避免真实 LibSQL 落盘），
@@ -11,11 +10,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Mastra } from '@mastra/core';
-import {
-  BUILTIN_WORKFLOW_TEMPLATES,
-  DEMO_WORKFLOW_DEFINITION,
-  DEMO_WORKFLOW_KEY,
-} from './workflow-builtin';
+import { BUILTIN_WORKFLOW_TEMPLATES } from './workflow-builtin';
 import { WorkflowService } from './workflow.service';
 import type { WorkflowDefinitionDoc } from './workflow.definition';
 
@@ -128,30 +123,20 @@ describe('onModuleInit：内置模板库 upsert（CAP-A-12）', () => {
     });
   });
 
-  it('幂等语义：update 载荷为空对象（重复启动不覆盖用户对模板的改动）', async () => {
+  it('update 分支覆写内置模板（CAP-S-03 V1→V2 替换：以代码为真相源）', async () => {
     const { service, prisma } = makeDeps();
     await service.onModuleInit();
 
-    for (const call of prisma.aIWorkflowDefinition.upsert.mock.calls) {
-      expect((call[0] as { update: Record<string, unknown> }).update).toEqual(
-        {},
-      );
-    }
-  });
-
-  it('demo 定义经 compiler 编译后注册进 Mastra 引擎注册表', async () => {
-    const { service, compiler } = makeDeps();
-    await service.onModuleInit();
-
-    expect(compiler.compile).toHaveBeenCalledWith(
-      DEMO_WORKFLOW_KEY,
-      DEMO_WORKFLOW_DEFINITION,
-    );
-    expect(Mastra).toHaveBeenCalledTimes(1);
-    const mastraArgs = vi.mocked(Mastra).mock.calls[0][0] as {
-      workflows: Record<string, unknown>;
-    };
-    expect(mastraArgs.workflows[DEMO_WORKFLOW_KEY]).toBe(COMPILED_DEMO);
+    BUILTIN_WORKFLOW_TEMPLATES.forEach((template, i) => {
+      const call = prisma.aIWorkflowDefinition.upsert.mock.calls[i][0] as {
+        update: Record<string, unknown>;
+      };
+      expect(call.update).toEqual({
+        name: template.name,
+        description: template.description,
+        definition: template.definition,
+      });
+    });
   });
 });
 

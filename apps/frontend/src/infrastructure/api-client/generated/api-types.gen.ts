@@ -5514,6 +5514,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/workflow-runs/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 取消工作流运行（v2 引擎；running/suspended 可取消） */
+        post: operations["WorkflowController_cancelRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/integrations": {
         parameters: {
             query?: never;
@@ -13540,6 +13557,8 @@ export interface components {
             description?: string | null;
             /** @description 版本号 */
             version: number;
+            /** @description 文法版本（definition 内部 version：1=线性链，2=节点树） */
+            grammarVersion: number;
         };
         WorkflowDetailDto: {
             id: string;
@@ -13550,6 +13569,8 @@ export interface components {
             description?: string | null;
             /** @description 版本号 */
             version: number;
+            /** @description 文法版本（definition 内部 version：1=线性链，2=节点树） */
+            grammarVersion: number;
             /** @description 工作流定义文法（workflow.definition.ts） */
             definition: {
                 [key: string]: unknown;
@@ -13685,6 +13706,8 @@ export interface components {
             resumeData: {
                 [key: string]: unknown;
             };
+            /** @description 目标节点 id（v2 引擎 journal 精确到节点；缺省时推断唯一 waiting 节点） */
+            nodeId?: string;
         };
         IntegrationConfigResponseDto: {
             id: string;
@@ -41528,6 +41551,84 @@ export interface operations {
         };
         responses: {
             /** @description 恢复已受理（异步继续执行） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRunTriggerResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    WorkflowController_cancelRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Workflow run ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 取消结果 */
             200: {
                 headers: {
                     [name: string]: unknown;
