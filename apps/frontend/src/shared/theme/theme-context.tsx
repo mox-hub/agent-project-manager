@@ -15,11 +15,12 @@ export interface AppearanceSettings {
 
 interface ThemeContextType {
   mode: ThemeMode;
+  /** 当前主题预设（宪法 §5.6 只保留 default 一套）。接口保留供未来多主题，
+      刻意不暴露 setter：当前无任何 UI 入口，无消费方的公开 API 是负债。 */
   preset: ThemePreset;
   appearance: AppearanceSettings;
   toggleTheme: () => void;
   setTheme: (mode: ThemeMode) => void;
-  setPreset: (preset: ThemePreset) => void;
   setAppearance: (settings: Partial<AppearanceSettings>) => void;
 }
 
@@ -93,7 +94,8 @@ function getFontSizeScale(fontSize: FontSize): string {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(getInitialMode);
-  const [preset, setPresetState] = useState<ThemePreset>(getInitialThemePreset);
+  // preset 当前无变更入口（T4 裁决：移除死接口），故只取初值不暴露 setter
+  const [preset] = useState<ThemePreset>(getInitialThemePreset);
   const [appearance, setAppearanceState] = useState<AppearanceSettings>(getInitialAppearance);
 
   useEffect(() => {
@@ -121,16 +123,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setModeState(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  const setPreset = (nextPreset: ThemePreset) => {
-    setPresetState(nextPreset);
-  };
-
   const setAppearance = (settings: Partial<AppearanceSettings>) => {
     setAppearanceState(prev => ({ ...prev, ...settings }));
   };
 
   return (
-    <ThemeContext.Provider value={{ mode, preset, appearance, toggleTheme, setTheme, setPreset, setAppearance }}>
+    <ThemeContext.Provider value={{ mode, preset, appearance, toggleTheme, setTheme, setAppearance }}>
       {children}
     </ThemeContext.Provider>
   );
