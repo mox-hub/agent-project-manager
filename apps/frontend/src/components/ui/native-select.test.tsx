@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { NativeSelect, NativeSelectOption } from './native-select';
 
 /**
@@ -109,5 +110,95 @@ describe('NativeSelect 显示名称（回归）', () => {
       </NativeSelect>,
     );
     expect(readHidden()).toBe('');
+  });
+});
+
+/**
+ * D14 补缺口（宪法 §18，native-select 引用数 32，P1「表单核心」）。
+ *
+ * 既有 7 例只覆盖「value → label 显示契约」（都是文本内容断言）。
+ * 这里补 §18.2 的另一半：**a11y 标签关联 + 交互回调 + 禁用/必填语义**。
+ * 不断言 className（§18.2）。
+ */
+describe('NativeSelect 无障碍与交互（D14 补缺口）', () => {
+  const OPTIONS = (
+    <>
+      <NativeSelectOption value="p1">项目甲</NativeSelectOption>
+      <NativeSelectOption value="p2">项目乙</NativeSelectOption>
+    </>
+  );
+
+  it('aria-label 成为 combobox 的可访问名（§8.5 #3 控件必须可关联）', () => {
+    render(
+      <NativeSelect value="p1" onChange={() => {}} aria-label="所属项目">
+        {OPTIONS}
+      </NativeSelect>,
+    );
+
+    expect(screen.getByRole('combobox', { name: '所属项目' })).toBeInTheDocument();
+  });
+
+  it('外部 label + id 关联同样获得可访问名（原生 select 的等价写法）', () => {
+    render(
+      <>
+        <label htmlFor="proj">所属项目</label>
+        <NativeSelect id="proj" value="p1" onChange={() => {}}>
+          {OPTIONS}
+        </NativeSelect>
+      </>,
+    );
+
+    expect(screen.getByLabelText('所属项目')).toBeInTheDocument();
+  });
+
+  it('disabled 时控件不可用（表单禁用态不被绕过）', () => {
+    render(
+      <NativeSelect value="p1" onChange={() => {}} disabled aria-label="所属项目">
+        {OPTIONS}
+      </NativeSelect>,
+    );
+
+    expect(screen.getByRole('combobox', { name: '所属项目' })).toBeDisabled();
+  });
+
+  it('required 以 aria-required 暴露给辅助技术（native select 语义等价物）', () => {
+    render(
+      <NativeSelect value="" onChange={() => {}} required aria-label="所属项目">
+        {OPTIONS}
+      </NativeSelect>,
+    );
+
+    expect(screen.getByRole('combobox', { name: '所属项目' })).toHaveAttribute(
+      'aria-required',
+      'true',
+    );
+  });
+
+  it('点击 trigger 打开 listbox 浮层（§8.2 浮层可达）', async () => {
+    const user = userEvent.setup();
+    render(
+      <NativeSelect value="p1" onChange={() => {}} aria-label="所属项目">
+        {OPTIONS}
+      </NativeSelect>,
+    );
+
+    expect(screen.queryByRole('listbox')).toBeNull();
+
+    await user.click(screen.getByRole('combobox', { name: '所属项目' }));
+
+    expect(await screen.findByRole('listbox')).toBeInTheDocument();
+  });
+
+  it('disabled 时点击不打开浮层（禁用不是视觉装饰）', async () => {
+    const user = userEvent.setup();
+    render(
+      <NativeSelect value="p1" onChange={() => {}} disabled aria-label="所属项目">
+        {OPTIONS}
+      </NativeSelect>,
+    );
+
+    await user.click(screen.getByRole('combobox', { name: '所属项目' }));
+
+    expect(screen.queryByRole('listbox')).toBeNull();
   });
 });
