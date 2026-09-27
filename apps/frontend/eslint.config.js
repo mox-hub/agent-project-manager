@@ -5,6 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import designGovernance from './eslint-rules/design-governance.js'
 
 export default defineConfig([
   globalIgnores([
@@ -72,6 +73,29 @@ export default defineConfig([
     files: ['e2e/**/*.ts'],
     rules: {
       'react-hooks/rules-of-hooks': 'off',
+    },
+  },
+  // ══ E 类批 5：设计门禁 AST 规则（design-governance）═════════════════════════
+  // 依据 docs/design/修改方案-E类-2026-09-27.md §四 4.1（第 431–450 行）与批 5（§六）。
+  // 规则实现见 ./eslint-rules/design-governance.js（3 条：no-naked-controls /
+  // no-visual-override / no-adhoc-tone），承接 §19.2 / §19.4 D2 / §19.5 里
+  // **只有 AST 才能可靠判定**的部分；8 个 check-*.mjs 保留并存，不替代、不改写。
+  //
+  // ⚠️ 本轮一律 `warn`，零 `error`（方案 §六批 5 第 569 行「先 warn 一轮，再转 error」）。
+  // 实测 `pnpm lint`（frontend = 9 个 lint:* 脚本 + `eslint .`）与 CI quality-gate.yml
+  // 均**不带 `--max-warnings`**，故 warn 不会把门禁弄红、不阻塞并行提交；
+  // 转 error 的前提是存量清零 + allowlist 机制（design-governance.allowlist.json）落地。
+  //
+  // 本块为**新增**，不改动上方 D11 的 jsx-a11y 块（批 9b，18 条 error）。
+  {
+    files: ['**/*.{ts,tsx}'],
+    plugins: {
+      'design-governance': designGovernance,
+    },
+    rules: {
+      'design-governance/no-naked-controls': 'warn',
+      'design-governance/no-visual-override': 'warn',
+      'design-governance/no-adhoc-tone': 'warn',
     },
   },
 ])
