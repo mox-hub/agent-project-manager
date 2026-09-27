@@ -22,9 +22,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
+  SelectField,
+  SelectFieldOption,
+} from '@/components/ui/select-field';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { ProjectType, ProjectVisibility } from '../api/project-api';
@@ -345,18 +345,18 @@ export function ProjectSettingsPage() {
                             render={({ field }) => (
                               <FormItem className={sectionClasses}>
                                 <FormLabel className={fieldLabelClasses}>{t('projectSettings.type')}</FormLabel>
-                                <NativeSelect
+                                <SelectField
                                   value={field.value}
                                   onChange={(event) => field.onChange(event.target.value as ProjectType)}
                                   data-ai-component="project.project-settings.general.type"
                                   data-ai-action="project.project-settings.general.type.change"
                                   data-ai-role="select"
                                 >
-                                  <NativeSelectOption value="personal">{t('project.type.personal')}</NativeSelectOption>
-                                  <NativeSelectOption value="team">{t('project.type.team')}</NativeSelectOption>
-                                  <NativeSelectOption value="experiment">{t('project.type.experiment')}</NativeSelectOption>
-                                  <NativeSelectOption value="enterprise">{t('project.type.enterprise')}</NativeSelectOption>
-                                </NativeSelect>
+                                  <SelectFieldOption value="personal">{t('project.type.personal')}</SelectFieldOption>
+                                  <SelectFieldOption value="team">{t('project.type.team')}</SelectFieldOption>
+                                  <SelectFieldOption value="experiment">{t('project.type.experiment')}</SelectFieldOption>
+                                  <SelectFieldOption value="enterprise">{t('project.type.enterprise')}</SelectFieldOption>
+                                </SelectField>
                               </FormItem>
                             )}
                           />
@@ -367,17 +367,17 @@ export function ProjectSettingsPage() {
                             render={({ field }) => (
                               <FormItem className={sectionClasses}>
                                 <FormLabel className={fieldLabelClasses}>{t('projectSettings.visibility')}</FormLabel>
-                                <NativeSelect
+                                <SelectField
                                   value={field.value}
                                   onChange={(event) => field.onChange(event.target.value as ProjectVisibility)}
                                   data-ai-component="project.project-settings.general.visibility"
                                   data-ai-action="project.project-settings.general.visibility.change"
                                   data-ai-role="select"
                                 >
-                                  <NativeSelectOption value="private">{t('project.visibility.private')}</NativeSelectOption>
-                                  <NativeSelectOption value="internal">{t('project.visibility.internal')}</NativeSelectOption>
-                                  <NativeSelectOption value="public">{t('project.visibility.public')}</NativeSelectOption>
-                                </NativeSelect>
+                                  <SelectFieldOption value="private">{t('project.visibility.private')}</SelectFieldOption>
+                                  <SelectFieldOption value="internal">{t('project.visibility.internal')}</SelectFieldOption>
+                                  <SelectFieldOption value="public">{t('project.visibility.public')}</SelectFieldOption>
+                                </SelectField>
                               </FormItem>
                             )}
                           />
@@ -554,19 +554,19 @@ export function ProjectSettingsPage() {
                             render={({ field }) => (
                               <FormItem className={sectionClasses}>
                                 <FormLabel className={fieldLabelClasses}>{t('projectSettings.defaultShell')}</FormLabel>
-                                <NativeSelect
+                                <SelectField
                                   value={field.value}
                                   onChange={(event) => field.onChange(event.target.value)}
                                   data-ai-component="project.project-settings.terminal.default-shell"
                                   data-ai-action="project.project-settings.terminal.default-shell.change"
                                   data-ai-role="select"
                                 >
-                                  <NativeSelectOption value="">{t('projectSettings.shellUseGlobal')}</NativeSelectOption>
-                                  <NativeSelectOption value="pwsh">PowerShell (pwsh)</NativeSelectOption>
-                                  <NativeSelectOption value="bash">Bash</NativeSelectOption>
-                                  <NativeSelectOption value="zsh">Zsh</NativeSelectOption>
-                                  <NativeSelectOption value="cmd">CMD (Windows)</NativeSelectOption>
-                                </NativeSelect>
+                                  <SelectFieldOption value="">{t('projectSettings.shellUseGlobal')}</SelectFieldOption>
+                                  <SelectFieldOption value="pwsh">PowerShell (pwsh)</SelectFieldOption>
+                                  <SelectFieldOption value="bash">Bash</SelectFieldOption>
+                                  <SelectFieldOption value="zsh">Zsh</SelectFieldOption>
+                                  <SelectFieldOption value="cmd">CMD (Windows)</SelectFieldOption>
+                                </SelectField>
                               </FormItem>
                             )}
                           />

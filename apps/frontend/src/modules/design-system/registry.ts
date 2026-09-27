@@ -104,7 +104,7 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'menubar', file: 'ui/menubar.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
   { name: 'meter', file: 'ui/meter.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby', proposal: 'standby' } },
   { name: 'mock-badge', file: 'ui/mock-badge.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'native-select', file: 'ui/native-select.tsx', section: 'Primitives', status: 'canonical' },
+  { name: 'select-field', file: 'ui/select-field.tsx', section: 'Primitives', status: 'canonical' },
   { name: 'navigation-menu', file: 'ui/navigation-menu.tsx', section: 'Primitives', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——横向导航由 menu / breadcrumb / tabs 承载', proposal: 'delete' } },
   { name: 'number-field', file: 'ui/number-field.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby', proposal: 'standby' } },
   { name: 'page-error-fallback', file: 'ui/page-error-fallback.tsx', section: 'App Components', status: 'canonical' },

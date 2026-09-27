@@ -73,7 +73,7 @@ import {
   useWaiveCompletion,
   useChecklists,
 } from '../hooks/use-acceptance';
-import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOptGroup, SelectFieldOption } from '@/components/ui/select-field';
 import { AuditReportPanel } from '../components/audit-report-panel';
 import {
   extractFailures,
@@ -710,34 +710,34 @@ export function AcceptanceDetailPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <NativeSelect
+                    <SelectField
                       value={auditChecklistId}
                       onChange={(e) => setAuditChecklistId(e.target.value)}
                       className="h-8 w-52 text-xs"
                       aria-label={t('acceptanceDetail.audit.checklistSelect')}
                     >
-                      <NativeSelectOption value="auto">
+                      <SelectFieldOption value="auto">
                         {t('acceptanceDetail.audit.autoChecklist')}
-                      </NativeSelectOption>
+                      </SelectFieldOption>
                       {systemChecklists.length > 0 && (
-                        <NativeSelectOptGroup label={t('acceptanceDetail.audit.systemChecklists')}>
+                        <SelectFieldOptGroup label={t('acceptanceDetail.audit.systemChecklists')}>
                           {systemChecklists.map((c) => (
-                            <NativeSelectOption key={c.id} value={c.id}>
+                            <SelectFieldOption key={c.id} value={c.id}>
                               {c.name} ({c.checklist?.length ?? 0})
-                            </NativeSelectOption>
+                            </SelectFieldOption>
                           ))}
-                        </NativeSelectOptGroup>
+                        </SelectFieldOptGroup>
                       )}
                       {teamChecklists.length > 0 && (
-                        <NativeSelectOptGroup label={t('acceptanceDetail.audit.teamChecklists')}>
+                        <SelectFieldOptGroup label={t('acceptanceDetail.audit.teamChecklists')}>
                           {teamChecklists.map((c) => (
-                            <NativeSelectOption key={c.id} value={c.id}>
+                            <SelectFieldOption key={c.id} value={c.id}>
                               {c.name} ({c.checklist?.length ?? 0})
-                            </NativeSelectOption>
+                            </SelectFieldOption>
                           ))}
-                        </NativeSelectOptGroup>
+                        </SelectFieldOptGroup>
                       )}
-                    </NativeSelect>
+                    </SelectField>
                     <Button
                       variant="outline"
                       size="sm"

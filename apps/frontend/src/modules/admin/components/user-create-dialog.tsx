@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { toast } from '@/components/ui/toast';
 import { useCreateAdminUser } from '../hooks/use-admin';
 import type { CreateAdminUserResponse } from '../api/admin-api';
@@ -115,14 +115,14 @@ export function UserCreateDialog({
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium">{t('admin.role', '角色')}</label>
-              <NativeSelect value={role} onChange={(e) => setRole(e.target.value)}>
-                <NativeSelectOption value="user">
+              <SelectField value={role} onChange={(e) => setRole(e.target.value)}>
+                <SelectFieldOption value="user">
                   {t('admin.roleUser', '普通成员')}
-                </NativeSelectOption>
-                <NativeSelectOption value="admin">
+                </SelectFieldOption>
+                <SelectFieldOption value="admin">
                   {t('admin.roleAdmin', '管理员')}
-                </NativeSelectOption>
-              </NativeSelect>
+                </SelectFieldOption>
+              </SelectField>
             </div>
           </div>
           <DialogFooter>

@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { NativeSelect } from '@/components/ui/native-select';
+import { SelectField } from '@/components/ui/select-field';
 import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
 import {
@@ -242,7 +242,7 @@ export function AccessTokensSettingsSection() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="token-expiry">{t('settings.tokenExpiryLabel')}</Label>
-              <NativeSelect
+              <SelectField
                 id="token-expiry"
                 value={expiry}
                 onChange={(e) => setExpiry(e.target.value)}
@@ -254,7 +254,7 @@ export function AccessTokensSettingsSection() {
                       : t('settings.tokenExpiryDays', { days: option.days })}
                   </option>
                 ))}
-              </NativeSelect>
+              </SelectField>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setCreateOpen(false)}>

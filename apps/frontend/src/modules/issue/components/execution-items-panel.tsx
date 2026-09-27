@@ -12,7 +12,7 @@ import { Bot, ChevronDown, ListChecks, MoreHorizontal, Plus, RotateCcw, ScrollTe
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -406,22 +406,22 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
             className="h-7 text-xs"
           />
           <div className="flex items-center gap-1.5">
-            <NativeSelect
+            <SelectField
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
               className="h-7 flex-1 text-xs"
             >
-              <NativeSelectOption value="">
+              <SelectFieldOption value="">
                 {humanMembers.length === 0
                   ? t('taskDetail.execItemsNoMembers')
                   : t('taskDetail.execItemsAssigneePlaceholder')}
-              </NativeSelectOption>
+              </SelectFieldOption>
               {humanMembers.map((m) => (
-                <NativeSelectOption key={m.id} value={m.id}>
+                <SelectFieldOption key={m.id} value={m.id}>
                   {m.displayName || m.handle}
-                </NativeSelectOption>
+                </SelectFieldOption>
               ))}
-            </NativeSelect>
+            </SelectField>
             <Input
               type="number"
               min={0}

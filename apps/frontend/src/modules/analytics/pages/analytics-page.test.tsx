@@ -202,7 +202,7 @@ describe('AnalyticsPage 成本 Tab（AI 用量迁移做实，?tab=cost 定位）
 
     expect(await screen.findByText('analytics.cost.emptyTitle')).toBeTruthy();
     expect(screen.getByText('analytics.cost.emptyHint')).toBeTruthy();
-    // NativeSelect 为 base-ui 组合件，jsdom 无法 fireEvent 驱动弹层；空态下以 aria-label 断言其仍挂载
+    // SelectField 为 base-ui 组合件，jsdom 无法 fireEvent 驱动弹层；空态下以 aria-label 断言其仍挂载
     expect(screen.getByLabelText('analytics.cost.range')).toBeTruthy();
     usageMock.data = undefined; // 还原，避免影响后续用例
   });

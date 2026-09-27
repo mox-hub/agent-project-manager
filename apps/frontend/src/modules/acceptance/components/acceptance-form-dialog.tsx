@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { NativeSelect } from '@/components/ui/native-select';
+import { SelectField } from '@/components/ui/select-field';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
 import { useAllTasks } from '@/modules/issue/hooks/use-project-tasks';
@@ -95,7 +95,7 @@ export function AcceptanceFormDialog({
             <span className="text-xs font-medium text-muted-foreground">
               {t('acceptance.form.task')}
             </span>
-            <NativeSelect
+            <SelectField
               value={issueId}
               onChange={(e) => setTaskId(e.target.value)}
               className="w-full"
@@ -106,14 +106,14 @@ export function AcceptanceFormDialog({
                   {task.title}
                 </option>
               ))}
-            </NativeSelect>
+            </SelectField>
           </label>
 
           <label className="block space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">
               {t('acceptance.form.completionType')}
             </span>
-            <NativeSelect
+            <SelectField
               value={completionType}
               onChange={(e) => setCompletionType(e.target.value as CompletionType | 'auto')}
               className="w-full"
@@ -125,7 +125,7 @@ export function AcceptanceFormDialog({
                     : t(`acceptance.completionType.${ty}`)}
                 </option>
               ))}
-            </NativeSelect>
+            </SelectField>
           </label>
 
           <label className="block space-y-1.5">

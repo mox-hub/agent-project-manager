@@ -17,9 +17,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Form, FormField } from '@/components/ui/form';
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
+  SelectField,
+  SelectFieldOption,
+} from '@/components/ui/select-field';
 import {
   Select,
   SelectContent,
@@ -463,16 +463,16 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                         control={editTaskForm.control}
                         name="status"
                         render={({ field }) => (
-                          <NativeSelect
+                          <SelectField
                             value={field.value}
                             onChange={(e) => field.onChange(e.target.value)}
                           >
                             {statusOptions.map((opt) => (
-                              <NativeSelectOption key={opt.value} value={opt.value}>
+                              <SelectFieldOption key={opt.value} value={opt.value}>
                                 {opt.label}
-                              </NativeSelectOption>
+                              </SelectFieldOption>
                             ))}
-                          </NativeSelect>
+                          </SelectField>
                         )}
                       />
                     </Form>
@@ -493,16 +493,16 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                         control={editTaskForm.control}
                         name="priority"
                         render={({ field }) => (
-                          <NativeSelect
+                          <SelectField
                             value={field.value}
                             onChange={(e) => field.onChange(e.target.value)}
                           >
                             {priorityOptions.map((opt) => (
-                              <NativeSelectOption key={opt.value} value={opt.value}>
+                              <SelectFieldOption key={opt.value} value={opt.value}>
                                 {opt.label}
-                              </NativeSelectOption>
+                              </SelectFieldOption>
                             ))}
-                          </NativeSelect>
+                          </SelectField>
                         )}
                       />
                     </Form>
@@ -529,18 +529,18 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                         control={editTaskForm.control}
                         name="assigneeId"
                         render={({ field }) => (
-                          <NativeSelect
+                          <SelectField
                             value={field.value}
                             onChange={(e) => field.onChange(e.target.value)}
                           >
-                            <NativeSelectOption value="">{t('task.detailDrawer.unassigned')}</NativeSelectOption>
+                            <SelectFieldOption value="">{t('task.detailDrawer.unassigned')}</SelectFieldOption>
                             {projectMembers.map((member) => (
-                              <NativeSelectOption key={member.id} value={member.id}>
+                              <SelectFieldOption key={member.id} value={member.id}>
                                 {member.displayName}
                                 {member.type === 'ai_agent' ? ' · AI' : ''}
-                              </NativeSelectOption>
+                              </SelectFieldOption>
                             ))}
-                          </NativeSelect>
+                          </SelectField>
                         )}
                       />
                     </Form>
@@ -616,17 +616,17 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                         control={editTaskForm.control}
                         name="iterationId"
                         render={({ field }) => (
-                          <NativeSelect
+                          <SelectField
                             value={field.value}
                             onChange={(e) => field.onChange(e.target.value)}
                           >
-                            <NativeSelectOption value="">{t('task.detailDrawer.noIteration')}</NativeSelectOption>
+                            <SelectFieldOption value="">{t('task.detailDrawer.noIteration')}</SelectFieldOption>
                             {iterations.map((iteration) => (
-                              <NativeSelectOption key={iteration.id} value={iteration.id}>
+                              <SelectFieldOption key={iteration.id} value={iteration.id}>
                                 {iteration.name}
-                              </NativeSelectOption>
+                              </SelectFieldOption>
                             ))}
-                          </NativeSelect>
+                          </SelectField>
                         )}
                       />
                     </Form>
@@ -675,17 +675,17 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                       control={editTaskForm.control}
                       name="milestoneId"
                       render={({ field }) => (
-                        <NativeSelect
+                        <SelectField
                           value={field.value}
                           onChange={(e) => field.onChange(e.target.value)}
                         >
-                          <NativeSelectOption value="">{t('task.detailDrawer.noMilestone')}</NativeSelectOption>
+                          <SelectFieldOption value="">{t('task.detailDrawer.noMilestone')}</SelectFieldOption>
                           {milestones.map((milestone) => (
-                            <NativeSelectOption key={milestone.id} value={milestone.id}>
+                            <SelectFieldOption key={milestone.id} value={milestone.id}>
                               {milestone.name}
-                            </NativeSelectOption>
+                            </SelectFieldOption>
                           ))}
-                        </NativeSelect>
+                        </SelectField>
                       )}
                     />
                     </Form>
@@ -716,11 +716,11 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                             control={editTaskForm.control}
                             name="severity"
                             render={({ field }) => (
-                              <NativeSelect value={field.value} onChange={(e) => field.onChange(e.target.value)}>
+                              <SelectField value={field.value} onChange={(e) => field.onChange(e.target.value)}>
                                 {severityOptions.map((opt) => (
-                                  <NativeSelectOption key={opt.value} value={opt.value}>{opt.label}</NativeSelectOption>
+                                  <SelectFieldOption key={opt.value} value={opt.value}>{opt.label}</SelectFieldOption>
                                 ))}
-                              </NativeSelect>
+                              </SelectField>
                             )}
                           />
                         </Form>

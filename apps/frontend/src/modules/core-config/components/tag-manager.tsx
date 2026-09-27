@@ -9,7 +9,7 @@ import { DataTableShell } from '@/components/ui/data-table-shell';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SegmentedControl } from '@/components/ui/segmented-control';
@@ -238,17 +238,17 @@ export function TagManager() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('settings.labelTypes')}</FormLabel>
-                    <NativeSelect
+                    <SelectField
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
                       disabled={Boolean(editing)}
                     >
                       {TAG_FILTERS.map((type) => (
-                        <NativeSelectOption key={type} value={type}>
+                        <SelectFieldOption key={type} value={type}>
                           {t(FILTER_I18N_KEY[type])}
-                        </NativeSelectOption>
+                        </SelectFieldOption>
                       ))}
-                    </NativeSelect>
+                    </SelectField>
                   </FormItem>
                 )}
               />

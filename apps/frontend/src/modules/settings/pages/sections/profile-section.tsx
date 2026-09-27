@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Input, PasswordInput } from '@/components/ui/input';
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { PageShell } from '@/components/ui/page-shell';
 import { toast } from '@/components/ui/toast';
@@ -175,18 +175,18 @@ export function ProfileSettingsSection() {
                     {t('settings.profileTimezone')}
                   </FieldLabel>
                   <FieldContent>
-                    <NativeSelect
+                    <SelectField
                       id="profileTimezone"
                       value={timezone}
                       onChange={(e) => setTimezone(e.target.value)}
                       disabled={isLoading}
                     >
                       {TIMEZONES.map((tz) => (
-                        <NativeSelectOption key={tz.value} value={tz.value}>
+                        <SelectFieldOption key={tz.value} value={tz.value}>
                           {tz.labelKey ? t(tz.labelKey) : tz.label}
-                        </NativeSelectOption>
+                        </SelectFieldOption>
                       ))}
-                    </NativeSelect>
+                    </SelectField>
                   </FieldContent>
                 </Field>
               </div>

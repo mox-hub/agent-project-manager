@@ -11,12 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-type NativeSelectProps = Omit<React.ComponentPropsWithoutRef<"select">, "size" | "onChange"> & {
+type SelectFieldProps = Omit<React.ComponentPropsWithoutRef<"select">, "size" | "onChange"> & {
   size?: "sm" | "default"
   onChange?: (event: React.ChangeEvent<HTMLSelectElement>) => void
 }
 
-const EMPTY_SENTINEL = "__native_select_empty__"
+const EMPTY_SENTINEL = "__select_field_empty__"
 
 type ParsedOption = {
   value: string
@@ -41,7 +41,7 @@ function parseOptions(children: React.ReactNode): ParsedGroup[] {
   const parseOptionNode = (node: React.ReactNode): ParsedOption | null => {
     if (!React.isValidElement(node)) return null
     const nodeType = node.type
-    if (nodeType !== "option" && nodeType !== NativeSelectOption) {
+    if (nodeType !== "option" && nodeType !== SelectFieldOption) {
       return null
     }
     return {
@@ -55,13 +55,13 @@ function parseOptions(children: React.ReactNode): ParsedGroup[] {
     if (!React.isValidElement(child)) return
     const childType = child.type
 
-    if (childType === "option" || childType === NativeSelectOption) {
+    if (childType === "option" || childType === SelectFieldOption) {
       const parsed = parseOptionNode(child)
       if (parsed) rootOptions.push(parsed)
       return
     }
 
-    if (childType === "optgroup" || childType === NativeSelectOptGroup) {
+    if (childType === "optgroup" || childType === SelectFieldOptGroup) {
       const options: ParsedOption[] = []
       React.Children.forEach(
         (child.props as { children?: React.ReactNode }).children,
@@ -85,7 +85,7 @@ function parseOptions(children: React.ReactNode): ParsedGroup[] {
   return groups
 }
 
-function NativeSelect({
+function SelectField({
   className,
   size = "default",
   children,
@@ -97,7 +97,7 @@ function NativeSelect({
   required,
   onChange,
   ...restProps
-}: NativeSelectProps) {
+}: SelectFieldProps) {
   const optionGroups = React.useMemo(() => parseOptions(children), [children])
   const options = React.useMemo(
     () => optionGroups.flatMap((group) => group.options),
@@ -136,7 +136,7 @@ function NativeSelect({
       label: option.label,
     }))
     // 调用方未提供空选项、但当前值为空时，给哨兵补一个空 label，
-    // 避免 `__native_select_empty__` 这个内部标记被当作文本渲染到 trigger 上
+    // 避免 `__select_field_empty__` 这个内部标记被当作文本渲染到 trigger 上
     if (!items.some((item) => item.value === EMPTY_SENTINEL)) {
       items.unshift({ value: EMPTY_SENTINEL, label: "" })
     }
@@ -159,9 +159,9 @@ function NativeSelect({
   return (
     <div
       className={cn(
-        "group/native-select relative w-full has-[button:disabled]:opacity-50",
+        "group/select-field relative w-full has-[button:disabled]:opacity-50",
       )}
-      data-slot="native-select-wrapper"
+      data-slot="select-field-wrapper"
       data-size={size}
     >
       {name ? <input type="hidden" name={name} value={currentValue} /> : null}
@@ -173,7 +173,7 @@ function NativeSelect({
       >
         <SelectTrigger
           id={id}
-          data-slot="native-select"
+          data-slot="select-field"
           data-size={size}
           className={cn(
             "w-full min-w-0 data-[size=sm]:h-8",
@@ -208,21 +208,21 @@ function NativeSelect({
   )
 }
 
-function NativeSelectOption({ ...props }: React.ComponentProps<"option">) {
-  return <option data-slot="native-select-option" {...props} />
+function SelectFieldOption({ ...props }: React.ComponentProps<"option">) {
+  return <option data-slot="select-field-option" {...props} />
 }
 
-function NativeSelectOptGroup({
+function SelectFieldOptGroup({
   className,
   ...props
 }: React.ComponentProps<"optgroup">) {
   return (
     <optgroup
-      data-slot="native-select-optgroup"
+      data-slot="select-field-optgroup"
       className={cn(className)}
       {...props}
     />
   )
 }
 
-export { NativeSelect, NativeSelectOptGroup, NativeSelectOption }
+export { SelectField, SelectFieldOptGroup, SelectFieldOption }

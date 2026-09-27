@@ -13,7 +13,7 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { NativeSelect } from '@/components/ui/native-select';
+import { SelectField } from '@/components/ui/select-field';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -396,7 +396,7 @@ function CreateReleaseDialog({
             <label className="text-xs font-medium text-content-text">
               {t('release.create.project')}
             </label>
-            <NativeSelect
+            <SelectField
               value={pid}
               onChange={(e) => setPidOverride(e.target.value)}
               className="h-8 w-full text-xs"
@@ -405,7 +405,7 @@ function CreateReleaseDialog({
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
-            </NativeSelect>
+            </SelectField>
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-content-text">
@@ -447,7 +447,7 @@ function CreateReleaseDialog({
             <label className="text-xs font-medium text-content-text">
               {t('release.create.milestoneLabel')}
             </label>
-            <NativeSelect
+            <SelectField
               value={milestoneId}
               onChange={(e) => setMilestoneId(e.target.value)}
               disabled={!pid}
@@ -457,7 +457,7 @@ function CreateReleaseDialog({
               {(milestones ?? []).map((m) => (
                 <option key={m.id} value={m.id}>{m.name}</option>
               ))}
-            </NativeSelect>
+            </SelectField>
           </div>
         </div>
         <DialogFooter>

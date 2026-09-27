@@ -118,7 +118,7 @@
 | menu-surface | `src/components/ui/menu-surface.ts` | ✅ canonical | — | — |
 | menubar | `src/components/ui/menubar.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
 | meter | `src/components/ui/meter.tsx` | 📦 standby | — | 自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby |
-| native-select | `src/components/ui/native-select.tsx` | ✅ canonical | — | — |
+| select-field | `src/components/ui/select-field.tsx` | ✅ canonical | — | — |
 | navigation-menu | `src/components/ui/navigation-menu.tsx` | 🔶 review | — | 零引用（实测）——横向导航由 menu / breadcrumb / tabs 承载 |
 | number-field | `src/components/ui/number-field.tsx` | 📦 standby | — | 自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby |
 | pagination | `src/components/ui/pagination.tsx` | ✅ canonical | — | — |

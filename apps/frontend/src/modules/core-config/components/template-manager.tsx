@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useProjectTemplates, useCreateProjectTemplate, useUpdateProjectTemplate, useTaskTemplates, useCreateTaskTemplate, useUpdateTaskTemplate, useDeleteTaskTemplate, type ProjectTemplate, type TaskTemplate } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -281,17 +281,17 @@ export function TemplateManager() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>{t('settings.templateManagerFormTypeLabel')}</FormLabel>
-                              <NativeSelect
+                              <SelectField
                                 value={field.value}
                                 onChange={(e) => field.onChange(e.target.value)}
                                 className="w-full"
                               >
                                 {PROJECT_TYPES.map((type) => (
-                                  <NativeSelectOption key={type} value={type}>
+                                  <SelectFieldOption key={type} value={type}>
                                     {t(projectTypeKey(type))}
-                                  </NativeSelectOption>
+                                  </SelectFieldOption>
                                 ))}
-                              </NativeSelect>
+                              </SelectField>
                             </FormItem>
                           )}
                         />
@@ -422,17 +422,17 @@ export function TemplateManager() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>{t('settings.templateManagerFormCategoryLabel')}</FormLabel>
-                              <NativeSelect
+                              <SelectField
                                 value={field.value}
                                 onChange={(e) => field.onChange(e.target.value)}
                                 className="w-full"
                               >
                                 {TASK_CATEGORIES.map((category) => (
-                                  <NativeSelectOption key={category} value={category}>
+                                  <SelectFieldOption key={category} value={category}>
                                     {t(taskCategoryKey(category))}
-                                  </NativeSelectOption>
+                                  </SelectFieldOption>
                                 ))}
-                              </NativeSelect>
+                              </SelectField>
                             </FormItem>
                           )}
                         />

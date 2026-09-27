@@ -24,7 +24,7 @@ import { OnboardingGate } from '@/modules/onboarding/components/onboarding-gate'
 import { cn } from '@/lib/utils';
 import { StatusPill } from '@/components/ui/status-pill';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { NativeSelect } from '@/components/ui/native-select';
+import { SelectField } from '@/components/ui/select-field';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import {
   HelpCircle,
@@ -815,7 +815,7 @@ function PipelineFocusFilter() {
       <span className="shrink-0 text-3xs font-medium text-sidebar-foreground/40">
         {t('shell.pipelineFocus.label', '项目聚焦')}
       </span>
-      <NativeSelect
+      <SelectField
         aria-label={t('shell.pipelineFocus.label', '项目聚焦')}
         value={focusProjectId ?? ''}
         onChange={(e) => setProjectId(e.target.value || null)}
@@ -826,7 +826,7 @@ function PipelineFocusFilter() {
         {projects.map((p) => (
           <option key={p.id} value={p.id}>{p.name}</option>
         ))}
-      </NativeSelect>
+      </SelectField>
     </div>
   );
 }

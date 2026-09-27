@@ -233,7 +233,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group'
-import { NativeSelect } from '@/components/ui/native-select'
+import { SelectField } from '@/components/ui/select-field'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import {
@@ -393,7 +393,7 @@ const SECTIONS = [
   { id: 'date-picker', label: 'Date Picker', group: 'Primitives' },
   { id: 'input-otp', label: 'Input OTP', group: 'Primitives' },
   { id: 'input-group', label: 'Input Group', group: 'Primitives' },
-  { id: 'native-select', label: 'Native Select', group: 'Primitives' },
+  { id: 'select-field', label: 'Select Field', group: 'Primitives' },
   { id: 'scroll-area', label: 'Scroll Area', group: 'Primitives' },
   { id: 'aspect-ratio', label: 'Aspect Ratio', group: 'Primitives' },
   { id: 'menubar', label: 'Menubar', group: 'Primitives' },
@@ -4851,13 +4851,13 @@ export function DesignSystemPage() {
 
           <Separator />
 
-          <SectionAnchor id="native-select">
-            <SectionTitle>Native Select</SectionTitle>
-            <NativeSelect defaultValue="active" className="w-48">
+          <SectionAnchor id="select-field">
+            <SectionTitle>Select Field</SectionTitle>
+            <SelectField defaultValue="active" className="w-48">
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
               <option value="archived">Archived</option>
-            </NativeSelect>
+            </SelectField>
           </SectionAnchor>
 
           <Separator />

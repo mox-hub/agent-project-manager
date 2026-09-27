@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
  *
  * 所以新写下拉框时的硬规则：**value ≠ 展示文本** 时，必须给 `Select` 传 `items`
  * （或给 `SelectValue` 传函数式 children），否则显示的就是 id。
- * 用 `NativeSelect` 则无需关心——它已从组件层把 `items` 接好。
+ * 用 `SelectField` 则无需关心——它已从组件层把 `items` 接好。
  */
 describe('Select 的 items → label 映射契约', () => {
   const ITEMS = [

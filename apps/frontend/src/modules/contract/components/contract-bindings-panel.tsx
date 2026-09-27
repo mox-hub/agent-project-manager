@@ -6,9 +6,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
+  SelectField,
+  SelectFieldOption,
+} from '@/components/ui/select-field';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import type {
@@ -229,7 +229,7 @@ export function ContractBindingsPanel({
                       {t('contract.action.seed')}
                     </Button>
                   )}
-                  <NativeSelect
+                  <SelectField
                     value={binding.syncMode}
                     onChange={(event) =>
                       setSyncMode.mutate({
@@ -242,11 +242,11 @@ export function ContractBindingsPanel({
                     data-ai-role="select"
                   >
                     {SYNC_MODES.map((mode) => (
-                      <NativeSelectOption key={mode} value={mode}>
+                      <SelectFieldOption key={mode} value={mode}>
                         {t(`contract.syncMode.${mode}`)}
-                      </NativeSelectOption>
+                      </SelectFieldOption>
                     ))}
-                  </NativeSelect>
+                  </SelectField>
                 </div>
               </div>
             );

@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CheckboxGroup } from '@/components/ui/checkbox-group';
 import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SegmentedControl } from '@/components/ui/segmented-control';
@@ -373,17 +373,17 @@ export function StatusManager() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('settings.statusType')} *</FormLabel>
-                      <NativeSelect
+                      <SelectField
                         value={field.value}
                         onChange={(e) => field.onChange(e.target.value)}
                         required
                       >
                         {STATUS_TYPES.map((type) => (
-                          <NativeSelectOption key={type} value={type}>
+                          <SelectFieldOption key={type} value={type}>
                             {t(TYPE_I18N_KEY[type])}
-                          </NativeSelectOption>
+                          </SelectFieldOption>
                         ))}
-                      </NativeSelect>
+                      </SelectField>
                     </FormItem>
                   )}
                 />

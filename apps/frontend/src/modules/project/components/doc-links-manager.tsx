@@ -7,9 +7,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
+  SelectField,
+  SelectFieldOption,
+} from '@/components/ui/select-field';
 
 const DOC_TYPE_OPTIONS = [
   { value: 'wiki', label: 'Wiki', icon: '📝' },
@@ -76,17 +76,17 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
               </div>
               <div>
                 <Label className="mb-1 block text-sm text-muted-foreground font-medium">Type</Label>
-                <NativeSelect
+                <SelectField
                   className="w-full"
                   value={newLink.type}
                   onChange={(e) => setNewLink({ ...newLink, type: e.target.value as ProjectDocLinkRequest['type'] })}
                 >
                   {DOC_TYPE_OPTIONS.map((opt) => (
-                    <NativeSelectOption key={opt.value} value={opt.value}>
+                    <SelectFieldOption key={opt.value} value={opt.value}>
                       {opt.icon} {opt.label}
-                    </NativeSelectOption>
+                    </SelectFieldOption>
                   ))}
-                </NativeSelect>
+                </SelectField>
               </div>
             </div>
             <div>

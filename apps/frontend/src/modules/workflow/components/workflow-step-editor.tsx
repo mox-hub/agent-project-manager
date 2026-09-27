@@ -8,7 +8,7 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { Label } from '@/components/ui/label';
 import type { WorkflowActionInfo } from '../api/workflow-api';
 
@@ -172,17 +172,17 @@ export function WorkflowStepEditor({
             <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.method')}
             </Label>
-            <NativeSelect
+            <SelectField
               value={String(step.method ?? 'GET')}
               onChange={(e) => onChange(setField(step, 'method', e.target.value))}
               className="h-8 text-xs"
             >
               {HTTP_METHODS.map((m) => (
-                <NativeSelectOption key={m} value={m}>
+                <SelectFieldOption key={m} value={m}>
                   {m}
-                </NativeSelectOption>
+                </SelectFieldOption>
               ))}
-            </NativeSelect>
+            </SelectField>
           </div>
           <div className="space-y-1.5">
             <Label className="text-2xs text-content-text-muted">
@@ -229,17 +229,17 @@ export function WorkflowStepEditor({
               <Label className="text-2xs text-content-text-muted">
                 {t('workflow.editor.op')}
               </Label>
-              <NativeSelect
+              <SelectField
                 value={String(step.op ?? 'eq')}
                 onChange={(e) => onChange(setField(step, 'op', e.target.value))}
                 className="h-8 text-xs"
               >
                 {CONDITION_OPS.map((op) => (
-                  <NativeSelectOption key={op} value={op}>
+                  <SelectFieldOption key={op} value={op}>
                     {op}
-                  </NativeSelectOption>
+                  </SelectFieldOption>
                 ))}
-              </NativeSelect>
+              </SelectField>
             </div>
             <div className="space-y-1.5">
               <Label className="text-2xs text-content-text-muted">
@@ -261,17 +261,17 @@ export function WorkflowStepEditor({
             <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.action')}
             </Label>
-            <NativeSelect
+            <SelectField
               value={String(step.action ?? '')}
               onChange={(e) => onChange(setField(step, 'action', e.target.value))}
               className="h-8 text-xs"
             >
               {actions.map((a) => (
-                <NativeSelectOption key={a.id} value={a.id}>
+                <SelectFieldOption key={a.id} value={a.id}>
                   {a.title}（{a.id}）
-                </NativeSelectOption>
+                </SelectFieldOption>
               ))}
-            </NativeSelect>
+            </SelectField>
             {actions.find((a) => a.id === step.action)?.description ? (
               <p className="text-2xs leading-relaxed text-content-text-muted">
                 {actions.find((a) => a.id === step.action)?.description}

@@ -40,7 +40,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { PromptEditor } from '@/shared/components/prompt-editor';
 import { cn } from '@/lib/utils';
 import {
@@ -349,7 +349,7 @@ function TemplateEditForm({
             data-ai-component="prompt.template-editor.name"
           />
           {isEditMode ? null : (
-            <NativeSelect
+            <SelectField
               value={target}
               onChange={(event) =>
                 setTarget(event.target.value as 'task' | 'project' | 'role' | 'member')
@@ -357,11 +357,11 @@ function TemplateEditForm({
               className="h-8 w-40 text-xs"
               data-ai-component="prompt.template-editor.target"
             >
-              <NativeSelectOption value="task">{t('prompt.target.task')}</NativeSelectOption>
-              <NativeSelectOption value="project">{t('prompt.target.project')}</NativeSelectOption>
-              <NativeSelectOption value="role">{t('prompt.target.role')}</NativeSelectOption>
-              <NativeSelectOption value="member">{t('prompt.target.member')}</NativeSelectOption>
-            </NativeSelect>
+              <SelectFieldOption value="task">{t('prompt.target.task')}</SelectFieldOption>
+              <SelectFieldOption value="project">{t('prompt.target.project')}</SelectFieldOption>
+              <SelectFieldOption value="role">{t('prompt.target.role')}</SelectFieldOption>
+              <SelectFieldOption value="member">{t('prompt.target.member')}</SelectFieldOption>
+            </SelectField>
           )}
         </div>
         <Input

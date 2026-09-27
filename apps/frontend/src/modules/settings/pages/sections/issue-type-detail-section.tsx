@@ -26,7 +26,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { NativeSelect } from '@/components/ui/native-select';
+import { SelectField } from '@/components/ui/select-field';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import {
   Dialog,
@@ -517,7 +517,7 @@ function FieldDialog({
           </div>
           <div className="space-y-1.5">
             <label className="text-xs text-content-text-secondary">{t('settings.fieldTypeLabel', '类型')}</label>
-            <NativeSelect
+            <SelectField
               value={draft.type}
               onChange={(e) => setDraft({ ...draft, type: e.target.value as FieldSchemaType })}
             >
@@ -526,7 +526,7 @@ function FieldDialog({
                   {t(`settings.issueTypesFieldTypes${type.charAt(0).toUpperCase()}${type.slice(1)}`)}
                 </option>
               ))}
-            </NativeSelect>
+            </SelectField>
           </div>
           {(draft.type === 'select' || draft.type === 'multiselect') && (
             <div className="space-y-1.5">
@@ -546,16 +546,16 @@ function FieldDialog({
           <div className="space-y-1.5">
             <label className="text-xs text-content-text-secondary">{t('settings.fieldDefaultValue', '默认值（可选）')}</label>
             {draft.type === 'boolean' ? (
-              <NativeSelect
+              <SelectField
                 value={draft.defaultValue ?? ''}
                 onChange={(e) => setDraft({ ...draft, defaultValue: e.target.value || undefined })}
               >
                 <option value="">{t('settings.none', '无')}</option>
                 <option value="true">true</option>
                 <option value="false">false</option>
-              </NativeSelect>
+              </SelectField>
             ) : draft.type === 'select' ? (
-              <NativeSelect
+              <SelectField
                 value={draft.defaultValue ?? ''}
                 onChange={(e) => setDraft({ ...draft, defaultValue: e.target.value || undefined })}
               >
@@ -563,7 +563,7 @@ function FieldDialog({
                 {(draft.options ?? []).map((opt) => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
-              </NativeSelect>
+              </SelectField>
             ) : draft.type === 'multiselect' ? (
               <Input
                 value={draft.defaultValue ?? ''}
@@ -761,7 +761,7 @@ function AddStatusDialog({
           </div>
           <div className="space-y-1.5">
             <label className="text-xs text-content-text-secondary">{t('settings.statusGroupLabel', '所属分组')}</label>
-            <NativeSelect
+            <SelectField
               value={draft.group}
               onChange={(e) => setDraft({ ...draft, group: e.target.value })}
             >
@@ -770,7 +770,7 @@ function AddStatusDialog({
                   {t(`settings.statusGroup.${group}`)}
                 </option>
               ))}
-            </NativeSelect>
+            </SelectField>
           </div>
           <label className="flex cursor-pointer items-center gap-1.5 text-xs text-content-text-secondary">
             <Checkbox

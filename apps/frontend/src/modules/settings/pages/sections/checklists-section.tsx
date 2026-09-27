@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import {
   Dialog,
   DialogContent,
@@ -298,16 +298,16 @@ function ChecklistsCard() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium">{t('settings.checklistsProjectType')}</label>
-                <NativeSelect
+                <SelectField
                   value={draft.projectType}
                   onChange={(e) => setDraft((p) => ({ ...p, projectType: e.target.value }))}
                 >
                   {PROJECT_TYPES.map((pt) => (
-                    <NativeSelectOption key={pt} value={pt} className="font-mono">
+                    <SelectFieldOption key={pt} value={pt} className="font-mono">
                       {pt}
-                    </NativeSelectOption>
+                    </SelectFieldOption>
                   ))}
-                </NativeSelect>
+                </SelectField>
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-medium">{t('settings.checklistsTechStack')}</label>
@@ -343,17 +343,17 @@ function ChecklistsCard() {
                         placeholder={t('settings.checklistItemCategory')}
                         className="h-8 flex-1 text-xs"
                       />
-                      <NativeSelect
+                      <SelectField
                         value={item.severity}
                         onChange={(e) => setItem(index, { severity: e.target.value })}
                         className="h-8 w-28 text-xs"
                       >
                         {SEVERITIES.map((s) => (
-                          <NativeSelectOption key={s} value={s}>
+                          <SelectFieldOption key={s} value={s}>
                             {t(`acceptance.severity.${s}`)}
-                          </NativeSelectOption>
+                          </SelectFieldOption>
                         ))}
-                      </NativeSelect>
+                      </SelectField>
                       <Button
                         variant="ghost"
                         size="icon-sm"

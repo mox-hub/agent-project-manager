@@ -146,9 +146,9 @@ describe('ReleaseListPage', () => {
     renderWithRouter(<ReleaseListPage />, '/?project=p-1');
     await user.click(screen.getByText('创建发版'));
     expect(screen.getByText('所属里程碑（可选）')).toBeTruthy();
-    // 里程碑下拉（NativeSelect=base-ui 封装，trigger 为 BUTTON，jsdom 下用键盘开层）
+    // 里程碑下拉（SelectField=base-ui 封装，trigger 为 BUTTON，jsdom 下用键盘开层）
     const milestoneTrigger = document.querySelector(
-      '[data-testid="release-milestone-select"] [data-slot="native-select"]',
+      '[data-testid="release-milestone-select"] [data-slot="select-field"]',
     ) as HTMLElement;
     expect(milestoneTrigger).toBeTruthy();
     expect(milestoneTrigger.textContent).toContain('不关联里程碑');

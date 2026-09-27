@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { NativeSelect } from '@/components/ui/native-select';
+import { SelectField } from '@/components/ui/select-field';
 import { PageShell } from '@/components/ui/page-shell';
 import { useToast } from '@/hooks/use-toast';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -186,7 +186,7 @@ export function DocumentNewPage() {
             <div className="space-y-4">
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground">文档分类</label>
-                <NativeSelect
+                <SelectField
                   value={category}
                   onChange={(event) => setCategory(event.target.value as DocumentCategory)}
                 >
@@ -195,7 +195,7 @@ export function DocumentNewPage() {
                       {option.label}
                     </option>
                   ))}
-                </NativeSelect>
+                </SelectField>
               </div>
 
               <div>

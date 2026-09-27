@@ -23,7 +23,7 @@ import { Progress } from '@/components/ui/progress';
 import { StatsCard } from '@/components/ui/stats-card';
 import { ActivityHeatmap } from '@/components/ui/activity-heatmap';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -284,14 +284,14 @@ function CostTab() {
   // 范围选择常驻（空态/加载态也保留，否则空范围内用户无法切回有数据的范围）
   const rangeRow = (
     <div className="flex items-center justify-end">
-      <NativeSelect
+      <SelectField
         value={range}
         onChange={(e) => setRange(e.target.value as AiUsageRange)}
         className="w-36 text-xs"
         aria-label={t('analytics.cost.range')}
       >
         {AI_USAGE_RANGE_OPTIONS.map((option) => (
-          <NativeSelectOption key={option.id} value={option.id}>
+          <SelectFieldOption key={option.id} value={option.id}>
             {t(
               option.id === '7d'
                 ? 'analytics.cost.range7d'
@@ -299,9 +299,9 @@ function CostTab() {
                   ? 'analytics.cost.range30d'
                   : 'analytics.cost.rangeAll',
             )}
-          </NativeSelectOption>
+          </SelectFieldOption>
         ))}
-      </NativeSelect>
+      </SelectField>
     </div>
   );
 

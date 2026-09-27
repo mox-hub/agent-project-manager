@@ -1,7 +1,7 @@
 /**
  * CustomFieldInput / CustomFieldsSection - 自定义字段动态渲染器（IssueType fieldSchema 适配引擎二期）
  *
- * - 按字段 type 渲染对应控件：text→Input、textarea→Textarea、select→NativeSelect、
+ * - 按字段 type 渲染对应控件：text→Input、textarea→Textarea、select→SelectField、
  *   multiselect→Checkbox 组、number→Input[type=number]、date→Input[type=date]
  * - label 必显示，required 加标记；值统一走 onChange(unknown)，空值以 null 表示
  * - 值格式化工具 formatCustomFieldValue 供只读展示复用
@@ -10,7 +10,7 @@ import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { NativeSelect } from '@/components/ui/native-select';
+import { SelectField } from '@/components/ui/select-field';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import type { FieldSchemaDef } from '@/modules/issue/api/issue-type-api';
@@ -63,7 +63,7 @@ function FieldControl({
       );
     case 'select':
       return (
-        <NativeSelect
+        <SelectField
           id={id}
           value={value == null ? '' : String(value)}
           onChange={(e) => onChange(e.target.value === '' ? null : e.target.value)}
@@ -74,7 +74,7 @@ function FieldControl({
               {option}
             </option>
           ))}
-        </NativeSelect>
+        </SelectField>
       );
     case 'multiselect': {
       const selected = Array.isArray(value) ? value.map(String) : [];

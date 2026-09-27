@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { NativeSelect } from '@/components/ui/native-select';
+import { SelectField } from '@/components/ui/select-field';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
@@ -229,11 +229,11 @@ function DocumentEditWorkspace({
             <div className="space-y-5">
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground">文档分类</label>
-                <NativeSelect value={category} onChange={(event) => setCategory(event.target.value as DocumentCategory)}>
+                <SelectField value={category} onChange={(event) => setCategory(event.target.value as DocumentCategory)}>
                   {CATEGORY_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
-                </NativeSelect>
+                </SelectField>
               </div>
 
               <div>

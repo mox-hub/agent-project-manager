@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { toast } from '@/components/ui/toast';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { useCreateRegistrationInvite } from '../hooks/use-admin';
@@ -127,14 +127,14 @@ export function InviteCreateDialog({
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-medium">{t('admin.inviteExpiry', '有效期')}</label>
-                <NativeSelect
+                <SelectField
                   value={expiresInDays}
                   onChange={(e) => setExpiresInDays(e.target.value)}
                 >
-                  <NativeSelectOption value="1">1 {t('admin.days', '天')}</NativeSelectOption>
-                  <NativeSelectOption value="7">7 {t('admin.days', '天')}</NativeSelectOption>
-                  <NativeSelectOption value="30">30 {t('admin.days', '天')}</NativeSelectOption>
-                </NativeSelect>
+                  <SelectFieldOption value="1">1 {t('admin.days', '天')}</SelectFieldOption>
+                  <SelectFieldOption value="7">7 {t('admin.days', '天')}</SelectFieldOption>
+                  <SelectFieldOption value="30">30 {t('admin.days', '天')}</SelectFieldOption>
+                </SelectField>
               </div>
             </div>
             <DialogFooter className="mt-4">

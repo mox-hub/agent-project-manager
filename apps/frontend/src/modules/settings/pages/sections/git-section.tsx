@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { PageShell } from '@/components/ui/page-shell';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Spinner } from '@/components/ui/spinner';
@@ -275,16 +275,16 @@ export function GitSettingsSection() {
                       <Field>
                         <FieldLabel htmlFor="defaultProvider">{t('settings.gitProvider')}</FieldLabel>
                         <FieldContent>
-                          <NativeSelect
+                          <SelectField
                             id="defaultProvider"
                             value={field.value}
                             onChange={(event) => field.onChange(event.target.value)}
                           >
-                            <NativeSelectOption value="github">GitHub</NativeSelectOption>
-                            <NativeSelectOption value="gitlab">GitLab</NativeSelectOption>
-                            <NativeSelectOption value="gitea">Gitea</NativeSelectOption>
-                            <NativeSelectOption value="local">{t('settings.gitProviderLocal')}</NativeSelectOption>
-                          </NativeSelect>
+                            <SelectFieldOption value="github">GitHub</SelectFieldOption>
+                            <SelectFieldOption value="gitlab">GitLab</SelectFieldOption>
+                            <SelectFieldOption value="gitea">Gitea</SelectFieldOption>
+                            <SelectFieldOption value="local">{t('settings.gitProviderLocal')}</SelectFieldOption>
+                          </SelectField>
                           <FieldDescription>{t('settings.gitProviderDesc')}</FieldDescription>
                         </FieldContent>
                       </Field>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { PageShell } from '@/components/ui/page-shell';
 import { Spinner } from '@/components/ui/spinner';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -267,17 +267,17 @@ export function TerminalSettingsSection() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel htmlFor="terminalShell">{t('settings.terminalShell')}</FormLabel>
-                        <NativeSelect
+                        <SelectField
                           id="terminalShell"
                           value={field.value}
                           onChange={(event) => field.onChange(event.target.value)}
                           className="mt-1"
                         >
-                          <NativeSelectOption value="pwsh">PowerShell (pwsh)</NativeSelectOption>
-                          <NativeSelectOption value="bash">Bash</NativeSelectOption>
-                          <NativeSelectOption value="zsh">Zsh</NativeSelectOption>
-                          <NativeSelectOption value="cmd">CMD (Windows)</NativeSelectOption>
-                        </NativeSelect>
+                          <SelectFieldOption value="pwsh">PowerShell (pwsh)</SelectFieldOption>
+                          <SelectFieldOption value="bash">Bash</SelectFieldOption>
+                          <SelectFieldOption value="zsh">Zsh</SelectFieldOption>
+                          <SelectFieldOption value="cmd">CMD (Windows)</SelectFieldOption>
+                        </SelectField>
                       </FormItem>
                     )}
                   />
@@ -287,17 +287,17 @@ export function TerminalSettingsSection() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel htmlFor="terminalTheme">{t('settings.terminalTheme')}</FormLabel>
-                        <NativeSelect
+                        <SelectField
                           id="terminalTheme"
                           value={field.value}
                           onChange={(event) => field.onChange(event.target.value)}
                           className="mt-1"
                         >
-                          <NativeSelectOption value="default">Default</NativeSelectOption>
-                          <NativeSelectOption value="dark">Dark</NativeSelectOption>
-                          <NativeSelectOption value="light">Light</NativeSelectOption>
-                          <NativeSelectOption value="monokai">Monokai</NativeSelectOption>
-                        </NativeSelect>
+                          <SelectFieldOption value="default">Default</SelectFieldOption>
+                          <SelectFieldOption value="dark">Dark</SelectFieldOption>
+                          <SelectFieldOption value="light">Light</SelectFieldOption>
+                          <SelectFieldOption value="monokai">Monokai</SelectFieldOption>
+                        </SelectField>
                       </FormItem>
                     )}
                   />

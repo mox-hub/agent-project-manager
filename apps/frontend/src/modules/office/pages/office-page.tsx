@@ -12,7 +12,7 @@ import { PageShell } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 import { IconStack } from '@/components/ui/icon-stack';
 import { Skeleton } from '@/components/ui/skeleton';
-import { NativeSelect } from '@/components/ui/native-select';
+import { SelectField } from '@/components/ui/select-field';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { projectApi } from '@/modules/project/api/project-api';
 import { useOfficeSummary } from '../hooks/use-office-summary';
@@ -56,7 +56,7 @@ export function OfficePage() {
               <Skeleton className="h-4 w-64" />
             )}
           </p>
-          <NativeSelect
+          <SelectField
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
             className="w-56"
@@ -70,7 +70,7 @@ export function OfficePage() {
                 {project.name}
               </option>
             ))}
-          </NativeSelect>
+          </SelectField>
         </div>
 
         {/* 员工卡网格 */}

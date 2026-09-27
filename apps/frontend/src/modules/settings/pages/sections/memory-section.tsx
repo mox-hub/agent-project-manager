@@ -18,7 +18,7 @@ import { PageShell } from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { NativeSelect } from '@/components/ui/native-select';
+import { SelectField } from '@/components/ui/select-field';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -134,7 +134,7 @@ export function MemorySection() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
-                <NativeSelect
+                <SelectField
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
                   className="w-56"
@@ -148,7 +148,7 @@ export function MemorySection() {
                       {project.name}
                     </option>
                   ))}
-                </NativeSelect>
+                </SelectField>
                 <Button
                   variant={showArchived ? 'secondary' : 'ghost'}
                   size="sm"

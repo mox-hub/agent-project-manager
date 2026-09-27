@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { SectionCard } from '@/components/ui/section-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
@@ -215,21 +215,21 @@ function PromptLivePreview({
   return (
     <>
       <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
-        <NativeSelect
+        <SelectField
           value={issueId}
           onChange={(event) => onIssueIdChange(event.target.value)}
           className="h-8 w-64 text-xs"
           data-ai-component="projectSettings.prompt.previewSelect"
         >
-          <NativeSelectOption value="">
+          <SelectFieldOption value="">
             {t('projectSettings.prompt.previewPickTask')}
-          </NativeSelectOption>
+          </SelectFieldOption>
           {rows.map((task) => (
-            <NativeSelectOption key={task.id} value={task.id}>
+            <SelectFieldOption key={task.id} value={task.id}>
               {task.title}
-            </NativeSelectOption>
+            </SelectFieldOption>
           ))}
-        </NativeSelect>
+        </SelectField>
         <Button
           type="button"
           variant="outline"

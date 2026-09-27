@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { GitPullRequest } from 'lucide-react';
 import { usePullRequests } from '../hooks/use-pull-requests';
 import { PullRequestCard } from './pull-request-card';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonList } from '@/components/ui/skeleton';
 
@@ -43,17 +43,17 @@ export function PullRequestList({ repoId }: PullRequestListProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <NativeSelect
+        <SelectField
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="h-8 w-45"
         >
           {PR_STATUS_OPTIONS.map((opt) => (
-            <NativeSelectOption key={opt.value} value={opt.value}>
+            <SelectFieldOption key={opt.value} value={opt.value}>
               {opt.label}
-            </NativeSelectOption>
+            </SelectFieldOption>
           ))}
-        </NativeSelect>
+        </SelectField>
         <span className="text-sm text-muted-foreground">
           {pullRequests?.length ?? 0} pull request(s)
         </span>
