@@ -202,7 +202,7 @@ function AISlotAnswerCard({
   const insight = mutationData ? parseCardExplain(mutationData.data) : null;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-lg">
+    <div className="flex h-full flex-col overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xs">
       <div className="flex shrink-0 items-center gap-1.5 border-b px-3 py-2">
         <Sparkles className="size-3.5 text-primary" aria-hidden />
         <span className="text-xs font-medium text-muted-foreground">

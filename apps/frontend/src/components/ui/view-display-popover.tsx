@@ -207,7 +207,7 @@ export function ViewDisplayPopover({
                 type="button"
                 onClick={() => onViewModeChange(opt.value)}
                 className={cn(
-                  "flex flex-1 items-center justify-center gap-1.5 rounded-md py-1 text-11 font-medium transition-all",
+                  "flex flex-1 items-center justify-center gap-1.5 rounded-md py-1 text-2xs font-medium transition-all",
                   isActive
                     ? "bg-card text-foreground shadow-xs"
                     : "text-muted-foreground hover:text-foreground",
@@ -357,7 +357,7 @@ export function ViewDisplayPopover({
 
         {onToggleDisplayProperty ? (
           <div className="flex flex-col gap-1.5 pt-1">
-            <span className="text-11 font-medium text-muted-foreground">
+            <span className="text-2xs font-medium text-muted-foreground">
               {t("viewDisplay.sections.displayProperties", "Display properties")}
             </span>
             <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -370,9 +370,9 @@ export function ViewDisplayPopover({
                     type="button"
                     onClick={() => onToggleDisplayProperty(prop.key)}
                     className={cn(
-                      "inline-flex items-center rounded-full px-2.5 py-0.5 text-11 font-medium transition-all",
+                      "inline-flex items-center rounded-full px-2.5 py-0.5 text-2xs font-medium transition-all",
                       isActive
-                        ? "bg-secondary text-foreground shadow-2xs border border-border"
+                        ? "bg-secondary text-foreground shadow-xs border border-border"
                         : "bg-muted/20 text-muted-foreground/60 border border-border/40 hover:bg-muted/40 hover:text-foreground",
                     )}
                   >

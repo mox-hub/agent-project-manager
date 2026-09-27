@@ -78,7 +78,7 @@ function renderTypeBadge(type: RoutePreviewType, label: string) {
   switch (type) {
     case 'bug':
       return (
-        <Badge variant="destructive" className="text-10 shrink-0">
+        <Badge variant="destructive" className="text-3xs shrink-0">
           {label}
         </Badge>
       );
@@ -86,7 +86,7 @@ function renderTypeBadge(type: RoutePreviewType, label: string) {
       return (
         <Badge
           variant="outline"
-          className="text-10 shrink-0 text-accent-purple border-accent-purple/40"
+          className="text-3xs shrink-0 text-accent-purple border-accent-purple/40"
         >
           {label}
         </Badge>
@@ -95,7 +95,7 @@ function renderTypeBadge(type: RoutePreviewType, label: string) {
       return (
         <Badge
           variant="outline"
-          className="text-10 shrink-0 text-accent-orange border-accent-orange/40"
+          className="text-3xs shrink-0 text-accent-orange border-accent-orange/40"
         >
           {label}
         </Badge>
@@ -104,14 +104,14 @@ function renderTypeBadge(type: RoutePreviewType, label: string) {
       return (
         <Badge
           variant="secondary"
-          className="text-10 shrink-0 text-accent-green bg-accent-green/10"
+          className="text-3xs shrink-0 text-accent-green bg-accent-green/10"
         >
           {label}
         </Badge>
       );
     default:
       return (
-        <Badge variant="outline" className="text-10 shrink-0">
+        <Badge variant="outline" className="text-3xs shrink-0">
           {label}
         </Badge>
       );

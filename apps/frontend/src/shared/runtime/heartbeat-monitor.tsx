@@ -175,7 +175,7 @@ export function HeartbeatMonitor({
             </Tooltip>
           ))}
         </div>
-        <div className="flex items-center justify-between text-10 text-muted-foreground tabular-nums">
+        <div className="flex items-center justify-between text-3xs text-muted-foreground tabular-nums">
           <span>{oldest ? formatClock(oldest.at) : '—'}</span>
           <span>{t('settings.runtimeJustNow')}</span>
         </div>

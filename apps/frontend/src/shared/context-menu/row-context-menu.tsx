@@ -151,7 +151,7 @@ function AssignMenuAvatar({ name, handle }: { name?: string; handle?: string }) 
   const initial = (name || '').trim().charAt(0).toUpperCase() || '?';
   return (
     <span
-      className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-10 font-semibold text-white"
+      className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-3xs font-semibold text-white"
       style={{ backgroundColor: key ? assigneeColor(key) : '#94A3B8' }}
     >
       {initial}

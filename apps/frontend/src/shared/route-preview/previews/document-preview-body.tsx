@@ -35,17 +35,17 @@ export function DocumentPreviewBody({ id }: { id: string }) {
             {humanize(doc.status)}
           </StatusPill>
           {doc.category && (
-            <span className="text-10 font-medium text-muted-foreground">
+            <span className="text-3xs font-medium text-muted-foreground">
               {humanize(doc.category)}
             </span>
           )}
         </div>
         {doc.wordCount != null && (
-          <span className="text-10 font-mono text-muted-foreground">{doc.wordCount} 字</span>
+          <span className="text-3xs font-mono text-muted-foreground">{doc.wordCount} 字</span>
         )}
       </div>
 
-      {doc.summary && <p className="line-clamp-2 text-11 text-muted-foreground">{doc.summary}</p>}
+      {doc.summary && <p className="line-clamp-2 text-2xs text-muted-foreground">{doc.summary}</p>}
 
       <PreviewSection title="文档属性">
         <PreviewRow label={t('routePreview.document.folder')}>
@@ -56,7 +56,7 @@ export function DocumentPreviewBody({ id }: { id: string }) {
 
       <PreviewFooterMeta>
         <span>更新于 {formatPreviewDateTime(doc.updatedAt)}</span>
-        <span className="ml-auto font-mono text-10">{doc.id.slice(0, 8)}</span>
+        <span className="ml-auto font-mono text-3xs">{doc.id.slice(0, 8)}</span>
       </PreviewFooterMeta>
     </div>
   );

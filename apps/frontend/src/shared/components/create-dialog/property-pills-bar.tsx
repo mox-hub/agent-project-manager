@@ -215,7 +215,7 @@ export function PropertyPillsBar({
               </button>
             }
           />
-          <PopoverContent align="start" className="w-56 p-1.5 shadow-xl border border-border/70 bg-popover/95 text-xs">
+          <PopoverContent align="start" className="w-56 p-1.5 shadow-xs border border-border/70 bg-popover/95 text-xs">
             <div className="flex flex-col gap-1">
               {onOpenAcceptance && (
                 <button
@@ -228,7 +228,7 @@ export function PropertyPillsBar({
                 >
                   <span className="text-foreground">{t('unifiedCreate.acceptanceTitle', { defaultValue: '验收标准门禁' })}</span>
                   {acceptanceCount > 0 && (
-                    <span className="text-10 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                    <span className="text-3xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
                       {acceptanceCount}
                     </span>
                   )}

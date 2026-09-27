@@ -382,7 +382,7 @@ function SmallCaps({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-md border border-border/80 bg-background/60 text-11 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+      className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-md border border-border/80 bg-background/60 text-2xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
     >
       <Icon className="size-3" />
       <span>{label}</span>

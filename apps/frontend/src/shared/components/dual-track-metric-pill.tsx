@@ -27,7 +27,7 @@ export function DualTrackMetricPill({
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-2 rounded-md border border-border/50 bg-muted/30 px-2 py-0.5 font-mono text-11 text-content-text-muted select-none',
+        'inline-flex items-center gap-2 rounded-md border border-border/50 bg-muted/30 px-2 py-0.5 font-mono text-2xs text-content-text-muted select-none',
         className,
       )}
       data-ai-component="dual-track-metric-pill"

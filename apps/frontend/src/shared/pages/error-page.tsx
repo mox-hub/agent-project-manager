@@ -64,7 +64,7 @@ export function ErrorPage({ className }: ErrorPageProps) {
         {/* Status Code */}
         {errorStatus && (
           <div className="space-y-1">
-            <p className="font-mono text-6xl font-bold tracking-tight text-foreground/10 select-none">
+            <p className="font-mono text-2xl font-semibold tracking-tight text-foreground/10 select-none">
               {errorStatus}
             </p>
           </div>

@@ -420,7 +420,7 @@ export function BoardView<T extends { id: string }>({
     if (renderCard) {
       return (
         <div
-          className={cn(overlay ? 'w-72 rotate-2 shadow-xl' : 'w-full')}
+          className={cn(overlay ? 'w-72 rotate-2 shadow-xs' : 'w-full')}
           onClick={() => handleCardClick(item, column.id)}
         >
           {renderCard(item, column)}
@@ -641,7 +641,7 @@ function BoardColumnView<T extends { id: string }>({
             {itemIds.length}
           </span>
           {typeof column.wipLimit === 'number' ? (
-            <span className="text-10 text-muted-foreground">
+            <span className="text-3xs text-muted-foreground">
               WIP {itemIds.length}/{column.wipLimit}
             </span>
           ) : null}
@@ -768,10 +768,11 @@ function DefaultBoardCard<T extends { id: string }>({
     <article
       onClick={onClick}
       className={cn(
-        'relative space-y-2 rounded-xl border border-border bg-card px-3 py-2.5 shadow-xs transition-all duration-200',
-        'hover:-translate-y-0.5 hover:shadow-md dark:shadow-none',
+        'relative space-y-2 rounded-xl border border-border bg-card px-3 py-2.5 shadow-xs transition-all duration-normal',
+        // 悬停反馈已由位移（-translate-y-0.5）承载，阴影不再抬升（宪法 §3.6）
+        'hover:-translate-y-0.5 dark:shadow-none',
         isAi && 'border-accent-purple/50 ring-1 ring-accent-purple/30',
-        overlay && 'rotate-0 shadow-xl',
+        overlay && 'rotate-0 shadow-xs',
         card.className?.(item),
       )}
       data-board-card-id={item.id}

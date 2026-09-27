@@ -251,7 +251,7 @@ function buildApprovalSlots(decision: Decision, t: (k: string, o?: Record<string
       {p.approverPolicy ? (
         <p>
           <span className="font-medium text-content-text">{t('decision.evidenceLabels.policy')}：</span>
-          <span className="font-mono text-11">{p.approverPolicy}</span>
+          <span className="font-mono text-2xs">{p.approverPolicy}</span>
         </p>
       ) : null}
       {decision.taskTitle ? (
@@ -345,7 +345,7 @@ function buildAcceptanceSlots(decision: Decision, t: (k: string, o?: Record<stri
         </p>
       ) : null}
       {ev?.filePaths && ev.filePaths.length > 0 ? (
-        <p className="font-mono text-11">{ev.filePaths.join(' · ')}</p>
+        <p className="font-mono text-2xs">{ev.filePaths.join(' · ')}</p>
       ) : null}
       {decision.detail ? <p>{decision.detail}</p> : null}
     </>
@@ -363,11 +363,11 @@ function buildAcceptanceSlots(decision: Decision, t: (k: string, o?: Record<stri
           <span className="flex-1 font-medium text-content-text">
             {t('decision.evidenceLabels.autoChecks')} · {checks.kind}
           </span>
-          <span className={cn('font-mono text-11', checks.valid ? 'text-accent-green' : 'text-accent-red')}>
+          <span className={cn('font-mono text-2xs', checks.valid ? 'text-accent-green' : 'text-accent-red')}>
             {checks.passed}/{checks.total}
           </span>
           {checks.failed > 0 ? (
-            <span className="rounded bg-accent-red-light px-1.5 py-0.5 text-10 text-accent-red">
+            <span className="rounded bg-accent-red-light px-1.5 py-0.5 text-3xs text-accent-red">
               {t('decision.evidenceLabels.failedCount', { n: checks.failed })}
             </span>
           ) : null}
@@ -385,7 +385,7 @@ function buildAcceptanceSlots(decision: Decision, t: (k: string, o?: Record<stri
             {ev.prUrl}
           </a>
           {ev.state ? (
-            <span className="rounded bg-accent-blue-light px-1.5 py-0.5 text-10 text-accent-blue">{ev.state}</span>
+            <span className="rounded bg-accent-blue-light px-1.5 py-0.5 text-3xs text-accent-blue">{ev.state}</span>
           ) : null}
         </div>
       ) : null}
@@ -468,12 +468,12 @@ function buildPlanSlots(decision: Decision, t: TFunc): DecisionSlots {
           <div className="flex items-center gap-2">
             <Plus className="size-3 shrink-0 text-accent-green" />
             <span className="flex-1 font-medium text-content-text">{s.title}</span>
-            {s.estimate ? <span className="font-mono text-11 text-content-text-muted">{s.estimate}h</span> : null}
+            {s.estimate ? <span className="font-mono text-2xs text-content-text-muted">{s.estimate}h</span> : null}
           </div>
           {s.acceptance?.criteria?.length ? (
             <div className="mt-1 space-y-0.5 pl-5">
               {s.acceptance.criteria.map((c, j) => (
-                <p key={j} className="flex items-start gap-1.5 text-11 text-content-text-muted">
+                <p key={j} className="flex items-start gap-1.5 text-2xs text-content-text-muted">
                   <ScrollText className="mt-0.5 size-3 shrink-0 text-accent-purple" />
                   <span className="min-w-0 flex-1">{c.content}</span>
                   {c.criteriaType ? (
@@ -522,7 +522,7 @@ function buildAssignmentSlots(decision: Decision, t: TFunc): DecisionSlots {
           {a.trustScore != null ? (
             <span
               className={cn(
-                'shrink-0 rounded px-1.5 py-0.5 text-10',
+                'shrink-0 rounded px-1.5 py-0.5 text-3xs',
                 a.trustScore >= 70
                   ? 'bg-accent-green-light text-accent-green'
                   : a.trustScore >= 40
@@ -672,7 +672,7 @@ function ClarifyBody({
                 </span>
                 <span className="font-semibold text-content-text">{c.label}</span>
                 {c.guess ? (
-                  <span className="rounded bg-accent-purple-light px-1.5 py-0.5 text-10 text-accent-purple">
+                  <span className="rounded bg-accent-purple-light px-1.5 py-0.5 text-3xs text-accent-purple">
                     {t('decision.clarify.aiGuess')}
                   </span>
                 ) : null}
@@ -732,17 +732,17 @@ function GateBody({ decision }: { decision: Decision }) {
         <div className="flex items-center gap-2.5 rounded-lg border border-accent-blue/30 bg-accent-blue-light/40 px-2.5 py-1.5 text-xs">
           <FileText className="size-4 shrink-0 text-accent-blue" />
           <span className="flex-1 truncate font-medium text-content-text">{p.documentTitle}</span>
-          <span className="shrink-0 text-10 text-content-text-muted">{t('decision.gate.inDocs')}</span>
+          <span className="shrink-0 text-3xs text-content-text-muted">{t('decision.gate.inDocs')}</span>
         </div>
       ) : null}
 
       {mappings.length > 0 ? (
         <div className="rounded-lg border border-border/60 bg-content-bg-secondary/40 p-2.5">
-          <p className="mb-1.5 text-11 font-medium text-content-text-muted">{t('decision.gate.glossary')}</p>
+          <p className="mb-1.5 text-2xs font-medium text-content-text-muted">{t('decision.gate.glossary')}</p>
           <div className="space-y-1">
             {mappings.map((m) =>
               m.term ? (
-                <div key={m.questionId} className="flex items-baseline gap-2 text-11">
+                <div key={m.questionId} className="flex items-baseline gap-2 text-2xs">
                   <span className="shrink-0 text-accent-purple">{m.term}</span>
                   <span className="truncate text-content-text-muted">← {m.answerExcerpt || m.question}</span>
                 </div>
@@ -754,13 +754,13 @@ function GateBody({ decision }: { decision: Decision }) {
 
       {consequences.length > 0 ? (
         <div className="rounded-lg border border-accent-yellow/40 bg-accent-yellow-light/30 p-2.5">
-          <p className="mb-1 flex items-center gap-1.5 text-11 font-medium text-content-text">
+          <p className="mb-1 flex items-center gap-1.5 text-2xs font-medium text-content-text">
             <AlertTriangle className="size-3 shrink-0 text-accent-yellow" />
             {t('decision.gate.consequences')}
           </p>
           <ul className="space-y-0.5">
             {consequences.map((c, i) => (
-              <li key={i} className="text-11 leading-relaxed text-content-text-secondary">· {c}</li>
+              <li key={i} className="text-2xs leading-relaxed text-content-text-secondary">· {c}</li>
             ))}
           </ul>
         </div>
@@ -771,7 +771,7 @@ function GateBody({ decision }: { decision: Decision }) {
           <div className="flex flex-wrap items-center gap-1.5" data-ai="gate-knowledge-terse">
             <Lightbulb className="size-3 shrink-0 text-content-text-muted" />
             {knowledge.map((k) => (
-              <span key={k.questionId ?? k.term} className="rounded bg-content-bg-secondary px-1.5 py-0.5 text-10 text-content-text-secondary">
+              <span key={k.questionId ?? k.term} className="rounded bg-content-bg-secondary px-1.5 py-0.5 text-3xs text-content-text-secondary">
                 {k.term}
               </span>
             ))}
@@ -781,7 +781,7 @@ function GateBody({ decision }: { decision: Decision }) {
             <button
               type="button"
               onClick={toggleKnowledge}
-              className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-11 font-medium text-content-text-secondary hover:bg-content-bg-secondary/60"
+              className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-2xs font-medium text-content-text-secondary hover:bg-content-bg-secondary/60"
               data-ai="gate-knowledge-toggle"
             >
               <Lightbulb className="size-3 shrink-0" />
@@ -792,14 +792,14 @@ function GateBody({ decision }: { decision: Decision }) {
               <div className="space-y-1.5 border-t border-border/60 px-2.5 py-2">
                 {knowledge.map((k) => (
                   <div key={k.questionId ?? k.term}>
-                    <p className="text-11 font-semibold text-content-text">{k.term}</p>
-                    <p className="text-11 leading-relaxed text-content-text-secondary">{k.note}</p>
+                    <p className="text-2xs font-semibold text-content-text">{k.term}</p>
+                    <p className="text-2xs leading-relaxed text-content-text-secondary">{k.note}</p>
                   </div>
                 ))}
                 <button
                   type="button"
                   onClick={suppressDomain}
-                  className="flex items-center gap-1 text-10 text-content-text-muted hover:text-content-text"
+                  className="flex items-center gap-1 text-3xs text-content-text-muted hover:text-content-text"
                   data-ai="gate-knowledge-suppress"
                 >
                   <EyeOff className="size-3" />
@@ -813,7 +813,7 @@ function GateBody({ decision }: { decision: Decision }) {
         <button
           type="button"
           onClick={() => domain && void feedback(domain, 'reset')}
-          className="text-10 text-content-text-muted hover:text-content-text"
+          className="text-3xs text-content-text-muted hover:text-content-text"
           data-ai="gate-knowledge-reset"
         >
           {t('decision.gate.suppressedHint')}
@@ -847,7 +847,7 @@ function PlaceholderBody({ decision }: { decision: Decision }) {
     <div className="rounded-md bg-content-bg-secondary px-3 py-2 text-xs text-content-text-secondary">
       <p>{t('decision.body.placeholder')}</p>
       {keys.length > 0 ? (
-        <p className="mt-1 font-mono text-11 text-content-text-muted">{keys.join(' · ')}</p>
+        <p className="mt-1 font-mono text-2xs text-content-text-muted">{keys.join(' · ')}</p>
       ) : null}
     </div>
   );
@@ -873,7 +873,7 @@ function buildWorkflowDefSlots(decision: Decision, t: TFunc): DecisionSlots {
           {p.description ? (
             <p className="mt-1 leading-relaxed text-content-text-secondary">{p.description}</p>
           ) : null}
-          {p.key ? <p className="mt-1 font-mono text-11 text-content-text-muted">{p.key}</p> : null}
+          {p.key ? <p className="mt-1 font-mono text-2xs text-content-text-muted">{p.key}</p> : null}
         </div>
         {steps.length > 0 ? (
           <div className="flex flex-wrap items-center gap-1">
@@ -882,7 +882,7 @@ function buildWorkflowDefSlots(decision: Decision, t: TFunc): DecisionSlots {
                 {idx > 0 ? <span className="text-content-text-muted">→</span> : null}
                 <span
                   className={cn(
-                    'rounded-full border px-2 py-0.5 text-11',
+                    'rounded-full border px-2 py-0.5 text-2xs',
                     s.type === 'human-confirm'
                       ? 'border-accent-yellow/40 bg-accent-yellow/10 text-accent-yellow'
                       : 'border-border bg-content-bg-secondary text-content-text-secondary',
@@ -948,7 +948,7 @@ function buildReleaseSlots(decision: Decision, t: TFunc): DecisionSlots {
         {checks.length > 0 ? (
           <ul className="space-y-1">
             {checks.map((c) => (
-              <li key={c.key} className="flex items-start gap-1.5 text-11">
+              <li key={c.key} className="flex items-start gap-1.5 text-2xs">
                 {c.passed ? (
                   <CheckCircle2 className="mt-0.5 size-3 shrink-0 text-accent-green" />
                 ) : (
@@ -964,7 +964,7 @@ function buildReleaseSlots(decision: Decision, t: TFunc): DecisionSlots {
             ))}
           </ul>
         ) : (
-          <p className="text-11 text-content-text-muted">{t('decision.release.noGate')}</p>
+          <p className="text-2xs text-content-text-muted">{t('decision.release.noGate')}</p>
         )}
       </div>
     ),
@@ -1036,25 +1036,25 @@ function buildContractConflictSlots(decision: Decision, t: TFunc): DecisionSlots
           {p.filePath ?? '—'}
         </span>
         {derived ? (
-          <span className="shrink-0 rounded bg-accent-orange-light px-1.5 py-0.5 text-10 text-accent-orange">
+          <span className="shrink-0 rounded bg-accent-orange-light px-1.5 py-0.5 text-3xs text-accent-orange">
             {t('decision.conflict.derivedBadge')}
           </span>
         ) : (
-          <span className="shrink-0 rounded bg-content-bg-secondary px-1.5 py-0.5 text-10 text-content-text-muted">
+          <span className="shrink-0 rounded bg-content-bg-secondary px-1.5 py-0.5 text-3xs text-content-text-muted">
             {t('decision.conflict.managedBadge')}
           </span>
         )}
       </div>
 
       {/* 冲突说明：托管型 = 区间被文件侧直改；派生型 = 整文件派生自平台被发现手改 */}
-      <p className="text-11 leading-relaxed text-content-text-secondary">
+      <p className="text-2xs leading-relaxed text-content-text-secondary">
         {derived ? t('decision.conflict.derivedHint') : t('decision.conflict.managedHint')}
       </p>
 
       {/* 托管差异区间对照（派生型无区间，整文件指纹失配，不渲染） */}
       {blocks.length > 0 ? (
         <div className="space-y-1">
-          <p className="text-11 font-medium text-content-text-muted">
+          <p className="text-2xs font-medium text-content-text-muted">
             {t('decision.conflict.blockDiff', { n: blocks.length })}
           </p>
           {blocks.map((b, i) => {
@@ -1063,7 +1063,7 @@ function buildContractConflictSlots(decision: Decision, t: TFunc): DecisionSlots
             return (
               <div
                 key={b.id ?? i}
-                className="rounded-lg border border-border/60 bg-content-bg-secondary/40 px-2.5 py-1.5 text-11"
+                className="rounded-lg border border-border/60 bg-content-bg-secondary/40 px-2.5 py-1.5 text-2xs"
               >
                 <p className="font-mono text-content-text-muted">#{b.id ?? i} · {b.state ?? '—'}</p>
                 {file ? (
@@ -1087,7 +1087,7 @@ function buildContractConflictSlots(decision: Decision, t: TFunc): DecisionSlots
       {/* 三种裁决动作的语义说明（顺序与动作栏前三键一致） */}
       <div className="space-y-1 rounded-lg border border-border/60 p-2.5">
         {actionSemantics.map(({ icon: Icon, key }) => (
-          <p key={key} className="flex items-start gap-1.5 text-11">
+          <p key={key} className="flex items-start gap-1.5 text-2xs">
             <Icon className="mt-0.5 size-3 shrink-0 text-content-text-muted" />
             <span className="min-w-0 flex-1 leading-relaxed text-content-text-secondary">{t(key)}</span>
           </p>

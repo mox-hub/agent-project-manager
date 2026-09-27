@@ -19,8 +19,8 @@ export function AppDock({ className, children, ...props }: AppDockProps) {
         className={cn(
           'fixed bottom-4 left-1/2 -translate-x-1/2 z-40',
           'flex h-12 items-center gap-1 px-2.5 py-1 rounded-full',
-          'bg-popover/85 backdrop-blur-xl border border-border/70 shadow-2xl',
-          'transition-all duration-200 select-none',
+          'bg-popover/85 backdrop-blur-xl border border-border/70 shadow-xs',
+          'transition-all duration-normal select-none',
           className,
         )}
         {...props}
@@ -66,7 +66,7 @@ export const AppDockItem = React.forwardRef<HTMLButtonElement, AppDockItemProps>
             {badge !== undefined && badge !== null && (
               <span
                 className={cn(
-                  'absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-10 font-bold tabular-nums ring-2 ring-popover',
+                  'absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-3xs font-semibold tabular-nums ring-2 ring-popover',
                   badgeTone === 'destructive' && 'bg-destructive text-destructive-foreground',
                   badgeTone === 'primary' && 'bg-primary text-primary-foreground',
                   badgeTone === 'warning' && 'bg-accent-yellow text-foreground',

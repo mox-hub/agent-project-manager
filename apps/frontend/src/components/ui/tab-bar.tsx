@@ -249,7 +249,7 @@ function TabItem({
               : 'border-transparent',
             'hover:border-sidebar-border/50 hover:bg-sidebar-accent/50',
             isActive
-              ? 'bg-background/95 border-border/70 shadow-2xs text-foreground font-medium backdrop-blur-xs dark:bg-background/80 dark:border-border/80'
+              ? 'bg-background/95 border-border/70 shadow-xs text-foreground font-medium backdrop-blur-xs dark:bg-background/80 dark:border-border/80'
               : 'text-sidebar-foreground/60'
           )}
           onClick={onClick}

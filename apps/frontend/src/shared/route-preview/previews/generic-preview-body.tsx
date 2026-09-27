@@ -25,11 +25,11 @@ export function GenericPreviewBody({ path }: { path: string }) {
   const descKey = STATIC_DESCRIPTIONS[path];
   return (
     <div className="space-y-2">
-      <p className="text-11 text-muted-foreground leading-relaxed">
+      <p className="text-2xs text-muted-foreground leading-relaxed">
         {descKey ? t(descKey) : t('routePreview.generic.hint')}
       </p>
       <PreviewFooterMeta>
-        <span className="truncate font-mono text-10 text-muted-foreground/70">{path}</span>
+        <span className="truncate font-mono text-3xs text-muted-foreground/70">{path}</span>
       </PreviewFooterMeta>
     </div>
   );

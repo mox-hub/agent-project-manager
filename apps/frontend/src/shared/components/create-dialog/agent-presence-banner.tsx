@@ -112,7 +112,7 @@ export function AgentPresenceBanner({
   return (
     <div
       data-testid="agent-presence-banner"
-      className="flex items-center justify-between gap-3 px-3.5 py-2 rounded-lg border border-accent-purple/20 bg-accent-purple/5 text-xs text-foreground/90 transition-all animate-in fade-in slide-in-from-top-1 duration-200"
+      className="flex items-center justify-between gap-3 px-3.5 py-2 rounded-lg border border-accent-purple/20 bg-accent-purple/5 text-xs text-foreground/90 transition-all animate-in fade-in slide-in-from-top-1 duration-normal"
     >
       <div className="flex items-center gap-2 min-w-0">
         <div className="relative shrink-0 flex items-center justify-center size-5 rounded-full bg-accent-purple/15 text-accent-purple">
@@ -142,7 +142,7 @@ export function AgentPresenceBanner({
             <button
               type="button"
               className={cn(
-                'inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-11 font-medium transition-colors hover:opacity-90 shrink-0',
+                'inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-2xs font-medium transition-colors hover:opacity-90 shrink-0',
                 strategyConfig.badgeClass,
               )}
             >
@@ -155,7 +155,7 @@ export function AgentPresenceBanner({
         <PopoverContent
           align="end"
           sideOffset={6}
-          className="w-48 p-1 shadow-xl border border-border/70 bg-popover/95 backdrop-blur-md"
+          className="w-48 p-1 shadow-xs border border-border/70 bg-popover/95 backdrop-blur-md"
         >
           <div className="flex flex-col gap-0.5">
             <button
@@ -172,7 +172,7 @@ export function AgentPresenceBanner({
               <Zap className="size-3.5 text-accent-green shrink-0" />
               <div className="flex flex-col">
                 <span>{t('unifiedCreate.dispatchStrategy.immediate', { defaultValue: '立即执行' })}</span>
-                <span className="text-10 text-muted-foreground">落库后立即调度运行</span>
+                <span className="text-3xs text-muted-foreground">落库后立即调度运行</span>
               </div>
             </button>
             <button
@@ -189,7 +189,7 @@ export function AgentPresenceBanner({
               <Shield className="size-3.5 text-accent-yellow shrink-0" />
               <div className="flex flex-col">
                 <span>{t('unifiedCreate.dispatchStrategy.approval', { defaultValue: '需审批' })}</span>
-                <span className="text-10 text-muted-foreground">进入通知中心审批</span>
+                <span className="text-3xs text-muted-foreground">进入通知中心审批</span>
               </div>
             </button>
             <button
@@ -206,7 +206,7 @@ export function AgentPresenceBanner({
               <Pause className="size-3.5 text-muted-foreground shrink-0" />
               <div className="flex flex-col">
                 <span>{t('unifiedCreate.dispatchStrategy.manual', { defaultValue: '仅建待办' })}</span>
-                <span className="text-10 text-muted-foreground">放入待办列手动启动</span>
+                <span className="text-3xs text-muted-foreground">放入待办列手动启动</span>
               </div>
             </button>
           </div>

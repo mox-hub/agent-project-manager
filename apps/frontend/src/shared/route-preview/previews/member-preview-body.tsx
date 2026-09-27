@@ -75,14 +75,14 @@ export function MemberPreviewBody({ id }: { id: string }) {
             <span className="truncate text-xs font-semibold text-foreground">
               {member.displayName}
             </span>
-            <span className="flex shrink-0 items-center gap-1 text-10 font-medium">
+            <span className="flex shrink-0 items-center gap-1 text-3xs font-medium">
               <span className={cn('size-1.5 rounded-full', TONE_DOT_CLASS[statusTone])} />
               <span className="text-muted-foreground">
                 {member.isOnline ? t('routePreview.member.online') : member.status}
               </span>
             </span>
           </div>
-          <p className="truncate text-11 text-muted-foreground">
+          <p className="truncate text-2xs text-muted-foreground">
             @{member.handle}
             {member.title ? ` · ${member.title}` : ''}
           </p>
@@ -95,7 +95,7 @@ export function MemberPreviewBody({ id }: { id: string }) {
         </div>
       </div>
 
-      {member.bio && <p className="line-clamp-2 text-11 text-muted-foreground">{member.bio}</p>}
+      {member.bio && <p className="line-clamp-2 text-2xs text-muted-foreground">{member.bio}</p>}
 
       <PreviewSection title={LABEL_PROFILE}>
         <PreviewRow label={t('routePreview.member.handle')}>{member.handle}</PreviewRow>
@@ -121,7 +121,7 @@ export function MemberPreviewBody({ id }: { id: string }) {
           {member.tags.slice(0, 6).map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-10 font-medium text-muted-foreground"
+              className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-3xs font-medium text-muted-foreground"
             >
               {tag}
             </span>

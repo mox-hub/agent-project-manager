@@ -129,7 +129,7 @@ export function AcceptanceCriteriaField({
             {t('unifiedCreate.acceptanceCriteria')}
           </span>
           {criteria.length > 0 && (
-            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-10 font-medium text-primary">
+            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-3xs font-medium text-primary">
               {criteria.filter((c) => c.completed).length}/{criteria.length}
             </span>
           )}
@@ -142,7 +142,7 @@ export function AcceptanceCriteriaField({
             size="xs"
             onClick={handleAiGenerate}
             disabled={isGenerating}
-            className="h-6 gap-1 px-2 text-11 text-accent-purple hover:bg-accent-purple/10 hover:text-accent-purple"
+            className="h-6 gap-1 px-2 text-2xs text-accent-purple hover:bg-accent-purple/10 hover:text-accent-purple"
           >
             <Sparkles className="size-3" />
             <span>{t('unifiedCreate.aiGenerateCriteria')}</span>
@@ -152,7 +152,7 @@ export function AcceptanceCriteriaField({
             variant="ghost"
             size="xs"
             onClick={handleAdd}
-            className="h-6 gap-1 px-2 text-11 text-muted-foreground hover:text-foreground"
+            className="h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
           >
             <Plus className="size-3" />
             <span>{t('unifiedCreate.addCriterion')}</span>
@@ -162,7 +162,7 @@ export function AcceptanceCriteriaField({
 
       {/* 放大态：完备性治理提示横幅 */}
       {maximized && (
-        <div className="flex items-center gap-2 rounded-lg border border-accent-blue/20 bg-accent-blue/5 px-2.5 py-1.5 text-11 text-accent-blue">
+        <div className="flex items-center gap-2 rounded-lg border border-accent-blue/20 bg-accent-blue/5 px-2.5 py-1.5 text-2xs text-accent-blue">
           <Lightbulb className="size-3.5 shrink-0" />
           <span className="leading-tight">{t('unifiedCreate.completenessHint')}</span>
         </div>

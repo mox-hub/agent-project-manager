@@ -44,14 +44,14 @@ export function ExecutionPreviewBody({ id }: { id: string }) {
                 : `执行状态: ${run.status}`}
           </span>
           {isPendingApproval ? (
-            <span className="text-10 font-mono px-1.5 py-0.5 rounded bg-accent-red/20 text-accent-red font-semibold">
+            <span className="text-3xs font-mono px-1.5 py-0.5 rounded bg-accent-red/20 text-accent-red font-semibold">
               高风险拦截
             </span>
           ) : (
             <StatusPill tone={getStatusTone(run.status)}>{run.status}</StatusPill>
           )}
         </div>
-        <div className="flex items-center justify-between text-10 font-mono text-accent-purple">
+        <div className="flex items-center justify-between text-3xs font-mono text-accent-purple">
           <span className="flex items-center gap-1 font-semibold">
             <Bot className="size-3" />
             {run.providerId ?? 'AI Execution'}
@@ -64,7 +64,7 @@ export function ExecutionPreviewBody({ id }: { id: string }) {
       </div>
 
       {run.goal && (
-        <p className="line-clamp-2 text-11 text-muted-foreground font-mono">{run.goal}</p>
+        <p className="line-clamp-2 text-2xs text-muted-foreground font-mono">{run.goal}</p>
       )}
 
       <PreviewSection title="执行属性">
@@ -95,7 +95,7 @@ export function ExecutionPreviewBody({ id }: { id: string }) {
           <Clock className="size-3" />
           {formatPreviewDateTime(run.startedAt ?? run.createdAt)}
         </span>
-        <span className="ml-auto font-mono text-10">{run.id.slice(0, 8)}</span>
+        <span className="ml-auto font-mono text-3xs">{run.id.slice(0, 8)}</span>
       </PreviewFooterMeta>
     </div>
   );

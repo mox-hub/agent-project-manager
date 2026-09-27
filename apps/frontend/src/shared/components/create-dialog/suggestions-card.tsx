@@ -59,7 +59,7 @@ export function SuggestionsCard({
         collapsed && 'border-b-0',
       )}>
         <Sparkles className="size-3 text-accent-purple" />
-        <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t('unifiedCreate.suggestions.title')}
         </span>
         {!collapsed ? (
@@ -67,7 +67,7 @@ export function SuggestionsCard({
             type="button"
             onClick={fetchAi}
             disabled={loading}
-            className="ml-auto flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-10 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+            className="ml-auto flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-3xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
             data-ai-action="create-dialog.suggestions.fetch"
           >
             <Sparkles className="size-2.5 text-accent-purple" />
@@ -88,7 +88,7 @@ export function SuggestionsCard({
       {!collapsed && (
         <div className="p-1.5 flex flex-col gap-0.5">
           {error ? (
-            <p className="px-2 py-1 text-10 text-accent-red">{error}</p>
+            <p className="px-2 py-1 text-3xs text-accent-red">{error}</p>
           ) : null}
           {items.length === 0 ? (
             <EmptyState

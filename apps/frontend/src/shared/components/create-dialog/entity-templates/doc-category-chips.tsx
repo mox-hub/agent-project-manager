@@ -89,7 +89,7 @@ export function DocCategoryChips({
             className={cn(
               'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all shrink-0 border select-none',
               active
-                ? 'bg-primary text-primary-foreground border-primary shadow-2xs'
+                ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                 : 'border-border/60 bg-muted/20 hover:bg-accent text-muted-foreground hover:text-foreground',
             )}
           >

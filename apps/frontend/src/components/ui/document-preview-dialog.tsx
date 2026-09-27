@@ -88,7 +88,7 @@ export function DocumentPreviewDialog({
         showCloseButton={false}
         keepDefaultWidth={false}
         className={cn(
-          'flex flex-col p-0 overflow-hidden transition-all duration-300',
+          'flex flex-col p-0 overflow-hidden transition-all duration-slow',
           dialogWidth
         )}
       >
@@ -107,7 +107,7 @@ export function DocumentPreviewDialog({
                   </StatusPill>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-1">{document.summary}</p>
-                <div className="flex items-center gap-3 mt-1.5 text-11 text-muted-foreground">
+                <div className="flex items-center gap-3 mt-1.5 text-2xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <CatIcon size={11} className={catConfig?.color} />
                     {catConfig?.label}
@@ -210,7 +210,7 @@ export function DocumentPreviewDialog({
             {/* Footer Actions */}
             <div className="px-5 py-2.5 border-t bg-muted/20 shrink-0">
               <div className="flex items-center justify-between">
-                <div className="text-11 text-muted-foreground">
+                <div className="text-2xs text-muted-foreground">
                   更新于 {new Date(document.updatedAt).toLocaleString('zh-CN')}
                 </div>
                 <div className="flex items-center gap-2">
@@ -218,7 +218,7 @@ export function DocumentPreviewDialog({
                     variant="outline"
                     size="sm"
                     onClick={handleCopyToClipboard}
-                    className="gap-1.5 h-7 text-11 px-3"
+                    className="gap-1.5 h-7 text-2xs px-3"
                   >
                     <Copy size={12} />
                     复制
@@ -226,7 +226,7 @@ export function DocumentPreviewDialog({
                   <Button
                     variant="default"
                     size="sm"
-                    className="gap-1.5 h-7 text-11 px-3"
+                    className="gap-1.5 h-7 text-2xs px-3"
                     // 应用内路由跳转编辑页（原 window.open 弹新页在 Electron 壳中不生效，
                     // 且与全站 SPA 导航不一致）；先关预览弹窗避免叠层
                     onClick={() => {

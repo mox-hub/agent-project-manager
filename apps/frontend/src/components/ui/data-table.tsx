@@ -307,7 +307,7 @@ export function DataTable<T>({
             <TableHeader
               className={cn(
                 "bg-muted/40",
-                stickyHeader && "sticky top-0 z-20 bg-card/95 backdrop-blur-xs border-b border-border shadow-2xs",
+                stickyHeader && "sticky top-0 z-20 bg-card/95 backdrop-blur-xs border-b border-border shadow-xs",
               )}
             >
               {table.getHeaderGroups().map((headerGroup) => (
@@ -426,8 +426,8 @@ export function DataTable<T>({
 
       {/* 多选悬浮胶囊（对齐 DataList SelectionBar 形态） */}
       {selectionManaged && selectionActions && selectedRows.length > 0 && (
-        <div className="pointer-events-none fixed bottom-28 left-1/2 z-50 -translate-x-1/2 transition-all duration-200">
-          <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-2 shadow-lg">
+        <div className="pointer-events-none fixed bottom-28 left-1/2 z-50 -translate-x-1/2 transition-all duration-normal">
+          <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-2 shadow-xs">
             <span className="px-2 text-sm font-semibold tabular-nums">
               {total > 0
                 ? t("dataTable.selectedWithTotal", {

@@ -215,7 +215,7 @@ export function DecisionDeckStack({
             <div
               key={decision.id}
               className={cn(
-                'w-full transition-all duration-300 flex justify-center',
+                'w-full transition-all duration-slow flex justify-center',
                 stackClass,
               )}
             >
@@ -281,7 +281,7 @@ export function DecisionDeckStack({
           >
             <X className="size-4 shrink-0" />
             <span className="whitespace-nowrap">{t('decision.review.quickReject')}</span>
-            <span className="font-mono text-10 opacity-60 whitespace-nowrap shrink-0">(2)</span>
+            <span className="font-mono text-3xs opacity-60 whitespace-nowrap shrink-0">(2)</span>
           </Button>
 
           {/* 翻面详情 */}
@@ -297,7 +297,7 @@ export function DecisionDeckStack({
           >
             <RotateCw className="size-4 shrink-0" />
             <span className="whitespace-nowrap">{isFlipped ? t('decision.review.flipFront') : t('decision.review.flipBack')}</span>
-            <span className="font-mono text-10 opacity-60 whitespace-nowrap shrink-0">(F)</span>
+            <span className="font-mono text-3xs opacity-60 whitespace-nowrap shrink-0">(F)</span>
           </Button>
 
           {/* 勾选通过（高亮大按钮） */}
@@ -306,14 +306,14 @@ export function DecisionDeckStack({
             onClick={handlePass}
             disabled={isProcessing}
             className={cn(
-              'shrink-0 rounded-full font-semibold shadow-sm whitespace-nowrap',
+              'shrink-0 rounded-full font-semibold shadow-xs whitespace-nowrap',
               compact ? 'gap-1.5 px-4 text-xs' : 'gap-2 px-6 text-sm',
             )}
             data-ai="deck-pass"
           >
             <Check className="size-4 shrink-0" />
             <span className="whitespace-nowrap">{t('decision.review.quickPass')}</span>
-            <span className="font-mono text-10 opacity-80 whitespace-nowrap shrink-0">(1/↵)</span>
+            <span className="font-mono text-3xs opacity-80 whitespace-nowrap shrink-0">(1/↵)</span>
           </Button>
         </div>
 
@@ -336,7 +336,7 @@ export function DecisionDeckStack({
       </div>
 
       {/* 快捷键提示 */}
-      <p className="mt-3 text-center text-11 text-muted-foreground">
+      <p className="mt-3 text-center text-2xs text-muted-foreground">
         {t('decision.review.shortcuts')}
       </p>
     </div>

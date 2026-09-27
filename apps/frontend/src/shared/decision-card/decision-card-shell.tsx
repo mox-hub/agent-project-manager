@@ -190,7 +190,7 @@ function ActionBar({
                 ? t('decision.action.cooldown', { n: cooldownLeft })
                 : t(def.label)}
             </span>
-            <span className="shrink-0 rounded border border-current/20 px-1 font-mono text-10 opacity-50 whitespace-nowrap">
+            <span className="shrink-0 rounded border border-current/20 px-1 font-mono text-3xs opacity-50 whitespace-nowrap">
               {index + 1}
             </span>
           </button>
@@ -414,7 +414,7 @@ export function DecisionCardShell({
                 {/* 提案人头像 */}
                 <div
                   className={cn(
-                    'flex size-7 shrink-0 items-center justify-center rounded-full shadow-2xs',
+                    'flex size-7 shrink-0 items-center justify-center rounded-full shadow-xs',
                     meta.avatarCls,
                   )}
                 >
@@ -479,7 +479,7 @@ export function DecisionCardShell({
             </div>
 
             {/* 第 2 行：决策编号（按要求移至第二行） + 提交时间 / 过期时间（禁止换行） */}
-            <div className="flex items-center justify-between gap-2 text-11 text-muted-foreground">
+            <div className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">
               <span className="font-mono font-medium uppercase tracking-wider text-muted-foreground/80 whitespace-nowrap shrink-0 select-all">
                 #{shortId}
               </span>
@@ -525,7 +525,7 @@ export function DecisionCardShell({
               <Eye className="size-3.5 shrink-0" />
               <span className="whitespace-nowrap">{t('decision.action.evidence')}</span>
               {cooldownSecs && cooldownSecs > 0 ? (
-                <span className="shrink-0 rounded bg-accent-yellow-light px-1 text-10 text-accent-yellow whitespace-nowrap">
+                <span className="shrink-0 rounded bg-accent-yellow-light px-1 text-3xs text-accent-yellow whitespace-nowrap">
                   {cooldownSecs}s 冷却
                 </span>
               ) : null}
@@ -544,7 +544,7 @@ export function DecisionCardShell({
           {/* ⑤ 动作栏（clarify 等交互体自管确认键时可为空）。
               只读预览优先：**不放动作键，也不做"按了没反应"的灰键**——说清楚为什么不能按 */}
           {readOnly ? (
-            <div className="border-t border-border px-4 py-2.5 text-11 text-muted-foreground">
+            <div className="border-t border-border px-4 py-2.5 text-2xs text-muted-foreground">
               {readOnlyNote}
             </div>
           ) : actionDefs.length > 0 ? (
@@ -592,7 +592,7 @@ export function DecisionCardShell({
               <button
                 type="button"
                 onClick={toggleFlip}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-foreground whitespace-nowrap shadow-2xs transition-colors hover:bg-accent"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-foreground whitespace-nowrap shadow-xs transition-colors hover:bg-accent"
               >
                 <RotateCw className="size-3 shrink-0" />
                 <span className="whitespace-nowrap">{t('decision.review.flipFront')}</span>
@@ -600,11 +600,11 @@ export function DecisionCardShell({
             </div>
 
             {/* 背面第 2 行：决策编号（按要求移至第二行） */}
-            <div className="flex items-center justify-between text-11 text-muted-foreground">
-              <span className="rounded border border-border px-1.5 py-0.5 font-mono text-10 uppercase tracking-wider text-muted-foreground/80 whitespace-nowrap shrink-0 select-all">
+            <div className="flex items-center justify-between text-2xs text-muted-foreground">
+              <span className="rounded border border-border px-1.5 py-0.5 font-mono text-3xs uppercase tracking-wider text-muted-foreground/80 whitespace-nowrap shrink-0 select-all">
                 #{shortId}
               </span>
-              <span className="text-10 text-muted-foreground/60 whitespace-nowrap shrink-0">
+              <span className="text-3xs text-muted-foreground/60 whitespace-nowrap shrink-0">
                 按 F 或点击翻回
               </span>
             </div>
@@ -613,7 +613,7 @@ export function DecisionCardShell({
           {/* 背面主体：完整证据抽屉内容 */}
           <div className="flex-1 min-h-0 overflow-y-auto p-5 text-xs text-secondary-foreground">
             {evidence ?? (
-              <pre className="whitespace-pre-wrap break-all rounded-lg border border-border/60 bg-muted/30 p-3 font-mono text-11 text-foreground">
+              <pre className="whitespace-pre-wrap break-all rounded-lg border border-border/60 bg-muted/30 p-3 font-mono text-2xs text-foreground">
                 {JSON.stringify(decision.payload, null, 2)}
               </pre>
             )}

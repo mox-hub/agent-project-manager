@@ -83,7 +83,7 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
         <Checkbox checked={checked} aria-hidden="true" className="pointer-events-none size-3.5" />
         <Avatar size="sm" className="size-5 shrink-0">
           {m.avatarUrl ? <AvatarImage src={m.avatarUrl} alt={m.displayName} /> : null}
-          <AvatarFallback className="text-10">{m.displayName[0]?.toUpperCase() ?? '?'}</AvatarFallback>
+          <AvatarFallback className="text-3xs">{m.displayName[0]?.toUpperCase() ?? '?'}</AvatarFallback>
         </Avatar>
         <span className="min-w-0 flex-1 truncate">{m.displayName}</span>
       </button>
@@ -121,11 +121,11 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
                 )}
               >
                 {m.avatarUrl ? <AvatarImage src={m.avatarUrl} alt={m.displayName} /> : null}
-                <AvatarFallback className="text-10">{m.displayName[0]?.toUpperCase() ?? '?'}</AvatarFallback>
+                <AvatarFallback className="text-3xs">{m.displayName[0]?.toUpperCase() ?? '?'}</AvatarFallback>
               </Avatar>
             ))}
             {subscribers.length > 3 ? (
-              <span className="-ml-1.5 rounded-full bg-muted px-1 text-10 leading-4 ring-1 ring-background">
+              <span className="-ml-1.5 rounded-full bg-muted px-1 text-3xs leading-relaxed ring-1 ring-background">
                 +{subscribers.length - 3}
               </span>
             ) : null}
@@ -146,7 +146,7 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
         </div>
         {humans.length > 0 ? (
           <div className="mb-1">
-            <p className="px-2 py-1 text-10 font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="px-2 py-1 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t('assistant.subscribe.members')}
             </p>
             {humans.map(renderRow)}
@@ -154,7 +154,7 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
         ) : null}
         {agents.length > 0 ? (
           <div>
-            <p className="px-2 py-1 text-10 font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="px-2 py-1 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t('assistant.subscribe.agents')}
             </p>
             {agents.map(renderRow)}

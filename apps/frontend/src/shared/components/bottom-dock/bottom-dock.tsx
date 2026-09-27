@@ -253,7 +253,7 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
       <div
         data-testid="dock-capsule"
         className={cn(
-          'transition-all duration-200 ease-out',
+          'transition-all duration-normal ease-out',
           !dockVisible && 'pointer-events-none translate-y-3 opacity-0',
         )}
       >
@@ -261,8 +261,8 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
         layout
         transition={{ type: 'spring', stiffness: 420, damping: 32 }}
         className={cn(
-          'relative flex h-12 items-center rounded-full border border-border/70 shadow-2xl backdrop-blur-xl',
-          'transition-colors duration-200',
+          'relative flex h-12 items-center rounded-full border border-border/70 shadow-xs backdrop-blur-xl',
+          'transition-colors duration-normal',
           isPromptOpen
             ? 'w-144 max-w-[calc(100vw-2rem)] bg-popover/95 px-2 py-1.5 ring-2 ring-accent-purple/20'
             : 'w-auto bg-popover/85 px-2.5 py-1',
@@ -437,7 +437,7 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
                           ring 是盒阴影不占布局，于是「填满」与「描边」可以同时成立。
                           不再用 overflow-hidden —— 状态点挂在右下角外侧，裁切会把它切掉。
                         */
-                        className="relative flex size-8 items-center justify-center rounded-full shadow-2xs ring-1 ring-border/70"
+                        className="relative flex size-8 items-center justify-center rounded-full shadow-xs ring-1 ring-border/70"
                         title={`点击向 [${colleague.name}] 发送指令 · 状态: ${colleague.status}`}
                       >
                         {/* 同选中态：真实头像优先，无则用该 AI 身份的确定性头像 */}

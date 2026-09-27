@@ -41,13 +41,13 @@ export function ProjectPreviewBody({ id }: { id: string }) {
               {statusLabel}
             </StatusPill>
             {typeof project.healthScore === 'number' && (
-              <span className="text-11 font-medium text-foreground">
+              <span className="text-2xs font-medium text-foreground">
                 健康度 {project.healthScore} 分
               </span>
             )}
           </div>
           {typeof project._count?.tasks === 'number' && (
-            <span className="text-10 font-mono text-muted-foreground">
+            <span className="text-3xs font-mono text-muted-foreground">
               {project._count.tasks} 项工单
             </span>
           )}
@@ -55,13 +55,13 @@ export function ProjectPreviewBody({ id }: { id: string }) {
         {typeof project.progress === 'number' && (
           <div className="flex items-center gap-2">
             <Progress value={project.progress} className="h-1.5 flex-1" />
-            <span className="font-mono text-10 text-muted-foreground">{project.progress}%</span>
+            <span className="font-mono text-3xs text-muted-foreground">{project.progress}%</span>
           </div>
         )}
       </div>
 
       {project.description && (
-        <p className="line-clamp-2 text-11 text-muted-foreground">{project.description}</p>
+        <p className="line-clamp-2 text-2xs text-muted-foreground">{project.description}</p>
       )}
 
       <PreviewSection title="项目大盘">
@@ -84,7 +84,7 @@ export function ProjectPreviewBody({ id }: { id: string }) {
       <PreviewFooterMeta>
         <span>负责人: {project.owner?.displayName ?? '—'}</span>
         {project.targetDate && (
-          <span className="ml-auto font-mono text-10">
+          <span className="ml-auto font-mono text-3xs">
             目标: {formatPreviewDate(project.targetDate)}
           </span>
         )}

@@ -24,12 +24,12 @@ export function RepositoryPreviewBody({ id }: { id: string }) {
     <div className="space-y-3">
       {/* 顶部 Hero 带：默认分支 + 项目 */}
       <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
-        <Badge variant="outline" className="text-10 font-mono">
+        <Badge variant="outline" className="text-3xs font-mono">
           <GitBranch className="size-2.5 mr-1 text-accent-purple" />
           {branch}
         </Badge>
         {repo.project?.name && (
-          <span className="text-10 font-medium text-muted-foreground truncate max-w-40">
+          <span className="text-3xs font-medium text-muted-foreground truncate max-w-40">
             {repo.project.name}
           </span>
         )}
@@ -44,7 +44,7 @@ export function RepositoryPreviewBody({ id }: { id: string }) {
         </PreviewRow>
         {repo.remoteUrl && (
           <PreviewRow label={t('routePreview.repository.remote')}>
-            <span className="font-mono text-10 truncate max-w-40" title={repo.remoteUrl}>
+            <span className="font-mono text-3xs truncate max-w-40" title={repo.remoteUrl}>
               {repo.remoteUrl}
             </span>
           </PreviewRow>
@@ -53,7 +53,7 @@ export function RepositoryPreviewBody({ id }: { id: string }) {
 
       <PreviewFooterMeta>
         <span>更新于 {formatPreviewDateTime(repo.updatedAt)}</span>
-        <span className="ml-auto font-mono text-10">{repo.id.slice(0, 8)}</span>
+        <span className="ml-auto font-mono text-3xs">{repo.id.slice(0, 8)}</span>
       </PreviewFooterMeta>
     </div>
   );

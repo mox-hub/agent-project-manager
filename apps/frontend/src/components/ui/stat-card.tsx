@@ -32,7 +32,8 @@ export function StatCard({
     <div
       className={cn(
         "relative overflow-hidden rounded-lg border border-border/60 bg-card p-4 text-card-foreground shadow-xs",
-        isClickable && "cursor-pointer transition-colors hover:bg-muted/50 hover:shadow-md",
+        // 悬停反馈由背景色承载（宪法 §3.6 全站唯一阴影档 shadow-xs，hover 不再抬升阴影）
+        isClickable && "cursor-pointer transition-colors hover:bg-muted/50",
         className,
       )}
       onClick={onClick}
@@ -44,7 +45,7 @@ export function StatCard({
           <p className="text-xs font-medium text-muted-foreground">{label}</p>
           <h3
             className={cn(
-              "text-2xl font-bold text-foreground",
+              "text-2xl font-semibold text-foreground",
               accentClassName,
             )}
           >

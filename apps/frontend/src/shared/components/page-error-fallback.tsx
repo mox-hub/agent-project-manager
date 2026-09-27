@@ -48,7 +48,7 @@ export function PageErrorFallback({ className }: PageErrorFallbackProps) {
       >
         <AlertTriangleIcon className="size-4 text-destructive" />
         <AlertTitle className="flex items-center gap-2">
-          <span className="font-mono text-xs font-bold text-destructive">
+          <span className="font-mono text-xs font-semibold text-destructive">
             {isNotFound ? "E404" : "EERR"}
           </span>
           <span>{isNotFound ? "页面未找到" : "加载失败"}</span>

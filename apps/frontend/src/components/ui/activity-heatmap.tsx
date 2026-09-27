@@ -105,12 +105,12 @@ export function ActivityHeatmap({
               <div key={wi} className="flex flex-col gap-0.5">
                 {week.map((cell) =>
                   cell.future ? (
-                    <div key={cell.date} className="size-3 rounded-3 bg-transparent" />
+                    <div key={cell.date} className="size-3 rounded-xs bg-transparent" />
                   ) : (
                     <Tooltip key={cell.date}>
                       <TooltipTrigger asChild>
                         <div
-                          className={cn('size-3 rounded-3', LEVEL_CLASS[levelOf(cell.count, max)])}
+                          className={cn('size-3 rounded-xs', LEVEL_CLASS[levelOf(cell.count, max)])}
                         />
                       </TooltipTrigger>
                       <TooltipContent side="top" className="text-xs">
@@ -129,7 +129,7 @@ export function ActivityHeatmap({
             {weeks.map((week, wi) => (
               <span
                 key={wi}
-                className="w-3 shrink-0 text-10 leading-4 text-muted-foreground"
+                className="w-3 shrink-0 text-3xs leading-relaxed text-muted-foreground"
               >
                 {monthTicks.get(wi) ?? ''}
               </span>
@@ -139,7 +139,7 @@ export function ActivityHeatmap({
       ) : (
         <p className="text-xs text-muted-foreground">{emptyLabel}</p>
       )}
-      <div className="flex items-center gap-1 text-10 text-muted-foreground">
+      <div className="flex items-center gap-1 text-3xs text-muted-foreground">
         <span>少</span>
         {LEVEL_CLASS.map((cls, i) => (
           <span key={i} className={cn('size-2.5 rounded-xs', cls)} />

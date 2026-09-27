@@ -57,7 +57,7 @@ export function ProjectSourceTabs({ value, onChange, sources }: ProjectSourceTab
             className={cn(
               'flex-1 flex items-center justify-center gap-1.5 py-1 px-2.5 rounded-md font-medium transition-all select-none',
               active
-                ? 'bg-background text-foreground shadow-2xs border border-border/60'
+                ? 'bg-background text-foreground shadow-xs border border-border/60'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
               opt.value === 'ai' && active && 'text-accent-purple border-accent-purple/40',
             )}

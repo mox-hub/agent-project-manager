@@ -253,7 +253,7 @@ export function SlashRefTextarea({
         style={style}
       />
       {menuVisible && (
-        <div className="absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md">
+        <div className="absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-xs">
           <div className="flex items-center gap-0.5 overflow-x-auto border-b border-border/60 px-1.5 py-1">
             {FILTERS.map((f) => (
               <button
@@ -265,7 +265,7 @@ export function SlashRefTextarea({
                   setActiveIndex(0);
                 }}
                 className={cn(
-                  'shrink-0 rounded-full px-2 py-0.5 text-11 transition-colors',
+                  'shrink-0 rounded-full px-2 py-0.5 text-2xs transition-colors',
                   filter === f.key
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted/60',
@@ -313,7 +313,7 @@ export function SlashRefTextarea({
                           showBadge={false}
                         />
                         <span className="truncate">{candidate.displayName}</span>
-                        <span className="text-11 truncate text-muted-foreground">
+                        <span className="text-2xs truncate text-muted-foreground">
                           @{candidate.handle}
                         </span>
                       </>
@@ -324,7 +324,7 @@ export function SlashRefTextarea({
                           return <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
                         })()}
                         <span className="truncate">{candidate.hit.title}</span>
-                        <span className="ml-auto shrink-0 truncate text-11 text-muted-foreground">
+                        <span className="ml-auto shrink-0 truncate text-2xs text-muted-foreground">
                           {candidate.hit.subtitle}
                         </span>
                       </>

@@ -544,7 +544,7 @@ export function CommandPaletteProvider({
                     ) : null}
                     {ai.refs.length > 0 ? (
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <span className="w-full text-10 text-muted-foreground">
+                        <span className="w-full text-3xs text-muted-foreground">
                           {t('commandPalette.relatedPages', '相关页面')}
                         </span>
                         {ai.refs.map((ref) => (

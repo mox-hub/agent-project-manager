@@ -126,7 +126,7 @@ function ErrorOverlay({
       role="alertdialog"
       aria-label={message}
     >
-      <div className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-border bg-card shadow-xl max-w-sm text-center">
+      <div className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-border bg-card shadow-xs max-w-sm text-center">
         <div className="flex items-center justify-center size-12 rounded-full bg-destructive/10">
           <XCircleIcon className="size-6 text-destructive" />
         </div>

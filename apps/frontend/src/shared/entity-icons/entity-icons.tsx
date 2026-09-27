@@ -19,7 +19,7 @@
  * 5. tone 取 5 档语义色（StatusTone），文字色档复用 TONE_TEXT_CLASS；
  *    词表暂无 purple/cyan/orange 等扩展色，品牌色诉求仍由 nav 配色承载。
  * 6. EntityIcon 尺寸走设计宪法 §6.2 四档：12 / 14 / 16 / 20 px（xs/sm/md/lg），
- *    与 text-10/11、text-xs、text-sm+、标题字阶一一配对。
+ *    与 text-3xs/2xs、text-xs、text-sm+、标题字阶一一配对。
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * ShieldCheck 三方重叠裁决（2026-09-11 用户裁决，第二批落地）：
@@ -139,7 +139,7 @@ export function getEntityIconTextClass(entity: EntityKind): string {
   return TONE_TEXT_CLASS[ENTITY_ICONS[entity].tone];
 }
 
-/** 设计宪法 §6.2 四档：text-10/11→12px、text-xs→14px、text-sm+→16px、标题→20px */
+/** 设计宪法 §6.2 四档：text-3xs/2xs→12px、text-xs→14px、text-sm+→16px、标题→20px */
 const ENTITY_ICON_SIZES = {
   xs: 'size-3',
   sm: 'size-3.5',

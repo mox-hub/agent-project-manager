@@ -1,5 +1,5 @@
 export const MENU_SURFACE_CLASS =
-  "min-w-32 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg"
+  "min-w-32 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-xs"
 
 export const MENU_ITEM_CLASS =
   "relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-[color,background-color] [transition-duration:var(--motion-fast)] [transition-timing-function:var(--motion-ease-standard)] hover:bg-accent hover:text-accent-foreground"

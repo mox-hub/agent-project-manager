@@ -16,11 +16,11 @@ export function ReleasePreviewBody({ id }: { id: string }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <StatusPill tone="success">Published</StatusPill>
-            <span className="text-11 font-mono font-medium text-foreground">tag: {versionTag}</span>
+            <span className="text-2xs font-mono font-medium text-foreground">tag: {versionTag}</span>
           </div>
-          <span className="text-10 font-mono text-muted-foreground">GA 稳定版</span>
+          <span className="text-3xs font-mono text-muted-foreground">GA 稳定版</span>
         </div>
-        <div className="flex items-center justify-between text-10 text-muted-foreground pt-0.5">
+        <div className="flex items-center justify-between text-3xs text-muted-foreground pt-0.5">
           <span className="flex items-center gap-1 text-accent-green font-medium">
             <ShieldCheck className="size-3" /> 门禁归档 100% 审计闭环
           </span>
@@ -41,7 +41,7 @@ export function ReleasePreviewBody({ id }: { id: string }) {
 
       <PreviewFooterMeta>
         <span className="text-muted-foreground">发版规范: SemVer 2.0</span>
-        <span className="ml-auto font-mono text-10">{versionTag}</span>
+        <span className="ml-auto font-mono text-3xs">{versionTag}</span>
       </PreviewFooterMeta>
     </div>
   );

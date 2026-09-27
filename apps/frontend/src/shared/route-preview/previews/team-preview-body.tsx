@@ -35,13 +35,13 @@ export function TeamPreviewBody({ id }: { id: string }) {
         <StatusPill tone={getStatusTone(team.status)}>
           {humanize(team.status)}
         </StatusPill>
-        <span className="text-10 font-mono text-muted-foreground">
+        <span className="text-3xs font-mono text-muted-foreground">
           {memberCount} 位成员
         </span>
       </div>
 
       {team.description && (
-        <p className="line-clamp-2 text-11 text-muted-foreground">{team.description}</p>
+        <p className="line-clamp-2 text-2xs text-muted-foreground">{team.description}</p>
       )}
 
       <PreviewSection title="团队概况">
@@ -55,7 +55,7 @@ export function TeamPreviewBody({ id }: { id: string }) {
 
       <PreviewFooterMeta>
         <span>团队规模: {memberCount} 人</span>
-        <span className="ml-auto font-mono text-10">{team.id.slice(0, 8)}</span>
+        <span className="ml-auto font-mono text-3xs">{team.id.slice(0, 8)}</span>
       </PreviewFooterMeta>
     </div>
   );

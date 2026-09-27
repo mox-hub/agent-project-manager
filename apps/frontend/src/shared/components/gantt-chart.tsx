@@ -255,7 +255,7 @@ export function GanttChart({
                     type="button"
                     onClick={() => setScale(s)}
                     className={cn(
-                      'rounded px-1.5 py-0.5 text-10 font-medium transition-colors',
+                      'rounded px-1.5 py-0.5 text-3xs font-medium transition-colors',
                       currentScale === s
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -271,12 +271,12 @@ export function GanttChart({
                 {timeline.days.map((day) => (
                   <div
                     key={day.toISOString()}
-                    className="border-r border-border px-1 py-1 text-center text-10 leading-tight text-muted-foreground"
+                    className="border-r border-border px-1 py-1 text-center text-3xs leading-tight text-muted-foreground"
                     style={{ width: `${dayWidth}px` }}
                   >
                     <div>{day.getUTCDate()}</div>
                     {day.getUTCDate() === 1 ? (
-                      <div className="text-10 uppercase">{getMonthLabel(day).split(' ')[0]}</div>
+                      <div className="text-3xs uppercase">{getMonthLabel(day).split(' ')[0]}</div>
                     ) : null}
                   </div>
                 ))}

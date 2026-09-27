@@ -29,11 +29,11 @@ export function AcceptancePreviewBody({ id }: { id: string }) {
       {/* 顶部 Hero 带：门禁通过率点阵 + 状态 */}
       <div className="space-y-1.5 p-2 rounded-md bg-accent-green/10 border border-accent-green/30">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold text-accent-green flex items-center gap-1 text-10">
+          <span className="font-semibold text-accent-green flex items-center gap-1 text-3xs">
             <ShieldCheck className="size-3.5" /> 门禁通过率: {passed}/{total > 0 ? total : '—'} Passed
           </span>
           <div className="flex items-center gap-1.5">
-            <span className="font-mono text-10 font-bold text-accent-green">{pct}%</span>
+            <span className="font-mono text-3xs font-semibold text-accent-green">{pct}%</span>
             <StatusPill tone={getStatusTone(acceptance.status)}>
               {acceptance.status}
             </StatusPill>
@@ -72,14 +72,14 @@ export function AcceptancePreviewBody({ id }: { id: string }) {
         )}
         {acceptance.completionType && (
           <PreviewRow label="闭环类型">
-            <span className="text-10 font-mono text-muted-foreground">{acceptance.completionType}</span>
+            <span className="text-3xs font-mono text-muted-foreground">{acceptance.completionType}</span>
           </PreviewRow>
         )}
         {acceptance.auditReport?.riskLevel && (
           <PreviewRow label="审计风险等级">
             <span
               className={cn(
-                'font-semibold uppercase text-10',
+                'font-semibold uppercase text-3xs',
                 acceptance.auditReport.riskLevel === 'red'
                   ? 'text-accent-red'
                   : acceptance.auditReport.riskLevel === 'yellow'
@@ -98,7 +98,7 @@ export function AcceptancePreviewBody({ id }: { id: string }) {
           <Clock className="size-3" />
           {formatPreviewDateTime(acceptance.updatedAt ?? acceptance.createdAt)}
         </span>
-        <span className="ml-auto font-mono text-10">{acceptance.id.slice(0, 8)}</span>
+        <span className="ml-auto font-mono text-3xs">{acceptance.id.slice(0, 8)}</span>
       </PreviewFooterMeta>
     </div>
   );

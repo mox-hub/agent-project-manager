@@ -59,7 +59,7 @@ export function StatsCard({
           <div
             key={item.key}
             className={cn(
-              'flex items-center gap-3 rounded-lg px-3.5 py-2.5 border bg-card border-border/70 shadow-2xs transition-all hover:border-border',
+              'flex items-center gap-3 rounded-lg px-3.5 py-2.5 border bg-card border-border/70 shadow-xs transition-all hover:border-border',
               item.colorClass,
               item.className
             )}

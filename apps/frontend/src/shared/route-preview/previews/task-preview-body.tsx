@@ -60,7 +60,7 @@ export function TaskPreviewBody({ id, kind }: { id: string; kind: 'task' | 'bug'
           <div className="flex items-center justify-between p-2 rounded-md bg-accent-red/10 border border-accent-red/30">
             <div className="flex items-center gap-2">
               <SeverityBar severity="critical" />
-              <span className="text-10 font-bold text-accent-red uppercase tracking-wider">
+              <span className="text-3xs font-semibold text-accent-red uppercase tracking-wider">
                 阻塞发布 (Blocker)
               </span>
             </div>
@@ -75,7 +75,7 @@ export function TaskPreviewBody({ id, kind }: { id: string; kind: 'task' | 'bug'
               {task.severity && <SeverityBar severity={task.severity} />}
             </div>
             {task.milestone?.name && (
-              <span className="text-10 font-mono text-muted-foreground">
+              <span className="text-3xs font-mono text-muted-foreground">
                 {task.milestone.name}
               </span>
             )}
@@ -90,7 +90,7 @@ export function TaskPreviewBody({ id, kind }: { id: string; kind: 'task' | 'bug'
             <PriorityFlag priority={task.priority} />
           </div>
           {task.milestone?.name && (
-            <span className="text-10 font-mono text-muted-foreground">
+            <span className="text-3xs font-mono text-muted-foreground">
               {task.milestone.name}
             </span>
           )}
@@ -98,7 +98,7 @@ export function TaskPreviewBody({ id, kind }: { id: string; kind: 'task' | 'bug'
       )}
 
       {task.description && (
-        <p className="line-clamp-2 text-11 text-muted-foreground">{task.description}</p>
+        <p className="line-clamp-2 text-2xs text-muted-foreground">{task.description}</p>
       )}
 
       <PreviewSection title={kind === 'bug' ? '排查上下文' : '工单属性'}>
@@ -129,7 +129,7 @@ export function TaskPreviewBody({ id, kind }: { id: string; kind: 'task' | 'bug'
         )}
         {task.estimate != null && (
           <PreviewRow label="预估工时">
-            <span className="font-mono text-10 text-muted-foreground">{task.estimate}h</span>
+            <span className="font-mono text-3xs text-muted-foreground">{task.estimate}h</span>
           </PreviewRow>
         )}
         {task.dueDate && (
@@ -145,7 +145,7 @@ export function TaskPreviewBody({ id, kind }: { id: string; kind: 'task' | 'bug'
         ) : (
           <span>截止 {formatPreviewDate(task.dueDate)}</span>
         )}
-        <span className="ml-auto font-mono text-10">{shortId}</span>
+        <span className="ml-auto font-mono text-3xs">{shortId}</span>
       </PreviewFooterMeta>
     </div>
   );

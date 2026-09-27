@@ -49,7 +49,7 @@ export function DockMetricBadge({
     <div
       className={cn(
         'absolute left-1/2 -translate-x-1/2 pointer-events-none select-none z-10 whitespace-nowrap',
-        'transition-all duration-200 ease-out',
+        'transition-all duration-normal ease-out',
         // 收起态贴底（底部唯一可见元素）；浮出态抬到 Dock 胶囊上方
         collapsed ? 'bottom-0' : 'bottom-full mb-2.5',
         className,
@@ -64,16 +64,16 @@ export function DockMetricBadge({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.95 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className="flex items-center gap-2 rounded-full border border-accent-purple/30 bg-popover/90 px-3 py-1 font-mono text-11 text-content-text-muted shadow-sm backdrop-blur-md whitespace-nowrap shrink-0"
+            className="flex items-center gap-2 rounded-full border border-accent-purple/30 bg-popover/90 px-3 py-1 font-mono text-2xs text-content-text-muted shadow-xs backdrop-blur-md whitespace-nowrap shrink-0"
           >
             <span className="flex items-center gap-1 text-accent-purple font-medium whitespace-nowrap shrink-0">
               <Sparkles className="size-3" />
               <span>{activeModel}</span>
             </span>
             <span className="text-border/80">|</span>
-            <span className="text-10 text-content-text-muted whitespace-nowrap shrink-0">
-              按 <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-10 text-foreground">↵</kbd> 发送 ·{' '}
-              <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-10 text-foreground">Esc</kbd> 收起
+            <span className="text-3xs text-content-text-muted whitespace-nowrap shrink-0">
+              按 <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-3xs text-foreground">↵</kbd> 发送 ·{' '}
+              <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-3xs text-foreground">Esc</kbd> 收起
             </span>
           </motion.div>
         ) : (
@@ -84,7 +84,7 @@ export function DockMetricBadge({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.95 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className="flex items-center gap-2.5 rounded-full border border-border/70 bg-popover/90 px-3 py-1 font-mono text-11 text-content-text-muted shadow-sm backdrop-blur-md whitespace-nowrap shrink-0"
+            className="flex items-center gap-2.5 rounded-full border border-border/70 bg-popover/90 px-3 py-1 font-mono text-2xs text-content-text-muted shadow-xs backdrop-blur-md whitespace-nowrap shrink-0"
           >
             {activeRun ? (
               // 实时运行中状态

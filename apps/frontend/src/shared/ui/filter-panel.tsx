@@ -251,7 +251,7 @@ export function FilterPanel({
           {!iconOnly && (
             <ChevronDown
               size={14}
-              className={`ml-1 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+              className={`ml-1 transition-transform duration-normal ${isOpen ? 'rotate-180' : 'rotate-0'}`}
             />
           )}
         </Button>
@@ -405,7 +405,7 @@ export function FilterPanel({
                     )}
                     <ChevronDown
                       size={14}
-                      className={`text-muted-foreground transition-transform duration-200 ${
+                      className={`text-muted-foreground transition-transform duration-normal ${
                         isGroupOpen ? 'rotate-180' : 'rotate-0'
                       }`}
                     />
@@ -414,7 +414,7 @@ export function FilterPanel({
                   {/* 二级菜单 */}
                   {isGroupOpen && openGroupRect && (
                     <div
-                      className={`fixed z-1001 flex flex-col rounded-lg border border-border bg-popover p-1.5 shadow-lg ${
+                      className={`fixed z-1001 flex flex-col rounded-lg border border-border bg-popover p-1.5 shadow-xs ${
                         openGroup?.searchable ? 'min-w-55' : 'min-w-40'
                       }`}
                       style={{

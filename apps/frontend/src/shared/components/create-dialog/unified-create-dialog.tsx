@@ -1079,7 +1079,7 @@ export function UnifiedCreateDialog({
     >
       <DialogContent
         className={cn(
-          'overflow-hidden p-0 gap-0 border border-border/70 bg-card/95 backdrop-blur-xl shadow-2xl transition-all duration-300',
+          'overflow-hidden p-0 gap-0 border border-border/70 bg-card/95 backdrop-blur-xl shadow-xs transition-all duration-slow',
           dialogSizeClass,
         )}
         keepDefaultWidth={false}
@@ -1174,7 +1174,7 @@ export function UnifiedCreateDialog({
                           type="button"
                           onClick={() => void generateDraft()}
                           disabled={silentCreateDraft.isPending}
-                          className="text-10 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                          className="text-3xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                         >
                           {t('unifiedCreate.aiPanel.regen')}
                         </button>
@@ -1471,7 +1471,7 @@ export function UnifiedCreateDialog({
                     <span>{t(`unifiedCreate.title.${activeType}`)}</span>
                     <kbd
                       aria-hidden="true"
-                      className="inline-flex items-center px-1 py-0.5 rounded bg-primary-foreground/20 text-10 font-mono opacity-80 ml-0.5"
+                      className="inline-flex items-center px-1 py-0.5 rounded bg-primary-foreground/20 text-3xs font-mono opacity-80 ml-0.5"
                     >
                       Ctrl ↵
                     </kbd>
@@ -1566,7 +1566,7 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
                   : <Sparkles className="size-3.5 text-accent-purple" />}
                 <span className="font-medium flex-1">{t(`unifiedCreate.labels.${ty}`)}</span>
                 {activeType === ty && <Check className="size-3 text-primary" />}
-                <span className="text-10 text-muted-foreground">{i + 1}</span>
+                <span className="text-3xs text-muted-foreground">{i + 1}</span>
               </button>
             );
           })}
@@ -1686,7 +1686,7 @@ function DescriptionField(props: {
           <button
             type="button"
             onClick={props.onTogglePreview}
-            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-11 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
             {props.descPreview ? (
               <>

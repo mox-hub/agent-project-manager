@@ -382,7 +382,7 @@ export function ShellLayout() {
           {/* Sidebar - Codex 磨砂一体化底座 */}
           <aside
             className={cn(
-              'flex flex-col h-full bg-sidebar/85 backdrop-blur-xl transition-all duration-200',
+              'flex flex-col h-full bg-sidebar/85 backdrop-blur-xl transition-all duration-normal',
               mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:relative',
               sidebarCollapsed ? 'w-16' : 'w-56',
             )}
@@ -498,7 +498,7 @@ export function ShellLayout() {
                             )}
                           />
                           {navCollapsed(group.id) && (
-                            <span className="ml-auto shrink-0 rounded-full bg-sidebar-accent px-1.5 py-px text-10 font-semibold tabular-nums text-sidebar-foreground/70">
+                            <span className="ml-auto shrink-0 rounded-full bg-sidebar-accent px-1.5 py-px text-3xs font-semibold tabular-nums text-sidebar-foreground/70">
                               {group.items.length}
                             </span>
                           )}
@@ -549,7 +549,7 @@ export function ShellLayout() {
                                   className={cn(
                                     'flex items-center rounded-lg text-xs font-medium transition-colors relative',
                                     active
-                                      ? 'bg-sidebar-accent text-sidebar-foreground shadow-2xs border border-sidebar-border/40'
+                                      ? 'bg-sidebar-accent text-sidebar-foreground shadow-xs border border-sidebar-border/40'
                                       : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground border border-transparent',
                                     sidebarCollapsed
                                       ? 'justify-center size-10'
@@ -561,7 +561,7 @@ export function ShellLayout() {
                                   {group.isPipeline && !sidebarCollapsed && (
                                     <span
                                       className={cn(
-                                        'absolute -left-1 top-1/2 -translate-y-1/2 size-1.5 rounded-full ring-2 ring-sidebar transition-all duration-200',
+                                        'absolute -left-1 top-1/2 -translate-y-1/2 size-1.5 rounded-full ring-2 ring-sidebar transition-all duration-normal',
                                         active
                                           ? 'bg-primary ring-sidebar scale-125'
                                           : 'bg-sidebar-border/90 hover:bg-sidebar-foreground/60',
@@ -579,7 +579,7 @@ export function ShellLayout() {
                                       {stageNumber && (
                                         <span
                                           className={cn(
-                                            'font-mono text-10 font-medium px-1.5 py-0.5 rounded tabular-nums transition-colors',
+                                            'font-mono text-3xs font-medium px-1.5 py-0.5 rounded tabular-nums transition-colors',
                                             active
                                               ? 'bg-sidebar-primary text-sidebar-primary-foreground font-semibold'
                                               : 'bg-sidebar-accent/70 text-sidebar-foreground/50',
@@ -589,7 +589,7 @@ export function ShellLayout() {
                                         </span>
                                       )}
                                       {typeof count === 'number' && count > 0 && (
-                                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1.5 text-10 font-semibold text-destructive-foreground tabular-nums">
+                                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1.5 text-3xs font-semibold text-destructive-foreground tabular-nums">
                                           {count > 99 ? '99+' : count}
                                         </span>
                                       )}
@@ -738,7 +738,7 @@ export function ShellLayout() {
 
             {/* Content area with rounded rectangle - 悬浮在磨砂画布上的工作台卡片 */}
             <div className="flex flex-1 overflow-hidden p-2.5 pt-0 pl-0 bg-transparent">
-              <div className="h-full w-full overflow-hidden rounded-xl bg-background/95 shadow-sm border border-border/60 backdrop-blur-xs">
+              <div className="h-full w-full overflow-hidden rounded-xl bg-background/95 shadow-xs border border-border/60 backdrop-blur-xs">
                 {/* Project Context Bar (only on project sub-routes, excluding /app/projects/dashboard) */}
                 {isProjectDetailRoute && currentProjectId && (
                   <ProjectContextBar projectId={currentProjectId} project={currentProject} />
@@ -798,7 +798,7 @@ function PipelineFocusFilter() {
 
   return (
     <div className="flex items-center gap-1.5 pb-1 pt-0.5">
-      <span className="shrink-0 text-10 font-medium text-sidebar-foreground/40">
+      <span className="shrink-0 text-3xs font-medium text-sidebar-foreground/40">
         {t('shell.pipelineFocus.label', '项目聚焦')}
       </span>
       <NativeSelect
@@ -806,7 +806,7 @@ function PipelineFocusFilter() {
         value={focusProjectId ?? ''}
         onChange={(e) => setProjectId(e.target.value || null)}
         size="sm"
-        className="h-6 min-w-0 flex-1 text-10"
+        className="h-6 min-w-0 flex-1 text-3xs"
       >
         <option value="">{t('shell.pipelineFocus.allProjects', '全部项目')}</option>
         {projects.map((p) => (

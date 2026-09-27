@@ -49,7 +49,7 @@ export function SidebarPanel({
     <div
       className={cn(
         // 磨砂底（bg-card/80）、无标题/内容分割线；圆角在展开/收起间保持一致的小圆角并做过渡
-        'rounded-xl border border-border/60 bg-card/80 backdrop-blur-xs shadow-2xs transition-[border-radius] duration-300',
+        'rounded-xl border border-border/60 bg-card/80 backdrop-blur-xs shadow-xs transition-[border-radius] duration-slow',
         className,
       )}
     >
@@ -58,7 +58,7 @@ export function SidebarPanel({
         {icon ? (
           <span className={cn('shrink-0', iconClassName)}>{icon}</span>
         ) : null}
-        <span className="min-w-0 flex-1 truncate text-10 font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="min-w-0 flex-1 truncate text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </span>
         {action ? <span className="flex shrink-0 items-center">{action}</span> : null}
@@ -71,7 +71,7 @@ export function SidebarPanel({
         >
           <ChevronDown
             className={cn(
-              'size-3 transition-transform duration-300',
+              'size-3 transition-transform duration-slow',
               !collapsed && 'rotate-180',
             )}
           />
@@ -81,7 +81,7 @@ export function SidebarPanel({
       {/* 内容区：grid-rows 动画实现流畅展开 / 收起 */}
       <div
         className={cn(
-          'grid transition-[grid-template-rows] duration-300 ease-out',
+          'grid transition-[grid-template-rows] duration-slow ease-out',
           collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
         )}
       >

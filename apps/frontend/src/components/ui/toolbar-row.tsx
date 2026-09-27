@@ -564,7 +564,7 @@ function ViewEditorPanel({
                 setName(preset.label);
                 setIcon(preset.icon);
               }}
-              className="rounded border border-border bg-muted/30 px-1.5 py-0.5 text-11 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="rounded border border-border bg-muted/30 px-1.5 py-0.5 text-2xs text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {preset.label}
             </button>
@@ -572,7 +572,7 @@ function ViewEditorPanel({
         </div>
       ) : null}
 
-      <div className="text-11 text-muted-foreground">选择代表图标</div>
+      <div className="text-2xs text-muted-foreground">选择代表图标</div>
       <div className="grid grid-cols-6 gap-1.5 max-h-36 overflow-y-auto pr-1">
         {Object.entries(TOOLBAR_VIEW_ICONS).map(([key, Icon]) => (
           <button
@@ -583,7 +583,7 @@ function ViewEditorPanel({
             className={cn(
               "flex size-8 items-center justify-center rounded-md border transition-colors",
               icon === key
-                ? "border-primary bg-primary/10 text-primary shadow-2xs"
+                ? "border-primary bg-primary/10 text-primary shadow-xs"
                 : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
@@ -680,7 +680,7 @@ function ViewPill({
           className={cn(
             "flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-all select-none [transition-duration:var(--motion-fast)]",
             active
-              ? "border-border bg-card text-foreground shadow-2xs font-semibold"
+              ? "border-border bg-card text-foreground shadow-xs font-semibold"
               : "border-border/40 bg-transparent text-muted-foreground hover:bg-muted/60 hover:text-foreground",
           )}
         >

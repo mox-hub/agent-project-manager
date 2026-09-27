@@ -32,18 +32,20 @@ export function ModeShuttleButton({
       data-testid="mode-shuttle-button"
       title={mode === 'manual' ? '切换到智能体对话与需求拆解' : '返回手动表单精准录入'}
       className={cn(
-        'group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 select-none overflow-hidden shrink-0',
+        'group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-slow select-none overflow-hidden shrink-0',
         // 系统默认 AI 配色（紫色系）+ 柔和呼吸微光
         'border border-accent-purple/40 bg-accent-purple/10 text-accent-purple hover:bg-accent-purple/20',
-        'shadow-xs hover:shadow-sm',
+        // 悬停反馈已由上一行的 hover:bg-accent-purple/20 承载，阴影不再抬升（宪法 §3.6）
+        'shadow-xs',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-purple/60',
-        mode === 'ai' && 'bg-accent-purple/20 border-accent-purple/60 shadow-sm',
+        mode === 'ai' && 'bg-accent-purple/20 border-accent-purple/60 shadow-xs',
         className,
       )}
     >
       {/* 呼吸微光小光标 */}
       <span className="relative flex size-2 shrink-0">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-purple opacity-75 duration-1000" />
+        {/* 注意：动画时长类只作用于 transition-duration，对 animate-ping 无效，不要在此加时长类 */}
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-purple opacity-75" />
         <span className="relative inline-flex rounded-full size-2 bg-accent-purple" />
       </span>
 

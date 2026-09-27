@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <AlertDescription className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-bold text-destructive">
+                  <span className="font-mono text-xs font-semibold text-destructive">
                     {code}
                   </span>
                   <span className="font-semibold text-destructive">发生错误</span>

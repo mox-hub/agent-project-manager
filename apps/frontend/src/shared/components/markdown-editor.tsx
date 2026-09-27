@@ -179,7 +179,7 @@ export function MarkdownEditor({
               </Button>
             </div>
           ) : hint ? (
-            <span className="text-10 text-muted-foreground/60">{hint}</span>
+            <span className="text-3xs text-muted-foreground/60">{hint}</span>
           ) : (
             <span />
           )}

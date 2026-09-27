@@ -51,7 +51,7 @@ export function SeverityBar({ severity }: { severity?: string | null }) {
   return (
     <div className="flex items-center gap-1.5">
       <div className={cn('w-1 h-3.5 rounded-full shrink-0', cfg.bar)} />
-      <span className={cn('text-10 font-medium', cfg.text)}>{cfg.label}</span>
+      <span className={cn('text-3xs font-medium', cfg.text)}>{cfg.label}</span>
     </div>
   );
 }
@@ -76,7 +76,7 @@ export function PriorityFlag({ priority }: { priority?: string | null }) {
           ? 'Medium'
           : 'Low';
   return (
-    <span className={cn('inline-flex items-center gap-1 text-10 font-medium', colorClass)}>
+    <span className={cn('inline-flex items-center gap-1 text-3xs font-medium', colorClass)}>
       <Flag className={cn('size-2.5', colorClass)} /> {label}
     </span>
   );
@@ -94,14 +94,14 @@ export function PreviewRow({
 }) {
   return (
     <div className={cn('flex min-w-0 items-center justify-between gap-2', className)}>
-      <span className="shrink-0 text-11 text-muted-foreground">{label}</span>
+      <span className="shrink-0 text-2xs text-muted-foreground">{label}</span>
       <span className="min-w-0 truncate text-xs font-medium text-foreground">{children}</span>
     </div>
   );
 }
 
 /**
- * 分组小节：大写 + 字距拉开的 text-10 分组标题 + 行集合（PreviewRow 等）。
+ * 分组小节：大写 + 字距拉开的 text-3xs 分组标题 + 行集合（PreviewRow 等）。
  * 富信息模板（B-2）的纵向分组件，member 等预览 body 用它提升信息密度。
  */
 export function PreviewSection({
@@ -115,14 +115,14 @@ export function PreviewSection({
 }) {
   return (
     <div className={cn('flex min-w-0 flex-col gap-1', className)}>
-      <div className="text-10 font-medium uppercase tracking-wider text-muted-foreground">{title}</div>
+      <div className="text-3xs font-medium uppercase tracking-wider text-muted-foreground">{title}</div>
       <div className="flex min-w-0 flex-col gap-1">{children}</div>
     </div>
   );
 }
 
 /**
- * 底部元信息行：时间 / 状态点等弱化小字（text-10 + 弱化色），上缘细分隔线。
+ * 底部元信息行：时间 / 状态点等弱化小字（text-3xs + 弱化色），上缘细分隔线。
  * children 自由组合（状态点、Clock 图标、shortId 等），保持单行不换行。
  */
 export function PreviewFooterMeta({
@@ -135,7 +135,7 @@ export function PreviewFooterMeta({
   return (
     <div
       className={cn(
-        'mt-0.5 flex items-center gap-1.5 border-t border-border/60 pt-1.5 text-10 text-muted-foreground',
+        'mt-0.5 flex items-center gap-1.5 border-t border-border/60 pt-1.5 text-3xs text-muted-foreground',
         className,
       )}
     >
@@ -158,7 +158,7 @@ export function PreviewBodySkeleton({ rows = 3 }: { rows?: number }) {
 /** body 数据加载失败的静默降级（不打断卡片，头部标题仍可见） */
 export function PreviewBodyError() {
   const { t } = useTranslation();
-  return <p className="text-11 text-muted-foreground">{t('routePreview.loadError')}</p>;
+  return <p className="text-2xs text-muted-foreground">{t('routePreview.loadError')}</p>;
 }
 
 const STATUS_BADGE_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {

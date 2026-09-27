@@ -37,7 +37,7 @@ export function AiExecutionBadge({
               ? 'bg-accent-red-light/40 text-accent-red'
               : 'bg-accent-purple-light/40 text-accent-purple',
           onClick && 'cursor-pointer hover:opacity-80',
-          size === 'xs' ? 'text-10' : 'text-xs',
+          size === 'xs' ? 'text-3xs' : 'text-xs',
           className,
         )}
       >

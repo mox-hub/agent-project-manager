@@ -29,15 +29,15 @@ export function WorkflowPreviewBody({ id }: { id: string }) {
   return (
     <div className="space-y-3">
       {workflow.description && (
-        <p className="line-clamp-2 text-11 text-muted-foreground">{workflow.description}</p>
+        <p className="line-clamp-2 text-2xs text-muted-foreground">{workflow.description}</p>
       )}
 
       <PreviewSection title={t('routePreview.workflow.definition', '定义')}>
         <PreviewRow label={t('routePreview.workflow.version', '版本')}>
-          <span className="font-mono text-10 text-muted-foreground">v{workflow.version}</span>
+          <span className="font-mono text-3xs text-muted-foreground">v{workflow.version}</span>
         </PreviewRow>
         <PreviewRow label={t('routePreview.workflow.steps', '步骤数')}>
-          <span className="font-mono text-10 text-muted-foreground">{steps.length}</span>
+          <span className="font-mono text-3xs text-muted-foreground">{steps.length}</span>
         </PreviewRow>
         {steps.slice(0, MAX_STEPS).map((step, index) => (
           <PreviewRow key={step.id} label={`#${index + 1}`}>
@@ -46,7 +46,7 @@ export function WorkflowPreviewBody({ id }: { id: string }) {
         ))}
         {steps.length > MAX_STEPS ? (
           <PreviewRow label="…">
-            <span className="text-10 text-muted-foreground">
+            <span className="text-3xs text-muted-foreground">
               {t('routePreview.workflow.moreSteps', { count: steps.length - MAX_STEPS })}
             </span>
           </PreviewRow>
@@ -55,7 +55,7 @@ export function WorkflowPreviewBody({ id }: { id: string }) {
 
       <PreviewFooterMeta>
         <span>{t('routePreview.workflow.updatedAt', '更新')} {formatPreviewDate(workflow.updatedAt)}</span>
-        <span className="ml-auto font-mono text-10">{workflow.key}</span>
+        <span className="ml-auto font-mono text-3xs">{workflow.key}</span>
       </PreviewFooterMeta>
     </div>
   );
