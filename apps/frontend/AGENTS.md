@@ -1,9 +1,9 @@
 # AGENTS.md — 前端开发治理手册
 
 > **适用范围**：`apps/frontend`（React 19 + Vite + TypeScript）
-> **设计真相源**：`refers/APM/`（Figma 设计还原参考，对应 `figma` 主题预设）
+> **设计宪法（最高依据）**：`docs/design/PRINCIPLES.md`（v2.0，2026-09-27 语义化 token 层落地）——**本文档 §3 已降级为其摘要**，样式规则与宪法冲突时**一律以宪法为准**
 > **组件索引**：`COMPONENTS.md`（开发第一入口）；**页面模板**：`src/templates/`
-> **版本**：v1.2（2026-08：Tailwind v4 @theme + shadcn CLI 官方管理 + base-ui 唯一基线，radix 清零）
+> **版本**：v1.3（2026-09-27：§3 降级为宪法摘要——字阶/字重/行高/动效/阴影全面语义 token 化并配 `lint:spacing` 机器强制，主题归一为 `default` 单套；v1.2 2026-08：Tailwind v4 @theme + shadcn CLI 官方管理 + base-ui 唯一基线，radix 清零）
 
 ---
 
@@ -20,14 +20,15 @@ Agent Project Manager (APM) 是一个 AI 驱动的项目管理工具。前端为
 | 状态 | Zustand（全局）+ TanStack Query v5（服务端状态） |
 | UI 原语 | @base-ui/react（唯一无头基线，radix 已于 2026-08 清零） |
 | 样式 | TailwindCSS 4（@tailwindcss/vite）+ @theme token 体系 |
-| 主题 | 3 套预设：`figma`（默认，refer 设计）/ `linear` / `notion` |
+| 主题 | **单套预设 `default`**（2026-09-27 归一，原 `figma`/`linear`/`notion` 已废止；保留 preset 接口，见 §6.3） |
 | i18n | i18next + react-i18next |
 
-### 设计还原来源
+### 设计还原来源（历史留档，2026-09-27 已失效）
 
-- `refers/APM/` 为设计还原参考（Figma 导出），其中 `theme.css` 定义设计变量、`src/app/components/` 定义组件与布局、`src/app/pages/` 定义页面。
-- 当前前端以 `figma` 主题预设（`src/index.css` 中 `:root[data-theme-preset='figma']`）还原该设计。
-- **默认主题预设为 `figma`**（`src/shared/theme/presets.ts` 的 `getInitialThemePreset`），应用启动即呈现 refer 设计。
+- `refers/APM/` 曾为设计还原参考（Figma 导出）：`theme.css` 定义设计变量、`src/app/components/` 定义组件与布局、`src/app/pages/` 定义页面。
+- **该链路已断开**：`figma` 主题预设与 `:root[data-theme-preset='figma']` 段已随主题归一删除，前端不再以 refer 设计为还原目标；现行基线为 `docs/design/PRINCIPLES.md` v2.0 的语义 token 体系。
+- **默认且唯一主题预设为 `default`**（`src/shared/theme/presets.ts`）；历史存量值（`figma`/`linear`/`notion`）与未知值一律回落 `default`。
+- `refers/APM/` 现仅作**结构意图参考**（§4.4 参考稿协议：参考稿是意图不是可粘贴代码）。
 
 ---
 
@@ -67,12 +68,15 @@ apps/frontend/
 │   ├── templates/                  # ★ 页面骨架模板（list/detail/form，开发复制起点）
 │   ├── test/  test-utils/          # 测试
 │   └── index.css                   # ★ 全局样式 + 主题变量 + @theme token（统一调整只改这里）
-├── scripts/
-│   ├── check-semantic-classes.mjs      # 语义化颜色类校验
-│   ├── check-ui-governance.mjs         # UI 治理校验（toast/confirm/table 等）
+├── scripts/                            # 设计门禁脚本（逐项说明见 §6.4）
+│   ├── check-spacing-governance.mjs    # 刻度类：字阶/间距/行高/字重/动效/阴影（含注释感知扫描）
+│   ├── check-palette.mjs               # 原生色板类 + Loader2 直用 + ai-surface 内联裸色
+│   ├── check-semantic-classes.mjs      # 语义类白名单对账
 │   ├── check-tailwind-arbitrary.mjs    # 禁任意值（白名单制）
 │   ├── check-component-registry.mjs    # 组件登记对账（COMPONENTS.md）
-│   ├── migrate-tailwind-tokens.mjs     # 任意值→token 迁移（一次性，留档）
+│   ├── check-ui-governance.mjs         # UI 治理校验（toast/confirm/table 等）
+│   ├── check-icons.mjs                 # 图标库治理（lucide 唯一）
+│   ├── check-undefined-classes.mjs     # 幽灵类：源码类名 ↔ 构建产物选择器（需先 build）
 │   └── shadcn-cli/npm-forward.cjs      # shadcn CLI 的 npm→pnpm 转发垫片（用法见 §4.5）
 ├── COMPONENTS.md                   # ★ 组件总索引（开发第一入口）
 └── components.json                 # shadcn CLI 配置（style: base-vega）
@@ -90,40 +94,32 @@ apps/frontend/
 
 ### 3.1 设计变量（Token）
 
-设计变量全部定义在 `src/index.css` 的 CSS 变量中，并按 `data-theme-preset` 提供预设覆盖：
+> ⚠️ **本节已降级为摘要。** 设计规则的**唯一权威是 `docs/design/PRINCIPLES.md`（v2.0）**——字号/字重/行高/间距/动效/阴影/颜色的全部档位定义、禁止项与豁免清单都在那里，且多由脚本机器强制。本节只保留「在哪找、怎么分层」的导航信息；**两者冲突时以宪法为准**。
 
-| 分类 | 变量 | refer 值（figma 预设） |
-|------|------|------------------------|
-| 背景/前景 | `--background` `--foreground` | `#ffffff` / 近黑 |
-| 主色 | `--primary` `--primary-foreground` | `#030213`（近黑）/ 白 |
-| 卡片 | `--card` `--card-foreground` | 白 / 近黑 |
-| 弱化 | `--muted` `--muted-foreground` | `#ececf0` / `#717182` |
-| 强调 | `--accent` `--accent-foreground` | `#e9ebef` / 近黑 |
-| 危险 | `--destructive` `--destructive-foreground` | `#d4183d` / 白 |
-| 边框 | `--border` | `rgba(0,0,0,0.1)` |
-| 输入 | `--input` `--input-background` | `transparent` / `#f3f3f5` |
-| 开关 | `--switch-background` | `#cbced4` |
-| 圆角 | `--radius` | `0.625rem` |
-| 侧栏 | `--sidebar*` | 浅灰（`oklch(0.985)`） |
+设计变量分两层，全部集中在 `src/index.css`：
 
-> ⚠️ **语义化颜色**：业务代码禁止使用原始 Tailwind 色（`bg-emerald-500`、`text-violet-500` 等），统一使用语义 token：`bg-accent-blue/green/yellow/red/purple(-light)`、`text-accent-*`、`bg-content-*`、`bg-sidebar-*`。详见 `src/lib/design-tokens.ts` 与 `scripts/check-semantic-classes.mjs`。
+1. **CSS 变量层**（`:root` / `.dark`）：`--background` `--foreground` `--primary` `--card` `--muted` `--accent` `--destructive` `--border` `--input` `--switch-background` `--radius` `--sidebar*` 等，负责**明暗两态的实际取值**。
+2. **`@theme` 注册层**：把上面这层包装成 Tailwind 能生成工具类的 `--color-*` / `--text-*` / `--spacing` / `--radius-*` / `--shadow-*` / `--transition-duration-*` / `--ease-*`。**只有注册进 `@theme` 的主题键才会生成对应工具类**——命名空间写错（如把 `duration-*` 的键写成 `--duration-*`）会导致类静默不生成，详见宪法 §7.1。
+
+> ⚠️ **语义化颜色**：业务代码禁止使用原始 Tailwind 色（`bg-emerald-500`、`text-violet-500` 等），统一使用语义 token：`bg-accent-blue/green/yellow/red/purple/orange(-light)`、`text-accent-*`、`bg-content-*`、`bg-sidebar-*`。详见 `src/lib/design-tokens.ts`、宪法 §5 与 `scripts/check-palette.mjs` / `scripts/check-semantic-classes.mjs`（**白名单逐项登记，未登记即拦截**——如 `text-content-text-tertiary` 已于 v2.0 删除，写回会被 `lint:semantic` 拦下）。
 
 ### 3.2 排版
 
-- 字体：`Inter`（sans）+ `JetBrains Mono`（mono），在 `index.css` 顶部引入。
-- 字号规范：`text-xs`(12) 标签 / `text-sm`(14) 正文 / `text-base`(16) 区块标题 / `text-lg`(18) 页面标题（PageHeader） / `text-xl`(20) 大标题。
+- 字体：`Inter`（sans）+ `JetBrains Mono`（mono）+ `Noto Sans SC`（中文回落），由 `@fontsource-variable/*` **自托管分片 woff2 随构建打包**（`index.css` 顶部 `@import`，禁止 CDN）。字体链与用户自定义覆写见宪法 §2.1/§2.2。
+- 字号规范：**8 档语义阶梯 `text-3xs/2xs/xs/sm/base/lg/xl/2xl`**（宪法 §3.1），逐档角色固定。`text-sm`(14) 为全站基准；中文最小 `text-xs`(12)；**`text-3xs/2xs` 仅非中文**。禁止 px 直读档（`text-10`/`text-13` 等）与任意值（`text-[13px]`），`lint:spacing` / `lint:tokens` 拦截。
 - 标题默认 `font-medium`、行高 1.5；页面标题由 `PageHeader` 统一提供：**单行高度**（`py-2`），裸图标（`size-5`，与标题视觉同高）+ `text-lg font-semibold` 标题 + 收藏星标；无副标题/描述行，数量类信息用 `metrics` 计数胶囊（收藏星标之后，integration 页 StatusBadge 同款形态的小号版本）。
 
 ### 3.3 间距 / 字号 / 圆角 / 阴影（token 体系）
 
 尺寸 token 全部固化在 `src/index.css` 的 `@theme` 块——**全站统一调整只改配置文件**；业务代码**禁止任意值**（`w-[260px]`、`text-[13px]` 等，`pnpm lint:tokens` 强制）。
 
-- **间距 / 宽高**：Tailwind spacing 公式 `key × 4px`（`p-4`=16px、`w-15`=60px、`max-w-150`=600px）；config 已扩展 42 档非默认步进（3px…980px），`max-w/min-w/max-h/min-h` 镜像同一刻度。
-- **字号**：默认语义档（`text-xs`12 / `sm`14 / `base`16 / `lg`18 / `xl`20）+ 紧凑微字号 **px 直读档**（`text-8/9/10/11/13/15/22/28/32` = 同数值 px）。
+- **间距 / 宽高**：Tailwind v4 动态刻度 `calc(var(--spacing) * N)`（`--spacing` 为标量）——`p-4`=16px、`w-15`=60px、`max-w-150`=600px，任意整数/`.5` 档都成立，**无需预先扩展 config**。四分之一档（`0.75/1.25/2.75/3.25/4.25/5.25`）**冻结禁新增**（宪法 §4.1）。
+- **字号 / 字重 / 行高**：8 档语义字号（见 §3.2）；字重只许 `font-normal/medium/semibold`（400/500/600，禁 300/700）；行高只许语义档 `leading-none/tight/snug/normal/relaxed/loose`（**禁数值档** `leading-5`/`leading-8.5`，唯一结构性例外见宪法附录 A3）。
 - **弹窗 / 滚动区语义尺寸**：`h-dialog`=95vh、`w-dialog`=95vw、`w-dialog-wide`=90vw、`max-h-dialog`=80vh、`max-h-dialog-full`=90vh。
 - **圆角**：`rounded-md`（控件，`--radius-control`）/ `rounded-lg`（面板，`--radius`）/ `rounded-xl`（卡片）/ `rounded-full`（胶囊）/ `rounded-xs`（2px）/ `rounded-chip`。
 - **品牌色**：`brand-linear(-light/-deep/-darkest)`、`brand-atlassian(-dark/-darker)`，仅用于对应集成商标识。
-- **阴影**：默认无阴影（refer 风格），需要时用 `shadow-xs/sm/md` 语义类。
+- **阴影**：**全站唯一投影档 `shadow-xs`**（`shadow-none` 为复位档）；其余具名档（`2xs/sm/md/lg/xl/2xl/inner`）与裸 `shadow` 一律封禁（宪法 §3.6 / D10）。**hover 不抬升阴影**，交互反馈改走边框/背景/位移/环色（宪法 §3.6 / D11）。
+- **动效**：时长三档 `duration-fast/normal/slow`（120/180/240ms）+ 缓动 `ease-standard/emphasis`；token 键必须是 `--transition-duration-*` 与 `--ease-*`，**写成 `--duration-*` 会静默不生效**（宪法 §7.1 命名空间陷阱）。
 - **确属无法 token 化的复杂值**（grid 模板、多段 calc、运行时 `var()`）：加入 `scripts/check-tailwind-arbitrary.mjs` 白名单并说明理由。
 
 ### 3.4 组件分层
@@ -294,20 +290,27 @@ import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
 
 ### 6.3 主题与预设
 
-- 新增颜色必须先加到 `index.css` 的 `:root` / `.dark` / 各 preset，再在 `src/index.css` 的 `@theme inline` 注册语义色。
-- `figma` 预设是 refer 设计的真相源，改动需与 `refers/APM/src/styles/theme.css` 对照。
+- 新增颜色必须先加到 `index.css` 的 `:root` / `.dark`，再在 `@theme inline` 注册语义色（**只加变量不注册 `@theme` = 不生成工具类 = 静默失效**，宪法 §7.1 同类陷阱）。
+- 主题预设**只有 `default` 一套**（宪法 §5.6 / D2）。新增主题 = 扩展 `presets.ts` 的 `ThemePreset` 类型 + `index.css` 增加对应 token 段；**不得**复活 `figma`/`linear`/`notion`，`refers/APM/src/styles/theme.css` 已不再是真相源。
 - 主题切换逻辑在 `src/shared/theme/theme-context.tsx`，预设定义在 `presets.ts`。
 
 ### 6.4 校验命令
 
 ```bash
-pnpm --filter frontend lint                 # 语义类 + UI 治理 + 禁任意值 + 组件登记 + eslint
-pnpm --filter frontend lint:tokens          # 仅禁任意值
-pnpm --filter frontend lint:registry        # 仅组件登记对账
+pnpm --filter frontend lint                 # 全部设计门禁 + eslint（下方逐项）
+pnpm --filter frontend lint:spacing         # 刻度类：字阶/间距/行高/字重/动效/阴影
+pnpm --filter frontend lint:palette         # 原生色板类 + Loader2 直用 + ai-surface 内联裸色
+pnpm --filter frontend lint:semantic        # 语义类白名单对账
+pnpm --filter frontend lint:tokens          # 禁任意值（白名单制）
+pnpm --filter frontend lint:registry        # 组件登记对账（COMPONENTS.md）
+pnpm --filter frontend lint:icons           # 图标库治理
+pnpm --filter frontend lint:undefined       # 幽灵类：源码类名 ↔ 构建产物选择器（★ 需先 build）
 pnpm --filter frontend type-check           # tsc -b
 pnpm --filter frontend build                # 类型检查 + 打包
 pnpm --filter frontend test -- --run        # 单测
 ```
+
+> `lint:undefined` **依赖构建产物**（比对「源码里写了什么」与「CSS 里生成了什么」），必须先 `build` 才有意义；CI 已排在 build 之后（`.github/workflows/quality-gate.yml` 的 `test-frontend`）。它专抓「类名合法但 Tailwind 没生成」这类静默失效（`--duration-*` 命名空间错写即由它兜底）。
 
 ### 6.5 设计系统预览页
 
@@ -320,7 +323,7 @@ pnpm --filter frontend test -- --run        # 单测
 | 项 | 决策 |
 |----|------|
 | 整体布局 | 保留当前“圆角内容卡片”布局（内容区 rounded-xl 卡片），**不**改为 refer 平铺 |
-| 默认主题 | `figma`（refer 设计） |
+| 默认主题 | `default`（唯一预设；原 `figma` 已随主题归一删除） |
 | Badge/Card/Input/PageHeader | 默认样式已对齐 refer，保留扩展变体 |
 | 改名/废弃页面（Git/GlobalTeam/Plugins/Terminal） | 保留现有路由映射，不新增 mock 页 |
 | 缺失页面（Delivery/Metadata） | ✅ Delivery 已还原为 dev-only 页面（`/app/delivery`）；Metadata 内容已并入设置页（`/app/settings`），`modules/metadata` 已于 2026-08 清理删除 |

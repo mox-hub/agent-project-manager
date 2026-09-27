@@ -32,7 +32,11 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 ### 3. 按模板实现
 
 - 复制模板骨架，替换占位内容；页面结构（PageHeader / ToolbarRow / SubPageToolbar / 内容区）不得偏离模板。
-- 样式规则：严格遵守 `docs/design/PRINCIPLES.md`（宪法 v1.1）——唯一字阶 8 档（§3）、中文最小 text-xs（§2.4）、字重 400/500/600（§2.3）、间距 4px 网格禁冻结档（§4）、语义色 token（§5）、lucide 唯一 UI 图标（§6）、动效白名单 120/180/240ms（§7）、hover/selected/focus 三态 token（§8）；**禁止任意值**（`w-[260px]`、`text-[13px]` 等）与 px 直读长尾字阶（text-8/9/13/15/22/28/32）。基础组件一律用 `components/ui/` 现有官方组件或经 `shadcn add` 引入（流程见 AGENTS.md §4.5），**禁止引入 radix**（基线唯一 @base-ui/react）。
+- 样式规则：严格遵守 `docs/design/PRINCIPLES.md`（**设计宪法，最高依据，不在此处钉版本号**）——8 档**语义**字阶 `text-3xs/2xs/xs/sm/base/lg/xl/2xl`（§3.1，**名字与 px 解耦**）、中文最小 `text-xs`（§2.4）、字重 400/500/600（§2.3）、**行高只许语义档**（§3.4）、间距 4px 网格且四分之一档冻结（§4）、语义色 token（§5）、**全站唯一阴影档 `shadow-xs`**（§3.6）、**hover 不抬升阴影**（§3.6）、动效 `duration-fast/normal/slow` = 120/180/240ms（§7.1）、hover/selected/focus 三态 token（§8）。
+  **禁止**：任意值（`w-[260px]`、`text-[13px]` 等）；px 直读字阶（`text-8/9/10/11/12/13/15/22/28/32` 与 `text-3xl` 及以上）；具名阴影档（`shadow-2xs/sm/md/lg/xl/2xl/inner`）与裸 `shadow`；数值行高（`leading-5` 等）；白名单外时长（`duration-100/150/200/250/300/500/…`）。
+  **改 token 时的坑**：Tailwind v4 的 `duration-<name>` 读 `--transition-duration-<name>`（写成 `--duration-*` 会静默不生成 CSS），`ease-<name>` 读 `--ease-*`（§7.1）。
+  基础组件一律用 `components/ui/` 现有官方组件或经 `shadcn add` 引入（流程见 AGENTS.md §4.5），**禁止引入 radix**（基线唯一 @base-ui/react）。
+  **自查命令**：`pnpm --filter frontend lint`（含 `lint:spacing`/`lint:palette` 等全部设计门禁）；改过类名后应 `build` 再跑 `lint:undefined` 抓幽灵类。
 - i18n：文案进 locales JSON 时用文本行插入，禁止程序化整体重写（JSON 有重复键风险）。
 
 ### 4. 自检清单（实现完成必须逐项核对并在回复中列出结果）
@@ -41,11 +45,13 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 - [ ] `pnpm --filter frontend lint:tokens` 通过（无任意值）
 - [ ] `pnpm --filter frontend lint:semantic` 通过（无原始色）
 - [ ] `pnpm --filter frontend lint:palette` 通过（无原生 Tailwind 色板类、无 Loader2 JSX 直用）
-- [ ] `pnpm --filter frontend lint:spacing` 通过（无冻结档 spacing、无长尾字阶）
+- [ ] `pnpm --filter frontend lint:spacing` 通过（无冻结档 spacing、无长尾/越界字阶、无 300/700 字重、无数值行高、无白名单外时长、无具名阴影档）
 - [ ] `pnpm --filter frontend lint:icons` 通过（图标库合规）
+- [ ] `pnpm --filter frontend build && pnpm --filter frontend lint:undefined` 通过（**无幽灵类**：源码里写的类名在构建产物里确实生成了 CSS；改了类名/token 后必跑，否则命名空间写错这类静默失效不会被发现）
 - [ ] 宪法三态：hover/selected/focus 用 §8 统一 token；focus-visible 焦点环可见
-- [ ] 中文文本 ≥ text-xs；同屏文字层级 ≤3 档；行高只取 dense 32 / comfortable 40 两档之一
-- [ ] 动效只用宪法 §7 白名单（120/180/240ms，.motion-* 工具类）
+- [ ] 中文文本 ≥ text-xs；同屏文字层级 ≤3 档；列表行高只取 dense 32 / comfortable 40 两档之一
+- [ ] **阴影只用 `shadow-xs`**（或 `shadow-none` 复位）；**hover 不抬升阴影**，反馈走边框/背景/位移/环色（§3.6）
+- [ ] 动效只用宪法 §7 白名单（`duration-fast/normal/slow` = 120/180/240ms）；手写组合类走 `.motion-shift`/`.motion-enter`，两套不可混用于同一元素
 - [ ] 空态用 EmptyState、加载用 Skeleton，无裸 spinner/手写空态；mock 数据只来自 msw（§9）
 - [ ] PageHeader/ToolbarRow/SubPageToolbar 形态符合 AGENTS.md §6.2
 - [ ] `pnpm --filter frontend lint && pnpm --filter frontend type-check` 通过

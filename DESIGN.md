@@ -1,15 +1,38 @@
 ---
 title: DESIGN.md - APM 全局设计系统规范与组件架构标准
-description: APM 双表面（人类控制面 + AI 执行面）前端设计系统权威技术规格书——低饱和多色色阶、外舒内紧卡片、多端字阶密度、系统化动效理念与全量组件清单
+description: APM 双表面（人类控制面 + AI 执行面）前端设计系统参考规格书——低饱和多色色阶、外舒内紧卡片、多端字阶密度、系统化动效理念与全量组件清单
 version: 2.0.0
-status: proposal-for-approval
-branch: feat/design-system-redesign
+status: reference-spec
+superseded_by: docs/design/PRINCIPLES.md
 created: "2026-09-10"
 scope: apps/frontend, apps/desktop
-governance: "docs/design/PRINCIPLES.md 并入升级为本文件"
+governance: "宪法为 docs/design/PRINCIPLES.md（v2.0）；本文件为其下位参考规格，冲突以宪法为准"
 ---
 
 # APM 全局设计系统规范与组件架构标准 (v2.0)
+
+> ## ⚠️ 地位勘正（2026-09-27，随 PRINCIPLES v2.0 落地）
+>
+> **本文件不是宪法，是参考规格（Reference Spec）。** 全仓前端设计的**最高依据是 `docs/design/PRINCIPLES.md`（v2.0）**；本文件与宪法冲突之处，一律以宪法为准，且**不得据本文件推翻宪法**。
+>
+> 本文件 frontmatter 原写 `governance: "docs/design/PRINCIPLES.md 并入升级为本文件"`、正文原写"全仓唯一最高权威标准"——该表述**已被推翻**：PRINCIPLES.md 并未并入本文件，而是在 2026-09-27 升为 v2.0 并成为唯一宪法（配 `lint:spacing` / `lint:palette` / `lint:semantic` / `lint:undefined` 等机器强制）。本文件状态从未越过 `proposal-for-approval`，其设计意图**部分落地、部分被取代**（见下方偏差清单），故保留为**设计意图与数值的存档参考**，不再具备规范效力。
+>
+> **本文件仍然有效的部分**（宪法未覆盖，可继续引用）：§二 低饱和多色域灰调色阶的具体色相数值、§六.1 五类 AI 高信息密度卡片矩阵、§三 外舒内紧卡片体系、§七 组件整改路线（与 `修改方案-BCD类-2026-09-27.md` 同源，以方案文档为准）。
+>
+> **已知偏差清单（引用本文件前务必核对）**：
+> | 本文件章节 | 本文件写法 | 现行真相（以此为准） |
+> |---|---|---|
+> | §五.2 动效白名单 | 100ms / 160ms / 220ms 三档 + 1.2s 呼吸 | **PRINCIPLES §7.1：120 / 180 / 240ms**，类名 `duration-fast/normal/slow`；呼吸脉冲 `animate-thinking-pulse` 仍在使用，属保留例外 |
+> | §五.3 动效工程规则 | 只动 transform / opacity | 与 PRINCIPLES §7.2 一致，无冲突 |
+> | §三 字阶（双层字阶/密度模式） | 多端双层字阶 | **PRINCIPLES §3.1：8 档语义阶梯**，token 名与 px 解耦（`text-3xs/2xs/…/2xl`） |
+> | §八.1 门禁 | "由 `pnpm lint:semantic` 拦截" | 裸色由 `lint:palette` 拦截，语义类白名单由 `lint:semantic` 拦截；刻度类（字阶/行高/字重/动效/阴影/间距）由 `lint:spacing` 拦截 |
+> | §七 组件整改 | 7 处异类组件路线 | 以 `docs/design/修改方案-BCD类-2026-09-27.md` 为准；四类删除决策已按「标记→确认→删除」三步走推进 |
+>
+> **副本说明**：本文件与 `docs/design/DESIGN.md` 曾为两份逐字副本（仅机器绝对路径不同）。2026-09-27 收口为**单份**：正文留于根 `DESIGN.md`，`docs/design/DESIGN.md` 降为指针页。
+>
+> ---
+>
+> 以下为原文（保留原貌，含上述偏差；未逐条改写以免掩盖历史决策）。
 
 > **本文件地位**：`apps/frontend` 与 `apps/desktop`（Electron）界面设计与样式重构的**全仓唯一最高权威标准**。
 > 本规范由 `docs/design/PRINCIPLES.md` (v1.0) 升级演进而来，经多轮讨论深度沉淀，专门解决：
@@ -256,6 +279,9 @@ APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主�
 ---
 
 ## 五、系统化动效设计理念与白名单
+
+> ⚠️ **本章时长数值已作废**（见文首「地位勘正」）：下表 100/160/220ms 三档已被 **`PRINCIPLES.md` §7.1 的 120/180/240ms** 取代，实际生效类名为 `duration-fast` / `duration-normal` / `duration-slow`（token `--transition-duration-*`）。下表**仅保留设计意图**（"微交互 → 结构展开 → 浮层入场"的时长递增梯度、每档的缓动曲线与适用场景）供参考；写代码请以宪法 §7.1 为准，`duration-100/150/200/250/300/500/...` 已被 `lint:spacing` 封禁。
+> 「AI 运行呼吸节律 1.2s 循环」一档**仍然有效**，实现在 `index.css` 的 `.animate-thinking-pulse`（唯一消费点 `modules/assistant/components/thinking-stream.tsx`），宪法 §7.1 的时长白名单只管 `duration-*` 过渡类，不含此类 keyframes 循环动画。
 
 ### 5.1 动效设计理念
 > **动效的唯一目的是引导用户心智、表达状态转移与降低认知负荷。一切纯装饰性、延迟操作的炫技动效均属于视觉负债。**
