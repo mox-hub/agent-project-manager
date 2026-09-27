@@ -350,6 +350,7 @@ export function BugDetailPage() {
               }}
               placeholder={t('bugDetail.addDescription')}
               className="w-full"
+              maxHeight={320}
             />
           </div>
 

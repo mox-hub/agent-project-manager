@@ -563,6 +563,7 @@ export function TaskDetailPage() {
               }}
               placeholder={t('taskDetail.addDescription')}
               className="w-full"
+              maxHeight={320}
             />
           </div>
 

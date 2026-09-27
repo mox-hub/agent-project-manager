@@ -175,7 +175,7 @@ function SystemPromptViewer() {
             <PromptEditor
               value={detail.data.content}
               readOnly
-              className="max-h-96 overflow-y-auto"
+              maxHeight={384}
             />
           </div>
         )}

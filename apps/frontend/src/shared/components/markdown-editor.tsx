@@ -26,6 +26,29 @@ export interface MarkdownInputProps {
   onKeyDown?: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
   className?: string;
   ref?: Ref<HTMLTextAreaElement>;
+  style?: React.CSSProperties;
+}
+
+export interface MarkdownEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  rows?: number;
+  autoFocus?: boolean;
+  onKeyDown?: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
+  preview?: 'live' | 'toggle' | 'none';
+  /** 底栏左侧提示文案（仅非 toggle 模式显示） */
+  hint?: string;
+  /** 底栏右侧动作区 */
+  actions?: ReactNode;
+  renderInput?: (props: MarkdownInputProps) => ReactElement;
+  className?: string;
+  inputClassName?: string;
+  inputRef?: Ref<HTMLTextAreaElement>;
+  /** 编辑器内容区域最大高度（数值 px 或 CSS 长度串，例如 240、'240px'、'16rem'；传入 false 或 'none' 为不限制），超限时在组件内滚动；缺省为 240px */
+  maxHeight?: number | string | false | null;
+  /** 编辑器内容区域最小高度（数值 px 或 CSS 长度串） */
+  minHeight?: number | string;
 }
 
 export function MarkdownEditor({
@@ -42,28 +65,29 @@ export function MarkdownEditor({
   className,
   inputClassName,
   inputRef,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  rows?: number;
-  autoFocus?: boolean;
-  onKeyDown?: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
-  preview?: 'live' | 'toggle' | 'none';
-  /** 底栏左侧提示文案（仅非 toggle 模式显示） */
-  hint?: string;
-  /** 底栏右侧动作区 */
-  actions?: ReactNode;
-  renderInput?: (props: MarkdownInputProps) => ReactElement;
-  className?: string;
-  inputClassName?: string;
-  inputRef?: Ref<HTMLTextAreaElement>;
-}) {
+  maxHeight = 240,
+  minHeight,
+}: MarkdownEditorProps) {
   const { t } = useTranslation();
   const [showPreview, setShowPreview] = useState(false);
   const Input = renderInput ?? SlashRefTextarea;
   const showLive = preview === 'live' && value.trim() !== '';
   const showToggledPreview = preview === 'toggle' && showPreview;
+
+  const resolvedMaxHeight =
+    maxHeight === false || maxHeight === null || maxHeight === 'none'
+      ? undefined
+      : typeof maxHeight === 'number'
+        ? `${maxHeight}px`
+        : maxHeight;
+
+  const resolvedMinHeight =
+    typeof minHeight === 'number' ? `${minHeight}px` : minHeight;
+
+  const contentStyle: React.CSSProperties = {
+    maxHeight: resolvedMaxHeight,
+    minHeight: resolvedMinHeight,
+  };
 
   return (
     <div
@@ -73,26 +97,41 @@ export function MarkdownEditor({
       )}
     >
       {showLive ? (
-        <div className="grid grid-cols-2 divide-x divide-border/60">
-          <Input
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            rows={rows}
-            autoFocus={autoFocus}
-            onKeyDown={onKeyDown}
-            className={cn(
-              'w-full px-3 py-2.5 text-sm leading-relaxed placeholder:text-muted-foreground/50',
-              inputClassName,
-            )}
-            ref={inputRef}
-          />
-          <div className="min-w-0 overflow-y-auto px-3 py-2">
+        <div
+          className="grid grid-cols-2 divide-x divide-border/60 overflow-hidden"
+          style={contentStyle}
+        >
+          <div
+            className="min-w-0 overflow-y-auto overscroll-contain"
+            style={contentStyle}
+          >
+            <Input
+              value={value}
+              onChange={onChange}
+              placeholder={placeholder}
+              rows={rows}
+              autoFocus={autoFocus}
+              onKeyDown={onKeyDown}
+              className={cn(
+                'w-full px-3 py-2.5 text-sm leading-relaxed placeholder:text-muted-foreground/50 overflow-y-auto overscroll-contain',
+                inputClassName,
+              )}
+              ref={inputRef}
+              style={contentStyle}
+            />
+          </div>
+          <div
+            className="min-w-0 overflow-y-auto overscroll-contain px-3 py-2"
+            style={contentStyle}
+          >
             <MarkdownView content={value} />
           </div>
         </div>
       ) : showToggledPreview ? (
-        <div className="min-h-13 px-3 py-2.5">
+        <div
+          className="min-h-13 overflow-y-auto overscroll-contain px-3 py-2.5"
+          style={contentStyle}
+        >
           {value.trim() ? (
             <MarkdownView content={value} />
           ) : (
@@ -108,10 +147,11 @@ export function MarkdownEditor({
           autoFocus={autoFocus}
           onKeyDown={onKeyDown}
           className={cn(
-            'w-full px-3 py-2.5 text-sm leading-relaxed placeholder:text-muted-foreground/50',
+            'w-full px-3 py-2.5 text-sm leading-relaxed placeholder:text-muted-foreground/50 overflow-y-auto overscroll-contain',
             inputClassName,
           )}
           ref={inputRef}
+          style={contentStyle}
         />
       )}
 

@@ -81,6 +81,7 @@ export function CommentInput({
           rows={2}
           preview="toggle"
           autoFocus={autoFocus}
+          maxHeight={200}
           inputRef={textareaRef}
           placeholder={placeholder ?? t('activity.comment.placeholder')}
           onKeyDown={(e) => {

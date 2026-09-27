@@ -811,13 +811,17 @@ function TokenLabel({ name }: { name: string }) {
 /* ── coss 新组件演示（2026-08 引入） ─────────────────────────── */
 
 function MarkdownEditorDemo() {
-  const [value, setValue] = useState('左侧输入，右侧实时渲染 —— **加粗**、`code`、- 列表')
+  const [value, setValue] = useState(
+    '左侧输入，右侧实时渲染 —— **加粗**、`code`、- 列表\n\n支持高度限制与组件内滚动显示。\n\n' +
+      Array.from({ length: 8 }, (_, i) => `段落 ${i + 1}：超出高度上限后采用组件内滚动显示，不再撑大外层容器。`).join('\n\n'),
+  )
   return (
     <MarkdownEditor
       value={value}
       onChange={setValue}
       rows={4}
       preview="live"
+      maxHeight={200}
       placeholder="live 分栏实时预览（宽容器）"
     />
   )
@@ -827,13 +831,15 @@ function MarkdownEditorDemo() {
 
 function MarkdownLiveEditorDemo() {
   const [value, setValue] = useState(
-    '点哪编哪：非活跃块恒为渲染态，点击块就地编辑。\n\n支持 **加粗**、`code`、- 列表、> 引用。\n\n失焦或 Esc 回渲染态。',
+    '点哪编哪：非活跃块恒为渲染态，点击块就地编辑。\n\n支持 **加粗**、`code`、- 列表、> 引用。\n\n失焦或 Esc 回渲染态。\n\n' +
+      Array.from({ length: 8 }, (_, i) => `块级内容 ${i + 1}：超出合理范围采用组件内滚动显示，保证页面其他组件不被挤压。`).join('\n\n'),
   )
   return (
     <MarkdownLiveEditor
       value={value}
       onChange={setValue}
       rows={2}
+      maxHeight={220}
       placeholder="添加描述…"
     />
   )

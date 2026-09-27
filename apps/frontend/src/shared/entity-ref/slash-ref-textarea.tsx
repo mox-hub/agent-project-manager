@@ -90,6 +90,7 @@ export interface SlashRefTextareaProps {
   onKeyDown?: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
   className?: string;
   ref?: Ref<HTMLTextAreaElement>;
+  style?: React.CSSProperties;
 }
 
 export function SlashRefTextarea({
@@ -101,6 +102,7 @@ export function SlashRefTextarea({
   onKeyDown,
   className,
   ref,
+  style,
 }: SlashRefTextareaProps) {
   const { t } = useTranslation();
   const innerRef = useRef<HTMLTextAreaElement>(null);
@@ -248,6 +250,7 @@ export function SlashRefTextarea({
           setTimeout(() => setQuery(null), 150);
         }}
         className={className}
+        style={style}
       />
       {menuVisible && (
         <div className="absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md">

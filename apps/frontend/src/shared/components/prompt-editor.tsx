@@ -28,16 +28,7 @@ import { cn } from '@/lib/utils';
 import { MarkdownLiveEditor } from './markdown-live-editor';
 import { MarkdownView } from './markdown-view';
 
-export function PromptEditor({
-  value,
-  onChange,
-  readOnly = false,
-  placeholder,
-  rows = 5,
-  className,
-  actions,
-  onDraft,
-}: {
+export interface PromptEditorProps {
   value: string;
   onChange?: (value: string) => void;
   readOnly?: boolean;
@@ -45,17 +36,49 @@ export function PromptEditor({
   /** 空内容占位输入区的初始行数 */
   rows?: number;
   className?: string;
+  /** 编辑器/查看器最大高度（数值 px 或 CSS 长度串，例如 360、'360px'、'24rem'；传入 false 或 'none' 为不限制），超限时在组件内滚动；缺省为 360px */
+  maxHeight?: number | string | false | null;
+  /** 编辑器/查看器最小高度（数值 px 或 CSS 长度串） */
+  minHeight?: number | string;
   /** 底部动作区（保存/撤销等，仅编辑态显示） */
   actions?: React.ReactNode;
   /** AI 起草：返回草稿全文（null = 用户放弃/生成失败）；不传则不显示起草按钮 */
   onDraft?: () => Promise<string | null>;
-}) {
+}
+
+export function PromptEditor({
+  value,
+  onChange,
+  readOnly = false,
+  placeholder,
+  rows = 5,
+  className,
+  maxHeight = 360,
+  minHeight,
+  actions,
+  onDraft,
+}: PromptEditorProps) {
   const { t } = useTranslation();
   const charCount = value.length;
   const [draftOpen, setDraftOpen] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftError, setDraftError] = useState(false);
   const [draftText, setDraftText] = useState<string | null>(null);
+
+  const resolvedMaxHeight =
+    maxHeight === false || maxHeight === null || maxHeight === 'none'
+      ? undefined
+      : typeof maxHeight === 'number'
+        ? `${maxHeight}px`
+        : maxHeight;
+
+  const resolvedMinHeight =
+    typeof minHeight === 'number' ? `${minHeight}px` : minHeight;
+
+  const contentStyle: React.CSSProperties = {
+    maxHeight: resolvedMaxHeight,
+    minHeight: resolvedMinHeight,
+  };
 
   const openDraftDialog = async () => {
     setDraftOpen(true);
@@ -101,13 +124,18 @@ export function PromptEditor({
         )}
         data-ai-component="shared.prompt-editor.readonly"
       >
-        {value.trim() ? (
-          <MarkdownView content={value} />
-        ) : (
-          <p className="text-sm text-muted-foreground/60">
-            {placeholder ?? t('promptEditor.empty')}
-          </p>
-        )}
+        <div
+          className="min-w-0 overflow-y-auto overscroll-contain pr-1"
+          style={contentStyle}
+        >
+          {value.trim() ? (
+            <MarkdownView content={value} />
+          ) : (
+            <p className="text-sm text-muted-foreground/60">
+              {placeholder ?? t('promptEditor.empty')}
+            </p>
+          )}
+        </div>
         <p className="mt-2 text-xs text-muted-foreground/60">
           {t('promptEditor.charCount', { count: charCount })}
         </p>
@@ -122,6 +150,8 @@ export function PromptEditor({
         onChange={onChange ?? (() => {})}
         placeholder={placeholder}
         rows={rows}
+        maxHeight={maxHeight}
+        minHeight={minHeight}
         className="bg-background"
       />
       <div className="flex items-center justify-between gap-2 px-0.5">

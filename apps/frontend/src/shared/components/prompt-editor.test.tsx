@@ -85,4 +85,25 @@ describe('PromptEditor（CAP-A-24 提示词编辑/查看复用组件）', () => 
     await screen.findByText('promptEditor.draftFailed');
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it('只读态支持 maxHeight 与内部滚动样式（默认 360px）', () => {
+    const value = '# 规范\n第一行\n第二行';
+    const { container } = renderWithProviders(
+      <PromptEditor value={value} readOnly />,
+    );
+    const scrollContainer = container.querySelector('.overflow-y-auto') as HTMLElement;
+    expect(scrollContainer).toBeTruthy();
+    expect(scrollContainer.style.maxHeight).toBe('360px');
+    expect(scrollContainer.className).toContain('overscroll-contain');
+  });
+
+  it('编辑态透传自定义 maxHeight 至内部 LiveEditor', () => {
+    const { container } = renderWithProviders(
+      <PromptEditor value="# 标题" onChange={vi.fn()} maxHeight={250} />,
+    );
+    const scrollContainer = container.querySelector('.overflow-y-auto') as HTMLElement;
+    expect(scrollContainer).toBeTruthy();
+    expect(scrollContainer.style.maxHeight).toBe('250px');
+  });
 });
+

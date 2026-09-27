@@ -48,14 +48,7 @@ export function splitMarkdownBlocks(content: string): string[] {
   return blocks;
 }
 
-export function MarkdownLiveEditor({
-  value,
-  onChange,
-  placeholder,
-  rows = 2,
-  className,
-  inputClassName,
-}: {
+export interface MarkdownLiveEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -63,13 +56,38 @@ export function MarkdownLiveEditor({
   rows?: number;
   className?: string;
   inputClassName?: string;
-}) {
+  /** 编辑器最大高度（数值 px 或 CSS 长度串，例如 320、'320px'、'20rem'；传入 false 或 'none' 为不限制），超限时在组件内滚动；缺省为 320px */
+  maxHeight?: number | string | false | null;
+  /** 编辑器最小高度（数值 px 或 CSS 长度串） */
+  minHeight?: number | string;
+}
+
+export function MarkdownLiveEditor({
+  value,
+  onChange,
+  placeholder,
+  rows = 2,
+  className,
+  inputClassName,
+  maxHeight = 320,
+  minHeight,
+}: MarkdownLiveEditorProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const blocks = useMemo(() => splitMarkdownBlocks(value), [value]);
   // 追加块态：activeIndex 指向 blocks 末尾的空位（blocks.length），先给空 textarea 再落内容
   const appending = activeIndex !== null && activeIndex >= blocks.length;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const prevActiveRef = useRef<number | null>(null);
+
+  const resolvedMaxHeight =
+    maxHeight === false || maxHeight === null || maxHeight === 'none'
+      ? undefined
+      : typeof maxHeight === 'number'
+        ? `${maxHeight}px`
+        : maxHeight;
+
+  const resolvedMinHeight =
+    typeof minHeight === 'number' ? `${minHeight}px` : minHeight;
 
   // 块切换后把焦点与光标落到新输入区末尾（点哪编哪，光标在块尾续写）
   useEffect(() => {
@@ -105,7 +123,15 @@ export function MarkdownLiveEditor({
   return (
     <div
       ref={containerRef}
-      className={cn('flex flex-col', className)}
+      className={cn(
+        'flex flex-col',
+        resolvedMaxHeight && 'overflow-y-auto overscroll-contain pr-1',
+        className,
+      )}
+      style={{
+        maxHeight: resolvedMaxHeight,
+        minHeight: resolvedMinHeight,
+      }}
       onBlur={(e) => {
         // 焦点离开编辑器整体（块内失焦）即回渲染态；块间切换走 mousedown 抢先换块不经 blur
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {

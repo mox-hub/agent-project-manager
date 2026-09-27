@@ -117,6 +117,7 @@ export function ActivityComment({
             rows={3}
             preview="toggle"
             className="mt-1"
+            maxHeight={220}
             actions={
               <>
                 <Button variant="ghost" size="xs" onClick={() => setEditing(false)}>

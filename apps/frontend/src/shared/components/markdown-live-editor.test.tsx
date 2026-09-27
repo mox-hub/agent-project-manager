@@ -133,4 +133,39 @@ describe('MarkdownLiveEditor 交互', () => {
     });
     expect(onChange).toHaveBeenCalledWith('第一段\n\n新块');
   });
+
+  it('高度限制与组件内滚动：默认带 320px 上限与 overflow-y-auto', () => {
+    const { container } = render(
+      <MarkdownLiveEditor value={'长正文内容'} onChange={vi.fn()} />,
+    );
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toBeTruthy();
+    expect(root.style.maxHeight).toBe('320px');
+    expect(root.className).toContain('overflow-y-auto');
+    expect(root.className).toContain('overscroll-contain');
+  });
+
+  it('支持自定义 maxHeight 与 minHeight', () => {
+    const { container } = render(
+      <MarkdownLiveEditor
+        value={'段落'}
+        onChange={vi.fn()}
+        maxHeight={200}
+        minHeight={100}
+      />
+    );
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.style.maxHeight).toBe('200px');
+    expect(root.style.minHeight).toBe('100px');
+  });
+
+  it('maxHeight 为 false 或 none 时不限高，不注入 overflow 类', () => {
+    const { container } = render(
+      <MarkdownLiveEditor value={'段落'} onChange={vi.fn()} maxHeight={false} />,
+    );
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.style.maxHeight).toBe('');
+    expect(root.className).not.toContain('overflow-y-auto');
+  });
 });
+
