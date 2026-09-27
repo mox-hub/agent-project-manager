@@ -18,8 +18,11 @@ const PKG_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 //        比对结果同时含假阳与假阴，不可信，不能用来阻塞流水线。
 //
 // 候选口径（宁可窄而准）：
-//   1) 命名空间只收 6 个**封闭刻度族**（text/rounded/shadow/leading/duration/font）；
-//      开放命名空间（颜色、grid、任意值…）语义 token 经 @theme 桥接、组合爆炸，误报率高；
+//   1) 命名空间只收**封闭刻度族**（字阶/颜色/圆角/阴影/行高/时长/字体/动画/缓动/层级）；
+//      `animate-*` 与 `ease-*` 是 2026-09-27 补入的——此前漏掉这两个命名空间，导致
+//      `animate-spin-slow` 与 `ease-ease` 两个实测幽灵类（C7 四例之二）逃过检查；
+//      真正开放的命名空间（grid/flex/space/任意值…）不收：语义 token 经 @theme 桥接、
+//      组合爆炸，误报率高；
 //   2) 只在**字符串字面量**里取候选——JS/JSX 里类名唯一的写法就是引号/模板字符串，
 //      这样天然排除注释与散文里形似类名的词（`text-color` / `font-size` / JSDoc 里的
 //      `--text-10` 之类实测误报），而 `.ts` 常量文件里的类名（同样是字符串）照常覆盖；
@@ -32,7 +35,19 @@ const ROOT = join(PKG_ROOT, "src");
 const ASSETS = join(PKG_ROOT, "dist", "assets");
 const TARGET_EXT = new Set([".ts", ".tsx"]);
 
-const NAMESPACES = ["text", "rounded", "shadow", "leading", "duration", "font"];
+const NAMESPACES = [
+  // 字阶 / 颜色 / 圆角 / 阴影 / 行高 / 时长 / 字体 / 动画 / 缓动 / 层级
+  "text",
+  "bg",
+  "rounded",
+  "shadow",
+  "leading",
+  "duration",
+  "font",
+  "animate",
+  "ease",
+  "z",
+];
 
 // 已生成类选择器：`.` 之后 \X 转义连读；未转义的 { } , ; : ( ) [ ] # > + ~ 与空白即结束。
 // （排除 `;` 是为了不被 `--text-base:1rem;` 这类 CSS 自定义属性声明误吞。）

@@ -154,6 +154,10 @@
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-slide-in-right: slide-in-right 0.2s ease-out;
+  /* 慢速自旋（create-dialog 模式穿梭按钮）：`spin` 复用 Tailwind 默认 keyframes（默认档
+     1s，本档 2s）。原写法 `animate-spin-slow` 无对应 token → 生成 0 CSS、静默不转，
+     与 bg-status-on-track / ease-ease / text-12 同属 C7「未定义类」，2026-09-27 补齐。 */
+  --animate-spin-slow: spin 2s linear infinite;
   /* coss toast 同 id 更新重播动画（success/error 交替脉冲） */
   --animate-toast-success-even: toast-success-replay-a 0.6s ease-out;
   --animate-toast-success-odd: toast-success-replay-b 0.6s ease-out;
