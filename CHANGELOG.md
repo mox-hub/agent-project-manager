@@ -21,6 +21,48 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——偏差 25 第四文件收口（设计系统展示页 15 处裸三元组当色值；口径由 12 更正为 15）
+
+> 提交 `60e63d83`（1 文件 / +9 / −9）。`design-system-page.tsx` 9 行 / **15 处** `var(--x)` → `var(--color-x)`：`card` 4、`border` 4、`destructive` 3、`primary` 1、`muted-foreground` 1、`accent-green` 1、`accent-blue` 1。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` 设计系统展示页 | BCD 类方案偏差 25（收口记录） | 残留裸三元组 **0**（`hsl(var(--chart-N))` 6 处为合法写法、原样保留）；type-check exit 0；palette / ui-governance / tokens / registry / spacing / icons / semantic-classes / undefined-classes **八项 exit 0**；`vite build` 后产物中 7 个 `--color-*` 别名**全部落盘**（对照 `--color-cost` 仍为 0） | 本 CHANGELOG + BCD 类方案偏差 25 收口段 |
+
+**口径更正（自我纠正）**：本条此前记为「12 处」，是被计数正则漏掉**带回退值**的写法——`var(--accent-green, #10B981)` 里 token 名后是逗号，不匹配 `var\(--[a-z-]+\)`，故第 1345 行的 3 处**一处都没被计入**；「9 行」无误。此类「计数正则决定了答案」本会话已第三次（前两次：`mdx-editor` 14 vs 12、C3 测试文件口径 130 vs 142），故本次改按「先枚举全部 `var(--` 行、再逐行分类」，并以「前一个字符非 `(`」判「直接当色值用」（排除 `hsl(var(--chart-N))`）。
+
+**为何动了当初记「只报不改」的文件**：原三条理由中「交付时正被并行代理改动」已随批 2 交付失效；该页是宪法条文与组件用法的**展示面**，把被静默丢弃的色值留在展示面上等于把反例当范例展示。仍属同类缺陷、同型修法，零新 token、零规则收窄；**视觉会变**（此前落到 Recharts 默认值），非等价替换。
+
+### 前端设计治理——E 类 · 批 5「ESLint 设计门禁落地」（3 条 AST 规则 + 2 个新门禁，一律 warn / 零 error）
+
+> 提交 `18402866`（3 条规则）+ `c8c78f72`（`lint:layers` / `lint:duplicate` + registry 消费方对账）。依据 E 类方案 §3 与 §四 4.1/4.2。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` lint 门禁 | E 类 §四 4.1/4.2（批 5） | `eslint .` → **exit 0，2302 problems (0 errors, 2302 warnings)**，协调方独立复跑逐字一致。**门禁真实性由协调方自建探针验证**：注入新增分层倒置 → `lint:layers` **exit 1**、撤除 → exit 0；注入 `stat-cards.tsx` 词干碰撞 → `lint:duplicate` **exit 1**、撤除 → exit 0；探针零残留。7 个设计脚本 + type-check 全 exit 0 | 本 CHANGELOG + E 类方案批 5 行 |
+
+**规则与命中**（`warn` 口径，存量与新增分离）：`no-naked-controls`（§19.2）**530 条 / 157 文件**；`no-visual-override`（§19.4 D2）**1714 条 / 228 文件**；`no-adhoc-tone`（§19.5）**49 条 / 37 文件**。三条规则在 `eslint.config.js` 内均配置为 `'warn'`，**无一条 `'off'`**（未收窄换绿）；该块注释写明转 error 的前提是「存量清零 + allowlist 落地」。
+
+**新门禁存量（报告项，不阻断）**：`lint:layers` 原子层 103 文件 **5 条 / 4 文件**（含批 2 今日搬迁**新引入**的 `ui/ai-execution-badge.tsx`）；`lint:duplicate` 组件 371 文件 **2 组**（`stat-card`/`stats-card`、`member-card`×2）；registry 消费方=0 的 canonical **4 条**；画廊覆盖率 **78/103 = 75.7%**。
+
+**有意未做（须记）**：① `design-governance.allowlist.json` **未创建**——warn 不阻断，「先 warn 一轮」要的是全貌，此刻引入 allowlist 只会把存量从普查里藏起来；② §4.2 ③「`review`/`deprecated` 逾期 → 失败」**刻意做成报告项**（脚本注释指向台账偏差 29：删除已被人类叫停、逾期处理属待裁决项）；③ §4.2 ④ `lint:gallery`、`lint:utilization` 只报告、未设门禁。
+
+**边界（报回裁决）**：未改 `lint-staged.config.mjs`，故两条新门禁只在 `pnpm lint` / CI / pre-push 生效、**不进 pre-commit**（协调方已核 lint-staged 五项链：spacing → palette → registry → semantic → ui-governance）。`--max-warnings` 全仓**无此 flag**（grep 唯一命中是脚本自身注释），故 warn 不会把门禁弄红。`task-detail-drawer` 经协调方复核为**零代码引用**（2 处纯注释 + 1 处 `api-types.gen.ts` 示例字符串巧合 + registry 自身条目）——按「不删只标记」仍留在 `review`/canonical 待审面。
+
+### 前端设计治理——E 类 · 批 0「能力补齐」（button 3 variant + 2 size、Card 1 variant、Field 2 轴；纯增补零迁移）
+
+> 提交 `60ba76a2`（button）+ `fb0dcb10`（card/field），合计 +360 / −5。依据 E 类 §三 E9 的前置铁律：不先补能力，后面的 lint 会造出「禁了但没得用」的自相矛盾。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` UI 原子能力 | E 类 §三 E9（批 0） | **既有档位零变化**：文本级（button 33 / card 21 / field 48 个字面量逐一比对，移除或改动 **0**）+ **渲染级**（旧/新组件真渲染后比对 `className`：button 8×8=64 组、Card 3 组、Field 全等）；button/card/field **3 文件 / 62 用例 passed**；type-check exit 0；八项设计门禁 exit 0 | 本 CHANGELOG + E 类方案批 0 行 |
+
+**新增能力**：`button` **3 variant**（`quiet` 57 处先例 / `subtle` 48 处 / `ghost-danger` 7 处）+ **2 size**（`icon-2xs` 20px / 10 处、`icon-2sm` 28px / 6 处）；`card` **1 variant**（`outline` = 圆角档 + 描边 + 去投影，对应手写壳主形态 23 行 / 16 文件）；`field` 的 `field-label` 槽 **2 轴**（`size` / `variant`，`FieldLabel` 与 `FieldTitle` 同槽同给）。**零迁移**：未替换任何消费方的裸 `<button>` 或手写卡片壳（属批 6）；**零删除、零标记**；仅 `card.tsx` 新增 `data-variant` DOM 属性（唯一 DOM 增量，`Button` 刻意未加以免破坏 191 处既有契约）。
+
+**基线复算（更正方案数字）**：裸 `<button>` **文件数 128 成立**，但**测试/生产拆分为 9 / 119**，方案原文「6 测试 → 生产 122」有误；元素级真值 **315 处生产裸 `<button>`**（自带 `className` 309 → 归一键 **215 簇**）——协调方独立复算与批 0 代理逐字一致。手写卡片壳 **27 文件成立**，展开 **40 行**（39 行 `border` 描边、30 行无 `shadow`、26 行 `rounded-lg`）。
+
+**升级人审（宪法与现状冲突，不静默覆盖）**：实测**胶囊按钮 `rounded-full` 35 处 / 27 文件**，而宪法 §4.5 明令「按钮一律 `rounded-md`，胶囊只归 chip/头像」——要么宪法开口子、要么批 6 把这 35 处改 `rounded-md` 并接受视觉变化。批 0 未碰，列为批 6 前置裁决。另有 7 条不入档/待裁决项记于 E 类方案批 0 行（含 `rounded-xl`+`border` 14 行 / 11 文件**单轴无法无损表达**、`hover:bg-accent` 与 `hover:bg-muted` 同值 token 别名、以及 `text-*` 与 `leading-*` 在 tailwind-merge 中互斥的**全库静默陷阱**——建议后续由批 5 规则覆盖）。
+
 ### 前端设计治理——E 类 · 批 2「命名空间收敛」（6 个错位原子件由 `shared/components/` 迁入 `components/ui/`，零删除）
 
 > 提交 `7bc4945a`（21 文件 / +28 / −28）。依据 E 类方案 §2.2 分拣表；**迁移清单严格 6 个**，分拣表标「留 `shared/`」的 11 组一律未动。
