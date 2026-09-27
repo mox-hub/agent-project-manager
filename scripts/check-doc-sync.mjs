@@ -5,6 +5,14 @@ function run(cmd) {
   return execSync(cmd, { encoding: 'utf8' }).trim();
 }
 
+// `-c core.quotePath=false`：让 git **原样**输出路径，不做引号 + 八进制转义。
+// 不加时非 ASCII 文件名会打印成 `"docs/design/\344\277\256..."`（首字符是引号），
+// 于是下游 `f.startsWith('docs/')` 恒为 false——**中文命名的文档（本仓 `docs/02-架构设计/`、
+// `docs/design/` 下属文件全是中文名）对 Check 1 形同不存在**：只改了中文文档 + 代码的提交
+// 会被判「code changed but no docs updated」而**误拦**。这与本文件 B4 修掉的
+// 「`docs/` 永远命不中」是同一类缺陷，只是那次修的是枚举（`git ls-files -z`），
+// diff 这三处漏了；此处与 `-z` 等价地解决同一问题（保留换行切分，改动面最小）。
+// 实测缺陷来源：E 类批 4 交付时报回 `check:docs-sync` exit 1，复现确认。
 function getChangedFiles() {
   try {
     const baseRef = process.env.GITHUB_BASE_REF;
@@ -14,14 +22,18 @@ function getChangedFiles() {
       } catch {
         // ignore fetch failure and fallback
       }
-      const out = run(`git diff --name-only --diff-filter=ACMRT origin/${baseRef}...HEAD`);
+      const out = run(
+        `git -c core.quotePath=false diff --name-only --diff-filter=ACMRT origin/${baseRef}...HEAD`,
+      );
       if (out) return out.split(/\r?\n/).filter(Boolean);
     }
 
-    const workingTree = run('git diff --name-only --diff-filter=ACMRT');
+    const workingTree = run('git -c core.quotePath=false diff --name-only --diff-filter=ACMRT');
     if (workingTree) return workingTree.split(/\r?\n/).filter(Boolean);
 
-    const headRange = run('git diff --name-only --diff-filter=ACMRT HEAD~1...HEAD');
+    const headRange = run(
+      'git -c core.quotePath=false diff --name-only --diff-filter=ACMRT HEAD~1...HEAD',
+    );
     return headRange ? headRange.split(/\r?\n/).filter(Boolean) : [];
   } catch {
     return [];

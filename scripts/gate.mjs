@@ -53,14 +53,27 @@ function resolveBase() {
   return null;
 }
 
+// `-c core.quotePath=false`：git 默认把非 ASCII 路径输出成 `"docs/design/\344\277\256..."`
+// （带引号 + 八进制转义），于是下面 `BUCKETS.docs` 的 `f.startsWith('docs/')` 恒为 false——
+// **中文命名的文档改动进不了任何 bucket**（本仓 `docs/02-架构设计/`、`docs/design/` 全是中文名）。
+// 最容易踩的后果：只改中文文档的提交 → `docs` bucket 为 false → **恰好跳过最该跑的 docs-sync**。
+// 同源缺陷见 `scripts/check-doc-sync.mjs` 的 `getChangedFiles`（那边会**误拦**提交）。
 function changedFiles(base) {
   const set = new Set();
   if (base) {
     // 已提交的改动（相对 base）——用三点，取分叉点之后的改动
-    for (const f of gitLines(['diff', '--name-only', '--diff-filter=ACMR', `${base}...HEAD`])) set.add(f);
+    for (const f of gitLines([
+      '-c',
+      'core.quotePath=false',
+      'diff',
+      '--name-only',
+      '--diff-filter=ACMR',
+      `${base}...HEAD`,
+    ]))
+      set.add(f);
   }
   // 工作区未提交的改动（本地 gate:quick 主要在跑这个）
-  for (const line of gitLines(['status', '--porcelain'])) {
+  for (const line of gitLines(['-c', 'core.quotePath=false', 'status', '--porcelain'])) {
     const p = line.slice(3).trim();
     if (!p) continue;
     const arrow = p.indexOf(' -> ');

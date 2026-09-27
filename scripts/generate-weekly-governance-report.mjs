@@ -8,7 +8,10 @@ function run(cmd) {
 const since = process.env.SINCE ?? '7 days ago';
 let files = [];
 try {
-  const out = run(`git log --since="${since}" --name-only --pretty=format:`);
+  // `-c core.quotePath=false`：否则中文文档路径输出为 `"docs/design/\344\277\256..."`，
+  // 下面 `f.startsWith('docs/')` 命不中 → `docFiles` **系统性少算**（`docs/design/` 下的
+  // 修改方案/审计/调研报告全是中文名）→ `codeFiles/docFiles` 比值被抬高。
+  const out = run(`git -c core.quotePath=false log --since="${since}" --name-only --pretty=format:`);
   files = [...new Set(out.split(/\r?\n/).map((x) => x.trim()).filter(Boolean))];
 } catch {
   files = [];
