@@ -21,6 +21,21 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——E 类 · 批 1「组件登记与标记」（零删除）
+
+> 本批的定位：**把「组件库实况」变成可机读的单一真相源**。此前「有哪些组件、谁在用、哪些是死件」只散落在人工维护的 `COMPONENTS.md` 与各人记忆里，且从未与磁盘对账过。本批建 registry 作为登记真相源，并**一个组件都不删**——按用户裁决：**先标记、经人审阅后再删**（清退执行属 E 类批 9）。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **新建 `src/modules/design-system/registry.ts`——334 条组件登记条目**（类型定义照 E 类方案 §5.2 逐字落地）。构成：UI 原子层 97（`components/ui/` 96 个 `.tsx` + `menu-surface.ts`）、跨模块 35（`shared/components/` 34 + `shared/ui/` 1）、模块层 202（`modules/*/components/**` 全量登记）。状态：**canonical 299 / review 18 / standby 17**（+1 行是文件头文档注释，非条目——故 `grep -c "status: 'standby'"` 会得 18，注意口径）。**零删除**：所有存量问题组件一律置 `review` 并写 `reason` + `proposal` + `reviewBy: '2026-10-31'`。**COMPONENTS.md 改为由 registry 单向再生**（220 行手写版 → 480 行再生版，旧版可从 git 历史取回），新增再生器 `scripts/gen-components-md.mjs` | CAP-P-01 | **独立复现双向对账**（不采信自报）：registry 334 条目 ↔ 磁盘 334 文件，**未登记 0 / 登记但不存在 0 / name 重复 0**；`lint:registry` `Component registry check passed (96 components)`。**零引用清单实测 30 个**（生产口径 = `modules` + `shared` + `app` + `main.tsx`，排除测试与展示页）：① **全库 0 引用 5**（`anchored-menu` / `direction` / `navigation-menu` / `sidebar` / `view-display-popover`）；② **仅画廊引用 15**；③ **仅测试/mock 引用 3**（`shared/ui/filter-panel`、`bug-template-helper`、`doc-category-chips`）；④ **模块层零引用 7**（`task-board` / `batch-create-tasks-dialog` / `thinking-stream` / `agent-handoff-card` / `mention-renderer` / `mention-textarea` / `task-rows`）。门禁：八道设计门禁全 PASS、`tsc -b` 零错、eslint 零错 | 新增 `registry.ts`（登记真相源）+ `gen-components-md.mjs`（再生器）；`COMPONENTS.md` 转再生 |
+| scripts | **顺带修复 `check-component-registry.mjs` 的一处正则缺陷**（本批暴露）。原正则 `/\bui\/([a-z0-9-]+\.tsx)\b/g` **未锚定 `components/` 前缀**，会把 `src/shared/ui/filter-panel.tsx` 里的 `ui/filter-panel.tsx` 误采为「已登记的 ui 组件」，进而判为「COMPONENTS.md 引用了不存在的组件文件」**直接红门禁**。批 1 当时的规避手法是在生成脚本里**把该行路径拆成两个代码片段**（`` `src/shared/ui/` `` + `` `filter-panel.tsx` ``）——**脆弱的文档侧 hack**：任何后续非 `components/ui` 的 `ui/<x>.tsx` 路径都会复现同一问题。本次改为在**校验脚本侧**加负向后顾 `(?<!shared/)` 锚定，并把生成脚本里的拆段逻辑删除、文档恢复自然直写 | CAP-P-01 | **实测复现缺陷**：把该行路径还原成自然直写 → 现行正则 stale = `["filter-panel.tsx"]`（门禁会红）；改用 `(?<!shared/)` 后**两种写法均 96/`[]`/0**。**负向测试**确保未削弱门禁：临时新增一个未登记的 `components/ui/probe-gate.tsx` → 门禁仍正确 exit 1 并列出该件；删除后 exit 0 | `check-component-registry.mjs` 正则 + 注释；`gen-components-md.mjs` 移除拆段 hack |
+
+> **E 类批 1 的范围偏离（登记，不静默）**：方案把「`COMPONENTS.md` 改由 registry 单向再生」列在 **E 类批 4**（画廊全覆盖 + 裁决面）。本批提前做了这一步——理由是批 1 若不建再生链，就只能在手写 md 上叠加登记区，**两处会立刻漂移**。**E 类批 4 的其余部分（拆分 6244 行展示页为 sections、registry 驱动渲染、治理仪表、「只看待裁决」筛选）仍未做**。
+>
+> **本批实测纠正的两处陷阱（登记以免后人重踩）**：① **`member-card` 是同名不同件的两个文件**——`modules/auth/components/member-card.tsx` 与 `modules/team-member/components/member-card.tsx` 内容不同、**都在用**（分别被 welcome-page / members-page 以**相对路径** import）。它们一度被误判为「零引用」，因为相对路径 import 逃过了「按 `components/ui/<stem>` 路径匹配」的统计法；registry 内为保 name 唯一把后者记为 `member-card-team`。**是命名冲突还是本该合并，待裁**。② **方案 §五 E2-B 与 §七 D 项对同一个 6 件集合给出相反状态**（前者要 `review`、后者要 `standby`）；本次按更具体的具名规则取 `standby` 并**同时保留 `review` 数据块**，使「只看待裁决」视图仍能取出它们（35 条待裁决 = 18 review + 17 standby）。
+>
+> **待裁决清单（8 项，供人裁，均已在 registry / `COMPONENTS.md` 留痕）**：E2-B 六件的状态口径（`review` vs `standby`，改一个字段即可切换）· `member-card` 重名是否合并 · `bug-template-helper` / `doc-category-chips` 仅测试引用，保留还是清退 · `menu-surface.ts` 的归类（有真实消费方但性质是常量模块而非组件）· **`ui/` 层 5 处分层倒置**（`ui/page-header.tsx → @/shared/components/favorite-toggle`；`ui/tab-bar.tsx → @/shared/tabs|command-palette|route-preview`；`ui/document-preview-dialog.tsx → @/shared/mdx/mdx-pipeline`）——E 类批 5 的 `lint:layers` 会直接拦住，**开规则前需先定豁免口径** · `dropdown-menu` 在 5 处生产代码仍在用却按批 1 要求置 `review`，是否先改回 `canonical` · `section` 只做到四个顶层分区，75 个细分标签需新增字段（本批未自加字段）· `stat-card` vs `stats-card` / `autocomplete` vs `combobox` 的合并方向已写入 `review.target`，但「谁是唯一实现」的判断无法代人类定。
+
 ### 前端设计治理——BCD 方案 · 批 5「token 迁移：圆角 + 层级」（D1 / D3）
 
 > 批 5 的标题原列六项 token 迁移，**其中四项（字阶 1000 / 阴影 104 / 动效 97 / 排版 74）经实测已由 A 类执行全部完成**——规则在跑、只是账没销。实做范围收敛为**圆角 + 层级**两族，分两次提交：圆角 `7d0a1667`（下表）、层级 `e0d3dc4d`（下下节）。
