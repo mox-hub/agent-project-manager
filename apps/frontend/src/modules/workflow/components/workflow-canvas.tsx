@@ -204,13 +204,22 @@ function StepNode({ data }: NodeProps) {
 
 const NODE_TYPES = { terminal: TerminalNode, step: StepNode };
 
-/** 按步骤类型生成 MiniMap 节点色（语义色一致性） */
+/**
+ * 按步骤类型生成 MiniMap 节点色（语义色一致性）。
+ *
+ * 实现口径（宪法 §5.1：禁止内联裸色）：Canvas/SVG 不吃 className，故这里读取
+ * CSS 变量。**必须引用 `--color-*` 而不是 `--*`**——`--accent-purple` 是
+ * `265 36% 50%` 的 HSL 分量三元组（非合法颜色值），`var(--accent-purple)` 在
+ * `fill` 位置属「计算值非法」，会被浏览器丢弃回落成默认黑；`--color-accent-purple`
+ * 才是 `hsl(var(--accent-purple))` 的合法颜色。也正因 `@theme` 里始终有定义，
+ * 无需再写 hex 兜底。
+ */
 const MINIMAP_COLOR: Record<string, string> = {
-  llm: 'var(--accent-purple, #8b5cf6)',
-  'human-confirm': 'var(--accent-yellow, #eab308)',
-  http: 'var(--accent-blue, #3b82f6)',
-  condition: 'var(--accent-orange, #f97316)',
-  action: 'var(--accent-green, #22c55e)',
+  llm: 'var(--color-accent-purple)',
+  'human-confirm': 'var(--color-accent-yellow)',
+  http: 'var(--color-accent-blue)',
+  condition: 'var(--color-accent-orange)',
+  action: 'var(--color-accent-green)',
 };
 
 export function WorkflowCanvas({
@@ -259,7 +268,7 @@ export function WorkflowCanvas({
           className="!bg-card !border-border"
           nodeColor={(node) => {
             const step = (node.data as { step?: CanvasStep }).step;
-            return (step && MINIMAP_COLOR[step.type]) || 'var(--muted, #94a3b8)';
+            return (step && MINIMAP_COLOR[step.type]) || 'var(--color-muted-foreground)';
           }}
         />
         <Controls position="bottom-right" showInteractive={false} />

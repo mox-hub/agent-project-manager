@@ -190,7 +190,12 @@ function ProgressRing({ done, total, size = 14 }: { done: number; total: number;
   const r = (size - 2.5) / 2;
   const circ = 2 * Math.PI * r;
   const ratio = total > 0 ? done / total : 0;
-  const stroke = ratio === 1 ? '#10B981' : ratio > 0 ? '#3B82F6' : '#94A3B8';
+  const stroke =
+    ratio === 1
+      ? 'hsl(var(--accent-green))'
+      : ratio > 0
+        ? 'hsl(var(--accent-blue))'
+        : 'hsl(var(--muted-foreground))';
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 -rotate-90">
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground/20" />
@@ -228,7 +233,7 @@ function AssigneeAvatar({ initials, color }: { initials?: string; color?: string
   return (
     <div
       className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-white text-3xs font-semibold shrink-0"
-      style={{ backgroundColor: color || '#6366F1' }}
+      style={{ backgroundColor: color || 'hsl(var(--chart-3))' }}
     >
       {initials}
     </div>

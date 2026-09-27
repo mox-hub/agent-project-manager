@@ -56,7 +56,7 @@ export function InvitePage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="flex min-h-screen items-center justify-center bg-background" data-ai-page="auth-invite">
       <div className="w-full max-w-90 space-y-6 rounded-lg border border-border bg-background p-8 shadow-xs">
         <div className="text-center">
           <Logo size="lg" variant="framed" className="mx-auto mb-3" ariaLabel="Agent Project Manager" />
@@ -106,11 +106,22 @@ export function InvitePage() {
               </Button>
             ) : (
               <div className="space-y-2">
-                <Button className="w-full" asChild>
-                  <Link to={`/login?next=/invite/${token}`}>登录后接受</Link>
+                {/* 宪法 §10.7：组合唯一方式为 render prop（旧 Radix 组合写法已禁）；
+                    render 到 <Link> 非原生 button，须显式 nativeButton={false}（同 ui/pagination） */}
+                <Button
+                  className="w-full"
+                  nativeButton={false}
+                  render={<Link to={`/login?next=/invite/${token}`} />}
+                >
+                  登录后接受
                 </Button>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link to={`/register?invite=${token}`}>没有账号？注册</Link>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  nativeButton={false}
+                  render={<Link to={`/register?invite=${token}`} />}
+                >
+                  没有账号？注册
                 </Button>
               </div>
             )}

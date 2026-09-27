@@ -130,7 +130,7 @@ export default function TeamsPage() {
   };
 
   return (
-    <PageShell className="overflow-hidden">
+    <PageShell aiPage="team-list" className="overflow-hidden">
       <PageHeader
         aiId="team-member.teams"
         title={t('teams.title', '团队')}

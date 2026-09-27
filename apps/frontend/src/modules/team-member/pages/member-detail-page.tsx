@@ -151,7 +151,7 @@ export default function MemberDetailPage() {
 
   if (isLoading) {
     return (
-      <PageShell>
+      <PageShell aiPage="member-detail">
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
           {t('common.loading', '加载中…')}
         </div>
@@ -160,7 +160,7 @@ export default function MemberDetailPage() {
   }
   if (!member) {
     return (
-      <PageShell>
+      <PageShell aiPage="member-detail">
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
           {t('memberDetail.notFound', '未找到成员')}
         </div>
@@ -190,7 +190,7 @@ export default function MemberDetailPage() {
   }));
 
   return (
-    <PageShell className="overflow-hidden">
+    <PageShell aiPage="member-detail" className="overflow-hidden">
       {/* SubPageToolbar：返回 + 面包屑 + 居中页签 + 翻页器 + 侧栏开关 */}
       <SubPageToolbar
         aiId="team-member.member-detail"
@@ -349,7 +349,7 @@ export default function MemberDetailPage() {
                           >
                             <span
                               className="size-2.5 rounded-full"
-                              style={{ backgroundColor: p.color || '#5E6AD2' }}
+                              style={{ backgroundColor: p.color || 'var(--color-brand-linear)' }}
                             />
                             {p.projectName}
                           </Link>
@@ -381,7 +381,7 @@ export default function MemberDetailPage() {
                           <div className="flex items-center gap-2 text-sm">
                             <span
                               className="size-2.5 rounded-full"
-                              style={{ backgroundColor: p.color || '#5E6AD2' }}
+                              style={{ backgroundColor: p.color || 'var(--color-brand-linear)' }}
                             />
                             {p.name}
                           </div>
@@ -420,7 +420,7 @@ export default function MemberDetailPage() {
                         >
                           <span
                             className="size-2.5 rounded-full"
-                            style={{ backgroundColor: tm.color || '#5E6AD2' }}
+                            style={{ backgroundColor: tm.color || 'var(--color-brand-linear)' }}
                           />
                           {tm.teamName}
                         </Link>

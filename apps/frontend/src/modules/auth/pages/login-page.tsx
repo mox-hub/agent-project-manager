@@ -44,7 +44,7 @@ export function LoginPage() {
   };
 
   return (
-    <AuthVisualCard>
+    <AuthVisualCard aiPage="auth-login">
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <Alert variant="destructive">

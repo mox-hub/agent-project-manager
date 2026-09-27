@@ -130,7 +130,8 @@ function assigneeNameOf(task: Task): string | undefined {
   return task.aiAgent?.name;
 }
 
-const AVATAR_PALETTE = ['#6366F1', '#F59E0B', '#EF4444', '#10B981'];
+// 头像是按姓名散列取色（非语义状态），色值口径与 task-rows.tsx 的同名调色板保持一致
+const AVATAR_PALETTE = ['hsl(var(--chart-1))', 'hsl(var(--chart-4))', 'hsl(var(--accent-red))', 'hsl(var(--accent-green))'];
 
 function colorOf(name: string): string {
   let hash = 0;
@@ -144,7 +145,12 @@ function ProgressRing({ done, total, size = 14 }: { done: number; total: number;
   const r = (size - 2.5) / 2;
   const circ = 2 * Math.PI * r;
   const ratio = total > 0 ? done / total : 0;
-  const stroke = ratio === 1 ? '#10B981' : ratio > 0 ? '#3B82F6' : '#94A3B8';
+  const stroke =
+    ratio === 1
+      ? 'hsl(var(--accent-green))'
+      : ratio > 0
+        ? 'hsl(var(--accent-blue))'
+        : 'hsl(var(--muted-foreground))';
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 -rotate-90">
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground/20" />

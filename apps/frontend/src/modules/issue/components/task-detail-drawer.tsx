@@ -62,18 +62,37 @@ export interface TaskDetailDrawerProps {
   onClose: () => void;
 }
 
+/**
+ * 优先级 / 严重度色档（宪法 §5.1：颜色一律走语义 accent token，禁内联裸色）。
+ * 内联样式不吃 Tailwind class，故取 `hsl(var(--<token>))`（同仓既有写法）。
+ * 上三档口径与 `shared/context-menu/row-context-menu` 的 `SEVERITY_CONFIG` 对齐
+ * （medium→yellow / high→orange / critical→red），避免同仓出现两套优先级色阶；
+ * `soft` 为浅底档，替代旧的 `${hex}20` 透明度字符串拼接（0x20/255 ≈ 0.125）。
+ */
 const priorityOptions = [
-  { value: 'low', label: 'Low', color: '#22c55e' },
-  { value: 'medium', label: 'Medium', color: '#eab308' },
-  { value: 'high', label: 'High', color: '#ef4444' },
-  { value: 'critical', label: 'Critical', color: '#dc2626' },
+  { value: 'low', label: 'Low', color: 'hsl(var(--accent-green))', soft: 'hsl(var(--accent-green) / 0.125)' },
+  { value: 'medium', label: 'Medium', color: 'hsl(var(--accent-yellow))', soft: 'hsl(var(--accent-yellow) / 0.125)' },
+  { value: 'high', label: 'High', color: 'hsl(var(--accent-orange))', soft: 'hsl(var(--accent-orange) / 0.125)' },
+  { value: 'critical', label: 'Critical', color: 'hsl(var(--accent-red))', soft: 'hsl(var(--accent-red) / 0.125)' },
 ];
 
+/** 未识别的优先级取值回落中性色（旧为写死的灰值字面量） */
+const priorityFallback = {
+  color: 'hsl(var(--muted-foreground))',
+  soft: 'hsl(var(--muted-foreground) / 0.125)',
+};
+
+/** 只读优先级胶囊的成对色（前景 + 浅底） */
+function priorityColors(value: string | undefined) {
+  const opt = priorityOptions.find((p) => p.value === value) ?? priorityFallback;
+  return { backgroundColor: opt.soft, color: opt.color };
+}
+
 const severityOptions = [
-  { value: 'low', label: 'Low', color: '#94a3b8' },
-  { value: 'medium', label: 'Medium', color: '#f59e0b' },
-  { value: 'high', label: 'High', color: '#f97316' },
-  { value: 'critical', label: 'Critical', color: '#ef4444' },
+  { value: 'low', label: 'Low', color: 'hsl(var(--muted-foreground))' },
+  { value: 'medium', label: 'Medium', color: 'hsl(var(--accent-yellow))' },
+  { value: 'high', label: 'High', color: 'hsl(var(--accent-orange))' },
+  { value: 'critical', label: 'Critical', color: 'hsl(var(--accent-red))' },
 ];
 
 const statusOptions = [
@@ -490,10 +509,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                   ) : (
                     <span
                       className="inline-block px-2 py-1 text-sm rounded-sm capitalize"
-                      style={{
-                        backgroundColor: `${priorityOptions.find((p) => p.value === task.priority)?.color || '#6b7280'}20`,
-                        color: priorityOptions.find((p) => p.value === task.priority)?.color || '#6b7280',
-                      }}
+                      style={priorityColors(task.priority)}
                     >
                       {task.priority}
                     </span>

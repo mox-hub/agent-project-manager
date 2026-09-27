@@ -115,7 +115,7 @@ export function ProjectTeamBindings({ projectId }: { projectId: string }) {
                   >
                     <span
                       className="size-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: team.color || '#5E6AD2' }}
+                      style={{ backgroundColor: team.color || 'var(--color-brand-linear)' }}
                     />
                     <span className="truncate">{team.name}</span>
                     <span className="ml-auto shrink-0 text-3xs text-muted-foreground">
@@ -151,7 +151,7 @@ export function ProjectTeamBindings({ projectId }: { projectId: string }) {
               >
                 <span
                   className="size-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: team.color || '#5E6AD2' }}
+                  style={{ backgroundColor: team.color || 'var(--color-brand-linear)' }}
                 />
                 <span className="max-w-40 truncate">{team.name}</span>
               </button>

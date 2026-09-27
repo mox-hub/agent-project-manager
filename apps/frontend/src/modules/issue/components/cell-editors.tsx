@@ -171,7 +171,7 @@ export function IssueTypeCell({ task, children }: { task: Task; children: React.
         icon: (
           <span
             className="inline-block size-2.5 shrink-0 rounded-full"
-            style={{ backgroundColor: tp.color || '#94A3B8' }}
+            style={{ backgroundColor: tp.color || 'hsl(var(--muted-foreground))' }}
           />
         ),
         active: tp.id === task.typeId,

@@ -118,7 +118,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
                 >
                   <span
                     className="size-1.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: team.color || '#5E6AD2' }}
+                    style={{ backgroundColor: team.color || 'var(--color-brand-linear)' }}
                   />
                   <span className="max-w-32 truncate">{team.name}</span>
                 </button>

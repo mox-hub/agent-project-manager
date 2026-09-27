@@ -281,7 +281,7 @@ export function MemberCardPopover({
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full"
-                      style={{ backgroundColor: p.color || '#5E6AD2' }}
+                      style={{ backgroundColor: p.color || 'var(--color-brand-linear)' }}
                     />
                     {p.projectName}
                     <span className="text-muted-foreground">· {p.role}</span>
@@ -306,7 +306,7 @@ export function MemberCardPopover({
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full"
-                      style={{ backgroundColor: t.color || '#5E6AD2' }}
+                      style={{ backgroundColor: t.color || 'var(--color-brand-linear)' }}
                     />
                     {t.teamName}
                     <span className="text-muted-foreground">· {t.role}</span>

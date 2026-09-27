@@ -81,7 +81,7 @@ export function RegisterPage() {
   const inviteInvalid = invite && invite.status !== 'pending';
 
   return (
-    <AuthVisualCard isRegister>
+    <AuthVisualCard isRegister aiPage="auth-register">
       <form onSubmit={handleSubmit} className="space-y-3.5">
         {invite && (
           <div

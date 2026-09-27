@@ -284,11 +284,14 @@ export function InterviewDialog({
               <Button variant="outline" onClick={() => close(false)}>
                 {t('common.close')}
               </Button>
-              <Button asChild data-ai="playbook.interview.gotoInbox" className={cn('gap-1.5')}>
-                <Link to="/app/notifications">
-                  <Inbox className="size-3.5" />
-                  {t('project.playbookPage.interview.goInbox')}
-                </Link>
+              <Button
+                data-ai="playbook.interview.gotoInbox"
+                className={cn('gap-1.5')}
+                nativeButton={false}
+                render={<Link to="/app/notifications" />}
+              >
+                <Inbox className="size-3.5" />
+                {t('project.playbookPage.interview.goInbox')}
               </Button>
             </DialogFooter>
           </>

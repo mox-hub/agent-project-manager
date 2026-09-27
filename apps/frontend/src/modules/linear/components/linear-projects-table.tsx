@@ -132,7 +132,7 @@ function ProjectRow({
           <div
             className="flex size-9 shrink-0 items-center justify-center rounded-md text-sm font-semibold text-white"
             style={{
-              background: project.color ?? '#5E6AD2',
+              background: project.color ?? 'var(--color-brand-linear)',
             }}
           >
             {project.icon ?? project.name.slice(0, 1).toUpperCase()}

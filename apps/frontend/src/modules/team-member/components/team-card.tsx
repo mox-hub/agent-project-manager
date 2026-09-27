@@ -37,7 +37,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
             ) : (
               <div
                 className="flex size-10 shrink-0 items-center justify-center rounded-full font-semibold text-white"
-                style={{ backgroundColor: team.color || '#5E6AD2' }}
+                style={{ backgroundColor: team.color || 'var(--color-brand-linear)' }}
               >
                 {team.name.slice(0, 2).toUpperCase()}
               </div>
@@ -87,10 +87,14 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
                 <Archive className="size-3" />
               </Button>
             )}
-            <Button asChild variant="ghost" size="sm" className="h-6 px-2">
-              <Link to={`/app/teams/${team.id}`}>
-                {t('teams.detail', '详情')} <ChevronRight className="size-3" />
-              </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2"
+              nativeButton={false}
+              render={<Link to={`/app/teams/${team.id}`} />}
+            >
+              {t('teams.detail', '详情')} <ChevronRight className="size-3" />
             </Button>
           </div>
         </div>

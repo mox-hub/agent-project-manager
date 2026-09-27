@@ -118,11 +118,13 @@ export function ProjectLinearSyncStatus({
 
         {isProjectFieldLocked ? (
           <Tooltip delayDuration={200}>
-            <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5 text-2xs text-muted-foreground">
-                <Lock className="size-3" />
-                provider-managed fields
-              </span>
+            <TooltipTrigger
+              render={
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5 text-2xs text-muted-foreground" />
+              }
+            >
+              <Lock className="size-3" />
+              provider-managed fields
             </TooltipTrigger>
             <TooltipContent>
               <p className="max-w-xs text-xs">
@@ -136,10 +138,12 @@ export function ProjectLinearSyncStatus({
 
         {project.syncErrorMessage ? (
           <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-1 text-2xs text-destructive">
-                <AlertCircle className="size-3" /> sync error
-              </span>
+            <TooltipTrigger
+              render={
+                <span className="inline-flex items-center gap-1 text-2xs text-destructive" />
+              }
+            >
+              <AlertCircle className="size-3" /> sync error
             </TooltipTrigger>
             <TooltipContent>{project.syncErrorMessage}</TooltipContent>
           </Tooltip>

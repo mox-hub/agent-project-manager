@@ -295,7 +295,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                         >
                           <span
                             className="size-2.5 shrink-0 rounded-full"
-                            style={{ backgroundColor: p.color || '#5E6AD2' }}
+                            style={{ backgroundColor: p.color || 'var(--color-brand-linear)' }}
                           />
                           <span className="truncate">{p.name}</span>
                         </Link>

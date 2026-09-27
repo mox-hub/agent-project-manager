@@ -166,7 +166,7 @@ export function AiSurfacePage() {
   }, [navigate]);
 
   return (
-    <div className="fixed inset-0 z-modal h-screen w-screen flex flex-col overflow-x-hidden overflow-y-auto bg-content-bg font-sans text-foreground select-none">
+    <div className="fixed inset-0 z-modal h-screen w-screen flex flex-col overflow-x-hidden overflow-y-auto bg-content-bg font-sans text-foreground select-none" data-ai-page="ai-surface">
       {/* 1. 顶部全屏微型全息导航条 (极其克制、通透) */}
       <header className="sticky top-0 z-overlay flex w-full items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
         <div className="flex items-center gap-3">

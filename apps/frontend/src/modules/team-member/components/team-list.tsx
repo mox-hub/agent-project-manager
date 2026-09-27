@@ -69,7 +69,7 @@ export function TeamList({
       selectionActions={selectionActions}
       renderLeading={(team) => (
         <>
-          <ListAvatar name={team.name} url={team.avatarUrl} color={team.color || '#5E6AD2'} />
+          <ListAvatar name={team.name} url={team.avatarUrl} color={team.color || 'var(--color-brand-linear)'} />
           <span className="min-w-0 shrink-0 whitespace-nowrap text-sm font-medium text-foreground">
             {team.name}
           </span>

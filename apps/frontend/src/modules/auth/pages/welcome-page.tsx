@@ -29,6 +29,7 @@ export function WelcomePage() {
 
   return (
     <AuthShell
+      aiPage="auth-welcome"
       header={<Logo size="lg" variant="framed" ariaLabel="Agent Project Manager" />}
       visual={
         <div className="absolute inset-0 flex items-center justify-center p-8">

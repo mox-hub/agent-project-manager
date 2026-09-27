@@ -192,10 +192,13 @@ export function ContractBindingsPanel({
                         {t('contract.state.fileChanged')}
                       </span>
                     ) : (
-                      <Button size="xs" variant="ghost" asChild>
-                        <Link to="/app/notifications">
-                          {t('contract.action.viewProposal')}
-                        </Link>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        nativeButton={false}
+                        render={<Link to="/app/notifications" />}
+                      >
+                        {t('contract.action.viewProposal')}
                       </Button>
                     ))}
                   {!conflicted &&

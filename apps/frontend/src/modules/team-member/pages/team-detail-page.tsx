@@ -241,7 +241,7 @@ export default function TeamDetailPage() {
 
   if (isLoading) {
     return (
-      <PageShell>
+      <PageShell aiPage="team-detail">
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
           {t('common.loading', '加载中…')}
         </div>
@@ -250,7 +250,7 @@ export default function TeamDetailPage() {
   }
   if (!team) {
     return (
-      <PageShell>
+      <PageShell aiPage="team-detail">
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
           {t('teamDetail.notFound', '未找到团队')}
         </div>
@@ -268,7 +268,7 @@ export default function TeamDetailPage() {
   ];
 
   return (
-    <PageShell className="overflow-hidden">
+    <PageShell aiPage="team-detail" className="overflow-hidden">
       {/* SubPageToolbar：返回 + 面包屑 + 居中页签 + 翻页器 + 侧栏开关 */}
       <SubPageToolbar
         aiId="team-member.team-detail"
@@ -310,7 +310,7 @@ export default function TeamDetailPage() {
               ) : (
                 <div
                   className="flex size-10 shrink-0 items-center justify-center rounded-full font-semibold text-white"
-                  style={{ backgroundColor: team.color || '#5E6AD2' }}
+                  style={{ backgroundColor: team.color || 'var(--color-brand-linear)' }}
                 >
                   {team.name.slice(0, 2).toUpperCase()}
                 </div>
@@ -600,7 +600,7 @@ export default function TeamDetailPage() {
                             >
                               <span
                                 className="size-2.5 rounded-full"
-                                style={{ backgroundColor: tp.project?.color || '#5E6AD2' }}
+                                style={{ backgroundColor: tp.project?.color || 'var(--color-brand-linear)' }}
                               />
                               {tp.project?.name ?? tp.projectId}
                             </Link>

@@ -70,7 +70,7 @@ export function RepositorySettingsPage() {
 
   if (!repoId) {
     return (
-      <PageShell>
+      <PageShell aiPage="repository-settings">
         <div className="flex items-center gap-2 px-6 py-4">
           <Button variant="ghost" size="sm" onClick={() => navigate('/app/repositories')}>
             <ArrowLeft size={16} />
@@ -83,7 +83,7 @@ export function RepositorySettingsPage() {
 
   if (isLoading) {
     return (
-      <PageShell>
+      <PageShell aiPage="repository-settings">
         <PageHeader title="Loading..." aiId="" />
         <div className="flex items-center justify-center p-12">
           <Spinner />
@@ -94,7 +94,7 @@ export function RepositorySettingsPage() {
 
   if (error || !repository) {
     return (
-      <PageShell>
+      <PageShell aiPage="repository-settings">
         <div className="flex items-center gap-2 px-6 py-4">
           <Button variant="ghost" size="sm" onClick={() => navigate('/app/repositories')}>
             <ArrowLeft size={16} />
@@ -106,7 +106,7 @@ export function RepositorySettingsPage() {
   }
 
   return (
-    <PageShell className="overflow-hidden">
+    <PageShell aiPage="repository-settings" className="overflow-hidden">
       <SubPageToolbar
         aiId="git.repository-settings"
         onBack={() => navigate(`/app/repositories/${repoId}`)}

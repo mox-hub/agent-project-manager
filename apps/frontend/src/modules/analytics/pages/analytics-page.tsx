@@ -513,9 +513,9 @@ function QualityTab() {
                 <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={TOOLTIP_STYLE} />
                 <Legend wrapperStyle={{ fontSize: 10 }} />
-                <Line type="monotone" dataKey="patchPct" stroke="#f59e0b" name={t('analytics.quality.seriesPatch', '补丁 %')} strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="refactorPct" stroke="#10b981" name={t('analytics.quality.seriesRefactor', '重构 %')} strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="complexity" stroke="#7c3aed" name={t('analytics.quality.seriesComplexity', '复杂度')} strokeWidth={2} dot={false} strokeDasharray="4 2" />
+                <Line type="monotone" dataKey="patchPct" stroke="hsl(var(--chart-1))" name={t('analytics.quality.seriesPatch', '补丁 %')} strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="refactorPct" stroke="hsl(var(--chart-2))" name={t('analytics.quality.seriesRefactor', '重构 %')} strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="complexity" stroke="hsl(var(--chart-3))" name={t('analytics.quality.seriesComplexity', '复杂度')} strokeWidth={2} dot={false} strokeDasharray="4 2" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -643,11 +643,11 @@ function TeamActivityTab() {
                 <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={TOOLTIP_STYLE} />
                 <Legend wrapperStyle={{ fontSize: 10 }} />
-                <Bar dataKey="alex" fill="#3b82f6" name="Alex" radius={[2, 2, 0, 0]} stackId="a" />
-                <Bar dataKey="sarah" fill="#10b981" name="Sarah" radius={[2, 2, 0, 0]} stackId="a" />
-                <Bar dataKey="marcus" fill="#f59e0b" name="Marcus" radius={[2, 2, 0, 0]} stackId="a" />
-                <Bar dataKey="lisa" fill="#7c3aed" name="Lisa" radius={[2, 2, 0, 0]} stackId="a" />
-                <Bar dataKey="james" fill="#ef4444" name="James" radius={[2, 2, 0, 0]} stackId="a" />
+                <Bar dataKey="alex" fill="hsl(var(--chart-1))" name="Alex" radius={[2, 2, 0, 0]} stackId="a" />
+                <Bar dataKey="sarah" fill="hsl(var(--chart-2))" name="Sarah" radius={[2, 2, 0, 0]} stackId="a" />
+                <Bar dataKey="marcus" fill="hsl(var(--chart-3))" name="Marcus" radius={[2, 2, 0, 0]} stackId="a" />
+                <Bar dataKey="lisa" fill="hsl(var(--chart-4))" name="Lisa" radius={[2, 2, 0, 0]} stackId="a" />
+                <Bar dataKey="james" fill="hsl(var(--chart-5))" name="James" radius={[2, 2, 0, 0]} stackId="a" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

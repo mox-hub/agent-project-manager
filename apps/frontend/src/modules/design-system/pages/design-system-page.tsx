@@ -1836,7 +1836,7 @@ export function DesignSystemPage() {
   }
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-background">
+    <div className="flex h-full w-full overflow-hidden bg-background" data-ai-page="design-system">
 
       {/* 左侧独立侧边栏：单独的滚动条，不跟右边共用，顶部常驻固定 */}
       <aside className="w-56 shrink-0 border-r border-border h-full flex flex-col bg-background/95 select-none">
@@ -2893,8 +2893,8 @@ export function DesignSystemPage() {
                       { side: 'right' as const, label: 'Tooltip Right' },
                     ].map(({ side, label }) => (
                       <Tooltip key={side}>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm">{label}</Button>
+                        <TooltipTrigger render={<Button variant="outline" size="sm" />}>
+                          {label}
                         </TooltipTrigger>
                         <TooltipContent side={side}>
                           <p className="text-xs">This is a {side} tooltip</p>
@@ -2902,8 +2902,8 @@ export function DesignSystemPage() {
                       </Tooltip>
                     ))}
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon"><Settings /></Button>
+                      <TooltipTrigger render={<Button variant="ghost" size="icon" />}>
+                        <Settings />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className="text-xs">Settings <kbd className="ml-1 px-1 rounded bg-muted text-3xs">⌘,</kbd></p>

@@ -163,10 +163,12 @@ export function TaskLinearPanel({ issueId, task, projectId }: TaskLinearPanelPro
       {task.syncStatus === 'error' ? (
         <TooltipProvider>
           <Tooltip delayDuration={150}>
-            <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1 text-2xs text-destructive">
-                <AlertCircle className="size-3" /> {t('linearSync.error')}
-              </div>
+            <TooltipTrigger
+              render={
+                <div className="inline-flex items-center gap-1 text-2xs text-destructive" />
+              }
+            >
+              <AlertCircle className="size-3" /> {t('linearSync.error')}
             </TooltipTrigger>
             <TooltipContent>
               <p className="max-w-xs text-xs">

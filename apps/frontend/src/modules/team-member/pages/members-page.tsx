@@ -126,7 +126,7 @@ export default function MembersPage() {
   };
 
   return (
-    <PageShell className="overflow-hidden">
+    <PageShell aiPage="member-list" className="overflow-hidden">
       <PageHeader
         aiId="team-member.members"
         title={t('members.title', '成员管理')}

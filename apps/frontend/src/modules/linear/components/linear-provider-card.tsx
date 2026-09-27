@@ -52,7 +52,7 @@ export function LinearProviderCard({
     >
       <div
         className="pointer-events-none absolute -right-12 -top-12 size-48 rounded-full opacity-30 blur-3xl"
-        style={{ background: '#5E6AD2' }}
+        style={{ background: 'var(--color-brand-linear)' }}
       />
       <div className="relative flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">

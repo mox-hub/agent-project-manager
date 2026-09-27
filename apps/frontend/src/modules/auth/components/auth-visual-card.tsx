@@ -46,11 +46,14 @@ interface AuthVisualCardProps {
   children: ReactNode;
   title?: string;
   isRegister?: boolean;
+  /** 页面标识（宪法 §12.1）：本卡片的根节点即登录/注册页的最外层容器，故由调用页传入 */
+  aiPage?: string;
 }
 
 export function AuthVisualCard({
   children,
   isRegister: _isRegister = false,
+  aiPage,
 }: AuthVisualCardProps) {
   const { i18n } = useTranslation();
   const { mode, toggleTheme } = useSafeTheme();
@@ -114,20 +117,25 @@ export function AuthVisualCard({
   }[surface];
 
   // 根据当前模式自适应左侧背景氛围色 (与右侧画布背景色精确同频交融)
-  // 人类控制面：清爽理智的工程蓝灰 (Light: 浅工程灰白, Dark: 深幽工程蓝黑 #091224)
-  // AI 执行面：深邃纯粹的光学暗室 (Light: 纯净 card 白, Dark: 极夜石墨黑 #060810)
+  // 人类控制面：清爽理智的工程蓝灰 (Light: 浅工程灰白, Dark: 深幽工程蓝黑)
+  // AI 执行面：深邃纯粹的光学暗室 (Light: 纯净 card 白, Dark: 极夜石墨黑)
+  // ⚠️ 深色两支与 visuals/ 画布美术（prism-canvas / blueprint-canvas）的底色是同一组
+  // 环境色，改色必须与画布同步（属「插画/美术资源」豁免类，见批 6b 报告存疑清单）。
   const leftBgStyle = {
     backgroundColor: isDark
       ? isAi
         ? '#060810'
         : '#091224'
       : isAi
-        ? 'var(--color-card, #ffffff)'
+        ? 'var(--color-card)'
         : 'rgba(248, 250, 252, 0.95)',
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4 sm:p-6 transition-colors duration-slow">
+    <div
+      className="flex min-h-screen w-full items-center justify-center bg-background p-4 sm:p-6 transition-colors duration-slow"
+      data-ai-page={aiPage}
+    >
       {/* 现代双栏一体化大卡片 */}
       <div className="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-border/80 shadow-xs md:grid md:min-h-130 md:grid-cols-12 transition-colors duration-slow bg-card">
         {/* 桌面紧凑窗口拖动区：盖住卡片顶部品牌行（右上控制按钮组 z-30 在其上可点；

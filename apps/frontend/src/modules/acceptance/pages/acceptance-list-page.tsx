@@ -535,7 +535,7 @@ export function AcceptanceListPage() {
   );
 
   return (
-    <PageShell>
+    <PageShell aiPage="acceptance-list">
       <PageHeader
         title={t('acceptance.title')}
         icon={getEntityIcon('acceptance').icon}

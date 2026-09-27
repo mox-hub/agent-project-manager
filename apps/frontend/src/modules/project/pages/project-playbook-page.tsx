@@ -268,10 +268,14 @@ export function ProjectPlaybookPage() {
                             <ListChecks className="size-3" />
                             {t('project.playbookPage.gatePending')}
                           </Badge>
-                          <Button asChild size="sm" variant="outline" data-ai="playbook.gotoGate">
-                            <Link to="/app/notifications">
-                              {t('project.playbookPage.goInbox')}
-                            </Link>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            data-ai="playbook.gotoGate"
+                            nativeButton={false}
+                            render={<Link to="/app/notifications" />}
+                          >
+                            {t('project.playbookPage.goInbox')}
                           </Button>
                         </>
                       ) : (
@@ -323,8 +327,14 @@ export function ProjectPlaybookPage() {
                   </p>
                 </div>
                 {intakeProposalId ? (
-                  <Button asChild size="sm" variant="outline" data-ai="playbook.intake.gotoInbox">
-                    <Link to="/app/notifications">{t('project.playbookPage.intake.goInbox')}</Link>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    data-ai="playbook.intake.gotoInbox"
+                    nativeButton={false}
+                    render={<Link to="/app/notifications" />}
+                  >
+                    {t('project.playbookPage.intake.goInbox')}
                   </Button>
                 ) : (
                   <Button

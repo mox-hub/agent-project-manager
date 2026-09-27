@@ -208,8 +208,11 @@ export function taskCardRow3(task: Task): ReactNode {
           </span>
         ) : null}
       </div>
+      {/* 卡片底色为 bg-card（浅色主题下即纯白），原 border-white 的环在浅色主题下不可见；
+          改语义 border-border 后浅色主题才真的有环，深色主题结果不变（原 dark:border-border
+          冗余，一并去掉，宪法 §5.5）。 */}
       {task.assignee ? (
-        <Avatar className="h-6 w-6 border border-white shadow-xs dark:border-border">
+        <Avatar className="h-6 w-6 border border-border shadow-xs">
           {task.assignee.avatarUrl ? (
             <AvatarImage src={task.assignee.avatarUrl} alt={task.assignee.displayName} />
           ) : null}

@@ -38,7 +38,7 @@ export function OfficePage() {
       <PageHeader
         title={t('office.title')}
         icon={DoorOpen}
-        iconColor="#8B5CF6"
+        iconColor="text-accent-purple"
       />
 
       <div className="flex w-full flex-col gap-4 px-4 py-3.5 sm:px-6 sm:py-4">

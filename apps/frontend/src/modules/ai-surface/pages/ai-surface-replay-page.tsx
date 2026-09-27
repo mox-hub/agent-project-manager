@@ -80,7 +80,7 @@ export function AiSurfaceReplayPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-modal flex h-screen w-screen flex-col overflow-x-hidden overflow-y-auto bg-content-bg font-sans text-foreground select-none">
+    <div className="fixed inset-0 z-modal flex h-screen w-screen flex-col overflow-x-hidden overflow-y-auto bg-content-bg font-sans text-foreground select-none" data-ai-page="ai-surface-replay">
       {/* 1. 页头：与盯盘面同构，但把「实时连接态」换成「回放」 */}
       <header className="sticky top-0 z-overlay flex w-full items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
         <div className="flex items-center gap-3">

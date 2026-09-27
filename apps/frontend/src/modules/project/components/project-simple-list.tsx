@@ -164,7 +164,7 @@ export function ProjectSimpleList({
       onItemContextMenu={onItemContextMenu}
       selectionActions={selectionActions}
       renderLeading={(project) => {
-        const color = project.color || '#5E6AD2';
+        const color = project.color || 'var(--color-brand-linear)';
         const activeCount = getProjectExecutionCount?.(project.id) ?? 0;
         return (
           <>

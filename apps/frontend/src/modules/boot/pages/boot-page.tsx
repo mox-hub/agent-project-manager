@@ -57,7 +57,7 @@ export function BootPage() {
 
   return (
     // 溢出走滚动（my-auto 在内容超高时退化为顶对齐+可滚），认证小窗 620 高内不裁切
-    <div className="flex min-h-screen justify-center overflow-y-auto bg-background px-4 py-4">
+    <div className="flex min-h-screen justify-center overflow-y-auto bg-background px-4 py-4" data-ai-page="boot">
       <div className="my-auto w-full max-w-3xl rounded-xl border border-border/60 bg-card/60 p-6 shadow-xs backdrop-blur-sm">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">

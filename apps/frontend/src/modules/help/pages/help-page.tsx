@@ -154,7 +154,7 @@ export function HelpPage() {
   });
 
   return (
-    <PageShell className="overflow-hidden">
+    <PageShell aiPage="help" className="overflow-hidden">
 <div className="flex flex-col h-full overflow-hidden">
       {/* Header - 使用 PageHeader 组件 */}
       <PageHeader
