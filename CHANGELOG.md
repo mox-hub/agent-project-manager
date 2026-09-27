@@ -21,6 +21,20 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 治理脚本修复——`check:docs-sync` 变更集改三源并集（修「工作区有代码在制品时看不见 HEAD 里的文档」误拦）
+
+> 提交 `c126d77e`（1 文件 / +40 / −20）。偏差 25 收口入账时 `check:docs-sync` 报 exit 1「code changed but no docs/governance files were updated」——**而该提交本身就是 `CHANGELOG.md` + 设计台账**，报文与事实相反。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| 根 `scripts/check-doc-sync.mjs` | 门禁可用性（闸门 1 误拦） | 仓库外临时仓 **A/B 探针四场景**（旧版 = `0262de98:scripts/check-doc-sync.mjs`）：工作区纯代码 + HEAD 是文档提交 **旧 1 / 新 0**；纯代码提交且全仓无文档改动 旧 1 / **新 1（未修漏）**；头顶非 ASCII 名文档提交 旧 0 / 新 0；受管文档缺 frontmatter 旧 1 / **新 1（Check 2 未削弱）**。主仓实测修复前 exit 1 → 修复后 `[docs-sync] passed.`（14 份受管文档 frontmatter 全过） | 本 CHANGELOG + 方案台账偏差 33 |
+
+**根因**：`getChangedFiles()` 是「首个非空即返回」的短路链——`if (workingTree) return workingTree…` 使工作区有未提交改动时**只看工作区**，HEAD 里已提交的文档/CHANGELOG 一律不可见。**为什么本仓必然踩**：方案简报明文要求「代理只改代码、CHANGELOG/台账由协调方另行提交」，故代码与文档**本就分成两个 commit**；多代理同工作区又让工作区混入别家的纯代码在制品；而 **CI 走 `GITHUB_BASE_REF` 分支级比对** ⇒ **只有本地坏**，又是一次「本地与 CI 结论分歧」。
+
+**修法**：改为**三源并集**（① `origin/<baseRef>...HEAD` ② 工作区 ③ `HEAD~1...HEAD`）——只**增加**文档侧来源、不删减代码侧来源；「文档改了就算数」正是报文自己写的契约（`in the same PR`），与 CI 口径一致。逐条 git 调用独立 `try/catch`，防任一失败把并集塌成空集（那是从「误报」**退化为静默放行**）。
+
+**未改**：规则口径与阈值、frontmatter 必填字段、Check 3（Tauri 主路径）、受管文档范围。**待裁决（未顺手做）**：是否收紧为「文档必须与代码**同一 commit**」——属口径变更。
+
 ### 前端设计治理——裸三元组当色值收口（21 处 `var(--x)` → `var(--color-x)`，3 文件）
 
 > 提交 `59f799e5`（3 文件 / +20 / −20）。依据 BCD 方案台账偏差 25（第 114 行）「建议批 7 顺手机械修」。
