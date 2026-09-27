@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "pnpm run lint:semantic && pnpm run lint:palette && pnpm run lint:ui-governance && pnpm run lint:tokens && pnpm run lint:registry && pnpm run lint:spacing && pnpm run lint:icons && eslint .",
+    "lint": "pnpm run lint:semantic && pnpm run lint:palette && pnpm run lint:ui-governance && pnpm run lint:tokens && pnpm run lint:registry && pnpm run lint:spacing && pnpm run lint:icons && pnpm run lint:layers && pnpm run lint:duplicate && eslint .",
     "lint:palette": "node ./scripts/check-palette.mjs",
     "lint:semantic": "node ./scripts/check-semantic-classes.mjs",
     "lint:ui-governance": "node ./scripts/check-ui-governance.mjs",
@@ -15,6 +15,8 @@
     "lint:spacing": "node ./scripts/check-spacing-governance.mjs",
     "lint:undefined": "node ./scripts/check-undefined-classes.mjs",
     "lint:icons": "node ./scripts/check-icons.mjs",
+    "lint:layers": "node ./scripts/check-layers.mjs",
+    "lint:duplicate": "node ./scripts/check-duplicate.mjs",
     "type-check": "tsc -b --pretty false",
     "preview": "vite preview",
     "test": "vitest run",

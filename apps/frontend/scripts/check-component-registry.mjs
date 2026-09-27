@@ -169,9 +169,229 @@ for (const entry of registryEntries) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// §四 4.2 ②：canonical 且消费方 = 0 → 失败（2026-09-27 批 5 新增）
+//
+// 这是 §19.3 轴二 LU（Library Utilization）的机器强制：「有真实消费方的 canonical 组件数 ÷
+// canonical 组件总数」，目标是逼问「components/ui/ 里每一个组件，谁在用？」。
+//
+// 「真实消费方」口径**严格照抄 §19.3**：指 `src/modules/**` 或 `src/shared/**` 中
+// **非测试、非设计系统页**的文件对该组件的引用。
+//
+// ⚠️ 三条口径要点（都影响结果，逐条记明以防被误读）：
+//   1. 原子层**内部**互相引用（ui/a.tsx 用 ui/b.tsx）**不算**真实消费方——§19.3 只认
+//      modules/shared。这正是 `internal` 五态存在的理由：仅被其他 ui 组件消费的组件
+//      应登记为 `internal`，而不是占着 `canonical` 把自己算进 LU 分母。
+//   2. `src/main.tsx`（app 入口）不在 modules/shared 内，**不算**。故「只被入口引用」的
+//      组件会被判 0——报告里会显式标注这种情况，避免被误当成孤儿件删掉。
+//   3. 画廊自证被排除（design-system 模块整目录），§19.3 明写「防止画廊自证」。
+//
+// 依赖解析：把 `@/x` 与 `./x` / `../x` 归一到 `src/...` 形式的无扩展名路径再比对，
+// 并支持 `index.tsx` barrel（`import … from '@/shared/components/create-dialog'` 要能命中
+// `…/create-dialog/index.tsx`）。**不用正则直接匹配文件基名**——`menu-surface.ts` 这类
+// 非 `.tsx` 文件与 barrel 都会漏（实测：早期正则版把 `menu-surface` 误判为「零消费方」）。
+//
+// ## 存量 vs 新增（新增即拦，存量放行）
+//
+// 存量条目**不许删**（人类铁律：删除已被叫停、待裁决），故只报告不阻断；
+// 任何不在基线内的「canonical 且消费方 = 0」= 新增 → 退出码 1。
+// 基线键 = **组件名**（file/行号都会随搬迁漂移，组件名在 registry 内唯一且稳定）。
+// ---------------------------------------------------------------------------
+const SRC_DIR = join(PKG_ROOT, "src");
+const toPosix = (p) => p.split("\\").join("/");
+
+/** registry 的 `file` 是 src 相对路径，但 `ui/` 实际位于 `src/components/ui/` */
+const toSrcPath = (file) => (file.startsWith("ui/") ? `src/components/${file}` : `src/${file}`);
+
+/** 归一：消 `.` / `..`，去掉 `.ts` / `.tsx` 扩展名 */
+function normalizePath(p) {
+  const parts = [];
+  for (const seg of p.split("/")) {
+    if (seg === "" || seg === ".") continue;
+    if (seg === "..") parts.pop();
+    else parts.push(seg);
+  }
+  return parts.join("/").replace(/\.tsx?$/, "");
+}
+
+function walkFiles(dir, out = []) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) walkFiles(p, out);
+    else out.push(p);
+  }
+  return out;
+}
+
+const SRC_PREFIX = toPosix(SRC_DIR) + "/";
+const srcFiles = walkFiles(SRC_DIR)
+  .map(toPosix)
+  .filter((f) => /\.tsx?$/.test(f))
+  .filter((f) => !/\.(test|spec)\.tsx?$/.test(f))
+  .filter((f) => !/\/(__mocks__|__fixtures__|test-utils)\//.test(f))
+  .map((f) => f.replace(SRC_PREFIX, "src/"));
+
+const isGallery = (f) => f.startsWith("src/modules/design-system/");
+const inModulesOrShared = (f) => f.startsWith("src/modules/") || f.startsWith("src/shared/");
+
+const specCache = new Map();
+function specifiersOf(file) {
+  if (!specCache.has(file)) {
+    const source = readFileSync(join(PKG_ROOT, file), "utf8");
+    const specs = new Set();
+    const re = /(?:from\s*|import\s*\(\s*)['"]([^'"]+)['"]/g;
+    let m;
+    while ((m = re.exec(source))) specs.add(m[1]);
+    specCache.set(file, specs);
+  }
+  return specCache.get(file);
+}
+
+function resolveSpecifier(spec, fromFile) {
+  if (spec.startsWith("@/")) return normalizePath(`src/${spec.slice(2)}`);
+  if (spec.startsWith("./") || spec.startsWith("../")) {
+    return normalizePath(`${normalizePath(fromFile).split("/").slice(0, -1).join("/")}/${spec}`);
+  }
+  return null; // 裸包名（react 等）不是内部引用
+}
+
+// 反向索引：归一后的「被导入目标路径」→ 引用它的文件列表。
+// 一次遍历建索引，避免「每个 registry 条目 × 每个 src 文件」的 O(N×M) 扫描
+// （299 条 canonical × ~1900 文件，实测会到秒级）。
+const importersByTarget = new Map();
+for (const f of srcFiles) {
+  for (const spec of specifiersOf(f)) {
+    const resolved = resolveSpecifier(spec, f);
+    if (!resolved) continue;
+    if (!importersByTarget.has(resolved)) importersByTarget.set(resolved, []);
+    importersByTarget.get(resolved).push(f);
+  }
+}
+
+function consumersOf(entry, accept) {
+  const selfNoExt = normalizePath(toSrcPath(entry.file));
+  const targets = [selfNoExt];
+  if (selfNoExt.endsWith("/index")) targets.push(selfNoExt.slice(0, -"/index".length));
+  const out = new Set();
+  for (const target of targets) {
+    for (const f of importersByTarget.get(target) ?? []) {
+      if (!accept(f)) continue;
+      if (normalizePath(f) === selfNoExt) continue; // 自己不算自己的消费方
+      out.add(f);
+    }
+  }
+  return [...out];
+}
+
+/**
+ * 存量基线（2026-09-27 实测 4 条）。全部「只报告不阻断」，修法为**登记改判**（改五态）
+ * 或补真实消费方，都不是删除。
+ */
+const LU_BASELINE = new Map([
+  [
+    "global-loading-state",
+    "仅被 app 入口 src/main.tsx 引用（不在 modules/shared 内 ⇒ 按 §19.3 口径判 0）",
+  ],
+  [
+    "loading-overlay",
+    "仅被原子层内部（ui/global-loading-state.tsx）与 app 入口引用 ⇒ 按 §19.3 表应改判 internal",
+  ],
+  ["mock-badge", "仅被 app 入口 src/main.tsx 引用 ⇒ 同上"],
+  [
+    "task-detail-drawer",
+    "全库零引用（实测，仅注释中提及）——canonical 但无消费方，属真·孤儿件",
+  ],
+]);
+
+const canonicalEntries = registryEntries.filter((e) => e.status === "canonical");
+const zeroConsumer = [];
+for (const entry of canonicalEntries) {
+  const strict = consumersOf(entry, (f) => !isGallery(f) && inModulesOrShared(f));
+  if (strict.length > 0) continue;
+  // 供报告用：放宽到全 src（含 app 入口 / 原子层内部），说明「为什么判 0」
+  const relaxed = consumersOf(entry, (f) => !isGallery(f));
+  zeroConsumer.push({ entry, relaxed });
+}
+
+const luExisting = zeroConsumer.filter(({ entry }) => LU_BASELINE.has(entry.name));
+const luAdded = zeroConsumer.filter(({ entry }) => !LU_BASELINE.has(entry.name));
+const luStale = [...LU_BASELINE.keys()].filter(
+  (name) => !zeroConsumer.some(({ entry }) => entry.name === name)
+);
+
+for (const { entry, relaxed } of luAdded) {
+  errors.push(
+    `registry.ts: canonical 组件 '${entry.name}'（${entry.file}）**消费方 = 0**（§19.3 轴二 LU）。\n` +
+      `  - 「真实消费方」= src/modules/** 或 src/shared/** 中非测试、非设计系统页的引用（§19.3）。\n` +
+      `  - 放宽到全 src 后命中：${relaxed.length > 0 ? relaxed.join(", ") : "无（确为孤儿件）"}\n` +
+      `  - 处置（§19.3 五态表，**不是删除**）：接上真实消费方、或改判 standby/internal/review。`
+  );
+}
+
 if (errors.length > 0) {
   console.error("Component registry check failed:\n" + errors.join("\n\n"));
   process.exit(1);
+}
+
+// ---------------------------------------------------------------------------
+// §四 4.2 ③：review / deprecated 逾期 —— **报告项，刻意不失败**
+//
+// ⚠️ 方案 §4.2 ③ 原文是「`deprecated` / `review` 逾期 → 失败」。**本脚本有意只报告**：
+// 该口径以门禁**向删除施压**，而「组件仍然不删除，但是要在 design-system 页面标记，
+// 我看过后再删」是人类裁决 ⇒ 删除已叫停、逾期处理属待裁决项（方案台账偏差 29）。
+// E 类批 4 已按同一理由未实现 ③ 的失败分支（见上方「② registry.ts 元数据完整性」注释），
+// 批 5 沿用并向上升级为「逾期可见化」：报告逾期条数与清单，把裁决权交回人。
+// ---------------------------------------------------------------------------
+const TODAY = new Date();
+const daysOverdue = (dateStr) => {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return null;
+  return Math.floor((TODAY.getTime() - d.getTime()) / 86400000);
+};
+
+const overdue = [];
+for (const entry of registryEntries) {
+  const due = entry.status === "review" ? entry.reviewBy : entry.status === "deprecated" ? entry.expiresAt : null;
+  const late = daysOverdue(due);
+  if (late !== null && late > 0) overdue.push({ entry, due, late });
+}
+
+// ---------------------------------------------------------------------------
+// §四 4.2 ④：设计系统页覆盖率（lint:gallery）—— **本轮不做门禁，只报告当前覆盖数**
+//
+// 方案 §5.1 曾记「覆盖 77/96」并列出 19 个未收录件；该页此后被批 2 改过、registry 也已增长。
+// 本轮先把**实测值**报出来，作为转 error 前的基线；门禁本身留待画廊改为
+// 「按 registry 遍历渲染」（registry.ts 头注宣称的恒 100% 形态）后再落地——
+// 否则手写清单与 registry 的漂移会每天假红（这正是该页 6255 行手写 import 的结构问题）。
+// ---------------------------------------------------------------------------
+const GALLERY_PAGE = join(
+  PKG_ROOT,
+  "src",
+  "modules",
+  "design-system",
+  "pages",
+  "design-system-page.tsx"
+);
+let galleryCoverage = null;
+try {
+  const pageSource = readFileSync(GALLERY_PAGE, "utf8");
+  const importedStems = new Set(
+    [...pageSource.matchAll(/from\s+['"]@\/components\/ui\/([a-z0-9-]+)['"]/g)].map((m) => m[1])
+  );
+  const uiEntries = registryEntries.filter((e) => e.file.startsWith("ui/"));
+  const mustShow = uiEntries.filter((e) => e.status !== "internal"); // internal 按 §19.3 表豁免
+  const covered = mustShow.filter((e) =>
+    importedStems.has(e.file.slice(3).replace(/\.tsx?$/, ""))
+  );
+  galleryCoverage = {
+    covered: covered.length,
+    total: mustShow.length,
+    missing: mustShow.filter((e) => !covered.includes(e)),
+  };
+} catch {
+  // 页面文件缺失不阻断（本项是报告项）：显式说明而非静默跳过
+  galleryCoverage = null;
 }
 
 console.log(
@@ -179,3 +399,38 @@ console.log(
     `registry.ts 登记 ${registryEntries.length} 条（canonical/standby/internal/review/deprecated 五态词表校验通过）；` +
     `review ${reviewEntries.length} 条元数据完整；deprecated ${deprecatedEntries.length} 条。`
 );
+
+// —— ② 消费方对账（报告部分）——
+console.log(
+  `\n[§4.2 ② 消费方对账] canonical ${canonicalEntries.length} 条中「消费方 = 0」${zeroConsumer.length} 条` +
+    `（新增 ${luAdded.length} → 已失败；存量基线 ${luExisting.length} → 报告项）。`
+);
+for (const { entry, relaxed } of luExisting) {
+  console.log(`  ○ ${entry.name}（${entry.file}）—— ${LU_BASELINE.get(entry.name)}`);
+  if (relaxed.length > 0) console.log(`      放宽到全 src 命中：${relaxed.join(", ")}`);
+}
+if (luStale.length > 0) {
+  console.log(`  ⚠ 基线提示：${luStale.join(", ")} 已不再命中，可从 LU_BASELINE 删除。`);
+}
+
+// —— ③ 逾期报告（不失败）——
+console.log(
+  `\n[§4.2 ③ 逾期报告 · 报告项不阻断] review/deprecated 逾期 ${overdue.length} 条` +
+    `（刻意不失败：向删除施压的口径已被人类叫停，见脚本内注释）。`
+);
+for (const { entry, due, late } of overdue) {
+  console.log(`  ○ ${entry.status} '${entry.name}' 期限 ${due} 已逾期 ${late} 天（${entry.file}）`);
+}
+
+// —— ④ 画廊覆盖率报告（本轮不做门禁）——
+if (galleryCoverage) {
+  const pct = ((galleryCoverage.covered / galleryCoverage.total) * 100).toFixed(1);
+  console.log(
+    `\n[§4.2 ④ 画廊覆盖率 · 报告项，本轮不做门禁] 设计系统页覆盖 ` +
+      `${galleryCoverage.covered}/${galleryCoverage.total} = ${pct}%（已排除 internal）；` +
+      `未收录 ${galleryCoverage.missing.length} 个。`
+  );
+  for (const e of galleryCoverage.missing) console.log(`  ○ ${e.name}（${e.status}，${e.file}）`);
+} else {
+  console.log("\n[§4.2 ④ 画廊覆盖率] 跳过：未找到设计系统页源文件。");
+}
