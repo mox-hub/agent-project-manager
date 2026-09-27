@@ -43,8 +43,10 @@ const defaultComponents: MDXComponentsType = {
     />
   ),
   hr: () => <hr className="my-8 border-border" />,
+  // `alt=""` 写在 `{...props}` 之前：既给「无 alt 的渲染路径」一个显式装饰性兜底
+  // （屏幕阅读器跳过，而不是朗读文件名），又保证 MDX 透传的真实 alt 优先。
   img: (props: ImageProps) => (
-    <img className="rounded-lg max-w-full my-4" loading="lazy" {...props} />
+    <img alt="" className="rounded-lg max-w-full my-4" loading="lazy" {...props} />
   ),
 };
 

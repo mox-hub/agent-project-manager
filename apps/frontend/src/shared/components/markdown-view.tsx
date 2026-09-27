@@ -104,8 +104,10 @@ const components: Components = {
     );
   },
   hr: () => <hr className="my-3 border-border" />,
+  // `alt=""` 写在 `{...props}` 之前：既给「无 alt 的渲染路径」一个显式装饰性兜底
+  // （屏幕阅读器跳过，而不是朗读文件名），又保证 react-markdown 透传的真实 alt 优先。
   img: (props) => (
-    <img {...props} className="my-2 max-w-full rounded-lg" loading="lazy" />
+    <img alt="" {...props} className="my-2 max-w-full rounded-lg" loading="lazy" />
   ),
 };
 
