@@ -647,6 +647,7 @@
     "runPanel.kindSuspended": "Workflow awaiting confirmation",
     "runPanel.kindCancelled": "Workflow cancelled",
     "runPanel.phasesDetail": "{{count}} phases",
+    "runPanel.agentsDetail": "{{count}} subagents",
     "runPanel.activeDetail": "{{count}} active",
     "runPanel.close": "Close",
     "runPanel.outputTitle": "Run artifacts",
@@ -661,7 +662,18 @@
     "runPanel.stats.durationShort": "{{s}}s",
     "runPanel.previewTitle": "Phases",
     "runPanel.previewHint": "Static phase preview of the definition. Hit Run (top-right) to start an execution and watch live phase progress, subagent status and artifacts here.",
-    "grammarVersionBadge": "Grammar version (v1=linear chain, v2=node tree)"
+    "grammarVersionBadge": "Grammar version (v1=linear chain, v2=node tree)",
+    "nodeType.llm": "AI step",
+    "nodeType.agent": "Subagent",
+    "nodeType.human": "Confirmation",
+    "nodeType.human-confirm": "Confirmation",
+    "nodeType.action": "Action",
+    "nodeType.condition": "Condition",
+    "nodeType.fan-out": "Fan-out",
+    "nodeType.loop": "Loop",
+    "nodeType.wait": "Wait",
+    "nodeType.http": "HTTP request",
+    "nodeType.unknown": "Step"
   },
   "aiSlot": {
     "badge": "AI Explain",

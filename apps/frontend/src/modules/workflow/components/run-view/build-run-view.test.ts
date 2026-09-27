@@ -108,12 +108,37 @@ describe('buildRunView', () => {
     expect(mk(['succeeded', 'succeeded'])).toBe('done');
   });
 
-  it('pending 站（无 journal 行）计数为 0 且不出药丸', () => {
+  it('pending 站回填静态模板药丸（未执行预览：容器站出子节点、叶子站出自身）', () => {
     const view = buildRunView(GRAPH, [row('prep', 'succeeded')], {});
+    // 叶子站 report：无 journal → 自身一条静态药丸（pending，label=站 title）
     const report = view.stations[4];
     expect(report.status).toBe('pending');
     expect(report.total).toBe(0);
-    expect(report.pills).toEqual([]);
+    expect(report.pills).toEqual([
+      {
+        key: 'report:static:report',
+        nodeId: 'report',
+        label: '汇总报告',
+        type: 'agent',
+        status: 'pending',
+        attempt: 0,
+      },
+    ]);
+    // 容器站 review：无 journal → children 模板药丸
+    const review = view.stations[1];
+    expect(review.pills.map((p) => p.label)).toEqual(['评审员 A', '评审员 B']);
+    expect(review.pills.every((p) => p.status === 'pending')).toBe(true);
+  });
+
+  it('有 journal 行的站不混入静态模板药丸（实际执行为准）', () => {
+    const view = buildRunView(
+      GRAPH,
+      [row('rv-a@i0', 'succeeded')],
+      {},
+    );
+    const review = view.stations[1];
+    // 只有 journal 药丸（rv-a），静态模板（rv-b）不回填
+    expect(review.pills.map((p) => p.label)).toEqual(['评审员 A']);
   });
 
   it('统计：时长/阶段/节点执行/子代理（agent 裸 id 去重）', () => {

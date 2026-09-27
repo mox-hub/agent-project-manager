@@ -205,13 +205,17 @@ export function WorkflowDetailPage() {
 
   // v2 默认态：静态阶段预览（graphSummary 投影 + 空 journal → 全 pending 站）+ 触发入口
   const [triggerOpen, setTriggerOpen] = useState(false);
-  const staticStations = useMemo(
+  const staticView = useMemo(
     () =>
       isV2Doc && workflow?.stepsSummary
-        ? buildRunView(workflow.stepsSummary as unknown as V2NodeSummary[], [], {}).stations
-        : [],
+        ? buildRunView(workflow.stepsSummary as unknown as V2NodeSummary[], [], {})
+        : null,
     [isV2Doc, workflow?.stepsSummary],
   );
+  const staticStations = staticView?.stations ?? [];
+  const staticAgentCount = new Set(
+    staticStations.flatMap((s) => s.pills).filter((p) => p.type === 'agent').map((p) => p.nodeId),
+  ).size;
 
   return (
     <PageShell className="overflow-hidden" aiPage="workflow.detail">
@@ -305,6 +309,14 @@ export function WorkflowDetailPage() {
                     >
                       v2
                     </Badge>
+                    <span className="ml-auto text-11 text-muted-foreground">
+                      {staticView
+                        ? t('workflow.runPanel.phasesDetail', { count: staticView.stats.phases })
+                        : ''}
+                      {staticView && staticAgentCount > 0
+                        ? ` · ${t('workflow.runPanel.agentsDetail', { count: staticAgentCount })}`
+                        : ''}
+                    </span>
                   </div>
                   <WorkflowRunTimeline stations={staticStations} />
                   <p className="text-11 leading-relaxed text-muted-foreground">

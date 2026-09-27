@@ -270,11 +270,11 @@ describe('WorkflowDetailPage', () => {
 
     renderWithProviders(<WorkflowDetailPage />, ['/app/workflows/wf-v2']);
 
-    // 预览卡：静态站列（graphSummary 投影）而非空画布
+    // 预览卡：静态站列 + 未执行模板药丸（站头与药丸同名双渲染）
     await waitFor(() => {
       expect(screen.getByText('workflow.runPanel.previewTitle')).toBeTruthy();
-      expect(screen.getByText('准备演示代码')).toBeTruthy();
-      expect(screen.getByText('人工确认')).toBeTruthy();
+      expect(screen.getAllByText('准备演示代码').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('人工确认').length).toBeGreaterThan(0);
     });
     // 触发入口（HeaderActionButton aria-label，i18n 表译为 Run）
     expect(screen.getByRole('button', { name: /^Run$/ })).toBeTruthy();

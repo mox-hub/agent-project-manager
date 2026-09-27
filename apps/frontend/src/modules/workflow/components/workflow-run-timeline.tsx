@@ -54,6 +54,7 @@ const PILL_TAIL: Record<string, { icon: LucideIcon; className: string; spin?: bo
   failed: { icon: XCircle, className: 'text-accent-red' },
   running: { icon: CircleDashed, className: 'text-accent-blue', spin: true },
   waiting: { icon: UserCheck, className: 'text-accent-yellow' },
+  pending: { icon: CircleDashed, className: 'text-muted-foreground/60' },
   skipped: { icon: CircleDashed, className: 'text-muted-foreground' },
 };
 
@@ -68,9 +69,28 @@ function PillTailIcon({ status }: { status: string }) {
   );
 }
 
+/** 节点类型 → 显示名键（静态模板药丸 label 缺省回落） */
+function nodeTypeLabelKey(type: string): string {
+  const known = new Set([
+    'llm',
+    'agent',
+    'human',
+    'human-confirm',
+    'action',
+    'condition',
+    'fan-out',
+    'loop',
+    'wait',
+    'http',
+  ]);
+  return known.has(type) ? `workflow.nodeType.${type}` : 'workflow.nodeType.unknown';
+}
+
 function RunPillRow({ pill }: { pill: RunPill }) {
+  const { t } = useTranslation();
   const meta = NODE_TYPE_META[pill.type] ?? FALLBACK_META;
   const TileIcon = meta.icon;
+  const label = pill.label ?? t(nodeTypeLabelKey(pill.type));
   return (
     <div
       className="flex h-8 min-w-0 items-center gap-1.5 rounded-full border border-border bg-card px-2"
@@ -83,7 +103,14 @@ function RunPillRow({ pill }: { pill: RunPill }) {
       >
         <TileIcon className="size-2.5" />
       </span>
-      <span className="min-w-0 flex-1 truncate text-xs">{pill.label}</span>
+      <span
+        className={cn(
+          'min-w-0 flex-1 truncate text-xs',
+          pill.status === 'pending' && 'text-muted-foreground',
+        )}
+      >
+        {label}
+      </span>
       <PillTailIcon status={pill.status} />
     </div>
   );

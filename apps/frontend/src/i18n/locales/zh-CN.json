@@ -647,6 +647,7 @@
     "runPanel.kindSuspended": "工作流等待确认",
     "runPanel.kindCancelled": "工作流已取消",
     "runPanel.phasesDetail": "{{count}} 个阶段",
+    "runPanel.agentsDetail": "{{count}} 个子代理",
     "runPanel.activeDetail": "{{count}} 个执行中",
     "runPanel.close": "关闭",
     "runPanel.outputTitle": "运行产物",
@@ -661,7 +662,18 @@
     "runPanel.stats.durationShort": "{{s}} 秒",
     "runPanel.previewTitle": "流程阶段",
     "runPanel.previewHint": "以上为流程定义的静态阶段图。点击右上角「运行」发起一次执行，此处将实时展示各阶段进度、子代理状态与产物回流。",
-    "grammarVersionBadge": "文法版本（v1=线性链，v2=节点树）"
+    "grammarVersionBadge": "文法版本（v1=线性链，v2=节点树）",
+    "nodeType.llm": "AI 步骤",
+    "nodeType.agent": "子代理",
+    "nodeType.human": "人工确认",
+    "nodeType.human-confirm": "人工确认",
+    "nodeType.action": "产品动作",
+    "nodeType.condition": "条件分支",
+    "nodeType.fan-out": "并行",
+    "nodeType.loop": "循环",
+    "nodeType.wait": "等待",
+    "nodeType.http": "HTTP 请求",
+    "nodeType.unknown": "步骤"
   },
   "aiSlot": {
     "badge": "AI 解释",

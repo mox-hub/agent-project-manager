@@ -27,13 +27,14 @@ export type StationStatus =
   | 'waiting'
   | 'skipped';
 
-/** 站下执行药丸（一次 journal 执行 = 一枚） */
+/** 站下执行药丸（一次 journal 执行 = 一枚；未执行站回填静态模板药丸） */
 export interface RunPill {
-  /** journalKey（run 内唯一） */
+  /** journalKey（run 内唯一）；静态模板药丸为 `{stationId}:static:{nodeId}` */
   key: string;
   /** 裸节点 id */
   nodeId: string;
-  label: string;
+  /** 执行显示名（journal=节点 title/裸 id）；静态模板药丸缺省时组件层回落类型名 */
+  label?: string;
   type: string;
   status: string;
   attempt: number;
@@ -150,6 +151,24 @@ export function buildRunView(
         error: r.error?.message ?? null,
       };
     });
+    // 未执行站回填静态模板药丸（用户裁决 2026-09-27：预览即见子 agent/脚本载体，
+    // 未执行显示未执行态；一旦有 journal 行则以实际执行为准，不混排）
+    if (pills.length === 0) {
+      const templateNodes =
+        root.type === 'condition'
+          ? [...(root.then ?? []), ...(root.else ?? [])]
+          : (root.children ?? (isContainer ? [] : [root]));
+      for (const child of templateNodes) {
+        pills.push({
+          key: `${root.id}:static:${child.id}`,
+          nodeId: child.id,
+          label: child.title,
+          type: child.type,
+          status: 'pending',
+          attempt: 0,
+        });
+      }
+    }
 
     const total = new Set(own.map((r) => r.nodeId)).size;
     const settled = new Set(
