@@ -5,6 +5,24 @@
  * 全量 type-check + lint 已移至 .husky/pre-push。
  * 设计宪法（docs/design/PRINCIPLES.md）的四个治理脚本同样在 pre-commit 把关：
  * 它们都是纯文本全库扫描（单个 0.2~0.6s，四个合计约 1.5s），能跟上提交节奏。
+ *
+ * ⚠️ eslint 一律带 `--no-error-on-unmatched-pattern`。触发条件经**成对实测**厘清如下：
+ *
+ *   护栏崩溃点**不是**「删除文件」——lint-staged 默认用 `git diff --diff-filter=ACMR`
+ *   取暂存列表（见 `node_modules/lint-staged/lib/getDiffCommand.js`），**D 已被滤掉**，
+ *   删除类提交不会把路径传给 eslint。
+ *
+ *   真正的触发条件是**「已暂存、随后从工作区移除」**（`git status` 的 `AD`）：A 在
+ *   diff-filter 之内，所以该路径仍被原样传给任务，而它此刻在磁盘上并不存在。
+ *   探针复现（暂存 `__probe.ts` → `rm` → 提交）：lint-staged 确实把该不存在路径
+ *   交给了 eslint，同时列进了两个任务。
+ *
+ *   成对实测（ESLint 9.39.5，绝对路径形态）：
+ *     eslint --fix <已不存在路径>                          → exit 1（Oops! Something went wrong!）
+ *     eslint --fix --no-error-on-unmatched-pattern <同上>  → exit 0
+ *
+ *   ⚠️ 本条注释在批 2 曾被写成「删除已跟踪 .ts 会被 pre-commit 拦下」——该推断
+ *   已被上述实测**证伪**（删除提交实测正常通过），在此更正而非静默改写。
  */
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,9 +37,9 @@ const designCheck = (name) =>
 
 export default {
   'apps/server/**/*.ts': (files) =>
-    `pnpm --filter server exec eslint --fix ${files.map((f) => `"${f}"`).join(' ')}`,
+    `pnpm --filter server exec eslint --fix --no-error-on-unmatched-pattern ${files.map((f) => `"${f}"`).join(' ')}`,
   'apps/frontend/**/*.{ts,tsx}': (files) =>
-    `pnpm --filter frontend exec eslint --fix ${files.map((f) => `"${f}"`).join(' ')}`,
+    `pnpm --filter frontend exec eslint --fix --no-error-on-unmatched-pattern ${files.map((f) => `"${f}"`).join(' ')}`,
   // 设计治理（宪法 §11 豁免与修订）：frontend src 一旦变更即跑四个设计脚本。
   // 四个脚本都是「全库扫描」语义（不按暂存文件过滤），故用函数形态返回固定命令——
   // lint-staged 只对字符串任务追加文件参数（getSpawnedTasks.js），函数任务原样执行。
