@@ -131,7 +131,10 @@ apps/desktop/electron-resources/
 .zcode/
 
 # Local Documents (not version controlled)
-docs/
+# 例外：docs/design/ 是设计宪法（PRINCIPLES.md）所在地，必须入库受版本控制
+# （宪法若不在 git 里，则无评审、无历史、无法回滚，无法作为「最高真相源」）
+docs/*
+!docs/design/
 
 # One-off integration diagnostics & log dumps
 linear-tasks.md

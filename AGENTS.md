@@ -24,7 +24,9 @@ apm_sync_mode: managed
 >
 > 三真相源：**代码实现** = 运行时真相；**docs/02-架构设计/** = 开发时真相；**PRD + 能力清单** = 需求真相。冲突时停止开发、人工裁决。
 >
-> **本文档自身受 `scripts/check-doc-sync.mjs` 管理**：必须保留 YAML frontmatter（`title`/`description`/`status`）；`docs/*` 变更需与本文件或 `CHANGELOG.md` 同 PR 提交。
+> **本文档自身受 `scripts/check-doc-sync.mjs` 管理**：必须保留 YAML frontmatter（`title`/`description`/`status`）；`docs/design/` 变更需与本文件或 `CHANGELOG.md` 同 PR 提交。
+>
+> **文档版本控制范围**：`docs/` 整体不入库（`.gitignore`），**唯一例外是 `docs/design/`**——设计宪法 `PRINCIPLES.md` 在那里，必须受版本控制（不进 git 的文档无评审、无历史、无法回滚，不能作为「最高真相源」）。
 
 ## 一、会话启动清单
 
