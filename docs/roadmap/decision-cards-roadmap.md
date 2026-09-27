@@ -1,3 +1,10 @@
+---
+title: decision-cards-roadmap.md - 决策卡（卡片文法）路线图
+description: 13 种决策卡的后端需求、关键节点与批次规划——批次 ①② 已落地，本文承载批次 ③④ 及其前置缺口
+status: active
+scope: apps/server, apps/frontend
+---
+
 # 决策卡（卡片文法）路线图
 
 > 13 种决策卡的后端需求、关键节点与批次规划。批次 ①② 已于 2026-09-02 落地

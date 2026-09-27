@@ -1,3 +1,10 @@
+---
+title: api-contract-proposals.md - API 契约提案（analytics / delivery / search / dashboard）
+description: 前端侧已按本提案落地、契约待后端确认的四个页面接口草案——字段以本文为准，后端确认或修订后同步 api 类型与 msw 生成器
+status: draft
+scope: apps/frontend, apps/server
+---
+
 # API 契约提案：analytics / delivery / search / dashboard（待后端确认）
 
 > **状态更新（2026-08-30 第三版）**：新增 §4 Dashboard——全局仪表盘按本提案完成前端侧落地

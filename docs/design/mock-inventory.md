@@ -1,3 +1,10 @@
+---
+title: mock-inventory.md - 组件层 Mock 盘点（批 3）
+description: 组件层/页面层存量 mock 的清单与迁移去向——宪法 §9 要求 mock 只许活在 msw handler 层，本文跟踪尚未下沉的位置
+status: reference
+scope: apps/frontend
+---
+
 # 组件层 Mock 盘点（批 3）
 
 宪法 §9：mock 只许活在 msw handler 层。下表是当前**组件层/页面层**存量 mock 的清单。

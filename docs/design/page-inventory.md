@@ -1,3 +1,10 @@
+---
+title: page-inventory.md - 页面盘点表（批 4 进度看板）
+description: 逐路由登记页面的 UI 代际、数据真实/mock 与宪法 §1 密度达标情况，是前端改造批次的进度看板
+status: reference
+scope: apps/frontend
+---
+
 # 页面盘点表（批 4 进度看板）
 
 列含义：UI = 新UI（装配原语+ui 基础组件）/ 旧UI（历史自生成组件）；数据 = 真实 / mock（见 [mock-inventory.md](./mock-inventory.md)）；密度 = 宪法 §1 高密区标准达标情况。
