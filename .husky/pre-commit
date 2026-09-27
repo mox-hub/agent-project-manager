@@ -1,3 +1,11 @@
 #!/usr/bin/env sh
 # pre-commit hook: 仅对暂存文件跑 eslint --fix（见 lint-staged.config.mjs）
-pnpm exec lint-staged
+#
+# --max-arg-length 6000（win32 真实上限 8191，留 ~27% 余量）：
+# lint-staged 自行探测到的上限是 8191，但它对「函数任务」的长度估算**不含引号与转义开销**
+# （lib/getSpawnedTasks.js: `isFn ? resolvedCommand : resolvedCommand + ' ' + files.join(' ')`），
+# 而实际命令行还要叠加 per-file 引号、cmd.exe 前缀与 pnpm 的二次 spawn。于是存在一段
+# 「估算说没超、实际已超」的灰区：实测 86 个文件时估算 ~7.8k（判定不切分），真实命令行
+# 越过 8191 → 报「命令行太长」。文件更多时反而没事（估算也超了，触发二分切分）。
+# 显式压低上限可让切分提前介入，消除该灰区；正常提交（个位数文件）不受影响。
+pnpm exec lint-staged --max-arg-length 6000
