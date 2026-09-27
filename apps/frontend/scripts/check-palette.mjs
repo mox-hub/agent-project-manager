@@ -72,7 +72,13 @@ const BRAND_EXEMPT = (relUnix) => relUnix.endsWith("components/brand/logo.tsx");
 // 技术豁免·假阳性：这些命中是 recharts 的 **CSS 属性选择器**（`[stroke='#ccc']`），
 // 属于「选择 recharts 自己吐出的 DOM」的锚点，改成 token 会让主题对齐失效。
 const TECH_FALSE_POSITIVE_EXEMPT = (relUnix) => relUnix.endsWith("components/ui/chart.tsx");
-// 生成文件豁免：生成物不可手改（改了下一次生成即被覆盖）
+// 生成文件豁免：生成物不可手改（改了下一次生成即被覆盖）。
+// 注（2026-09-27 补注释感知后）：本豁免当前**已无实际命中**——api-types.gen.ts 里
+// 那 4 处 `#5E6AD2/#8B5CF6` 全部在 `/** @example ... */` JSDoc 注释内，补注释感知后
+// 不再计入。**保留而非删除**是刻意：这是唯一一道「整文件放行」型豁免，一旦后端
+// openapi 变更让生成物在**代码位置**带上色值字面量，`file:token` 白名单对生成物
+// 无法维护（下次生成即覆盖），删掉它等于给不出可登记的逃逸口。若日后确认生成物
+// 永不会在代码位置出现色值，应连同这条一并删除（属裁决项，勿静默删）。
 const GENERATED_EXEMPT = (relUnix) =>
   relUnix.startsWith("infrastructure/api-client/generated/");
 
@@ -212,6 +218,58 @@ const INLINE_COLOR_LEGACY_ALLOWLIST = new Set([
   "modules/auth/components/auth-visual-card.tsx:rgba(248, 250, 252, 0.95)",
 ]);
 
+// 注释感知（2026-09-27 补，批 7a 扩面后暴露）：
+// C2/C3 扩为全库生效、且本脚本进了 pre-commit（lint-staged）之后，
+// 「注释里写字面量」会直接把提交拦下——`// 修复 #1234 的回归` 命中 C3 的 hex 正则、
+// `// 原 bg-white 已换成 bg-muted` 命中 C2。而注释不是出货代码，写清楚「原来错在哪、
+// 为什么这么改」恰恰是「文档即契约」要求作者做的事，拦它等于惩罚写清原因的注释。
+// 与 check-spacing-governance.mjs 的同名实现保持一致（那边已因连续踩中 4 次而加）。
+// 保守实现：只算注释区间，命中落在区间内才跳过；字符串/代码一律照常扫描，
+// 故误判方向只会是「多报」而非「漏报」。
+function commentRanges(src) {
+  const ranges = [];
+  const n = src.length;
+  let i = 0;
+  let quote = null;
+  let lineCommentAt = -1;
+  let blockCommentAt = -1;
+  while (i < n) {
+    const c = src[i];
+    const c2 = i + 1 < n ? src[i + 1] : "";
+    if (quote !== null) {
+      if (c === "\\") { i += 2; continue; }
+      if (c === quote) quote = null;
+      i += 1;
+      continue;
+    }
+    if (lineCommentAt >= 0) {
+      if (c === "\n") { ranges.push([lineCommentAt, i]); lineCommentAt = -1; }
+      i += 1;
+      continue;
+    }
+    if (blockCommentAt >= 0) {
+      if (c === "*" && c2 === "/") {
+        ranges.push([blockCommentAt, i + 2]);
+        blockCommentAt = -1;
+        i += 2;
+        continue;
+      }
+      i += 1;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === "`") { quote = c; i += 1; continue; }
+    if (c === "/" && c2 === "/") { lineCommentAt = i; i += 2; continue; }
+    if (c === "/" && c2 === "*") { blockCommentAt = i; i += 2; continue; }
+    i += 1;
+  }
+  if (lineCommentAt >= 0) ranges.push([lineCommentAt, n]);
+  if (blockCommentAt >= 0) ranges.push([blockCommentAt, n]);
+  return ranges;
+}
+
+const inRanges = (ranges, index) =>
+  ranges.some(([start, end]) => index >= start && index < end);
+
 function walk(dir) {
   const entries = readdirSync(dir);
   const files = [];
@@ -234,7 +292,9 @@ for (const file of walk(ROOT)) {
   const relUnix = relative(ROOT, file).split(sep).join("/");
   if (EXEMPT(relUnix)) continue;
   const text = readFileSync(file, "utf8");
+  const comments = commentRanges(text);
   for (const match of text.matchAll(RAW_PALETTE)) {
+    if (inRanges(comments, match.index)) continue;
     offenders.push({
       file,
       token: match[0],
@@ -242,6 +302,7 @@ for (const file of walk(ROOT)) {
     });
   }
   for (const match of text.matchAll(RAW_LOADER)) {
+    if (inRanges(comments, match.index)) continue;
     offenders.push({
       file,
       token: match[0],
@@ -252,6 +313,7 @@ for (const file of walk(ROOT)) {
 
   // C2：无编号中性裸色类——全库生效（批 7a）
   for (const match of text.matchAll(RAW_NEUTRAL)) {
+    if (inRanges(comments, match.index)) continue;
     if (NEUTRAL_LEGACY_ALLOWLIST.has(`${relUnix}:${match[0]}`)) continue;
     offenders.push({
       file,
@@ -261,6 +323,7 @@ for (const file of walk(ROOT)) {
   }
   // C3：内联裸色——全库生效（批 7a）
   for (const match of text.matchAll(INLINE_COLOR)) {
+    if (inRanges(comments, match.index)) continue;
     if (INLINE_COLOR_LEGACY_ALLOWLIST.has(`${relUnix}:${match[0]}`)) continue;
     offenders.push({
       file,
