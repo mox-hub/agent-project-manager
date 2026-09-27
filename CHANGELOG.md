@@ -21,6 +21,14 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——E 类批 6 开工前复核：无损可迁移率 ≈ 0.6%–1.0%，批 6 判定为「能力补档工程」而非替换工程
+
+> 本次**无代码交付**（零提交零改动，代理亦为零改动返回）。派工前按批 0 同一铁律（不能造出「禁了但没得用」）实测，**证否方案对批 6 的规模前提**，故本轮不派替换工；结论与人审项落 E 类方案新增小节「批 6 开工前可行性复核」。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` 全库裸 `<button>`（设计治理） | E 类方案批 6（开工前复核）；能力清单 B 治理线 | **口径复原**：全域生产（排除 test/stories）裸 `<button>` 元素级 **366**，`components/ui` 独占 **52**，366−52 = **314**，与批 0 复算值**逐整数吻合** ⇒ 采信口径「排除设计系统自身 `src/components/ui/**`」。**转化率实测**：候选项 90 处，逐 token 剔除 §19.4 白名单与现有 Button 轴可表达项后**零阻断仅 3 处**（其中 `document-properties-panel.tsx:273` 因 `text-muted-foreground/70` 透明度后缀**存疑**）⇒ **真无损 2–3 处 / 314 ≈ 0.6%–1.0%**；代理自述「8 处 / 2.5%」经抽核其 7 处 (i) 类，**6 处实带 `text-xs`/`text-sm`/`disabled:opacity-50`/`hover:underline`**（Button 无字号轴，按铁律应归缺档），**方向一致、量级更低**。**缺档分布**：布局 `flex/gap-*`、内距 `px-*/py-*`、字号 `text-2xs/xs/sm`、字族 `font-mono`、`cursor-pointer`、`hover:opacity-*`、尺寸 `size-N`、未定义色 `text-accent-red`。**批 0 先例数不可复现**：`button.tsx:25-28` 注释声明 `quiet` 57/34、`subtle` 48/30，同口径下协调方两种规则四种取值（23/16、54/32、42/28、129/73）**无一吻合** ⇒ 范围可复现、**划分规则未留档**，本次不采信为规模依据（**未改源码注释**，待人裁决）；该瑕疵不影响批 0 交付物有效性（新增档位已双取证为零变化纯增补）。**零改动自证**：`git diff --numstat -- src/modules/team-member` = 0 行；`eslint` 三条规则模块命中数逐字未变 | 本 CHANGELOG + E 类方案「批 6 开工前可行性复核」小节（含 4 项待裁口径与「批 0b 能力二次补档」建议） |
+
 ### 前端设计治理——偏差 25 第四文件收口（设计系统展示页 15 处裸三元组当色值；口径由 12 更正为 15）
 
 > 提交 `60e63d83`（1 文件 / +9 / −9）。`design-system-page.tsx` 9 行 / **15 处** `var(--x)` → `var(--color-x)`：`card` 4、`border` 4、`destructive` 3、`primary` 1、`muted-foreground` 1、`accent-green` 1、`accent-blue` 1。
