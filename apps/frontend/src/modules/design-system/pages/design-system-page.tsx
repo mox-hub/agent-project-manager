@@ -339,8 +339,12 @@ import { ApmRefLink } from '@/shared/apm-ref/apm-ref-chip'
 import type { ApmRefKind } from '@apm/shared/apm-ref'
 import { SlashRefTextarea } from '@/shared/entity-ref/slash-ref-textarea'
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger'
+import { ComponentReviewBoard } from '@/modules/design-system/sections/component-review-board'
 
 const SECTIONS = [
+  // 组件裁决面置首：人类原话「组件仍然不删除，但是要在 design-system 页面标记，我看过后再删」
+  // ——② 人看必须在第一屏可达；本区只读，不改任何组件、不做裁决。
+  { id: 'component-review', label: '组件裁决面', group: 'Governance' },
   { id: 'colors', label: 'Color Tokens', group: 'Tokens' },
   { id: 'typography', label: 'Typography', group: 'Tokens' },
   { id: 'spacing', label: 'Spacing', group: 'Tokens' },
@@ -511,7 +515,7 @@ function SortableGridDemo() {
   )
 }
 
-const SECTION_GROUPS = ['Tokens', 'Primitives', 'App Components', 'AI Execution']
+const SECTION_GROUPS = ['Governance', 'Tokens', 'Primitives', 'App Components', 'AI Execution']
 
 /** SubPageToolbar 演示：返回 + 面包屑 + 居中页签 + 翻页器/按钮组/侧栏开关 */
 function SubPageToolbarDemo({ withPager, withSidebar }: { withPager?: boolean; withSidebar?: boolean }) {
@@ -1762,7 +1766,8 @@ function AgentPill({ name, status }: { name: string; status: 'active' | 'contrib
 }
 
 export function DesignSystemPage() {
-  const [activeSection, setActiveSection] = React.useState('colors')
+  // 默认落在裁决面（页面首个分区）——滚动高亮与首屏一致，避免「人在看裁决面、导航高亮着 colors」
+  const [activeSection, setActiveSection] = React.useState('component-review')
   const [navSearch, setNavSearch] = React.useState('')
   const [sliderVal, setSliderVal] = React.useState(40)
   const [groupCollapsed, setGroupCollapsed] = React.useState(false)
@@ -1926,6 +1931,13 @@ export function DesignSystemPage() {
               AgentPM design tokens, primitives, and app-level component patterns.
             </p>
           </div>
+
+          <SectionAnchor id="component-review">
+            <SectionTitle>组件裁决面 (Component Review Board)</SectionTitle>
+            <ComponentReviewBoard />
+          </SectionAnchor>
+
+          <Separator />
 
           <SectionAnchor id="colors">
             <SectionTitle>Color Tokens</SectionTitle>

@@ -4,6 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DesignSystemPage } from './design-system-page';
+import { COMPONENT_REGISTRY } from '../registry';
 
 // Mock ResizeObserver for Recharts
 global.ResizeObserver = class ResizeObserver {
@@ -57,6 +58,20 @@ describe('DesignSystemPage', () => {
     expect(screen.getByText(/多 Agent 协作交接卡 \(AgentHandoffCard\)/)).toBeInTheDocument();
     expect(screen.getByText(/决策证据抽屉卡 \(DecisionCardShell\)/)).toBeInTheDocument();
     expect(screen.getByText(/双轨成本与执行微徽章 \(DualTrackMetricPill\)/)).toBeInTheDocument();
+
+    // 批 4（2026-09-27）：「组件裁决面」必须真的在这张页面上。
+    // 背景（人类原话）：「组件仍然不删除，但是要在 design-system 页面标记，我看过后再删。」
+    // 改造前本页不 import registry.ts，18 条 review 在页面上完全看不到 ⇒ 第②步「人看」卡死。
+    // 断言口径：逐条比对 registry 里每条 review 的「文件路径 · 登记分区」元数据行——
+    // 该行在整页内唯一，且与 registry 逐字对齐 ⇒ 能证伪「页面上看不到」。
+    expect(screen.getByText('组件裁决面 (Component Review Board)')).toBeInTheDocument();
+    const reviewEntries = COMPONENT_REGISTRY.filter((e) => e.status === 'review');
+    expect(reviewEntries.length).toBeGreaterThan(0);
+    for (const entry of reviewEntries) {
+      expect(
+        screen.getByText(`${entry.file} · 登记分区 ${entry.section}`),
+      ).toBeInTheDocument();
+    }
 
     consoleError.mockRestore();
     // 全量并行时机器慢，设计系统页渲染整套组件库，5s 默认超时不够
