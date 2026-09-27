@@ -49,6 +49,27 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * `field-label` 槽的字号档与色调档（E 类批 0 增补，2026-09-27）。
+ *
+ * 归因（实测，见交付报告）：全库 178 个裸 `<label>` / 49 文件里——
+ * · 字号：`text-xs` 110 处（28 文件） vs `text-sm` 54 处（17 文件），**多数形态是 12px 标签**，
+ *   而 `Label` 基线把字号写死成 `text-sm`；
+ * · 色调：弱色 61 处（`text-muted-foreground` 41 + `text-content-text-secondary` 20），
+ *   而 `Label` 不设文字色（靠继承）。
+ * 两者此前都只能由调用方写 className 覆盖来表达。**已具备的「label + 描述 + 错误」
+ * 三件套未改动**——本文件只补这两根轴。
+ *
+ * `FieldLabel`（`<label>`）与 `FieldTitle`（`<div>`）共用 `data-slot="field-label"`，
+ * 属同一个槽，故两根轴同时给到两者，避免同槽两个出口的 API 不一致。
+ */
+type FieldLabelProps = {
+  /** 字号档：`default` = 基线 `text-sm`；`xs` = `text-xs`（中文最小字号，§2.4 D5） */
+  size?: "default" | "xs"
+  /** 色调档：`default` = 继承所在容器；`muted` = 弱化（`text-muted-foreground`） */
+  variant?: "default" | "muted"
+}
+
 const fieldVariants = cva(
   "group/field flex w-full gap-3 data-[invalid=true]:text-destructive",
   {
@@ -98,14 +119,25 @@ function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
 
 function FieldLabel({
   className,
+  size = "default",
+  variant = "default",
   ...props
-}: React.ComponentProps<typeof Label>) {
+}: React.ComponentProps<typeof Label> & FieldLabelProps) {
   return (
     <Label
       data-slot="field-label"
       className={cn(
         "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50 has-data-checked:border-primary/30 has-data-checked:bg-primary/5 has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border has-[>[data-slot=field]]:not-has-[:disabled,[data-disabled]]:hover:bg-muted/50 has-[>[data-slot=field]]:has-[:focus-visible]:border-ring has-[>[data-slot=field]]:has-[:focus-visible]:ring-3 has-[>[data-slot=field]]:has-[:focus-visible]:ring-ring/50 *:data-[slot=field]:p-3 dark:has-data-checked:border-primary/20 dark:has-data-checked:bg-primary/10",
         "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col",
+        // 批 0 增补：两档默认不生效，既有调用方的类值不变。
+        // 置于 className 之前，调用方仍可最终覆盖。
+        //
+        // ⚠️ `text-xs leading-snug` 不是冗余：twMerge 把 `text-*`（字号）与
+        // `leading-*`（行高）视为互斥组，后者在前者之后出现才会保留。
+        // 若只写 `text-xs`，上面的 `leading-snug` 会被**静默丢弃**——
+        // size="xs" 就变成「同时改了字号和行高」，与「只加字号档」的意图不符。
+        size === "xs" && "text-xs leading-snug",
+        variant === "muted" && "text-muted-foreground",
         className
       )}
       {...props}
@@ -113,12 +145,19 @@ function FieldLabel({
   )
 }
 
-function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
+function FieldTitle({
+  className,
+  size = "default",
+  variant = "default",
+  ...props
+}: React.ComponentProps<"div"> & FieldLabelProps) {
   return (
     <div
       data-slot="field-label"
       className={cn(
         "flex w-fit items-center gap-2 text-sm font-medium group-data-[disabled=true]/field:opacity-50",
+        size === "xs" && "text-xs",
+        variant === "muted" && "text-muted-foreground",
         className
       )}
       {...props}

@@ -18,7 +18,10 @@ import {
  * 按 §18.2 不断言 className——`data-size` 是结构与可访问性无关，
  * 但仍属样式开关，故只用它验证「变体不吞内容」，不验证取值组合。
  */
-function renderFullCard(props?: { size?: 'default' | 'sm' }) {
+function renderFullCard(props?: {
+  size?: 'default' | 'sm';
+  variant?: 'default' | 'outline';
+}) {
   return render(
     <Card {...props}>
       <CardHeader>
@@ -52,6 +55,41 @@ describe('Card 插槽装配', () => {
     expect(screen.getByText('项目健康度')).toBeInTheDocument();
     expect(screen.getByText('进度 62%')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '查看详情' })).toBeInTheDocument();
+  });
+
+  /**
+   * E 类批 0 增补（2026-09-27）：variant 轴（default 保持既有描边环 + 投影不动；
+   * outline = 手写卡片壳主形态「描边 + 无投影 + 卡片圆角」）。
+   *
+   * 与上面的 size 用例同口径：§18.2 不断言 className，故只验
+   * 「变体不吞内容」+「variant 落到 DOM 供样式与评审定位」。
+   * 40 行手写壳的形态归纳与档位分界依据见交付报告。
+   */
+  it.each(['default', 'outline'] as const)(
+    'variant=%s 不吞任何插槽内容',
+    (variant) => {
+      renderFullCard({ variant });
+
+      expect(screen.getByText('项目健康度')).toBeInTheDocument();
+      expect(screen.getByText('近 7 天评分')).toBeInTheDocument();
+      expect(screen.getByText('进度 62%')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '查看详情' })).toBeEnabled();
+    },
+  );
+
+  it('variant 落到 data-variant（与既有 data-size 同口径），默认档为 default', () => {
+    const { container } = renderFullCard({ variant: 'outline' });
+
+    expect(container.querySelector('[data-slot="card"]')).toHaveAttribute(
+      'data-variant',
+      'outline',
+    );
+
+    const { container: plain } = renderFullCard();
+    expect(plain.querySelector('[data-slot="card"]')).toHaveAttribute(
+      'data-variant',
+      'default',
+    );
   });
 
   it('CardAction 内的交互元素可被键盘/鼠标命中（行内操作不靠视觉位置）', () => {
