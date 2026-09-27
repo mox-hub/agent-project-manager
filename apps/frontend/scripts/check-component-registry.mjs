@@ -18,9 +18,13 @@ try {
   process.exit(1);
 }
 
-// COMPONENTS.md 中引用组件文件时必须写成 `ui/<file>.tsx` 形式
+// COMPONENTS.md 中引用组件文件时必须写成 `src/components/ui/<file>.tsx` 形式。
+// 负向后顾 `(?<!shared/)` 是必须的：本仓还有第二个 ui 命名空间 `src/shared/ui/`，
+// 其路径天然含有 `ui/<file>.tsx` 子串，不加锚点会被误采进 docFiles，进而被判为
+// 「COMPONENTS.md 引用了不存在的组件文件」而红门禁（2026-09-27 实测复现）。
+// 曾以「把该行路径拆成两个代码片段」绕过，那是脆弱的文档侧 hack——已在生成脚本中移除。
 const docFiles = new Set(
-  [...doc.matchAll(/\bui\/([a-z0-9-]+\.tsx)\b/g)].map((m) => m[1])
+  [...doc.matchAll(/(?<!shared\/)\bui\/([a-z0-9-]+\.tsx)\b/g)].map((m) => m[1])
 );
 
 const actual = readdirSync(UI_DIR).filter(
