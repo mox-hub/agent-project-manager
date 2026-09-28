@@ -21,6 +21,21 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——F 类「布局与组合」纯结构批次落地（2026-09-29）：J8/J9/J10 + F3.1 宽度阶梯 + J16–J18 高度，六笔提交零组件实现改动
+
+> 承接 F 类方案（`docs/design/修改方案-F类-布局与组合-2026-09-28.md`，J1–J18 已全裁决）与 E 类裸组件路线废止裁决：先落 F 类中「只动结构、不动组件内部实现」的部分，为 E 类三层解耦路线重修让出 ui 层。2026-09-28 首轮 F 类代码改动随裁决撤下，本批为同口径重落地（`scripts/f-class/` 迁移脚本未入 git 已失传、存 stash 可找，本批改逐点手工迁移）；`ui/right-sidebar` 默认宽度常量是全批唯一 ui 层触点（J8 裁决实体本身），已独立成笔便于单独回滚。
+
+| 提交 | 项 | 内容与证据 |
+|---|---|---|
+| `6c31112a` | J9（批 F1 债务清除） | 删 project-sidebar 拖拽 API（MIN/MAX/setWidth 全库 0 调用，shell-layout 只接 toggle）、`PROJECT_SIDEBAR_DEFAULT_WIDTH` 320→360 |
+| `c642a946` | J8（批 F2 项 3） | 属性栏统一 360px、废除 320 档：ui/right-sidebar 默认值 + 六详情页删显式 `width={320}` 走默认链；project-right-sidebar / workflow-detail-page 经默认链跟随零编辑 |
+| `49236798` | J10（批 F1 债务清除） | 清退死组件 view-switcher（全库 0 渲染）：registry 删条目 → gen-components-md 再生（335→334）→ check-component-registry 对账过；ViewMode 改 project-list-page 本地类型（与各列表页同构，grid 档暂留待裁） |
+| `17a49b45` | J16/J17/J18（批 F2 项 8） | 高度迁移 17 文件 18 编辑：`--spacing-dialog-scroll` 80→85vh + assistant-fab 迁 `h-dialog-scroll`；面板头归一 h-12 ×3；滚动区四档封闭表 40/64/80/96（48→40×1、56→64×4、72→80×6、60vh→96×2） |
+| `063b7064` | F3.1（批 F2 项 1） | 弹窗宽度数字档 14 处就近迁五档语义阶梯（100→sm、110/120→lg、140/150→xl、160→2xl；dashboard 七弹窗按 J3 逐个判均 StatTile+列表信息型、全归 xl）+ linear-projects-table `max-w-3xl`→`sm:max-w-2xl` |
+| `43975392` | F3.1 越界活案例 | run-details 画布型 Dialog（max-w-5xl+85vh 全站唯一越界）迁 Sheet 2xl 档——「日志流归 Sheet 不归 Dialog」示范；同为 base-ui Dialog.Root 原语，四个消费方 props 不变零改动 |
+
+test_evidence：每笔过 pre-commit 五治理脚本（spacing/palette/registry/semantic/ui-governance）+ eslint 0 error + tsc -b 0 错；收口跑前端全量 Vitest 192 文件 1436 用例全绿。doc_impact：F 类方案批次表/状态同步本批。余量登记：弹窗级 `max-h-[85vh]` ×9 不在 J16 裁决集（F12.2 vh 封禁 lint 落地时一并处理）；document-preview-dialog（components/ui 内）维持 E 类占用推迟；J11/J12 接线、组件默认值批、F3.6 表单容器迁移、批 F3 lint 待 E 类三层解耦路线收口。
+
 ### 前端设计治理——E 类「禁止裸组件」路线废止，改行「三层分层解耦」（2026-09-29）：方案 §七之十一 裁决入账，纯文档轮零代码改动
 
 > 用户裁决（2026-09-29）：「我过去的经验已经证明了裸组件改造不是正确的方案，三个层级分层，对组件进行改造和解耦才是正解。」承接同日凌晨 `660752f1` 全轮回退（见下一条），本条为该裁决的**方案侧正式入账**：废止批 6/7 裸元素迁移路线，确立「动作钮 Button / 非动作具名直通出口 / 特殊形态语义组件」的三层归属模型。
