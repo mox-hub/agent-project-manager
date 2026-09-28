@@ -34,6 +34,12 @@ const BANNED_DURATION =
 // 前导 lookbehind 避免误伤 drop-shadow-md / inset-shadow-[...] / transition-shadow。
 const BANNED_SHADOW = /(?<![\w-])shadow-(?!xs\b|none\b)[a-z0-9-]+/g;
 
+// F 类 F9.1/F3.3 间距唯一律：正向 `space-x-*`（横向手摊间距）封禁——同组相邻
+// 按钮/条目的横向间距一律 `gap-*`，两端对齐用 `justify-between`。负向 `-space-x-N`
+// 是头像/图标叠层的合法惯用法（全仓 7 处，负号被 lookbehind 排除不误伤）；
+// `space-y-*` 不在封禁范围（纵向节律档，F3.5/F6.5/F10.4 点名合法）。
+const BANNED_SPACE_X = /(?<![\w-])space-x-[\w.[\]()#%/-]+/g;
+
 // 裸 `shadow` 类（Tailwind 默认投影，超规格）：`transition-shadow`、`drop-shadow(...)` 靠
 // lookbehind 排除；`shadow={false}` 这类 JSX 属性靠 `=` 排除；`shadow:` 对象键靠 `:` 排除。
 const BANNED_SHADOW_BARE = /(?<![\w-])shadow(?![\w\-=:])/g;
@@ -79,6 +85,11 @@ const RULES = [
     id: "shadow",
     re: BANNED_SHADOW_BARE,
     rule: "宪法 §3.6 裸 shadow 类（Tailwind 默认投影超规格；改 shadow-xs 或 shadow-none）",
+  },
+  {
+    id: "spacing",
+    re: BANNED_SPACE_X,
+    rule: "F 类 F9.1/F3.3 间距唯一律（正向 space-x 封禁：同组相邻间距一律 gap-*；负向叠层 -space-x-N 合法）",
   },
 ];
 
