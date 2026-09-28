@@ -856,7 +856,7 @@ export function AcceptanceDetailPage() {
         </div>
 
         {/* 右栏 */}
-        <RightSidebar hidden={false} width={320}>
+        <RightSidebar hidden={false}>
           <SidebarButtonGroup className="px-1">
             <SidebarButton
               icon={Trash2}

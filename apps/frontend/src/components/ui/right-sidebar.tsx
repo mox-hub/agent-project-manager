@@ -11,13 +11,13 @@ import { cn } from '@/lib/utils';
 export interface RightSidebarProps extends ComponentProps<'aside'> {
   /** 是否隐藏（收起）侧边栏 */
   hidden?: boolean;
-  /** 宽度，默认 320px */
+  /** 宽度，默认 360px（F 类 F4.2：全站唯一档，320 档已废除） */
   width?: number | string;
 }
 
 export function RightSidebar({
   hidden,
-  width = 320,
+  width = 360,
   className,
   children,
   ...rest

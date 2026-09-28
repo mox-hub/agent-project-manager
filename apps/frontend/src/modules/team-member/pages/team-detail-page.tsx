@@ -870,8 +870,8 @@ export default function TeamDetailPage() {
           </div>
         </div>
 
-        {/* 右侧栏（320px，可收起） */}
-        <RightSidebar hidden={asideHidden} width={320}>
+        {/* 右侧栏（360px，可收起） */}
+        <RightSidebar hidden={asideHidden}>
           <SidebarButtonGroup className="px-1">
             <SidebarButton
               variant="capsule"

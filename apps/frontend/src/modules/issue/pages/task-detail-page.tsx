@@ -611,7 +611,7 @@ export function TaskDetailPage() {
         </div>
 
         {/* ── Right sidebar ── */}
-        <RightSidebar hidden={asideHidden} width={320}>
+        <RightSidebar hidden={asideHidden}>
           {/* Top action bar — 按钮固定一行、靠右对齐；幽灵「✨ 问 AI」hover 显形（渐进披露②） */}
           <SidebarButtonGroup className="group/sidebar justify-end">
             <AnchorQaGhostButton

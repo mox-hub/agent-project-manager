@@ -396,7 +396,7 @@ export function BugDetailPage() {
         </div>
 
         {/* Right sidebar */}
-        <RightSidebar hidden={asideHidden} width={320}>
+        <RightSidebar hidden={asideHidden}>
           {/* Top action bar — 靠右对齐 */}
           <SidebarButtonGroup className="justify-end">
             <SidebarButton
