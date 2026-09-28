@@ -8,12 +8,14 @@ function Card({
   variant = "default",
   border = "ring",
   surface = "default",
+  inset = "default",
   ...props
 }: React.ComponentProps<"div"> & {
   size?: "default" | "sm"
   variant?: "default" | "outline"
   border?: "ring" | "solid" | "dashed"
   surface?: "default" | "flat" | "translucent"
+  inset?: "default" | "xs" | "sm" | "md" | "lg" | "xl"
 }) {
   return (
     <div
@@ -22,6 +24,7 @@ function Card({
       data-variant={variant}
       data-border={border}
       data-surface={surface}
+      data-inset={inset}
       className={cn(
         "group/card flex flex-col gap-3 overflow-hidden rounded-xl bg-card py-3.5 text-sm text-card-foreground shadow-xs ring-1 ring-border/50 [--card-spacing:--spacing(4)] has-[>img:first-child]:pt-0 data-[size=sm]:py-2.5 data-[size=sm]:gap-2 data-[size=sm]:[--card-spacing:--spacing(3)] *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
         // —— E 类批 0 增补（2026-09-27）：纯增补，variant=default 时下面整行不生效 ——
@@ -55,6 +58,32 @@ function Card({
         surface === "flat" && "shadow-none",
         surface === "translucent" &&
           "border border-border/60 bg-card/60 ring-0 shadow-none",
+        // —— E 类批 0b 增补：Card 内距轴 `inset`，纯增补，`default` 不生成任何类 ——
+        //
+        // 形态依据（口径：`components/ui/` 之外、排除 `*.test.*` / `*.stories.*` 的生产面里，
+        // 同一 class 串内「圆角档 + 卡片底色」且未 import `ui/card` 的手写壳）：这类壳是**裸壳**
+        // ——内容直接挂在壳根上，没有 header/content 槽位拆分，内距类因此落在**壳根元素**上。
+        // 故本轴只接管**根元素内距**，不覆盖 `--card-spacing`：槽位级内距在仓内实测无该类先例，
+        // 按「无证据不造档」不立；`size` 已给槽位内距两档，两轴**按形态分工、不叠加**：
+        //   · 裸壳形态：内距由本轴给（`p-*`），内容直接作为 children；
+        //   · 槽位形态：内距由 `size` 经 `--card-spacing` 给，走 CardHeader / Content / Footer；
+        //     两形态同用会「根内距 + 槽位内距」叠加，属禁止组合。
+        // 档位值域 = 裸壳实测的**对称内距**取值（写成 `px-N py-N` 的等值形式按同一内距归并到该档）；
+        // 档名沿用 `COMPONENTS.md` 的尺寸词表，其中 `md` 与 Card 基线 `--card-spacing(4)` 同值、
+        // `sm` 与 `size=sm` 的槽位间距同值——本轴不是另起的一套刻度，而是既有内距阶梯的显式化。
+        // 两个 `.5` 档与相邻主档仅差一档（2px）、且属零散取值，**不立档**（否则本轴出现相邻不可辨档）。
+        // 与 `size` 同时给出时的裁决（已按构建产物取证）：垂直以 `size` 档为准——`data-[size=*]:py-*`
+        // 作用域类特异性高于裸 `p-*`；水平以本轴为准。
+        //
+        // 轴名（2026-09-28 裁决，跨组件口径）：本轴叫 `inset`——**语义档 + 一维全向**
+        // （`p-N`，档名 xs/sm/md/lg/xl）。`ui/button.tsx` 另有一根内距轴，但那是**二维内距对**
+        // （`px-* py-*`），语义档名会给「同横不同纵」的形态编出撒谎的名字，故那边档名即类值
+        // 且**必须异名**（叫 `padding`）。通则：**同名轴若值域形态不同必须异名**。
+        inset === "xs" && "p-2",
+        inset === "sm" && "p-3",
+        inset === "md" && "p-4",
+        inset === "lg" && "p-6",
+        inset === "xl" && "p-8",
         className
       )}
       {...props}

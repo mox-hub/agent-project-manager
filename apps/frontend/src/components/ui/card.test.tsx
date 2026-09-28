@@ -23,6 +23,7 @@ function renderFullCard(props?: {
   variant?: 'default' | 'outline';
   border?: 'ring' | 'solid' | 'dashed';
   surface?: 'default' | 'flat' | 'translucent';
+  inset?: 'default' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }) {
   return render(
     <Card {...props}>
@@ -149,6 +150,93 @@ describe('Card 插槽装配', () => {
     expect(screen.getByText('进度 62%')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '查看详情' })).toBeEnabled();
   });
+
+  /**
+   * E 类批 0b 增补：Card 第四轴 `inset`（内容框内距）——服务「裸壳」形态：内容直接作为
+   * children（无 CardHeader/CardContent 槽位），内距落在壳根上。
+   *
+   * 与上面各轴同口径：§18.2 不断言 className，只验「不吞内容」+「档值落到 data-*」。
+   * 「默认档零变化」在此按**语义等价**验（文本 + 全部 data-* 相同）；默认档与 HEAD 的
+   * `cn()` 终串逐字节相等由交付报告的取证脚本复算，测试不承担类串断言。
+   */
+  const INSETS = ['default', 'xs', 'sm', 'md', 'lg', 'xl'] as const;
+
+  const cardAttrs = (el: Element | null) =>
+    ['slot', 'size', 'variant', 'border', 'surface', 'inset'].map((k) =>
+      el?.getAttribute(`data-${k}`),
+    );
+
+  it.each(INSETS)('inset=%s 不吞任何插槽内容', (inset) => {
+    renderFullCard({ inset });
+
+    expect(screen.getByText('项目健康度')).toBeInTheDocument();
+    expect(screen.getByText('进度 62%')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '查看详情' })).toBeEnabled();
+  });
+
+  it('inset 落到 data-inset，默认档为 default（与 data-border/data-surface 同口径）', () => {
+    const { container } = renderFullCard({
+      variant: 'outline',
+      border: 'solid',
+      surface: 'flat',
+      inset: 'lg',
+    });
+    const card = container.querySelector('[data-slot="card"]');
+
+    expect(card).toHaveAttribute('data-inset', 'lg');
+    // 交叉轴不得互吞：其余三轴的档值仍落在 DOM 上
+    expect(cardAttrs(card)).toEqual([
+      'card',
+      'default',
+      'outline',
+      'solid',
+      'flat',
+      'lg',
+    ]);
+
+    const { container: plain } = renderFullCard();
+    expect(plain.querySelector('[data-slot="card"]')).toHaveAttribute(
+      'data-inset',
+      'default',
+    );
+  });
+
+  it('默认档零行为变化：不传 inset 与传 inset="default" 渲染结果一致', () => {
+    const { container: bare } = renderFullCard();
+    const { container: explicit } = renderFullCard({ inset: 'default' });
+
+    expect(explicit.textContent).toEqual(bare.textContent);
+    expect(cardAttrs(explicit.querySelector('[data-slot="card"]'))).toEqual(
+      cardAttrs(bare.querySelector('[data-slot="card"]')),
+    );
+  });
+
+  it('裸壳形态：inset 下内容直接作为 children，不产生未装配的空壳插槽', () => {
+    const { container } = render(
+      <Card inset="md">
+        <span>裸壳内容</span>
+      </Card>,
+    );
+
+    expect(screen.getByText('裸壳内容')).toBeInTheDocument();
+    expect(container.querySelector('[data-slot="card-header"]')).toBeNull();
+    expect(container.querySelector('[data-slot="card-content"]')).toBeNull();
+    expect(container.querySelector('[data-slot="card-footer"]')).toBeNull();
+  });
+
+  it.each([
+    ['sm', 'dashed', 'flat'],
+    ['default', 'solid', 'translucent'],
+  ] as const)(
+    'inset × size/border/surface 交叉组合不吞内容（size=%s × border=%s × surface=%s）',
+    (size, border, surface) => {
+      renderFullCard({ size, border, surface, inset: 'lg' });
+
+      expect(screen.getByText('项目健康度')).toBeInTheDocument();
+      expect(screen.getByText('进度 62%')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '刷新' })).toBeEnabled();
+    },
+  );
 
   it('CardAction 内的交互元素可被键盘/鼠标命中（行内操作不靠视觉位置）', () => {
     renderFullCard();

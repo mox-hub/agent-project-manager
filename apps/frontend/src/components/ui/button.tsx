@@ -89,15 +89,127 @@ const buttonVariants = cva(
         danger:
           "data-[tone=danger]:text-accent-red data-[tone=danger]:hover:text-accent-red data-[tone=danger]:hover:bg-accent-red-light",
       },
+      // —— E 类批 0b 二次补档（2026-09-28）：内距轴 ——
+      // 立项与靶子口径见 `docs/design/修改方案-E类-2026-09-27.md`（§七之二 #1「批 0b 能力
+      // 二次补档」与「批 6 开工前可行性复核」③ 的缺档分布）。口径：生产裸 `<button>`
+      // （`src/components/ui/**` 之外，排除 `*.test.*` / `*.stories.*`）className 的
+      // **形态聚类 + 档位语义**。**本注释刻意不写逐档先例数**（2026-09-28 裁决「删数留结论」）：
+      // 同型计数在不同口径下不可复现，写进源码即成为无法核对的噪声。
+      //
+      // 为什么档值是「内距原样写出」而不是 xs/sm/lg 一类的阶梯名：实测的 `px-*/py-*`
+      // 组合是**二维**的（横内距与纵内距各自独立取档），不存在单一阶梯能覆盖——硬造
+      // 阶梯名就会给「px-2 py-1.5」与「px-2 py-0.5」这类同横不同纵的形态编出无语义的
+      // 名字。故档值直接等于它产出的内距类串：**档位表即实测簇的封闭词表**，表外的
+      // 组合（如 `px-5 py-4`）在类型上不可表达。每个档一一对应实测形态聚类：
+      //   · `p-0.5` / `p-1` / `p-1.5` —— 方形内距（四周等值）：图标钮 / 紧凑方钮，
+      //     与 `size="icon-*"` 同族但走「内距撑高」模型（见下），多以 `opacity-0`
+      //     悬停显形、出现在行尾或面板角；
+      //   · `px-1.5 py-0.5` / `px-2 py-0.5` / `px-2 py-1` / `px-2.5 py-1` 一族 ——
+      //     密集工具条钮 / chip（常配 `rounded-sm`、`font-mono`、`text-2xs`，
+      //     纵内距明显小于横内距）；
+      //   · `px-2 py-1.5` / `px-2.5 py-1.5` / `px-3 py-1.5` 一族 —— 列表行钮 / 面板内
+      //     动作钮（常配 `w-full` + `text-left` + `hover:bg-accent`）；
+      //   · `px-2.5 py-2` / `px-3 py-2` / `px-3 py-2.5` 一族 —— 对话框内选项钮 /
+      //     卡片式钮（`items-start` + 两行文案）。
+      //
+      // ⚠️ **本轴会接管高度**（每档都带 `h-auto`）——这是它「可用」的前提，不是顺手加
+      // 的：实测缺档的裸钮**多数不写 `h-*`，靠内距撑高**，其真实高度落在 20/22/26/28px
+      // 等位置，而 `size` 轴只提供 h-6(24) / h-8(32) / h-9(36) / h-10(40)——若本轴只给
+      // `px/py` 不动高度，`size` 的定高会留下，档位就落不到目标几何（迁移即产生可见
+      // 变化，违反批 6 的「无损」前提 ⇒ 造出「禁了但没得用」的档）。故约定：
+      // **`size` = 定高模型（档位定 h-* 与横内距）；`padding` = 内距驱动模型（h-auto +
+      // 内距），二者同时给时以 `padding` 为准**（cva 输出顺序在本轴在后，twMerge 会丢弃
+      // `size` 的 `h-*` / `px-*`）。
+      //
+      // 命名：本轴**不叫 `inset`**（2026-09-28 裁决）。`ui/card.tsx` 的内距轴叫 `inset`
+      // 且用**语义档**（xs/sm/md/lg/xl，一维全向 `p-N`）；本轴是**二维内距对**
+      // （`px-* py-*`），语义档名会给「同横不同纵」的形态编出撒谎的名字，故档名即类值。
+      // 两者值域形态不同 ⇒ 必须异名（通则：同名轴若值域形态不同必须异名）。
+      //
+      // 与 `size="icon-*"` 的关系：图标档给的是**完整几何**（`size-N` 定宽定高），与
+      // 本轴的「内距驱动几何」是两套模型；同给会产生「定宽 + 自高」的矛盾几何
+      // （已复现：`size="icon-xs" padding="p-1"` → `size-6 h-auto p-1`）。组件在下方
+      // **内建优先级**：`size` 为 `icon*` 时忽略本轴，故此处无需调用方自行避让。
+      //
+      // 默认档为空串 ⇒ 既有全部 variant × size × tone 档的输出**逐字节不变**（纯增补）。
+      padding: {
+        default: "",
+        // 方形内距（图标钮 / 紧凑方钮）
+        "p-0.5": "h-auto p-0.5",
+        "p-1": "h-auto p-1",
+        "p-1.5": "h-auto p-1.5",
+        // 密集工具条钮 / chip
+        "px-1.5 py-0.5": "h-auto px-1.5 py-0.5",
+        "px-2 py-0.5": "h-auto px-2 py-0.5",
+        "px-2 py-1": "h-auto px-2 py-1",
+        "px-2.5 py-1": "h-auto px-2.5 py-1",
+        // 列表行钮 / 面板内动作钮
+        "px-2 py-1.5": "h-auto px-2 py-1.5",
+        "px-2.5 py-1.5": "h-auto px-2.5 py-1.5",
+        "px-3 py-1.5": "h-auto px-3 py-1.5",
+        // 对话框内选项钮 / 卡片式钮
+        "px-2.5 py-2": "h-auto px-2.5 py-2",
+        "px-3 py-2": "h-auto px-3 py-2",
+        "px-3 py-2.5": "h-auto px-3 py-2.5",
+      },
+      // —— E 类批 0b 二次补档（2026-09-28）：字阶轴 ——
+      // 口径同上（生产裸 `<button>` 的形态聚类）。值域只收实测有量级的 `text-2xs` /
+      // `text-xs` / `text-sm`：`text-sm` 与 Button 基线同值，保留为独立档是为了让
+      // `size="xs"`（自带 `text-xs`）等场合能**把字阶还原回基线**，而不是「无档可表达」。
+      // 刻意**不设** `text-3xs` / `text-lg`：
+      //   · `text-3xs` —— 两条独立理由。①宪法 §2.4「任何中文 ≥ `text-xs`，`text-3xs/2xs`
+      //     仅用于徽标内数字 / 图表轴 / 纯 Latin 元数据」；②实测先例（含本仓展示页）的**主体**
+      //     是徽标内数字、`font-mono` 元数据、`ml-auto` 计数一类**非动作形态**，把动作文案
+      //     压到 3xs 属存量违规，不应由 Button 档位予以固化。要补须先有「3xs 的动作文案」
+      //     先例，并同时修改 §2.4。
+      //   · `text-lg` —— 先例量级不足（仅 1 处，且是展示页里的装饰性大按钮）。
+      // 对照：`text-2xs` 同受 §2.4 约束，但它确有**动作文案**先例（工具条钮 / chip 上的
+      // 动作标签），立档是为了让这些存量形态**可被表达、进而可被迁移**；这不改变 §2.4
+      // 对该轴中文用例的约束——中文动作文案仍应 ≥ `text-xs`，§2.4 由评审把关（无脚本）。
+      //
+      // 命名的可读性陷阱（本仓既有裁决点名的）：档名 **不叫 `text`**——`text` 作为
+      // prop 名会被读成「按钮文案」，且与 Tailwind 的 `text-*` 类名（字号 / 颜色 / 对齐
+      // 三义）同词；`fontSize` 与 CSS 属性同名、无歧义。档值与 token 后缀一一对应
+      // （`2xs` → `text-2xs`）。
+      // 默认档为空串 ⇒ 既有输出逐字节不变（纯增补）。
+      fontSize: {
+        default: "",
+        "2xs": "text-2xs",
+        xs: "text-xs",
+        sm: "text-sm",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
       // 默认档为空串 ⇒ 既有全部 variant × size 档的输出**逐字节不变**（纯增补）。
       tone: "default",
+      padding: "default",
+      fontSize: "default",
     },
   }
 )
+
+type ButtonSizeAxis = NonNullable<VariantProps<typeof buttonVariants>["size"]>;
+type ButtonPaddingAxis = NonNullable<VariantProps<typeof buttonVariants>["padding"]>;
+
+/**
+ * 内距轴与 size 轴的**解析优先级**（2026-09-28 裁决）。
+ *
+ * `size="icon-*"` 给的是**完整几何**（`size-N` 定宽定高），`padding` 给的是
+ * **内距驱动几何**（`h-auto` + 内距）——两套模型同给会产生「定宽 + 自高」的矛盾几何
+ * （已复现：`size="icon-xs"` + `padding="p-1"` → `size-6 h-auto p-1`）。icon 档更封闭，
+ * 且实测缺档形态里不含「定宽图标钮再改内距」，故 icon 档下**忽略** `padding`。
+ *
+ * 独立成导出函数（而非内联在 JSX 里）是为了让这条优先级可被**逻辑单测**锁住——
+ * 按 §18.2，组件测试不得断言 className，而该优先级只影响类串，故只能在逻辑层断言。
+ */
+export function resolvePaddingAxis(
+  size: ButtonSizeAxis,
+  padding: ButtonPaddingAxis,
+): ButtonPaddingAxis {
+  return size.startsWith("icon") ? "default" : padding;
+}
 
 // 组合方式：唯一走 base-ui 原生 `render` prop（宪法 §10.7）。
 // Radix 遗产 `asChild` 已于批 6b 移除（radix 已退场，base-ui 不认该 prop）。
@@ -110,16 +222,35 @@ function Button({
   variant = "default",
   size = "default",
   tone = "default",
+  // padding / fontSize 是**只给 cva 用**的轴，必须在此解构——否则会被 `...props`
+  // 透传到 DOM（`fontSize` 这类 camelCase 属性还会触发 React 警告）。
+  // 见 button.test.tsx 的「轴不泄漏到 DOM」用例。
+  padding = "default",
+  fontSize = "default",
   children,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  // 内建优先级（2026-09-28 裁决）：`size="icon-*"` 是完整几何档（`size-N` 定宽定高），
+  // 与 `padding` 的「h-auto + 内距」是两套模型；同给会得到「定宽 + 自高」的矛盾几何
+  // （已复现 `size="icon-xs" padding="p-1"` → `size-6 h-auto p-1`）。icon 档更封闭，
+  // 故 icon 档下**忽略** `padding`。解析逻辑见 `resolvePaddingAxis`。
+  const effectivePadding = resolvePaddingAxis(size, padding);
   return (
     <ButtonPrimitive
       data-slot="button"
       // tone 档的色类靠本属性拿到特异性（见上方 tone 轴注释）。
       // 默认档传 undefined ⇒ 属性不落 DOM，既有用法的渲染结果零变化。
       data-tone={tone === "default" ? undefined : tone}
-      className={cn(buttonVariants({ variant, size, tone, className }))}
+      className={cn(
+        buttonVariants({
+          variant,
+          size,
+          tone,
+          padding: effectivePadding,
+          fontSize,
+          className,
+        }),
+      )}
       {...props}
     >
       {children}
