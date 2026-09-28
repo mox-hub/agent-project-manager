@@ -302,13 +302,21 @@ export function FilterPanel({
                       <span className="text-xs text-muted-foreground">{filter.groupLabel}: </span>
                       <span className="text-xs font-medium text-foreground">{filter.optionLabel}</span>
                     </div>
-                    <button
+                    {/* E 类批 6：`size="icon-2xs"`(size-5=20px) 逐字等于原 `h-5 w-5`，且该档
+                        刻意不覆盖基线 `rounded-md`；`subtle` 逐字等于原三色类串。`ml-2` 是
+                        §19.4 白名单内的定位类，故留在 className。
+                        `size-3` 是**必需连带**：Button 基线带
+                        `[&_svg:not([class*='size-'])]:size-4`，`<X size={12} />` 的 width/height
+                        表现属性会被 CSS 归一成 16px ⇒ 不钉住即为可见几何漂移。 */}
+                    <Button
                       type="button"
+                      variant="subtle"
+                      size="icon-2xs"
+                      className="ml-2"
                       onClick={(e) => handleRemoveFilter(filter.groupId, filter.optionId, e)}
-                      className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
-                      <X size={12} />
-                    </button>
+                      <X className="size-3" />
+                    </Button>
                   </div>
                 ))}
               </div>

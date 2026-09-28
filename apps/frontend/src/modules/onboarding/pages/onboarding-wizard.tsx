@@ -183,14 +183,21 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
                 className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2"
               >
                 <span className="truncate font-mono text-xs text-foreground">{root}</span>
-                <button
+                {/* E 类批 6：`ghost-danger` 档 = 静默态 + 悬停转危险色，逐 token 覆盖原
+                    className；`shrink-0`/`rounded-md`/`transition-all` 由 Button 基线给。
+                    `size-3.5` 是**必需连带**：Button 基线带
+                    `[&_svg:not([class*='size-'])]:size-4`，而原 `h-3.5 w-3.5` 不含 `size-`
+                    子串 ⇒ 不钉住就会被归一成 16px（CSS 覆盖 width/height 表现属性），
+                    14px → 16px 即可见几何漂移。同型先例见 `acceptance-detail-page.tsx`。 */}
+                <Button
                   type="button"
+                  variant="ghost-danger"
+                  padding="p-1"
                   onClick={() => void handleRemove(root)}
-                  className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                   aria-label={`移除 ${root}`}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                  <Trash2 className="size-3.5" />
+                </Button>
               </div>
             ))}
           </div>

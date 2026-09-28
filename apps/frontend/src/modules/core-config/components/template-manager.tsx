@@ -511,15 +511,25 @@ export function TemplateManager() {
                                 >
                                   <Pencil size={14} />
                                 </button>
-                                <button
+                                {/* E 类批 6：`quiet` + `tone="danger"` —— tone 的色类带
+                                    `data-[tone=danger]:` 作用域（特异性 (0,2,0)/(0,3,0)），
+                                    故压得住 quiet 的 `text-muted-foreground` 与
+                                    `hover:text-foreground`：常态 = accent-red、悬停文字仍是
+                                    accent-red、悬停底 = accent-red-light，与原类串逐态等价。
+                                    `size-3.5` 是**必需连带**：Button 基线带
+                                    `[&_svg:not([class*='size-'])]:size-4`，`<Trash2 size={14} />`
+                                    的表现属性会被 CSS 归一成 16px ⇒ 不钉住即为几何漂移。 */}
+                                <Button
                                   type="button"
+                                  variant="quiet"
+                                  tone="danger"
+                                  padding="p-1.5"
                                   onClick={() => handleTaskDelete(template.id)}
                                   disabled={deleteTaskTemplate.isPending}
-                                  className="rounded-md p-1.5 text-accent-red hover:bg-accent-red-light"
                                   title={t('common.delete')}
                                 >
-                                  <Trash2 size={14} />
-                                </button>
+                                  <Trash2 className="size-3.5" />
+                                </Button>
                               </div>
                             </div>
                           </div>
