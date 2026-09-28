@@ -14,11 +14,11 @@
 
 | 状态 | 数量 | 计入 LU 分母 | 必须在画廊展示 | 是否需消费方 |
 |---|---|---|---|---|
-| ✅ canonical | 300 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
+| ✅ canonical | 299 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
 | 📦 standby | 17 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
 | 🔶 review | 17 | ❌ 暂不计 | ✅ 必须（带醒目标记） | ❌ 暂不要求 |
 | ⛔ deprecated | 1 | ❌ 不计 | ✅ 标记 deprecated | — |
-| **合计** | **335** | | | |
+| **合计** | **334** | | | |
 
 > 当前 0 条的状态：`internal`。注：`ui/menu-surface.ts` 实测有模块层消费方（document 模块页面直接 import 其中的常量），故按实测登记为 `canonical` 而非方案 §三 E6 建议的 `internal`（差异见批 1 报告）。
 
@@ -27,7 +27,7 @@
 | 分区 | 数量 |
 |---|---|
 | Primitives | 64 |
-| App Components | 246 |
+| App Components | 245 |
 | AI Execution | 25 |
 
 ## 待裁决清单（设计系统页「只看待裁决」视图同源）
@@ -145,7 +145,7 @@
 | tone | `src/components/ui/tone.ts` | ✅ canonical | — | — |
 | tooltip | `src/components/ui/tooltip.tsx` | ✅ canonical | — | — |
 
-### App Components（246）
+### App Components（245）
 
 #### UI 原子层 `src/components/ui/`（40）
 
@@ -198,7 +198,7 @@
 |---|---|---|---|---|
 | filter-panel | `src/shared/ui/filter-panel.tsx` | 🔶 review | — | 零引用（实测）——唯一引用是 project-list-page.test.tsx 的 vi.mock；且构成第二个 ui 命名空间 |
 
-#### 跨模块业务组件 `src/shared/components/`（28）
+#### 跨模块业务组件 `src/shared/components/`（27）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
@@ -229,7 +229,6 @@
 | markdown-live-editor | `src/shared/components/markdown-live-editor.tsx` | ✅ canonical | — | — |
 | markdown-view | `src/shared/components/markdown-view.tsx` | ✅ canonical | — | — |
 | prompt-editor | `src/shared/components/prompt-editor.tsx` | ✅ canonical | — | — |
-| view-switcher | `src/shared/components/view-switcher.tsx` | ✅ canonical | — | — |
 
 #### 模块专用组件 `src/modules/*/components/`（177）
 

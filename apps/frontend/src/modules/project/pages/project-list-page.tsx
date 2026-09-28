@@ -24,7 +24,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import type { ViewMode } from '@/shared/components/view-switcher';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import type { FilterState } from '@/shared/filters/types';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
@@ -71,6 +70,9 @@ type ProjectListColumnKey =
   | 'progress'
   | 'updated'
   | 'status';
+
+/** 视图形态词表（J10：view-switcher 清退后本地定义，与各列表页本地 ViewMode 同构；grid 档去留待后续裁决，暂保留） */
+type ViewMode = 'list' | 'grid' | 'board' | 'gantt';
 
 const getColumnOptions = (t: (key: string) => string): { key: ProjectListColumnKey; label: string }[] => [
   { key: 'icon', label: t("project.columns.icon") },

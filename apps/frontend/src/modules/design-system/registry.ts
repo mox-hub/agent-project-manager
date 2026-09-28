@@ -179,7 +179,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'markdown-live-editor', file: 'shared/components/markdown-live-editor.tsx', section: 'App Components', status: 'canonical' },
   { name: 'markdown-view', file: 'shared/components/markdown-view.tsx', section: 'App Components', status: 'canonical' },
   { name: 'prompt-editor', file: 'shared/components/prompt-editor.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'view-switcher', file: 'shared/components/view-switcher.tsx', section: 'App Components', status: 'canonical' },
 
   // ── 错位目录：src/shared/ui/（E7 清退候选） ───────────────────────────────
   { name: 'filter-panel', file: 'shared/ui/filter-panel.tsx', section: 'App Components', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——唯一引用是 project-list-page.test.tsx 的 vi.mock；且构成第二个 ui 命名空间', proposal: 'delete' } },
