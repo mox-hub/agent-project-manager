@@ -533,6 +533,12 @@ AI 会话开工前必读（由 `frontend-page` skill 强制）。
 
 > **A2+A4 曾导致一次方案否决**：A 类方案 §3.6 第 3 步建议设 `--shadow-*: initial` 让违规档「物理上无法生成 CSS」。经裁决**不实施**——命名空间闭合会连带抹掉 A2/A4 已豁免的投影，把「豁免」变成静默破版。**物理闭合与豁免机制不可并存**，取「豁免 + lint 拦截」（§3.6）。同一原因，`check-palette.mjs` 中的 `RAW_SHADOW` 系列正则已整体删除，阴影治理单点收敛到 `check-spacing-governance.mjs`。
 
+**ESLint 三规则（`design-governance/*`）的豁免登记**（2026-09-28 增补）：`no-naked-controls` / `no-visual-override` / `no-adhoc-tone` 三条 AST 规则的豁免**不走本表逐行登记**，走 `apps/frontend/design-governance.allowlist.json`（schema 与机器实现：`apps/frontend/eslint-rules/`）——因该机制的豁免粒度是**范围级**且带强制到期日（`expiresAt`，距登记日最长 90 天，过期自动失效），与本表「不计划清除」的长期边界条目语义不同。登记格式：规则（含 `*`=三条全豁免）+ 范围（相对 `apps/frontend` 的 posix 路径，`/**` 后缀按目录前缀匹配）+ `reason` + `owner` + `expiresAt`，五者缺一即整份判无效（lint 抛错，fail-closed）；文件缺失 = 零豁免。**登记文件与 `eslint-rules/allowlist.js` 必须成对改动**——只写登记不改代码等于没豁免，只改代码不写登记等于暗箱豁免（同本表序言）。转 `error` 的前提仍是存量清零：已登记豁免的范围不算存量。
+
+| # | 范围 | 豁免规则 | 原因 | 清除计划 |
+|---|------|---------|------|---------|
+| A6 | `src/modules/design-system/**` | `*`（ESLint 三规则，登记于 `design-governance.allowlist.json`） | 展示页陈列 token 名与各档对照，必然出现规范禁止的形态——同 A4 的展示页属性；A4 管 `check-*.mjs` 文本层，本条把同一裁决落到 AST 层 | 90 天滚动复登记（`expiresAt` 强制）；展示页属性不变则续登 |
+
 ### A.2 交互态裁决登记（非豁免，是决策留档）
 
 **hover 抬升阴影的 12 处处置**（D11 落地，2026-09-27 用户决策：`改用边框/背景做 hover 反馈`）。这些位置在 v2.0 前靠 `hover:shadow-md` 之类的抬升表达可交互性；唯一阴影档下无「更高一档」可去，故逐处改写（下表 10 行覆盖 12 处，`template-manager` 与 `documents-page` 各 ×2）：

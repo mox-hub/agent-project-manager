@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "design-governance.allowlist.json —— E 类设计门禁豁免登记",
+  "description": "apps/frontend 三条 design-governance ESLint 规则的豁免登记表。机器实现：eslint-rules/allowlist.js（fail-closed：文件缺失=零豁免；字段缺失/日期非法/超过 90 天=lint 抛错；expiresAt 过期=自动失效）。登记行为受 docs/design/PRINCIPLES.md 附录 A.1 约束，附录登记与本文件必须成对改动。",
+  "type": "object",
+  "required": ["version", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "登记表格式版本，当前固定为 1"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule", "file", "reason", "owner", "expiresAt"],
+        "additionalProperties": false,
+        "properties": {
+          "rule": {
+            "enum": ["no-naked-controls", "no-visual-override", "no-adhoc-tone", "*"],
+            "description": "豁免哪条规则；* 表示该范围对三条规则全豁免（附录 A.1「范围级豁免」形态）"
+          },
+          "file": {
+            "type": "string",
+            "pattern": "^src/.+",
+            "description": "相对 apps/frontend 包根的 posix 路径；以 /** 结尾按目录前缀匹配，否则精确匹配文件"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 8,
+            "description": "为什么必须豁免、为什么不能现在迁移（引用宪法条款或方案 §七 裁决）"
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 2,
+            "description": "责任人/岗位——到期复核时找谁"
+          },
+          "expiresAt": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "format": "date",
+            "description": "到期日 YYYY-MM-DD；距登记日最长 90 天，过期自动失效（违规恢复告警），续期须重新登记并复述理由"
+          }
+        }
+      }
+    }
+  }
+}

@@ -12,7 +12,9 @@
  *
  * 方案 §六 批 5：「先 warn 一轮，再转 error」。存量命中量大（见各规则的命中统计），
  * 先以 warn 暴露全貌、由人来决定分批清剿顺序，**不缩窄规则去换绿色**。
- * 转 error 的前提是存量清零 + 豁免机制（`design-governance.allowlist.json`）就位。
+ * 转 error 的前提是存量清零；豁免机制（`design-governance.allowlist.json`，见
+ * `./allowlist.js`）已于 2026-09-28 落地——存量中「不可迁移但可解释」的范围
+ * （如设计系统展示页，宪法附录 A.1）逐条登记豁免，其余迁移或裁决。
  *
  * ## 与既有脚本的关系：并存，不替代
  *
@@ -25,6 +27,8 @@
  * 不参与设计治理：它们不是出厂 UI，对其报错只会淹没真实信号。这与本仓既有 8 个
  * `check-*.mjs`（均排除 `.test.tsx`）口径一致。
  */
+
+import { isExempt } from "./allowlist.js";
 
 /** 正斜杠归一（Windows 的 path.join 给反斜杠，includes("a/b") 会静默失败） */
 const toPosix = (p) => p.split("\\").join("/");
@@ -53,10 +57,10 @@ const isUiAtomFile = (filename) => toPosix(filename).includes("/components/ui/")
  * §19.2 正文另有 `<a>`（条件禁止）与 `<img>`。
  * - `<a>` 的判定依赖 `href` 的**字面量**是否以 `http` 开头；`href={expr}` 时静态不可知，
  *   加了必然产生大量误报（本仓当前 `href={` 形态占多数）。故本轮**不纳入**。
- * - `<img>` 本轮**不纳入**：§19.2 允许「其他场景登记豁免」，而豁免清单
- *   （`design-governance.allowlist.json`）本轮尚未落地，强行报错会把合规的头像
- *   与装饰性图片一起误伤。
- * 两条均记入交付报告「未做/存疑」，待豁免机制落地后再补。
+ * - `<img>` 本轮**不纳入**：§19.2 允许「其他场景登记豁免」，豁免机制
+ *   （`design-governance.allowlist.json`，`./allowlist.js`）2026-09-28 已落地，
+ *   纳入 `<img>` 前先按宪法附录 A.1 把合规的头像/装饰图边界登记清楚。
+ * 两条均记入交付报告「未做/存疑」。
  */
 const NAKED_CONTROL_REPLACEMENTS = {
   button: "ui/button 的 <Button>（用 variant / size 表达形态）",
@@ -83,8 +87,10 @@ const noNakedControls = {
   },
   create(context) {
     const filename = context.filename ?? context.getFilename();
-    // 原子层自身就是这些标签的实现处（ui/table 内部必然写 <table>），豁免。
+    // 原子层自身就是这些标签的实现处（ui/table 内部必然写 <table>），豁免；
+    // allowlist 已登记的范围（如设计系统展示页，附录 A.1）整文件豁免本规则。
     if (isUiAtomFile(filename) || isTestFile(filename)) return {};
+    if (isExempt("no-naked-controls", filename)) return {};
     return {
       JSXOpeningElement(node) {
         if (node.name.type !== "JSXIdentifier") return; // <Foo.Bar> 之类不判
@@ -171,6 +177,7 @@ const noVisualOverride = {
   create(context) {
     const filename = context.filename ?? context.getFilename();
     if (isUiAtomFile(filename) || isTestFile(filename)) return {};
+    if (isExempt("no-visual-override", filename)) return {};
 
     // 用**导入来源**而非组件名白名单识别「宿主是本仓 ui 原子组件」：
     // 名字白名单会把同名局部组件误判，且无法覆盖 `import { Button as B }`。
@@ -237,6 +244,7 @@ const noAdhocTone = {
   create(context) {
     const filename = context.filename ?? context.getFilename();
     if (isTestFile(filename)) return {};
+    if (isExempt("no-adhoc-tone", filename)) return {};
     const sourceCode = context.sourceCode ?? context.getSourceCode();
 
     return {

@@ -1,0 +1,13 @@
+{
+  "$schema": "./eslint-rules/design-governance.allowlist.schema.json",
+  "version": 1,
+  "entries": [
+    {
+      "rule": "*",
+      "file": "src/modules/design-system/**",
+      "reason": "设计系统展示页的存在意义就是陈列 token 名与各档对照，必然出现规范禁止的裸控件/覆盖类/对照色（宪法附录 A.1 A4 同源：A4 管文本层 check-*.mjs，本条把同一裁决落到 AST 层 ESLint 三规则）",
+      "owner": "APM 前端设计治理",
+      "expiresAt": "2026-12-27"
+    }
+  ]
+}

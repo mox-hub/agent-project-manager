@@ -84,7 +84,8 @@ export default defineConfig([
   // ⚠️ 本轮一律 `warn`，零 `error`（方案 §六批 5 第 569 行「先 warn 一轮，再转 error」）。
   // 实测 `pnpm lint`（frontend = 9 个 lint:* 脚本 + `eslint .`）与 CI quality-gate.yml
   // 均**不带 `--max-warnings`**，故 warn 不会把门禁弄红、不阻塞并行提交；
-  // 转 error 的前提是存量清零 + allowlist 机制（design-governance.allowlist.json）落地。
+  // 转 error 的前提是存量清零。豁免机制（design-governance.allowlist.json）已于
+  // 2026-09-28 落地（读取实现 ./eslint-rules/allowlist.js，登记约束见宪法附录 A.1）。
   //
   // 本块为**新增**，不改动上方 D11 的 jsx-a11y 块（批 9b，18 条 error）。
   {
