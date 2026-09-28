@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { ChecklistsSettingsSection } from './checklists-section';
 import type { CompletenessChecklist } from '@/modules/acceptance/api/acceptance-api';
 
@@ -84,6 +84,20 @@ function renderSection() {
   );
 }
 
+/**
+ * 语义锚点定位清单行：以「清单名称」文本为锚，向上取最近的卡片壳
+ * （`data-slot="card"`，Card 组件的公开契约）。
+ *
+ * 此前用的是类选择器 `.rounded-lg.border.bg-card`——那是「以实现细节当契约」：
+ * 壳的 class 串一改（哪怕可见效果逐像素不变）断言就红，反过来也逼着迁移者为了过测试
+ * 而保留旧 class。改锚到语义后，断言只依赖「一行清单 = 一张以名称标识的卡片」这一事实。
+ */
+function rowFor(name: string): HTMLElement {
+  const row = screen.getByText(name).closest('[data-slot="card"]');
+  if (!row) throw new Error(`未找到清单「${name}」所在的行卡片`);
+  return row as HTMLElement;
+}
+
 describe('ChecklistsSettingsSection', () => {
   beforeEach(() => {
     // mockClear 只清调用记录、保留 mockResolvedValue 实现
@@ -110,15 +124,16 @@ describe('ChecklistsSettingsSection', () => {
     mockChecklists([systemChecklist, teamChecklist]);
     renderSection();
 
-    const rows = document.querySelectorAll('.rounded-lg.border.bg-card');
-    expect(rows.length).toBe(2);
+    const sysRow = rowFor('通用工程清单');
+    const teamRow = rowFor('我的前端清单');
+    // 两行各自独立成卡（systemChecklist 与 teamChecklist 未被合并到同一壳里）
+    expect(sysRow).not.toBe(teamRow);
 
-    const sysRow = rows[0];
     expect(sysRow.querySelector('[data-svg-src], svg') ?? null).toBeTruthy();
     // 系统行没有编辑/删除操作按钮
-    expect(sysRow.querySelectorAll('button').length).toBe(0);
+    expect(within(sysRow).queryAllByRole('button')).toHaveLength(0);
     // 团队行有两个操作按钮（编辑/删除）
-    expect(rows[1].querySelectorAll('button').length).toBe(2);
+    expect(within(teamRow).queryAllByRole('button')).toHaveLength(2);
   });
 
   it('创建对话框：填写名称与技术栈后保存，携带 projectType/checklist 落库', async () => {
@@ -164,8 +179,8 @@ describe('ChecklistsSettingsSection', () => {
     mockChecklists([teamChecklist]);
     renderSection();
 
-    const row = document.querySelectorAll('.rounded-lg.border.bg-card')[0];
-    const buttons = row.querySelectorAll('button');
+    const row = rowFor('我的前端清单');
+    const buttons = within(row).getAllByRole('button');
     fireEvent.click(buttons[buttons.length - 1]);
 
     await waitFor(() => expect(confirmMock).toHaveBeenCalled());

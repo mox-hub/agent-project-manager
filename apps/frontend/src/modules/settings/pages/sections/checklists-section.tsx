@@ -83,7 +83,9 @@ function ChecklistRow({
   const items = checklist.checklist ?? [];
 
   return (
-    <div className="rounded-lg border bg-card p-3">
+    // 壳迁至 Card：`rounded-lg`+`border`+`bg-card` = variant="outline"（圆角/描边/去投影），
+    // `p-3` = inset="sm"。内容侧布局（flex items-start gap-3）留在内层 div，不上壳。
+    <Card variant="outline" inset="sm">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex items-center gap-2">
@@ -125,7 +127,7 @@ function ChecklistRow({
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
