@@ -50,9 +50,14 @@ export interface DataListProgress {
   total: number;
 }
 
+/** 行高两档（F 类 F7.2 / 宪法 §4.2）：同一列表只选一档 */
+export type DataListSize = 'dense' | 'comfortable';
+
 export interface DataListProps<T extends DataListItem> {
   items: T[];
   loading?: boolean;
+  /** 行高两档（F7.2）：dense 32px（默认）/ comfortable 40px（高触达场景：成员列表、设置列表） */
+  size?: DataListSize;
   /** 空态文案（默认 i18n「暂无数据」）；渲染走 EmptyState 规范形态 */
   emptyMessage?: ReactNode;
   /** 空态描述行（EmptyState description） */
@@ -253,6 +258,7 @@ function SelectCell({
 
 function Row<T extends DataListItem>({
   item,
+  size = 'dense',
   selectable,
   isSelected,
   onToggleSelect,
@@ -265,6 +271,7 @@ function Row<T extends DataListItem>({
   isActive,
 }: {
   item: T;
+  size?: DataListSize;
   selectable: boolean;
   isSelected: (item: T) => boolean;
   onToggleSelect: (id: string) => void;
@@ -282,7 +289,8 @@ function Row<T extends DataListItem>({
     <div
       data-row-id={item.id}
       className={cn(
-        'group flex items-center gap-2.5 px-2 py-2 transition-colors',
+        'group flex items-center gap-2.5 px-2 transition-colors',
+        size === 'comfortable' ? 'py-2.5' : 'py-2',
         indent ? 'bg-muted/5 pl-7' : '',
         onItemClick ? 'cursor-pointer hover:bg-accent/20' : 'hover:bg-accent/10',
         isActive && 'bg-accent',
@@ -314,6 +322,7 @@ function Row<T extends DataListItem>({
         <Row
           key={child.id}
           item={child}
+          size={size}
           selectable={selectable}
           isSelected={isSelected}
           onToggleSelect={onToggleSelect}
@@ -493,6 +502,7 @@ export function DataListSkeleton({ grouping }: { grouping: boolean }) {
 export function DataList<T extends DataListItem>({
   items,
   loading,
+  size = 'dense',
   emptyMessage,
   emptyDescription,
   emptyIcon,
@@ -663,6 +673,7 @@ export function DataList<T extends DataListItem>({
         <Row
           key={item.id}
           item={item}
+          size={size}
           selectable={selectable}
           isSelected={(it) => selected.has(it.id)}
           onToggleSelect={toggleSelect}
@@ -714,6 +725,7 @@ export function DataList<T extends DataListItem>({
                       <Row
                         key={item.id}
                         item={item}
+                        size={size}
                         selectable={selectable}
                         isSelected={(it) => selected.has(it.id)}
                         onToggleSelect={toggleSelect}
