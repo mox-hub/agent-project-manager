@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AsyncState } from "@/components/ui/async-state";
 import { Button } from "@/components/ui/button";
 import { DataTableShell } from "@/components/ui/data-table-shell";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { SectionCard } from "@/components/ui/section-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -65,6 +66,7 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
   };
 
   return (
+    <>
     <SectionCard
       title="Repositories"
       actions={
@@ -80,10 +82,42 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
       }
       contentClassName="space-y-4"
     >
-      {showCreateForm ? (
+      <AsyncState isLoading={isLoading} isEmpty={filteredRepositories.length === 0} emptyTitle="No repositories found">
+        <DataTableShell>
+          <div className="divide-y divide-border">
+            {filteredRepositories.map((repo) => (
+              <div
+                key={repo.id}
+                className="space-y-1 p-3 text-sm motion-shift hover:bg-muted/50"
+                data-ai-component={`git.repository-list.row.${repo.id}`}
+                data-ai-role="content"
+              >
+                <div className="font-medium text-foreground">{repo.name}</div>
+                {repo.localPath ? <div className="text-muted-foreground">{repo.localPath}</div> : null}
+                {repo.remoteUrl ? <div className="text-muted-foreground">{repo.remoteUrl}</div> : null}
+                {repo.defaultBranch ? <div className="text-muted-foreground">Branch: {repo.defaultBranch}</div> : null}
+              </div>
+            ))}
+          </div>
+        </DataTableShell>
+      </AsyncState>
+    </SectionCard>
+
+    {/* 新建仓库弹窗（F3.6 表单容器铁律：实体表单走模态 Dialog） */}
+    <Dialog
+      open={showCreateForm}
+      onOpenChange={(open) => {
+        setShowCreateForm(open);
+        if (!open) setFormError(null);
+      }}
+    >
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Add Repository</DialogTitle>
+        </DialogHeader>
         <form
           onSubmit={handleSubmit}
-          className="space-y-3 rounded-xl border border-border bg-muted/50 p-4 motion-enter"
+          className="space-y-3"
           data-ai-component="git.repository-list.create-form"
           data-ai-role="input"
         >
@@ -147,16 +181,7 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
             />
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              type="submit"
-              disabled={createRepository.isPending}
-              data-ai-component="git.repository-list.create-form.submit"
-              data-ai-action="git.repository-list.create-form.submit.click"
-              data-ai-role="submit"
-            >
-              Create
-            </Button>
+          <DialogFooter>
             <Button
               type="button"
               variant="secondary"
@@ -167,29 +192,19 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
             >
               Cancel
             </Button>
-          </div>
+            <Button
+              type="submit"
+              disabled={createRepository.isPending}
+              data-ai-component="git.repository-list.create-form.submit"
+              data-ai-action="git.repository-list.create-form.submit.click"
+              data-ai-role="submit"
+            >
+              Create
+            </Button>
+          </DialogFooter>
         </form>
-      ) : null}
-
-      <AsyncState isLoading={isLoading} isEmpty={filteredRepositories.length === 0} emptyTitle="No repositories found">
-        <DataTableShell>
-          <div className="divide-y divide-border">
-            {filteredRepositories.map((repo) => (
-              <div
-                key={repo.id}
-                className="space-y-1 p-3 text-sm motion-shift hover:bg-muted/50"
-                data-ai-component={`git.repository-list.row.${repo.id}`}
-                data-ai-role="content"
-              >
-                <div className="font-medium text-foreground">{repo.name}</div>
-                {repo.localPath ? <div className="text-muted-foreground">{repo.localPath}</div> : null}
-                {repo.remoteUrl ? <div className="text-muted-foreground">{repo.remoteUrl}</div> : null}
-                {repo.defaultBranch ? <div className="text-muted-foreground">Branch: {repo.defaultBranch}</div> : null}
-              </div>
-            ))}
-          </div>
-        </DataTableShell>
-      </AsyncState>
-    </SectionCard>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
