@@ -304,7 +304,7 @@ function NewWorkspaceContent() {
                 </div>
 
                 {step === 0 ? (
-                  <Card className="border-border shadow-none">
+                  <Card surface="flat">
                     <CardHeader>
                       <CardTitle>{t('workspace.step1Title', '基本信息')}</CardTitle>
                       <CardDescription>
@@ -333,7 +333,7 @@ function NewWorkspaceContent() {
                     </CardContent>
                   </Card>
                 ) : step === 1 ? (
-                  <Card className="border-border shadow-none">
+                  <Card surface="flat">
                     <CardHeader>
                       <CardTitle>{t('workspace.step2Title', '存储位置')}</CardTitle>
                       <CardDescription>
@@ -380,7 +380,7 @@ function NewWorkspaceContent() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card className="border-border shadow-none">
+                  <Card surface="flat">
                     <CardHeader>
                       <CardTitle>{t('workspace.step3Title', '确认创建')}</CardTitle>
                       <CardDescription>
@@ -480,10 +480,10 @@ function CreatedCard({
   const { t } = useTranslation();
 
   return (
-    <Card className="border-border shadow-none" data-ai-component="workspace.new.done">
+    <Card surface="flat" data-ai-component="workspace.new.done">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CheckCircle2 size={16} className="text-accent-green" />
+        <CardTitle className="flex items-center">
+          <CheckCircle2 size={16} className="mr-2 text-accent-green" />
           {t('workspace.doneTitle', '创建完成')}
         </CardTitle>
         <CardDescription>

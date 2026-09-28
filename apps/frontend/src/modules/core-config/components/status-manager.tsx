@@ -186,7 +186,6 @@ export function StatusManager() {
       variant="standard"
       contentClassName="gap-4"
       aiPage="settings.statuses"
-      className="bg-background text-foreground"
       title={t('settings.statuses')}
       icon={Layers}
       iconColor="text-accent-yellow"

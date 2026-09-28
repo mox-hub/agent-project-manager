@@ -60,7 +60,6 @@ export function ChecklistsSettingsSection() {
       icon={ClipboardCheck}
       iconColor="text-accent-blue"
       title={t('settings.checklists')}
-      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
       <ChecklistsCard />
@@ -91,12 +90,12 @@ function ChecklistRow({
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium">{checklist.name}</span>
             {checklist.isSystem ? (
-              <Badge variant="secondary" className="gap-1 text-2xs">
+              <Badge variant="secondary">
                 <Lock className="size-3" />
                 {t('settings.checklistsSystemBadge')}
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-2xs">
+              <Badge variant="outline">
                 v{checklist.version}
               </Badge>
             )}
@@ -105,11 +104,11 @@ function ChecklistRow({
             <p className="text-xs text-muted-foreground">{checklist.description}</p>
           )}
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="outline" className="font-mono text-2xs">
-              {checklist.projectType}
+            <Badge variant="outline">
+              <span className="font-mono">{checklist.projectType}</span>
             </Badge>
-            <Badge variant="outline" className="font-mono text-2xs">
-              {checklist.techStack}
+            <Badge variant="outline">
+              <span className="font-mono">{checklist.techStack}</span>
             </Badge>
             <span className="text-xs text-muted-foreground">
               {t('settings.checklistsItemsCount', { count: items.length })}
@@ -243,12 +242,12 @@ function ChecklistsCard() {
     );
 
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ClipboardCheck size={16} className="text-accent-blue" />
-            <CardTitle className="text-base">{t('settings.checklistsTitle')}</CardTitle>
+            <CardTitle>{t('settings.checklistsTitle')}</CardTitle>
           </div>
           <Button size="sm" onClick={openCreate}>
             <Plus className="mr-1 size-3.5" />

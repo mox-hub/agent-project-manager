@@ -91,21 +91,21 @@ function McpServerCard({
 }) {
   const { t } = useTranslation();
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex min-w-0 items-center gap-2 text-base">
-            {server.transport === 'stdio' ? <Terminal size={15} className="shrink-0 text-accent-blue" /> : <Globe size={15} className="shrink-0 text-accent-blue" />}
+          <CardTitle className="flex min-w-0 items-center">
+            {server.transport === 'stdio' ? <Terminal size={15} className="mr-2 shrink-0 text-accent-blue" /> : <Globe size={15} className="mr-2 shrink-0 text-accent-blue" />}
             <span className="truncate">{server.name}</span>
           </CardTitle>
           <div className="flex shrink-0 items-center gap-1.5">
-            <Badge variant="outline" className="text-xs uppercase">{server.transport}</Badge>
+            <Badge variant="outline"><span className="text-xs uppercase">{server.transport}</span></Badge>
             <McpStatusBadge status={mcpServerStatus(server)} />
           </div>
         </div>
         {server.description ? <CardDescription>{server.description}</CardDescription> : null}
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent>
         <p className="truncate rounded-md border border-border bg-muted/40 px-2.5 py-1.5 font-mono text-xs text-muted-foreground">
           {server.transport === 'stdio'
             ? [server.command, ...(server.args ?? [])].filter(Boolean).join(' ')

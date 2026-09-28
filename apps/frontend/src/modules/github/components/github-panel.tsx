@@ -67,8 +67,8 @@ export function GithubPanel({
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <GitBranch className="h-4 w-4" />
+            <CardTitle className="flex items-center">
+              <GitBranch className="mr-2 h-4 w-4" />
               GitHub 集成
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
@@ -76,8 +76,8 @@ export function GithubPanel({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-mono text-3xs">
-              V3 Stage 2
+            <Badge variant="outline">
+              <span className="font-mono text-3xs">V3 Stage 2</span>
             </Badge>
           </div>
         </div>
@@ -102,7 +102,6 @@ export function GithubPanel({
               variant="outline"
               onClick={() => refetch()}
               disabled={!repo || isLoading}
-              className="h-8"
             >
               {isLoading ? (
                 <Spinner className="h-3 w-3 text-inherit" />
@@ -116,7 +115,6 @@ export function GithubPanel({
               variant="default"
               onClick={() => setShowCreate((v) => !v)}
               disabled={!repo}
-              className="h-8"
             >
               {showCreate ? <X className="h-3 w-3" /> : <GitPullRequest className="h-3 w-3" />}
               <span className="ml-1">新建 PR</span>
@@ -169,7 +167,6 @@ export function GithubPanel({
                 size="sm"
                 variant="ghost"
                 onClick={() => setShowCreate(false)}
-                className="h-8"
               >
                 取消
               </Button>
@@ -194,7 +191,6 @@ export function GithubPanel({
                   !createInput.head ||
                   !createInput.base
                 }
-                className="h-8"
               >
                 {createMut.isPending ? (
                   <Spinner className="h-3 w-3 mr-1 text-inherit" />
@@ -359,7 +355,6 @@ export function GithubPanelEmbedded({
       <Button
         variant="ghost"
         size="xs"
-        className="h-6 px-2"
         onClick={() => setShowCreate((v) => !v)}
         disabled={!repo}
       >
@@ -410,7 +405,6 @@ export function GithubPanelEmbedded({
           <div className="flex items-center justify-end pt-0.5">
             <Button
               size="xs"
-              className="h-6 px-2"
               onClick={async () => {
                 const [owner, repoName] = repo.split('/');
                 await createMut.mutateAsync({

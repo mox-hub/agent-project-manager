@@ -190,12 +190,12 @@ export function UserAccountsSection({
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {u.email ?? '—'}
+                    <TableCell>
+                      <span className="text-muted-foreground">{u.email ?? '—'}</span>
                     </TableCell>
                     <TableCell>
                       {isAdmin ? (
-                        <Badge variant="secondary" className="gap-1">
+                        <Badge variant="secondary">
                           <ShieldCheck className="size-3" />
                           {t('admin.roleAdmin', '管理员')}
                         </Badge>
@@ -214,11 +214,15 @@ export function UserAccountsSection({
                         </StatusPill>
                       )}
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {u.memberShortId ?? '—'}
+                    <TableCell>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {u.memberShortId ?? '—'}
+                      </span>
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {new Date(u.createdAt).toLocaleDateString()}
+                    <TableCell>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Menu>

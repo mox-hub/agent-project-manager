@@ -33,8 +33,8 @@ export function GeneratedPasswordDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <KeyRound size={16} className="text-accent-yellow" />
+          <DialogTitle className="flex items-center">
+            <KeyRound size={16} className="mr-2 text-accent-yellow" />
             {t('admin.passwordGenerated', '初始密码')}
           </DialogTitle>
           <DialogDescription>

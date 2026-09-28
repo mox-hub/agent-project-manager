@@ -69,12 +69,12 @@ function TerminalToolStatusCard() {
   };
 
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Terminal size={16} className="text-accent-blue" />
-            <CardTitle className="text-base">{t('settings.terminalStatus')}</CardTitle>
+            <CardTitle>{t('settings.terminalStatus')}</CardTitle>
           </div>
           <Button
             variant="outline"
@@ -229,7 +229,6 @@ export function TerminalSettingsSection() {
       icon={Terminal}
       iconColor="text-accent-purple"
       title={t('settings.terminal')}
-      className="bg-background text-foreground"
       contentClassName="space-y-6"
       actions={
         <HeaderActionButton
@@ -248,12 +247,12 @@ export function TerminalSettingsSection() {
 
           {/* 终端配置卡片 */}
           <Card
-            className="border-border shadow-none"
+            surface="flat"
             data-ai-component="settings.global-settings.terminal-card"
           >
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Settings2 size={16} className="text-accent-purple" />
+              <CardTitle className="flex items-center">
+                <Settings2 size={16} className="mr-2 text-accent-purple" />
                 {t('settings.terminalTitle')}
               </CardTitle>
               <CardDescription>{t('settings.terminalDesc')}</CardDescription>

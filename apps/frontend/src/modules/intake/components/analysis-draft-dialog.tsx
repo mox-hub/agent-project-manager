@@ -108,8 +108,8 @@ export function AnalysisDraftDialog({
       {/* keepDefaultWidth={false}：丢掉基类 sm:max-w-md，否则 max-w-2xl 在桌面端被覆盖回 448px，报告内容被压窄 */}
       <DialogContent keepDefaultWidth={false} className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles size={16} />
+          <DialogTitle className="flex items-center">
+            <Sparkles size={16} className="mr-2" />
             {t('intake.analysisTitle', 'AI 生成需求分析报告')}
           </DialogTitle>
           <DialogDescription>
@@ -246,11 +246,8 @@ export function AnalysisDraftDialog({
                 <ul className="mt-1.5 space-y-1 text-xs text-content-text-secondary">
                   {draft.risks.map((r) => (
                     <li key={r.risk} className="flex items-start gap-1.5">
-                      <Badge
-                        variant="secondary"
-                        className="mt-0.5 shrink-0 font-mono text-3xs"
-                      >
-                        {r.severity}
+                      <Badge variant="secondary" className="mt-0.5 shrink-0">
+                        <span className="font-mono text-3xs">{r.severity}</span>
                       </Badge>
                       <span>
                         {r.risk}

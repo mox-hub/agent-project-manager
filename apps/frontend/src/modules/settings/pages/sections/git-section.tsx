@@ -73,12 +73,12 @@ function GitToolStatusCard() {
   };
 
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <GitBranch size={16} className="text-accent-blue" />
-            <CardTitle className="text-base">{t('settings.gitToolStatus')}</CardTitle>
+            <CardTitle>{t('settings.gitToolStatus')}</CardTitle>
           </div>
           <Button
             variant="outline"
@@ -236,7 +236,6 @@ export function GitSettingsSection() {
       icon={GitBranch}
       iconColor="text-accent-blue"
       title={t('settings.git')}
-      className="bg-background text-foreground"
       contentClassName="space-y-6"
       actions={
         <HeaderActionButton
@@ -255,12 +254,12 @@ export function GitSettingsSection() {
 
           {/* Git 配置卡片 */}
           <Card
-            className="border-border shadow-none"
+            surface="flat"
             data-ai-component="settings.global-settings.git-card"
           >
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Settings2 size={16} className="text-accent-blue" />
+              <CardTitle className="flex items-center">
+                <Settings2 size={16} className="mr-2 text-accent-blue" />
                 {t('settings.gitTitle')}
               </CardTitle>
               <CardDescription>{t('settings.gitDesc')}</CardDescription>

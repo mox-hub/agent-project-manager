@@ -46,8 +46,8 @@ export function GithubSetupCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Github className="h-4 w-4" />
+        <CardTitle className="flex items-center">
+          <Github className="mr-2 h-4 w-4" />
           GitHub Integration Setup
         </CardTitle>
         <CardDescription>
@@ -66,12 +66,11 @@ export function GithubSetupCard({
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-              className="h-9 text-sm font-mono"
+              className="text-sm font-mono"
             />
             <Button
               onClick={testInline}
               disabled={testResult.loading || !token.trim()}
-              className="h-9"
             >
               {testResult.loading ? (
                 <Spinner className="h-3 w-3 mr-1 text-inherit" />
@@ -105,8 +104,8 @@ export function GithubSetupCard({
         <div className="space-y-2 border-t pt-4">
           <div className="flex items-center justify-between">
             <Label className="text-xs">已存配置</Label>
-            <Badge variant="outline" className="font-mono text-3xs">
-              ID: {integrationId.slice(-6)}
+            <Badge variant="outline">
+              <span className="font-mono text-3xs">ID: {integrationId.slice(-6)}</span>
             </Badge>
           </div>
           {storedTest.isLoading ? (

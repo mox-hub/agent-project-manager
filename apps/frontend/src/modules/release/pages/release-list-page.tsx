@@ -275,12 +275,14 @@ export function ReleaseListPage() {
                       className="cursor-pointer"
                       onClick={() => navigate(`/app/releases/${r.id}`)}
                     >
-                      <TableCell className="font-mono text-xs font-medium">
-                        v{r.version}
+                      <TableCell>
+                        <span className="font-mono text-xs font-medium">v{r.version}</span>
                       </TableCell>
-                      <TableCell className="text-xs">{r.name || '—'}</TableCell>
-                      <TableCell className="text-xs text-content-text-secondary">
-                        {r.project?.name || '—'}
+                      <TableCell>
+                        <span className="text-xs">{r.name || '—'}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-content-text-secondary">{r.project?.name || '—'}</span>
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -290,16 +292,18 @@ export function ReleaseListPage() {
                           {t(statusLabelKey(r.status))}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-content-text-secondary">
-                        {r.milestone?.name || '—'}
+                      <TableCell>
+                        <span className="text-xs text-content-text-secondary">{r.milestone?.name || '—'}</span>
                       </TableCell>
-                      <TableCell className="font-mono text-2xs text-content-text-muted">
-                        {r.gitTag || '—'}
+                      <TableCell>
+                        <span className="font-mono text-2xs text-content-text-muted">{r.gitTag || '—'}</span>
                       </TableCell>
-                      <TableCell className="text-2xs text-content-text-muted">
-                        {r.releasedAt
-                          ? new Date(r.releasedAt).toLocaleDateString()
-                          : '—'}
+                      <TableCell>
+                        <span className="text-2xs text-content-text-muted">
+                          {r.releasedAt
+                            ? new Date(r.releasedAt).toLocaleDateString()
+                            : '—'}
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))}

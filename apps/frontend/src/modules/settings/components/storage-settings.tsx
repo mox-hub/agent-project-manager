@@ -75,7 +75,7 @@ export function StorageSettings() {
 
   if (isLoading) {
     return (
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardContent className="flex items-center gap-2 p-6 text-muted-foreground">
           <Spinner size="sm" />
           {t('settings.storageLoading')}
@@ -86,11 +86,11 @@ export function StorageSettings() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardHeader>
           <div className="flex items-center gap-2">
             <FolderOpen size={16} className="text-accent-yellow" />
-            <CardTitle className="text-base">{t('settings.storageTitle')}</CardTitle>
+            <CardTitle>{t('settings.storageTitle')}</CardTitle>
           </div>
           <CardDescription>
             {t('settings.storageDesc')}
@@ -206,12 +206,12 @@ export function StorageSettings() {
       </Card>
 
       {/* 已同步文件列表 */}
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileText size={16} className="text-accent-yellow" />
-              <CardTitle className="text-base">{t('settings.storageSyncedFiles')}</CardTitle>
+              <CardTitle>{t('settings.storageSyncedFiles')}</CardTitle>
             </div>
             <Button
               variant="outline"

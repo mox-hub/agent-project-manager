@@ -88,7 +88,7 @@ export function IssueTypeDetailSection() {
   const type = useMemo(() => types.find((ty) => ty.key === typeKey), [types, typeKey]);
 
   return (
-    <PageShell className="overflow-hidden bg-background text-foreground">
+    <PageShell className="overflow-hidden">
       <PageHeader
         icon={Shapes}
         iconColor="text-accent-blue"
@@ -414,7 +414,6 @@ function FieldsTab({ type }: { type: IssueTypeMeta }) {
         <Button
           size="sm"
           variant="outline"
-          className="gap-1"
           onClick={() => {
             setDialogIndex(-1);
             setDialogDef({ key: '', label: '', type: 'text', order: draft.length });
@@ -648,7 +647,7 @@ function StatusesTab() {
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <p className="text-xs text-content-text-secondary">{t('settings.statusGroupsHint', '设置该工作空间可用的状态；顺序即组内展示顺序。')}</p>
-          <Button size="sm" variant="outline" className="gap-1" onClick={() => setAddOpen(true)}>
+          <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
             <Plus size={14} />
             {t('settings.addStatus', '添加状态')}
           </Button>

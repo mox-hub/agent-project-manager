@@ -65,7 +65,6 @@ export function IssueTypesSettingsSection() {
       actions={
         <HeaderActionButton icon={Plus} label={t('settings.addIssueType', '添加任务类型')} />
       }
-      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
       <TypesListCard />
@@ -139,7 +138,7 @@ function TypesListCard() {
       title={t('settings.issueTypesListTitle', '任务类型')}
       description={t('settings.issueTypesListDesc', '任务类型及其状态按空间配置。')}
       actions={
-        <Button size="sm" className="gap-1" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" onClick={() => setCreateOpen(true)}>
           <Plus size={14} />
           {t('settings.addIssueType', '添加任务类型')}
         </Button>
@@ -313,7 +312,7 @@ function CreateTypeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('settings.issueTypesCreateTitle', '创建任务类型')}</DialogTitle>
           <DialogDescription>

@@ -286,8 +286,8 @@ export function SkillsTab() {
                     <div className="min-w-0">
                       <p className="flex items-center gap-1.5 truncate text-sm font-medium">
                         {skill.name}
-                        <Badge variant="outline" className="shrink-0 text-3xs uppercase">
-                          {skill.source}
+                        <Badge variant="outline" className="shrink-0">
+                          <span className="text-3xs uppercase">{skill.source}</span>
                         </Badge>
                       </p>
                       <p className="truncate text-xs text-muted-foreground">{skill.description}</p>

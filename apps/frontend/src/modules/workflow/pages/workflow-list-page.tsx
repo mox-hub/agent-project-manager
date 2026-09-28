@@ -187,10 +187,10 @@ export function WorkflowListPage() {
                         </span>
                         <Badge
                           variant="secondary"
-                          className="shrink-0 text-3xs"
+                          className="shrink-0"
                           title={t('workflow.grammarVersionBadge')}
                         >
-                          v{wf.grammarVersion ?? 1}
+                          <span className="text-3xs">v{wf.grammarVersion ?? 1}</span>
                         </Badge>
                         <code className="font-mono text-2xs text-muted-foreground/60">
                           {wf.key}

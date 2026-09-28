@@ -152,11 +152,13 @@ export function MembersSection({
                         : t('admin.memberInactive', '已停用')}
                     </StatusPill>
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {m.user?.username ?? (m.userId ? '—' : t('admin.noAccount', '无账号'))}
+                  <TableCell>
+                    <span className="text-xs text-muted-foreground">
+                      {m.user?.username ?? (m.userId ? '—' : t('admin.noAccount', '无账号'))}
+                    </span>
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {m.shortId}
+                  <TableCell>
+                    <span className="font-mono text-xs text-muted-foreground">{m.shortId}</span>
                   </TableCell>
                   <TableCell>
                     <Menu>

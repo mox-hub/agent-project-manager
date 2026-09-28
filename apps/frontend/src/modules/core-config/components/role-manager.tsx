@@ -145,7 +145,6 @@ export function RoleManager() {
       variant="standard"
       contentClassName="gap-4"
       aiPage="settings.roles"
-      className="bg-background text-foreground"
       title={t('settings.roles')}
       icon={CircleUser}
       iconColor="text-accent-purple"

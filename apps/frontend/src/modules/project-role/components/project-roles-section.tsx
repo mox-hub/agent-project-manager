@@ -210,16 +210,16 @@ function RoleRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium">{role.name}</span>
-          <Badge variant="secondary" className="font-mono text-xs">
-            {role.key}
+          <Badge variant="secondary">
+            <span className="font-mono text-xs">{role.key}</span>
           </Badge>
-          <Badge variant="outline" className="text-xs">
-            {role.executionRole}
+          <Badge variant="outline">
+            <span className="text-xs">{role.executionRole}</span>
           </Badge>
           {role.defaultCliProviderId && (
-            <Badge variant="default" className="text-xs gap-1">
+            <Badge variant="default">
               <Terminal className="h-3 w-3" />
-              {role.defaultCliProviderId}
+              <span className="text-xs">{role.defaultCliProviderId}</span>
             </Badge>
           )}
         </div>

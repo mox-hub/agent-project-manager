@@ -84,7 +84,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -127,7 +127,6 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
                 setUrl('/_api');
                 setTestResult(null);
               }}
-              className="text-xs"
             >
               同源代理 (/_api)
             </Button>
@@ -139,9 +138,8 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
                 setUrl('http://localhost:3000/_api');
                 setTestResult(null);
               }}
-              className="text-xs font-mono"
             >
-              本地 3000
+              <span className="font-mono">本地 3000</span>
             </Button>
           </div>
 
@@ -169,21 +167,22 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
             type="button"
             variant="ghost"
             size="sm"
+            fontSize="xs"
             onClick={handleReset}
-            className="text-xs text-muted-foreground"
+            className="text-muted-foreground"
           >
             恢复默认
           </Button>
 
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleTest}
-              disabled={testing || !url.trim()}
-              className="text-xs"
-            >
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                fontSize="xs"
+                onClick={handleTest}
+                disabled={testing || !url.trim()}
+              >
               {testing ? (
                 <>
                   <Spinner className="mr-1 size-3 text-inherit" />
@@ -196,7 +195,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
                 </>
               )}
             </Button>
-            <Button type="button" size="sm" onClick={handleSave} className="text-xs">
+            <Button type="button" size="sm" fontSize="xs" onClick={handleSave}>
               保存并应用
             </Button>
           </div>
