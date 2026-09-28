@@ -35,6 +35,7 @@ import {
 import { cn } from '@/lib/utils';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import {
   RightSidebar,
   SidebarButton,
@@ -444,6 +445,7 @@ export function AcceptanceDetailPage() {
           { label: t('acceptance.title'), to: '/app/acceptance' },
           { label: acceptance.title || t('acceptance.title') },
         ]}
+        titleIcon={<EntityIcon entity="acceptance" />}
         actions={
           <>
             <FavoriteToggle label={acceptance.title || t('acceptance.title')} />

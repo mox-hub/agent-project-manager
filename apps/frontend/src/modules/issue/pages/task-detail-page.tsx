@@ -45,6 +45,7 @@ import type { AnchorQaAction } from '@/modules/assistant/hooks/use-anchor-qa';
 import { Spinner } from '@/components/ui/spinner';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/ui/right-sidebar';
@@ -438,6 +439,7 @@ export function TaskDetailPage() {
           ...(project ? [{ label: project.name, to: `/app/projects/${task.projectId}` }] : []),
           { label: shortId },
         ]}
+        titleIcon={<EntityIcon entity="issue" />}
         actions={<>
           <FavoriteToggle label={task?.title ?? ''} />
           <SubscribeButton />

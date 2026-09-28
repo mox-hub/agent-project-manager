@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui/right-sidebar';
 import { AsyncState } from '@/components/ui/async-state';
@@ -196,6 +197,7 @@ export function RepositoryDetailPage() {
         aiId="git.repository-detail"
         onBack={backToList}
         breadcrumbs={[{ label: t('git.title'), to: '/app/repositories' }, { label: repository.name }]}
+        titleIcon={<EntityIcon entity="repository" />}
         tabs={{
           value: activeTab,
           onChange: setActiveTab,

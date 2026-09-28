@@ -24,6 +24,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { MarkdownView } from '@/shared/components/markdown-view';
@@ -261,6 +262,7 @@ export function BugDetailPage() {
           ...(project ? [{ label: project.name, to: `/app/projects/${bug.projectId}` }] : []),
           { label: shortId },
         ]}
+        titleIcon={<EntityIcon entity="bug" />}
         actions={<>
           <FavoriteToggle label={bug?.title ?? ''} />
           <SubscribeButton />

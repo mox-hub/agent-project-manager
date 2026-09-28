@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui/right-sidebar';
@@ -278,6 +279,7 @@ export default function TeamDetailPage() {
           { label: t('teams.title', '团队'), to: '/app/teams' },
           { label: team.name },
         ]}
+        titleIcon={<EntityIcon entity="team" />}
         tabs={{ value: activeTab, onChange: (v) => setActiveTab(v as DetailTab), items: tabItems }}
         actions={<>
           <FavoriteToggle label={team.name} />

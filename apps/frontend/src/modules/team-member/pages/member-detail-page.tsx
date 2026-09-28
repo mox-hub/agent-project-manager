@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui/right-sidebar';
@@ -200,6 +201,7 @@ export default function MemberDetailPage() {
           { label: t('members.title', '成员管理'), to: '/app/members' },
           { label: member.displayName },
         ]}
+        titleIcon={<EntityIcon entity="member" />}
         tabs={{ value: activeTab, onChange: (v) => setActiveTab(v as DetailTab), items: tabItems }}
         actions={<>
           <FavoriteToggle label={member.displayName} />

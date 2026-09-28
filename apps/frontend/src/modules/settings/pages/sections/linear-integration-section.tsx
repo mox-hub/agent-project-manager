@@ -7,7 +7,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Trash2, Power, PowerOff } from 'lucide-react';
+import { ArrowLeft, Trash2, Power, PowerOff, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { PageShell } from '@/components/ui/page-shell';
@@ -87,11 +87,9 @@ export function LinearIntegrationSection() {
         ]}
       />
       <PageHeader
-        title={
-          <span className="flex items-center gap-2">
-            <LinearIcon size={20} /> {data.name}
-          </span>
-        }
+        icon={LinearIcon as LucideIcon}
+        iconColor=""
+        title={data.name}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={toggleEnabled}>

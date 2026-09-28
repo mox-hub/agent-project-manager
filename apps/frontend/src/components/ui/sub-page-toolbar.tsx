@@ -47,6 +47,8 @@ interface SubPageToolbarProps {
   backLabel?: string;
   /** 层级面包屑，ChevronRight 分隔，可点项为 Link，末项高亮 */
   breadcrumbs?: SubPageBreadcrumb[];
+  /** 面包屑末项实体图标（F 类 J11/F2.5②）：icon 必须取自 entity-icons 唯一源（与 L1 PageHeader 同源），禁页面自选 */
+  titleIcon?: ReactNode;
   /** 居中子页签（SegmentedControl rect 滑块，与 ToolbarRow 同款） */
   tabs?: {
     value: string;
@@ -71,6 +73,7 @@ export function SubPageToolbar({
   onBack,
   backLabel = "Back",
   breadcrumbs,
+  titleIcon,
   tabs,
   pager,
   actions,
@@ -103,6 +106,7 @@ export function SubPageToolbar({
               return (
                 <span key={index} className="flex min-w-0 items-center gap-1">
                   {index > 0 ? <ChevronRight className="size-3 shrink-0 text-muted-foreground/60" aria-hidden /> : null}
+                  {isLast && titleIcon ? <span className="flex shrink-0">{titleIcon}</span> : null}
                   {crumb.to && !isLast ? (
                     <Link
                       to={crumb.to}
