@@ -21,6 +21,8 @@ import {
 function renderFullCard(props?: {
   size?: 'default' | 'sm';
   variant?: 'default' | 'outline';
+  border?: 'ring' | 'solid' | 'dashed';
+  surface?: 'default' | 'flat' | 'translucent';
 }) {
   return render(
     <Card {...props}>
@@ -90,6 +92,62 @@ describe('Card 插槽装配', () => {
       'data-variant',
       'default',
     );
+  });
+
+  /**
+   * E 类批 0b 增补：Card 第二轴 `border`（描边样式）与第三轴 `surface`（表面/强调层级）。
+   * 与上面 variant 用例同口径——§18.2 不断言 className，只验「不吞内容」+
+   * 「轴值落到 data-* 供评审与后续语义断言定位」。两轴与 size/variant 正交，
+   * 故同时覆盖交叉组合（任一圈不吞样式/不吞内容）。
+   */
+  const BORDERS = ['ring', 'solid', 'dashed'] as const;
+  const SURFACES = ['default', 'flat', 'translucent'] as const;
+
+  it.each(BORDERS)('border=%s 不吞任何插槽内容', (border) => {
+    renderFullCard({ border });
+
+    expect(screen.getByText('项目健康度')).toBeInTheDocument();
+    expect(screen.getByText('进度 62%')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '查看详情' })).toBeEnabled();
+  });
+
+  it.each(SURFACES)('surface=%s 不吞任何插槽内容', (surface) => {
+    renderFullCard({ surface });
+
+    expect(screen.getByText('项目健康度')).toBeInTheDocument();
+    expect(screen.getByText('近 7 天评分')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '刷新' })).toBeEnabled();
+  });
+
+  it('border/surface 落到 data-*，默认档为 ring / default（与 data-variant 同口径）', () => {
+    const { container } = renderFullCard({
+      variant: 'outline',
+      border: 'dashed',
+      surface: 'translucent',
+    });
+    const card = container.querySelector('[data-slot="card"]');
+
+    expect(card).toHaveAttribute('data-border', 'dashed');
+    expect(card).toHaveAttribute('data-surface', 'translucent');
+    // 交叉轴不得互吞：variant 与 size 的同名断言仍成立
+    expect(card).toHaveAttribute('data-variant', 'outline');
+    expect(card).toHaveAttribute('data-size', 'default');
+
+    const { container: plain } = renderFullCard();
+    const plainCard = plain.querySelector('[data-slot="card"]');
+    expect(plainCard).toHaveAttribute('data-border', 'ring');
+    expect(plainCard).toHaveAttribute('data-surface', 'default');
+  });
+
+  it.each([
+    ['default', 'flat'],
+    ['outline', 'translucent'],
+  ] as const)('variant=%s × surface=%s 组合不吞内容', (variant, surface) => {
+    renderFullCard({ variant, surface });
+
+    expect(screen.getByText('项目健康度')).toBeInTheDocument();
+    expect(screen.getByText('进度 62%')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '查看详情' })).toBeEnabled();
   });
 
   it('CardAction 内的交互元素可被键盘/鼠标命中（行内操作不靠视觉位置）', () => {
