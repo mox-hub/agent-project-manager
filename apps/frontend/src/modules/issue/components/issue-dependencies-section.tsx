@@ -20,6 +20,7 @@ import { ChevronDown, Link2 } from 'lucide-react';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals';
 import type { TaskDependencyRef } from '../api/issue-api';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 /** 依赖条目投影：工单摘要（title + status），来自关系记录上的对侧工单 */
@@ -113,17 +114,17 @@ export function IssueDependenciesSection({
           <span>{t('task.detailDrawer.dependencies')}</span>
           <span className="text-3xs font-normal normal-case tabular-nums">({totalCount})</span>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="subtle"
+          size="icon-2xs"
           onClick={() => setCollapsed((v) => !v)}
-          className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           aria-label={collapsed ? t('common.expand') : t('common.collapse')}
           aria-expanded={!collapsed}
         >
           <ChevronDown
             className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
           />
-        </button>
+        </Button>
       </div>
 
       {/* 分区内容：grid-rows 动画展开 / 收起（与正文其他分区同一手势） */}
