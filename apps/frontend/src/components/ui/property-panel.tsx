@@ -338,7 +338,6 @@ export function PropertyRow({
 export function PropsCard({
   title,
   icon,
-  iconClassName,
   collapsed,
   onToggleCollapse,
   children,
@@ -346,17 +345,17 @@ export function PropsCard({
   title: string;
   /** 标题区图标（透传 SidebarPanel） */
   icon?: React.ReactNode;
-  /** 图标颜色类，如 "text-accent-purple" */
-  iconClassName?: string;
   collapsed: boolean;
   onToggleCollapse: () => void;
   children: React.ReactNode;
 }) {
+  // 曾有一个 `iconClassName?: string` 直通 SidebarPanel 的图标色类：**实测零调用方**
+  // （13 个 `<PropsCard` 无一传它），属死属性，随 SidebarPanel 收窄逃生舱
+  // （2026-09-28 裁决）一并删除。要改图标色请先在 SidebarPanel 侧补语义档。
   return (
     <SidebarPanel
       title={title}
       icon={icon}
-      iconClassName={iconClassName}
       collapsed={collapsed}
       onToggle={onToggleCollapse}
     >

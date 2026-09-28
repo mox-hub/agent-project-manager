@@ -26,7 +26,6 @@ export function StatusIconFrame({
   size = 'md',
   spin = false,
   className,
-  iconClassName,
 }: {
   icon: LucideIcon;
   tone: StatusTone;
@@ -34,7 +33,6 @@ export function StatusIconFrame({
   /** in_progress 等旋转图标需要自旋（Loader2） */
   spin?: boolean;
   className?: string;
-  iconClassName?: string;
 }) {
   const sizes = FRAME_SIZES[size];
   return (
@@ -47,7 +45,7 @@ export function StatusIconFrame({
       )}
     >
       <Icon
-        className={cn(sizes.icon, spin && 'animate-spin', iconClassName)}
+        className={cn(sizes.icon, spin && 'animate-spin')}
       />
     </span>
   );

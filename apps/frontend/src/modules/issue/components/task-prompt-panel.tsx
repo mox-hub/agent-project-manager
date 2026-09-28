@@ -68,7 +68,7 @@ function TaskPromptEditor({
     <SidebarPanel
       title={t('taskDetail.promptPanel')}
       icon={<Sparkles className="size-3" />}
-      iconClassName="text-accent-blue"
+      iconTone="info"
     >
       <PromptEditor
         value={text}

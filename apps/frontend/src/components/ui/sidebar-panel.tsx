@@ -1,6 +1,18 @@
 import { useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TONE_CLASS, type Tone } from './tone';
+
+/**
+ * 图标的**分类强调色**（不是状态色）。
+ *
+ * `purple` 在本仓当分类 / 强调用（权限、项目角色），不属 §19.4 的 5 档**状态**词表，
+ * 故在此单列一档而**不扩 `Tone`**（2026-09-28 裁决）。这样「purple 不是状态」是**结构性
+ * 的**（类型上就区分开），而不是靠注释约定。
+ */
+const ACCENT_CLASS = {
+  purple: 'text-accent-purple',
+} as const;
 
 /**
  * SidebarPanel - 右侧栏统一「圆角矩形 ↔ 圆角胶囊」折叠面板
@@ -14,10 +26,18 @@ import { cn } from '@/lib/utils';
  */
 export interface SidebarPanelProps {
   title: string;
-  /** 标题区图标（支持彩色图标，配合 iconClassName 控制颜色） */
+  /** 标题区图标 */
   icon?: ReactNode;
-  /** 图标颜色类，如 "text-accent-purple" */
-  iconClassName?: string;
+  /**
+   * 图标的**状态色**。tone → class 取自 `components/ui/tone.ts`（§19.5 视觉层唯一词表）。
+   * 缺省不设色 ⇒ 沿用继承色（既有调用方的渲染结果零变化）。
+   */
+  iconTone?: Tone;
+  /**
+   * 图标的**分类强调色**（与 `iconTone` 语义不同，见 `ACCENT_CLASS`）。
+   * 同时给时以 `iconTone` 为准。
+   */
+  accent?: keyof typeof ACCENT_CLASS;
   /** 标题右侧额外的自定义内容（显示在收缩三角之前） */
   action?: ReactNode;
   /** 受控：是否收起 */
@@ -33,7 +53,8 @@ export interface SidebarPanelProps {
 export function SidebarPanel({
   title,
   icon,
-  iconClassName,
+  iconTone,
+  accent,
   action,
   collapsed: collapsedProp,
   onToggle,
@@ -56,7 +77,14 @@ export function SidebarPanel({
       {/* 标题区 */}
       <div className="flex items-center gap-1.5 px-3 py-2">
         {icon ? (
-          <span className={cn('shrink-0', iconClassName)}>{icon}</span>
+          <span
+            className={cn(
+              'shrink-0',
+              iconTone ? TONE_CLASS[iconTone].text : accent ? ACCENT_CLASS[accent] : undefined,
+            )}
+          >
+            {icon}
+          </span>
         ) : null}
         <span className="min-w-0 flex-1 truncate text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}

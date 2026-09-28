@@ -995,7 +995,7 @@ function ProjectContextBar({
               <HeaderActionButton
                 variant="outline"
                 icon={RefreshCw}
-                iconClassName={isSyncing ? 'animate-spin' : undefined}
+                loading={isSyncing}
                 label={isSyncing ? syncButtonLabel : t('linearSync.button')}
                 pinned={isSyncing}
                 disabled={isSyncing}

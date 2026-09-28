@@ -55,7 +55,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
         <SidebarPanel
           title={t('project.sidebar.related')}
           icon={<Link2 className="size-3" />}
-          iconClassName="text-muted-foreground"
+          iconTone="default"
         >
           <p className="px-2 py-2 text-xs text-muted-foreground">
             {isLoading ? t('project.sidebar.loading') : error ? t('project.sidebar.loadFailed') : t('project.sidebar.noData')}
@@ -65,7 +65,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
         <SidebarPanel
           title={t('project.sidebar.related')}
           icon={<Link2 className="size-3" />}
-          iconClassName="text-muted-foreground"
+          iconTone="default"
           collapsed={relatedCollapsed}
           onToggle={() => setRelatedCollapsed((v) => !v)}
         >
@@ -132,7 +132,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
       <SidebarPanel
         title={t('project.sidebar.activity')}
         icon={<Sparkles className="size-3" />}
-        iconClassName="text-accent-purple"
+        accent="purple"
         collapsed={activityCollapsed}
         onToggle={() => setActivityCollapsed((v) => !v)}
       >

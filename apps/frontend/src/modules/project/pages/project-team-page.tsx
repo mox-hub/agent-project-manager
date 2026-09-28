@@ -101,7 +101,7 @@ export function ProjectTeamPage() {
             <HeaderActionButton
               variant="outline"
               icon={RefreshCw}
-              iconClassName={syncTasks.isPending ? 'animate-spin' : undefined}
+              loading={syncTasks.isPending}
               label={t('project.team.syncTasks')}
               disabled={syncTasks.isPending}
               onClick={handleTeamSync}

@@ -46,7 +46,6 @@ import {
   LayoutGrid,
   List,
   Loader,
-  Loader2,
   Mail,
   MessagesSquare,
   Milestone,
@@ -2116,7 +2115,13 @@ export function DesignSystemPage() {
                 <div className="flex flex-wrap gap-3">
                   <Button>Active</Button>
                   <Button disabled>Disabled</Button>
-                  <Button disabled><Loader2 className="animate-spin" /> Loading…</Button>
+                  {/* 加载态一律走 ui/spinner（2026-09-28 裁决）：本行原为
+                      `<Loader2 className="animate-spin" />` —— 裸图标自旋的
+                      离群写法。Spinner 默认档与 Button 的 `[&_svg:…]:size-4`
+                      撞档（size-5），故显式给 size="sm"(=size-4) 并 text-inherit
+                      保色；字形同为 Loader2 ⇒ 视觉不变，仅新增 role=status 与
+                      aria-label（无障碍增强）。 */}
+                  <Button disabled><Spinner size="sm" className="text-inherit" /> Loading…</Button>
                   <Button variant="outline" disabled>Disabled Outline</Button>
                 </div>
               </div>

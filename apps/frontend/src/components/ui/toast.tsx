@@ -11,6 +11,7 @@ import {
 import type React from "react"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 
 /*
  * coss ui Toast（base-ui 配方移植，registry @coss/toast）
@@ -24,6 +25,38 @@ const TOAST_ICONS = {
   success: CircleCheckIcon,
   warning: TriangleAlertIcon,
 } as const
+
+/**
+ * Toast 图标位（§10.6 三态选型）。
+ *
+ * `type="loading"` **一律**渲染 `ui/spinner`——加载指示的唯一实现。此前两处图标位
+ * 写的是 `<Icon className="in-data-[type=loading]:animate-spin">`，让 `LoaderCircleIcon`
+ * 手写自旋：既绕开唯一实现，也**绕开 `check-palette` 的 `Loader2` 字面量检查**（只认
+ * `Loader2` / `Loader2Icon` / `Icons.Loader2`），属 lint 看不见的加载指示
+ * （2026-09-28 裁决迁移）。
+ *
+ * 视觉与原写法一致：尺寸仍由外层 `[&>svg]:h-lh [&>svg]:w-4` 决定（元素选择器 + 类，
+ * 特异性高于 Spinner 自带的 `size-4`）；`text-inherit` 保色（Spinner 默认
+ * `text-muted-foreground`，会压掉 toast 自身的文字色）；`opacity-80` 沿用原 loading
+ * 档的 80% 不透明度。
+ *
+ * `TOAST_ICONS.loading` 条目**保留**：它是 `Record` 类型完备性所需的键，也是各 type
+ * 图标的规范清单；本组件的 loading 分支不再消费它。
+ */
+function ToastIcon({
+  toastType,
+  icon: Icon,
+}: {
+  toastType: string | undefined
+  icon: (typeof TOAST_ICONS)[keyof typeof TOAST_ICONS]
+}) {
+  if (toastType === "loading") {
+    return <Spinner className="text-inherit opacity-80" />
+  }
+  return (
+    <Icon className="in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning" />
+  )
+}
 
 type SwipeDirection = "up" | "down" | "left" | "right"
 
@@ -154,7 +187,7 @@ function Toasts({
                       className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
                       data-slot="toast-icon"
                     >
-                      <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
+                      <ToastIcon toastType={toast.type} icon={Icon} />
                     </div>
                   )}
 
@@ -243,7 +276,7 @@ function AnchoredToasts({
                           className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
                           data-slot="toast-icon"
                         >
-                          <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
+                          <ToastIcon toastType={toast.type} icon={Icon} />
                         </div>
                       )}
 

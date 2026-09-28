@@ -70,7 +70,7 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
       <SidebarPanel
         title={t('project.sidebar.properties')}
         icon={<Tag className="size-3" />}
-        iconClassName="text-muted-foreground"
+        iconTone="default"
       >
         <p className="px-2 py-2 text-xs text-muted-foreground">{t('project.sidebar.noData')}</p>
       </SidebarPanel>
@@ -131,7 +131,7 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
     <SidebarPanel
       title={t('project.sidebar.properties')}
       icon={<Tag className="size-3" />}
-      iconClassName="text-muted-foreground"
+      iconTone="default"
       collapsed={collapsed}
       onToggle={onToggleCollapse}
     >

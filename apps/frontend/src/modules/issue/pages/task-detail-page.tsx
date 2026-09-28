@@ -837,7 +837,7 @@ export function TaskDetailPage() {
           <SidebarPanel
             title={t('taskDetail.acceptanceContract')}
             icon={<CheckCircle2 className="size-3" />}
-            iconClassName="text-accent-purple"
+            accent="purple"
             action={
               acceptances.length > 0 ? (
                 <span className="text-3xs text-muted-foreground">({acceptances.length})</span>
