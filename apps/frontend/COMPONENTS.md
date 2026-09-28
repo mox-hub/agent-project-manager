@@ -15,8 +15,8 @@
 | 状态 | 数量 | 计入 LU 分母 | 必须在画廊展示 | 是否需消费方 |
 |---|---|---|---|---|
 | ✅ canonical | 299 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
-| 📦 standby | 17 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
-| 🔶 review | 17 | ❌ 暂不计 | ✅ 必须（带醒目标记） | ❌ 暂不要求 |
+| 📦 standby | 16 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
+| 🔶 review | 18 | ❌ 暂不计 | ✅ 必须（带醒目标记） | ❌ 暂不要求 |
 | ⛔ deprecated | 1 | ❌ 不计 | ✅ 标记 deprecated | — |
 | **合计** | **334** | | | |
 
@@ -32,7 +32,7 @@
 
 ## 待裁决清单（设计系统页「只看待裁决」视图同源）
 
-共 **35** 项：`status: review`（17）或 `status: standby` 但带 review 数据（18）。按方案 §七 D 项裁决：**先标记、不删除**，人工在 `/app/design-system` 审阅后由批 9 执行清退（决策写入 `component-review-decisions.json`）。
+共 **35** 项：`status: review`（18）或 `status: standby` 但带 review 数据（17）。按方案 §七 D 项裁决：**先标记、不删除**，人工在 `/app/design-system` 审阅后由批 9 执行清退（决策写入 `component-review-decisions.json`）。
 
 | 组件 | 路径 | 状态 | 建议 | 理由 | 裁决期限 |
 |---|---|---|---|---|---|
@@ -42,7 +42,7 @@
 | aspect-ratio | `src/components/ui/aspect-ratio.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | autocomplete | `src/components/ui/autocomplete.tsx` | 🔶 review | merge → combobox | 消费方仅 1（命令面板），与 ui/combobox 能力重叠（输入过滤 + 建议列表） | 2026-10-31 |
 | breadcrumb | `src/components/ui/breadcrumb.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| button-group | `src/components/ui/button-group.tsx` | 📦 standby | keep | 自研长尾：零引用（仅画廊），与 button / toggle-group 能力边界待查 | 2026-10-31 |
+| button-group | `src/components/ui/button-group.tsx` | 📦 standby | keep | F 类 F9.3 已结案（2026-09-29）：分裂按钮（主动作+下拉变体）是唯一合法场景，休眠原语不推广不清退；首个分裂按钮场景出现时启用 | 2026-10-31 |
 | calendar | `src/components/ui/calendar.tsx` | 📦 standby | keep | 官方注册表基线件（react-day-picker 封装），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | collapsible | `src/components/ui/collapsible.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | direction | `src/components/ui/direction.tsx` | 🔶 review | delete | 零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求 | 2026-10-31 |
@@ -57,7 +57,6 @@
 | sidebar | `src/components/ui/sidebar.tsx` | 🔶 review | delete | 零引用（实测）——与 ui/sidebar-panel（消费方 6）能力重叠 | 2026-10-31 |
 | slider | `src/components/ui/slider.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | stat-card | `src/components/ui/stat-card.tsx` | 🔶 review | merge → stats-card | 命名双轨：与 ui/stats-card（消费方 10）能力重叠，本件消费方仅 1 | 2026-10-31 |
-| tab-bar | `src/components/ui/tab-bar.tsx` | 📦 standby | delete | 自研长尾：消费方 1（shell-layout），与 bottom-dock / 页签能力重叠 | 2026-10-31 |
 | toggle | `src/components/ui/toggle.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | toggle-group | `src/components/ui/toggle-group.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | view-display-popover | `src/components/ui/view-display-popover.tsx` | 🔶 review | delete | 零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选 | 2026-10-31 |
@@ -67,6 +66,7 @@
 | thinking-stream | `src/modules/assistant/components/thinking-stream.tsx` | 🔶 review | delete | 零引用（实测）——仅被设计系统页引用，无模块内消费方 | 2026-10-31 |
 | batch-create-tasks-dialog | `src/modules/issue/components/batch-create-tasks-dialog.tsx` | 🔶 review | delete | 零引用（实测）——全库无 import，且不在画廊 | 2026-10-31 |
 | task-board | `src/modules/issue/components/task-board.tsx` | 🔶 review | delete | 零引用（实测）——全库无 import（看板能力由 shared/components/board-view 承载），且不在画廊 | 2026-10-31 |
+| task-detail-drawer | `src/modules/issue/components/task-detail-drawer.tsx` | 🔶 review | delete | 孤儿组件：全库 0 importer（仅自身与测试文件引用）；F 类 §1.4 顺带发现，按 E1 制度转公示、公示期无人认领则清退 | 2026-10-31 |
 | task-rows | `src/modules/issue/components/task-rows.tsx` | 🔶 review | delete | 零引用（实测）——仅被自身测试与设计系统页引用 | 2026-10-31 |
 | agent-handoff-card | `src/modules/office/components/agent-handoff-card.tsx` | 🔶 review | delete | 零引用（实测）——仅被设计系统页引用，无模块内消费方 | 2026-10-31 |
 | mention-renderer | `src/modules/team-member/components/mention-renderer.tsx` | 🔶 review | delete | 零引用（实测）——仅被设计系统页引用；mention 渲染实际走 MarkdownView | 2026-10-31 |
@@ -91,7 +91,7 @@
 | badge | `src/components/ui/badge.tsx` | ✅ canonical | — | — |
 | breadcrumb | `src/components/ui/breadcrumb.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
 | button | `src/components/ui/button.tsx` | ✅ canonical | — | — |
-| button-group | `src/components/ui/button-group.tsx` | 📦 standby | — | 自研长尾：零引用（仅画廊），与 button / toggle-group 能力边界待查 |
+| button-group | `src/components/ui/button-group.tsx` | 📦 standby | — | F 类 F9.3 已结案（2026-09-29）：分裂按钮（主动作+下拉变体）是唯一合法场景，休眠原语不推广不清退；首个分裂按钮场景出现时启用 |
 | calendar | `src/components/ui/calendar.tsx` | 📦 standby | — | 官方注册表基线件（react-day-picker 封装），零引用（仅画廊），零维护成本 |
 | card | `src/components/ui/card.tsx` | ✅ canonical | — | — |
 | chapter-scrubber | `src/components/ui/chapter-scrubber.tsx` | ✅ canonical | — | — |
@@ -187,7 +187,7 @@
 | stat-card | `src/components/ui/stat-card.tsx` | 🔶 review | — | 命名双轨：与 ui/stats-card（消费方 10）能力重叠，本件消费方仅 1 |
 | stats-card | `src/components/ui/stats-card.tsx` | ✅ canonical | — | — |
 | sub-page-toolbar | `src/components/ui/sub-page-toolbar.tsx` | ✅ canonical | — | — |
-| tab-bar | `src/components/ui/tab-bar.tsx` | 📦 standby | — | 自研长尾：消费方 1（shell-layout），与 bottom-dock / 页签能力重叠 |
+| tab-bar | `src/components/ui/tab-bar.tsx` | ✅ canonical | — | — |
 | table | `src/components/ui/table.tsx` | ✅ canonical | — | — |
 | toolbar-row | `src/components/ui/toolbar-row.tsx` | ✅ canonical | — | — |
 | view-display-popover | `src/components/ui/view-display-popover.tsx` | 🔶 review | — | 零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选 |
@@ -325,7 +325,7 @@
 | iteration-detail-dialog | `src/modules/issue/components/iteration-detail-dialog.tsx` | ✅ canonical | — | — |
 | iteration-form-dialog | `src/modules/issue/components/iteration-form-dialog.tsx` | ✅ canonical | — | — |
 | task-board | `src/modules/issue/components/task-board.tsx` | 🔶 review | — | 零引用（实测）——全库无 import（看板能力由 shared/components/board-view 承载），且不在画廊 |
-| task-detail-drawer | `src/modules/issue/components/task-detail-drawer.tsx` | ✅ canonical | — | — |
+| task-detail-drawer | `src/modules/issue/components/task-detail-drawer.tsx` | 🔶 review | — | 孤儿组件：全库 0 importer（仅自身与测试文件引用）；F 类 §1.4 顺带发现，按 E1 制度转公示、公示期无人认领则清退 |
 | task-gantt | `src/modules/issue/components/task-gantt.tsx` | ✅ canonical | — | — |
 | task-import-export | `src/modules/issue/components/task-import-export.tsx` | ✅ canonical | — | — |
 | task-prompt-panel | `src/modules/issue/components/task-prompt-panel.tsx` | ✅ canonical | — | — |

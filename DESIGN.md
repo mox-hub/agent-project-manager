@@ -27,6 +27,10 @@ governance: "宪法为 docs/design/PRINCIPLES.md（版本号只在宪法头部�
 > | §三 字阶（双层字阶/密度模式） | 多端双层字阶 | **PRINCIPLES §3.1：8 档语义阶梯**，token 名与 px 解耦（`text-3xs/2xs/…/2xl`） |
 > | §八.1 门禁 | "由 `pnpm lint:semantic` 拦截" | 裸色由 `lint:palette` 拦截，语义类白名单由 `lint:semantic` 拦截；刻度类（字阶/行高/字重/动效/阴影/间距）由 `lint:spacing` 拦截 |
 > | §七 组件整改 | 7 处异类组件路线 | 以 `docs/design/修改方案-BCD类-2026-09-27.md` 为准；四类删除决策已按「标记→确认→删除」三步走推进 |
+> | §3.4 页面壳四类（含「概览聚焦型 max-w-7xl」） | 4 类页面壳 | **F 类 F1.3 主栏宽度四档总表（full/wide/standard/reading）已落地**（PageShell 四 variant，2026-09-29）；L2 详情母版按 F1.2 结构自管、不走 PageShell 居中 |
+> | §3.4 属性栏「320px 标准 / 360px 复杂」双档 | 320 标准 / 360 复杂 | **F 类 F4.2：360px 全站唯一档（320 档废除）已落地**（2026-09-29，J8/J9） |
+> | §三「外舒内紧」双 padding | CardContent 可再写 py-* | **F 类 F6.4：Card 已含 py-3.5，CardContent 禁再写 py-\***（双 padding 禁令） |
+> | §三 KPI 卡间距 | space-y-6 割裂同组卡片 | **F 类 F6.5：同组卡片 gap-3/space-y-3，区块间才用 space-y-6** |
 >
 > **副本说明**：本文件与 `docs/design/DESIGN.md` 曾为两份逐字副本（仅机器绝对路径不同）。2026-09-27 收口为**单份**：正文留于根 `DESIGN.md`，`docs/design/DESIGN.md` 降为指针页。
 >
