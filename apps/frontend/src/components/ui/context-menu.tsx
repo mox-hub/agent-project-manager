@@ -14,7 +14,6 @@ import {
   MENU_SEPARATOR_CLASS,
   MENU_GROUP_LABEL_CLASS,
 } from "@/components/ui/menu"
-import { RawInput } from './raw-input'
 
 /*
  * 右键菜单：base-ui ContextMenu 原语（右键定位原生支持）
@@ -431,7 +430,7 @@ function SearchableMenuChildren({
       >
         <div className="flex h-7 items-center gap-1.5 rounded-sm border border-border/60 bg-muted/40 px-2">
           <SearchIcon className="size-3.5 shrink-0 text-muted-foreground" />
-          <RawInput
+          <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}

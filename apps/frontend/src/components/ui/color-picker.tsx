@@ -12,7 +12,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { RawButton } from './raw-button'
 
 /*
  * Color Picker —— 照 coss DatePicker 组合范式自建（Popover + react-colorful + 预设色板），
@@ -128,7 +127,7 @@ export function ColorPicker({
             {swatches.map((color) => {
               const selected = value?.toLowerCase() === color.toLowerCase()
               return (
-                <RawButton
+                <button
                   key={color}
                   type="button"
                   aria-label={color}
@@ -148,7 +147,7 @@ export function ColorPicker({
                   {selected ? (
                     <CheckIcon className="size-3.5 text-white drop-shadow-sm" />
                   ) : null}
-                </RawButton>
+                </button>
               )
             })}
           </div>

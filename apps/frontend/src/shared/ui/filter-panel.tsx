@@ -275,15 +275,13 @@ export function FilterPanel({
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <span className="text-xs font-medium text-foreground">已筛选条件</span>
             {hasFilters && (
-              <Button
+              <button
                 type="button"
-                variant="quiet"
-                fontSize="xs"
-                padding="p-0"
                 onClick={handleRemoveAllFilters}
+                className="text-xs text-muted-foreground hover:text-foreground"
               >
                 清除全部
-              </Button>
+              </button>
             )}
           </div>
           <div className="max-h-50 overflow-y-auto p-2">
@@ -291,7 +289,7 @@ export function FilterPanel({
               <EmptyState
                 title="还没有筛选条件"
                 description="在上方选择筛选项后，条件会列在这里"
-                minHeight="none" frame="none" padding="compact"
+                className="min-h-0 border-0 py-4"
               />
             ) : (
               <div className="space-y-1">
@@ -304,21 +302,13 @@ export function FilterPanel({
                       <span className="text-xs text-muted-foreground">{filter.groupLabel}: </span>
                       <span className="text-xs font-medium text-foreground">{filter.optionLabel}</span>
                     </div>
-                    {/* E 类批 6：`size="icon-2xs"`(size-5=20px) 逐字等于原 `h-5 w-5`，且该档
-                        刻意不覆盖基线 `rounded-md`；`subtle` 逐字等于原三色类串。`ml-2` 是
-                        §19.4 白名单内的定位类，故留在 className。
-                        `size-3` 是**必需连带**：Button 基线带
-                        `[&_svg:not([class*='size-'])]:size-4`，`<X size={12} />` 的 width/height
-                        表现属性会被 CSS 归一成 16px ⇒ 不钉住即为可见几何漂移。 */}
-                    <Button
+                    <button
                       type="button"
-                      variant="subtle"
-                      size="icon-2xs"
-                      className="ml-2"
                       onClick={(e) => handleRemoveFilter(filter.groupId, filter.optionId, e)}
+                      className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
-                      <X className="size-3" />
-                    </Button>
+                      <X size={12} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -326,18 +316,18 @@ export function FilterPanel({
           </div>
           {onAddFilter && (
             <div className="border-t border-border p-2">
-              <Button variant="ghost"
+              <button
                 type="button"
                 onClick={() => {
                   setIsHovered(false);
                   setIsOpen(true);
                   onAddFilter();
                 }}
-                className="flex items-center"
+                className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <Plus size={12} />
                 添加筛选条件
-              </Button>
+              </button>
             </div>
           )}
         </div>
@@ -378,13 +368,13 @@ export function FilterPanel({
         >
           {onAddFilter && (
             <div className="border-b border-border p-2">
-              <Input fontSize="xs"
+              <Input
                 type="text"
                 placeholder={addFilterPlaceholder}
                 value=""
                 onChange={() => {}}
                 onFocus={onAddFilter}
-                
+                className="text-xs"
               />
             </div>
           )}
@@ -440,14 +430,14 @@ export function FilterPanel({
                         <div className="mb-1.5 px-1">
                           <div className="relative">
                             <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                            <Input fontSize="xs" size="h-7"
+                            <Input
                               type="text"
                               placeholder="搜索..."
                               value={searchQuery[openGroup.id] || ''}
                               onChange={(e) =>
                                 setSearchQuery((prev) => ({ ...prev, [openGroup!.id]: e.target.value }))
                               }
-                              
+                              className="h-7 pl-7 text-xs"
                             />
                           </div>
                         </div>

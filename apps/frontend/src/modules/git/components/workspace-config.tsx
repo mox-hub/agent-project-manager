@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import React, { useState } from 'react';
 import {
   useWorkspace,
@@ -81,7 +80,7 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
 
   if (!workspace) {
     return (
-      <Card >
+      <Card className="p-4">
         <Alert variant="destructive">
           <AlertTitle>加载失败</AlertTitle>
           <AlertDescription>Failed to load workspace</AlertDescription>
@@ -147,14 +146,14 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
             </p>
           </div>
 
-          <FieldLabel size="xs" variant="muted" className="flex items-center">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <Checkbox
               id="autoClone"
               checked={autoClone}
               onChange={(e) => setAutoClone(e.target.checked)}
             />
             Auto-clone when setting remote URL
-          </FieldLabel>
+          </label>
 
           <div className="flex gap-2">
             <Button

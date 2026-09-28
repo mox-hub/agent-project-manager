@@ -63,20 +63,21 @@ export function AssistantModelPicker({
     <DropdownMenu>
       <DropdownMenuTrigger
         type="button"
-        className="inline-flex shrink-0 items-center transition-colors"
+        className="inline-flex h-7 max-w-30 shrink-0 items-center gap-1 rounded-md px-2 text-2xs text-content-text-muted transition-colors hover:bg-accent hover:text-content-text"
         data-ai-action="assistant.model.open"
       >
         <Cpu className="size-3 shrink-0" />
         <span className="truncate">{currentLabel}</span>
         <ChevronDown className="size-3 shrink-0" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" >
+      <DropdownMenuContent align="end" className="w-52">
         {/* base-ui 的 GroupLabel 必须位于 Group 上下文内，Label+items 整体成组 */}
         <DropdownMenuGroup>
           <DropdownMenuLabel>{t('assistant.model.label')}</DropdownMenuLabel>
           <DropdownMenuItem
             disabled={!hasCli || !projectId}
             onClick={() => onChange('cli')}
+            className="gap-2"
           >
             <ModelItemLabel
               option={
@@ -101,6 +102,7 @@ export function AssistantModelPicker({
               key={option.id}
               disabled={!projectId}
               onClick={() => onChange(option.id)}
+              className="gap-2"
             >
               <ModelItemLabel option={option} />
               {value === option.id ? (
@@ -112,6 +114,7 @@ export function AssistantModelPicker({
             <DropdownMenuItem
               key={option.id}
               onClick={() => onChange(option.id)}
+              className="gap-2"
             >
               <ModelItemLabel option={option} />
               {value === option.id ? (

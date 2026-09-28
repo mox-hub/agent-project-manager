@@ -29,8 +29,8 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
   // 悬停反馈用 ring 而非阴影（宪法 §3.6：全站唯一阴影档 shadow-xs）：
   // Card 自带 ring-1 ring-border/50，悬停把环色加深即可，无需新增阴影。
   return (
-    <Card className="transition-shadow" data-ai-entity={`member:${member.id}`}>
-      <CardContent >
+    <Card className="gap-0 py-0 transition-shadow hover:ring-border" data-ai-entity={`member:${member.id}`}>
+      <CardContent className="px-3.5 py-2.5">
         <div className="flex items-start gap-3">
           <MemberCardPopover
             memberId={member.id}
@@ -85,7 +85,7 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
 
         <div className="mt-2 flex flex-wrap gap-1">
           {(member.tags ?? []).slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="secondary" fontSize="3xs" >
+            <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-3xs">
               {tag}
             </Badge>
           ))}
@@ -101,7 +101,7 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
             <Button
               variant="ghost"
               size="sm"
-              
+              className="h-5 px-1.5 text-3xs text-accent-red hover:text-accent-red"
               onClick={() => onDeactivate?.(member)}
             >
               {t('members.deactivate', '停用')}

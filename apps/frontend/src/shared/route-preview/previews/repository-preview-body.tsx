@@ -24,9 +24,9 @@ export function RepositoryPreviewBody({ id }: { id: string }) {
     <div className="space-y-3">
       {/* 顶部 Hero 带：默认分支 + 项目 */}
       <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
-        <Badge variant="outline">
+        <Badge variant="outline" className="text-3xs font-mono">
           <GitBranch className="size-2.5 mr-1 text-accent-purple" />
-          <span className="text-3xs font-mono">{branch}</span>
+          {branch}
         </Badge>
         {repo.project?.name && (
           <span className="text-3xs font-medium text-muted-foreground truncate max-w-40">

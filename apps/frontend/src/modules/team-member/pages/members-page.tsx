@@ -215,7 +215,7 @@ export default function MembersPage() {
             <EmptyState
               variant="page"
               visual={
-                <IconStack aria-hidden="true" >
+                <IconStack aria-hidden="true" className="text-accent-blue">
                   <Users className="size-4 text-accent-blue" />
                 </IconStack>
               }
@@ -241,7 +241,7 @@ export default function MembersPage() {
                 <ListActionButton
                   onClick={() => handleBatchDeactivate(selected.filter((m) => m.status === 'active'), close)}
                   title={t('members.deactivate', '停用')}
-                  
+                  className="text-accent-red"
                 >
                   {t('members.deactivate', '停用')}
                 </ListActionButton>

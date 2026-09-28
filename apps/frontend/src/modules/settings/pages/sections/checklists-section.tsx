@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,6 +60,7 @@ export function ChecklistsSettingsSection() {
       icon={ClipboardCheck}
       iconColor="text-accent-blue"
       title={t('settings.checklists')}
+      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
       <ChecklistsCard />
@@ -83,20 +83,18 @@ function ChecklistRow({
   const items = checklist.checklist ?? [];
 
   return (
-    // 壳迁至 Card：`rounded-lg`+`border`+`bg-card` = variant="outline"（圆角/描边/去投影），
-    // `p-3` = inset="sm"。内容侧布局（flex items-start gap-3）留在内层 div，不上壳。
-    <Card variant="outline" inset="sm">
+    <div className="rounded-lg border bg-card p-3">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium">{checklist.name}</span>
             {checklist.isSystem ? (
-              <Badge variant="secondary">
+              <Badge variant="secondary" className="gap-1 text-2xs">
                 <Lock className="size-3" />
                 {t('settings.checklistsSystemBadge')}
               </Badge>
             ) : (
-              <Badge variant="outline">
+              <Badge variant="outline" className="text-2xs">
                 v{checklist.version}
               </Badge>
             )}
@@ -105,11 +103,11 @@ function ChecklistRow({
             <p className="text-xs text-muted-foreground">{checklist.description}</p>
           )}
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="outline">
-              <span className="font-mono">{checklist.projectType}</span>
+            <Badge variant="outline" className="font-mono text-2xs">
+              {checklist.projectType}
             </Badge>
-            <Badge variant="outline">
-              <span className="font-mono">{checklist.techStack}</span>
+            <Badge variant="outline" className="font-mono text-2xs">
+              {checklist.techStack}
             </Badge>
             <span className="text-xs text-muted-foreground">
               {t('settings.checklistsItemsCount', { count: items.length })}
@@ -127,7 +125,7 @@ function ChecklistRow({
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -243,12 +241,12 @@ function ChecklistsCard() {
     );
 
   return (
-    <Card surface="flat">
+    <Card className="border-border shadow-none">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ClipboardCheck size={16} className="text-accent-blue" />
-            <CardTitle>{t('settings.checklistsTitle')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.checklistsTitle')}</CardTitle>
           </div>
           <Button size="sm" onClick={openCreate}>
             <Plus className="mr-1 size-3.5" />
@@ -257,7 +255,7 @@ function ChecklistsCard() {
         </div>
         <CardDescription>{t('settings.checklistsDesc')}</CardDescription>
       </CardHeader>
-      <CardContent >
+      <CardContent className="space-y-5">
         <section className="space-y-2">
           <h4 className="text-xs font-medium text-muted-foreground">
             {t('settings.checklistsSystemGroup')}
@@ -273,7 +271,7 @@ function ChecklistsCard() {
       </CardContent>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent maxWidth="lg" className="overflow-y-auto">
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {editingId ? t('settings.checklistsEdit') : t('settings.checklistsCreate')}
@@ -282,7 +280,7 @@ function ChecklistsCard() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >{t('settings.checklistsName')}</FieldLabel>
+              <label className="text-xs font-medium">{t('settings.checklistsName')}</label>
               <Input
                 value={draft.name}
                 onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))}
@@ -290,7 +288,7 @@ function ChecklistsCard() {
               />
             </div>
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >{t('settings.checklistsDescription')}</FieldLabel>
+              <label className="text-xs font-medium">{t('settings.checklistsDescription')}</label>
               <Textarea
                 value={draft.description}
                 onChange={(e) => setDraft((p) => ({ ...p, description: e.target.value }))}
@@ -299,31 +297,31 @@ function ChecklistsCard() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <FieldLabel size="xs" variant="muted" >{t('settings.checklistsProjectType')}</FieldLabel>
+                <label className="text-xs font-medium">{t('settings.checklistsProjectType')}</label>
                 <SelectField
                   value={draft.projectType}
                   onChange={(e) => setDraft((p) => ({ ...p, projectType: e.target.value }))}
                 >
                   {PROJECT_TYPES.map((pt) => (
-                    <SelectFieldOption key={pt} value={pt} >
+                    <SelectFieldOption key={pt} value={pt} className="font-mono">
                       {pt}
                     </SelectFieldOption>
                   ))}
                 </SelectField>
               </div>
               <div className="space-y-1.5">
-                <FieldLabel size="xs" variant="muted" >{t('settings.checklistsTechStack')}</FieldLabel>
-                <Input fontVariant="mono"
+                <label className="text-xs font-medium">{t('settings.checklistsTechStack')}</label>
+                <Input
                   value={draft.techStack}
                   onChange={(e) => setDraft((p) => ({ ...p, techStack: e.target.value }))}
                   placeholder="ts-node / react / go-gin"
-                  
+                  className="font-mono"
                 />
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <FieldLabel size="xs" variant="muted" >{t('settings.checklistItems')}</FieldLabel>
+                <label className="text-xs font-medium">{t('settings.checklistItems')}</label>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -339,16 +337,16 @@ function ChecklistsCard() {
                 {draft.checklist.map((item, index) => (
                   <div key={index} className="space-y-1.5 rounded-lg border p-2.5">
                     <div className="flex items-center gap-2">
-                      <Input size="h-8"
+                      <Input
                         value={item.category}
                         onChange={(e) => setItem(index, { category: e.target.value })}
                         placeholder={t('settings.checklistItemCategory')}
-                        className="flex-1"
+                        className="h-8 flex-1 text-xs"
                       />
                       <SelectField
                         value={item.severity}
                         onChange={(e) => setItem(index, { severity: e.target.value })}
-                        
+                        className="h-8 w-28 text-xs"
                       >
                         {SEVERITIES.map((s) => (
                           <SelectFieldOption key={s} value={s}>
@@ -371,19 +369,19 @@ function ChecklistsCard() {
                       </Button>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Input fontSize="xs" size="h-8"
+                      <Input
                         value={item.content}
                         onChange={(e) => setItem(index, { content: e.target.value })}
                         placeholder={t('settings.checklistItemContent')}
-                        className="flex-1"
+                        className="h-8 flex-1 text-xs"
                       />
-                      <FieldLabel size="xs" variant="muted" className="flex shrink-0 cursor-pointer items-center">
+                      <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
                         <Checkbox
                           checked={!!item.autoFixable}
                           onChange={(checked) => setItem(index, { autoFixable: !!checked })}
                         />
                         {t('settings.checklistItemAutoFixable')}
-                      </FieldLabel>
+                      </label>
                     </div>
                   </div>
                 ))}

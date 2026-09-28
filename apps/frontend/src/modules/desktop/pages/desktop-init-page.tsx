@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { StatusPill } from '@/components/ui/status-pill';
 import { useNavigate } from 'react-router-dom';
@@ -65,7 +64,7 @@ export function DesktopInitPage() {
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">后端状态</span>
-              <StatusPill tone={backendStatus?.running ? 'success' : 'default'} >
+              <StatusPill tone={backendStatus?.running ? 'success' : 'default'} className="gap-1.5">
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
                     backendStatus?.running ? 'bg-accent-green' : 'bg-muted-foreground/40'
@@ -108,21 +107,21 @@ export function DesktopInitPage() {
           )}
 
           {!backendStatus?.running && (
-            <Button variant="ghost"
+            <button
               type="button"
               onClick={handleStartBackend}
               disabled={isLoading}
-              className="inline-flex items-center justify-center transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? (
                 <>
-                  <Spinner size="sm" color="inherit" className="mr-2" />
+                  <Spinner className="mr-2 size-4 text-inherit" />
                   启动中...
                 </>
               ) : (
                 '启动后端服务'
               )}
-            </Button>
+            </button>
           )}
 
           <div className="rounded-lg border border-border bg-muted/20 p-3">

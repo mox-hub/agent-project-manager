@@ -27,9 +27,6 @@ import type {
   Acceptance,
   CriterionStatus,
 } from '@/modules/acceptance/api/acceptance-api';
-import { Button } from '@/components/ui/button';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { CRITERION_STATUS_TONE } from '@/shared/status/status-visuals';
 import { cn } from '@/lib/utils';
 
 /** 标准状态视觉：与 acceptance-detail-page 保持同口径（只读回显不引入新形态） */
@@ -38,6 +35,13 @@ const CRITERION_ICON: Record<CriterionStatus, typeof Circle> = {
   passed: CheckCircle2,
   failed: XCircle,
   blocked: Ban,
+};
+
+const CRITERION_TONE: Record<CriterionStatus, string> = {
+  pending: 'text-muted-foreground',
+  passed: 'text-accent-green',
+  failed: 'text-accent-red',
+  blocked: 'text-accent-yellow',
 };
 
 interface AcceptanceCriteriaPreviewProps {
@@ -83,26 +87,26 @@ export function AcceptanceCriteriaPreview({
         </div>
         <div className="flex items-center gap-0.5">
           {onOpenEditor && (
-            <Button variant="ghost"
+            <button
               type="button"
               onClick={onOpenEditor}
-              className="inline-flex items-center normal-case transition-colors"
+              className="inline-flex h-5 items-center rounded-md px-1 text-3xs font-normal normal-case text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               title={t('common.edit')}
             >
               {t('common.edit')}
-            </Button>
+            </button>
           )}
-          <Button
-            variant="subtle"
-            size="icon-2xs"
+          <button
+            type="button"
             onClick={() => setCollapsed((v) => !v)}
+            className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             aria-label={collapsed ? t('common.expand') : t('common.collapse')}
             aria-expanded={!collapsed}
           >
             <ChevronDown
               className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
             />
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -141,7 +145,7 @@ export function AcceptanceCriteriaPreview({
                 <ul className="mt-1">
                   {criteria.map((c) => {
                     const Icon = CRITERION_ICON[c.status] ?? Circle;
-                    const tone = TONE_CLASS[CRITERION_STATUS_TONE[c.status] ?? 'default'].text;
+                    const tone = CRITERION_TONE[c.status] ?? 'text-muted-foreground';
                     return (
                       <li key={c.id} className="flex items-start gap-1.5 py-0.5 text-xs">
                         <Icon className={cn('size-3.5 shrink-0 mt-0.5', tone)} />

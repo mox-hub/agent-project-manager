@@ -81,8 +81,8 @@ export function TemplatePickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent maxWidth="2xl"
-        
+      <DialogContent
+        className="sm:max-w-2xl"
         data-ai-component="prompt.template-picker"
       >
         <DialogHeader>
@@ -93,8 +93,8 @@ export function TemplatePickerDialog({
         </DialogHeader>
         {templates.isLoading ? (
           <div className="space-y-2">
-            <Skeleton  />
-            <Skeleton  />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
           </div>
         ) : items.length === 0 ? (
           <EmptyState
@@ -110,7 +110,7 @@ export function TemplatePickerDialog({
               data-ai-component="prompt.template-picker.list"
             >
               {items.map((item) => (
-                <Button variant="ghost"
+                <button
                   key={item.id}
                   type="button"
                   onClick={() => void select(item)}
@@ -126,9 +126,9 @@ export function TemplatePickerDialog({
                   <p className="flex items-center gap-1.5 truncate text-sm font-medium">
                     {item.name}
                     {item.builtIn ? (
-                      <Badge color="blue"
+                      <Badge
                         variant="secondary"
-                        fontSize="xs" 
+                        className="bg-accent-blue/10 px-1 py-0 text-xs text-accent-blue"
                       >
                         {t('prompt.templatePicker.builtin')}
                       </Badge>
@@ -139,7 +139,7 @@ export function TemplatePickerDialog({
                       {item.description}
                     </p>
                   ) : null}
-                </Button>
+                </button>
               ))}
             </div>
             {/* 插值预览 */}
@@ -153,7 +153,7 @@ export function TemplatePickerDialog({
               >
                 {previewLoading ? (
                   <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Spinner size="xs" />
+                    <Spinner className="size-3.5" />
                     {t('prompt.templatePicker.previewing')}
                   </p>
                 ) : preview?.text ? (
@@ -174,7 +174,7 @@ export function TemplatePickerDialog({
             </div>
           </div>
         )}
-        <DialogFooter >
+        <DialogFooter className="gap-2">
           <Button
             type="button"
             variant="ghost"

@@ -61,10 +61,10 @@ function KpiCard({
 }: KpiCardProps) {
   return (
     <Card
-      className="cursor-pointer transition-all group"
+      className="cursor-pointer hover:ring-2 hover:ring-ring/30 transition-all group py-0"
       onClick={onClick}
     >
-      <CardContent >
+      <CardContent className="p-3.5">
         <div className="flex items-start justify-between mb-2">
           <div className={cn('size-8 rounded-lg flex items-center justify-center shrink-0', bgColor)}>
             <Icon className={cn('size-4', color)} />
@@ -105,9 +105,9 @@ function TeamDialog({ data, open, onClose }: { data: DashboardOverview['team']; 
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
+          <DialogTitle className="flex items-center gap-2">
             <Users className="size-4" />
             {t('dashboard.dialog.team')}
           </DialogTitle>
@@ -143,9 +143,9 @@ function AIDialog({ data, open, onClose }: { data: DashboardOverview['ai']; open
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
+          <DialogTitle className="flex items-center gap-2">
             <Bot className="size-4" />
             {t('dashboard.dialog.ai')}
           </DialogTitle>
@@ -174,9 +174,9 @@ function CostDialog({ data, open, onClose }: { data: DashboardOverview['cost']; 
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
+          <DialogTitle className="flex items-center gap-2">
             <DollarSign className="size-4" />
             {t('dashboard.dialog.cost')}
           </DialogTitle>
@@ -197,7 +197,7 @@ function CostDialog({ data, open, onClose }: { data: DashboardOverview['cost']; 
                     <span className="text-xs text-muted-foreground">{item.percentage}%</span>
                   </div>
                 </div>
-                <Progress value={item.percentage}  />
+                <Progress value={item.percentage} className="h-1.5" />
               </div>
             ))}
           </div>
@@ -211,9 +211,9 @@ function BugsDialog({ data, open, onClose }: { data: DashboardOverview['delivery
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
+          <DialogTitle className="flex items-center gap-2">
             <Bug className="size-4" />
             {t('dashboard.dialog.bugs')}
           </DialogTitle>
@@ -232,9 +232,9 @@ function TasksDialog({ data, open, onClose }: { data: DashboardOverview['deliver
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
+          <DialogTitle className="flex items-center gap-2">
             <CheckSquare className="size-4" />
             {t('dashboard.dialog.tasks')}
           </DialogTitle>
@@ -263,9 +263,9 @@ function HealthDialog({ data, open, onClose }: { data: DashboardOverview['health
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
+          <DialogTitle className="flex items-center gap-2">
             <Activity className="size-4" />
             {t('dashboard.dialog.health')}
           </DialogTitle>
@@ -287,7 +287,7 @@ function HealthDialog({ data, open, onClose }: { data: DashboardOverview['health
                   </span>
                   <span className="text-xs text-muted-foreground">{p.score}/100</span>
                 </div>
-                <Progress value={p.score}  />
+                <Progress value={p.score} className="h-2" />
               </div>
             ))}
           </div>
@@ -301,9 +301,9 @@ function RisksDialog({ data, open, onClose }: { data: DashboardOverview['risks']
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
+          <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="size-4" />
             {t('dashboard.dialog.risks')}
           </DialogTitle>
@@ -331,7 +331,7 @@ function RisksDialog({ data, open, onClose }: { data: DashboardOverview['risks']
           </div>
           <div className="bg-muted/50 rounded-lg p-3">
             <p className="text-xs font-medium mb-1.5">{t('dashboard.risks.status')}</p>
-            <Progress value={data.mitigationRatePct} className="mb-2" />
+            <Progress value={data.mitigationRatePct} className="h-2 mb-2" />
             <p className="text-xs text-muted-foreground">
               {t('dashboard.risks.statusDesc', { rate: data.mitigationRatePct })}
             </p>
@@ -366,15 +366,15 @@ export function DashboardPage() {
             <div className="mx-auto w-full max-w-7xl px-6 py-5 sm:px-8 sm:py-6 lg:px-10 space-y-4">
               <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {Array.from({ length: 4 }, (_, i) => <Skeleton key={i}  />)}
+                  {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {Array.from({ length: 3 }, (_, i) => <Skeleton key={i}  />)}
+                  {Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
                 </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
-                <Skeleton  />
-                <Skeleton  />
+                <Skeleton className="h-56 rounded-xl" />
+                <Skeleton className="h-56 rounded-xl" />
               </div>
             </div>
           </div>
@@ -461,8 +461,8 @@ export function DashboardPage() {
 
               {/* Trends - Row 3 */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
-                <Card >
-                  <CardContent inset="md">
+                <Card className="py-0">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="text-sm font-medium">{t('dashboard.panel.productivity')}</p>
@@ -498,8 +498,8 @@ export function DashboardPage() {
                   </CardContent>
                 </Card>
 
-                <Card >
-                  <CardContent inset="md">
+                <Card className="py-0">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="text-sm font-medium">{t('dashboard.panel.healthTrend')}</p>
@@ -524,8 +524,8 @@ export function DashboardPage() {
 
               {/* Row 4 */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
-                <Card className="lg:col-span-1">
-                  <CardContent inset="md">
+                <Card className="lg:col-span-1 py-0">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="text-sm font-medium">{t('dashboard.panel.performance')}</p>
@@ -546,8 +546,8 @@ export function DashboardPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="lg:col-span-2">
-                  <CardContent inset="md">
+                <Card className="lg:col-span-2 py-0">
+                  <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="text-sm font-medium">{t('dashboard.panel.cost')}</p>
@@ -565,7 +565,7 @@ export function DashboardPage() {
                               <span className="text-xs text-muted-foreground">{item.percentage}%</span>
                             </div>
                           </div>
-                          <Progress value={item.percentage}  />
+                          <Progress value={item.percentage} className="h-1.5" />
                         </div>
                       ))}
                     </div>
@@ -574,23 +574,23 @@ export function DashboardPage() {
               </div>
 
               {/* Quick Actions */}
-              <Card >
-                <CardContent inset="md">
+              <Card className="py-0">
+                <CardContent className="p-4">
                   <p className="text-sm font-medium mb-2.5">{t('dashboard.actions.title')}</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <Button variant="outline" className="flex-col" onClick={() => navigate('/app/issues')}>
+                    <Button variant="outline" className="h-auto py-2.5 flex-col gap-1.5" onClick={() => navigate('/app/issues')}>
                       <CheckSquare className="size-4.5" />
                       <span className="text-xs">{t('dashboard.actions.tasks')}</span>
                     </Button>
-                    <Button variant="outline" className="flex-col" onClick={() => navigate('/app/bugs')}>
+                    <Button variant="outline" className="h-auto py-2.5 flex-col gap-1.5" onClick={() => navigate('/app/bugs')}>
                       <Bug className="size-4.5" />
                       <span className="text-xs">{t('dashboard.actions.bugs')}</span>
                     </Button>
-                    <Button variant="outline" className="flex-col" onClick={() => navigate('/app/settings/ai')}>
+                    <Button variant="outline" className="h-auto py-2.5 flex-col gap-1.5" onClick={() => navigate('/app/settings/ai')}>
                       <Sparkles className="size-4.5" />
                       <span className="text-xs">{t('dashboard.actions.aiHub')}</span>
                     </Button>
-                    <Button variant="outline" className="flex-col" onClick={() => navigate('/app/repositories')}>
+                    <Button variant="outline" className="h-auto py-2.5 flex-col gap-1.5" onClick={() => navigate('/app/repositories')}>
                       <GitBranch className="size-4.5" />
                       <span className="text-xs">{t('dashboard.actions.repos')}</span>
                     </Button>

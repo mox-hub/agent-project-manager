@@ -190,7 +190,7 @@ export function RunDiagnosisSection({
               data-testid="run-diagnosis-retry"
             >
               {retryWithDiagnosis.isPending ? (
-                <Spinner size="2xs" />
+                <Spinner className="size-3" />
               ) : (
                 <RotateCcw className="size-3" />
               )}
@@ -209,7 +209,7 @@ export function RunDiagnosisSection({
           data-testid="run-diagnosis-trigger"
         >
           {diagnose.isPending ? (
-            <Spinner size="2xs" />
+            <Spinner className="size-3" />
           ) : (
             <Stethoscope className="size-3" />
           )}

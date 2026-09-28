@@ -75,7 +75,7 @@ export function CellSelect({
         {/* 弹层内层限高滚动：候选超一屏时不撑爆视口（与右键菜单子菜单同口径） */}
         <div className="max-h-72 w-full overflow-y-auto">
           {options.map((option) => (
-            <MenuItem key={option.value} onClick={() => onChange(option.value)}>
+            <MenuItem key={option.value} className="gap-2" onClick={() => onChange(option.value)}>
               {option.icon ? (
                 <span className="flex size-4 shrink-0 items-center justify-center">{option.icon}</span>
               ) : null}

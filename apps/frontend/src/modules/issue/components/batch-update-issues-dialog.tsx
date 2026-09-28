@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +12,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { toast } from '@/components/ui/toast';
 import { useMembers } from '@/modules/team-member/hooks';
 import { taskApi, type TaskPriority } from '../api/issue-api';
@@ -35,6 +33,9 @@ interface BatchUpdateIssuesDialogProps {
 
 const STATUS_OPTIONS = ['todo', 'in_progress', 'in_review', 'done', 'canceled'] as const;
 const PRIORITY_OPTIONS: TaskPriority[] = ['low', 'medium', 'high', 'critical'];
+
+const SELECT_CLASS =
+  'h-9 w-full rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary';
 
 /**
  * 批量修改工单（P1-12）：状态 / 优先级 / 负责人 三个可选字段，留空 = 不修改。
@@ -146,14 +147,11 @@ export function BatchUpdateIssuesDialog({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && resetAndClose()}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
-            <span className="flex items-center gap-2">
-              <SlidersHorizontal size={16} className="text-accent-blue" />
-              {t('task.batchUpdate.title', '批量修改 {{count}} 条工单', { count: issues.length })}
-            </span>
+          <DialogTitle className="flex items-center gap-2">
+            <SlidersHorizontal size={16} className="text-accent-blue" />
+            {t('task.batchUpdate.title', '批量修改 {{count}} 条工单', { count: issues.length })}
           </DialogTitle>
           <DialogDescription>
             {t(
@@ -165,57 +163,60 @@ export function BatchUpdateIssuesDialog({
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted"  htmlFor="batch-update-status">
+            <label className="text-xs font-medium text-muted-foreground" htmlFor="batch-update-status">
               {t('task.status.group', 'Status')}
-            </FieldLabel>
-            <SelectField
+            </label>
+            <select
               id="batch-update-status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
+              className={SELECT_CLASS}
             >
-              <SelectFieldOption value="">{t('task.batchUpdate.noChange', '不修改')}</SelectFieldOption>
+              <option value="">{t('task.batchUpdate.noChange', '不修改')}</option>
               {STATUS_OPTIONS.map((value) => (
-                <SelectFieldOption key={value} value={value}>
+                <option key={value} value={value}>
                   {t(`task.status.${value}`)}
-                </SelectFieldOption>
+                </option>
               ))}
-            </SelectField>
+            </select>
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted"  htmlFor="batch-update-priority">
+            <label className="text-xs font-medium text-muted-foreground" htmlFor="batch-update-priority">
               {t('viewDisplay.properties.priority', 'Priority')}
-            </FieldLabel>
-            <SelectField
+            </label>
+            <select
               id="batch-update-priority"
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
+              className={SELECT_CLASS}
             >
-              <SelectFieldOption value="">{t('task.batchUpdate.noChange', '不修改')}</SelectFieldOption>
+              <option value="">{t('task.batchUpdate.noChange', '不修改')}</option>
               {PRIORITY_OPTIONS.map((value) => (
-                <SelectFieldOption key={value} value={value}>
+                <option key={value} value={value}>
                   {t(`task.priority.${value}`, value)}
-                </SelectFieldOption>
+                </option>
               ))}
-            </SelectField>
+            </select>
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted"  htmlFor="batch-update-assignee">
+            <label className="text-xs font-medium text-muted-foreground" htmlFor="batch-update-assignee">
               {t('viewDisplay.properties.assignee', 'Assignee')}
-            </FieldLabel>
-            <SelectField
+            </label>
+            <select
               id="batch-update-assignee"
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
+              className={SELECT_CLASS}
             >
-              <SelectFieldOption value="">{t('task.batchUpdate.noChange', '不修改')}</SelectFieldOption>
+              <option value="">{t('task.batchUpdate.noChange', '不修改')}</option>
               {members.map((member) => (
-                <SelectFieldOption key={member.id} value={member.id}>
+                <option key={member.id} value={member.id}>
                   {(member.type === 'ai_agent' ? '[AI] ' : '') + (member.displayName || member.handle || member.id)}
-                </SelectFieldOption>
+                </option>
               ))}
-            </SelectField>
+            </select>
           </div>
         </div>
 
@@ -224,7 +225,7 @@ export function BatchUpdateIssuesDialog({
             {t('common.cancel', '取消')}
           </Button>
           <Button onClick={handleApply} disabled={!hasChanges || pending}>
-            {pending ? <Spinner size="sm" /> : null}
+            {pending ? <Spinner className="size-4" /> : null}
             {pending
               ? t('task.batchUpdate.applying', '更新中…')
               : t('task.batchUpdate.apply', '应用到 {{count}} 条', { count: issues.length })}

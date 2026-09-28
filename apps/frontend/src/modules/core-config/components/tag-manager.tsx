@@ -174,7 +174,7 @@ export function TagManager() {
       variant="standard"
       contentClassName="gap-4"
       aiPage="settings.labels"
-      
+      className="bg-background text-foreground"
       title={t('settings.labels')}
       icon={Tags}
       iconColor="text-accent-blue"
@@ -330,11 +330,11 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
   return (
     <Table>
       <TableHeader>
-        <TableRow >
-          <TableHead width="w-8"  />
+        <TableRow className="bg-muted/50 hover:bg-muted/50">
+          <TableHead className="w-8 px-2" />
           <TableHead>{t('settings.labelName')}</TableHead>
           <TableHead>{t('settings.labelDesc')}</TableHead>
-          <TableHead width="w-28" align="right" >{t('common.actions')}</TableHead>
+          <TableHead className="w-28 text-right">{t('common.actions')}</TableHead>
         </TableRow>
       </TableHeader>
       <Sortable
@@ -345,17 +345,23 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
       >
         {tags.map((tag) => (
           <SortableItem key={tag.id} value={tag.id} render={<TableRow />}>
-            <TableCell padding="py-1.5" >
-              {/* 拖拽柄：格式预设已内置于 SortableItemHandle（几何/弱化前景/touch-none），
-                  不再嵌 Button——把手是拖拽可供性不是动作钮 */}
+            <TableCell className="px-2 py-1.5">
               <SortableItemHandle
-                aria-label={t('common.dragToSort')}
-                title={t('common.dragToSort')}
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={t('common.dragToSort')}
+                    title={t('common.dragToSort')}
+                  />
+                }
+                className="touch-none text-muted-foreground"
               >
                 <GripVertical />
               </SortableItemHandle>
             </TableCell>
-            <TableCell padding="py-1.5">
+            <TableCell className="py-1.5">
               <span
                 className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white"
                 style={{ backgroundColor: tag.color || '#6b7280' }}
@@ -363,10 +369,10 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
                 {tag.name}
               </span>
             </TableCell>
-            <TableCell padding="py-1.5" className="truncate">
+            <TableCell className="max-w-50 truncate py-1.5 text-muted-foreground">
               {tag.description || '—'}
             </TableCell>
-            <TableCell padding="py-1.5" align="right">
+            <TableCell className="py-1.5 text-right">
               <div className="flex items-center justify-end gap-0.5">
                 <Button
                   type="button"
@@ -391,11 +397,12 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
                 </Button>
                 <Button
                   type="button"
-                  variant="destructive"
+                  variant="ghost"
                   size="icon-xs"
                   aria-label={t('common.delete')}
                   title={t('common.delete')}
                   disabled={deleting}
+                  className="text-destructive hover:text-destructive"
                   onClick={() => onDelete(tag)}
                 >
                   <Trash2 />

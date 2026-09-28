@@ -17,8 +17,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { SEVERITY_TONE, TASK_STATUS_VISUALS, type StatusTone } from '@/shared/status/status-visuals';
+import { TASK_STATUS_VISUALS, type StatusTone } from '@/shared/status/status-visuals';
 import type { Task } from '@/modules/issue/api/issue-api';
 import type { IssueTypeMeta } from '@/modules/issue/api/issue-type-api';
 import { IssueTypeIcon } from '@/shared/components/issue-type-icon';
@@ -54,12 +53,15 @@ export const STATUS_VISUAL = Object.fromEntries(
   }),
 ) as Record<TaskStatusKey, { icon: LucideIcon; color: BoardAccentColor }>;
 
-/** 状态/严重度 → 图标文字色统一走 tone 唯一词表（§19.5，本文件不再自造 text-* 映射） */
-const statusIconTextClass = (status: string): string =>
-  TONE_CLASS[TASK_STATUS_VISUALS[status]?.tone ?? 'default'].text;
-
-const severityIconTextClass = (severity: SeverityKey): string =>
-  TONE_CLASS[SEVERITY_TONE[severity] ?? 'default'].text;
+/** 状态色 → 图标文字色（静态类名，避免 Tailwind JIT 收集不到动态拼接） */
+const STATUS_ICON_TEXT: Record<BoardAccentColor, string> = {
+  blue: 'text-accent-blue',
+  green: 'text-accent-green',
+  yellow: 'text-accent-yellow',
+  red: 'text-accent-red',
+  purple: 'text-accent-purple',
+  muted: 'text-muted-foreground',
+};
 
 /** 任务状态看板列（可选排除 canceled） */
 export function getTaskStatusColumns(t: Translate, includeCanceled = true): BoardColumnDef[] {
@@ -157,7 +159,7 @@ export function taskCardRow1(
         <StatusIcon
           size={12}
           className={cn(
-            statusIconTextClass(task.status),
+            STATUS_ICON_TEXT[statusVisual.color],
             task.status === 'in_progress' ? 'animate-spin [animation-duration:3s]' : '',
           )}
         />
@@ -210,11 +212,11 @@ export function taskCardRow3(task: Task): ReactNode {
           与底色同色、完全不可见；改语义 border-border 后浅色主题才真的有环，深色主题结果不变
           （原 dark:border-border 冗余，一并去掉，宪法 §5.5）。 */}
       {task.assignee ? (
-        <Avatar >
+        <Avatar className="h-6 w-6 border border-border shadow-xs">
           {task.assignee.avatarUrl ? (
             <AvatarImage src={task.assignee.avatarUrl} alt={task.assignee.displayName} />
           ) : null}
-          <AvatarFallback >
+          <AvatarFallback className="text-xs">
             {(task.assignee.displayName || task.assignee.username).slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
@@ -237,10 +239,11 @@ export const taskCardModel: BoardCardModel<Task> = {
   dataEntity: (task) => `task:${task.id}`,
 };
 
-/** Bug 严重度胶囊配色：tone 唯一链路（浅底 + 描边槽） */
-const severityBadgeClass = (severity: SeverityKey): string => {
-  const tone = SEVERITY_TONE[severity] ?? 'default';
-  return cn(TONE_CLASS[tone].light, TONE_CLASS[tone].border);
+const SEVERITY_BADGE_CLASS: Record<string, string> = {
+  critical: 'bg-accent-red/15 text-accent-red border-accent-red/30',
+  high: 'bg-accent-yellow/15 text-accent-yellow border-accent-yellow/30',
+  medium: 'bg-accent-blue/15 text-accent-blue border-accent-blue/30',
+  low: 'bg-muted/40 text-muted-foreground border-border/40',
 };
 
 /** Bug 行1：类型图标 + 重要性/严重度图标 + Bug编号 + 严重度胶囊 + 状态图标 */
@@ -263,7 +266,7 @@ export function bugCardRow1(
         <IssueTypeIcon meta={typeMeta} />
         <SevIcon
           size={13}
-          className={severityIconTextClass(sevKey)}
+          className={STATUS_ICON_TEXT[sevVisual.color]}
           aria-label={sevKey}
         />
         <span className="font-mono text-xs font-semibold tracking-tight text-foreground truncate">
@@ -272,7 +275,7 @@ export function bugCardRow1(
         <span
           className={cn(
             'inline-flex items-center rounded-sm border px-1 py-0 text-3xs font-medium uppercase leading-tight',
-            severityBadgeClass(sevKey),
+            SEVERITY_BADGE_CLASS[sevKey] ?? SEVERITY_BADGE_CLASS.low,
           )}
         >
           {sevLabel}
@@ -285,7 +288,7 @@ export function bugCardRow1(
         <StatusIcon
           size={12}
           className={cn(
-            statusIconTextClass(bug.status),
+            STATUS_ICON_TEXT[statusVisual.color],
             bug.status === 'in_progress' ? 'animate-spin [animation-duration:3s]' : '',
           )}
         />
@@ -339,11 +342,11 @@ export function bugCardRow3(bug: Task, projectName?: string, t?: Translate): Rea
         ) : null}
       </div>
       {bug.assignee ? (
-        <Avatar className="shrink-0">
+        <Avatar className="size-5 shrink-0 border border-background shadow-xs">
           {bug.assignee.avatarUrl ? (
             <AvatarImage src={bug.assignee.avatarUrl} alt={bug.assignee.displayName} />
           ) : null}
-          <AvatarFallback >
+          <AvatarFallback className="text-3xs">
             {(bug.assignee.displayName || bug.assignee.username).slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>

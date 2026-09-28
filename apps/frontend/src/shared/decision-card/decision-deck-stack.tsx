@@ -172,7 +172,7 @@ export function DecisionDeckStack({
         {onAllDone && (
           <Button
             onClick={onAllDone}
-            className="mt-6"
+            className="mt-6 gap-2"
             variant="outline"
             data-ai="deck-back-inbox"
           >

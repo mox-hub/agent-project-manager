@@ -105,7 +105,7 @@ export function CommentInput({
                     </Button>
                   }
                 />
-                <PopoverContent align="end" side="top" >
+                <PopoverContent align="end" side="top" className="w-75 p-0">
                   <EmojiPicker onSelect={insertEmoji} />
                 </PopoverContent>
               </Popover>
@@ -117,7 +117,7 @@ export function CommentInput({
                 title={`${t('activity.comment.send')} (⌘⏎)`}
               >
                 {addComment.isPending ? (
-                  <Spinner size="2xs" color="inherit" />
+                  <Spinner className="size-3 text-inherit" />
                 ) : (
                   <ArrowUp className="size-3.5" />
                 )}

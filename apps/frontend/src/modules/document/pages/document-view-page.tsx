@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -276,7 +275,7 @@ export function DocumentViewPage() {
   const isAuthor = currentUserId === document.authorId;
 
   return (
-    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.documentView}>
+    <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.documentView}>
       {/* 子页面工具栏：返回 + 面包屑 + 操作按钮 */}
       <SubPageToolbar
         aiId="document.document-view"
@@ -314,27 +313,27 @@ export function DocumentViewPage() {
 
             {menuOpen ? (
               <div className={`absolute right-0 top-10.5 z-banner w-47.5 p-1 motion-enter ${MENU_SURFACE_CLASS}`}>
-                <Button variant="ghost" type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
+                <button type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
                   <Share2 size={14} /> 分享
-                </Button>
-                <Button variant="ghost" type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
+                </button>
+                <button type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
                   <Copy size={14} /> 复制链接
-                </Button>
-                <Button variant="ghost" type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
+                </button>
+                <button type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
                   <Download size={14} /> 导出 Markdown
-                </Button>
-                <Button variant="ghost" type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
+                </button>
+                <button type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
                   <Bookmark size={14} /> 添加书签
-                </Button>
+                </button>
                 <div className={MENU_SEPARATOR_CLASS} />
-                <Button variant="ghost"
+                <button
                   type="button"
                   className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
                   disabled={isDeletingDocument}
                   onClick={() => void handleDeleteDocument()}
                 >
                   <Trash2 size={14} /> 删除文档
-                </Button>
+                </button>
               </div>
             ) : null}
           </div>
@@ -345,7 +344,7 @@ export function DocumentViewPage() {
         <aside className="hidden w-75 shrink-0 border-r border-border bg-muted/20 xl:flex xl:flex-col">
           {/* 标签页切换 */}
           <div className="flex h-14 shrink-0 items-center gap-1 border-b border-border px-3">
-            <Button variant="ghost"
+            <button
               type="button"
               onClick={() => setActiveTab('toc')}
               className={cn(
@@ -355,8 +354,8 @@ export function DocumentViewPage() {
             >
               <FileText size={14} />
               目录
-            </Button>
-            <Button variant="ghost"
+            </button>
+            <button
               type="button"
               onClick={() => setActiveTab('tasks')}
               className={cn(
@@ -366,8 +365,8 @@ export function DocumentViewPage() {
             >
               <CheckSquare size={14} />
               任务
-            </Button>
-            <Button variant="ghost"
+            </button>
+            <button
               type="button"
               onClick={() => setActiveTab('versions')}
               className={cn(
@@ -377,7 +376,7 @@ export function DocumentViewPage() {
             >
               <History size={14} />
               版本
-            </Button>
+            </button>
           </div>
 
           {/* 内容区域 */}
@@ -435,21 +434,21 @@ export function DocumentViewPage() {
                 <h1 className="truncate text-2xl font-semibold leading-tight text-foreground">{document.title}</h1>
                 <ApprovalStatus status={document.status as 'pending' | 'approved' | 'rejected' | 'draft' | 'reviewing' | 'published'} />
                 {document.docRole && (
-                  <Badge variant="outline" className="shrink-0">
+                  <Badge variant="outline" className="shrink-0 font-normal text-2xs">
                     {document.docRole}
                   </Badge>
                 )}
                 {apmAddress ? (
-                  <Button variant="ghost"
+                  <button
                     type="button"
                     onClick={() => copyToClipboard(apmAddress)}
                     title="复制 apm:// 地址"
                     data-ai-component="document.document-view.apm-address"
-                    className="inline-flex shrink-0 items-center transition-colors"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 font-mono text-2xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
                     {isCopied ? <Check size={12} /> : <Copy size={12} />}
                     {apmAddress}
-                  </Button>
+                  </button>
                 ) : null}
               </div>
                 <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
@@ -497,14 +496,14 @@ export function DocumentViewPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {links.map((item) => (
-                    <Button variant="ghost"
+                    <button
                       key={item}
                       type="button"
-                      className="inline-flex items-center"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1 text-xs font-medium text-foreground hover:bg-muted"
                     >
                       {item}
                       <ExternalLink size={13} className="text-muted-foreground" />
-                    </Button>
+                    </button>
                   ))}
                 </div>
               </div>

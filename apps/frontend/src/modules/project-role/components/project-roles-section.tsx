@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { Plus, Pencil, RefreshCw, Terminal, Trash2 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/section-card';
@@ -87,12 +86,12 @@ export function ProjectRolesSection({ projectId }: { projectId: string }) {
             <Button
               variant="outline"
               size="sm"
-              
+              className="gap-1.5"
               onClick={handleSeed}
               disabled={seed.isPending}
             >
               {seed.isPending ? (
-                <Spinner color="inherit" size="xs"  />
+                <Spinner className="size-3.5 text-inherit" />
               ) : (
                 <RefreshCw size={13} />
               )}
@@ -100,7 +99,7 @@ export function ProjectRolesSection({ projectId }: { projectId: string }) {
             </Button>
             <Button
               size="sm"
-              
+              className="gap-1.5"
               onClick={() => setShowCreate(true)}
             >
               <Plus size={13} />
@@ -119,12 +118,12 @@ export function ProjectRolesSection({ projectId }: { projectId: string }) {
             {projectRoles.length === 0 ? (
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div>项目还没有执行角色。</div>
-                <Button padding="p-0"
+                <Button
                   variant="link"
                   size="sm"
                   onClick={handleSeed}
                   disabled={seed.isPending}
-                  
+                  className="h-auto p-0"
                 >
                   从全局模板同步 {globalRoles.length} 个默认角色 →
                 </Button>
@@ -211,16 +210,16 @@ function RoleRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium">{role.name}</span>
-          <Badge variant="secondary">
-            <span className="font-mono text-xs">{role.key}</span>
+          <Badge variant="secondary" className="font-mono text-xs">
+            {role.key}
           </Badge>
-          <Badge variant="outline">
-            <span className="text-xs">{role.executionRole}</span>
+          <Badge variant="outline" className="text-xs">
+            {role.executionRole}
           </Badge>
           {role.defaultCliProviderId && (
-            <Badge variant="default">
+            <Badge variant="default" className="text-xs gap-1">
               <Terminal className="h-3 w-3" />
-              <span className="text-xs">{role.defaultCliProviderId}</span>
+              {role.defaultCliProviderId}
             </Badge>
           )}
         </div>
@@ -294,7 +293,7 @@ function RoleEditDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent maxWidth="lg" >
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? '新建角色' : '编辑角色'}</DialogTitle>
           <DialogDescription>
@@ -304,7 +303,7 @@ function RoleEditDialog({
         <form onSubmit={handleSubmit} className="space-y-3">
           {mode === 'create' && (
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >Key (唯一标识) *</FieldLabel>
+              <label className="text-xs font-medium">Key (唯一标识) *</label>
               <Input
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
@@ -314,7 +313,7 @@ function RoleEditDialog({
             </div>
           )}
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >名称 *</FieldLabel>
+            <label className="text-xs font-medium">名称 *</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -323,7 +322,7 @@ function RoleEditDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >描述</FieldLabel>
+            <label className="text-xs font-medium">描述</label>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -332,7 +331,7 @@ function RoleEditDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >执行角色</FieldLabel>
+              <label className="text-xs font-medium">执行角色</label>
               <Select
                 value={executionRole}
                 onValueChange={(v) => setExecutionRole(v as ExecutionRole)}
@@ -351,7 +350,7 @@ function RoleEditDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >默认 CLI Provider</FieldLabel>
+              <label className="text-xs font-medium">默认 CLI Provider</label>
               <Select
                 value={cliProviderId}
                 onValueChange={(v) =>
@@ -373,9 +372,9 @@ function RoleEditDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >
+            <label className="text-xs font-medium">
               角色约定（该角色成员的 AI 执行者继承）
-            </FieldLabel>
+            </label>
             <PromptEditor
               value={promptHint}
               onChange={setPromptHint}

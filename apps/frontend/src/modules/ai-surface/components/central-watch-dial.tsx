@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect, useCallback, type UIEvent } from 'react';
 import type { ArtifactItem, CognitiveMessage } from '../types';
 import { SampleTag } from './sample-tag';
@@ -303,7 +302,7 @@ export function CentralWatchDial({
               { id: 'acceptance', label: '门禁闭环' },
               { id: 'stream', label: '认知共鸣' },
             ].map((tab) => (
-              <Button variant="ghost"
+              <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as 'overview' | 'contract' | 'acceptance' | 'stream')}
@@ -322,7 +321,7 @@ export function CentralWatchDial({
                 }}
               >
                 {tab.label}
-              </Button>
+              </button>
             ))}
           </div>
         </div>
@@ -536,14 +535,14 @@ export function CentralWatchDial({
                   <span className="font-semibold text-xs">Prisma / OpenAPI 契约 Diff</span>
                 </div>
                 {codeArtifact.payload.codeSnippet && (
-                  <Button variant="ghost"
+                  <button
                     type="button"
                     onClick={() => handleCopy(codeArtifact.payload.codeSnippet!)}
-                    className="transition-colors cursor-pointer"
+                    className="px-2 py-0.5 rounded-sm text-muted-foreground hover:text-foreground font-mono transition-colors cursor-pointer"
                     style={{ fontSize: 9, background: 'hsl(var(--foreground) / 0.08)' }}
                   >
                     {copiedDiff ? 'COPIED ✓' : 'COPY'}
-                  </Button>
+                  </button>
                 )}
               </div>
 

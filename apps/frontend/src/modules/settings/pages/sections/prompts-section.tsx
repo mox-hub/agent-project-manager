@@ -122,10 +122,10 @@ function SystemPromptViewer() {
     return (
       <div className="flex gap-4">
         <div className="w-56 shrink-0 space-y-2">
-          <Skeleton  />
-          <Skeleton  />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
         </div>
-        <Skeleton className="flex-1" />
+        <Skeleton className="h-40 flex-1" />
       </div>
     );
   }
@@ -139,7 +139,7 @@ function SystemPromptViewer() {
       {/* 左列表 */}
       <div className="w-56 shrink-0 space-y-1" data-ai-component="settings.prompts.system.list">
         {items.map((item) => (
-          <Button variant="ghost"
+          <button
             key={item.key}
             type="button"
             onClick={() => setSelected(item.key)}
@@ -156,18 +156,18 @@ function SystemPromptViewer() {
             <p className="truncate text-xs text-muted-foreground">
               {t('prompts.system.charCount', { count: item.charCount })}
             </p>
-          </Button>
+          </button>
         ))}
       </div>
       {/* 右只读查看器 */}
       <div className="min-w-0 flex-1">
         {detail.isLoading || !detail.data ? (
-          <Skeleton  />
+          <Skeleton className="h-40 w-full" />
         ) : (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold">{detail.data.title}</h3>
-              <Badge color="blue" variant="secondary" >
+              <Badge variant="secondary" className="bg-accent-blue/10 text-accent-blue">
                 {t('prompts.system.builtin')}
               </Badge>
             </div>
@@ -191,7 +191,7 @@ function UsageStatsCard() {
   const sections = stats.data?.sections ?? [];
 
   if (stats.isLoading) {
-    return <Skeleton  />;
+    return <Skeleton className="h-24 w-full" />;
   }
   if (!stats.data || stats.data.promptCount === 0) {
     return (
@@ -267,8 +267,8 @@ function TemplateEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? null : close())}>
-      <DialogContent maxWidth="2xl"
-        
+      <DialogContent
+        className="sm:max-w-2xl"
         data-ai-component="prompt.template-editor"
       >
         <DialogHeader>
@@ -341,11 +341,11 @@ function TemplateEditForm({
     <>
       <div className="space-y-3">
         <div className="flex gap-2">
-          <Input size="h-8"
+          <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={editing?.name ?? t('prompt.templateEditor.namePlaceholder')}
-            
+            className="h-8 text-sm"
             data-ai-component="prompt.template-editor.name"
           />
           {isEditMode ? null : (
@@ -354,7 +354,7 @@ function TemplateEditForm({
               onChange={(event) =>
                 setTarget(event.target.value as 'task' | 'project' | 'role' | 'member')
               }
-              
+              className="h-8 w-40 text-xs"
               data-ai-component="prompt.template-editor.target"
             >
               <SelectFieldOption value="task">{t('prompt.target.task')}</SelectFieldOption>
@@ -364,11 +364,11 @@ function TemplateEditForm({
             </SelectField>
           )}
         </div>
-        <Input size="h-8"
+        <Input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder={t('prompt.templateEditor.descPlaceholder')}
-          
+          className="h-8 text-sm"
         />
         <PromptEditor
           value={body}
@@ -380,7 +380,7 @@ function TemplateEditForm({
           {t('prompt.templateEditor.variableHint')}
         </p>
       </div>
-      <DialogFooter >
+      <DialogFooter className="gap-2">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           {t('prompt.templateEditor.cancel')}
         </Button>
@@ -431,7 +431,7 @@ function TemplateLibraryCard() {
           type="button"
           variant="outline"
           size="sm"
-          fontSize="xs" 
+          className="h-7 gap-1 text-xs"
           onClick={openCreate}
           data-ai-component="settings.prompts.templates.create"
           data-ai-action="settings.prompts.templates.create.click"
@@ -441,7 +441,7 @@ function TemplateLibraryCard() {
         </Button>
       </div>
       {templates.isLoading ? (
-        <Skeleton  />
+        <Skeleton className="h-20 w-full" />
       ) : items.length === 0 ? (
         <EmptyState variant="card" icon={LayoutTemplate} title={t('prompts.templates.empty')} />
       ) : (
@@ -455,11 +455,11 @@ function TemplateLibraryCard() {
               <div className="min-w-0">
                 <p className="flex items-center gap-1.5 truncate text-sm font-medium">
                   {item.name}
-                  <Badge variant="secondary" fontSize="xs" className="shrink-0">
+                  <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-xs text-muted-foreground">
                     {t(`prompt.target.${item.target}`)}
                   </Badge>
                   {item.builtIn ? (
-                    <Badge color="blue" variant="secondary" fontSize="xs" className="shrink-0">
+                    <Badge variant="secondary" className="shrink-0 bg-accent-blue/10 px-1.5 py-0 text-xs text-accent-blue">
                       {t('prompts.templates.builtin')}
                     </Badge>
                   ) : null}
@@ -474,7 +474,7 @@ function TemplateLibraryCard() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    fontSize="xs" 
+                    className="h-7 text-xs"
                     onClick={() => openDuplicate(item)}
                     data-ai-action={`settings.prompts.templates.${item.id}.duplicate`}
                   >
@@ -486,7 +486,7 @@ function TemplateLibraryCard() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      fontSize="xs" 
+                      className="h-7 gap-1 text-xs"
                       onClick={() => openEdit(item)}
                       data-ai-action={`settings.prompts.templates.${item.id}.edit`}
                     >
@@ -497,7 +497,7 @@ function TemplateLibraryCard() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      fontSize="xs" 
+                      className="h-7 gap-1 text-xs text-destructive"
                       disabled={remove.isPending}
                       onClick={() => remove.mutate(item.id)}
                       data-ai-action={`settings.prompts.templates.${item.id}.delete`}
@@ -537,9 +537,9 @@ export function PromptsSettingsSection() {
         >
           {config.isLoading || !toggles ? (
             <div className="space-y-2 px-3 py-2">
-              <Skeleton  />
-              <Skeleton  />
-              <Skeleton  />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
             </div>
           ) : (
             <div className="divide-y divide-border/60" data-ai-component="settings.prompts.toggles">

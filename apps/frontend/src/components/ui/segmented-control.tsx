@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { RawButton } from './raw-button'
 
 /** 选项高亮色调：激活滑块与文字按语义色着色（页面按需传入） */
 export type SegmentedTone = "default" | "blue" | "green" | "yellow" | "red" | "purple";
@@ -84,7 +83,7 @@ export function SegmentedControl<T extends string>({
         aria-hidden="true"
       />
       {options.map((option) => (
-        <RawButton
+        <button
           key={option.value}
           type="button"
           onClick={() => onChange(option.value)}
@@ -100,7 +99,7 @@ export function SegmentedControl<T extends string>({
         >
           {option.icon}
           {option.label}
-        </RawButton>
+        </button>
       ))}
     </div>
   );

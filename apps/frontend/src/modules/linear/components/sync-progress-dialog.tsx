@@ -52,7 +52,7 @@ export function SyncProgressDialog({
     if (isSuccess) return <CheckCircle className="w-5 h-5 text-accent-green" />;
     if (isError) return <XCircle className="w-5 h-5 text-destructive" />;
     if (isCompleted) return <CheckCircle className="w-5 h-5 text-accent-green" />;
-    return <Spinner size="md"  />;
+    return <Spinner size="md" className="text-accent-blue" />;
   };
 
   const getStatusText = () => {
@@ -66,7 +66,7 @@ export function SyncProgressDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent  showCloseButton={isCompleted}>
+      <DialogContent className="sm:max-w-md" showCloseButton={isCompleted}>
         <DialogHeader>
           <div className="flex items-center gap-3">
             {getStatusIcon()}
@@ -85,7 +85,7 @@ export function SyncProgressDialog({
                 <span>{progress?.message || t('linearSync.initializing')}</span>
                 <span>{progress?.current ?? 0}%</span>
               </div>
-              <Progress value={progress?.current ?? 0}  />
+              <Progress value={progress?.current ?? 0} className="h-2" />
               {progress?.currentItem && (
                 <p className="text-xs text-muted-foreground truncate">
                   {t('linearSync.current')} {progress.currentItem}

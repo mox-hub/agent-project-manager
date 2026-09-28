@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { RawInput } from './raw-input'
 
 type SelectFieldProps = Omit<React.ComponentPropsWithoutRef<"select">, "size" | "onChange"> & {
   size?: "sm" | "default"
@@ -165,7 +164,7 @@ function SelectField({
       data-slot="select-field-wrapper"
       data-size={size}
     >
-      {name ? <RawInput type="hidden" name={name} value={currentValue} /> : null}
+      {name ? <input type="hidden" name={name} value={currentValue} /> : null}
       <Select
         value={selectValue}
         onValueChange={handleValueChange}

@@ -13,7 +13,6 @@
  * - 右键菜单：传入 onItemContextMenu（返回 MenuItem[]）时卡片包裹与列表行一致的 ContextMenu
  * - 可选列拖拽重排（enableColumnReorder）、WIP 限制、空列 drop 区、拖拽 overlay
  */
-import { Button } from '@/components/ui/button';
 import {
   useLayoutEffect,
   useMemo,
@@ -233,10 +232,10 @@ function useFillViewportHeight(ref: RefObject<HTMLElement | null>, deps: unknown
 function BoardCardSkeleton() {
   return (
     <div className="space-y-2 rounded-lg border border-border/60 bg-card p-2.5">
-      <Skeleton  />
+      <Skeleton className="h-3.5 w-2/3" />
       <div className="flex items-center justify-between gap-2">
-        <Skeleton  />
-        <Skeleton  />
+        <Skeleton className="h-3 w-1/3" />
+        <Skeleton className="size-5 rounded-full" />
       </div>
     </div>
   );
@@ -463,7 +462,7 @@ export function BoardView<T extends { id: string }>({
                   <header className="flex h-10 shrink-0 items-center gap-2 border-b border-border bg-muted/40 px-3">
                     {Icon ? <Icon size={13} className="shrink-0 text-muted-foreground" /> : null}
                     <h3 className="truncate text-sm font-medium text-muted-foreground">{column.title}</h3>
-                    <Skeleton  />
+                    <Skeleton className="h-4 w-6 rounded-full" />
                   </header>
                   <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
                     {[0, 1, 2].map((index) => (
@@ -650,16 +649,16 @@ function BoardColumnView<T extends { id: string }>({
         <div className="flex shrink-0 items-center gap-1">
           {column.actions}
           {onItemAdd ? (
-            <Button variant="ghost"
+            <button
               type="button"
-              className="inline-flex items-center justify-center transition-colors"
+              className="inline-flex h-5 w-5 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground dark:hover:bg-muted/50"
               onClick={() => onItemAdd(column.id)}
               aria-label={addButtonLabel}
               title={addButtonLabel}
               data-board-column-add={column.id}
             >
               <Plus size={12} />
-            </Button>
+            </button>
           ) : null}
         </div>
       </header>

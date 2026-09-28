@@ -319,9 +319,7 @@ export function ProjectListPage() {
           </div>
         ) : isError ? (
           <div className="flex flex-1 items-center justify-center">
-            {/* 布局下沉：Alert 基线 w-full，限宽由调用方 wrapper 承载 */}
-            <div className="w-full max-w-md">
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="max-w-md">
               <AlertTriangle className="size-4" />
               <AlertDescription>
                 {error?.message ?? t('project.messages.loadError')}
@@ -332,7 +330,6 @@ export function ProjectListPage() {
                 </Button>
               </div>
             </Alert>
-            </div>
           </div>
         ) : projects.length === 0 ? (
           <div className="flex flex-1 items-center justify-center">
@@ -414,7 +411,7 @@ export function ProjectListPage() {
                       refetch();
                     }}
                     title={t('project.archive.label')}
-                    
+                    className="text-muted-foreground"
                   >
                     <Archive className="size-4" /> {t('project.archive.label')}
                   </ListActionButton>
@@ -431,7 +428,7 @@ export function ProjectListPage() {
               {t('project.messages.pageShowing', { from, to, total })}
             </p>
             {totalPages > 1 && (
-              <Pagination className="mx-0 justify-end">
+              <Pagination className="mx-0 w-auto justify-end">
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious

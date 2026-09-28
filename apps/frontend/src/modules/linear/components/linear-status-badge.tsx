@@ -1,8 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { LINEAR_SYNC_STATUS_TONE } from '@/shared/status/status-visuals';
 import { Badge } from '@/components/ui/badge';
 import { LinearIcon } from '@/components/icons/linear';
 
@@ -100,9 +98,22 @@ interface LinearSyncStatusBadgeProps {
   pill?: boolean;
 }
 
-/** 同步状态 → tone（唯一链路，键登记于 status-visuals.LINEAR_SYNC_STATUS_TONE） */
-const syncTone = (key: LinearSyncStatusValue) =>
-  TONE_CLASS[LINEAR_SYNC_STATUS_TONE[key] ?? 'default'];
+/** 胶囊形态配色：与 SubPageToolbar 状态徽章的 accent token 体系一致 */
+const PILL_CLASS_MAP: Record<LinearSyncStatusValue, string> = {
+  synced: 'border-accent-green/30 bg-accent-green-light text-accent-green',
+  pending: 'border-accent-yellow/30 bg-accent-yellow-light text-accent-yellow',
+  error: 'border-accent-red/30 bg-accent-red-light text-accent-red',
+  never_synced: 'border-border bg-muted/60 text-muted-foreground',
+  conflict: 'border-accent-orange/30 bg-accent-orange-light text-accent-orange',
+};
+
+const PILL_DOT_MAP: Record<LinearSyncStatusValue, string> = {
+  synced: 'bg-accent-green',
+  pending: 'bg-accent-yellow',
+  error: 'bg-accent-red',
+  never_synced: 'bg-muted-foreground/60',
+  conflict: 'bg-accent-orange',
+};
 
 export function LinearSyncStatusBadge({
   status,
@@ -113,17 +124,15 @@ export function LinearSyncStatusBadge({
   const key = (status ?? 'never_synced') as LinearSyncStatusValue;
   const cfg = STATUS_MAP[key] ?? STATUS_MAP.never_synced;
   if (pill) {
-    const tone = syncTone(key);
     return (
       <span
         className={cn(
           'inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-3xs font-medium',
-          tone.border,
-          tone.light,
+          PILL_CLASS_MAP[key] ?? PILL_CLASS_MAP.never_synced,
           className,
         )}
       >
-        <span className={cn('size-1.5 rounded-full', tone.dot)} />
+        <span className={cn('size-1.5 rounded-full', PILL_DOT_MAP[key] ?? PILL_DOT_MAP.never_synced)} />
         {t(cfg.label)}
       </span>
     );
@@ -136,7 +145,16 @@ export function LinearSyncStatusBadge({
         className,
       )}
     >
-      <span className={cn('size-1.5 rounded-full', syncTone(key).dot)} />
+      <span
+        className={cn(
+          'size-1.5 rounded-full',
+          key === 'synced' && 'bg-accent-green',
+          key === 'pending' && 'bg-accent-yellow',
+          key === 'error' && 'bg-destructive',
+          key === 'never_synced' && 'bg-slate-400',
+          key === 'conflict' && 'bg-accent-orange',
+        )}
+      />
       {t(cfg.label)}
     </span>
   );

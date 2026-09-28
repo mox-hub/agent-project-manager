@@ -189,11 +189,11 @@ export function SettingsPage() {
       <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-muted/20">
         {/* 返回应用 */}
         <div className="shrink-0 border-b border-border p-3">
-          <Button width="full"
+          <Button
             variant="ghost"
             size="sm"
             onClick={handleBackToApp}
-            className="justify-start"
+            className="w-full justify-start gap-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             data-ai-component="settings.global-settings.back"
             data-ai-action="settings.global-settings.back.click"
           >
@@ -213,7 +213,7 @@ export function SettingsPage() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder={t('settings.searchPlaceholder')}
-              
+              className="h-9 pl-8 text-sm"
               data-ai-component="settings.search"
             />
           </div>
@@ -251,7 +251,7 @@ export function SettingsPage() {
 
       {/* 右侧内容区：子路由子页（PageShell + PageHeader + 卡片内容） */}
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <ScrollArea >
+        <ScrollArea className="h-full w-full">
           <Outlet />
         </ScrollArea>
       </main>

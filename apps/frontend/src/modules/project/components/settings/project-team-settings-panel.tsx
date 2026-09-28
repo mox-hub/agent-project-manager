@@ -49,13 +49,11 @@ export function ProjectTeamSettingsPanel({ projectId }: { projectId: string }) {
           <Button
             variant="outline"
             size="sm"
+            className="gap-1.5"
             onClick={() => navigate(`/app/projects/${projectId}/team`)}
           >
-            {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
-            <span className="flex items-center gap-1.5">
-              <ExternalLink size={14} />
-              {t('projectSettings.team.openFull')}
-            </span>
+            <ExternalLink size={14} />
+            {t('projectSettings.team.openFull')}
           </Button>
         }
       >

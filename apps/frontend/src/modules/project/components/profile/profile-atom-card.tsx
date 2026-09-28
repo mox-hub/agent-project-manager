@@ -57,10 +57,10 @@ export function ProfileAtomCard({
     >
       {editing ? (
         <div className="flex items-center gap-1.5">
-          <Input fontSize="xs" size="h-6"
+          <Input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            className="flex-1"
+            className="h-6 flex-1 text-xs"
             autoFocus
             onKeyDown={(e) => {
               if (e.key === 'Enter' && draft.trim()) {
@@ -114,7 +114,7 @@ export function ProfileAtomCard({
                     <Button
                       size="icon-sm"
                       variant="ghost"
-                      
+                      className="text-accent-red hover:text-accent-red"
                       title={t('project.profilePage.delete')}
                       disabled={busy}
                       data-ai-action="delete-atom"
@@ -139,9 +139,9 @@ export function ProfileAtomCard({
               {Math.round(atom.confidence * 100)}%
             </span>
             {isAi && (
-              <Badge color="blue"
+              <Badge
                 variant="outline"
-                fontSize="3xs" 
+                className="h-4 gap-0.5 border-accent-blue/30 bg-accent-blue-light/60 px-1 text-3xs text-accent-blue"
               >
                 <Sparkles size={9} />
                 {t('project.profilePage.aiDraft')}
@@ -152,7 +152,7 @@ export function ProfileAtomCard({
                 <Button
                   size="sm"
                   variant="default"
-                  
+                  className="h-5 px-1.5 text-3xs"
                   disabled={busy}
                   onClick={() => onApprove?.(atom.id)}
                 >
@@ -162,7 +162,7 @@ export function ProfileAtomCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  
+                  className="h-5 px-1.5 text-3xs"
                   disabled={busy}
                   onClick={() => onReject?.(atom.id)}
                 >

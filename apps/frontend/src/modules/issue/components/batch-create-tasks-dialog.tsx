@@ -9,12 +9,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCreateTask } from '../hooks/use-project-tasks';
 import type { CreateTaskRequest } from '../api/issue-api';
@@ -140,52 +138,47 @@ function ManualBatchCreate({ tasks, onTasksChange }: {
           </Button>
         </div>
       ) : (
-        <ScrollArea >
+        <ScrollArea className="h-75">
           <div className="space-y-2 pr-4">
             {tasks.map((task, index) => (
-              <Card key={task.id} variant="outline" inset="sm">
-                <div className="flex gap-2 items-start">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                    {index + 1}
-                  </span>
-                  <div className="flex-1 space-y-2">
-                    <Input size="h-8"
-                      placeholder="Task title"
-                      value={task.title}
-                      onChange={(e) => updateTask(task.id, 'title', e.target.value)}
-                      
+              <div key={task.id} className="flex gap-2 items-start p-3 border rounded-lg bg-card">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                  {index + 1}
+                </span>
+                <div className="flex-1 space-y-2">
+                  <Input
+                    placeholder="Task title"
+                    value={task.title}
+                    onChange={(e) => updateTask(task.id, 'title', e.target.value)}
+                    className="h-8"
+                  />
+                  <div className="flex gap-2">
+                    <select
+                      className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                      value={task.priority}
+                      onChange={(e) => updateTask(task.id, 'priority', e.target.value)}
+                    >
+                      {PRIORITIES.map(p => (
+                        <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                      ))}
+                    </select>
+                    <Input
+                      placeholder="Description (optional)"
+                      value={task.description}
+                      onChange={(e) => updateTask(task.id, 'description', e.target.value)}
+                      className="h-8 flex-1"
                     />
-                    <div className="flex gap-2">
-                      {/* 控宽 wrapper：SelectField 基线为 w-full，此处行内有 flex-1 输入框并排，收窄为定宽 */}
-                      <div className="w-36 shrink-0">
-                        <SelectField
-                          size="sm"
-                          value={task.priority}
-                          onChange={(e) => updateTask(task.id, 'priority', e.target.value)}
-                        >
-                          {PRIORITIES.map(p => (
-                            <SelectFieldOption key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</SelectFieldOption>
-                          ))}
-                        </SelectField>
-                      </div>
-                      <Input size="h-8"
-                        placeholder="Description (optional)"
-                        value={task.description}
-                        onChange={(e) => updateTask(task.id, 'description', e.target.value)}
-                        className="flex-1"
-                      />
-                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeTask(task.id)}
-                    
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
-              </Card>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeTask(task.id)}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             ))}
           </div>
         </ScrollArea>
@@ -230,20 +223,20 @@ function TemplateBatchCreate({ tasks, onTasksChange }: {
         {TASK_TEMPLATES.map((template) => {
           const Icon = template.icon;
           return (
-            <Button variant="ghost"
+            <button
               key={template.id}
               onClick={() => applyTemplate(template)}
-              className="flex flex-col items-start transition-colors"
+              className="flex flex-col items-start p-4 border rounded-lg text-left hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-2 mb-1">
                 <Icon className="h-4 w-4 text-primary" />
                 <span className="font-medium text-sm">{template.name}</span>
               </div>
               <p className="text-xs text-muted-foreground">{template.description}</p>
-              <Badge variant="secondary" fontSize="xs" className="mt-2">
+              <Badge variant="secondary" className="mt-2 text-xs">
                 {template.tasks.length} tasks
               </Badge>
-            </Button>
+            </button>
           );
         })}
       </div>
@@ -253,13 +246,13 @@ function TemplateBatchCreate({ tasks, onTasksChange }: {
           <p className="text-sm font-medium mb-2">
             Preview ({tasks.length} tasks to create)
           </p>
-          <ScrollArea >
+          <ScrollArea className="h-37.5">
             <div className="space-y-1">
               {tasks.map((task, i) => (
                 <div key={task.id} className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground w-6">{i + 1}.</span>
                   <span className="flex-1 truncate">{task.title}</span>
-                  <Badge variant="outline" fontSize="xs">
+                  <Badge variant="outline" className="text-xs">
                     {task.priority}
                   </Badge>
                 </div>
@@ -325,10 +318,10 @@ function AiBatchCreate({ tasks, onTasksChange }: {
         </p>
       </div>
 
-      <Button width="full"
+      <Button
         onClick={generateTasks}
         disabled={!prompt.trim() || isGenerating}
-        
+        className="w-full"
       >
         {isGenerating ? (
           <>Generating...</>
@@ -345,13 +338,13 @@ function AiBatchCreate({ tasks, onTasksChange }: {
           <p className="text-sm font-medium mb-2">
             Preview ({tasks.length} tasks to create)
           </p>
-          <ScrollArea >
+          <ScrollArea className="h-37.5">
             <div className="space-y-1">
               {tasks.map((task, i) => (
                 <div key={task.id} className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground w-6">{i + 1}.</span>
                   <span className="flex-1 truncate">{task.title}</span>
-                  <Badge variant="outline" >
+                  <Badge variant="outline" className="text-xs">
                     {task.priority}
                   </Badge>
                 </div>
@@ -398,7 +391,7 @@ export function BatchCreateTasksDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent maxWidth="2xl" className="flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Batch Create Tasks</DialogTitle>
           <DialogDescription>
@@ -408,15 +401,15 @@ export function BatchCreateTasksDialog({
 
         <Tabs value={mode} onValueChange={(v) => setMode(v as BatchMode)} className="flex-1">
           <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="manual" className="flex">
+            <TabsTrigger value="manual" className="flex gap-1">
               <List className="h-3 w-3" />
               Manual
             </TabsTrigger>
-            <TabsTrigger value="template" className="flex">
+            <TabsTrigger value="template" className="flex gap-1">
               <FileText className="h-3 w-3" />
               Templates
             </TabsTrigger>
-            <TabsTrigger value="ai" className="flex">
+            <TabsTrigger value="ai" className="flex gap-1">
               <Bot className="h-3 w-3" />
               AI Generate
             </TabsTrigger>
@@ -439,7 +432,7 @@ export function BatchCreateTasksDialog({
           </ScrollArea>
         </Tabs>
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="border-t pt-4 mt-4">
           <div className="flex w-full items-center justify-between">
             <span className="text-sm text-muted-foreground">
               {validCount > 0 ? `${validCount} task${validCount > 1 ? 's' : ''} to create` : 'No tasks to create'}

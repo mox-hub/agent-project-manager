@@ -1,6 +1,3 @@
-import { Input } from '@/components/ui/input';
-import { FieldLabel } from '@/components/ui/field';
-import { Textarea } from '@/components/ui/textarea';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -137,7 +134,7 @@ export function InterviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent maxWidth="xl" className="overflow-y-auto">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         {!result ? (
           <>
             <DialogHeader>
@@ -175,17 +172,17 @@ export function InterviewDialog({
               <>
                 <div className="flex items-center gap-2 rounded-lg border border-border bg-content-bg-secondary/40 px-3 py-2">
                   <Sparkles className="size-3.5 shrink-0 text-accent-purple" />
-                  <Input
+                  <input
                     value={requirement}
                     onChange={(e) => setRequirement(e.target.value)}
                     placeholder={t('project.playbookPage.interview.requirementPlaceholder')}
-                    className="flex-1 outline-none"
+                    className="min-w-0 flex-1 bg-transparent text-xs text-content-text outline-none placeholder:text-content-text-muted"
                     data-ai="playbook.interview.requirement"
                   />
                   <Button
                     variant="outline"
                     size="sm"
-                    fontSize="xs" className="shrink-0"
+                    className="h-7 shrink-0 gap-1 px-2 text-xs"
                     disabled={prefill.isPending}
                     onClick={handlePrefill}
                     data-ai="playbook.interview.aiPrefill"
@@ -206,14 +203,14 @@ export function InterviewDialog({
                 <div className="space-y-4 py-1">
                   {questions.map((q, idx) => (
                     <div key={q.id} className="space-y-1.5">
-                      <FieldLabel size="xs" variant="muted"
+                      <label
                         htmlFor={`q-${q.id}`}
-                        
+                        className="text-xs font-medium text-content-text"
                       >
                         <span className="mr-1.5 text-content-text-muted">{idx + 1}.</span>
                         {q.question}
-                      </FieldLabel>
-                      <Textarea
+                      </label>
+                      <textarea
                         id={`q-${q.id}`}
                         value={answers[q.id] ?? ''}
                         onChange={(e) =>
@@ -221,7 +218,7 @@ export function InterviewDialog({
                         }
                         placeholder={q.hint ?? t('project.playbookPage.interview.placeholder')}
                         rows={2}
-                        className="resize-y outline-none transition-colors"
+                        className="w-full resize-y rounded-lg border border-border bg-content-bg px-3 py-2 text-xs text-content-text outline-none transition-colors placeholder:text-content-text-muted focus:border-accent-blue/60"
                         data-ai={`playbook.interview.answer.${q.id}`}
                       />
                     </div>

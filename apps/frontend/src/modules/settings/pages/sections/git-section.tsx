@@ -73,27 +73,27 @@ function GitToolStatusCard() {
   };
 
   return (
-    <Card surface="flat">
+    <Card className="border-border shadow-none">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <GitBranch size={16} className="text-accent-blue" />
-            <CardTitle>{t('settings.gitToolStatus')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.gitToolStatus')}</CardTitle>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={handleTestGit}
             disabled={testing || isLoading}
-            
+            className="gap-1.5"
           >
-            {testing ? <Spinner color="inherit" size="xs"  /> : <RefreshCw size={14} />}
+            {testing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={14} />}
             {testing ? t('settings.gitTesting') : t('settings.gitTest')}
           </Button>
         </div>
         <CardDescription>{t('settings.gitToolStatusDesc')}</CardDescription>
       </CardHeader>
-      <CardContent >
+      <CardContent className="space-y-4">
         {isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Spinner size="sm" />
@@ -137,11 +137,11 @@ function GitToolStatusCard() {
         <div className="space-y-3 pt-2">
           <p className="text-sm font-medium text-foreground">{t('settings.gitPathInput')}</p>
           <div className="flex gap-2">
-            <Input fontVariant="mono"
+            <Input
               value={gitPathInput}
               onChange={(e) => setGitPathInput(e.target.value)}
               placeholder={t('settings.gitPathPlaceholder')}
-              
+              className="font-mono text-sm"
             />
             <Button
               onClick={handleSaveGitPath}
@@ -149,7 +149,7 @@ function GitToolStatusCard() {
               className="shrink-0"
             >
               {setGitPath.isPending ? (
-                <Spinner color="inherit" size="xs"  />
+                <Spinner className="size-3.5 text-inherit" />
               ) : (
                 t('settings.gitPathSave')
               )}
@@ -168,14 +168,14 @@ function GitToolStatusCard() {
                 { label: 'C:\\Program Files\\Git\\bin\\git.exe', value: 'C:\\Program Files\\Git\\bin\\git.exe' },
                 { label: 'C:\\Program Files (x86)\\Git\\bin\\git.exe', value: 'C:\\Program Files (x86)\\Git\\bin\\git.exe' },
               ].map((option) => (
-                <Button variant="ghost"
+                <button
                   key={option.value}
                   type="button"
                   onClick={() => setGitPathInput(option.value)}
-                  className="block"
+                  className="block w-full rounded-md px-2 py-1 text-left font-mono text-xs hover:bg-muted/50"
                 >
                   {option.label}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
@@ -236,6 +236,7 @@ export function GitSettingsSection() {
       icon={GitBranch}
       iconColor="text-accent-blue"
       title={t('settings.git')}
+      className="bg-background text-foreground"
       contentClassName="space-y-6"
       actions={
         <HeaderActionButton
@@ -254,17 +255,17 @@ export function GitSettingsSection() {
 
           {/* Git 配置卡片 */}
           <Card
-            surface="flat"
+            className="border-border shadow-none"
             data-ai-component="settings.global-settings.git-card"
           >
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Settings2 size={16} className="mr-2 text-accent-blue" />
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Settings2 size={16} className="text-accent-blue" />
                 {t('settings.gitTitle')}
               </CardTitle>
               <CardDescription>{t('settings.gitDesc')}</CardDescription>
             </CardHeader>
-            <CardContent className="grid md:grid-cols-2">
+            <CardContent className="grid gap-4 md:grid-cols-2">
               <Form {...gitForm}>
                 <div className="contents">
                   <FormField
@@ -356,26 +357,26 @@ export function GitSettingsSection() {
                     control={gitForm.control}
                     name="autoSync"
                     render={({ field }) => (
-                      <FieldLabel size="xs" variant="muted" className={checkboxLabelClassName}>
+                      <label className={checkboxLabelClassName}>
                         <Checkbox
                           checked={field.value}
                           onChange={(event) => field.onChange(event.target.checked)}
                         />
                         {t('settings.gitAutoSync')}
-                      </FieldLabel>
+                      </label>
                     )}
                   />
                   <FormField
                     control={gitForm.control}
                     name="diffShowWhitespace"
                     render={({ field }) => (
-                      <FieldLabel size="xs" variant="muted" className={checkboxLabelClassName}>
+                      <label className={checkboxLabelClassName}>
                         <Checkbox
                           checked={field.value}
                           onChange={(event) => field.onChange(event.target.checked)}
                         />
                         {t('settings.gitShowWhitespace')}
-                      </FieldLabel>
+                      </label>
                     )}
                   />
                 </div>

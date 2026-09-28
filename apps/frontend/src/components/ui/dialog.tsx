@@ -37,31 +37,15 @@ function DialogOverlay({
   )
 }
 
-/**
- * 弹层宽度档族（E 类第二轮增补，2026-09-28 第八轮裁决 #1-③，纯增补 default 不变）。
- * 归因出处：`docs/design/修改方案-E类-2026-09-27.md` §七之九 #1；档值形态对齐基线
- * 既有 `sm:max-w-md`（keepDefaultWidth）的写法——同一 `sm:` 断点变体，仅宽度档不同。
- * 生产实测覆盖形态：`sm:max-w-lg` / `sm:max-w-xl` / `sm:max-w-2xl`（此前三者只能由
- * 调用方 className 覆盖表达）。default 档行为完全由 keepDefaultWidth 决定（不变）；
- * 显式给 maxWidth 时由本轴接管宽度（不再叠加基线 md 档，避免双档靠 twMerge 裁决）。
- */
-const dialogMaxWidthMap = {
-  lg: "sm:max-w-lg",
-  xl: "sm:max-w-xl",
-  "2xl": "sm:max-w-2xl",
-} as const
-
 function DialogContent({
   className,
   children,
   showCloseButton = true,
   keepDefaultWidth = true,
-  maxWidth = "default",
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
   keepDefaultWidth?: boolean
-  maxWidth?: keyof typeof dialogMaxWidthMap | "default"
 }) {
   return (
     <DialogPortal>
@@ -70,8 +54,7 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-modal grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-xl bg-popover/95 backdrop-blur-xl p-6 text-sm text-popover-foreground border border-border/70 shadow-xs ring-1 ring-border/40 duration-normal outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          keepDefaultWidth && maxWidth === "default" && "sm:max-w-md",
-          maxWidth !== "default" && dialogMaxWidthMap[maxWidth],
+          keepDefaultWidth && "sm:max-w-md",
           className
         )}
         {...props}

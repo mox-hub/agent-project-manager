@@ -5,7 +5,6 @@
  * 实体类输出渲染实体行卡（图标+标题+状态+详情跳转）；列表输出渲染结果数+样例；
  * propose_decision 输出内联决策卡（复用 DecisionCard 文法，决议走 useDecisionActions）。
  */
-import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -380,10 +379,10 @@ export function AssistantToolCard({ part }: { part: AssistantToolPart }) {
       data-ai-component="assistant.tool-card"
       data-tool-state={state}
     >
-      <Button variant="ghost"
+      <button
         type="button"
         onClick={() => hasBody && setOpen((v) => !v)}
-        className="flex items-center"
+        className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left text-2xs"
         aria-expanded={open}
       >
         {done ? (
@@ -391,7 +390,7 @@ export function AssistantToolCard({ part }: { part: AssistantToolPart }) {
         ) : error ? (
           <XCircle className="size-3.5 shrink-0 text-accent-red" />
         ) : (
-          <Spinner size="sm" className="shrink-0" />
+          <Spinner size="sm" className="size-3.5 shrink-0 text-accent-blue" />
         )}
         <span className="shrink-0 font-medium text-content-text">{actionLabel}</span>
         {summary ? (
@@ -406,7 +405,7 @@ export function AssistantToolCard({ part }: { part: AssistantToolPart }) {
             <ChevronRight className="size-3 shrink-0 text-content-text-muted" />
           )
         ) : null}
-      </Button>
+      </button>
       {/* 结果常显（对齐 zcode：结果一眼可见，输入默认折叠） */}
       {error ? (
         <div className="px-2.5 pb-1.5">

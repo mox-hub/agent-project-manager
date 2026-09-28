@@ -109,46 +109,48 @@ export function WorkflowStepEditor({
       </div>
 
       <div className="space-y-1.5">
-        <Label >
+        <Label className="text-2xs text-content-text-muted">
           {t('workflow.editor.stepId')}
         </Label>
-        <Input fontSize="xs" size="h-8" fontVariant="mono"
+        <Input
           value={String(step.id ?? '')}
           onChange={(e) => onChange(setField(step, 'id', e.target.value))}
-          
+          className="h-8 font-mono text-xs"
         />
       </div>
       <div className="space-y-1.5">
-        <Label >
+        <Label className="text-2xs text-content-text-muted">
           {t('workflow.editor.stepName')}
         </Label>
-        <Input fontSize="xs" size="h-8"
+        <Input
           value={String(step.title ?? '')}
           onChange={(e) => onChange(setField(step, 'title', e.target.value))}
-          
+          className="h-8 text-xs"
         />
       </div>
 
       {type === 'llm' ? (
         <>
           <div className="space-y-1.5">
-            <Label >
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.system')}
             </Label>
-            <Textarea               value={String(step.system ?? '')}
+            <Textarea
+              value={String(step.system ?? '')}
               onChange={(e) => onChange(setField(step, 'system', e.target.value))}
               rows={2}
-              
+              className="text-xs"
             />
           </div>
           <div className="space-y-1.5">
-            <Label >
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.prompt')}
             </Label>
-            <Textarea               value={String(step.prompt ?? '')}
+            <Textarea
+              value={String(step.prompt ?? '')}
               onChange={(e) => onChange(setField(step, 'prompt', e.target.value))}
               rows={4}
-              
+              className="text-xs"
             />
           </div>
         </>
@@ -157,23 +159,23 @@ export function WorkflowStepEditor({
       {type === 'http' ? (
         <>
           <div className="space-y-1.5">
-            <Label >
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.url')}
             </Label>
-            <Input fontSize="xs" size="h-8" fontVariant="mono"
+            <Input
               value={String(step.url ?? '')}
               onChange={(e) => onChange(setField(step, 'url', e.target.value))}
-              
+              className="h-8 font-mono text-xs"
             />
           </div>
           <div className="space-y-1.5">
-            <Label >
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.method')}
             </Label>
             <SelectField
               value={String(step.method ?? 'GET')}
               onChange={(e) => onChange(setField(step, 'method', e.target.value))}
-              
+              className="h-8 text-xs"
             >
               {HTTP_METHODS.map((m) => (
                 <SelectFieldOption key={m} value={m}>
@@ -183,14 +185,14 @@ export function WorkflowStepEditor({
             </SelectField>
           </div>
           <div className="space-y-1.5">
-            <Label >
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.bodyJson')}
             </Label>
-            <Textarea fontVariant="mono"
+            <Textarea
               value={jsonOf(step.body)}
               onChange={(e) => editJson('body', e.target.value)}
               rows={3}
-              
+              className="font-mono text-xs"
             />
           </div>
         </>
@@ -198,13 +200,14 @@ export function WorkflowStepEditor({
 
       {type === 'human-confirm' ? (
         <div className="space-y-1.5">
-          <Label >
+          <Label className="text-2xs text-content-text-muted">
             {t('workflow.editor.message')}
           </Label>
-          <Textarea             value={String(step.message ?? '')}
+          <Textarea
+            value={String(step.message ?? '')}
             onChange={(e) => onChange(setField(step, 'message', e.target.value))}
             rows={3}
-            
+            className="text-xs"
           />
         </div>
       ) : null}
@@ -212,24 +215,24 @@ export function WorkflowStepEditor({
       {type === 'condition' ? (
         <>
           <div className="space-y-1.5">
-            <Label >
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.left')}
             </Label>
-            <Input fontSize="xs" size="h-8" fontVariant="mono"
+            <Input
               value={String(step.left ?? '')}
               onChange={(e) => onChange(setField(step, 'left', e.target.value))}
-              
+              className="h-8 font-mono text-xs"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <Label >
+              <Label className="text-2xs text-content-text-muted">
                 {t('workflow.editor.op')}
               </Label>
               <SelectField
                 value={String(step.op ?? 'eq')}
                 onChange={(e) => onChange(setField(step, 'op', e.target.value))}
-                
+                className="h-8 text-xs"
               >
                 {CONDITION_OPS.map((op) => (
                   <SelectFieldOption key={op} value={op}>
@@ -239,13 +242,13 @@ export function WorkflowStepEditor({
               </SelectField>
             </div>
             <div className="space-y-1.5">
-              <Label >
+              <Label className="text-2xs text-content-text-muted">
                 {t('workflow.editor.right')}
               </Label>
-              <Input fontSize="xs" size="h-8"
+              <Input
                 value={String(step.right ?? '')}
                 onChange={(e) => onChange(setField(step, 'right', e.target.value))}
-                
+                className="h-8 text-xs"
               />
             </div>
           </div>
@@ -255,13 +258,13 @@ export function WorkflowStepEditor({
       {type === 'action' ? (
         <>
           <div className="space-y-1.5">
-            <Label >
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.action')}
             </Label>
             <SelectField
               value={String(step.action ?? '')}
               onChange={(e) => onChange(setField(step, 'action', e.target.value))}
-              
+              className="h-8 text-xs"
             >
               {actions.map((a) => (
                 <SelectFieldOption key={a.id} value={a.id}>
@@ -276,21 +279,21 @@ export function WorkflowStepEditor({
             ) : null}
           </div>
           <div className="space-y-1.5">
-            <Label >
+            <Label className="text-2xs text-content-text-muted">
               {t('workflow.editor.paramsJson')}
             </Label>
-            <Textarea fontVariant="mono"
+            <Textarea
               value={jsonOf(step.params)}
               onChange={(e) => editJson('params', e.target.value)}
               rows={4}
-              
+              className="font-mono text-xs"
             />
           </div>
         </>
       ) : null}
 
       <div className="mt-auto flex items-center justify-between pt-2">
-        <Button fontSize="xs" variant="outline" size="sm"  onClick={onInsertAfter}>
+        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={onInsertAfter}>
           <Plus className="mr-1 size-3" />
           {t('workflow.editor.insertAfter')}
         </Button>

@@ -2,8 +2,6 @@
  * Workflow 列表页（CAP-A-11 基座）——定义卡片 + 触发对话框。
  * 「运行」支持可选 JSON 入参（demo 工作流只需 { "topic": "..." }）。
  */
-import { FieldLabel } from '@/components/ui/field';
-import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -142,7 +140,7 @@ export function WorkflowListPage() {
         {isLoading ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i}  />
+              <Skeleton key={i} className="h-32 rounded-lg" />
             ))}
           </div>
         ) : filteredWorkflows.length === 0 ? (
@@ -161,7 +159,7 @@ export function WorkflowListPage() {
             <EmptyState
               variant="page"
               visual={
-                <IconStack aria-hidden="true" >
+                <IconStack aria-hidden="true" className="text-accent-purple">
                   <WorkflowIcon className="size-4 text-accent-purple" />
                 </IconStack>
               }
@@ -174,10 +172,10 @@ export function WorkflowListPage() {
             {filteredWorkflows.map((wf) => (
               <Card
                 key={wf.id}
-                className="cursor-pointer transition-colors"
+                className="cursor-pointer transition-colors hover:border-border/80 hover:bg-muted/30"
                 onClick={() => navigate(`/app/workflows/${wf.id}`)}
               >
-                <CardContent className="flex items-center justify-between">
+                <CardContent className="flex items-center justify-between gap-4 p-3.5">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-purple/10 text-accent-purple">
                       <GitBranch className="size-4" />
@@ -189,10 +187,10 @@ export function WorkflowListPage() {
                         </span>
                         <Badge
                           variant="secondary"
-                          className="shrink-0"
+                          className="shrink-0 text-3xs"
                           title={t('workflow.grammarVersionBadge')}
                         >
-                          <span className="text-3xs">v{wf.grammarVersion ?? 1}</span>
+                          v{wf.grammarVersion ?? 1}
                         </Badge>
                         <code className="font-mono text-2xs text-muted-foreground/60">
                           {wf.key}
@@ -204,10 +202,10 @@ export function WorkflowListPage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <Button fontSize="xs"
+                    <Button
                       size="sm"
                       variant="outline"
-                      
+                      className="h-7 gap-1.5 px-2.5 text-xs"
                       onClick={(e) => {
                         e.stopPropagation();
                         setTriggerTarget(wf);
@@ -226,20 +224,20 @@ export function WorkflowListPage() {
             {filteredWorkflows.map((wf) => (
               <Card
                 key={wf.id}
-                className="transition-colors"
+                className="transition-colors hover:border-border/80 hover:bg-muted/30"
               >
-                <CardContent className="flex flex-col">
+                <CardContent className="flex h-full flex-col gap-2 p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <Button variant="ghost"
+                    <button
                       type="button"
-                      className="flex items-center"
+                      className="flex min-w-0 items-center gap-2 text-left"
                       onClick={() => navigate(`/app/workflows/${wf.id}`)}
                     >
                       <GitBranch className="size-4 shrink-0 text-muted-foreground" />
                       <span className="truncate text-sm font-medium hover:underline">
                         {wf.name}
                       </span>
-                    </Button>
+                    </button>
                     <Badge
                       variant="secondary"
                       className="shrink-0"
@@ -248,21 +246,21 @@ export function WorkflowListPage() {
                       v{wf.grammarVersion ?? 1}
                     </Badge>
                   </div>
-                  <Button variant="ghost"
+                  <button
                     type="button"
-                    
+                    className="text-left"
                     onClick={() => navigate(`/app/workflows/${wf.id}`)}
                   >
                     <p className="line-clamp-2 min-h-8 text-xs leading-relaxed text-muted-foreground">
                       {wf.description || t('workflow.noDescription')}
                     </p>
-                  </Button>
+                  </button>
                   <div className="mt-auto flex items-center justify-between pt-1">
                     <code className="truncate text-2xs text-muted-foreground/60">{wf.key}</code>
-                    <Button fontSize="xs"
+                    <Button
                       size="sm"
                       variant="outline"
-                      
+                      className="h-7 gap-1.5 px-2.5 text-xs"
                       onClick={() => setTriggerTarget(wf)}
                     >
                       <Play className="size-3" />
@@ -361,23 +359,23 @@ function CreateWorkflowDialog({
         }
       }}
     >
-      <DialogContent maxWidth="lg" className="overflow-y-auto">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('workflow.createDialog.title')}</DialogTitle>
           <DialogDescription>{t('workflow.createDialog.desc')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5 rounded-lg border border-accent-purple/30 bg-accent-purple/5 p-3">
-            <FieldLabel size="xs" variant="muted" className="flex items-center">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-content-text">
               <Sparkles className="size-3.5 text-accent-purple" />
               {t('workflow.createDialog.aiLabel')}
-            </FieldLabel>
-            <Textarea
+            </label>
+            <textarea
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               rows={2}
               placeholder={t('workflow.createDialog.aiPlaceholder')}
-              className="resize-y outline-none transition-colors"
+              className="w-full resize-y rounded-lg border border-border bg-content-bg px-3 py-2 text-xs text-content-text outline-none transition-colors placeholder:text-content-text-muted focus:border-accent-blue/60"
               data-ai="workflow.aiPrompt"
             />
             <div className="flex items-center justify-between">
@@ -386,9 +384,10 @@ function CreateWorkflowDialog({
                   ? t('workflow.createDialog.draftedSteps', { count: aiSteps.length })
                   : t('workflow.createDialog.aiHint')}
               </span>
-              <Button                 variant="outline"
+              <Button
+                variant="outline"
                 size="sm"
-                
+                className="h-7 text-xs"
                 disabled={draft.isPending || !aiPrompt.trim()}
                 onClick={handleDraft}
                 data-ai="workflow.aiDraft"
@@ -405,34 +404,34 @@ function CreateWorkflowDialog({
           </div>
 
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >
+            <label className="text-xs font-medium text-content-text">
               {t('workflow.createDialog.keyLabel')}
-            </FieldLabel>
-            <Input fontSize="xs" size="h-8" fontVariant="mono"
+            </label>
+            <Input
               value={key}
               onChange={(e) => setKey(e.target.value)}
               placeholder="weekly-report"
-              
+              className="h-8 font-mono text-xs"
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >
+            <label className="text-xs font-medium text-content-text">
               {t('workflow.createDialog.nameLabel')}
-            </FieldLabel>
-            <Input fontSize="xs" size="h-8"
+            </label>
+            <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              
+              className="h-8 text-xs"
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >
+            <label className="text-xs font-medium text-content-text">
               {t('workflow.createDialog.descLabel')}
-            </FieldLabel>
-            <Input fontSize="xs" size="h-8"
+            </label>
+            <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              
+              className="h-8 text-xs"
             />
           </div>
         </div>

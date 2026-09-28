@@ -119,7 +119,7 @@ export function MembersSection({
                 <TableHead>{t('admin.status', '状态')}</TableHead>
                 <TableHead>{t('admin.linkedAccount', '关联账号')}</TableHead>
                 <TableHead>{t('admin.memberShortId', 'Short ID')}</TableHead>
-                <TableHead width="w-10"  />
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -152,13 +152,11 @@ export function MembersSection({
                         : t('admin.memberInactive', '已停用')}
                     </StatusPill>
                   </TableCell>
-                  <TableCell>
-                    <span className="text-xs text-muted-foreground">
-                      {m.user?.username ?? (m.userId ? '—' : t('admin.noAccount', '无账号'))}
-                    </span>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {m.user?.username ?? (m.userId ? '—' : t('admin.noAccount', '无账号'))}
                   </TableCell>
-                  <TableCell>
-                    <span className="font-mono text-xs text-muted-foreground">{m.shortId}</span>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {m.shortId}
                   </TableCell>
                   <TableCell>
                     <Menu>

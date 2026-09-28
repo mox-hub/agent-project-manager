@@ -8,9 +8,6 @@
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { ASSISTANT_STATUS_TONE } from '@/shared/status/status-visuals';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useOfficeSummary } from '@/modules/office/hooks/use-office-summary';
 import { useAssistantStatus } from '@/modules/assistant/hooks/use-assistant-status';
@@ -35,13 +32,12 @@ export interface DockAiColleague {
   isMain: boolean;
 }
 
-/** AI 同事状态呼吸点样式（Dock 头像与展开输入栏共用）：
- *  色值取自 tone 唯一词表 dot 槽（业务层登记 ASSISTANT_STATUS_TONE），ring/脉冲为 Dock 本地形态 */
+/** AI 同事状态呼吸点样式（Dock 头像与展开输入栏共用） */
 export const STATUS_DOT_CLASS: Record<string, string> = {
-  needYou: cn(TONE_CLASS[ASSISTANT_STATUS_TONE.needYou].dot, 'animate-pulse ring-2 ring-popover'),
-  working: cn(TONE_CLASS[ASSISTANT_STATUS_TONE.working].dot, 'animate-pulse ring-2 ring-popover'),
-  suggestions: cn(TONE_CLASS[ASSISTANT_STATUS_TONE.suggestions].dot, 'ring-2 ring-popover'),
-  idle: cn(TONE_CLASS[ASSISTANT_STATUS_TONE.idle].dot, 'ring-2 ring-popover'),
+  needYou: 'bg-accent-red animate-pulse ring-2 ring-popover',
+  working: 'bg-accent-blue animate-pulse ring-2 ring-popover',
+  suggestions: 'bg-accent-yellow ring-2 ring-popover',
+  idle: 'bg-accent-green ring-2 ring-popover',
 };
 
 export function useDockAiColleagues() {

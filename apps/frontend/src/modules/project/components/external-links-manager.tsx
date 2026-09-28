@@ -58,12 +58,12 @@ export function ExternalLinksManager({ projectId }: ExternalLinksManagerProps) {
       </div>
 
       {isAdding && (
-        <Card className="mb-4">
-          <CardContent className="flex flex-col">
+        <Card className="mb-4 bg-muted/50">
+          <CardContent className="flex flex-col gap-4 pt-4">
             <div>
-              <Label variant="muted" className="mb-1 block">Provider</Label>
+              <Label className="mb-1 block text-sm text-muted-foreground font-medium">Provider</Label>
               <SelectField
-                
+                className="w-full"
                 value={newLink.provider}
                 onChange={(e) => setNewLink({ ...newLink, provider: e.target.value as ExternalProjectLinkRequest['provider'] })}
               >
@@ -75,7 +75,7 @@ export function ExternalLinksManager({ projectId }: ExternalLinksManagerProps) {
               </SelectField>
             </div>
             <div>
-              <Label variant="muted" className="mb-1 block">External Project ID</Label>
+              <Label className="mb-1 block text-sm text-muted-foreground font-medium">External Project ID</Label>
               <Input
                 type="text"
                 value={newLink.externalProjectId}
@@ -84,7 +84,7 @@ export function ExternalLinksManager({ projectId }: ExternalLinksManagerProps) {
               />
             </div>
             <div>
-              <Label variant="muted" className="mb-1 block">External Project URL</Label>
+              <Label className="mb-1 block text-sm text-muted-foreground font-medium">External Project URL</Label>
               <Input
                 type="url"
                 value={newLink.externalProjectUrl}

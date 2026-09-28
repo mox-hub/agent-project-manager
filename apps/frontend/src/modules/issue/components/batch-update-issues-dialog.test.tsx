@@ -1,5 +1,4 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BatchUpdateIssuesDialog } from './batch-update-issues-dialog';
@@ -89,39 +88,22 @@ beforeEach(() => {
   toastError.mockClear();
 });
 
-/**
- * SelectField 适配（2026-09-28 no-naked-controls 收敛）：三个下拉框已从裸 <select>
- * 迁到 ui/select-field（base-ui 组合件），原生 change 事件不再触发回调。
- * 等价交互 = 点开 trigger（combobox）→ 点击弹层内选项（option）。
- * 选项可访问名跟随 mock translate：无 defaultValue 时返回 key 本身。
- */
-async function chooseOption(
-  user: ReturnType<typeof userEvent.setup>,
-  label: string,
-  optionName: string,
-) {
-  await user.click(screen.getByLabelText(label));
-  await user.click(await screen.findByRole('option', { name: optionName }));
-}
-
 describe('BatchUpdateIssuesDialog（P1-12 批量修改）', () => {
-  it('keeps the apply button disabled until at least one field is chosen', async () => {
-    const user = userEvent.setup();
+  it('keeps the apply button disabled until at least one field is chosen', () => {
     renderDialog();
     expect(screen.getByRole('button', { name: '应用到 3 条' })).toHaveProperty('disabled', true);
 
-    await chooseOption(user, 'Status', 'task.status.in_progress');
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'in_progress' } });
     expect(screen.getByRole('button', { name: '应用到 3 条' })).toHaveProperty('disabled', false);
   });
 
   it('patches each selected issue via PATCH /issues/:id and reports total success', async () => {
-    const user = userEvent.setup();
     updateMock.mockResolvedValue({ id: 'ok' });
     const onCompleted = vi.fn();
     renderDialog({ onCompleted });
 
-    await chooseOption(user, 'Status', 'task.status.in_progress');
-    await chooseOption(user, 'Priority', 'high');
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'in_progress' } });
+    fireEvent.change(screen.getByLabelText('Priority'), { target: { value: 'high' } });
     fireEvent.click(screen.getByRole('button', { name: '应用到 3 条' }));
 
     await waitFor(() => {
@@ -135,14 +117,13 @@ describe('BatchUpdateIssuesDialog（P1-12 批量修改）', () => {
   });
 
   it('reports per-item failures in the summary toast when the network partially fails', async () => {
-    const user = userEvent.setup();
     updateMock.mockImplementation((issueId: string) =>
       issueId === 't2' ? Promise.reject(new Error('网络错误')) : Promise.resolve({ id: issueId }),
     );
 
     renderDialog();
 
-    await chooseOption(user, 'Assignee', 'Alice');
+    fireEvent.change(screen.getByLabelText('Assignee'), { target: { value: 'm1' } });
     fireEvent.click(screen.getByRole('button', { name: '应用到 3 条' }));
 
     await waitFor(() => {
@@ -157,12 +138,11 @@ describe('BatchUpdateIssuesDialog（P1-12 批量修改）', () => {
   });
 
   it('falls back to error toast when every patch fails', async () => {
-    const user = userEvent.setup();
     updateMock.mockRejectedValue(new Error('服务器错误'));
 
     renderDialog();
 
-    await chooseOption(user, 'Status', 'task.status.done');
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'done' } });
     fireEvent.click(screen.getByRole('button', { name: '应用到 3 条' }));
 
     await waitFor(() => {

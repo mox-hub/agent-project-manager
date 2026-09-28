@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/shared/theme/theme-context';
@@ -69,13 +68,13 @@ export function AiSurfaceReplayPage() {
           ))}
           {PARSED.drops.length === 0 && <li>演示数据里没有任何一帧可用</li>}
         </ul>
-        <Button variant="ghost"
+        <button
           type="button"
           onClick={() => navigate('/app/ai-surface')}
-          className="mt-2 cursor-pointer"
+          className="mt-2 cursor-pointer rounded-lg bg-foreground/10 px-3 py-1.5 text-2xs hover:bg-foreground/20"
         >
           返回盯盘面
-        </Button>
+        </button>
       </div>
     );
   }
@@ -85,14 +84,14 @@ export function AiSurfaceReplayPage() {
       {/* 1. 页头：与盯盘面同构，但把「实时连接态」换成「回放」 */}
       <header className="sticky top-0 z-overlay flex w-full items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
         <div className="flex items-center gap-3">
-          <Button variant="ghost"
+          <button
             type="button"
             onClick={() => navigate('/app/ai-surface')}
-            className="flex cursor-pointer items-center justify-center transition-colors"
+            className="flex size-8 cursor-pointer items-center justify-center rounded-xl bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title="返回盯盘面"
           >
             <ArrowLeft className="size-4" />
-          </Button>
+          </button>
 
           <div className="flex items-center gap-2">
             <div className="flex size-6 items-center justify-center rounded-lg bg-accent-purple text-xs font-semibold text-background">
@@ -112,10 +111,10 @@ export function AiSurfaceReplayPage() {
         </div>
 
         <div className="flex items-center gap-3 font-mono text-xs">
-          <Button variant="ghost"
+          <button
             type="button"
             onClick={toggleTheme}
-            className="flex cursor-pointer items-center transition-colors"
+            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-2xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title={isDark ? '切换至日间模式' : '切换至夜间模式'}
           >
             {isDark ? (
@@ -124,7 +123,7 @@ export function AiSurfaceReplayPage() {
               <Moon className="size-3.5 text-accent-blue" />
             )}
             <span>{isDark ? '深空' : '明眸'}</span>
-          </Button>
+          </button>
         </div>
       </header>
 
@@ -214,14 +213,14 @@ export function AiSurfaceReplayPage() {
 
       {/* 6. 页脚：出口明确指回盯盘面 */}
       <footer className="relative z-sticky mx-auto mb-6 w-full max-w-[1100px] px-6">
-        <Button variant="ghost"
+        <button
           type="button"
           onClick={() => navigate('/app/ai-surface')}
-          className="cursor-pointer transition-colors"
+          className="w-full cursor-pointer rounded-xl border border-foreground/10 bg-foreground/5 px-3 py-2.5 text-2xs text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
           data-ai-action="ai-surface.replay.exit"
         >
           看完了，回到盯盘面 —— 那里的数字是真实项目里的
-        </Button>
+        </button>
       </footer>
     </div>
   );

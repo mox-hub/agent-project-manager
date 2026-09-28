@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
 import { GanttChart, type GanttChartItem, type GanttDateRange } from '@/shared/components/gantt-chart';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { PROJECT_WORKFLOW_VISUALS } from '@/shared/status/status-visuals';
 import type { Project } from '../api/project-api';
 
 interface ProjectGanttProps {
@@ -11,11 +9,13 @@ interface ProjectGanttProps {
   getProjectExecutionCount?: (projectId: string) => number;
 }
 
-/** workflowStatus → 甘特条颜色（共享 gantt 按任务态值判断，项目侧必须显式传 colorClassName）：
- *  走 status-visuals 业务层映射 + tone 唯一词表 dot 槽（实心条填充，§19.5） */
-const workflowBarClass = (workflowStatus: string | null | undefined): string => {
-  const tone = PROJECT_WORKFLOW_VISUALS[workflowStatus ?? 'backlog']?.tone ?? 'default';
-  return TONE_CLASS[tone].dot;
+/** workflowStatus → 甘特条颜色（共享 gantt 按任务态值判断，项目侧必须显式传 colorClassName） */
+const WORKFLOW_BAR_CLASS: Record<string, string> = {
+  backlog: 'bg-muted-foreground',
+  planned: 'bg-accent-yellow',
+  in_progress: 'bg-accent-blue',
+  completed: 'bg-accent-green',
+  canceled: 'bg-muted-foreground',
 };
 
 function parseDate(value?: string | null): Date | null {
@@ -69,7 +69,9 @@ export function ProjectGantt({
         priority: project.priority,
         isAiExecuting: count > 0,
         aiExecutionSummary: count > 0 ? `${count} 个任务 AI 执行中` : undefined,
-        colorClassName: workflowBarClass(project.workflowStatus),
+        colorClassName:
+          WORKFLOW_BAR_CLASS[project.workflowStatus ?? 'backlog'] ??
+          WORKFLOW_BAR_CLASS.backlog,
         meta: project.owner?.displayName || project.owner?.username || undefined,
       });
       return acc;

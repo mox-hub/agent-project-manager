@@ -5,7 +5,6 @@
  * - 状态徽章 / criteria 进度 / 审计风险点 / 链接到验收详情页
  * - 接收（聚合校验，服务端使用已回写证据）/ 驳回（原因弹窗）/ 无活契约时可新建
  */
-import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -26,15 +25,12 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
 import { acceptanceApi, isActiveAcceptance, extractFailures, type Acceptance, type CompletionType, type AcceptanceFailure } from '@/modules/acceptance/api/acceptance-api';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { ACCEPTANCE_STATUS_TONE } from '@/shared/status/status-visuals';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { AcceptanceFormDialog } from '@/modules/acceptance/components/acceptance-form-dialog';
 import { AcceptanceDraftDialog } from '@/modules/acceptance/components/acceptance-draft-dialog';
@@ -49,6 +45,15 @@ const TYPE_ICON: Record<CompletionType, typeof GitPullRequest> = {
   test_report: FileCode,
   document: FileText,
   artifact: Package,
+};
+
+const STATUS_TONE: Record<string, string> = {
+  draft: 'text-muted-foreground border-border',
+  pending: 'text-muted-foreground border-border',
+  in_review: 'text-accent-blue border-accent-blue/40',
+  passed: 'text-accent-green border-accent-green/40',
+  failed: 'text-accent-red border-accent-red/40',
+  waived: 'text-muted-foreground border-border',
 };
 
 function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
@@ -110,7 +115,7 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
           </a>
         ) : null}
         <div className="text-3xs text-muted-foreground">
-          {t('acceptance.prState')} <Badge fontSize="3xs" variant="outline" >{String(ev.state ?? '?')}</Badge>
+          {t('acceptance.prState')} <Badge variant="outline" className="text-3xs py-0">{String(ev.state ?? '?')}</Badge>
         </div>
       </div>
     );
@@ -162,8 +167,7 @@ function AcceptanceCard({
 }) {
   const { t } = useTranslation();
   const Icon = TYPE_ICON[acceptance.completionType];
-  const statusColor =
-    TONE_CLASS[ACCEPTANCE_STATUS_TONE[acceptance.status] ?? 'default'].text;
+  const statusColor = STATUS_TONE[acceptance.status] ?? 'text-muted-foreground';
   const canReview =
     acceptance.status === 'in_review' || acceptance.status === 'pending';
 
@@ -178,110 +182,108 @@ function AcceptanceCard({
   const riskLevel = acceptance.auditReport?.riskLevel;
 
   return (
-    <Card variant="outline" inset="sm">
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Icon size={14} className="text-accent-purple shrink-0" />
-          <div className="flex-1 min-w-0">
-            <Link
-              to={`/app/acceptance/${acceptance.id}`}
-              className="text-sm font-medium truncate hover:underline flex items-center gap-1"
-            >
-              <span className="truncate">
-                {acceptance.title || t('acceptance.titleFallback', { id: acceptance.id.slice(0, 8) })}
-              </span>
-              <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
-            </Link>
-            <div className="text-3xs text-muted-foreground flex items-center gap-1.5">
-              <span>{t(`acceptance.completionType.${acceptance.completionType}`)}</span>
-              <span>·</span>
-              <span className={statusColor}>
-                {t(`acceptance.status.${acceptance.status}`)}
-              </span>
-              {isActiveAcceptance(acceptance) && (
-                <Badge fontSize="3xs" variant="secondary" >
-                  {t('acceptance.activeBadge')}
-                </Badge>
-              )}
-            </div>
+    <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <Icon size={14} className="text-accent-purple shrink-0" />
+        <div className="flex-1 min-w-0">
+          <Link
+            to={`/app/acceptance/${acceptance.id}`}
+            className="text-sm font-medium truncate hover:underline flex items-center gap-1"
+          >
+            <span className="truncate">
+              {acceptance.title || t('acceptance.titleFallback', { id: acceptance.id.slice(0, 8) })}
+            </span>
+            <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
+          </Link>
+          <div className="text-3xs text-muted-foreground flex items-center gap-1.5">
+            <span>{t(`acceptance.completionType.${acceptance.completionType}`)}</span>
+            <span>·</span>
+            <span className={statusColor}>
+              {t(`acceptance.status.${acceptance.status}`)}
+            </span>
+            {isActiveAcceptance(acceptance) && (
+              <Badge variant="secondary" className="text-3xs px-1 py-0">
+                {t('acceptance.activeBadge')}
+              </Badge>
+            )}
           </div>
         </div>
-
-        {/* criteria 进度 + 审计风险点 */}
-        {criteria.length > 0 && (
-          <div className="flex items-center gap-2 text-3xs text-muted-foreground">
-            <div className="h-1 flex-1 overflow-hidden rounded-xs bg-muted">
-              <div
-                className="h-full bg-accent-green"
-                style={{ width: `${Math.round((passedCount / criteria.length) * 100)}%` }}
-              />
-            </div>
-            <span>{t('acceptanceDetail.criteria.progress', { passed: passedCount, total: criteria.length })}</span>
-            {blockingCriteria > 0 && (
-              <span className="text-accent-red">⚑{blockingCriteria}</span>
-            )}
-            {riskLevel === 'red' && <span className="text-accent-red">●</span>}
-            {riskLevel === 'yellow' && <span className="text-accent-yellow">●</span>}
-          </div>
-        )}
-
-        <EvidencePreview acceptance={acceptance} />
-
-        {acceptance.rejectionReason && (
-          <div className="text-2xs text-accent-red flex gap-1 items-start">
-            <AlertCircle size={12} className="shrink-0 mt-0.5" />
-            <span>{t('acceptance.rejectionReason', { reason: acceptance.rejectionReason })}</span>
-          </div>
-        )}
-        {acceptance.waiverReason && (
-          <div className="text-2xs text-muted-foreground flex gap-1 items-start">
-            <span>{t('acceptance.waiverReason', { reason: acceptance.waiverReason })}</span>
-          </div>
-        )}
-
-        {canReview && (
-          <div className="flex gap-1.5 pt-1">
-            <Button
-              size="sm"
-              variant="default"
-              
-              onClick={onAccept}
-              disabled={isAccepting || isRejecting}
-            >
-              {isAccepting ? <Spinner color="inherit" size="2xs" className="mr-1" /> : <CheckCircle2 size={12} className="mr-1" />}
-              {t('acceptance.accept')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              
-              onClick={onReject}
-              disabled={isAccepting || isRejecting}
-            >
-              <XCircle size={12} className="mr-1" />
-              {t('acceptance.reject')}
-            </Button>
-          </div>
-        )}
-
-        {acceptance.status === 'passed' && (
-          <div className="flex items-center gap-1 text-2xs text-accent-green">
-            <CheckCircle2 size={12} />
-            {t('acceptance.acceptedAt', {
-              time: acceptance.completedAt ? new Date(acceptance.completedAt).toLocaleString() : '',
-            })}
-          </div>
-        )}
-        {acceptance.status === 'failed' && (
-          <div className="flex items-center gap-1 text-2xs text-accent-red">
-            <XCircle size={12} />
-            {t('acceptance.rejectedAt', {
-              time: acceptance.rejectedAt ? new Date(acceptance.rejectedAt).toLocaleString() : '',
-            })}
-          </div>
-        )}
       </div>
-    </Card>
+
+      {/* criteria 进度 + 审计风险点 */}
+      {criteria.length > 0 && (
+        <div className="flex items-center gap-2 text-3xs text-muted-foreground">
+          <div className="h-1 flex-1 overflow-hidden rounded-xs bg-muted">
+            <div
+              className="h-full bg-accent-green"
+              style={{ width: `${Math.round((passedCount / criteria.length) * 100)}%` }}
+            />
+          </div>
+          <span>{t('acceptanceDetail.criteria.progress', { passed: passedCount, total: criteria.length })}</span>
+          {blockingCriteria > 0 && (
+            <span className="text-accent-red">⚑{blockingCriteria}</span>
+          )}
+          {riskLevel === 'red' && <span className="text-accent-red">●</span>}
+          {riskLevel === 'yellow' && <span className="text-accent-yellow">●</span>}
+        </div>
+      )}
+
+      <EvidencePreview acceptance={acceptance} />
+
+      {acceptance.rejectionReason && (
+        <div className="text-2xs text-accent-red flex gap-1 items-start">
+          <AlertCircle size={12} className="shrink-0 mt-0.5" />
+          <span>{t('acceptance.rejectionReason', { reason: acceptance.rejectionReason })}</span>
+        </div>
+      )}
+      {acceptance.waiverReason && (
+        <div className="text-2xs text-muted-foreground flex gap-1 items-start">
+          <span>{t('acceptance.waiverReason', { reason: acceptance.waiverReason })}</span>
+        </div>
+      )}
+
+      {canReview && (
+        <div className="flex gap-1.5 pt-1">
+          <Button
+            size="sm"
+            variant="default"
+            className="bg-accent-green hover:bg-accent-green/90 text-white"
+            onClick={onAccept}
+            disabled={isAccepting || isRejecting}
+          >
+            {isAccepting ? <Spinner className="size-3 mr-1 text-inherit" /> : <CheckCircle2 size={12} className="mr-1" />}
+            {t('acceptance.accept')}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-accent-red border-accent-red/50"
+            onClick={onReject}
+            disabled={isAccepting || isRejecting}
+          >
+            <XCircle size={12} className="mr-1" />
+            {t('acceptance.reject')}
+          </Button>
+        </div>
+      )}
+
+      {acceptance.status === 'passed' && (
+        <div className="flex items-center gap-1 text-2xs text-accent-green">
+          <CheckCircle2 size={12} />
+          {t('acceptance.acceptedAt', {
+            time: acceptance.completedAt ? new Date(acceptance.completedAt).toLocaleString() : '',
+          })}
+        </div>
+      )}
+      {acceptance.status === 'failed' && (
+        <div className="flex items-center gap-1 text-2xs text-accent-red">
+          <XCircle size={12} />
+          {t('acceptance.rejectedAt', {
+            time: acceptance.rejectedAt ? new Date(acceptance.rejectedAt).toLocaleString() : '',
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -349,16 +351,16 @@ export function CompletionReview({ issueId, acceptances }: CompletionReviewProps
           </span>
           {/* 兜底改造批 3：AI 代写直入——先有标准再干活（派发前门禁会拦空契约） */}
           <div className="flex items-center gap-2">
-            <Button fontSize="xs"
+            <Button
               variant="outline"
               size="sm"
-              
+              className="text-xs text-accent-purple hover:text-accent-purple"
               onClick={() => setShowDraft(true)}
             >
               <Sparkles size={12} className="mr-1" />
               {t('acceptance.draft.button', { defaultValue: 'AI 代写验收标准' })}
             </Button>
-            <Button fontSize="xs" variant="ghost" size="sm"  onClick={() => setShowCreate(true)}>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowCreate(true)}>
               <Plus size={12} className="mr-1" />
               {t('acceptance.new')}
             </Button>
@@ -395,10 +397,10 @@ export function CompletionReview({ issueId, acceptances }: CompletionReviewProps
         ))}
         {/* 全部终态后可开启新一轮验收 */}
         {!hasActive && (
-          <Button fontSize="xs" width="full"
+          <Button
             variant="ghost"
             size="sm"
-            
+            className="w-full text-xs text-muted-foreground"
             onClick={() => setShowCreate(true)}
           >
             <Plus size={12} className="mr-1" />
@@ -448,24 +450,24 @@ export function CompletionReview({ issueId, acceptances }: CompletionReviewProps
               {t('acceptanceDetail.actions.rejectDesc')}
             </DialogDescription>
           </DialogHeader>
-          <Textarea
+          <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder={t('acceptanceDetail.actions.rejectPlaceholder')}
-            className="outline-hidden"
+            className="w-full min-h-25 rounded-md border border-border bg-background p-2 text-sm outline-hidden focus:ring-1 focus:ring-accent-purple"
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => { setRejectingId(null); setReason(''); }}>
               {t('common.cancel')}
             </Button>
             <Button
-              
+              className="bg-accent-red hover:bg-accent-red/90 text-white"
               disabled={!reason.trim() || rejectMutation.isPending}
               onClick={() =>
                 rejectingId && rejectMutation.mutate({ id: rejectingId, reason: reason.trim() })
               }
             >
-              {rejectMutation.isPending ? <Spinner color="inherit" size="xs" className="mr-1" /> : null}
+              {rejectMutation.isPending ? <Spinner className="size-3.5 mr-1 text-inherit" /> : null}
               {t('acceptanceDetail.actions.rejectConfirm')}
             </Button>
           </DialogFooter>

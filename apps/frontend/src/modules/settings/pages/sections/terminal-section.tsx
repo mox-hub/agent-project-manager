@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -70,27 +69,27 @@ function TerminalToolStatusCard() {
   };
 
   return (
-    <Card surface="flat">
+    <Card className="border-border shadow-none">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Terminal size={16} className="text-accent-blue" />
-            <CardTitle>{t('settings.terminalStatus')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.terminalStatus')}</CardTitle>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={handleTestTerminal}
             disabled={testing || isLoading}
-            
+            className="gap-1.5"
           >
-            {testing ? <Spinner color="inherit" size="xs"  /> : <RefreshCw size={14} />}
+            {testing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={14} />}
             {testing ? t('settings.terminalTesting') : t('settings.terminalTest')}
           </Button>
         </div>
         <CardDescription>{t('settings.terminalStatusDesc')}</CardDescription>
       </CardHeader>
-      <CardContent >
+      <CardContent className="space-y-4">
         {isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Spinner size="sm" />
@@ -125,15 +124,15 @@ function TerminalToolStatusCard() {
                 <p className="mb-2 text-xs text-muted-foreground">{t('settings.terminalAvailableShells')}</p>
                 <div className="flex flex-wrap gap-2">
                   {terminalStatus.availableShells.map((shellPath) => (
-                    <Button variant="ghost"
+                    <button
                       key={shellPath}
                       type="button"
                       onClick={() => setShellPathInput(shellPath)}
-                      
+                      className="rounded-full border border-border bg-background px-2 py-0.5 text-xs hover:border-muted-foreground"
                       title={shellPath}
                     >
                       {shellPath}
-                    </Button>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -160,11 +159,11 @@ function TerminalToolStatusCard() {
             <p className="text-xs text-muted-foreground">{t('settings.terminalShellPathDesc')}</p>
           </div>
           <div className="flex gap-2">
-            <Input fontVariant="mono"
+            <Input
               value={shellPathInput}
               onChange={(e) => setShellPathInput(e.target.value)}
               placeholder={t('settings.terminalShellPlaceholder')}
-              
+              className="font-mono text-sm"
             />
             <Button
               variant="outline"
@@ -230,6 +229,7 @@ export function TerminalSettingsSection() {
       icon={Terminal}
       iconColor="text-accent-purple"
       title={t('settings.terminal')}
+      className="bg-background text-foreground"
       contentClassName="space-y-6"
       actions={
         <HeaderActionButton
@@ -248,17 +248,17 @@ export function TerminalSettingsSection() {
 
           {/* 终端配置卡片 */}
           <Card
-            surface="flat"
+            className="border-border shadow-none"
             data-ai-component="settings.global-settings.terminal-card"
           >
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Settings2 size={16} className="mr-2 text-accent-purple" />
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Settings2 size={16} className="text-accent-purple" />
                 {t('settings.terminalTitle')}
               </CardTitle>
               <CardDescription>{t('settings.terminalDesc')}</CardDescription>
             </CardHeader>
-            <CardContent className="grid md:grid-cols-2">
+            <CardContent className="grid gap-4 md:grid-cols-2">
               <Form {...terminalForm}>
                 <div className="contents">
                   <FormField
@@ -340,26 +340,26 @@ export function TerminalSettingsSection() {
                       control={terminalForm.control}
                       name="autoSaveOutput"
                       render={({ field }) => (
-                        <FieldLabel size="xs" variant="muted" className={checkboxLabelClassName}>
+                        <label className={checkboxLabelClassName}>
                           <Checkbox
                             checked={field.value}
                             onChange={(event) => field.onChange(event.target.checked)}
                           />
                           {t('settings.terminalAutoSave')}
-                        </FieldLabel>
+                        </label>
                       )}
                     />
                     <FormField
                       control={terminalForm.control}
                       name="aiDiagnostics"
                       render={({ field }) => (
-                        <FieldLabel size="xs" variant="muted" className={checkboxLabelClassName}>
+                        <label className={checkboxLabelClassName}>
                           <Checkbox
                             checked={field.value}
                             onChange={(event) => field.onChange(event.target.checked)}
                           />
                           {t('settings.terminalAiDiag')}
-                        </FieldLabel>
+                        </label>
                       )}
                     />
                   </div>

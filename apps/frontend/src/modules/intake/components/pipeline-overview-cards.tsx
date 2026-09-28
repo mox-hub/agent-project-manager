@@ -7,17 +7,12 @@ import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/ui/section-card';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { TONE_CLASS } from '@/components/ui/tone';
 import { playbookApi } from '@/modules/project/api/playbook-api';
 import type {
   PlaybookStageStatus,
   PlaybookStageStatusValue,
 } from '@/modules/project/api/playbook-api';
 import type { DocumentListItem } from '@/modules/document/api/document-api';
-import {
-  PLAYBOOK_STAGE_TONE,
-  READINESS_VERDICT_TONE,
-} from '@/shared/status/status-visuals';
 import { AnalysisDraftDialog } from './analysis-draft-dialog';
 import { ReadinessDialog } from './readiness-dialog';
 import { readinessCacheKey, type ReadinessReviewResult } from '../hooks/use-readiness-review';
@@ -29,18 +24,17 @@ import { readinessCacheKey, type ReadinessReviewResult } from '../hooks/use-read
  * 阶段 CTA 钻取剧本页。未关联项目的纪要仍留在下方文档列表，不进管道卡。
  */
 
-/** 阶段进度点：done/active 实心 + 描边；pending/skipped 浅底（保持「未到=空」可读性） */
-const stageDotClass = (status: PlaybookStageStatusValue): string => {
-  const tone = PLAYBOOK_STAGE_TONE[status] ?? 'default';
-  return tone === 'default'
-    ? cn(TONE_CLASS[tone].light, TONE_CLASS[tone].border)
-    : cn(TONE_CLASS[tone].dot, TONE_CLASS[tone].border);
+const STAGE_DOT: Record<PlaybookStageStatusValue, string> = {
+  done: 'bg-accent-green border-accent-green',
+  active: 'border-accent-blue bg-accent-blue/20',
+  skipped: 'border-border bg-muted',
+  pending: 'border-border bg-background',
 };
 
-/** 完备度徽章配色：tone 唯一链路（描边 + 浅底槽） */
-const verdictBadgeClass = (verdict: ReadinessReviewResult['verdict']): string => {
-  const tone = READINESS_VERDICT_TONE[verdict] ?? 'default';
-  return cn(TONE_CLASS[tone].border, TONE_CLASS[tone].light);
+const VERDICT_BADGE: Record<ReadinessReviewResult['verdict'], string> = {
+  ready: 'border-accent-green/40 bg-accent-green-light/50 text-accent-green',
+  'needs-clarification': 'border-accent-yellow/40 bg-accent-yellow-light/50 text-accent-yellow',
+  blocked: 'border-accent-red/40 bg-accent-red-light/50 text-accent-red',
 };
 
 interface PipelineProject {
@@ -189,16 +183,16 @@ function PipelineCardInner({
             {pipeline.projectName}
           </div>
         </div>
-        <Button variant="ghost"
+        <button
           type="button"
           onClick={onOpenReadiness}
           title={t('intake.pipelineCards.assessHint')}
-            className={cn(
-              'flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-3xs transition-colors hover:bg-accent',
-              readinessResult
-                ? verdictBadgeClass(readinessResult.verdict)
-                : 'border-border bg-muted/40 text-content-text-muted',
-            )}
+          className={cn(
+            'flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-3xs transition-colors hover:bg-accent',
+            readinessResult
+              ? VERDICT_BADGE[readinessResult.verdict]
+              : 'border-border bg-muted/40 text-content-text-muted',
+          )}
           data-ai-component="intake.pipeline.readiness-badge"
           data-ai-role="status"
           data-testid={`readiness-badge-${pipeline.projectId}`}
@@ -210,7 +204,7 @@ function PipelineCardInner({
                 ? ` · ${readinessResult.missingInfo.length}`
                 : '')
             : t('intake.pipelineCards.notAssessed')}
-        </Button>
+        </button>
       </div>
 
       {stages.length > 0 && (
@@ -221,7 +215,7 @@ function PipelineCardInner({
               title={`${stage.name} · ${t(`intake.pipelineCards.stageStatus.${stage.status}`)}`}
               className={cn(
                 'size-2.5 rounded-full border',
-                stageDotClass(stage.status),
+                STAGE_DOT[stage.status],
               )}
               data-stage-status={stage.status}
             />
@@ -238,29 +232,25 @@ function PipelineCardInner({
         {isAnalysisActive && (
           <Button
             size="sm"
+            className="gap-1.5"
             onClick={onOpenAnalysis}
           >
-            {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
-            <span className="flex items-center gap-1.5">
-              <Sparkles size={14} />
-              {t('intake.pipelineCards.analysisCta')}
-            </span>
+            <Sparkles size={14} />
+            {t('intake.pipelineCards.analysisCta')}
           </Button>
         )}
         <Button
           variant="outline"
           size="sm"
+          className="gap-1.5"
           onClick={() => navigate(`/app/projects/${pipeline.projectId}/playbook`)}
         >
-          {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
-          <span className="flex items-center gap-1.5">
-            {mounted
-              ? activeStage
-                ? t('intake.pipelineCards.continueCta', { stage: activeStage.name })
-                : t('intake.pipelineCards.viewCta')
-              : t('intake.pipelineCards.mountCta')}
-            <ArrowRight size={14} />
-          </span>
+          {mounted
+            ? activeStage
+              ? t('intake.pipelineCards.continueCta', { stage: activeStage.name })
+              : t('intake.pipelineCards.viewCta')
+            : t('intake.pipelineCards.mountCta')}
+          <ArrowRight size={14} />
         </Button>
       </div>
     </div>

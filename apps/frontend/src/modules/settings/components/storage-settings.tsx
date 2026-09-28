@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FolderOpen, Save, RefreshCw, FileText, AlertCircle } from 'lucide-react';
@@ -76,8 +75,8 @@ export function StorageSettings() {
 
   if (isLoading) {
     return (
-      <Card surface="flat">
-        <CardContent className="flex items-center">
+      <Card className="border-border shadow-none">
+        <CardContent className="flex items-center gap-2 p-6 text-muted-foreground">
           <Spinner size="sm" />
           {t('settings.storageLoading')}
         </CardContent>
@@ -87,26 +86,26 @@ export function StorageSettings() {
 
   return (
     <div className="space-y-6">
-      <Card surface="flat">
+      <Card className="border-border shadow-none">
         <CardHeader>
           <div className="flex items-center gap-2">
             <FolderOpen size={16} className="text-accent-yellow" />
-            <CardTitle>{t('settings.storageTitle')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.storageTitle')}</CardTitle>
           </div>
           <CardDescription>
             {t('settings.storageDesc')}
           </CardDescription>
         </CardHeader>
-        <CardContent >
+        <CardContent className="space-y-5">
           {/* 存储路径 */}
           <div className="space-y-2">
-            <FieldLabel size="xs" variant="muted" >{t('settings.storagePathLabel')}</FieldLabel>
+            <label className="text-sm font-medium text-foreground">{t('settings.storagePathLabel')}</label>
             <div className="flex gap-2">
-              <Input fontVariant="mono"
+              <Input
                 value={basePath}
                 onChange={(e) => setBasePath(e.target.value)}
                 placeholder={t('settings.storagePathPlaceholder')}
-                
+                className="font-mono text-sm"
               />
               <Button
                 variant="outline"
@@ -115,7 +114,7 @@ export function StorageSettings() {
                 disabled={detectDefault.isFetching}
               >
                 {detectDefault.isFetching ? (
-                  <Spinner color="inherit"  />
+                  <Spinner className="text-inherit" />
                 ) : (
                   t('settings.detectDefault')
                 )}
@@ -128,20 +127,20 @@ export function StorageSettings() {
 
           {/* 子目录 */}
           <div className="space-y-2">
-            <FieldLabel size="xs" variant="muted" >{t('settings.storageSubfolderLabel')}</FieldLabel>
-            <Input fontVariant="mono"
+            <label className="text-sm font-medium text-foreground">{t('settings.storageSubfolderLabel')}</label>
+            <Input
               value={defaultSubfolder}
               onChange={(e) => setDefaultSubfolder(e.target.value)}
               placeholder={t('settings.storageSubfolderPlaceholder')}
-              
+              className="font-mono text-sm"
             />
           </div>
 
           {/* 文件格式 */}
           <div className="space-y-2">
-            <FieldLabel size="xs" variant="muted" >{t('settings.storageFileFormatLabel')}</FieldLabel>
+            <label className="text-sm font-medium text-foreground">{t('settings.storageFileFormatLabel')}</label>
             <div className="flex gap-2">
-              <Button variant="ghost"
+              <button
                 type="button"
                 onClick={() => setFileExtension('md')}
                 className={cn(
@@ -153,8 +152,8 @@ export function StorageSettings() {
               >
                 <FileText className="h-4 w-4" />
                 .md
-              </Button>
-              <Button variant="ghost"
+              </button>
+              <button
                 type="button"
                 onClick={() => setFileExtension('mdx')}
                 className={cn(
@@ -166,7 +165,7 @@ export function StorageSettings() {
               >
                 <FileText className="h-4 w-4" />
                 .mdx
-              </Button>
+              </button>
             </div>
             <p className="text-xs text-muted-foreground">
               {t('settings.storageMdxDesc')}
@@ -175,28 +174,28 @@ export function StorageSettings() {
 
           {/* 自动同步 */}
           <div className="space-y-3 rounded-lg border border-dashed border-border p-4">
-            <FieldLabel size="xs" variant="muted" className="flex items-center">
+            <label className="flex items-center gap-2 text-sm text-foreground">
               <Checkbox
                 checked={autoSync}
                 onChange={(e) => setAutoSync(e.target.checked)}
               />
               {t('settings.storageAutoSyncLabel')}
-            </FieldLabel>
-            <FieldLabel size="xs" variant="muted" className="flex items-center">
+            </label>
+            <label className="flex items-center gap-2 text-sm text-foreground">
               <Checkbox
                 checked={syncOnUpdate}
                 onChange={(e) => setSyncOnUpdate(e.target.checked)}
                 disabled={!autoSync}
               />
               {t('settings.storageSyncOnUpdateLabel')}
-            </FieldLabel>
+            </label>
           </div>
 
           {/* 保存按钮 */}
           <div className="flex justify-end pt-2">
-            <Button onClick={handleSave} disabled={updateConfig.isPending} >
+            <Button onClick={handleSave} disabled={updateConfig.isPending} className="gap-2">
               {updateConfig.isPending ? (
-                <Spinner color="inherit"  />
+                <Spinner className="text-inherit" />
               ) : (
                 <Save className="h-4 w-4" />
               )}
@@ -207,21 +206,21 @@ export function StorageSettings() {
       </Card>
 
       {/* 已同步文件列表 */}
-      <Card surface="flat">
+      <Card className="border-border shadow-none">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileText size={16} className="text-accent-yellow" />
-              <CardTitle>{t('settings.storageSyncedFiles')}</CardTitle>
+              <CardTitle className="text-base">{t('settings.storageSyncedFiles')}</CardTitle>
             </div>
             <Button
               variant="outline"
               size="sm"
               onClick={handleListFiles}
               disabled={filesFetching}
-              
+              className="gap-1.5"
             >
-              {filesFetching ? <Spinner color="inherit"  /> : <RefreshCw className="h-4 w-4" />}
+              {filesFetching ? <Spinner className="text-inherit" /> : <RefreshCw className="h-4 w-4" />}
               {t('common.refresh')}
             </Button>
           </div>

@@ -1,8 +1,6 @@
 import * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Spinner } from "@/components/ui/spinner";
-import { RawButton } from './raw-button'
 
 /**
  * PageHeader / ToolbarRow 操作按钮：默认正圆形仅图标，hover / focus-visible 展开为胶囊
@@ -33,30 +31,14 @@ export interface HeaderActionButtonProps
   pinned?: boolean;
   /** 展开态文本后追加的节点（如下拉箭头） */
   trailing?: React.ReactNode;
-  /**
-   * 加载态：**由组件内部**在图标位渲染内联 `Spinner`（§10.6「按钮提交中 → 按钮
-   * `disabled` + 内联 `Spinner`，禁遮罩」）。
-   *
-   * 为什么不让调用方自旋自己的 `icon`（2026-09-28 裁决）：`ui/spinner` 是加载指示的
-   * 唯一实现（§10.6），而「给任意图标加 `animate-spin`」既绕开该唯一实现，也**绕开
-   * `check-palette` 的 `Loader2` 字面量检查**（该规则只认 `Loader2` / `Loader2Icon` /
-   * `Icons.Loader2` 三种写法）——即形成 lint 看不见的加载指示。故本档不再接受「转动
-   * 调用方图标」这一形态，而是内部固定渲染 `Spinner`。
-   *
-   * 命名依 §10.7「加载 → `loading`」。
-   * 与 `StatusIconFrame.spin` **不是同一轴**：后者是状态图标的「在制旋转」（状态语义，
-   * 2026-09-28 裁决登记为合法形态），本档是加载指示，二者的合法依据与组件都不同。
-   *
-   * 约定：调用方须**同时**给 `disabled`（§10.6 的成对要求）。本组件不代为接管禁用态，
-   * 以免与调用方自己的禁用条件打架。
-   */
-  loading?: boolean;
+  /** 追加到图标的类（如 animate-spin） */
+  iconClassName?: string;
 }
 
 const HeaderActionButton = React.forwardRef<HTMLButtonElement, HeaderActionButtonProps>(
-  ({ icon: Icon, label, variant = "primary", pinned = false, trailing, loading = false, className, type = "button", ...props }, ref) => {
+  ({ icon: Icon, label, variant = "primary", pinned = false, trailing, iconClassName, className, type = "button", ...props }, ref) => {
     return (
-      <RawButton
+      <button
         ref={ref}
         type={type}
         aria-label={label}
@@ -70,13 +52,7 @@ const HeaderActionButton = React.forwardRef<HTMLButtonElement, HeaderActionButto
         {...props}
       >
         <span className="flex size-8 shrink-0 items-center justify-center">
-          {loading ? (
-            // size="sm" = size-4，与常态图标的 size-4 同框；
-            // text-inherit 保色——Spinner 自带 text-muted-foreground，会压掉按钮自身的文字色。
-            <Spinner size="sm" className="text-inherit" />
-          ) : (
-            <Icon className="size-4" strokeWidth={1.75} aria-hidden />
-          )}
+          <Icon className={cn("size-4", iconClassName)} strokeWidth={1.75} aria-hidden />
         </span>
         <span
           className={cn(
@@ -87,7 +63,7 @@ const HeaderActionButton = React.forwardRef<HTMLButtonElement, HeaderActionButto
           {label}
           {trailing}
         </span>
-      </RawButton>
+      </button>
     );
   },
 );

@@ -39,7 +39,7 @@ export function BootErrorDrawer({ open, onOpenChange, errors, onCopy }: BootErro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent >
+      <DialogContent className="sm:max-w-160">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <FileWarning className="h-5 w-5 text-destructive" />
@@ -68,7 +68,7 @@ export function BootErrorDrawer({ open, onOpenChange, errors, onCopy }: BootErro
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             关闭
           </Button>

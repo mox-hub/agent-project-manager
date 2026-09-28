@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -66,6 +65,7 @@ export function IssueTypesSettingsSection() {
       actions={
         <HeaderActionButton icon={Plus} label={t('settings.addIssueType', '添加任务类型')} />
       }
+      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
       <TypesListCard />
@@ -139,7 +139,7 @@ function TypesListCard() {
       title={t('settings.issueTypesListTitle', '任务类型')}
       description={t('settings.issueTypesListDesc', '任务类型及其状态按空间配置。')}
       actions={
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" className="gap-1" onClick={() => setCreateOpen(true)}>
           <Plus size={14} />
           {t('settings.addIssueType', '添加任务类型')}
         </Button>
@@ -201,35 +201,36 @@ function SortableTypeRow({
         type.enabled ? '' : 'opacity-60'
       }`}
     >
-      <SortableItemHandle size="sm" aria-label={t('common.reorder', '拖拽排序')}>
+      <SortableItemHandle
+        render={<button type="button" aria-label={t('common.reorder', '拖拽排序')} />}
+        className="touch-none text-content-text-muted hover:text-content-text-secondary"
+      >
         <GripVertical size={14} />
       </SortableItemHandle>
       <IssueTypeIcon meta={type} />
-      <div className="min-w-0 flex-1">
-        <Button variant="ghost" width="full" align="start" type="button" onClick={onOpen}>
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="truncate text-sm font-medium text-foreground">{type.name}</span>
-            {isDefault ? <Badge variant="secondary">{t('settings.defaultType', '默认')}</Badge> : null}
-            {!type.enabled ? <Badge variant="outline">{t('settings.typeDisabled', '已停用')}</Badge> : null}
-          </div>
-          <div className="truncate text-xs text-content-text-secondary">
-            {type.description || t('settings.issueTypesStats', '{{status}} 个状态 · {{fields}} 个自定义字段 · {{tasks}} 个任务', {
+      <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm font-medium text-foreground">{type.name}</span>
+          {isDefault ? <Badge variant="secondary">{t('settings.defaultType', '默认')}</Badge> : null}
+          {!type.enabled ? <Badge variant="outline">{t('settings.typeDisabled', '已停用')}</Badge> : null}
+        </div>
+        <div className="truncate text-xs text-content-text-secondary">
+          {type.description || t('settings.issueTypesStats', '{{status}} 个状态 · {{fields}} 个自定义字段 · {{tasks}} 个任务', {
+            status: statusCount,
+            fields: type.fieldSchema?.length ?? 0,
+            tasks: type._count?.tasks ?? 0,
+          })}
+        </div>
+        {type.description ? (
+          <div className="truncate text-xs text-content-text-muted">
+            {t('settings.issueTypesStats', '{{status}} 个状态 · {{fields}} 个自定义字段 · {{tasks}} 个任务', {
               status: statusCount,
               fields: type.fieldSchema?.length ?? 0,
               tasks: type._count?.tasks ?? 0,
             })}
           </div>
-          {type.description ? (
-            <div className="truncate text-xs text-content-text-muted">
-              {t('settings.issueTypesStats', '{{status}} 个状态 · {{fields}} 个自定义字段 · {{tasks}} 个任务', {
-                status: statusCount,
-                fields: type.fieldSchema?.length ?? 0,
-                tasks: type._count?.tasks ?? 0,
-              })}
-            </div>
-          ) : null}
-        </Button>
-      </div>
+        ) : null}
+      </button>
       <Switch
         checked={type.enabled}
         disabled={isDefault}
@@ -257,14 +258,14 @@ function SortableTypeRow({
           </MenuItem>
         </MenuPopup>
       </Menu>
-      <Button variant="ghost"
+      <button
         type="button"
         onClick={onOpen}
-        
+        className="text-content-text-muted hover:text-content-text-secondary"
         aria-label={t('settings.openTypeDetail', '查看类型详情')}
       >
         <ChevronRight size={14} />
-      </Button>
+      </button>
     </SortableItem>
   );
 }
@@ -312,7 +313,7 @@ function CreateTypeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('settings.issueTypesCreateTitle', '创建任务类型')}</DialogTitle>
           <DialogDescription>
@@ -321,17 +322,17 @@ function CreateTypeDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeKeyLabel', '键（小写 slug）')}</FieldLabel>
-            <Input fontVariant="mono"
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeKeyLabel', '键（小写 slug）')}</label>
+            <Input
               value={key}
               onChange={(e) => setKey(e.target.value.toLowerCase())}
               placeholder="story"
-              
+              className="font-mono"
               maxLength={32}
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeNameLabel', '名称')}</FieldLabel>
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeNameLabel', '名称')}</label>
             <Input
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
@@ -340,7 +341,7 @@ function CreateTypeDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeDescLabel', '描述')}</FieldLabel>
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeDescLabel', '描述')}</label>
             <Textarea
               value={draft.description}
               onChange={(e) => setDraft({ ...draft, description: e.target.value })}
@@ -349,11 +350,11 @@ function CreateTypeDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeIcon', '图标')}</FieldLabel>
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeIcon', '图标')}</label>
             <IconPicker value={draft.icon} onChange={(icon) => setDraft({ ...draft, icon })} />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeColor', '颜色')}</FieldLabel>
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeColor', '颜色')}</label>
             <ColorPicker
               value={draft.color}
               onValueChange={(color) => setDraft({ ...draft, color })}
@@ -447,7 +448,7 @@ function IconPicker({ value, onChange }: { value: string; onChange: (icon: strin
       {ICON_CHOICES.map((iconName) => {
         const Icon = ISSUE_TYPE_ICONS[iconName];
         return (
-          <Button variant="ghost"
+          <button
             key={iconName}
             type="button"
             onClick={() => onChange(iconName)}
@@ -459,7 +460,7 @@ function IconPicker({ value, onChange }: { value: string; onChange: (icon: strin
             title={iconName}
           >
             <Icon size={14} />
-          </Button>
+          </button>
         );
       })}
     </div>

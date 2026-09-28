@@ -86,16 +86,12 @@ export function ProcessMonitorCard() {
                         {t(ROLE_LABEL_KEYS[proc.role])}
                       </span>
                     </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-xs">{proc.pid > 0 ? proc.pid : '—'}</span>
+                    <TableCell className="font-mono text-xs">
+                      {proc.pid > 0 ? proc.pid : '—'}
                     </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-xs">{proc.port ?? '—'}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-xs">
-                        {proc.memoryMB != null ? `${proc.memoryMB} MB` : '—'}
-                      </span>
+                    <TableCell className="font-mono text-xs">{proc.port ?? '—'}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {proc.memoryMB != null ? `${proc.memoryMB} MB` : '—'}
                     </TableCell>
                     <TableCell>
                       <StatusPill tone={proc.running ? 'success' : 'default'}>

@@ -157,8 +157,8 @@ function LocalDaemonCard() {
       }
     >
       <div className="mb-3 flex items-center gap-2">
-        <StatusPill tone={running ? 'success' : 'default'}>
-          <span className={`mr-1.5 h-1.5 w-1.5 rounded-full ${running ? 'bg-accent-green' : 'bg-muted-foreground/40'}`} />
+        <StatusPill tone={running ? 'success' : 'default'} className="gap-1.5">
+          <span className={`h-1.5 w-1.5 rounded-full ${running ? 'bg-accent-green' : 'bg-muted-foreground/40'}`} />
           {running ? t('settings.runtimeOnline') : t('settings.runtimeOffline')}
         </StatusPill>
         {running && daemonStatus?.pid ? (
@@ -184,15 +184,15 @@ function LocalDaemonCard() {
             {(daemonStatus?.workspaceRoots ?? []).map((root) => (
               <div key={root} className="group flex items-center justify-between gap-2 rounded-md px-2 py-1 hover:bg-accent">
                 <span className="truncate font-mono text-xs">{root}</span>
-                <Button variant="ghost"
+                <button
                   type="button"
                   disabled={isLoading}
                   onClick={() => void removeWorkspaceRoot(root)}
-                  className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                  className="shrink-0 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                   aria-label={t('settings.desktopDaemonRemoveRoot')}
                 >
                   <Trash2 className="size-3.5" />
-                </Button>
+                </button>
               </div>
             ))}
           </div>
@@ -290,11 +290,11 @@ export function RuntimeSettingsSection() {
                 const online = machine.status === 'online';
                 const providers = [...new Set(machine.cliProviders ?? [])];
                 return (
-                  <Button variant="ghost"
+                  <button
                     key={machine.runtimeId}
                     type="button"
                     onClick={() => navigate(`/app/settings/runtime/${machine.runtimeId}`)}
-                    className="flex items-center motion-shift"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left motion-shift hover:bg-accent"
                   >
                     <span className="relative flex size-9 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
                       <Monitor className="size-4" />
@@ -309,8 +309,8 @@ export function RuntimeSettingsSection() {
                         <span className="truncate text-sm font-medium">
                           {machineDisplayName(machine)}
                         </span>
-                        <Badge variant="outline">
-                          <span className="text-xs uppercase">{machine.hostPlatform}</span>
+                        <Badge variant="outline" className="text-xs uppercase">
+                          {machine.hostPlatform}
                         </Badge>
                       </span>
                       <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">
@@ -349,7 +349,7 @@ export function RuntimeSettingsSection() {
                       {formatRelativeTime(machine.lastHeartbeatAt, t)}
                     </span>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                  </Button>
+                  </button>
                 );
               })}
             </div>
@@ -375,11 +375,9 @@ export function RuntimeSettingsSection() {
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <ItemTitle>{approval.requestedAction}</ItemTitle>
-                        <ItemDescription>
-                          <span className="font-mono">
-                            {approval.executionRunId}
-                            {approval.reason ? ` · ${approval.reason}` : ''}
-                          </span>
+                        <ItemDescription className="font-mono">
+                          {approval.executionRunId}
+                          {approval.reason ? ` · ${approval.reason}` : ''}
                         </ItemDescription>
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5">
@@ -442,8 +440,8 @@ export function RuntimeSettingsSection() {
                 <TableBody>
                   {(dispatches.data ?? []).map((dispatch) => (
                     <TableRow key={dispatch.executionRunId}>
-                      <TableCell>
-                        <div className="max-w-60 truncate font-mono">{dispatch.executionRunId}</div>
+                      <TableCell className="max-w-60 truncate font-mono">
+                        {dispatch.executionRunId}
                       </TableCell>
                       <TableCell>
                         {dispatch.providerId ? (

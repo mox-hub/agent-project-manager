@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { TONE_LIGHT_CLASS } from '@/shared/status/status-visuals';
@@ -80,7 +79,7 @@ export function PipelineLaneStripView({
 
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-6">
         {lanes.map((lane) => (
-          <Button variant="ghost"
+          <button
             key={lane.to}
             type="button"
             onClick={() => onOpenStage(lane)}
@@ -105,7 +104,7 @@ export function PipelineLaneStripView({
             </div>
 
             <span className="truncate font-mono text-3xs text-muted-foreground">{lane.hint}</span>
-          </Button>
+          </button>
         ))}
       </div>
     </section>

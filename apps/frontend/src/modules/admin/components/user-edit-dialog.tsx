@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -66,7 +65,7 @@ export function UserEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent >
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t('admin.editUser', '编辑账号')}</DialogTitle>
           <DialogDescription>
@@ -75,7 +74,7 @@ export function UserEditDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('admin.displayName', '姓名')} *</FieldLabel>
+            <label className="text-xs font-medium">{t('admin.displayName', '姓名')} *</label>
             <Input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -83,7 +82,7 @@ export function UserEditDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('admin.email', '邮箱')}</FieldLabel>
+            <label className="text-xs font-medium">{t('admin.email', '邮箱')}</label>
             <Input
               type="email"
               value={email}

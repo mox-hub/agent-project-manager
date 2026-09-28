@@ -2,7 +2,6 @@
  * 上下文注入 chip —— 展示当前「正在查看」的实体（详情页自动上报），
  * 用户可一键移除（提前告知语义：移除后随消息附带的上下文即取消）。
  */
-import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Eye, X } from 'lucide-react';
 import { useAppStore } from '@/infrastructure/store/app-store';
@@ -34,15 +33,15 @@ export function AssistantContextChip() {
     >
       <Eye className="size-3 shrink-0 text-accent-purple" />
       <span className="truncate">{label}</span>
-      <Button variant="ghost"
+      <button
         type="button"
         onClick={() => setViewing(null)}
-        className="shrink-0"
+        className="shrink-0 rounded-sm p-0.5 hover:bg-accent"
         aria-label={t('assistant.context.remove')}
         data-ai-action="assistant.context.remove.click"
       >
         <X className="size-3" />
-      </Button>
+      </button>
     </div>
   );
 }

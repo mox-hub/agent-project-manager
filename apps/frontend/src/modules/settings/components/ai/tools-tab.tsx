@@ -58,10 +58,10 @@ function CliToolCard({
     disabled: t('aiHub.disabled'),
   } as const;
   return (
-    <Card surface="flat">
+    <Card className="border-border shadow-none">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
-          <CardTitle size="base" className="flex items-center">
+          <CardTitle className="flex items-center gap-2 text-base">
             <CliBrandIcon providerId={provider.providerId} size={18} />
             {name}
           </CardTitle>
@@ -79,7 +79,7 @@ function CliToolCard({
         </div>
         <CardDescription>{PROVIDER_DESCRIPTIONS[provider.providerId] ?? name}</CardDescription>
       </CardHeader>
-      <CardContent >
+      <CardContent className="space-y-3">
         <div className="space-y-1.5 text-xs text-muted-foreground">
           {provider.version ? <p className="font-mono">v{provider.version}</p> : null}
           <p className="truncate font-mono" title={provider.commandPath}>{provider.commandPath}</p>
@@ -92,8 +92,8 @@ function CliToolCard({
           </p>
         ) : null}
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={onTest} disabled={testing} >
-            {testing ? <Spinner size="xs" color="inherit" /> : <RefreshCw size={13} />}
+          <Button variant="outline" size="sm" onClick={onTest} disabled={testing} className="gap-1.5">
+            {testing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={13} />}
             {t('aiHub.test')}
           </Button>
           <Button variant={provider.enabled ? 'secondary' : 'default'} size="sm" onClick={onToggle}>
@@ -113,9 +113,9 @@ function CopyableCode({ text }: { text: string }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   return (
-    <Button variant="ghost"
+    <button
       type="button"
-      className="flex items-center transition-colors"
+      className="flex w-full items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5 text-left font-mono text-xs text-muted-foreground transition-colors hover:bg-muted/70"
       onClick={() => {
         navigator.clipboard.writeText(text);
         setCopied(true);
@@ -125,7 +125,7 @@ function CopyableCode({ text }: { text: string }) {
     >
       <span className="min-w-0 flex-1 truncate">{text}</span>
       {copied ? <Check size={12} className="shrink-0 text-accent-green" /> : <Copy size={12} className="shrink-0" />}
-    </Button>
+    </button>
   );
 }
 
@@ -133,7 +133,7 @@ function LoadingCards({ count = 3 }: { count?: number }) {
   return (
     <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i}  />
+        <Skeleton key={i} className="h-36" />
       ))}
     </div>
   );

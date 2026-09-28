@@ -61,16 +61,16 @@ export function ProjectOverviewCharts({ summary }: ProjectOverviewChartsProps) {
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <Card className="lg:col-span-2" data-mock="true">
-        <CardHeader >
-          <CardTitle size="sm" fontWeight="medium" className="flex items-center justify-between">
+        <CardHeader className="p-4">
+          <CardTitle className="flex items-center justify-between text-sm font-medium">
             {t('project.detail.sprintBurndown')}
             <span className="text-xs font-normal text-muted-foreground">
               {t('project.detail.last7Days')}
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent >
-          <ChartContainer config={burndownConfig} >
+        <CardContent className="px-2 pb-3">
+          <ChartContainer config={burndownConfig} className="h-40 w-full">
             <AreaChart data={burndownData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="day" tickLine={false} axisLine={false} />
@@ -98,14 +98,14 @@ export function ProjectOverviewCharts({ summary }: ProjectOverviewChartsProps) {
       </Card>
 
       <Card>
-        <CardHeader >
-          <CardTitle size="sm" fontWeight="medium">
+        <CardHeader className="p-4">
+          <CardTitle className="text-sm font-medium">
             {t('project.detail.taskDistribution')}
           </CardTitle>
         </CardHeader>
-        <CardContent >
+        <CardContent className="px-4 pb-4">
           <div className="flex items-center justify-center">
-            <ChartContainer config={distributionConfig} >
+            <ChartContainer config={distributionConfig} className="h-30 w-full">
               <PieChart>
                 <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                 <Pie

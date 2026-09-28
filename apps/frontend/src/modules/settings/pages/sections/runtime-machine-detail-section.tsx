@@ -187,7 +187,7 @@ export function RuntimeMachineDetailSection() {
         onBack={() => navigate('/app/settings/runtime')}
         breadcrumbs={breadcrumbs}
       />
-      <PageBody variant="standard" >
+      <PageBody variant="standard" className="space-y-6">
         {/* 机器头部：图标框 + 名称 + 状态 + 元信息行 + 心跳监控条（右上） */}
         <div className="flex flex-wrap items-start gap-4">
           <span className="relative flex size-14 shrink-0 items-center justify-center rounded-xl bg-accent-blue/10 text-accent-blue">
@@ -204,7 +204,7 @@ export function RuntimeMachineDetailSection() {
               <StatusPill tone={online ? 'success' : 'default'}>
                 {online ? t('settings.runtimeOnline') : t('settings.runtimeOffline')}
               </StatusPill>
-              <Badge variant="outline" className="uppercase">
+              <Badge variant="outline" className="text-xs uppercase">
                 {machine.hostPlatform}
               </Badge>
             </div>
@@ -238,7 +238,7 @@ export function RuntimeMachineDetailSection() {
                 onClick={handleDaemonAction}
               >
                 {daemonBusy ? (
-                  <Spinner size="xs" className="mr-1.5" />
+                  <Spinner className="mr-1.5 size-3.5" />
                 ) : daemonRunning ? (
                   <RefreshCw className="mr-1.5 size-3.5" />
                 ) : (
@@ -309,9 +309,9 @@ export function RuntimeMachineDetailSection() {
                               : t('settings.runtimeOffline')}
                           </span>
                         </TableCell>
-                        <TableCell >—</TableCell>
-                        <TableCell >—</TableCell>
-                        <TableCell >—</TableCell>
+                        <TableCell className="text-muted-foreground">—</TableCell>
+                        <TableCell className="text-muted-foreground">—</TableCell>
+                        <TableCell className="text-muted-foreground">—</TableCell>
                       </TableRow>
                     );
                   })}

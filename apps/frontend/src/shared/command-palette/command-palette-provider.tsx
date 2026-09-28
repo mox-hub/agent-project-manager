@@ -482,7 +482,8 @@ export function CommandPaletteProvider({
                   aria-label={t('commandPalette.aiPlaceholder', '问问 AI…')}
                   startAddon={<SparklesIcon />}
                 />
-                <Button className="me-2.5"
+                <Button
+                  className="me-2.5 rounded-md text-sm not-hover:text-muted-foreground sm:text-xs"
                   onClick={backToSearch}
                   size="sm"
                   variant="ghost"
@@ -494,7 +495,7 @@ export function CommandPaletteProvider({
               </div>
               <CommandPanel>
                 <ScrollArea
-                  
+                  className="[&_[data-slot=scroll-area-viewport]]:max-h-80"
                   overscrollContain
                   scrollbarGutter
                   scrollFade
@@ -513,15 +514,15 @@ export function CommandPaletteProvider({
                     {ai.isGenerating ? (
                       <div className="flex flex-col gap-4" aria-live="polite">
                         <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                          <Spinner size="2xs" />
+                          <Spinner className="size-3" />
                           <span className="animate-pulse">
                             {t('commandPalette.aiGenerating', '生成中…')}
                           </span>
                         </div>
                         <div className="flex flex-col gap-2">
-                          <Skeleton  />
-                          <Skeleton  />
-                          <Skeleton  />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-2/3" />
                         </div>
                       </div>
                     ) : null}
@@ -568,7 +569,7 @@ export function CommandPaletteProvider({
                 {ai.isGenerating ? (
                   <div aria-live="polite" className="flex items-center gap-2">
                     <div className="flex h-5 items-center justify-center">
-                      <Spinner size="2xs" />
+                      <Spinner className="size-3" />
                     </div>
                     <span className="animate-pulse">
                       {t('commandPalette.aiGenerating', '生成中…')}
@@ -610,7 +611,8 @@ export function CommandPaletteProvider({
                   value={query}
                   aria-label={t('commandPalette.title')}
                 />
-                <Button className="me-2.5"
+                <Button
+                  className="me-2.5 rounded-md text-sm not-hover:text-muted-foreground sm:text-xs"
                   onClick={enterAiMode}
                   size="sm"
                   variant="ghost"
@@ -621,7 +623,7 @@ export function CommandPaletteProvider({
                 </Button>
               </div>
               <CommandPanel>
-                <CommandEmpty >
+                <CommandEmpty className="not-empty:py-12">
                   {trimmedQuery ? (
                     <div className="wrap-break-word flex flex-col items-center gap-2">
                       <EmptySearchMedia />

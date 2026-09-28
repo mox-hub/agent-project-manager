@@ -1,7 +1,6 @@
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 
 import { cn } from "@/lib/utils"
-import { RawButton } from './raw-button'
 
 function TooltipProvider({
   delay = 0,
@@ -33,7 +32,7 @@ function Tooltip({
 
 // 组合方式：唯一走 base-ui 原生 `render` prop（宪法 §10.7）。
 // Radix 遗产 `asChild` 已于批 6b 移除（base-ui 不认该 prop，会透传到 DOM
-// 并另渲染一个自带 <RawButton>，产生非法嵌套结构）。
+// 并另渲染一个自带 <button>，产生非法嵌套结构）。
 function TooltipTrigger({
   children,
   ...props

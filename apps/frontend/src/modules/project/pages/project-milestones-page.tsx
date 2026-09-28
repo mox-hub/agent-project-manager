@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
@@ -23,8 +22,6 @@ import { SectionCard } from '@/components/ui/section-card';
 import { AsyncState } from '@/components/ui/async-state';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { RELEASE_STATUS_TONE_MAP } from '@/shared/status/status-visuals';
 import { useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
@@ -90,9 +87,15 @@ function milestoneTone(status: string) {
   );
 }
 
-/** 发版状态徽标配色：tone 唯一链路（与 release 模块列表同一业务层登记 RELEASE_STATUS_TONE_MAP） */
-const releaseToneClass = (status: string): string =>
-  TONE_CLASS[RELEASE_STATUS_TONE_MAP[status] ?? 'default'].light;
+/** 发版状态徽标 tone（与 release 模块列表口径一致的语义色映射） */
+const RELEASE_TONE: Record<string, string> = {
+  draft: 'bg-muted/50 text-muted-foreground',
+  gated: 'bg-accent-yellow-light text-accent-yellow',
+  approved: 'bg-accent-blue-light text-accent-blue',
+  publishing: 'bg-accent-yellow-light text-accent-yellow',
+  released: 'bg-accent-green-light text-accent-green',
+  failed: 'bg-accent-red-light text-accent-red',
+};
 
 /** 迭代状态 tone：统一走日期推导纯函数（P1-19），tone 常量与详情对话框共享 */
 function iterationToneOf(iteration: IterationRef) {
@@ -204,7 +207,7 @@ export function ProjectMilestonesPage() {
         </>
       }
       contextBar={
-        <SectionCard  contentClassName="gap-0 px-4 py-3">
+        <SectionCard className="py-0" contentClassName="gap-0 px-4 py-3">
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <CalendarDays size={13} />
@@ -221,7 +224,7 @@ export function ProjectMilestonesPage() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Progress value={timelineCompletion} className="flex-1" />
+            <Progress value={timelineCompletion} className="h-2 flex-1" />
             <span className="text-xs font-medium text-foreground">
               {timelineCompletion}%
             </span>
@@ -237,14 +240,14 @@ export function ProjectMilestonesPage() {
         }
         emptyTitle={t('project.milestonesPage.empty')}
         loadingFallback={
-          <SectionCard  contentClassName="px-4 py-4">
+          <SectionCard className="py-0" contentClassName="px-4 py-4">
             <SkeletonList count={4} avatar />
           </SectionCard>
         }
       >
         <div className="space-y-6">
           {scheduled.length > 0 && (
-            <SectionCard  contentClassName="px-4 py-4">
+            <SectionCard className="py-0" contentClassName="px-4 py-4">
               <div className="flex flex-col">
                 {scheduled.map((entry, index) =>
                   entry.kind === 'iteration' ? (
@@ -271,7 +274,7 @@ export function ProjectMilestonesPage() {
             <SectionCard
               title={t('project.milestonesPage.unscheduled')}
               description={t('project.milestonesPage.unscheduledDesc')}
-              
+              className="py-0"
               contentClassName="px-4 py-3"
             >
               <div className="space-y-2">
@@ -391,7 +394,7 @@ function TimelineIterationRow({
       iconClass="text-accent-purple"
       isLast={isLast}
     >
-      <Button variant="ghost"
+      <button
         type="button"
         className={cn(
           'flex w-full cursor-pointer flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-left transition-colors hover:bg-muted/40',
@@ -415,7 +418,7 @@ function TimelineIterationRow({
             {t('project.milestonesPage.taskCount', { count: capacity })}
           </span>
         </span>
-      </Button>
+      </button>
     </TimelineRow>
   );
 }
@@ -477,7 +480,8 @@ function TimelineMilestoneRow({
                 <Badge
                   className={cn(
                     'text-3xs',
-                    releaseToneClass(release.status),
+                    RELEASE_TONE[release.status] ??
+                      RELEASE_TONE.draft,
                   )}
                 >
                   {t(`release.status.${release.status}`)}

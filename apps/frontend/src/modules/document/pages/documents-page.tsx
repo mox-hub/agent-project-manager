@@ -210,13 +210,13 @@ export function DocumentsPage() {
                             error: w.lastError,
                           })}
                         </span>
-                        <Button variant="ghost"
+                        <button
                           type="button"
-                          className="shrink-0 hover:underline"
+                          className="shrink-0 text-accent-blue hover:underline"
                           onClick={() => clearSyncWarning.mutate(w.documentId)}
                         >
                           {t('document.syncBanner.dismiss')}
-                        </Button>
+                        </button>
                       </div>
                     );
                   })}
@@ -225,14 +225,14 @@ export function DocumentsPage() {
                   ) : null}
                 </div>
               </div>
-              <Button variant="ghost"
+              <button
                 type="button"
-                className="shrink-0"
+                className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted"
                 onClick={() => setShowSyncBanner(false)}
                 aria-label={t('document.syncBanner.close')}
               >
                 <X size={14} />
-              </Button>
+              </button>
             </div>
           ) : null}
           <StatsCard
@@ -243,7 +243,7 @@ export function DocumentsPage() {
               { key: 'draft', value: stats.draft, label: t('document.draft'), icon: FileEdit, ...STATS_THEMES.blue },
             ]}
             columns={4}
-            className="grid grid-cols-4"
+            className="grid grid-cols-4 gap-3"
           />
         </div>
 
@@ -322,7 +322,7 @@ export function DocumentsPage() {
               <EmptyState
                 variant="page"
                 visual={
-                  <IconStack aria-hidden="true" >
+                  <IconStack aria-hidden="true" className="text-primary">
                     <FileText className="size-4 text-primary" />
                   </IconStack>
                 }
@@ -401,14 +401,14 @@ function DocumentCard({
             <CatIcon className={cn('size-4', catConfig.color)} />
           </div>
           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-            <StatusPill tone={DOC_STATUS_TONE[document.status]} >
+            <StatusPill tone={DOC_STATUS_TONE[document.status]} className="text-2xs px-1.5 py-0.5 rounded-md">
               {t(statusConfig.labelKey)}
             </StatusPill>
             <div className="relative">
               <Button
                 variant="ghost"
                 size="icon"
-                className="opacity-0 transition-opacity group-hover:opacity-100"
+                className="size-7 opacity-0 transition-opacity group-hover:opacity-100"
                 aria-label={t('document.actions.more', '更多操作')}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -442,7 +442,7 @@ function DocumentCard({
                   >
                     {t('document.actions.edit')}
                   </Link>
-                  <Button variant="ghost"
+                  <button
                     type="button"
                     className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
                     onClick={() => onDelete(document)}
@@ -452,7 +452,7 @@ function DocumentCard({
                   >
                     <Trash2 className="size-3.5" />
                     {t('document.actions.delete')}
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
@@ -477,7 +477,7 @@ function DocumentCard({
             </span>
           )}
           {document.docRole && (
-            <Badge variant="outline" fontSize="3xs" >
+            <Badge variant="outline" className="text-3xs font-normal px-1.5 py-0">
               {document.docRole}
             </Badge>
           )}
@@ -491,17 +491,17 @@ function DocumentCard({
         </span>
         <div className="flex items-center gap-2">
           <span>{new Date(document.updatedAt).toLocaleDateString(i18n.language)}</span>
-          <Button variant="ghost"
+          <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onPreview(document);
             }}
-            className="flex items-center hover:underline"
+            className="flex items-center gap-0.5 text-accent-blue hover:underline"
           >
             <Eye className="size-3" />
             <span>{t('document.actions.preview')}</span>
-          </Button>
+          </button>
         </div>
       </div>
     </div>
@@ -541,11 +541,11 @@ function DocumentListItem({
           <h3 className="truncate text-sm font-medium text-foreground group-hover:text-primary transition-colors">
             {document.title}
           </h3>
-          <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0">
+          <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0 text-3xs px-1.5 py-0.5 rounded-md">
             {t(statusConfig.labelKey)}
           </StatusPill>
           {document.docRole && (
-            <Badge variant="outline" fontSize="3xs" className="shrink-0">
+            <Badge variant="outline" className="shrink-0 font-normal text-3xs px-1.5 py-0">
               {document.docRole}
             </Badge>
           )}
@@ -583,7 +583,7 @@ function DocumentListItem({
           <Button
             variant="ghost"
             size="icon"
-            
+            className="size-7"
             aria-label={t('document.actions.more', '更多操作')}
             onClick={(e) => {
               e.stopPropagation();
@@ -597,15 +597,15 @@ function DocumentListItem({
               className={`absolute right-0 top-full z-dropdown mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
               onClick={(e) => e.stopPropagation()}
             >
-              <Button variant="ghost"
+              <button
                 type="button"
                 className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`}
                 onClick={() => onMenuToggle(null)}
               >
                 <GitBranch className="size-3.5" />
                 {t('document.actions.versionHistory')}
-              </Button>
-              <Button variant="ghost"
+              </button>
+              <button
                 type="button"
                 className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
                 onClick={() => onDelete(document)}
@@ -615,7 +615,7 @@ function DocumentListItem({
               >
                 <Trash2 className="size-3.5" />
                 {t('document.actions.delete')}
-              </Button>
+              </button>
             </div>
           )}
         </div>

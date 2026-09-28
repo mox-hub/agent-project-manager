@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
@@ -107,10 +106,10 @@ export function AnalysisDraftDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* keepDefaultWidth={false}：丢掉基类 sm:max-w-md，否则 max-w-2xl 在桌面端被覆盖回 448px，报告内容被压窄 */}
-      <DialogContent maxWidth="2xl" keepDefaultWidth={false} className="overflow-y-auto">
+      <DialogContent keepDefaultWidth={false} className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <Sparkles size={16} className="mr-2" />
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles size={16} />
             {t('intake.analysisTitle', 'AI 生成需求分析报告')}
           </DialogTitle>
           <DialogDescription>
@@ -124,15 +123,15 @@ export function AnalysisDraftDialog({
         {!draft ? (
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >
+              <label className="text-xs font-medium text-foreground">
                 {t('intake.analysisResearch', '调研纪要（必选一项来源）')}
-              </FieldLabel>
+              </label>
               <Select
                 value={researchId}
                 onValueChange={(v) => setResearchId(typeof v === 'string' ? v : '')}
                 items={researchOptions}
               >
-                <SelectTrigger >
+                <SelectTrigger className="w-full">
                   <SelectValue
                     placeholder={t('intake.analysisSelectDoc', '选择文档')}
                   />
@@ -147,15 +146,15 @@ export function AnalysisDraftDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >
+              <label className="text-xs font-medium text-foreground">
                 {t('intake.analysisClarify', '澄清纪要（可选，补充边界与约束）')}
-              </FieldLabel>
+              </label>
               <Select
                 value={clarifyId}
                 onValueChange={(v) => setClarifyId(typeof v === 'string' ? v : '')}
                 items={clarifyOptions}
               >
-                <SelectTrigger >
+                <SelectTrigger className="w-full">
                   <SelectValue
                     placeholder={t('intake.analysisSelectOptional', '不指定')}
                   />
@@ -247,8 +246,11 @@ export function AnalysisDraftDialog({
                 <ul className="mt-1.5 space-y-1 text-xs text-content-text-secondary">
                   {draft.risks.map((r) => (
                     <li key={r.risk} className="flex items-start gap-1.5">
-                      <Badge variant="secondary" className="mt-0.5 shrink-0">
-                        <span className="font-mono text-3xs">{r.severity}</span>
+                      <Badge
+                        variant="secondary"
+                        className="mt-0.5 shrink-0 font-mono text-3xs"
+                      >
+                        {r.severity}
                       </Badge>
                       <span>
                         {r.risk}

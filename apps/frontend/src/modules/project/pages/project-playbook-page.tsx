@@ -138,7 +138,7 @@ export function ProjectPlaybookPage() {
       description={t('project.playbookPage.description')}
       actions={
         mounted ? (
-          <Badge variant="outline" >
+          <Badge variant="outline" className="gap-1.5 text-2xs">
             <BookOpen className="size-3" />
             {status?.template?.name}
           </Badge>
@@ -168,7 +168,7 @@ export function ProjectPlaybookPage() {
                       {tp.description}
                     </p>
                   </div>
-                  <Badge fontSize="3xs" variant="outline" className="shrink-0">
+                  <Badge variant="outline" className="shrink-0 text-3xs">
                     {tp.audience === 'novice'
                       ? t('project.playbookPage.audienceNovice')
                       : t('project.playbookPage.audienceMaintenance')}
@@ -223,19 +223,19 @@ export function ProjectPlaybookPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-content-text">{stage.name}</p>
                     {stage.status === 'done' ? (
-                      <Badge color="green" fontSize="3xs" >
+                      <Badge className="gap-1 rounded-full bg-accent-green-light text-3xs text-accent-green">
                         <Check className="size-3" />
                         {t('project.playbookPage.statusDone')}
                       </Badge>
                     ) : null}
                     {stage.status === 'active' ? (
-                      <Badge color="blue" fontSize="3xs" >
+                      <Badge className="gap-1 rounded-full bg-accent-blue-light text-3xs text-accent-blue">
                         <Clock className="size-3" />
                         {t('project.playbookPage.statusActive')}
                       </Badge>
                     ) : null}
                     {stage.status === 'skipped' ? (
-                      <Badge fontSize="3xs" >
+                      <Badge className="rounded-full bg-muted text-3xs text-content-text-muted">
                         {t('project.playbookPage.statusSkipped')}
                       </Badge>
                     ) : null}
@@ -264,7 +264,7 @@ export function ProjectPlaybookPage() {
                     <div className="mt-2.5 flex flex-wrap items-center gap-2">
                       {activeGatePending ? (
                         <>
-                          <Badge color="purple" fontSize="3xs" >
+                          <Badge className="gap-1 rounded-full bg-accent-purple-light text-3xs text-accent-purple">
                             <ListChecks className="size-3" />
                             {t('project.playbookPage.gatePending')}
                           </Badge>
@@ -339,7 +339,7 @@ export function ProjectPlaybookPage() {
                 ) : (
                   <Button
                     size="sm"
-                    
+                    className="gap-1.5"
                     disabled={intake.isPending}
                     onClick={handleIntake}
                     data-ai="playbook.intake.generate"
@@ -375,7 +375,7 @@ export function ProjectPlaybookPage() {
         open={!!skipStageKey}
         onOpenChange={(open) => !open && setSkipStageKey(null)}
       >
-        <DialogContent >
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t('project.playbookPage.skipTitle')}</DialogTitle>
           </DialogHeader>

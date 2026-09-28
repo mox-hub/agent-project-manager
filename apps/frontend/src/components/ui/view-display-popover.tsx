@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "./switch";
-import { RawButton } from './raw-button'
 
 export interface ViewDisplayPropertyItem {
   key: string;
@@ -203,7 +202,7 @@ export function ViewDisplayPopover({
             const isActive = viewMode === opt.value;
             const label = t(`viewDisplay.views.${opt.value}`, opt.label);
             return (
-              <RawButton
+              <button
                 key={opt.value}
                 type="button"
                 onClick={() => onViewModeChange(opt.value)}
@@ -216,7 +215,7 @@ export function ViewDisplayPopover({
               >
                 {Icon ? <Icon className="size-3.5 shrink-0" strokeWidth={1.75} /> : null}
                 <span>{label}</span>
-              </RawButton>
+              </button>
             );
           })}
         </div>
@@ -271,7 +270,7 @@ export function ViewDisplayPopover({
             </span>
             <div className="flex items-center gap-1">
               {onOrderDirectionToggle ? (
-                <RawButton
+                <button
                   type="button"
                   onClick={onOrderDirectionToggle}
                   title={
@@ -286,7 +285,7 @@ export function ViewDisplayPopover({
                   ) : (
                     <ArrowDownWideNarrow className="size-3.5" />
                   )}
-                </RawButton>
+                </button>
               ) : null}
               <select
                 value={orderBy}
@@ -366,7 +365,7 @@ export function ViewDisplayPopover({
                 const isActive = activePropsMap[prop.key] !== false;
                 const propLabel = t(`viewDisplay.properties.${prop.key}`, prop.label);
                 return (
-                  <RawButton
+                  <button
                     key={prop.key}
                     type="button"
                     onClick={() => onToggleDisplayProperty(prop.key)}
@@ -381,7 +380,7 @@ export function ViewDisplayPopover({
                       <span className="mr-1 inline-block size-1.5 rounded-full bg-accent-purple" />
                     )}
                     {propLabel}
-                  </RawButton>
+                  </button>
                 );
               })}
             </div>

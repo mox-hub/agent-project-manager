@@ -4,8 +4,6 @@
  */
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { RUN_TIMELINE_BAR_TONE } from '@/shared/status/status-visuals';
 import type { ExecutionStepRecord } from '../api/execution-api';
 import {
   computeTimelineRows,
@@ -13,9 +11,11 @@ import {
   type TimelineRowData,
 } from './run-details-format';
 
-/** 活动条分类 → 实心填充（tone 唯一词表 dot 槽；分类键登记于 status-visuals） */
-const barToneClass = (tone: TimelineRowData['bars'][number]['tone']): string =>
-  TONE_CLASS[RUN_TIMELINE_BAR_TONE[tone] ?? 'default'].dot;
+const BAR_TONE_CLASS: Record<TimelineRowData['bars'][number]['tone'], string> = {
+  model: 'bg-accent-green',
+  tools: 'bg-accent-blue',
+  error: 'bg-accent-red',
+};
 
 const ROW_LABEL_KEY = {
   model: 'runDetails.timeline.model',
@@ -36,7 +36,7 @@ function TimelineTrack({ row }: { row: TimelineRowData }) {
           title={bar.name}
           className={cn(
             'absolute inset-y-0 rounded-full',
-            barToneClass(bar.tone),
+            BAR_TONE_CLASS[bar.tone],
           )}
           style={{ left: `${bar.leftPct}%`, width: `${bar.widthPct}%` }}
         />

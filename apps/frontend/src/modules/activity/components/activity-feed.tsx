@@ -10,7 +10,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { ChevronDown, History } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import type { StatusTone } from '@/shared/status/status-visuals';
 import type { ActivityEntityType, ActivityItem } from '../api/activity-api';
@@ -56,18 +55,17 @@ export function ActivityFeed({
             <span className="text-3xs text-muted-foreground/60">({activities.length})</span>
           )}
         </div>
-        <Button
+        <button
           type="button"
-          variant="subtle"
-          size="icon-2xs"
           onClick={() => setCollapsed((v) => !v)}
+          className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           aria-label={collapsed ? t('common.expand') : t('common.collapse')}
           aria-expanded={!collapsed}
         >
           <ChevronDown
             className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
           />
-        </Button>
+        </button>
       </div>
 
       {/* 动态时间线 + 评论输入（grid-rows 动画展开 / 收起） */}

@@ -186,13 +186,14 @@ export function ShortcutsSettingsSection() {
       icon={Keyboard}
       iconColor="text-accent-blue"
       title={t('settings.shortcuts')}
+      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
-      <Card surface="flat">
-        <CardHeader className="flex-row items-center">
+      <Card className="border-border shadow-none">
+        <CardHeader className="flex-row items-center gap-2">
           <Keyboard className="size-4 text-muted-foreground" />
           <div className="flex-1">
-            <CardTitle size="base" >{t('settings.shortcutsGlobalTitle')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.shortcutsGlobalTitle')}</CardTitle>
             <CardDescription>{t('settings.shortcutsGlobalDesc')}</CardDescription>
           </div>
           {hasOverrides ? (
@@ -215,9 +216,9 @@ export function ShortcutsSettingsSection() {
         </CardContent>
       </Card>
 
-      <Card surface="flat">
+      <Card className="border-border shadow-none">
         <CardHeader>
-          <CardTitle size="base" >{t('settings.shortcutsContextTitle')}</CardTitle>
+          <CardTitle className="text-base">{t('settings.shortcutsContextTitle')}</CardTitle>
           <CardDescription>{t('settings.shortcutsContextDesc')}</CardDescription>
         </CardHeader>
         <CardContent>

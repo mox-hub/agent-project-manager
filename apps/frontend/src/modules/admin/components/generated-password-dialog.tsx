@@ -31,10 +31,10 @@ export function GeneratedPasswordDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent >
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <KeyRound size={16} className="mr-2 text-accent-yellow" />
+          <DialogTitle className="flex items-center gap-2">
+            <KeyRound size={16} className="text-accent-yellow" />
             {t('admin.passwordGenerated', '初始密码')}
           </DialogTitle>
           <DialogDescription>
@@ -48,10 +48,10 @@ export function GeneratedPasswordDialog({
             </p>
           ) : null}
           <div className="flex gap-2">
-            <Input fontVariant="mono"
+            <Input
               readOnly
               value={password}
-              
+              className="font-mono"
               onFocus={(e) => e.target.select()}
             />
             <Button

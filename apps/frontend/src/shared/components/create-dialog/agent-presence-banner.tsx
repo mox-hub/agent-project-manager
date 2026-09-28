@@ -4,7 +4,6 @@
  * 规范：当 Assignee 指派给 AI Agent（Mika 等）时平滑淡入，
  * 给予人类清晰的“AI 同事已就绪”反馈，并提供立即执行/需审批/仅建待办三档策略切换。
  */
-import { Button } from '@/components/ui/button';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bot, Zap, Shield, Pause, ChevronDown } from 'lucide-react';
@@ -140,7 +139,7 @@ export function AgentPresenceBanner({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           render={
-            <Button variant="ghost"
+            <button
               type="button"
               className={cn(
                 'inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-2xs font-medium transition-colors hover:opacity-90 shrink-0',
@@ -150,16 +149,16 @@ export function AgentPresenceBanner({
               <CurrentIcon className={cn('size-3', strategyConfig.iconClass)} />
               <span>{strategyConfig.label}</span>
               <ChevronDown className="size-2.5 opacity-60" />
-            </Button>
+            </button>
           }
         />
         <PopoverContent
           align="end"
           sideOffset={6}
-          className="backdrop-blur-md"
+          className="w-48 p-1 shadow-xs border border-border/70 bg-popover/95 backdrop-blur-md"
         >
           <div className="flex flex-col gap-0.5">
-            <Button variant="ghost"
+            <button
               type="button"
               onClick={() => {
                 onStrategyChange('immediate');
@@ -175,8 +174,8 @@ export function AgentPresenceBanner({
                 <span>{t('unifiedCreate.dispatchStrategy.immediate', { defaultValue: '立即执行' })}</span>
                 <span className="text-3xs text-muted-foreground">落库后立即调度运行</span>
               </div>
-            </Button>
-            <Button variant="ghost"
+            </button>
+            <button
               type="button"
               onClick={() => {
                 onStrategyChange('approval');
@@ -192,8 +191,8 @@ export function AgentPresenceBanner({
                 <span>{t('unifiedCreate.dispatchStrategy.approval', { defaultValue: '需审批' })}</span>
                 <span className="text-3xs text-muted-foreground">进入通知中心审批</span>
               </div>
-            </Button>
-            <Button variant="ghost"
+            </button>
+            <button
               type="button"
               onClick={() => {
                 onStrategyChange('manual_dispatch');
@@ -209,7 +208,7 @@ export function AgentPresenceBanner({
                 <span>{t('unifiedCreate.dispatchStrategy.manual', { defaultValue: '仅建待办' })}</span>
                 <span className="text-3xs text-muted-foreground">放入待办列手动启动</span>
               </div>
-            </Button>
+            </button>
           </div>
         </PopoverContent>
       </Popover>

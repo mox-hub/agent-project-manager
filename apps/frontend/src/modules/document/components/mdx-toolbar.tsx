@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { useRef } from 'react';
 import {
   Bold,
@@ -71,16 +70,16 @@ export function MdxToolbar({ editorRef, className }: MdxToolbarProps) {
         const Icon = action.icon;
         const tip = action.shortcut ? `${action.label} (${action.shortcut})` : action.label;
         return (
-          <Button variant="ghost"
+          <button
             key={action.id}
             type="button"
-            className="inline-flex items-center justify-center transition-colors focus-visible:outline-hidden"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:outline-hidden"
             onClick={() => action.run(editorRef.current!)}
             aria-label={action.label}
             title={tip}
           >
             <Icon size={14} />
-          </Button>
+          </button>
         );
       })}
     </div>

@@ -94,7 +94,7 @@ export function InvitesSection({ statusFilter }: { statusFilter: string }) {
                 <TableHead>{t('admin.inviteCreatedBy', '创建人')}</TableHead>
                 <TableHead>{t('admin.createdAt', '创建时间')}</TableHead>
                 <TableHead>{t('admin.inviteExpiresAt', '过期时间')}</TableHead>
-                <TableHead width="w-32"  />
+                <TableHead className="w-32" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -111,17 +111,17 @@ export function InvitesSection({ statusFilter }: { statusFilter: string }) {
                       : 'default';
                 return (
                   <TableRow key={inv.id}>
-                    <TableCell >{inv.email ?? '—'}</TableCell>
+                    <TableCell className="text-sm">{inv.email ?? '—'}</TableCell>
                     <TableCell>
                       <StatusPill tone={tone}>{label}</StatusPill>
                     </TableCell>
-                    <TableCell >
+                    <TableCell className="text-sm text-muted-foreground">
                       {inv.createdBy ?? '—'}
                     </TableCell>
-                    <TableCell fontSize="xs" >
+                    <TableCell className="text-xs text-muted-foreground">
                       {new Date(inv.createdAt).toLocaleString()}
                     </TableCell>
-                    <TableCell fontSize="xs" >
+                    <TableCell className="text-xs text-muted-foreground">
                       {new Date(inv.expiresAt).toLocaleString()}
                     </TableCell>
                     <TableCell>

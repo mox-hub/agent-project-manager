@@ -18,7 +18,7 @@ import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ListAvatar, ListChip, ListDate, ListIcon, ListText, DataList } from '@/components/ui/data-list';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
-import { TASK_STATUS_VISUALS, TONE_DOT_CLASS, TONE_TEXT_CLASS, SEVERITY_TONE } from '@/shared/status/status-visuals';
+import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
@@ -80,9 +80,12 @@ const PRIORITY_CONFIG: Record<RowPriority, { icon: React.ComponentType<{ classNa
   low: { icon: ArrowDown, color: 'text-muted-foreground' },
 };
 
-/** Bug 严重度竖条：tone 唯一词表 dot 槽（实心填充） */
-const severityBarClass = (severity: Severity): string =>
-  TONE_DOT_CLASS[SEVERITY_TONE[severity] ?? 'default'];
+const SEVERITY_BAR: Record<Severity, string> = {
+  critical: 'bg-destructive',
+  high: 'bg-accent-orange',
+  medium: 'bg-accent-yellow',
+  low: 'bg-muted',
+};
 
 function normalizeStatus(status: string | undefined): TaskStatus {
   return (STATUS_ORDER as string[]).includes(status ?? '') ? (status as TaskStatus) : 'todo';
@@ -274,7 +277,7 @@ export function TaskSimpleList({
               />
             ) : null}
             {task.type === 'bug' ? (
-              <span className={cn('h-6 w-1.5 shrink-0 rounded-full', severityBarClass(severityOf(task)))} />
+              <span className={cn('h-6 w-1.5 shrink-0 rounded-full', SEVERITY_BAR[severityOf(task)])} />
             ) : null}
             <IssueTypeCell task={task}>
               <IssueTypePill meta={issueTypeOf(task)} />
@@ -290,7 +293,7 @@ export function TaskSimpleList({
             <PriorityCell task={task}>
               <ListIcon icon={PRIORITY_CONFIG[priorityOf(task)].icon} className={PRIORITY_CONFIG[priorityOf(task)].color} />
             </PriorityCell>
-            <ListText className="flex-1">{task.title}</ListText>
+            <ListText className="min-w-0 flex-1">{task.title}</ListText>
             {aiExecution ? (
               <AiExecutionBadge execution={aiExecution} size="xs" variant="compact" />
             ) : null}
@@ -313,12 +316,12 @@ export function TaskSimpleList({
                 {shownTags.map(({ tag }) => (
                   <ListChip key={tag.id} color={tag.color}>{tag.name}</ListChip>
                 ))}
-                {extraTags > 0 ? <ListChip className="opacity-80">+{extraTags}</ListChip> : null}
+                {extraTags > 0 ? <ListChip className="opacity-80 text-muted-foreground">+{extraTags}</ListChip> : null}
               </div>
             ) : null}
             {task.milestone?.name && density !== 'dense' ? (
               <MilestoneCell task={task}>
-                <ListChip >{task.milestone.name}</ListChip>
+                <ListChip className="border border-border bg-muted/40 text-muted-foreground">{task.milestone.name}</ListChip>
               </MilestoneCell>
             ) : (
               <span className="w-0" />

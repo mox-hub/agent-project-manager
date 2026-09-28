@@ -2,7 +2,6 @@
  * 运行事件流 —— 相对时间戳 + 类型图标 + 内容（文本走 Markdown）+ 右侧耗时，
  * 顶部搜索框 + 类型过滤 chips；条目可点选，选中后由外层渲染右侧详情面板。
  */
-import { Button } from '@/components/ui/button';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -29,8 +28,6 @@ import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MarkdownView } from '@/shared/components/markdown-view';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { RUN_EVENT_KIND_TONE } from '@/shared/status/status-visuals';
 import {
   formatDurationMs,
   formatOffset,
@@ -63,9 +60,20 @@ const KIND_ICON: Record<RunEventKind, LucideIcon> = {
   status: Activity,
 };
 
-/** 事件形态 → 图标底框浅底（tone 唯一链路；形态分类键登记于 status-visuals） */
-const kindIconClass = (kind: RunEventKind): string =>
-  TONE_CLASS[RUN_EVENT_KIND_TONE[kind] ?? 'default'].light;
+const KIND_ICON_CLASS: Record<RunEventKind, string> = {
+  user: 'bg-accent-purple-light text-accent-purple',
+  prompt: 'bg-accent-purple-light text-accent-purple',
+  context: 'bg-accent-blue-light text-accent-blue',
+  assistant: 'bg-accent-green-light text-accent-green',
+  thinking: 'bg-accent-blue-light text-accent-blue',
+  tool: 'bg-accent-blue-light text-accent-blue',
+  file: 'bg-accent-green-light text-accent-green',
+  usage: 'bg-accent-orange-light text-accent-orange',
+  result: 'bg-muted/60 text-content-text-secondary',
+  error: 'bg-accent-red-light text-accent-red',
+  approval: 'bg-accent-yellow-light text-accent-yellow',
+  status: 'bg-muted/60 text-content-text-secondary',
+};
 
 /** 过滤 chips 文案键：status/assistant/user 归为「状态」不单列 */
 const KIND_FILTER_KEYS: Partial<Record<RunEventKind, string>> = {
@@ -92,7 +100,7 @@ function EntryIcon({ entry }: { entry: RunEventEntry }) {
     <span
       className={cn(
         'flex size-6 shrink-0 items-center justify-center rounded-lg',
-        kindIconClass(entry.kind),
+        KIND_ICON_CLASS[entry.kind],
       )}
     >
       <Glyph icon={icon} />
@@ -183,11 +191,11 @@ export function RunEventList({
       <div className="flex shrink-0 flex-wrap items-center gap-2 px-4 py-2.5">
         <div className="relative w-64 max-w-full">
           <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-content-text-muted" />
-          <Input fontSize="xs"
+          <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('runDetails.searchPlaceholder')}
-            
+            className="pl-8 text-xs"
           />
         </div>
         <span className="shrink-0 whitespace-nowrap text-2xs text-content-text-muted">
@@ -198,14 +206,14 @@ export function RunEventList({
             {kindCounts.map(({ kind, count }) => {
               const active = kindFilter === kind;
               return (
-                <Button variant="ghost"
+                <button
                   key={kind}
                   type="button"
                   onClick={() => setKindFilter(active ? null : kind)}
                   className={cn(
                     'flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs transition-colors',
                     active
-                      ? cn('font-medium', kindIconClass(kind))
+                      ? cn('font-medium', KIND_ICON_CLASS[kind])
                       : 'text-content-text-muted hover:bg-muted/60 hover:text-content-text-secondary',
                   )}
                 >
@@ -213,7 +221,7 @@ export function RunEventList({
                     ? t(KIND_FILTER_KEYS[kind] as string)
                     : t(`runDetails.event.${kind}`)}
                   <span className="font-mono">{count}</span>
-                </Button>
+                </button>
               );
             })}
           </div>
@@ -221,9 +229,9 @@ export function RunEventList({
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden px-2 pb-2">
-        <ScrollArea >
+        <ScrollArea className="h-full w-full">
           {filtered.length === 0 ? (
-            <EmptyState title={t('runDetails.empty')} minHeight="sm" />
+            <EmptyState title={t('runDetails.empty')} className="min-h-20" />
           ) : (
             <ul className="divide-y divide-border/60">
               {filtered.map((entry) => {

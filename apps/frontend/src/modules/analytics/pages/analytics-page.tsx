@@ -66,8 +66,8 @@ function StatCard({ label, value, sub, icon: Icon, color = 'text-foreground', tr
   const TrendIcon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : Minus;
   const trendColor = trend === 'up' ? 'text-destructive' : trend === 'down' ? 'text-accent-green' : 'text-muted-foreground';
   return (
-    <Card >
-      <CardContent >
+    <Card className="py-0">
+      <CardContent className="p-3.5">
         <div className="flex items-center justify-between mb-1">
           <p className="text-xs text-muted-foreground">{label}</p>
           <Icon className={cn('size-4', color)} />
@@ -103,7 +103,7 @@ function OverviewTab() {
   if (isError || !data) {
     return (
       <div className="mx-auto flex min-h-[40vh] w-full max-w-md flex-col items-center justify-center p-8 text-center">
-        <Alert variant="destructive" >
+        <Alert variant="destructive" className="w-full text-left">
           <AlertTriangleIcon className="size-4" />
           <AlertTitle>加载失败</AlertTitle>
           <AlertDescription>无法加载分析数据，请稍后重试。</AlertDescription>
@@ -140,17 +140,17 @@ function ProfileHealthCard() {
   const withData = items.filter((i) => i.filled > 0);
   return (
     <Card>
-      <CardHeader >
-        <CardTitle size="sm" fontWeight="medium">项目档案健康</CardTitle>
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-sm font-medium">项目档案健康</CardTitle>
       </CardHeader>
-      <CardContent >
+      <CardContent className="px-4 pb-4 space-y-2.5">
         {isLoading ? (
           <p className="text-xs text-muted-foreground">加载中…</p>
         ) : withData.length === 0 ? (
           <EmptyState
             title="暂无档案数据"
             description="在项目「档案」页触发考古或手动填充后这里会亮起来。"
-            minHeight="sm"
+            className="min-h-20"
           />
         ) : (
           withData.slice(0, 6).map((item) => <ProfileHealthRow key={item.projectId} item={item} />)
@@ -186,19 +186,19 @@ function PlaybookHealthCard() {
   const stages = data?.stages ?? [];
   return (
     <Card>
-      <CardHeader >
-        <CardTitle size="sm" fontWeight="medium">
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-sm font-medium">
           项目步骤健康{data && data.mountedProjects > 0 ? ` · ${data.mountedProjects} 个项目挂载` : ''}
         </CardTitle>
       </CardHeader>
-      <CardContent >
+      <CardContent className="px-4 pb-4">
         {isLoading ? (
           <p className="text-xs text-muted-foreground">加载中…</p>
         ) : stages.length === 0 ? (
           <EmptyState
             title="暂无项目步骤运行数据"
             description="项目「流程」页挂载项目步骤并跑一个阶段后，这里会出现跳过率与退回率。"
-            minHeight="sm"
+            className="min-h-20"
           />
         ) : (
           <Table>
@@ -214,7 +214,7 @@ function PlaybookHealthCard() {
             <TableBody>
               {stages.slice(0, 8).map((s) => (
                 <TableRow key={s.stage}>
-                  <TableCell >{s.stage}</TableCell>
+                  <TableCell className="font-medium">{s.stage}</TableCell>
                   <TableCell>{s.completed}</TableCell>
                   <TableCell className={s.skipRatePct >= 50 ? 'text-accent-yellow' : ''}>{s.skipRatePct}%</TableCell>
                   <TableCell className={s.rejectRatePct >= 50 ? 'text-accent-red' : ''}>{s.rejectRatePct}%</TableCell>
@@ -287,7 +287,7 @@ function CostTab() {
       <SelectField
         value={range}
         onChange={(e) => setRange(e.target.value as AiUsageRange)}
-        
+        className="w-36 text-xs"
         aria-label={t('analytics.cost.range')}
       >
         {AI_USAGE_RANGE_OPTIONS.map((option) => (
@@ -324,7 +324,7 @@ function CostTab() {
         <EmptyState
           title={t('analytics.cost.emptyTitle')}
           description={t('analytics.cost.emptyHint')}
-          
+          className="min-h-60"
         />
       </div>
     );
@@ -387,13 +387,13 @@ function CostTab() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader >
-            <CardTitle size="sm" fontWeight="medium">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-sm font-medium">
               {t(isMonthly ? 'analytics.cost.monthlyCost' : 'analytics.cost.dailyCost')}
             </CardTitle>
           </CardHeader>
-          <CardContent >
-            <ChartContainer config={barConfig} >
+          <CardContent className="px-2 pb-2">
+            <ChartContainer config={barConfig} className="h-40 w-full">
               <BarChart data={costBars}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="label" tickLine={false} axisLine={false} />
@@ -413,15 +413,15 @@ function CostTab() {
         </Card>
 
         <Card>
-          <CardHeader >
-            <CardTitle size="sm" fontWeight="medium" className="flex items-center justify-between">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="flex items-center justify-between text-sm font-medium">
               {t('analytics.cost.heatmap')}
               <span className="text-xs font-normal text-muted-foreground">
                 {t('analytics.cost.heatmapRange')}
               </span>
             </CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent className="px-4 pb-4">
             <ActivityHeatmap
               data={heatmapData}
               days={365}
@@ -433,17 +433,17 @@ function CostTab() {
       </div>
 
       <Card>
-        <CardHeader >
-          <CardTitle size="sm" fontWeight="medium">{t('analytics.cost.byModel')}</CardTitle>
+        <CardHeader className="pb-2 pt-4 px-4">
+          <CardTitle className="text-sm font-medium">{t('analytics.cost.byModel')}</CardTitle>
         </CardHeader>
-        <CardContent >
-          <Table >
-            <TableHeader fontSize="xs" variant="muted">
+        <CardContent className="px-4 pb-4">
+          <Table className="w-full text-sm">
+            <TableHeader className="text-xs text-muted-foreground">
               <TableRow>
-                <TableHead padding="p-2">{t('analytics.cost.model')}</TableHead>
-                <TableHead width="w-32" padding="p-2" align="right" >{t('analytics.cost.tokens')}</TableHead>
-                <TableHead width="w-28" padding="p-2" align="right" >{t('analytics.cost.cost')}</TableHead>
-                <TableHead width="w-40" padding="p-2" align="right" >{t('analytics.cost.share')}</TableHead>
+                <TableHead className="p-2 text-left">{t('analytics.cost.model')}</TableHead>
+                <TableHead className="w-32 p-2 text-right">{t('analytics.cost.tokens')}</TableHead>
+                <TableHead className="w-28 p-2 text-right">{t('analytics.cost.cost')}</TableHead>
+                <TableHead className="w-40 p-2 text-right">{t('analytics.cost.share')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -453,12 +453,12 @@ function CostTab() {
                   : 0;
                 return (
                   <TableRow key={row.modelName}>
-                    <TableCell >{row.modelName}</TableCell>
-                    <TableCell align="right" className="tabular-nums">{row.totalTokens.toLocaleString()}</TableCell>
-                    <TableCell align="right" className="tabular-nums">{formatCost(row.totalCost ?? 0)}</TableCell>
-                    <TableCell>
+                    <TableCell className="p-2 font-medium">{row.modelName}</TableCell>
+                    <TableCell className="p-2 text-right tabular-nums">{row.totalTokens.toLocaleString()}</TableCell>
+                    <TableCell className="p-2 text-right tabular-nums">{formatCost(row.totalCost ?? 0)}</TableCell>
+                    <TableCell className="p-2">
                       <div className="flex items-center justify-end gap-2">
-                        <Progress value={sharePct}  />
+                        <Progress value={sharePct} className="h-1.5 w-24" />
                         <span className="w-8 text-right text-xs text-muted-foreground tabular-nums">{sharePct}%</span>
                       </div>
                     </TableCell>
@@ -502,10 +502,10 @@ function QualityTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
-          <CardHeader >
-            <CardTitle size="sm" fontWeight="medium">{t('analytics.quality.trendTitle', '代码变更质量趋势')}</CardTitle>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-sm font-medium">{t('analytics.quality.trendTitle', '代码变更质量趋势')}</CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent className="px-2 pb-3">
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={ov?.qualityTrend ?? []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -522,10 +522,10 @@ function QualityTab() {
         </Card>
 
         <Card>
-          <CardHeader >
-            <CardTitle size="sm" fontWeight="medium">{t('analytics.quality.byProjectTitle', '各项目质量分')}</CardTitle>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-sm font-medium">{t('analytics.quality.byProjectTitle', '各项目质量分')}</CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent className="px-4 pb-4 space-y-3">
             {(ov?.qualityByProject ?? []).map(p => (
               <div key={p.name} className="space-y-1">
                 <div className="flex items-center justify-between">
@@ -536,8 +536,8 @@ function QualityTab() {
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <Progress value={p.score} className="flex-1" />
-                  <Progress value={p.testCoverage} className="opacity-50" />
+                  <Progress value={p.score} className="flex-1 h-1.5" />
+                  <Progress value={p.testCoverage} className="w-16 h-1.5 opacity-50" />
                 </div>
               </div>
             ))}
@@ -573,13 +573,13 @@ function RiskTab() {
       </div>
 
       <Card>
-        <CardHeader >
-          <CardTitle size="sm" fontWeight="medium" className="flex items-center">
+        <CardHeader className="pb-2 pt-4 px-4">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-destructive" />
             Risk Scorecard
           </CardTitle>
         </CardHeader>
-        <CardContent >
+        <CardContent className="px-4 pb-4 space-y-2">
           {(ov?.riskItems ?? []).map(item => {
             const typeCfg = RISK_TYPE_CFG[item.type];
             const TrendIcon = item.trend === 'up' ? ArrowUp : item.trend === 'down' ? ArrowDown : Minus;
@@ -602,7 +602,7 @@ function RiskTab() {
                 <div className="flex items-center gap-2 shrink-0">
                   <TrendIcon className={cn('w-3.5 h-3.5', trendColor)} />
                   <div className="w-24">
-                    <Progress value={item.risk}  />
+                    <Progress value={item.risk} className="h-1.5" />
                   </div>
                   <span className={cn('text-sm font-semibold w-8 text-right', riskColor)}>{item.risk}</span>
                 </div>
@@ -632,10 +632,10 @@ function TeamActivityTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
-          <CardHeader >
-            <CardTitle size="sm" fontWeight="medium">{t('analytics.team.activityByMember', '成员 AI 活跃度（今日）')}</CardTitle>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-sm font-medium">{t('analytics.team.activityByMember', '成员 AI 活跃度（今日）')}</CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent className="px-2 pb-3">
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={ov?.activityTimeline ?? []} layout="horizontal">
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -654,10 +654,10 @@ function TeamActivityTab() {
         </Card>
 
         <Card>
-          <CardHeader >
-            <CardTitle size="sm" fontWeight="medium">{t('analytics.team.usageBreakdown', '成员 AI 用量拆解')}</CardTitle>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-sm font-medium">{t('analytics.team.usageBreakdown', '成员 AI 用量拆解')}</CardTitle>
           </CardHeader>
-          <CardContent >
+          <CardContent className="px-4 pb-4 space-y-3">
             {(ov?.memberActivity ?? []).map(m => (
               <div key={m.name} className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-3xs font-semibold shrink-0" style={{ backgroundColor: m.color }}>
@@ -670,7 +670,7 @@ function TeamActivityTab() {
                       {m.executions} {t('analytics.team.unitRuns', '次执行')} · {m.aiHoursUsed}h · {m.acceptancesOwned} {t('analytics.team.unitAcceptances', '个验收')}
                     </span>
                   </div>
-                  <Progress value={(m.aiHoursUsed / 12) * 100}  />
+                  <Progress value={(m.aiHoursUsed / 12) * 100} className="h-1" />
                 </div>
               </div>
             ))}
@@ -797,7 +797,7 @@ export function AnalyticsPage() {
       />
 
       <div className="flex w-full min-w-0 flex-1 flex-col overflow-y-auto px-6 py-4 sm:px-8 sm:py-5 lg:px-10 space-y-4">
-        <Tabs value={activeTab} onValueChange={(val) => changeTab(val as AnalyticsTab)} >
+        <Tabs value={activeTab} onValueChange={(val) => changeTab(val as AnalyticsTab)} className="w-full">
           {availableTabs.map((def) => {
             const Content = ANALYTICS_TAB_CONTENT[def.value];
             return (

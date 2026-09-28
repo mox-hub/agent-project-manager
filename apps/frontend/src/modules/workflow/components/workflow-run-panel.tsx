@@ -117,7 +117,7 @@ export function WorkflowRunPanel({
   const cancel = useCancelWorkflow();
   const [note, setNote] = useState('');
 
-  if (isLoading || !run) return <Skeleton  />;
+  if (isLoading || !run) return <Skeleton className="h-64 rounded-lg" />;
 
   const isV2Run = run.engineVersion === 2;
   const meta = RUN_KIND_META[run.status] ?? RUN_KIND_META.running;
@@ -157,7 +157,7 @@ export function WorkflowRunPanel({
           <code className="text-3xs">{run.id.slice(0, 12)}…</code>
         </StatusPill>
         {isV2Run ? (
-          <Badge variant="secondary" fontSize="3xs" className="shrink-0">
+          <Badge variant="secondary" className="shrink-0 text-3xs">
             {t('workflow.engineV2')}
           </Badge>
         ) : null}
@@ -174,7 +174,7 @@ export function WorkflowRunPanel({
           <Button
             size="sm"
             variant="outline"
-            fontSize="xs" className="shrink-0"
+            className="h-7 shrink-0 text-xs text-destructive"
             disabled={cancel.isPending}
             onClick={() => cancel.mutate(runId)}
             data-ai-component="workflow.run.cancel"
@@ -186,7 +186,7 @@ export function WorkflowRunPanel({
         <Button
           size="icon"
           variant="ghost"
-          className="shrink-0"
+          className="size-7 shrink-0 text-muted-foreground"
           onClick={onClose}
           aria-label={t('workflow.runPanel.close')}
           data-ai-component="workflow.run.close"
@@ -203,17 +203,17 @@ export function WorkflowRunPanel({
             {waiting.title || t('workflow.waitingApproval')}
           </div>
           <p className="whitespace-pre-wrap text-xs leading-relaxed">{waiting.message}</p>
-          <Input fontSize="xs" size="h-7"
+          <Input
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder={t('workflow.notePlaceholder')}
-            
+            className="h-7 text-xs"
           />
           <div className="flex justify-end gap-1.5">
             <Button
               size="sm"
               variant="outline"
-              fontSize="xs" 
+              className="h-7 text-xs"
               disabled={resume.isPending}
               onClick={() =>
                 resume.mutate(
@@ -232,7 +232,7 @@ export function WorkflowRunPanel({
             </Button>
             <Button
               size="sm"
-              fontSize="xs" 
+              className="h-7 text-xs"
               disabled={resume.isPending}
               onClick={() =>
                 resume.mutate(

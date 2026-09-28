@@ -77,7 +77,7 @@ export function BootPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setDrawerOpen(true)}
-                
+                className="text-destructive"
               >
                 <FileWarning className="mr-1 h-4 w-4" />
                 {t('boot.viewLogs', { count: state.errors.length })}
@@ -123,7 +123,7 @@ export function BootPage() {
             <Button
               variant="outline"
               onClick={handleRetryFailed}
-              
+              className="text-destructive"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               {t('boot.retryFailed', { count: failedCount })}

@@ -5,7 +5,6 @@
  * 在工单创建期即可定义可验证的验收条件，支持手写与 AI 智能生成，
  * 提交时存入 Issue 的 todoItems 数组，实现创建到验收的闭环。
  */
-import { Input } from '@/components/ui/input';
 import * as React from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -143,7 +142,7 @@ export function AcceptanceCriteriaField({
             size="xs"
             onClick={handleAiGenerate}
             disabled={isGenerating}
-            fontSize="2xs" 
+            className="h-6 gap-1 px-2 text-2xs text-accent-purple hover:bg-accent-purple/10 hover:text-accent-purple"
           >
             <Sparkles className="size-3" />
             <span>{t('unifiedCreate.aiGenerateCriteria')}</span>
@@ -153,7 +152,7 @@ export function AcceptanceCriteriaField({
             variant="ghost"
             size="xs"
             onClick={handleAdd}
-            fontSize="2xs" 
+            className="h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
           >
             <Plus className="size-3" />
             <span>{t('unifiedCreate.addCriterion')}</span>
@@ -185,13 +184,13 @@ export function AcceptanceCriteriaField({
               key={item.id}
               className="group flex items-center gap-2 rounded-md border border-border/40 bg-card/60 px-2.5 py-1.5 transition-colors focus-within:border-primary/50 focus-within:bg-card"
             >
-              <Input
+              <input
                 type="checkbox"
                 checked={item.completed}
                 onChange={() => handleToggle(item.id)}
-                className="accent-primary cursor-pointer"
+                className="size-3.5 rounded-xs accent-primary cursor-pointer"
               />
-              <Input
+              <input
                 type="text"
                 value={item.text}
                 onChange={(e) => handleUpdate(item.id, e.target.value)}
@@ -203,14 +202,14 @@ export function AcceptanceCriteriaField({
                   item.completed && 'line-through text-muted-foreground',
                 )}
               />
-              <Button variant="ghost"
+              <button
                 type="button"
                 onClick={() => handleRemove(item.id)}
-                className="opacity-0 group-hover:opacity-100 inline-flex items-center justify-center transition-all"
+                className="opacity-0 group-hover:opacity-100 size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
                 title="删除要点"
               >
                 <Trash2 className="size-3" />
-              </Button>
+              </button>
             </div>
           ))}
         </div>

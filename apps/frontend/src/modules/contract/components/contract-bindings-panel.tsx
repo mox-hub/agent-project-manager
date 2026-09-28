@@ -11,8 +11,6 @@ import {
 } from '@/components/ui/select-field';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { CONTRACT_SYNC_MODE_TONE } from '@/shared/status/status-visuals';
 import type {
   ContractAlignmentReport,
   ContractBinding,
@@ -29,6 +27,13 @@ import {
 /** 可种生的标准契约文件类型（其余类型随四期扩展） */
 const SEEDABLE_FILE_TYPES = ['agents', 'claude_alias', 'changelog'] as const;
 const SYNC_MODES = ['managed', 'synced', 'detached'] as const;
+
+const syncModeTone: Record<string, string> = {
+  managed: 'text-accent-blue',
+  synced: 'text-accent-green',
+  // 原为 text-content-muted（幽灵类：@theme 里真实 token 是 --color-content-text-muted，不生成 CSS）
+  detached: 'text-content-text-muted',
+};
 
 export interface ContractBindingsPanelProps {
   projectId: string;
@@ -166,15 +171,12 @@ export function ContractBindingsPanel({
                     <span>{t(`contract.fileType.${binding.fileType}`)}</span>
                     <Badge
                       variant="outline"
-                      className={cn(
-                        'text-3xs',
-                        TONE_CLASS[CONTRACT_SYNC_MODE_TONE[binding.syncMode] ?? 'default'].text,
-                      )}
+                      className={cn('text-3xs', syncModeTone[binding.syncMode])}
                     >
                       {t(`contract.syncMode.${binding.syncMode}`)}
                     </Badge>
                     {conflicted && (
-                      <Badge variant="destructive" fontSize="3xs">
+                      <Badge variant="destructive" className="text-3xs">
                         {t('contract.state.conflicted')}
                       </Badge>
                     )}
@@ -235,7 +237,7 @@ export function ContractBindingsPanel({
                         syncMode: event.target.value,
                       })
                     }
-                    
+                    className="h-7 w-24 text-xs"
                     data-ai-action={`contract.bindings-panel.sync-mode.${binding.fileType}.change`}
                     data-ai-role="select"
                   >
@@ -260,7 +262,7 @@ export function ContractBindingsPanel({
               <span className="font-mono">{file.path}</span>
               <Badge
                 variant={file.action === 'created' || file.action === 'updated' ? 'secondary' : 'outline'}
-                fontSize="3xs"
+                className="text-3xs"
               >
                 {t(`contract.seedAction.${file.action}`)}
               </Badge>
@@ -277,7 +279,7 @@ export function ContractBindingsPanel({
               <span>{t(`contract.fileType.${report.fileType}`)}</span>
               <Badge
                 variant={report.state === 'aligned' ? 'secondary' : report.state === 'conflicted' ? 'destructive' : 'outline'}
-                fontSize="3xs"
+                className="text-3xs"
               >
                 {t(`contract.checkState.${report.state}`)}
               </Badge>

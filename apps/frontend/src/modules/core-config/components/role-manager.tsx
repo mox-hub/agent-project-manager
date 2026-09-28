@@ -145,6 +145,7 @@ export function RoleManager() {
       variant="standard"
       contentClassName="gap-4"
       aiPage="settings.roles"
+      className="bg-background text-foreground"
       title={t('settings.roles')}
       icon={CircleUser}
       iconColor="text-accent-purple"
@@ -204,25 +205,25 @@ export function RoleManager() {
               <DataTableShell>
                 <Table>
                   <TableHeader>
-                    <TableRow >
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
                       <TableHead>{t('settings.roleName')}</TableHead>
                       <TableHead>Key</TableHead>
                       <TableHead>{t('settings.roleScope')}</TableHead>
-                      <TableHead width="w-20" >{t('settings.globalAccess')}</TableHead>
-                      <TableHead width="w-20" >{t('common.actions')}</TableHead>
+                      <TableHead className="w-20">{t('settings.globalAccess')}</TableHead>
+                      <TableHead className="w-20 text-right">{t('common.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {displayRoles.map((role) => (
                       <TableRow key={role.id}>
-                        <TableCell density="dense" >{role.name}</TableCell>
-                        <TableCell fontSize="xs" density="dense" >
+                        <TableCell className="py-1.5 font-medium text-foreground">{role.name}</TableCell>
+                        <TableCell className="py-1.5 font-mono text-xs text-muted-foreground">
                           {role.key}
                         </TableCell>
-                        <TableCell density="dense" className="truncate">
+                        <TableCell className="max-w-60 truncate py-1.5 text-muted-foreground">
                           {role.description || '—'}
                         </TableCell>
-                        <TableCell density="dense" >
+                        <TableCell className="py-1.5">
                           {!role.projectId ? (
                             <span
                               className="inline-flex items-center text-accent-green"
@@ -239,7 +240,7 @@ export function RoleManager() {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell density="dense" >
+                        <TableCell className="py-1.5 text-right">
                           <div className="flex items-center justify-end gap-0.5">
                             <Button
                               type="button"
@@ -258,7 +259,7 @@ export function RoleManager() {
                               aria-label={t('common.delete')}
                               title={t('common.delete')}
                               disabled={deleteRole.isPending}
-                              
+                              className="text-destructive hover:text-destructive"
                               onClick={() => handleDelete(role)}
                             >
                               <Trash2 />

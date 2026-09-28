@@ -50,7 +50,6 @@ import {
   ViewDisplayPopover,
   type ViewDisplayPopoverProps,
 } from "./view-display-popover";
-import { RawButton } from './raw-button'
 
 /* ────────────────────────────── 类型 ────────────────────────────── */
 
@@ -393,7 +392,7 @@ function ToolbarMenuItems({ items, close }: { items: ToolbarMenuItem[]; close: (
         const Icon = item.icon;
         const isCheckbox = item.type === "checkbox";
         return (
-          <RawButton
+          <button
             key={key}
             type="button"
             disabled={item.disabled}
@@ -417,7 +416,7 @@ function ToolbarMenuItems({ items, close }: { items: ToolbarMenuItem[]; close: (
               <Icon className="mr-2 size-4 shrink-0" strokeWidth={1.75} />
             ) : null}
             <span className="truncate">{item.label}</span>
-          </RawButton>
+          </button>
         );
       })}
     </div>
@@ -558,7 +557,7 @@ function ViewEditorPanel({
       {submitText === "Create" ? (
         <div className="flex flex-wrap gap-1">
           {PRESET_VIEW_NAMES.map((preset) => (
-            <RawButton
+            <button
               key={preset.label}
               type="button"
               onClick={() => {
@@ -568,7 +567,7 @@ function ViewEditorPanel({
               className="rounded-md border border-border bg-muted/30 px-1.5 py-0.5 text-2xs text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {preset.label}
-            </RawButton>
+            </button>
           ))}
         </div>
       ) : null}
@@ -576,7 +575,7 @@ function ViewEditorPanel({
       <div className="text-2xs text-muted-foreground">选择代表图标</div>
       <div className="grid grid-cols-6 gap-1.5 max-h-36 overflow-y-auto pr-1">
         {Object.entries(TOOLBAR_VIEW_ICONS).map(([key, Icon]) => (
-          <RawButton
+          <button
             key={key}
             type="button"
             onClick={() => setIcon(key)}
@@ -589,25 +588,25 @@ function ViewEditorPanel({
             )}
           >
             <Icon className="size-4" strokeWidth={1.75} />
-          </RawButton>
+          </button>
         ))}
       </div>
 
       <div className="flex items-center gap-2 pt-1">
-        <RawButton
+        <button
           type="submit"
           className="inline-flex h-8 flex-1 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
         >
           {submitText}
-        </RawButton>
+        </button>
         {onDelete && !builtIn ? (
-          <RawButton
+          <button
             type="button"
             onClick={onDelete}
             className="inline-flex h-8 items-center justify-center rounded-md border border-border px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
             删除
-          </RawButton>
+          </button>
         ) : null}
       </div>
     </form>
@@ -672,7 +671,7 @@ function ViewPill({
   return (
     <div className="relative inline-flex shrink-0">
       <ContextMenu items={contextMenuItems}>
-        <RawButton
+        <button
           ref={anchorRef}
           type="button"
           onClick={() => onSelect(view.id)}
@@ -693,7 +692,7 @@ function ViewPill({
               className="size-1.5 rounded-full bg-accent-yellow ring-1 ring-accent-yellow/40"
             />
           ) : null}
-        </RawButton>
+        </button>
       </ContextMenu>
 
       <AnchoredMenu open={editing} onClose={() => setEditing(false)} anchor={anchorRef}>
@@ -723,7 +722,7 @@ function AddViewButton({ onCreate }: { onCreate: (name: string, icon?: string) =
 
   return (
     <>
-      <RawButton
+      <button
         ref={anchorRef}
         type="button"
         onClick={() => setOpen(true)}
@@ -732,7 +731,7 @@ function AddViewButton({ onCreate }: { onCreate: (name: string, icon?: string) =
         className="flex h-7 shrink-0 items-center justify-center rounded-full border border-dashed border-border/70 px-2 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
       >
         <Plus className="size-3.5" strokeWidth={2} aria-hidden />
-      </RawButton>
+      </button>
       <AnchoredMenu open={open} onClose={() => setOpen(false)} anchor={anchorRef}>
         <ViewEditorPanel
           submitText="Create"
@@ -788,7 +787,7 @@ function ViewStyleDropdown({
                 ? t(`viewDisplay.views.${option.value}`, option.label)
                 : option.label;
             return (
-              <RawButton
+              <button
                 key={option.value}
                 type="button"
                 onClick={() => {
@@ -802,7 +801,7 @@ function ViewStyleDropdown({
                 {option.value === current.value ? (
                   <Check className="ml-2 size-3.5 shrink-0 text-primary" strokeWidth={2.5} />
                 ) : null}
-              </RawButton>
+              </button>
             );
           })}
         </div>

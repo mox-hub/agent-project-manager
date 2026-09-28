@@ -5,7 +5,6 @@
  * 收敛出结构化需求摘要 → 用户确认后回调 onConfirm 交给宿主创建项目。
  * 会话态全在本地 useState（无服务端会话）；任何时刻可降级 onFallback 改手动。
  */
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { ArrowRight, CircleAlert, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -102,22 +101,23 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
           </span>
         </div>
         <div className="space-y-3 rounded-lg border border-border bg-content-bg-secondary/30 p-3">
-          <FieldLabel size="xs" variant="muted" className="block">
+          <label className="block space-y-1.5">
             <span className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground">项目名</span>
             <Input
               value={summary.name}
               onChange={(e) => setSummary({ ...summary, name: e.target.value })}
-              
+              className="font-medium"
             />
-          </FieldLabel>
-          <FieldLabel size="xs" variant="muted" className="block">
+          </label>
+          <label className="block space-y-1.5">
             <span className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground">一句话介绍</span>
-            <Textarea               rows={2}
+            <Textarea
+              rows={2}
               value={summary.description}
               onChange={(e) => setSummary({ ...summary, description: e.target.value })}
-              className="resize-none"
+              className="resize-none text-xs"
             />
-          </FieldLabel>
+          </label>
           <SummaryList
             title="这一期做什么"
             items={summary.scope}
@@ -135,12 +135,12 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm"  disabled={!canCreate || confirmPending} onClick={() => onConfirm(summary)}>
-            {confirmPending ? <Spinner color="inherit" size="xs"  /> : <ArrowRight size={14} />}
+          <Button size="sm" className="gap-1.5" disabled={!canCreate || confirmPending} onClick={() => onConfirm(summary)}>
+            {confirmPending ? <Spinner className="size-3.5 text-inherit" /> : <ArrowRight size={14} />}
             创建项目
           </Button>
           <Button variant="ghost" size="sm" onClick={restart}>重新拷问</Button>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={onFallback}>
+          <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground" onClick={onFallback}>
             改用手动填写
           </Button>
         </div>
@@ -167,7 +167,7 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
 
           {grill.isPending ? (
             <p className="flex items-center gap-2 pl-4 text-xs text-muted-foreground">
-              <Spinner size="xs"  /> 正在琢磨下一个问题…
+              <Spinner className="size-3.5" /> 正在琢磨下一个问题…
             </p>
           ) : null}
 
@@ -176,9 +176,9 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
               <CircleAlert size={13} className="mt-0.5 shrink-0" />
               <span>
                 {grill.error instanceof Error ? grill.error.message : '拷问中断了'}
-                <Button variant="ghost" type="button" className="ml-2 underline underline-offset-2" onClick={retry}>
+                <button type="button" className="ml-2 underline underline-offset-2" onClick={retry}>
                   重试
-                </Button>
+                </button>
               </span>
             </div>
           ) : null}
@@ -189,16 +189,16 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
               {currentChoices.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5 pl-4">
                   {currentChoices.map((choice) => (
-                    <Button variant="ghost"
+                    <button
                       key={choice.key}
                       type="button"
                       onClick={() => answer(choice.label, choice)}
                       title={choice.sub}
-                      className="transition-colors"
+                      className="h-7 rounded-full border border-border px-2.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
                     >
                       {choice.label}
                       {choice.guess ? <span className="ml-1 text-3xs text-muted-foreground">猜</span> : null}
-                    </Button>
+                    </button>
                   ))}
                 </div>
               ) : null}
@@ -217,7 +217,7 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
               placeholder="用自己的话回答，回车发送"
               autoFocus
             />
-            <Button size="sm" variant="outline" className="shrink-0" disabled={!freeText.trim() || grill.isPending} onClick={() => answer(freeText)}>
+            <Button size="sm" variant="outline" className="gap-1 shrink-0" disabled={!freeText.trim() || grill.isPending} onClick={() => answer(freeText)}>
               回答
             </Button>
           </div>
@@ -225,7 +225,7 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
 
         <div className="flex items-center">
           <span className="text-3xs text-muted-foreground">{turns.length} 问已答</span>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={onFallback}>
+          <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground" onClick={onFallback}>
             跳过，改用手动填写
           </Button>
         </div>
@@ -248,14 +248,14 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
         rows={6}
         autoFocus
         placeholder="例如：想给我们小组做一个记录会议决定的小工具，现在每次开完会都记不清谁答应了什么"
-        className="flex-1 resize-none outline-none"
+        className="flex-1 resize-none rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus-visible:ring-0 focus-visible:border-primary/50"
       />
       <div className="flex items-center">
-        <Button size="sm"  disabled={!draft.trim() || grill.isPending} onClick={start}>
+        <Button size="sm" className="gap-1.5" disabled={!draft.trim() || grill.isPending} onClick={start}>
           <Sparkles size={14} />
           开始拷问
         </Button>
-        <Button variant="ghost" size="sm" className="ml-auto" onClick={onFallback}>
+        <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground" onClick={onFallback}>
           改用手动填写
         </Button>
       </div>
@@ -291,14 +291,14 @@ function SummaryList({
         {items.map((item, i) => (
           <div key={i} className="group flex items-center gap-1.5">
             <span className="min-w-0 flex-1 truncate text-xs text-foreground">{item}</span>
-            <Button variant="ghost"
+            <button
               type="button"
               aria-label="移除"
-              className="opacity-0 transition-opacity group-hover:opacity-100"
+              className="text-3xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-red"
               onClick={() => onChange(items.filter((_, j) => j !== i))}
             >
               移除
-            </Button>
+            </button>
           </div>
         ))}
       </div>

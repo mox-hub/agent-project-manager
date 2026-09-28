@@ -217,7 +217,7 @@ export default function TeamsPage() {
             <EmptyState
               variant="page"
               visual={
-                <IconStack aria-hidden="true" >
+                <IconStack aria-hidden="true" className="text-accent-purple">
                   <Users className="size-4 text-accent-purple" />
                 </IconStack>
               }
@@ -242,7 +242,7 @@ export default function TeamsPage() {
                 <ListActionButton
                   onClick={() => handleBatchArchive(selected.filter((tm) => tm.status === 'active'), close)}
                   title={t('teams.archive', '归档')}
-                  
+                  className="text-accent-red"
                 >
                   {t('teams.archive', '归档')}
                 </ListActionButton>

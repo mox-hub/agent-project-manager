@@ -35,8 +35,8 @@ export function LinearIntegrationSection() {
   if (isLoading) {
     return (
       <PageShell>
-        <Skeleton  />
-        <Skeleton  />
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-32 w-full" />
       </PageShell>
     );
   }
@@ -137,10 +137,10 @@ export function LinearIntegrationSection() {
           <div className="rounded-lg border bg-card p-4">
             <h3 className="text-sm font-medium">{t('settings.integration.linearIntegration.quickActions')}</h3>
             <div className="mt-3 flex flex-col gap-2">
-              <Button width="full"
+              <Button
                 variant="secondary"
                 onClick={() => setPickerOpen(true)}
-                className="justify-start"
+                className="w-full justify-start"
               >
                 {t('settings.integration.linearIntegration.pullProject')}
               </Button>

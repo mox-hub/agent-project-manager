@@ -4,7 +4,6 @@
  * 决策建议内联 DecisionCard）——对齐成熟 agent 工具的工具块形态；
  * CLI 桥 running 占位渲染工作指示；流式增量由 useChat 实时聚合进 parts。
  */
-import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -36,7 +35,7 @@ function AssistantBubble({ message }: { message: AssistantChatMessage }) {
         data-ai-component="assistant.message-pending"
       >
         {working ? (
-          <Spinner size="sm" className="shrink-0" />
+          <Spinner size="sm" className="size-3.5 shrink-0 text-accent-purple" />
         ) : null}
         {working
           ? t('assistant.chat.working')
@@ -129,13 +128,13 @@ export function AssistantMessageList() {
         >
           <div className="max-w-4/5 rounded-lg border border-accent-red/30 bg-accent-red-light/60 px-3 py-2 text-xs text-accent-red">
             <p className="break-words">{error.message}</p>
-            <Button variant="ghost"
+            <button
               type="button"
               onClick={() => clearError()}
-              className="mt-1 underline-offset-2 hover:underline"
+              className="mt-1 text-2xs underline-offset-2 hover:underline"
             >
               {t('assistant.chat.dismissError')}
-            </Button>
+            </button>
           </div>
         </div>
       ) : null}

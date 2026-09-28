@@ -652,7 +652,7 @@ function ClarifyBody({
               ? 'border-accent-purple bg-accent-purple-light/50 ring-1 ring-accent-purple/50'
               : 'border-border hover:border-accent-purple/40 hover:bg-content-bg-secondary/60';
           return (
-            <Button variant="ghost"
+            <button
               key={key}
               disabled={busy}
               onClick={() => setSelected(key)}
@@ -678,12 +678,12 @@ function ClarifyBody({
                 ) : null}
               </div>
               {c.sub ? <p className="mt-0.5 text-content-text-secondary">{c.sub}</p> : null}
-            </Button>
+            </button>
           );
         })}
       </div>
-      <Button width="full"
-        
+      <Button
+        className="w-full"
         size="sm"
         disabled={selected === null || busy}
         onClick={() => onAction('accept', decision, { answer: selected ?? undefined })}
@@ -778,16 +778,16 @@ function GateBody({ decision }: { decision: Decision }) {
           </div>
         ) : (
           <div className="rounded-lg border border-border/60">
-            <Button variant="ghost"
+            <button
               type="button"
               onClick={toggleKnowledge}
-              className="flex items-center"
+              className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-2xs font-medium text-content-text-secondary hover:bg-content-bg-secondary/60"
               data-ai="gate-knowledge-toggle"
             >
               <Lightbulb className="size-3 shrink-0" />
               {t('decision.gate.knowledgeLayer')}
               <ChevronDown className={cn('ml-auto size-3 transition-transform', knowledgeOpen && 'rotate-180')} />
-            </Button>
+            </button>
             {knowledgeOpen ? (
               <div className="space-y-1.5 border-t border-border/60 px-2.5 py-2">
                 {knowledge.map((k) => (
@@ -796,28 +796,28 @@ function GateBody({ decision }: { decision: Decision }) {
                     <p className="text-2xs leading-relaxed text-content-text-secondary">{k.note}</p>
                   </div>
                 ))}
-                <Button variant="ghost"
+                <button
                   type="button"
                   onClick={suppressDomain}
-                  className="flex items-center"
+                  className="flex items-center gap-1 text-3xs text-content-text-muted hover:text-content-text"
                   data-ai="gate-knowledge-suppress"
                 >
                   <EyeOff className="size-3" />
                   {t('decision.gate.suppress')}
-                </Button>
+                </button>
               </div>
             ) : null}
           </div>
         )
       ) : knowledge.length > 0 && lvl === 'suppressed' ? (
-        <Button variant="ghost"
+        <button
           type="button"
           onClick={() => domain && void feedback(domain, 'reset')}
-          
+          className="text-3xs text-content-text-muted hover:text-content-text"
           data-ai="gate-knowledge-reset"
         >
           {t('decision.gate.suppressedHint')}
-        </Button>
+        </button>
       ) : null}
     </div>
   );

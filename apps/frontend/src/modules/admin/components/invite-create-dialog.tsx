@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -68,7 +67,7 @@ export function InviteCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent >
+      <DialogContent className="max-w-md">
         {created ? (
           <>
             <DialogHeader>
@@ -78,7 +77,7 @@ export function InviteCreateDialog({
               </DialogDescription>
             </DialogHeader>
             <div className="flex gap-2">
-              <Input fontSize="xs" fontVariant="mono" readOnly value={link}  onFocus={(e) => e.target.select()} />
+              <Input readOnly value={link} className="font-mono text-xs" onFocus={(e) => e.target.select()} />
               <Button
                 variant="outline"
                 className="shrink-0"
@@ -113,9 +112,9 @@ export function InviteCreateDialog({
             </DialogHeader>
             <div className="mt-4 space-y-4">
               <div className="space-y-1.5">
-                <FieldLabel size="xs" variant="muted" >
+                <label className="text-xs font-medium">
                   {t('admin.inviteEmailOptional', '限定邮箱（可选）')}
-                </FieldLabel>
+                </label>
                 <Input
                   type="email"
                   value={email}
@@ -127,7 +126,7 @@ export function InviteCreateDialog({
                 </p>
               </div>
               <div className="space-y-1.5">
-                <FieldLabel size="xs" variant="muted" >{t('admin.inviteExpiry', '有效期')}</FieldLabel>
+                <label className="text-xs font-medium">{t('admin.inviteExpiry', '有效期')}</label>
                 <SelectField
                   value={expiresInDays}
                   onChange={(e) => setExpiresInDays(e.target.value)}

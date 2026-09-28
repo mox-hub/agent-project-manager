@@ -1,5 +1,3 @@
-import { Input } from '@/components/ui/input';
-import { FieldLabel } from '@/components/ui/field';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -109,30 +107,30 @@ export function DocumentNewPage() {
   };
 
   return (
-    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.documentEdit}>
+    <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.documentEdit}>
       <div className="flex h-full flex-col border-t border-border bg-background">
         <header className="shrink-0 border-b border-border px-6 py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <Button variant="ghost"
+              <button
                 type="button"
-                className="inline-flex items-center justify-center"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted"
                 onClick={() => navigate('/app/documents')}
               >
                 <ArrowLeft size={18} />
-              </Button>
-              <Input
+              </button>
+              <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="输入文档标题..."
-                className="flex-1 outline-hidden"
+                className="min-w-0 flex-1 bg-transparent text-2xl font-semibold text-foreground outline-hidden placeholder:text-muted-foreground"
               />
             </div>
 
             <div className="flex items-center gap-2">
               <div className="flex items-center rounded-lg border border-border p-1">
-                <Button variant="ghost"
+                <button
                   type="button"
                   className={cn(
                     'inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm',
@@ -141,8 +139,8 @@ export function DocumentNewPage() {
                   onClick={() => setEditorMode('edit')}
                 >
                   <Code size={14} /> 编辑
-                </Button>
-                <Button variant="ghost"
+                </button>
+                <button
                   type="button"
                   className={cn(
                     'inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm',
@@ -151,8 +149,8 @@ export function DocumentNewPage() {
                   onClick={() => setEditorMode('split')}
                 >
                   <FileText size={14} /> 分屏
-                </Button>
-                <Button variant="ghost"
+                </button>
+                <button
                   type="button"
                   className={cn(
                     'inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm',
@@ -161,17 +159,19 @@ export function DocumentNewPage() {
                   onClick={() => setEditorMode('preview')}
                 >
                   <Eye size={14} /> 预览
-                </Button>
+                </button>
               </div>
 
               <Button
                 variant="outline"
-                size="sm" 
+                size="sm"
+                className="h-10 gap-1.5 text-sm"
                 onClick={() => setShowAiPanel((value) => !value)}
               >
                 <Sparkles size={14} /> AI 助手
               </Button>
-              <Button size="lg" 
+              <Button
+                className="h-10 gap-1.5 px-4 text-sm"
                 onClick={handleSave}
                 disabled={createDocument.isPending}
               >
@@ -185,7 +185,7 @@ export function DocumentNewPage() {
           <aside className="w-70 shrink-0 border-r border-border bg-muted/20 p-4">
             <div className="space-y-4">
               <div>
-                <FieldLabel size="xs" variant="muted" className="mb-2 block">文档分类</FieldLabel>
+                <label className="mb-2 block text-sm font-medium text-foreground">文档分类</label>
                 <SelectField
                   value={category}
                   onChange={(event) => setCategory(event.target.value as DocumentCategory)}
@@ -199,10 +199,10 @@ export function DocumentNewPage() {
               </div>
 
               <div>
-                <FieldLabel size="xs" variant="muted" className="mb-2 block">文档状态</FieldLabel>
+                <label className="mb-2 block text-sm font-medium text-foreground">文档状态</label>
                 <div className="grid grid-cols-2 gap-2">
                   {STATUS_OPTIONS.map((option) => (
-                    <Button variant="ghost"
+                    <button
                       key={option.value}
                       type="button"
                       onClick={() => setStatus(option.value)}
@@ -215,16 +215,16 @@ export function DocumentNewPage() {
                     >
                       <span className={cn('mx-auto mb-1 block h-2.5 w-2.5 rounded-full', option.dot)} />
                       {option.label}
-                    </Button>
+                    </button>
                   ))}
-                  <Button variant="ghost"
+                  <button
                     type="button"
                     disabled
-                    
+                    className="rounded-lg border border-border bg-background/50 px-3 py-2 text-xs text-muted-foreground/70"
                   >
                     <span className="mx-auto mb-1 block h-2.5 w-2.5 rounded-full bg-muted-foreground" />
                     已归档
-                  </Button>
+                  </button>
                 </div>
               </div>
 
@@ -286,22 +286,22 @@ export function DocumentNewPage() {
                 <div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
                   <Sparkles size={15} className="text-accent-purple" /> AI 助手
                 </div>
-                <Button variant="ghost"
+                <button
                   type="button"
-                  className="inline-flex items-center justify-center"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted"
                   onClick={() => setShowAiPanel(false)}
                 >
                   <X size={15} />
-                </Button>
+                </button>
               </div>
               <div className="space-y-3 p-4">
-                <Button width="full" size="lg" variant="outline" className="justify-start">
+                <Button variant="outline" className="h-10 w-full justify-start gap-2 text-sm">
                   <Sparkles size={14} /> 优化文档结构
                 </Button>
-                <Button width="full" size="lg" variant="outline" className="justify-start">
+                <Button variant="outline" className="h-10 w-full justify-start gap-2 text-sm">
                   <Sparkles size={14} /> 生成摘要
                 </Button>
-                <Button width="full" size="lg"  disabled>
+                <Button className="h-10 w-full gap-1.5 text-sm" disabled>
                   <Sparkles size={14} /> 生成内容
                 </Button>
               </div>

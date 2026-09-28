@@ -46,34 +46,35 @@ export function GithubSetupCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Github className="mr-2 h-4 w-4" />
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Github className="h-4 w-4" />
           GitHub Integration Setup
         </CardTitle>
         <CardDescription>
           通过 Personal Access Token (PAT) 连接 GitHub。V3 阶段2 启用 PR 状态追踪。
         </CardDescription>
       </CardHeader>
-      <CardContent >
+      <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="pat-token" >
+          <Label htmlFor="pat-token" className="text-xs">
             GitHub PAT（仅测试，不保存）
           </Label>
           <div className="flex gap-2">
-            <Input fontVariant="mono"
+            <Input
               id="pat-token"
               type="password"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-              
+              className="h-9 text-sm font-mono"
             />
             <Button
               onClick={testInline}
               disabled={testResult.loading || !token.trim()}
+              className="h-9"
             >
               {testResult.loading ? (
-                <Spinner color="inherit" size="2xs" className="mr-1" />
+                <Spinner className="h-3 w-3 mr-1 text-inherit" />
               ) : null}
               Test
             </Button>
@@ -103,14 +104,14 @@ export function GithubSetupCard({
 
         <div className="space-y-2 border-t pt-4">
           <div className="flex items-center justify-between">
-            <Label >已存配置</Label>
-            <Badge variant="outline">
-              <span className="font-mono text-3xs">ID: {integrationId.slice(-6)}</span>
+            <Label className="text-xs">已存配置</Label>
+            <Badge variant="outline" className="font-mono text-3xs">
+              ID: {integrationId.slice(-6)}
             </Badge>
           </div>
           {storedTest.isLoading ? (
             <div className="text-xs text-muted-foreground flex items-center gap-1">
-              <Spinner color="inherit" size="2xs"  />
+              <Spinner className="h-3 w-3 text-inherit" />
               验证已存凭据…
             </div>
           ) : storedTest.data ? (

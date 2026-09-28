@@ -9,7 +9,6 @@
  * - 组尾 "Add task" 行: 触发 onCreateTask(status)
  */
 
-import { Button } from '@/components/ui/button';
 import { useMemo, useState } from 'react';
 import type { ElementType } from 'react';
 import {
@@ -27,13 +26,7 @@ import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DataListSkeleton } from '@/components/ui/data-list';
 import { EmptyState } from '@/components/ui/empty-state';
-import {
-  TASK_STATUS_VISUALS,
-  TONE_DOT_CLASS,
-  TONE_LIGHT_CLASS,
-  TONE_TEXT_CLASS,
-  SEVERITY_TONE,
-} from '@/shared/status/status-visuals';
+import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import type { BugSeverity, Task } from '../api/issue-api';
 
 type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
@@ -46,7 +39,6 @@ interface StatusCfg {
   Icon: LucideIcon;
   color: string;
   bg: string;
-  fill: string;
 }
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
@@ -55,6 +47,15 @@ const STATUS_LABEL: Record<TaskStatus, string> = {
   in_review: 'In Review',
   done: 'Done',
   canceled: 'Canceled',
+};
+
+/** 分组头底色为本组件排版细节；图标与文字色统一取 status-visuals 唯一映射源 */
+const STATUS_BG: Record<TaskStatus, string> = {
+  todo: 'bg-muted/40',
+  in_progress: 'bg-accent-blue/10',
+  in_review: 'bg-accent-yellow/10',
+  done: 'bg-accent-green/10',
+  canceled: 'bg-muted',
 };
 
 const STATUS_CFG: Record<TaskStatus, StatusCfg> = Object.fromEntries(
@@ -66,9 +67,7 @@ const STATUS_CFG: Record<TaskStatus, StatusCfg> = Object.fromEntries(
         label: STATUS_LABEL[status],
         Icon: visual.icon,
         color: TONE_TEXT_CLASS[visual.tone],
-        // 组头底色/进度条填充均取 tone 唯一词表（浅底槽 / 实心填充槽，§19.5）
-        bg: TONE_LIGHT_CLASS[visual.tone],
-        fill: TONE_DOT_CLASS[visual.tone],
+        bg: STATUS_BG[status],
       },
     ];
   }),
@@ -81,9 +80,12 @@ const PRIORITY_CFG: Record<RowPriority, { label: string; Icon: ElementType; colo
   low: { label: 'Low', Icon: ArrowDown, color: 'text-muted-foreground' },
 };
 
-/** Bug 严重度竖条：tone 唯一词表 dot 槽（实心填充） */
-const severityBarClass = (severity: BugSeverity): string =>
-  TONE_DOT_CLASS[SEVERITY_TONE[severity] ?? 'default'];
+const SEVERITY_BAR: Record<BugSeverity, string> = {
+  critical: 'bg-destructive',
+  high: 'bg-accent-orange',
+  medium: 'bg-accent-yellow',
+  low: 'bg-muted',
+};
 
 const MILESTONE_COLORS = [
   { bg: 'bg-accent-blue/10', text: 'text-accent-blue', border: 'border-accent-blue/30' },
@@ -91,6 +93,14 @@ const MILESTONE_COLORS = [
   { bg: 'bg-accent-green/10', text: 'text-accent-green', border: 'border-accent-green/30' },
   { bg: 'bg-accent-yellow/10', text: 'text-accent-yellow', border: 'border-accent-yellow/30' },
 ];
+
+const GROUP_PROGRESS_COLOR: Record<TaskStatus, string> = {
+  todo: 'bg-muted-foreground/40',
+  in_progress: 'bg-accent-blue',
+  in_review: 'bg-accent-yellow',
+  done: 'bg-accent-green',
+  canceled: 'bg-muted',
+};
 
 const AVATAR_PALETTE = ['hsl(var(--chart-1))', 'hsl(var(--chart-4))', 'hsl(var(--accent-red))', 'hsl(var(--accent-green))'];
 
@@ -271,7 +281,7 @@ function TaskRowItem({ task, milestoneIdx, nameOf, onTaskClick }: TaskRowItemPro
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <span className="w-4 h-4 shrink-0" />
         {task.type === 'bug' && task.severity ? (
-          <div className={cn('w-1 h-5 rounded-full shrink-0', severityBarClass(task.severity))} title={`Severity: ${task.severity}`} />
+          <div className={cn('w-1 h-5 rounded-full shrink-0', SEVERITY_BAR[task.severity])} title={`Severity: ${task.severity}`} />
         ) : null}
         <StatusChip status={status} />
         <span className="w-15 shrink-0 text-2xs font-mono text-muted-foreground/50 truncate">{idLabel}</span>
@@ -434,15 +444,15 @@ export function TaskRowsList({
               className="flex items-center gap-3 px-4 py-2 bg-muted/25 hover:bg-muted/40 transition-colors cursor-pointer"
               onClick={() => toggleGroup(status)}
             >
-              <Button variant="ghost"
-                className="flex items-center justify-center shrink-0"
+              <button
+                className="w-4 h-4 flex items-center justify-center text-muted-foreground shrink-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleGroup(status);
                 }}
               >
                 {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </Button>
+              </button>
               <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0', cfg.bg)}>
                 <cfg.Icon
                   className={cn('w-3.5 h-3.5', cfg.color, status === 'in_progress' && 'animate-spin')}
@@ -455,7 +465,7 @@ export function TaskRowsList({
                 <div className="flex items-center gap-2 flex-1 max-w-45">
                   <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
                     <div
-                      className={cn('h-full rounded-full transition-all', cfg.fill)}
+                      className={cn('h-full rounded-full transition-all', GROUP_PROGRESS_COLOR[status])}
                       style={{ width: `${Math.round((subDone / subTotal) * 100)}%` }}
                     />
                   </div>
@@ -463,8 +473,8 @@ export function TaskRowsList({
                 </div>
               ) : null}
               {onCreateTask ? (
-                <Button variant="ghost"
-                  className="ml-auto opacity-0 group-hover/status:opacity-100 transition-colors"
+                <button
+                  className="ml-auto opacity-0 group-hover/status:opacity-100 p-1 rounded-md hover:bg-accent transition-colors"
                   title={`Add task to ${cfg.label}`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -472,7 +482,7 @@ export function TaskRowsList({
                   }}
                 >
                   <Plus className="w-3 h-3 text-muted-foreground" />
-                </Button>
+                </button>
               ) : null}
             </div>
 

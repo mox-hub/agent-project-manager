@@ -88,8 +88,8 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
     },
     row1: (project) => (
       <>
-        <Badge variant="outline" fontSize="3xs">{t(`project.type.${project.type}`)}</Badge>
-        <Badge variant="secondary" fontSize="3xs">{t(`project.visibility.${project.visibility}`)}</Badge>
+        <Badge variant="outline" className="text-3xs">{t(`project.type.${project.type}`)}</Badge>
+        <Badge variant="secondary" className="text-3xs">{t(`project.visibility.${project.visibility}`)}</Badge>
       </>
     ),
     dataEntity: (project) => `project:${project.id}`,
@@ -100,7 +100,7 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
         ) : null}
         {typeof project.progress === 'number' && project.progress > 0 ? (
           <div className="space-y-1">
-            <Progress value={project.progress}  />
+            <Progress value={project.progress} className="h-1.5" />
             <span className="text-3xs text-muted-foreground">{project.progress}%</span>
           </div>
         ) : null}
@@ -135,9 +135,9 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
             )}
           </span>
           {project.owner ? (
-            <Avatar >
+            <Avatar className="h-5 w-5">
               <AvatarImage src={project.owner.avatarUrl ?? undefined} />
-              <AvatarFallback >
+              <AvatarFallback className="text-3xs">
                 {(project.owner.displayName || project.owner.username || 'U').slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>

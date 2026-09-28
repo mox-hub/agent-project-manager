@@ -66,7 +66,7 @@ export function DockSettingsSection() {
       icon={LayoutList}
       iconColor="text-accent-blue"
       title={t('settings.dock')}
-      
+      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
       <DockPreviewCard />
@@ -86,11 +86,11 @@ function DockDisplayCard() {
   const setDockAlwaysVisible = useAppStore((s) => s.setDockAlwaysVisible);
 
   return (
-    <Card surface="flat">
+    <Card className="border-border shadow-none">
       <CardHeader>
         <div className="flex items-center gap-2">
           <PanelBottom size={16} className="text-accent-green" />
-          <CardTitle size="base">{t('settings.dockDisplayTitle')}</CardTitle>
+          <CardTitle className="text-base">{t('settings.dockDisplayTitle')}</CardTitle>
         </div>
         <CardDescription>{t('settings.dockDisplayDesc')}</CardDescription>
       </CardHeader>
@@ -120,11 +120,11 @@ function DockPreviewCard() {
   const { t } = useTranslation();
 
   return (
-    <Card surface="flat">
+    <Card className="border-border shadow-none">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Eye size={16} className="text-accent-purple" />
-          <CardTitle size="base">{t('settings.dockPreviewTitle')}</CardTitle>
+          <CardTitle className="text-base">{t('settings.dockPreviewTitle')}</CardTitle>
         </div>
         <CardDescription>
           {t('settings.dockPreviewDesc')}
@@ -156,15 +156,15 @@ function DockActionsCard() {
   const resetDockSettings = useAppStore((s) => s.resetDockSettings);
 
   return (
-    <Card surface="flat">
+    <Card className="border-border shadow-none">
       <CardHeader>
         <div className="flex items-center gap-2">
           <LayoutList size={16} className="text-accent-blue" />
-          <CardTitle size="base">{t('settings.dockActionsTitle')}</CardTitle>
+          <CardTitle className="text-base">{t('settings.dockActionsTitle')}</CardTitle>
         </div>
         <CardDescription>{t('settings.dockActionsDesc')}</CardDescription>
       </CardHeader>
-      <CardContent >
+      <CardContent className="space-y-4">
         <ul className="divide-y divide-border rounded-lg border border-border">
           {DOCK_ITEM_IDS.map((id) => {
             const Icon = DOCK_ITEM_ICONS[id];
@@ -188,10 +188,10 @@ function DockActionsCard() {
                 >
                   {t(DOCK_ITEM_LABEL_KEYS[id])}
                 </span>
-                <Button padding="p-0"
+                <Button
                   variant="ghost"
                   size="sm"
-                  
+                  className="size-7 p-0"
                   disabled={!visible || index <= 0}
                   onClick={() => moveDockItem(id, -1)}
                   title={t('settings.dockMoveUp')}
@@ -200,10 +200,10 @@ function DockActionsCard() {
                 >
                   <ChevronUp className="size-4" />
                 </Button>
-                <Button padding="p-0"
+                <Button
                   variant="ghost"
                   size="sm"
-                  
+                  className="size-7 p-0"
                   disabled={!visible || index === dockItems.length - 1}
                   onClick={() => moveDockItem(id, 1)}
                   title={t('settings.dockMoveDown')}
@@ -228,7 +228,7 @@ function DockActionsCard() {
           <Button
             variant="outline"
             size="sm"
-            
+            className="gap-1.5"
             onClick={resetDockSettings}
             data-testid="dock-reset"
           >
@@ -269,18 +269,18 @@ function DockAiColleaguesCard() {
   };
 
   return (
-    <Card surface="flat">
+    <Card className="border-border shadow-none">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Users size={16} className="text-accent-purple" />
-            <CardTitle size="base">{t('settings.dockAiTitle')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.dockAiTitle')}</CardTitle>
           </div>
           {hiddenIds.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              fontSize="xs" 
+              className="h-7 text-xs"
               onClick={() => setHiddenIds([])}
               data-testid="dock-ai-show-all"
             >

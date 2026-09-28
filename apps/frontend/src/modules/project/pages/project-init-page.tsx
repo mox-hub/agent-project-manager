@@ -100,15 +100,16 @@ export function ProjectInitPage() {
         {grilled && grillSummary ? (
           <Card
             data-ai-component="project.init.grilled"
+            className="border-primary/30"
           >
-            <CardHeader >
-              <CardTitle size="base" className="flex items-center">
+            <CardHeader className="border-b border-border pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Sparkles className="h-4 w-4 text-accent-purple" />
                 {t('project.init.grilled.title')}
               </CardTitle>
               <CardDescription>{t('project.init.grilled.desc')}</CardDescription>
             </CardHeader>
-            <CardContent >
+            <CardContent className="space-y-2 pt-4 text-xs text-muted-foreground">
               {[
                 { label: t('project.init.grilled.scope'), items: grillSummary.scope },
                 { label: t('project.init.grilled.nonGoals'), items: grillSummary.nonGoals },
@@ -137,14 +138,14 @@ export function ProjectInitPage() {
           data-ai-component="project.init.workspace"
           data-ai-role="content"
         >
-          <CardHeader >
-            <CardTitle className="flex items-center">
+          <CardHeader className="border-b border-border">
+            <CardTitle className="flex items-center gap-2">
               <GitBranch className="h-4 w-4" />
               {t('project.init.workspace.title')}
             </CardTitle>
             <CardDescription>{t('project.init.workspace.desc')}</CardDescription>
           </CardHeader>
-          <CardContent >
+          <CardContent className="pt-4">
             <WorkspaceConfig projectId={projectId} />
           </CardContent>
         </Card>
@@ -153,14 +154,14 @@ export function ProjectInitPage() {
           data-ai-component="project.init.contract"
           data-ai-role="content"
         >
-          <CardHeader >
-            <CardTitle className="flex items-center">
+          <CardHeader className="border-b border-border">
+            <CardTitle className="flex items-center gap-2">
               <ScrollText className="h-4 w-4" />
               {t('project.init.contract.title')}
             </CardTitle>
             <CardDescription>{t('project.init.contract.desc')}</CardDescription>
           </CardHeader>
-          <CardContent >
+          <CardContent className="pt-4">
             <ContractBindingsPanel
               key={contractPanelKey}
               projectId={projectId}
@@ -173,11 +174,11 @@ export function ProjectInitPage() {
           data-ai-component="project.init.next"
           data-ai-role="content"
         >
-          <CardHeader >
+          <CardHeader className="border-b border-border">
             <CardTitle>{t('project.init.next.title')}</CardTitle>
             <CardDescription>{t('project.init.next.desc')}</CardDescription>
           </CardHeader>
-          <CardContent className="grid">
+          <CardContent className="grid gap-2 pt-4">
             {nextSteps.map((step) => {
               const Icon = step.icon;
               return (

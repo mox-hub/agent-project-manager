@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +21,6 @@ import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { ToolbarRow } from '@/components/ui/toolbar-row';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -89,7 +87,7 @@ export function IssueTypeDetailSection() {
   const type = useMemo(() => types.find((ty) => ty.key === typeKey), [types, typeKey]);
 
   return (
-    <PageShell className="overflow-hidden">
+    <PageShell className="overflow-hidden bg-background text-foreground">
       <PageHeader
         icon={Shapes}
         iconColor="text-accent-blue"
@@ -204,82 +202,78 @@ function BasicsTab({ type, isDefault }: { type: IssueTypeMeta; isDefault: boolea
   };
 
   return (
-    <Card variant="outline" inset="md">
-      {/* 原壳逐 token 去向：`rounded-lg border border-border` + 去投影 → variant="outline"，
-          `p-4` → inset="md"，`space-y-4`（内容侧布局类，§19.4）下沉到本层 div。 */}
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeNameLabel', '名称')}</FieldLabel>
-          <Input
-            value={draft.name}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-            maxLength={50}
-            
-          />
-        </div>
-        <div className="space-y-1.5">
-          <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeDescLabel', '描述')}</FieldLabel>
-          <Textarea
-            value={draft.description}
-            onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-            placeholder={t('settings.issueTypeDescPlaceholder', '一句话说明该类型跟踪什么工作')}
-            rows={2}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeIcon', '图标')}</FieldLabel>
-          <div className="flex flex-wrap items-center gap-1">
-            {ICON_CHOICES.map((iconName) => {
-              const Icon = ISSUE_TYPE_ICONS[iconName];
-              return (
-                <Button variant="ghost"
-                  key={iconName}
-                  type="button"
-                  onClick={() => setDraft({ ...draft, icon: iconName })}
-                  className={`flex size-7 items-center justify-center rounded-md border motion-shift ${
-                    draft.icon === iconName
-                      ? 'border-accent-blue bg-accent-blue/10'
-                      : 'border-transparent hover:bg-accent'
-                  }`}
-                  title={iconName}
-                >
-                  <Icon size={14} />
-                </Button>
-              );
-            })}
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeColor', '颜色')}</FieldLabel>
-          <Input
-            type="color"
-            value={draft.color}
-            onChange={(e) => setDraft({ ...draft, color: e.target.value })}
-            className="cursor-pointer"
-          />
-        </div>
-        <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
-          <div>
-            <div className="text-sm text-foreground">{t('settings.enabled', '启用')}</div>
-            <div className="text-xs text-content-text-secondary">
-              {isDefault
-                ? t('settings.defaultTypeAlwaysOn', '默认类型不可停用')
-                : t('settings.enabledHint', '停用后新工单不再可选此类型，既有工单不受影响')}
-            </div>
-          </div>
-          <Switch
-            checked={draft.enabled}
-            disabled={isDefault}
-            onCheckedChange={(checked) => setDraft({ ...draft, enabled: checked })}
-          />
-        </div>
-        <div className="flex justify-end">
-          <Button size="sm" onClick={() => void save()} disabled={updateType.isPending}>
-            {t('common.save')}
-          </Button>
+    <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+      <div className="space-y-1.5">
+        <label className="text-xs text-content-text-secondary">{t('settings.issueTypeNameLabel', '名称')}</label>
+        <Input
+          value={draft.name}
+          onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+          maxLength={50}
+          className="max-w-sm"
+        />
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-xs text-content-text-secondary">{t('settings.issueTypeDescLabel', '描述')}</label>
+        <Textarea
+          value={draft.description}
+          onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+          placeholder={t('settings.issueTypeDescPlaceholder', '一句话说明该类型跟踪什么工作')}
+          rows={2}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-xs text-content-text-secondary">{t('settings.issueTypeIcon', '图标')}</label>
+        <div className="flex flex-wrap items-center gap-1">
+          {ICON_CHOICES.map((iconName) => {
+            const Icon = ISSUE_TYPE_ICONS[iconName];
+            return (
+              <button
+                key={iconName}
+                type="button"
+                onClick={() => setDraft({ ...draft, icon: iconName })}
+                className={`flex size-7 items-center justify-center rounded-md border motion-shift ${
+                  draft.icon === iconName
+                    ? 'border-accent-blue bg-accent-blue/10'
+                    : 'border-transparent hover:bg-accent'
+                }`}
+                title={iconName}
+              >
+                <Icon size={14} />
+              </button>
+            );
+          })}
         </div>
       </div>
-    </Card>
+      <div className="space-y-1.5">
+        <label className="text-xs text-content-text-secondary">{t('settings.issueTypeColor', '颜色')}</label>
+        <Input
+          type="color"
+          value={draft.color}
+          onChange={(e) => setDraft({ ...draft, color: e.target.value })}
+          className="h-9 w-20 cursor-pointer p-1"
+        />
+      </div>
+      <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
+        <div>
+          <div className="text-sm text-foreground">{t('settings.enabled', '启用')}</div>
+          <div className="text-xs text-content-text-secondary">
+            {isDefault
+              ? t('settings.defaultTypeAlwaysOn', '默认类型不可停用')
+              : t('settings.enabledHint', '停用后新工单不再可选此类型，既有工单不受影响')}
+          </div>
+        </div>
+        <Switch
+          checked={draft.enabled}
+          disabled={isDefault}
+          onCheckedChange={(checked) => setDraft({ ...draft, enabled: checked })}
+        />
+      </div>
+      <div className="flex justify-end">
+        <Button size="sm" onClick={() => void save()} disabled={updateType.isPending}>
+          {t('common.save')}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -350,92 +344,90 @@ function FieldsTab({ type }: { type: IssueTypeMeta }) {
   };
 
   return (
-    <Card variant="outline" inset="md">
-      {/* 原壳的 `space-y-3` 是内容侧布局类（§19.4 不许留在组件 className 上），下沉到内层 div。 */}
-      <div className="space-y-3">
-        <p className="text-xs text-content-text-secondary">{t('settings.issueTypesFieldsHint')}</p>
-        {draft.length === 0 ? (
-          <p className="text-xs text-content-text-muted">{t('settings.issueTypesFieldsEmpty')}</p>
-        ) : (
-          <div className="divide-y divide-border rounded-lg border border-border">
-            {draft.map((def, index) => {
-              const Icon = getFieldIcon(def.type);
-              return (
-                <div key={`${def.key}-${index}`} className="flex items-center gap-3 px-3 py-2">
-                  <Button variant="ghost"
-                    type="button"
-                    onClick={() => void move(index, -1)}
-                    disabled={index === 0}
-                    className="disabled:opacity-30"
-                    aria-label={t('common.moveUp', '上移')}
-                  >
-                    <ArrowUp size={13} />
-                  </Button>
-                  <Button variant="ghost"
-                    type="button"
-                    onClick={() => void move(index, 1)}
-                    disabled={index === draft.length - 1}
-                    className="disabled:opacity-30"
-                    aria-label={t('common.moveDown', '下移')}
-                  >
-                    <ArrowDown size={13} />
-                  </Button>
-                  <Icon size={14} className="shrink-0 text-content-text-secondary" />
-                  <Button variant="ghost"
-                    type="button"
-                    className="flex-1"
-                    onClick={() => {
-                      setDialogIndex(index);
-                      setDialogDef({ ...def });
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="truncate text-sm text-foreground">{def.label}</span>
-                      {def.required ? (
-                        <Badge variant="secondary">{t('settings.issueTypesFieldRequired')}</Badge>
-                      ) : null}
-                      {def.enabled === false ? (
-                        <Badge variant="outline">{t('settings.typeDisabled', '已停用')}</Badge>
-                      ) : null}
-                    </div>
-                    <div className="truncate font-mono text-xs text-content-text-muted">
-                      {def.key} · {t(`settings.issueTypesFieldTypes${def.type.charAt(0).toUpperCase()}${def.type.slice(1)}`)}
-                    </div>
-                  </Button>
-                  <Switch
-                    checked={def.enabled !== false}
-                    onCheckedChange={(checked) => void toggleEnabled(index, checked)}
-                    aria-label={t('settings.enabled', '启用')}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        )}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            setDialogIndex(-1);
-            setDialogDef({ key: '', label: '', type: 'text', order: draft.length });
-          }}
-        >
-          <Plus size={14} />
-          {t('settings.addField', '添加自定义字段')}
-        </Button>
+    <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+      <p className="text-xs text-content-text-secondary">{t('settings.issueTypesFieldsHint')}</p>
+      {draft.length === 0 ? (
+        <p className="text-xs text-content-text-muted">{t('settings.issueTypesFieldsEmpty')}</p>
+      ) : (
+        <div className="divide-y divide-border rounded-lg border border-border">
+          {draft.map((def, index) => {
+            const Icon = getFieldIcon(def.type);
+            return (
+              <div key={`${def.key}-${index}`} className="flex items-center gap-3 px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => void move(index, -1)}
+                  disabled={index === 0}
+                  className="text-content-text-muted hover:text-content-text-secondary disabled:opacity-30"
+                  aria-label={t('common.moveUp', '上移')}
+                >
+                  <ArrowUp size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void move(index, 1)}
+                  disabled={index === draft.length - 1}
+                  className="text-content-text-muted hover:text-content-text-secondary disabled:opacity-30"
+                  aria-label={t('common.moveDown', '下移')}
+                >
+                  <ArrowDown size={13} />
+                </button>
+                <Icon size={14} className="shrink-0 text-content-text-secondary" />
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 text-left"
+                  onClick={() => {
+                    setDialogIndex(index);
+                    setDialogDef({ ...def });
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm text-foreground">{def.label}</span>
+                    {def.required ? (
+                      <Badge variant="secondary">{t('settings.issueTypesFieldRequired')}</Badge>
+                    ) : null}
+                    {def.enabled === false ? (
+                      <Badge variant="outline">{t('settings.typeDisabled', '已停用')}</Badge>
+                    ) : null}
+                  </div>
+                  <div className="truncate font-mono text-xs text-content-text-muted">
+                    {def.key} · {t(`settings.issueTypesFieldTypes${def.type.charAt(0).toUpperCase()}${def.type.slice(1)}`)}
+                  </div>
+                </button>
+                <Switch
+                  checked={def.enabled !== false}
+                  onCheckedChange={(checked) => void toggleEnabled(index, checked)}
+                  aria-label={t('settings.enabled', '启用')}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <Button
+        size="sm"
+        variant="outline"
+        className="gap-1"
+        onClick={() => {
+          setDialogIndex(-1);
+          setDialogDef({ key: '', label: '', type: 'text', order: draft.length });
+        }}
+      >
+        <Plus size={14} />
+        {t('settings.addField', '添加自定义字段')}
+      </Button>
 
-        {dialogDef ? (
-          <FieldDialog
-            def={dialogDef}
-            isNew={dialogIndex < 0}
-            existingKeys={draft.map((d) => d.key)}
-            onCancel={() => setDialogDef(null)}
-            onSave={(def) => void saveDialog(def, dialogIndex)}
-            saving={updateType.isPending}
-          />
-        ) : null}
-      </div>
-    </Card>
+      {dialogDef ? (
+        <FieldDialog
+          def={dialogDef}
+          isNew={dialogIndex < 0}
+          existingKeys={draft.map((d) => d.key)}
+          onCancel={() => setDialogDef(null)}
+          onSave={(def) => void saveDialog(def, dialogIndex)}
+          saving={updateType.isPending}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -495,7 +487,7 @@ function FieldDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent >
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             {isNew ? t('settings.addField', '添加自定义字段') : t('settings.editField', '编辑自定义字段')}
@@ -504,7 +496,7 @@ function FieldDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeNameLabel', '名称')}</FieldLabel>
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeNameLabel', '名称')}</label>
             <Input
               value={draft.label}
               onChange={(e) => setDraft({ ...draft, label: e.target.value })}
@@ -513,18 +505,18 @@ function FieldDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.issueTypeKeyLabel', '键（小写 slug）')}</FieldLabel>
-            <Input fontVariant="mono"
+            <label className="text-xs text-content-text-secondary">{t('settings.issueTypeKeyLabel', '键（小写 slug）')}</label>
+            <Input
               value={draft.key}
               onChange={(e) => setDraft({ ...draft, key: e.target.value.toLowerCase() })}
               placeholder="severity"
-              
+              className="font-mono"
               maxLength={64}
               disabled={!isNew}
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.fieldTypeLabel', '类型')}</FieldLabel>
+            <label className="text-xs text-content-text-secondary">{t('settings.fieldTypeLabel', '类型')}</label>
             <SelectField
               value={draft.type}
               onChange={(e) => setDraft({ ...draft, type: e.target.value as FieldSchemaType })}
@@ -538,7 +530,7 @@ function FieldDialog({
           </div>
           {(draft.type === 'select' || draft.type === 'multiselect') && (
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >{t('settings.issueTypesFieldOptions', '选项（逗号分隔）')}</FieldLabel>
+              <label className="text-xs text-content-text-secondary">{t('settings.issueTypesFieldOptions', '选项（逗号分隔）')}</label>
               <Input
                 value={(draft.options ?? []).join(',')}
                 onChange={(e) =>
@@ -552,7 +544,7 @@ function FieldDialog({
             </div>
           )}
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.fieldDefaultValue', '默认值（可选）')}</FieldLabel>
+            <label className="text-xs text-content-text-secondary">{t('settings.fieldDefaultValue', '默认值（可选）')}</label>
             {draft.type === 'boolean' ? (
               <SelectField
                 value={draft.defaultValue ?? ''}
@@ -586,7 +578,7 @@ function FieldDialog({
             )}
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.fieldDescLabel', '描述（可选）')}</FieldLabel>
+            <label className="text-xs text-content-text-secondary">{t('settings.fieldDescLabel', '描述（可选）')}</label>
             <Textarea
               value={draft.description ?? ''}
               onChange={(e) => setDraft({ ...draft, description: e.target.value || undefined })}
@@ -594,13 +586,13 @@ function FieldDialog({
               rows={2}
             />
           </div>
-          <FieldLabel size="xs" variant="muted" className="flex cursor-pointer items-center">
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs text-content-text-secondary">
             <Checkbox
               checked={!!draft.required}
               onCheckedChange={(checked) => setDraft({ ...draft, required: checked === true })}
             />
             {t('settings.issueTypesFieldRequired', '必填')}
-          </FieldLabel>
+          </label>
           {error ? <p className="text-xs text-destructive">{error}</p> : null}
         </div>
         <DialogFooter>
@@ -642,71 +634,67 @@ function StatusesTab() {
   }, [globalStatuses]);
 
   return (
-    <Card variant="outline" inset="md">
-      {/* 原壳的 `space-y-4` 是内容侧布局类——§19.4 只许定位类留在组件 className 上，
-          故下沉到内层 div，随壳一起内缩一层；壳本身只剩轴能表达的部分。 */}
-      <div className="space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-xs text-content-text-secondary">{t('settings.statusGroupsHint', '设置该工作空间可用的状态；顺序即组内展示顺序。')}</p>
-          <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
-            <Plus size={14} />
-            {t('settings.addStatus', '添加状态')}
-          </Button>
-        </div>
-        {STATUS_GROUP_ORDER.map((group) => {
-          const items = grouped.get(group) ?? [];
-          if (items.length === 0) return null;
-          const GroupIcon = STATUS_GROUP_ICONS[group] ?? CircleDot;
-          return (
-            <div key={group} className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <GroupIcon size={14} className="text-content-text-secondary" />
-                <span className="text-sm font-medium text-foreground">
-                  {t(`settings.statusGroup.${group}`)}
-                </span>
-              </div>
-              <p className="text-xs text-content-text-muted">{t(`settings.statusGroup.${group}Desc`)}</p>
-              <div className="space-y-1.5">
-                {items.map((status) => (
-                  <div
-                    key={status.id}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2"
-                  >
-                    <CircleDot size={14} className="text-content-text-muted" />
-                    <span className="text-sm text-foreground">{status.name}</span>
-                    {status.key === 'todo' ? (
-                      <Badge variant="secondary">{t('settings.defaultType', '默认')}</Badge>
-                    ) : null}
-                    <span className="flex-1" />
-                    <span className="font-mono text-3xs text-content-text-muted">{status.key}</span>
-                    {status.isFinal ? (
-                      <Badge variant="outline">{t('settings.statusFinalBadge', '终态')}</Badge>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-        {addOpen ? (
-          <AddStatusDialog
-            existingKeys={globalStatuses.map((s) => s.key)}
-            nextOrder={(globalStatuses.reduce((max, s) => Math.max(max, s.order ?? 0), 0) ?? 0) + 10}
-            onCancel={() => setAddOpen(false)}
-            onSubmit={async (data) => {
-              try {
-                await createStatus.mutateAsync(data);
-                toast.success(t('settings.issueTypesUpdated'));
-                setAddOpen(false);
-              } catch (e) {
-                toast.error((e as Error).message || t('settings.updateFailed'));
-              }
-            }}
-            saving={createStatus.isPending}
-          />
-        ) : null}
+    <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs text-content-text-secondary">{t('settings.statusGroupsHint', '设置该工作空间可用的状态；顺序即组内展示顺序。')}</p>
+        <Button size="sm" variant="outline" className="gap-1" onClick={() => setAddOpen(true)}>
+          <Plus size={14} />
+          {t('settings.addStatus', '添加状态')}
+        </Button>
       </div>
-    </Card>
+      {STATUS_GROUP_ORDER.map((group) => {
+        const items = grouped.get(group) ?? [];
+        if (items.length === 0) return null;
+        const GroupIcon = STATUS_GROUP_ICONS[group] ?? CircleDot;
+        return (
+          <div key={group} className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <GroupIcon size={14} className="text-content-text-secondary" />
+              <span className="text-sm font-medium text-foreground">
+                {t(`settings.statusGroup.${group}`)}
+              </span>
+            </div>
+            <p className="text-xs text-content-text-muted">{t(`settings.statusGroup.${group}Desc`)}</p>
+            <div className="space-y-1.5">
+              {items.map((status) => (
+                <div
+                  key={status.id}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2"
+                >
+                  <CircleDot size={14} className="text-content-text-muted" />
+                  <span className="text-sm text-foreground">{status.name}</span>
+                  {status.key === 'todo' ? (
+                    <Badge variant="secondary">{t('settings.defaultType', '默认')}</Badge>
+                  ) : null}
+                  <span className="flex-1" />
+                  <span className="font-mono text-3xs text-content-text-muted">{status.key}</span>
+                  {status.isFinal ? (
+                    <Badge variant="outline">{t('settings.statusFinalBadge', '终态')}</Badge>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      {addOpen ? (
+        <AddStatusDialog
+          existingKeys={globalStatuses.map((s) => s.key)}
+          nextOrder={(globalStatuses.reduce((max, s) => Math.max(max, s.order ?? 0), 0) ?? 0) + 10}
+          onCancel={() => setAddOpen(false)}
+          onSubmit={async (data) => {
+            try {
+              await createStatus.mutateAsync(data);
+              toast.success(t('settings.issueTypesUpdated'));
+              setAddOpen(false);
+            } catch (e) {
+              toast.error((e as Error).message || t('settings.updateFailed'));
+            }
+          }}
+          saving={createStatus.isPending}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -748,14 +736,14 @@ function AddStatusDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent >
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('settings.addStatus', '添加状态')}</DialogTitle>
           <DialogDescription>{t('settings.addStatusDesc', '新增状态将对该空间所有任务类型生效。')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.statusName', '名称')}</FieldLabel>
+            <label className="text-xs text-content-text-secondary">{t('settings.statusName', '名称')}</label>
             <Input
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
@@ -763,16 +751,16 @@ function AddStatusDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.statusKey', '键（小写 slug）')}</FieldLabel>
-            <Input fontVariant="mono"
+            <label className="text-xs text-content-text-secondary">{t('settings.statusKey', '键（小写 slug）')}</label>
+            <Input
               value={draft.key}
               onChange={(e) => setDraft({ ...draft, key: e.target.value.toLowerCase() })}
-              
+              className="font-mono"
               maxLength={32}
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('settings.statusGroupLabel', '所属分组')}</FieldLabel>
+            <label className="text-xs text-content-text-secondary">{t('settings.statusGroupLabel', '所属分组')}</label>
             <SelectField
               value={draft.group}
               onChange={(e) => setDraft({ ...draft, group: e.target.value })}
@@ -784,13 +772,13 @@ function AddStatusDialog({
               ))}
             </SelectField>
           </div>
-          <FieldLabel size="xs" variant="muted" className="flex cursor-pointer items-center">
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs text-content-text-secondary">
             <Checkbox
               checked={draft.isFinal}
               onCheckedChange={(checked) => setDraft({ ...draft, isFinal: checked === true })}
             />
             {t('settings.statusFinalLabel', '终态（表示工作已完成或关闭）')}
-          </FieldLabel>
+          </label>
           {error ? <p className="text-xs text-destructive">{error}</p> : null}
         </div>
         <DialogFooter>

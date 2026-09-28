@@ -2,8 +2,6 @@
  * AcceptanceFormDialog — 新建验收契约弹窗
  * 选择任务 + 完成契约类型（可自动推断）+ 描述；提交 POST /acceptance
  */
-import { FieldLabel } from '@/components/ui/field';
-import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -93,13 +91,14 @@ export function AcceptanceFormDialog({
         </DialogHeader>
 
         <div className="space-y-3">
-          <FieldLabel size="xs" variant="muted" className="block">
+          <label className="block space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">
               {t('acceptance.form.task')}
             </span>
             <SelectField
               value={issueId}
               onChange={(e) => setTaskId(e.target.value)}
+              className="w-full"
             >
               <option value="">{t('acceptance.form.taskPlaceholder')}</option>
               {availableTasks.map((task) => (
@@ -108,15 +107,16 @@ export function AcceptanceFormDialog({
                 </option>
               ))}
             </SelectField>
-          </FieldLabel>
+          </label>
 
-          <FieldLabel size="xs" variant="muted" className="block">
+          <label className="block space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">
               {t('acceptance.form.completionType')}
             </span>
             <SelectField
               value={completionType}
               onChange={(e) => setCompletionType(e.target.value as CompletionType | 'auto')}
+              className="w-full"
             >
               {COMPLETION_TYPES.map((ty) => (
                 <option key={ty} value={ty}>
@@ -126,25 +126,25 @@ export function AcceptanceFormDialog({
                 </option>
               ))}
             </SelectField>
-          </FieldLabel>
+          </label>
 
-          <FieldLabel size="xs" variant="muted" className="block">
+          <label className="block space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">
               {t('acceptance.form.name')}
             </span>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-          </FieldLabel>
+          </label>
 
-          <FieldLabel size="xs" variant="muted" className="block">
+          <label className="block space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">
               {t('acceptance.form.description')}
             </span>
-            <Textarea
+            <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="outline-hidden"
+              className="min-h-20 w-full rounded-md border border-border bg-background p-2 text-sm outline-hidden focus:ring-1 focus:ring-primary"
             />
-          </FieldLabel>
+          </label>
         </div>
 
         <DialogFooter>

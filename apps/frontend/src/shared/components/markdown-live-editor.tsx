@@ -11,7 +11,6 @@
  * - 编辑态以块为粒度：正在编辑的块内显示 markdown 源文，失焦即整块渲染；
  *   块间分隔统一归一为空行（连续多空行在下一次编辑落盘时收敛为一个空行）。
  */
-import { Button } from '@/components/ui/button';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { SlashRefTextarea } from '@/shared/entity-ref/slash-ref-textarea';
@@ -204,13 +203,13 @@ export function MarkdownLiveEditor({
         />
       ) : (
         !appending && (
-          <Button variant="ghost"
+          <button
             type="button"
             onMouseDown={(e) => {
               e.preventDefault();
               appendBlock();
             }}
-            className="-mx-1.5 mt-0.5 cursor-text transition-colors"
+            className="-mx-1.5 mt-0.5 min-h-7 cursor-text rounded-md px-1.5 py-0.5 text-left text-sm text-transparent transition-colors hover:bg-muted/40"
             aria-label={placeholder}
           />
         )

@@ -3,7 +3,6 @@
  * @description 由原 ai-agents-section skills 页签迁移（2026-09-19 页面合并）。
  * 原 ai-management 的本地假技能开关（无持久化）已废除，统一由本 Tab 真实数据承担。
  */
-import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useState } from 'react';
 import { FileInput, Pencil, Plus, Trash2, Zap } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
@@ -126,7 +125,7 @@ function SkillDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <DialogContent maxWidth="lg" >
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t(titleKey)}</DialogTitle>
           <DialogDescription>
@@ -136,26 +135,26 @@ function SkillDialog({
         <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
           {mode === 'import' ? (
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >{t('aiHub.skillFieldSourcePath')}</FieldLabel>
-              <Input fontVariant="mono"
+              <label className="text-xs font-medium text-foreground">{t('aiHub.skillFieldSourcePath')}</label>
+              <Input
                 value={sourcePath}
                 onChange={(e) => setSourcePath(e.target.value)}
                 placeholder="C:\skills\grill-me\SKILL.md"
-                
+                className="font-mono"
               />
             </div>
           ) : null}
           {mode !== 'edit' ? (
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >
+              <label className="text-xs font-medium text-foreground">
                 {t('aiHub.skillFieldKey')}
                 {mode === 'import' ? `（${t('aiHub.skillOptional')}）` : ''}
-              </FieldLabel>
-              <Input fontVariant="mono"
+              </label>
+              <Input
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
                 placeholder={mode === 'import' ? t('aiHub.skillKeyFromPath') : 'my-skill'}
-                
+                className="font-mono"
               />
               {mode === 'create' && key.length > 0 && !keyValid ? (
                 <p className="text-xs text-accent-red">{t('aiHub.skillKeyInvalid')}</p>
@@ -163,30 +162,30 @@ function SkillDialog({
             </div>
           ) : null}
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >
+            <label className="text-xs font-medium text-foreground">
               {t('aiHub.skillFieldName')}
               {mode === 'import' ? `（${t('aiHub.skillOptional')}）` : ''}
-            </FieldLabel>
+            </label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Grilling 需求拷问" />
           </div>
           {mode !== 'import' ? (
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >{t('aiHub.skillFieldDescription')}</FieldLabel>
+              <label className="text-xs font-medium text-foreground">{t('aiHub.skillFieldDescription')}</label>
               <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('aiHub.mcpOptionalDescription')} />
             </div>
           ) : null}
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('aiHub.skillFieldCategory')}</FieldLabel>
+            <label className="text-xs font-medium text-foreground">{t('aiHub.skillFieldCategory')}</label>
             <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Development" />
           </div>
           {mode !== 'import' ? (
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >{t('aiHub.skillFieldContent')}</FieldLabel>
-              <Textarea fontVariant="mono"
+              <label className="text-xs font-medium text-foreground">{t('aiHub.skillFieldContent')}</label>
+              <Textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={8}
-                
+                className="font-mono text-xs"
                 placeholder={t('aiHub.skillContentPlaceholder')}
               />
             </div>
@@ -194,8 +193,8 @@ function SkillDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button size="sm" onClick={handleSubmit} disabled={!valid || pending} >
-            {pending ? <Spinner color="inherit" size="xs"  /> : null}
+          <Button size="sm" onClick={handleSubmit} disabled={!valid || pending} className="gap-1.5">
+            {pending ? <Spinner className="size-3.5 text-inherit" /> : null}
             {mode === 'import' ? t('aiHub.skillImportAction') : t('common.save')}
           </Button>
         </DialogFooter>
@@ -243,11 +242,11 @@ export function SkillsTab() {
           <p className="text-xs text-muted-foreground">{t('aiHub.skillsRegistryDesc')}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="outline" size="sm"  onClick={() => setSkillDialog({ mode: 'import', skill: null })}>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setSkillDialog({ mode: 'import', skill: null })}>
             <FileInput size={14} />
             {t('aiHub.skillImport')}
           </Button>
-          <Button size="sm"  onClick={() => setSkillDialog({ mode: 'create', skill: null })}>
+          <Button size="sm" className="gap-1.5" onClick={() => setSkillDialog({ mode: 'create', skill: null })}>
             <Plus size={14} />
             {t('aiHub.skillCreate')}
           </Button>
@@ -257,7 +256,7 @@ export function SkillsTab() {
       {skillsLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i}  />
+            <Skeleton key={i} className="h-16" />
           ))}
         </div>
       ) : skills.length === 0 ? (
@@ -266,7 +265,7 @@ export function SkillsTab() {
           title={t('aiHub.skillEmpty', '还没有技能')}
           description={t('aiHub.skillEmptyDesc', '从本地导入已有技能，或手动新建一个')}
           action={
-            <Button size="sm" variant="outline"  onClick={() => setSkillDialog({ mode: 'create', skill: null })}>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setSkillDialog({ mode: 'create', skill: null })}>
               <Plus size={14} /> {t('aiHub.skillCreate')}
             </Button>
           }
@@ -287,8 +286,8 @@ export function SkillsTab() {
                     <div className="min-w-0">
                       <p className="flex items-center gap-1.5 truncate text-sm font-medium">
                         {skill.name}
-                        <Badge variant="outline" className="shrink-0">
-                          <span className="text-3xs uppercase">{skill.source}</span>
+                        <Badge variant="outline" className="shrink-0 text-3xs uppercase">
+                          {skill.source}
                         </Badge>
                       </p>
                       <p className="truncate text-xs text-muted-foreground">{skill.description}</p>
@@ -310,21 +309,21 @@ export function SkillsTab() {
                         }
                       >
                         {updateSkillMutation.isPending && updateSkillMutation.variables?.key === skill.key ? (
-                          <Spinner color="inherit" size="xs"  />
+                          <Spinner className="size-3.5 text-inherit" />
                         ) : skill.enabled ? (
                           t('aiHub.enabled')
                         ) : (
                           t('aiHub.disabled')
                         )}
                       </Button>
-                      <Button variant="outline" size="sm"  aria-label={t('common.edit')} onClick={() => setSkillDialog({ mode: 'edit', skill })}>
+                      <Button variant="outline" size="sm" className="gap-1.5 px-2" aria-label={t('common.edit')} onClick={() => setSkillDialog({ mode: 'edit', skill })}>
                         <Pencil size={13} />
                       </Button>
                       {skill.source === 'custom' ? (
                         <Button
                           variant="ghost"
                           size="sm"
-                          
+                          className="px-2 text-accent-red hover:bg-accent-red-light/50 hover:text-accent-red"
                           aria-label={t('common.delete')}
                           onClick={() => handleDeleteSkill(skill)}
                         >

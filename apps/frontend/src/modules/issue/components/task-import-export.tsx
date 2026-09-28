@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -190,7 +189,7 @@ export function ImportModal({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogContent className="overflow-auto">
+      <DialogContent className="max-h-dialog-scroll overflow-auto">
         <DialogHeader>
           <DialogTitle>Import Tasks</DialogTitle>
           <DialogDescription>
@@ -213,7 +212,7 @@ export function ImportModal({
               type="file"
               accept=".csv"
               onChange={handleFileChange}
-              
+              className="w-full rounded-md border border-dashed border-border bg-background px-3 py-2 text-sm text-foreground"
             />
           </div>
 
@@ -313,14 +312,14 @@ function ExportModal({
         <fieldset className="space-y-3">
           <legend className="sr-only">Export format</legend>
           <RadioGroup value={format} onValueChange={(v) => setFormat(v as typeof format)}>
-            <FieldLabel size="xs" variant="muted" className="flex cursor-pointer items-center">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
               <RadioGroupItem value="csv" />
               CSV
-            </FieldLabel>
-            <FieldLabel size="xs" variant="muted" className="mt-2 flex cursor-pointer items-center">
+            </label>
+            <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-foreground">
               <RadioGroupItem value="json" />
               JSON
-            </FieldLabel>
+            </label>
           </RadioGroup>
         </fieldset>
 

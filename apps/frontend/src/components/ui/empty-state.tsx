@@ -24,45 +24,16 @@ export function EmptyState({
   icon: Icon,
   visual,
   variant = "card",
-  frame = "default",
-  minHeight = "default",
-  padding = "default",
-  density = "default",
   title,
   description,
   action,
   className,
-}: EmptyStateProps & {
-  /** 边框档（E 类桶1 增补 2026-09-28，纯增补 default 不变）：`none` = 去虚线框
-   * （承接内嵌于卡片/面板内的无框空态，调用方此前裸写 border-0）。 */
-  frame?: "default" | "none";
-  /** 最小高档：`none` = 撤兜底 min-h（承接外层已控高的场景）；`sm` = min-h-20。 */
-  minHeight?: "default" | "none" | "sm";
-  /** 内距档：`compact` = py-4（纵内距收紧，横内距保持 p-6 的 6）。 */
-  padding?: "default" | "compact";
-  /**
-   * 密度档（E 类第二轮增补，2026-09-28 第八轮裁决 #1-④，纯增补 default 不变）：
-   * `compact` = 解除 card 档兜底 min-h-40（输出 min-h-0），承接「受限滚动容器内的
-   * 密集嵌入空态」。归因出处：`docs/design/修改方案-E类-2026-09-27.md` §七之九 #1；
-   * 实测留报：iteration-detail-dialog:119 `min-h-0`（清剿报告桶2 留报 #22，
-   * 该留报原始建议即「EmptyState 增 compact 档」）。
-   * 与 minHeight="none" 的关系：两者渲染结果相同（都是 min-h-0）——minHeight 是
-   * 「值档」（外层已控高的机械兜底撤除），compact 是「密集嵌入」的语义档名
-   * （留报 #279 的嵌入形态 min-h-0 border-0 py-4 即 frame="none" + density="compact"
-   * + padding="compact" 的组合）。并存是有意的：语义意图不同，不做合并裁决。
-   */
-  density?: "default" | "compact";
-}) {
+}: EmptyStateProps) {
   return (
     <div
       className={cn(
         "flex flex-col items-center justify-center rounded-lg border border-dashed border-border p-6 text-center",
         variant === "page" ? "h-full min-h-100" : "min-h-40",
-        frame === "none" && "border-0",
-        minHeight === "none" && "min-h-0",
-        minHeight === "sm" && "min-h-20",
-        padding === "compact" && "py-4",
-        density === "compact" && "min-h-0",
         className
       )}
     >

@@ -145,7 +145,7 @@ function StatusBadge({ status }: { status: AcceptanceStatus }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
   const Icon = cfg.icon;
   return (
-    <StatusPill tone={ACCEPTANCE_TONE[status]} >
+    <StatusPill tone={ACCEPTANCE_TONE[status]} className="gap-1">
       <Icon className="size-3" />
       {t(cfg.labelKey)}
     </StatusPill>
@@ -222,12 +222,12 @@ function StatusDistributionCard({ acceptances }: { acceptances: Acceptance[] }) 
   const { t } = useTranslation();
   return (
     <Card size="sm">
-      <CardHeader >
-        <CardTitle size="sm" fontWeight="medium" >
+      <CardHeader className="px-4 pb-2 pt-4">
+        <CardTitle className="text-sm font-medium">
           {t('acceptance.filter.status')}
         </CardTitle>
       </CardHeader>
-      <CardContent >
+      <CardContent className="space-y-2 px-4 pb-4">
         {STATUS_ORDER.map((status) => {
           const count = acceptances.filter((a) => a.status === status).length;
           const cfg = STATUS_CONFIG[status];
@@ -238,7 +238,7 @@ function StatusDistributionCard({ acceptances }: { acceptances: Acceptance[] }) 
             <div key={status} className="flex items-center gap-3">
               <Icon className={cn('size-3.5 shrink-0', cfg.color)} />
               <span className="w-20 shrink-0 text-xs">{t(cfg.labelKey)}</span>
-              <Progress value={pct} className="flex-1" />
+              <Progress value={pct} className="h-1.5 flex-1" />
               <span className="w-6 shrink-0 text-right text-xs text-muted-foreground">
                 {count}
               </span>
@@ -264,8 +264,8 @@ function AuditRiskCard({
 
   return (
     <Card size="sm">
-      <CardHeader >
-        <CardTitle size="sm" fontWeight="medium" className="flex items-center">
+      <CardHeader className="px-4 pb-2 pt-4">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
           {t('acceptance.filter.risk')}
           {redCount > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full border border-accent-red/40 bg-accent-red/10 px-1.5 py-0.5 text-3xs font-medium text-accent-red">
@@ -275,7 +275,7 @@ function AuditRiskCard({
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent >
+      <CardContent className="space-y-3 px-4 pb-4">
         {risks.map((risk) => {
           const count = acceptances.filter((a) => a.auditReport?.riskLevel === risk).length;
           const cfg = RISK_CONFIG[risk];
@@ -287,7 +287,7 @@ function AuditRiskCard({
               <span className={cn('w-20 shrink-0 text-xs font-medium', cfg.color)}>
                 {t(cfg.labelKey)}
               </span>
-              <Progress value={pct} className="flex-1" />
+              <Progress value={pct} className="h-1.5 flex-1" />
               <span className="w-6 shrink-0 text-right text-xs text-muted-foreground">
                 {count}
               </span>
@@ -295,13 +295,13 @@ function AuditRiskCard({
           );
         })}
         {redCount > 0 && (
-          <Button variant="ghost"
-            className="mt-2 flex items-center transition-colors hover:opacity-80"
+          <button
+            className="mt-2 flex items-center gap-1.5 text-xs text-accent-red transition-colors hover:opacity-80"
             onClick={onShowBlocking}
           >
             <Eye className="size-3.5" />
             {t('acceptance.risk.red')} × {redCount}
-          </Button>
+          </button>
         )}
       </CardContent>
     </Card>
@@ -436,7 +436,7 @@ export function AcceptanceListPage() {
           <span className="flex max-w-60 items-center gap-1.5 truncate">
             <span className="truncate">{row.original.title || t('acceptance.title')}</span>
             {isActiveAcceptance(row.original) && (
-              <Badge variant="secondary" fontSize="3xs" className="shrink-0">
+              <Badge variant="secondary" className="shrink-0 text-3xs">
                 {t('acceptance.activeBadge')}
               </Badge>
             )}
@@ -480,7 +480,7 @@ export function AcceptanceListPage() {
             <span className="flex items-center gap-2 tabular-nums">
               <Progress
                 value={criteria.length ? (passed / criteria.length) * 100 : 0}
-                
+                className="h-1.5 w-14"
               />
               <span className="text-xs text-muted-foreground">
                 {passed}/{criteria.length}
@@ -653,7 +653,7 @@ export function AcceptanceListPage() {
             <EmptyState
               variant="page"
               visual={
-                <IconStack aria-hidden="true" >
+                <IconStack aria-hidden="true" className="text-accent-green">
                   <ShieldCheck className="size-4 text-accent-green" />
                 </IconStack>
               }
@@ -675,7 +675,7 @@ export function AcceptanceListPage() {
           isLoading ? (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
               {[...Array(6)].map((_, i) => (
-                <Skeleton key={i}  />
+                <Skeleton key={i} className="h-24" />
               ))}
             </div>
           ) : (
@@ -698,10 +698,10 @@ export function AcceptanceListPage() {
             <span>{t('acceptance.results', { count: filteredAcceptances.length })}</span>
             {meta && meta.totalPages > 1 && (
               <span className="flex items-center gap-2">
-                <Button padding="p-0"
+                <Button
                   variant="ghost"
                   size="sm"
-                  
+                  className="size-7 p-0"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
@@ -712,10 +712,10 @@ export function AcceptanceListPage() {
                   totalPages: meta.totalPages,
                   total: meta.total,
                 })}
-                <Button padding="p-0"
+                <Button
                   variant="ghost"
                   size="sm"
-                  
+                  className="size-7 p-0"
                   disabled={page >= meta.totalPages}
                   onClick={() => setPage((p) => p + 1)}
                 >
@@ -729,7 +729,7 @@ export function AcceptanceListPage() {
         {/* 列表：卡片 / 表格双视图 */}
         {viewMode === 'table' ? (
           isLoading ? (
-            <Skeleton  />
+            <Skeleton className="h-64" />
           ) : (
             <DataTable<Acceptance>
               columns={columns}
@@ -743,7 +743,7 @@ export function AcceptanceListPage() {
                 <ListActionButton
                   onClick={() => handleBulkDelete(selected, clear)}
                   disabled={bulkDeleting}
-                  
+                  className="text-destructive hover:text-destructive"
                 >
                   {t('common.delete')}
                 </ListActionButton>
@@ -763,7 +763,7 @@ export function AcceptanceListPage() {
                   icon={SearchX}
                   title={t('acceptance.emptyFiltered', '未找到匹配的验收契约')}
                   description={t('acceptance.emptyFilteredHint', '换个关键词，或清除筛选条件再试')}
-                  
+                  className="min-h-40"
                 />
               }
             />
@@ -781,7 +781,7 @@ export function AcceptanceListPage() {
               <ListActionButton
                 onClick={() => handleBulkDelete(selected, clear)}
                 disabled={bulkDeleting}
-                
+                className="text-destructive hover:text-destructive"
               >
                 {t('common.delete')}
               </ListActionButton>
@@ -797,7 +797,7 @@ export function AcceptanceListPage() {
                   </span>
                   <StatusBadge status={acceptance.status} />
                   {isActiveAcceptance(acceptance) && (
-                    <Badge variant="secondary" fontSize="3xs" className="shrink-0">
+                    <Badge variant="secondary" className="shrink-0 text-3xs">
                       {t('acceptance.activeBadge')}
                     </Badge>
                   )}
@@ -836,7 +836,7 @@ export function AcceptanceListPage() {
                   {/* 验收标准进度 */}
                   <div className="hidden w-28 shrink-0 flex-col items-end gap-1 sm:flex">
                     <div className="flex w-full items-center gap-1.5">
-                      <Progress value={progressPct} className="flex-1" />
+                      <Progress value={progressPct} className="h-1.5 flex-1" />
                       <span className="w-10 text-right text-2xs tabular-nums text-muted-foreground">
                         {passedCriteria}/{totalCriteria}
                       </span>

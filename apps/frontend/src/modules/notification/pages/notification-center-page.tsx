@@ -96,7 +96,7 @@ export function NotificationCenterPage() {
 
   return (
     <PageShell
-      className="overflow-hidden"
+      className="overflow-hidden p-0"
       aiPage={CORE_AI_PAGE_IDS.notificationCenter}
       title={t('notification.title')}
       icon={Bell}
@@ -107,7 +107,7 @@ export function NotificationCenterPage() {
             <Button
               variant="default"
               size="sm"
-              fontSize="xs" 
+              className="h-7 gap-1.5 rounded-full px-2.5 text-xs font-semibold shadow-xs"
               onClick={() => setReviewModalOpen(true)}
               title="快速审阅待办决策"
             >
@@ -121,7 +121,7 @@ export function NotificationCenterPage() {
           <Button
             variant="ghost"
             size="icon"
-            
+            className="size-8 rounded-full"
             aria-label="通知设置"
             title="通知设置"
             data-ai-component="notification.settings-button"
@@ -143,7 +143,7 @@ export function NotificationCenterPage() {
               const Icon = tab.icon;
               const isActive = activeTab === tab.key;
               return (
-                <Button variant="ghost"
+                <button
                   key={tab.key}
                   type="button"
                   onClick={() => {
@@ -171,7 +171,7 @@ export function NotificationCenterPage() {
                       {tab.count}
                     </span>
                   )}
-                </Button>
+                </button>
               );
             })}
           </div>
@@ -182,11 +182,11 @@ export function NotificationCenterPage() {
               {/* 筛选菜单 */}
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  render={<Button variant="ghost" size="icon" className="shrink-0" />}
+                  render={<Button variant="ghost" size="icon" className="size-7 shrink-0 text-muted-foreground" />}
                 >
                   <Filter className="size-3.5" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" >
+                <DropdownMenuContent align="start" className="w-36 text-xs">
                   <DropdownMenuItem onClick={() => setTypeFilter('all')}>
                     全部类型
                   </DropdownMenuItem>
@@ -205,11 +205,11 @@ export function NotificationCenterPage() {
               {/* 搜索框 */}
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                <Input fontSize="xs" size="h-7"
+                <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="搜索条目、工单或 Agent..."
-                  
+                  className="h-7 pl-7 text-xs bg-background"
                 />
               </div>
             </div>
@@ -219,7 +219,7 @@ export function NotificationCenterPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                fontSize="xs" 
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                 onClick={markAllRead}
                 title="全部标记为已读"
               >
@@ -231,7 +231,7 @@ export function NotificationCenterPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  fontSize="xs" 
+                  className="h-7 gap-1 px-2 text-xs font-medium border-border/80 shadow-xs hover:bg-muted"
                   onClick={clearAllCurrent}
                   title="全部清理当前视图"
                 >
@@ -259,7 +259,7 @@ export function NotificationCenterPage() {
                 variant="page"
                 className="m-8"
                 visual={
-                  <IconStack aria-hidden="true" >
+                  <IconStack aria-hidden="true" className="text-accent-blue">
                     <Sparkles className="size-5 text-accent-blue" />
                   </IconStack>
                 }
@@ -300,10 +300,10 @@ export function NotificationCenterPage() {
 
         {/* ── 详情 Sheet：选中条目的就地拍板决策卡 / 通知详情（Overlays 抽屉形态） ── */}
         <Sheet open={!!selectedItem} onOpenChange={handleSheetOpenChange}>
-          <SheetContent maxWidth="2xl" side="right" >
+          <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-2xl">
             {selectedItem?.sourceKind === 'decision' && selectedItem.rawDecision ? (
               <>
-                <SheetHeader >
+                <SheetHeader className="border-b border-border/60 p-4 pr-12">
                   <SheetTitle className="sr-only">{selectedItem.title}</SheetTitle>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
@@ -314,11 +314,11 @@ export function NotificationCenterPage() {
                         审核完毕将自动归入「已清理」
                       </span>
                     </div>
-                    <Button fontSize="xs"
+                    <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setReviewModalOpen(true)}
-                      
+                      className="h-7 gap-1.5 text-xs text-primary hover:text-primary"
                     >
                       <Layers className="size-3.5" />
                       <span>多卡集中批阅</span>
@@ -339,13 +339,13 @@ export function NotificationCenterPage() {
               </>
             ) : selectedItem ? (
               <>
-                <SheetHeader >
+                <SheetHeader className="border-b border-border/60 p-4 pr-12">
                   <div className="flex items-start gap-3">
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-blue-light text-accent-blue">
                       <Bell className="size-5 text-accent-blue" />
                     </div>
                     <div className="min-w-0">
-                      <SheetTitle >
+                      <SheetTitle className="text-lg font-semibold text-foreground">
                         {selectedItem.title}
                       </SheetTitle>
                       <div className="mt-1 flex items-center gap-2 text-xs text-content-text-muted">
@@ -376,7 +376,7 @@ export function NotificationCenterPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        fontSize="xs" 
+                        className="h-7 gap-1 text-xs text-primary hover:text-primary"
                         onClick={() => navigate(`/app/tasks/${selectedItem.issueId}`)}
                       >
                         <span>打开工单</span>
@@ -389,7 +389,7 @@ export function NotificationCenterPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      fontSize="xs" 
+                      className="h-8 gap-1 text-xs"
                       onClick={() => clearItem(selectedItem.id)}
                     >
                       <Check className="size-3.5" />

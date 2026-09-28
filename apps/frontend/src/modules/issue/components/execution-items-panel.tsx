@@ -23,8 +23,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
 import { eventClient } from '@/infrastructure/event-client';
 import { cn } from '@/lib/utils';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { EXECUTION_RUN_STATUS_TONE } from '@/shared/status/status-visuals';
 import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
 import { RunDetailsDialog } from '@/modules/executions/components/run-details-dialog';
 import {
@@ -58,6 +56,17 @@ const PRIMARY_TRANSITION: Partial<Record<ExecutionStatus, ExecutionStatus>> = {
   pending_approval: 'completed',
   blocked: 'in_progress',
   failed: 'in_progress',
+};
+
+const STATUS_BADGE: Record<ExecutionStatus, string> = {
+  draft: 'bg-muted text-muted-foreground',
+  planned: 'bg-accent-blue/10 text-accent-blue',
+  in_progress: 'bg-accent-blue/10 text-accent-blue',
+  pending_approval: 'bg-accent-yellow/10 text-accent-yellow',
+  completed: 'bg-accent-green/10 text-accent-green',
+  failed: 'bg-destructive/10 text-destructive',
+  blocked: 'bg-accent-orange/10 text-accent-orange',
+  superseded: 'bg-muted/40 text-muted-foreground',
 };
 
 const STATUS_LABEL_KEY: Record<ExecutionStatus, string> = {
@@ -96,10 +105,7 @@ function ExecutionStatusBadge({ status }: { status: ExecutionStatus }) {
   return (
     <Badge
       variant="outline"
-      className={cn(
-        'shrink-0 border-transparent px-1.5 text-3xs font-medium',
-        TONE_CLASS[EXECUTION_RUN_STATUS_TONE[status] ?? 'default'].light,
-      )}
+      className={cn('shrink-0 border-transparent px-1.5 text-3xs font-medium', STATUS_BADGE[status])}
     >
       {t(STATUS_LABEL_KEY[status])}
     </Badge>
@@ -145,20 +151,20 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
         </span>
         <ExecutionStatusBadge status={execution.status} />
         {onViewLog && (
-          <Button variant="ghost"
+          <button
             type="button"
-            className="inline-flex items-center justify-center transition-colors disabled:pointer-events-none disabled:opacity-50"
+            className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
             title={t('taskDetail.execActionViewLog')}
             disabled={disabled}
             onClick={() => onViewLog(execution)}
           >
             <ScrollText className="size-3.5" />
-          </Button>
+          </button>
         )}
         {(secondary.length > 0 || canDispatchCli || canRetryCli) && (
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="inline-flex items-center justify-center transition-colors disabled:pointer-events-none disabled:opacity-50"
+              className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
               title={t('taskDetail.execActionMore')}
               disabled={disabled}
             >
@@ -190,23 +196,23 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
         {estimate && <span className="shrink-0">{t('taskDetail.execItemsEstimateShort', { value: estimate })}</span>}
         {actual && <span className="shrink-0">{t('taskDetail.execItemsActualShort', { value: actual })}</span>}
         {execution.retryOfId && (
-          <Button variant="ghost"
+          <button
             type="button"
-            className="inline-flex shrink-0 items-center transition-colors"
+            className="inline-flex shrink-0 items-center gap-0.5 transition-colors hover:text-foreground"
             title={t('taskDetail.execRetryOf')}
             disabled={disabled}
             onClick={() => onViewRunById?.(execution.retryOfId!)}
           >
             <RotateCcw className="size-2.5" />
             {t('taskDetail.execRetryOf')}
-          </Button>
+          </button>
         )}
         <span className="flex-1" />
         {primary && (
           <Button
             variant="secondary"
             size="xs"
-            
+            className="h-5 px-1.5 text-3xs"
             disabled={disabled}
             onClick={() => onTransition(execution, primary)}
           >
@@ -347,18 +353,18 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
           )}
         </div>
         <div className="flex items-center gap-0.5">
-          <Button
-            variant="subtle"
-            size="icon-2xs"
+          <button
+            type="button"
             onClick={() => setCollapsed((v) => !v)}
+            className="inline-flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             aria-label={collapsed ? t('common.expand') : t('common.collapse')}
             aria-expanded={!collapsed}
           >
             <ChevronDown
               className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
             />
-          </Button>
-          <Button variant="ghost"
+          </button>
+          <button
             type="button"
             onClick={() => {
               setCollapsed(false);
@@ -371,7 +377,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
             title={formOpen ? t('common.cancel') : t('taskDetail.execItemsAdd')}
           >
             <Plus className={cn('size-3.5 transition-transform', formOpen && 'rotate-45')} />
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -386,24 +392,24 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
           {/* 添加人工执行项表单 */}
           {formOpen && (
         <div className="mx-6 mb-2 flex flex-col gap-1.5 rounded-lg border border-border bg-muted/20 p-2">
-          <Input fontSize="xs" size="h-7"
+          <Input
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder={t('taskDetail.execItemsTitlePlaceholder')}
-            
+            className="h-7 text-xs"
           />
-          <Input fontSize="xs" size="h-7"
+          <Input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t('taskDetail.execItemsDescPlaceholder')}
-            
+            className="h-7 text-xs"
           />
           <div className="flex items-center gap-1.5">
             <SelectField
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
-              className="flex-1"
+              className="h-7 flex-1 text-xs"
             >
               <SelectFieldOption value="">
                 {humanMembers.length === 0
@@ -416,7 +422,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
                 </SelectFieldOption>
               ))}
             </SelectField>
-            <Input fontSize="xs" size="h-7"
+            <Input
               type="number"
               min={0}
               step={0.5}
@@ -424,15 +430,15 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
               onChange={(e) => setEstimateHours(e.target.value)}
               placeholder={t('taskDetail.execItemsEstimatePlaceholder')}
               title={t('taskDetail.execItemsEstimate')}
-              
+              className="h-7 w-16 text-xs"
             />
             <Button
               size="xs"
-              
+              className="h-7"
               disabled={!title.trim() || !subjectId || busy}
               onClick={() => void handleCreate()}
             >
-              {createExecution.isPending ? <Spinner size="2xs" color="inherit" /> : t('taskDetail.execItemsSave')}
+              {createExecution.isPending ? <Spinner className="size-3 text-inherit" /> : t('taskDetail.execItemsSave')}
             </Button>
           </div>
         </div>
@@ -440,7 +446,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
 
           {isLoading ? (
             <div className="px-6 py-1.5 text-xs text-muted-foreground">
-              <Spinner size="2xs" color="inherit" className="mr-2 inline" />
+              <Spinner className="mr-2 inline size-3 text-inherit" />
               {t('taskDetail.execItemsLoading')}
             </div>
           ) : executions.length === 0 ? (

@@ -67,22 +67,19 @@ export function ApprovalDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
-            <span className="flex items-center gap-2">
-              {mode === 'approve' && (
-                <Icons.CheckCircle className="h-5 w-5 text-accent-green" />
-              )}
-              {mode === 'reject' && (
-                <Icons.XCircle className="h-5 w-5 text-destructive" />
-              )}
-              {mode === 'submit' && (
-                <Icons.Send className="h-5 w-5 text-accent-blue" />
-              )}
-              {titles[mode]}
-            </span>
+          <DialogTitle className="flex items-center gap-2">
+            {mode === 'approve' && (
+              <Icons.CheckCircle className="h-5 w-5 text-accent-green" />
+            )}
+            {mode === 'reject' && (
+              <Icons.XCircle className="h-5 w-5 text-destructive" />
+            )}
+            {mode === 'submit' && (
+              <Icons.Send className="h-5 w-5 text-accent-blue" />
+            )}
+            {titles[mode]}
           </DialogTitle>
           <DialogDescription>{descriptions[mode]}</DialogDescription>
         </DialogHeader>
@@ -102,7 +99,7 @@ export function ApprovalDialog({
           </div>
         </div>
 
-        <DialogFooter >
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button
             type="button"
             variant="secondary"

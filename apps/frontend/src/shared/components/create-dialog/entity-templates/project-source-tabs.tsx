@@ -1,7 +1,6 @@
 /**
  * ProjectSourceTabs - 项目立项来源三分流组件（CAP-A-18 V2）
  */
-import { Button } from '@/components/ui/button';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlusCircle, FolderGit2, Sparkles } from 'lucide-react';
@@ -51,7 +50,7 @@ export function ProjectSourceTabs({ value, onChange, sources }: ProjectSourceTab
         const Icon = opt.icon;
         const active = value === opt.value;
         return (
-          <Button variant="ghost"
+          <button
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
@@ -65,7 +64,7 @@ export function ProjectSourceTabs({ value, onChange, sources }: ProjectSourceTab
           >
             <Icon className={cn('size-3.5', opt.value === 'ai' ? 'text-accent-purple' : 'opacity-70')} />
             <span className="truncate">{t(opt.labelKey, { defaultValue: opt.defaultLabel })}</span>
-          </Button>
+          </button>
         );
       })}
     </div>

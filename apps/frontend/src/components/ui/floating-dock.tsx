@@ -11,7 +11,6 @@ import {
   type MotionValue,
 } from "motion/react";
 import { cn } from "@/lib/utils";
-import { RawButton } from './raw-button'
 
 export interface DockItem {
   title: string;
@@ -77,12 +76,12 @@ const FloatingDockMobile = ({
           </motion.div>
         )}
       </AnimatePresence>
-      <RawButton
+      <button
         onClick={() => setOpen(!open)}
         className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground"
       >
         <PanelTopClose className="h-5 w-5" />
-      </RawButton>
+      </button>
     </div>
   );
 };

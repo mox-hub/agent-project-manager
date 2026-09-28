@@ -211,7 +211,7 @@ export function TemplateManager() {
   };
 
   return (
-    <PageShell aiPage="settings.templates" >
+    <PageShell aiPage="settings.templates" className="bg-background text-foreground">
       <PageHeader
         aiId="settings.templates"
         title={t('settings.templates')}
@@ -235,27 +235,20 @@ export function TemplateManager() {
         <div />
       </div>
 
-      <PageBody variant="standard">
-        {/* 布局下沉：PageBody 基线为 flex-col 无 gap，卡片间距由调用方结构承载 */}
-        <div className="space-y-6">
+      <PageBody variant="standard" className="space-y-6">
         {showProjects && (
-            <Card >
+            <Card className="border-border shadow-none">
               <CardHeader>
-                <CardTitle size="base" >
-                  {/* 布局下沉：图标+标题行由调用方结构承载，CardTitle 保持基线盒 */}
-                  <div className="flex items-center gap-2">
-                    <FolderKanban size={16} className="text-accent-blue" />
-                    {t('settings.templateManagerProjectTemplates')}
-                  </div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <FolderKanban size={16} className="text-accent-blue" />
+                  {t('settings.templateManagerProjectTemplates')}
                 </CardTitle>
                 <CardDescription>{t('settings.templateManagerProjectDesc')}</CardDescription>
               </CardHeader>
-              <CardContent>
-                {/* 布局下沉：间距（gap-3+space-y-4 叠加）由调用方结构等价承载 */}
-                <div className="flex flex-col gap-3 space-y-4">
+              <CardContent className="space-y-4">
                 {!isProjectFormOpen ? (
                   <div>
-                    <Button onClick={() => setIsProjectFormOpen(true)} variant="default">
+                    <Button onClick={() => setIsProjectFormOpen(true)} variant="default" className="gap-1.5">
                       <Plus size={15} />
                       {t('settings.templateManagerAddProject')}
                     </Button>
@@ -291,6 +284,7 @@ export function TemplateManager() {
                               <SelectField
                                 value={field.value}
                                 onChange={(e) => field.onChange(e.target.value)}
+                                className="w-full"
                               >
                                 {PROJECT_TYPES.map((type) => (
                                   <SelectFieldOption key={type} value={type}>
@@ -361,14 +355,14 @@ export function TemplateManager() {
                               <Clock size={12} />
                               {relativeTimeLabel(template.updatedAt || template.createdAt, t)}
                             </span>
-                            <Button variant="ghost"
+                            <button
                               type="button"
                               onClick={() => handleProjectEdit(template)}
-                              
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                               title={t('common.edit')}
                             >
                               <Pencil size={14} />
-                            </Button>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -377,31 +371,25 @@ export function TemplateManager() {
                 ) : (
                   <EmptyState title={t('settings.templateManagerEmptyProjects')} />
                 )}
-                </div>
               </CardContent>
             </Card>
           )}
 
           {showTasks && (
-            <Card >
+            <Card className="border-border shadow-none">
               <CardHeader>
-                <CardTitle size="base" >
-                  {/* 布局下沉：图标+标题行由调用方结构承载，CardTitle 保持基线盒 */}
-                  <div className="flex items-center gap-2">
-                    <ListTodo size={16} className="text-accent-purple" />
-                    {t('settings.templateManagerTaskTemplates')}
-                  </div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <ListTodo size={16} className="text-accent-purple" />
+                  {t('settings.templateManagerTaskTemplates')}
                 </CardTitle>
                 <CardDescription>{t('settings.templateManagerTaskDesc')}</CardDescription>
               </CardHeader>
-              <CardContent>
-                {/* 布局下沉：间距（gap-3+space-y-4 叠加）由调用方结构等价承载 */}
-                <div className="flex flex-col gap-3 space-y-4">
+              <CardContent className="space-y-4">
                 {loadingTaskTemplates ? (
                   <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
                 ) : !isTaskFormOpen ? (
                   <div>
-                    <Button onClick={() => setIsTaskFormOpen(true)} variant="default">
+                    <Button onClick={() => setIsTaskFormOpen(true)} variant="default" className="gap-1.5">
                       <Plus size={15} />
                       {t('settings.templateManagerAddTask')}
                     </Button>
@@ -437,6 +425,7 @@ export function TemplateManager() {
                               <SelectField
                                 value={field.value}
                                 onChange={(e) => field.onChange(e.target.value)}
+                                className="w-full"
                               >
                                 {TASK_CATEGORIES.map((category) => (
                                   <SelectFieldOption key={category} value={category}>
@@ -514,33 +503,23 @@ export function TemplateManager() {
                                 </span>
                               </span>
                               <div className="flex items-center gap-0.5">
-                                <Button variant="ghost"
+                                <button
                                   type="button"
                                   onClick={() => handleTaskEdit(template)}
-                                  
+                                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                   title={t('common.edit')}
                                 >
                                   <Pencil size={14} />
-                                </Button>
-                                {/* E 类批 6：`quiet` + `tone="danger"` —— tone 的色类带
-                                    `data-[tone=danger]:` 作用域（特异性 (0,2,0)/(0,3,0)），
-                                    故压得住 quiet 的 `text-muted-foreground` 与
-                                    `hover:text-foreground`：常态 = accent-red、悬停文字仍是
-                                    accent-red、悬停底 = accent-red-light，与原类串逐态等价。
-                                    `size-3.5` 是**必需连带**：Button 基线带
-                                    `[&_svg:not([class*='size-'])]:size-4`，`<Trash2 size={14} />`
-                                    的表现属性会被 CSS 归一成 16px ⇒ 不钉住即为几何漂移。 */}
-                                <Button
+                                </button>
+                                <button
                                   type="button"
-                                  variant="quiet"
-                                  tone="danger"
-                                  padding="p-1.5"
                                   onClick={() => handleTaskDelete(template.id)}
                                   disabled={deleteTaskTemplate.isPending}
+                                  className="rounded-md p-1.5 text-accent-red hover:bg-accent-red-light"
                                   title={t('common.delete')}
                                 >
-                                  <Trash2 className="size-3.5" />
-                                </Button>
+                                  <Trash2 size={14} />
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -553,11 +532,9 @@ export function TemplateManager() {
                 {!loadingTaskTemplates && taskTemplates.length === 0 && !isTaskFormOpen && (
                   <EmptyState title={t('settings.templateManagerEmptyTasks')} />
                 )}
-                </div>
               </CardContent>
             </Card>
           )}
-        </div>
       </PageBody>
     </PageShell>
   );

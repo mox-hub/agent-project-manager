@@ -89,7 +89,7 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
       <EmptyState
         title="暂无版本记录"
         description="编辑文档后会自动创建版本快照"
-        
+        className="min-h-0 border-0 py-4"
       />
     );
   }
@@ -185,7 +185,7 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
                       {renamingId === version.id ? (
                         <span className="inline-flex items-center gap-1">
                           <span className="text-xs text-muted-foreground">v</span>
-                          <Input fontSize="xs" size="h-6" fontVariant="mono"
+                          <Input
                             value={renameDraft}
                             onChange={(e) => setRenameDraft(e.target.value)}
                             onKeyDown={(e) => {
@@ -197,13 +197,13 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
                                 setRenameDraft('');
                               }
                             }}
-                            
+                            className="h-6 w-32 font-mono text-xs"
                             autoFocus
                           />
                           <Button
                             size="icon"
                             variant="ghost"
-                            
+                            className="h-6 w-6"
                             onClick={() => handleSubmitRename(version.id)}
                             disabled={!renameDraft.trim() || renameVersion.isPending}
                             aria-label="保存版本名"
@@ -213,7 +213,7 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
                           <Button
                             size="icon"
                             variant="ghost"
-                            
+                            className="h-6 w-6"
                             onClick={() => {
                               setRenamingId(undefined);
                               setRenameDraft('');
@@ -229,7 +229,7 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="opacity-0 transition-opacity group-hover:opacity-100"
+                            className="h-5 w-5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
                             onClick={() => handleStartRename(version.id, version.version)}
                             aria-label="重命名版本"
                             title="重命名版本"
@@ -261,18 +261,18 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
                 </div>
 
                 <div className="mt-2 flex flex-wrap items-center gap-1">
-                  <Button fontSize="xs"
+                  <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => {
                       setSelectedId(version.id === selectedId ? undefined : version.id);
                       onPreview?.(version.content);
                     }}
-                    
+                    className="h-7 gap-1 px-2 text-xs"
                   >
                     <Eye size={12} /> 预览
                   </Button>
-                  <Button fontSize="xs"
+                  <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => {
@@ -285,17 +285,17 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
                         setCompareTargetId(undefined);
                       }
                     }}
-                    
+                    className="h-7 gap-1 px-2 text-xs"
                   >
                     <GitCompare size={12} /> 对比
                   </Button>
                   {!isLatest && (
-                    <Button fontSize="xs"
+                    <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => handleRollback(version.id)}
                       disabled={rollback.isPending}
-                      
+                      className="h-7 gap-1 px-2 text-xs text-accent-yellow hover:bg-accent-yellow/10"
                     >
                       <RotateCcw size={12} /> 回滚
                     </Button>

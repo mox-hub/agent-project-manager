@@ -56,7 +56,7 @@ export function ReactionBar({
             </Button>
           }
         />
-        <PopoverContent align="start" >
+        <PopoverContent align="start" className="w-75 p-0">
           <EmojiPicker onSelect={toggle} />
         </PopoverContent>
       </Popover>
@@ -74,7 +74,7 @@ function ReactionChip({
   const { t } = useTranslation();
   const names = group.users.map((u) => u.displayName).join(', ');
   return (
-    <Button variant="ghost"
+    <button
       type="button"
       onClick={onToggle}
       title={names || undefined}
@@ -88,6 +88,6 @@ function ReactionChip({
       <span className="text-sm leading-none">{group.emoji}</span>
       {group.count > 1 && <span className="text-2xs font-medium">{group.count}</span>}
       <span className="sr-only">{t('activity.reaction.reacted', { count: group.count })}</span>
-    </Button>
+    </button>
   );
 }

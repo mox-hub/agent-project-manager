@@ -70,7 +70,7 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
       <SidebarPanel
         title={t('project.sidebar.properties')}
         icon={<Tag className="size-3" />}
-        iconTone="default"
+        iconClassName="text-muted-foreground"
       >
         <p className="px-2 py-2 text-xs text-muted-foreground">{t('project.sidebar.noData')}</p>
       </SidebarPanel>
@@ -110,9 +110,9 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
       value: m.userId as string,
       label: m.displayName,
       icon: (
-        <Avatar >
+        <Avatar className="h-4 w-4">
           {m.avatarUrl ? <AvatarImage src={m.avatarUrl} alt="" /> : null}
-          <AvatarFallback >
+          <AvatarFallback className="text-3xs">
             {(m.displayName || '?').slice(0, 1).toUpperCase()}
           </AvatarFallback>
         </Avatar>
@@ -131,7 +131,7 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
     <SidebarPanel
       title={t('project.sidebar.properties')}
       icon={<Tag className="size-3" />}
-      iconTone="default"
+      iconClassName="text-muted-foreground"
       collapsed={collapsed}
       onToggle={onToggleCollapse}
     >

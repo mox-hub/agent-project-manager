@@ -104,36 +104,12 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/**
- * CardTitle 的字阶/字重档（E 类桶1 增补，2026-09-28）：纯增补，default 档
- * 不生成任何类 ⇒ 既有渲染逐字节不变。归因：生产面裸覆盖集中在
- * `text-sm`（小一号标题，与 size=sm 卡片同值但作用于普通卡）、`text-base`
- * （基线字号的显式还原——同 ui/button fontSize 轴的 sm 档先例：实例裸写
- * text-base 会经 twMerge 吞掉基线 leading-normal，删除实例类会**恢复**
- * leading 而改变渲染，故必须立「还原档」承接而不能冗余删除）与
- * `font-medium`（降半档字重，与基线同组覆盖，删除安全——但先例未达
- * 立档门槛前按字阶轴同款口径一并立出，便于统一迁移）。
- */
-type CardTitleSize = "default" | "sm" | "base"
-type CardTitleFontWeight = "default" | "medium"
-
-function CardTitle({
-  className,
-  size = "default",
-  fontWeight = "default",
-  ...props
-}: React.ComponentProps<"div"> & {
-  size?: CardTitleSize
-  fontWeight?: CardTitleFontWeight
-}) {
+function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
       className={cn(
         "text-base leading-normal font-semibold group-data-[size=sm]/card:text-sm",
-        size === "sm" && "text-sm",
-        size === "base" && "text-base",
-        fontWeight === "medium" && "font-medium",
         className
       )}
       {...props}
@@ -164,30 +140,11 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/**
- * CardContent 的内距档（E 类桶1 增补，2026-09-28）：纯增补，default 档不生成
- * 任何类 ⇒ 既有渲染逐字节不变。归因：生产面裸覆盖集中在 `p-4`（与基线
- * px-(--card-spacing) 在 size=default 卡下同值的**全向**内距）与 `p-0`（撤内距）。
- * 档名沿用根组件 `inset` 轴的语义词表（none=p-0、md=p-4）；其余档（xs/sm/lg/xl）
- * 实测先例未达立档门槛，有先例再扩。与根轴同名的的原因：同一语义刻度、
- * 同一值域形态（一维全向 p-N）。
- */
-type CardContentInset = "default" | "none" | "md"
-
-function CardContent({
-  className,
-  inset = "default",
-  ...props
-}: React.ComponentProps<"div"> & { inset?: CardContentInset }) {
+function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn(
-        "flex flex-col gap-3 px-(--card-spacing)",
-        inset === "none" && "p-0",
-        inset === "md" && "p-4",
-        className
-      )}
+      className={cn("flex flex-col gap-3 px-(--card-spacing)", className)}
       {...props}
     />
   )

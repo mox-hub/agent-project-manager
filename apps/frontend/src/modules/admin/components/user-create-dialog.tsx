@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -73,7 +72,7 @@ export function UserCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent >
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t('admin.createUser', '创建成员账号')}</DialogTitle>
           <DialogDescription>
@@ -85,7 +84,7 @@ export function UserCreateDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('admin.displayName', '姓名')} *</FieldLabel>
+            <label className="text-xs font-medium">{t('admin.displayName', '姓名')} *</label>
             <Input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -94,7 +93,7 @@ export function UserCreateDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted" >{t('admin.email', '邮箱')} *</FieldLabel>
+            <label className="text-xs font-medium">{t('admin.email', '邮箱')} *</label>
             <Input
               type="email"
               value={email}
@@ -105,9 +104,9 @@ export function UserCreateDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >
+              <label className="text-xs font-medium">
                 {t('admin.usernameOptional', '登录名（可选）')}
-              </FieldLabel>
+              </label>
               <Input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -115,7 +114,7 @@ export function UserCreateDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <FieldLabel size="xs" variant="muted" >{t('admin.role', '角色')}</FieldLabel>
+              <label className="text-xs font-medium">{t('admin.role', '角色')}</label>
               <SelectField value={role} onChange={(e) => setRole(e.target.value)}>
                 <SelectFieldOption value="user">
                   {t('admin.roleUser', '普通成员')}

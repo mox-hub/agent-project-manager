@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useState } from 'react';
 import { useOnboarding } from '../hooks/use-onboarding';
 import { Button } from '@/components/ui/button';
@@ -59,7 +58,7 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <IconStack aria-hidden="true" className="mx-auto mb-4">
+        <IconStack aria-hidden="true" className="mx-auto mb-4 text-primary">
           <Rocket className="size-4 text-primary" />
         </IconStack>
         <h2 className="text-2xl font-semibold">欢迎使用 APM</h2>
@@ -102,7 +101,7 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
         </p>
       </div>
 
-      <DialogFooter >
+      <DialogFooter className="gap-2 sm:gap-0">
         <Button variant="outline" onClick={onSkip}>
           稍后设置
         </Button>
@@ -165,8 +164,8 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <FolderOpen className="h-7 w-7 text-primary" />
         </div>
-        <DialogTitle >配置工作目录</DialogTitle>
-        <DialogDescription >
+        <DialogTitle className="text-center text-xl">配置工作目录</DialogTitle>
+        <DialogDescription className="text-center">
           AI 同事将在这些目录内读写代码、执行命令
         </DialogDescription>
       </DialogHeader>
@@ -184,27 +183,20 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
                 className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2"
               >
                 <span className="truncate font-mono text-xs text-foreground">{root}</span>
-                {/* E 类批 6：`ghost-danger` 档 = 静默态 + 悬停转危险色，逐 token 覆盖原
-                    className；`shrink-0`/`rounded-md`/`transition-all` 由 Button 基线给。
-                    `size-3.5` 是**必需连带**：Button 基线带
-                    `[&_svg:not([class*='size-'])]:size-4`，而原 `h-3.5 w-3.5` 不含 `size-`
-                    子串 ⇒ 不钉住就会被归一成 16px（CSS 覆盖 width/height 表现属性），
-                    14px → 16px 即可见几何漂移。同型先例见 `acceptance-detail-page.tsx`。 */}
-                <Button
+                <button
                   type="button"
-                  variant="ghost-danger"
-                  padding="p-1"
                   onClick={() => void handleRemove(root)}
+                  className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                   aria-label={`移除 ${root}`}
                 >
-                  <Trash2 className="size-3.5" />
-                </Button>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
             ))}
           </div>
         )}
 
-        <Button width="full" type="button" variant="outline" onClick={() => void handleChoose()} disabled={isChoosing} >
+        <Button type="button" variant="outline" onClick={() => void handleChoose()} disabled={isChoosing} className="w-full">
           <Plus className="mr-1 h-4 w-4" />
           {isChoosing ? '选择中...' : '选择目录'}
         </Button>
@@ -214,7 +206,7 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
         )}
       </div>
 
-      <DialogFooter >
+      <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onSkip}>
           跳过
         </Button>
@@ -254,17 +246,17 @@ function CreateProjectStep({
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <FolderPlus className="h-7 w-7 text-primary" />
         </div>
-        <DialogTitle >创建您的第一个项目</DialogTitle>
-        <DialogDescription >
+        <DialogTitle className="text-center text-xl">创建您的第一个项目</DialogTitle>
+        <DialogDescription className="text-center">
           项目是您管理任务、成员和目标的容器
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <FieldLabel size="xs" variant="muted"  htmlFor="project-name">
+          <label className="text-sm font-medium" htmlFor="project-name">
             项目名称 <span className="text-destructive">*</span>
-          </FieldLabel>
+          </label>
           <Input
             id="project-name"
             value={name}
@@ -275,9 +267,9 @@ function CreateProjectStep({
         </div>
 
         <div className="space-y-2">
-          <FieldLabel size="xs" variant="muted"  htmlFor="project-description">
+          <label className="text-sm font-medium" htmlFor="project-description">
             项目描述
-          </FieldLabel>
+          </label>
           <Textarea
             id="project-description"
             value={description}
@@ -288,14 +280,14 @@ function CreateProjectStep({
         </div>
 
         <div className="space-y-2">
-          <FieldLabel size="xs" variant="muted" >项目类型</FieldLabel>
+          <label className="text-sm font-medium">项目类型</label>
           <div className="grid grid-cols-3 gap-2">
             {[
               { value: 'team', label: '团队', icon: Users },
               { value: 'personal', label: '个人', icon: Sparkles },
               { value: 'enterprise', label: '企业', icon: Shield },
             ].map((option) => (
-              <Button variant="ghost"
+              <button
                 key={option.value}
                 type="button"
                 onClick={() => setType(option.value as typeof type)}
@@ -307,13 +299,13 @@ function CreateProjectStep({
               >
                 <option.icon className="h-5 w-5" />
                 <span className="text-xs font-medium">{option.label}</span>
-              </Button>
+              </button>
             ))}
           </div>
         </div>
       </div>
 
-      <DialogFooter >
+      <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onSkip}>
           跳过
         </Button>
@@ -337,8 +329,8 @@ function ConnectRepositoryStep({ onNext, onSkip }: StepContentProps) {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <GitBranch className="h-7 w-7 text-primary" />
         </div>
-        <DialogTitle >连接 Git 仓库</DialogTitle>
-        <DialogDescription >
+        <DialogTitle className="text-center text-xl">连接 Git 仓库</DialogTitle>
+        <DialogDescription className="text-center">
           关联您的代码仓库，跟踪代码变更和分支
         </DialogDescription>
       </DialogHeader>
@@ -348,7 +340,7 @@ function ConnectRepositoryStep({ onNext, onSkip }: StepContentProps) {
         后于项目内随时完成——此步可以先跳过，不影响使用。
       </div>
 
-      <DialogFooter >
+      <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onSkip}>
           跳过
         </Button>
@@ -373,8 +365,8 @@ function ConfigureAiStep({ onNext, onSkip }: StepContentProps) {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <Bot className="h-7 w-7 text-primary" />
         </div>
-        <DialogTitle >配置 AI 模型</DialogTitle>
-        <DialogDescription >
+        <DialogTitle className="text-center text-xl">配置 AI 模型</DialogTitle>
+        <DialogDescription className="text-center">
           连接 AI 服务，启用智能辅助
         </DialogDescription>
       </DialogHeader>
@@ -384,7 +376,7 @@ function ConfigureAiStep({ onNext, onSkip }: StepContentProps) {
         等模型服务。进入 APM 后可在「设置 → AI 管理」中随时配置 API Key 与端点——此步可以先跳过。
       </div>
 
-      <DialogFooter >
+      <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onSkip}>
           跳过
         </Button>
@@ -417,7 +409,7 @@ function CompleteStep({
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <IconStack aria-hidden="true" className="mx-auto mb-4">
+        <IconStack aria-hidden="true" className="mx-auto mb-4 text-accent-green">
           <CheckCircle className="size-4 text-accent-green" />
         </IconStack>
         <h2 className="text-2xl font-semibold">设置完成！</h2>
@@ -470,15 +462,15 @@ function CompleteStep({
             用户会合理地认为这东西坏了。回放不需要 runtime、不需要 API key，
             在任何机器上都放得完——它是唯一能在第一分钟就说清"这东西能干什么"的东西。
             按钮文案承担全部说明责任（含"不需要配置"），避免主键变成一个语焉不详的跳转 */}
-        <Button width="full" onClick={onWatchReplay} size="lg" >
+        <Button onClick={onWatchReplay} size="lg" className="w-full">
           <Sparkles className="mr-2 h-4 w-4" />
           先看一遍它怎么干活（90 秒 · 不需要配置模型）
         </Button>
-        <Button width="full" variant="outline" onClick={handleFinish} >
+        <Button variant="outline" onClick={handleFinish} className="w-full">
           <Rocket className="mr-2 h-4 w-4" />
           直接进入 APM
         </Button>
-        <Button width="full" variant="ghost" onClick={handleGoToDocs} >
+        <Button variant="ghost" onClick={handleGoToDocs} className="w-full">
           查看文档
         </Button>
       </div>
@@ -542,7 +534,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent >
+      <DialogContent className="sm:max-w-140">
         {/* 步骤条（可点击回跳已走过的步骤；未来步骤禁用）——受控 value，导航走 goToStep */}
         <Stepper value={state.currentStep + 1} className="mb-6">
           <StepperNav>
@@ -551,9 +543,9 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
                 <StepperTrigger
                   onClick={() => goToStep(i)}
                   disabled={i > state.currentStep}
-                  
+                  className="gap-1.5"
                 >
-                  <StepperIndicator >
+                  <StepperIndicator className="size-5 text-3xs font-medium">
                     {step.status === 'completed' ? (
                       <Check className="size-3" />
                     ) : step.status === 'skipped' ? (
@@ -562,7 +554,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
                       i + 1
                     )}
                   </StepperIndicator>
-                  <StepperTitle className="whitespace-nowrap">
+                  <StepperTitle className="text-xs whitespace-nowrap">
                     {step.title}
                   </StepperTitle>
                 </StepperTrigger>

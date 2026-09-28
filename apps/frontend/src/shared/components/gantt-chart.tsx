@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -211,6 +210,7 @@ export function GanttChart({
         icon={CalendarRange}
         title={emptyMessage}
         description={emptyDescription}
+        className="min-h-40"
       />
     );
   }
@@ -250,7 +250,7 @@ export function GanttChart({
               <span>{leftColumnTitle}</span>
               <div className="flex items-center gap-1">
                 {(['day', 'week', 'month'] as const).map((s) => (
-                  <Button variant="ghost"
+                  <button
                     key={s}
                     type="button"
                     onClick={() => setScale(s)}
@@ -262,7 +262,7 @@ export function GanttChart({
                     )}
                   >
                     {s === 'day' ? '日' : s === 'week' ? '周' : '月'}
-                  </Button>
+                  </button>
                 ))}
               </div>
             </div>
@@ -302,10 +302,10 @@ export function GanttChart({
                 key={item.id}
                 className="flex border-b border-border/40 last:border-b-0 hover:bg-muted/30"
               >
-                <Button variant="ghost"
+                <button
                   type="button"
                   onClick={() => onItemClick?.(item.id)}
-                  className="flex items-center"
+                  className="flex w-60 min-w-60 items-center gap-2 border-r border-border px-3 py-2 text-left"
                 >
                   <span
                     className={cn(
@@ -317,7 +317,7 @@ export function GanttChart({
                   {item.meta ? (
                     <span className="truncate text-xs text-muted-foreground">{item.meta}</span>
                   ) : null}
-                </Button>
+                </button>
 
                 <div className="relative h-11" style={{ width: `${totalWidth}px` }}>
                   <div className="absolute inset-0 flex">

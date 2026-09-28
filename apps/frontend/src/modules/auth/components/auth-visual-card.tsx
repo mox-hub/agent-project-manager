@@ -148,14 +148,14 @@ export function AuthVisualCard({
         {/* 右上角圆形悬浮控制按钮组 (反转卡片 + 日夜间切换) */}
         <div className="absolute top-4 right-4 z-banner flex items-center gap-2">
           {/* 1. 双表面反转圆形按钮 (role="switch") */}
-          <Button variant="ghost"
+          <button
             type="button"
             role="switch"
             aria-checked={isAi}
             onClick={toggleSurface}
             aria-label={surfaceMetadata.switchPrompt}
             title={surfaceMetadata.switchPrompt}
-            className="flex items-center justify-center backdrop-blur-md transition-all hover:scale-105 active:scale-95 group"
+            className="flex size-9 items-center justify-center rounded-full border border-border/70 bg-card/85 text-foreground backdrop-blur-md transition-all hover:scale-105 hover:bg-muted active:scale-95 shadow-xs group"
           >
             <RotateCw
               className={cn(
@@ -165,24 +165,24 @@ export function AuthVisualCard({
                   : 'text-primary group-hover:rotate-180',
               )}
             />
-          </Button>
+          </button>
 
           {/* 2. 日夜间切换圆形按钮 (role="switch") */}
-          <Button variant="ghost"
+          <button
             type="button"
             role="switch"
             aria-checked={isDark}
             onClick={toggleTheme}
             aria-label={isDark ? '切换至日间浅色模式' : '切换至夜间深色模式'}
             title={isDark ? '切换至日间浅色模式' : '切换至夜间深色模式'}
-            className="flex items-center justify-center backdrop-blur-md transition-all hover:scale-105 active:scale-95"
+            className="flex size-9 items-center justify-center rounded-full border border-border/70 bg-card/85 text-foreground backdrop-blur-md transition-all hover:scale-105 hover:bg-muted active:scale-95 shadow-xs"
           >
             {isDark ? (
               <Sun className="size-4 text-accent-yellow transition-transform" />
             ) : (
               <Moon className="size-4 text-muted-foreground transition-transform" />
             )}
-          </Button>
+          </button>
         </div>
 
         {/* 左侧：人机交互、品牌叙事与表单操作区 (背景色随右侧模式联动自适应) */}
@@ -231,13 +231,13 @@ export function AuthVisualCard({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {/* 接入域名 / 服务配置：采用系统内置标准 Button */}
-                <Button fontSize="xs"
+                <Button
                   type="button"
                   role="link"
                   variant="outline"
                   size="sm"
                   onClick={() => setServerDialogOpen(true)}
-                  
+                  className="h-8 gap-1.5 px-3 text-xs font-normal shadow-xs hover:bg-muted/80"
                 >
                   <Globe className="size-3.5 text-muted-foreground" />
                   接入端点
@@ -252,7 +252,7 @@ export function AuthVisualCard({
                   variant="outline"
                   size="sm"
                   onClick={handleLanguageToggle}
-                  fontSize="xs" 
+                  className="h-8 gap-1.5 px-2.5 text-xs font-normal shadow-xs hover:bg-muted/80"
                 >
                   <Languages className="size-3.5 text-muted-foreground" />
                   <span>{currentLang === 'zh' ? '简体中文' : 'English'}</span>
@@ -261,13 +261,13 @@ export function AuthVisualCard({
               </div>
 
               {/* 无法登录 / 帮助反馈：采用系统内置 Button */}
-              <Button fontSize="xs"
+              <Button
                 type="button"
                 role="link"
                 variant="ghost"
                 size="sm"
                 onClick={() => setHelpDialogOpen(true)}
-                
+                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50"
               >
                 无法登录？
               </Button>
@@ -332,8 +332,8 @@ export function AuthVisualCard({
               </p>
             </div>
 
-            <Button width="full"
-              fontSize="xs" 
+            <Button
+              className="w-full text-xs"
               size="sm"
               onClick={() => setHelpDialogOpen(false)}
             >

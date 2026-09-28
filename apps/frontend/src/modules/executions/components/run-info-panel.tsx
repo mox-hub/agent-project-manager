@@ -2,7 +2,6 @@
  * 运行信息面板 —— provider/runtime/mode/工作目录 + 时间线 + token/费用细分（含按模型汇总）。
  * 弹窗右上 ℹ 按钮切换显示；选中步骤详情时让位。
  */
-import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -65,13 +64,13 @@ export function RunInfoPanel({
     <div className="flex w-64 shrink-0 flex-col overflow-y-auto border-l border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <span className="text-xs font-semibold">{t('runDetails.infoTitle')}</span>
-        <Button variant="ghost"
+        <button
           type="button"
           onClick={onClose}
-          className="transition-colors"
+          className="text-content-text-muted transition-colors hover:text-content-text"
         >
           <X className="size-4" />
-        </Button>
+        </button>
       </div>
 
       <Section>

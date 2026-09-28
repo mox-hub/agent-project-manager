@@ -45,9 +45,9 @@ export function ProfileHealthChips({ profile }: { profile: ProfileResponse }) {
   return (
     <div className="flex items-center gap-1.5" data-ai="profile.health-chips">
       {avgConfidence !== null ? (
-        <Badge fontSize="3xs"
+        <Badge
           variant="outline"
-          
+          className="gap-1 text-3xs"
           title={t('project.profilePage.avgConfidence')}
         >
           <Percent className="size-3" />
@@ -55,8 +55,8 @@ export function ProfileHealthChips({ profile }: { profile: ProfileResponse }) {
         </Badge>
       ) : null}
       {staleSlots > 0 ? (
-        <Badge fontSize="3xs"
-          
+        <Badge
+          className="gap-1 rounded-full border border-accent-yellow/40 bg-accent-yellow-light text-3xs text-accent-yellow"
           title={t('project.profilePage.staleHint')}
         >
           <Clock3 className="size-3" />

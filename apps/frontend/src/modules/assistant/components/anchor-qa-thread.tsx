@@ -121,7 +121,7 @@ export function AnchorQaThread({
                     key={action.action}
                     variant="outline"
                     size="sm"
-                    fontSize="2xs" 
+                    className="h-6 px-2 text-2xs"
                     disabled={applied || applying !== null || !onApplyAction}
                     onClick={() => applyAction(index, action)}
                     data-ai-action="assistant.anchor-qa.apply.click"
@@ -148,7 +148,7 @@ export function AnchorQaThread({
 
       {/* 输入行 */}
       <div className="flex items-center gap-1.5">
-        <Input fontSize="xs" size="h-7"
+        <Input
           ref={inputRef}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
@@ -156,14 +156,14 @@ export function AnchorQaThread({
             if (e.key === 'Enter' && !e.nativeEvent.isComposing) ask();
           }}
           placeholder={t('assistant.anchorQa.placeholder')}
-          
+          className="h-7 border-0 bg-transparent text-xs shadow-none focus-visible:ring-0"
           data-ai-component="assistant.anchor-qa-input"
           data-ai-role="input"
         />
-        <Button padding="p-0"
+        <Button
           variant="ghost"
           size="sm"
-          className="shrink-0"
+          className="h-6 w-6 shrink-0 p-0"
           disabled={!question.trim() || anchorQa.isPending}
           onClick={ask}
           data-ai-action="assistant.anchor-qa.send.click"
@@ -171,10 +171,10 @@ export function AnchorQaThread({
         >
           <Send className="size-3.5" />
         </Button>
-        <Button padding="p-0"
+        <Button
           variant="ghost"
           size="sm"
-          className="shrink-0"
+          className="h-6 w-6 shrink-0 p-0"
           onClick={() => onOpenChange?.(false)}
           aria-label={t('common.close')}
         >
@@ -184,24 +184,24 @@ export function AnchorQaThread({
 
       {/* 升级出口：细聊 / 进办公室 */}
       <div className="mt-1 flex items-center gap-3 border-t border-border/60 pt-1.5">
-        <Button variant="ghost"
+        <button
           type="button"
           onClick={escalateToPanel}
-          className="flex items-center hover:underline"
+          className="flex items-center gap-1 text-2xs text-accent-purple hover:underline"
           data-ai-action="assistant.anchor-qa.escalate-panel.click"
         >
           <ArrowUpRight className="size-3" />
           {t('assistant.anchorQa.escalatePanel')}
-        </Button>
-        <Button variant="ghost"
+        </button>
+        <button
           type="button"
           onClick={() => navigate('/app/office')}
-          className="flex items-center hover:underline"
+          className="flex items-center gap-1 text-2xs text-content-text-muted hover:underline"
           data-ai-action="assistant.anchor-qa.escalate-office.click"
         >
           <DoorOpen className="size-3" />
           {t('assistant.anchorQa.escalateOffice')}
-        </Button>
+        </button>
       </div>
     </div>
   );
@@ -217,7 +217,7 @@ export function AnchorQaGhostButton({
 }) {
   const { t } = useTranslation();
   return (
-    <Button variant="ghost"
+    <button
       type="button"
       onClick={onClick}
       className={cn(
@@ -231,7 +231,7 @@ export function AnchorQaGhostButton({
     >
       <Sparkles className="size-3" />
       {t('assistant.anchorQa.open')}
-    </Button>
+    </button>
   );
 }
 

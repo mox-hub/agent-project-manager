@@ -199,14 +199,14 @@ export function RunDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         keepDefaultWidth={false}
-        className="flex flex-col overflow-hidden"
+        className="flex h-[85vh] max-w-5xl flex-col gap-0 overflow-hidden p-0"
       >
         {!data ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3">
             {detail.isLoading ? (
               <>
-                <Spinner  />
-                <Skeleton  />
+                <Spinner className="text-accent-blue" />
+                <Skeleton className="h-4 w-40" />
               </>
             ) : (
               <>
@@ -224,7 +224,7 @@ export function RunDetailsDialog({
             <div className="shrink-0 space-y-1.5 border-b p-4 pr-12">
               <div className="flex items-center gap-2">
                 <StatusPillFor status={data.status} />
-                <DialogTitle className="truncate">
+                <DialogTitle className="min-w-0 truncate text-sm font-medium">
                   {data.goal}
                 </DialogTitle>
               </div>
@@ -268,7 +268,7 @@ export function RunDetailsDialog({
                       {cost}
                     </span>
                   ) : null}
-                  <Button variant="ghost"
+                  <button
                     type="button"
                     onClick={toggleInfo}
                     title={t('runDetails.title')}
@@ -280,7 +280,7 @@ export function RunDetailsDialog({
                     )}
                   >
                     <Info className="size-4" />
-                  </Button>
+                  </button>
                 </span>
               </div>
             </div>
@@ -324,7 +324,7 @@ export function RunDetailsDialog({
               ).map(([key, label]) => {
                 const active = activeMode === key;
                 return (
-                  <Button variant="ghost"
+                  <button
                     key={key}
                     type="button"
                     onClick={() => setView({ runId: runId ?? '', mode: key })}
@@ -338,12 +338,12 @@ export function RunDetailsDialog({
                     data-ai-action={`executions.run-details.tab.${key}.click`}
                   >
                     {label}
-                  </Button>
+                  </button>
                 );
               })}
               {showRaw && stillActive ? (
                 <span className="ml-auto flex items-center gap-1 text-3xs text-content-text-muted">
-                  <Spinner size="2xs" />
+                  <Spinner className="size-3" />
                   {t('runDetails.rawLogStreaming')}
                 </span>
               ) : null}

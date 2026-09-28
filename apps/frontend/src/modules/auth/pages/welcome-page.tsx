@@ -44,7 +44,7 @@ export function WelcomePage() {
           >
             {t('auth.learnMore')}
           </Link>
-          <Button size="sm"  onClick={() => navigate('/app')}>
+          <Button size="sm" className="w-28" onClick={() => navigate('/app')}>
             {t('auth.getStarted')}
           </Button>
         </>

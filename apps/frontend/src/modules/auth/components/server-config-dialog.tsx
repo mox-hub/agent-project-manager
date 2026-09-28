@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -85,15 +84,15 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Server className="size-4" />
             </div>
             <div>
-              <DialogTitle >服务接入与端点配置</DialogTitle>
-              <DialogDescription >
+              <DialogTitle className="text-base font-semibold">服务接入与端点配置</DialogTitle>
+              <DialogDescription className="text-xs">
                 配置 APM 后端 API 服务地址（适用于私有部署、多工作区或本地多端口开发）
               </DialogDescription>
             </div>
@@ -102,10 +101,10 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted"  htmlFor="api-url-input">
+            <label className="text-xs font-medium text-foreground" htmlFor="api-url-input">
               后端服务基础 URL (API Base URL)
-            </FieldLabel>
-            <Input fontSize="xs" fontVariant="mono"
+            </label>
+            <Input
               id="api-url-input"
               value={url}
               onChange={(e) => {
@@ -113,7 +112,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
                 setTestResult(null);
               }}
               placeholder="例如 http://localhost:3000/_api 或 https://apm.internal"
-              
+              className="font-mono text-xs"
             />
           </div>
 
@@ -128,6 +127,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
                 setUrl('/_api');
                 setTestResult(null);
               }}
+              className="text-xs"
             >
               同源代理 (/_api)
             </Button>
@@ -139,8 +139,9 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
                 setUrl('http://localhost:3000/_api');
                 setTestResult(null);
               }}
+              className="text-xs font-mono"
             >
-              <span className="font-mono">本地 3000</span>
+              本地 3000
             </Button>
           </div>
 
@@ -168,25 +169,24 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
             type="button"
             variant="ghost"
             size="sm"
-            fontSize="xs"
             onClick={handleReset}
-            
+            className="text-xs text-muted-foreground"
           >
             恢复默认
           </Button>
 
           <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                fontSize="xs"
-                onClick={handleTest}
-                disabled={testing || !url.trim()}
-              >
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleTest}
+              disabled={testing || !url.trim()}
+              className="text-xs"
+            >
               {testing ? (
                 <>
-                  <Spinner color="inherit" size="2xs" className="mr-1" />
+                  <Spinner className="mr-1 size-3 text-inherit" />
                   测试中
                 </>
               ) : (
@@ -196,7 +196,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
                 </>
               )}
             </Button>
-            <Button type="button" size="sm" fontSize="xs" onClick={handleSave}>
+            <Button type="button" size="sm" onClick={handleSave} className="text-xs">
               保存并应用
             </Button>
           </div>

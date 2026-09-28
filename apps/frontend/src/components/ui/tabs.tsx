@@ -42,27 +42,13 @@ const tabsListVariants = cva(
 function TabsList({
   className,
   variant = "default",
-  width = "default",
   ...props
-}: TabsPrimitive.List.Props &
-  VariantProps<typeof tabsListVariants> & {
-    /**
-     * 全宽档（E 类第二轮增补，2026-09-28 第八轮裁决 #1-④，纯增补 default 不变）：
-     * `full` = `w-full`，接管基线 `w-fit`（同组类 twMerge 后者胜出）。归因：
-     * 生产面 TabsList 上的 `w-full` 覆盖（等宽分页签形态），此前只能 className 表达。
-     * 出处：`docs/design/修改方案-E类-2026-09-27.md` §七之九 #1。
-     */
-    width?: "default" | "full"
-  }) {
+}: TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
       data-variant={variant}
-      className={cn(
-        tabsListVariants({ variant }),
-        width === "full" && "w-full",
-        className
-      )}
+      className={cn(tabsListVariants({ variant }), className)}
       {...props}
     >
       {variant === "segmented" && (
@@ -76,11 +62,7 @@ function TabsList({
   )
 }
 
-function TabsTrigger({
-  className,
-  fontSize = "default",
-  ...props
-}: TabsPrimitive.Tab.Props & { fontSize?: "default" | "xs" }) {
+function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
@@ -89,9 +71,6 @@ function TabsTrigger({
         "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
         "data-active:bg-background data-active:text-foreground dark:data-active:border-input dark:data-active:bg-input/30 dark:data-active:text-foreground",
         "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
-        // —— E 类桶1 增补（2026-09-28）：字阶档，纯增补，default 不变 ——
-        // 归因：紧凑页签的 `text-xs` 覆盖此前只能由调用方 className 表达。
-        fontSize === "xs" && "text-xs",
         className
       )}
       {...props}

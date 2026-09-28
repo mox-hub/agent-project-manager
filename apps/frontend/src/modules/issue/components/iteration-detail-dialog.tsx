@@ -20,8 +20,6 @@ import {
 } from '../lib/iteration-status';
 import { formatDate } from '@/shared/lib/date-format';
 import { cn } from '@/lib/utils';
-import { TONE_CLASS } from '@/components/ui/tone';
-import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals';
 
 interface IterationDetailDialogProps {
   open: boolean;
@@ -33,10 +31,12 @@ interface IterationDetailDialogProps {
   onEdit?: (iteration: IterationRef) => void;
 }
 
-/** 工单状态徽标配色：tone 唯一链路（浅底 + 描边槽，键登记于 status-visuals.TASK_STATUS_VISUALS） */
-const issueStatusBadgeClass = (status: string): string => {
-  const tone = TASK_STATUS_VISUALS[status]?.tone ?? 'default';
-  return cn(TONE_CLASS[tone].light, TONE_CLASS[tone].border);
+/** 工单状态徽标色（克制复用 muted 语义，避免引入新色板） */
+const ISSUE_STATUS_BADGE: Record<string, string> = {
+  todo: 'bg-muted text-muted-foreground border-border',
+  in_progress: 'bg-accent-blue-light text-accent-blue border-accent-blue/30',
+  in_review: 'bg-accent-yellow-light text-accent-yellow border-accent-yellow/30',
+  done: 'bg-accent-green-light text-accent-green border-accent-green/30',
 };
 
 /**
@@ -67,17 +67,14 @@ export function IterationDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent >
+      <DialogContent className="sm:max-w-110">
         {iteration && tone ? (
           <>
             <DialogHeader>
-              <DialogTitle>
-                {/* 布局下沉：图标+名称+徽标行由调用方结构承载（span 合法于 h2 内） */}
-                <span className="flex flex-wrap items-center gap-2">
-                  <CalendarRange className="h-5 w-5 shrink-0 text-accent-purple" />
-                  <span className="min-w-0 break-all">{iteration.name}</span>
-                  <Badge className={tone.badgeClass}>{t(tone.labelKey)}</Badge>
-                </span>
+              <DialogTitle className="flex flex-wrap items-center gap-2">
+                <CalendarRange className="h-5 w-5 shrink-0 text-accent-purple" />
+                <span className="min-w-0 break-all">{iteration.name}</span>
+                <Badge className={tone.badgeClass}>{t(tone.labelKey)}</Badge>
               </DialogTitle>
               <DialogDescription>
                 {t(
@@ -116,7 +113,7 @@ export function IterationDetailDialog({
                       'project.milestonesPage.iterationEmptyIssuesDesc',
                       '在任务工作台把工单的迭代字段设为本迭代',
                     )}
-                    
+                    className="min-h-0 border-0 py-6"
                   />
                 ) : (
                   issues.map((issue) => (
@@ -130,7 +127,8 @@ export function IterationDetailDialog({
                       <Badge
                         className={cn(
                           'shrink-0 text-3xs',
-                          issueStatusBadgeClass(issue.status),
+                          ISSUE_STATUS_BADGE[issue.status] ??
+                            ISSUE_STATUS_BADGE.todo,
                         )}
                       >
                         {issue.status}

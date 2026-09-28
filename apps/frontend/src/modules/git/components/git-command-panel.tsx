@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import React, { useState } from 'react';
 import { useExecuteCommand, useCommandHistory } from '../hooks/use-git-command';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -75,9 +74,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="command">
-            {/* 布局下沉：TabsContent 基线为普通块级，子项间距由调用方结构承载 */}
-            <div className="space-y-3">
+          <TabsContent value="command" className="space-y-3">
             <div className="space-y-2">
               <div>
                 <p className="text-sm font-medium text-foreground">Command</p>
@@ -107,18 +104,18 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                   />
                 </InputGroup>
               </div>
-              <FieldLabel size="xs" variant="muted" className="flex items-center">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Checkbox
                   id="allowDangerous"
                   checked={allowDangerous}
                   onChange={(e) => setAllowDangerous(e.target.checked)}
                 />
                 Allow dangerous commands
-              </FieldLabel>
-              <Button width="full"
+              </label>
+              <Button
                 onClick={handleExecute}
                 disabled={executing || !command.trim()}
-                
+                className="w-full"
               >
                 {executing ? (
                   <>
@@ -130,12 +127,9 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 )}
               </Button>
             </div>
-            </div>
           </TabsContent>
 
-          <TabsContent value="quick">
-            {/* 布局下沉：子项间距由调用方结构承载 */}
-            <div className="space-y-2">
+          <TabsContent value="quick" className="space-y-2">
             <p className="text-sm text-muted-foreground">Click a command to fill the input:</p>
             <div className="grid grid-cols-2 gap-2">
               {commonCommands.map((cmd) => (
@@ -149,12 +143,9 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 </Button>
               ))}
             </div>
-            </div>
           </TabsContent>
 
-          <TabsContent value="history">
-            {/* 布局下沉：子项间距由调用方结构承载 */}
-            <div className="space-y-2">
+          <TabsContent value="history" className="space-y-2">
             {history && history.length === 0 ? (
               <p className="text-sm text-muted-foreground">No command history</p>
             ) : (
@@ -186,7 +177,6 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 ))}
               </div>
             )}
-            </div>
           </TabsContent>
         </Tabs>
 

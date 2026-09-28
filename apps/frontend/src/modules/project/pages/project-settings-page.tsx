@@ -226,7 +226,7 @@ export function ProjectSettingsPage() {
           {SETTINGS_TABS.map((tab) => {
             const Icon = tab.icon;
             return (
-              <Button variant="ghost"
+              <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
@@ -242,7 +242,7 @@ export function ProjectSettingsPage() {
               >
                 <Icon className="h-3.5 w-3.5" />
                 {t(tab.label)}
-              </Button>
+              </button>
             );
           })}
 
@@ -257,11 +257,11 @@ export function ProjectSettingsPage() {
                 {t('projectSettings.archive.archived')}
               </div>
             ) : (
-              <Button variant="ghost"
+              <button
                 type="button"
                 onClick={handleArchiveProject}
                 disabled={archiveProject.isPending}
-                className="flex items-center transition-colors disabled:pointer-events-none disabled:opacity-50"
+                className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
                 data-ai-component="project.project-settings.danger.archive"
                 data-ai-action="project.project-settings.danger.archive.click"
                 data-ai-role="action"
@@ -270,7 +270,7 @@ export function ProjectSettingsPage() {
                 {archiveProject.isPending
                   ? t('projectSettings.archive.archiving')
                   : t('projectSettings.archive.action')}
-              </Button>
+              </button>
             )}
           </div>
         </div>
@@ -292,11 +292,11 @@ export function ProjectSettingsPage() {
                 </div>
 
                 <Card>
-                  <CardHeader >
+                  <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.info.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.info.desc')}</CardDescription>
                   </CardHeader>
-                  <CardContent >
+                  <CardContent className="pt-4">
                     <Form {...projectForm}>
                       <div className="space-y-1">
                         <FormField
@@ -400,11 +400,11 @@ export function ProjectSettingsPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader >
+                  <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.gitTool.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.gitTool.desc')}</CardDescription>
                   </CardHeader>
-                  <CardContent >
+                  <CardContent className="pt-4">
                     <GitToolStatusPanel />
                   </CardContent>
                 </Card>
@@ -447,31 +447,31 @@ export function ProjectSettingsPage() {
                 </div>
 
                 <Card>
-                  <CardHeader >
+                  <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.workspace.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.workspace.desc')}</CardDescription>
                   </CardHeader>
-                  <CardContent >
+                  <CardContent className="pt-4">
                     <WorkspaceConfig projectId={projectId} />
                   </CardContent>
                 </Card>
 
                 <Card>
-                  <CardHeader >
+                  <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.repos.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.repos.desc')}</CardDescription>
                   </CardHeader>
-                  <CardContent >
+                  <CardContent className="pt-4">
                     <RepositoryList projectId={projectId} />
                   </CardContent>
                 </Card>
 
                 <Card>
-                  <CardHeader >
+                  <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.gitConfig.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.gitConfig.desc')}</CardDescription>
                   </CardHeader>
-                  <CardContent >
+                  <CardContent className="pt-4">
                     <Form {...configForm}>
                       <div className="space-y-1">
                         <FormField
@@ -623,11 +623,11 @@ export function ProjectSettingsPage() {
                 </div>
 
                 <Card>
-                  <CardHeader >
+                  <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.contract.panel.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.contract.panel.desc')}</CardDescription>
                   </CardHeader>
-                  <CardContent >
+                  <CardContent className="pt-4">
                     <ContractBindingsPanel projectId={projectId} />
                   </CardContent>
                 </Card>
@@ -648,11 +648,11 @@ export function ProjectSettingsPage() {
                 </div>
 
                 <Card>
-                  <CardHeader >
+                  <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.cloud.sync.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.cloud.sync.desc')}</CardDescription>
                   </CardHeader>
-                  <CardContent >
+                  <CardContent className="pt-4">
                     <ExternalLinksManager projectId={projectId} />
                   </CardContent>
                 </Card>
@@ -673,21 +673,21 @@ export function ProjectSettingsPage() {
                 </div>
 
                 <Card>
-                  <CardHeader >
+                  <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.docs.external.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.docs.external.desc')}</CardDescription>
                   </CardHeader>
-                  <CardContent >
+                  <CardContent className="pt-4">
                     <DocLinksManager projectId={projectId} />
                   </CardContent>
                 </Card>
 
                 <Card>
-                  <CardHeader >
+                  <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.docs.api.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.docs.api.desc')}</CardDescription>
                   </CardHeader>
-                  <CardContent >
+                  <CardContent className="pt-4">
                     <ApiDocLinksManager projectId={projectId} />
                   </CardContent>
                 </Card>

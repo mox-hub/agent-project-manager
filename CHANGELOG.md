@@ -21,6 +21,17 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——E 类裸组件清剿与规范收敛全轮回滚（2026-09-28 深夜）：代码回到批 0c 补档基线，文档与治理基建全量保留
+
+> 用户裁决（2026-09-28）：codemod 大批量修改导致系统组件混乱，裸组件改动整轮回退——「主要还是裸组件这块的改动出问题了，只要回退到裸组件改动过之前就行」；chip 组件不保留；F 类代码改动不保留（文档保留）；docs/ 全部最新文档保留。执行方式：工作区与索引按 `git restore --source=4563d236` 整体回到 **4563d236（E 类批 0c 纯增补补档）**，即 a6007d6f（批 0c 收口）起 17 笔迁移/替换/清剿类代码提交全部撤除；`docs/`、`CHANGELOG.md` 与 allowlist 豁免基建五文件（`eslint-rules/*`、`design-governance.allowlist.json`、`eslint.config.js`）明确排除在外。回退前保险分支 `backup/pre-rollback-ba418dad`；chip.tsx 与 `scripts/f-class/` 存 stash 可找回。
+
+| 项 | 内容 | 证据要点 |
+|---|---|---|
+| 回退范围 | 批 0c 收口（a6007d6f·加载指示收口+逃生舱转语义档）→ 批 6/7 裸写作迁移 9 笔 → 交接单任务 A（zero 档+八处落轴）→ 四桶清剿 4 笔 → A1 补档+胶囊收敛（9c5d0a4a）→ codemod 批量清零（7efb798e·259 文件）→ RawButton/RawInput 具名出口 → 画廊恢复（ba418dad，回退后自然失效） | 约 308 文件回到 4563d236 状态；raw-button.tsx / raw-input.tsx / header-action-button.test.tsx 三个范围内新增文件随源移除 |
+| 保留面 | 批 0/0b/0c 纯增补轴（button/card/field/tone.ts）、批 1-5 基建（registry、三条 warn 规则、lint:layers/duplicate）、批 3 select-field 改名、allowlist 豁免机制 + PRINCIPLES A7 条款 | 索引 vs 4563d236 在 apps/frontend 仅余 allowlist 五文件差异；registry.ts / COMPONENTS.md / package.json / index.css 不在回退范围，零再生 |
+| 文档口径 | docs/design/**（含 E 类方案 §七十各轮、清剿报告、交接单、A7 落宪）+ CHANGELOG 历史条目 + F 类方案文档全部保留为最新；本文条目与其后各轮记录为决策史，不随代码回退改写 | F 类方案与高度章记录先行单独入账（9a04f27e） |
+| 可见变化 | Button 基线回 `rounded-md` 方角；裸 button/label/input/textarea 回归原写法；F 类成果（85vh token、侧栏 360、面板头 h-12、滚动区四档）消失 | 三条 warn 规则下 eslint 警告回归 ~2000+，属回退后代码的真实状态（warn 不阻断） |
+
 ### 前端设计治理——F 类高度 J16–J18 拍板落地（2026-09-28 晚）：三项均按推荐收口，17 文件迁移入账
 
 > 承接同日 F12 高度增补章：用户三项裁决 **J16 复活 token 改 85vh / J17 面板头归一 h-12 / J18 滚动区四档封闭表 40/64/80/96**（均按推荐）。执行 `scripts/f-class/f2-height-migration.mjs`（同一 fail-closed 守卫体系，17 文件 17 编辑，脚本入库）：`--spacing-dialog-scroll` 80→85vh（token 向事实对齐）+ assistant-fab 浮窗迁 `h-dialog-scroll`（等值）；面板头 h-14 ×2 / h-16 ×1 → h-12；滚动区 48→40 ×1、56→64 ×4、72→80 ×6、60vh→96 ×2（收缩性迁移：1080p 下 648→384px，均为受限列表/表格预览且外层有滚动兜底，**建议实机过一眼**）。**余 1 处推迟**：document-preview-dialog:82 `h-[85vh]`→token（该文件 E 类 ui 收敛批次占用中）；顺带发现 `--spacing-dialog-full: 90vh` 亦为零消费死 token（未在裁决范围，仅登记）。方案已同步定档：F12.3 总表（面板头 h-12 / 滚动区四档 / 弹窗 85vh token）+ F3.2/F3.5 表述 token 化 + frontmatter status（J1–J18 全收口）。

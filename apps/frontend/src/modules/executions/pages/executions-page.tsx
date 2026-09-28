@@ -263,7 +263,7 @@ export function ExecutionsPage() {
         />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <div className="flex min-w-0 items-center gap-2">
-            <ListText >{run.goal}</ListText>
+            <ListText className="font-medium">{run.goal}</ListText>
             <RunStatusBadge status={run.status} />
           </div>
           <div className="flex min-w-0 items-center gap-3 text-xs text-muted-foreground">
@@ -281,15 +281,15 @@ export function ExecutionsPage() {
             ) : null}
             {run.issue?.title ? <span className="truncate">{run.issue.title}</span> : null}
             {run.retryOfId ? (
-              <Button variant="ghost"
+              <button
                 type="button"
-                className="inline-flex shrink-0 items-center transition-colors"
+                className="inline-flex shrink-0 items-center gap-0.5 text-muted-foreground transition-colors hover:text-foreground"
                 title={t('execution.row.retryOf')}
                 onClick={() => setDetailRunId(run.retryOfId!)}
               >
                 <RotateCcw className="size-3" />
                 {t('execution.row.retryOf')}
-              </Button>
+              </button>
             ) : null}
             <span className="shrink-0">{formatRunDateTime(run.startedAt ?? run.createdAt)}</span>
             {duration ? <span className="shrink-0">{duration}</span> : null}
@@ -331,10 +331,10 @@ export function ExecutionsPage() {
             {cost.replace('$', '')}
           </span>
         ) : null}
-        <Button padding="p-0"
+        <Button
           variant="ghost"
           size="sm"
-          className="shrink-0"
+          className="size-7 shrink-0 p-0"
           title={t('runDetails.viewDetail')}
           onClick={(event) => {
             event.stopPropagation();
@@ -464,7 +464,7 @@ export function ExecutionsPage() {
             <EmptyState
               variant="page"
               visual={
-                <IconStack aria-hidden="true" >
+                <IconStack aria-hidden="true" className="text-accent-blue">
                   <Activity className="size-4 text-accent-blue" />
                 </IconStack>
               }
@@ -492,7 +492,7 @@ export function ExecutionsPage() {
           <DataList
             items={filteredRuns}
             loading={isLoading}
-            
+            className="w-full"
             renderLeading={renderLeading}
             renderTrailing={renderTrailing}
             onItemClick={(run) => setDetailRunId(run.id)}

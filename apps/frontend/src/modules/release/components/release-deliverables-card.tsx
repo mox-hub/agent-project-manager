@@ -80,8 +80,8 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between">
-        <CardTitle size="sm" className="flex items-center">
+      <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardTitle className="flex items-center gap-1.5 text-sm">
           <PackageCheck className="size-4 text-accent-green" />
           {t('release.deliverables.title')}
         </CardTitle>
@@ -89,14 +89,14 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
           <Button
             variant="outline"
             size="sm"
-            fontSize="xs" 
+            className="h-7 text-xs"
             onClick={startEdit}
           >
             {t('release.deliverables.edit')}
           </Button>
         )}
       </CardHeader>
-      <CardContent >
+      <CardContent className="space-y-3">
         {editing ? (
           <>
             <div className="space-y-2">
@@ -105,27 +105,27 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
                   key={`deliverable-draft-${index}`}
                   className="relative space-y-1.5 rounded-md border border-border p-3 pr-8"
                 >
-                  <Button variant="ghost"
+                  <button
                     type="button"
-                    className="absolute right-2 top-2"
+                    className="absolute right-2 top-2 text-content-text-muted hover:text-accent-red"
                     title={t('release.deliverables.remove')}
                     onClick={() =>
                       setDraft((prev) => prev.filter((_, i) => i !== index))
                     }
                   >
                     <X className="size-3.5" />
-                  </Button>
+                  </button>
                   <div className="grid gap-1.5 sm:grid-cols-3">
                     <Input
                       value={item.name}
                       placeholder={t('release.deliverables.field.name')}
-                      size="h-7" fontSize="xs"
+                      className="h-7 text-xs"
                       onChange={(e) => patchItem(index, { name: e.target.value })}
                     />
                     <Input
                       value={item.location}
                       placeholder={t('release.deliverables.field.location')}
-                      size="h-7" fontSize="xs"
+                      className="h-7 text-xs"
                       onChange={(e) =>
                         patchItem(index, { location: e.target.value })
                       }
@@ -133,7 +133,7 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
                     <Input
                       value={item.howToVerify}
                       placeholder={t('release.deliverables.field.howToVerify')}
-                      size="h-7" fontSize="xs"
+                      className="h-7 text-xs"
                       onChange={(e) =>
                         patchItem(index, { howToVerify: e.target.value })
                       }
@@ -143,7 +143,7 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
                     <Input
                       value={item.limitations ?? ''}
                       placeholder={t('release.deliverables.field.limitations')}
-                      size="h-7" fontSize="xs"
+                      className="h-7 text-xs"
                       onChange={(e) =>
                         patchItem(index, { limitations: e.target.value })
                       }
@@ -151,7 +151,7 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
                     <Input
                       value={item.receiver ?? ''}
                       placeholder={t('release.deliverables.field.receiver')}
-                      size="h-7" fontSize="xs"
+                      className="h-7 text-xs"
                       onChange={(e) =>
                         patchItem(index, { receiver: e.target.value })
                       }
@@ -164,7 +164,7 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
               <Button
                 variant="outline"
                 size="sm"
-                fontSize="xs" 
+                className="h-7 text-xs"
                 onClick={() => setDraft((prev) => [...prev, { ...EMPTY_ITEM }])}
               >
                 <Plus className="mr-1 size-3" />
@@ -174,14 +174,14 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
                 <Button
                   variant="outline"
                   size="sm"
-                  fontSize="xs" 
+                  className="h-7 text-xs"
                   onClick={() => setEditing(false)}
                 >
                   {t('common.cancel')}
                 </Button>
                 <Button
                   size="sm"
-                  fontSize="xs" 
+                  className="h-7 text-xs"
                   disabled={update.isPending}
                   onClick={save}
                 >

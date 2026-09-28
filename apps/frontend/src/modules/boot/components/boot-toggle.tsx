@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
@@ -10,7 +9,7 @@ export interface BootToggleProps {
 
 export function BootToggle({ checked, onChange, className }: BootToggleProps) {
   return (
-    <FieldLabel size="xs" variant="muted"
+    <label
       htmlFor="boot-skip-toggle"
       className={`flex cursor-pointer items-center gap-2 text-xs text-muted-foreground ${className ?? ''}`}
     >
@@ -20,10 +19,10 @@ export function BootToggle({ checked, onChange, className }: BootToggleProps) {
         checked={checked}
         onCheckedChange={onChange}
       />
-      <Label htmlFor="boot-skip-toggle" className="cursor-pointer">
+      <Label htmlFor="boot-skip-toggle" className="cursor-pointer text-xs font-normal">
         下次启动时跳过此页
       </Label>
-    </FieldLabel>
+    </label>
   );
 }
 

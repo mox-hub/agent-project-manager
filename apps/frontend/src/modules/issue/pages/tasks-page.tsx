@@ -733,7 +733,7 @@ export function TasksPage() {
             close();
           }}
           title={t('task.batchUpdate.actionTitle', '批量修改状态 / 优先级 / 负责人')}
-          
+          className="text-accent-blue"
         >
           <SlidersHorizontal className="size-3.5" /> {t('task.batchUpdate.action', '批量修改')}
         </ListActionButton>
@@ -741,7 +741,7 @@ export function TasksPage() {
           onClick={() => handleDispatchSelected(selected, close)}
           disabled={!selected.some((task) => task.projectId)}
           title={t('taskDetail.dispatchAi')}
-          
+          className="text-accent-purple"
         >
           <BotIcon className="size-3.5" /> {t('taskDetail.dispatchAi')}
         </ListActionButton>
@@ -760,7 +760,7 @@ export function TasksPage() {
             refetch();
           }}
           title={t('common.delete')}
-          
+          className="text-destructive"
         >
           <Trash2 className="size-3.5" /> {t('common.delete')}
         </ListActionButton>
@@ -916,7 +916,7 @@ export function TasksPage() {
             { key: 'canceled', value: allTasks.filter(task => task.status === 'canceled').length, label: t("task.stats.canceled") , icon: TASK_STATUS_VISUALS.canceled.icon, ...STATS_THEMES.gray },
           ]}
           columns={6}
-          className="grid grid-cols-6"
+          className="grid grid-cols-6 gap-3"
         />
         </div>
       ) : null}
@@ -960,7 +960,7 @@ export function TasksPage() {
           ),
         }}
         actions={
-          <Button variant="ghost"
+          <button
             type="button"
             onClick={toggleAiFilter}
             aria-pressed={isAiFiltering}
@@ -985,7 +985,7 @@ export function TasksPage() {
                 : t("viewDisplay.aiFilter.executing", "AI 执行中")}
               {isAiFiltering ? ` (${t("viewDisplay.aiFilter.filtered", "已筛选")})` : ""}
             </span>
-          </Button>
+          </button>
         }
         displayMenu={{
           displayConfig: {
@@ -1182,7 +1182,7 @@ export function TasksPage() {
             {hasActiveFilters ? ` · ${t('task.pagination.filterScopeNote', '筛选仅作用于当前页')}` : ''}
           </p>
           {totalPages > 1 ? (
-            <Pagination className="mx-0 justify-end">
+            <Pagination className="mx-0 w-auto justify-end">
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
@@ -1317,9 +1317,9 @@ function TasksBoardView({
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1">{taskCardRow3(task)}</div>
         {task.projectId && onDispatchTask ? (
-          <Button variant="ghost"
+          <button
             type="button"
-            className="shrink-0 transition-colors"
+            className="shrink-0 rounded-md p-1 text-accent-purple transition-colors hover:bg-accent-purple/20"
             onClick={(event) => {
               event.stopPropagation();
               onDispatchTask(task, task.projectId!);
@@ -1327,7 +1327,7 @@ function TasksBoardView({
             title={t('task.dispatchToAi')}
           >
             <BotIcon size={12} />
-          </Button>
+          </button>
         ) : null}
       </div>
     ),

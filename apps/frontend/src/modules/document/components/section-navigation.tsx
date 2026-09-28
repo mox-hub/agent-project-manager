@@ -1,8 +1,6 @@
 // Section Navigation Component - 章节导航组件
-import { Input } from '@/components/ui/input';
 import React, { memo, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Button } from '@/components/ui/button';
 import { ChevronRight, Search, ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentSection } from '../api/document-section-api';
@@ -92,18 +90,10 @@ const SectionItemComponent = memo(function SectionItemComponent({
         onKeyDown={handleKeyDown}
         data-heading-level={section.level}
       >
-        {/* 展开/折叠钮（E 类批 6）：原裸钮的样式 token 逐字落在既有轴上——
-            `text-muted-foreground hover:text-foreground` = `variant="quiet"`，
-            `p-0.5` = `padding="p-0.5"`（内距驱动高度；原无 `h-*`，故按 Button 约定不给 `size`），
-            `shrink-0` 由 Button 基线自带，故不再显式传。
-            图标上的 `size-3.5` 不是新样式：Button 基线带
-            `[&_svg:not([class*='size-'])]:size-4`，会把本处 14px 的图标归一成 16px；
-            显式钉住 `size-3.5`(14px) 才是几何不变（仓内既有先例：acceptance 的图标钮）。 */}
         {hasChildren ? (
-          <Button
+          <button
             type="button"
-            variant="quiet"
-            padding="p-0.5"
+            className="shrink-0 p-0.5 text-muted-foreground hover:text-foreground"
             onClick={(e) => {
               e.stopPropagation();
               toggleExpand(section.id);
@@ -112,9 +102,9 @@ const SectionItemComponent = memo(function SectionItemComponent({
           >
             <ChevronRight
               size={14}
-              className={cn('size-3.5', 'transition-transform', isExpanded && 'rotate-90')}
+              className={cn('transition-transform', isExpanded && 'rotate-90')}
             />
-          </Button>
+          </button>
         ) : (
           <span className="w-5 shrink-0" />
         )}
@@ -271,30 +261,30 @@ export const SectionNavigation = memo(function SectionNavigation({
             size={13}
             className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
-          <Input
+          <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="搜索章节…"
-            className="focus:outline-hidden"
+            className="h-7 w-full rounded-md border border-border bg-background pl-7 pr-7 text-xs focus:border-accent-blue focus:outline-hidden"
           />
           {searchTerm && (
-            <Button variant="ghost"
+            <button
               type="button"
               onClick={() => setSearchTerm('')}
-              className="absolute right-1 top-1/2 -translate-y-1/2"
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
               aria-label="清除搜索"
             >
               <X size={12} />
-            </Button>
+            </button>
           )}
         </div>
         <div className="flex items-center justify-between text-3xs text-muted-foreground">
           <span>{allFlat.length} 章节</span>
-          <Button variant="ghost"
+          <button
             type="button"
             onClick={allExpanded ? collapseAll : expandAll}
-            className="inline-flex items-center"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-muted"
             disabled={allFlat.filter((s) => s.children?.length).length === 0}
           >
             {allCollapsed ? (
@@ -310,7 +300,7 @@ export const SectionNavigation = memo(function SectionNavigation({
                 <ChevronsUpDown size={11} /> 全部展开
               </>
             )}
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -366,7 +356,7 @@ export function FlatSectionList({
       {flatSections.map((section) => {
         const isActive = currentAnchor === section.anchor;
         return (
-          <Button variant="ghost"
+          <button
             key={section.id}
             type="button"
             className={cn(
@@ -383,7 +373,7 @@ export function FlatSectionList({
             >
               {section.title}
             </span>
-          </Button>
+          </button>
         );
       })}
     </nav>

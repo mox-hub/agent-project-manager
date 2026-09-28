@@ -91,9 +91,9 @@ export function IterationFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent >
+      <DialogContent className="sm:max-w-100">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
+          <DialogTitle className="flex items-center gap-2">
             <CalendarRange className="h-5 w-5 text-accent-purple" />
             {isEdit
               ? t('project.milestonesPage.editIteration', '编辑迭代')
@@ -153,7 +153,7 @@ export function IterationFormDialog({
                       {t('project.milestonesPage.iterationStartDate', '开始日期')}
                     </FormLabel>
                     <FormControl>
-                      <Input type="date"  {...field} />
+                      <Input type="date" className="h-9" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -183,7 +183,7 @@ export function IterationFormDialog({
                       {t('project.milestonesPage.iterationEndDate', '结束日期')}
                     </FormLabel>
                     <FormControl>
-                      <Input type="date"  {...field} />
+                      <Input type="date" className="h-9" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

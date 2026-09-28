@@ -114,7 +114,7 @@ export function DesktopPreferencesCard() {
     >
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-0.5">
-          <Label htmlFor="desktop-close-to-tray">
+          <Label htmlFor="desktop-close-to-tray" className="text-sm">
             {t('settings.desktopPrefsCloseToTray')}
           </Label>
           <p className="text-xs text-muted-foreground">

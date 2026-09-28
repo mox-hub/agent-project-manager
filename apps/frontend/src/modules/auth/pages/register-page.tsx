@@ -113,14 +113,14 @@ export function RegisterPage() {
             placeholder="name@example.com"
             required
             autoComplete="email"
-            
+            className="h-9.5 text-sm"
           />
           <Input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="姓名（可选）"
             autoComplete="name"
-            
+            className="h-9.5 text-sm"
           />
           <Input
             type="password"
@@ -130,7 +130,7 @@ export function RegisterPage() {
             required
             minLength={8}
             autoComplete="new-password"
-            
+            className="h-9.5 text-sm"
           />
           <Input
             type="password"
@@ -139,18 +139,18 @@ export function RegisterPage() {
             placeholder="确认密码"
             required
             autoComplete="new-password"
-            
+            className="h-9.5 text-sm"
           />
         </div>
 
-        <Button width="full"
+        <Button
           type="submit"
-          size="lg" 
+          className="h-10 w-full text-sm font-medium shadow-xs"
           disabled={submitting || Boolean(inviteInvalid)}
         >
           {submitting ? (
             <>
-              <Spinner size="sm" color="inherit" className="mr-2" />
+              <Spinner className="size-4 text-inherit mr-2" />
               注册并初始化…
             </>
           ) : (

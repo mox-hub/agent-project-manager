@@ -1,5 +1,3 @@
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect, useMemo, useCallback, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -314,7 +312,7 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
 
               {/* 中间：Prompt 输入框 */}
               <div className="flex-1 min-w-0">
-                <Input
+                <input
                   ref={inputRef}
                   type="text"
                   value={promptText}
@@ -328,7 +326,7 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
                     }
                   }}
                   placeholder={selectedColleague.placeholder}
-                  className="focus:outline-hidden"
+                  className="w-full bg-transparent px-2 text-xs text-foreground placeholder:text-content-text-muted focus:outline-hidden"
                 />
               </div>
 
@@ -351,14 +349,14 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
                   <Send className="size-3.5 translate-x-px -translate-y-px" />
                 </motion.button>
 
-                <Button variant="ghost"
+                <button
                   type="button"
                   onClick={() => handleClosePrompt(true)}
-                  className="flex items-center justify-center transition-colors"
+                  className="flex size-7 items-center justify-center rounded-full text-content-text-muted hover:bg-accent hover:text-foreground transition-colors"
                   title="收起并关闭 (Esc)"
                 >
                   <X className="size-3.5" />
-                </Button>
+                </button>
               </div>
             </motion.div>
           ) : (
@@ -398,18 +396,18 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
 
               {/* ③ AI 协同执行面：Sparkles 快捷呼出 | 真实 AI 成员头像群 */}
               <div className="flex items-center gap-1.5 pl-0.5 pr-1">
-                <Button variant="ghost"
+                <button
                   type="button"
                   onClick={() => {
                     setSelectedColleagueId(defaultColleagueId);
                     setIsPromptOpen(true);
                     setAiPanelOpen(true);
                   }}
-                  className="flex items-center justify-center transition-colors"
+                  className="flex size-7 items-center justify-center rounded-full text-accent-purple hover:bg-accent/60 transition-colors"
                   title="点击呼出 AI 快捷指令栏与对话面板"
                 >
                   <Sparkles className="size-4 text-accent-yellow" />
-                </Button>
+                </button>
 
                 {visibleColleagues.length > 0 && (
                   <div className="h-4 w-px bg-border/60" aria-hidden="true" />

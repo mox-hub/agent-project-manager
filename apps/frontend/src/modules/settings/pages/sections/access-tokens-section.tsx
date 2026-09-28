@@ -173,8 +173,8 @@ export function AccessTokensSettingsSection() {
                     return (
                       <TableRow key={item.id}>
                         <TableCell>{item.name}</TableCell>
-                        <TableCell>
-                          <span className="font-mono">{item.tokenPrefix}…</span>
+                        <TableCell className="font-mono">
+                          {item.tokenPrefix}…
                         </TableCell>
                         <TableCell>
                           <StatusPill tone={status.tone}>{status.label}</StatusPill>
@@ -203,14 +203,14 @@ export function AccessTokensSettingsSection() {
           </AsyncState>
         </SectionCard>
 
-        <Card surface="flat">
+        <Card className="border-border shadow-none">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Terminal size={16} className="mr-2 text-accent-yellow" />
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Terminal size={16} className="text-accent-yellow" />
               {t('settings.tokenCliTitle')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <Alert>{t('settings.tokenUsageTip')}</Alert>
             <div className="space-y-1.5 rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs">
               <div>apm login --token &lt;{t('settings.runtimeGuideToken')}&gt;</div>

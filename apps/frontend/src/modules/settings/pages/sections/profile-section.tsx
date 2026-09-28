@@ -95,6 +95,7 @@ export function ProfileSettingsSection() {
       icon={UserRound}
       iconColor="text-accent-blue"
       title={t('settings.profile')}
+      className="bg-background text-foreground"
       contentClassName="space-y-6"
       actions={
         <HeaderActionButton
@@ -106,15 +107,15 @@ export function ProfileSettingsSection() {
         />
       }
     >
-      <Card surface="flat">
+      <Card className="border-border shadow-none">
             <CardHeader>
-              <CardTitle size="base" className="flex items-center">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <UserRound size={16} className="text-accent-blue" />
                 {t('settings.profileBasic')}
               </CardTitle>
               <CardDescription>{t('settings.profileBasicDesc')}</CardDescription>
             </CardHeader>
-            <CardContent >
+            <CardContent className="space-y-4">
               <Field>
                 <FieldLabel>{t('settings.profileAvatar')}</FieldLabel>
                 <FieldContent>
@@ -235,9 +236,9 @@ function PasswordCard() {
   };
 
   return (
-    <Card surface="flat">
+    <Card className="border-border shadow-none">
       <CardHeader>
-        <CardTitle size="base" className="flex items-center">
+        <CardTitle className="flex items-center gap-2 text-base">
           <KeyRound size={16} className="text-accent-yellow" />
           {t('settings.profilePassword')}
         </CardTitle>

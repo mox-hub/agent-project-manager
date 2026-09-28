@@ -14,11 +14,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { TONE_CLASS } from '@/components/ui/tone';
-import {
-  READINESS_DIMENSION_TONE,
-  READINESS_VERDICT_TONE,
-} from '@/shared/status/status-visuals';
 import {
   READINESS_DIMENSION_LABELS,
   readinessCacheKey,
@@ -32,15 +27,17 @@ import {
  * 供管道卡徽章共享；blocked 时 CTA 是「去补」而非禁止——评估仅呈现，不拦路。
  */
 
-/** verdict 胶囊配色：tone 唯一链路（描边 + 浅底槽） */
-const verdictClass = (verdict: ReadinessReviewResult['verdict']): string => {
-  const tone = READINESS_VERDICT_TONE[verdict] ?? 'default';
-  return cn(TONE_CLASS[tone].border, TONE_CLASS[tone].light);
+const VERDICT_STYLE: Record<ReadinessReviewResult['verdict'], string> = {
+  ready: 'border-accent-green/40 bg-accent-green-light/50 text-accent-green',
+  'needs-clarification': 'border-accent-yellow/40 bg-accent-yellow-light/50 text-accent-yellow',
+  blocked: 'border-accent-red/40 bg-accent-red-light/50 text-accent-red',
 };
 
-/** 维度状态点：tone 唯一词表 dot 槽（实心点） */
-const dimensionDotClass = (status: ReadinessReviewResult['dimensions'][number]['status']): string =>
-  TONE_CLASS[READINESS_DIMENSION_TONE[status] ?? 'default'].dot;
+const DIMENSION_DOT: Record<ReadinessReviewResult['dimensions'][number]['status'], string> = {
+  ready: 'bg-accent-green',
+  unclear: 'bg-accent-yellow',
+  missing: 'bg-accent-red',
+};
 
 export function ReadinessDialog({
   open,
@@ -75,15 +72,12 @@ export function ReadinessDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent maxWidth="2xl" keepDefaultWidth={false} className="overflow-y-auto">
+      <DialogContent keepDefaultWidth={false} className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
-            <span className="flex items-center gap-2">
-              <ShieldCheck size={16} />
-              {t('intake.readiness.title', '完备性评估')}
-              <span className="text-xs font-normal text-content-text-muted">{projectName}</span>
-            </span>
+          <DialogTitle className="flex items-center gap-2">
+            <ShieldCheck size={16} />
+            {t('intake.readiness.title', '完备性评估')}
+            <span className="text-xs font-normal text-content-text-muted">{projectName}</span>
           </DialogTitle>
           <DialogDescription>
             {t(
@@ -111,7 +105,7 @@ export function ReadinessDialog({
               <span
                 className={cn(
                   'rounded-full border px-2.5 py-0.5 text-xs font-medium',
-                  verdictClass(result.verdict),
+                  VERDICT_STYLE[result.verdict],
                 )}
               >
                 {t(`intake.readiness.verdict.${result.verdict}`)}
@@ -129,7 +123,7 @@ export function ReadinessDialog({
                   title={d.evidence || d.gap || undefined}
                 >
                   <span
-                    className={cn('mt-1 size-2 shrink-0 rounded-full', dimensionDotClass(d.status))}
+                    className={cn('mt-1 size-2 shrink-0 rounded-full', DIMENSION_DOT[d.status])}
                   />
                   <div className="min-w-0">
                     <div className="text-xs font-medium text-foreground">
@@ -199,17 +193,16 @@ export function ReadinessDialog({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="gap-1.5"
                   onClick={() => navigate(`/app/projects/${projectId}/playbook`)}
                 >
-                  {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
-                  <span className="flex items-center gap-1.5">
-                    {t('intake.readiness.goFill', '去补')}
-                    <ArrowRight size={14} />
-                  </span>
+                  {t('intake.readiness.goFill', '去补')}
+                  <ArrowRight size={14} />
                 </Button>
               )}
               <Button
                 size="sm"
+                className="gap-1.5"
                 onClick={() =>
                   review.mutate(
                     { docId: requirementDocId, analysisDocumentId: analysisDocId },
@@ -217,13 +210,10 @@ export function ReadinessDialog({
                 }
                 disabled={review.isPending}
               >
-                {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
-                <span className="flex items-center gap-1.5">
-                  {review.isPending ? <Spinner size="sm" /> : <Sparkles size={14} />}
-                  {result
-                    ? t('intake.readiness.reRun', '重新评估')
-                    : t('intake.readiness.run', '开始评估')}
-                </span>
+                {review.isPending ? <Spinner size="sm" /> : <Sparkles size={14} />}
+                {result
+                  ? t('intake.readiness.reRun', '重新评估')
+                  : t('intake.readiness.run', '开始评估')}
               </Button>
             </div>
           </div>

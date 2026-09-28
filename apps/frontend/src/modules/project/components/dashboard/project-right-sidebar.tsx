@@ -5,7 +5,6 @@
  * 属性面板复用 ProjectPropertyPanel（支持下拉选择），Related/Activity 用共享 SidebarPanel。
  */
 
-import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import {
   AlertCircle,
@@ -56,7 +55,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
         <SidebarPanel
           title={t('project.sidebar.related')}
           icon={<Link2 className="size-3" />}
-          iconTone="default"
+          iconClassName="text-muted-foreground"
         >
           <p className="px-2 py-2 text-xs text-muted-foreground">
             {isLoading ? t('project.sidebar.loading') : error ? t('project.sidebar.loadFailed') : t('project.sidebar.noData')}
@@ -66,7 +65,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
         <SidebarPanel
           title={t('project.sidebar.related')}
           icon={<Link2 className="size-3" />}
-          iconTone="default"
+          iconClassName="text-muted-foreground"
           collapsed={relatedCollapsed}
           onToggle={() => setRelatedCollapsed((v) => !v)}
         >
@@ -110,19 +109,19 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
           {boundTeams.length > 0 ? (
             <div className="flex flex-wrap gap-1 px-2 pb-1.5 pl-8">
               {boundTeams.map((team) => (
-                <Button variant="ghost"
+                <button
                   key={team.id}
                   type="button"
                   title={team.name}
                   onClick={() => navigate(`/app/teams/${team.id}`)}
-                  className="inline-flex items-center transition-colors"
+                  className="inline-flex h-5 max-w-full items-center gap-1 rounded-full border border-border px-1.5 text-3xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
                 >
                   <span
                     className="size-1.5 shrink-0 rounded-full"
                     style={{ backgroundColor: team.color || 'var(--color-brand-linear)' }}
                   />
                   <span className="max-w-32 truncate">{team.name}</span>
-                </Button>
+                </button>
               ))}
             </div>
           ) : null}
@@ -133,7 +132,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
       <SidebarPanel
         title={t('project.sidebar.activity')}
         icon={<Sparkles className="size-3" />}
-        accent="purple"
+        iconClassName="text-accent-purple"
         collapsed={activityCollapsed}
         onToggle={() => setActivityCollapsed((v) => !v)}
       >
@@ -185,13 +184,13 @@ function SidebarLinkRow({
       <span className="text-xs text-muted-foreground flex-1 min-w-0 truncate">{label}</span>
       <div className="shrink-0">
         {onClick ? (
-          <Button variant="ghost"
+          <button
             type="button"
             onClick={onClick}
-            className="inline-flex items-center transition-colors"
+            className="inline-flex items-center rounded-full transition-colors hover:bg-accent hover:text-foreground"
           >
             {content}
-          </Button>
+          </button>
         ) : (
           content
         )}
@@ -216,7 +215,7 @@ export function ProjectRightSidebar({ projectId, hidden, width }: ProjectRightSi
     <RightSidebar hidden={hidden} width={width ?? PROJECT_SIDEBAR_DEFAULT_WIDTH}>
       {/* 头部按钮操作区：Linear 来源/同步状态徽章（仅 Linear 同步项目） */}
       {isLinearLinked ? (
-        <SidebarButtonGroup  data-ai-component="project.right-sidebar.linear-status" data-ai-role="status">
+        <SidebarButtonGroup className="px-1" data-ai-component="project.right-sidebar.linear-status" data-ai-role="status">
           <LinearSourceBadge source="linear" className="h-6 shrink-0 rounded-full px-2.5 text-3xs" />
           <LinearSyncStatusBadge status={project?.syncStatus} pill />
         </SidebarButtonGroup>

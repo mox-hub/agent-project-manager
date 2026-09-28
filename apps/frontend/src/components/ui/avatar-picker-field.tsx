@@ -13,7 +13,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { RawButton } from './raw-button'
 
 /*
  * Avatar Picker Field —— 照 coss DatePicker 组合范式升级的弹层头像选择组合件
@@ -145,7 +144,7 @@ function AvatarPickerField({
             {options.map((avatar) => {
               const selected = value === avatar.url
               return (
-                <RawButton
+                <button
                   key={avatar.key}
                   type="button"
                   title={avatar.label}
@@ -162,7 +161,7 @@ function AvatarPickerField({
                   )}
                 >
                   <AvatarGlyph url={avatar.url} label={avatar.label} />
-                </RawButton>
+                </button>
               )
             })}
           </div>

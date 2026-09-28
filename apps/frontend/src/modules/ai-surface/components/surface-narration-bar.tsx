@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { RefreshCw, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DualTrackMetricPill } from '@/components/ui/dual-track-metric-pill';
@@ -83,15 +82,15 @@ export function SurfaceNarrationBar({
                   />
                 ) : null}
                 {onRefresh ? (
-                  <Button variant="ghost"
+                  <button
                     type="button"
                     onClick={onRefresh}
-                    className="flex cursor-pointer items-center justify-center transition-colors"
+                    className="flex size-6 cursor-pointer items-center justify-center rounded-lg bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     title="重新读盘（会消耗一次模型调用）"
                     data-ai-action="ai-surface.narration.refresh"
                   >
                     <RefreshCw className="size-3" />
-                  </Button>
+                  </button>
                 ) : null}
               </div>
             </div>

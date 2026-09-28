@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -389,7 +388,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
           </Button>
         </div>
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 p-4">
           {taskLoading ? (
             <div className="text-center p-8 text-muted-foreground">
               {t('task.detailDrawer.loading')}
@@ -413,7 +412,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                         <Input
                           value={field.value}
                           onChange={(e) => field.onChange(e.target.value)}
-                          
+                          className="text-lg font-semibold"
                         />
                       )}
                     />
@@ -427,9 +426,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
 
               {/* Description */}
               <div>
-                <FieldLabel size="xs" variant="muted" className="block mb-1">
+                <label className="text-sm font-medium text-muted-foreground block mb-1">
                   Description
-                </FieldLabel>
+                </label>
                 {isEditing ? (
                   <Form {...editTaskForm}>
                     <FormField
@@ -455,9 +454,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
               {/* Status & Priority */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="block mb-1">
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     {t('task.detailDrawer.status')}
-                  </FieldLabel>
+                  </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
                       <FormField
@@ -485,9 +484,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                 </div>
 
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="block mb-1">
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     {t('task.detailDrawer.priority')}
-                  </FieldLabel>
+                  </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
                       <FormField
@@ -521,9 +520,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
               {/* Assignee, Due Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="block mb-1">
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     {t('task.detailDrawer.assignee')}
-                  </FieldLabel>
+                  </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
                       <FormField
@@ -555,7 +554,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                           <span className="text-sm">
                             {primaryAssignee.member.displayName}
                             {primaryAssignee.member.type === 'ai_agent' ? (
-                              <Badge variant="outline" fontSize="3xs" className="ml-1">
+                              <Badge variant="outline" className="ml-1 text-3xs">
                                 AI
                               </Badge>
                             ) : null}
@@ -580,9 +579,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                 </div>
 
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="block mb-1">
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     {t('task.detailDrawer.dueDate')}
-                  </FieldLabel>
+                  </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
                       <FormField
@@ -608,9 +607,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
               {/* Iteration & Estimate */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="block mb-1">
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     {t('task.detailDrawer.iteration')}
-                  </FieldLabel>
+                  </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
                       <FormField
@@ -639,9 +638,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                 </div>
 
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="block mb-1">
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     {t('task.detailDrawer.estimateHours')}
-                  </FieldLabel>
+                  </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
                       <FormField
@@ -667,9 +666,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
 
               {/* Milestone */}
               <div>
-                <FieldLabel size="xs" variant="muted" className="block mb-1">
+                <label className="text-sm font-medium text-muted-foreground block mb-1">
                   {t('task.detailDrawer.milestone')}
-                </FieldLabel>
+                </label>
                 {isEditing ? (
                   <Form {...editTaskForm}>
                     <FormField
@@ -710,7 +709,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                   {/* Severity */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <FieldLabel size="xs" variant="muted" className="block mb-1">{t('task.detailDrawer.severity')}</FieldLabel>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">{t('task.detailDrawer.severity')}</label>
                       {isEditing ? (
                         <Form {...editTaskForm}>
                           <FormField
@@ -733,7 +732,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                     </div>
 
                     <div>
-                      <FieldLabel size="xs" variant="muted" className="block mb-1">{t('task.detailDrawer.environment')}</FieldLabel>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">{t('task.detailDrawer.environment')}</label>
                       {isEditing ? (
                         <Form {...editTaskForm}>
                           <FormField
@@ -753,7 +752,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                   {/* Expected vs Actual */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <FieldLabel size="xs" variant="muted" className="block mb-1">{t('task.detailDrawer.expectedResult')}</FieldLabel>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">{t('task.detailDrawer.expectedResult')}</label>
                       {isEditing ? (
                         <Form {...editTaskForm}>
                           <FormField
@@ -770,7 +769,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                     </div>
 
                     <div>
-                      <FieldLabel size="xs" variant="muted" className="block mb-1">{t('task.detailDrawer.actualResult')}</FieldLabel>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">{t('task.detailDrawer.actualResult')}</label>
                       {isEditing ? (
                         <Form {...editTaskForm}>
                           <FormField
@@ -792,9 +791,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
               {/* 待办事项 */}
               {task.todoItems && task.todoItems.length > 0 && (
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="block mb-2">
+                  <label className="text-sm font-medium text-muted-foreground block mb-2">
                     {t('task.detailDrawer.todoItems')} ({task.todoItems.filter(t => t.completed).length}/{task.todoItems.length})
-                  </FieldLabel>
+                  </label>
                   <div className="space-y-2">
                     {task.todoItems.map((item) => (
                       <div key={item.id} className="flex items-start gap-2">
@@ -820,9 +819,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
               {/* Dependencies */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <FieldLabel size="xs" variant="muted" className="block">
+                  <label className="text-sm font-medium text-muted-foreground block">
                     {t('task.detailDrawer.dependencies')}
-                  </FieldLabel>
+                  </label>
                   <Button
                     size="sm"
                     variant="outline"
@@ -867,9 +866,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
               {/* AI Execution */}
               <div className="rounded-lg border border-content-border bg-content-bg-secondary p-3">
                 <div className="mb-3">
-                  <FieldLabel size="xs" variant="muted" className="mb-1 block">
+                  <label className="mb-1 block text-sm font-medium text-muted-foreground">
                     AI Assignee
-                  </FieldLabel>
+                  </label>
                   <div className="mb-2 flex items-center gap-2">
                     {task.aiAgent ? (
                       <>
@@ -899,7 +898,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                         })),
                       ]}
                     >
-                      <SelectTrigger >
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select AI agent" />
                       </SelectTrigger>
                       <SelectContent>
@@ -928,9 +927,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                 </div>
 
                 <div className="mb-3">
-                  <FieldLabel size="xs" variant="muted" className="mb-1 block">
+                  <label className="mb-1 block text-sm font-medium text-muted-foreground">
                     Execution Goal
-                  </FieldLabel>
+                  </label>
                   <Textarea
                     rows={3}
                     value={executionGoal}
@@ -951,9 +950,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
 
                 {pendingExecutions.length > 0 ? (
                   <div className="mb-3 rounded-md border border-accent-yellow/30 bg-accent-yellow/10 p-2">
-                    <FieldLabel size="xs" variant="muted" className="mb-1 block">
+                    <label className="mb-1 block text-sm font-medium text-muted-foreground">
                       Approval Comment
-                    </FieldLabel>
+                    </label>
                     <Input
                       value={approvalComment}
                       onChange={(event) => setApprovalComment(event.target.value)}
@@ -963,9 +962,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                 ) : null}
 
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="mb-2 block">
+                  <label className="mb-2 block text-sm font-medium text-muted-foreground">
                     Recent AI Executions
-                  </FieldLabel>
+                  </label>
                   {executions.length > 0 ? (
                     <div className="flex flex-col gap-2">
                       {executions.slice(0, 5).map((execution) => {
@@ -1027,9 +1026,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
               {/* Blocked By */}
               {task.blockedBy && task.blockedBy.length > 0 && (
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="block mb-1">
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     {t('task.detailDrawer.blockedBy')}
-                  </FieldLabel>
+                  </label>
                   <div className="flex flex-col gap-1">
                     {task.blockedBy.map((dep) => (
                       <div
@@ -1047,9 +1046,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
 
               {/* Tags */}
               <div>
-                <FieldLabel size="xs" variant="muted" className="block mb-1">
+                <label className="text-sm font-medium text-muted-foreground block mb-1">
                   {t('task.detailDrawer.tags')}
-                </FieldLabel>
+                </label>
                 {task.issueTags && task.issueTags.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
                     {task.issueTags.map(({ tag }) => (
@@ -1075,9 +1074,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
               {/* Reporter */}
               {task.reporter && (
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="block mb-1">
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     {t('task.detailDrawer.reporter')}
-                  </FieldLabel>
+                  </label>
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-foreground">
                       {task.reporter.displayName?.[0]?.toUpperCase() || '?'}
@@ -1092,9 +1091,9 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
               {/* AI Assignment */}
               {task.assigneeType === 'ai_agent' && (
                 <div>
-                  <FieldLabel size="xs" variant="muted" className="block mb-1">
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     {t('task.detailDrawer.aiAssignment')}
-                  </FieldLabel>
+                  </label>
                   <div className="flex items-center gap-2">
                     <AiAgentBadge agentName={task.aiAgent?.name ?? task.aiAgentId} size="md" />
                   </div>
@@ -1103,20 +1102,20 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
 
               {/* Tabbed Section: Execution, Approvals, AI Suggestion, Discussion, Documents */}
               <Tabs defaultValue="execution" className="mt-4">
-                <TabsList variant="line" className="justify-start">
-                  <TabsTrigger value="execution" >
+                <TabsList variant="line" className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto">
+                  <TabsTrigger value="execution" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Activity className="mr-1 h-3 w-3" />
                     {t('task.detailDrawer.execution')}
                   </TabsTrigger>
-                  <TabsTrigger value="approvals" fontSize="xs" >
+                  <TabsTrigger value="approvals" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <CheckCircle className="mr-1 h-3 w-3" />
                     {t('task.detailDrawer.approvals')}
                   </TabsTrigger>
-                  <TabsTrigger value="documents" fontSize="xs" >
+                  <TabsTrigger value="documents" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <FileText className="mr-1 h-3 w-3" />
                     {t('taskDetail.linkedDocs')}
                   </TabsTrigger>
-                  <TabsTrigger value="discussion" fontSize="xs" >
+                  <TabsTrigger value="discussion" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Activity className="mr-1 h-3 w-3" />
                     {t('task.detailDrawer.discussion')}
                   </TabsTrigger>
@@ -1211,7 +1210,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                 })),
               ]}
             >
-              <SelectTrigger >
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder={t('task.detailDrawer.selectTask')} />
               </SelectTrigger>
               <SelectContent>
@@ -1403,14 +1402,14 @@ function TaskDiscussionContent({ activities }: { activities: ActivityItem[] | un
     return (
       <div className="text-center py-4">
         <p className="text-sm text-muted-foreground mb-3">{t('task.detailDrawer.noDiscussion')}</p>
-        <Textarea
-          
+        <textarea
+          className="w-full rounded-md border p-2 text-sm"
           placeholder={t('task.detailDrawer.addComment')}
           rows={2}
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
         />
-        <Button width="full" size="sm" className="mt-2" disabled={!newComment.trim()}>
+        <Button size="sm" className="mt-2 w-full" disabled={!newComment.trim()}>
           {t('task.detailDrawer.send')}
         </Button>
       </div>
@@ -1436,8 +1435,8 @@ function TaskDiscussionContent({ activities }: { activities: ActivityItem[] | un
         </div>
       ))}
       <div className="pt-2 border-t">
-        <Textarea
-          
+        <textarea
+          className="w-full rounded-md border p-2 text-sm"
           placeholder={t('task.detailDrawer.addComment')}
           rows={2}
           value={newComment}

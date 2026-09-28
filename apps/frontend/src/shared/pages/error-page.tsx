@@ -115,14 +115,14 @@ export function ErrorPage({ className }: ErrorPageProps) {
         <p className="text-xs text-muted-foreground/50 pt-4">
           {t("error.footerHint") || "If the problem persists, please contact the administrator or"}
           {" "}
-          <Button variant="ghost"
-            className="underline underline-offset-2 transition-colors"
+          <button
+            className="underline underline-offset-2 hover:text-foreground transition-colors"
             onClick={() => {
               /* TODO: open bug report dialog */
             }}
           >
             {t("error.actions.reportIssue")}
-          </Button>
+          </button>
         </p>
       </div>
     </div>

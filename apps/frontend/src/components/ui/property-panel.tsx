@@ -38,7 +38,6 @@ import {
 import { DatePicker } from '@/components/ui/date-picker';
 import { MemberAvatar as StandardMemberAvatar } from '@/modules/team-member/components/member-avatar';
 import { Textarea } from '@/components/ui/textarea';
-import { RawButton } from './raw-button'
 
 // ============================================================================
 // Local icon fallbacks (Linear-style status icons)
@@ -113,7 +112,7 @@ export function Capsule({
   className?: string;
 }) {
   return (
-    <RawButton
+    <button
       type="button"
       onClick={onClick}
       className={cn(
@@ -124,7 +123,7 @@ export function Capsule({
     >
       <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">{children}</span>
       <ChevronDown className="size-3 opacity-50 shrink-0" />
-    </RawButton>
+    </button>
   );
 }
 
@@ -162,7 +161,7 @@ export function DateCapsuleField({
       popoverAlign="end"
       formatDate={(d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
       trigger={
-        <RawButton type="button" className={cn(
+        <button type="button" className={cn(
           'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2 rounded-md border border-border/80 bg-background/60 text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border',
           value && 'bg-accent border-border text-foreground',
         )}>
@@ -173,17 +172,17 @@ export function DateCapsuleField({
               : placeholder}
           </span>
           <ChevronDown className="size-3 opacity-50 shrink-0" />
-        </RawButton>
+        </button>
       }
       footer={
         value ? (
-          <RawButton
+          <button
             type="button"
             onClick={() => onChange('')}
             className="w-full text-xs text-muted-foreground hover:text-foreground py-1 px-2 rounded-md hover:bg-accent transition-colors"
           >
             {clearLabel}
-          </RawButton>
+          </button>
         ) : null
       }
     />
@@ -221,7 +220,7 @@ export function CapsuleSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger render={
-        <RawButton
+        <button
           type="button"
           className={cn(
             'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2 rounded-md border border-border/80 bg-background/60 text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border',
@@ -233,7 +232,7 @@ export function CapsuleSelect({
             {current?.label ?? placeholder}
           </span>
           <ChevronDown className="size-3 opacity-50 shrink-0" />
-        </RawButton>
+        </button>
       } />
       <PopoverContent
         align="end"
@@ -242,7 +241,7 @@ export function CapsuleSelect({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col">
-          <RawButton
+          <button
             type="button"
             onClick={() => { onChange(''); setOpen(false); }}
             className={cn(
@@ -251,9 +250,9 @@ export function CapsuleSelect({
             )}
           >
             <span className="text-muted-foreground italic">{placeholder}</span>
-          </RawButton>
+          </button>
           {options.map((opt) => (
-            <RawButton
+            <button
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
@@ -265,7 +264,7 @@ export function CapsuleSelect({
               {opt.icon}
               <span className="flex-1 text-left">{opt.label}</span>
               {value === opt.value && <Check className="size-3.5 text-primary" />}
-            </RawButton>
+            </button>
           ))}
         </div>
       </PopoverContent>
@@ -339,6 +338,7 @@ export function PropertyRow({
 export function PropsCard({
   title,
   icon,
+  iconClassName,
   collapsed,
   onToggleCollapse,
   children,
@@ -346,17 +346,17 @@ export function PropsCard({
   title: string;
   /** 标题区图标（透传 SidebarPanel） */
   icon?: React.ReactNode;
+  /** 图标颜色类，如 "text-accent-purple" */
+  iconClassName?: string;
   collapsed: boolean;
   onToggleCollapse: () => void;
   children: React.ReactNode;
 }) {
-  // 曾有一个 `iconClassName?: string` 直通 SidebarPanel 的图标色类：**实测零调用方**
-  // （13 个 `<PropsCard` 无一传它），属死属性，随 SidebarPanel 收窄逃生舱
-  // （2026-09-28 裁决）一并删除。要改图标色请先在 SidebarPanel 侧补语义档。
   return (
     <SidebarPanel
       title={title}
       icon={icon}
+      iconClassName={iconClassName}
       collapsed={collapsed}
       onToggle={onToggleCollapse}
     >
@@ -379,14 +379,14 @@ function SmallCaps({
   onClick?: () => void;
 }) {
   return (
-    <RawButton
+    <button
       type="button"
       onClick={onClick}
       className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-md border border-border/80 bg-background/60 text-2xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
     >
       <Icon className="size-3" />
       <span>{label}</span>
-    </RawButton>
+    </button>
   );
 }
 
@@ -416,14 +416,14 @@ export function SubTaskCard({
   if (!open) {
     return (
       <div className="px-3 py-2 border-t border-border/40 bg-card/80 backdrop-blur-xs">
-        <RawButton
+        <button
           type="button"
           onClick={onOpen}
           className="flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors w-full px-1 py-0.5"
         >
           <Plus className="size-3.5" />
           <span>Add sub-task</span>
-        </RawButton>
+        </button>
       </div>
     );
   }
@@ -435,14 +435,14 @@ export function SubTaskCard({
             <ListTodo className="size-3.5" />
             <span>Sub-task</span>
           </div>
-          <RawButton
+          <button
             type="button"
             onClick={onClose}
             className="size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             title="关闭"
           >
             <X className="size-3" />
-          </RawButton>
+          </button>
         </div>
         <div className="p-3 flex flex-col gap-2">
           <AutoSizeTextarea
@@ -470,21 +470,21 @@ export function SubTaskCard({
         )}
         {onSave && (
           <div className="px-4 pb-3 flex justify-end gap-2">
-            <RawButton
+            <button
               type="button"
               onClick={onClose}
               className="h-7 px-3 rounded-md text-xs text-muted-foreground hover:bg-accent transition-colors"
             >
               取消
-            </RawButton>
-            <RawButton
+            </button>
+            <button
               type="button"
               onClick={onSave}
               disabled={!title.trim() || isSaving}
               className="h-7 px-3 rounded-md text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {isSaving ? <Spinner className="size-3 text-inherit" /> : '保存子任务'}
-            </RawButton>
+            </button>
           </div>
         )}
       </div>

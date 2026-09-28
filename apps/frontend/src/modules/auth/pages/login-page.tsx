@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
@@ -55,13 +54,13 @@ export function LoginPage() {
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <FieldLabel size="xs" variant="muted"
-              
+            <label
+              className="text-xs font-medium text-foreground"
               htmlFor="username"
             >
               {t('auth.username')}
-            </FieldLabel>
-            <Input size="h-10"
+            </label>
+            <Input
               id="username"
               type="text"
               value={username}
@@ -69,20 +68,20 @@ export function LoginPage() {
               required
               placeholder={t('auth.usernamePlaceholder') || '请输入账号或邮箱'}
               autoComplete="username"
-              
+              className="h-10 text-sm"
             />
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <FieldLabel size="xs" variant="muted"
-                
+              <label
+                className="text-xs font-medium text-foreground"
                 htmlFor="password"
               >
                 {t('auth.password')}
-              </FieldLabel>
+              </label>
             </div>
-            <Input size="h-10"
+            <Input
               id="password"
               type="password"
               value={password}
@@ -90,19 +89,19 @@ export function LoginPage() {
               required
               placeholder={t('auth.passwordPlaceholder') || '请输入密码'}
               autoComplete="current-password"
-              
+              className="h-10 text-sm"
             />
           </div>
         </div>
 
-        <Button width="full"
+        <Button
           type="submit"
           disabled={isLoading}
-          size="lg" 
+          className="h-10 w-full text-sm font-medium shadow-xs"
         >
           {isLoading ? (
             <>
-              <Spinner size="sm" color="inherit" className="mr-2" />
+              <Spinner className="size-4 text-inherit mr-2" />
               {t('auth.loggingIn') || '正在验证中…'}
             </>
           ) : (

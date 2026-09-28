@@ -6,7 +6,6 @@
  * 补齐收藏入口；收藏数据走 useAppStore.favoritePages（zustand persist）。
  */
 
-import { Button } from '@/components/ui/button';
 import { useLocation } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -33,7 +32,7 @@ export function FavoriteToggle({ favoriteId, label, className, aiId }: FavoriteT
   const actionText = isFavorite ? t('common.unfavorite') : t('common.favorite');
 
   return (
-    <Button variant="ghost"
+    <button
       type="button"
       onClick={() => toggleFavoritePage({ path: favoriteKey, label: label || favoriteKey })}
       aria-pressed={isFavorite}
@@ -48,6 +47,6 @@ export function FavoriteToggle({ favoriteId, label, className, aiId }: FavoriteT
       )}
     >
       <Star className="size-3.5" strokeWidth={1.75} fill={isFavorite ? 'currentColor' : 'none'} />
-    </Button>
+    </button>
   );
 }

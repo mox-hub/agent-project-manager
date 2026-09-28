@@ -56,16 +56,16 @@ export function ProfileSlotSection({
         <div className="flex min-w-0 items-center gap-2">
           <h3 className="truncate text-sm font-medium">{group.label}</h3>
           {group.filled ? (
-            <Badge color="green"
+            <Badge
               variant="outline"
-              fontSize="3xs" 
+              className="h-4 border-accent-green/30 bg-accent-green-light/50 px-1 text-3xs text-accent-green"
             >
               {t('project.profilePage.filled')}
             </Badge>
           ) : (
             <Badge
               variant="outline"
-              fontSize="3xs" 
+              className="h-4 border-dashed px-1 text-3xs text-muted-foreground"
             >
               {t('project.profilePage.notFilled')}
             </Badge>
@@ -76,7 +76,7 @@ export function ProfileSlotSection({
             <Button
               size="sm"
               variant="ghost"
-              fontSize="xs" 
+              className="h-6 gap-1 px-1.5 text-xs text-accent-blue"
               disabled={busy}
               data-ai-action={`slot-${group.slot}-approve-all`}
               onClick={() => onApproveAll(group.drafts.map((d) => d.id))}
@@ -88,7 +88,7 @@ export function ProfileSlotSection({
           <Button
             size="sm"
             variant="ghost"
-            fontSize="xs" 
+            className="h-6 gap-1 px-1.5 text-xs text-muted-foreground"
             onClick={() => onAdd(group.slot)}
           >
             <Plus size={12} />

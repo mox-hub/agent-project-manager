@@ -84,10 +84,10 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
     <div className="space-y-3">
       {groups.map(([role, rows]) => (
         <Card key={role}>
-          <CardHeader >
-            <CardTitle size="sm" className="flex items-center">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
               {ROLE_LABEL[role] ?? role}
-              <Badge variant="secondary" fontSize="3xs">{rows.length}</Badge>
+              <Badge variant="secondary" className="text-3xs">{rows.length}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -146,18 +146,18 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
       )}
 
       <Card>
-        <CardHeader >
-          <CardTitle size="sm" className="flex items-center">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
             <WorkflowIcon className="h-4 w-4 text-accent-purple" />
             平台工作流（只读）
           </CardTitle>
         </CardHeader>
-        <CardContent >
+        <CardContent className="space-y-2">
           {(workflows ?? []).length === 0 ? (
             <EmptyState
               title="暂无已注册工作流"
               description="可在 AI Hub 中定义"
-              minHeight="none" frame="none" padding="compact"
+              className="min-h-0 border-0 py-4"
             />
           ) : (
             (workflows ?? []).map((w) => {
@@ -168,7 +168,7 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
                   className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2"
                 >
                   <span className="text-sm font-medium">{w.name}</span>
-                  <Badge variant="outline" fontSize="3xs">v{w.version}</Badge>
+                  <Badge variant="outline" className="text-3xs">v{w.version}</Badge>
                   {w.description && (
                     <span className="text-xs text-muted-foreground truncate max-w-60">
                       {w.description}
@@ -177,10 +177,10 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
                   {steps.length > 0 && (
                     <div className="ml-auto flex flex-wrap items-center gap-1">
                       {steps.map((s, i) => (
-                        <Badge color="purple"
+                        <Badge
                           key={`${s}-${i}`}
                           variant="secondary"
-                          fontSize="3xs" 
+                          className="bg-accent-purple/10 text-3xs text-accent-purple"
                         >
                           {i + 1}. {s}
                         </Badge>

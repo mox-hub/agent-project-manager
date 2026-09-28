@@ -101,7 +101,7 @@ export function ProjectTeamPage() {
             <HeaderActionButton
               variant="outline"
               icon={RefreshCw}
-              loading={syncTasks.isPending}
+              iconClassName={syncTasks.isPending ? 'animate-spin' : undefined}
               label={t('project.team.syncTasks')}
               disabled={syncTasks.isPending}
               onClick={handleTeamSync}
@@ -124,17 +124,17 @@ export function ProjectTeamPage() {
                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 size={14}
               />
-              <Input fontSize="xs" size="h-8"
+              <Input
                 value={searchKeyword}
                 onChange={(event) => setSearchKeyword(event.target.value)}
                 placeholder={t('project.team.searchMembers')}
-                
+                className="h-8 pl-9 text-xs"
               />
             </div>
           }
         >
           {isError ? (
-            <Alert variant="destructive" >
+            <Alert variant="destructive" className="text-left">
               <AlertTriangleIcon className="size-4" />
               <AlertDescription>
                 {error?.message || t('project.team.loadFailed')}
@@ -146,7 +146,7 @@ export function ProjectTeamPage() {
             <>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {filteredMembers.map((member) => (
-                  <Card key={member.memberId} size="sm" >
+                  <Card key={member.memberId} size="sm" className="gap-3">
                     <CardHeader>
                       <div className="flex items-center gap-3">
                         <Avatar size="lg">
@@ -156,7 +156,7 @@ export function ProjectTeamPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <CardTitle className="truncate">
+                          <CardTitle className="truncate leading-tight">
                             {member.memberName}
                           </CardTitle>
                           <CardDescription className="truncate">
@@ -165,7 +165,7 @@ export function ProjectTeamPage() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent >
+                    <CardContent className="gap-3">
                       <div className="grid grid-cols-3 gap-2">
                         <div className="rounded-lg bg-muted/50 p-2 text-center">
                           <p className="text-lg font-semibold leading-none text-foreground">

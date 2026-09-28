@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-md border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -39,58 +39,27 @@ const buttonVariants = cva(
         "ghost-danger":
           "text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:border-destructive/40 focus-visible:ring-destructive/20",
       },
-      // —— E 类第二轮（2026-09-28 第八轮裁决 #2 → 第九轮收敛，§七之十）——
-      // 演进：第八轮先把 min() 圆角钳位统一为 `rounded-md`（10px）；同日第九轮用户
-      // 裁断「取消圆角矩形按钮，收敛为胶囊/圆形」（§七之十 #1），基线与组内锁一并
-      // 升为 `rounded-full`。size 轴的组内锁（in-data-[slot=button-group]）随基线
-      // 同步；xs/icon-xs 曾有的 min() 钳位在第八轮已移除，不再存在。
-      // 可见变化（用户已裁，两轮累计）：全部按钮圆角 → 胶囊；icon-* 档（方形定宽高
-      // + 胶囊基线）即圆形钮，即「胶囊收缩为圆形」形态；不立 rectangle 档。
-      // 连带解除的迁移阻断：icon-xs 档圆角 8px ≠ 基线曾被判「不可迁」（清剿报告
-      // 桶2 留报 version-history-panel），钳位移除后该阻断消失。
       size: {
         default:
-          "h-9 gap-1.5 px-2.5 in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 rounded-full px-2 text-xs in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1 rounded-full px-2.5 in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5",
+          "h-9 gap-1.5 px-2.5 in-data-[slot=button-group]:rounded-md has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        xs: "h-6 gap-1 rounded-[min(var(--radius-md),8px)] px-2 text-xs in-data-[slot=button-group]:rounded-md has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-8 gap-1 rounded-[min(var(--radius-md),10px)] px-2.5 in-data-[slot=button-group]:rounded-md has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5",
         lg: "h-10 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         icon: "size-9",
         "icon-xs":
-          "size-6 rounded-full in-data-[slot=button-group]:rounded-full [&_svg:not([class*='size-'])]:size-3",
+          "size-6 rounded-[min(var(--radius-md),8px)] in-data-[slot=button-group]:rounded-md [&_svg:not([class*='size-'])]:size-3",
         "icon-sm":
-          "size-8 rounded-full in-data-[slot=button-group]:rounded-full",
+          "size-8 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-md",
         "icon-lg": "size-10",
         // —— E 类批 0 增补（2026-09-27）：纯增补，不改任何既有档位的类值 ——
         // 档名规则：`2<档>` = 该档的下一档，沿用字阶 3xs / 2xs 的既有命名约定
         // （`2xs` 即「xs 的下一档」）。
         // · icon-2xs = 20px：既有最小档 icon-xs 是 24px，此前 20px 只能写裸 <button>
         // · icon-2sm = 28px：落在 xs(24px) 与 sm(32px) 之间的空档
-        // 圆角刻意不写：基线已是 rounded-full（§七之十 #1 胶囊收敛，见 size 轴头注），
-        // 与 icon / icon-lg 同口径；既有 xs/icon-xs/icon-sm 的 min() 钳位曾作为历史存量
-        // 保留，2026-09-28 第八轮裁决 #2 已统一移除（本文件 size 轴注释）。
+        // 圆角刻意不写：基线已是 rounded-md（§4.5「按钮一律 rounded-md，不因尺寸降档」），
+        // 与 icon / icon-lg 同口径；既有 xs/icon-xs/icon-sm 的 min() 钳位是历史存量，未改动。
         "icon-2xs": "size-5",
         "icon-2sm": "size-7",
-        // —— E 类桶1 增补（2026-09-28）：`2sm` 定高档，承接「28px 紧凑动作钮」形态
-        // （生产面裸覆盖 `h-7 gap-1 px-2` 聚类，常伴 `text-xs`）。纯增补，default 不变。
-        // 与 xs/sm 同为完整几何档（定高 + gap + 横内距）；字阶刻意不入档——28px 钮
-        // 的字号由 fontSize 轴表达（默认 text-sm，紧凑形态配 fontSize="xs"），
-        // 避免「高与字」耦合导致非紧凑 28px 钮无档可用。圆角不写（基线 rounded-full，
-        // 与全 size 档统一口径——xs/sm 的 min() 钳位已随第八轮裁决 #2 移除）。
-        // in-data / has-data 两条与 default 档同口径：组内圆角锁随基线（第九轮起为
-        // rounded-full，见 size 轴头注）；内联图标侧内距收窄到与 px-2 同值的 pr-2/pl-2
-        // （default 是收窄到 2，本档 px-2 本身就是 2 ⇒ 同值，带图标钮渲染不变）。
-        "2sm":
-          "h-7 gap-1 px-2 in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-      },
-      // —— E 类第二轮增补（2026-09-28 第八轮裁决 #3）：全宽钮形态档 ——
-      // 裁决原文：作为**形态档例外**于「布局不建轴」裁决（§七之三 #1 的例外，本次人裁
-      // 确认）；`w-full` 存量按档迁移。归因出处：`docs/design/修改方案-E类-2026-09-27.md`
-      // §七之九 #3。值域只有 full 一档：这是「形态档例外」授权的封闭值，不是布局轴的
-      // 重新开口——flex/gap/items/justify 仍不建轴（§七之三 #1 维持不变）。
-      // 默认档为空串 ⇒ 既有全部输出逐字节不变（纯增补）。
-      width: {
-        default: "",
-        full: "w-full",
       },
       // —— E 类批 0b 增补（2026-09-28）：语义色 tone 轴 ——
       // 立项与靶子口径见 `docs/design/修改方案-E类-2026-09-27.md`（§七之二 #1「批 0b 能力
@@ -165,18 +134,6 @@ const buttonVariants = cva(
       // 默认档为空串 ⇒ 既有全部 variant × size × tone 档的输出**逐字节不变**（纯增补）。
       padding: {
         default: "",
-        // zero 档（2026-09-28 增补）：承接「不写任何内距/定高、靠文字行高撑起来」的裸钮
-        // （纯文本钮 / 裸图标钮）。只写 `h-auto p-0` 并不等价，size 默认档残留的 `h-9` /
-        // `px-2.5` 会被 twMerge 压掉，但基线还有两类**参与几何**的类必须一并中和——
-        //   · `gap-1.5`：裸钮没有 flex gap（子元素间距 0）；不中和，多子元素钮平白多出间距；
-        //   · `border`（1px 透明边框）：preflight 全量重置是 `border: 0 solid`，裸钮边框宽
-        //     为 0；`h-auto` 下边框宽计入盒高（content + padding + border），不中和即整体
-        //     +2px。定高档（size / icon-*）走 border-box 由定高吸收边框，无此问题——故只有
-        //     内距驱动档需要显式归零。
-        // 即：zero 档 = 「撤掉基线全部几何、回到 preflight 裸几何」的档，不是省略档。
-        // 档值经构建产物 + Playwright 实测双证（原/迁两形态盒高逐像素相等），证据见
-        // 方案 §七之七。
-        "p-0": "h-auto gap-0 border-0 p-0",
         // 方形内距（图标钮 / 紧凑方钮）
         "p-0.5": "h-auto p-0.5",
         "p-1": "h-auto p-1",
@@ -226,7 +183,6 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
       // 默认档为空串 ⇒ 既有全部 variant × size 档的输出**逐字节不变**（纯增补）。
-      width: "default",
       tone: "default",
       padding: "default",
       fontSize: "default",
@@ -265,10 +221,9 @@ function Button({
   className,
   variant = "default",
   size = "default",
-  width = "default",
   tone = "default",
-  // padding / fontSize / width 是**只给 cva 用**的轴，必须在此解构——否则会被
-  // `...props` 透传到 DOM（`fontSize` 这类 camelCase 属性还会触发 React 警告）。
+  // padding / fontSize 是**只给 cva 用**的轴，必须在此解构——否则会被 `...props`
+  // 透传到 DOM（`fontSize` 这类 camelCase 属性还会触发 React 警告）。
   // 见 button.test.tsx 的「轴不泄漏到 DOM」用例。
   padding = "default",
   fontSize = "default",
@@ -290,7 +245,6 @@ function Button({
         buttonVariants({
           variant,
           size,
-          width,
           tone,
           padding: effectivePadding,
           fontSize,

@@ -5,7 +5,6 @@
  * 本卡承载静默 AI 场景 create-suggestions 的拉取与应用（点击 chip 回填表单）。
  * CAP-A-18 批4：移除原四条不可点的静态假建议（死可供性），未生成时渲染 EmptyState 引导。
  */
-import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
@@ -64,18 +63,18 @@ export function SuggestionsCard({
           {t('unifiedCreate.suggestions.title')}
         </span>
         {!collapsed ? (
-          <Button variant="ghost"
+          <button
             type="button"
             onClick={fetchAi}
             disabled={loading}
-            className="ml-auto flex items-center transition-colors disabled:opacity-50"
+            className="ml-auto flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-3xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
             data-ai-action="create-dialog.suggestions.fetch"
           >
             <Sparkles className="size-2.5 text-accent-purple" />
             {loading ? t('unifiedCreate.suggestions.generating') : t('unifiedCreate.aiSuggestions')}
-          </Button>
+          </button>
         ) : null}
-        <Button variant="ghost"
+        <button
           type="button"
           onClick={onToggle}
           className={cn(
@@ -84,7 +83,7 @@ export function SuggestionsCard({
           )}
         >
           {collapsed ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
-        </Button>
+        </button>
       </div>
       {!collapsed && (
         <div className="p-1.5 flex flex-col gap-0.5">
@@ -96,13 +95,13 @@ export function SuggestionsCard({
               variant="card"
               title={t('unifiedCreate.suggestions.empty')}
               description={t('unifiedCreate.suggestions.emptyHint')}
-              minHeight="none" frame="none" 
+              className="min-h-0 border-0 p-1"
             />
           ) : (
             items.map((it, idx) => {
               const applied = appliedKeys.includes(`${it.field}:${it.value}`);
               return (
-                <Button variant="ghost"
+                <button
                   key={`${it.field}-${it.label}-${idx}`}
                   type="button"
                   disabled={applied}
@@ -118,7 +117,7 @@ export function SuggestionsCard({
                 >
                   <Sparkles className="size-3.5 text-accent-purple" />
                   <span className="flex-1 text-left">{it.label}</span>
-                </Button>
+                </button>
               );
             })
           )}

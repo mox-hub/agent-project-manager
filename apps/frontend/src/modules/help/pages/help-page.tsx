@@ -174,7 +174,7 @@ export function HelpPage() {
                 placeholder={t('help.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                
+                className="pl-9"
               />
             </div>
           </div>
@@ -183,7 +183,7 @@ export function HelpPage() {
           <div className="flex-1 overflow-auto p-4">
             {filteredSections.map((section) => (
               <div key={section.id} className="mb-4">
-                <Button variant="ghost"
+                <button
                   onClick={() => {
                     setSelectedSection(section.id);
                     setSelectedArticle(null);
@@ -197,11 +197,11 @@ export function HelpPage() {
                 >
                   {section.icon}
                   {t(`help.sections.${section.id}`)}
-                </Button>
+                </button>
                 {selectedSection === section.id && (
                   <div className="ml-8 mt-1 space-y-1">
                     {section.articles.map((article) => (
-                      <Button variant="ghost"
+                      <button
                         key={article.id}
                         onClick={() => setSelectedArticle(article.id)}
                         className={cn(
@@ -213,7 +213,7 @@ export function HelpPage() {
                       >
                         <ChevronRight className="w-3 h-3" />
                         {t(articleKey(section.id, article.id, 'title'))}
-                      </Button>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -227,14 +227,12 @@ export function HelpPage() {
           <div className="mx-auto w-full max-w-4xl space-y-6">
           {currentArticle ? (
             <div>
-              <Button
-                variant="quiet"
-                padding="p-0"
-                className="mb-4"
+              <button
                 onClick={() => setSelectedArticle(null)}
+                className="text-sm text-muted-foreground hover:text-foreground mb-4"
               >
                 ← {t('help.backTo', { section: currentSection ? t(`help.sections.${currentSection.id}`) : '' })}
-              </Button>
+              </button>
               <h2 className="text-2xl font-semibold mb-2">
                 {t(articleKey(currentSection?.id ?? '', currentArticle.id, 'title'))}
               </h2>
@@ -257,11 +255,11 @@ export function HelpPage() {
                 {currentSection.articles.map((article) => (
                   <Card
                     key={article.id}
-                    className="cursor-pointer transition-colors"
+                    className="cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={() => setSelectedArticle(article.id)}
                   >
-                    <CardHeader >
-                      <CardTitle size="base">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">
                         {t(articleKey(currentSection.id, article.id, 'title'))}
                       </CardTitle>
                       <CardDescription>
@@ -272,7 +270,7 @@ export function HelpPage() {
                       <p className="text-sm text-muted-foreground">
                         {t(articleKey(currentSection.id, article.id, 'content'))}
                       </p>
-                      <Button padding="p-0" variant="link" size="sm" className="mt-2">
+                      <Button variant="link" size="sm" className="mt-2 p-0">
                         {t('help.readMore')} <ExternalLink className="w-3 h-3 ml-1" />
                       </Button>
                     </CardContent>
@@ -284,7 +282,7 @@ export function HelpPage() {
             <EmptyState
               variant="page"
               visual={
-                <IconStack aria-hidden="true" >
+                <IconStack aria-hidden="true" className="text-accent-blue">
                   <Book className="size-4 text-accent-blue" />
                 </IconStack>
               }
@@ -315,7 +313,7 @@ export function HelpPage() {
                             ))}
                           </KbdGroup>
                         </TableCell>
-                        <TableCell >{shortcut.action}</TableCell>
+                        <TableCell className="text-sm">{shortcut.action}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

@@ -24,7 +24,6 @@
  * 胶囊 (Capsule) 等原子一律取自 components/ui/property-panel（单一来源，
  * 与详情页属性面板共版，禁止在本文件重写原子）；AI 建议卡为业务组件见 ./suggestions-card。
  */
-import { FieldLabel } from '@/components/ui/field';
 import * as React from 'react';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -1140,9 +1139,9 @@ export function UnifiedCreateDialog({
           <div ref={mainColRef} className="flex-1 min-w-0 overflow-y-auto flex flex-col">
             <div className="p-5 pb-3 flex flex-col gap-3.5 flex-1 min-h-0 w-full transition-all">
               {error && (
-                <Alert variant="destructive" >
+                <Alert variant="destructive" className="py-2 text-xs">
                   <AlertCircle className="size-3.5 shrink-0" />
-                  <AlertDescription >{error}</AlertDescription>
+                  <AlertDescription className="text-xs">{error}</AlertDescription>
                 </Alert>
               )}
 
@@ -1159,7 +1158,7 @@ export function UnifiedCreateDialog({
                     rows={5}
                     autoFocus
                     placeholder={t('unifiedCreate.aiPanel.inputPlaceholder')}
-                    className="flex-1 resize-none outline-none"
+                    className="flex-1 resize-none rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus-visible:ring-0 focus-visible:border-primary/50"
                   />
                   {draft && (
                     <div
@@ -1171,14 +1170,14 @@ export function UnifiedCreateDialog({
                           <EntityIcon entity={DRAFT_ENTITY_KIND[draft.type]} size="sm" />
                           {t('unifiedCreate.aiPanel.draftBadge', { type: t(`unifiedCreate.labels.${draft.type}`) })}
                         </span>
-                        <Button variant="ghost"
+                        <button
                           type="button"
                           onClick={() => void generateDraft()}
                           disabled={silentCreateDraft.isPending}
-                          className="transition-colors disabled:opacity-50"
+                          className="text-3xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                         >
                           {t('unifiedCreate.aiPanel.regen')}
-                        </Button>
+                        </button>
                       </div>
                       <div className="p-3 flex flex-col gap-1.5 text-xs">
                         <div>
@@ -1384,18 +1383,18 @@ export function UnifiedCreateDialog({
           {/* 左侧：附件入口 + 连续创建（并列） */}
           <div className="flex items-center gap-3">
             {activeType !== 'project' && (
-              <Button variant="ghost"
+              <button
                 type="button"
-                className="inline-flex items-center justify-center transition-colors shrink-0"
+                className="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors shrink-0"
                 title="添加附件"
               >
                 <Paperclip className="size-4 opacity-70 hover:opacity-100" />
-              </Button>
+              </button>
             )}
-            <FieldLabel size="xs" variant="muted" className="flex items-center cursor-pointer select-none transition-colors">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-muted-foreground hover:text-foreground transition-colors">
               <span>{t('unifiedCreate.createMore')}</span>
               <Switch checked={createMore} onCheckedChange={setCreateMore} />
-            </FieldLabel>
+            </label>
           </div>
 
           {/* 右侧：模式穿梭、取消与提交主按钮 */}
@@ -1437,7 +1436,7 @@ export function UnifiedCreateDialog({
                 >
                   {silentCreateDraft.isPending ? (
                     <>
-                      <Spinner size="2xs" color="inherit" />
+                      <Spinner className="size-3 text-inherit" />
                       {t('unifiedCreate.aiPanel.parsing')}
                     </>
                   ) : draft ? (
@@ -1459,11 +1458,11 @@ export function UnifiedCreateDialog({
                 onClick={handleSubmit}
                 disabled={isSubmitting || !currentTitle.trim()}
                 aria-label={t(`unifiedCreate.title.${activeType}`)}
-                
+                className="gap-1.5 font-medium"
               >
                 {isSubmitting ? (
                   <>
-                    <Spinner size="2xs" color="inherit" />
+                    <Spinner className="size-3 text-inherit" />
                     {t('unifiedCreate.creating')}
                   </>
                 ) : (
@@ -1518,20 +1517,17 @@ function IconBtn({
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
   return (
-    <Button
+    <button
       type="button"
-      variant="ghost"
-      // icon-2sm = size-7：与原裸 <button> 的 size-7 精确同尺寸（圆角随基线收敛为胶囊，接受）
-      size="icon-2sm"
       className={cn(
-        'text-muted-foreground transition-colors',
+        'size-7 inline-flex items-center justify-center rounded-md text-muted-foreground transition-colors',
         'hover:bg-accent hover:text-foreground',
         active && 'bg-accent text-foreground',
       )}
       {...props}
     >
       {children}
-    </Button>
+    </button>
   );
 }
 
@@ -1542,7 +1538,7 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
     <Popover>
       <PopoverTrigger
         render={
-          <Button variant="ghost" className="inline-flex items-center transition-colors" />
+          <button className="inline-flex items-center gap-1.5 px-1.5 py-1 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" />
         }
       >
         {meta.kind
@@ -1551,12 +1547,12 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
         <span>{t(`unifiedCreate.labels.${activeType}`)}</span>
         <ChevronDown className="size-3 opacity-50" />
       </PopoverTrigger>
-      <PopoverContent align="start" >
+      <PopoverContent align="start" className="p-1 w-44">
         <div className="flex flex-col gap-0.5">
           {TYPE_ORDER.map((ty, i) => {
             const M = TYPE_META[ty];
             return (
-              <Button variant="ghost"
+              <button
                 key={ty}
                 type="button"
                 onClick={() => onChange(ty)}
@@ -1571,7 +1567,7 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
                 <span className="font-medium flex-1">{t(`unifiedCreate.labels.${ty}`)}</span>
                 {activeType === ty && <Check className="size-3 text-primary" />}
                 <span className="text-3xs text-muted-foreground">{i + 1}</span>
-              </Button>
+              </button>
             );
           })}
         </div>
@@ -1616,17 +1612,17 @@ function ProjectBreadcrumbSelector({
       <Popover>
         <PopoverTrigger
           render={
-            <Button variant="ghost" className="inline-flex items-center transition-colors truncate" />
+            <button className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors max-w-36 truncate" />
           }
         >
           <Flag className="size-3 text-muted-foreground shrink-0" />
           <span className="truncate">{current?.name || '选择项目'}</span>
           <ChevronDown className="size-2.5 opacity-50 shrink-0" />
         </PopoverTrigger>
-        <PopoverContent align="start" className="overflow-y-auto">
+        <PopoverContent align="start" className="p-1 w-52 max-h-60 overflow-y-auto">
           <div className="flex flex-col gap-0.5">
             {projectList.map((p) => (
-              <Button variant="ghost"
+              <button
                 key={p.id}
                 type="button"
                 onClick={() => onSelect(p.id)}
@@ -1637,7 +1633,7 @@ function ProjectBreadcrumbSelector({
               >
                 <span className="truncate flex-1">{p.name}</span>
                 {projectId === p.id && <Check className="size-3 text-primary ml-1 shrink-0" />}
-              </Button>
+              </button>
             ))}
           </div>
         </PopoverContent>
@@ -1687,10 +1683,10 @@ function DescriptionField(props: {
           <span className="font-medium text-foreground/70">
             {t('unifiedCreate.linear.description')} (Markdown)
           </span>
-          <Button variant="ghost"
+          <button
             type="button"
             onClick={props.onTogglePreview}
-            className="flex items-center transition-colors"
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
             {props.descPreview ? (
               <>
@@ -1703,7 +1699,7 @@ function DescriptionField(props: {
                 <span>{t('unifiedCreate.preview')}</span>
               </>
             )}
-          </Button>
+          </button>
         </div>
       )}
       {props.maximized && props.descPreview ? (

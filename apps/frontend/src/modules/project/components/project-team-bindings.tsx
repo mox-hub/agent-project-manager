@@ -82,21 +82,21 @@ export function ProjectTeamBindings({ projectId }: { projectId: string }) {
         <Popover open={addOpen} onOpenChange={setAddOpen}>
           <PopoverTrigger
             render={
-              <Button variant="outline" size="sm" fontSize="xs" >
+              <Button variant="outline" size="sm" className="h-7 text-xs">
                 <Plus className="size-3.5" />
                 {t('project.team.bindings.add')}
               </Button>
             }
           />
-          <PopoverContent align="end" >
+          <PopoverContent align="end" className="w-64 p-2">
             <div className="relative">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={13} />
-              <Input fontSize="xs" size="h-7"
+              <Input
                 autoFocus
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
                 placeholder={t('project.team.bindings.search')}
-                
+                className="h-7 pl-8 text-xs"
               />
             </div>
             <div className="mt-1.5 max-h-56 overflow-y-auto">
@@ -106,12 +106,12 @@ export function ProjectTeamBindings({ projectId }: { projectId: string }) {
                 </p>
               ) : (
                 candidates.map((team) => (
-                  <Button variant="ghost"
+                  <button
                     key={team.id}
                     type="button"
                     disabled={bindTeam.isPending}
                     onClick={() => handleBind(team.id, team.name)}
-                    className="flex items-center transition-colors disabled:opacity-50"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted/60 disabled:opacity-50"
                   >
                     <span
                       className="size-2.5 shrink-0 rounded-full"
@@ -121,7 +121,7 @@ export function ProjectTeamBindings({ projectId }: { projectId: string }) {
                     <span className="ml-auto shrink-0 text-3xs text-muted-foreground">
                       {t('project.sidebar.memberCount', { count: team.memberCount ?? 0 })}
                     </span>
-                  </Button>
+                  </button>
                 ))
               )}
             </div>
@@ -143,10 +143,10 @@ export function ProjectTeamBindings({ projectId }: { projectId: string }) {
               key={team.id}
               className="group inline-flex h-6 items-center gap-1.5 rounded-full border border-border pl-2 pr-1 text-xs transition-colors hover:bg-muted/60"
             >
-              <Button variant="ghost"
+              <button
                 type="button"
                 onClick={() => navigate(`/app/teams/${team.id}`)}
-                className="flex items-center"
+                className="flex min-w-0 items-center gap-1.5"
                 title={team.name}
               >
                 <span
@@ -154,16 +154,16 @@ export function ProjectTeamBindings({ projectId }: { projectId: string }) {
                   style={{ backgroundColor: team.color || 'var(--color-brand-linear)' }}
                 />
                 <span className="max-w-40 truncate">{team.name}</span>
-              </Button>
-              <Button variant="ghost"
+              </button>
+              <button
                 type="button"
                 disabled={unbindTeam.isPending}
                 onClick={() => handleUnbind(team.id, team.name)}
-                className="flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50"
+                className="flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 disabled:opacity-50"
                 title={t('project.team.bindings.unbind')}
               >
                 <X className="size-3" />
-              </Button>
+              </button>
             </span>
           ))}
         </div>

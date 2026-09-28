@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download } from 'lucide-react';
@@ -130,14 +129,11 @@ export function GlobalTaskExportDialog({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onOpenChange(false)}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
-            <span className="flex items-center gap-2">
-              <Download size={16} className="text-accent-blue" />
-              {t('task.export.globalTitle', '导出任务')}
-            </span>
+          <DialogTitle className="flex items-center gap-2">
+            <Download size={16} className="text-accent-blue" />
+            {t('task.export.globalTitle', '导出任务')}
           </DialogTitle>
           <DialogDescription>
             {scopeNote ??
@@ -153,14 +149,14 @@ export function GlobalTaskExportDialog({
         <fieldset className="space-y-3">
           <legend className="sr-only">{t('task.export.formatLegend', '导出格式')}</legend>
           <RadioGroup value={format} onValueChange={(v) => setFormat(v as ExportFormat)}>
-            <FieldLabel size="xs" variant="muted" className="flex cursor-pointer items-center">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
               <RadioGroupItem value="csv" />
               CSV
-            </FieldLabel>
-            <FieldLabel size="xs" variant="muted" className="mt-2 flex cursor-pointer items-center">
+            </label>
+            <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-foreground">
               <RadioGroupItem value="json" />
               JSON
-            </FieldLabel>
+            </label>
           </RadioGroup>
         </fieldset>
 

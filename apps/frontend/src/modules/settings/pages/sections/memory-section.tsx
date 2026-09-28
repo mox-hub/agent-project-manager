@@ -29,13 +29,7 @@ import {
   type MemoryAtomRecord,
 } from '../../api/memory-api';
 
-/**
- * 记忆原子「类型」徽标配色——**内容分类**而非状态语义（preference/conclusion/…
- * 是知识形态，无健康/进度含义），不并入 tone 链路；按 §19.5 收敛批口径
- * 自 `TYPE_TONE` 正名为 `MEMORY_TYPE_BADGE_CLASS`，避开状态语境词表
- * （先例：Spinner tone→color，§七之八（四））。
- */
-const MEMORY_TYPE_BADGE_CLASS: Record<string, string> = {
+const TYPE_TONE: Record<string, string> = {
   preference: 'bg-accent-purple/10 text-accent-purple',
   conclusion: 'bg-accent-blue/10 text-accent-blue',
   summary: 'bg-accent-green/10 text-accent-green',
@@ -54,7 +48,7 @@ function AtomRow({ atom }: { atom: MemoryAtomRecord }) {
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <Badge className={MEMORY_TYPE_BADGE_CLASS[atom.type] ?? 'bg-muted'} variant="secondary">
+          <Badge className={TYPE_TONE[atom.type] ?? 'bg-muted'} variant="secondary">
             {t(`memory.type.${atom.type}`)}
           </Badge>
           {atom.pinned && (
@@ -74,30 +68,30 @@ function AtomRow({ atom }: { atom: MemoryAtomRecord }) {
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        <Button padding="p-0"
+        <Button
           variant="ghost"
           size="sm"
-          
+          className="h-7 w-7 p-0"
           aria-label={atom.pinned ? t('memory.unpin') : t('memory.pin')}
           onClick={() => pin.mutate({ id: atom.id, pinned: !atom.pinned })}
           data-ai-action="settings.memory.pin.click"
         >
           {atom.pinned ? <PinOff className="size-3.5" /> : <Pin className="size-3.5" />}
         </Button>
-        <Button padding="p-0"
+        <Button
           variant="ghost"
           size="sm"
-          
+          className="h-7 w-7 p-0"
           aria-label={t('memory.archive')}
           onClick={() => archive.mutate(atom.id)}
           data-ai-action="settings.memory.archive.click"
         >
           <Archive className="size-3.5" />
         </Button>
-        <Button padding="p-0"
+        <Button
           variant="ghost"
           size="sm"
-          
+          className="h-7 w-7 p-0 text-destructive hover:text-destructive"
           aria-label={t('common.delete')}
           onClick={() => remove.mutate(atom.id)}
           data-ai-action="settings.memory.delete.click"
@@ -127,23 +121,23 @@ export function MemorySection() {
       icon={Brain}
       iconColor="text-accent-yellow"
       aiPage={CORE_AI_PAGE_IDS.settings}
-      
+      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
-      <Card surface="flat">
+      <Card className="border-border shadow-none">
             <CardHeader>
-              <CardTitle size="base" className="flex items-center">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Brain size={16} className="text-accent-yellow" />
                 {t('memory.atomsList')}
               </CardTitle>
               <CardDescription>{t('memory.description')}</CardDescription>
             </CardHeader>
-            <CardContent >
+            <CardContent className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
                 <SelectField
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
-                  
+                  className="w-56"
                   aria-label={t('memory.scopeFilter')}
                   data-ai-component="settings.memory.scope-filter"
                   data-ai-role="filter"
@@ -158,7 +152,7 @@ export function MemorySection() {
                 <Button
                   variant={showArchived ? 'secondary' : 'ghost'}
                   size="sm"
-                  
+                  className="h-8"
                   onClick={() => setShowArchived((v) => !v)}
                   data-ai-action="settings.memory.show-archived.click"
                 >
@@ -168,7 +162,7 @@ export function MemorySection() {
               </div>
 
               {memory.isLoading ? (
-                <Skeleton  />
+                <Skeleton className="h-40 rounded-lg" />
               ) : items.length === 0 ? (
                 <EmptyState icon={Brain} title={t('memory.empty')} />
               ) : (

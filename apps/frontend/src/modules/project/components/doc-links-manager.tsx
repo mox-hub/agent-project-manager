@@ -62,11 +62,11 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
       </div>
 
       {isAdding && (
-        <Card className="mb-4">
-          <CardContent className="flex flex-col">
+        <Card className="mb-4 bg-muted/50">
+          <CardContent className="flex flex-col gap-4 pt-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label variant="muted" className="mb-1 block">Label</Label>
+                <Label className="mb-1 block text-sm text-muted-foreground font-medium">Label</Label>
                 <Input
                   type="text"
                   value={newLink.label}
@@ -75,9 +75,9 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
                 />
               </div>
               <div>
-                <Label variant="muted" className="mb-1 block">Type</Label>
+                <Label className="mb-1 block text-sm text-muted-foreground font-medium">Type</Label>
                 <SelectField
-                  
+                  className="w-full"
                   value={newLink.type}
                   onChange={(e) => setNewLink({ ...newLink, type: e.target.value as ProjectDocLinkRequest['type'] })}
                 >
@@ -90,7 +90,7 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
               </div>
             </div>
             <div>
-              <Label variant="muted" className="mb-1 block">URL</Label>
+              <Label className="mb-1 block text-sm text-muted-foreground font-medium">URL</Label>
               <Input
                 type="url"
                 value={newLink.url}
@@ -99,7 +99,7 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
               />
             </div>
             <div>
-              <Label variant="muted" className="mb-1 block">Description (optional)</Label>
+              <Label className="mb-1 block text-sm text-muted-foreground font-medium">Description (optional)</Label>
               <Input
                 type="text"
                 value={newLink.description}
@@ -113,7 +113,7 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
                 checked={newLink.aiIndexed}
                 onChange={(e) => setNewLink({ ...newLink, aiIndexed: e.target.checked })}
               />
-              <Label htmlFor="aiIndexed" variant="muted">
+              <Label htmlFor="aiIndexed" className="text-sm text-muted-foreground">
                 Index for AI context (make available to AI assistant)
               </Label>
             </div>

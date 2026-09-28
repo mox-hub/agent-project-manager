@@ -59,7 +59,7 @@ export function AssistantMessageInput({
 
   return (
     <div className="flex items-center gap-2" data-ai-component="assistant.message-input">
-      <Input fontSize="xs" size="h-8"
+      <Input
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
@@ -70,7 +70,7 @@ export function AssistantMessageInput({
         }}
         placeholder={t('assistant.chat.inputPlaceholder', { name: personaName })}
         disabled={disabled}
-        
+        className="h-8 text-xs"
       />
       {dispatchAction ? (
         <Button

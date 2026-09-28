@@ -53,7 +53,7 @@ export function LinearConflictResolver({
         <Button
           variant="outline"
           size="sm"
-          fontSize="2xs" 
+          className="h-6 px-2 text-2xs border-orange-500/40 text-accent-orange hover:bg-accent-orange/10"
           disabled={resolve.isPending}
           onClick={() => setOpenMenu((v) => !v)}
           data-ai-component="linear.conflict-resolver.compact"
@@ -66,9 +66,9 @@ export function LinearConflictResolver({
             className="absolute right-0 top-full z-modal mt-1 w-56 rounded-md border border-border bg-background p-1 shadow-xs"
             onMouseLeave={() => setOpenMenu(false)}
           >
-            <Button variant="ghost"
+            <button
               type="button"
-              className="flex items-start"
+              className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent"
               onClick={() => submit('use_linear')}
               disabled={resolve.isPending}
             >
@@ -77,10 +77,10 @@ export function LinearConflictResolver({
                 <div className="font-medium">Use Linear</div>
                 <div className="text-3xs text-muted-foreground">Override local</div>
               </div>
-            </Button>
-            <Button variant="ghost"
+            </button>
+            <button
               type="button"
-              className="flex items-start"
+              className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent"
               onClick={() => submit('use_local')}
               disabled={resolve.isPending}
             >
@@ -89,10 +89,10 @@ export function LinearConflictResolver({
                 <div className="font-medium">Use Local</div>
                 <div className="text-3xs text-muted-foreground">Push to Linear</div>
               </div>
-            </Button>
-            <Button variant="ghost"
+            </button>
+            <button
               type="button"
-              className="flex items-start"
+              className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent"
               onClick={() => submit('keep_both')}
               disabled={resolve.isPending}
             >
@@ -101,7 +101,7 @@ export function LinearConflictResolver({
                 <div className="font-medium">Keep Both</div>
                 <div className="text-3xs text-muted-foreground">Duplicate remote</div>
               </div>
-            </Button>
+            </button>
           </div>
         ) : null}
       </div>
@@ -122,7 +122,7 @@ export function LinearConflictResolver({
           onClick={() => submit('use_linear')}
           disabled={resolve.isPending}
           variant="secondary"
-          className="justify-start"
+          className="justify-start gap-2"
         >
           <Download className="size-4" />
           <div className="text-left">
@@ -136,7 +136,7 @@ export function LinearConflictResolver({
           onClick={() => submit('use_local')}
           disabled={resolve.isPending}
           variant="secondary"
-          className="justify-start"
+          className="justify-start gap-2"
         >
           <Upload className="size-4" />
           <div className="text-left">
@@ -150,7 +150,7 @@ export function LinearConflictResolver({
           onClick={() => submit('keep_both')}
           disabled={resolve.isPending}
           variant="secondary"
-          className="justify-start"
+          className="justify-start gap-2"
         >
           <Copy className="size-4" />
           <div className="text-left">

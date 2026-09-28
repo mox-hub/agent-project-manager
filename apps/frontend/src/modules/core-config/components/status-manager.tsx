@@ -1,4 +1,3 @@
-import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -187,6 +186,7 @@ export function StatusManager() {
       variant="standard"
       contentClassName="gap-4"
       aiPage="settings.statuses"
+      className="bg-background text-foreground"
       title={t('settings.statuses')}
       icon={Layers}
       iconColor="text-accent-yellow"
@@ -226,19 +226,19 @@ export function StatusManager() {
             <DataTableShell>
               <Table>
                 <TableHeader>
-                  <TableRow >
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
                     <TableHead>{t('settings.statusName')}</TableHead>
                     <TableHead>Key</TableHead>
                     <TableHead>{t('settings.statusType')}</TableHead>
-                    <TableHead width="w-16" >{t('settings.statusOrder')}</TableHead>
+                    <TableHead className="w-16">{t('settings.statusOrder')}</TableHead>
                     <TableHead>{t('settings.statusFlags')}</TableHead>
-                    <TableHead width="w-20" >{t('common.actions')}</TableHead>
+                    <TableHead className="w-20 text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {displayStatuses.map((status) => (
                     <TableRow key={status.id}>
-                      <TableCell density="dense" >
+                      <TableCell className="py-1.5">
                         <span className="inline-flex items-center gap-2">
                           <span
                             className={cn('size-2 shrink-0 rounded-full', getStatusDotColor(status))}
@@ -246,14 +246,14 @@ export function StatusManager() {
                           <span className="font-medium text-foreground">{status.name}</span>
                         </span>
                       </TableCell>
-                      <TableCell fontSize="xs" density="dense" >
+                      <TableCell className="py-1.5 font-mono text-xs text-muted-foreground">
                         {status.key}
                       </TableCell>
-                      <TableCell density="dense" >
+                      <TableCell className="py-1.5">
                         <Badge variant="outline">{t(TYPE_I18N_KEY[status.type] ?? status.type)}</Badge>
                       </TableCell>
-                      <TableCell density="dense" >{status.order}</TableCell>
-                      <TableCell density="dense" >
+                      <TableCell className="py-1.5 text-muted-foreground">{status.order}</TableCell>
+                      <TableCell className="py-1.5">
                         {status.isFinal || status.isBlockedState ? (
                           <span className="inline-flex gap-1">
                             {status.isFinal && <Badge variant="secondary">{t('settings.isFinal')}</Badge>}
@@ -265,7 +265,7 @@ export function StatusManager() {
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      <TableCell density="dense" >
+                      <TableCell className="py-1.5 text-right">
                         <div className="flex items-center justify-end gap-0.5">
                           <Button
                             type="button"
@@ -284,7 +284,7 @@ export function StatusManager() {
                             aria-label={t('common.delete')}
                             title={t('common.delete')}
                             disabled={deleteStatus.isPending}
-                            
+                            className="text-destructive hover:text-destructive"
                             onClick={() => handleDelete(status)}
                           >
                             <Trash2 />
@@ -307,23 +307,23 @@ export function StatusManager() {
               <DataTableShell>
                 <Table>
                   <TableHeader>
-                    <TableRow >
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
                       <TableHead>{t('settings.transitionFrom')}</TableHead>
                       <TableHead>{t('settings.transitionTo')}</TableHead>
-                      <TableHead width="w-20" >{t('settings.transitionTrigger')}</TableHead>
+                      <TableHead className="w-20">{t('settings.transitionTrigger')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {transitions.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={3} >
+                        <TableCell colSpan={3} className="py-6 text-center text-sm text-muted-foreground">
                           {t('settings.transitionsEmpty')}
                         </TableCell>
                       </TableRow>
                     ) : (
                       transitions.map((row) => (
                         <TableRow key={row.rowKey}>
-                          <TableCell density="dense" >
+                          <TableCell className="py-1.5">
                             <span className="inline-flex items-center gap-2">
                               <span
                                 className={cn(
@@ -334,7 +334,7 @@ export function StatusManager() {
                               {row.fromStatus.name}
                             </span>
                           </TableCell>
-                          <TableCell density="dense" >
+                          <TableCell className="py-1.5">
                             <span className="inline-flex items-center gap-2">
                               <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" />
                               <span
@@ -346,7 +346,7 @@ export function StatusManager() {
                               {row.toStatus.name}
                             </span>
                           </TableCell>
-                          <TableCell density="dense" >
+                          <TableCell className="py-1.5">
                             <Badge variant="outline">{t('settings.transitionManual')}</Badge>
                           </TableCell>
                         </TableRow>
@@ -442,26 +442,26 @@ export function StatusManager() {
                   control={statusForm.control}
                   name="isFinal"
                   render={({ field }) => (
-                    <FieldLabel size="xs" variant="muted" className="flex cursor-pointer items-center">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm">
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={(checked) => field.onChange(Boolean(checked))}
                       />
                       {t('settings.isFinal')}
-                    </FieldLabel>
+                    </label>
                   )}
                 />
                 <FormField
                   control={statusForm.control}
                   name="isBlockedState"
                   render={({ field }) => (
-                    <FieldLabel size="xs" variant="muted" className="flex cursor-pointer items-center">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm">
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={(checked) => field.onChange(Boolean(checked))}
                       />
                       {t('settings.isBlockedState')}
-                    </FieldLabel>
+                    </label>
                   )}
                 />
               </div>
@@ -479,13 +479,13 @@ export function StatusManager() {
                       <CheckboxGroup
                         value={field.value}
                         onValueChange={(value) => field.onChange((value as string[]) ?? [])}
-                        className="flex-row flex-wrap"
+                        className="flex-row flex-wrap gap-x-4 gap-y-2"
                       >
                         {nextStatusOptions.map((s) => (
-                          <FieldLabel size="xs" variant="muted" key={s.id} className="flex cursor-pointer items-center">
+                          <label key={s.id} className="flex cursor-pointer items-center gap-2 text-sm">
                             <Checkbox value={s.key} />
                             {s.name}
-                          </FieldLabel>
+                          </label>
                         ))}
                       </CheckboxGroup>
                     )}

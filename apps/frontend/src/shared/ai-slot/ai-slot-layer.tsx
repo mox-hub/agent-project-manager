@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { MessageCircleQuestion, Sparkles, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import {
   parseCardExplain,
@@ -211,9 +210,9 @@ function AISlotAnswerCard({
         </span>
         <div className="ml-auto flex items-center gap-1">
           {insight?.title ? (
-            <Button variant="ghost"
+            <button
               type="button"
-              className="inline-flex items-center"
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={() => {
                 openAssistantWithDraft(
                   t('aiSlot.askDraft', { title: insight.title ?? '' }),
@@ -223,17 +222,16 @@ function AISlotAnswerCard({
             >
               <MessageCircleQuestion className="size-3.5" aria-hidden />
               {t('aiSlot.askMore')}
-            </Button>
+            </button>
           ) : null}
-          <Button
+          <button
             type="button"
-            variant="subtle"
-            padding="p-1"
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
             title={t('aiSlot.close')}
             onClick={onClose}
           >
             <X className="size-3.5" aria-hidden />
-          </Button>
+          </button>
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2 text-sm">
@@ -241,13 +239,13 @@ function AISlotAnswerCard({
         {isError ? (
           <div className="flex flex-col items-start gap-2 py-2">
             <p className="text-sm text-destructive">{t('aiSlot.error')}</p>
-            <Button variant="ghost"
+            <button
               type="button"
-              
+              className="rounded-md border px-2 py-1 text-xs hover:bg-muted"
               onClick={() => explainCard({ kind, id })}
             >
               {t('aiSlot.retry')}
-            </Button>
+            </button>
           </div>
         ) : null}
         {insight ? <AnswerBody insight={insight} /> : null}

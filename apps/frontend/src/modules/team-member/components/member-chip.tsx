@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MemberAvatar } from './member-avatar';
 import { Bot, X } from 'lucide-react';
@@ -48,16 +47,16 @@ export function MemberChip({
         <Bot className="h-2.5 w-2.5 text-accent-purple shrink-0" />
       )}
       {removable && (
-        <Button variant="ghost"
+        <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onRemove?.();
           }}
-          className="ml-0.5 -mr-1 inline-flex items-center justify-center"
+          className="ml-0.5 -mr-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground"
         >
           <X className="h-2.5 w-2.5" />
-        </Button>
+        </button>
       )}
     </span>
   );

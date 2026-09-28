@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -65,7 +64,7 @@ export function DockUserPopover() {
       */}
       <PopoverTrigger
         render={
-          <Button variant="ghost"
+          <button
             type="button"
             aria-label="账号与工作区菜单"
             className={cn(
@@ -96,7 +95,7 @@ export function DockUserPopover() {
                 工作区路由
               </span>
             </div>
-          </Button>
+          </button>
         }
       />
 
@@ -104,7 +103,7 @@ export function DockUserPopover() {
         side="top"
         align="start"
         sideOffset={14}
-        className="overflow-hidden backdrop-blur-2xl"
+        className="w-72 p-2 overflow-hidden shadow-xs rounded-xl border-border/80 bg-popover/95 backdrop-blur-2xl"
       >
         {/* 1. 一体化紧凑身份条：头像 + 姓名/角色 + 快捷设置与登出 */}
         <div className="flex items-center gap-2.5 rounded-xl bg-accent/40 px-3 py-2 border border-border/40">
@@ -123,28 +122,28 @@ export function DockUserPopover() {
             </div>
           </div>
           <div className="flex items-center gap-0.5 shrink-0">
-            <Button variant="ghost"
+            <button
               type="button"
               onClick={() => {
                 navigate('/app/settings');
                 setOpen(false);
               }}
               title="偏好设置"
-              className="flex items-center justify-center transition-colors"
+              className="flex size-6.5 items-center justify-center rounded-lg text-content-text-muted hover:bg-accent hover:text-foreground transition-colors"
             >
               <Settings className="size-3.5" />
-            </Button>
-            <Button variant="ghost"
+            </button>
+            <button
               type="button"
               onClick={() => {
                 setOpen(false);
                 logout();
               }}
               title="退出登录"
-              className="flex items-center justify-center transition-colors"
+              className="flex size-6.5 items-center justify-center rounded-lg text-content-text-muted hover:bg-destructive/10 hover:text-destructive transition-colors"
             >
               <LogOut className="size-3.5" />
-            </Button>
+            </button>
           </div>
         </div>
 
@@ -158,24 +157,24 @@ export function DockUserPopover() {
                 {workspaces.length}
               </span>
             </span>
-            <Button variant="ghost"
+            <button
               type="button"
               onClick={() => {
                 navigate('/app/workspaces/new');
                 setOpen(false);
               }}
-              className="flex items-center hover:underline"
+              className="flex items-center gap-1 text-3xs font-medium text-accent-purple hover:underline"
             >
               <Plus className="size-3" />
               <span>新建</span>
-            </Button>
+            </button>
           </div>
 
           <div className="max-h-44 overflow-y-auto space-y-1 pr-0.5">
             {workspaces.map((ws) => {
               const isActive = ws.id === activeWorkspaceId;
               return (
-                <Button variant="ghost"
+                <button
                   key={ws.id}
                   type="button"
                   onClick={() => {
@@ -214,7 +213,7 @@ export function DockUserPopover() {
                       <Check className="size-3" strokeWidth={2.5} />
                     </span>
                   )}
-                </Button>
+                </button>
               );
             })}
           </div>
@@ -222,17 +221,17 @@ export function DockUserPopover() {
 
         {/* 3. 底部极简仪表盘快捷入口 */}
         <div className="mt-2 pt-1 border-t border-border/50 px-1">
-          <Button variant="ghost"
+          <button
             type="button"
             onClick={() => {
               navigate('/app/projects/dashboard');
               setOpen(false);
             }}
-            className="flex items-center justify-between transition-colors"
+            className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs text-content-text-muted hover:bg-accent hover:text-foreground transition-colors"
           >
             <span className="text-2xs">进入项目仪表盘</span>
             <ArrowUpRight className="size-3.5 text-content-text-muted" />
-          </Button>
+          </button>
         </div>
       </PopoverContent>
     </Popover>

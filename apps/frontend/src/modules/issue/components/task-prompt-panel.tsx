@@ -68,7 +68,7 @@ function TaskPromptEditor({
     <SidebarPanel
       title={t('taskDetail.promptPanel')}
       icon={<Sparkles className="size-3" />}
-      iconTone="info"
+      iconClassName="text-accent-blue"
     >
       <PromptEditor
         value={text}
@@ -89,6 +89,7 @@ function TaskPromptEditor({
               type="button"
               variant="ghost"
               size="sm"
+              className="gap-1"
               onClick={() => setPickerOpen(true)}
               data-ai-component="taskDetail.promptPanel.pickTemplate"
               data-ai-action="taskDetail.promptPanel.pickTemplate.click"

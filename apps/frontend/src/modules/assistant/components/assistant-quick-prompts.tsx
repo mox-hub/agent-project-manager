@@ -34,13 +34,13 @@ export function AssistantQuickPrompts({
         </span>
       ) : null}
       {prompts.map((prompt) => (
-        <Button fontSize="2xs" size="xs"
+        <Button
           key={prompt}
           type="button"
           variant="outline"
           disabled={disabled}
           onClick={() => onSend(prompt)}
-          
+          className="h-6 rounded-full px-2.5 text-2xs font-normal text-content-text-secondary"
         >
           {prompt}
         </Button>

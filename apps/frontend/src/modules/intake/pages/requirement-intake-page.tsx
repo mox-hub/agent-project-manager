@@ -36,10 +36,10 @@ import { PipelineOverviewCards } from '../components/pipeline-overview-cards';
  */
 function DocListRow({ doc, onOpen }: { doc: DocumentListItem; onOpen: () => void }) {
   return (
-    <Button variant="ghost"
+    <button
       type="button"
       onClick={onOpen}
-      className="flex items-center motion-shift"
+      className="flex w-full items-center gap-3 px-2 py-2 text-left motion-shift hover:bg-accent"
     >
       <FileText size={16} className="shrink-0 text-content-text-secondary" />
       <div className="min-w-0 flex-1">
@@ -51,7 +51,7 @@ function DocListRow({ doc, onOpen }: { doc: DocumentListItem; onOpen: () => void
       </div>
       <Badge variant="secondary">{doc.status}</Badge>
       <ArrowRight size={14} className="shrink-0 text-content-text-muted" />
-    </Button>
+    </button>
   );
 }
 
@@ -128,7 +128,7 @@ export function RequirementIntakePage() {
           {t('intake.heroDesc', '从一句原始需求开始：AI 同事连续追问澄清目标，访谈补全细节，分析评估可行性与影响面，生成任务族与验收清单，确认后落库进工单。')}
         </p>
         <div className="mt-5 flex justify-center">
-          <Button size="lg" onClick={() => openCreateDialog({ type: 'project' })}>
+          <Button size="lg" className="gap-1.5" onClick={() => openCreateDialog({ type: 'project' })}>
             <Plus size={16} />
             {t('intake.cta', '提出需求')}
           </Button>
@@ -169,14 +169,12 @@ export function RequirementIntakePage() {
           <Button
             variant="outline"
             size="sm"
+            className="gap-1.5"
             onClick={() => setAnalysisOpen(true)}
             disabled={docs.length === 0}
           >
-            {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
-            <span className="flex items-center gap-1.5">
-              <Sparkles size={14} />
-              {t('intake.analysisCta', 'AI 生成分析报告')}
-            </span>
+            <Sparkles size={14} />
+            {t('intake.analysisCta', 'AI 生成分析报告')}
           </Button>
         </div>
         <AsyncState
