@@ -210,7 +210,6 @@ export function GanttChart({
         icon={CalendarRange}
         title={emptyMessage}
         description={emptyDescription}
-        className="min-h-40"
       />
     );
   }

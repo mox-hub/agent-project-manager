@@ -228,7 +228,7 @@ export function ProjectProfilePage() {
       />
 
       <Dialog open={!!addSlot} onOpenChange={(open) => !open && setAddSlot(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>
               {t('project.profilePage.addTo', {

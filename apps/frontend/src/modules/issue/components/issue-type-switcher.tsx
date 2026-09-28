@@ -78,7 +78,6 @@ export function IssueTypeSwitcher({
           return (
             <DropdownMenuItem
               key={ty.id}
-              className="gap-2"
               onClick={() => void switchType(ty.id)}
             >
               <Icon className="size-3.5 shrink-0" style={{ color: ty.color }} />
@@ -89,7 +88,7 @@ export function IssueTypeSwitcher({
         })}
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="gap-2 text-muted-foreground"
+          className="text-muted-foreground"
           onSelect={() => navigate('/app/settings/issue-types')}
         >
           <Settings2 className="size-3.5 shrink-0" />

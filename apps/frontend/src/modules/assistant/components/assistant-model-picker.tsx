@@ -77,7 +77,6 @@ export function AssistantModelPicker({
           <DropdownMenuItem
             disabled={!hasCli || !projectId}
             onClick={() => onChange('cli')}
-            className="gap-2"
           >
             <ModelItemLabel
               option={
@@ -102,7 +101,6 @@ export function AssistantModelPicker({
               key={option.id}
               disabled={!projectId}
               onClick={() => onChange(option.id)}
-              className="gap-2"
             >
               <ModelItemLabel option={option} />
               {value === option.id ? (
@@ -114,7 +112,6 @@ export function AssistantModelPicker({
             <DropdownMenuItem
               key={option.id}
               onClick={() => onChange(option.id)}
-              className="gap-2"
             >
               <ModelItemLabel option={option} />
               {value === option.id ? (

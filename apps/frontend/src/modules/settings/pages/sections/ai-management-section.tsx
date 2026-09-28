@@ -89,7 +89,7 @@ export function AiManagementSection() {
       {/* 内容区：内部滚动 + standard 居中列 */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         <PageBody variant="standard">
-          <Tabs value={activeTab} onValueChange={(val) => changeTab(val as AiManagementTab)} className="w-full" data-ai-component="ai-hub.ai-management.tab" data-ai-tab={activeTab}>
+          <Tabs value={activeTab} onValueChange={(val) => changeTab(val as AiManagementTab)} data-ai-component="ai-hub.ai-management.tab" data-ai-tab={activeTab}>
             <TabsContent value="models">
               <ModelsTab />
             </TabsContent>

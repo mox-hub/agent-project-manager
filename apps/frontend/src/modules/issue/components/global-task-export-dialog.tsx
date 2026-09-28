@@ -129,11 +129,14 @@ export function GlobalTaskExportDialog({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onOpenChange(false)}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Download size={16} className="text-accent-blue" />
-            {t('task.export.globalTitle', '导出任务')}
+          <DialogTitle>
+            {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
+            <span className="flex items-center gap-2">
+              <Download size={16} className="text-accent-blue" />
+              {t('task.export.globalTitle', '导出任务')}
+            </span>
           </DialogTitle>
           <DialogDescription>
             {scopeNote ??

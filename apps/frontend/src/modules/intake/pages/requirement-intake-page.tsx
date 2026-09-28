@@ -128,7 +128,7 @@ export function RequirementIntakePage() {
           {t('intake.heroDesc', '从一句原始需求开始：AI 同事连续追问澄清目标，访谈补全细节，分析评估可行性与影响面，生成任务族与验收清单，确认后落库进工单。')}
         </p>
         <div className="mt-5 flex justify-center">
-          <Button size="lg" className="gap-1.5" onClick={() => openCreateDialog({ type: 'project' })}>
+          <Button size="lg" onClick={() => openCreateDialog({ type: 'project' })}>
             <Plus size={16} />
             {t('intake.cta', '提出需求')}
           </Button>
@@ -169,12 +169,14 @@ export function RequirementIntakePage() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5"
             onClick={() => setAnalysisOpen(true)}
             disabled={docs.length === 0}
           >
-            <Sparkles size={14} />
-            {t('intake.analysisCta', 'AI 生成分析报告')}
+            {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
+            <span className="flex items-center gap-1.5">
+              <Sparkles size={14} />
+              {t('intake.analysisCta', 'AI 生成分析报告')}
+            </span>
           </Button>
         </div>
         <AsyncState

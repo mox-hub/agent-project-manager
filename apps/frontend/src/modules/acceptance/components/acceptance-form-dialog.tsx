@@ -98,7 +98,6 @@ export function AcceptanceFormDialog({
             <SelectField
               value={issueId}
               onChange={(e) => setTaskId(e.target.value)}
-              className="w-full"
             >
               <option value="">{t('acceptance.form.taskPlaceholder')}</option>
               {availableTasks.map((task) => (
@@ -116,7 +115,6 @@ export function AcceptanceFormDialog({
             <SelectField
               value={completionType}
               onChange={(e) => setCompletionType(e.target.value as CompletionType | 'auto')}
-              className="w-full"
             >
               {COMPLETION_TYPES.map((ty) => (
                 <option key={ty} value={ty}>

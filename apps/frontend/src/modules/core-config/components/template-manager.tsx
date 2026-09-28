@@ -235,20 +235,27 @@ export function TemplateManager() {
         <div />
       </div>
 
-      <PageBody variant="standard" className="space-y-6">
+      <PageBody variant="standard">
+        {/* 布局下沉：PageBody 基线为 flex-col 无 gap，卡片间距由调用方结构承载 */}
+        <div className="space-y-6">
         {showProjects && (
             <Card className="border-border shadow-none">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <FolderKanban size={16} className="text-accent-blue" />
-                  {t('settings.templateManagerProjectTemplates')}
+                <CardTitle className="text-base">
+                  {/* 布局下沉：图标+标题行由调用方结构承载，CardTitle 保持基线盒 */}
+                  <div className="flex items-center gap-2">
+                    <FolderKanban size={16} className="text-accent-blue" />
+                    {t('settings.templateManagerProjectTemplates')}
+                  </div>
                 </CardTitle>
                 <CardDescription>{t('settings.templateManagerProjectDesc')}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
+                {/* 布局下沉：间距（gap-3+space-y-4 叠加）由调用方结构等价承载 */}
+                <div className="flex flex-col gap-3 space-y-4">
                 {!isProjectFormOpen ? (
                   <div>
-                    <Button onClick={() => setIsProjectFormOpen(true)} variant="default" className="gap-1.5">
+                    <Button onClick={() => setIsProjectFormOpen(true)} variant="default">
                       <Plus size={15} />
                       {t('settings.templateManagerAddProject')}
                     </Button>
@@ -284,7 +291,6 @@ export function TemplateManager() {
                               <SelectField
                                 value={field.value}
                                 onChange={(e) => field.onChange(e.target.value)}
-                                className="w-full"
                               >
                                 {PROJECT_TYPES.map((type) => (
                                   <SelectFieldOption key={type} value={type}>
@@ -371,6 +377,7 @@ export function TemplateManager() {
                 ) : (
                   <EmptyState title={t('settings.templateManagerEmptyProjects')} />
                 )}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -378,18 +385,23 @@ export function TemplateManager() {
           {showTasks && (
             <Card className="border-border shadow-none">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <ListTodo size={16} className="text-accent-purple" />
-                  {t('settings.templateManagerTaskTemplates')}
+                <CardTitle className="text-base">
+                  {/* 布局下沉：图标+标题行由调用方结构承载，CardTitle 保持基线盒 */}
+                  <div className="flex items-center gap-2">
+                    <ListTodo size={16} className="text-accent-purple" />
+                    {t('settings.templateManagerTaskTemplates')}
+                  </div>
                 </CardTitle>
                 <CardDescription>{t('settings.templateManagerTaskDesc')}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
+                {/* 布局下沉：间距（gap-3+space-y-4 叠加）由调用方结构等价承载 */}
+                <div className="flex flex-col gap-3 space-y-4">
                 {loadingTaskTemplates ? (
                   <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
                 ) : !isTaskFormOpen ? (
                   <div>
-                    <Button onClick={() => setIsTaskFormOpen(true)} variant="default" className="gap-1.5">
+                    <Button onClick={() => setIsTaskFormOpen(true)} variant="default">
                       <Plus size={15} />
                       {t('settings.templateManagerAddTask')}
                     </Button>
@@ -425,7 +437,6 @@ export function TemplateManager() {
                               <SelectField
                                 value={field.value}
                                 onChange={(e) => field.onChange(e.target.value)}
-                                className="w-full"
                               >
                                 {TASK_CATEGORIES.map((category) => (
                                   <SelectFieldOption key={category} value={category}>
@@ -542,9 +553,11 @@ export function TemplateManager() {
                 {!loadingTaskTemplates && taskTemplates.length === 0 && !isTaskFormOpen && (
                   <EmptyState title={t('settings.templateManagerEmptyTasks')} />
                 )}
+                </div>
               </CardContent>
             </Card>
           )}
+        </div>
       </PageBody>
     </PageShell>
   );

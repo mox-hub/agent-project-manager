@@ -92,12 +92,12 @@ export function InvitePage() {
                 该邀请已失效，请联系团队管理员重新发送。
               </p>
             ) : authLoading ? (
-              <Spinner className="mx-auto size-4" />
+                <Spinner size="sm" className="mx-auto" />
             ) : isAuthenticated ? (
               <Button className="w-full" onClick={accept} disabled={accepting}>
                 {accepting ? (
                   <>
-                    <Spinner className="size-4 text-inherit" />
+                    <Spinner size="sm" className="text-inherit" />
                     接受中…
                   </>
                 ) : (

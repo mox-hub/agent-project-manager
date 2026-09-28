@@ -74,10 +74,13 @@ export function ReadinessDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent keepDefaultWidth={false} className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ShieldCheck size={16} />
-            {t('intake.readiness.title', '完备性评估')}
-            <span className="text-xs font-normal text-content-text-muted">{projectName}</span>
+          <DialogTitle>
+            {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
+            <span className="flex items-center gap-2">
+              <ShieldCheck size={16} />
+              {t('intake.readiness.title', '完备性评估')}
+              <span className="text-xs font-normal text-content-text-muted">{projectName}</span>
+            </span>
           </DialogTitle>
           <DialogDescription>
             {t(
@@ -193,16 +196,17 @@ export function ReadinessDialog({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-1.5"
                   onClick={() => navigate(`/app/projects/${projectId}/playbook`)}
                 >
-                  {t('intake.readiness.goFill', '去补')}
-                  <ArrowRight size={14} />
+                  {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
+                  <span className="flex items-center gap-1.5">
+                    {t('intake.readiness.goFill', '去补')}
+                    <ArrowRight size={14} />
+                  </span>
                 </Button>
               )}
               <Button
                 size="sm"
-                className="gap-1.5"
                 onClick={() =>
                   review.mutate(
                     { docId: requirementDocId, analysisDocumentId: analysisDocId },
@@ -210,10 +214,13 @@ export function ReadinessDialog({
                 }
                 disabled={review.isPending}
               >
-                {review.isPending ? <Spinner size="sm" /> : <Sparkles size={14} />}
-                {result
-                  ? t('intake.readiness.reRun', '重新评估')
-                  : t('intake.readiness.run', '开始评估')}
+                {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
+                <span className="flex items-center gap-1.5">
+                  {review.isPending ? <Spinner size="sm" /> : <Sparkles size={14} />}
+                  {result
+                    ? t('intake.readiness.reRun', '重新评估')
+                    : t('intake.readiness.run', '开始评估')}
+                </span>
               </Button>
             </div>
           </div>

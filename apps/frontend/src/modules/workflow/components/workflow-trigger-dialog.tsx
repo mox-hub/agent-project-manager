@@ -62,7 +62,7 @@ export function WorkflowTriggerDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('workflow.runDialogTitle', { name: target?.name ?? '' })}</DialogTitle>
           <DialogDescription>{t('workflow.runDialogHint')}</DialogDescription>

@@ -147,11 +147,14 @@ export function BatchUpdateIssuesDialog({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && resetAndClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <SlidersHorizontal size={16} className="text-accent-blue" />
-            {t('task.batchUpdate.title', '批量修改 {{count}} 条工单', { count: issues.length })}
+          <DialogTitle>
+            {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
+            <span className="flex items-center gap-2">
+              <SlidersHorizontal size={16} className="text-accent-blue" />
+              {t('task.batchUpdate.title', '批量修改 {{count}} 条工单', { count: issues.length })}
+            </span>
           </DialogTitle>
           <DialogDescription>
             {t(
@@ -225,7 +228,7 @@ export function BatchUpdateIssuesDialog({
             {t('common.cancel', '取消')}
           </Button>
           <Button onClick={handleApply} disabled={!hasChanges || pending}>
-            {pending ? <Spinner className="size-4" /> : null}
+            {pending ? <Spinner size="sm" /> : null}
             {pending
               ? t('task.batchUpdate.applying', '更新中…')
               : t('task.batchUpdate.apply', '应用到 {{count}} 条', { count: issues.length })}

@@ -71,10 +71,13 @@ export function IterationDetailDialog({
         {iteration && tone ? (
           <>
             <DialogHeader>
-              <DialogTitle className="flex flex-wrap items-center gap-2">
-                <CalendarRange className="h-5 w-5 shrink-0 text-accent-purple" />
-                <span className="min-w-0 break-all">{iteration.name}</span>
-                <Badge className={tone.badgeClass}>{t(tone.labelKey)}</Badge>
+              <DialogTitle>
+                {/* 布局下沉：图标+名称+徽标行由调用方结构承载（span 合法于 h2 内） */}
+                <span className="flex flex-wrap items-center gap-2">
+                  <CalendarRange className="h-5 w-5 shrink-0 text-accent-purple" />
+                  <span className="min-w-0 break-all">{iteration.name}</span>
+                  <Badge className={tone.badgeClass}>{t(tone.labelKey)}</Badge>
+                </span>
               </DialogTitle>
               <DialogDescription>
                 {t(

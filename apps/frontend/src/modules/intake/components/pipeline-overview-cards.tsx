@@ -232,25 +232,29 @@ function PipelineCardInner({
         {isAnalysisActive && (
           <Button
             size="sm"
-            className="gap-1.5"
             onClick={onOpenAnalysis}
           >
-            <Sparkles size={14} />
-            {t('intake.pipelineCards.analysisCta')}
+            {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
+            <span className="flex items-center gap-1.5">
+              <Sparkles size={14} />
+              {t('intake.pipelineCards.analysisCta')}
+            </span>
           </Button>
         )}
         <Button
           variant="outline"
           size="sm"
-          className="gap-1.5"
           onClick={() => navigate(`/app/projects/${pipeline.projectId}/playbook`)}
         >
-          {mounted
-            ? activeStage
-              ? t('intake.pipelineCards.continueCta', { stage: activeStage.name })
-              : t('intake.pipelineCards.viewCta')
-            : t('intake.pipelineCards.mountCta')}
-          <ArrowRight size={14} />
+          {/* 布局下沉：sm 档基线 gap-1 与意图 gap-1.5 不符，由内容行自承载 */}
+          <span className="flex items-center gap-1.5">
+            {mounted
+              ? activeStage
+                ? t('intake.pipelineCards.continueCta', { stage: activeStage.name })
+                : t('intake.pipelineCards.viewCta')
+              : t('intake.pipelineCards.mountCta')}
+            <ArrowRight size={14} />
+          </span>
         </Button>
       </div>
     </div>

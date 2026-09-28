@@ -113,8 +113,11 @@ export function LinearConfigForm({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent keepDefaultWidth={false} className="max-w-xl border-border">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <LinearIcon size={24} /> Connect Linear
+          <DialogTitle>
+            {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
+            <span className="flex items-center gap-2">
+              <LinearIcon size={24} /> Connect Linear
+            </span>
           </DialogTitle>
           <DialogDescription>
             Get your Personal API Key at{' '}

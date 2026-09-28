@@ -65,11 +65,17 @@ export function LinearSyncLogDrawer({
       ) : null}
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="flex w-full max-w-md flex-col gap-0 sm:max-w-lg">
+        <SheetContent className="w-full max-w-md sm:max-w-lg">
+          {/* 布局下沉：SheetContent 基线 gap-4 在此不适用（分区自管内距/描边），
+              由调用方 wrapper（无 gap）承载零间距；flex-1/min-h-0 保日志区撑满与内部滚动几何不变 */}
+          <div className="flex min-h-0 flex-1 flex-col">
           <SheetHeader className="border-b border-border pb-3">
             <div className="flex items-center justify-between gap-2">
-              <SheetTitle className="flex items-center gap-2">
-                <LinearIcon size={16} /> {t('linearSync.logTitle')}
+              <SheetTitle>
+                {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
+                <span className="flex items-center gap-2">
+                  <LinearIcon size={16} /> {t('linearSync.logTitle')}
+                </span>
               </SheetTitle>
               <Button
                 variant="ghost"
@@ -120,6 +126,7 @@ export function LinearSyncLogDrawer({
                 Connect a Linear integration first to see sync activity.
               </div>
             )}
+          </div>
           </div>
         </SheetContent>
       </Sheet>

@@ -74,7 +74,9 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="command" className="space-y-3">
+          <TabsContent value="command">
+            {/* 布局下沉：TabsContent 基线为普通块级，子项间距由调用方结构承载 */}
+            <div className="space-y-3">
             <div className="space-y-2">
               <div>
                 <p className="text-sm font-medium text-foreground">Command</p>
@@ -127,9 +129,12 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 )}
               </Button>
             </div>
+            </div>
           </TabsContent>
 
-          <TabsContent value="quick" className="space-y-2">
+          <TabsContent value="quick">
+            {/* 布局下沉：子项间距由调用方结构承载 */}
+            <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Click a command to fill the input:</p>
             <div className="grid grid-cols-2 gap-2">
               {commonCommands.map((cmd) => (
@@ -143,9 +148,12 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 </Button>
               ))}
             </div>
+            </div>
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-2">
+          <TabsContent value="history">
+            {/* 布局下沉：子项间距由调用方结构承载 */}
+            <div className="space-y-2">
             {history && history.length === 0 ? (
               <p className="text-sm text-muted-foreground">No command history</p>
             ) : (
@@ -177,6 +185,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 ))}
               </div>
             )}
+            </div>
           </TabsContent>
         </Tabs>
 

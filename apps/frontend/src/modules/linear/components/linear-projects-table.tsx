@@ -55,8 +55,11 @@ export function LinearProjectsTable({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent keepDefaultWidth={false} className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <LinearIcon size={20} /> Choose a Linear project
+          <DialogTitle>
+            {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
+            <span className="flex items-center gap-2">
+              <LinearIcon size={20} /> Choose a Linear project
+            </span>
           </DialogTitle>
           <DialogDescription>
             {targetLocalProjectId
@@ -73,7 +76,7 @@ export function LinearProjectsTable({
             loadingFallback={
               <div className="space-y-2 p-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-14 w-full" />
+                  <Skeleton key={i} className="h-14" />
                 ))}
               </div>
             }
