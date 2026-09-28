@@ -21,6 +21,14 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——F 类高度 J16–J18 拍板落地（2026-09-28 晚）：三项均按推荐收口，17 文件迁移入账
+
+> 承接同日 F12 高度增补章：用户三项裁决 **J16 复活 token 改 85vh / J17 面板头归一 h-12 / J18 滚动区四档封闭表 40/64/80/96**（均按推荐）。执行 `scripts/f-class/f2-height-migration.mjs`（同一 fail-closed 守卫体系，17 文件 17 编辑，脚本入库）：`--spacing-dialog-scroll` 80→85vh（token 向事实对齐）+ assistant-fab 浮窗迁 `h-dialog-scroll`（等值）；面板头 h-14 ×2 / h-16 ×1 → h-12；滚动区 48→40 ×1、56→64 ×4、72→80 ×6、60vh→96 ×2（收缩性迁移：1080p 下 648→384px，均为受限列表/表格预览且外层有滚动兜底，**建议实机过一眼**）。**余 1 处推迟**：document-preview-dialog:82 `h-[85vh]`→token（该文件 E 类 ui 收敛批次占用中）；顺带发现 `--spacing-dialog-full: 90vh` 亦为零消费死 token（未在裁决范围，仅登记）。方案已同步定档：F12.3 总表（面板头 h-12 / 滚动区四档 / 弹窗 85vh token）+ F3.2/F3.5 表述 token 化 + frontmatter status（J1–J18 全收口）。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` 17 文件（index.css + 16 组件/页面）+ `scripts/f-class/f2-height-migration.mjs` | F 类方案 §四 J16–J18；能力清单 B 治理线 | `tsc -b` exit 0；改动 17 文件 eslint 0 error；`lint:tokens` 过（裸 vh 任意值 −4）；干跑+实跑逐项命中 | F12.3 定档 + F3.2/F3.5 token 表述 + §四裁决回写 + 批 F2 第 8 项状态更新 |
+
 ### 前端设计治理——E 类策略切换「规范收敛」：codemod 批量清零，三规则 override/naked/adhoc 1548/493/44 → 0/0/0（2026-09-28 第九轮）
 
 > 用户两度拍板：①已完成裁决方向暴力清空、多形态主线程裁断收敛（§七十 十二条款映射表）；②脚本批量替换、替换完再修报错区域。执行链：A1 补档八项（`9c5d0a4a`）→ Button 胶囊收敛（§七十 #1：基线 `rounded-full`，icon 档即圆形，不立 rectangle 档）→ codemod 两轮（AST 定位+文本切片，202 文件：纯删 2676 token / prop 插入 526 / 裸元素直替 496）→ 伤情修复 27 TS 错 → adhoc-tone 语义收尾 44→0（status-visuals 追加 19 个业务量表）→ naked 收尾 select 11+button 1 替换、内容渲染 2 条豁免落宪（PRINCIPLES A7）。并行隔离：F 类会话在制文件（ui 8 文件 + project-sidebar-context）显式排除，零混改。总账见 `docs/design/修改方案-E类-2026-09-27.md` §七十（四）。
@@ -32,6 +40,14 @@ tags: "changelog,release"
 | naked 直替 | 493→2→豁免后 0：label→FieldLabel 档、button→Button ghost、input/textarea 直替、select 11 处 select-field/select 组合件 | 内容渲染 2 条（markdown checkbox/mdx table）豁免落宪 A7，90 天滚动 |
 | adhoc-tone | 44→0：自造映射删除接入 status-visuals→tone 唯一链路；`TONE_CLASS.bg/border` 零消费槽首次接线；status-visuals 追加 19 个业务量表键 | 1 处词表误报改等值函数、1 处非状态语义改名（Spinner 正名先例） |
 | 门禁 | 三规则 0/0/0（当日起点 1548/493/44）；tsc 0 错；前端全量 vitest 绿 | 迁移/豁免明细：`docs/design/修改方案-E类-2026-09-27.md` §七十（四） |
+
+### 前端设计治理——F 类高度增补调研入档（2026-09-28 晚）：F12 章 + 高度三律 + 档位总表；J16–J18 待裁决
+
+> 全仓生产面 tsx 高度取值补测（grep 实测），方案新增 **F12 高度章**：立法三原则「内容不定高、滚动定上限、条状定高」。三分账——已收编：卡片体系零高度类（SectionCard/Card 源码无 h-*）/ `min-h-0` ×65 滚动链健康 / 横向条状件双口径（标题行 40px `h-10` 定高 + 工具条行 48px `py-2`+`h-8` 自适应，ToolbarRow 与 SubPageToolbar 同构实为同一档）；分叉三实锤：**H1** 弹窗高度两制（`--spacing-dialog-scroll` 80vh 为**死 token 全仓零消费**，实际 85vh 裸写 ×2 + 84vh ×1 + 60vh ×2 + 40vh ×1）、**H2** 面板头 h-12/14/16 三档散布 4 处（assistant-panel ×2 / project-detail-frame / document-view-page / decision-review-modal）、**H3** 内嵌滚动区 `max-h` 七档 ~25 处（40~96 全占，宪法 §10.5 只锁下拉 max-h-80）。新增裁决点 **J16**（推荐：复活 token 改 85vh 收编引用）/ **J17**（推荐：面板头归一 h-12，迁移量最小）/ **J18**（推荐：四档封闭表 max-h-40/64/80/96，迁移 ~10 处）；无争议两条直接立律（卡片禁定高 / vh 裸值封禁），lint 候选并入批 F3，存量迁移挂批 F2 第 8 项。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `docs/design/修改方案-F类-布局与组合-2026-09-28.md`（F12 章 + §四 J16–J18 + 批 F2 第 8 项） | F 类方案 §三 批 F2/F3；能力清单 B 治理线 | 全仓 grep 实测（vh 全查 / h-N 频次表 / max-h 逐处归属 / SectionCard·card 源码零高度 / min-h 分布），证据路径全部入档 F12.1 | 方案 frontmatter status 更新（J16–J18 待裁决） |
 
 ### 前端设计治理——F 类布局与组合·批 F1/F2 组件侧批量落地（2026-09-28 第八轮）：八文件 21 编辑，E 类并行零混改
 
