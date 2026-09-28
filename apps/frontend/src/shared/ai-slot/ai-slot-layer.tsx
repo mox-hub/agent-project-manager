@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { MessageCircleQuestion, Sparkles, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import {
   parseCardExplain,
@@ -224,14 +225,15 @@ function AISlotAnswerCard({
               {t('aiSlot.askMore')}
             </button>
           ) : null}
-          <button
+          <Button
             type="button"
-            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            variant="subtle"
+            padding="p-1"
             title={t('aiSlot.close')}
             onClick={onClose}
           >
             <X className="size-3.5" aria-hidden />
-          </button>
+          </Button>
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2 text-sm">

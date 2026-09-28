@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Bot, Clock, DoorOpen, Maximize2, Minimize2, X, Inbox, PanelLeftClose, PanelLeftOpen, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SkeletonText } from '@/components/ui/skeleton';
@@ -232,15 +233,16 @@ export function AssistantPanel() {
               <span className="text-3xs text-muted-foreground font-mono tabular-nums">
                 {deckProgress.current} / {stripItems.length}
               </span>
-              <button
+              <Button
                 type="button"
+                variant="subtle"
+                padding="p-1"
                 onClick={() => setShowDecisionSide(false)}
-                className="text-muted-foreground hover:text-foreground rounded-md p-1 hover:bg-accent transition-colors"
                 title="收起卡片堆侧栏"
                 data-ai-action="assistant.decision.collapse.click"
               >
                 <PanelLeftClose className="size-3.5" />
-              </button>
+              </Button>
             </div>
           </div>
 
