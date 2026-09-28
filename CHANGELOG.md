@@ -21,6 +21,18 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——E 类四桶子代理清剿第一轮（2026-09-28 第七轮）：override 1548 → 1166（−382 / 24.7%）
+
+> 四桶子代理并行清剿（用户拍板编队）：桶1 组件档迁移 / 桶2 布局清理 / 桶3 font-mono 专项 / 桶4 色彩构成。领地按**文件独占**切割（29 个 font-mono 文件剥离桶3，防同文件并发覆盖）；`rounded-*` 43 条属待裁项 B 剔除派工。收口复算：naked 493、adhoc 44 持平（范围外零触碰）；收口修正两插曲（spinner `tone`→`color` 正名回平 adhoc；桶2 任意值 `w-[37.5%]` 回退）。总账见 `docs/design/修改方案-E类-2026-09-27.md` **§七之八**；逐文件明细见 `docs/design/清剿报告-E类四桶-2026-09-28.md`。
+
+| 项 | 内容 | 证据要点 |
+|---|---|---|
+| 桶1 组件档 | 清 224 条（962→738）；补档 9 个 ui 文件 / 13 轴 / 18 档，全「新档默认不生效+注释归因」（button `size="2sm"`、input `size`/`fontSize`/`paddingStart`、table `align`/`padding`、card 标题/内距、label 还原档等） | 等价证明临时 vitest 14/14（cn() 终串逐字符）；被改组件既有测试全过 |
+| 桶2 布局 | 清 57 处（删冗余 27 / 迁档 4 / 等价下沉 26）；全宽 Button 等静态证明不了的逐条留报 | 逐处基线源码证实；DialogTitle 内 span、wrapper 叠加复现等下沉论证入报告 |
+| 桶3 font-mono | 29 文件清 87 条（392→305）；font-mono 50 = 内层 span 下沉 18 / 留报 32 | 表单控件无内层可包裹为主；补档建议 11 类待裁 |
+| 桶4 色彩构成 | 35 文件清 57 token（删冗余 42 / 迁档 15，`Card surface="flat"` 逐字节等价） | 禁止对调实录：`destructive ≠ accent-red`、`bg-muted ≠ bg-muted/50` 等全部未动 |
+| 门禁 | `tsc -b` 通过；10 个 `check-*.mjs` 全过；前端全量 vitest 通过；三规则计数前后 JSON 逐条对比 | 残留 1166 逐条留报待下一轮；naked/adhoc 另案 |
+
 ### 前端设计治理——E 类交接单执行轮（2026-09-28 第六轮）：豁免机制落地 + padding zero 档八处落轴；两项「可先做」被实测证伪转决策简报
 
 > 执行 `docs/design/交接-E类剩余工作-2026-09-28.md`，总账见 `docs/design/修改方案-E类-2026-09-27.md` **§七之七**。三笔提交（显式路径、未 push）：`cf6772c4`（任务 E）、`207fee56`（任务 A）、本轮 docs。**任务 C/D 零迁移**——实测发现交接单「label 40 处无争议可先做」「17 处可收编 StatusIconFrame」均存在无损性缺口，按证据转人裁简报（§3.4 纪律），不硬迁。
