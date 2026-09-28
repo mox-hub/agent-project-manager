@@ -8,6 +8,7 @@ import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PageShell, PageBody } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { useConfirm } from '@/shared/confirm/use-confirm';
@@ -246,87 +247,91 @@ export function TemplateManager() {
                 <CardDescription>{t('settings.templateManagerProjectDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {!isProjectFormOpen ? (
-                  <div>
-                    <Button onClick={() => setIsProjectFormOpen(true)} variant="default" className="gap-1.5">
-                      <Plus size={15} />
-                      {t('settings.templateManagerAddProject')}
-                    </Button>
-                  </div>
-                ) : (
-                  <Form {...projectForm}>
-                    <form
-                      onSubmit={handleProjectSubmit}
-                      className="space-y-4 rounded-lg border border-border bg-muted/20 p-4"
-                    >
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <Button onClick={() => setIsProjectFormOpen(true)} variant="default" className="gap-1.5">
+                    <Plus size={15} />
+                    {t('settings.templateManagerAddProject')}
+                  </Button>
+                </div>
+
+                {/* 项目模板新建/编辑两用弹窗（F3.6 表单容器铁律：实体表单走模态 Dialog） */}
+                <Dialog open={isProjectFormOpen} onOpenChange={(open) => { if (!open) handleProjectCancel(); }}>
+                  <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingProjectId ? t('common.edit') : t('settings.templateManagerAddProject')}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <Form {...projectForm}>
+                      <form onSubmit={handleProjectSubmit} className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <FormField
+                            control={projectForm.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t('settings.templateManagerFormNameLabel')}</FormLabel>
+                                <Input
+                                  value={field.value}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  placeholder={t('settings.templateManagerFormNameProjectPlaceholder')}
+                                  required
+                                />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={projectForm.control}
+                            name="baseProjectType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t('settings.templateManagerFormTypeLabel')}</FormLabel>
+                                <SelectField
+                                  value={field.value}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  className="w-full"
+                                >
+                                  {PROJECT_TYPES.map((type) => (
+                                    <SelectFieldOption key={type} value={type}>
+                                      {t(projectTypeKey(type))}
+                                    </SelectFieldOption>
+                                  ))}
+                                </SelectField>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                         <FormField
                           control={projectForm.control}
-                          name="name"
+                          name="description"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('settings.templateManagerFormNameLabel')}</FormLabel>
+                              <FormLabel>{t('settings.templateManagerFormDescriptionLabel')}</FormLabel>
                               <Input
                                 value={field.value}
                                 onChange={(e) => field.onChange(e.target.value)}
-                                placeholder={t('settings.templateManagerFormNameProjectPlaceholder')}
-                                required
+                                placeholder={t('settings.templateManagerFormDescriptionPlaceholder')}
                               />
                             </FormItem>
                           )}
                         />
-                        <FormField
-                          control={projectForm.control}
-                          name="baseProjectType"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t('settings.templateManagerFormTypeLabel')}</FormLabel>
-                              <SelectField
-                                value={field.value}
-                                onChange={(e) => field.onChange(e.target.value)}
-                                className="w-full"
-                              >
-                                {PROJECT_TYPES.map((type) => (
-                                  <SelectFieldOption key={type} value={type}>
-                                    {t(projectTypeKey(type))}
-                                  </SelectFieldOption>
-                                ))}
-                              </SelectField>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <FormField
-                        control={projectForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t('settings.templateManagerFormDescriptionLabel')}</FormLabel>
-                            <Input
-                              value={field.value}
-                              onChange={(e) => field.onChange(e.target.value)}
-                              placeholder={t('settings.templateManagerFormDescriptionPlaceholder')}
-                            />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          type="submit"
-                          variant="default"
-                          disabled={createProjectTemplate.isPending || updateProjectTemplate.isPending}
-                        >
-                          {editingProjectId
-                            ? t('settings.templateManagerSubmitUpdate')
-                            : t('settings.templateManagerSubmitCreate')}
-                        </Button>
-                        <Button type="button" variant="ghost" onClick={handleProjectCancel}>
-                          {t('common.cancel')}
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                )}
+                        <DialogFooter>
+                          <Button type="button" variant="ghost" onClick={handleProjectCancel}>
+                            {t('common.cancel')}
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={createProjectTemplate.isPending || updateProjectTemplate.isPending}
+                          >
+                            {editingProjectId
+                              ? t('settings.templateManagerSubmitUpdate')
+                              : t('settings.templateManagerSubmitCreate')}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
 
                 {loadingProjectTemplates ? (
                   <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
@@ -387,87 +392,93 @@ export function TemplateManager() {
               <CardContent className="space-y-4">
                 {loadingTaskTemplates ? (
                   <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
-                ) : !isTaskFormOpen ? (
+                ) : (
                   <div>
                     <Button onClick={() => setIsTaskFormOpen(true)} variant="default" className="gap-1.5">
                       <Plus size={15} />
                       {t('settings.templateManagerAddTask')}
                     </Button>
                   </div>
-                ) : (
-                  <Form {...taskForm}>
-                    <form
-                      onSubmit={handleTaskSubmit}
-                      className="space-y-4 rounded-lg border border-border bg-muted/20 p-4"
-                    >
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                )}
+
+                {/* 任务模板新建/编辑两用弹窗（F3.6 表单容器铁律） */}
+                <Dialog open={isTaskFormOpen} onOpenChange={(open) => { if (!open) handleTaskCancel(); }}>
+                  <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingTaskId ? t('common.edit') : t('settings.templateManagerAddTask')}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <Form {...taskForm}>
+                      <form onSubmit={handleTaskSubmit} className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <FormField
+                            control={taskForm.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t('settings.templateManagerFormNameLabel')}</FormLabel>
+                                <Input
+                                  value={field.value}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  placeholder={t('settings.templateManagerFormNameTaskPlaceholder')}
+                                  required
+                                />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={taskForm.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t('settings.templateManagerFormCategoryLabel')}</FormLabel>
+                                <SelectField
+                                  value={field.value}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  className="w-full"
+                                >
+                                  {TASK_CATEGORIES.map((category) => (
+                                    <SelectFieldOption key={category} value={category}>
+                                      {t(taskCategoryKey(category))}
+                                    </SelectFieldOption>
+                                  ))}
+                                </SelectField>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                         <FormField
                           control={taskForm.control}
-                          name="name"
+                          name="description"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('settings.templateManagerFormNameLabel')}</FormLabel>
+                              <FormLabel>{t('settings.templateManagerFormDescriptionLabel')}</FormLabel>
                               <Input
                                 value={field.value}
                                 onChange={(e) => field.onChange(e.target.value)}
-                                placeholder={t('settings.templateManagerFormNameTaskPlaceholder')}
-                                required
+                                placeholder={t('settings.templateManagerFormDescriptionPlaceholder')}
                               />
                             </FormItem>
                           )}
                         />
-                        <FormField
-                          control={taskForm.control}
-                          name="category"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t('settings.templateManagerFormCategoryLabel')}</FormLabel>
-                              <SelectField
-                                value={field.value}
-                                onChange={(e) => field.onChange(e.target.value)}
-                                className="w-full"
-                              >
-                                {TASK_CATEGORIES.map((category) => (
-                                  <SelectFieldOption key={category} value={category}>
-                                    {t(taskCategoryKey(category))}
-                                  </SelectFieldOption>
-                                ))}
-                              </SelectField>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <FormField
-                        control={taskForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t('settings.templateManagerFormDescriptionLabel')}</FormLabel>
-                            <Input
-                              value={field.value}
-                              onChange={(e) => field.onChange(e.target.value)}
-                              placeholder={t('settings.templateManagerFormDescriptionPlaceholder')}
-                            />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          type="submit"
-                          variant="default"
-                          disabled={createTaskTemplate.isPending || updateTaskTemplate.isPending}
-                        >
-                          {editingTaskId
-                            ? t('settings.templateManagerSubmitUpdate')
-                            : t('settings.templateManagerSubmitCreate')}
-                        </Button>
-                        <Button type="button" variant="ghost" onClick={handleTaskCancel}>
-                          {t('common.cancel')}
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                )}
+                        <DialogFooter>
+                          <Button type="button" variant="ghost" onClick={handleTaskCancel}>
+                            {t('common.cancel')}
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={createTaskTemplate.isPending || updateTaskTemplate.isPending}
+                          >
+                            {editingTaskId
+                              ? t('settings.templateManagerSubmitUpdate')
+                              : t('settings.templateManagerSubmitCreate')}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
 
                 {!loadingTaskTemplates && taskTemplates.length > 0 && (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
