@@ -146,6 +146,7 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'toast', file: 'ui/toast.tsx', section: 'Primitives', status: 'canonical' },
   { name: 'toggle', file: 'ui/toggle.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
   { name: 'toggle-group', file: 'ui/toggle-group.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'tone', file: 'ui/tone.ts', section: 'Primitives', status: 'canonical' },
   { name: 'toolbar-row', file: 'ui/toolbar-row.tsx', section: 'App Components', status: 'canonical' },
   { name: 'tooltip', file: 'ui/tooltip.tsx', section: 'Primitives', status: 'canonical' },
   { name: 'view-display-popover', file: 'ui/view-display-popover.tsx', section: 'App Components', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选', proposal: 'delete' } },

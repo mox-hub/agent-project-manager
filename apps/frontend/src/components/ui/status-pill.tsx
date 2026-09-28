@@ -1,28 +1,19 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-
-type StatusTone = "default" | "success" | "warning" | "danger" | "info";
+import { TONE_CLASS, type Tone } from "./tone";
 
 interface StatusPillProps {
   children: ReactNode;
-  tone?: StatusTone;
+  tone?: Tone;
   className?: string;
 }
-
-const toneClass: Record<StatusTone, string> = {
-  default: "bg-muted/50 text-muted-foreground",
-  success: "bg-accent-green-light text-accent-green",
-  warning: "bg-accent-yellow-light text-accent-yellow",
-  danger: "bg-accent-red-light text-accent-red",
-  info: "bg-accent-blue-light text-accent-blue",
-};
 
 export function StatusPill({ children, tone = "default", className }: StatusPillProps) {
   return (
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 text-2xs font-semibold",
-        toneClass[tone],
+        TONE_CLASS[tone].light,
         className,
       )}
     >

@@ -26,8 +26,16 @@ import {
   Minus,
   type LucideIcon,
 } from 'lucide-react';
+import { TONE_CLASS, type Tone } from '@/components/ui/tone';
 
-export type StatusTone = 'default' | 'info' | 'warning' | 'success' | 'danger';
+/**
+ * 状态色 tone 词表（re-export 视觉层的 `Tone`，§19.5）。
+ *
+ * 词表定义已下沉到 `src/components/ui/tone.ts`——本文件只做**业务层映射**
+ * （status → tone），tone → class 的视觉层映射由 tone.ts 唯一持有。
+ * 保留 `StatusTone` 这个名字别名，以不破坏既有消费方（本模块导出名的 import 方）。
+ */
+export type StatusTone = Tone;
 
 export interface StatusVisual {
   /** i18n key（status.* 命名空间） */
@@ -36,31 +44,31 @@ export interface StatusVisual {
   icon: LucideIcon;
 }
 
-/** tone → 文字色类（语义 accent token，禁原始色） */
+/** tone → 文字色类（语义 accent token，禁原始色）——值取自 `components/ui/tone.ts` 唯一词表 */
 export const TONE_TEXT_CLASS: Record<StatusTone, string> = {
-  default: 'text-muted-foreground',
-  info: 'text-accent-blue',
-  warning: 'text-accent-yellow',
-  success: 'text-accent-green',
-  danger: 'text-accent-red',
+  default: TONE_CLASS.default.text,
+  info: TONE_CLASS.info.text,
+  warning: TONE_CLASS.warning.text,
+  success: TONE_CLASS.success.text,
+  danger: TONE_CLASS.danger.text,
 };
 
-/** tone → 色点/进度条填充类 */
+/** tone → 色点/进度条填充类——值取自 `components/ui/tone.ts` 唯一词表 */
 export const TONE_DOT_CLASS: Record<StatusTone, string> = {
-  default: 'bg-muted-foreground',
-  info: 'bg-accent-blue',
-  warning: 'bg-accent-yellow',
-  success: 'bg-accent-green',
-  danger: 'bg-accent-red',
+  default: TONE_CLASS.default.dot,
+  info: TONE_CLASS.info.dot,
+  warning: TONE_CLASS.warning.dot,
+  success: TONE_CLASS.success.dot,
+  danger: TONE_CLASS.danger.dot,
 };
 
-/** tone → StatusPill 之外的浅底胶囊（菜单图标等轻量场景） */
+/** tone → StatusPill 之外的浅底胶囊（菜单图标等轻量场景）——值取自 `components/ui/tone.ts` 唯一词表 */
 export const TONE_LIGHT_CLASS: Record<StatusTone, string> = {
-  default: 'bg-muted/50 text-muted-foreground',
-  info: 'bg-accent-blue-light text-accent-blue',
-  warning: 'bg-accent-yellow-light text-accent-yellow',
-  success: 'bg-accent-green-light text-accent-green',
-  danger: 'bg-accent-red-light text-accent-red',
+  default: TONE_CLASS.default.light,
+  info: TONE_CLASS.info.light,
+  warning: TONE_CLASS.warning.light,
+  success: TONE_CLASS.success.light,
+  danger: TONE_CLASS.danger.light,
 };
 
 /** 任务状态五态 */
