@@ -21,6 +21,36 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——E 类策略切换「规范收敛」：codemod 批量清零，三规则 override/naked/adhoc 1548/493/44 → 0/0/0（2026-09-28 第九轮）
+
+> 用户两度拍板：①已完成裁决方向暴力清空、多形态主线程裁断收敛（§七十 十二条款映射表）；②脚本批量替换、替换完再修报错区域。执行链：A1 补档八项（`9c5d0a4a`）→ Button 胶囊收敛（§七十 #1：基线 `rounded-full`，icon 档即圆形，不立 rectangle 档）→ codemod 两轮（AST 定位+文本切片，202 文件：纯删 2676 token / prop 插入 526 / 裸元素直替 496）→ 伤情修复 27 TS 错 → adhoc-tone 语义收尾 44→0（status-visuals 追加 19 个业务量表）→ naked 收尾 select 11+button 1 替换、内容渲染 2 条豁免落宪（PRINCIPLES A7）。并行隔离：F 类会话在制文件（ui 8 文件 + project-sidebar-context）显式排除，零混改。总账见 `docs/design/修改方案-E类-2026-09-27.md` §七十（四）。
+
+| 项 | 内容 | 证据要点 |
+|---|---|---|
+| 胶囊收敛 | Button 基线 `rounded-md`→`rounded-full` + 组内锁同步；icon-* 即圆形钮 | 可见变化用户已裁；button.test 72/72、ui vitest 329/329 |
+| codemod 批量 | override 1168→0：rounded 全族/素形族纯删 2676 + className→prop 结构映射 526（width/fontVariant/density/maxWidth/fontSize/size/padding/Badge color/Spinner 轴） | tsc 0 错（27 处越域/重复 prop 机械修复）；9 个 check-*.mjs 全过 |
+| naked 直替 | 493→2→豁免后 0：label→FieldLabel 档、button→Button ghost、input/textarea 直替、select 11 处 select-field/select 组合件 | 内容渲染 2 条（markdown checkbox/mdx table）豁免落宪 A7，90 天滚动 |
+| adhoc-tone | 44→0：自造映射删除接入 status-visuals→tone 唯一链路；`TONE_CLASS.bg/border` 零消费槽首次接线；status-visuals 追加 19 个业务量表键 | 1 处词表误报改等值函数、1 处非状态语义改名（Spinner 正名先例） |
+| 门禁 | 三规则 0/0/0（当日起点 1548/493/44）；tsc 0 错；前端全量 vitest 绿 | 迁移/豁免明细：`docs/design/修改方案-E类-2026-09-27.md` §七十（四） |
+
+### 前端设计治理——F 类布局与组合·批 F1/F2 组件侧批量落地（2026-09-28 第八轮）：八文件 21 编辑，E 类并行零混改
+
+> 执行 `docs/design/修改方案-F类-布局与组合-2026-09-28.md` 批 F1（默认值+债务清除·组件侧）与批 F2（语义档·组件侧）中**可脚本化**的部分，落地脚本入库 `scripts/f-class/`（`f1-defaults-debt.mjs` / `f2-component-axis.mjs` / `_lib.mjs`，支持 `--check` 干跑、幂等重跑）。**并行纪律**：脚本内建 fail-closed 守卫——目标文件一律先过 `git status` 干净校验，E 类修复未提交的 250+ 文件零混改；J9 删拖拽 API（provider 在 shell-layout.tsx）、J10 删 view-switcher（迁移点 project-list-page.tsx 且须走 E 类 registry 清退闭环）、九处 320→360 页面接线、J11 六详情页接线、F3 lint 规则均因依赖 E 类 M 文件或人工迁移**有意推迟**。
+
+| 项 | 内容 | 证据要点 |
+|---|---|---|
+| J1 | DialogTitle 升 `text-base font-semibold`（原无字号继承 text-sm 与正文同档，78 处弹窗视觉微变） | `dialog.tsx`；方案 F2④/X3 |
+| J6 | CardFooter 补 `gap-2`（F9.1 间距唯一律，对齐 DialogFooter；既有手写间距不受影响） | `card.tsx`；60 importer 由 `card.test` 回归 |
+| J7 | Tabs line 变体贴边六件套内聚为默认（消费面核验：仅死件手写 + 画廊展示自动跟随，零业务破坏） | `tabs.tsx`；方案 X7 |
+| J8 | 属性栏唯一标准宽 320→360：RightSidebar 默认值 + PROJECT_SIDEBAR_DEFAULT_WIDTH（9 处 `width={320}` 页面接线留批 F2，E 类 M 文件） | `right-sidebar.tsx` + `project-sidebar-context.tsx` |
+| J2 | PageShell 补 `wide` 档（max-w-7xl，F1.3 四档总表收编；project-detail-frame 手写补位收编推迟） | `page-shell.tsx`；方案 X1/J2 |
+| J5 | DataList 行高 `size` 轴 dense(32 默认)/comfortable(40)（table.tsx 两档已由 E 类 density 轴覆盖，不重复加轴） | `data-list.tsx` 七处编辑；`data-list.test` 7 绿 |
+| J11 | SubPageToolbar 补 `titleIcon` 槽（面包屑末项升「icon+标题」，接线推迟；icon 消费实体注册表 entity.icon 与 E8 合流） | `sub-page-toolbar.tsx`；方案 F2.5② |
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` 8 个组件文件 + `scripts/f-class/` | F 类方案 §三 批 F1/F2；能力清单 B 治理线 | `tsc -b` exit 0；card/dialog/data-list 测试 51 绿；改动 8 文件 eslint 0 error；`lint:registry`/`lint:spacing`/`lint:semantic` 全过 | 本表 + 脚本注释归因（方案正文裁决记录 §四 不变）；宪法升格（批 F1.3 条文）待 E 类收口后统一走 §11.2 |
+
 ### 前端设计治理——E 类四桶子代理清剿第一轮（2026-09-28 第七轮）：override 1548 → 1166（−382 / 24.7%）
 
 > 四桶子代理并行清剿（用户拍板编队）：桶1 组件档迁移 / 桶2 布局清理 / 桶3 font-mono 专项 / 桶4 色彩构成。领地按**文件独占**切割（29 个 font-mono 文件剥离桶3，防同文件并发覆盖）；`rounded-*` 43 条属待裁项 B 剔除派工。收口复算：naked 493、adhoc 44 持平（范围外零触碰）；收口修正两插曲（spinner `tone`→`color` 正名回平 adhoc；桶2 任意值 `w-[37.5%]` 回退）。总账见 `docs/design/修改方案-E类-2026-09-27.md` **§七之八**；逐文件明细见 `docs/design/清剿报告-E类四桶-2026-09-28.md`。
