@@ -21,6 +21,29 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——2026-09-28 第二轮三项裁决落地：缺档补齐政策（批 0c 开工）+ spin 收口 + 逃生舱收窄；并迁画廊加载态样本
+
+> 裁决记录见 `docs/design/修改方案-E类-2026-09-27.md` **§七之三**。三项**均采纳协调方建议**；同轮内协调方**自我更正两条**（见下）。**批 0c 已派工**（3 个代理：`Button` 内距+字阶轴 / `Card` 内距轴 / 逃生舱收窄），交付另行入账。
+
+| 项 | 裁决 | 落地状态 |
+|---|---|---|
+| #1 | 批 6/7 共同根因（组件缺内距/布局/字阶轴）→ **补内距轴 + 字阶轴；布局类不建轴、由调用方内层 div 承载** | 批 0c 执行中（`Button` 内距+字阶；`Card` 内距）。布局不建轴的理由：内距/字阶是可穷举档位，布局轴会膨胀成第二个 Tailwind |
+| #2 | 28 处 `animate-spin` → **只迁画廊样本，其余登记为合法形态** | 画廊样本 `design-system-page.tsx:2119` **已迁**（同批落库）；其余 26 处（在制状态旋转 / 变体作用域 / 装饰）不迁 |
+| #3 | `iconClassName` 逃生舱 → **收窄为语义档** | 批 0c 执行中 |
+
+**画廊样本迁移（协调方自执行，1 文件）**：`design-system-page.tsx:2119` 的 `<Loader2 className="animate-spin" /> Loading…` → `<Spinner size="sm" className="text-inherit" />`。**显式给 `size="sm"`(=`size-4`) 与 `text-inherit` 的理由**：`Spinner` 默认档 `md`=`size-5` 会与 `Button` 的 `[&_svg:not([class*='size-'])]:size-4` 撞档（后者因类里已含 `size-` 而不生效），且 `Spinner` 硬编码 `text-muted-foreground` 会改色。故取「同字形（同为 `Loader2`）+ 同尺寸（16px）+ 同色（inherit）」的最小平移，**唯一差异是新增 `role="status"` 与 `aria-label`（无障碍增强，非劣化）**。`Loader2` 在该文件自此零引用，已从 import 移除；`eslint` 该文件 **0 error**（185 条 warning 均为该展示页既有的「故意展示各形态」告警，与本次改动无关）。**`:5423` 另有一处 `Loader` 自旋未迁**：它带 `text-blue-500`（裸色）与 `animationDuration:2s` 自定义时长，`Spinner` 无时长档 ⇒ 迁移会丢能力，故留待单独裁决。
+
+**⚠️ 协调方自我更正（同轮两条，不静默）**：
+
+1. **`iconClassName` 不是一种舱而是三种**。上呈时建议「统一收窄为 `spin?: boolean`」，侦察后推翻：`HeaderActionButton`（2 处，全是自旋）/ `StatusIconFrame`（**0 处**，属性是死的）/ `SidebarPanel`（**7 处，全是颜色**，含 `text-accent-purple` ×2）/ `PropertyPanel`（仅转发）。**统一收窄会打断 `SidebarPanel` 的 7 个调用方**，故按舱分型处置。裁决指向不变，被更正的只是收窄形态。
+2. **spin 项的关键论据不完整**（更重要）。上呈时我的论据是「2 处真加载态换 `Spinner` 会改字形/颜色/无障碍」。**该论据漏查了「同一状态在别处怎么渲染」**。补查后：`{pending ? <Spinner/> : <RefreshCw/>}`（字形替换）**8 处**，`iconClassName={pending ? 'animate-spin'}`（让刷新图标自己转）**2 处** ⇒ **同一状态两种渲染，8:2，后者是离群写法，不是应豁免的惯例**。若当时握有这份证据，我会建议「把 2 处收敛到主流写法」而非「发豁免」。**处置**：裁决照原样记录执行（2 处本轮不迁），但**新增待裁 ①**（是否收敛），且**宪法本轮不写此条**——在离群/主流判定未获确认前，不把 2 处离群写法写成宪法惯例。
+
+**本轮新增待裁 2 项**：① 是否把 2 处离群写法收敛到 8 处主流写法（代价：这 2 处字形可见变化）；② `SidebarPanel` 的 2 处 `text-accent-purple` 无 tone 可表达——建议**不扩 tone 词表**（§19.4 的 5 档是**状态**词表，purple 在本仓当**分类/强调**用），改给 `SidebarPanel` 一个窄的 `accent?: 'purple'` 档并在宪法登记「purple 不入 tone 词表」。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` 设计系统（`design-system-page.tsx` 画廊样本） | E 类方案 §七之三 #2；能力清单 B 治理线 | `eslint` 该文件 **0 error**（185 warning 均为既有）；`Loader2` 零引用残留已确认 | `docs/design/修改方案-E类-2026-09-27.md` 新增 **§七之三**「裁决记录（2026-09-28 第二轮）」含三项裁决、`iconClassName` 实物分型表、**两条自我更正**与 2 项新增待裁 |
+
 ### 前端设计治理——E 类批 0b「能力二次补档」交付：Card 描边/表面两轴 + Button `tone` 轴 + `ui/tone.ts` 词表下沉
 
 > 三笔提交（均显式路径、**未 push**），**零迁移**——未替换任何消费方（替换是批 6/7 的活）。**⚠️ 交付范围与裁决 #1 不符**：授权的是「Button 字号/内距/布局/tone **四轴** + Card 第二·三轴」，实落 Card 两轴 + Button **仅 `tone` 一轴**，另三轴未交付 ⇒ 批 6 可无损迁移量**仍锁在 0.6%–1.0%**。沿线记录：`docs/design/修改方案-E类-2026-09-27.md` §七之二（五）。
