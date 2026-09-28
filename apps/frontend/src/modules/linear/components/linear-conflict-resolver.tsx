@@ -53,7 +53,7 @@ export function LinearConflictResolver({
         <Button
           variant="outline"
           size="sm"
-          className="h-6 px-2 text-2xs border-orange-500/40 text-accent-orange hover:bg-accent-orange/10"
+          fontSize="2xs" className="h-6 px-2 border-orange-500/40 text-accent-orange hover:bg-accent-orange/10"
           disabled={resolve.isPending}
           onClick={() => setOpenMenu((v) => !v)}
           data-ai-component="linear.conflict-resolver.compact"

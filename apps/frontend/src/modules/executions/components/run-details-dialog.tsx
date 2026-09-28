@@ -343,7 +343,7 @@ export function RunDetailsDialog({
               })}
               {showRaw && stillActive ? (
                 <span className="ml-auto flex items-center gap-1 text-3xs text-content-text-muted">
-                  <Spinner className="size-3" />
+                  <Spinner size="2xs" />
                   {t('runDetails.rawLogStreaming')}
                 </span>
               ) : null}

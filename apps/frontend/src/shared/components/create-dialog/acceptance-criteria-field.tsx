@@ -142,7 +142,7 @@ export function AcceptanceCriteriaField({
             size="xs"
             onClick={handleAiGenerate}
             disabled={isGenerating}
-            className="h-6 gap-1 px-2 text-2xs text-accent-purple hover:bg-accent-purple/10 hover:text-accent-purple"
+            fontSize="2xs" className="h-6 gap-1 px-2 text-accent-purple hover:bg-accent-purple/10 hover:text-accent-purple"
           >
             <Sparkles className="size-3" />
             <span>{t('unifiedCreate.aiGenerateCriteria')}</span>
@@ -152,7 +152,7 @@ export function AcceptanceCriteriaField({
             variant="ghost"
             size="xs"
             onClick={handleAdd}
-            className="h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
+            fontSize="2xs" className="h-6 gap-1 px-2 text-muted-foreground hover:text-foreground"
           >
             <Plus className="size-3" />
             <span>{t('unifiedCreate.addCriterion')}</span>

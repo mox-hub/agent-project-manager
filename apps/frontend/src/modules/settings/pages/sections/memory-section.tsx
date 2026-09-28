@@ -124,9 +124,9 @@ export function MemorySection() {
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle size="base" className="flex items-center gap-2">
                 <Brain size={16} className="text-accent-yellow" />
                 {t('memory.atomsList')}
               </CardTitle>

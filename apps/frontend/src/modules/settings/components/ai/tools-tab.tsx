@@ -58,10 +58,10 @@ function CliToolCard({
     disabled: t('aiHub.disabled'),
   } as const;
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle size="base" className="flex items-center gap-2">
             <CliBrandIcon providerId={provider.providerId} size={18} />
             {name}
           </CardTitle>
@@ -93,7 +93,7 @@ function CliToolCard({
         ) : null}
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onTest} disabled={testing} className="gap-1.5">
-            {testing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={13} />}
+            {testing ? <Spinner size="xs" color="inherit" /> : <RefreshCw size={13} />}
             {t('aiHub.test')}
           </Button>
           <Button variant={provider.enabled ? 'secondary' : 'default'} size="sm" onClick={onToggle}>

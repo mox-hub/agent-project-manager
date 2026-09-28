@@ -117,7 +117,7 @@ export function CommentInput({
                 title={`${t('activity.comment.send')} (⌘⏎)`}
               >
                 {addComment.isPending ? (
-                  <Spinner className="size-3 text-inherit" />
+                  <Spinner size="2xs" color="inherit" />
                 ) : (
                   <ArrowUp className="size-3.5" />
                 )}

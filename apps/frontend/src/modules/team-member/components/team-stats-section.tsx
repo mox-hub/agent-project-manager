@@ -91,7 +91,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
       {/* Token 用量折线 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Token 用量（近 30 天，AIUsageLog 真实数据）</CardTitle>
+          <CardTitle size="sm">Token 用量（近 30 天，AIUsageLog 真实数据）</CardTitle>
         </CardHeader>
         <CardContent className="h-56">
           {stats.tokenUsage.daily.length === 0 ? (
@@ -131,7 +131,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
       {/* 热力图 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">活跃热力图（MemberActivity 真实数据）</CardTitle>
+          <CardTitle size="sm">活跃热力图（MemberActivity 真实数据）</CardTitle>
         </CardHeader>
         <CardContent>
           <ActivityHeatmap data={stats.heatmap} days={91} />
@@ -142,7 +142,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">
+            <CardTitle size="sm">
               人天成本
               {anyDefaultRate && (
                 <span className="ml-2 text-3xs font-normal text-muted-foreground" data-mock="true">
@@ -151,28 +151,28 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent inset="none">
             <Table className="w-full text-sm">
-              <TableHeader className="text-xs text-muted-foreground border-b border-border">
+              <TableHeader fontSize="xs" variant="muted" className="border-b border-border">
                 <TableRow>
-                  <TableHead className="text-left p-2">成员</TableHead>
-                  <TableHead className="text-right p-2 w-20">活跃天</TableHead>
-                  <TableHead className="text-right p-2 w-28">日费率</TableHead>
-                  <TableHead className="text-right p-2 w-28">成本</TableHead>
+                  <TableHead padding="p-2">成员</TableHead>
+                  <TableHead align="right" padding="p-2" className="w-20">活跃天</TableHead>
+                  <TableHead align="right" padding="p-2" className="w-28">日费率</TableHead>
+                  <TableHead align="right" padding="p-2" className="w-28">成本</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {stats.personDays.rows.map((r) => (
                   <TableRow key={r.memberId} className="border-b border-border/50 last:border-0">
-                    <TableCell className="p-2">{r.name}</TableCell>
-                    <TableCell className="p-2 text-right">{r.activeDays}</TableCell>
-                    <TableCell className="p-2 text-right">
+                    <TableCell>{r.name}</TableCell>
+                    <TableCell align="right">{r.activeDays}</TableCell>
+                    <TableCell align="right">
                       {fenToYuan(r.rateCents)}
                       {r.rateIsDefault && (
-                        <Badge variant="secondary" className="ml-1 text-3xs">默认</Badge>
+                        <Badge variant="secondary" fontSize="3xs" className="ml-1">默认</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="p-2 text-right font-medium">
+                    <TableCell align="right" className="font-medium">
                       {fenToYuan(r.costCents)}
                     </TableCell>
                   </TableRow>
@@ -183,7 +183,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                       <EmptyState
                         title="还没有成员"
                         description="成员加入团队并产生活跃记录后，用量会在这里统计"
-                        className="min-h-0 border-0 py-4"
+                        minHeight="none" frame="none" padding="compact"
                       />
                     </TableCell>
                   </TableRow>
@@ -195,29 +195,29 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">成员活跃排行</CardTitle>
+            <CardTitle size="sm">成员活跃排行</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent inset="none">
             <Table className="w-full text-sm">
-              <TableHeader className="text-xs text-muted-foreground border-b border-border">
+              <TableHeader fontSize="xs" variant="muted" className="border-b border-border">
                 <TableRow>
-                  <TableHead className="text-left p-2">成员</TableHead>
-                  <TableHead className="text-left p-2 w-16">类型</TableHead>
-                  <TableHead className="text-right p-2 w-24">活动数</TableHead>
-                  <TableHead className="text-right p-2 w-24">Token</TableHead>
+                  <TableHead padding="p-2">成员</TableHead>
+                  <TableHead padding="p-2" className="w-16">类型</TableHead>
+                  <TableHead align="right" padding="p-2" className="w-24">活动数</TableHead>
+                  <TableHead align="right" padding="p-2" className="w-24">Token</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {stats.leaderboard.map((r) => (
                   <TableRow key={r.memberId} className="border-b border-border/50 last:border-0">
-                    <TableCell className="p-2">{r.name}</TableCell>
-                    <TableCell className="p-2">
-                      <Badge variant="outline" className="text-3xs">
+                    <TableCell>{r.name}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" fontSize="3xs">
                         {r.type === 'ai_agent' ? 'AI' : '人类'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="p-2 text-right">{r.activityCount}</TableCell>
-                    <TableCell className="p-2 text-right">{fmtTokens(r.totalTokens)}</TableCell>
+                    <TableCell align="right">{r.activityCount}</TableCell>
+                    <TableCell align="right">{fmtTokens(r.totalTokens)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -229,7 +229,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
       {/* 所辖项目统计 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">
+          <CardTitle size="sm">
             {t('teamDetail.stats.projects.title', '项目统计')}
           </CardTitle>
         </CardHeader>
@@ -274,21 +274,21 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                 {t('teamDetail.stats.projects.projectCount', { count: projectStats.projectCount })}
               </div>
               <Table className="w-full text-sm">
-                <TableHeader className="text-xs text-muted-foreground border-b border-border">
+                <TableHeader fontSize="xs" variant="muted" className="border-b border-border">
                   <TableRow>
-                    <TableHead className="text-left p-2">{t('teamDetail.projects.project', '项目')}</TableHead>
-                    <TableHead className="text-left p-2 w-20">{t('teamDetail.stats.projects.status', '状态')}</TableHead>
-                    <TableHead className="text-left p-2 w-32">{t('teamDetail.stats.projects.progress', '进度')}</TableHead>
-                    <TableHead className="text-right p-2 w-16">{t('teamDetail.stats.projects.tasks', '任务')}</TableHead>
-                    <TableHead className="text-right p-2 w-16">{t('teamDetail.stats.projects.inProgress', '进行中')}</TableHead>
-                    <TableHead className="text-right p-2 w-16">{t('teamDetail.stats.projects.done', '已完成')}</TableHead>
-                    <TableHead className="text-right p-2 w-16">{t('teamDetail.stats.projects.overdue', '逾期')}</TableHead>
+                    <TableHead padding="p-2">{t('teamDetail.projects.project', '项目')}</TableHead>
+                    <TableHead padding="p-2" className="w-20">{t('teamDetail.stats.projects.status', '状态')}</TableHead>
+                    <TableHead padding="p-2" className="w-32">{t('teamDetail.stats.projects.progress', '进度')}</TableHead>
+                    <TableHead align="right" padding="p-2" className="w-16">{t('teamDetail.stats.projects.tasks', '任务')}</TableHead>
+                    <TableHead align="right" padding="p-2" className="w-16">{t('teamDetail.stats.projects.inProgress', '进行中')}</TableHead>
+                    <TableHead align="right" padding="p-2" className="w-16">{t('teamDetail.stats.projects.done', '已完成')}</TableHead>
+                    <TableHead align="right" padding="p-2" className="w-16">{t('teamDetail.stats.projects.overdue', '逾期')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {projectStats.projects.map((p) => (
                     <TableRow key={p.projectId} className="border-b border-border/50 last:border-0">
-                      <TableCell className="p-2">
+                      <TableCell>
                         <Link
                           to={`/app/projects/${p.projectId}`}
                           className="flex items-center gap-2 text-sm hover:underline"
@@ -300,12 +300,12 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                           <span className="truncate">{p.name}</span>
                         </Link>
                       </TableCell>
-                      <TableCell className="p-2">
-                        <Badge variant="outline" className="text-3xs">
+                      <TableCell>
+                        <Badge variant="outline" fontSize="3xs">
                           {t(`project.sidebar.statusLabel.${p.status}`, p.status)}
                         </Badge>
                       </TableCell>
-                      <TableCell className="p-2">
+                      <TableCell>
                         <div className="flex items-center gap-2">
                           <Progress value={p.progress} className="flex-1" />
                           <span className="w-8 shrink-0 text-right text-xs text-muted-foreground">
@@ -313,9 +313,9 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="p-2 text-right">{p.taskCount}</TableCell>
-                      <TableCell className="p-2 text-right">{p.inProgressCount}</TableCell>
-                      <TableCell className="p-2 text-right">{p.doneCount}</TableCell>
+                      <TableCell align="right">{p.taskCount}</TableCell>
+                      <TableCell align="right">{p.inProgressCount}</TableCell>
+                      <TableCell align="right">{p.doneCount}</TableCell>
                       <TableCell className={p.overdueCount > 0 ? 'p-2 text-right font-medium text-accent-red' : 'p-2 text-right'}>
                         {p.overdueCount}
                       </TableCell>

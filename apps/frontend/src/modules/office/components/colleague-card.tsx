@@ -171,7 +171,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs"
+            fontSize="xs" className="h-7 px-2"
             onClick={() => navigate(`/app/members/${colleague.memberId}`)}
             data-ai-action="office.colleague.detail.click"
           >
@@ -181,7 +181,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 px-2 text-xs"
+            fontSize="xs" className="h-7 px-2"
             onClick={openChat}
             data-ai-action="office.colleague.chat.click"
           >

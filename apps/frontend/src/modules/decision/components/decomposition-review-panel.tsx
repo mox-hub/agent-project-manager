@@ -69,7 +69,7 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 gap-1.5 px-2 text-xs text-accent-purple hover:text-accent-purple"
+          fontSize="xs" className="h-7 gap-1.5 px-2 text-accent-purple hover:text-accent-purple"
           onClick={run}
           disabled={review.isPending || added.length === 0}
         >

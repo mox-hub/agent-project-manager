@@ -252,7 +252,7 @@ export function AuthVisualCard({
                   variant="outline"
                   size="sm"
                   onClick={handleLanguageToggle}
-                  className="h-8 gap-1.5 px-2.5 text-xs font-normal shadow-xs hover:bg-muted/80"
+                  fontSize="xs" className="h-8 gap-1.5 px-2.5 font-normal shadow-xs hover:bg-muted/80"
                 >
                   <Languages className="size-3.5 text-muted-foreground" />
                   <span>{currentLang === 'zh' ? '简体中文' : 'English'}</span>
@@ -333,7 +333,7 @@ export function AuthVisualCard({
             </div>
 
             <Button
-              className="w-full text-xs"
+              fontSize="xs" className="w-full"
               size="sm"
               onClick={() => setHelpDialogOpen(false)}
             >

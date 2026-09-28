@@ -85,7 +85,7 @@ export function TeamList({
             {t('teams.projectCount', { defaultValue: '{{count}} 项目', count: team._count?.projects ?? 0 })}
           </span>
           {team.status === 'archived' && (
-            <Badge variant="secondary" className="text-3xs">
+            <Badge variant="secondary" fontSize="3xs">
               {t('teams.status.archived', '已归档')}
             </Badge>
           )}

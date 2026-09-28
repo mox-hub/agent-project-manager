@@ -462,7 +462,7 @@ export function DashboardPage() {
               {/* Trends - Row 3 */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
                 <Card className="py-0">
-                  <CardContent className="p-4">
+                  <CardContent inset="md">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="text-sm font-medium">{t('dashboard.panel.productivity')}</p>
@@ -499,7 +499,7 @@ export function DashboardPage() {
                 </Card>
 
                 <Card className="py-0">
-                  <CardContent className="p-4">
+                  <CardContent inset="md">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="text-sm font-medium">{t('dashboard.panel.healthTrend')}</p>
@@ -525,7 +525,7 @@ export function DashboardPage() {
               {/* Row 4 */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
                 <Card className="lg:col-span-1 py-0">
-                  <CardContent className="p-4">
+                  <CardContent inset="md">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="text-sm font-medium">{t('dashboard.panel.performance')}</p>
@@ -547,7 +547,7 @@ export function DashboardPage() {
                 </Card>
 
                 <Card className="lg:col-span-2 py-0">
-                  <CardContent className="p-4">
+                  <CardContent inset="md">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className="text-sm font-medium">{t('dashboard.panel.cost')}</p>
@@ -575,7 +575,7 @@ export function DashboardPage() {
 
               {/* Quick Actions */}
               <Card className="py-0">
-                <CardContent className="p-4">
+                <CardContent inset="md">
                   <p className="text-sm font-medium mb-2.5">{t('dashboard.actions.title')}</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <Button variant="outline" className="h-auto py-2.5 flex-col gap-1.5" onClick={() => navigate('/app/issues')}>

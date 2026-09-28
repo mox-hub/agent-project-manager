@@ -357,21 +357,21 @@ export function AcceptanceDetailPage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm">{c.content}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-3xs text-muted-foreground">
-                    <Badge variant="outline" className="text-3xs py-0">
+                    <Badge variant="outline" fontSize="3xs" className="py-0">
                       {t(`acceptance.severity.${c.severity}`, c.severity)}
                     </Badge>
                     <span>{t(`acceptance.criterionStatus.${c.status}`, c.status)}</span>
                     {typeof c.revision === 'number' && c.revision > 1 && (
                       <Badge
                         variant="outline"
-                        className="text-3xs py-0"
+                        fontSize="3xs" className="py-0"
                         title={c.revisedAt ? new Date(c.revisedAt).toLocaleString() : undefined}
                       >
                         v{c.revision}
                       </Badge>
                     )}
                     {hasStaleEvidenceOnly(c) && (
-                      <Badge className="border-accent-yellow/50 bg-accent-yellow/15 py-0 text-3xs text-accent-yellow">
+                      <Badge fontSize="3xs" className="border-accent-yellow/50 bg-accent-yellow/15 py-0 text-accent-yellow">
                         <AlertTriangle className="mr-0.5 size-2.5" />
                         {t('acceptanceDetail.criteria.evidenceStale')}
                       </Badge>
@@ -396,7 +396,7 @@ export function AcceptanceDetailPage() {
                             : ev.storageRef;
                         return (
                           <li key={ev.id} className="flex items-center gap-1.5 text-3xs text-muted-foreground">
-                            <Badge variant="outline" className="text-3xs py-0">
+                            <Badge variant="outline" fontSize="3xs" className="py-0">
                               {t(`acceptanceDetail.evidenceType.${ev.evidenceType}`, ev.evidenceType)}
                             </Badge>
                             <span className="truncate">{ev.content ?? ev.evidenceType}</span>
@@ -431,7 +431,7 @@ export function AcceptanceDetailPage() {
           );
         })}
         {items.length === 0 && (
-          <EmptyState title={emptyText} className="min-h-20" />
+          <EmptyState title={emptyText} minHeight="sm" />
         )}
       </div>
     </div>
@@ -532,7 +532,7 @@ export function AcceptanceDetailPage() {
                     </Link>
                   )}
                   {active && (
-                    <Badge variant="secondary" className="text-3xs">
+                    <Badge variant="secondary" fontSize="3xs">
                       {t('acceptance.activeBadge')}
                     </Badge>
                   )}
@@ -591,7 +591,7 @@ export function AcceptanceDetailPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 text-xs"
+                fontSize="xs" className="shrink-0"
                 onClick={() => runAudit()}
                 disabled={auditMutation.isPending}
               >
@@ -612,11 +612,11 @@ export function AcceptanceDetailPage() {
           <div className="px-6 pb-6 pt-4">
             <Tabs defaultValue="criteria">
               <TabsList className="h-8 text-xs">
-                <TabsTrigger value="criteria" className="text-xs">
+                <TabsTrigger value="criteria" fontSize="xs">
                   {t('acceptanceDetail.tabs.criteria')}
                   <span className="ml-1.5 rounded-md bg-muted px-1 text-3xs">{criteria.length}</span>
                 </TabsTrigger>
-                <TabsTrigger value="audit" className="text-xs">
+                <TabsTrigger value="audit" fontSize="xs">
                   {t('acceptanceDetail.tabs.audit')}
                   {(blockedCount > 0 || suggestedCount > 0) && (
                     <span
@@ -631,7 +631,7 @@ export function AcceptanceDetailPage() {
                     </span>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="executions" className="text-xs">
+                <TabsTrigger value="executions" fontSize="xs">
                   {t('acceptanceDetail.tabs.executions')}
                   <span className="ml-1.5 rounded-md bg-muted px-1 text-3xs">
                     {acceptance.executions?.length ?? 0}
@@ -685,7 +685,7 @@ export function AcceptanceDetailPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="shrink-0 text-xs"
+                    fontSize="xs" className="shrink-0"
                     onClick={handleAddCriterion}
                     disabled={!addContent.trim() || addCriterion.isPending}
                   >

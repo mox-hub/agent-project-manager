@@ -141,7 +141,7 @@ export function ProfileAtomCard({
             {isAi && (
               <Badge
                 variant="outline"
-                className="h-4 gap-0.5 border-accent-blue/30 bg-accent-blue-light/60 px-1 text-3xs text-accent-blue"
+                fontSize="3xs" className="h-4 gap-0.5 border-accent-blue/30 bg-accent-blue-light/60 px-1 text-accent-blue"
               >
                 <Sparkles size={9} />
                 {t('project.profilePage.aiDraft')}

@@ -39,12 +39,12 @@ export function TeamPromptSection({ team }: { team: Team }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-sm">团队提示词</CardTitle>
+        <CardTitle size="sm">团队提示词</CardTitle>
         <Button size="sm" onClick={save} disabled={saving}>
           {saving ? '保存中…' : '保存'}
         </Button>
       </CardHeader>
-      <CardContent className="p-4 space-y-3">
+      <CardContent inset="md" className="space-y-3">
         <p className="text-xs text-muted-foreground">
           作为团队整体需遵守的规则，派发任务给团队成员时注入上下文（Team Rules 段）。
         </p>

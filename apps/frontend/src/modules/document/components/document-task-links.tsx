@@ -191,7 +191,7 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
         <EmptyState
           title="暂无任务关联"
           description="将文档或章节与任务关联，便于追踪"
-          className="min-h-0 border-0 py-4"
+          minHeight="none" frame="none" padding="compact"
         />
       )}
 

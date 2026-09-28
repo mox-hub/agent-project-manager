@@ -29,7 +29,7 @@ export function CustomFieldInput({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id} className="text-xs text-muted-foreground">
+      <Label htmlFor={id} variant="muted" className="text-xs">
         {field.label}
         {field.required ? <span className="text-destructive">*</span> : null}
       </Label>

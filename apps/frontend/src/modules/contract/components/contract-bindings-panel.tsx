@@ -176,7 +176,7 @@ export function ContractBindingsPanel({
                       {t(`contract.syncMode.${binding.syncMode}`)}
                     </Badge>
                     {conflicted && (
-                      <Badge variant="destructive" className="text-3xs">
+                      <Badge variant="destructive" fontSize="3xs">
                         {t('contract.state.conflicted')}
                       </Badge>
                     )}
@@ -262,7 +262,7 @@ export function ContractBindingsPanel({
               <span className="font-mono">{file.path}</span>
               <Badge
                 variant={file.action === 'created' || file.action === 'updated' ? 'secondary' : 'outline'}
-                className="text-3xs"
+                fontSize="3xs"
               >
                 {t(`contract.seedAction.${file.action}`)}
               </Badge>
@@ -279,7 +279,7 @@ export function ContractBindingsPanel({
               <span>{t(`contract.fileType.${report.fileType}`)}</span>
               <Badge
                 variant={report.state === 'aligned' ? 'secondary' : report.state === 'conflicted' ? 'destructive' : 'outline'}
-                className="text-3xs"
+                fontSize="3xs"
               >
                 {t(`contract.checkState.${report.state}`)}
               </Badge>

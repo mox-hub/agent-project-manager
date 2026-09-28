@@ -291,7 +291,7 @@ export function FilterPanel({
               <EmptyState
                 title="还没有筛选条件"
                 description="在上方选择筛选项后，条件会列在这里"
-                className="min-h-0 border-0 py-4"
+                minHeight="none" frame="none" padding="compact"
               />
             ) : (
               <div className="space-y-1">

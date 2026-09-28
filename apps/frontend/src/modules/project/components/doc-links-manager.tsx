@@ -66,7 +66,7 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
           <CardContent className="flex flex-col gap-4 pt-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="mb-1 block text-sm text-muted-foreground font-medium">Label</Label>
+                <Label fontSize="sm" variant="muted" className="mb-1 block">Label</Label>
                 <Input
                   type="text"
                   value={newLink.label}
@@ -75,7 +75,7 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
                 />
               </div>
               <div>
-                <Label className="mb-1 block text-sm text-muted-foreground font-medium">Type</Label>
+                <Label fontSize="sm" variant="muted" className="mb-1 block">Type</Label>
                 <SelectField
                   className="w-full"
                   value={newLink.type}
@@ -90,7 +90,7 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
               </div>
             </div>
             <div>
-              <Label className="mb-1 block text-sm text-muted-foreground font-medium">URL</Label>
+              <Label fontSize="sm" variant="muted" className="mb-1 block">URL</Label>
               <Input
                 type="url"
                 value={newLink.url}
@@ -99,7 +99,7 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
               />
             </div>
             <div>
-              <Label className="mb-1 block text-sm text-muted-foreground font-medium">Description (optional)</Label>
+              <Label fontSize="sm" variant="muted" className="mb-1 block">Description (optional)</Label>
               <Input
                 type="text"
                 value={newLink.description}
@@ -113,7 +113,7 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
                 checked={newLink.aiIndexed}
                 onChange={(e) => setNewLink({ ...newLink, aiIndexed: e.target.checked })}
               />
-              <Label htmlFor="aiIndexed" className="text-sm text-muted-foreground">
+              <Label htmlFor="aiIndexed" fontSize="sm" variant="muted">
                 Index for AI context (make available to AI assistant)
               </Label>
             </div>

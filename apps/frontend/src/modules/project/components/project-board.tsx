@@ -88,8 +88,8 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
     },
     row1: (project) => (
       <>
-        <Badge variant="outline" className="text-3xs">{t(`project.type.${project.type}`)}</Badge>
-        <Badge variant="secondary" className="text-3xs">{t(`project.visibility.${project.visibility}`)}</Badge>
+        <Badge variant="outline" fontSize="3xs">{t(`project.type.${project.type}`)}</Badge>
+        <Badge variant="secondary" fontSize="3xs">{t(`project.visibility.${project.visibility}`)}</Badge>
       </>
     ),
     dataEntity: (project) => `project:${project.id}`,

@@ -85,7 +85,7 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
 
         <div className="mt-2 flex flex-wrap gap-1">
           {(member.tags ?? []).slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-3xs">
+            <Badge key={tag} variant="secondary" fontSize="3xs" className="px-1.5 py-0">
               {tag}
             </Badge>
           ))}

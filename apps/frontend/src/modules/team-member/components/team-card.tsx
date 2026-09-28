@@ -43,7 +43,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
               </div>
             )}
             <div className="min-w-0">
-              <CardTitle className="truncate text-base">{team.name}</CardTitle>
+              <CardTitle size="base" className="truncate">{team.name}</CardTitle>
               <CardDescription className="truncate text-xs">
                 @{team.slug}
                 {team.ownerName ? ` · ${t('teams.owner', '创始人')} ${team.ownerName}` : ''}
@@ -51,7 +51,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
             </div>
           </div>
           {team.status === 'archived' && (
-            <Badge variant="secondary" className="text-3xs">
+            <Badge variant="secondary" fontSize="3xs">
               {t('teams.status.archived', '已归档')}
             </Badge>
           )}
@@ -64,7 +64,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
         {(team.tags ?? []).length > 0 && (
           <div className="mb-3 flex flex-wrap gap-1">
             {(team.tags ?? []).slice(0, 4).map((tag) => (
-              <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-3xs">
+              <Badge key={tag} variant="secondary" fontSize="3xs" className="px-1.5 py-0">
                 {tag}
               </Badge>
             ))}

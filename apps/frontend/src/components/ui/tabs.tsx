@@ -62,7 +62,11 @@ function TabsList({
   )
 }
 
-function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
+function TabsTrigger({
+  className,
+  fontSize = "default",
+  ...props
+}: TabsPrimitive.Tab.Props & { fontSize?: "default" | "xs" }) {
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
@@ -71,6 +75,9 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
         "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
         "data-active:bg-background data-active:text-foreground dark:data-active:border-input dark:data-active:bg-input/30 dark:data-active:text-foreground",
         "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
+        // —— E 类桶1 增补（2026-09-28）：字阶档，纯增补，default 不变 ——
+        // 归因：紧凑页签的 `text-xs` 覆盖此前只能由调用方 className 表达。
+        fontSize === "xs" && "text-xs",
         className
       )}
       {...props}

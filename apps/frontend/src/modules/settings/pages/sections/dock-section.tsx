@@ -86,11 +86,11 @@ function DockDisplayCard() {
   const setDockAlwaysVisible = useAppStore((s) => s.setDockAlwaysVisible);
 
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <div className="flex items-center gap-2">
           <PanelBottom size={16} className="text-accent-green" />
-          <CardTitle className="text-base">{t('settings.dockDisplayTitle')}</CardTitle>
+          <CardTitle size="base">{t('settings.dockDisplayTitle')}</CardTitle>
         </div>
         <CardDescription>{t('settings.dockDisplayDesc')}</CardDescription>
       </CardHeader>
@@ -120,11 +120,11 @@ function DockPreviewCard() {
   const { t } = useTranslation();
 
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Eye size={16} className="text-accent-purple" />
-          <CardTitle className="text-base">{t('settings.dockPreviewTitle')}</CardTitle>
+          <CardTitle size="base">{t('settings.dockPreviewTitle')}</CardTitle>
         </div>
         <CardDescription>
           {t('settings.dockPreviewDesc')}
@@ -156,11 +156,11 @@ function DockActionsCard() {
   const resetDockSettings = useAppStore((s) => s.resetDockSettings);
 
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <div className="flex items-center gap-2">
           <LayoutList size={16} className="text-accent-blue" />
-          <CardTitle className="text-base">{t('settings.dockActionsTitle')}</CardTitle>
+          <CardTitle size="base">{t('settings.dockActionsTitle')}</CardTitle>
         </div>
         <CardDescription>{t('settings.dockActionsDesc')}</CardDescription>
       </CardHeader>
@@ -269,18 +269,18 @@ function DockAiColleaguesCard() {
   };
 
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Users size={16} className="text-accent-purple" />
-            <CardTitle className="text-base">{t('settings.dockAiTitle')}</CardTitle>
+            <CardTitle size="base">{t('settings.dockAiTitle')}</CardTitle>
           </div>
           {hiddenIds.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs"
+              fontSize="xs" className="h-7"
               onClick={() => setHiddenIds([])}
               data-testid="dock-ai-show-all"
             >

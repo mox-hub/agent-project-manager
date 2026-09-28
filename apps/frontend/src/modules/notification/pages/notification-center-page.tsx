@@ -107,7 +107,7 @@ export function NotificationCenterPage() {
             <Button
               variant="default"
               size="sm"
-              className="h-7 gap-1.5 rounded-full px-2.5 text-xs font-semibold shadow-xs"
+              fontSize="xs" className="h-7 gap-1.5 rounded-full px-2.5 font-semibold shadow-xs"
               onClick={() => setReviewModalOpen(true)}
               title="快速审阅待办决策"
             >
@@ -219,7 +219,7 @@ export function NotificationCenterPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                fontSize="xs" className="h-7 px-2 text-muted-foreground hover:text-foreground"
                 onClick={markAllRead}
                 title="全部标记为已读"
               >
@@ -231,7 +231,7 @@ export function NotificationCenterPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 gap-1 px-2 text-xs font-medium border-border/80 shadow-xs hover:bg-muted"
+                  fontSize="xs" className="h-7 gap-1 px-2 border-border/80 shadow-xs hover:bg-muted"
                   onClick={clearAllCurrent}
                   title="全部清理当前视图"
                 >
@@ -376,7 +376,7 @@ export function NotificationCenterPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 gap-1 text-xs text-primary hover:text-primary"
+                        fontSize="xs" className="h-7 gap-1 text-primary hover:text-primary"
                         onClick={() => navigate(`/app/tasks/${selectedItem.issueId}`)}
                       >
                         <span>打开工单</span>
@@ -389,7 +389,7 @@ export function NotificationCenterPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 gap-1 text-xs"
+                      fontSize="xs" className="h-8 gap-1"
                       onClick={() => clearItem(selectedItem.id)}
                     >
                       <Check className="size-3.5" />

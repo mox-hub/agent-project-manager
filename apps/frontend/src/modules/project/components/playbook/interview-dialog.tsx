@@ -182,7 +182,7 @@ export function InterviewDialog({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 shrink-0 gap-1 px-2 text-xs"
+                    fontSize="xs" className="h-7 shrink-0 gap-1 px-2"
                     disabled={prefill.isPending}
                     onClick={handlePrefill}
                     data-ai="playbook.interview.aiPrefill"

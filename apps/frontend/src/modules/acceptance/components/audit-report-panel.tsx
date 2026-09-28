@@ -136,7 +136,7 @@ export function AuditReportPanel({ report, onApplySuggestions, loading }: Props)
                 <span className="text-accent-green">✓</span>
                 <span className="flex-1">{item.content}</span>
                 {item.category && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" fontSize="xs">
                     {item.category}
                   </Badge>
                 )}
@@ -169,7 +169,7 @@ function AuditItemCard({ item, showApply, onApply, loading }: AuditItemCardProps
               {t(`acceptance.severity.${item.severity}`, item.severity)}
             </Badge>
             {item.category && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" fontSize="xs">
                 {item.category}
               </Badge>
             )}
@@ -182,7 +182,7 @@ function AuditItemCard({ item, showApply, onApply, loading }: AuditItemCardProps
           )}
         </div>
         {showApply && onApply && (
-          <Button variant="ghost" size="sm" onClick={onApply} disabled={loading} className="text-xs">
+          <Button variant="ghost" size="sm" onClick={onApply} disabled={loading} fontSize="xs">
             {t('acceptanceDetail.audit.apply')}
           </Button>
         )}

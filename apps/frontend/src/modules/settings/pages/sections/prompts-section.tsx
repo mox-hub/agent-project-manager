@@ -431,7 +431,7 @@ function TemplateLibraryCard() {
           type="button"
           variant="outline"
           size="sm"
-          className="h-7 gap-1 text-xs"
+          fontSize="xs" className="h-7 gap-1"
           onClick={openCreate}
           data-ai-component="settings.prompts.templates.create"
           data-ai-action="settings.prompts.templates.create.click"
@@ -455,11 +455,11 @@ function TemplateLibraryCard() {
               <div className="min-w-0">
                 <p className="flex items-center gap-1.5 truncate text-sm font-medium">
                   {item.name}
-                  <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-xs text-muted-foreground">
+                  <Badge variant="secondary" fontSize="xs" className="shrink-0 px-1.5 py-0 text-muted-foreground">
                     {t(`prompt.target.${item.target}`)}
                   </Badge>
                   {item.builtIn ? (
-                    <Badge variant="secondary" className="shrink-0 bg-accent-blue/10 px-1.5 py-0 text-xs text-accent-blue">
+                    <Badge variant="secondary" fontSize="xs" className="shrink-0 bg-accent-blue/10 px-1.5 py-0 text-accent-blue">
                       {t('prompts.templates.builtin')}
                     </Badge>
                   ) : null}
@@ -474,7 +474,7 @@ function TemplateLibraryCard() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-xs"
+                    fontSize="xs" className="h-7"
                     onClick={() => openDuplicate(item)}
                     data-ai-action={`settings.prompts.templates.${item.id}.duplicate`}
                   >
@@ -486,7 +486,7 @@ function TemplateLibraryCard() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-7 gap-1 text-xs"
+                      fontSize="xs" className="h-7 gap-1"
                       onClick={() => openEdit(item)}
                       data-ai-action={`settings.prompts.templates.${item.id}.edit`}
                     >
@@ -497,7 +497,7 @@ function TemplateLibraryCard() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-7 gap-1 text-xs text-destructive"
+                      fontSize="xs" className="h-7 gap-1 text-destructive"
                       disabled={remove.isPending}
                       onClick={() => remove.mutate(item.id)}
                       data-ai-action={`settings.prompts.templates.${item.id}.delete`}

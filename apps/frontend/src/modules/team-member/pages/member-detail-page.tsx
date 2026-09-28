@@ -261,7 +261,7 @@ export default function MemberDetailPage() {
               {(member.tags ?? []).length > 0 && (
                 <span className="flex flex-wrap items-center gap-1">
                   {(member.tags ?? []).map((tag) => (
-                    <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-3xs">
+                    <Badge key={tag} variant="secondary" fontSize="3xs" className="px-1.5 py-0">
                       {tag}
                     </Badge>
                   ))}
@@ -354,7 +354,7 @@ export default function MemberDetailPage() {
                             {p.projectName}
                           </Link>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-3xs">{p.role}</Badge>
+                            <Badge variant="outline" fontSize="3xs">{p.role}</Badge>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -424,7 +424,7 @@ export default function MemberDetailPage() {
                           />
                           {tm.teamName}
                         </Link>
-                        <Badge variant="outline" className="text-3xs">{tm.role}</Badge>
+                        <Badge variant="outline" fontSize="3xs">{tm.role}</Badge>
                       </li>
                     ))}
                   </ul>
@@ -439,7 +439,7 @@ export default function MemberDetailPage() {
                     variant="card"
                     title={t('memberDetail.noActivities', '还没有活动记录')}
                     description={t('memberDetail.noActivitiesDesc', '该成员产生操作后，记录会出现在这里')}
-                    className="min-h-0 border-0"
+                    minHeight="none" frame="none"
                   />
                 ) : (
                   <ul className="space-y-2">
@@ -564,7 +564,7 @@ export default function MemberDetailPage() {
             >
               {(card?.projects ?? []).map((p) => (
                 <PropertyRow key={p.projectId} icon={<Folder className="size-3.5" />} label={p.projectName}>
-                  <Badge variant="outline" className="text-3xs">{p.role}</Badge>
+                  <Badge variant="outline" fontSize="3xs">{p.role}</Badge>
                 </PropertyRow>
               ))}
             </PropsCard>
@@ -578,7 +578,7 @@ export default function MemberDetailPage() {
             >
               {(card?.teams ?? []).map((tm) => (
                 <PropertyRow key={tm.teamId} icon={<Users className="size-3.5" />} label={tm.teamName}>
-                  <Badge variant="outline" className="text-3xs">{tm.role}</Badge>
+                  <Badge variant="outline" fontSize="3xs">{tm.role}</Badge>
                 </PropertyRow>
               ))}
             </PropsCard>

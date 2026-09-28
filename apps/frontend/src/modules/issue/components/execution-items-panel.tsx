@@ -438,7 +438,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
               disabled={!title.trim() || !subjectId || busy}
               onClick={() => void handleCreate()}
             >
-              {createExecution.isPending ? <Spinner className="size-3 text-inherit" /> : t('taskDetail.execItemsSave')}
+              {createExecution.isPending ? <Spinner size="2xs" color="inherit" /> : t('taskDetail.execItemsSave')}
             </Button>
           </div>
         </div>
@@ -446,7 +446,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
 
           {isLoading ? (
             <div className="px-6 py-1.5 text-xs text-muted-foreground">
-              <Spinner className="mr-2 inline size-3 text-inherit" />
+              <Spinner color="inherit" className="mr-2 inline size-3" />
               {t('taskDetail.execItemsLoading')}
             </div>
           ) : executions.length === 0 ? (

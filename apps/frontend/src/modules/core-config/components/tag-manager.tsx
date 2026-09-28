@@ -334,7 +334,7 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
           <TableHead className="w-8 px-2" />
           <TableHead>{t('settings.labelName')}</TableHead>
           <TableHead>{t('settings.labelDesc')}</TableHead>
-          <TableHead className="w-28 text-right">{t('common.actions')}</TableHead>
+          <TableHead align="right" className="w-28">{t('common.actions')}</TableHead>
         </TableRow>
       </TableHeader>
       <Sortable
@@ -345,7 +345,7 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
       >
         {tags.map((tag) => (
           <SortableItem key={tag.id} value={tag.id} render={<TableRow />}>
-            <TableCell className="px-2 py-1.5">
+            <TableCell padding="py-1.5" className="px-2">
               <SortableItemHandle
                 render={
                   <Button
@@ -361,7 +361,7 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
                 <GripVertical />
               </SortableItemHandle>
             </TableCell>
-            <TableCell className="py-1.5">
+            <TableCell padding="py-1.5">
               <span
                 className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white"
                 style={{ backgroundColor: tag.color || '#6b7280' }}
@@ -369,10 +369,10 @@ function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, arch
                 {tag.name}
               </span>
             </TableCell>
-            <TableCell className="max-w-50 truncate py-1.5 text-muted-foreground">
+            <TableCell padding="py-1.5" className="max-w-50 truncate text-muted-foreground">
               {tag.description || '—'}
             </TableCell>
-            <TableCell className="py-1.5 text-right">
+            <TableCell padding="py-1.5" align="right">
               <div className="flex items-center justify-end gap-0.5">
                 <Button
                   type="button"

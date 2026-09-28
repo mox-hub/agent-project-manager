@@ -42,7 +42,7 @@ export function GithubIntegrationSection() {
           {githubInts.length === 0 ? (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
+                <CardTitle size="base" className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-accent-yellow" />
                   {t('settings.integration.githubIntegration.emptyTitle')}
                 </CardTitle>
@@ -82,14 +82,14 @@ function PrLifecycleExplainerCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">{t('settings.integration.githubIntegration.prLifecycleTitle')}</CardTitle>
+        <CardTitle size="base">{t('settings.integration.githubIntegration.prLifecycleTitle')}</CardTitle>
         <CardDescription>
           {t('settings.integration.githubIntegration.prLifecycleDesc')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         <Table className="w-full text-xs">
-          <TableHeader className="text-muted-foreground">
+          <TableHeader variant="muted">
             <TableRow>
               <TableHead className="text-left py-1">{t('settings.integration.githubIntegration.colStatus')}</TableHead>
               <TableHead className="text-left py-1">{t('settings.integration.githubIntegration.colMeaning')}</TableHead>
@@ -98,32 +98,32 @@ function PrLifecycleExplainerCard() {
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell className="py-1">
+              <TableCell padding="py-1">
                 <Badge className="bg-accent-purple">merged</Badge>
               </TableCell>
-              <TableCell className="py-1">{t('settings.integration.githubIntegration.meaningMerged')}</TableCell>
-              <TableCell className="py-1 text-accent-green font-semibold">+8</TableCell>
+              <TableCell padding="py-1">{t('settings.integration.githubIntegration.meaningMerged')}</TableCell>
+              <TableCell padding="py-1" className="text-accent-green font-semibold">+8</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="py-1">
+              <TableCell padding="py-1">
                 <Badge variant="secondary">merged_with_comments</Badge>
               </TableCell>
-              <TableCell className="py-1">{t('settings.integration.githubIntegration.meaningMergedComments')}</TableCell>
-              <TableCell className="py-1 text-accent-green">+4</TableCell>
+              <TableCell padding="py-1">{t('settings.integration.githubIntegration.meaningMergedComments')}</TableCell>
+              <TableCell padding="py-1" className="text-accent-green">+4</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="py-1">
+              <TableCell padding="py-1">
                 <Badge variant="destructive">changes_requested</Badge>
               </TableCell>
-              <TableCell className="py-1">{t('settings.integration.githubIntegration.meaningChangesRequested')}</TableCell>
-              <TableCell className="py-1 text-destructive">−4</TableCell>
+              <TableCell padding="py-1">{t('settings.integration.githubIntegration.meaningChangesRequested')}</TableCell>
+              <TableCell padding="py-1" className="text-destructive">−4</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="py-1">
+              <TableCell padding="py-1">
                 <Badge variant="destructive">closed</Badge>
               </TableCell>
-              <TableCell className="py-1">{t('settings.integration.githubIntegration.meaningClosed')}</TableCell>
-              <TableCell className="py-1 text-destructive">−2</TableCell>
+              <TableCell padding="py-1">{t('settings.integration.githubIntegration.meaningClosed')}</TableCell>
+              <TableCell padding="py-1" className="text-destructive">−2</TableCell>
             </TableRow>
           </TableBody>
         </Table>

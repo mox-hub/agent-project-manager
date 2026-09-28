@@ -95,7 +95,7 @@ export function SuggestionsCard({
               variant="card"
               title={t('unifiedCreate.suggestions.empty')}
               description={t('unifiedCreate.suggestions.emptyHint')}
-              className="min-h-0 border-0 p-1"
+              minHeight="none" frame="none" className="p-1"
             />
           ) : (
             items.map((it, idx) => {

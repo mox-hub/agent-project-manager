@@ -55,7 +55,7 @@ export function AssistantHistoryList({
         variant="outline"
         disabled={isLoading}
         onClick={onCreate}
-        className="h-8 justify-start gap-2 text-xs"
+        fontSize="xs" className="h-8 justify-start gap-2"
         data-ai-action="assistant.history.new.click"
       >
         <SquarePen className="size-3.5" />

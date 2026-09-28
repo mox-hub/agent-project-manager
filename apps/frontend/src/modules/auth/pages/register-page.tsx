@@ -145,12 +145,12 @@ export function RegisterPage() {
 
         <Button
           type="submit"
-          className="h-10 w-full text-sm font-medium shadow-xs"
+          size="lg" fontSize="sm" className="w-full shadow-xs"
           disabled={submitting || Boolean(inviteInvalid)}
         >
           {submitting ? (
             <>
-              <Spinner className="size-4 text-inherit mr-2" />
+              <Spinner size="sm" color="inherit" className="mr-2" />
               注册并初始化…
             </>
           ) : (

@@ -231,7 +231,7 @@ export function WorkflowDetailPage() {
             {workflow ? (
               <Badge
                 variant="secondary"
-                className="shrink-0 text-3xs"
+                fontSize="3xs" className="shrink-0"
                 title={t('workflow.grammarVersionBadge')}
               >
                 v{workflow.grammarVersion ?? 1}
@@ -242,7 +242,7 @@ export function WorkflowDetailPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2.5 text-xs text-muted-foreground"
+                  fontSize="xs" className="h-7 px-2.5 text-muted-foreground"
                   onClick={() => setEditing(false)}
                 >
                   {t('workflow.editor.cancel')}
@@ -297,14 +297,14 @@ export function WorkflowDetailPage() {
               <WorkflowRunPanel runId={activeRunId} onClose={closeRun} />
             ) : !editing && isV2Doc ? (
               <Card className="min-h-0 flex-1 overflow-y-auto">
-                <CardContent className="flex flex-col gap-3 p-4">
+                <CardContent inset="md" className="flex flex-col gap-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground">
                       {t('workflow.runPanel.previewTitle')}
                     </span>
                     <Badge
                       variant="secondary"
-                      className="shrink-0 text-3xs"
+                      fontSize="3xs" className="shrink-0"
                       title={t('workflow.grammarVersionBadge')}
                     >
                       v2

@@ -82,7 +82,7 @@ export function ProjectTeamBindings({ projectId }: { projectId: string }) {
         <Popover open={addOpen} onOpenChange={setAddOpen}>
           <PopoverTrigger
             render={
-              <Button variant="outline" size="sm" className="h-7 text-xs">
+              <Button variant="outline" size="sm" fontSize="xs" className="h-7">
                 <Plus className="size-3.5" />
                 {t('project.team.bindings.add')}
               </Button>

@@ -164,14 +164,14 @@ export function PromptEditor({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-6 gap-1 px-2 text-xs text-muted-foreground"
+              fontSize="xs" className="h-6 gap-1 px-2 text-muted-foreground"
               disabled={draftLoading}
               onClick={() => void openDraftDialog()}
               data-ai-component="shared.prompt-editor.draft"
               data-ai-action="shared.prompt-editor.draft.click"
             >
               {draftLoading ? (
-                <Spinner className="size-3" />
+                <Spinner size="2xs" />
               ) : (
                 <Sparkles className="size-3" />
               )}
@@ -222,7 +222,7 @@ export function PromptEditor({
               >
                 {draftLoading ? (
                   <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Spinner className="size-3.5" />
+                    <Spinner size="xs" />
                     {t('promptEditor.draftLoading')}
                   </p>
                 ) : draftText?.trim() ? (

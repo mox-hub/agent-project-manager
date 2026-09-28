@@ -140,13 +140,13 @@ export function MemberPicker({
                 onValueChange={(v) => setTab(v as 'all' | 'human' | 'ai_agent')}
               >
                 <TabsList className="h-7 w-full">
-                  <TabsTrigger value="all" className="h-5 text-xs flex-1">
+                  <TabsTrigger value="all" fontSize="xs" className="h-5 flex-1">
                     全部
                   </TabsTrigger>
-                  <TabsTrigger value="human" className="h-5 text-xs flex-1">
+                  <TabsTrigger value="human" fontSize="xs" className="h-5 flex-1">
                     人类
                   </TabsTrigger>
-                  <TabsTrigger value="ai_agent" className="h-5 text-xs flex-1">
+                  <TabsTrigger value="ai_agent" fontSize="xs" className="h-5 flex-1">
                     AI
                   </TabsTrigger>
                 </TabsList>

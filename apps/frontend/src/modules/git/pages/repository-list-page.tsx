@@ -428,7 +428,7 @@ function GitStatusPill({ status, isLoading, onSettingsClick }: GitStatusPillProp
   if (isLoading) {
     return (
       <span className="flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
-        <Spinner className="size-3" />
+        <Spinner size="2xs" />
         <span>Git…</span>
       </span>
     );

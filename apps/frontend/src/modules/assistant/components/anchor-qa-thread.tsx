@@ -121,7 +121,7 @@ export function AnchorQaThread({
                     key={action.action}
                     variant="outline"
                     size="sm"
-                    className="h-6 px-2 text-2xs"
+                    fontSize="2xs" className="h-6 px-2"
                     disabled={applied || applying !== null || !onApplyAction}
                     onClick={() => applyAction(index, action)}
                     data-ai-action="assistant.anchor-qa.apply.click"

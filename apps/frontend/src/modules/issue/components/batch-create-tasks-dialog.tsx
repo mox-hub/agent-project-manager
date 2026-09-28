@@ -236,7 +236,7 @@ function TemplateBatchCreate({ tasks, onTasksChange }: {
                 <span className="font-medium text-sm">{template.name}</span>
               </div>
               <p className="text-xs text-muted-foreground">{template.description}</p>
-              <Badge variant="secondary" className="mt-2 text-xs">
+              <Badge variant="secondary" fontSize="xs" className="mt-2">
                 {template.tasks.length} tasks
               </Badge>
             </button>
@@ -255,7 +255,7 @@ function TemplateBatchCreate({ tasks, onTasksChange }: {
                 <div key={task.id} className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground w-6">{i + 1}.</span>
                   <span className="flex-1 truncate">{task.title}</span>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" fontSize="xs">
                     {task.priority}
                   </Badge>
                 </div>
@@ -347,7 +347,7 @@ function AiBatchCreate({ tasks, onTasksChange }: {
                 <div key={task.id} className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground w-6">{i + 1}.</span>
                   <span className="flex-1 truncate">{task.title}</span>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" fontSize="xs">
                     {task.priority}
                   </Badge>
                 </div>

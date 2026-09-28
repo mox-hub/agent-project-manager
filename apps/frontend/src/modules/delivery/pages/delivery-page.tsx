@@ -270,7 +270,7 @@ function AnnotationPanel({
           variant="card"
           title="还没有标注"
           description="在下方输入框添加第一条标注"
-          className="min-h-0 border-0 py-3"
+          minHeight="none" frame="none" className="py-3"
         />
       )}
 

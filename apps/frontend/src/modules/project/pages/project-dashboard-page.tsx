@@ -253,13 +253,13 @@ export function ProjectDashboardPage() {
         <section className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between p-4">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle size="sm" fontWeight="medium">
                 {t('project.detail.recentActivity')}
               </CardTitle>
               <Button
                 variant="ghost"
                 size="xs"
-                className="text-xs text-muted-foreground"
+                fontSize="xs" className="text-muted-foreground"
                 onClick={() => navigate(`/app/projects/${projectId}/issues`)}
               >
                 {t('project.detail.viewAll')}
@@ -307,14 +307,14 @@ export function ProjectDashboardPage() {
         <section className="mb-4">
           <Card>
             <CardHeader className="flex items-center justify-between p-4">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <CardTitle size="sm" fontWeight="medium" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 {t('project.detail.teamWorkload')}
               </CardTitle>
               <Button
                 variant="ghost"
                 size="xs"
-                className="text-xs text-muted-foreground"
+                fontSize="xs" className="text-muted-foreground"
                 onClick={() => navigate(`/app/projects/${projectId}/team`)}
               >
                 {t('project.detail.viewTeam')} <ChevronRight className="ml-0.5 h-3 w-3" />

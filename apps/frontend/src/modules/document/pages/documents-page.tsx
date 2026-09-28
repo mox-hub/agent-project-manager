@@ -477,7 +477,7 @@ function DocumentCard({
             </span>
           )}
           {document.docRole && (
-            <Badge variant="outline" className="text-3xs font-normal px-1.5 py-0">
+            <Badge variant="outline" fontSize="3xs" className="font-normal px-1.5 py-0">
               {document.docRole}
             </Badge>
           )}
@@ -545,7 +545,7 @@ function DocumentListItem({
             {t(statusConfig.labelKey)}
           </StatusPill>
           {document.docRole && (
-            <Badge variant="outline" className="shrink-0 font-normal text-3xs px-1.5 py-0">
+            <Badge variant="outline" fontSize="3xs" className="shrink-0 font-normal px-1.5 py-0">
               {document.docRole}
             </Badge>
           )}

@@ -165,13 +165,13 @@ export function DocumentNewPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-10 gap-1.5 text-sm"
+                fontSize="sm" className="h-10 gap-1.5"
                 onClick={() => setShowAiPanel((value) => !value)}
               >
                 <Sparkles size={14} /> AI 助手
               </Button>
               <Button
-                className="h-10 gap-1.5 px-4 text-sm"
+                fontSize="sm" className="h-10 gap-1.5 px-4"
                 onClick={handleSave}
                 disabled={createDocument.isPending}
               >
@@ -295,13 +295,13 @@ export function DocumentNewPage() {
                 </button>
               </div>
               <div className="space-y-3 p-4">
-                <Button variant="outline" className="h-10 w-full justify-start gap-2 text-sm">
+                <Button variant="outline" fontSize="sm" className="h-10 w-full justify-start gap-2">
                   <Sparkles size={14} /> 优化文档结构
                 </Button>
-                <Button variant="outline" className="h-10 w-full justify-start gap-2 text-sm">
+                <Button variant="outline" fontSize="sm" className="h-10 w-full justify-start gap-2">
                   <Sparkles size={14} /> 生成摘要
                 </Button>
-                <Button className="h-10 w-full gap-1.5 text-sm" disabled>
+                <Button fontSize="sm" className="h-10 w-full gap-1.5" disabled>
                   <Sparkles size={14} /> 生成内容
                 </Button>
               </div>

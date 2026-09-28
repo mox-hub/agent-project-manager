@@ -228,14 +228,14 @@ function ExecutionQueueTab() {
   return (
     <div className="space-y-6">
       {running.length > 0 && (
-        <Card className="border-border shadow-none">
+        <Card surface="flat">
           <CardHeader className="py-3">
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle size="base" className="flex items-center gap-2">
               <Play size={16} className="text-accent-blue" />
               {t('settings.aiExecutionCenter.groupRunning', { count: running.length })}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 p-4 pt-0">
+          <CardContent inset="md" className="space-y-2 pt-0">
             {running.map((run) => (
               <ExecutionRunRow key={run.id} run={run} />
             ))}
@@ -244,14 +244,14 @@ function ExecutionQueueTab() {
       )}
 
       {pending.length > 0 && (
-        <Card className="border-border shadow-none">
+        <Card surface="flat">
           <CardHeader className="py-3">
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle size="base" className="flex items-center gap-2">
               <Clock size={16} className="text-accent-yellow" />
               {t('settings.aiExecutionCenter.groupQueued', { count: pending.length })}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 p-4 pt-0">
+          <CardContent inset="md" className="space-y-2 pt-0">
             {pending.map((run) => (
               <ExecutionRunRow key={run.id} run={run} />
             ))}
@@ -259,14 +259,14 @@ function ExecutionQueueTab() {
         </Card>
       )}
 
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardHeader className="py-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle size="base" className="flex items-center gap-2">
             <Activity size={16} className="text-muted-foreground" />
             {t('settings.aiExecutionCenter.groupRecent', { count: recent.length })}
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-4 pt-0">
+        <CardContent inset="md" className="pt-0">
           {recent.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t('settings.aiExecutionCenter.emptyRecent')}</p>
           ) : (
@@ -463,9 +463,9 @@ function ApprovalCenterTab() {
 
   return (
     <div className="space-y-4">
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle size="base" className="flex items-center gap-2">
             <CheckCircle size={16} className="text-accent-yellow" />
             {t('settings.aiExecutionCenter.approvalsPending', { count: pendingApprovals.length })}
           </CardTitle>
@@ -477,7 +477,7 @@ function ApprovalCenterTab() {
             {batchMode ? t('settings.aiExecutionCenter.exitBatchMode') : t('settings.aiExecutionCenter.batchMode')}
           </Button>
         </CardHeader>
-        <CardContent className="space-y-2 p-4 pt-0">
+        <CardContent inset="md" className="space-y-2 pt-0">
           {sortedApprovals.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t('settings.aiExecutionCenter.approvalsEmpty')}</p>
           ) : (
@@ -611,9 +611,9 @@ function ExecutionReplayTab() {
 
       <div className="min-w-0 flex-1">
         {selectedRun ? (
-          <Card className="border-border shadow-none">
+          <Card surface="flat">
             <CardHeader>
-              <CardTitle className="text-base">{runTitle(selectedRun, t)}</CardTitle>
+              <CardTitle size="base">{runTitle(selectedRun, t)}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -693,9 +693,9 @@ function TrustTierCard({ tier }: { tier: MemberTrustTierDef }) {
   const { t } = useTranslation();
   const Icon = TIER_ICON[tier.level];
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
+        <CardTitle size="base" className="flex items-center gap-2">
           <Icon size={16} className={TIER_ICON_COLOR[tier.level]} />
           {t(tier.labelKey)}
         </CardTitle>
@@ -838,10 +838,10 @@ function AgentTrustCard({ profile }: { profile: AgentTrustProfile }) {
   const def = tier !== null ? MEMBER_TRUST_TIERS[tier - 1] : null;
 
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle size="base" className="flex items-center gap-2">
             <Bot size={16} className="text-accent-purple" />
             {profile.agentName}
           </CardTitle>

@@ -128,7 +128,7 @@ export function TemplatePickerDialog({
                     {item.builtIn ? (
                       <Badge
                         variant="secondary"
-                        className="bg-accent-blue/10 px-1 py-0 text-xs text-accent-blue"
+                        fontSize="xs" className="bg-accent-blue/10 px-1 py-0 text-accent-blue"
                       >
                         {t('prompt.templatePicker.builtin')}
                       </Badge>
@@ -153,7 +153,7 @@ export function TemplatePickerDialog({
               >
                 {previewLoading ? (
                   <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Spinner className="size-3.5" />
+                    <Spinner size="xs" />
                     {t('prompt.templatePicker.previewing')}
                   </p>
                 ) : preview?.text ? (

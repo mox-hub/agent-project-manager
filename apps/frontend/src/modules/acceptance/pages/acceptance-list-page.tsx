@@ -223,7 +223,7 @@ function StatusDistributionCard({ acceptances }: { acceptances: Acceptance[] }) 
   return (
     <Card size="sm">
       <CardHeader className="px-4 pb-2 pt-4">
-        <CardTitle className="text-sm font-medium">
+        <CardTitle fontWeight="medium" className="text-sm">
           {t('acceptance.filter.status')}
         </CardTitle>
       </CardHeader>
@@ -265,7 +265,7 @@ function AuditRiskCard({
   return (
     <Card size="sm">
       <CardHeader className="px-4 pb-2 pt-4">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+        <CardTitle fontWeight="medium" className="flex items-center gap-2 text-sm">
           {t('acceptance.filter.risk')}
           {redCount > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full border border-accent-red/40 bg-accent-red/10 px-1.5 py-0.5 text-3xs font-medium text-accent-red">
@@ -436,7 +436,7 @@ export function AcceptanceListPage() {
           <span className="flex max-w-60 items-center gap-1.5 truncate">
             <span className="truncate">{row.original.title || t('acceptance.title')}</span>
             {isActiveAcceptance(row.original) && (
-              <Badge variant="secondary" className="shrink-0 text-3xs">
+              <Badge variant="secondary" fontSize="3xs" className="shrink-0">
                 {t('acceptance.activeBadge')}
               </Badge>
             )}
@@ -797,7 +797,7 @@ export function AcceptanceListPage() {
                   </span>
                   <StatusBadge status={acceptance.status} />
                   {isActiveAcceptance(acceptance) && (
-                    <Badge variant="secondary" className="shrink-0 text-3xs">
+                    <Badge variant="secondary" fontSize="3xs" className="shrink-0">
                       {t('acceptance.activeBadge')}
                     </Badge>
                   )}

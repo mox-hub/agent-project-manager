@@ -61,7 +61,7 @@ export function ExternalLinksManager({ projectId }: ExternalLinksManagerProps) {
         <Card className="mb-4 bg-muted/50">
           <CardContent className="flex flex-col gap-4 pt-4">
             <div>
-              <Label className="mb-1 block text-sm text-muted-foreground font-medium">Provider</Label>
+              <Label fontSize="sm" variant="muted" className="mb-1 block">Provider</Label>
               <SelectField
                 className="w-full"
                 value={newLink.provider}
@@ -75,7 +75,7 @@ export function ExternalLinksManager({ projectId }: ExternalLinksManagerProps) {
               </SelectField>
             </div>
             <div>
-              <Label className="mb-1 block text-sm text-muted-foreground font-medium">External Project ID</Label>
+              <Label fontSize="sm" variant="muted" className="mb-1 block">External Project ID</Label>
               <Input
                 type="text"
                 value={newLink.externalProjectId}
@@ -84,7 +84,7 @@ export function ExternalLinksManager({ projectId }: ExternalLinksManagerProps) {
               />
             </div>
             <div>
-              <Label className="mb-1 block text-sm text-muted-foreground font-medium">External Project URL</Label>
+              <Label fontSize="sm" variant="muted" className="mb-1 block">External Project URL</Label>
               <Input
                 type="url"
                 value={newLink.externalProjectUrl}

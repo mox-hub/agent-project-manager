@@ -231,7 +231,7 @@ export function RunEventList({
       <div className="min-h-0 flex-1 overflow-hidden px-2 pb-2">
         <ScrollArea className="h-full w-full">
           {filtered.length === 0 ? (
-            <EmptyState title={t('runDetails.empty')} className="min-h-20" />
+            <EmptyState title={t('runDetails.empty')} minHeight="sm" />
           ) : (
             <ul className="divide-y divide-border/60">
               {filtered.map((entry) => {

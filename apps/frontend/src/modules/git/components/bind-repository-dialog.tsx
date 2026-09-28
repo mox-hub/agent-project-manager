@@ -246,7 +246,7 @@ export function BindRepositoryDialog({
                 disabled={bindMutation.isPending}
               >
                 {bindMutation.isPending && (
-                  <Spinner className="mr-2 h-4 w-4 text-inherit" />
+                  <Spinner color="inherit" className="mr-2 h-4 w-4" />
                 )}
                 Bind Repository
               </Button>

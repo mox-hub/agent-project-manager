@@ -94,7 +94,7 @@ export function DesktopLogCard() {
               checked={autoRefresh}
               onCheckedChange={setAutoRefresh}
             />
-            <Label htmlFor="desktop-log-follow" className="text-xs text-muted-foreground">
+            <Label htmlFor="desktop-log-follow" variant="muted" className="text-xs">
               {t('settings.desktopLogFollow')}
             </Label>
           </div>

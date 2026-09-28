@@ -554,7 +554,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                           <span className="text-sm">
                             {primaryAssignee.member.displayName}
                             {primaryAssignee.member.type === 'ai_agent' ? (
-                              <Badge variant="outline" className="ml-1 text-3xs">
+                              <Badge variant="outline" fontSize="3xs" className="ml-1">
                                 AI
                               </Badge>
                             ) : null}
@@ -1103,19 +1103,19 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
               {/* Tabbed Section: Execution, Approvals, AI Suggestion, Discussion, Documents */}
               <Tabs defaultValue="execution" className="mt-4">
                 <TabsList variant="line" className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto">
-                  <TabsTrigger value="execution" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
+                  <TabsTrigger value="execution" fontSize="xs" className="data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Activity className="mr-1 h-3 w-3" />
                     {t('task.detailDrawer.execution')}
                   </TabsTrigger>
-                  <TabsTrigger value="approvals" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
+                  <TabsTrigger value="approvals" fontSize="xs" className="data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <CheckCircle className="mr-1 h-3 w-3" />
                     {t('task.detailDrawer.approvals')}
                   </TabsTrigger>
-                  <TabsTrigger value="documents" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
+                  <TabsTrigger value="documents" fontSize="xs" className="data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <FileText className="mr-1 h-3 w-3" />
                     {t('taskDetail.linkedDocs')}
                   </TabsTrigger>
-                  <TabsTrigger value="discussion" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
+                  <TabsTrigger value="discussion" fontSize="xs" className="data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Activity className="mr-1 h-3 w-3" />
                     {t('task.detailDrawer.discussion')}
                   </TabsTrigger>

@@ -62,7 +62,7 @@ export function ProjectOverviewCharts({ summary }: ProjectOverviewChartsProps) {
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <Card className="lg:col-span-2" data-mock="true">
         <CardHeader className="p-4">
-          <CardTitle className="flex items-center justify-between text-sm font-medium">
+          <CardTitle size="sm" fontWeight="medium" className="flex items-center justify-between">
             {t('project.detail.sprintBurndown')}
             <span className="text-xs font-normal text-muted-foreground">
               {t('project.detail.last7Days')}
@@ -99,7 +99,7 @@ export function ProjectOverviewCharts({ summary }: ProjectOverviewChartsProps) {
 
       <Card>
         <CardHeader className="p-4">
-          <CardTitle className="text-sm font-medium">
+          <CardTitle size="sm" fontWeight="medium">
             {t('project.detail.taskDistribution')}
           </CardTitle>
         </CardHeader>

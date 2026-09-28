@@ -82,7 +82,7 @@ const components: Components = {
   tbody: ({ children }) => <TableBody>{children}</TableBody>,
   tr: ({ children }) => <TableRow>{children}</TableRow>,
   th: ({ children }) => <TableHead className="px-2.5 py-1.5 text-left">{children}</TableHead>,
-  td: ({ children }) => <TableCell className="px-2.5 py-1.5">{children}</TableCell>,
+  td: ({ children }) => <TableCell padding="py-1.5" className="px-2.5">{children}</TableCell>,
   a: ({ children, href, ...rest }) => {
     if (href && isApmRef(href)) {
       return (

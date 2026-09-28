@@ -60,6 +60,17 @@ const buttonVariants = cva(
         // 与 icon / icon-lg 同口径；既有 xs/icon-xs/icon-sm 的 min() 钳位是历史存量，未改动。
         "icon-2xs": "size-5",
         "icon-2sm": "size-7",
+        // —— E 类桶1 增补（2026-09-28）：`2sm` 定高档，承接「28px 紧凑动作钮」形态
+        // （生产面裸覆盖 `h-7 gap-1 px-2` 聚类，常伴 `text-xs`）。纯增补，default 不变。
+        // 与 xs/sm 同为完整几何档（定高 + gap + 横内距）；字阶刻意不入档——28px 钮
+        // 的字号由 fontSize 轴表达（默认 text-sm，紧凑形态配 fontSize="xs"），
+        // 避免「高与字」耦合导致非紧凑 28px 钮无档可用。圆角不写（基线 rounded-md，
+        // 不沿用 xs/sm 的 min() 钳位历史存量）。
+        // in-data / has-data 两条与 default 档同口径：组内圆角锁 rounded-md；
+        // 内联图标侧内距收窄到与 px-2 同值的 pr-2/pl-2（default 是收窄到 2，
+        // 本档 px-2 本身就是 2 ⇒ 同值，带图标钮渲染不变）。
+        "2sm":
+          "h-7 gap-1 px-2 in-data-[slot=button-group]:rounded-md has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
       },
       // —— E 类批 0b 增补（2026-09-28）：语义色 tone 轴 ——
       // 立项与靶子口径见 `docs/design/修改方案-E类-2026-09-27.md`（§七之二 #1「批 0b 能力

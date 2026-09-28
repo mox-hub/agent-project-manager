@@ -137,7 +137,7 @@ export function ReleaseDetailPage() {
             <>
               {/* 状态机进度链（纯展示指示器式；publishing 步 loading，failed 不在链上另挂徽章） */}
               <Card>
-                <CardContent className="flex items-center gap-2 p-4">
+                <CardContent inset="md" className="flex items-center gap-2">
                   <Stepper
                     value={Math.max(STATUS_FLOW.indexOf(release.status) + 1, 1)}
                     className="flex-1"
@@ -189,7 +189,7 @@ export function ReleaseDetailPage() {
               {/* 基本信息 + 发版说明（AI 起草） */}
               <Card>
                 <CardHeader className="flex-row items-center justify-between space-y-0">
-                  <CardTitle className="flex items-center gap-1.5 text-sm">
+                  <CardTitle size="sm" className="flex items-center gap-1.5">
                     <Rocket className="size-4 text-accent-green" />
                     {t('release.detail.notesTitle')}
                   </CardTitle>
@@ -197,7 +197,7 @@ export function ReleaseDetailPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 text-xs"
+                      fontSize="xs" className="h-7"
                       disabled={updateNotes.isPending}
                       onClick={draftNotes}
                     >
@@ -219,14 +219,14 @@ export function ReleaseDetailPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 text-xs"
+                          fontSize="xs" className="h-7"
                           onClick={() => setNotesDraft(null)}
                         >
                           {t('common.cancel')}
                         </Button>
                         <Button
                           size="sm"
-                          className="h-7 text-xs"
+                          fontSize="xs" className="h-7"
                           disabled={updateNotes.isPending}
                           onClick={() =>
                             updateNotes.mutate(
@@ -340,7 +340,7 @@ export function ReleaseDetailPage() {
               {release.executionLog && release.executionLog.length > 0 ? (
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">{t('release.detail.logTitle')}</CardTitle>
+                    <CardTitle size="sm">{t('release.detail.logTitle')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {release.executionLog.map((step, i) => (
@@ -377,12 +377,12 @@ function GateCard({
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-sm">{t('release.gate.title')}</CardTitle>
+        <CardTitle size="sm">{t('release.gate.title')}</CardTitle>
         {status === 'draft' ? (
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs"
+            fontSize="xs" className="h-7"
             disabled={gatePending}
             onClick={onGate}
           >
@@ -469,7 +469,7 @@ function ActionCard({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">{t('release.action.title')}</CardTitle>
+        <CardTitle size="sm">{t('release.action.title')}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-wrap items-center gap-2">
         {status === 'draft' ? (
@@ -477,26 +477,26 @@ function ActionCard({
         ) : null}
         {status === 'gated' ? (
           <>
-            <Button size="sm" className="h-7 text-xs" disabled={approvalPending} onClick={onApproval}>
+            <Button size="sm" fontSize="xs" className="h-7" disabled={approvalPending} onClick={onApproval}>
               {t('release.action.requestApproval')}
             </Button>
-            <Button variant="outline" size="sm" className="h-7 text-xs" disabled={rejectPending} onClick={onReject}>
+            <Button variant="outline" size="sm" fontSize="xs" className="h-7" disabled={rejectPending} onClick={onReject}>
               {t('release.action.reject')}
             </Button>
           </>
         ) : null}
         {status === 'approved' ? (
           <>
-            <Button size="sm" className="h-7 text-xs" disabled={publishPending} onClick={onPublish}>
+            <Button size="sm" fontSize="xs" className="h-7" disabled={publishPending} onClick={onPublish}>
               {t('release.action.publish')}
             </Button>
-            <Button variant="outline" size="sm" className="h-7 text-xs" disabled={rejectPending} onClick={onReject}>
+            <Button variant="outline" size="sm" fontSize="xs" className="h-7" disabled={rejectPending} onClick={onReject}>
               {t('release.action.reject')}
             </Button>
           </>
         ) : null}
         {status === 'failed' ? (
-          <Button size="sm" className="h-7 text-xs" disabled={reopenPending} onClick={onReopen}>
+          <Button size="sm" fontSize="xs" className="h-7" disabled={reopenPending} onClick={onReopen}>
             {t('release.action.reopen')}
           </Button>
         ) : null}

@@ -362,7 +362,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
                 disabled
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground cursor-not-allowed"
               >
-                <Spinner className="size-3 text-inherit" />
+                <Spinner size="2xs" color="inherit" />
                 {t('settings.integration.connecting')}
               </button>
             )}

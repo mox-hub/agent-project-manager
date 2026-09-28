@@ -59,7 +59,7 @@ export function TaskLinearPanel({ issueId, task, projectId }: TaskLinearPanelPro
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-2xs"
+            fontSize="2xs" className="h-6 px-2"
             disabled={pushCreate.isPending}
             onClick={() => setPushConfirmOpen(true)}
             data-ai-component="task.linear.push-create"
@@ -137,12 +137,12 @@ export function TaskLinearPanel({ issueId, task, projectId }: TaskLinearPanelPro
         <Button
           variant="outline"
           size="sm"
-          className="h-6 flex-1 px-2 text-2xs"
+          fontSize="2xs" className="h-6 flex-1 px-2"
           disabled={syncTasks.isPending}
           onClick={handleSyncThis}
         >
           {syncTasks.isPending ? (
-            <Spinner className="mr-1 size-3 text-inherit" />
+            <Spinner color="inherit" className="mr-1 size-3" />
           ) : (
             <RefreshCw className="mr-1 size-3" />
           )}

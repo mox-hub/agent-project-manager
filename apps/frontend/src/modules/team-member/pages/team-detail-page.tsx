@@ -328,7 +328,7 @@ export default function TeamDetailPage() {
               <span className="font-mono">@{team.slug}</span>
               <span className="opacity-50">•</span>
               {team.status === 'archived' ? (
-                <Badge variant="secondary" className="text-3xs">
+                <Badge variant="secondary" fontSize="3xs">
                   {t('teams.status.archived', '已归档')}
                 </Badge>
               ) : (
@@ -348,7 +348,7 @@ export default function TeamDetailPage() {
               {(team.tags ?? []).length > 0 && (
                 <span className="flex flex-wrap items-center gap-1">
                   {(team.tags ?? []).map((tag) => (
-                    <Badge key={tag} variant="secondary" className="px-1.5 py-0 text-3xs">
+                    <Badge key={tag} variant="secondary" fontSize="3xs" className="px-1.5 py-0">
                       {tag}
                     </Badge>
                   ))}
@@ -422,21 +422,21 @@ export default function TeamDetailPage() {
                 )}
 
                 <Card>
-                  <CardContent className="p-0">
+                  <CardContent inset="none">
                     <Table className="w-full text-sm">
-                      <TableHeader className="text-xs text-muted-foreground">
+                      <TableHeader fontSize="xs" variant="muted">
                         <TableRow>
-                          <TableHead className="p-2 text-left">{t('teamDetail.members.member', '成员')}</TableHead>
-                          <TableHead className="w-24 p-2 text-left">{t('teamDetail.members.type', '类型')}</TableHead>
-                          <TableHead className="w-28 p-2 text-left">{t('teamDetail.members.role', '角色')}</TableHead>
-                          <TableHead className="w-32 p-2 text-left">{t('teamDetail.members.joinedAt', '加入时间')}</TableHead>
-                          <TableHead className="w-12 p-2 text-right"></TableHead>
+                          <TableHead padding="p-2">{t('teamDetail.members.member', '成员')}</TableHead>
+                          <TableHead padding="p-2" className="w-24">{t('teamDetail.members.type', '类型')}</TableHead>
+                          <TableHead padding="p-2" className="w-28">{t('teamDetail.members.role', '角色')}</TableHead>
+                          <TableHead padding="p-2" className="w-32">{t('teamDetail.members.joinedAt', '加入时间')}</TableHead>
+                          <TableHead padding="p-2" align="right" className="w-12"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {((members ?? []) as TeamMember[]).map((tm) => (
                           <TableRow key={tm.id}>
-                            <TableCell className="p-2">
+                            <TableCell>
                               <MemberCardPopover
                                 memberId={tm.memberId}
                                 trigger={
@@ -458,22 +458,22 @@ export default function TeamDetailPage() {
                                 }
                               />
                             </TableCell>
-                            <TableCell className="p-2">
+                            <TableCell>
                               {tm.member?.type === 'ai_agent' ? (
-                                <Badge variant="secondary" className="text-3xs">AI</Badge>
+                                <Badge variant="secondary" fontSize="3xs">AI</Badge>
                               ) : (
-                                <Badge variant="outline" className="text-3xs">
+                                <Badge variant="outline" fontSize="3xs">
                                   {t('members.filter.human', '人类')}
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="p-2">
-                              <Badge variant="outline" className="text-3xs">{tm.role}</Badge>
+                            <TableCell>
+                              <Badge variant="outline" fontSize="3xs">{tm.role}</Badge>
                             </TableCell>
-                            <TableCell className="p-2 text-xs text-muted-foreground">
+                            <TableCell fontSize="xs" className="text-muted-foreground">
                               {new Date(tm.joinedAt).toLocaleDateString()}
                             </TableCell>
-                            <TableCell className="p-2 text-right">
+                            <TableCell align="right">
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -492,7 +492,7 @@ export default function TeamDetailPage() {
                                 variant="card"
                                 title={t('teamDetail.members.empty', '还没有成员')}
                                 description={t('teamDetail.members.emptyDesc', '邀请成员加入后，他们会出现在这里')}
-                                className="min-h-0 border-0"
+                                minHeight="none" frame="none"
                               />
                             </TableCell>
                           </TableRow>
@@ -506,7 +506,7 @@ export default function TeamDetailPage() {
 
             {activeTab === 'projects' && (
               <Card>
-                <CardContent className="p-0">
+                <CardContent inset="none">
                   <div className="flex items-center justify-between gap-2 px-3 py-2">
                     <span className="text-xs text-muted-foreground">
                       {t('teamDetail.projects.hint', '绑定后全体团队成员自动获得项目成员身份')}
@@ -583,17 +583,17 @@ export default function TeamDetailPage() {
                     )}
                   </div>
                   <Table className="w-full text-sm">
-                    <TableHeader className="text-xs text-muted-foreground">
+                    <TableHeader fontSize="xs" variant="muted">
                       <TableRow>
-                        <TableHead className="p-2 text-left">{t('teamDetail.projects.project', '项目')}</TableHead>
-                        <TableHead className="w-32 p-2 text-left">{t('teamDetail.projects.boundAt', '绑定时间')}</TableHead>
-                        <TableHead className="w-16 p-2 text-left">{t('teamDetail.projects.actions', '操作')}</TableHead>
+                        <TableHead padding="p-2">{t('teamDetail.projects.project', '项目')}</TableHead>
+                        <TableHead padding="p-2" className="w-32">{t('teamDetail.projects.boundAt', '绑定时间')}</TableHead>
+                        <TableHead padding="p-2" className="w-16">{t('teamDetail.projects.actions', '操作')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {(team.projects ?? []).map((tp) => (
                         <TableRow key={tp.id}>
-                          <TableCell className="p-2">
+                          <TableCell>
                             <Link
                               to={`/app/projects/${tp.projectId}`}
                               className="flex items-center gap-2 text-sm hover:underline"
@@ -605,10 +605,10 @@ export default function TeamDetailPage() {
                               {tp.project?.name ?? tp.projectId}
                             </Link>
                           </TableCell>
-                          <TableCell className="p-2 text-xs text-muted-foreground">
+                          <TableCell fontSize="xs" className="text-muted-foreground">
                             {new Date(tp.createdAt).toLocaleDateString()}
                           </TableCell>
-                          <TableCell className="p-2">
+                          <TableCell>
                             <Button
                               size="sm"
                               variant="ghost"
@@ -627,7 +627,7 @@ export default function TeamDetailPage() {
                       ))}
                       {(team.projects ?? []).length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={3} className="p-6 text-center text-sm text-muted-foreground">
+                          <TableCell colSpan={3} align="center" className="p-6 text-sm text-muted-foreground">
                             {t('teamDetail.projects.empty', '尚未绑定项目')}
                           </TableCell>
                         </TableRow>
@@ -726,16 +726,16 @@ export default function TeamDetailPage() {
 
                 {/* 邀请列表 */}
                 <Card>
-                  <CardContent className="p-0">
+                  <CardContent inset="none">
                     <Table className="w-full text-sm">
-                      <TableHeader className="text-xs text-muted-foreground">
+                      <TableHeader fontSize="xs" variant="muted">
                         <TableRow>
-                          <TableHead className="p-2 text-left">{t('teamDetail.invites.email', '邮箱')}</TableHead>
-                          <TableHead className="w-24 p-2 text-left">{t('teamDetail.members.role', '角色')}</TableHead>
-                          <TableHead className="w-24 p-2 text-left">{t('teamDetail.invites.status', '状态')}</TableHead>
-                          <TableHead className="w-32 p-2 text-left">{t('teamDetail.invites.expiresAt', '过期时间')}</TableHead>
-                          <TableHead className="p-2 text-left">{t('teamDetail.invites.link', '邀请链接')}</TableHead>
-                          <TableHead className="w-16 p-2 text-right"></TableHead>
+                          <TableHead padding="p-2">{t('teamDetail.invites.email', '邮箱')}</TableHead>
+                          <TableHead padding="p-2" className="w-24">{t('teamDetail.members.role', '角色')}</TableHead>
+                          <TableHead padding="p-2" className="w-24">{t('teamDetail.invites.status', '状态')}</TableHead>
+                          <TableHead padding="p-2" className="w-32">{t('teamDetail.invites.expiresAt', '过期时间')}</TableHead>
+                          <TableHead padding="p-2">{t('teamDetail.invites.link', '邀请链接')}</TableHead>
+                          <TableHead padding="p-2" align="right" className="w-16"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -744,11 +744,11 @@ export default function TeamDetailPage() {
                           const dead = inv.status !== 'pending';
                           return (
                             <TableRow key={inv.id}>
-                              <TableCell className="p-2">{inv.email || '—'}</TableCell>
-                              <TableCell className="p-2">
-                                <Badge variant="outline" className="text-3xs">{inv.role}</Badge>
+                              <TableCell>{inv.email || '—'}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" fontSize="3xs">{inv.role}</Badge>
                               </TableCell>
-                              <TableCell className="p-2">
+                              <TableCell>
                                 <Badge
                                   variant="secondary"
                                   className={
@@ -762,10 +762,10 @@ export default function TeamDetailPage() {
                                   {inv.status}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="p-2 text-xs text-muted-foreground">
+                              <TableCell fontSize="xs" className="text-muted-foreground">
                                 {new Date(inv.expiresAt).toLocaleString()}
                               </TableCell>
-                              <TableCell className="p-2">
+                              <TableCell>
                                 {!dead && (
                                   <button
                                     type="button"
@@ -780,12 +780,12 @@ export default function TeamDetailPage() {
                                   </button>
                                 )}
                               </TableCell>
-                              <TableCell className="p-2 text-right">
+                              <TableCell align="right">
                                 {!dead && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 px-2 text-2xs text-accent-red"
+                                    fontSize="2xs" className="h-6 px-2 text-accent-red"
                                     onClick={async () => {
                                       await revokeTeamInvite(teamId!, inv.id);
                                       refetchInvites();
@@ -805,7 +805,7 @@ export default function TeamDetailPage() {
                                 variant="card"
                                 title={t('teamDetail.invites.empty', '还没有邀请记录')}
                                 description={t('teamDetail.invites.emptyDesc', '发出邀请后，记录会出现在这里')}
-                                className="min-h-0 border-0"
+                                minHeight="none" frame="none"
                               />
                             </TableCell>
                           </TableRow>
@@ -826,7 +826,7 @@ export default function TeamDetailPage() {
                         variant="card"
                         title={t('teamDetail.invites.outboxEmpty', '还没有待发邮件')}
                         description={t('teamDetail.invites.outboxEmptyDesc', '系统发出的通知邮件会先排在这里')}
-                        className="min-h-0 border-0 py-4"
+                        minHeight="none" frame="none" padding="compact"
                       />
                     ) : (
                       <ul className="space-y-1.5">

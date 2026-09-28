@@ -211,13 +211,13 @@ function DocumentEditWorkspace({
                 </button>
               </div>
 
-              <Button variant="outline" size="sm" className="h-10 gap-1.5 text-sm" onClick={() => setShowAiPanel((value) => !value)}>
+              <Button variant="outline" size="sm" fontSize="sm" className="h-10 gap-1.5" onClick={() => setShowAiPanel((value) => !value)}>
                 <Sparkles size={14} /> AI 助手
               </Button>
               <Button variant="outline" size="icon" className="h-10 w-10">
                 <MoreVertical size={16} />
               </Button>
-              <Button className="h-10 gap-1.5 px-4 text-sm" onClick={handleSave} disabled={updateDocument.isPending}>
+              <Button fontSize="sm" className="h-10 gap-1.5 px-4" onClick={handleSave} disabled={updateDocument.isPending}>
                 <Save size={14} /> 保存
               </Button>
             </div>
@@ -351,10 +351,10 @@ function DocumentEditWorkspace({
                 </button>
               </div>
               <div className="space-y-3 p-4">
-                <Button variant="outline" className="h-10 w-full justify-start gap-2 text-sm"><Wand2 size={14} /> 优化文档结构</Button>
-                <Button variant="outline" className="h-10 w-full justify-start gap-2 text-sm"><Wand2 size={14} /> 生成摘要</Button>
+                <Button variant="outline" fontSize="sm" className="h-10 w-full justify-start gap-2"><Wand2 size={14} /> 优化文档结构</Button>
+                <Button variant="outline" fontSize="sm" className="h-10 w-full justify-start gap-2"><Wand2 size={14} /> 生成摘要</Button>
                 <Textarea value={aiPrompt} onChange={(event) => setAiPrompt(event.target.value)} placeholder="告诉 AI 你想要什么..." className="min-h-30 text-sm" />
-                <Button className="h-10 w-full gap-1.5 text-sm" disabled={!aiPrompt.trim()}>
+                <Button fontSize="sm" className="h-10 w-full gap-1.5" disabled={!aiPrompt.trim()}>
                   <Sparkles size={14} /> 生成内容
                 </Button>
               </div>

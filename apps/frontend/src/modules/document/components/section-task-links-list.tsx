@@ -270,7 +270,7 @@ function SectionGroupCard({
           size="sm"
           variant="ghost"
           onClick={onAdd}
-          className="h-6 gap-1 px-2 text-2xs"
+          fontSize="2xs" className="h-6 gap-1 px-2"
         >
           <Plus size={11} /> 添加
         </Button>

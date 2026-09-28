@@ -118,10 +118,10 @@ export function InvitesSection({ statusFilter }: { statusFilter: string }) {
                     <TableCell className="text-sm text-muted-foreground">
                       {inv.createdBy ?? '—'}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell fontSize="xs" className="text-muted-foreground">
                       {new Date(inv.createdAt).toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell fontSize="xs" className="text-muted-foreground">
                       {new Date(inv.expiresAt).toLocaleString()}
                     </TableCell>
                     <TableCell>

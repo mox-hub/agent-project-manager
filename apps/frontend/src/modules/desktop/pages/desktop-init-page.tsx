@@ -115,7 +115,7 @@ export function DesktopInitPage() {
             >
               {isLoading ? (
                 <>
-                  <Spinner className="mr-2 size-4 text-inherit" />
+                  <Spinner size="sm" color="inherit" className="mr-2" />
                   启动中...
                 </>
               ) : (

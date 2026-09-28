@@ -141,7 +141,7 @@ function ProfileHealthCard() {
   return (
     <Card>
       <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className="text-sm font-medium">项目档案健康</CardTitle>
+        <CardTitle size="sm" fontWeight="medium">项目档案健康</CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4 space-y-2.5">
         {isLoading ? (
@@ -150,7 +150,7 @@ function ProfileHealthCard() {
           <EmptyState
             title="暂无档案数据"
             description="在项目「档案」页触发考古或手动填充后这里会亮起来。"
-            className="min-h-20"
+            minHeight="sm"
           />
         ) : (
           withData.slice(0, 6).map((item) => <ProfileHealthRow key={item.projectId} item={item} />)
@@ -187,7 +187,7 @@ function PlaybookHealthCard() {
   return (
     <Card>
       <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className="text-sm font-medium">
+        <CardTitle size="sm" fontWeight="medium">
           项目步骤健康{data && data.mountedProjects > 0 ? ` · ${data.mountedProjects} 个项目挂载` : ''}
         </CardTitle>
       </CardHeader>
@@ -198,7 +198,7 @@ function PlaybookHealthCard() {
           <EmptyState
             title="暂无项目步骤运行数据"
             description="项目「流程」页挂载项目步骤并跑一个阶段后，这里会出现跳过率与退回率。"
-            className="min-h-20"
+            minHeight="sm"
           />
         ) : (
           <Table>
@@ -388,7 +388,7 @@ function CostTab() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle size="sm" fontWeight="medium">
               {t(isMonthly ? 'analytics.cost.monthlyCost' : 'analytics.cost.dailyCost')}
             </CardTitle>
           </CardHeader>
@@ -414,7 +414,7 @@ function CostTab() {
 
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="flex items-center justify-between text-sm font-medium">
+            <CardTitle size="sm" fontWeight="medium" className="flex items-center justify-between">
               {t('analytics.cost.heatmap')}
               <span className="text-xs font-normal text-muted-foreground">
                 {t('analytics.cost.heatmapRange')}
@@ -434,16 +434,16 @@ function CostTab() {
 
       <Card>
         <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="text-sm font-medium">{t('analytics.cost.byModel')}</CardTitle>
+          <CardTitle size="sm" fontWeight="medium">{t('analytics.cost.byModel')}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <Table className="w-full text-sm">
-            <TableHeader className="text-xs text-muted-foreground">
+            <TableHeader fontSize="xs" variant="muted">
               <TableRow>
-                <TableHead className="p-2 text-left">{t('analytics.cost.model')}</TableHead>
-                <TableHead className="w-32 p-2 text-right">{t('analytics.cost.tokens')}</TableHead>
-                <TableHead className="w-28 p-2 text-right">{t('analytics.cost.cost')}</TableHead>
-                <TableHead className="w-40 p-2 text-right">{t('analytics.cost.share')}</TableHead>
+                <TableHead padding="p-2">{t('analytics.cost.model')}</TableHead>
+                <TableHead padding="p-2" align="right" className="w-32">{t('analytics.cost.tokens')}</TableHead>
+                <TableHead padding="p-2" align="right" className="w-28">{t('analytics.cost.cost')}</TableHead>
+                <TableHead padding="p-2" align="right" className="w-40">{t('analytics.cost.share')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -454,9 +454,9 @@ function CostTab() {
                 return (
                   <TableRow key={row.modelName}>
                     <TableCell className="p-2 font-medium">{row.modelName}</TableCell>
-                    <TableCell className="p-2 text-right tabular-nums">{row.totalTokens.toLocaleString()}</TableCell>
-                    <TableCell className="p-2 text-right tabular-nums">{formatCost(row.totalCost ?? 0)}</TableCell>
-                    <TableCell className="p-2">
+                    <TableCell align="right" className="tabular-nums">{row.totalTokens.toLocaleString()}</TableCell>
+                    <TableCell align="right" className="tabular-nums">{formatCost(row.totalCost ?? 0)}</TableCell>
+                    <TableCell>
                       <div className="flex items-center justify-end gap-2">
                         <Progress value={sharePct} className="h-1.5 w-24" />
                         <span className="w-8 text-right text-xs text-muted-foreground tabular-nums">{sharePct}%</span>
@@ -503,7 +503,7 @@ function QualityTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">{t('analytics.quality.trendTitle', '代码变更质量趋势')}</CardTitle>
+            <CardTitle size="sm" fontWeight="medium">{t('analytics.quality.trendTitle', '代码变更质量趋势')}</CardTitle>
           </CardHeader>
           <CardContent className="px-2 pb-3">
             <ResponsiveContainer width="100%" height={200}>
@@ -523,7 +523,7 @@ function QualityTab() {
 
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">{t('analytics.quality.byProjectTitle', '各项目质量分')}</CardTitle>
+            <CardTitle size="sm" fontWeight="medium">{t('analytics.quality.byProjectTitle', '各项目质量分')}</CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-3">
             {(ov?.qualityByProject ?? []).map(p => (
@@ -574,7 +574,7 @@ function RiskTab() {
 
       <Card>
         <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle size="sm" fontWeight="medium" className="flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-destructive" />
             Risk Scorecard
           </CardTitle>
@@ -633,7 +633,7 @@ function TeamActivityTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">{t('analytics.team.activityByMember', '成员 AI 活跃度（今日）')}</CardTitle>
+            <CardTitle size="sm" fontWeight="medium">{t('analytics.team.activityByMember', '成员 AI 活跃度（今日）')}</CardTitle>
           </CardHeader>
           <CardContent className="px-2 pb-3">
             <ResponsiveContainer width="100%" height={200}>
@@ -655,7 +655,7 @@ function TeamActivityTab() {
 
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-medium">{t('analytics.team.usageBreakdown', '成员 AI 用量拆解')}</CardTitle>
+            <CardTitle size="sm" fontWeight="medium">{t('analytics.team.usageBreakdown', '成员 AI 用量拆解')}</CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-3">
             {(ov?.memberActivity ?? []).map(m => (

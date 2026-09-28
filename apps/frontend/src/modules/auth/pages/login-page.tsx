@@ -97,11 +97,11 @@ export function LoginPage() {
         <Button
           type="submit"
           disabled={isLoading}
-          className="h-10 w-full text-sm font-medium shadow-xs"
+          size="lg" fontSize="sm" className="w-full shadow-xs"
         >
           {isLoading ? (
             <>
-              <Spinner className="size-4 text-inherit mr-2" />
+              <Spinner size="sm" color="inherit" className="mr-2" />
               {t('auth.loggingIn') || '正在验证中…'}
             </>
           ) : (

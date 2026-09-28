@@ -70,7 +70,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
             <Button
               variant="outline"
               size="sm"
-              className="h-7 px-2 text-2xs"
+              fontSize="2xs" className="h-7 px-2"
               disabled={verify.isPending}
               onClick={() =>
                 verify.mutate({ id: card.id, verdict: 'changes_requested' })
@@ -81,7 +81,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
             </Button>
             <Button
               size="sm"
-              className="h-7 px-2 text-2xs"
+              fontSize="2xs" className="h-7 px-2"
               disabled={verify.isPending}
               onClick={() => verify.mutate({ id: card.id, verdict: 'verified' })}
               data-ai-action="office.collaboration.verify.click"
@@ -94,7 +94,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-2xs text-muted-foreground"
+            fontSize="2xs" className="h-7 px-2 text-muted-foreground"
             disabled={cancel.isPending}
             onClick={() => cancel.mutate(card.id)}
             data-ai-action="office.collaboration.cancel.click"

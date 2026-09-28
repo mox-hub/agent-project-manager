@@ -24,16 +24,31 @@ export function EmptyState({
   icon: Icon,
   visual,
   variant = "card",
+  frame = "default",
+  minHeight = "default",
+  padding = "default",
   title,
   description,
   action,
   className,
-}: EmptyStateProps) {
+}: EmptyStateProps & {
+  /** 边框档（E 类桶1 增补 2026-09-28，纯增补 default 不变）：`none` = 去虚线框
+   * （承接内嵌于卡片/面板内的无框空态，调用方此前裸写 border-0）。 */
+  frame?: "default" | "none";
+  /** 最小高档：`none` = 撤兜底 min-h（承接外层已控高的场景）；`sm` = min-h-20。 */
+  minHeight?: "default" | "none" | "sm";
+  /** 内距档：`compact` = py-4（纵内距收紧，横内距保持 p-6 的 6）。 */
+  padding?: "default" | "compact";
+}) {
   return (
     <div
       className={cn(
         "flex flex-col items-center justify-center rounded-lg border border-dashed border-border p-6 text-center",
         variant === "page" ? "h-full min-h-100" : "min-h-40",
+        frame === "none" && "border-0",
+        minHeight === "none" && "min-h-0",
+        minHeight === "sm" && "min-h-20",
+        padding === "compact" && "py-4",
         className
       )}
     >

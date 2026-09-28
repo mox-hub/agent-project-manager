@@ -1436,7 +1436,7 @@ export function UnifiedCreateDialog({
                 >
                   {silentCreateDraft.isPending ? (
                     <>
-                      <Spinner className="size-3 text-inherit" />
+                      <Spinner size="2xs" color="inherit" />
                       {t('unifiedCreate.aiPanel.parsing')}
                     </>
                   ) : draft ? (
@@ -1462,7 +1462,7 @@ export function UnifiedCreateDialog({
               >
                 {isSubmitting ? (
                   <>
-                    <Spinner className="size-3 text-inherit" />
+                    <Spinner size="2xs" color="inherit" />
                     {t('unifiedCreate.creating')}
                   </>
                 ) : (

@@ -483,7 +483,7 @@ export function CommandPaletteProvider({
                   startAddon={<SparklesIcon />}
                 />
                 <Button
-                  className="me-2.5 rounded-md text-sm not-hover:text-muted-foreground sm:text-xs"
+                  fontSize="sm" className="me-2.5 rounded-md not-hover:text-muted-foreground sm:text-xs"
                   onClick={backToSearch}
                   size="sm"
                   variant="ghost"
@@ -514,7 +514,7 @@ export function CommandPaletteProvider({
                     {ai.isGenerating ? (
                       <div className="flex flex-col gap-4" aria-live="polite">
                         <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                          <Spinner className="size-3" />
+                          <Spinner size="2xs" />
                           <span className="animate-pulse">
                             {t('commandPalette.aiGenerating', '生成中…')}
                           </span>
@@ -569,7 +569,7 @@ export function CommandPaletteProvider({
                 {ai.isGenerating ? (
                   <div aria-live="polite" className="flex items-center gap-2">
                     <div className="flex h-5 items-center justify-center">
-                      <Spinner className="size-3" />
+                      <Spinner size="2xs" />
                     </div>
                     <span className="animate-pulse">
                       {t('commandPalette.aiGenerating', '生成中…')}
@@ -612,7 +612,7 @@ export function CommandPaletteProvider({
                   aria-label={t('commandPalette.title')}
                 />
                 <Button
-                  className="me-2.5 rounded-md text-sm not-hover:text-muted-foreground sm:text-xs"
+                  fontSize="sm" className="me-2.5 rounded-md not-hover:text-muted-foreground sm:text-xs"
                   onClick={enterAiMode}
                   size="sm"
                   variant="ghost"

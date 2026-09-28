@@ -49,10 +49,10 @@ export function PullRequestCard({ pullRequest, onClick }: PullRequestCardProps) 
         </div>
 
         <div className="flex flex-wrap gap-1">
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" fontSize="xs">
             <span className="text-muted-foreground">←</span> {pullRequest.targetBranch}
           </Badge>
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" fontSize="xs">
             <span className="text-muted-foreground">→</span> {pullRequest.sourceBranch}
           </Badge>
         </div>
@@ -60,7 +60,7 @@ export function PullRequestCard({ pullRequest, onClick }: PullRequestCardProps) 
         {pullRequest.labels && pullRequest.labels.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {pullRequest.labels.map((label) => (
-              <Badge key={label} variant="secondary" className="text-xs">
+              <Badge key={label} variant="secondary" fontSize="xs">
                 {label}
               </Badge>
             ))}

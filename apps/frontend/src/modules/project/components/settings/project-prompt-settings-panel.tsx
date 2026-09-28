@@ -134,7 +134,7 @@ function ProjectPromptEditorPanel({
               type="button"
               variant="outline"
               size="sm"
-              className="h-6 shrink-0 text-xs"
+              fontSize="xs" className="h-6 shrink-0"
               disabled={update.isPending}
               onClick={() => void adoptFileSide()}
               data-ai-action="projectSettings.prompt.adoptFile"
@@ -234,7 +234,7 @@ function PromptLivePreview({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 gap-1 text-xs"
+          fontSize="xs" className="h-8 gap-1"
           disabled={!issueId}
           onClick={() => onOpenChange(true)}
           data-ai-component="projectSettings.prompt.preview"
@@ -263,7 +263,7 @@ function PromptLivePreview({
           </DialogHeader>
           {preview.isLoading ? (
             <p className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-              <Spinner className="size-3.5" />
+              <Spinner size="xs" />
               {t('projectSettings.prompt.previewLoading')}
             </p>
           ) : (

@@ -146,7 +146,7 @@ export function AcceptanceDraftDialog({
 
         {loading ? (
           <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
-            <Spinner className="size-4" />
+            <Spinner size="sm" />
             {t('acceptance.draft.generating', 'AI 正在起草验收标准…')}
           </div>
         ) : loadError ? (
@@ -196,7 +196,7 @@ export function AcceptanceDraftDialog({
             onClick={() => void handleApply()}
           >
             {submitting ? (
-              <Spinner className="size-3 text-inherit" />
+              <Spinner size="2xs" color="inherit" />
             ) : (
               t('acceptance.draft.apply', { defaultValue: '确认落库' })
             )}

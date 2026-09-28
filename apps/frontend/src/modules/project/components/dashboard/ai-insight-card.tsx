@@ -53,14 +53,14 @@ export function AiInsightCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-accent-purple" />
-            <CardTitle className="text-sm font-medium">AI Insights</CardTitle>
+            <CardTitle size="sm" fontWeight="medium">AI Insights</CardTitle>
           </div>
           <Button size="xs" variant="ghost" onClick={onRefresh} disabled={isRefreshing}>
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 p-4">
+      <CardContent inset="md" className="space-y-4">
         {/* AI Context Summary — tech stack chips, meta, health gauge */}
         <AiContextSummary context={contextData} compact />
 

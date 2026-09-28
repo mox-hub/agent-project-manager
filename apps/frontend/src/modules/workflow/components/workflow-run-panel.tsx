@@ -157,7 +157,7 @@ export function WorkflowRunPanel({
           <code className="text-3xs">{run.id.slice(0, 12)}…</code>
         </StatusPill>
         {isV2Run ? (
-          <Badge variant="secondary" className="shrink-0 text-3xs">
+          <Badge variant="secondary" fontSize="3xs" className="shrink-0">
             {t('workflow.engineV2')}
           </Badge>
         ) : null}
@@ -174,7 +174,7 @@ export function WorkflowRunPanel({
           <Button
             size="sm"
             variant="outline"
-            className="h-7 shrink-0 text-xs text-destructive"
+            fontSize="xs" className="h-7 shrink-0 text-destructive"
             disabled={cancel.isPending}
             onClick={() => cancel.mutate(runId)}
             data-ai-component="workflow.run.cancel"
@@ -213,7 +213,7 @@ export function WorkflowRunPanel({
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs"
+              fontSize="xs" className="h-7"
               disabled={resume.isPending}
               onClick={() =>
                 resume.mutate(
@@ -232,7 +232,7 @@ export function WorkflowRunPanel({
             </Button>
             <Button
               size="sm"
-              className="h-7 text-xs"
+              fontSize="xs" className="h-7"
               disabled={resume.isPending}
               onClick={() =>
                 resume.mutate(

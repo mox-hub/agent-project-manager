@@ -128,7 +128,7 @@ export function ReleaseTraceSection({ release }: { release: ReleaseRecord }) {
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <CardTitle className="flex items-center gap-1.5 text-sm">
+          <CardTitle size="sm" className="flex items-center gap-1.5">
             <ListChecks className="size-4 text-accent-blue" />
             {t('release.trace.title')}
           </CardTitle>
@@ -148,7 +148,7 @@ export function ReleaseTraceSection({ release }: { release: ReleaseRecord }) {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs"
+            fontSize="xs" className="h-7"
             onClick={() => setEditing((v) => !v)}
           >
             <Pencil className="mr-1 size-3" />
@@ -297,7 +297,7 @@ function TraceIssueRow({
                             {a.title || t('release.trace.unnamedAcceptance')}
                           </span>
                           {a.auditReport?.riskLevel ? (
-                            <Badge variant="secondary" className="text-3xs">
+                            <Badge variant="secondary" fontSize="3xs">
                               {a.auditReport.riskLevel}
                             </Badge>
                           ) : null}
@@ -470,12 +470,12 @@ function ScopeEditor({
           {t('release.trace.selectedCount', { count: selected.size })}
         </span>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={onDone}>
+          <Button variant="outline" size="sm" fontSize="xs" className="h-7" onClick={onDone}>
             {t('common.cancel')}
           </Button>
           <Button
             size="sm"
-            className="h-7 text-xs"
+            fontSize="xs" className="h-7"
             disabled={!dirty || update.isPending}
             onClick={save}
           >

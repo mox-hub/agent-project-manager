@@ -261,7 +261,7 @@ export function HelpPage() {
                     onClick={() => setSelectedArticle(article.id)}
                   >
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-base">
+                      <CardTitle size="base">
                         {t(articleKey(currentSection.id, article.id, 'title'))}
                       </CardTitle>
                       <CardDescription>

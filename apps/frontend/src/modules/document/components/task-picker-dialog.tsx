@@ -131,7 +131,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
               isEmpty={tasks.length === 0}
               loadingFallback={
                 <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-                  <Spinner className="h-4 w-4 text-inherit" />
+                  <Spinner color="inherit" className="h-4 w-4" />
                   正在加载任务…
                 </div>
               }
@@ -162,10 +162,10 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
                       <div className="min-w-0 flex-1">
                         <div className="truncate font-medium">{t.title}</div>
                         <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-2xs text-muted-foreground">
-                          <Badge variant="outline" className="text-3xs">
+                          <Badge variant="outline" fontSize="3xs">
                             {t.status}
                           </Badge>
-                          <Badge variant="outline" className="text-3xs">
+                          <Badge variant="outline" fontSize="3xs">
                             {t.priority}
                           </Badge>
                           {t.assignee?.displayName && (

@@ -161,12 +161,12 @@ export function MemberToolGrants({ memberId }: { memberId: string }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-sm">工具与访问授权</CardTitle>
+        <CardTitle size="sm">工具与访问授权</CardTitle>
         <Button size="sm" disabled={saving} onClick={save}>
           {saving ? '保存中…' : '保存授权'}
         </Button>
       </CardHeader>
-      <CardContent className="p-4 space-y-4">
+      <CardContent inset="md" className="space-y-4">
         <p className="text-xs text-muted-foreground">
           {configured
             ? '当前为白名单模式：仅选定的对象可用，派发任务时按此收敛工具集。'
