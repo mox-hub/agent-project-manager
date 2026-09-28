@@ -10,6 +10,7 @@ import {
   type MotionValue,
 } from "motion/react";
 import { cn } from "@/lib/utils";
+import { RawButton } from './raw-button'
 
 export interface Chapter {
   /** Stable, unique identifier for the chapter. */
@@ -317,7 +318,7 @@ export function ChapterScrubber({
           const restScale =
             (chapter.level && LEVEL_REST_SCALE[chapter.level]) || 1;
           return (
-            <button
+            <RawButton
               ref={(el) => {
                 buttonsRef.current[index] = el;
               }}
@@ -349,7 +350,7 @@ export function ChapterScrubber({
                 peakLength={peakLength}
                 isCurrent={isCurrent}
               />
-            </button>
+            </RawButton>
           );
         })}
       </div>

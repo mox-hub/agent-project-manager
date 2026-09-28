@@ -2,6 +2,7 @@ import * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
+import { RawButton } from './raw-button'
 
 /**
  * PageHeader / ToolbarRow 操作按钮：默认正圆形仅图标，hover / focus-visible 展开为胶囊
@@ -55,7 +56,7 @@ export interface HeaderActionButtonProps
 const HeaderActionButton = React.forwardRef<HTMLButtonElement, HeaderActionButtonProps>(
   ({ icon: Icon, label, variant = "primary", pinned = false, trailing, loading = false, className, type = "button", ...props }, ref) => {
     return (
-      <button
+      <RawButton
         ref={ref}
         type={type}
         aria-label={label}
@@ -86,7 +87,7 @@ const HeaderActionButton = React.forwardRef<HTMLButtonElement, HeaderActionButto
           {label}
           {trailing}
         </span>
-      </button>
+      </RawButton>
     );
   },
 );

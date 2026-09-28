@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { RawButton } from './raw-button'
 
 function Sidebar({
   className,
@@ -107,7 +108,7 @@ function SidebarMenuButton({
   ...props
 }: React.ComponentProps<"button">) {
   return (
-    <button
+    <RawButton
       data-slot="sidebar-menu-button"
       className={cn("flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", className)}
       {...props}

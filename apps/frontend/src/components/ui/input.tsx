@@ -62,6 +62,7 @@ function Input({
 
 // 项目扩展：密码框（显隐切换），历史 API 保留
 import { Eye, EyeOff } from "lucide-react"
+import { RawButton } from './raw-button'
 
 function PasswordInput({
   className,
@@ -89,14 +90,14 @@ function PasswordInput({
         data-ai-role={props["data-ai-role"] ?? "password-input"}
         {...props}
       />
-      <button
+      <RawButton
         type="button"
         onClick={() => setShowPassword(!showPassword)}
         className="absolute right-2 top-1/2 z-sticky inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
         tabIndex={-1}
       >
         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-      </button>
+      </RawButton>
     </div>
   )
 }
