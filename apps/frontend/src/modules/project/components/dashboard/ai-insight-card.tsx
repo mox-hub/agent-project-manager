@@ -48,8 +48,8 @@ export function AiInsightCard({
   };
 
   return (
-    <Card className="border-accent-purple/30 bg-accent-purple-light/5">
-      <CardHeader className="p-4 pb-0">
+    <Card >
+      <CardHeader >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-accent-purple" />
@@ -60,7 +60,7 @@ export function AiInsightCard({
           </Button>
         </div>
       </CardHeader>
-      <CardContent inset="md" className="space-y-4">
+      <CardContent inset="md" >
         {/* AI Context Summary — tech stack chips, meta, health gauge */}
         <AiContextSummary context={contextData} compact />
 

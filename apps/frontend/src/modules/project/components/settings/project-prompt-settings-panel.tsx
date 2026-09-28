@@ -55,7 +55,7 @@ export function ProjectPromptSettingsPanel({ projectId }: { projectId: string })
   if (config.isLoading || !config.data) {
     return (
       <SectionCard title={t('projectSettings.prompt.title')} description={t('projectSettings.prompt.desc')}>
-        <Skeleton className="h-40 w-full" />
+        <Skeleton  />
       </SectionCard>
     );
   }
@@ -134,7 +134,7 @@ function ProjectPromptEditorPanel({
               type="button"
               variant="outline"
               size="sm"
-              fontSize="xs" className="h-6 shrink-0"
+              fontSize="xs" className="shrink-0"
               disabled={update.isPending}
               onClick={() => void adoptFileSide()}
               data-ai-action="projectSettings.prompt.adoptFile"
@@ -218,7 +218,7 @@ function PromptLivePreview({
         <SelectField
           value={issueId}
           onChange={(event) => onIssueIdChange(event.target.value)}
-          className="h-8 w-64 text-xs"
+          
           data-ai-component="projectSettings.prompt.previewSelect"
         >
           <SelectFieldOption value="">
@@ -234,7 +234,7 @@ function PromptLivePreview({
           type="button"
           variant="outline"
           size="sm"
-          fontSize="xs" className="h-8 gap-1"
+          fontSize="xs" 
           disabled={!issueId}
           onClick={() => onOpenChange(true)}
           data-ai-component="projectSettings.prompt.preview"
@@ -249,8 +249,8 @@ function PromptLivePreview({
       </div>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent
-          className="sm:max-w-xl"
+        <DialogContent maxWidth="xl"
+          
           data-ai-component="projectSettings.prompt.previewDialog"
         >
           <DialogHeader>

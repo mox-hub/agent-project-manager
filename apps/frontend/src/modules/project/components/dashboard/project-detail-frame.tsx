@@ -82,7 +82,7 @@ export function ProjectDetailFrame({
             <div className="flex items-center gap-2">
               {topActions}
               {showSidebar ? <SidebarToggle open={!sidebarHidden} onToggle={toggleSidebar} /> : null}
-              <Badge className="h-6 rounded-full border border-accent-green/30 bg-accent-green-light px-2.5 text-sm font-semibold text-accent-green">
+              <Badge color="green" >
                 {trackingScore !== undefined ? `${trackingScore} · ` : ''}
                 {trackingLabel}
               </Badge>

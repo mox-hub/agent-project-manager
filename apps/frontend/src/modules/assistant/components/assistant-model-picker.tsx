@@ -63,14 +63,14 @@ export function AssistantModelPicker({
     <DropdownMenu>
       <DropdownMenuTrigger
         type="button"
-        className="inline-flex h-7 max-w-30 shrink-0 items-center gap-1 rounded-md px-2 text-2xs text-content-text-muted transition-colors hover:bg-accent hover:text-content-text"
+        className="inline-flex shrink-0 items-center transition-colors"
         data-ai-action="assistant.model.open"
       >
         <Cpu className="size-3 shrink-0" />
         <span className="truncate">{currentLabel}</span>
         <ChevronDown className="size-3 shrink-0" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent align="end" >
         {/* base-ui 的 GroupLabel 必须位于 Group 上下文内，Label+items 整体成组 */}
         <DropdownMenuGroup>
           <DropdownMenuLabel>{t('assistant.model.label')}</DropdownMenuLabel>

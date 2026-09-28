@@ -84,8 +84,8 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
     <div className="space-y-3">
       {groups.map(([role, rows]) => (
         <Card key={role}>
-          <CardHeader className="pb-2">
-            <CardTitle size="sm" className="flex items-center gap-2">
+          <CardHeader >
+            <CardTitle size="sm" className="flex items-center">
               {ROLE_LABEL[role] ?? role}
               <Badge variant="secondary" fontSize="3xs">{rows.length}</Badge>
             </CardTitle>
@@ -146,13 +146,13 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
       )}
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle size="sm" className="flex items-center gap-2">
+        <CardHeader >
+          <CardTitle size="sm" className="flex items-center">
             <WorkflowIcon className="h-4 w-4 text-accent-purple" />
             平台工作流（只读）
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent >
           {(workflows ?? []).length === 0 ? (
             <EmptyState
               title="暂无已注册工作流"
@@ -177,10 +177,10 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
                   {steps.length > 0 && (
                     <div className="ml-auto flex flex-wrap items-center gap-1">
                       {steps.map((s, i) => (
-                        <Badge
+                        <Badge color="purple"
                           key={`${s}-${i}`}
                           variant="secondary"
-                          fontSize="3xs" className="bg-accent-purple/10 text-accent-purple"
+                          fontSize="3xs" 
                         >
                           {i + 1}. {s}
                         </Badge>

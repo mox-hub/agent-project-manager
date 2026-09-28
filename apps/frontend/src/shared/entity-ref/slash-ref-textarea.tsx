@@ -12,6 +12,7 @@
  * apm-ref-chip 呈现为胶囊 + hover 预览。菜单关闭时按键语义完全透传
  * （评论 mod+Enter 提交、描述区 Esc 失焦不受影响）。
  */
+import { Button } from '@/components/ui/button';
 import {
   useImperativeHandle,
   useMemo,
@@ -256,7 +257,7 @@ export function SlashRefTextarea({
         <div className="absolute inset-x-0 top-full z-modal mt-1 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-xs">
           <div className="flex items-center gap-0.5 overflow-x-auto border-b border-border/60 px-1.5 py-1">
             {FILTERS.map((f) => (
-              <button
+              <Button variant="ghost"
                 key={f.key}
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
@@ -272,7 +273,7 @@ export function SlashRefTextarea({
                 )}
               >
                 {t(f.labelKey)}
-              </button>
+              </Button>
             ))}
           </div>
           {showHintRow ? (
@@ -287,7 +288,7 @@ export function SlashRefTextarea({
             <ul className="max-h-56 overflow-y-auto py-1">
               {items.map((candidate, i) => (
                 <li key={`${candidate.kind}-${candidate.kind === 'hit' ? candidate.hit.id : candidate.id}`}>
-                  <button
+                  <Button variant="ghost"
                     type="button"
                     className={cn(
                       'flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm',
@@ -329,7 +330,7 @@ export function SlashRefTextarea({
                         </span>
                       </>
                     )}
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>

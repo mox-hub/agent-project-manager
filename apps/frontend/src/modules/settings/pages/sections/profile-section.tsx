@@ -108,13 +108,13 @@ export function ProfileSettingsSection() {
     >
       <Card surface="flat">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle size="base" className="flex items-center">
                 <UserRound size={16} className="text-accent-blue" />
                 {t('settings.profileBasic')}
               </CardTitle>
               <CardDescription>{t('settings.profileBasicDesc')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent >
               <Field>
                 <FieldLabel>{t('settings.profileAvatar')}</FieldLabel>
                 <FieldContent>
@@ -237,7 +237,7 @@ function PasswordCard() {
   return (
     <Card surface="flat">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
+        <CardTitle size="base" className="flex items-center">
           <KeyRound size={16} className="text-accent-yellow" />
           {t('settings.profilePassword')}
         </CardTitle>

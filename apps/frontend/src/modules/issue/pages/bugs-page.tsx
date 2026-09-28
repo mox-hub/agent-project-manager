@@ -5,6 +5,7 @@
  * @version 1.0.0
  */
 
+import { Button } from '@/components/ui/button';
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -26,7 +27,7 @@ import {
   type FilterCondition,
   type FilterFieldDef,
 } from '@/components/ui/filter-chips';
-import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
+import { TASK_STATUS_VISUALS, TONE_DOT_CLASS, TONE_TEXT_CLASS, SEVERITY_TONE } from '@/shared/status/status-visuals';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { AsyncState } from '@/components/ui/async-state';
 import { useAllBugs, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
@@ -58,12 +59,9 @@ type ViewMode = 'list' | 'board' | 'gantt' | 'table';
 type GroupBy = 'none' | 'status' | 'severity' | 'project';
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
-const SEVERITY_DOT: Record<Severity, string> = {
-  critical: 'bg-destructive',
-  high: 'bg-accent-orange',
-  medium: 'bg-accent-yellow',
-  low: 'bg-muted-foreground/40',
-};
+/** Bug 严重度分组点：tone 唯一词表 dot 槽（实心点） */
+const severityDotClass = (severity: Severity): string =>
+  TONE_DOT_CLASS[SEVERITY_TONE[severity] ?? 'default'];
 
 /** severity 缺失时从 priority 推导（Bug 页统一口径） */
 const severityOf = (bug: Task): Severity =>
@@ -217,7 +215,7 @@ export function BugsPage() {
         options: (['critical', 'high', 'medium', 'low'] as const).map((value) => ({
           value,
           label: t(`task.bug.severity.${value}`),
-          icon: <span className={`size-2.5 shrink-0 rounded-full ${SEVERITY_DOT[value]}`} />,
+          icon: <span className={`size-2.5 shrink-0 rounded-full ${severityDotClass(value)}`} />,
           hint: severityCounts.get(value)?.toString(),
         })),
       },
@@ -397,7 +395,7 @@ export function BugsPage() {
               },
             ]}
             columns={3}
-            className="grid grid-cols-3 gap-3"
+            className="grid grid-cols-3"
           />
         </div>
       ) : null}
@@ -414,7 +412,7 @@ export function BugsPage() {
         isDirty={toolbar.isDirty}
         onSaveCurrentView={toolbar.saveCurrentToActive}
         actions={
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={toggleAiFilter}
             aria-pressed={isAiFiltering}
@@ -439,7 +437,7 @@ export function BugsPage() {
                 : t("viewDisplay.aiFilter.executing", "AI 执行中")}
               {isAiFiltering ? ` (${t("viewDisplay.aiFilter.filtered", "已筛选")})` : ""}
             </span>
-          </button>
+          </Button>
         }
         viewStyle={{
           layout: 'centered',
@@ -562,7 +560,7 @@ export function BugsPage() {
                     refetch();
                   }}
                   title={t('common.delete')}
-                  className="text-destructive"
+                  
                 >
                   <Trash2 className="size-4" /> {t('common.delete')}
                 </ListActionButton>
@@ -621,7 +619,7 @@ export function BugsPage() {
                     refetch();
                   }}
                   title={t('common.delete')}
-                  className="text-destructive"
+                  
                 >
                   <Trash2 className="size-4" /> {t('common.delete')}
                 </ListActionButton>
@@ -718,9 +716,9 @@ function BugBoardView({
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1">{bugCardRow3(bug, getProjectName(bug.projectId), t)}</div>
         {bug.projectId && onDispatchBug ? (
-          <button
+          <Button variant="ghost"
             type="button"
-            className="shrink-0 rounded-md p-1 text-accent-purple transition-colors hover:bg-accent-purple/20"
+            className="shrink-0 transition-colors"
             onClick={(event) => {
               event.stopPropagation();
               onDispatchBug(bug, bug.projectId!);
@@ -728,7 +726,7 @@ function BugBoardView({
             title={t('task.dispatchToAi', '派发给 AI 修复')}
           >
             <Bot size={12} />
-          </button>
+          </Button>
         ) : null}
       </div>
     ),

@@ -115,7 +115,7 @@ export function GithubConfigForm({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent keepDefaultWidth={false} className="max-w-xl border-border">
+      <DialogContent maxWidth="xl" keepDefaultWidth={false} >
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <Github className="mr-2 h-5 w-5" />
@@ -154,7 +154,7 @@ export function GithubConfigForm({
               {t('github.connectDialog.tokenLabel')}
             </Label>
             <div className="flex gap-2">
-              <Input
+              <Input fontVariant="mono"
                 id="github-token"
                 type="password"
                 autoComplete="off"
@@ -162,7 +162,7 @@ export function GithubConfigForm({
                 onChange={(e) => setToken(e.target.value)}
                 placeholder={t('github.connectDialog.tokenPlaceholder')}
                 required
-                className="flex-1 font-mono"
+                className="flex-1"
               />
               <Button
                 type="button"
@@ -172,7 +172,7 @@ export function GithubConfigForm({
                 className="shrink-0"
               >
                 {testState === 'loading' ? (
-                  <Spinner className="h-3 w-3 mr-1 text-inherit" />
+                  <Spinner color="inherit" size="2xs" className="mr-1" />
                 ) : null}
                 {testState === 'loading'
                   ? t('github.connectDialog.testing')
@@ -187,14 +187,14 @@ export function GithubConfigForm({
             <Label htmlFor="github-webhook-secret">
               {t('github.connectDialog.webhookLabel')}
             </Label>
-            <Input
+            <Input fontVariant="mono"
               id="github-webhook-secret"
               type="password"
               autoComplete="off"
               value={webhookSecret}
               onChange={(e) => setWebhookSecret(e.target.value)}
               placeholder={t('github.connectDialog.webhookPlaceholder')}
-              className="font-mono"
+              
             />
             <p className="text-xs text-muted-foreground">
               {t('github.connectDialog.webhookHint')}

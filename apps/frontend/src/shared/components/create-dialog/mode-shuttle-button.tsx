@@ -4,6 +4,7 @@
  * 位于创建面板底部，采用系统默认 AI 紫色系配色（accent-purple），
  * 并具备柔和呼吸感微光动效，在手动表单与智能体澄清/拆解模式间无缝穿梭。
  */
+import { Button } from '@/components/ui/button';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeftRight, Sparkles } from 'lucide-react';
@@ -25,7 +26,7 @@ export function ModeShuttleButton({
   const { t } = useTranslation();
 
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onToggle}
       disabled={disabled}
@@ -60,6 +61,6 @@ export function ModeShuttleButton({
           <span>{t('unifiedCreate.shuttle.toManual', { defaultValue: '返回手动编辑' })}</span>
         </>
       )}
-    </button>
+    </Button>
   );
 }

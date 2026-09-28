@@ -119,7 +119,7 @@ export function MembersSection({
                 <TableHead>{t('admin.status', '状态')}</TableHead>
                 <TableHead>{t('admin.linkedAccount', '关联账号')}</TableHead>
                 <TableHead>{t('admin.memberShortId', 'Short ID')}</TableHead>
-                <TableHead className="w-10" />
+                <TableHead width="w-10"  />
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -1,3 +1,5 @@
+import { FieldLabel } from '@/components/ui/field';
+import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { toast } from '@/components/ui/toast';
@@ -206,7 +209,7 @@ export function MemberCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent maxWidth="lg" >
         <DialogHeader>
           <DialogTitle>{isEdit ? '编辑成员' : '新建成员'}</DialogTitle>
           <DialogDescription>
@@ -217,7 +220,7 @@ export function MemberCreateDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs value={type} onValueChange={(v) => setType(v as 'human' | 'ai_agent')}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid grid-cols-2">
               <TabsTrigger value="human" disabled={isEdit}>人类成员</TabsTrigger>
               <TabsTrigger value="ai_agent" disabled={isEdit}>AI 成员</TabsTrigger>
             </TabsList>
@@ -225,7 +228,7 @@ export function MemberCreateDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium">显示名 *</label>
+              <FieldLabel size="xs" variant="muted" >显示名 *</FieldLabel>
               <Input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -234,7 +237,7 @@ export function MemberCreateDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium">@handle *</label>
+              <FieldLabel size="xs" variant="muted" >@handle *</FieldLabel>
               <Input
                 value={handle}
                 onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ''))}
@@ -245,7 +248,7 @@ export function MemberCreateDialog({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">头像</label>
+            <FieldLabel size="xs" variant="muted" >头像</FieldLabel>
             <AvatarPickerField
               value={avatarUrl}
               onValueChange={setAvatarUrl}
@@ -255,7 +258,7 @@ export function MemberCreateDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium">职务</label>
+              <FieldLabel size="xs" variant="muted" >职务</FieldLabel>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -263,24 +266,23 @@ export function MemberCreateDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium">信任等级</label>
-              <select
-                className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+              <FieldLabel size="xs" variant="muted" >信任等级</FieldLabel>
+              <SelectField
                 value={trustLevel}
                 onChange={(e) => setTrustLevel(e.target.value)}
               >
-                <option value="">{t('trust.unrated', '未评估')}</option>
+                <SelectFieldOption value="">{t('trust.unrated', '未评估')}</SelectFieldOption>
                 {MEMBER_TRUST_TIERS.map((tier) => (
-                  <option key={tier.level} value={tier.level}>
+                  <SelectFieldOption key={tier.level} value={tier.level}>
                     {t(tier.labelKey)}
-                  </option>
+                  </SelectFieldOption>
                 ))}
-              </select>
+              </SelectField>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">邮箱</label>
+            <FieldLabel size="xs" variant="muted" >邮箱</FieldLabel>
             <Input
               type="email"
               value={email}
@@ -290,7 +292,7 @@ export function MemberCreateDialog({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">标签（逗号分隔）</label>
+            <FieldLabel size="xs" variant="muted" >标签（逗号分隔）</FieldLabel>
             <Input
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
@@ -299,7 +301,7 @@ export function MemberCreateDialog({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">描述</label>
+            <FieldLabel size="xs" variant="muted" >描述</FieldLabel>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -311,24 +313,23 @@ export function MemberCreateDialog({
             <div className="space-y-3 rounded-md border border-border p-3 bg-muted/30">
               <div className="text-xs font-semibold text-muted-foreground">人类成员</div>
               <div className="space-y-1.5">
-                <label className="text-xs">关联 User</label>
-                <select
-                  className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm disabled:opacity-50"
+                <FieldLabel size="xs" variant="muted" >关联 User</FieldLabel>
+                <SelectField
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
                   disabled={isEdit}
                 >
-                  <option value="">不关联（独立人类）</option>
+                  <SelectFieldOption value="">不关联（独立人类）</SelectFieldOption>
                   {users?.map((u) => (
-                    <option key={u.id} value={u.id}>
+                    <SelectFieldOption key={u.id} value={u.id}>
                       {u.displayName} (@{u.username})
-                    </option>
+                    </SelectFieldOption>
                   ))}
-                </select>
+                </SelectField>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs">电话</label>
+                  <FieldLabel size="xs" variant="muted" >电话</FieldLabel>
                   <Input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -336,7 +337,7 @@ export function MemberCreateDialog({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs">时区</label>
+                  <FieldLabel size="xs" variant="muted" >时区</FieldLabel>
                   <Input
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
@@ -344,7 +345,7 @@ export function MemberCreateDialog({
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs">日费率（元/天，用于团队人天成本统计）</label>
+                <FieldLabel size="xs" variant="muted" >日费率（元/天，用于团队人天成本统计）</FieldLabel>
                 <Input
                   type="number"
                   min="0"
@@ -359,81 +360,77 @@ export function MemberCreateDialog({
             <div className="space-y-3 rounded-md border border-border p-3 bg-accent-purple/5">
               <div className="text-xs font-semibold text-accent-purple">AI 成员</div>
               <div className="space-y-1.5">
-                <label className="text-xs">AI 模型 *</label>
-                <select
-                  className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                <FieldLabel size="xs" variant="muted" >AI 模型 *</FieldLabel>
+                <SelectField
                   value={aiModelConfigId}
                   onChange={(e) => setAiModelConfigId(e.target.value)}
                   required
                 >
-                  <option value="">选择 AI 模型</option>
+                  <SelectFieldOption value="">选择 AI 模型</SelectFieldOption>
                   {aiModels?.map((m) => (
-                    <option key={m.id} value={m.id}>
+                    <SelectFieldOption key={m.id} value={m.id}>
                       {m.name} ({m.provider})
-                    </option>
+                    </SelectFieldOption>
                   ))}
-                </select>
+                </SelectField>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs">个人提示词（与所属角色的共享约定合并注入派发 prompt）</label>
-                <textarea
+                <FieldLabel size="xs" variant="muted" >个人提示词（与所属角色的共享约定合并注入派发 prompt）</FieldLabel>
+                <Textarea
                   value={personalPrompt}
                   onChange={(e) => setPersonalPrompt(e.target.value)}
                   placeholder="该成员 AI 执行者的私有偏好与补充约定，如: 偏好简洁实现与充分测试..."
-                  className="w-full h-20 px-2 py-1.5 rounded-md border border-input bg-background text-sm resize-none"
+                  className="resize-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs">思考强度</label>
-                  <select
-                    className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                  <FieldLabel size="xs" variant="muted" >思考强度</FieldLabel>
+                  <SelectField
                     value={thinkingLevel}
                     onChange={(e) => setThinkingLevel(e.target.value as ThinkingLevel | '')}
                   >
-                    <option value="">默认</option>
+                    <SelectFieldOption value="">默认</SelectFieldOption>
                     {MEMBER_THINKING_LEVELS.map((l) => (
-                      <option key={l.value} value={l.value}>
+                      <SelectFieldOption key={l.value} value={l.value}>
                         {l.label}
-                      </option>
+                      </SelectFieldOption>
                     ))}
-                  </select>
+                  </SelectField>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs">默认执行角色</label>
-                  <select
-                    className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                  <FieldLabel size="xs" variant="muted" >默认执行角色</FieldLabel>
+                  <SelectField
                     value={defaultExecutionRole}
                     onChange={(e) => setDefaultExecutionRole(e.target.value)}
                   >
-                    <option value="">不指定（按任务解析）</option>
+                    <SelectFieldOption value="">不指定（按任务解析）</SelectFieldOption>
                     {executionRoleOptions.map((r) => (
-                      <option key={r.id} value={r.executionRole}>
+                      <SelectFieldOption key={r.id} value={r.executionRole}>
                         {r.name} ({r.executionRole})
-                      </option>
+                      </SelectFieldOption>
                     ))}
-                  </select>
+                  </SelectField>
                 </div>
               </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs">默认 CLI Provider</label>
-                  <select
-                    className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                  <FieldLabel size="xs" variant="muted" >默认 CLI Provider</FieldLabel>
+                  <SelectField
                     value={defaultCliProviderId}
                     onChange={(e) => setDefaultCliProviderId(e.target.value)}
                   >
-                    <option value="">不指定（按角色解析）</option>
+                    <SelectFieldOption value="">不指定（按角色解析）</SelectFieldOption>
                     {cliProviders.map((p) => (
-                      <option
+                      <SelectFieldOption
                         key={p.providerId}
                         value={p.providerId}
                         disabled={!p.enabled}
                       >
                         {p.providerId}
                         {p.enabled ? ' · 可用' : ' · 已禁用'}
-                      </option>
+                      </SelectFieldOption>
                     ))}
-                  </select>
+                  </SelectField>
                 </div>
             </div>
           )}

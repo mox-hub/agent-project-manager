@@ -1,6 +1,7 @@
 /**
  * BugTemplateHelper - 缺陷专属排查模板快捷注入器（CAP-A-18 V2）
  */
+import { Button } from '@/components/ui/button';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileText } from 'lucide-react';
@@ -29,14 +30,14 @@ export function BugTemplateHelper({
 
   return (
     <div className="flex items-center gap-2 py-1">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => onInject(BUG_MARKDOWN_TEMPLATE)}
-        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-dashed border-border/80 bg-muted/20 hover:bg-accent hover:text-foreground text-xs text-muted-foreground transition-colors"
+        className="inline-flex items-center transition-colors"
       >
         <FileText className="size-3 text-accent-orange" />
         <span>{t('unifiedCreate.bug.injectTemplate', { defaultValue: '填入标准缺陷排查模板' })}</span>
-      </button>
+      </Button>
     </div>
   );
 }

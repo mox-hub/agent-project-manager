@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -91,8 +92,8 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
               <Server className="size-4" />
             </div>
             <div>
-              <DialogTitle className="text-base font-semibold">服务接入与端点配置</DialogTitle>
-              <DialogDescription className="text-xs">
+              <DialogTitle >服务接入与端点配置</DialogTitle>
+              <DialogDescription >
                 配置 APM 后端 API 服务地址（适用于私有部署、多工作区或本地多端口开发）
               </DialogDescription>
             </div>
@@ -101,10 +102,10 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground" htmlFor="api-url-input">
+            <FieldLabel size="xs" variant="muted"  htmlFor="api-url-input">
               后端服务基础 URL (API Base URL)
-            </label>
-            <Input
+            </FieldLabel>
+            <Input fontSize="xs" fontVariant="mono"
               id="api-url-input"
               value={url}
               onChange={(e) => {
@@ -112,7 +113,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
                 setTestResult(null);
               }}
               placeholder="例如 http://localhost:3000/_api 或 https://apm.internal"
-              className="font-mono text-xs"
+              
             />
           </div>
 
@@ -169,7 +170,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
             size="sm"
             fontSize="xs"
             onClick={handleReset}
-            className="text-muted-foreground"
+            
           >
             恢复默认
           </Button>
@@ -185,7 +186,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
               >
               {testing ? (
                 <>
-                  <Spinner className="mr-1 size-3 text-inherit" />
+                  <Spinner color="inherit" size="2xs" className="mr-1" />
                   测试中
                 </>
               ) : (

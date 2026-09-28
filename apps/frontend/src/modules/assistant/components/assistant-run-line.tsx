@@ -106,7 +106,7 @@ export function AssistantRunLine({
       >
         <p className="flex items-center gap-1.5 font-medium">
           {!isTerminal ? (
-            <Spinner size="sm" className="size-3 text-accent-blue" />
+            <Spinner size="sm"  />
           ) : isFailed ? (
             <XCircle className="size-3" />
           ) : (
@@ -123,34 +123,34 @@ export function AssistantRunLine({
           <p className="mt-0.5 break-words text-2xs">{data.error}</p>
         ) : null}
         <div className="mt-1 flex items-center gap-1">
-          <Button
+          <Button fontSize="2xs"
             type="button"
             variant="ghost"
             onClick={() => setDetailOpen(true)}
-            className="h-5 gap-1 px-1 text-2xs text-accent-blue underline-offset-2 hover:underline"
+            className="underline-offset-2 hover:underline"
           >
             <FileText className="size-3" />
             {t('runDetails.viewDetail')}
           </Button>
-          <Button
+          <Button fontSize="2xs"
             type="button"
             variant="ghost"
             onClick={() => navigate('/app/executions')}
-            className="h-5 gap-1 px-1 text-2xs text-content-text-muted underline-offset-2 hover:underline"
+            className="underline-offset-2 hover:underline"
           >
             <ExternalLink className="size-3" />
             {t('assistant.run.viewDetail')}
           </Button>
           {isFailed && projectId ? (
-            <Button
+            <Button fontSize="2xs"
               type="button"
               variant="ghost"
               disabled={retry.isPending}
               onClick={() => retry.mutate()}
-              className="ml-auto h-5 gap-1 px-1 text-2xs underline-offset-2 hover:underline"
+              className="ml-auto underline-offset-2 hover:underline"
             >
               {retry.isPending ? (
-                <Spinner size="sm" className="size-3" />
+                <Spinner size="sm"  />
               ) : (
                 <RotateCcw className="size-3" />
               )}

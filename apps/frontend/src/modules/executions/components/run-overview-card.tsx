@@ -3,6 +3,7 @@
  * 状态色条 + 触发/用时 + 委托人→执行人 + 统计格 + 步骤构成条 + provider/mode 页脚。
  * 数据复用 run 详情 + 事件流水 hooks（打开才拉取）。
  */
+import { Button } from '@/components/ui/button';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bot, Link2, X } from 'lucide-react';
@@ -10,6 +11,11 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { StatusPill } from '@/components/ui/status-pill';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { TONE_CLASS } from '@/components/ui/tone';
+import {
+  EXECUTION_RUN_STATUS_TONE,
+  RUN_EVENT_KIND_TONE,
+} from '@/shared/status/status-visuals';
 import {
   isTerminalRunStatus,
   useExecutionRunDetail,
@@ -34,21 +40,13 @@ const TRIGGER_I18N: Record<string, string> = {
   api: 'runDetails.trigger.api',
 };
 
-/** 步骤构成条配色（与事件列表图标底色同族） */
-const KIND_BAR_CLASS: Record<RunEventKind, string> = {
-  tool: 'bg-accent-blue',
-  thinking: 'bg-accent-purple',
-  result: 'bg-accent-green',
-  approval: 'bg-accent-yellow',
-  error: 'bg-accent-red',
-  user: 'bg-accent-purple-light',
-  prompt: 'bg-accent-purple',
-  context: 'bg-accent-blue-light',
-  file: 'bg-accent-green',
-  usage: 'bg-accent-orange',
-  assistant: 'bg-accent-green-light',
-  status: 'bg-muted-foreground/40',
-};
+/** 步骤构成条配色：tone 唯一词表 dot 槽（实心填充；分类键登记于 status-visuals） */
+const kindBarClass = (kind: RunEventKind): string =>
+  TONE_CLASS[RUN_EVENT_KIND_TONE[kind] ?? 'default'].dot;
+
+/** 状态色条：tone 唯一词表 bg 槽（实心 tone 底，本批新启用槽） */
+const statusStripClass = (status: string): string =>
+  TONE_CLASS[EXECUTION_RUN_STATUS_TONE[status] ?? 'default'].bg;
 
 const KIND_LABEL_KEY: Partial<Record<RunEventKind, string>> = {
   prompt: 'runDetails.filter.prompt',
@@ -60,19 +58,6 @@ const KIND_LABEL_KEY: Partial<Record<RunEventKind, string>> = {
   result: 'runDetails.filter.result',
   approval: 'runDetails.filter.approval',
   error: 'runDetails.filter.error',
-};
-
-const STATUS_STRIP_CLASS: Record<string, string> = {
-  completed: 'bg-accent-green',
-  in_progress: 'bg-accent-blue',
-  failed: 'bg-accent-red',
-  blocked: 'bg-accent-red',
-  pending_approval: 'bg-accent-yellow',
-  draft: 'bg-muted-foreground/40',
-  planned: 'bg-muted-foreground/40',
-  superseded: 'bg-muted-foreground/40',
-  approved: 'bg-accent-green',
-  rejected: 'bg-accent-red',
 };
 
 function StatCell({
@@ -133,10 +118,10 @@ export function RunOverviewCard({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         keepDefaultWidth={false}
-        className="overflow-hidden rounded-xl p-0"
+        className="overflow-hidden"
       >
         {/* 状态色条 */}
-        <div className={cn('h-1 w-full', STATUS_STRIP_CLASS[run.status] ?? 'bg-muted-foreground/40')} />
+        <div className={cn('h-1 w-full', statusStripClass(run.status))} />
 
         <div className="space-y-3 px-5 py-4">
           {/* 顶部：状态 + 目标 + 时间 */}
@@ -154,13 +139,13 @@ export function RunOverviewCard({
                 {duration ? `${t('runDetails.duration')} ${duration}` : ''}
               </p>
             </div>
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() => onOpenChange(false)}
-              className="shrink-0 rounded-md p-1.5 text-content-text-muted transition-colors hover:bg-muted hover:text-content-text"
+              className="shrink-0 transition-colors"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
 
           {/* 委托 → 执行 */}
@@ -204,7 +189,7 @@ export function RunOverviewCard({
                 {kinds.map(({ kind, count }) => (
                   <div
                     key={kind}
-                    className={cn('h-full rounded-full', KIND_BAR_CLASS[kind])}
+                    className={cn('h-full rounded-full', kindBarClass(kind))}
                     style={{ flex: count }}
                   />
                 ))}
@@ -212,7 +197,7 @@ export function RunOverviewCard({
               <div className="mt-1.5 flex flex-wrap items-center gap-3">
                 {kinds.map(({ kind, count }) => (
                   <div key={kind} className="flex items-center gap-1">
-                    <span className={cn('size-2 rounded-full', KIND_BAR_CLASS[kind])} />
+                    <span className={cn('size-2 rounded-full', kindBarClass(kind))} />
                     <span className="text-3xs text-content-text-muted">
                       {KIND_LABEL_KEY[kind]
                         ? t(KIND_LABEL_KEY[kind] as string)
@@ -225,7 +210,7 @@ export function RunOverviewCard({
             </div>
           ) : stepCount === 0 && stillActive ? (
             <div className="flex items-center gap-2 text-2xs text-content-text-muted">
-              <Skeleton className="h-2 w-40" />
+              <Skeleton  />
               <span className="flex items-center gap-1">
                 <Link2 className="size-3" />
                 {t('runDetails.card.loading')}

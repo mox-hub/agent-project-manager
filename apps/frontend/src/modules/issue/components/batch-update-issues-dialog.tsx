@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { toast } from '@/components/ui/toast';
 import { useMembers } from '@/modules/team-member/hooks';
 import { taskApi, type TaskPriority } from '../api/issue-api';
@@ -33,9 +35,6 @@ interface BatchUpdateIssuesDialogProps {
 
 const STATUS_OPTIONS = ['todo', 'in_progress', 'in_review', 'done', 'canceled'] as const;
 const PRIORITY_OPTIONS: TaskPriority[] = ['low', 'medium', 'high', 'critical'];
-
-const SELECT_CLASS =
-  'h-9 w-full rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary';
 
 /**
  * 批量修改工单（P1-12）：状态 / 优先级 / 负责人 三个可选字段，留空 = 不修改。
@@ -166,60 +165,57 @@ export function BatchUpdateIssuesDialog({
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="batch-update-status">
+            <FieldLabel size="xs" variant="muted"  htmlFor="batch-update-status">
               {t('task.status.group', 'Status')}
-            </label>
-            <select
+            </FieldLabel>
+            <SelectField
               id="batch-update-status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className={SELECT_CLASS}
             >
-              <option value="">{t('task.batchUpdate.noChange', '不修改')}</option>
+              <SelectFieldOption value="">{t('task.batchUpdate.noChange', '不修改')}</SelectFieldOption>
               {STATUS_OPTIONS.map((value) => (
-                <option key={value} value={value}>
+                <SelectFieldOption key={value} value={value}>
                   {t(`task.status.${value}`)}
-                </option>
+                </SelectFieldOption>
               ))}
-            </select>
+            </SelectField>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="batch-update-priority">
+            <FieldLabel size="xs" variant="muted"  htmlFor="batch-update-priority">
               {t('viewDisplay.properties.priority', 'Priority')}
-            </label>
-            <select
+            </FieldLabel>
+            <SelectField
               id="batch-update-priority"
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className={SELECT_CLASS}
             >
-              <option value="">{t('task.batchUpdate.noChange', '不修改')}</option>
+              <SelectFieldOption value="">{t('task.batchUpdate.noChange', '不修改')}</SelectFieldOption>
               {PRIORITY_OPTIONS.map((value) => (
-                <option key={value} value={value}>
+                <SelectFieldOption key={value} value={value}>
                   {t(`task.priority.${value}`, value)}
-                </option>
+                </SelectFieldOption>
               ))}
-            </select>
+            </SelectField>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="batch-update-assignee">
+            <FieldLabel size="xs" variant="muted"  htmlFor="batch-update-assignee">
               {t('viewDisplay.properties.assignee', 'Assignee')}
-            </label>
-            <select
+            </FieldLabel>
+            <SelectField
               id="batch-update-assignee"
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
-              className={SELECT_CLASS}
             >
-              <option value="">{t('task.batchUpdate.noChange', '不修改')}</option>
+              <SelectFieldOption value="">{t('task.batchUpdate.noChange', '不修改')}</SelectFieldOption>
               {members.map((member) => (
-                <option key={member.id} value={member.id}>
+                <SelectFieldOption key={member.id} value={member.id}>
                   {(member.type === 'ai_agent' ? '[AI] ' : '') + (member.displayName || member.handle || member.id)}
-                </option>
+                </SelectFieldOption>
               ))}
-            </select>
+            </SelectField>
           </div>
         </div>
 

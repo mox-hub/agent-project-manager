@@ -105,7 +105,7 @@ export function CommentInput({
                     </Button>
                   }
                 />
-                <PopoverContent align="end" side="top" className="w-75 p-0">
+                <PopoverContent align="end" side="top" >
                   <EmojiPicker onSelect={insertEmoji} />
                 </PopoverContent>
               </Popover>

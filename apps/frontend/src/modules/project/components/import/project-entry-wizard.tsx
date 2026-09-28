@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, CircleAlert, FolderGit2, ScanSearch } from 'lucide-react';
@@ -136,7 +137,7 @@ export function ProjectEntryWizard({
         if (!next) reset();
       }}
     >
-      <DialogContent className="sm:max-w-lg" data-ai-component="project-entry-wizard">
+      <DialogContent maxWidth="lg"  data-ai-component="project-entry-wizard">
         <DialogHeader>
           <DialogTitle>{t('project.importWizard.title')}</DialogTitle>
         </DialogHeader>
@@ -147,7 +148,7 @@ export function ProjectEntryWizard({
           className="mb-4"
           indicators={{
             completed: <Check className="size-3.5" />,
-            loading: <Spinner size="sm" className="size-3.5 text-primary-foreground" />,
+            loading: <Spinner size="sm"  />,
           }}
         >
           <StepperNav>
@@ -169,7 +170,7 @@ export function ProjectEntryWizard({
                     >
                       {scanFailed ? <CircleAlert className="size-3.5" /> : i + 1}
                     </StepperIndicator>
-                    <StepperTitle className="text-xs">
+                    <StepperTitle >
                       {t(`project.importWizard.${s.id}`)}
                     </StepperTitle>
                   </div>
@@ -187,9 +188,9 @@ export function ProjectEntryWizard({
               <p>{t('project.importWizard.connectHint')}</p>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium" htmlFor="wizard-local-path">
+              <FieldLabel size="xs" variant="muted"  htmlFor="wizard-local-path">
                 {t('project.importWizard.localPath')}
-              </label>
+              </FieldLabel>
               <Input
                 id="wizard-local-path"
                 value={localPath}
@@ -198,9 +199,9 @@ export function ProjectEntryWizard({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium" htmlFor="wizard-remote-url">
+              <FieldLabel size="xs" variant="muted"  htmlFor="wizard-remote-url">
                 {t('project.importWizard.remoteUrl')}
-              </label>
+              </FieldLabel>
               <Input
                 id="wizard-remote-url"
                 value={remoteUrl}
@@ -224,7 +225,7 @@ export function ProjectEntryWizard({
               </p>
             ) : (
               <>
-                <Spinner className="text-accent-blue" />
+                <Spinner  />
                 <p className="text-xs text-muted-foreground">
                   {t('project.importWizard.scanning', {
                     steps: countArchaeologyProgress(runEvents),

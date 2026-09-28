@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -139,7 +140,7 @@ function ManualBatchCreate({ tasks, onTasksChange }: {
           </Button>
         </div>
       ) : (
-        <ScrollArea className="h-75">
+        <ScrollArea >
           <div className="space-y-2 pr-4">
             {tasks.map((task, index) => (
               <Card key={task.id} variant="outline" inset="sm">
@@ -148,27 +149,30 @@ function ManualBatchCreate({ tasks, onTasksChange }: {
                     {index + 1}
                   </span>
                   <div className="flex-1 space-y-2">
-                    <Input
+                    <Input size="h-8"
                       placeholder="Task title"
                       value={task.title}
                       onChange={(e) => updateTask(task.id, 'title', e.target.value)}
-                      className="h-8"
+                      
                     />
                     <div className="flex gap-2">
-                      <select
-                        className="h-8 rounded-md border border-input bg-background px-2 text-sm"
-                        value={task.priority}
-                        onChange={(e) => updateTask(task.id, 'priority', e.target.value)}
-                      >
-                        {PRIORITIES.map(p => (
-                          <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-                        ))}
-                      </select>
-                      <Input
+                      {/* 控宽 wrapper：SelectField 基线为 w-full，此处行内有 flex-1 输入框并排，收窄为定宽 */}
+                      <div className="w-36 shrink-0">
+                        <SelectField
+                          size="sm"
+                          value={task.priority}
+                          onChange={(e) => updateTask(task.id, 'priority', e.target.value)}
+                        >
+                          {PRIORITIES.map(p => (
+                            <SelectFieldOption key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</SelectFieldOption>
+                          ))}
+                        </SelectField>
+                      </div>
+                      <Input size="h-8"
                         placeholder="Description (optional)"
                         value={task.description}
                         onChange={(e) => updateTask(task.id, 'description', e.target.value)}
-                        className="h-8 flex-1"
+                        className="flex-1"
                       />
                     </div>
                   </div>
@@ -176,7 +180,7 @@ function ManualBatchCreate({ tasks, onTasksChange }: {
                     variant="ghost"
                     size="sm"
                     onClick={() => removeTask(task.id)}
-                    className="text-muted-foreground hover:text-destructive"
+                    
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -226,10 +230,10 @@ function TemplateBatchCreate({ tasks, onTasksChange }: {
         {TASK_TEMPLATES.map((template) => {
           const Icon = template.icon;
           return (
-            <button
+            <Button variant="ghost"
               key={template.id}
               onClick={() => applyTemplate(template)}
-              className="flex flex-col items-start p-4 border rounded-lg text-left hover:bg-muted/50 transition-colors"
+              className="flex flex-col items-start transition-colors"
             >
               <div className="flex items-center gap-2 mb-1">
                 <Icon className="h-4 w-4 text-primary" />
@@ -239,7 +243,7 @@ function TemplateBatchCreate({ tasks, onTasksChange }: {
               <Badge variant="secondary" fontSize="xs" className="mt-2">
                 {template.tasks.length} tasks
               </Badge>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -249,7 +253,7 @@ function TemplateBatchCreate({ tasks, onTasksChange }: {
           <p className="text-sm font-medium mb-2">
             Preview ({tasks.length} tasks to create)
           </p>
-          <ScrollArea className="h-37.5">
+          <ScrollArea >
             <div className="space-y-1">
               {tasks.map((task, i) => (
                 <div key={task.id} className="flex items-center gap-2 text-sm">
@@ -321,10 +325,10 @@ function AiBatchCreate({ tasks, onTasksChange }: {
         </p>
       </div>
 
-      <Button
+      <Button width="full"
         onClick={generateTasks}
         disabled={!prompt.trim() || isGenerating}
-        className="w-full"
+        
       >
         {isGenerating ? (
           <>Generating...</>
@@ -341,13 +345,13 @@ function AiBatchCreate({ tasks, onTasksChange }: {
           <p className="text-sm font-medium mb-2">
             Preview ({tasks.length} tasks to create)
           </p>
-          <ScrollArea className="h-37.5">
+          <ScrollArea >
             <div className="space-y-1">
               {tasks.map((task, i) => (
                 <div key={task.id} className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground w-6">{i + 1}.</span>
                   <span className="flex-1 truncate">{task.title}</span>
-                  <Badge variant="outline" fontSize="xs">
+                  <Badge variant="outline" >
                     {task.priority}
                   </Badge>
                 </div>
@@ -394,7 +398,7 @@ export function BatchCreateTasksDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent maxWidth="2xl" className="flex flex-col">
         <DialogHeader>
           <DialogTitle>Batch Create Tasks</DialogTitle>
           <DialogDescription>
@@ -404,15 +408,15 @@ export function BatchCreateTasksDialog({
 
         <Tabs value={mode} onValueChange={(v) => setMode(v as BatchMode)} className="flex-1">
           <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="manual" className="flex gap-1">
+            <TabsTrigger value="manual" className="flex">
               <List className="h-3 w-3" />
               Manual
             </TabsTrigger>
-            <TabsTrigger value="template" className="flex gap-1">
+            <TabsTrigger value="template" className="flex">
               <FileText className="h-3 w-3" />
               Templates
             </TabsTrigger>
-            <TabsTrigger value="ai" className="flex gap-1">
+            <TabsTrigger value="ai" className="flex">
               <Bot className="h-3 w-3" />
               AI Generate
             </TabsTrigger>
@@ -435,7 +439,7 @@ export function BatchCreateTasksDialog({
           </ScrollArea>
         </Tabs>
 
-        <DialogFooter className="border-t pt-4 mt-4">
+        <DialogFooter className="mt-4">
           <div className="flex w-full items-center justify-between">
             <span className="text-sm text-muted-foreground">
               {validCount > 0 ? `${validCount} task${validCount > 1 ? 's' : ''} to create` : 'No tasks to create'}

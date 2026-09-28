@@ -174,7 +174,7 @@ export function HelpPage() {
                 placeholder={t('help.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                
               />
             </div>
           </div>
@@ -183,7 +183,7 @@ export function HelpPage() {
           <div className="flex-1 overflow-auto p-4">
             {filteredSections.map((section) => (
               <div key={section.id} className="mb-4">
-                <button
+                <Button variant="ghost"
                   onClick={() => {
                     setSelectedSection(section.id);
                     setSelectedArticle(null);
@@ -197,11 +197,11 @@ export function HelpPage() {
                 >
                   {section.icon}
                   {t(`help.sections.${section.id}`)}
-                </button>
+                </Button>
                 {selectedSection === section.id && (
                   <div className="ml-8 mt-1 space-y-1">
                     {section.articles.map((article) => (
-                      <button
+                      <Button variant="ghost"
                         key={article.id}
                         onClick={() => setSelectedArticle(article.id)}
                         className={cn(
@@ -213,7 +213,7 @@ export function HelpPage() {
                       >
                         <ChevronRight className="w-3 h-3" />
                         {t(articleKey(section.id, article.id, 'title'))}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
@@ -257,10 +257,10 @@ export function HelpPage() {
                 {currentSection.articles.map((article) => (
                   <Card
                     key={article.id}
-                    className="cursor-pointer hover:border-primary/50 transition-colors"
+                    className="cursor-pointer transition-colors"
                     onClick={() => setSelectedArticle(article.id)}
                   >
-                    <CardHeader className="pb-2">
+                    <CardHeader >
                       <CardTitle size="base">
                         {t(articleKey(currentSection.id, article.id, 'title'))}
                       </CardTitle>
@@ -272,7 +272,7 @@ export function HelpPage() {
                       <p className="text-sm text-muted-foreground">
                         {t(articleKey(currentSection.id, article.id, 'content'))}
                       </p>
-                      <Button variant="link" size="sm" className="mt-2 p-0">
+                      <Button padding="p-0" variant="link" size="sm" className="mt-2">
                         {t('help.readMore')} <ExternalLink className="w-3 h-3 ml-1" />
                       </Button>
                     </CardContent>
@@ -284,7 +284,7 @@ export function HelpPage() {
             <EmptyState
               variant="page"
               visual={
-                <IconStack aria-hidden="true" className="text-accent-blue">
+                <IconStack aria-hidden="true" >
                   <Book className="size-4 text-accent-blue" />
                 </IconStack>
               }
@@ -315,7 +315,7 @@ export function HelpPage() {
                             ))}
                           </KbdGroup>
                         </TableCell>
-                        <TableCell className="text-sm">{shortcut.action}</TableCell>
+                        <TableCell >{shortcut.action}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

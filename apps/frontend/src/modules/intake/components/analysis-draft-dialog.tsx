@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
@@ -106,7 +107,7 @@ export function AnalysisDraftDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* keepDefaultWidth={false}：丢掉基类 sm:max-w-md，否则 max-w-2xl 在桌面端被覆盖回 448px，报告内容被压窄 */}
-      <DialogContent keepDefaultWidth={false} className="max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent maxWidth="2xl" keepDefaultWidth={false} className="overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <Sparkles size={16} className="mr-2" />
@@ -123,15 +124,15 @@ export function AnalysisDraftDialog({
         {!draft ? (
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">
+              <FieldLabel size="xs" variant="muted" >
                 {t('intake.analysisResearch', '调研纪要（必选一项来源）')}
-              </label>
+              </FieldLabel>
               <Select
                 value={researchId}
                 onValueChange={(v) => setResearchId(typeof v === 'string' ? v : '')}
                 items={researchOptions}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger >
                   <SelectValue
                     placeholder={t('intake.analysisSelectDoc', '选择文档')}
                   />
@@ -146,15 +147,15 @@ export function AnalysisDraftDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">
+              <FieldLabel size="xs" variant="muted" >
                 {t('intake.analysisClarify', '澄清纪要（可选，补充边界与约束）')}
-              </label>
+              </FieldLabel>
               <Select
                 value={clarifyId}
                 onValueChange={(v) => setClarifyId(typeof v === 'string' ? v : '')}
                 items={clarifyOptions}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger >
                   <SelectValue
                     placeholder={t('intake.analysisSelectOptional', '不指定')}
                   />

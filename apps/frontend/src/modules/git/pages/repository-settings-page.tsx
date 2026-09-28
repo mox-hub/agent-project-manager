@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRepository, useUpdateRepository, useDeleteRepository } from '../hooks/use-repositories';
@@ -124,10 +125,10 @@ export function RepositorySettingsPage() {
       />
 
       <div className="mx-auto max-w-2xl p-6">
-        <Card className="p-6">
+        <Card >
           <div className="space-y-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Repository Name</label>
+              <FieldLabel size="xs" variant="muted" >Repository Name</FieldLabel>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -136,7 +137,7 @@ export function RepositorySettingsPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Local Path</label>
+              <FieldLabel size="xs" variant="muted" >Local Path</FieldLabel>
               <Input
                 value={localPath}
                 onChange={(e) => setLocalPath(e.target.value)}
@@ -148,7 +149,7 @@ export function RepositorySettingsPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Remote URL</label>
+              <FieldLabel size="xs" variant="muted" >Remote URL</FieldLabel>
               <Input
                 value={remoteUrl}
                 onChange={(e) => setRemoteUrl(e.target.value)}
@@ -161,7 +162,7 @@ export function RepositorySettingsPage() {
 
             <div className="flex gap-4">
               <div className="flex-1 space-y-1">
-                <label className="text-sm font-medium text-foreground">Default Branch</label>
+                <FieldLabel size="xs" variant="muted" >Default Branch</FieldLabel>
                 <Input
                   value={defaultBranch}
                   onChange={(e) => setDefaultBranch(e.target.value)}
@@ -169,7 +170,7 @@ export function RepositorySettingsPage() {
                 />
               </div>
               <div className="flex-1 space-y-1">
-                <label className="text-sm font-medium text-foreground">Provider</label>
+                <FieldLabel size="xs" variant="muted" >Provider</FieldLabel>
                 <Input
                   value={provider}
                   onChange={(e) => setProvider(e.target.value)}

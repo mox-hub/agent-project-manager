@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -256,7 +257,7 @@ function ChecklistsCard() {
         </div>
         <CardDescription>{t('settings.checklistsDesc')}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent >
         <section className="space-y-2">
           <h4 className="text-xs font-medium text-muted-foreground">
             {t('settings.checklistsSystemGroup')}
@@ -272,7 +273,7 @@ function ChecklistsCard() {
       </CardContent>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent maxWidth="lg" className="overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingId ? t('settings.checklistsEdit') : t('settings.checklistsCreate')}
@@ -281,7 +282,7 @@ function ChecklistsCard() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium">{t('settings.checklistsName')}</label>
+              <FieldLabel size="xs" variant="muted" >{t('settings.checklistsName')}</FieldLabel>
               <Input
                 value={draft.name}
                 onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))}
@@ -289,7 +290,7 @@ function ChecklistsCard() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium">{t('settings.checklistsDescription')}</label>
+              <FieldLabel size="xs" variant="muted" >{t('settings.checklistsDescription')}</FieldLabel>
               <Textarea
                 value={draft.description}
                 onChange={(e) => setDraft((p) => ({ ...p, description: e.target.value }))}
@@ -298,31 +299,31 @@ function ChecklistsCard() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium">{t('settings.checklistsProjectType')}</label>
+                <FieldLabel size="xs" variant="muted" >{t('settings.checklistsProjectType')}</FieldLabel>
                 <SelectField
                   value={draft.projectType}
                   onChange={(e) => setDraft((p) => ({ ...p, projectType: e.target.value }))}
                 >
                   {PROJECT_TYPES.map((pt) => (
-                    <SelectFieldOption key={pt} value={pt} className="font-mono">
+                    <SelectFieldOption key={pt} value={pt} >
                       {pt}
                     </SelectFieldOption>
                   ))}
                 </SelectField>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium">{t('settings.checklistsTechStack')}</label>
-                <Input
+                <FieldLabel size="xs" variant="muted" >{t('settings.checklistsTechStack')}</FieldLabel>
+                <Input fontVariant="mono"
                   value={draft.techStack}
                   onChange={(e) => setDraft((p) => ({ ...p, techStack: e.target.value }))}
                   placeholder="ts-node / react / go-gin"
-                  className="font-mono"
+                  
                 />
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium">{t('settings.checklistItems')}</label>
+                <FieldLabel size="xs" variant="muted" >{t('settings.checklistItems')}</FieldLabel>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -338,16 +339,16 @@ function ChecklistsCard() {
                 {draft.checklist.map((item, index) => (
                   <div key={index} className="space-y-1.5 rounded-lg border p-2.5">
                     <div className="flex items-center gap-2">
-                      <Input
+                      <Input size="h-8"
                         value={item.category}
                         onChange={(e) => setItem(index, { category: e.target.value })}
                         placeholder={t('settings.checklistItemCategory')}
-                        className="h-8 flex-1 text-xs"
+                        className="flex-1"
                       />
                       <SelectField
                         value={item.severity}
                         onChange={(e) => setItem(index, { severity: e.target.value })}
-                        className="h-8 w-28 text-xs"
+                        
                       >
                         {SEVERITIES.map((s) => (
                           <SelectFieldOption key={s} value={s}>
@@ -370,19 +371,19 @@ function ChecklistsCard() {
                       </Button>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Input
+                      <Input fontSize="xs" size="h-8"
                         value={item.content}
                         onChange={(e) => setItem(index, { content: e.target.value })}
                         placeholder={t('settings.checklistItemContent')}
-                        className="h-8 flex-1 text-xs"
+                        className="flex-1"
                       />
-                      <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+                      <FieldLabel size="xs" variant="muted" className="flex shrink-0 cursor-pointer items-center">
                         <Checkbox
                           checked={!!item.autoFixable}
                           onChange={(checked) => setItem(index, { autoFixable: !!checked })}
                         />
                         {t('settings.checklistItemAutoFixable')}
-                      </label>
+                      </FieldLabel>
                     </div>
                   </div>
                 ))}

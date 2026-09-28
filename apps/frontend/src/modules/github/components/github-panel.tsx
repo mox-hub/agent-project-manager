@@ -82,18 +82,18 @@ export function GithubPanel({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <div className="space-y-1">
-            <Label htmlFor="repo-name" className="text-xs">
+            <Label htmlFor="repo-name" >
               仓库 (owner/repo)
             </Label>
-            <Input
+            <Input size="h-8"
               id="repo-name"
               value={repo}
               onChange={(e) => setRepo(e.target.value.trim())}
               placeholder="例如 owner/repo"
-              className="h-8 text-sm"
+              
             />
           </div>
           <div className="flex items-end gap-2">
@@ -104,7 +104,7 @@ export function GithubPanel({
               disabled={!repo || isLoading}
             >
               {isLoading ? (
-                <Spinner className="h-3 w-3 text-inherit" />
+                <Spinner color="inherit" size="2xs"  />
               ) : (
                 <RefreshCcw className="h-3 w-3" />
               )}
@@ -125,41 +125,41 @@ export function GithubPanel({
         {showCreate && (
           <div className="rounded-md border bg-muted/30 p-3 space-y-2">
             <div className="space-y-1">
-              <Label className="text-xs">PR 标题</Label>
-              <Input
+              <Label >PR 标题</Label>
+              <Input size="h-8"
                 value={createInput.title}
                 onChange={(e) => setCreateInput((s) => ({ ...s, title: e.target.value }))}
                 placeholder="feat(scope): ..."
-                className="h-8 text-sm"
+                
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs">Head 分支</Label>
-                <Input
+                <Label >Head 分支</Label>
+                <Input size="h-8"
                   value={createInput.head}
                   onChange={(e) => setCreateInput((s) => ({ ...s, head: e.target.value }))}
                   placeholder="feat/xxx"
-                  className="h-8 text-sm"
+                  
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Base 分支</Label>
-                <Input
+                <Label >Base 分支</Label>
+                <Input size="h-8"
                   value={createInput.base}
                   onChange={(e) => setCreateInput((s) => ({ ...s, base: e.target.value }))}
                   placeholder="main"
-                  className="h-8 text-sm"
+                  
                 />
               </div>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">描述（可选）</Label>
-              <Input
+              <Label >描述（可选）</Label>
+              <Input size="h-8"
                 value={createInput.body}
                 onChange={(e) => setCreateInput((s) => ({ ...s, body: e.target.value }))}
                 placeholder="关联任务：..."
-                className="h-8 text-sm"
+                
               />
             </div>
             <div className="flex items-center justify-end gap-2 pt-1">
@@ -193,7 +193,7 @@ export function GithubPanel({
                 }
               >
                 {createMut.isPending ? (
-                  <Spinner className="h-3 w-3 mr-1 text-inherit" />
+                  <Spinner color="inherit" size="2xs" className="mr-1" />
                 ) : (
                   <GitPullRequest className="h-3 w-3 mr-1" />
                 )}
@@ -212,7 +212,7 @@ export function GithubPanel({
 
         {isLoading && (
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <Spinner className="h-3 w-3 text-inherit" />
+            <Spinner color="inherit" size="2xs"  />
             加载 PR 列表…
           </div>
         )}
@@ -264,7 +264,7 @@ function PrRow({ pr }: { pr: Pr }) {
       </div>
       <div className="flex items-center gap-2">
         {pr.merged ? (
-          <Badge variant="default" className="bg-accent-purple hover:bg-accent-purple">
+          <Badge color="purple-solid" variant="default" >
             <GitMerge className="h-3 w-3 mr-1" />
             merged
           </Badge>
@@ -274,7 +274,7 @@ function PrRow({ pr }: { pr: Pr }) {
             closed
           </Badge>
         ) : (
-          <Badge variant="default" className="bg-accent-green hover:bg-accent-green">
+          <Badge color="green-solid" variant="default" >
             <CheckCircle2 className="h-3 w-3 mr-1" />
             open
           </Badge>
@@ -328,27 +328,27 @@ export function GithubPanelEmbedded({
       {/* repo 行：图标 + 仓库输入 + 刷新 */}
       <div className="flex items-center gap-1.5">
         <GitBranch className="size-3.5 shrink-0 text-muted-foreground" />
-        <Input
+        <Input fontSize="xs" size="h-6"
           value={repo}
           onChange={(e) => setRepo(e.target.value.trim())}
           placeholder={t('github.panel.repoPlaceholder')}
           aria-label={t('github.panel.repoPlaceholder')}
-          className="h-6 flex-1 px-2 text-xs"
+          className="flex-1"
         />
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => refetch()}
           disabled={!repo || isLoading}
           aria-label={t('github.panel.refresh')}
           title={t('github.panel.refresh')}
-          className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+          className="inline-flex shrink-0 items-center justify-center transition-colors disabled:pointer-events-none disabled:opacity-50"
         >
           {isLoading ? (
-            <Spinner className="size-3 text-inherit" />
+            <Spinner color="inherit" size="2xs"  />
           ) : (
             <RefreshCcw className="size-3" />
           )}
-        </button>
+        </Button>
       </div>
 
       {/* 新建 PR 开关 */}
@@ -365,41 +365,41 @@ export function GithubPanelEmbedded({
       {showCreate && (
         <div className="space-y-1.5 rounded-md border bg-muted/30 p-2">
           <div className="space-y-0.5">
-            <Label className="text-xs">{t('github.panel.prTitleLabel')}</Label>
-            <Input
+            <Label >{t('github.panel.prTitleLabel')}</Label>
+            <Input fontSize="xs" size="h-6"
               value={createInput.title}
               onChange={(e) => setCreateInput((s) => ({ ...s, title: e.target.value }))}
               placeholder="feat(scope): ..."
-              className="h-6 px-2 text-xs"
+              
             />
           </div>
           <div className="grid grid-cols-2 gap-1.5">
             <div className="space-y-0.5">
-              <Label className="text-xs">{t('github.panel.headBranch')}</Label>
-              <Input
+              <Label >{t('github.panel.headBranch')}</Label>
+              <Input fontSize="xs" size="h-6"
                 value={createInput.head}
                 onChange={(e) => setCreateInput((s) => ({ ...s, head: e.target.value }))}
                 placeholder="feat/xxx"
-                className="h-6 px-2 text-xs"
+                
               />
             </div>
             <div className="space-y-0.5">
-              <Label className="text-xs">{t('github.panel.baseBranch')}</Label>
-              <Input
+              <Label >{t('github.panel.baseBranch')}</Label>
+              <Input fontSize="xs" size="h-6"
                 value={createInput.base}
                 onChange={(e) => setCreateInput((s) => ({ ...s, base: e.target.value }))}
                 placeholder="main"
-                className="h-6 px-2 text-xs"
+                
               />
             </div>
           </div>
           <div className="space-y-0.5">
-            <Label className="text-xs">{t('github.panel.descOptional')}</Label>
-            <Input
+            <Label >{t('github.panel.descOptional')}</Label>
+            <Input fontSize="xs" size="h-6"
               value={createInput.body}
               onChange={(e) => setCreateInput((s) => ({ ...s, body: e.target.value }))}
               placeholder={t('github.panel.descPlaceholder')}
-              className="h-6 px-2 text-xs"
+              
             />
           </div>
           <div className="flex items-center justify-end pt-0.5">
@@ -426,7 +426,7 @@ export function GithubPanelEmbedded({
               }
             >
               {createMut.isPending ? (
-                <Spinner className="mr-1 size-3 text-inherit" />
+                <Spinner color="inherit" size="2xs" className="mr-1" />
               ) : (
                 <GitPullRequest className="mr-1 size-3" />
               )}
@@ -445,7 +445,7 @@ export function GithubPanelEmbedded({
 
       {isLoading && !isError && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Spinner className="size-3 text-inherit" />
+          <Spinner color="inherit" size="2xs"  />
           {t('github.panel.loading')}
         </div>
       )}

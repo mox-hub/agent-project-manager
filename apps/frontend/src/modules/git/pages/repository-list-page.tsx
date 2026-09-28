@@ -211,7 +211,7 @@ export function RepositoryListPage() {
       <EmptyState
         variant="page"
         visual={
-          <IconStack aria-hidden="true" className="text-accent-blue">
+          <IconStack aria-hidden="true" >
             <FolderGit2 className="size-4 text-accent-blue" />
           </IconStack>
         }
@@ -373,8 +373,8 @@ export function RepositoryListPage() {
               )}
               renderLeading={(repo) => (
                 <span className="flex min-w-0 items-center gap-2">
-                  <ListIcon icon={FolderGit2} className="text-accent-blue" />
-                  <ListText className="font-medium">{repo.name}</ListText>
+                  <ListIcon icon={FolderGit2}  />
+                  <ListText >{repo.name}</ListText>
                   {(repo.localPath || repo.remoteUrl) && (
                     <span
                       className="hidden truncate font-mono text-xs text-muted-foreground lg:inline"
@@ -435,31 +435,31 @@ function GitStatusPill({ status, isLoading, onSettingsClick }: GitStatusPillProp
   }
   if (!status) {
     return (
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onSettingsClick}
-        className="flex items-center gap-1.5 rounded-full bg-accent-red/10 px-2.5 py-1 text-xs font-medium text-accent-red transition-colors hover:bg-accent-red/20"
+        className="flex items-center transition-colors"
       >
         <XCircle className="size-3" />
         <span>Git</span>
-      </button>
+      </Button>
     );
   }
   if (status.available) {
     return (
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onSettingsClick}
         title={`Git ${status.version ?? ''}`.trim()}
-        className="flex items-center gap-1.5 rounded-full bg-accent-green/10 px-2.5 py-1 text-xs font-medium text-accent-green transition-colors hover:bg-accent-green/20"
+        className="flex items-center transition-colors"
       >
         <CheckCircle2 className="size-3" />
         <span>Git</span>
-      </button>
+      </Button>
     );
   }
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onSettingsClick}
       title={status.suggestion ?? status.error}
@@ -470,6 +470,6 @@ function GitStatusPill({ status, isLoading, onSettingsClick }: GitStatusPillProp
     >
       <AlertTriangle className="size-3" />
       <span>Git</span>
-    </button>
+    </Button>
   );
 }

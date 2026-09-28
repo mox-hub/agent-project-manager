@@ -4,6 +4,7 @@
  * ② 主体槽位（卡内平滑滚动）③ 影响行 ④ 3D 背面证据档案（支持一键翻转 + 冷却联动）⑤ 动作栏（快捷键 + 驳回原因 chips）。
  * 高代价动作路由策略见 decisionActionPolicy：证据强制 + 冷却后「接受」才可用。
  */
+import { Button } from '@/components/ui/button';
 import './decision-card.css';
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -150,17 +151,17 @@ function ActionBar({
         </p>
         <div className="flex flex-wrap gap-1.5">
           {REASON_CHIPS.map((chipKey) => (
-            <button
+            <Button variant="ghost"
               key={chipKey}
               disabled={busy}
               onClick={() => {
                 onOpenReason(null);
                 onAction(reasonDef.action, decision, { reason: t(chipKey) });
               }}
-              className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs text-content-text-secondary whitespace-nowrap transition-colors hover:border-accent-red/40 hover:bg-accent-red-light hover:text-accent-red disabled:opacity-40"
+              className="shrink-0 whitespace-nowrap transition-colors disabled:opacity-40"
             >
               <span className="whitespace-nowrap">{t(chipKey)}</span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -176,7 +177,7 @@ function ActionBar({
           index === 0 &&
           ((requireEvidence && !evidenceOpen) || cooldownLeft > 0);
         return (
-          <button
+          <Button variant="ghost"
             key={def.action}
             disabled={busy || gated}
             onClick={() => handleSelect(def)}
@@ -193,7 +194,7 @@ function ActionBar({
             <span className="shrink-0 rounded-sm border border-current/20 px-1 font-mono text-3xs opacity-50 whitespace-nowrap">
               {index + 1}
             </span>
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -467,15 +468,15 @@ export function DecisionCardShell({
               </div>
 
               {/* 3D 翻面按钮（禁止换行） */}
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={toggleFlip}
-                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border/80 bg-muted/40 px-2 py-1 text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-accent-foreground"
+                className="inline-flex shrink-0 items-center whitespace-nowrap transition-colors"
                 title={t('decision.review.flipHint')}
               >
                 <RotateCw className="size-3.5 shrink-0 text-muted-foreground" />
                 <span className="whitespace-nowrap">{t('decision.review.flipBack')}</span>
-              </button>
+              </Button>
             </div>
 
             {/* 第 2 行：决策编号（按要求移至第二行） + 提交时间 / 过期时间（禁止换行） */}
@@ -517,10 +518,10 @@ export function DecisionCardShell({
 
           {/* ④ 正面翻面与证据导引条（所有按钮禁止换行） */}
           <div className="flex shrink-0 items-center justify-between border-t border-border/40 bg-muted/20 px-4 py-2 text-xs">
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={toggleEvidence}
-              className="inline-flex shrink-0 items-center gap-1.5 text-muted-foreground whitespace-nowrap transition-colors hover:text-foreground"
+              className="inline-flex shrink-0 items-center whitespace-nowrap transition-colors"
             >
               <Eye className="size-3.5 shrink-0" />
               <span className="whitespace-nowrap">{t('decision.action.evidence')}</span>
@@ -529,16 +530,16 @@ export function DecisionCardShell({
                   {cooldownSecs}s 冷却
                 </span>
               ) : null}
-            </button>
+            </Button>
 
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={toggleFlip}
-              className="inline-flex shrink-0 items-center gap-1 font-medium text-primary whitespace-nowrap transition-opacity hover:opacity-80"
+              className="inline-flex shrink-0 items-center whitespace-nowrap transition-opacity hover:opacity-80"
             >
               <span className="whitespace-nowrap">{t('decision.review.flipHint')}</span>
               <RotateCw className="size-3 shrink-0" />
-            </button>
+            </Button>
           </div>
 
           {/* ⑤ 动作栏（clarify 等交互体自管确认键时可为空）。
@@ -589,14 +590,14 @@ export function DecisionCardShell({
                   {t('decision.action.evidence')} · 溯源与推导档案
                 </span>
               </div>
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={toggleFlip}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-foreground whitespace-nowrap shadow-xs transition-colors hover:bg-accent"
+                className="inline-flex shrink-0 items-center whitespace-nowrap transition-colors"
               >
                 <RotateCw className="size-3 shrink-0" />
                 <span className="whitespace-nowrap">{t('decision.review.flipFront')}</span>
-              </button>
+              </Button>
             </div>
 
             {/* 背面第 2 行：决策编号（按要求移至第二行） */}
@@ -626,14 +627,14 @@ export function DecisionCardShell({
 
           {/* 背面底部操作条：一键翻回正面继续批阅（禁止换行） */}
           <div className="flex shrink-0 justify-end border-t border-border/40 bg-muted/20 px-4 py-2.5">
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={toggleFlip}
-              className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-primary whitespace-nowrap hover:underline"
+              className="inline-flex shrink-0 items-center whitespace-nowrap hover:underline"
             >
               <RotateCw className="size-3 shrink-0" />
               <span className="whitespace-nowrap">{t('decision.review.flipFront')}</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

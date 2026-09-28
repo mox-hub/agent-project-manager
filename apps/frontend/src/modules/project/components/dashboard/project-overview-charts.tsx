@@ -61,7 +61,7 @@ export function ProjectOverviewCharts({ summary }: ProjectOverviewChartsProps) {
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <Card className="lg:col-span-2" data-mock="true">
-        <CardHeader className="p-4">
+        <CardHeader >
           <CardTitle size="sm" fontWeight="medium" className="flex items-center justify-between">
             {t('project.detail.sprintBurndown')}
             <span className="text-xs font-normal text-muted-foreground">
@@ -69,8 +69,8 @@ export function ProjectOverviewCharts({ summary }: ProjectOverviewChartsProps) {
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-2 pb-3">
-          <ChartContainer config={burndownConfig} className="h-40 w-full">
+        <CardContent >
+          <ChartContainer config={burndownConfig} >
             <AreaChart data={burndownData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="day" tickLine={false} axisLine={false} />
@@ -98,14 +98,14 @@ export function ProjectOverviewCharts({ summary }: ProjectOverviewChartsProps) {
       </Card>
 
       <Card>
-        <CardHeader className="p-4">
+        <CardHeader >
           <CardTitle size="sm" fontWeight="medium">
             {t('project.detail.taskDistribution')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-4 pb-4">
+        <CardContent >
           <div className="flex items-center justify-center">
-            <ChartContainer config={distributionConfig} className="h-30 w-full">
+            <ChartContainer config={distributionConfig} >
               <PieChart>
                 <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                 <Pie

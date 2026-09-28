@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { Pause, Play, RotateCcw, SkipBack, SkipForward } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PIPELINE_STAGES } from '@/shared/layout/pipeline-stages';
@@ -67,51 +68,51 @@ export function ScreenplayControls({
       aria-label="回放控制"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={player.toggle}
-          className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-accent-purple/15 px-2.5 py-1 text-2xs font-semibold text-accent-purple transition-colors hover:bg-accent-purple/25"
+          className="flex cursor-pointer items-center transition-colors"
           data-ai-action="ai-surface.replay.toggle"
           title={player.playing ? '暂停（看清楚这一帧）' : '继续播放'}
         >
           {player.playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
           <span>{player.playing ? '暂停' : player.atEnd ? '重播' : '播放'}</span>
-        </button>
+        </Button>
 
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={player.stepBack}
           disabled={player.index === 0}
-          className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex cursor-pointer items-center transition-colors disabled:cursor-not-allowed disabled:opacity-40"
           data-ai-action="ai-surface.replay.step-back"
           title="上一帧（会自动暂停）"
         >
           <SkipBack className="size-3.5" />
           <span>上一步</span>
-        </button>
+        </Button>
 
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={player.stepForward}
           disabled={player.atEnd}
-          className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex cursor-pointer items-center transition-colors disabled:cursor-not-allowed disabled:opacity-40"
           data-ai-action="ai-surface.replay.step-forward"
           title="下一帧（会自动暂停）"
         >
           <span>下一步</span>
           <SkipForward className="size-3.5" />
-        </button>
+        </Button>
 
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={player.restart}
-          className="flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-2xs text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+          className="flex cursor-pointer items-center transition-colors"
           data-ai-action="ai-surface.replay.restart"
           title="从第一帧重放"
         >
           <RotateCcw className="size-3.5" />
           <span>重头放</span>
-        </button>
+        </Button>
 
         <span className="ml-auto font-mono text-3xs text-muted-foreground">
           {`第 ${player.index + 1}/${player.frameCount} 帧 · ${formatReplayClock(player.elapsedMs)} / ${formatReplayClock(player.totalMs)}`}
@@ -141,7 +142,7 @@ export function ScreenplayControls({
         {PIPELINE_STAGES.map((stage) => {
           const active = stage.stageNumber === currentStageNumber;
           return (
-            <button
+            <Button variant="ghost"
               key={stage.to}
               type="button"
               onClick={() => player.jumpToStage(stage.stageNumber)}
@@ -155,7 +156,7 @@ export function ScreenplayControls({
               title={`跳到「${stage.labelFallback}」的第一帧（会自动暂停）`}
             >
               {`${stage.stageNumber} ${stage.labelFallback}`}
-            </button>
+            </Button>
           );
         })}
       </div>

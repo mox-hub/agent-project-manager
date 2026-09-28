@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import React, { createContext, memo, useCallback, useContext, useState } from 'react';
 import { ChevronDown, ChevronRight, Copy, Link2, ListPlus } from 'lucide-react';
 import { toast } from '@/components/ui/toast';
@@ -65,7 +66,7 @@ function SectionTaskBadge({ anchor, count }: { anchor: string; count: number }) 
   };
 
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       data-anchor={anchor}
       data-count={count}
@@ -89,7 +90,7 @@ function SectionTaskBadge({ anchor, count }: { anchor: string; count: number }) 
     >
       {isLinked ? <span aria-hidden>📎</span> : <ListPlus size={11} />}
       <span>{isLinked ? `${count} 任务` : '任务'}</span>
-    </button>
+    </Button>
   );
 }
 
@@ -141,34 +142,34 @@ function HeadingActions({ slug, title, level }: { slug: string; title: string; l
   return (
     <span className="inline-flex shrink-0 items-center gap-1 opacity-0 transition-opacity duration-normal group-hover:opacity-100">
       {hasChildren ? (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={handleToggleCollapse}
-          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="inline-flex items-center justify-center"
           aria-label={isCollapsed ? '展开子标题' : '折叠子标题'}
           title={isCollapsed ? '展开子标题' : '折叠子标题'}
         >
           {isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-        </button>
+        </Button>
       ) : null}
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={handleCopyAnchor}
-        className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="inline-flex items-center justify-center"
         aria-label="复制锚点链接"
         title="复制锚点链接"
       >
         <Link2 size={12} />
-      </button>
-      <button
+      </Button>
+      <Button variant="ghost"
         type="button"
         onClick={handleCopyMarkdown}
-        className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="inline-flex items-center justify-center"
         aria-label="复制为 Markdown"
         title="复制为 Markdown"
       >
         <Copy size={12} />
-      </button>
+      </Button>
     </span>
   );
 }

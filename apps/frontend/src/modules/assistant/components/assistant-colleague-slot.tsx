@@ -2,6 +2,7 @@
  * 侧栏同事位 —— 主 AI 以「人」的身份占侧栏底部一个位置：
  * 头像 + 状态点 + 待决数；点击走进办公室（门语义，办公室页是这扇门后的屋子）。
  */
+import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Bot } from 'lucide-react';
@@ -18,10 +19,10 @@ export function AssistantColleagueSlot({ collapsed }: { collapsed: boolean }) {
 
   if (collapsed) {
     return (
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => navigate('/app/office')}
-        className="relative flex w-full items-center justify-center rounded-lg p-2 transition-colors hover:bg-sidebar-accent/80"
+        className="relative flex items-center justify-center transition-colors"
         aria-label={t('assistant.colleague.open')}
         data-ai-component="assistant.colleague-slot"
         data-ai-action="assistant.colleague.office.click"
@@ -30,15 +31,15 @@ export function AssistantColleagueSlot({ collapsed }: { collapsed: boolean }) {
           <Bot className="size-4" />
         </span>
         <AssistantStatusDot state={status.state} className="absolute right-1.5 top-1.5 ring-2 ring-sidebar" />
-      </button>
+      </Button>
     );
   }
 
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={() => navigate('/app/office')}
-      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-sidebar-accent/80"
+      className="flex items-center transition-colors"
       data-ai-component="assistant.colleague-slot"
       data-ai-action="assistant.colleague.office.click"
     >
@@ -59,6 +60,6 @@ export function AssistantColleagueSlot({ collapsed }: { collapsed: boolean }) {
           {status.pending > 99 ? '99+' : status.pending}
         </span>
       )}
-    </button>
+    </Button>
   );
 }

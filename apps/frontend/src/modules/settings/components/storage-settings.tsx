@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FolderOpen, Save, RefreshCw, FileText, AlertCircle } from 'lucide-react';
@@ -76,7 +77,7 @@ export function StorageSettings() {
   if (isLoading) {
     return (
       <Card surface="flat">
-        <CardContent className="flex items-center gap-2 p-6 text-muted-foreground">
+        <CardContent className="flex items-center">
           <Spinner size="sm" />
           {t('settings.storageLoading')}
         </CardContent>
@@ -96,16 +97,16 @@ export function StorageSettings() {
             {t('settings.storageDesc')}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-5">
+        <CardContent >
           {/* 存储路径 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">{t('settings.storagePathLabel')}</label>
+            <FieldLabel size="xs" variant="muted" >{t('settings.storagePathLabel')}</FieldLabel>
             <div className="flex gap-2">
-              <Input
+              <Input fontVariant="mono"
                 value={basePath}
                 onChange={(e) => setBasePath(e.target.value)}
                 placeholder={t('settings.storagePathPlaceholder')}
-                className="font-mono text-sm"
+                
               />
               <Button
                 variant="outline"
@@ -114,7 +115,7 @@ export function StorageSettings() {
                 disabled={detectDefault.isFetching}
               >
                 {detectDefault.isFetching ? (
-                  <Spinner className="text-inherit" />
+                  <Spinner color="inherit"  />
                 ) : (
                   t('settings.detectDefault')
                 )}
@@ -127,20 +128,20 @@ export function StorageSettings() {
 
           {/* 子目录 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">{t('settings.storageSubfolderLabel')}</label>
-            <Input
+            <FieldLabel size="xs" variant="muted" >{t('settings.storageSubfolderLabel')}</FieldLabel>
+            <Input fontVariant="mono"
               value={defaultSubfolder}
               onChange={(e) => setDefaultSubfolder(e.target.value)}
               placeholder={t('settings.storageSubfolderPlaceholder')}
-              className="font-mono text-sm"
+              
             />
           </div>
 
           {/* 文件格式 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">{t('settings.storageFileFormatLabel')}</label>
+            <FieldLabel size="xs" variant="muted" >{t('settings.storageFileFormatLabel')}</FieldLabel>
             <div className="flex gap-2">
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => setFileExtension('md')}
                 className={cn(
@@ -152,8 +153,8 @@ export function StorageSettings() {
               >
                 <FileText className="h-4 w-4" />
                 .md
-              </button>
-              <button
+              </Button>
+              <Button variant="ghost"
                 type="button"
                 onClick={() => setFileExtension('mdx')}
                 className={cn(
@@ -165,7 +166,7 @@ export function StorageSettings() {
               >
                 <FileText className="h-4 w-4" />
                 .mdx
-              </button>
+              </Button>
             </div>
             <p className="text-xs text-muted-foreground">
               {t('settings.storageMdxDesc')}
@@ -174,28 +175,28 @@ export function StorageSettings() {
 
           {/* 自动同步 */}
           <div className="space-y-3 rounded-lg border border-dashed border-border p-4">
-            <label className="flex items-center gap-2 text-sm text-foreground">
+            <FieldLabel size="xs" variant="muted" className="flex items-center">
               <Checkbox
                 checked={autoSync}
                 onChange={(e) => setAutoSync(e.target.checked)}
               />
               {t('settings.storageAutoSyncLabel')}
-            </label>
-            <label className="flex items-center gap-2 text-sm text-foreground">
+            </FieldLabel>
+            <FieldLabel size="xs" variant="muted" className="flex items-center">
               <Checkbox
                 checked={syncOnUpdate}
                 onChange={(e) => setSyncOnUpdate(e.target.checked)}
                 disabled={!autoSync}
               />
               {t('settings.storageSyncOnUpdateLabel')}
-            </label>
+            </FieldLabel>
           </div>
 
           {/* 保存按钮 */}
           <div className="flex justify-end pt-2">
-            <Button onClick={handleSave} disabled={updateConfig.isPending} className="gap-2">
+            <Button onClick={handleSave} disabled={updateConfig.isPending} >
               {updateConfig.isPending ? (
-                <Spinner className="text-inherit" />
+                <Spinner color="inherit"  />
               ) : (
                 <Save className="h-4 w-4" />
               )}
@@ -218,9 +219,9 @@ export function StorageSettings() {
               size="sm"
               onClick={handleListFiles}
               disabled={filesFetching}
-              className="gap-1.5"
+              
             >
-              {filesFetching ? <Spinner className="text-inherit" /> : <RefreshCw className="h-4 w-4" />}
+              {filesFetching ? <Spinner color="inherit"  /> : <RefreshCw className="h-4 w-4" />}
               {t('common.refresh')}
             </Button>
           </div>

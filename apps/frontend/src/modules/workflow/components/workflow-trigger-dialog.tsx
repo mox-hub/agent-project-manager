@@ -2,6 +2,7 @@
  * 工作流触发对话框（可选 JSON 入参）——列表页与详情页共用。
  * 触发成功后携带 runId 跳详情页，直接进入运行面板（CAP-S-03 呈现层）。
  */
+import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -67,12 +68,12 @@ export function WorkflowTriggerDialog({
           <DialogTitle>{t('workflow.runDialogTitle', { name: target?.name ?? '' })}</DialogTitle>
           <DialogDescription>{t('workflow.runDialogHint')}</DialogDescription>
         </DialogHeader>
-        <textarea
+        <Textarea
           value={parametersText}
           onChange={(e) => setParametersText(e.target.value)}
           rows={5}
           spellCheck={false}
-          className="w-full rounded-md border border-border bg-transparent p-2 font-mono text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="focus-visible:outline-none"
           placeholder='{ "topic": "..." }'
         />
         <DialogFooter>

@@ -49,11 +49,11 @@ export function ProjectHealthScoreDialog({
 }: ProjectHealthScoreDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="max-h-dialog-full max-w-2xl overflow-y-auto p-0">
-        <DialogHeader className="border-b border-border p-5">
+      <DialogContent maxWidth="2xl" showCloseButton={false} className="overflow-y-auto">
+        <DialogHeader >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <DialogTitle className="flex items-center gap-2 text-xl">
+              <DialogTitle className="flex items-center">
                 <Sparkles size={18} className="text-accent-blue" />
                 Project Health Score
               </DialogTitle>
@@ -108,8 +108,8 @@ export function ProjectHealthScoreDialog({
           </div>
         </div>
 
-        <DialogFooter className="sticky bottom-0 border-t border-border bg-background p-4 sm:justify-between">
-          <Button variant="ghost" className="justify-start text-muted-foreground">
+        <DialogFooter className="sticky bottom-0 sm:justify-between">
+          <Button variant="ghost" className="justify-start">
             <ArrowUpRight size={14} />
             View detailed report
           </Button>

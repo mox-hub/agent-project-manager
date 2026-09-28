@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -165,7 +166,7 @@ function DocumentEditWorkspace({
   }, [content, title, summary, coverImage, tags, category, status, currentUserId]);
 
   return (
-    <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.documentEdit}>
+    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.documentEdit}>
       {/* 子页面工具栏：返回 + 面包屑 */}
       <SubPageToolbar
         aiId="document.document-edit"
@@ -188,36 +189,36 @@ function DocumentEditWorkspace({
 
             <div className="flex items-center gap-2">
               <div className="flex items-center rounded-lg border border-border p-1">
-                <button
+                <Button variant="ghost"
                   type="button"
                   className={cn('inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm', editorMode === 'edit' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted')}
                   onClick={() => setEditorMode('edit')}
                 >
                   <Code size={14} /> 编辑
-                </button>
-                <button
+                </Button>
+                <Button variant="ghost"
                   type="button"
                   className={cn('inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm', editorMode === 'split' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted')}
                   onClick={() => setEditorMode('split')}
                 >
                   <FileText size={14} /> 分屏
-                </button>
-                <button
+                </Button>
+                <Button variant="ghost"
                   type="button"
                   className={cn('inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm', editorMode === 'preview' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted')}
                   onClick={() => setEditorMode('preview')}
                 >
                   <Eye size={14} /> 预览
-                </button>
+                </Button>
               </div>
 
-              <Button variant="outline" size="sm" fontSize="sm" className="h-10 gap-1.5" onClick={() => setShowAiPanel((value) => !value)}>
+              <Button variant="outline" size="sm"  onClick={() => setShowAiPanel((value) => !value)}>
                 <Sparkles size={14} /> AI 助手
               </Button>
-              <Button variant="outline" size="icon" className="h-10 w-10">
+              <Button variant="outline" size="icon" >
                 <MoreVertical size={16} />
               </Button>
-              <Button fontSize="sm" className="h-10 gap-1.5 px-4" onClick={handleSave} disabled={updateDocument.isPending}>
+              <Button size="lg"  onClick={handleSave} disabled={updateDocument.isPending}>
                 <Save size={14} /> 保存
               </Button>
             </div>
@@ -228,7 +229,7 @@ function DocumentEditWorkspace({
           <aside className="w-80 shrink-0 overflow-y-auto border-r border-border bg-muted/20 p-4">
             <div className="space-y-5">
               <div>
-                <label className="mb-2 block text-sm font-medium text-foreground">文档分类</label>
+                <FieldLabel size="xs" variant="muted" className="mb-2 block">文档分类</FieldLabel>
                 <SelectField value={category} onChange={(event) => setCategory(event.target.value as DocumentCategory)}>
                   {CATEGORY_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
@@ -237,10 +238,10 @@ function DocumentEditWorkspace({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-foreground">文档状态</label>
+                <FieldLabel size="xs" variant="muted" className="mb-2 block">文档状态</FieldLabel>
                 <div className="grid grid-cols-2 gap-2">
                   {STATUS_OPTIONS.map((option) => (
-                    <button
+                    <Button variant="ghost"
                       key={option.value}
                       type="button"
                       onClick={() => setStatus(option.value)}
@@ -251,11 +252,11 @@ function DocumentEditWorkspace({
                     >
                       <span className={cn('mx-auto mb-1 block h-2.5 w-2.5 rounded-full', option.dot)} />
                       {option.label}
-                    </button>
+                    </Button>
                   ))}
-                  <button type="button" disabled className="rounded-lg border border-border bg-background/50 px-3 py-2 text-xs text-muted-foreground/70">
+                  <Button variant="ghost" type="button" disabled >
                     <span className="mx-auto mb-1 block h-2.5 w-2.5 rounded-full bg-muted-foreground" />已归档
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -269,31 +270,31 @@ function DocumentEditWorkspace({
                 </p>
 
                 <div>
-                  <label className="mb-1.5 flex items-center gap-1 text-xs font-medium text-foreground">
+                  <FieldLabel size="xs" variant="muted" className="mb-1.5 flex items-center">
                     <AlignLeft size={11} /> 摘要
-                  </label>
+                  </FieldLabel>
                   <Textarea
                     value={summary}
                     onChange={(e) => setSummary(e.target.value)}
                     placeholder="一句话说明这篇文档讲什么..."
-                    className="min-h-16 text-sm"
+                    
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 flex items-center gap-1 text-xs font-medium text-foreground">
+                  <FieldLabel size="xs" variant="muted" className="mb-1.5 flex items-center">
                     <ImageIcon size={11} /> 封面图 URL
-                  </label>
-                  <Input
+                  </FieldLabel>
+                  <Input size="h-8"
                     value={coverImage}
                     onChange={(e) => setCoverImage(e.target.value)}
                     placeholder="https://..."
-                    className="h-8 text-sm"
+                    
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-foreground">标签 (只读, 来源 frontmatter)</label>
+                  <FieldLabel size="xs" variant="muted" className="mb-1.5 block">标签 (只读, 来源 frontmatter)</FieldLabel>
                   <div className="flex flex-wrap gap-1.5">
                     {tags.length === 0 && (
                       <span className="text-2xs text-muted-foreground">暂无标签, 在 frontmatter 添加 <code className="rounded-sm bg-muted px-1 font-mono text-3xs">tags: [a, b]</code></span>
@@ -346,15 +347,15 @@ function DocumentEditWorkspace({
                 <div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
                   <Sparkles size={15} className="text-accent-purple" /> AI 助手
                 </div>
-                <button type="button" className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted" onClick={() => setShowAiPanel(false)}>
+                <Button variant="ghost" type="button" className="inline-flex items-center justify-center" onClick={() => setShowAiPanel(false)}>
                   <X size={15} />
-                </button>
+                </Button>
               </div>
               <div className="space-y-3 p-4">
-                <Button variant="outline" fontSize="sm" className="h-10 w-full justify-start gap-2"><Wand2 size={14} /> 优化文档结构</Button>
-                <Button variant="outline" fontSize="sm" className="h-10 w-full justify-start gap-2"><Wand2 size={14} /> 生成摘要</Button>
-                <Textarea value={aiPrompt} onChange={(event) => setAiPrompt(event.target.value)} placeholder="告诉 AI 你想要什么..." className="min-h-30 text-sm" />
-                <Button fontSize="sm" className="h-10 w-full gap-1.5" disabled={!aiPrompt.trim()}>
+                <Button width="full" size="lg" variant="outline" className="justify-start"><Wand2 size={14} /> 优化文档结构</Button>
+                <Button width="full" size="lg" variant="outline" className="justify-start"><Wand2 size={14} /> 生成摘要</Button>
+                <Textarea value={aiPrompt} onChange={(event) => setAiPrompt(event.target.value)} placeholder="告诉 AI 你想要什么..."  />
+                <Button width="full" size="lg"  disabled={!aiPrompt.trim()}>
                   <Sparkles size={14} /> 生成内容
                 </Button>
               </div>

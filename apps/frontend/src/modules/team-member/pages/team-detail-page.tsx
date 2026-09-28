@@ -6,6 +6,7 @@
  * 主区：标题热编辑 > 描述热编辑 > 页签内容（成员/项目/层级/提示词/统计/邀请）
  * 右栏：SidebarButtonGroup(添加成员/归档) + PropsCard(属性胶囊)
  */
+import { FieldLabel } from '@/components/ui/field';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -321,7 +322,7 @@ export default function TeamDetailPage() {
                 rows={1}
                 placeholder={t('teamDetail.unnamedTitle', '未命名团队')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-2xl font-semibold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                
               />
             </div>
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
@@ -348,7 +349,7 @@ export default function TeamDetailPage() {
               {(team.tags ?? []).length > 0 && (
                 <span className="flex flex-wrap items-center gap-1">
                   {(team.tags ?? []).map((tag) => (
-                    <Badge key={tag} variant="secondary" fontSize="3xs" className="px-1.5 py-0">
+                    <Badge key={tag} variant="secondary" fontSize="3xs" >
                       {tag}
                     </Badge>
                   ))}
@@ -359,15 +360,15 @@ export default function TeamDetailPage() {
 
           {/* 描述区：热编辑 */}
           <div className="shrink-0 border-b px-6 pb-4 pt-4">
-            <label className="mb-2 block text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <FieldLabel size="xs" variant="muted" className="mb-2 block uppercase">
               {t('teamDetail.description', '描述')}
-            </label>
+            </FieldLabel>
             <AutoSizeTextarea
               rows={2}
               defaultValue={team.description ?? ''}
               onChange={(e) => persistDescription(e.target.value)}
               placeholder={t('teamDetail.addDescription', '添加描述…')}
-              className="w-full text-sm leading-relaxed placeholder:text-muted-foreground/40"
+              
             />
           </div>
 
@@ -386,16 +387,16 @@ export default function TeamDetailPage() {
 
                 {pickerOpen && (
                   <Card>
-                    <CardContent className="space-y-2 py-3">
+                    <CardContent >
                       <MemberPicker
                         value={selectedMembers}
                         onChange={setSelectedMembers}
                         multiple
                       />
                       <div className="flex items-center gap-2">
-                        <label className="text-xs">{t('teamDetail.members.role', '角色')}:</label>
+                        <FieldLabel size="xs" variant="muted" >{t('teamDetail.members.role', '角色')}:</FieldLabel>
                         <Select value={memberRole} onValueChange={setMemberRole}>
-                          <SelectTrigger size="sm" className="w-36">
+                          <SelectTrigger size="sm" >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -423,14 +424,14 @@ export default function TeamDetailPage() {
 
                 <Card>
                   <CardContent inset="none">
-                    <Table className="w-full text-sm">
+                    <Table >
                       <TableHeader fontSize="xs" variant="muted">
                         <TableRow>
                           <TableHead padding="p-2">{t('teamDetail.members.member', '成员')}</TableHead>
-                          <TableHead padding="p-2" className="w-24">{t('teamDetail.members.type', '类型')}</TableHead>
-                          <TableHead padding="p-2" className="w-28">{t('teamDetail.members.role', '角色')}</TableHead>
-                          <TableHead padding="p-2" className="w-32">{t('teamDetail.members.joinedAt', '加入时间')}</TableHead>
-                          <TableHead padding="p-2" align="right" className="w-12"></TableHead>
+                          <TableHead width="w-24" padding="p-2" >{t('teamDetail.members.type', '类型')}</TableHead>
+                          <TableHead width="w-28" padding="p-2" >{t('teamDetail.members.role', '角色')}</TableHead>
+                          <TableHead width="w-32" padding="p-2" >{t('teamDetail.members.joinedAt', '加入时间')}</TableHead>
+                          <TableHead width="w-12" padding="p-2" align="right" ></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -470,15 +471,15 @@ export default function TeamDetailPage() {
                             <TableCell>
                               <Badge variant="outline" fontSize="3xs">{tm.role}</Badge>
                             </TableCell>
-                            <TableCell fontSize="xs" className="text-muted-foreground">
+                            <TableCell fontSize="xs" >
                               {new Date(tm.joinedAt).toLocaleDateString()}
                             </TableCell>
                             <TableCell align="right">
-                              <Button
+                              <Button padding="p-0"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeMember.mutate(tm.memberId)}
-                                className="size-6 p-0 text-accent-red"
+                                
                               >
                                 <Trash2 className="size-3" />
                               </Button>
@@ -487,7 +488,7 @@ export default function TeamDetailPage() {
                         ))}
                         {((members ?? []) as TeamMember[]).length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={5} className="p-2">
+                            <TableCell colSpan={5} >
                               <EmptyState
                                 variant="card"
                                 title={t('teamDetail.members.empty', '还没有成员')}
@@ -528,7 +529,7 @@ export default function TeamDetailPage() {
                             })),
                           ]}
                         >
-                          <SelectTrigger className="w-56">
+                          <SelectTrigger >
                             <SelectValue placeholder={t('teamDetail.projects.pickPlaceholder', '选择项目')} />
                           </SelectTrigger>
                           <SelectContent>
@@ -582,12 +583,12 @@ export default function TeamDetailPage() {
                       </Button>
                     )}
                   </div>
-                  <Table className="w-full text-sm">
+                  <Table >
                     <TableHeader fontSize="xs" variant="muted">
                       <TableRow>
                         <TableHead padding="p-2">{t('teamDetail.projects.project', '项目')}</TableHead>
-                        <TableHead padding="p-2" className="w-32">{t('teamDetail.projects.boundAt', '绑定时间')}</TableHead>
-                        <TableHead padding="p-2" className="w-16">{t('teamDetail.projects.actions', '操作')}</TableHead>
+                        <TableHead width="w-32" padding="p-2" >{t('teamDetail.projects.boundAt', '绑定时间')}</TableHead>
+                        <TableHead width="w-16" padding="p-2" >{t('teamDetail.projects.actions', '操作')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -605,7 +606,7 @@ export default function TeamDetailPage() {
                               {tp.project?.name ?? tp.projectId}
                             </Link>
                           </TableCell>
-                          <TableCell fontSize="xs" className="text-muted-foreground">
+                          <TableCell fontSize="xs" >
                             {new Date(tp.createdAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
@@ -627,7 +628,7 @@ export default function TeamDetailPage() {
                       ))}
                       {(team.projects ?? []).length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={3} align="center" className="p-6 text-sm text-muted-foreground">
+                          <TableCell colSpan={3} align="center" >
                             {t('teamDetail.projects.empty', '尚未绑定项目')}
                           </TableCell>
                         </TableRow>
@@ -646,7 +647,7 @@ export default function TeamDetailPage() {
               <>
                 {/* 邮件邀请 */}
                 <Card>
-                  <CardContent className="space-y-2 p-3">
+                  <CardContent >
                     <div className="flex items-center gap-2">
                       <Mail className="size-4 text-accent-blue" />
                       <span className="text-sm font-medium">{t('teamDetail.invite.mailTitle', '邮件邀请')}</span>
@@ -660,10 +661,10 @@ export default function TeamDetailPage() {
                         value={inviteEmail}
                         onChange={(e) => setInviteEmail(e.target.value)}
                         placeholder="name@example.com"
-                        className="max-w-xs"
+                        
                       />
                       <Select value={inviteRole} onValueChange={setInviteRole}>
-                        <SelectTrigger size="sm" className="w-36">
+                        <SelectTrigger size="sm" >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -682,7 +683,7 @@ export default function TeamDetailPage() {
                 {/* 本地部署直邀 */}
                 {isLocalMode && (
                   <Card>
-                    <CardContent className="space-y-2 p-3">
+                    <CardContent >
                       <div className="flex items-center gap-2">
                         <HardDriveDownload className="size-4 text-accent-green" />
                         <span className="text-sm font-medium">
@@ -696,7 +697,7 @@ export default function TeamDetailPage() {
                         value={userQuery}
                         onChange={(e) => setUserQuery(e.target.value)}
                         placeholder={t('teamDetail.invite.directPlaceholder', '按邮箱 / 用户名检索用户…')}
-                        className="max-w-xs"
+                        
                       />
                       {(userHits ?? []).length > 0 && (
                         <div className="max-w-md divide-y divide-border rounded-md border border-border">
@@ -727,15 +728,15 @@ export default function TeamDetailPage() {
                 {/* 邀请列表 */}
                 <Card>
                   <CardContent inset="none">
-                    <Table className="w-full text-sm">
+                    <Table >
                       <TableHeader fontSize="xs" variant="muted">
                         <TableRow>
                           <TableHead padding="p-2">{t('teamDetail.invites.email', '邮箱')}</TableHead>
-                          <TableHead padding="p-2" className="w-24">{t('teamDetail.members.role', '角色')}</TableHead>
-                          <TableHead padding="p-2" className="w-24">{t('teamDetail.invites.status', '状态')}</TableHead>
-                          <TableHead padding="p-2" className="w-32">{t('teamDetail.invites.expiresAt', '过期时间')}</TableHead>
+                          <TableHead width="w-24" padding="p-2" >{t('teamDetail.members.role', '角色')}</TableHead>
+                          <TableHead width="w-24" padding="p-2" >{t('teamDetail.invites.status', '状态')}</TableHead>
+                          <TableHead width="w-32" padding="p-2" >{t('teamDetail.invites.expiresAt', '过期时间')}</TableHead>
                           <TableHead padding="p-2">{t('teamDetail.invites.link', '邀请链接')}</TableHead>
-                          <TableHead padding="p-2" align="right" className="w-16"></TableHead>
+                          <TableHead width="w-16" padding="p-2" align="right" ></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -762,22 +763,22 @@ export default function TeamDetailPage() {
                                   {inv.status}
                                 </Badge>
                               </TableCell>
-                              <TableCell fontSize="xs" className="text-muted-foreground">
+                              <TableCell fontSize="xs" >
                                 {new Date(inv.expiresAt).toLocaleString()}
                               </TableCell>
                               <TableCell>
                                 {!dead && (
-                                  <button
+                                  <Button variant="ghost"
                                     type="button"
                                     title={t('teamDetail.invites.copyLink', '复制邀请链接')}
                                     onClick={() => {
                                       navigator.clipboard.writeText(link);
                                       toast.success(t('teamDetail.invites.linkCopied', '邀请链接已复制'));
                                     }}
-                                    className="block max-w-55 truncate text-left font-mono text-2xs text-accent-blue hover:underline"
+                                    className="block truncate hover:underline"
                                   >
                                     /invite/{inv.token.slice(0, 10)}…
-                                  </button>
+                                  </Button>
                                 )}
                               </TableCell>
                               <TableCell align="right">
@@ -785,7 +786,7 @@ export default function TeamDetailPage() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    fontSize="2xs" className="h-6 px-2 text-accent-red"
+                                    fontSize="2xs" 
                                     onClick={async () => {
                                       await revokeTeamInvite(teamId!, inv.id);
                                       refetchInvites();
@@ -800,7 +801,7 @@ export default function TeamDetailPage() {
                         })}
                         {(invites ?? []).length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={6} className="p-2">
+                            <TableCell colSpan={6} >
                               <EmptyState
                                 variant="card"
                                 title={t('teamDetail.invites.empty', '还没有邀请记录')}
@@ -817,7 +818,7 @@ export default function TeamDetailPage() {
 
                 {/* 发件箱（最新 20 封） */}
                 <Card>
-                  <CardContent className="space-y-2 p-3">
+                  <CardContent >
                     <div className="text-sm font-medium">
                       {t('teamDetail.invites.outbox', '邮件发件箱（Outbox）')}
                     </div>
@@ -872,7 +873,7 @@ export default function TeamDetailPage() {
 
         {/* 右侧栏（320px，可收起） */}
         <RightSidebar hidden={asideHidden} width={320}>
-          <SidebarButtonGroup className="px-1">
+          <SidebarButtonGroup >
             <SidebarButton
               variant="capsule"
               icon={UserPlus}
@@ -887,7 +888,7 @@ export default function TeamDetailPage() {
                 icon={Archive}
                 label={t('teams.archive', '归档')}
                 onClick={handleArchive}
-                className="text-destructive hover:text-destructive"
+                
               />
             )}
           </SidebarButtonGroup>

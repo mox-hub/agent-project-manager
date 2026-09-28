@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download } from 'lucide-react';
@@ -152,14 +153,14 @@ export function GlobalTaskExportDialog({
         <fieldset className="space-y-3">
           <legend className="sr-only">{t('task.export.formatLegend', '导出格式')}</legend>
           <RadioGroup value={format} onValueChange={(v) => setFormat(v as ExportFormat)}>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
+            <FieldLabel size="xs" variant="muted" className="flex cursor-pointer items-center">
               <RadioGroupItem value="csv" />
               CSV
-            </label>
-            <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-foreground">
+            </FieldLabel>
+            <FieldLabel size="xs" variant="muted" className="mt-2 flex cursor-pointer items-center">
               <RadioGroupItem value="json" />
               JSON
-            </label>
+            </FieldLabel>
           </RadioGroup>
         </fieldset>
 

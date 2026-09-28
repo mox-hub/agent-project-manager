@@ -8,25 +8,15 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronRight, ExternalLink, Handshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TONE_CLASS } from '@/components/ui/tone';
+import { COLLABORATION_STATUS_TONE } from '@/shared/status/status-visuals';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   useCollaborationActions,
   useCollaborationList,
   type CollaborationCard,
-  type CollaborationStatus,
 } from '../api/collaboration-api';
-
-const STATUS_TONE: Record<CollaborationStatus, string> = {
-  requested: 'bg-accent-yellow/10 text-accent-yellow',
-  committed: 'bg-accent-blue/10 text-accent-blue',
-  in_progress: 'bg-accent-blue/10 text-accent-blue',
-  delivered: 'bg-accent-purple/10 text-accent-purple',
-  verified: 'bg-accent-green/10 text-accent-green',
-  rejected: 'bg-accent-red/10 text-accent-red',
-  cancelled: 'bg-muted text-muted-foreground',
-  escalated: 'bg-accent-red/10 text-accent-red',
-};
 
 function CardRow({ card }: { card: CollaborationCard }) {
   const { t } = useTranslation();
@@ -39,14 +29,14 @@ function CardRow({ card }: { card: CollaborationCard }) {
       data-ai-component="office.collaboration-card"
     >
       <div className="flex items-center gap-2">
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="shrink-0 text-content-text-muted hover:text-content-text"
+          className="shrink-0"
           aria-label={expanded ? t('common.collapse') : t('common.expand')}
         >
           {expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-        </button>
+        </Button>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-content-text" title={card.title}>
             {card.title}
@@ -58,7 +48,13 @@ function CardRow({ card }: { card: CollaborationCard }) {
             {` · ${t('office.collaboration.rounds', { n: card.rounds })}`}
           </p>
         </div>
-        <Badge className={cn('shrink-0', STATUS_TONE[card.status])} variant="secondary">
+        <Badge
+          className={cn(
+            'shrink-0',
+            TONE_CLASS[COLLABORATION_STATUS_TONE[card.status] ?? 'default'].light,
+          )}
+          variant="secondary"
+        >
           {t(`office.collaboration.status.${card.status}`)}
         </Badge>
       </div>
@@ -70,7 +66,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
             <Button
               variant="outline"
               size="sm"
-              fontSize="2xs" className="h-7 px-2"
+              fontSize="2xs" 
               disabled={verify.isPending}
               onClick={() =>
                 verify.mutate({ id: card.id, verdict: 'changes_requested' })
@@ -81,7 +77,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
             </Button>
             <Button
               size="sm"
-              fontSize="2xs" className="h-7 px-2"
+              fontSize="2xs" 
               disabled={verify.isPending}
               onClick={() => verify.mutate({ id: card.id, verdict: 'verified' })}
               data-ai-action="office.collaboration.verify.click"
@@ -94,7 +90,7 @@ function CardRow({ card }: { card: CollaborationCard }) {
           <Button
             variant="ghost"
             size="sm"
-            fontSize="2xs" className="h-7 px-2 text-muted-foreground"
+            fontSize="2xs" 
             disabled={cancel.isPending}
             onClick={() => cancel.mutate(card.id)}
             data-ai-action="office.collaboration.cancel.click"

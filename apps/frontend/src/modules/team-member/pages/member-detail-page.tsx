@@ -6,6 +6,7 @@
  * 主区：标题热编辑 > 描述热编辑 > 页签内容（概览/项目/团队/活动/AI 工具授权）
  * 右栏：SidebarButtonGroup(复制短ID/停用) + PropsCard(属性胶囊)
  */
+import { FieldLabel } from '@/components/ui/field';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -230,21 +231,21 @@ export default function MemberDetailPage() {
                 rows={1}
                 placeholder={t('memberDetail.unnamedTitle', '未命名成员')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-2xl font-semibold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                
               />
             </div>
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
               <span className="truncate">@{member.handle}</span>
               <span className="opacity-50">•</span>
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => copyToClipboard(member.shortId)}
                 title={t('memberDetail.copyId', '复制短 ID')}
-                className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-3xs hover:bg-muted hover:text-foreground"
+                className="inline-flex items-center"
               >
                 <IdCard className="size-3" />
                 {member.shortId}
-              </button>
+              </Button>
               <span className="opacity-50">•</span>
               <span className="inline-flex items-center gap-1">
                 {member.status === 'active' && (
@@ -261,7 +262,7 @@ export default function MemberDetailPage() {
               {(member.tags ?? []).length > 0 && (
                 <span className="flex flex-wrap items-center gap-1">
                   {(member.tags ?? []).map((tag) => (
-                    <Badge key={tag} variant="secondary" fontSize="3xs" className="px-1.5 py-0">
+                    <Badge key={tag} variant="secondary" fontSize="3xs" >
                       {tag}
                     </Badge>
                   ))}
@@ -272,15 +273,15 @@ export default function MemberDetailPage() {
 
           {/* 描述区：热编辑 */}
           <div className="shrink-0 border-b px-6 pb-4 pt-4">
-            <label className="mb-2 block text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <FieldLabel size="xs" variant="muted" className="mb-2 block uppercase">
               {t('memberDetail.description', '描述')}
-            </label>
+            </FieldLabel>
             <AutoSizeTextarea
               rows={2}
               defaultValue={member.description ?? member.bio ?? ''}
               onChange={(e) => persistDescription(e.target.value)}
               placeholder={t('memberDetail.addDescription', '添加描述…')}
-              className="w-full text-sm leading-relaxed placeholder:text-muted-foreground/40"
+              
             />
           </div>
 
@@ -358,7 +359,7 @@ export default function MemberDetailPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-5 px-1.5 text-3xs text-accent-red"
+                              
                               onClick={() => unbind.mutate(p.projectId)}
                             >
                               {t('memberDetail.unbind', '解除')}
@@ -388,7 +389,7 @@ export default function MemberDetailPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-5 px-1.5 text-3xs"
+                            
                             onClick={() => bind.mutate({ projectId: p.id, role: 'member' })}
                           >
                             {t('memberDetail.bind', '绑定')}
@@ -464,7 +465,7 @@ export default function MemberDetailPage() {
 
         {/* 右侧栏（320px，可收起） */}
         <RightSidebar hidden={asideHidden} width={320}>
-          <SidebarButtonGroup className="px-1">
+          <SidebarButtonGroup >
             <SidebarButton
               icon={IdCard}
               label={t('memberDetail.copyId', '复制短 ID')}
@@ -475,7 +476,7 @@ export default function MemberDetailPage() {
                 icon={UserX}
                 label={t('members.deactivate', '停用')}
                 onClick={handleDeactivate}
-                className="text-destructive hover:text-destructive"
+                
               />
             )}
             {isSystemAssistantMember(member) && (

@@ -6,26 +6,22 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, PlayCircle, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TONE_CLASS } from '@/components/ui/tone';
+import {
+  ASSISTANT_STATUS_TONE,
+  CAPACITY_ACCEPTABILITY_TONE,
+} from '@/shared/status/status-visuals';
 import { Button } from '@/components/ui/button';
 import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
 import { TrustLevelBadge } from '@/modules/team-member/components/trust-level-badge';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { formatRelativeTime } from '@/shared/runtime/runtime-api';
 import { STATE_DOT, STATE_TEXT } from '@/modules/assistant/components/assistant-status-dot';
-import type { OfficeColleague, OfficeStatus } from '../api/office-api';
+import type { OfficeColleague } from '../api/office-api';
 
-const STATUS_TONE: Record<OfficeStatus, string> = {
-  needYou: 'border-accent-red/30 bg-accent-red/5',
-  working: 'border-accent-blue/30 bg-accent-blue/5',
-  suggestions: 'border-accent-yellow/30 bg-accent-yellow/5',
-  idle: 'border-border bg-card',
-};
-
-const ACCEPTABILITY_TONE: Record<OfficeColleague['capacity']['acceptability'], string> = {
-  available: 'bg-accent-green/10 text-accent-green',
-  busy: 'bg-accent-yellow/10 text-accent-yellow',
-  saturated: 'bg-accent-red/10 text-accent-red',
-};
+/** 卡片状态描边：tone 唯一链路 border 槽（弃原 5% 微底色，描边承载状态信号） */
+const statusCardClass = (status: OfficeColleague['status']): string =>
+  TONE_CLASS[ASSISTANT_STATUS_TONE[status] ?? 'default'].border;
 
 /** 容量条颜色：负载语义色（与可接活度一致） */
 function loadBarTone(loadPct: number, saturated: boolean): string {
@@ -52,8 +48,8 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-xl border p-4 transition-colors',
-        STATUS_TONE[colleague.status],
+        'flex flex-col gap-3 rounded-xl border bg-card p-4 transition-colors',
+        statusCardClass(colleague.status),
       )}
       data-ai-component="office.colleague-card"
       data-ai-role="panel"
@@ -139,7 +135,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
           <span
             className={cn(
               'rounded-full px-1.5 py-0.5 font-medium',
-              ACCEPTABILITY_TONE[capacity.acceptability],
+              TONE_CLASS[CAPACITY_ACCEPTABILITY_TONE[capacity.acceptability] ?? 'default'].light,
             )}
           >
             {t(`office.acceptability.${capacity.acceptability}`)}
@@ -171,7 +167,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
           <Button
             variant="ghost"
             size="sm"
-            fontSize="xs" className="h-7 px-2"
+            fontSize="xs" 
             onClick={() => navigate(`/app/members/${colleague.memberId}`)}
             data-ai-action="office.colleague.detail.click"
           >
@@ -181,7 +177,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
           <Button
             variant="outline"
             size="sm"
-            fontSize="xs" className="h-7 px-2"
+            fontSize="xs" 
             onClick={openChat}
             data-ai-action="office.colleague.chat.click"
           >

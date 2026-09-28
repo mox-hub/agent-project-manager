@@ -267,13 +267,13 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                   ) : property.type === 'list' ? (
                     <div className="flex flex-wrap items-center gap-1.5 px-1 py-0.5">
                       {splitListValue(property.value).map((item) => (
-                        <Badge key={item} variant="secondary" className="max-w-full">
+                        <Badge key={item} variant="secondary" >
                           <span className="truncate">{item}</span>
                           {editable && (
-                            <button
+                            <Button variant="ghost"
                               type="button"
                               aria-label={`移除 ${item}`}
-                              className="shrink-0 text-muted-foreground/70 transition-colors hover:text-destructive"
+                              className="shrink-0 transition-colors"
                               onClick={() =>
                                 commitChip(
                                   property,
@@ -282,13 +282,13 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                               }
                             >
                               <X size={11} />
-                            </button>
+                            </Button>
                           )}
                         </Badge>
                       ))}
                       {editable &&
                         (listAdding === property.key ? (
-                          <Input
+                          <Input fontSize="xs" size="h-6"
                             autoFocus
                             value={listDraft}
                             onChange={(e) => setListDraft(e.target.value)}
@@ -301,7 +301,7 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                               }
                             }}
                             placeholder="标签名，逗号可批量"
-                            className="h-6 w-36 px-2 text-xs"
+                            
                           />
                         ) : (
                           <Button
@@ -309,7 +309,7 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                             variant="ghost"
                             size="icon-xs"
                             aria-label="添加列表项"
-                            className="size-5 text-muted-foreground"
+                            
                             onClick={() => {
                               setListDraft('');
                               setListAdding(property.key);
@@ -328,7 +328,7 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                       />
                     </div>
                   ) : editing?.key === property.key ? (
-                    <Input
+                    <Input fontSize="xs" size="h-6"
                       autoFocus
                       value={editing.draft}
                       onChange={(e) => setEditing({ key: property.key, draft: e.target.value })}
@@ -338,7 +338,7 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                         if (e.key === 'Escape') setEditing(null);
                       }}
                       placeholder={property.type === 'date' ? 'ISO 日期，如 2026-09-17' : '属性值'}
-                      className="h-6 px-2 text-xs"
+                      
                     />
                   ) : (
                     <Button
@@ -369,7 +369,7 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                     size="icon-xs"
                     aria-label={`删除属性 ${property.key}`}
                     title="删除该属性"
-                    className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover/prop:opacity-100"
+                    className="shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover/prop:opacity-100"
                     onClick={() => commit({ [property.key]: null })}
                   >
                     <X size={12} />
@@ -388,7 +388,7 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                   autoFocus
                   placeholder="属性名"
                   onChange={(e) => setNewKey(e.target.value)}
-                  className="w-30 flex-none"
+                  className="flex-none"
                 />
                 <ComboboxContent>
                   <ComboboxList>
@@ -443,7 +443,7 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                   }
                 />
               ) : (
-                <Input
+                <Input fontSize="xs" size="h-6"
                   value={newValue}
                   onChange={(e) => setNewValue(e.target.value)}
                   onKeyDown={(e) => {
@@ -453,7 +453,7 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                   placeholder={
                     newKeyType === 'list' ? '逗号分隔，如 a, b' : '属性值（必填）'
                   }
-                  className="h-6 min-w-0 flex-1 px-2 text-xs"
+                  className="flex-1"
                 />
               )}
 
@@ -467,7 +467,7 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                   properties.some((p) => p.key === newKey.trim()) ||
                   (newKeyType !== 'boolean' && !newValue.trim())
                 }
-                className="shrink-0 text-muted-foreground"
+                className="shrink-0"
                 onClick={submitNewProperty}
               >
                 <Check size={14} />
@@ -477,19 +477,19 @@ export function DocumentPropertiesPanel({ content, editable, onSave }: DocumentP
                 variant="ghost"
                 size="icon-xs"
                 aria-label="取消添加"
-                className="shrink-0 text-muted-foreground"
+                className="shrink-0"
                 onClick={cancelNewProperty}
               >
                 <X size={14} />
               </Button>
             </div>
           ) : (
-            <Button
+            <Button width="full"
               type="button"
               variant="ghost"
               size="xs"
               onClick={() => setAddingProperty(true)}
-              className="w-full justify-start text-muted-foreground"
+              className="justify-start"
             >
               <Plus size={12} /> 添加属性
             </Button>

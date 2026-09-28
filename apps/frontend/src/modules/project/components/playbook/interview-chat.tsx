@@ -1,3 +1,4 @@
+import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CornerDownLeft, Sparkles } from 'lucide-react';
@@ -137,7 +138,7 @@ export function InterviewChat({
               key={choice}
               variant="outline"
               size="xs"
-              fontSize="2xs" className="h-6 px-2"
+              fontSize="2xs" 
               disabled={reachedMaxTurns}
               onClick={() => send(choice)}
             >
@@ -150,13 +151,13 @@ export function InterviewChat({
       {reachedMaxTurns ? (
         <div className="flex items-center justify-between gap-2 rounded-lg bg-accent-yellow-light/40 px-3 py-2 text-xs text-content-text">
           <span>{t('project.playbookPage.interview.chatMaxTurns')}</span>
-          <Button variant="outline" size="xs" className="h-6 shrink-0" onClick={onSwitchToForm}>
+          <Button variant="outline" size="xs" className="shrink-0" onClick={onSwitchToForm}>
             {t('project.playbookPage.interview.modeForm')}
           </Button>
         </div>
       ) : (
         <div className="flex items-end gap-2">
-          <textarea
+          <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -168,12 +169,12 @@ export function InterviewChat({
             rows={2}
             disabled={dynamic.isPending || turns.length === 0}
             placeholder={t('project.playbookPage.interview.chatPlaceholder')}
-            className="min-h-0 w-full flex-1 resize-none rounded-lg border border-border bg-content-bg px-3 py-2 text-xs text-content-text outline-none transition-colors placeholder:text-content-text-muted focus:border-accent-blue/60"
+            className="flex-1 resize-none outline-none transition-colors"
             data-ai="playbook.interview.chatInput"
           />
           <Button
             size="sm"
-            className="h-8 shrink-0"
+            className="shrink-0"
             disabled={dynamic.isPending || !input.trim() || reachedMaxTurns}
             onClick={() => send(input)}
             data-ai="playbook.interview.chatSend"
@@ -192,7 +193,7 @@ export function InterviewChat({
           <Button
             variant="outline"
             size="xs"
-            className="h-6 shrink-0"
+            className="shrink-0"
             disabled={dynamic.isPending}
             onClick={() => askNext(history)}
           >

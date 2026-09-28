@@ -4,6 +4,7 @@
  * 搜索过滤 + 成员/智能体两组勾选（图1），勾选即全量替换订阅者集合。
  * 作用域按当前路由自动推导（详情页/项目页），无法推导时不渲染。
  */
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, UserRoundPlus } from 'lucide-react';
@@ -72,21 +73,21 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
   const renderRow = (m: Member) => {
     const checked = checkedIds.has(m.id);
     return (
-      <button
+      <Button variant="ghost"
         key={m.id}
         type="button"
         onClick={() => toggle(m.id)}
-        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent hover:text-foreground"
+        className="flex items-center transition-colors"
         data-ai-component="ui.subscribe-row"
         data-checked={checked}
       >
-        <Checkbox checked={checked} aria-hidden="true" className="pointer-events-none size-3.5" />
-        <Avatar size="sm" className="size-5 shrink-0">
+        <Checkbox checked={checked} aria-hidden="true" className="pointer-events-none" />
+        <Avatar size="sm" className="shrink-0">
           {m.avatarUrl ? <AvatarImage src={m.avatarUrl} alt={m.displayName} /> : null}
-          <AvatarFallback className="text-3xs">{m.displayName[0]?.toUpperCase() ?? '?'}</AvatarFallback>
+          <AvatarFallback >{m.displayName[0]?.toUpperCase() ?? '?'}</AvatarFallback>
         </Avatar>
         <span className="min-w-0 flex-1 truncate">{m.displayName}</span>
-      </button>
+      </Button>
     );
   };
 
@@ -94,7 +95,7 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setSearch(''); }}>
       <PopoverTrigger
         render={
-          <button
+          <Button variant="ghost"
             type="button"
             // 订阅文案键位于 assistant.subscribe 命名空间（勿写裸 subscribe.*，会渲染出裸键）
             aria-label={t(subscribed ? 'assistant.subscribe.subscribed' : 'assistant.subscribe.title')}
@@ -121,7 +122,7 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
                 )}
               >
                 {m.avatarUrl ? <AvatarImage src={m.avatarUrl} alt={m.displayName} /> : null}
-                <AvatarFallback className="text-3xs">{m.displayName[0]?.toUpperCase() ?? '?'}</AvatarFallback>
+                <AvatarFallback >{m.displayName[0]?.toUpperCase() ?? '?'}</AvatarFallback>
               </Avatar>
             ))}
             {subscribers.length > 3 ? (
@@ -134,14 +135,14 @@ export function SubscribeButton({ className }: SubscribeButtonProps) {
           <UserRoundPlus className="size-3.5" strokeWidth={1.75} />
         )}
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={6} className="w-60 p-2">
+      <PopoverContent align="end" sideOffset={6} >
         <div className="relative mb-2">
           <Search className="absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <Input fontSize="xs" size="h-8"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('assistant.subscribe.searchPlaceholder')}
-            className="h-8 pl-7 text-xs"
+            
           />
         </div>
         {humans.length > 0 ? (

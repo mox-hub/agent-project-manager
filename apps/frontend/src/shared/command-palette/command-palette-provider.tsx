@@ -482,8 +482,7 @@ export function CommandPaletteProvider({
                   aria-label={t('commandPalette.aiPlaceholder', '问问 AI…')}
                   startAddon={<SparklesIcon />}
                 />
-                <Button
-                  fontSize="sm" className="me-2.5 rounded-md not-hover:text-muted-foreground sm:text-xs"
+                <Button className="me-2.5"
                   onClick={backToSearch}
                   size="sm"
                   variant="ghost"
@@ -495,7 +494,7 @@ export function CommandPaletteProvider({
               </div>
               <CommandPanel>
                 <ScrollArea
-                  className="[&_[data-slot=scroll-area-viewport]]:max-h-80"
+                  
                   overscrollContain
                   scrollbarGutter
                   scrollFade
@@ -520,9 +519,9 @@ export function CommandPaletteProvider({
                           </span>
                         </div>
                         <div className="flex flex-col gap-2">
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-2/3" />
+                          <Skeleton  />
+                          <Skeleton  />
+                          <Skeleton  />
                         </div>
                       </div>
                     ) : null}
@@ -611,8 +610,7 @@ export function CommandPaletteProvider({
                   value={query}
                   aria-label={t('commandPalette.title')}
                 />
-                <Button
-                  fontSize="sm" className="me-2.5 rounded-md not-hover:text-muted-foreground sm:text-xs"
+                <Button className="me-2.5"
                   onClick={enterAiMode}
                   size="sm"
                   variant="ghost"
@@ -623,7 +621,7 @@ export function CommandPaletteProvider({
                 </Button>
               </div>
               <CommandPanel>
-                <CommandEmpty className="not-empty:py-12">
+                <CommandEmpty >
                   {trimmedQuery ? (
                     <div className="wrap-break-word flex flex-col items-center gap-2">
                       <EmptySearchMedia />

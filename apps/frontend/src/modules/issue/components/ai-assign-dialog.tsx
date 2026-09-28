@@ -223,9 +223,9 @@ export function AiAssignDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent >
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center">
             <Bot size={16} className="text-accent-purple" />
             {isBatch
               ? t('task.batchDispatch.dialogTitle', '批量派发 {{count}} 条任务给 AI 员工', {
@@ -257,7 +257,7 @@ export function AiAssignDialog({
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-            <Spinner className="size-4 mr-2 text-inherit" />
+            <Spinner color="inherit" className="mr-2" />
             {t('task.aiAssign.loadingMembers')}
           </div>
         ) : !members || members.length === 0 ? (
@@ -279,7 +279,7 @@ export function AiAssignDialog({
                     | undefined)
                 : null;
               return (
-                <button
+                <Button variant="ghost"
                   key={m.id}
                   type="button"
                   onClick={() => setSelectedMemberId(m.id)}
@@ -307,21 +307,21 @@ export function AiAssignDialog({
                         </p>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           {m.defaultExecutionRole && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" >
                               {m.defaultExecutionRole}
                             </Badge>
                           )}
                           {role?.defaultCliProviderId && (
                             <Badge
                               variant="outline"
-                              className="text-xs gap-1"
+                              
                             >
                               <Terminal className="h-3 w-3" />
                               {role.defaultCliProviderId}
                             </Badge>
                           )}
                           {m.defaultCliProviderId && (
-                            <Badge className="text-xs gap-1">
+                            <Badge >
                               <Terminal className="h-3 w-3" />
                               {m.defaultCliProviderId} (override)
                             </Badge>
@@ -330,17 +330,17 @@ export function AiAssignDialog({
                       </div>
                     </div>
                     {m.status === 'active' ? (
-                      <Badge className="border-0 bg-accent-green-light/50 text-accent-green text-xs">
+                      <Badge color="green" >
                         <Radio size={10} className="mr-1" />
                         Active
                       </Badge>
                     ) : (
-                      <Badge className="border-0 bg-muted text-muted-foreground text-xs">
+                      <Badge >
                         {m.status}
                       </Badge>
                     )}
                   </div>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -361,7 +361,7 @@ export function AiAssignDialog({
           >
             {pending ? (
               <>
-                <Spinner className="size-3.5 mr-1 text-inherit" />
+                <Spinner color="inherit" size="xs" className="mr-1" />
                 {t('task.aiAssign.dispatching')}
               </>
             ) : (

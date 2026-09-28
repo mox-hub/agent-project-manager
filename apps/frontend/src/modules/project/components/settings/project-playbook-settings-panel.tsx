@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/ui/section-card';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { TONE_CLASS } from '@/components/ui/tone';
+import { PLAYBOOK_STAGE_TONE } from '@/shared/status/status-visuals';
 import {
   usePlaybookStatus,
 } from '../../hooks/use-playbook';
@@ -30,12 +32,9 @@ const STAGE_ICONS = {
   pending: Circle,
 } as const;
 
-const STAGE_ICON_CLASS: Record<PlaybookStageStatus['status'], string> = {
-  done: 'text-accent-green',
-  active: 'text-accent-blue',
-  skipped: 'text-muted-foreground',
-  pending: 'text-muted-foreground/60',
-};
+/** 阶段图标文字色：tone 唯一词表 text 槽（键登记于 status-visuals.PLAYBOOK_STAGE_TONE） */
+const stageIconClass = (status: PlaybookStageStatus['status']): string =>
+  TONE_CLASS[PLAYBOOK_STAGE_TONE[status] ?? 'default'].text;
 
 export function ProjectPlaybookSettingsPanel({ projectId }: { projectId: string }) {
   const { t } = useTranslation();
@@ -90,7 +89,7 @@ export function ProjectPlaybookSettingsPanel({ projectId }: { projectId: string 
                   <div className="flex flex-col items-center">
                     <Icon
                       size={16}
-                      className={cn('shrink-0', STAGE_ICON_CLASS[stage.status])}
+                      className={cn('shrink-0', stageIconClass(stage.status))}
                     />
                     {!isLast && <span className="mt-1 w-px flex-1 bg-border" />}
                   </div>

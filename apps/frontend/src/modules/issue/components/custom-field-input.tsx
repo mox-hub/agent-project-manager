@@ -6,6 +6,7 @@
  * - label 必显示，required 加标记；值统一走 onChange(unknown)，空值以 null 表示
  * - 值格式化工具 formatCustomFieldValue 供只读展示复用
  */
+import { FieldLabel } from '@/components/ui/field';
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
@@ -29,7 +30,7 @@ export function CustomFieldInput({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id} variant="muted" className="text-xs">
+      <Label htmlFor={id} variant="muted" >
         {field.label}
         {field.required ? <span className="text-destructive">*</span> : null}
       </Label>
@@ -83,9 +84,9 @@ function FieldControl({
           {(field.options ?? []).map((option) => {
             const checked = selected.includes(option);
             return (
-              <label
+              <FieldLabel size="xs" variant="muted"
                 key={option}
-                className="flex cursor-pointer items-center gap-1.5 text-sm text-foreground"
+                className="flex cursor-pointer items-center"
               >
                 <Checkbox
                   checked={checked}
@@ -98,7 +99,7 @@ function FieldControl({
                   }
                 />
                 {option}
-              </label>
+              </FieldLabel>
             );
           })}
         </div>

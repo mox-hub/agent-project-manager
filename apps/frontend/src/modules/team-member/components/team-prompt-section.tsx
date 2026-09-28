@@ -1,3 +1,5 @@
+import { Textarea } from '@/components/ui/textarea';
+import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -44,19 +46,19 @@ export function TeamPromptSection({ team }: { team: Team }) {
           {saving ? '保存中…' : '保存'}
         </Button>
       </CardHeader>
-      <CardContent inset="md" className="space-y-3">
+      <CardContent inset="md" >
         <p className="text-xs text-muted-foreground">
           作为团队整体需遵守的规则，派发任务给团队成员时注入上下文（Team Rules 段）。
         </p>
-        <textarea
+        <Textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           rows={8}
           placeholder="如：所有提交必须附带测试；沟通使用中文；代码风格遵循仓库 ESLint 配置…"
-          className="w-full px-2.5 py-2 rounded-md border border-input bg-background text-sm resize-y placeholder:text-muted-foreground focus-visible:border-accent-blue focus-visible:outline-hidden"
+          className="resize-y focus-visible:outline-hidden"
         />
         <div className="space-y-1.5">
-          <label className="text-xs font-medium">团队标签（逗号分隔）</label>
+          <FieldLabel size="xs" variant="muted" >团队标签（逗号分隔）</FieldLabel>
           <Input
             value={tagsInput}
             onChange={(e) => setTagsInput(e.target.value)}

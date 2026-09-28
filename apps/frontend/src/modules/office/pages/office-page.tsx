@@ -53,13 +53,13 @@ export function OfficePage() {
                 blocking: totals.blocking,
               })
             ) : (
-              <Skeleton className="h-4 w-64" />
+              <Skeleton  />
             )}
           </p>
           <SelectField
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
-            className="w-56"
+            
             aria-label={t('office.projectFilter')}
             data-ai-component="office.project-filter"
             data-ai-role="filter"
@@ -77,14 +77,14 @@ export function OfficePage() {
         {summary.isLoading ? (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-56 rounded-xl" />
+              <Skeleton key={i}  />
             ))}
           </div>
         ) : colleagues.length === 0 ? (
           <EmptyState
             variant="page"
             visual={
-              <IconStack aria-hidden="true" className="text-accent-purple">
+              <IconStack aria-hidden="true" >
                 <Bot className="size-4 text-accent-purple" />
               </IconStack>
             }

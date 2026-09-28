@@ -237,7 +237,7 @@ export function RepositoryDetailPage() {
                 rows={1}
                 placeholder={t('git.detail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40"
+                
               />
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -288,7 +288,7 @@ export function RepositoryDetailPage() {
 
         {/* 右侧栏（320px，可收起） */}
         <RightSidebar hidden={asideHidden} width={320}>
-          <SidebarButtonGroup className="px-1">
+          <SidebarButtonGroup >
             <SidebarButton
               icon={RefreshCw}
               label={t('common.refresh')}
@@ -303,7 +303,7 @@ export function RepositoryDetailPage() {
               icon={Trash2}
               label={t('common.delete')}
               onClick={handleDelete}
-              className="text-destructive hover:text-destructive"
+              
             />
           </SidebarButtonGroup>
 

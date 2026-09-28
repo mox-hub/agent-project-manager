@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { Plus, Pencil, RefreshCw, Terminal, Trash2 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/section-card';
@@ -86,12 +87,12 @@ export function ProjectRolesSection({ projectId }: { projectId: string }) {
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5"
+              
               onClick={handleSeed}
               disabled={seed.isPending}
             >
               {seed.isPending ? (
-                <Spinner className="size-3.5 text-inherit" />
+                <Spinner color="inherit" size="xs"  />
               ) : (
                 <RefreshCw size={13} />
               )}
@@ -99,7 +100,7 @@ export function ProjectRolesSection({ projectId }: { projectId: string }) {
             </Button>
             <Button
               size="sm"
-              className="gap-1.5"
+              
               onClick={() => setShowCreate(true)}
             >
               <Plus size={13} />
@@ -118,12 +119,12 @@ export function ProjectRolesSection({ projectId }: { projectId: string }) {
             {projectRoles.length === 0 ? (
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div>项目还没有执行角色。</div>
-                <Button
+                <Button padding="p-0"
                   variant="link"
                   size="sm"
                   onClick={handleSeed}
                   disabled={seed.isPending}
-                  className="h-auto p-0"
+                  
                 >
                   从全局模板同步 {globalRoles.length} 个默认角色 →
                 </Button>
@@ -293,7 +294,7 @@ function RoleEditDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent maxWidth="lg" >
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? '新建角色' : '编辑角色'}</DialogTitle>
           <DialogDescription>
@@ -303,7 +304,7 @@ function RoleEditDialog({
         <form onSubmit={handleSubmit} className="space-y-3">
           {mode === 'create' && (
             <div className="space-y-1.5">
-              <label className="text-xs font-medium">Key (唯一标识) *</label>
+              <FieldLabel size="xs" variant="muted" >Key (唯一标识) *</FieldLabel>
               <Input
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
@@ -313,7 +314,7 @@ function RoleEditDialog({
             </div>
           )}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">名称 *</label>
+            <FieldLabel size="xs" variant="muted" >名称 *</FieldLabel>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -322,7 +323,7 @@ function RoleEditDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">描述</label>
+            <FieldLabel size="xs" variant="muted" >描述</FieldLabel>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -331,7 +332,7 @@ function RoleEditDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium">执行角色</label>
+              <FieldLabel size="xs" variant="muted" >执行角色</FieldLabel>
               <Select
                 value={executionRole}
                 onValueChange={(v) => setExecutionRole(v as ExecutionRole)}
@@ -350,7 +351,7 @@ function RoleEditDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium">默认 CLI Provider</label>
+              <FieldLabel size="xs" variant="muted" >默认 CLI Provider</FieldLabel>
               <Select
                 value={cliProviderId}
                 onValueChange={(v) =>
@@ -372,9 +373,9 @@ function RoleEditDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">
+            <FieldLabel size="xs" variant="muted" >
               角色约定（该角色成员的 AI 执行者继承）
-            </label>
+            </FieldLabel>
             <PromptEditor
               value={promptHint}
               onChange={setPromptHint}

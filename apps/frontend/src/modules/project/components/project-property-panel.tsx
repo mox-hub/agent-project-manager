@@ -110,9 +110,9 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
       value: m.userId as string,
       label: m.displayName,
       icon: (
-        <Avatar className="h-4 w-4">
+        <Avatar >
           {m.avatarUrl ? <AvatarImage src={m.avatarUrl} alt="" /> : null}
-          <AvatarFallback className="text-3xs">
+          <AvatarFallback >
             {(m.displayName || '?').slice(0, 1).toUpperCase()}
           </AvatarFallback>
         </Avatar>

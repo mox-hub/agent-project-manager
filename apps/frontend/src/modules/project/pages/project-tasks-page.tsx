@@ -4,6 +4,7 @@
  * 列表/看板双视图 + 筛选/分组/搜索 + 多选批量（指派 AI/删除）+ 统一创建
  * （Linear 同步 UI/逻辑已上移至 shell 层 ProjectContextBar，全项目 tab 可用）
  */
+import { Button } from '@/components/ui/button';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -27,7 +28,7 @@ import {
   type FilterCondition,
   type FilterFieldDef,
 } from '@/components/ui/filter-chips';
-import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
+import { TASK_STATUS_VISUALS, TONE_DOT_CLASS, TONE_TEXT_CLASS, SEVERITY_TONE } from '@/shared/status/status-visuals';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
@@ -63,12 +64,9 @@ const SEVERITY_LABELS: Record<Severity, string> = {
   low: 'Low',
 };
 
-const SEVERITY_DOT: Record<Severity, string> = {
-  critical: 'bg-destructive',
-  high: 'bg-accent-orange',
-  medium: 'bg-accent-yellow',
-  low: 'bg-muted-foreground/40',
-};
+/** Bug 严重度分组点：tone 唯一词表 dot 槽（实心点） */
+const severityDotClass = (severity: Severity): string =>
+  TONE_DOT_CLASS[SEVERITY_TONE[severity] ?? 'default'];
 
 /** severity 缺失时从 priority 推导（项目任务页统一口径） */
 const severityOf = (task: Task): Severity =>
@@ -206,7 +204,7 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
         options: (['critical', 'high', 'medium', 'low'] as const).map((value) => ({
           value,
           label: SEVERITY_LABELS[value],
-          icon: <span className={`size-2.5 shrink-0 rounded-full ${SEVERITY_DOT[value]}`} />,
+          icon: <span className={`size-2.5 shrink-0 rounded-full ${severityDotClass(value)}`} />,
           hint: severityCounts.get(value)?.toString(),
         })),
       },
@@ -335,7 +333,7 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
                   }}
                   disabled={selected.length === 0}
                   title={t('task.dispatchToAi')}
-                  className="text-accent-purple"
+                  
                 >
                   <BotIcon className="size-3.5" /> {t('task.dispatchToAi')}
                 </ListActionButton>
@@ -354,7 +352,7 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
                     refetch();
                   }}
                   title={t('task.selection.confirmText')}
-                  className="text-destructive"
+                  
                 >
                   <Trash2 className="size-3.5" /> {t('task.selection.confirmText')}
                 </ListActionButton>
@@ -456,9 +454,9 @@ function ProjectTasksBoard({
     row3: (task: Task) => (
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1">{taskCardRow3(task)}</div>
-        <button
+        <Button variant="ghost"
           type="button"
-          className="shrink-0 rounded-md p-1 text-accent-purple transition-colors hover:bg-accent-purple/20"
+          className="shrink-0 transition-colors"
           onClick={(event) => {
             event.stopPropagation();
             onDispatchTask(task);
@@ -466,7 +464,7 @@ function ProjectTasksBoard({
           title={t('task.dispatchToAi')}
         >
           <BotIcon size={12} />
-        </button>
+        </Button>
       </div>
     ),
   };

@@ -118,3 +118,182 @@ export const RISK_VISUALS: Record<string, StatusVisual> = {
   high: { labelKey: 'status.risk.high', tone: 'warning', icon: ArrowUp },
   critical: { labelKey: 'status.risk.critical', tone: 'danger', icon: Flame },
 };
+
+// ── 业务量表 → tone 登记（2026-09-28 no-adhoc-tone 存量收敛批追加）────────────
+//
+// 以下均为**业务层 status → tone** 纯映射（值是封闭五档词表，不含任何 class），
+// 消费方一律经 `TONE_CLASS[tone].{text|dot|light|bg|border}` 取视觉类
+// （src/components/ui/tone.ts 视觉层唯一真相源）。只追加、不改既有映射值。
+
+/** 验收单状态（AcceptanceStatus：acceptance 模块详情/契约卡共用） */
+export const ACCEPTANCE_STATUS_TONE: Record<string, StatusTone> = {
+  draft: 'default',
+  pending: 'default',
+  in_review: 'info',
+  passed: 'success',
+  failed: 'danger',
+  waived: 'default',
+};
+
+/** 验收标准条目状态（CriterionStatus：标准逐项判定） */
+export const CRITERION_STATUS_TONE: Record<string, StatusTone> = {
+  pending: 'default',
+  passed: 'success',
+  failed: 'danger',
+  blocked: 'warning',
+};
+
+/** 严重度四档（Bug severity / 验收标准 severity；色阶与优先级一致） */
+export const SEVERITY_TONE: Record<string, StatusTone> = {
+  low: 'default',
+  medium: 'info',
+  high: 'warning',
+  critical: 'danger',
+};
+
+/** 完整性审计风险级别（AuditReport.riskLevel：red/yellow/green 色名键为服务端契约） */
+export const AUDIT_RISK_LEVEL_TONE: Record<string, StatusTone> = {
+  red: 'danger',
+  yellow: 'warning',
+  green: 'success',
+};
+
+/** 执行/运行状态（ExecutionRun / ExecutionStep / 执行项与审批结果，14 键合一登记） */
+export const EXECUTION_RUN_STATUS_TONE: Record<string, StatusTone> = {
+  draft: 'default',
+  planned: 'default',
+  pending: 'default',
+  in_progress: 'info',
+  running: 'info',
+  pending_approval: 'warning',
+  completed: 'success',
+  approved: 'success',
+  failed: 'danger',
+  rejected: 'danger',
+  blocked: 'danger',
+  cancelled: 'default',
+  skipped: 'warning',
+  superseded: 'default',
+};
+
+/** 运行时间轴活动条分类（run-timeline 的 model/tools/error 行） */
+export const RUN_TIMELINE_BAR_TONE: Record<string, StatusTone> = {
+  model: 'success',
+  tools: 'info',
+  error: 'danger',
+};
+
+/** 运行事件形态（RunEventKind 分类配色；形态分类并入链路登记，紫色不在封闭词表故归并） */
+export const RUN_EVENT_KIND_TONE: Record<string, StatusTone> = {
+  user: 'default',
+  prompt: 'default',
+  context: 'info',
+  assistant: 'success',
+  thinking: 'info',
+  tool: 'info',
+  file: 'success',
+  usage: 'warning',
+  result: 'default',
+  error: 'danger',
+  approval: 'warning',
+  status: 'default',
+};
+
+/** 工作流站点状态（workflow 站灯；pending/skipped 由消费侧以描边空心表达） */
+export const WORKFLOW_STATION_STATUS_TONE: Record<string, StatusTone> = {
+  done: 'success',
+  failed: 'danger',
+  running: 'warning',
+  waiting: 'warning',
+  pending: 'default',
+  skipped: 'default',
+};
+
+/** 剧本五阶段状态（intake 管道进度点 / project 设置面板共用） */
+export const PLAYBOOK_STAGE_TONE: Record<string, StatusTone> = {
+  done: 'success',
+  active: 'info',
+  skipped: 'default',
+  pending: 'default',
+};
+
+/** 完备性评估结论（intake readiness verdict） */
+export const READINESS_VERDICT_TONE: Record<string, StatusTone> = {
+  ready: 'success',
+  'needs-clarification': 'warning',
+  blocked: 'danger',
+};
+
+/** 完备性评估维度状态（intake readiness 六维度） */
+export const READINESS_DIMENSION_TONE: Record<string, StatusTone> = {
+  ready: 'success',
+  unclear: 'warning',
+  missing: 'danger',
+};
+
+/** 拆解质量评估结论（decision decomposition review verdict） */
+export const DECISION_VERDICT_TONE: Record<string, StatusTone> = {
+  healthy: 'success',
+  'needs-review': 'warning',
+  rework: 'danger',
+};
+
+/** AI 同事状态（assistant 状态点 / office 同事位 / bottom-dock 呼吸点共用） */
+export const ASSISTANT_STATUS_TONE: Record<string, StatusTone> = {
+  needYou: 'danger',
+  working: 'info',
+  suggestions: 'warning',
+  idle: 'success',
+};
+
+/** 协作卡状态（office 交接协作状态机） */
+export const COLLABORATION_STATUS_TONE: Record<string, StatusTone> = {
+  requested: 'warning',
+  committed: 'info',
+  in_progress: 'info',
+  delivered: 'info',
+  verified: 'success',
+  rejected: 'danger',
+  cancelled: 'default',
+  escalated: 'danger',
+};
+
+/** 容量可接活度（office colleague capacity.acceptability） */
+export const CAPACITY_ACCEPTABILITY_TONE: Record<string, StatusTone> = {
+  available: 'success',
+  busy: 'warning',
+  saturated: 'danger',
+};
+
+/** 契约文件三态绑定（contract syncMode：managed/synced/detached） */
+export const CONTRACT_SYNC_MODE_TONE: Record<string, StatusTone> = {
+  managed: 'info',
+  synced: 'success',
+  detached: 'default',
+};
+
+/** Linear 同步状态（linear sync badge） */
+export const LINEAR_SYNC_STATUS_TONE: Record<string, StatusTone> = {
+  synced: 'success',
+  pending: 'warning',
+  error: 'danger',
+  never_synced: 'default',
+  conflict: 'warning',
+};
+
+/** 发版状态（ReleaseStatus：release 列表/详情与里程碑页共用） */
+export const RELEASE_STATUS_TONE_MAP: Record<string, StatusTone> = {
+  draft: 'default',
+  gated: 'warning',
+  approved: 'info',
+  publishing: 'warning',
+  released: 'success',
+  failed: 'danger',
+};
+
+/** 成员活跃状态（team-member 成员卡） */
+export const MEMBER_STATUS_TONE: Record<string, StatusTone> = {
+  active: 'success',
+  inactive: 'default',
+  suspended: 'warning',
+};

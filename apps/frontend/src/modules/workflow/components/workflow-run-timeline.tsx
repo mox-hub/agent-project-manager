@@ -22,16 +22,23 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { TONE_CLASS } from '@/components/ui/tone';
+import { WORKFLOW_STATION_STATUS_TONE } from '@/shared/status/status-visuals';
 import type { RunPill, RunStation, StationStatus } from './run-view/build-run-view';
 
-const STATION_LAMP: Record<StationStatus, string> = {
-  done: 'bg-accent-green',
-  failed: 'bg-accent-red',
-  running: 'bg-accent-yellow animate-pulse',
-  waiting: 'bg-accent-yellow',
-  pending: 'border border-muted-foreground/40 bg-transparent',
-  skipped: 'border border-muted-foreground/40 bg-transparent',
+/** 空心档：pending/skipped 以描边表达「未开始/已跳过」（灯色走 border 槽） */
+const HOLLOW_STATION: Partial<Record<StationStatus, true>> = {
+  pending: true,
+  skipped: true,
 };
+
+/** 站灯配色：tone 唯一词表（实心档 dot 槽 / 空心档 border 槽，键登记于 status-visuals） */
+function stationLampClass(status: StationStatus): string {
+  const tone = WORKFLOW_STATION_STATUS_TONE[status] ?? 'default';
+  return HOLLOW_STATION[status]
+    ? cn('border bg-transparent', TONE_CLASS[tone].border)
+    : TONE_CLASS[tone].dot;
+}
 
 /** 节点类型 → 瓦片图标与语义色底（与画布 STEP_NODE_STYLE 同色系，v2 型扩展） */
 const NODE_TYPE_META: Record<string, { icon: LucideIcon; tile: string }> = {
@@ -121,7 +128,11 @@ function StationHead({ station }: { station: RunStation }) {
   return (
     <div className="flex w-42 items-center gap-1.5">
       <span
-        className={cn('size-2.5 shrink-0 rounded-full', STATION_LAMP[station.status])}
+        className={cn(
+          'size-2.5 shrink-0 rounded-full',
+          stationLampClass(station.status),
+          station.status === 'running' && 'animate-pulse',
+        )}
         aria-hidden
       />
       <span className="min-w-0 flex-1 truncate text-xs font-medium">{station.title}</span>

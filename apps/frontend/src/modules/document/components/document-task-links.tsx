@@ -1,4 +1,5 @@
 // Document Task Links Component - 文档任务关联组件
+import { Button } from '@/components/ui/button';
 import React, { memo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
 import * as Icons from 'lucide-react';
@@ -62,21 +63,21 @@ const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
 
         {/* 操作菜单 */}
         <div className="relative">
-          <button
+          <Button variant="ghost"
             type="button"
-            className="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-accent-foreground group-hover:opacity-100"
+            className="opacity-0 transition-opacity group-hover:opacity-100"
             onClick={() => setShowMenu(!showMenu)}
           >
             <Icons.MoreHorizontal size={16} />
-          </button>
+          </Button>
 
           {showMenu && (
             <>
               <div className="fixed inset-0 z-sticky" onClick={() => setShowMenu(false)} />
               <div className="absolute right-0 top-full z-dropdown mt-1 w-36 rounded-md border border-border bg-popover p-1 shadow-xs">
-                <button
+                <Button variant="ghost"
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
+                  className="flex items-center"
                   onClick={() => {
                     // TODO: 跳转到任务
                     setShowMenu(false);
@@ -84,10 +85,10 @@ const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
                 >
                   <Icons.ExternalLink size={14} />
                   打开任务
-                </button>
-                <button
+                </Button>
+                <Button variant="ghost"
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10"
+                  className="flex items-center"
                   onClick={() => {
                     onDelete(link.id);
                     setShowMenu(false);
@@ -95,7 +96,7 @@ const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
                 >
                   <Icons.Trash size={14} />
                   移除关联
-                </button>
+                </Button>
               </div>
             </>
           )}
@@ -145,7 +146,7 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Spinner className="h-6 w-6 text-muted-foreground" />
+        <Spinner  />
       </div>
     );
   }
@@ -163,16 +164,16 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
       {/* 头部 */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">关联任务</h3>
-        <button
+        <Button variant="ghost"
           type="button"
-          className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="inline-flex items-center transition-colors"
           onClick={() => setPickerOpen(true)}
           data-ai-component="document.task-links.add"
           data-ai-action="document.task-links.add.click"
         >
           <Icons.Plus size={14} />
           添加关联
-        </button>
+        </Button>
       </div>
 
       {/* 关联列表 */}
@@ -220,7 +221,7 @@ export function LinkTypeSelector({
   return (
     <div className="flex gap-2">
       {types.map((type) => (
-        <button
+        <Button variant="ghost"
           key={type}
           type="button"
           className={`
@@ -231,7 +232,7 @@ export function LinkTypeSelector({
           onClick={() => onChange(type)}
         >
           {LINK_TYPE_LABELS[type]}
-        </button>
+        </Button>
       ))}
     </div>
   );

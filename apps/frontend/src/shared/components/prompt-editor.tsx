@@ -164,7 +164,7 @@ export function PromptEditor({
               type="button"
               variant="ghost"
               size="sm"
-              fontSize="xs" className="h-6 gap-1 px-2 text-muted-foreground"
+              fontSize="xs" 
               disabled={draftLoading}
               onClick={() => void openDraftDialog()}
               data-ai-component="shared.prompt-editor.draft"
@@ -187,8 +187,8 @@ export function PromptEditor({
         setDraftOpen(next);
         if (!next) setDraftText(null);
       }}>
-        <DialogContent
-          className="sm:max-w-2xl"
+        <DialogContent maxWidth="2xl"
+          
           data-ai-component="shared.prompt-editor.draft-dialog"
         >
           <DialogHeader>
@@ -237,7 +237,7 @@ export function PromptEditor({
               </div>
             </div>
           </div>
-          <DialogFooter className="gap-2">
+          <DialogFooter >
             <Button
               type="button"
               variant="ghost"

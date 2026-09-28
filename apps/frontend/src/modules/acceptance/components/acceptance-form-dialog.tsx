@@ -2,6 +2,8 @@
  * AcceptanceFormDialog — 新建验收契约弹窗
  * 选择任务 + 完成契约类型（可自动推断）+ 描述；提交 POST /acceptance
  */
+import { FieldLabel } from '@/components/ui/field';
+import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -91,7 +93,7 @@ export function AcceptanceFormDialog({
         </DialogHeader>
 
         <div className="space-y-3">
-          <label className="block space-y-1.5">
+          <FieldLabel size="xs" variant="muted" className="block">
             <span className="text-xs font-medium text-muted-foreground">
               {t('acceptance.form.task')}
             </span>
@@ -106,9 +108,9 @@ export function AcceptanceFormDialog({
                 </option>
               ))}
             </SelectField>
-          </label>
+          </FieldLabel>
 
-          <label className="block space-y-1.5">
+          <FieldLabel size="xs" variant="muted" className="block">
             <span className="text-xs font-medium text-muted-foreground">
               {t('acceptance.form.completionType')}
             </span>
@@ -124,25 +126,25 @@ export function AcceptanceFormDialog({
                 </option>
               ))}
             </SelectField>
-          </label>
+          </FieldLabel>
 
-          <label className="block space-y-1.5">
+          <FieldLabel size="xs" variant="muted" className="block">
             <span className="text-xs font-medium text-muted-foreground">
               {t('acceptance.form.name')}
             </span>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-          </label>
+          </FieldLabel>
 
-          <label className="block space-y-1.5">
+          <FieldLabel size="xs" variant="muted" className="block">
             <span className="text-xs font-medium text-muted-foreground">
               {t('acceptance.form.description')}
             </span>
-            <textarea
+            <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="min-h-20 w-full rounded-md border border-border bg-background p-2 text-sm outline-hidden focus:ring-1 focus:ring-primary"
+              className="outline-hidden"
             />
-          </label>
+          </FieldLabel>
         </div>
 
         <DialogFooter>

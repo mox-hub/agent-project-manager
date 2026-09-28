@@ -62,11 +62,11 @@ export function ApiDocLinksManager({ projectId }: ApiDocLinksManagerProps) {
       </div>
 
       {isAdding && (
-        <Card className="mb-4 bg-muted/50">
-          <CardContent className="flex flex-col gap-4 pt-4">
+        <Card className="mb-4">
+          <CardContent className="flex flex-col">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label fontSize="sm" variant="muted" className="mb-1 block">Label</Label>
+                <Label variant="muted" className="mb-1 block">Label</Label>
                 <Input
                   type="text"
                   value={newLink.label}
@@ -75,9 +75,9 @@ export function ApiDocLinksManager({ projectId }: ApiDocLinksManagerProps) {
                 />
               </div>
               <div>
-                <Label fontSize="sm" variant="muted" className="mb-1 block">Type</Label>
+                <Label variant="muted" className="mb-1 block">Type</Label>
                 <SelectField
-                  className="w-full"
+                  
                   value={newLink.type}
                   onChange={(e) => setNewLink({ ...newLink, type: e.target.value as ProjectApiDocLinkRequest['type'] })}
                 >
@@ -90,7 +90,7 @@ export function ApiDocLinksManager({ projectId }: ApiDocLinksManagerProps) {
               </div>
             </div>
             <div>
-              <Label fontSize="sm" variant="muted" className="mb-1 block">URL</Label>
+              <Label variant="muted" className="mb-1 block">URL</Label>
               <Input
                 type="url"
                 value={newLink.url}
@@ -99,7 +99,7 @@ export function ApiDocLinksManager({ projectId }: ApiDocLinksManagerProps) {
               />
             </div>
             <div>
-              <Label fontSize="sm" variant="muted" className="mb-1 block">Description (optional)</Label>
+              <Label variant="muted" className="mb-1 block">Description (optional)</Label>
               <Input
                 type="text"
                 value={newLink.description}
@@ -113,7 +113,7 @@ export function ApiDocLinksManager({ projectId }: ApiDocLinksManagerProps) {
                 checked={newLink.aiIndexed}
                 onChange={(e) => setNewLink({ ...newLink, aiIndexed: e.target.checked })}
               />
-              <Label htmlFor="apiAiIndexed" fontSize="sm" variant="muted">
+              <Label htmlFor="apiAiIndexed" variant="muted">
                 Index for AI context
               </Label>
             </div>

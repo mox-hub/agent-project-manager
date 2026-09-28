@@ -1,3 +1,5 @@
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { useMemo, useRef, useState } from 'react';
 import { FileText } from 'lucide-react';
 
@@ -133,7 +135,7 @@ export function MentionTextarea({
 
   return (
     <div className={cn('relative', className)}>
-      <textarea
+      <Textarea
         ref={textareaRef}
         value={value}
         disabled={disabled}
@@ -165,7 +167,7 @@ export function MentionTextarea({
           <ul className="max-h-56 overflow-y-auto py-1">
             {list.map((candidate, i) => (
               <li key={`${candidate.kind}-${candidate.id}`}>
-                <button
+                <Button variant="ghost"
                   type="button"
                   className={cn(
                     'flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm',
@@ -207,7 +209,7 @@ export function MentionTextarea({
                       </span>
                     </>
                   )}
-                </button>
+                </Button>
               </li>
             ))}
           </ul>

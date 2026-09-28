@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type ColumnDef, type OnChangeFn, type SortingState } from '@tanstack/react-table';
@@ -190,19 +191,19 @@ export function TaskTableView({
               data-subtask-depth={depth}
             >
               {kidCount > 0 ? (
-                <button
+                <Button variant="ghost"
                   type="button"
                   aria-expanded={!isCollapsed}
                   aria-label={isCollapsed ? `Expand ${task.title}` : `Collapse ${task.title}`}
                   title={isCollapsed ? `Expand ${task.title}` : `Collapse ${task.title}`}
-                  className="flex size-4 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  className="flex shrink-0 items-center justify-center transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleCollapsed(task.id);
                   }}
                 >
                   {isCollapsed ? <ChevronRight className="size-3" /> : <ChevronDown className="size-3" />}
-                </button>
+                </Button>
               ) : (
                 <span className="size-4 shrink-0" />
               )}

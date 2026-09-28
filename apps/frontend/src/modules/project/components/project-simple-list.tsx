@@ -190,7 +190,7 @@ export function ProjectSimpleList({
                 {activeCount} AI 执行中
               </span>
             ) : null}
-            <ListChip className="border border-border bg-muted/40 uppercase text-muted-foreground">
+            <ListChip className="uppercase">
               {getSourceBadgeText(project.source)}
             </ListChip>
           </>
@@ -315,7 +315,7 @@ export function ProjectSimpleList({
               <span className="tabular-nums text-xs text-muted-foreground">{progressValue}%</span>
             </span>
             {/* 更新时间 */}
-            <ListText className="shrink-0 text-muted-foreground">{formatDate(rowUpdatedAt)}</ListText>
+            <ListText className="shrink-0">{formatDate(rowUpdatedAt)}</ListText>
           </>
         );
       }}

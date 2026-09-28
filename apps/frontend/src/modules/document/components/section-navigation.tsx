@@ -1,4 +1,5 @@
 // Section Navigation Component - 章节导航组件
+import { Input } from '@/components/ui/input';
 import React, { memo, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
@@ -270,30 +271,30 @@ export const SectionNavigation = memo(function SectionNavigation({
             size={13}
             className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
-          <input
+          <Input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="搜索章节…"
-            className="h-7 w-full rounded-md border border-border bg-background pl-7 pr-7 text-xs focus:border-accent-blue focus:outline-hidden"
+            className="focus:outline-hidden"
           />
           {searchTerm && (
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() => setSearchTerm('')}
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
+              className="absolute right-1 top-1/2 -translate-y-1/2"
               aria-label="清除搜索"
             >
               <X size={12} />
-            </button>
+            </Button>
           )}
         </div>
         <div className="flex items-center justify-between text-3xs text-muted-foreground">
           <span>{allFlat.length} 章节</span>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={allExpanded ? collapseAll : expandAll}
-            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-muted"
+            className="inline-flex items-center"
             disabled={allFlat.filter((s) => s.children?.length).length === 0}
           >
             {allCollapsed ? (
@@ -309,7 +310,7 @@ export const SectionNavigation = memo(function SectionNavigation({
                 <ChevronsUpDown size={11} /> 全部展开
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -365,7 +366,7 @@ export function FlatSectionList({
       {flatSections.map((section) => {
         const isActive = currentAnchor === section.anchor;
         return (
-          <button
+          <Button variant="ghost"
             key={section.id}
             type="button"
             className={cn(
@@ -382,7 +383,7 @@ export function FlatSectionList({
             >
               {section.title}
             </span>
-          </button>
+          </Button>
         );
       })}
     </nav>

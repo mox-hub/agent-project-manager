@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import * as React from 'react'
 import { useCallback, useMemo, useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
@@ -474,13 +475,13 @@ function SortableDemo() {
       value={items}
       onValueChange={setItems}
       getItemValue={(item) => item}
-      className="divide-y divide-border rounded-lg border border-border bg-card"
+      className="divide-y divide-border"
     >
       {items.map((item) => (
-        <SortableItem key={item} value={item} className="flex items-center gap-2 bg-card px-3 py-2">
+        <SortableItem key={item} value={item} className="flex items-center">
           <SortableItemHandle
-            render={<button type="button" aria-label="拖拽排序" />}
-            className="touch-none text-muted-foreground"
+            render={<Button variant="ghost" type="button" aria-label="拖拽排序" />}
+            className="touch-none"
           >
             <GripVertical className="size-3.5" />
           </SortableItemHandle>
@@ -499,13 +500,13 @@ function SortableGridDemo() {
       onValueChange={setTiles}
       getItemValue={(tile) => tile}
       strategy="grid"
-      className="grid grid-cols-3 gap-2"
+      className="grid grid-cols-3"
     >
       {tiles.map((tile) => (
         <SortableItem
           key={tile}
           value={tile}
-          className="rounded-md border border-border bg-card px-3 py-4 text-center text-xs font-medium"
+          
         >
           {tile}
         </SortableItem>
@@ -802,12 +803,12 @@ function SubLabel({ children }: { children: React.ReactNode }) {
 function TokenLabel({ name }: { name: string }) {
   const { copyToClipboard, isCopied: copied } = useCopyToClipboard({ timeout: 1200 })
   return (
-    <button onClick={() => copyToClipboard(name)} className="flex items-center gap-1 text-3xs text-muted-foreground hover:text-foreground font-mono group transition-colors">
+    <Button variant="ghost" onClick={() => copyToClipboard(name)} className="flex items-center group transition-colors">
       <span>{name}</span>
       {copied
         ? <Check className="w-2.5 h-2.5 text-emerald-500" />
         : <Copy className="w-2.5 h-2.5 opacity-0 group-hover:opacity-60 transition-opacity" />}
-    </button>
+    </Button>
   )
 }
 
@@ -1019,7 +1020,7 @@ function CommandPaletteDemo() {
             />
           </div>
           <CommandPanel>
-            <CommandEmpty className="not-empty:py-12">
+            <CommandEmpty >
               <p className="text-muted-foreground text-sm">
                 {trimmed ? `没有匹配「${trimmed}」的命令` : '没有匹配的命令'}
               </p>
@@ -1090,7 +1091,7 @@ function MenuDemo() {
     <div className="flex flex-wrap items-start gap-3">
       <Menu>
         <MenuTrigger render={<Button variant="outline">Open Menu</Button>} />
-        <MenuPopup className="min-w-52">
+        <MenuPopup >
           <MenuGroupLabel>Playback</MenuGroupLabel>
           <MenuItem onClick={() => undefined}>
             Play <MenuShortcut>⌘P</MenuShortcut>
@@ -1211,10 +1212,10 @@ function CheckboxGroupDemo() {
   return (
     <CheckboxGroup value={channels} onValueChange={setChannels}>
       {['Email', 'Push', 'SMS'].map((channel) => (
-        <label key={channel} className="flex cursor-pointer items-center gap-2 text-sm">
+        <FieldLabel size="xs" variant="muted" key={channel} className="flex cursor-pointer items-center">
           <Checkbox value={channel} />
           {channel}
-        </label>
+        </FieldLabel>
       ))}
     </CheckboxGroup>
   )
@@ -1239,7 +1240,7 @@ function MeterDemo() {
           <MeterValue>{(formatted) => formatted}</MeterValue>
         </div>
         <MeterTrack>
-          <MeterIndicator className="bg-accent-red" />
+          <MeterIndicator  />
         </MeterTrack>
       </Meter>
     </div>
@@ -1458,14 +1459,14 @@ function AvatarModernizationShowcase() {
             <h3 className="text-sm font-semibold text-foreground">
               双表面头像体系（人类同事: react-nice-avatar × AI 同事: avvvatars）
             </h3>
-            <Badge variant="outline" className="text-3xs text-accent-blue border-accent-blue/30">官方定夺</Badge>
+            <Badge color="blue" fontSize="3xs" variant="outline" >官方定夺</Badge>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             全面舍弃其他非标方案。人类同事采用 <code>react-nice-avatar</code> 确定性插画肖像；AI 同事采用 <code>avvvatars</code> 算法几何。纯本地 SVG 驱动，零外网依赖。
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="secondary" className="text-3xs text-accent-green bg-accent-green/10 border-accent-green/30">
+          <Badge color="green" fontSize="3xs" variant="secondary" >
             双表面 100% 确定性生成
           </Badge>
         </div>
@@ -1480,7 +1481,7 @@ function AvatarModernizationShowcase() {
               <User className="size-4 text-accent-blue" />
               <span className="text-xs font-semibold text-foreground">人类同事肖像引擎</span>
             </div>
-            <Badge variant="secondary" className="text-3xs text-accent-blue bg-accent-blue/10">react-nice-avatar</Badge>
+            <Badge color="blue" fontSize="3xs" variant="secondary" >react-nice-avatar</Badge>
           </div>
 
           <div className="flex items-center gap-3">
@@ -1490,13 +1491,13 @@ function AvatarModernizationShowcase() {
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-foreground truncate">{humanSeed}</span>
-                <button
+                <Button variant="ghost"
                   type="button"
                   onClick={() => setHumanNonce((n) => n + 1)}
-                  className="px-2 py-0.5 rounded text-3xs font-medium bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                  className="transition-colors"
                 >
                   随机变幻
-                </button>
+                </Button>
               </div>
               <div className="flex flex-wrap gap-1 text-3xs font-mono text-muted-foreground">
                 <span className="px-1.5 py-0.5 rounded bg-muted/60">性别: {currentNiceConfig.sex}</span>
@@ -1511,7 +1512,7 @@ function AvatarModernizationShowcase() {
               <span className="text-3xs text-muted-foreground">测试 Seed / 姓名:</span>
               <div className="flex flex-wrap gap-1">
                 {humanPresets.slice(0, 4).map((p) => (
-                  <button
+                  <Button variant="ghost"
                     key={p}
                     type="button"
                     onClick={() => { setHumanSeed(p); setHumanNonce(0); }}
@@ -1521,15 +1522,15 @@ function AvatarModernizationShowcase() {
                     )}
                   >
                     {p.split(' ')[0]}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
-            <Input
+            <Input fontSize="xs" size="h-7" fontVariant="mono"
               value={humanSeed}
               onChange={(e) => { setHumanSeed(e.target.value || 'User'); setHumanNonce(0); }}
               placeholder="输入人类成员姓名或邮箱…"
-              className="h-7 text-xs font-mono"
+              
             />
           </div>
         </div>
@@ -1541,7 +1542,7 @@ function AvatarModernizationShowcase() {
               <Bot className="size-4 text-accent-purple" />
               <span className="text-xs font-semibold text-foreground">AI 同事几何符号引擎</span>
             </div>
-            <Badge variant="secondary" className="text-3xs text-accent-purple bg-accent-purple/10">avvvatars-react</Badge>
+            <Badge color="purple" fontSize="3xs" variant="secondary" >avvvatars-react</Badge>
           </div>
 
           <div className="flex items-center gap-3">
@@ -1552,7 +1553,7 @@ function AvatarModernizationShowcase() {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-foreground truncate">@{agentSeed}</span>
                 <div className="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-                  <button
+                  <Button variant="ghost"
                     type="button"
                     onClick={() => setAvStyle('shape')}
                     className={cn(
@@ -1561,8 +1562,8 @@ function AvatarModernizationShowcase() {
                     )}
                   >
                     Shape
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="ghost"
                     type="button"
                     onClick={() => setAvStyle('character')}
                     className={cn(
@@ -1571,19 +1572,19 @@ function AvatarModernizationShowcase() {
                     )}
                   >
                     Char
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div className="flex flex-wrap gap-1 text-3xs font-mono text-muted-foreground">
                 <span className="px-1.5 py-0.5 rounded bg-muted/60">模式: {avStyle}</span>
                 <span className="px-1.5 py-0.5 rounded bg-muted/60">60 几何哈希</span>
-                <button
+                <Button variant="ghost"
                   type="button"
                   onClick={() => setAvShadow(!avShadow)}
-                  className="px-1.5 py-0.5 rounded bg-muted/60 hover:bg-muted text-accent-purple"
+                  
                 >
                   {avShadow ? '阴影: 开' : '阴影: 关'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1593,7 +1594,7 @@ function AvatarModernizationShowcase() {
               <span className="text-3xs text-muted-foreground">测试智能体 Handle:</span>
               <div className="flex flex-wrap gap-1">
                 {agentPresets.slice(0, 4).map((p) => (
-                  <button
+                  <Button variant="ghost"
                     key={p}
                     type="button"
                     onClick={() => setAgentSeed(p)}
@@ -1603,15 +1604,15 @@ function AvatarModernizationShowcase() {
                     )}
                   >
                     @{p.split('-')[0]}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
-            <Input
+            <Input fontSize="xs" size="h-7" fontVariant="mono"
               value={agentSeed}
               onChange={(e) => setAgentSeed(e.target.value || 'agent')}
               placeholder="输入智能体标识…"
-              className="h-7 text-xs font-mono"
+              
             />
           </div>
         </div>
@@ -1634,7 +1635,7 @@ function AvatarModernizationShowcase() {
               <span className="text-xs font-semibold text-accent-blue flex items-center gap-1">
                 <User className="size-3" /> 人类工程师与产品团队
               </span>
-              <Badge variant="outline" className="text-3xs text-accent-blue border-accent-blue/30">插画肖像</Badge>
+              <Badge color="blue" fontSize="3xs" variant="outline" >插画肖像</Badge>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {humanTeam.map((h) => (
@@ -1659,7 +1660,7 @@ function AvatarModernizationShowcase() {
               <span className="text-xs font-semibold text-accent-purple flex items-center gap-1">
                 <Bot className="size-3" /> AI 智能体执行面
               </span>
-              <Badge variant="outline" className="text-3xs text-accent-purple border-accent-purple/30">算法几何</Badge>
+              <Badge color="purple" fontSize="3xs" variant="outline" >算法几何</Badge>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {agentTeam.map((a) => (
@@ -1714,7 +1715,7 @@ function ActivityHeatmapShowcase() {
     const count = Math.floor(Math.abs(seed % 1) * 8) - 4
     return { date: d.toISOString().slice(0, 10), count: Math.max(0, count) }
   })
-  return <ActivityHeatmap data={data} days={91} className="max-w-lg" />
+  return <ActivityHeatmap data={data} days={91}  />
 }
 
 function SeverityBar({ severity }: { severity: Severity }) {
@@ -1856,21 +1857,21 @@ export function DesignSystemPage() {
           {/* 快速搜索框 */}
           <div className="relative">
             <Search className="absolute left-2 top-2 size-3.5 text-muted-foreground pointer-events-none" />
-            <input
+            <Input
               type="text"
               value={navSearch}
               onChange={(e) => setNavSearch(e.target.value)}
               placeholder="搜索组件或 Token…"
-              className="w-full h-7 pl-7 pr-6 text-xs rounded-md border border-border bg-muted/40 placeholder:text-muted-foreground/60 focus:bg-background focus:outline-hidden focus:border-accent-blue transition-colors"
+              className="focus:outline-hidden transition-colors"
             />
             {navSearch && (
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => setNavSearch('')}
-                className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+                className="absolute right-2 top-2"
               >
                 <X className="size-3" />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -1888,7 +1889,7 @@ export function DesignSystemPage() {
                 {g.items.map((s) => {
                   const isActive = activeSection === s.id
                   return (
-                    <button
+                    <Button variant="ghost"
                       key={s.id}
                       onClick={() => scrollTo(s.id)}
                       className={cn(
@@ -1902,7 +1903,7 @@ export function DesignSystemPage() {
                       {isActive && (
                         <span className="w-1.5 h-1.5 rounded-full bg-accent-blue shrink-0 ml-1.5" />
                       )}
-                    </button>
+                    </Button>
                   )
                 })}
               </div>
@@ -2121,7 +2122,7 @@ export function DesignSystemPage() {
                       撞档（size-5），故显式给 size="sm"(=size-4) 并 text-inherit
                       保色；字形同为 Loader2 ⇒ 视觉不变，仅新增 role=status 与
                       aria-label（无障碍增强）。 */}
-                  <Button disabled><Spinner size="sm" className="text-inherit" /> Loading…</Button>
+                  <Button disabled><Spinner color="inherit" size="sm"  /> Loading…</Button>
                   <Button variant="outline" disabled>Disabled Outline</Button>
                 </div>
               </div>
@@ -2197,14 +2198,14 @@ export function DesignSystemPage() {
                     <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground text-xs font-medium border border-border">
                       <Tag className="w-2.5 h-2.5" />
                       {tag}
-                      <button className="ml-0.5 hover:text-destructive transition-colors">
+                      <Button variant="ghost" className="ml-0.5 transition-colors">
                         <X className="w-2.5 h-2.5" />
-                      </button>
+                      </Button>
                     </span>
                   ))}
-                  <button className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-dashed border-border text-muted-foreground text-xs hover:border-primary hover:text-primary transition-colors">
+                  <Button variant="ghost" className="inline-flex items-center transition-colors">
                     <Plus className="w-2.5 h-2.5" /> Add tag
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div>
@@ -2267,12 +2268,12 @@ export function DesignSystemPage() {
                   ))}
                   <div className="flex -space-x-2 ml-2">
                     {['AK', 'BM', 'CR', 'DS'].map((i, idx) => (
-                      <Avatar key={i} className="size-8 ring-2 ring-background" style={{ zIndex: 4 - idx }}>
-                        <AvatarFallback className="text-3xs font-semibold bg-primary text-primary-foreground">{i}</AvatarFallback>
+                      <Avatar key={i}  style={{ zIndex: 4 - idx }}>
+                        <AvatarFallback >{i}</AvatarFallback>
                       </Avatar>
                     ))}
-                    <Avatar className="size-8 ring-2 ring-background">
-                      <AvatarFallback className="text-3xs font-semibold bg-muted text-muted-foreground">+4</AvatarFallback>
+                    <Avatar >
+                      <AvatarFallback >+4</AvatarFallback>
                     </Avatar>
                   </div>
                 </div>
@@ -2390,8 +2391,8 @@ export function DesignSystemPage() {
             <div className="grid grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm font-medium">Basic Card</CardTitle>
-                  <CardDescription className="text-xs">Header + content pattern.</CardDescription>
+                  <CardTitle size="sm" >Basic Card</CardTitle>
+                  <CardDescription >Header + content pattern.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">Uses <code className="font-mono text-2xs bg-muted px-1 rounded">bg-card</code> and <code className="font-mono text-2xs bg-muted px-1 rounded">rounded-xl</code>.</p>
@@ -2399,19 +2400,19 @@ export function DesignSystemPage() {
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm font-medium">Card with Footer</CardTitle>
-                  <CardDescription className="text-xs">Action footer row.</CardDescription>
+                  <CardTitle size="sm" >Card with Footer</CardTitle>
+                  <CardDescription >Action footer row.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">Footer holds primary and secondary actions.</p>
                 </CardContent>
-                <CardFooter className="gap-2">
+                <CardFooter >
                   <Button size="sm">Confirm</Button>
                   <Button size="sm" variant="outline">Cancel</Button>
                 </CardFooter>
               </Card>
               <Card>
-                <CardContent className="pt-6">
+                <CardContent >
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">Total Tasks</p>
@@ -2424,14 +2425,14 @@ export function DesignSystemPage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="shadow-md">
+              <Card >
                 <CardHeader>
-                  <CardTitle className="text-sm font-medium">Elevated Card</CardTitle>
+                  <CardTitle size="sm" >Elevated Card</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent >
                   <Progress value={72} />
-                  <Progress value={45} className="[&>div]:bg-amber-500" />
-                  <Progress value={18} className="[&>div]:bg-red-500" />
+                  <Progress value={45}  />
+                  <Progress value={18}  />
                 </CardContent>
               </Card>
             </div>
@@ -2445,26 +2446,26 @@ export function DesignSystemPage() {
               <div className="space-y-4">
                 <SubLabel>Text Inputs</SubLabel>
                 <div className="space-y-1.5">
-                  <Label htmlFor="ds-i1" className="text-xs">Default</Label>
+                  <Label htmlFor="ds-i1" >Default</Label>
                   <Input id="ds-i1" placeholder="Enter a value…" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="ds-i2" className="text-xs">With Icon</Label>
+                  <Label htmlFor="ds-i2" >With Icon</Label>
                   <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                    <Input id="ds-i2" className="pl-8" placeholder="Search…" />
+                    <Input id="ds-i2"  placeholder="Search…" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="ds-i3" className="text-xs">Disabled</Label>
+                  <Label htmlFor="ds-i3" >Disabled</Label>
                   <Input id="ds-i3" disabled placeholder="Not editable" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="ds-ta" className="text-xs">Textarea</Label>
+                  <Label htmlFor="ds-ta" >Textarea</Label>
                   <Textarea id="ds-ta" placeholder="Write a description…" rows={3} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Select</Label>
+                  <Label >Select</Label>
                   <Select
                     items={[
                       { value: 'a', label: 'Option Alpha' },
@@ -2472,7 +2473,7 @@ export function DesignSystemPage() {
                       { value: 'c', label: 'Option Gamma' },
                     ]}
                   >
-                    <SelectTrigger className="w-full"><SelectValue placeholder="Choose…" /></SelectTrigger>
+                    <SelectTrigger ><SelectValue placeholder="Choose…" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="a">Option Alpha</SelectItem>
                       <SelectItem value="b">Option Beta</SelectItem>
@@ -2514,7 +2515,7 @@ export function DesignSystemPage() {
                     {['Alpha', 'Beta', 'Gamma'].map((v) => (
                       <div key={v} className="flex items-center gap-2">
                         <RadioGroupItem value={v.toLowerCase()} id={`r-${v}`} />
-                        <Label htmlFor={`r-${v}`} className="text-xs cursor-pointer">{v}</Label>
+                        <Label htmlFor={`r-${v}`} className="cursor-pointer">{v}</Label>
                       </div>
                     ))}
                   </RadioGroup>
@@ -2562,15 +2563,15 @@ export function DesignSystemPage() {
                 <AlertTitle>Information</AlertTitle>
                 <AlertDescription>This is an informational alert for neutral messages.</AlertDescription>
               </Alert>
-              <Alert className="border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/40 [&>svg]:text-emerald-600">
+              <Alert >
                 <CheckCircle2 className="h-4 w-4" />
-                <AlertTitle className="text-emerald-800 dark:text-emerald-300">Success</AlertTitle>
-                <AlertDescription className="text-emerald-700 dark:text-emerald-400">Operation completed. Changes have been saved.</AlertDescription>
+                <AlertTitle >Success</AlertTitle>
+                <AlertDescription >Operation completed. Changes have been saved.</AlertDescription>
               </Alert>
-              <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 [&>svg]:text-amber-600">
+              <Alert >
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle className="text-amber-800 dark:text-amber-300">Warning</AlertTitle>
-                <AlertDescription className="text-amber-700 dark:text-amber-400">This action may have unintended consequences.</AlertDescription>
+                <AlertTitle >Warning</AlertTitle>
+                <AlertDescription >This action may have unintended consequences.</AlertDescription>
               </Alert>
               <Alert variant="destructive">
                 <XCircle className="h-4 w-4" />
@@ -2647,9 +2648,9 @@ export function DesignSystemPage() {
                   <StepperNav>
                     {['Account', 'Profile', 'Workspace', 'Done'].map((label, i, arr) => (
                       <StepperItem key={label} step={i + 1}>
-                        <StepperTrigger className="gap-1.5">
-                          <StepperIndicator className="size-5 text-3xs font-medium">{i + 1}</StepperIndicator>
-                          <StepperTitle className="text-xs whitespace-nowrap">{label}</StepperTitle>
+                        <StepperTrigger >
+                          <StepperIndicator >{i + 1}</StepperIndicator>
+                          <StepperTitle className="whitespace-nowrap">{label}</StepperTitle>
                         </StepperTrigger>
                         {i < arr.length - 1 && <StepperSeparator />}
                       </StepperItem>
@@ -2663,15 +2664,15 @@ export function DesignSystemPage() {
                   value={3}
                   indicators={{
                     completed: <Check className="size-3" />,
-                    loading: <Spinner size="sm" className="size-3.5 text-primary-foreground" />,
+                    loading: <Spinner size="sm"  />,
                   }}
                 >
                   <StepperNav>
                     {['Draft', 'Gated', 'Approved', 'Publishing', 'Released'].map((label, i, arr) => (
                       <StepperItem key={label} step={i + 1} loading={i === 3}>
                         <div className="flex items-center gap-2">
-                          <StepperIndicator className="size-5 text-3xs font-medium">{i + 1}</StepperIndicator>
-                          <StepperTitle className="text-xs whitespace-nowrap">{label}</StepperTitle>
+                          <StepperIndicator >{i + 1}</StepperIndicator>
+                          <StepperTitle className="whitespace-nowrap">{label}</StepperTitle>
                         </div>
                         {i < arr.length - 1 && <StepperSeparator />}
                       </StepperItem>
@@ -2689,17 +2690,17 @@ export function DesignSystemPage() {
                         { title: '扫描考古', desc: '解析提交历史并生成档案草稿' },
                         { title: '校对入库', desc: '人工确认后进入项目档案' },
                       ].map((s, i, arr) => (
-                        <StepperItem key={s.title} step={i + 1} className="w-full">
+                        <StepperItem key={s.title} step={i + 1} >
                           <div className="flex w-full items-start gap-3">
                             <div className="flex flex-col items-center self-stretch">
-                              <StepperIndicator className="text-3xs font-medium">{i + 1}</StepperIndicator>
+                              <StepperIndicator >{i + 1}</StepperIndicator>
                               {i < arr.length - 1 && (
-                                <StepperSeparator className="m-0 w-0.5 flex-1 rounded-full" />
+                                <StepperSeparator className="m-0 flex-1" />
                               )}
                             </div>
                             <div className={cn('min-w-0 flex-1', i < arr.length - 1 && 'pb-6')}>
                               <StepperTitle>{s.title}</StepperTitle>
-                              <StepperDescription className="mt-1 text-xs">{s.desc}</StepperDescription>
+                              <StepperDescription className="mt-1">{s.desc}</StepperDescription>
                             </div>
                           </div>
                         </StepperItem>
@@ -2762,7 +2763,7 @@ export function DesignSystemPage() {
                   <EmptyState
                     variant="page"
                     visual={
-                      <IconStack aria-hidden="true" className="text-primary">
+                      <IconStack aria-hidden="true" >
                         <FileText className="size-4 text-primary" />
                       </IconStack>
                     }
@@ -2800,16 +2801,16 @@ export function DesignSystemPage() {
               <div>
                 <SubLabel>Segmented slider (fixed-height panel below)</SubLabel>
                 <div className="w-full max-w-md">
-                  <Tabs defaultValue="overview" className="h-60">
-                    <TabsList variant="segmented" className="w-full">
+                  <Tabs defaultValue="overview" >
+                    <TabsList variant="segmented" >
                       <TabsTrigger value="overview">Overview</TabsTrigger>
                       <TabsTrigger value="activity">Activity</TabsTrigger>
                       <TabsTrigger value="settings">Settings</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="overview" className="min-h-0 p-4 overflow-auto rounded-lg border border-border bg-muted/20">
+                    <TabsContent value="overview" className="overflow-auto">
                       <p className="text-sm text-muted-foreground">Overview panel. Switch tabs to see the slider move.</p>
                     </TabsContent>
-                    <TabsContent value="activity" className="min-h-0 p-4 overflow-auto rounded-lg border border-border bg-muted/20 space-y-2">
+                    <TabsContent value="activity" className="overflow-auto">
                       {['Alice committed 3 files', 'Bob opened PR #42', 'CI pipeline passed'].map((item) => (
                         <div key={item} className="flex items-center gap-3 text-sm">
                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
@@ -2817,7 +2818,7 @@ export function DesignSystemPage() {
                         </div>
                       ))}
                     </TabsContent>
-                    <TabsContent value="settings" className="min-h-0 p-4 overflow-auto rounded-lg border border-border bg-muted/20">
+                    <TabsContent value="settings" className="overflow-auto">
                       <p className="text-sm text-muted-foreground">Settings panel content.</p>
                     </TabsContent>
                   </Tabs>
@@ -2832,13 +2833,13 @@ export function DesignSystemPage() {
                       <TabsTrigger value="activity">Activity</TabsTrigger>
                       <TabsTrigger value="settings">Settings</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="overview" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                    <TabsContent value="overview" className="mt-4">
                       <p className="text-sm text-muted-foreground">Line variant with underline indicator.</p>
                     </TabsContent>
-                    <TabsContent value="activity" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                    <TabsContent value="activity" className="mt-4">
                       <p className="text-sm text-muted-foreground">Activity panel content.</p>
                     </TabsContent>
-                    <TabsContent value="settings" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                    <TabsContent value="settings" className="mt-4">
                       <p className="text-sm text-muted-foreground">Settings panel content.</p>
                     </TabsContent>
                   </Tabs>
@@ -2858,11 +2859,11 @@ export function DesignSystemPage() {
                 { title: 'Can I extend the system?', body: 'Yes. Add new tokens to theme.css and map them in the @theme inline block. New Tailwind utilities will be generated automatically.' },
               ].map(({ title, body }) => (
                 <AccordionItem key={title}>
-                  <AccordionTrigger className="text-sm w-full">
+                  <AccordionTrigger >
                     {title}
                     <ChevronDown className="w-4 h-4 shrink-0 transition-transform" />
                   </AccordionTrigger>
-                  <AccordionContent className="text-sm text-muted-foreground pb-4">{body}</AccordionContent>
+                  <AccordionContent >{body}</AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
@@ -2942,7 +2943,7 @@ export function DesignSystemPage() {
                         <DropdownMenuItem><Star className="w-4 h-4" /> Favorite</DropdownMenuItem>
                         <DropdownMenuItem><ExternalLink className="w-4 h-4" /> Open in new tab</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive"><Trash2 className="w-4 h-4" /> Delete</DropdownMenuItem>
+                        <DropdownMenuItem ><Trash2 className="w-4 h-4" /> Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -2987,7 +2988,7 @@ export function DesignSystemPage() {
                         <DialogDescription>Fill in the details to create a new project.</DialogDescription>
                       </DialogHeader>
                       <div className="space-y-3 py-2">
-                        <Label className="text-xs">Project name</Label>
+                        <Label >Project name</Label>
                         <Input placeholder="AgentPM Platform" />
                       </div>
                       <DialogFooter>
@@ -3020,7 +3021,7 @@ export function DesignSystemPage() {
                 <SubLabel>Sheet — right side panel</SubLabel>
                 <Sheet>
                   <SheetTrigger render={<Button variant="outline" />}>Open Sheet</SheetTrigger>
-                  <SheetContent className="w-full max-w-sm rounded-l-lg">
+                  <SheetContent >
                     <SheetHeader>
                       <SheetTitle>Details</SheetTitle>
                       <SheetDescription>Right side panel content.</SheetDescription>
@@ -3036,7 +3037,7 @@ export function DesignSystemPage() {
                 <SubLabel>Drawer — bottom sheet</SubLabel>
                 <Drawer>
                   <DrawerTrigger render={<Button variant="outline" />}>Open Drawer</DrawerTrigger>
-                  <DrawerContent className="mx-auto w-full max-w-md">
+                  <DrawerContent className="mx-auto">
                     <DrawerHeader>
                       <DrawerTitle>Actions</DrawerTitle>
                       <DrawerDescription>Bottom drawer content.</DrawerDescription>
@@ -3061,12 +3062,12 @@ export function DesignSystemPage() {
                 <Popover>
                   <PopoverTrigger
                     render={
-                      <Button variant="outline" size="sm" className="gap-2">
+                      <Button variant="outline" size="sm" >
                         <Bell className="w-4 h-4" /> Notifications
                       </Button>
                     }
                   />
-                  <PopoverContent className="w-72">
+                  <PopoverContent >
                     <PopoverHeader>
                       <PopoverTitle>Notifications</PopoverTitle>
                       <PopoverDescription>Latest activity in your workspace.</PopoverDescription>
@@ -3083,7 +3084,7 @@ export function DesignSystemPage() {
                 <SubLabel>Combobox — searchable select (functional)</SubLabel>
                 <div className="w-72">
                   <Combobox value={ownerValue} onValueChange={setOwnerValue}>
-                    <ComboboxInput className="w-full" placeholder="Select owner..." />
+                    <ComboboxInput  placeholder="Select owner..." />
                     <ComboboxContent>
                       <ComboboxList>
                         <ComboboxItem value="alex">Alex Chen</ComboboxItem>
@@ -3114,14 +3115,14 @@ export function DesignSystemPage() {
                 <SubLabel>① 尺寸规格阶梯（Sizes: sm / md / lg / xl）</SubLabel>
                 <div className="flex flex-wrap items-center gap-4">
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                    <HoverCardTrigger href="#" className="hover:underline">
                       size="sm" (w-56)
                     </HoverCardTrigger>
                     <HoverCardContent size="sm">
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-foreground">Compact Card</span>
-                          <Badge variant="outline" className="text-3xs px-1">sm</Badge>
+                          <Badge fontSize="3xs" variant="outline" >sm</Badge>
                         </div>
                         <p className="text-2xs text-muted-foreground leading-relaxed">
                           适用于窄栏、密集表格单元格或单行轻量指标说明。
@@ -3131,14 +3132,14 @@ export function DesignSystemPage() {
                   </HoverCard>
 
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                    <HoverCardTrigger href="#" className="hover:underline">
                       size="md" (w-64 · 默认)
                     </HoverCardTrigger>
                     <HoverCardContent size="md">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-foreground">Standard Card</span>
-                          <Badge variant="outline" className="text-3xs px-1">md</Badge>
+                          <Badge fontSize="3xs" variant="outline" >md</Badge>
                         </div>
                         <p className="text-2xs text-muted-foreground leading-relaxed">
                           通用默认卡片宽度，满足绝大部分简短详情与状态预览。
@@ -3148,7 +3149,7 @@ export function DesignSystemPage() {
                   </HoverCard>
 
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                    <HoverCardTrigger href="#" className="hover:underline">
                       size="lg" (w-72 · 路由标准)
                     </HoverCardTrigger>
                     <HoverCardContent size="lg">
@@ -3156,7 +3157,7 @@ export function DesignSystemPage() {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-foreground">Large Card + Arrow</span>
-                          <Badge variant="secondary" className="text-3xs px-1">lg</Badge>
+                          <Badge fontSize="3xs" variant="secondary" >lg</Badge>
                         </div>
                         <p className="text-2xs text-muted-foreground leading-relaxed">
                           对齐 <code>route-preview</code> 规范标准宽，兼顾内容信息量与弹出留白。
@@ -3166,14 +3167,14 @@ export function DesignSystemPage() {
                   </HoverCard>
 
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs font-mono text-accent-blue hover:underline">
+                    <HoverCardTrigger href="#" className="hover:underline">
                       size="xl" (w-80 · 富实体宽)
                     </HoverCardTrigger>
                     <HoverCardContent size="xl">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-foreground">Extra Large Card</span>
-                          <Badge variant="secondary" className="text-3xs px-1">xl</Badge>
+                          <Badge fontSize="3xs" variant="secondary" >xl</Badge>
                         </div>
                         <p className="text-2xs text-muted-foreground leading-relaxed">
                           用于成员履历、AI 智能体运行态面板等高信息密度复合组件展示。
@@ -3194,7 +3195,7 @@ export function DesignSystemPage() {
                       <HoverCard>
                         <HoverCardTrigger
                           render={
-                            <Button variant="outline" size="sm" className="h-7 text-xs">
+                            <Button variant="outline" size="sm" >
                               Hover {side}
                             </Button>
                           }
@@ -3215,7 +3216,7 @@ export function DesignSystemPage() {
                 <SubLabel>③ 视觉修饰对比（无箭头默认 vs 显式气泡箭头 HoverCardArrow）</SubLabel>
                 <div className="flex flex-wrap items-center gap-6">
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs text-muted-foreground hover:text-foreground underline decoration-dotted">
+                    <HoverCardTrigger href="#" className="underline decoration-dotted">
                       无箭头平整卡片（Clean Minimal）
                     </HoverCardTrigger>
                     <HoverCardContent size="sm">
@@ -3225,7 +3226,7 @@ export function DesignSystemPage() {
                   </HoverCard>
 
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs text-muted-foreground hover:text-foreground underline decoration-dotted">
+                    <HoverCardTrigger href="#" className="underline decoration-dotted">
                       带气泡指向箭头（With HoverCardArrow）
                     </HoverCardTrigger>
                     <HoverCardContent size="sm">
@@ -3242,7 +3243,7 @@ export function DesignSystemPage() {
                 <SubLabel>④ 响应延迟策略（Timings: 即时调试 vs 防误触人机工程）</SubLabel>
                 <div className="flex flex-wrap items-center gap-4">
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs font-mono px-2 py-1 rounded bg-muted/60 hover:bg-muted text-foreground">
+                    <HoverCardTrigger href="#" >
                       delay=0 (即时)
                     </HoverCardTrigger>
                     <HoverCardContent size="sm">
@@ -3252,7 +3253,7 @@ export function DesignSystemPage() {
                   </HoverCard>
 
                   <HoverCard>
-                    <HoverCardTrigger href="#" className="text-xs font-mono px-2 py-1 rounded bg-muted/60 hover:bg-muted text-foreground">
+                    <HoverCardTrigger href="#" >
                       delay=300 · closeDelay=150 (推荐生产配置)
                     </HoverCardTrigger>
                     <HoverCardContent size="sm">
@@ -3282,7 +3283,7 @@ export function DesignSystemPage() {
                   <div className="flex flex-wrap items-center gap-3">
                     {/* 1. 任务卡 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <CheckSquare className="size-3.5 text-accent-blue" />
                         <span className="group-hover:text-accent-blue">任务: #ISSUE-104</span>
                       </HoverCardTrigger>
@@ -3296,7 +3297,7 @@ export function DesignSystemPage() {
                             <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                               重构 Design System 侧栏导航与悬停规范
                             </span>
-                            <Badge variant="outline" className="text-3xs shrink-0">Task</Badge>
+                            <Badge fontSize="3xs" variant="outline" className="shrink-0">Task</Badge>
                           </div>
                           {/* Hero 带：状态 + 优先级 + 迭代 */}
                           <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
@@ -3326,7 +3327,7 @@ export function DesignSystemPage() {
                             <PreviewRow label="所属项目">Agent Project Manager</PreviewRow>
                             <PreviewRow label="工时进度">
                               <div className="flex items-center gap-2 flex-1">
-                                <Progress value={62} className="h-1.5 flex-1" />
+                                <Progress value={62} className="flex-1" />
                                 <span className="font-mono text-3xs text-muted-foreground">2.5h / 4h</span>
                               </div>
                             </PreviewRow>
@@ -3341,7 +3342,7 @@ export function DesignSystemPage() {
 
                     {/* 2. 缺陷阻断卡 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-red/30 bg-accent-red/5 hover:bg-accent-red/10 text-xs font-medium text-accent-red transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <Bug className="size-3.5" />
                         <span className="group-hover:underline">缺陷: #BUG-42 (阻断)</span>
                       </HoverCardTrigger>
@@ -3355,7 +3356,7 @@ export function DesignSystemPage() {
                             <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                               工作区路由并发死锁（阻断发版）
                             </span>
-                            <Badge variant="destructive" className="text-3xs shrink-0">Bug</Badge>
+                            <Badge fontSize="3xs" variant="destructive" className="shrink-0">Bug</Badge>
                           </div>
                           {/* Hero 带：严重性标尺 + 阻断发版警示 */}
                           <div className="flex items-center justify-between p-2 rounded-md bg-accent-red/10 border border-accent-red/30">
@@ -3384,7 +3385,7 @@ export function DesignSystemPage() {
 
                     {/* 3. 工程治理验收卡 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-green/30 bg-accent-green/5 hover:bg-accent-green/10 text-xs font-medium text-accent-green transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <ShieldCheck className="size-3.5" />
                         <span className="group-hover:underline">验收: ACC-2026-09</span>
                       </HoverCardTrigger>
@@ -3398,7 +3399,7 @@ export function DesignSystemPage() {
                             <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                               v2.4 核心质量门禁收口与闭环
                             </span>
-                            <Badge variant="secondary" className="text-3xs shrink-0 text-accent-green bg-accent-green/10">
+                            <Badge color="green" fontSize="3xs" variant="secondary" className="shrink-0">
                               Acceptance
                             </Badge>
                           </div>
@@ -3434,7 +3435,7 @@ export function DesignSystemPage() {
 
                     {/* 4. 项目全景卡 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <FolderKanban className="size-3.5 text-primary" />
                         <span className="group-hover:text-primary">项目: Nebula Core</span>
                       </HoverCardTrigger>
@@ -3448,7 +3449,7 @@ export function DesignSystemPage() {
                             <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                               Nebula Core (AgentPM 核心平台)
                             </span>
-                            <Badge variant="outline" className="text-3xs shrink-0">Project</Badge>
+                            <Badge fontSize="3xs" variant="outline" className="shrink-0">Project</Badge>
                           </div>
                           {/* Hero 带：健康度 + 交付进度 */}
                           <div className="space-y-1.5 pb-1 border-b border-border/50">
@@ -3460,7 +3461,7 @@ export function DesignSystemPage() {
                               <span className="text-3xs font-mono text-muted-foreground">已完成 48/60 工单</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Progress value={80} className="h-1.5 flex-1" />
+                              <Progress value={80} className="flex-1" />
                               <span className="font-mono text-3xs text-muted-foreground">80%</span>
                             </div>
                           </div>
@@ -3479,7 +3480,7 @@ export function DesignSystemPage() {
 
                     {/* 5. AI 执行与审批卡 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-purple/30 bg-accent-purple/5 hover:bg-accent-purple/10 text-xs font-medium text-accent-purple transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <Bot className="size-3.5" />
                         <span className="group-hover:underline">执行审批: EXEC-891</span>
                       </HoverCardTrigger>
@@ -3493,7 +3494,7 @@ export function DesignSystemPage() {
                             <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                               EXEC-891: 全局样式 Token 批量重构
                             </span>
-                            <Badge variant="outline" className="text-3xs shrink-0 text-accent-purple border-accent-purple/40">
+                            <Badge color="purple" fontSize="3xs" variant="outline" className="shrink-0">
                               Execution
                             </Badge>
                           </div>
@@ -3526,7 +3527,7 @@ export function DesignSystemPage() {
 
                     {/* 6. 版本发布卡 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-accent-orange/30 bg-accent-orange/5 hover:bg-accent-orange/10 text-xs font-medium text-accent-orange transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <Rocket className="size-3.5" />
                         <span className="group-hover:underline">发版: Release v2.4.0</span>
                       </HoverCardTrigger>
@@ -3540,7 +3541,7 @@ export function DesignSystemPage() {
                             <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                               Release v2.4.0 (Spring GA 稳定版)
                             </span>
-                            <Badge variant="outline" className="text-3xs shrink-0 text-accent-orange border-accent-orange/40">
+                            <Badge fontSize="3xs" variant="outline" className="shrink-0">
                               Release
                             </Badge>
                           </div>
@@ -3581,7 +3582,7 @@ export function DesignSystemPage() {
                     <p className="text-2xs font-medium text-foreground">
                       全景平铺审查画廊（无需悬停，直接对比各模块卡片的统一底盘与差异化第一视觉）：
                     </p>
-                    <Badge variant="secondary" className="text-3xs">静态展开对比</Badge>
+                    <Badge fontSize="3xs" variant="secondary" >静态展开对比</Badge>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -3595,7 +3596,7 @@ export function DesignSystemPage() {
                           <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                             #ISSUE-104: 重构侧栏与 HoverCard
                           </span>
-                          <Badge variant="outline" className="text-3xs shrink-0">Task</Badge>
+                          <Badge fontSize="3xs" variant="outline" className="shrink-0">Task</Badge>
                         </div>
                         <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
                           <div className="flex items-center gap-1.5">
@@ -3628,7 +3629,7 @@ export function DesignSystemPage() {
                           <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                             #BUG-42: 工作区路由并发死锁
                           </span>
-                          <Badge variant="destructive" className="text-3xs shrink-0">Bug</Badge>
+                          <Badge fontSize="3xs" variant="destructive" className="shrink-0">Bug</Badge>
                         </div>
                         <div className="flex items-center justify-between p-2 rounded-md bg-accent-red/10 border border-accent-red/30">
                           <div className="flex items-center gap-2">
@@ -3663,7 +3664,7 @@ export function DesignSystemPage() {
                           <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                             ACC-2026-09: 核心门禁收口
                           </span>
-                          <Badge variant="secondary" className="text-3xs shrink-0 text-accent-green bg-accent-green/10">
+                          <Badge color="green" fontSize="3xs" variant="secondary" className="shrink-0">
                             Acceptance
                           </Badge>
                         </div>
@@ -3705,7 +3706,7 @@ export function DesignSystemPage() {
                           <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                             Nebula Core
                           </span>
-                          <Badge variant="outline" className="text-3xs shrink-0">Project</Badge>
+                          <Badge fontSize="3xs" variant="outline" className="shrink-0">Project</Badge>
                         </div>
                         <div className="space-y-1.5 pb-1 border-b border-border/50">
                           <div className="flex items-center justify-between">
@@ -3716,7 +3717,7 @@ export function DesignSystemPage() {
                             <span className="text-3xs font-mono text-muted-foreground">48/60 工单</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Progress value={80} className="h-1.5 flex-1" />
+                            <Progress value={80} className="flex-1" />
                             <span className="font-mono text-3xs text-muted-foreground">80%</span>
                           </div>
                         </div>
@@ -3742,7 +3743,7 @@ export function DesignSystemPage() {
                           <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                             EXEC-891: 全局样式重构
                           </span>
-                          <Badge variant="outline" className="text-3xs shrink-0 text-accent-purple border-accent-purple/40">
+                          <Badge color="purple" fontSize="3xs" variant="outline" className="shrink-0">
                             Execution
                           </Badge>
                         </div>
@@ -3781,7 +3782,7 @@ export function DesignSystemPage() {
                           <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                             Release v2.4.0-GA
                           </span>
-                          <Badge variant="outline" className="text-3xs shrink-0 text-accent-orange border-accent-orange/40">
+                          <Badge fontSize="3xs" variant="outline" className="shrink-0">
                             Release
                           </Badge>
                         </div>
@@ -3832,7 +3833,7 @@ export function DesignSystemPage() {
                   <div className="flex flex-wrap items-center gap-3">
                     {/* 人类同事 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <MemberAvatar
                           size="xs"
                           member={{
@@ -3868,7 +3869,7 @@ export function DesignSystemPage() {
                               <p className="text-2xs text-muted-foreground truncate">资深全栈架构师 · @alex</p>
                               <div className="flex items-center gap-1.5 mt-1">
                                 <TrustLevelBadge level={2} />
-                                <Badge variant="outline" className="text-3xs py-0">PR 评审 / 生产发布</Badge>
+                                <Badge fontSize="3xs" variant="outline" >PR 评审 / 生产发布</Badge>
                               </div>
                             </div>
                           </div>
@@ -3907,7 +3908,7 @@ export function DesignSystemPage() {
 
                     {/* AI 同事 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-accent-purple/30 bg-accent-purple/5 hover:bg-accent-purple/10 text-xs font-medium text-accent-purple transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <MemberAvatar
                           size="xs"
                           member={{
@@ -3943,7 +3944,7 @@ export function DesignSystemPage() {
                               <p className="text-2xs text-muted-foreground truncate">全栈执行 Agent · Claude 3.7 Sonnet</p>
                               <div className="flex items-center gap-1.5 mt-1">
                                 <TrustLevelBadge level={3} />
-                                <Badge variant="outline" className="text-3xs py-0">自主编码权限</Badge>
+                                <Badge fontSize="3xs" variant="outline" >自主编码权限</Badge>
                               </div>
                             </div>
                           </div>
@@ -3985,7 +3986,7 @@ export function DesignSystemPage() {
                     <p className="text-2xs font-medium text-foreground">
                       孪生卡片 1:1 对称平铺画廊（验证三列头部、中间 Hero 焦点带、PreviewSection 高度节奏一致性）：
                     </p>
-                    <Badge variant="secondary" className="text-3xs">对称规范对比</Badge>
+                    <Badge fontSize="3xs" variant="secondary" >对称规范对比</Badge>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
@@ -4012,7 +4013,7 @@ export function DesignSystemPage() {
                             <p className="text-2xs text-muted-foreground truncate">资深全栈架构师 · @alex</p>
                             <div className="flex items-center gap-1.5 mt-1">
                               <TrustLevelBadge level={2} />
-                              <Badge variant="outline" className="text-3xs py-0">PR 评审 / 生产发布</Badge>
+                              <Badge fontSize="3xs" variant="outline" >PR 评审 / 生产发布</Badge>
                             </div>
                           </div>
                         </div>
@@ -4071,7 +4072,7 @@ export function DesignSystemPage() {
                             <p className="text-2xs text-muted-foreground truncate">全栈执行 Agent · Claude 3.7 Sonnet</p>
                             <div className="flex items-center gap-1.5 mt-1">
                               <TrustLevelBadge level={3} />
-                              <Badge variant="outline" className="text-3xs py-0">自主编码权限</Badge>
+                              <Badge fontSize="3xs" variant="outline" >自主编码权限</Badge>
                             </div>
                           </div>
                         </div>
@@ -4124,7 +4125,7 @@ export function DesignSystemPage() {
                   <div className="flex flex-wrap items-center gap-3">
                     {/* 1. 里程碑 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <Milestone className="size-3.5 text-accent-blue" />
                         <span className="group-hover:text-accent-blue">里程碑: v2.4 门禁收口</span>
                       </HoverCardTrigger>
@@ -4145,7 +4146,7 @@ export function DesignSystemPage() {
                               <span className="text-2xs font-medium text-foreground">18 / 24 工单完成</span>
                               <span className="font-mono text-3xs text-muted-foreground">75% · 剩余 3 天</span>
                             </div>
-                            <Progress value={75} className="h-1.5" />
+                            <Progress value={75}  />
                             <div className="flex items-center justify-between text-3xs text-muted-foreground">
                               <span className="flex items-center gap-1 text-accent-green">
                                 <TrendingUp className="size-3" /> 燃尽速率平稳
@@ -4168,7 +4169,7 @@ export function DesignSystemPage() {
 
                     {/* 2. 团队 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <Users className="size-3.5 text-accent-purple" />
                         <span className="group-hover:text-accent-purple">团队: 前端架构组</span>
                       </HoverCardTrigger>
@@ -4182,7 +4183,7 @@ export function DesignSystemPage() {
                             <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                               前端架构与工程团队
                             </span>
-                            <Badge variant="outline" className="text-3xs shrink-0">Core Team</Badge>
+                            <Badge fontSize="3xs" variant="outline" className="shrink-0">Core Team</Badge>
                           </div>
                           <div className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/60">
                             <div className="flex items-center -space-x-2">
@@ -4213,7 +4214,7 @@ export function DesignSystemPage() {
 
                     {/* 3. Pull Request Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <GitPullRequest className="size-3.5 text-accent-blue" />
                         <span className="group-hover:text-accent-blue">PR: #128 HoverCard 体系</span>
                       </HoverCardTrigger>
@@ -4258,7 +4259,7 @@ export function DesignSystemPage() {
 
                     {/* 4. Git 提交 Trigger */}
                     <HoverCard>
-                      <HoverCardTrigger href="#" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors group">
+                      <HoverCardTrigger href="#" className="inline-flex items-center transition-colors group">
                         <GitCommit className="size-3.5 text-muted-foreground" />
                         <span className="group-hover:text-foreground">提交: 7a3f8c1 (fix ALS)</span>
                       </HoverCardTrigger>
@@ -4272,7 +4273,7 @@ export function DesignSystemPage() {
                             <span className="font-mono text-xs font-semibold text-foreground">
                               commit 7a3f8c1
                             </span>
-                            <Badge variant="outline" className="text-3xs shrink-0 text-accent-green border-accent-green/40 flex items-center gap-0.5">
+                            <Badge color="green" fontSize="3xs" variant="outline" className="shrink-0 flex items-center">
                               <ShieldCheck className="size-2.5" /> Verified
                             </Badge>
                           </div>
@@ -4302,7 +4303,7 @@ export function DesignSystemPage() {
                     <p className="text-2xs font-medium text-foreground">
                       轻量属性卡片平铺全景画廊（4 大高频元属性规范对比）：
                     </p>
-                    <Badge variant="secondary" className="text-3xs">轻量元卡对比</Badge>
+                    <Badge fontSize="3xs" variant="secondary" >轻量元卡对比</Badge>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -4323,7 +4324,7 @@ export function DesignSystemPage() {
                             <span className="text-2xs font-medium text-foreground">18 / 24 工单</span>
                             <span className="font-mono text-3xs text-muted-foreground">75% · 剩3天</span>
                           </div>
-                          <Progress value={75} className="h-1.5" />
+                          <Progress value={75}  />
                           <div className="flex items-center justify-between text-3xs text-muted-foreground">
                             <span className="flex items-center gap-1 text-accent-green">
                               <TrendingUp className="size-3" /> 燃尽平稳
@@ -4353,7 +4354,7 @@ export function DesignSystemPage() {
                           <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
                             前端架构组
                           </span>
-                          <Badge variant="outline" className="text-3xs shrink-0">Core</Badge>
+                          <Badge fontSize="3xs" variant="outline" className="shrink-0">Core</Badge>
                         </div>
                         <div className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/60">
                           <div className="flex items-center -space-x-2">
@@ -4429,7 +4430,7 @@ export function DesignSystemPage() {
                           <span className="font-mono text-xs font-semibold text-foreground">
                             7a3f8c1
                           </span>
-                          <Badge variant="outline" className="text-3xs shrink-0 text-accent-green border-accent-green/40 flex items-center gap-0.5">
+                          <Badge color="green" fontSize="3xs" variant="outline" className="shrink-0 flex items-center">
                             <ShieldCheck className="size-2.5" /> Verified
                           </Badge>
                         </div>
@@ -4620,7 +4621,7 @@ export function DesignSystemPage() {
                 </div>
               ))}
               <div className="flex flex-col items-center gap-2">
-                <Spinner size="lg" className="text-primary" />
+                <Spinner size="lg"  />
                 <span className="text-3xs text-muted-foreground">primary</span>
               </div>
             </div>
@@ -4834,7 +4835,7 @@ export function DesignSystemPage() {
             <div className="space-y-4">
               <div>
                 <SubLabel>Icon + input + action</SubLabel>
-                <InputGroup className="w-80">
+                <InputGroup >
                   <InputGroupAddon align="inline-start"><Search className="w-4 h-4" /></InputGroupAddon>
                   <InputGroupInput placeholder="Search tasks..." />
                   <InputGroupAddon align="inline-end">
@@ -4844,7 +4845,7 @@ export function DesignSystemPage() {
               </div>
               <div>
                 <SubLabel>Input + button</SubLabel>
-                <InputGroup className="w-80">
+                <InputGroup >
                   <InputGroupInput placeholder="Enter email address..." />
                   <InputGroupAddon align="inline-end">
                     <InputGroupButton size="sm">Subscribe</InputGroupButton>
@@ -4858,7 +4859,7 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="select-field">
             <SectionTitle>Select Field</SectionTitle>
-            <SelectField defaultValue="active" className="w-48">
+            <SelectField defaultValue="active" >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
               <option value="archived">Archived</option>
@@ -4869,7 +4870,7 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="scroll-area">
             <SectionTitle>Scroll Area</SectionTitle>
-            <ScrollArea className="h-40 w-full max-w-sm rounded-lg border border-border">
+            <ScrollArea >
               <div className="p-4 space-y-3">
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
@@ -4886,10 +4887,10 @@ export function DesignSystemPage() {
           <SectionAnchor id="aspect-ratio">
             <SectionTitle>Aspect Ratio</SectionTitle>
             <div className="flex gap-6">
-              <AspectRatio ratio={16 / 9} className="w-64 overflow-hidden rounded-lg border border-border" style={{ aspectRatio: '16 / 9' }}>
+              <AspectRatio ratio={16 / 9} className="overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
                 <div className="flex h-full w-full items-center justify-center bg-muted/50 text-xs text-muted-foreground">16:9</div>
               </AspectRatio>
-              <AspectRatio ratio={4 / 3} className="w-48 overflow-hidden rounded-lg border border-border" style={{ aspectRatio: '4 / 3' }}>
+              <AspectRatio ratio={4 / 3} className="overflow-hidden" style={{ aspectRatio: '4 / 3' }}>
                 <div className="flex h-full w-full items-center justify-center bg-muted/50 text-xs text-muted-foreground">4:3</div>
               </AspectRatio>
             </div>
@@ -4928,12 +4929,12 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="collapsible">
             <SectionTitle>Collapsible</SectionTitle>
-            <Collapsible className="w-full max-w-md">
-              <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent transition-colors [&>svg]:transition-transform data-[panel-open=true]:[&>svg]:rotate-180">
+            <Collapsible >
+              <CollapsibleTrigger className="flex items-center transition-colors [&>svg]:transition-transform data-[panel-open=true]:[&>svg]:rotate-180">
                 <ChevronDown className="w-4 h-4" />
                 Show details
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2 rounded-md border border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+              <CollapsibleContent className="mt-2">
                 This is collapsible content that reveals additional information on demand.
               </CollapsibleContent>
             </Collapsible>
@@ -4948,10 +4949,10 @@ export function DesignSystemPage() {
                 <SubLabel>List Loading</SubLabel>
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <Skeleton className="size-9 rounded-full" />
+                    <Skeleton  />
                     <div className="flex-1 space-y-2">
-                      <Skeleton className="h-3 w-3/4" />
-                      <Skeleton className="h-2.5 w-1/2" />
+                      <Skeleton  />
+                      <Skeleton  />
                     </div>
                   </div>
                 ))}
@@ -4959,13 +4960,13 @@ export function DesignSystemPage() {
               <div>
                 <SubLabel>Card Loading</SubLabel>
                 <div className="rounded-xl border border-border p-4 space-y-3">
-                  <Skeleton className="h-4 w-2/3" />
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-3 w-5/6" />
-                  <Skeleton className="h-24 w-full rounded-lg" />
+                  <Skeleton  />
+                  <Skeleton  />
+                  <Skeleton  />
+                  <Skeleton  />
                   <div className="flex gap-2 pt-1">
-                    <Skeleton className="h-8 w-20 rounded-md" />
-                    <Skeleton className="h-8 w-20 rounded-md" />
+                    <Skeleton  />
+                    <Skeleton  />
                   </div>
                 </div>
               </div>
@@ -4984,7 +4985,7 @@ export function DesignSystemPage() {
                   <EmptyState
                     variant="page"
                     visual={
-                      <IconStack aria-hidden="true" className="text-primary">
+                      <IconStack aria-hidden="true" >
                         <FileText className="size-4 text-primary" />
                       </IconStack>
                     }
@@ -5072,11 +5073,11 @@ export function DesignSystemPage() {
             <SectionTitle>Charts</SectionTitle>
             <div className="grid grid-cols-2 gap-6">
               <Card>
-                <CardHeader className="pb-0">
-                  <CardTitle className="text-sm font-medium">Bar Chart</CardTitle>
-                  <CardDescription className="text-xs">Monthly task completions</CardDescription>
+                <CardHeader >
+                  <CardTitle size="sm" >Bar Chart</CardTitle>
+                  <CardDescription >Monthly task completions</CardDescription>
                 </CardHeader>
-                <CardContent className="pt-4">
+                <CardContent >
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={CHART_DATA} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
@@ -5089,11 +5090,11 @@ export function DesignSystemPage() {
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader className="pb-0">
-                  <CardTitle className="text-sm font-medium">Area Chart</CardTitle>
-                  <CardDescription className="text-xs">Bug count over time</CardDescription>
+                <CardHeader >
+                  <CardTitle size="sm" >Area Chart</CardTitle>
+                  <CardDescription >Bug count over time</CardDescription>
                 </CardHeader>
-                <CardContent className="pt-4">
+                <CardContent >
                   <ResponsiveContainer width="100%" height={200}>
                     <AreaChart data={CHART_DATA} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
                       <defs>
@@ -5112,11 +5113,11 @@ export function DesignSystemPage() {
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader className="pb-0">
-                  <CardTitle className="text-sm font-medium">Line Chart</CardTitle>
-                  <CardDescription className="text-xs">Multi-series trend</CardDescription>
+                <CardHeader >
+                  <CardTitle size="sm" >Line Chart</CardTitle>
+                  <CardDescription >Multi-series trend</CardDescription>
                 </CardHeader>
-                <CardContent className="pt-4">
+                <CardContent >
                   <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={CHART_DATA} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
@@ -5131,11 +5132,11 @@ export function DesignSystemPage() {
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader className="pb-0">
-                  <CardTitle className="text-sm font-medium">Pie / Donut Chart</CardTitle>
-                  <CardDescription className="text-xs">Task status distribution</CardDescription>
+                <CardHeader >
+                  <CardTitle size="sm" >Pie / Donut Chart</CardTitle>
+                  <CardDescription >Task status distribution</CardDescription>
                 </CardHeader>
-                <CardContent className="pt-4">
+                <CardContent >
                   <div className="flex items-center gap-4">
                     <PieChart width={160} height={160}>
                       <Pie data={PIE_DATA} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
@@ -5421,9 +5422,9 @@ export function DesignSystemPage() {
                   className="flex items-center gap-3 px-4 py-2 bg-muted/25 hover:bg-muted/40 transition-colors cursor-pointer"
                   onClick={() => setGroupCollapsed(!groupCollapsed)}
                 >
-                  <button className="w-4 h-4 flex items-center justify-center text-muted-foreground shrink-0">
+                  <Button variant="ghost" className="flex items-center justify-center shrink-0">
                     {groupCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
+                  </Button>
                   <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0', STATUS_CFG.in_progress.bg)}>
                     <Loader className="w-3.5 h-3.5 text-blue-500 animate-spin" style={{ animationDuration: '2s' }} />
                   </div>
@@ -5435,9 +5436,9 @@ export function DesignSystemPage() {
                     </div>
                     <span className="text-3xs text-muted-foreground shrink-0">1/3</span>
                   </div>
-                  <button className="ml-auto opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-accent transition-colors">
+                  <Button variant="ghost" className="ml-auto opacity-0 group-hover:opacity-100 transition-colors">
                     <Plus className="w-3 h-3 text-muted-foreground" />
-                  </button>
+                  </Button>
                 </div>
 
                 {!groupCollapsed && (
@@ -5534,9 +5535,9 @@ export function DesignSystemPage() {
                   { Icon: FileText, label: 'New Document', sub: 'Markdown or rich text' },
                   { Icon: FolderKanban, label: 'New Project', sub: 'Start from scratch' },
                 ].map(({ Icon, label, sub }) => (
-                  <button
+                  <Button variant="ghost"
                     key={label}
-                    className="group flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all text-center"
+                    className="group flex flex-col items-center justify-center transition-all"
                   >
                     <div className="w-10 h-10 rounded-lg bg-muted group-hover:bg-primary/10 flex items-center justify-center transition-colors">
                       <Icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -5545,7 +5546,7 @@ export function DesignSystemPage() {
                       <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{label}</p>
                       <p className="text-3xs text-muted-foreground/60 mt-0.5">{sub}</p>
                     </div>
-                  </button>
+                  </Button>
                 ))}
               </div>
 
@@ -5891,7 +5892,7 @@ export function DesignSystemPage() {
             <div className="space-y-4">
               <SubLabel>PageShell + PageHeader + SectionCard + DataTableShell</SubLabel>
               <div className="rounded-xl border border-border overflow-hidden">
-                <PageShell className="bg-background">
+                <PageShell >
                   <PageHeader
                     title="Projects"
                     icon={FolderKanban}
@@ -5908,7 +5909,7 @@ export function DesignSystemPage() {
                         SectionCard combines Card primitives with a header, description and action slot.
                       </p>
                     </SectionCard>
-                    <DataTableShell className="p-4">
+                    <DataTableShell >
                       <p className="text-sm text-muted-foreground">
                         DataTableShell wraps data tables in a bordered, rounded container.
                       </p>
@@ -6001,7 +6002,7 @@ export function DesignSystemPage() {
                     emptyVariant="page"
                     emptyTitle="No documents"
                     emptyVisual={
-                      <IconStack aria-hidden="true" className="text-primary">
+                      <IconStack aria-hidden="true" >
                         <FileText className="size-4 text-primary" />
                       </IconStack>
                     }

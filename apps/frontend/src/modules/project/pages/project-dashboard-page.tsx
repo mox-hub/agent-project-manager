@@ -102,7 +102,7 @@ export function ProjectDashboardPage() {
   if (isError || !summary || !project || !taskStats) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-8">
-        <Alert variant="destructive" className="max-w-md">
+        <Alert variant="destructive" >
           <AlertTriangleIcon className="size-4" />
           <AlertDescription>
             加载项目概览失败，请稍后重试。
@@ -181,7 +181,7 @@ export function ProjectDashboardPage() {
                 onChange={(event) => setNewTaskTitle(event.target.value)}
                 placeholder={t('project.detail.taskTitle')}
                 autoFocus
-                className="h-9 min-w-65 flex-1 bg-background"
+                className="flex-1"
                 data-ai-component="project.project-dashboard.inline-create.title-input"
                 data-ai-action="project.project-dashboard.inline-create.title-input.change"
               />
@@ -252,20 +252,20 @@ export function ProjectDashboardPage() {
         {/* ── Bottom Row (Recent Activity + AI Insights) ────────────── */}
         <section className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between p-4">
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle size="sm" fontWeight="medium">
                 {t('project.detail.recentActivity')}
               </CardTitle>
               <Button
                 variant="ghost"
                 size="xs"
-                fontSize="xs" className="text-muted-foreground"
+                fontSize="xs" 
                 onClick={() => navigate(`/app/projects/${projectId}/issues`)}
               >
                 {t('project.detail.viewAll')}
               </Button>
             </CardHeader>
-            <CardContent className="space-y-2.5 px-4 pb-4">
+            <CardContent >
               {summary.activityFeed.length === 0 ? (
                 <p className="text-xs text-muted-foreground">{t('project.detail.noRecentActivity')}</p>
               ) : (
@@ -306,30 +306,30 @@ export function ProjectDashboardPage() {
         {/* ── Team Workload (compact) ────────────────────────────────── */}
         <section className="mb-4">
           <Card>
-            <CardHeader className="flex items-center justify-between p-4">
-              <CardTitle size="sm" fontWeight="medium" className="flex items-center gap-2">
+            <CardHeader className="flex items-center justify-between">
+              <CardTitle size="sm" fontWeight="medium" className="flex items-center">
                 <Users className="h-4 w-4" />
                 {t('project.detail.teamWorkload')}
               </CardTitle>
               <Button
                 variant="ghost"
                 size="xs"
-                fontSize="xs" className="text-muted-foreground"
+                fontSize="xs" 
                 onClick={() => navigate(`/app/projects/${projectId}/team`)}
               >
                 {t('project.detail.viewTeam')} <ChevronRight className="ml-0.5 h-3 w-3" />
               </Button>
             </CardHeader>
-            <CardContent className="px-4 pb-4">
+            <CardContent >
               {summary.teamWorkload.length === 0 ? (
                 <p className="text-xs text-muted-foreground">{t('project.detail.noTeamData')}</p>
               ) : (
                 <div className="space-y-3">
                   {summary.teamWorkload.slice(0, 5).map((member) => (
                     <div key={member.memberId} className="flex items-center gap-3">
-                      <Avatar className="h-7 w-7 shrink-0">
+                      <Avatar className="shrink-0">
                         {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt="" /> : null}
-                        <AvatarFallback className="text-xs">
+                        <AvatarFallback >
                           {member.memberName.slice(0, 1).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>

@@ -3,6 +3,7 @@
  * ToolbarRow 筛选（项目/状态收进下拉，项目真相源仍在 URL searchParams 深链友好）；
  * 创建草案走对话框（版本可 AI/机械推荐），发布主链路（门禁→审批→执行）在详情页完成。
  */
+import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -40,14 +41,20 @@ import {
 } from '../hooks/use-releases';
 import type { ReleaseStatus } from '../api/release-api';
 import { cn } from '@/lib/utils';
+import { TONE_CLASS } from '@/components/ui/tone';
+import { RELEASE_STATUS_TONE_MAP } from '@/shared/status/status-visuals';
 
+/**
+ * 发版状态徽标配色：tone 唯一链路派生（业务层登记见 status-visuals.RELEASE_STATUS_TONE_MAP；
+ * publishing 保留「发布中」呼吸提示）。导出面不变，release-detail-page 经此引用。
+ */
 export const RELEASE_STATUS_TONE: Record<ReleaseStatus, string> = {
-  draft: 'bg-muted/50 text-muted-foreground',
-  gated: 'bg-accent-yellow-light text-accent-yellow',
-  approved: 'bg-accent-blue-light text-accent-blue',
-  publishing: 'bg-accent-yellow-light text-accent-yellow animate-pulse',
-  released: 'bg-accent-green-light text-accent-green',
-  failed: 'bg-accent-red-light text-accent-red',
+  draft: TONE_CLASS[RELEASE_STATUS_TONE_MAP.draft].light,
+  gated: TONE_CLASS[RELEASE_STATUS_TONE_MAP.gated].light,
+  approved: TONE_CLASS[RELEASE_STATUS_TONE_MAP.approved].light,
+  publishing: cn(TONE_CLASS[RELEASE_STATUS_TONE_MAP.publishing].light, 'animate-pulse'),
+  released: TONE_CLASS[RELEASE_STATUS_TONE_MAP.released].light,
+  failed: TONE_CLASS[RELEASE_STATUS_TONE_MAP.failed].light,
 };
 
 export const RELEASE_STATUSES = Object.keys(RELEASE_STATUS_TONE) as ReleaseStatus[];
@@ -222,7 +229,7 @@ export function ReleaseListPage() {
             <EmptyState
               variant="page"
               visual={
-                <IconStack aria-hidden="true" className="text-accent-purple">
+                <IconStack aria-hidden="true" >
                   <Rocket className="size-4 text-accent-purple" />
                 </IconStack>
               }
@@ -255,17 +262,17 @@ export function ReleaseListPage() {
           )
         ) : (
           <Card>
-            <CardContent className="p-0">
+            <CardContent >
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-32">{t('release.table.version')}</TableHead>
+                    <TableHead width="w-32" >{t('release.table.version')}</TableHead>
                     <TableHead>{t('release.table.name')}</TableHead>
-                    <TableHead className="w-36">{t('release.table.project')}</TableHead>
-                    <TableHead className="w-28">{t('release.table.status')}</TableHead>
-                    <TableHead className="w-36">{t('release.table.milestone')}</TableHead>
-                    <TableHead className="w-32">{t('release.table.tag')}</TableHead>
-                    <TableHead className="w-40">{t('release.table.releasedAt')}</TableHead>
+                    <TableHead width="w-36" >{t('release.table.project')}</TableHead>
+                    <TableHead width="w-28" >{t('release.table.status')}</TableHead>
+                    <TableHead width="w-36" >{t('release.table.milestone')}</TableHead>
+                    <TableHead width="w-32" >{t('release.table.tag')}</TableHead>
+                    <TableHead width="w-40" >{t('release.table.releasedAt')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -390,20 +397,20 @@ function CreateReleaseDialog({
         if (!next) onClose();
       }}
     >
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('release.create.title')}</DialogTitle>
           <DialogDescription>{t('release.create.desc')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-content-text">
+            <FieldLabel size="xs" variant="muted" >
               {t('release.create.project')}
-            </label>
+            </FieldLabel>
             <SelectField
               value={pid}
               onChange={(e) => setPidOverride(e.target.value)}
-              className="h-8 w-full text-xs"
+              
             >
               <option value="">{t('release.filter.pickProject')}</option>
               {projects.map((p) => (
@@ -412,20 +419,20 @@ function CreateReleaseDialog({
             </SelectField>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-content-text">
+            <FieldLabel size="xs" variant="muted" >
               {t('release.create.version')}
-            </label>
+            </FieldLabel>
             <div className="flex gap-2">
-              <Input
+              <Input fontSize="xs" size="h-8" fontVariant="mono"
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
                 placeholder="1.0.0"
-                className="h-8 font-mono text-xs"
+                
               />
-              <Button
+              <Button fontSize="xs"
                 variant="outline"
                 size="sm"
-                className="h-8 shrink-0 text-xs"
+                className="shrink-0"
                 disabled={!pid || recommend.isPending}
                 onClick={handleRecommend}
               >
@@ -438,24 +445,24 @@ function CreateReleaseDialog({
             ) : null}
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-content-text">
+            <FieldLabel size="xs" variant="muted" >
               {t('release.create.nameLabel')}
-            </label>
-            <Input
+            </FieldLabel>
+            <Input fontSize="xs" size="h-8"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-8 text-xs"
+              
             />
           </div>
           <div className="space-y-1.5" data-testid="release-milestone-select">
-            <label className="text-xs font-medium text-content-text">
+            <FieldLabel size="xs" variant="muted" >
               {t('release.create.milestoneLabel')}
-            </label>
+            </FieldLabel>
             <SelectField
               value={milestoneId}
               onChange={(e) => setMilestoneId(e.target.value)}
               disabled={!pid}
-              className="h-8 w-full text-xs"
+              
             >
               <option value="">{t('release.create.milestoneNone')}</option>
               {(milestones ?? []).map((m) => (

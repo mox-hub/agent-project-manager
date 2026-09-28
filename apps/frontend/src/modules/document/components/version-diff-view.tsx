@@ -56,7 +56,7 @@ export function VersionDiffView({ documentId, baseVersionId, targetVersionId }: 
   if (loading) {
     return (
       <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-        <Spinner color="inherit" className="h-4 w-4" />
+        <Spinner color="inherit"  />
         加载版本内容…
       </div>
     );
@@ -82,7 +82,7 @@ export function VersionDiffView({ documentId, baseVersionId, targetVersionId }: 
               <span className="text-accent-red">-{summary.removed}</span>
             </span>
           </div>
-          <Button size="sm" variant="ghost" onClick={() => setView('unified')} className="h-6 gap-1 px-2 text-xs">
+          <Button fontSize="xs" size="sm" variant="ghost" onClick={() => setView('unified')} >
             <ArrowLeftRight size={12} /> 切换
           </Button>
         </div>
@@ -109,7 +109,7 @@ export function VersionDiffView({ documentId, baseVersionId, targetVersionId }: 
             <span className="text-accent-red">-{summary.removed}</span>
           </span>
         </div>
-        <Button size="sm" variant="ghost" onClick={() => setView('split')} className="h-6 gap-1 px-2 text-xs">
+        <Button fontSize="xs" size="sm" variant="ghost" onClick={() => setView('split')} >
           <ArrowLeftRight size={12} /> 切换
         </Button>
       </div>

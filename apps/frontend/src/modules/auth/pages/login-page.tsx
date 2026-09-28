@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
@@ -54,13 +55,13 @@ export function LoginPage() {
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label
-              className="text-xs font-medium text-foreground"
+            <FieldLabel size="xs" variant="muted"
+              
               htmlFor="username"
             >
               {t('auth.username')}
-            </label>
-            <Input
+            </FieldLabel>
+            <Input size="h-10"
               id="username"
               type="text"
               value={username}
@@ -68,20 +69,20 @@ export function LoginPage() {
               required
               placeholder={t('auth.usernamePlaceholder') || '请输入账号或邮箱'}
               autoComplete="username"
-              className="h-10 text-sm"
+              
             />
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label
-                className="text-xs font-medium text-foreground"
+              <FieldLabel size="xs" variant="muted"
+                
                 htmlFor="password"
               >
                 {t('auth.password')}
-              </label>
+              </FieldLabel>
             </div>
-            <Input
+            <Input size="h-10"
               id="password"
               type="password"
               value={password}
@@ -89,15 +90,15 @@ export function LoginPage() {
               required
               placeholder={t('auth.passwordPlaceholder') || '请输入密码'}
               autoComplete="current-password"
-              className="h-10 text-sm"
+              
             />
           </div>
         </div>
 
-        <Button
+        <Button width="full"
           type="submit"
           disabled={isLoading}
-          size="lg" fontSize="sm" className="w-full shadow-xs"
+          size="lg" 
         >
           {isLoading ? (
             <>

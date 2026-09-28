@@ -116,10 +116,10 @@ export function NotificationSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-150 overflow-y-auto" showCloseButton>
+      <DialogContent className="overflow-y-auto" showCloseButton>
         <div className="space-y-6">
           <div>
-            <DialogTitle className="text-lg font-semibold">通知</DialogTitle>
+            <DialogTitle >通知</DialogTitle>
             <DialogDescription className="sr-only">个人通知设置</DialogDescription>
           </div>
           {isLoading ? (

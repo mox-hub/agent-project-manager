@@ -46,7 +46,7 @@ export function PullRequestList({ repoId }: PullRequestListProps) {
         <SelectField
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-8 w-45"
+          
         >
           {PR_STATUS_OPTIONS.map((opt) => (
             <SelectFieldOption key={opt.value} value={opt.value}>

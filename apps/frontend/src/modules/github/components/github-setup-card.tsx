@@ -54,26 +54,26 @@ export function GithubSetupCard({
           通过 Personal Access Token (PAT) 连接 GitHub。V3 阶段2 启用 PR 状态追踪。
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent >
         <div className="space-y-2">
-          <Label htmlFor="pat-token" className="text-xs">
+          <Label htmlFor="pat-token" >
             GitHub PAT（仅测试，不保存）
           </Label>
           <div className="flex gap-2">
-            <Input
+            <Input fontVariant="mono"
               id="pat-token"
               type="password"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-              className="text-sm font-mono"
+              
             />
             <Button
               onClick={testInline}
               disabled={testResult.loading || !token.trim()}
             >
               {testResult.loading ? (
-                <Spinner className="h-3 w-3 mr-1 text-inherit" />
+                <Spinner color="inherit" size="2xs" className="mr-1" />
               ) : null}
               Test
             </Button>
@@ -103,14 +103,14 @@ export function GithubSetupCard({
 
         <div className="space-y-2 border-t pt-4">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">已存配置</Label>
+            <Label >已存配置</Label>
             <Badge variant="outline">
               <span className="font-mono text-3xs">ID: {integrationId.slice(-6)}</span>
             </Badge>
           </div>
           {storedTest.isLoading ? (
             <div className="text-xs text-muted-foreground flex items-center gap-1">
-              <Spinner className="h-3 w-3 text-inherit" />
+              <Spinner color="inherit" size="2xs"  />
               验证已存凭据…
             </div>
           ) : storedTest.data ? (

@@ -4,6 +4,7 @@
  * 将传统笨重垂直右侧属性面板下沉为紧凑的单行横向胶囊，
  * 采用极简药丸视觉（Linear 风格），随实体类型动态组装。
  */
+import { Button } from '@/components/ui/button';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -206,25 +207,25 @@ export function PropertyPillsBar({
         <Popover open={moreOpen} onOpenChange={setMoreOpen}>
           <PopoverTrigger
             render={
-              <button
+              <Button variant="ghost"
                 type="button"
-                className="inline-flex items-center justify-center size-6 rounded-md border border-border/70 bg-background/60 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                className="inline-flex items-center justify-center transition-colors"
                 title={t('unifiedCreate.moreProperties', { defaultValue: '更多属性' })}
               >
                 <MoreHorizontal className="size-3.5" />
-              </button>
+              </Button>
             }
           />
-          <PopoverContent align="start" className="w-56 p-1.5 shadow-xs border border-border/70 bg-popover/95 text-xs">
+          <PopoverContent align="start" >
             <div className="flex flex-col gap-1">
               {onOpenAcceptance && (
-                <button
+                <Button variant="ghost"
                   type="button"
                   onClick={() => {
                     onOpenAcceptance();
                     setMoreOpen(false);
                   }}
-                  className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-left"
+                  className="flex items-center justify-between transition-colors"
                 >
                   <span className="text-foreground">{t('unifiedCreate.acceptanceTitle', { defaultValue: '验收标准门禁' })}</span>
                   {acceptanceCount > 0 && (
@@ -232,7 +233,7 @@ export function PropertyPillsBar({
                       {acceptanceCount}
                     </span>
                   )}
-                </button>
+                </Button>
               )}
             </div>
           </PopoverContent>

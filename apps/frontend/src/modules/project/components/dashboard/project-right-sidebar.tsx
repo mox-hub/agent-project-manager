@@ -5,6 +5,7 @@
  * 属性面板复用 ProjectPropertyPanel（支持下拉选择），Related/Activity 用共享 SidebarPanel。
  */
 
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import {
   AlertCircle,
@@ -109,19 +110,19 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
           {boundTeams.length > 0 ? (
             <div className="flex flex-wrap gap-1 px-2 pb-1.5 pl-8">
               {boundTeams.map((team) => (
-                <button
+                <Button variant="ghost"
                   key={team.id}
                   type="button"
                   title={team.name}
                   onClick={() => navigate(`/app/teams/${team.id}`)}
-                  className="inline-flex h-5 max-w-full items-center gap-1 rounded-full border border-border px-1.5 text-3xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                  className="inline-flex items-center transition-colors"
                 >
                   <span
                     className="size-1.5 shrink-0 rounded-full"
                     style={{ backgroundColor: team.color || 'var(--color-brand-linear)' }}
                   />
                   <span className="max-w-32 truncate">{team.name}</span>
-                </button>
+                </Button>
               ))}
             </div>
           ) : null}
@@ -184,13 +185,13 @@ function SidebarLinkRow({
       <span className="text-xs text-muted-foreground flex-1 min-w-0 truncate">{label}</span>
       <div className="shrink-0">
         {onClick ? (
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={onClick}
-            className="inline-flex items-center rounded-full transition-colors hover:bg-accent hover:text-foreground"
+            className="inline-flex items-center transition-colors"
           >
             {content}
-          </button>
+          </Button>
         ) : (
           content
         )}
@@ -215,7 +216,7 @@ export function ProjectRightSidebar({ projectId, hidden, width }: ProjectRightSi
     <RightSidebar hidden={hidden} width={width ?? PROJECT_SIDEBAR_DEFAULT_WIDTH}>
       {/* 头部按钮操作区：Linear 来源/同步状态徽章（仅 Linear 同步项目） */}
       {isLinearLinked ? (
-        <SidebarButtonGroup className="px-1" data-ai-component="project.right-sidebar.linear-status" data-ai-role="status">
+        <SidebarButtonGroup  data-ai-component="project.right-sidebar.linear-status" data-ai-role="status">
           <LinearSourceBadge source="linear" className="h-6 shrink-0 rounded-full px-2.5 text-3xs" />
           <LinearSyncStatusBadge status={project?.syncStatus} pill />
         </SidebarButtonGroup>

@@ -326,18 +326,18 @@ export function FilterPanel({
           </div>
           {onAddFilter && (
             <div className="border-t border-border p-2">
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => {
                   setIsHovered(false);
                   setIsOpen(true);
                   onAddFilter();
                 }}
-                className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="flex items-center"
               >
                 <Plus size={12} />
                 添加筛选条件
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -378,13 +378,13 @@ export function FilterPanel({
         >
           {onAddFilter && (
             <div className="border-b border-border p-2">
-              <Input
+              <Input fontSize="xs"
                 type="text"
                 placeholder={addFilterPlaceholder}
                 value=""
                 onChange={() => {}}
                 onFocus={onAddFilter}
-                className="text-xs"
+                
               />
             </div>
           )}
@@ -440,14 +440,14 @@ export function FilterPanel({
                         <div className="mb-1.5 px-1">
                           <div className="relative">
                             <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                            <Input
+                            <Input fontSize="xs" size="h-7"
                               type="text"
                               placeholder="搜索..."
                               value={searchQuery[openGroup.id] || ''}
                               onChange={(e) =>
                                 setSearchQuery((prev) => ({ ...prev, [openGroup!.id]: e.target.value }))
                               }
-                              className="h-7 pl-7 text-xs"
+                              
                             />
                           </div>
                         </div>

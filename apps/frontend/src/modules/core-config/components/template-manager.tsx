@@ -211,7 +211,7 @@ export function TemplateManager() {
   };
 
   return (
-    <PageShell aiPage="settings.templates" className="bg-background text-foreground">
+    <PageShell aiPage="settings.templates" >
       <PageHeader
         aiId="settings.templates"
         title={t('settings.templates')}
@@ -239,9 +239,9 @@ export function TemplateManager() {
         {/* 布局下沉：PageBody 基线为 flex-col 无 gap，卡片间距由调用方结构承载 */}
         <div className="space-y-6">
         {showProjects && (
-            <Card className="border-border shadow-none">
+            <Card >
               <CardHeader>
-                <CardTitle className="text-base">
+                <CardTitle size="base" >
                   {/* 布局下沉：图标+标题行由调用方结构承载，CardTitle 保持基线盒 */}
                   <div className="flex items-center gap-2">
                     <FolderKanban size={16} className="text-accent-blue" />
@@ -361,14 +361,14 @@ export function TemplateManager() {
                               <Clock size={12} />
                               {relativeTimeLabel(template.updatedAt || template.createdAt, t)}
                             </span>
-                            <button
+                            <Button variant="ghost"
                               type="button"
                               onClick={() => handleProjectEdit(template)}
-                              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                              
                               title={t('common.edit')}
                             >
                               <Pencil size={14} />
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -383,9 +383,9 @@ export function TemplateManager() {
           )}
 
           {showTasks && (
-            <Card className="border-border shadow-none">
+            <Card >
               <CardHeader>
-                <CardTitle className="text-base">
+                <CardTitle size="base" >
                   {/* 布局下沉：图标+标题行由调用方结构承载，CardTitle 保持基线盒 */}
                   <div className="flex items-center gap-2">
                     <ListTodo size={16} className="text-accent-purple" />
@@ -514,14 +514,14 @@ export function TemplateManager() {
                                 </span>
                               </span>
                               <div className="flex items-center gap-0.5">
-                                <button
+                                <Button variant="ghost"
                                   type="button"
                                   onClick={() => handleTaskEdit(template)}
-                                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                  
                                   title={t('common.edit')}
                                 >
                                   <Pencil size={14} />
-                                </button>
+                                </Button>
                                 {/* E 类批 6：`quiet` + `tone="danger"` —— tone 的色类带
                                     `data-[tone=danger]:` 作用域（特异性 (0,2,0)/(0,3,0)），
                                     故压得住 quiet 的 `text-muted-foreground` 与

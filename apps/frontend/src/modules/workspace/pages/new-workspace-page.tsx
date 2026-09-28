@@ -151,11 +151,11 @@ function NewWorkspaceContent() {
       {/* 左侧：返回 + 工作区说明 */}
       <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-muted/20">
         <div className="shrink-0 border-b border-border p-3">
-          <Button
+          <Button width="full"
             variant="ghost"
             size="sm"
             onClick={handleBackToApp}
-            className="w-full justify-start gap-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            className="justify-start"
             data-ai-component="workspace.new.back"
             data-ai-action="workspace.new.back.click"
           >
@@ -250,7 +250,7 @@ function NewWorkspaceContent() {
 
       {/* 右侧：三步向导 / 完成页 */}
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <ScrollArea className="h-full w-full">
+        <ScrollArea >
           <div className="mx-auto max-w-2xl px-6 py-10">
             <div className="mb-2 flex items-center gap-2">
               <FolderPlus size={18} className="text-accent-blue" />
@@ -299,7 +299,7 @@ function NewWorkspaceContent() {
                   </div>
                   <Progress
                     value={((step + 1) / TOTAL_STEPS) * 100}
-                    className="h-1"
+                    
                   />
                 </div>
 
@@ -351,12 +351,12 @@ function NewWorkspaceContent() {
                         <FieldContent>
                           <div className="flex items-center gap-2">
                             <FolderOpen size={14} className="shrink-0 text-muted-foreground" />
-                            <Input
+                            <Input fontSize="xs" fontVariant="mono"
                               id="workspace-path"
                               value={pathInput}
                               onChange={(e) => setPathInput(e.target.value)}
                               placeholder={t('workspace.pathPlaceholder', '如：D:\\apm-workspaces\\company-a')}
-                              className="font-mono text-xs"
+                              
                               autoFocus
                             />
                           </div>
@@ -387,7 +387,7 @@ function NewWorkspaceContent() {
                         {t('workspace.step3Desc', '请核对以下信息，创建后立即生效。')}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent >
                       <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
                         <div className="flex items-center justify-between gap-3">
                           <span className="text-xs text-muted-foreground">
@@ -451,7 +451,7 @@ function NewWorkspaceContent() {
                     >
                       {creating ? (
                         <>
-                          <Spinner className="size-3.5 text-inherit" />
+                          <Spinner color="inherit" size="xs"  />
                           {t('workspace.creating', '初始化中…')}
                         </>
                       ) : (
@@ -490,7 +490,7 @@ function CreatedCard({
           {t('workspace.doneDesc', '工作区已初始化完成，可立即切换过去登录使用。')}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent >
         <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3 text-sm">
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-muted-foreground">

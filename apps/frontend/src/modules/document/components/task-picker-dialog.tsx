@@ -61,7 +61,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent maxWidth="2xl" >
         <DialogHeader>
           <DialogTitle>选择任务或 Bug</DialogTitle>
         </DialogHeader>
@@ -71,7 +71,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">关联类型</span>
             {LINK_TYPE_OPTIONS.map((opt) => (
-              <button
+              <Button variant="ghost"
                 key={opt.value}
                 type="button"
                 onClick={() => setLinkType(opt.value)}
@@ -82,7 +82,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
                 )}
               >
                 {opt.label}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -96,7 +96,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="按标题搜索…"
-              className="pl-7"
+              
             />
           </div>
 
@@ -107,7 +107,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
               { id: 'task' as const, label: '任务' },
               { id: 'bug' as const, label: 'Bug' },
             ].map((opt) => (
-              <button
+              <Button variant="ghost"
                 key={opt.id}
                 type="button"
                 onClick={() => setFilterType(opt.id)}
@@ -119,7 +119,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
                 )}
               >
                 {opt.label}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -131,7 +131,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
               isEmpty={tasks.length === 0}
               loadingFallback={
                 <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-                  <Spinner color="inherit" className="h-4 w-4" />
+                  <Spinner color="inherit"  />
                   正在加载任务…
                 </div>
               }
@@ -149,10 +149,10 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
               <ul className="divide-y divide-border">
                 {tasks.map((t) => (
                   <li key={t.id}>
-                    <button
+                    <Button variant="ghost"
                       type="button"
                       onClick={() => handleSelect(t.id)}
-                      className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted/50"
+                      className="flex items-start transition-colors"
                     >
                       {t.type === 'bug' ? (
                         <Bug size={14} className="mt-0.5 shrink-0 text-accent-red" />
@@ -174,7 +174,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
                         </div>
                       </div>
                       <Plus size={14} className="shrink-0 text-muted-foreground" />
-                    </button>
+                    </Button>
                   </li>
                 ))}
               </ul>

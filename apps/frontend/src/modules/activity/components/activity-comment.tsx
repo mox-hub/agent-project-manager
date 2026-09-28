@@ -94,12 +94,12 @@ export function ActivityComment({
                   variant="ghost"
                   size="icon-xs"
                   title={t('common.delete')}
-                  className="hover:text-destructive"
+                  
                   disabled={deleteComment.isPending}
                   onClick={() => deleteComment.mutate(activity.id)}
                 >
                   {deleteComment.isPending ? (
-                    <Spinner className="size-3 text-inherit" />
+                    <Spinner color="inherit" size="2xs"  />
                   ) : (
                     <Trash2 className="size-3" />
                   )}
@@ -124,7 +124,7 @@ export function ActivityComment({
                   {t('common.cancel')}
                 </Button>
                 <Button size="xs" disabled={!draft.trim() || updateComment.isPending} onClick={saveEdit}>
-                  {updateComment.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.save')}
+                  {updateComment.isPending ? <Spinner color="inherit" size="2xs"  /> : t('common.save')}
                 </Button>
               </>
             }

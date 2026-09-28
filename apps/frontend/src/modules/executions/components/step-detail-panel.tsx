@@ -3,6 +3,7 @@
  * 与弹窗主体共用一套设计 token（bg-muted 代码块 + border-border），支持复制与展开收起；
  * 无结构化详情时回退展示条目文本。
  */
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, Copy, X } from 'lucide-react';
@@ -12,7 +13,7 @@ function CopyButton({ text }: { text: string }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       title={t('runDetails.copy')}
       onClick={() => {
@@ -20,14 +21,14 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="rounded-md p-1 text-content-text-muted transition-colors hover:bg-muted hover:text-content-text"
+      className="transition-colors"
     >
       {copied ? (
         <Check className="size-3.5 text-accent-green" />
       ) : (
         <Copy className="size-3.5" />
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -45,15 +46,15 @@ function CodeBlock({ code, maxLines }: { code: string; maxLines: number }) {
       </pre>
       {lines.length > maxLines ? (
         <div className="flex items-center justify-center border-t border-border bg-muted/20 py-1">
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="text-2xs text-content-text-muted transition-colors hover:text-content-text"
+            className="transition-colors"
           >
             {expanded
               ? t('runDetails.collapse')
               : t('runDetails.expandAll', { count: lines.length })}
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>
@@ -100,13 +101,13 @@ export function StepDetailPanel({
         ) : null}
         <span className="ml-auto flex shrink-0 items-center gap-1">
           {hasContent && output ? <CopyButton text={output} /> : null}
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-content-text-muted transition-colors hover:bg-muted hover:text-content-text"
+            className="transition-colors"
           >
             <X className="size-3.5" />
-          </button>
+          </Button>
         </span>
       </div>
 

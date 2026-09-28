@@ -261,10 +261,10 @@ export function AssistantPanel() {
       {/* 当存在决策且侧栏收起时：高质感现实实体手卡折叠夹槽手柄（伴随左侧悬浮） */}
       {hasDecisions && !showDecisionSide && (
         <div className="flex flex-col justify-center shrink-0 z-dropdown">
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => setShowDecisionSide(true)}
-            className="decision-deck-collapsed-tab group flex flex-col items-center justify-between w-11 py-3.5 rounded-xl border border-border/80 bg-background/95 backdrop-blur-xl text-foreground cursor-pointer transition-all active:scale-95"
+            className="decision-deck-collapsed-tab group flex flex-col items-center justify-between backdrop-blur-xl cursor-pointer transition-all active:scale-95"
             title={`展开待决卡片堆（共 ${stripItems.length} 项${hasBlocking ? '，含紧急阻断' : ''}）`}
             data-ai-action="assistant.decision.expand.click"
           >
@@ -296,7 +296,7 @@ export function AssistantPanel() {
             <div className="mt-1 flex items-center justify-center text-muted-foreground group-hover:text-accent-purple group-hover:translate-x-0.5 transition-all">
               <PanelLeftOpen className="size-3.5" />
             </div>
-          </button>
+          </Button>
         </div>
       )}
 
@@ -328,7 +328,7 @@ export function AssistantPanel() {
 
           {/* 待决决策显隐切换按钮（有决策时呈现） */}
           {hasDecisions && (
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() => setShowDecisionSide(!showDecisionSide)}
               className={cn(
@@ -343,7 +343,7 @@ export function AssistantPanel() {
               <span className="text-3xs leading-none tabular-nums">
                 {showDecisionSide ? '收起待办' : `待办 ${stripItems.length}`}
               </span>
-            </button>
+            </Button>
           )}
 
           <AssistantModelPicker
@@ -401,7 +401,7 @@ export function AssistantPanel() {
             }}
           >
             <div className="min-h-0 flex-1 overflow-hidden">
-              <ScrollArea className="h-full w-full">
+              <ScrollArea >
                 <div className="flex flex-col gap-4 p-3">
                   <AssistantOpeningReport status={status} personaName={personaName} />
                   <AssistantMessageList />
@@ -419,7 +419,7 @@ export function AssistantPanel() {
         ) : (
           <>
             <div className="min-h-0 flex-1 overflow-hidden">
-              <ScrollArea className="h-full w-full">
+              <ScrollArea >
                 <div className="flex flex-col gap-4 p-3">
                   <AssistantOpeningReport status={status} personaName={personaName} />
                   <div className="space-y-2 px-1">

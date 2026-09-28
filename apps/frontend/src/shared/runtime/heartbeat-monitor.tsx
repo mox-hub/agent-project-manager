@@ -156,7 +156,7 @@ export function HeartbeatMonitor({
                   />
                 }
               />
-              <TooltipContent className="w-52">
+              <TooltipContent >
                 <p
                   className={cn(
                     'text-sm font-semibold',

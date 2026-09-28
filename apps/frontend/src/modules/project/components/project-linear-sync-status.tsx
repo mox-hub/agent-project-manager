@@ -159,7 +159,7 @@ export function ProjectLinearSyncStatus({
                 onClick={() => handleSyncTasks('two-way')}
               >
                 {syncTasks.isPending ? (
-                  <Spinner className="mr-1.5 size-3.5 text-inherit" />
+                  <Spinner color="inherit" size="xs" className="mr-1.5" />
                 ) : (
                   <RefreshCw className="mr-1.5 size-3.5" />
                 )}
@@ -171,7 +171,7 @@ export function ProjectLinearSyncStatus({
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-destructive hover:text-destructive"
+                
                 disabled={unbinding}
                 onClick={handleUnbind}
               >

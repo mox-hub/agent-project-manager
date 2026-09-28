@@ -4,6 +4,7 @@
  * 经 apply-criteria 落契约（服务端增量写入同文去重，绝不覆盖已有标准）。
  * 覆盖场景：任务详情验收卡「缺标准」黄条入口 / 手动补全顺滑化。
  */
+import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles } from 'lucide-react';
@@ -20,6 +21,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
+import { TONE_CLASS } from '@/components/ui/tone';
+import { SEVERITY_TONE } from '@/shared/status/status-visuals';
 import { assistantApi } from '@/modules/assistant/api/assistant-api';
 import { acceptanceApi } from '@/modules/acceptance/api/acceptance-api';
 import { parseAcceptanceDraft } from '@/modules/assistant/hooks/use-silent-ai';
@@ -31,13 +34,6 @@ interface AcceptanceDraftDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
-
-const SEVERITY_TONE: Record<string, string> = {
-  critical: 'bg-destructive/10 text-destructive',
-  high: 'bg-accent-orange/10 text-accent-orange',
-  medium: 'bg-accent-blue/10 text-accent-blue',
-  low: 'bg-muted text-muted-foreground',
-};
 
 export function AcceptanceDraftDialog({
   issueId,
@@ -130,9 +126,9 @@ export function AcceptanceDraftDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg" data-ai-component="acceptance.draft-dialog">
+      <DialogContent maxWidth="lg"  data-ai-component="acceptance.draft-dialog">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
+          <DialogTitle className="flex items-center">
             <Sparkles className="size-4 text-accent-purple" />
             {t('acceptance.draft.title', 'AI 代写验收标准')}
           </DialogTitle>
@@ -156,9 +152,9 @@ export function AcceptanceDraftDialog({
         ) : (
           <div className="max-h-80 space-y-1.5 overflow-y-auto pr-1">
             {items.map((item, idx) => (
-              <label
+              <FieldLabel size="xs" variant="muted"
                 key={idx}
-                className="flex cursor-pointer items-start gap-2 rounded-lg border border-transparent px-2 py-1.5 transition-colors hover:bg-muted/50 has-[[data-state=checked]]:border-border has-[[data-state=checked]]:bg-muted/40"
+                className="flex cursor-pointer items-start transition-colors"
               >
                 <Checkbox
                   checked={selected.has(idx)}
@@ -171,7 +167,7 @@ export function AcceptanceDraftDialog({
                 <span className="flex shrink-0 flex-col items-end gap-0.5">
                   <Badge
                     variant="outline"
-                    className={`border-transparent px-1 text-3xs ${SEVERITY_TONE[item.severity] ?? SEVERITY_TONE.medium}`}
+                    className={`border-transparent px-1 text-3xs ${TONE_CLASS[SEVERITY_TONE[item.severity] ?? 'info'].light}`}
                   >
                     {item.severity}
                   </Badge>
@@ -181,7 +177,7 @@ export function AcceptanceDraftDialog({
                       : t('acceptance.draft.functional', '功能')}
                   </span>
                 </span>
-              </label>
+              </FieldLabel>
             ))}
           </div>
         )}

@@ -166,7 +166,7 @@ export function MemberToolGrants({ memberId }: { memberId: string }) {
           {saving ? '保存中…' : '保存授权'}
         </Button>
       </CardHeader>
-      <CardContent inset="md" className="space-y-4">
+      <CardContent inset="md" >
         <p className="text-xs text-muted-foreground">
           {configured
             ? '当前为白名单模式：仅选定的对象可用，派发任务时按此收敛工具集。'
@@ -184,7 +184,7 @@ export function MemberToolGrants({ memberId }: { memberId: string }) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-72 justify-between px-2.5 font-normal"
+                        className="justify-between"
                       >
                         <span className="inline-flex min-w-0 items-center gap-1.5">
                           {selectedMeta && SelectedIcon && (
@@ -208,7 +208,7 @@ export function MemberToolGrants({ memberId }: { memberId: string }) {
                       </Button>
                     }
                   />
-                  <MenuPopup align="start" className="w-72">
+                  <MenuPopup align="start" >
                     <MenuCheckboxItem
                       checked={cliSelected == null}
                       onCheckedChange={() => setCliSelected(null)}
@@ -234,7 +234,7 @@ export function MemberToolGrants({ memberId }: { memberId: string }) {
                               {onlineCount}/{machine.providers.length} 在线
                             </span>
                           </MenuSubTrigger>
-                          <MenuSubPopup className="w-64">
+                          <MenuSubPopup >
                             {machine.providers.length === 0 ? (
                               <div className="px-2 py-1.5 text-xs text-muted-foreground">
                                 该机器未上报 CLI 运行时

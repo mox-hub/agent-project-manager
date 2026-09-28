@@ -83,7 +83,7 @@ export function InvitePage() {
             {accepted ? (
               <div className="space-y-3 text-center">
                 <p className="text-sm text-accent-green">已加入「{preview.teamName}」！</p>
-                <Button className="w-full" onClick={() => navigate('/app/teams')}>
+                <Button width="full"  onClick={() => navigate('/app/teams')}>
                   查看我的团队
                 </Button>
               </div>
@@ -94,10 +94,10 @@ export function InvitePage() {
             ) : authLoading ? (
                 <Spinner size="sm" className="mx-auto" />
             ) : isAuthenticated ? (
-              <Button className="w-full" onClick={accept} disabled={accepting}>
+              <Button width="full"  onClick={accept} disabled={accepting}>
                 {accepting ? (
                   <>
-                    <Spinner size="sm" className="text-inherit" />
+                    <Spinner color="inherit" size="sm"  />
                     接受中…
                   </>
                 ) : (
@@ -108,16 +108,16 @@ export function InvitePage() {
               <div className="space-y-2">
                 {/* 宪法 §10.7：组合唯一方式为 render prop（旧 Radix 组合写法已禁）；
                     render 到 <Link> 非原生 button，须显式 nativeButton={false}（同 ui/pagination） */}
-                <Button
-                  className="w-full"
+                <Button width="full"
+                  
                   nativeButton={false}
                   render={<Link to={`/login?next=/invite/${token}`} />}
                 >
                   登录后接受
                 </Button>
-                <Button
+                <Button width="full"
                   variant="outline"
-                  className="w-full"
+                  
                   nativeButton={false}
                   render={<Link to={`/register?invite=${token}`} />}
                 >

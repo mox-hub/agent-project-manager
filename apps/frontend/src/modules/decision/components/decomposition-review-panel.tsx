@@ -4,6 +4,8 @@ import { AlertTriangle, CheckCircle2, ListChecks, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
+import { TONE_CLASS } from '@/components/ui/tone';
+import { DECISION_VERDICT_TONE } from '@/shared/status/status-visuals';
 import type { Decision } from '@/shared/decision-card/types';
 import {
   useDecompositionReview,
@@ -16,10 +18,10 @@ import {
  * 只呈现问题与建议，不拦截批卡动作；正常任务聚合为一行（渐进展开）。
  */
 
-const VERDICT_STYLE: Record<DecompositionReviewResult['verdict'], string> = {
-  healthy: 'border-accent-green/40 bg-accent-green-light/50 text-accent-green',
-  'needs-review': 'border-accent-yellow/40 bg-accent-yellow-light/50 text-accent-yellow',
-  rework: 'border-accent-red/40 bg-accent-red-light/50 text-accent-red',
+/** verdict 胶囊配色：tone 唯一链路（描边 + 浅底槽） */
+const verdictClass = (verdict: DecompositionReviewResult['verdict']): string => {
+  const tone = DECISION_VERDICT_TONE[verdict] ?? 'default';
+  return cn(TONE_CLASS[tone].border, TONE_CLASS[tone].light);
 };
 
 export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
@@ -60,7 +62,7 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
           <span
             className={cn(
               'rounded-full border px-2 py-0.5 text-3xs font-medium',
-              VERDICT_STYLE[result.verdict],
+              verdictClass(result.verdict),
             )}
           >
             {t(`decision.decompReview.verdict.${result.verdict}`)}
@@ -69,7 +71,7 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
         <Button
           variant="ghost"
           size="sm"
-          fontSize="xs" className="h-7 gap-1.5 px-2 text-accent-purple hover:text-accent-purple"
+          fontSize="xs" 
           onClick={run}
           disabled={review.isPending || added.length === 0}
         >

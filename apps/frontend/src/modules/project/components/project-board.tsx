@@ -100,7 +100,7 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
         ) : null}
         {typeof project.progress === 'number' && project.progress > 0 ? (
           <div className="space-y-1">
-            <Progress value={project.progress} className="h-1.5" />
+            <Progress value={project.progress}  />
             <span className="text-3xs text-muted-foreground">{project.progress}%</span>
           </div>
         ) : null}
@@ -135,9 +135,9 @@ function useProjectCardModel(getProjectExecutionCount?: (projectId: string) => n
             )}
           </span>
           {project.owner ? (
-            <Avatar className="h-5 w-5">
+            <Avatar >
               <AvatarImage src={project.owner.avatarUrl ?? undefined} />
-              <AvatarFallback className="text-3xs">
+              <AvatarFallback >
                 {(project.owner.displayName || project.owner.username || 'U').slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>

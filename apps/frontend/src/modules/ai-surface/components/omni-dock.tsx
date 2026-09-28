@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { cn } from '@/lib/utils';
 import {
@@ -111,38 +113,38 @@ export function OmniDock({
 
           {/* 快捷指令 */}
           <div className="hidden sm:flex items-center gap-1.5 ml-2">
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() => handleQuickCommand('/plan CAP-P-01 任务拆解')}
-              className="px-2 py-0.5 rounded-md hover:opacity-80 text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
+              className="hover:opacity-80 transition-colors cursor-pointer"
               style={{
                 fontSize: 11,
                 background: isDark ? 'hsl(var(--foreground) / 0.05)' : 'hsl(var(--foreground) / 0.05)',
               }}
             >
               /plan 任务拆解
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost"
               type="button"
               onClick={() => handleQuickCommand('/verify 运行契约门禁审计')}
-              className="px-2 py-0.5 rounded-md hover:opacity-80 text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
+              className="hover:opacity-80 transition-colors cursor-pointer"
               style={{
                 fontSize: 11,
                 background: isDark ? 'hsl(var(--foreground) / 0.05)' : 'hsl(var(--foreground) / 0.05)',
               }}
             >
               /verify 门禁审计
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* 右侧控制栏：主题切换与退出人类控制面 */}
         <div className="flex items-center gap-2">
           {onToggleTheme && (
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={onToggleTheme}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
+              className="flex items-center transition-colors cursor-pointer"
               style={{
                 fontSize: 11,
                 background: isDark ? 'hsl(var(--foreground) / 0.06)' : 'hsl(var(--foreground) / 0.06)',
@@ -155,14 +157,14 @@ export function OmniDock({
                 <Moon className="size-3" style={{ color: 'hsl(var(--accent-blue))' }} />
               )}
               <span>{isDark ? '深空' : '明眸'}</span>
-            </button>
+            </Button>
           )}
 
           {onExitSurface && (
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={onExitSurface}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
+              className="flex items-center transition-colors cursor-pointer"
               style={{
                 fontSize: 11,
                 background: isDark ? 'hsl(var(--foreground) / 0.06)' : 'hsl(var(--foreground) / 0.06)',
@@ -180,7 +182,7 @@ export function OmniDock({
               >
                 ESC
               </kbd>
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -201,10 +203,10 @@ export function OmniDock({
       >
         {/* 模型切换胶囊 */}
         <div className="relative shrink-0">
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-foreground transition-colors cursor-pointer"
+            className="flex items-center transition-colors cursor-pointer"
             style={{
               background: isDark ? 'hsl(var(--foreground) / 0.06)' : 'hsl(var(--accent-purple) / 0.08)',
             }}
@@ -219,7 +221,7 @@ export function OmniDock({
                 !modelDropdownOpen && 'rotate-180',
               )}
             />
-          </button>
+          </Button>
 
           {/* 模型弹出列表 */}
           {modelDropdownOpen && (
@@ -231,7 +233,7 @@ export function OmniDock({
               }}
             >
               {AVAILABLE_MODELS.map((model) => (
-                <button
+                <Button variant="ghost"
                   key={model.id}
                   type="button"
                   onClick={() => {
@@ -263,7 +265,7 @@ export function OmniDock({
                   >
                     {model.badge}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -271,18 +273,18 @@ export function OmniDock({
 
         {/* 自然语言输入框 */}
         <div className="relative flex-1">
-          <input
+          <Input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="输入协同指令，或使用 / 唤起技能，@ 呼唤指定 Agent..."
-            className="w-full bg-transparent border-none outline-none px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 font-normal"
+            className="outline-none"
           />
         </div>
 
         {/* 发送按钮 */}
-        <button
+        <Button variant="ghost"
           type="submit"
           disabled={!input.trim()}
           className={cn(
@@ -303,7 +305,7 @@ export function OmniDock({
           }}
         >
           <Send className="size-4" />
-        </button>
+        </Button>
       </form>
     </div>
   );

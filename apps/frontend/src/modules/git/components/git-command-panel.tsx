@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import React, { useState } from 'react';
 import { useExecuteCommand, useCommandHistory } from '../hooks/use-git-command';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -106,18 +107,18 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                   />
                 </InputGroup>
               </div>
-              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FieldLabel size="xs" variant="muted" className="flex items-center">
                 <Checkbox
                   id="allowDangerous"
                   checked={allowDangerous}
                   onChange={(e) => setAllowDangerous(e.target.checked)}
                 />
                 Allow dangerous commands
-              </label>
-              <Button
+              </FieldLabel>
+              <Button width="full"
                 onClick={handleExecute}
                 disabled={executing || !command.trim()}
-                className="w-full"
+                
               >
                 {executing ? (
                   <>

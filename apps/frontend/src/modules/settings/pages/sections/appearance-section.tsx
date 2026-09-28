@@ -75,7 +75,7 @@ function FontPickerField({
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {presets.map((font) => (
-          <button
+          <Button variant="ghost"
             key={font}
             type="button"
             onClick={() => onChange(font)}
@@ -87,18 +87,18 @@ function FontPickerField({
             )}
           >
             {font}
-          </button>
+          </Button>
         ))}
       </div>
       <div className="mt-3 flex items-center gap-2">
-        <Input
+        <Input fontSize="xs" size="h-8"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={t('settings.fontCustomPlaceholder')}
-          className="h-8 text-xs"
+          
         />
         {supportsLocalFonts && (
-          <Button variant="outline" size="sm" className="h-8 shrink-0" onClick={pickFromSystem}>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={pickFromSystem}>
             {t('settings.fontFromSystem')}
           </Button>
         )}
@@ -106,10 +106,10 @@ function FontPickerField({
       {systemFonts && (
         <div className="mt-2">
           <Select value="" onValueChange={(font) => onChange(font)}>
-            <SelectTrigger size="sm" className="text-xs">
+            <SelectTrigger size="sm" >
               <SelectValue placeholder={t('settings.fontsCount', { count: systemFonts.length })} />
             </SelectTrigger>
-            <SelectContent className="max-h-60">
+            <SelectContent >
               {systemFonts.map((font) => (
                 <SelectItem key={font} value={font}>
                   {font}
@@ -148,7 +148,7 @@ export function AppearanceSettingsSection() {
       {/* 主题模式 */}
       <Card surface="flat">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle size="base" className="flex items-center">
                 <SunMoon size={16} className="text-accent-blue" />
                 {t('settings.themeMode')}
               </CardTitle>
@@ -161,7 +161,7 @@ export function AppearanceSettingsSection() {
                 ].map((item) => {
                   const isActive = mode === item.id;
                   return (
-                    <button
+                    <Button variant="ghost"
                       key={item.id}
                       type="button"
                       onClick={() => setTheme(item.id as 'light' | 'dark')}
@@ -183,7 +183,7 @@ export function AppearanceSettingsSection() {
                           <CheckCircle2 size={12} className="text-white" />
                         </div>
                       )}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -193,12 +193,12 @@ export function AppearanceSettingsSection() {
           {/* 界面缩放 */}
           <Card surface="flat">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle size="base" className="flex items-center">
                 <ZoomIn size={16} className="text-accent-green" />
                 {t('settings.interfaceZoom')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent >
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">{t('settings.interfaceZoomDesc')}</p>
                 <span className="font-mono text-sm text-muted-foreground">{appearance.zoom}%</span>
@@ -212,7 +212,7 @@ export function AppearanceSettingsSection() {
                 >
                   <span className="text-lg">−</span>
                 </Button>
-                <input
+                <Input
                   type="range"
                   min="50"
                   max="200"
@@ -236,7 +236,7 @@ export function AppearanceSettingsSection() {
           {/* 字体选择（批 2.5：--font-user-* 变量，字体只管 family，字号缩放走独立机制） */}
           <Card surface="flat">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle size="base" className="flex items-center">
                 <Type size={16} className="text-accent-purple" />
                 {t('settings.appearanceFonts')}
               </CardTitle>
@@ -262,14 +262,14 @@ export function AppearanceSettingsSection() {
           {/* 字号调整 */}
           <Card surface="flat">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle size="base" className="flex items-center">
                 <ALargeSmall size={16} className="text-accent-yellow" />
                 {t('settings.fontSize')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between rounded-lg border border-border p-4">
-                <button
+                <Button variant="ghost"
                   type="button"
                   onClick={() => setAppearance({ fontSize: 'small' })}
                   className={cn(
@@ -280,11 +280,11 @@ export function AppearanceSettingsSection() {
                   )}
                 >
                   <p className="text-sm">{t('settings.fontSizeSmall')}</p>
-                </button>
+                </Button>
                 <div className={`mx-4 flex-1 text-center ${appearance.fontSize === 'medium' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}>
                   <p className="text-base">{t('settings.fontSizeMedium')}</p>
                 </div>
-                <button
+                <Button variant="ghost"
                   type="button"
                   onClick={() => setAppearance({ fontSize: 'large' })}
                   className={cn(
@@ -295,7 +295,7 @@ export function AppearanceSettingsSection() {
                   )}
                 >
                   <p className="text-lg">{t('settings.fontSizeLarge')}</p>
-                </button>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -303,7 +303,7 @@ export function AppearanceSettingsSection() {
           {/* 语言设置 */}
           <Card surface="flat">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle size="base" className="flex items-center">
                 <Languages size={16} className="text-accent-blue" />
                 {t('settings.language.title')}
               </CardTitle>

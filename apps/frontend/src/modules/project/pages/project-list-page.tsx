@@ -414,7 +414,7 @@ export function ProjectListPage() {
                       refetch();
                     }}
                     title={t('project.archive.label')}
-                    className="text-muted-foreground"
+                    
                   >
                     <Archive className="size-4" /> {t('project.archive.label')}
                   </ListActionButton>

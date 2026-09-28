@@ -3,6 +3,7 @@
  * 分类分组（AI 能力 / 人工环节 / 集成 / 流程逻辑 / 产品动作），点击插入画布。
  * 产品动作分类展开注册表目录（/workflows/actions），点击直接带 action id。
  */
+import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Globe, GitBranch, Plus, UserCheck, Sparkles, Wrench, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -115,11 +116,11 @@ export function WorkflowNodePalette({
           </h4>
           <div className="space-y-1.5">
             {group.items.map((item) => (
-              <button
+              <Button variant="ghost"
                 key={item.key}
                 type="button"
                 onClick={() => onAdd(item.type, item.actionId)}
-                className="flex w-full items-start gap-2 rounded-lg border border-border bg-card px-2.5 py-2 text-left transition-colors hover:bg-accent/40"
+                className="flex items-start transition-colors"
                 data-ai={`workflow.palette.${item.key}`}
               >
                 <item.icon className={cn('mt-0.5 size-3.5 shrink-0', item.className)} />
@@ -134,7 +135,7 @@ export function WorkflowNodePalette({
                   ) : null}
                 </span>
                 <Plus className="mt-0.5 size-3 shrink-0 text-content-text-muted" />
-              </button>
+              </Button>
             ))}
           </div>
         </section>

@@ -36,10 +36,10 @@ import { PipelineOverviewCards } from '../components/pipeline-overview-cards';
  */
 function DocListRow({ doc, onOpen }: { doc: DocumentListItem; onOpen: () => void }) {
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onOpen}
-      className="flex w-full items-center gap-3 px-2 py-2 text-left motion-shift hover:bg-accent"
+      className="flex items-center motion-shift"
     >
       <FileText size={16} className="shrink-0 text-content-text-secondary" />
       <div className="min-w-0 flex-1">
@@ -51,7 +51,7 @@ function DocListRow({ doc, onOpen }: { doc: DocumentListItem; onOpen: () => void
       </div>
       <Badge variant="secondary">{doc.status}</Badge>
       <ArrowRight size={14} className="shrink-0 text-content-text-muted" />
-    </button>
+    </Button>
   );
 }
 

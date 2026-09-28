@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { useMemberCard } from '../hooks';
 import { cn } from '@/lib/utils';
+import { TONE_CLASS } from '@/components/ui/tone';
+import { MEMBER_STATUS_TONE } from '@/shared/status/status-visuals';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/toast';
 
@@ -34,11 +36,9 @@ export interface MemberCardPopoverProps {
   className?: string;
 }
 
-const STATUS_DOT: Record<string, string> = {
-  active: 'bg-accent-green',
-  inactive: 'bg-muted-foreground',
-  suspended: 'bg-accent-yellow',
-};
+/** 成员活跃状态点：tone 唯一词表 dot 槽（键登记于 status-visuals.MEMBER_STATUS_TONE） */
+const statusDotClass = (status: string): string =>
+  TONE_CLASS[MEMBER_STATUS_TONE[status] ?? 'default'].dot;
 
 function formatTime(iso: string | null): string {
   if (!iso) return '从未';
@@ -164,7 +164,7 @@ export function MemberCardPopover({
                 <span
                   className={cn(
                     'h-1.5 w-1.5 rounded-full',
-                    STATUS_DOT[card.status] || 'bg-muted-foreground',
+                    statusDotClass(card.status),
                   )}
                 />
                 <span>{card.isOnline ? '在线' : '离线'}</span>
@@ -178,15 +178,15 @@ export function MemberCardPopover({
           {/* Trust + shortId */}
           <div className="flex items-center justify-between gap-2">
             <TrustLevelBadge level={card.trustLevel} />
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={copyShortId}
               title="复制短 ID"
-              className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-3xs text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="inline-flex items-center"
             >
               {card.shortId}
               {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-            </button>
+            </Button>
           </div>
 
           {card.bio && (
@@ -342,22 +342,22 @@ export function MemberCardPopover({
           {/* Actions + link to detail */}
           <div className="pt-2 border-t border-border/60 space-y-2">
             <div className="flex items-center gap-2">
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={injectToAi}
-                className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-2xs text-muted-foreground transition-colors hover:border-accent-purple hover:text-accent-purple"
+                className="inline-flex flex-1 items-center justify-center transition-colors"
               >
                 <Sparkles className="h-3 w-3" />
                 注入 AI 上下文
-              </button>
-              <button
+              </Button>
+              <Button variant="ghost"
                 type="button"
                 onClick={dispatchTask}
-                className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-2xs text-muted-foreground transition-colors hover:border-accent-blue hover:text-accent-blue"
+                className="inline-flex flex-1 items-center justify-center transition-colors"
               >
                 <ListTodo className="h-3 w-3" />
                 派发任务
-              </button>
+              </Button>
             </div>
             <Link
               to={`/app/members/${card.id}`}
@@ -392,7 +392,7 @@ export function MemberCardPopover({
           </Button>
         )}
       </PopoverTrigger>
-      <PopoverContent side={side} align={align} className="p-0">
+      <PopoverContent side={side} align={align} >
         {content}
       </PopoverContent>
     </Popover>

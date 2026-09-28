@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -170,14 +171,14 @@ export function AiSurfacePage() {
       {/* 1. 顶部全屏微型全息导航条 (极其克制、通透) */}
       <header className="sticky top-0 z-overlay flex w-full items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
         <div className="flex items-center gap-3">
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={handleExitSurface}
-            className="flex size-8 cursor-pointer items-center justify-center rounded-xl bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex cursor-pointer items-center justify-center transition-colors"
             title="返回人类控制面 (Esc)"
           >
             <ArrowLeft className="size-4" />
-          </button>
+          </Button>
 
           <div className="flex items-center gap-2">
             {/* AI 专属标识：烟熏紫（DESIGN.md §2.3 H265 S32% L60%），无渐变无发光 */}
@@ -201,10 +202,10 @@ export function AiSurfacePage() {
         {/* 右上角控制与指示 */}
         <div className="flex items-center gap-3 font-mono text-xs">
           {/* 日夜模式切换 */}
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={toggleTheme}
-            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-2xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex cursor-pointer items-center transition-colors"
             title={isDark ? '切换至日间模式' : '切换至夜间模式'}
           >
             {isDark ? (
@@ -213,32 +214,32 @@ export function AiSurfacePage() {
               <Moon className="size-3.5 text-accent-blue" />
             )}
             <span>{isDark ? '深空' : '明眸'}</span>
-          </button>
+          </Button>
 
           {/* 回放入口（S5）。放在**页头**而不是 OmniDock 里：它是"换一种看的方式"，
               不是"在这个面里做一件事"——坞里的每一件都对外产生副作用，它不产生任何副作用。
               悬停文案如实说明它不需要 runtime 与 API key（那正是回放存在的理由）。 */}
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => navigate('/app/ai-surface/replay')}
-            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-2xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex cursor-pointer items-center transition-colors"
             title="回放一段预置演示：从一句需求到交付，不需要 runtime、不需要 API key"
             data-ai-action="ai-surface.replay.enter"
           >
             <Rewind className="size-3.5" />
             <span>回放</span>
-          </button>
+          </Button>
 
           {/* 全屏切换 */}
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={handleToggleFullscreen}
-            className="hidden cursor-pointer items-center gap-1.5 rounded-xl bg-muted/50 px-2.5 py-1 text-2xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex"
+            className="hidden cursor-pointer items-center transition-colors sm:flex"
             title={isFullscreen ? '退出全屏模式' : '进入真正全屏模式'}
           >
             {isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
             <span>{isFullscreen ? '窗口' : '全屏'}</span>
-          </button>
+          </Button>
 
           {/* 真实连接态（取代原写死的「ACTIVE」——那是纯装饰，断线也照样绿） */}
           <SurfaceLiveness />

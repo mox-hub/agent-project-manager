@@ -44,7 +44,7 @@ export function LinearSyncLog({
           <LinearIcon size={14} /> Sync history
         </h4>
         {isFetching ? (
-          <Spinner className="size-3.5 text-muted-foreground" />
+          <Spinner size="xs"  />
         ) : (
           <RefreshCw
             className="size-3.5 text-muted-foreground/50"

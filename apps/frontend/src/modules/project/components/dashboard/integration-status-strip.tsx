@@ -61,7 +61,7 @@ export function IntegrationStatusStrip({
   ];
 
   return (
-    <Card className="border-border">
+    <Card >
       <CardContent>
         {/* 布局下沉：间距（gap-3+space-y-3 叠加）由调用方结构等价承载 */}
         <div className="flex flex-col gap-3 space-y-3">
@@ -70,7 +70,7 @@ export function IntegrationStatusStrip({
             <IconMetric key={item.key} icon={item.icon} label={item.label} value={item.value} />
           ))}
         </div>
-        <Button variant="ghost" className="w-full justify-between" onClick={onManage}>
+        <Button width="full" variant="ghost" className="justify-between" onClick={onManage}>
           {t('project.detail.manageIntegrations')}
           <ArrowUpRight size={14} />
         </Button>

@@ -94,7 +94,7 @@ export function DesktopLogCard() {
               checked={autoRefresh}
               onCheckedChange={setAutoRefresh}
             />
-            <Label htmlFor="desktop-log-follow" variant="muted" className="text-xs">
+            <Label htmlFor="desktop-log-follow" variant="muted" >
               {t('settings.desktopLogFollow')}
             </Label>
           </div>
@@ -112,11 +112,11 @@ export function DesktopLogCard() {
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <div className="relative min-w-52 flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <Input fontSize="xs" size="h-8"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('settings.desktopLogSearch')}
-            className="h-8 pl-8 text-xs"
+            
           />
         </div>
         <div className="flex items-center gap-1">
@@ -125,7 +125,7 @@ export function DesktopLogCard() {
             const count =
               level === 'ALL' ? total : (counts?.[level as keyof NonNullable<typeof counts>] ?? 0);
             return (
-              <button
+              <Button variant="ghost"
                 key={level}
                 type="button"
                 aria-pressed={active}
@@ -137,7 +137,7 @@ export function DesktopLogCard() {
                 }`}
               >
                 {level} {count}
-              </button>
+              </Button>
             );
           })}
         </div>

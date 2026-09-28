@@ -106,9 +106,9 @@ export function BindRepositoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-120">
+      <DialogContent >
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center">
             <Link2 className="h-5 w-5" />
             Bind Repository
           </DialogTitle>
@@ -246,7 +246,7 @@ export function BindRepositoryDialog({
                 disabled={bindMutation.isPending}
               >
                 {bindMutation.isPending && (
-                  <Spinner color="inherit" className="mr-2 h-4 w-4" />
+                  <Spinner color="inherit" className="mr-2" />
                 )}
                 Bind Repository
               </Button>

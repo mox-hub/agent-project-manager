@@ -24,7 +24,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
   // 悬停反馈用 ring 而非阴影（宪法 §3.6：全站唯一阴影档 shadow-xs）：
   // Card 自带 ring-1 ring-border/50，悬停把环色加深即可，无需新增阴影。
   return (
-    <Card className="group transition-shadow hover:ring-border" data-ai-entity={`team:${team.id}`}>
+    <Card className="group transition-shadow" data-ai-entity={`team:${team.id}`}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex min-w-0 items-center gap-3">
@@ -44,7 +44,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
             )}
             <div className="min-w-0">
               <CardTitle size="base" className="truncate">{team.name}</CardTitle>
-              <CardDescription className="truncate text-xs">
+              <CardDescription className="truncate">
                 @{team.slug}
                 {team.ownerName ? ` · ${t('teams.owner', '创始人')} ${team.ownerName}` : ''}
               </CardDescription>
@@ -64,7 +64,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
         {(team.tags ?? []).length > 0 && (
           <div className="mb-3 flex flex-wrap gap-1">
             {(team.tags ?? []).slice(0, 4).map((tag) => (
-              <Badge key={tag} variant="secondary" fontSize="3xs" className="px-1.5 py-0">
+              <Badge key={tag} variant="secondary" fontSize="3xs" >
                 {tag}
               </Badge>
             ))}
@@ -80,7 +80,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 px-2 text-3xs"
+                
                 title={t('teams.archive', '归档')}
                 onClick={() => onArchive(team)}
               >
@@ -90,7 +90,7 @@ export function TeamCard({ team, onArchive }: TeamCardProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2"
+              
               nativeButton={false}
               render={<Link to={`/app/teams/${team.id}`} />}
             >

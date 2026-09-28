@@ -8,6 +8,9 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { TONE_CLASS } from '@/components/ui/tone';
+import { AUDIT_RISK_LEVEL_TONE, SEVERITY_TONE } from '@/shared/status/status-visuals';
 import type { AuditReport, AuditItem } from '../api/acceptance-api';
 
 interface Props {
@@ -16,17 +19,16 @@ interface Props {
   loading?: boolean;
 }
 
-const RISK_STYLE: Record<string, string> = {
-  red: 'border-accent-red/40 bg-accent-red/10 text-accent-red',
-  yellow: 'border-accent-yellow/30 bg-accent-yellow/10 text-accent-yellow',
-  green: 'border-accent-green/40 bg-accent-green/10 text-accent-green',
+/** 风险级别徽标配色：tone 唯一链路（描边 + 浅底槽） */
+const riskLevelClass = (level: string | undefined): string => {
+  const tone = AUDIT_RISK_LEVEL_TONE[level ?? ''] ?? 'default';
+  return cn(TONE_CLASS[tone].border, TONE_CLASS[tone].light);
 };
 
-const SEVERITY_STYLE: Record<string, string> = {
-  critical: 'text-accent-red border-accent-red/40',
-  high: 'text-accent-yellow border-accent-yellow/30',
-  medium: 'text-muted-foreground border-border',
-  low: 'text-muted-foreground border-border',
+/** 审计条目严重度徽标配色：tone 唯一链路（描边 + 文字槽，outline 胶囊无底色） */
+const severityClass = (severity: string | undefined): string => {
+  const tone = SEVERITY_TONE[severity ?? ''] ?? 'default';
+  return cn(TONE_CLASS[tone].text, TONE_CLASS[tone].border);
 };
 
 export function AuditReportPanel({ report, onApplySuggestions, loading }: Props) {
@@ -40,14 +42,14 @@ export function AuditReportPanel({ report, onApplySuggestions, loading }: Props)
     <div className="space-y-4">
       {/* 风险级别 + 清单 + 上次审计时间 */}
       <div className="flex flex-wrap items-center gap-3">
-        <Badge variant="outline" className={`px-3 py-1 ${RISK_STYLE[report.riskLevel] ?? ''}`}>
+        <Badge variant="outline" className={`px-3 py-1 ${riskLevelClass(report.riskLevel)}`}>
           {riskLabel}
         </Badge>
         {/* CAP-B-02：审计后标准修订/新增 → 结论过期待重审 */}
         {report.stale && (
           <Badge
             variant="outline"
-            className="border-accent-yellow/50 bg-accent-yellow/15 px-3 py-1 text-accent-yellow"
+            
           >
             <AlertTriangle className="mr-1 size-3" />
             {t('acceptanceDetail.audit.staleBadge')}
@@ -165,7 +167,7 @@ function AuditItemCard({ item, showApply, onApply, loading }: AuditItemCardProps
         <div className="flex-1 space-y-1">
           <p className="text-sm font-medium">{item.content}</p>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className={`text-xs ${SEVERITY_STYLE[item.severity] ?? ''}`}>
+            <Badge variant="outline" className={`text-xs ${severityClass(item.severity)}`}>
               {t(`acceptance.severity.${item.severity}`, item.severity)}
             </Badge>
             {item.category && (

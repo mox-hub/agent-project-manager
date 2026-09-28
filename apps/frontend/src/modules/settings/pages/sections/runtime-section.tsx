@@ -184,15 +184,15 @@ function LocalDaemonCard() {
             {(daemonStatus?.workspaceRoots ?? []).map((root) => (
               <div key={root} className="group flex items-center justify-between gap-2 rounded-md px-2 py-1 hover:bg-accent">
                 <span className="truncate font-mono text-xs">{root}</span>
-                <button
+                <Button variant="ghost"
                   type="button"
                   disabled={isLoading}
                   onClick={() => void removeWorkspaceRoot(root)}
-                  className="shrink-0 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                  className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
                   aria-label={t('settings.desktopDaemonRemoveRoot')}
                 >
                   <Trash2 className="size-3.5" />
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -290,11 +290,11 @@ export function RuntimeSettingsSection() {
                 const online = machine.status === 'online';
                 const providers = [...new Set(machine.cliProviders ?? [])];
                 return (
-                  <button
+                  <Button variant="ghost"
                     key={machine.runtimeId}
                     type="button"
                     onClick={() => navigate(`/app/settings/runtime/${machine.runtimeId}`)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left motion-shift hover:bg-accent"
+                    className="flex items-center motion-shift"
                   >
                     <span className="relative flex size-9 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
                       <Monitor className="size-4" />
@@ -349,7 +349,7 @@ export function RuntimeSettingsSection() {
                       {formatRelativeTime(machine.lastHeartbeatAt, t)}
                     </span>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                  </button>
+                  </Button>
                 );
               })}
             </div>

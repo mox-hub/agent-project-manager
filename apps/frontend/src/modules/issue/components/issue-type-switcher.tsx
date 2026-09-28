@@ -65,12 +65,12 @@ export function IssueTypeSwitcher({
     <DropdownMenu>
       <DropdownMenuTrigger
         title={t('taskDetail.switchType')}
-        className="inline-flex shrink-0 cursor-pointer items-center gap-0.5 rounded-full outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+        className="inline-flex shrink-0 cursor-pointer items-center outline-none transition-opacity hover:opacity-80"
       >
         <IssueTypePill meta={current} />
         <ChevronsUpDown className="size-3 text-muted-foreground" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-auto min-w-44">
+      <DropdownMenuContent align="start" >
         {selectable.map((ty) => {
           const Icon = issueTypeIcon(ty.icon);
           const selected = ty.id === current?.id;
@@ -88,7 +88,7 @@ export function IssueTypeSwitcher({
         })}
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="text-muted-foreground"
+          
           onSelect={() => navigate('/app/settings/issue-types')}
         >
           <Settings2 className="size-3.5 shrink-0" />

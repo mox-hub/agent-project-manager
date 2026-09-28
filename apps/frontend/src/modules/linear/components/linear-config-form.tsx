@@ -111,7 +111,7 @@ export function LinearConfigForm({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent keepDefaultWidth={false} className="max-w-xl border-border">
+      <DialogContent maxWidth="xl" keepDefaultWidth={false} >
         <DialogHeader>
           <DialogTitle>
             {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}

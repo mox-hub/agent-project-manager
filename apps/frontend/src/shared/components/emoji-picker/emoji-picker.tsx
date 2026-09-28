@@ -4,6 +4,7 @@
  * 纯面板组件，由调用方包裹 Popover/AnchoredMenu 触发。
  * 选中时回写 localStorage 常用记录（getFrequentlyUsedEmojis 读取）。
  */
+import { Button } from '@/components/ui/button';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
@@ -49,12 +50,12 @@ export function EmojiPicker({
       <div className="border-b border-border p-2">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <Input size="h-8"
             ref={searchRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('emojiPicker.search')}
-            className="h-8 pl-8 text-sm"
+            
           />
         </div>
       </div>
@@ -113,15 +114,15 @@ function EmojiGrid({
   return (
     <div className="grid grid-cols-8 gap-0.5">
       {emojis.map((item) => (
-        <button
+        <Button variant="ghost"
           key={item.emoji}
           type="button"
           title={item.name}
           onClick={() => onSelect(item.emoji)}
-          className="flex size-8 items-center justify-center rounded-md text-lg leading-none transition-colors hover:bg-accent"
+          className="flex items-center justify-center transition-colors"
         >
           {item.emoji}
-        </button>
+        </Button>
       ))}
     </div>
   );

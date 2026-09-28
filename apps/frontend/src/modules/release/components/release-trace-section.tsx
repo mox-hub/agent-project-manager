@@ -6,6 +6,7 @@
  * 无后端新契约；门禁卡是发版时快照、本区为实时重查，验收未全绿行内高亮呼应。
  * draft 态内联圈定范围（勾选项目任务 → useUpdateRelease({ scopeIssueIds })）。
  */
+import { FieldLabel } from '@/components/ui/field';
 import { useMemo, useState } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -126,9 +127,9 @@ export function ReleaseTraceSection({ release }: { release: ReleaseRecord }) {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
+      <CardHeader className="flex-row items-center justify-between">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <CardTitle size="sm" className="flex items-center gap-1.5">
+          <CardTitle size="sm" className="flex items-center">
             <ListChecks className="size-4 text-accent-blue" />
             {t('release.trace.title')}
           </CardTitle>
@@ -148,7 +149,7 @@ export function ReleaseTraceSection({ release }: { release: ReleaseRecord }) {
           <Button
             variant="outline"
             size="sm"
-            fontSize="xs" className="h-7"
+            fontSize="xs" 
             onClick={() => setEditing((v) => !v)}
           >
             <Pencil className="mr-1 size-3" />
@@ -156,7 +157,7 @@ export function ReleaseTraceSection({ release }: { release: ReleaseRecord }) {
           </Button>
         ) : null}
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent >
         {editing && isDraft ? (
           <ScopeEditor release={release} onDone={() => setEditing(false)} />
         ) : null}
@@ -237,10 +238,10 @@ function TraceIssueRow({
 
   return (
     <div className="overflow-hidden rounded-lg border border-border">
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onToggle}
-        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-accent/20"
+        className="flex cursor-pointer items-center transition-colors"
       >
         {expanded ? (
           <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
@@ -266,12 +267,12 @@ function TraceIssueRow({
             {formatCost(runCost)}
           </span>
         ) : null}
-      </button>
+      </Button>
 
       {expanded ? (
         <div className="space-y-3 border-t border-border bg-muted/20 px-3 py-3">
           {row.loading ? (
-            <Skeleton className="h-6 w-2/3" />
+            <Skeleton  />
           ) : (
             <>
               {/* 验收单段 */}
@@ -323,10 +324,10 @@ function TraceIssueRow({
                       const duration = formatRunDuration(run);
                       return (
                         <li key={run.id}>
-                          <button
+                          <Button variant="ghost"
                             type="button"
                             onClick={() => onOpenRun(run.id)}
-                            className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-xs transition-colors hover:bg-accent/20"
+                            className="flex items-center transition-colors"
                           >
                             <RunStatusBadge status={run.status} />
                             <span className="min-w-0 flex-1 truncate">{run.goal}</span>
@@ -338,7 +339,7 @@ function TraceIssueRow({
                                 {formatCost(run.totalCost)}
                               </span>
                             ) : null}
-                          </button>
+                          </Button>
                         </li>
                       );
                     })}
@@ -436,11 +437,11 @@ function ScopeEditor({
       </p>
       {/* max-h 必须落在 viewport 上：根容器高度不定时 h-full 百分比失效，
           viewport 会被内容撑高溢出根容器，压住底栏且无从滚动 */}
-      <ScrollArea className="[&_[data-slot=scroll-area-viewport]]:max-h-64">
+      <ScrollArea >
         {isLoading ? (
           <div className="space-y-2 p-3">
             {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-6" />
+              <Skeleton key={i}  />
             ))}
           </div>
         ) : tasks.length === 0 ? (
@@ -449,9 +450,9 @@ function ScopeEditor({
           </p>
         ) : (
           tasks.map((task) => (
-            <label
+            <FieldLabel size="xs" variant="muted"
               key={task.id}
-              className="flex cursor-pointer items-center gap-2.5 px-3 py-1.5 transition-colors hover:bg-accent/10"
+              className="flex cursor-pointer items-center transition-colors"
             >
               <Checkbox
                 checked={selected.has(task.id)}
@@ -461,7 +462,7 @@ function ScopeEditor({
               <span className="shrink-0 text-xs text-muted-foreground">
                 {statusNameOf(task.status)}
               </span>
-            </label>
+            </FieldLabel>
           ))
         )}
       </ScrollArea>
@@ -470,12 +471,12 @@ function ScopeEditor({
           {t('release.trace.selectedCount', { count: selected.size })}
         </span>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" fontSize="xs" className="h-7" onClick={onDone}>
+          <Button variant="outline" size="sm" fontSize="xs"  onClick={onDone}>
             {t('common.cancel')}
           </Button>
           <Button
             size="sm"
-            fontSize="xs" className="h-7"
+            fontSize="xs" 
             disabled={!dirty || update.isPending}
             onClick={save}
           >

@@ -54,7 +54,7 @@ export function ProjectPreviewBody({ id }: { id: string }) {
         </div>
         {typeof project.progress === 'number' && (
           <div className="flex items-center gap-2">
-            <Progress value={project.progress} className="h-1.5 flex-1" />
+            <Progress value={project.progress} className="flex-1" />
             <span className="font-mono text-3xs text-muted-foreground">{project.progress}%</span>
           </div>
         )}

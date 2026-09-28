@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { NavLink, Outlet, useNavigate, useLocation, useMatches } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -371,8 +372,12 @@ export function ShellLayout() {
           <ConnectionBanner />
           {/* Mobile sidebar backdrop */}
           {mobileSidebarOpen ? (
-            <button
-              type="button"
+            // 遮罩点击 catcher：视觉归场景元素（base-ui Dialog.Backdrop 同为 div 形态），
+            // 不经 Button——胶囊几何与默认配色对全屏遮罩都是错配。
+            // 长期归宿：移动端侧栏改 Dialog + Backdrop（E 类 §七之十一 挂账）。
+            <div
+              role="button"
+              tabIndex={-1}
               className="fixed inset-0 z-banner bg-black/40 md:hidden"
               onClick={() => setMobileSidebarOpen(false)}
               aria-label={t('shell.closeSidebar')}
@@ -396,37 +401,48 @@ export function ShellLayout() {
                 'flex items-center h-12 shrink-0',
                 sidebarCollapsed ? 'justify-center px-0' : 'px-2.5 gap-2'
               )}>
-                <button
-                  onClick={toggleSidebar}
-                  className={cn(
-                    'flex items-center rounded-lg transition-colors hover:bg-sidebar-accent/60',
-                    sidebarCollapsed
-                      ? 'size-10 justify-center'
-                      : 'flex-1 min-w-0 gap-2.5 px-2.5 py-1.5'
-                  )}
-                  aria-label="Toggle sidebar"
-                  title={sidebarCollapsed ? t('shell.expandSidebar') : t('shell.appName')}
-                >
-                  <Logo size="sm" variant="framed" tone="auto" className="shrink-0 size-6" ariaLabel="Agent Project Manager" />
-                  {!sidebarCollapsed && (
-                    <span className="text-sm font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
-                  )}
-                </button>
+                {sidebarCollapsed ? (
+                  <Button
+                    variant="ghost"
+                    size="icon-lg"
+                    onClick={toggleSidebar}
+                    aria-label="Toggle sidebar"
+                    title={t('shell.expandSidebar')}
+                  >
+                    <Logo size="sm" variant="framed" tone="auto" className="shrink-0 size-6" ariaLabel="Agent Project Manager" />
+                  </Button>
+                ) : (
+                  <div className="min-w-0 flex-1">
+                    <Button
+                      variant="ghost"
+                      width="full"
+                      align="start"
+                      padding="px-2.5 py-1.5"
+                      onClick={toggleSidebar}
+                      aria-label="Toggle sidebar"
+                      title={t('shell.appName')}
+                    >
+                      <Logo size="sm" variant="framed" tone="auto" className="shrink-0 size-6" ariaLabel="Agent Project Manager" />
+                      <span className="text-sm font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
+                    </Button>
+                  </div>
+                )}
                 {!sidebarCollapsed && (
                   <div className="shrink-0 flex items-center gap-1">
                     <Tooltip>
                       <TooltipTrigger
                         render={
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
                             type="button"
                             onClick={() =>
                               window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))
                             }
-                            className="relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
                             aria-label={t('nav.search')}
                           >
                             <Search className="size-4" />
-                          </button>
+                          </Button>
                         }
                       />
                       <TooltipContent side="bottom">
@@ -478,9 +494,16 @@ export function ShellLayout() {
                         <div className="my-1.5 mx-auto w-6 border-t border-sidebar-border/40" />
                       )}
 
-                      {/* Group Header：可收缩按钮 */}
+                      {/* Group Header：可收缩按钮。
+                          语义与交互态归 Button（全宽+左对齐走 align="start" 形态档）；
+                          侧边栏弱化前景/悬停加深是场景视觉，由内部 span 承接
+                          （ui 原子上禁写 className 色类，自由元素上合法）。 */}
                       {!sidebarCollapsed && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          width="full"
+                          align="start"
+                          padding="px-3 py-1.5"
                           type="button"
                           onClick={() => {
                             if (collapsibleId)
@@ -492,23 +515,25 @@ export function ShellLayout() {
                               ? `${group.label} (${group.items.length})`
                               : group.label
                           }
-                          className="flex w-full items-center gap-1 px-3 pt-2 pb-1 mt-0.5 text-left text-sidebar-foreground/40 transition-colors hover:text-sidebar-foreground/70"
+                          className="mt-0.5"
                         >
-                          <span className="truncate text-xs font-semibold uppercase tracking-wider">
-                            {group.label}
+                          <span className="flex items-center gap-1 text-sidebar-foreground/40 transition-colors group-hover/button:text-sidebar-foreground/70">
+                            <span className="truncate text-xs font-semibold uppercase tracking-wider">
+                              {group.label}
+                            </span>
+                            <ChevronDown
+                              className={cn(
+                                'size-3.5 shrink-0 transition-transform',
+                                navCollapsed(group.id) && '-rotate-90',
+                              )}
+                            />
                           </span>
-                          <ChevronDown
-                            className={cn(
-                              'size-3.5 shrink-0 transition-transform',
-                              navCollapsed(group.id) && '-rotate-90',
-                            )}
-                          />
                           {navCollapsed(group.id) && (
                             <span className="ml-auto shrink-0 rounded-full bg-sidebar-accent px-1.5 py-px text-3xs font-semibold tabular-nums text-sidebar-foreground/70">
                               {group.items.length}
                             </span>
                           )}
-                        </button>
+                        </Button>
                       )}
 
                       {!itemsHidden && (
@@ -664,16 +689,17 @@ export function ShellLayout() {
                   <Tooltip>
                     <TooltipTrigger
                       render={
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           type="button"
                           onClick={() =>
                             window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))
                           }
-                          className="relative flex size-8 items-center justify-center rounded-full text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
                           aria-label={t('nav.search')}
                         >
                           <Search className="size-4" />
-                        </button>
+                        </Button>
                       }
                     />
                     <TooltipContent side="right">
@@ -710,14 +736,15 @@ export function ShellLayout() {
                   <Tooltip>
                     <TooltipTrigger
                       render={
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon-lg"
                           type="button"
                           onClick={toggleSidebar}
-                          className="flex items-center justify-center size-10 rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground transition-colors"
                           aria-label={t('shell.expandSidebar')}
                         >
                           <PanelLeftOpen className="size-4.5 shrink-0" />
-                        </button>
+                        </Button>
                       }
                     />
                     <TooltipContent side="right">
@@ -738,15 +765,15 @@ export function ShellLayout() {
 
             {/* Mobile header */}
             <div className="flex items-center gap-2 bg-sidebar/85 backdrop-blur-md px-3 py-2 md:hidden">
-              <button
+              <Button variant="ghost"
                 type="button"
-                className="rounded-md bg-transparent p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                
                 onClick={() => setMobileSidebarOpen(true)}
                 aria-label={t('shell.openSidebar')}
                 aria-expanded={mobileSidebarOpen}
               >
                 <Menu size={18} aria-hidden="true" />
-              </button>
+              </Button>
               <span className="text-sm font-medium text-sidebar-foreground">{t('shell.appName')}</span>
             </div>
 
@@ -768,7 +795,7 @@ export function ShellLayout() {
                     </ErrorBoundary>
                   </div>
                 ) : (
-                  <ScrollArea className="h-full w-full" fill>
+                  <ScrollArea  fill>
                     <ErrorBoundary fallback={<PageErrorFallback />}>
                       <Outlet />
                     </ErrorBoundary>
@@ -820,7 +847,7 @@ function PipelineFocusFilter() {
         value={focusProjectId ?? ''}
         onChange={(e) => setProjectId(e.target.value || null)}
         size="sm"
-        className="h-6 min-w-0 flex-1 text-3xs"
+        className="flex-1"
       >
         <option value="">{t('shell.pipelineFocus.allProjects', '全部项目')}</option>
         {projects.map((p) => (
@@ -972,7 +999,7 @@ function ProjectContextBar({
           而非 bg-sidebar（日间也深），避免白卡上顶一条深色带 */}
       <SubPageToolbar
         aiId="shell.project-context"
-        className="bg-background"
+        
         breadcrumbs={[
           { label: t('nav.projects'), to: '/app/projects' },
           { label: project?.name || t('project.title'), to: `/app/projects/${projectId}` },

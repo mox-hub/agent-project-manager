@@ -189,10 +189,10 @@ export function ShortcutsSettingsSection() {
       contentClassName="space-y-6"
     >
       <Card surface="flat">
-        <CardHeader className="flex-row items-center gap-2">
+        <CardHeader className="flex-row items-center">
           <Keyboard className="size-4 text-muted-foreground" />
           <div className="flex-1">
-            <CardTitle className="text-base">{t('settings.shortcutsGlobalTitle')}</CardTitle>
+            <CardTitle size="base" >{t('settings.shortcutsGlobalTitle')}</CardTitle>
             <CardDescription>{t('settings.shortcutsGlobalDesc')}</CardDescription>
           </div>
           {hasOverrides ? (
@@ -217,7 +217,7 @@ export function ShortcutsSettingsSection() {
 
       <Card surface="flat">
         <CardHeader>
-          <CardTitle className="text-base">{t('settings.shortcutsContextTitle')}</CardTitle>
+          <CardTitle size="base" >{t('settings.shortcutsContextTitle')}</CardTitle>
           <CardDescription>{t('settings.shortcutsContextDesc')}</CardDescription>
         </CardHeader>
         <CardContent>

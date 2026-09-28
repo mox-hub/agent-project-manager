@@ -170,7 +170,7 @@ export function UserAccountsSection({
                 <TableHead>{t('admin.status', '状态')}</TableHead>
                 <TableHead>{t('admin.memberShortId', '成员')}</TableHead>
                 <TableHead>{t('admin.createdAt', '创建时间')}</TableHead>
-                <TableHead className="w-10" />
+                <TableHead width="w-10"  />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -180,7 +180,7 @@ export function UserAccountsSection({
                   <TableRow key={u.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Avatar className="size-7">
+                        <Avatar >
                           {u.avatarUrl ? <AvatarImage src={u.avatarUrl} /> : null}
                           <AvatarFallback>{u.displayName.slice(0, 1)}</AvatarFallback>
                         </Avatar>

@@ -40,7 +40,7 @@ export function BootChecklist({ steps, className }: BootChecklistProps) {
               step={i + 1}
               completed={passed(step)}
               loading={step.status === 'running'}
-              className="w-full"
+              
             >
               <div className="flex w-full items-start gap-3">
                 <div className="flex flex-col items-center self-stretch">
@@ -57,7 +57,7 @@ export function BootChecklist({ steps, className }: BootChecklistProps) {
                     ) : step.status === 'skipped' ? (
                       <SkipForward className="size-3.5" />
                     ) : step.status === 'running' ? (
-                      <Spinner size="sm" className="size-3.5 text-primary-foreground" />
+                      <Spinner size="sm"  />
                     ) : isError ? (
                       <CircleAlert className="size-3.5" />
                     ) : (
@@ -76,7 +76,7 @@ export function BootChecklist({ steps, className }: BootChecklistProps) {
                   >
                     {step.title}
                   </StepperTitle>
-                  <StepperDescription className="mt-1 text-xs leading-snug">
+                  <StepperDescription className="mt-1">
                     {step.detail ?? step.description}
                   </StepperDescription>
                 </div>

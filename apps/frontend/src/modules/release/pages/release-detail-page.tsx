@@ -132,19 +132,19 @@ export function ReleaseDetailPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-5xl space-y-4 px-6 py-5 sm:px-8">
           {releaseQuery.isLoading || !release ? (
-            <SkeletonCard className="h-64" />
+            <SkeletonCard  />
           ) : (
             <>
               {/* 状态机进度链（纯展示指示器式；publishing 步 loading，failed 不在链上另挂徽章） */}
               <Card>
-                <CardContent inset="md" className="flex items-center gap-2">
+                <CardContent inset="md" className="flex items-center">
                   <Stepper
                     value={Math.max(STATUS_FLOW.indexOf(release.status) + 1, 1)}
                     className="flex-1"
                     indicators={{
                       completed: <Check className="size-3" />,
                       loading: (
-                        <Spinner size="sm" className="size-3.5 text-primary-foreground" />
+                        <Spinner size="sm"  />
                       ),
                     }}
                   >
@@ -156,10 +156,10 @@ export function ReleaseDetailPage() {
                           loading={release.status === 'publishing' && s === 'publishing'}
                         >
                           <div className="flex items-center gap-2">
-                            <StepperIndicator className="size-5 text-3xs font-medium">
+                            <StepperIndicator >
                               {i + 1}
                             </StepperIndicator>
-                            <StepperTitle className="text-xs whitespace-nowrap">
+                            <StepperTitle className="whitespace-nowrap">
                               {t(statusLabelKey(s))}
                             </StepperTitle>
                           </div>
@@ -180,7 +180,7 @@ export function ReleaseDetailPage() {
                 <Alert variant="destructive">
                   <XCircle className="size-4" />
                   <AlertTitle>{t('release.detail.failureTitle')}</AlertTitle>
-                  <AlertDescription className="text-xs">
+                  <AlertDescription >
                     {release.failureReason}
                   </AlertDescription>
                 </Alert>
@@ -188,8 +188,8 @@ export function ReleaseDetailPage() {
 
               {/* 基本信息 + 发版说明（AI 起草） */}
               <Card>
-                <CardHeader className="flex-row items-center justify-between space-y-0">
-                  <CardTitle size="sm" className="flex items-center gap-1.5">
+                <CardHeader className="flex-row items-center justify-between">
+                  <CardTitle size="sm" className="flex items-center">
                     <Rocket className="size-4 text-accent-green" />
                     {t('release.detail.notesTitle')}
                   </CardTitle>
@@ -197,7 +197,7 @@ export function ReleaseDetailPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      fontSize="xs" className="h-7"
+                      fontSize="xs" 
                       disabled={updateNotes.isPending}
                       onClick={draftNotes}
                     >
@@ -206,27 +206,26 @@ export function ReleaseDetailPage() {
                     </Button>
                   ) : null}
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent >
                   {release.status === 'draft' && notesDraft !== null ? (
                     <div className="space-y-2">
-                      <Textarea
-                        value={notesDraft}
+                      <Textarea                         value={notesDraft}
                         onChange={(e) => setNotesDraft(e.target.value)}
                         rows={8}
-                        className="text-xs"
+                        
                       />
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          fontSize="xs" className="h-7"
+                          fontSize="xs" 
                           onClick={() => setNotesDraft(null)}
                         >
                           {t('common.cancel')}
                         </Button>
                         <Button
                           size="sm"
-                          fontSize="xs" className="h-7"
+                          fontSize="xs" 
                           disabled={updateNotes.isPending}
                           onClick={() =>
                             updateNotes.mutate(
@@ -339,10 +338,10 @@ export function ReleaseDetailPage() {
               {/* 发布执行日志 */}
               {release.executionLog && release.executionLog.length > 0 ? (
                 <Card>
-                  <CardHeader className="pb-2">
+                  <CardHeader >
                     <CardTitle size="sm">{t('release.detail.logTitle')}</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2">
+                  <CardContent >
                     {release.executionLog.map((step, i) => (
                       <ExecutionStepRow key={`${step.step}-${i}`} step={step} />
                     ))}
@@ -376,13 +375,13 @@ function GateCard({
   void releaseId;
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
+      <CardHeader className="flex-row items-center justify-between">
         <CardTitle size="sm">{t('release.gate.title')}</CardTitle>
         {status === 'draft' ? (
           <Button
             variant="outline"
             size="sm"
-            fontSize="xs" className="h-7"
+            fontSize="xs" 
             disabled={gatePending}
             onClick={onGate}
           >
@@ -391,7 +390,7 @@ function GateCard({
           </Button>
         ) : null}
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent >
         {ranAt ? (
           <p className="text-2xs text-content-text-muted">
             {t('release.gate.ranAt')} {new Date(ranAt).toLocaleString()}
@@ -468,35 +467,35 @@ function ActionCard({
   void releaseId;
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader >
         <CardTitle size="sm">{t('release.action.title')}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-wrap items-center gap-2">
+      <CardContent className="flex flex-wrap items-center">
         {status === 'draft' ? (
           <p className="text-xs text-content-text-muted">{t('release.action.draftHint')}</p>
         ) : null}
         {status === 'gated' ? (
           <>
-            <Button size="sm" fontSize="xs" className="h-7" disabled={approvalPending} onClick={onApproval}>
+            <Button size="sm" fontSize="xs"  disabled={approvalPending} onClick={onApproval}>
               {t('release.action.requestApproval')}
             </Button>
-            <Button variant="outline" size="sm" fontSize="xs" className="h-7" disabled={rejectPending} onClick={onReject}>
+            <Button variant="outline" size="sm" fontSize="xs"  disabled={rejectPending} onClick={onReject}>
               {t('release.action.reject')}
             </Button>
           </>
         ) : null}
         {status === 'approved' ? (
           <>
-            <Button size="sm" fontSize="xs" className="h-7" disabled={publishPending} onClick={onPublish}>
+            <Button size="sm" fontSize="xs"  disabled={publishPending} onClick={onPublish}>
               {t('release.action.publish')}
             </Button>
-            <Button variant="outline" size="sm" fontSize="xs" className="h-7" disabled={rejectPending} onClick={onReject}>
+            <Button variant="outline" size="sm" fontSize="xs"  disabled={rejectPending} onClick={onReject}>
               {t('release.action.reject')}
             </Button>
           </>
         ) : null}
         {status === 'failed' ? (
-          <Button size="sm" fontSize="xs" className="h-7" disabled={reopenPending} onClick={onReopen}>
+          <Button size="sm" fontSize="xs"  disabled={reopenPending} onClick={onReopen}>
             {t('release.action.reopen')}
           </Button>
         ) : null}

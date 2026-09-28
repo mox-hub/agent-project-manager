@@ -270,7 +270,7 @@ function SectionGroupCard({
           size="sm"
           variant="ghost"
           onClick={onAdd}
-          fontSize="2xs" className="h-6 gap-1 px-2"
+          fontSize="2xs" 
         >
           <Plus size={11} /> 添加
         </Button>
@@ -320,14 +320,14 @@ function SectionGroupCard({
               >
                 {LINK_TYPE_LABELS[link.linkType] ?? link.linkType}
               </span>
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => remove.mutate(link.id)}
-                className="rounded-md p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/li:opacity-100"
+                className="opacity-0 transition-opacity group-hover/li:opacity-100"
                 aria-label="删除关联"
               >
                 <X size={11} />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

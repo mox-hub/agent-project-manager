@@ -1,6 +1,7 @@
 /**
  * DocCategoryChips - 文档类目规范 Chips 栏（CAP-A-18 V2）
  */
+import { Button } from '@/components/ui/button';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileText, Layers, Code, CheckSquare, BookOpen, BarChart3 } from 'lucide-react';
@@ -77,7 +78,7 @@ export function DocCategoryChips({
         const Icon = item.icon;
         const active = value === item.value;
         return (
-          <button
+          <Button variant="ghost"
             key={item.value}
             type="button"
             onClick={() => {
@@ -95,7 +96,7 @@ export function DocCategoryChips({
           >
             <Icon className={cn('size-3.5', active ? 'text-primary-foreground' : 'text-muted-foreground')} />
             <span>{t(item.labelKey, { defaultValue: item.defaultLabel })}</span>
-          </button>
+          </Button>
         );
       })}
     </div>

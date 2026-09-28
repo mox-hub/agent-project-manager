@@ -106,7 +106,7 @@ export function LinearProviderCard({
           <Button
             onClick={onManage}
             variant="secondary"
-            className="bg-white/10 text-white border-0 hover:bg-white/20"
+            
           >
             Manage
             <ArrowRight className="ml-2 size-4" />
@@ -114,7 +114,7 @@ export function LinearProviderCard({
         ) : (
           <Button
             onClick={onConnect}
-            className="bg-white text-brand-linear-deep hover:bg-white/90"
+            
           >
             Connect Linear
             <ArrowRight className="ml-2 size-4" />

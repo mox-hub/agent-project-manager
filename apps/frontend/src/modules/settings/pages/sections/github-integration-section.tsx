@@ -31,7 +31,7 @@ export function GithubIntegrationSection() {
       title={t('settings.integration.githubIntegration.title')}
       icon={Github}
       actions={
-        <Button size="sm" className="h-7" onClick={() => setConnectOpen(true)}>
+        <Button size="sm"  onClick={() => setConnectOpen(true)}>
           <Github className="mr-1 h-3.5 w-3.5" />
           {t('settings.integration.githubIntegration.connect')}
         </Button>
@@ -42,11 +42,11 @@ export function GithubIntegrationSection() {
           {githubInts.length === 0 ? (
             <Card>
               <CardHeader>
-                <CardTitle size="base" className="flex items-center gap-2">
+                <CardTitle size="base" className="flex items-center">
                   <AlertCircle className="h-4 w-4 text-accent-yellow" />
                   {t('settings.integration.githubIntegration.emptyTitle')}
                 </CardTitle>
-                <CardDescription className="space-y-3">
+                <CardDescription >
                   <span className="block">
                     {t('settings.integration.githubIntegration.emptyDesc')}
                   </span>
@@ -87,43 +87,43 @@ function PrLifecycleExplainerCard() {
           {t('settings.integration.githubIntegration.prLifecycleDesc')}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2 text-sm">
-        <Table className="w-full text-xs">
+      <CardContent >
+        <Table >
           <TableHeader variant="muted">
             <TableRow>
-              <TableHead className="text-left py-1">{t('settings.integration.githubIntegration.colStatus')}</TableHead>
-              <TableHead className="text-left py-1">{t('settings.integration.githubIntegration.colMeaning')}</TableHead>
-              <TableHead className="text-left py-1">{t('settings.integration.githubIntegration.colTrustDelta')}</TableHead>
+              <TableHead density="dense" >{t('settings.integration.githubIntegration.colStatus')}</TableHead>
+              <TableHead density="dense" >{t('settings.integration.githubIntegration.colMeaning')}</TableHead>
+              <TableHead density="dense" >{t('settings.integration.githubIntegration.colTrustDelta')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
               <TableCell padding="py-1">
-                <Badge className="bg-accent-purple">merged</Badge>
+                <Badge color="purple-solid" >merged</Badge>
               </TableCell>
               <TableCell padding="py-1">{t('settings.integration.githubIntegration.meaningMerged')}</TableCell>
-              <TableCell padding="py-1" className="text-accent-green font-semibold">+8</TableCell>
+              <TableCell padding="py-1" >+8</TableCell>
             </TableRow>
             <TableRow>
               <TableCell padding="py-1">
                 <Badge variant="secondary">merged_with_comments</Badge>
               </TableCell>
               <TableCell padding="py-1">{t('settings.integration.githubIntegration.meaningMergedComments')}</TableCell>
-              <TableCell padding="py-1" className="text-accent-green">+4</TableCell>
+              <TableCell padding="py-1" >+4</TableCell>
             </TableRow>
             <TableRow>
               <TableCell padding="py-1">
                 <Badge variant="destructive">changes_requested</Badge>
               </TableCell>
               <TableCell padding="py-1">{t('settings.integration.githubIntegration.meaningChangesRequested')}</TableCell>
-              <TableCell padding="py-1" className="text-destructive">−4</TableCell>
+              <TableCell padding="py-1" >−4</TableCell>
             </TableRow>
             <TableRow>
               <TableCell padding="py-1">
                 <Badge variant="destructive">closed</Badge>
               </TableCell>
               <TableCell padding="py-1">{t('settings.integration.githubIntegration.meaningClosed')}</TableCell>
-              <TableCell padding="py-1" className="text-destructive">−2</TableCell>
+              <TableCell padding="py-1" >−2</TableCell>
             </TableRow>
           </TableBody>
         </Table>

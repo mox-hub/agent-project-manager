@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { useRef, useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -93,7 +94,7 @@ export function MemberPicker({
         }}
       >
         <PopoverTrigger>
-          <button
+          <Button variant="ghost"
             type="button"
             ref={triggerRef}
             disabled={disabled}
@@ -117,21 +118,21 @@ export function MemberPicker({
               ))
             )}
             <ChevronDown className="ml-auto h-4 w-4 text-muted-foreground shrink-0" />
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="min-w-70 p-0"
+          
           style={triggerWidth ? { width: triggerWidth } : undefined}
           align="start"
         >
           <div className="p-2 border-b border-border space-y-2">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
+              <Input size="h-8"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="搜索姓名/handle/邮箱..."
-                className="pl-7 h-8 text-sm"
+                
               />
             </div>
             {filterType === 'all' && (
@@ -139,14 +140,14 @@ export function MemberPicker({
                 value={tab}
                 onValueChange={(v) => setTab(v as 'all' | 'human' | 'ai_agent')}
               >
-                <TabsList className="h-7 w-full">
-                  <TabsTrigger value="all" fontSize="xs" className="h-5 flex-1">
+                <TabsList >
+                  <TabsTrigger value="all" fontSize="xs" className="flex-1">
                     全部
                   </TabsTrigger>
-                  <TabsTrigger value="human" fontSize="xs" className="h-5 flex-1">
+                  <TabsTrigger value="human" fontSize="xs" className="flex-1">
                     人类
                   </TabsTrigger>
-                  <TabsTrigger value="ai_agent" fontSize="xs" className="h-5 flex-1">
+                  <TabsTrigger value="ai_agent" fontSize="xs" className="flex-1">
                     AI
                   </TabsTrigger>
                 </TabsList>
@@ -163,7 +164,7 @@ export function MemberPicker({
               items.map((m) => {
                 const selected = value.includes(m.id);
                 return (
-                  <button
+                  <Button variant="ghost"
                     key={m.id}
                     type="button"
                     onClick={() => toggle(m.id)}
@@ -192,7 +193,7 @@ export function MemberPicker({
                       </div>
                     </div>
                     {selected && <Check className="h-3.5 w-3.5 text-primary" />}
-                  </button>
+                  </Button>
                 );
               })
             )}

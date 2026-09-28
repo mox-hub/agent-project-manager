@@ -280,7 +280,7 @@ export function TaskDetailPage() {
     return (
       <PageShell>
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          <Spinner className="size-4 mr-2 text-inherit" />
+          <Spinner color="inherit" className="mr-2" />
           {t('common.loading')}
         </div>
       </PageShell>
@@ -484,7 +484,7 @@ export function TaskDetailPage() {
                 rows={1}
                 placeholder={t('taskDetail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40"
+                
               />
             </div>
             {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}
@@ -548,7 +548,7 @@ export function TaskDetailPage() {
                 onClick={() => void handleDecompose()}
               >
                 {decompose.isPending ? (
-                  <Spinner className="size-3 text-inherit" />
+                  <Spinner color="inherit" size="2xs"  />
                 ) : (
                   <Split className="size-3" />
                 )}
@@ -625,13 +625,13 @@ export function TaskDetailPage() {
               label={task.assigneeType === 'ai_agent' ? t('taskDetail.dispatchAiAgain') : t('taskDetail.dispatchAi')}
               onClick={() => setShowAiAssignDialog(true)}
               data-ai-action="task.task-detail.assign-ai.click"
-              className="text-accent-purple"
+              
             />
             <SidebarButton
               icon={Trash2}
               label={t('common.delete')}
               onClick={() => setShowDeleteDialog(true)}
-              className="text-destructive hover:text-destructive"
+              
             />
           </SidebarButtonGroup>
 
@@ -694,13 +694,13 @@ export function TaskDetailPage() {
                       <span className="max-w-40 truncate">
                         {t('taskDetail.execItemsForceCloseHint')}
                       </span>
-                      <button
+                      <Button variant="ghost"
                         type="button"
                         onClick={() => void handleForceClose()}
-                        className="shrink-0 font-semibold underline underline-offset-2 transition-opacity hover:opacity-80"
+                        className="shrink-0 underline underline-offset-2 transition-opacity hover:opacity-80"
                       >
                         {t('taskDetail.execItemsForceClose')}
-                      </button>
+                      </Button>
                     </span>
                   )}
                 </div>
@@ -859,7 +859,7 @@ export function TaskDetailPage() {
           <DialogFooter>
             <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>{t('common.cancel')}</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleteTask.isPending}>
-              {deleteTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.delete')}
+              {deleteTask.isPending ? <Spinner color="inherit" size="2xs"  /> : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1031,17 +1031,17 @@ function SubTaskSection({
               className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
             />
           </Button>
-          <button
+          <Button variant="ghost"
             type="button"
             onClick={() => {
               setCollapsed(false);
               setSubOpen((v) => !v);
             }}
-            className="size-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            className="inline-flex items-center justify-center transition-colors"
             title={subOpen ? t('taskDetail.collapse') : t('taskDetail.addSubtask')}
           >
             {subOpen ? <Plus className="size-3.5 rotate-45" /> : <Plus className="size-3.5" />}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -1188,14 +1188,14 @@ function SubTaskSection({
                     placeholder={t('taskDetail.subtaskTitle')}
                     value={subTitle}
                     onChange={(e) => setSubTitle(e.target.value)}
-                    className="w-full text-sm font-semibold placeholder:text-muted-foreground/50"
+                    
                   />
                   <AutoSizeTextarea
                     rows={1}
                     placeholder={t('taskDetail.addDescription')}
                     value={subDesc}
                     onChange={(e) => setSubDesc(e.target.value)}
-                    className="w-full text-xs font-normal placeholder:text-muted-foreground/50"
+                    
                   />
                 </div>
                 {mutationError && (
@@ -1206,7 +1206,7 @@ function SubTaskSection({
                     {t('common.cancel')}
                   </Button>
                   <Button size="xs" onClick={handleSave} disabled={!subTitle.trim() || createSubTask.isPending}>
-                    {createSubTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('taskDetail.saveSubtask')}
+                    {createSubTask.isPending ? <Spinner color="inherit" size="2xs"  /> : t('taskDetail.saveSubtask')}
                   </Button>
                 </div>
               </div>
@@ -1314,7 +1314,7 @@ function CustomFieldsPanel({
                   {t('common.cancel')}
                 </Button>
                 <Button size="xs" onClick={() => void handleSave()} disabled={updateTask.isPending}>
-                  {updateTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.save')}
+                  {updateTask.isPending ? <Spinner color="inherit" size="2xs"  /> : t('common.save')}
                 </Button>
               </div>
             </div>

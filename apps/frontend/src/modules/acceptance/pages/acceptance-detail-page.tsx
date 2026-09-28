@@ -4,6 +4,7 @@
  * 右栏：操作组（删除）+ 属性卡 + 完成证据卡
  * 闭环动作：标准逐项判定（自动落证据）/ 运行审计 / 接收（聚合校验）/ 驳回 / 豁免
  */
+import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -57,6 +58,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
+import { TONE_CLASS } from '@/components/ui/tone';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
@@ -79,20 +81,14 @@ import {
   extractFailures,
   isActiveAcceptance,
   type AcceptanceFailure,
-  type AcceptanceStatus,
   type AcceptanceCriterion,
   type CompletionType,
   type CriterionStatus,
 } from '../api/acceptance-api';
-
-const STATUS_TONE: Record<AcceptanceStatus, string> = {
-  draft: 'text-muted-foreground border-border',
-  pending: 'text-muted-foreground border-border',
-  in_review: 'text-accent-blue border-accent-blue/40',
-  passed: 'text-accent-green border-accent-green/40',
-  failed: 'text-accent-red border-accent-red/40',
-  waived: 'text-muted-foreground border-border',
-};
+import {
+  ACCEPTANCE_STATUS_TONE,
+  CRITERION_STATUS_TONE,
+} from '@/shared/status/status-visuals';
 
 const TYPE_ICON: Record<CompletionType, typeof GitPullRequest> = {
   pr: GitPullRequest,
@@ -106,13 +102,6 @@ const CRITERION_ICON: Record<CriterionStatus, typeof Circle> = {
   passed: CheckCircle2,
   failed: XCircle,
   blocked: Ban,
-};
-
-const CRITERION_TONE: Record<CriterionStatus, string> = {
-  pending: 'text-muted-foreground',
-  passed: 'text-accent-green',
-  failed: 'text-accent-red',
-  blocked: 'text-accent-yellow',
 };
 
 /** 判定循环：待判定 → 已通过 → 未通过 → 待判定 */
@@ -181,9 +170,9 @@ export function AcceptanceDetailPage() {
     return (
       <PageShell>
         <div className="mx-auto max-w-screen-lg space-y-4 p-6">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-48" />
-          <Skeleton className="h-32" />
+          <Skeleton  />
+          <Skeleton  />
+          <Skeleton  />
         </div>
       </PageShell>
     );
@@ -350,41 +339,41 @@ export function AcceptanceDetailPage() {
                   <Icon
                     className={cn(
                       'size-4 transition-colors hover:opacity-70',
-                      CRITERION_TONE[c.status] ?? 'text-muted-foreground',
+                      TONE_CLASS[CRITERION_STATUS_TONE[c.status] ?? 'default'].text,
                     )}
                   />
                 </Button>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm">{c.content}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-3xs text-muted-foreground">
-                    <Badge variant="outline" fontSize="3xs" className="py-0">
+                    <Badge variant="outline" fontSize="3xs" >
                       {t(`acceptance.severity.${c.severity}`, c.severity)}
                     </Badge>
                     <span>{t(`acceptance.criterionStatus.${c.status}`, c.status)}</span>
                     {typeof c.revision === 'number' && c.revision > 1 && (
                       <Badge
                         variant="outline"
-                        fontSize="3xs" className="py-0"
+                        fontSize="3xs" 
                         title={c.revisedAt ? new Date(c.revisedAt).toLocaleString() : undefined}
                       >
                         v{c.revision}
                       </Badge>
                     )}
                     {hasStaleEvidenceOnly(c) && (
-                      <Badge fontSize="3xs" className="border-accent-yellow/50 bg-accent-yellow/15 py-0 text-accent-yellow">
+                      <Badge fontSize="3xs" >
                         <AlertTriangle className="mr-0.5 size-2.5" />
                         {t('acceptanceDetail.criteria.evidenceStale')}
                       </Badge>
                     )}
                     {c.evidences && c.evidences.length > 0 && (
-                      <button
-                        className="flex items-center gap-0.5 hover:text-foreground"
+                      <Button variant="ghost"
+                        className="flex items-center"
                         title={t('acceptanceDetail.evidence.list.toggle')}
                         onClick={() => toggleCriterionEvidence(c.id)}
                       >
                         <ShieldCheck className="size-3" />
                         {c.evidences.length}
-                      </button>
+                      </Button>
                     )}
                   </div>
                   {c.evidences && expandedCriteria.has(c.id) && (
@@ -396,7 +385,7 @@ export function AcceptanceDetailPage() {
                             : ev.storageRef;
                         return (
                           <li key={ev.id} className="flex items-center gap-1.5 text-3xs text-muted-foreground">
-                            <Badge variant="outline" fontSize="3xs" className="py-0">
+                            <Badge variant="outline" fontSize="3xs" >
                               {t(`acceptanceDetail.evidenceType.${ev.evidenceType}`, ev.evidenceType)}
                             </Badge>
                             <span className="truncate">{ev.content ?? ev.evidenceType}</span>
@@ -419,13 +408,13 @@ export function AcceptanceDetailPage() {
                     </ul>
                   )}
                 </div>
-                <button
-                  className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-red"
+                <Button variant="ghost"
+                  className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
                   onClick={() => handleDeleteCriterion(c.id)}
                   title={t('common.delete')}
                 >
                   <Trash2 className="size-3.5" />
-                </button>
+                </Button>
               </div>
             </div>
           );
@@ -489,9 +478,9 @@ export function AcceptanceDetailPage() {
                   <AlertTriangle className="size-4" />
                   {t('acceptanceDetail.actions.blockedTitle')}
                 </span>
-                <button onClick={() => setAcceptFailures(null)}>
+                <Button variant="ghost" onClick={() => setAcceptFailures(null)}>
                   <X className="size-4 text-muted-foreground hover:text-foreground" />
-                </button>
+                </Button>
               </div>
               <ul className="mt-2 space-y-1">
                 {acceptFailures.map((f, i) => (
@@ -515,7 +504,13 @@ export function AcceptanceDetailPage() {
                   {acceptance.title || t('acceptance.title')}
                 </h1>
                 <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <Badge variant="outline" className={STATUS_TONE[acceptance.status]}>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      TONE_CLASS[ACCEPTANCE_STATUS_TONE[acceptance.status] ?? 'default'].text,
+                      TONE_CLASS[ACCEPTANCE_STATUS_TONE[acceptance.status] ?? 'default'].border,
+                    )}
+                  >
                     {t(`acceptance.status.${acceptance.status}`)}
                   </Badge>
                   <span className="flex items-center gap-1">
@@ -611,7 +606,7 @@ export function AcceptanceDetailPage() {
           {/* Tabs */}
           <div className="px-6 pb-6 pt-4">
             <Tabs defaultValue="criteria">
-              <TabsList className="h-8 text-xs">
+              <TabsList >
                 <TabsTrigger value="criteria" fontSize="xs">
                   {t('acceptanceDetail.tabs.criteria')}
                   <span className="ml-1.5 rounded-md bg-muted px-1 text-3xs">{criteria.length}</span>
@@ -642,7 +637,7 @@ export function AcceptanceDetailPage() {
               {/* 验收标准 */}
               <TabsContent
                 value="criteria"
-                className="mt-4 space-y-5"
+                className="mt-4"
                 data-ai-entity={`acceptance:${id}`}
               >
                 {renderCriterionGroup(
@@ -660,7 +655,7 @@ export function AcceptanceDetailPage() {
                 <div className="flex items-center gap-2">
                   <div className="flex overflow-hidden rounded-md border">
                     {(['functional', 'technical'] as const).map((ty) => (
-                      <button
+                      <Button variant="ghost"
                         key={ty}
                         className={cn(
                           'px-2.5 py-1.5 text-xs transition-colors',
@@ -671,15 +666,15 @@ export function AcceptanceDetailPage() {
                         onClick={() => setAddType(ty)}
                       >
                         {t(`acceptanceDetail.criteria.${ty === 'functional' ? 'functional' : 'technical'}`)}
-                      </button>
+                      </Button>
                     ))}
                   </div>
-                  <Input
+                  <Input size="h-8"
                     value={addContent}
                     onChange={(e) => setAddContent(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddCriterion()}
                     placeholder={t('acceptanceDetail.criteria.addPlaceholder')}
-                    className="h-8 text-sm"
+                    
                     disabled={addCriterion.isPending}
                   />
                   <Button
@@ -698,7 +693,7 @@ export function AcceptanceDetailPage() {
               {/* 审计报告 */}
               <TabsContent
                 value="audit"
-                className="mt-4 space-y-4"
+                className="mt-4"
                 data-ai-entity={`acceptance:${id}`}
               >
                 <div className="flex items-center justify-between">
@@ -715,7 +710,7 @@ export function AcceptanceDetailPage() {
                     <SelectField
                       value={auditChecklistId}
                       onChange={(e) => setAuditChecklistId(e.target.value)}
-                      className="h-8 w-52 text-xs"
+                      
                       aria-label={t('acceptanceDetail.audit.checklistSelect')}
                     >
                       <SelectFieldOption value="auto">
@@ -788,7 +783,7 @@ export function AcceptanceDetailPage() {
                 {acceptance.executions && acceptance.executions.length > 0 ? (
                   <>
                     <Card>
-                      <CardContent className="divide-y divide-border p-2">
+                      <CardContent className="divide-y divide-border">
                         {acceptance.executions.map((e) => (
                           <div key={e.id} className="flex items-start gap-3 p-3 hover:bg-accent/40">
                             {e.status === 'completed' ? (
@@ -859,12 +854,12 @@ export function AcceptanceDetailPage() {
 
         {/* 右栏 */}
         <RightSidebar hidden={false} width={320}>
-          <SidebarButtonGroup className="px-1">
+          <SidebarButtonGroup >
             <SidebarButton
               icon={Trash2}
               label={t('common.delete')}
               onClick={handleDeleteAcceptance}
-              className="text-destructive hover:text-destructive"
+              
             />
           </SidebarButtonGroup>
 
@@ -873,7 +868,13 @@ export function AcceptanceDetailPage() {
               icon={<Flag className="size-3.5" />}
               label={t('acceptanceDetail.props.status')}
             >
-              <Badge variant="outline" className={STATUS_TONE[acceptance.status]}>
+              <Badge
+                variant="outline"
+                className={cn(
+                  TONE_CLASS[ACCEPTANCE_STATUS_TONE[acceptance.status] ?? 'default'].text,
+                  TONE_CLASS[ACCEPTANCE_STATUS_TONE[acceptance.status] ?? 'default'].border,
+                )}
+              >
                 {t(`acceptance.status.${acceptance.status}`)}
               </Badge>
             </PropertyRow>
@@ -1069,11 +1070,11 @@ export function AcceptanceDetailPage() {
             <DialogTitle>{t('acceptanceDetail.actions.rejectTitle')}</DialogTitle>
             <DialogDescription>{t('acceptanceDetail.actions.rejectDesc')}</DialogDescription>
           </DialogHeader>
-          <textarea
+          <Textarea
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder={t('acceptanceDetail.actions.rejectPlaceholder')}
-            className="min-h-25 w-full rounded-md border border-border bg-background p-2 text-sm outline-hidden focus:ring-1 focus:ring-primary"
+            className="outline-hidden"
           />
           <DialogFooter>
             <Button
@@ -1111,11 +1112,11 @@ export function AcceptanceDetailPage() {
             <DialogTitle>{t('acceptanceDetail.actions.waiveTitle')}</DialogTitle>
             <DialogDescription>{t('acceptanceDetail.actions.waiveDesc')}</DialogDescription>
           </DialogHeader>
-          <textarea
+          <Textarea
             value={waiveReason}
             onChange={(e) => setWaiveReason(e.target.value)}
             placeholder={t('acceptanceDetail.actions.waivePlaceholder')}
-            className="min-h-25 w-full rounded-md border border-border bg-background p-2 text-sm outline-hidden focus:ring-1 focus:ring-primary"
+            className="outline-hidden"
           />
           <DialogFooter>
             <Button

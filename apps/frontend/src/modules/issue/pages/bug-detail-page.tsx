@@ -6,6 +6,7 @@
  *         + Bug 专属信息 + 关联文档 + Activity 动态(评论/表情)
  * - Right (320px): 操作条(删除) + Properties(含 Severity) + 关联文档
  */
+import { FieldLabel } from '@/components/ui/field';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -45,6 +46,7 @@ import {
   TONE_TEXT_CLASS,
   PRIORITY_VISUALS,
   TASK_STATUS_VISUALS,
+  SEVERITY_TONE,
 } from '@/shared/status/status-visuals';
 import {
   useTaskDetail, useUpdateTask, useDeleteTask,
@@ -74,12 +76,9 @@ const SEVERITY_LABEL_KEYS = {
   low: 'bugDetail.severityS3',
 } as const;
 
-const SEVERITY_TONES: Record<BugSeverity, string> = {
-  critical: 'text-accent-red',
-  high: 'text-accent-orange',
-  medium: 'text-accent-yellow',
-  low: 'text-accent-green',
-};
+/** 严重度点色：tone 唯一词表 text 槽（消费侧 bg-current 取当前色） */
+const severityToneClass = (severity: BugSeverity): string =>
+  TONE_TEXT_CLASS[SEVERITY_TONE[severity] ?? 'default'];
 
 export function BugDetailPage() {
   const navigate = useNavigate();
@@ -175,7 +174,7 @@ export function BugDetailPage() {
     return (
       <PageShell>
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          <Spinner className="size-4 mr-2 text-inherit" />
+          <Spinner color="inherit" className="mr-2" />
           {t('common.loading')}
         </div>
       </PageShell>
@@ -226,7 +225,7 @@ export function BugDetailPage() {
   const severityOptions = (Object.keys(SEVERITY_LABEL_KEYS) as BugSeverity[]).map((value) => ({
     value,
     label: t(SEVERITY_LABEL_KEYS[value]),
-    icon: <span className={cn('inline-block size-2.5 rounded-full bg-current', SEVERITY_TONES[value])} />,
+    icon: <span className={cn('inline-block size-2.5 rounded-full bg-current', severityToneClass(value))} />,
   }));
 
   const updateField = async (patch: Partial<UpdateTaskRequest> & { projectId?: string | null }) => {
@@ -305,7 +304,7 @@ export function BugDetailPage() {
                 rows={1}
                 placeholder={t('bugDetail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40"
+                
               />
             </div>
             {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}
@@ -363,13 +362,13 @@ export function BugDetailPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1">{t('bugDetail.expectedResult')}</label>
+                <FieldLabel size="xs" variant="muted" className="block mb-1">{t('bugDetail.expectedResult')}</FieldLabel>
                 <MarkdownView
                   content={bug.bugExpectedResult || `*${t('bugDetail.emptyValue')}*`}
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1">{t('bugDetail.actualResult')}</label>
+                <FieldLabel size="xs" variant="muted" className="block mb-1">{t('bugDetail.actualResult')}</FieldLabel>
                 <MarkdownView
                   content={bug.bugActualResult || `*${t('bugDetail.emptyValue')}*`}
                 />
@@ -378,11 +377,11 @@ export function BugDetailPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1">{t('bugDetail.environment')}</label>
+                <FieldLabel size="xs" variant="muted" className="block mb-1">{t('bugDetail.environment')}</FieldLabel>
                 <p className="text-sm">{bug.bugEnvironment || '-'}</p>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1">{t('bugDetail.reproducibility')}</label>
+                <FieldLabel size="xs" variant="muted" className="block mb-1">{t('bugDetail.reproducibility')}</FieldLabel>
                 <p className="text-sm">{bug.bugReproducibility || '-'}</p>
               </div>
             </div>
@@ -403,7 +402,7 @@ export function BugDetailPage() {
               icon={Trash2}
               label={t('common.delete')}
               onClick={() => setShowDeleteDialog(true)}
-              className="text-destructive hover:text-destructive"
+              
             />
           </SidebarButtonGroup>
 
@@ -427,7 +426,7 @@ export function BugDetailPage() {
             </PropertyRow>
 
             <PropertyRow
-              icon={<span className={cn('inline-block size-2.5 rounded-full bg-current', SEVERITY_TONES[severity])} />}
+              icon={<span className={cn('inline-block size-2.5 rounded-full bg-current', severityToneClass(severity))} />}
               label={t('bugDetail.severityLabel')}
             >
               <CapsuleSelect
@@ -532,7 +531,7 @@ export function BugDetailPage() {
           <DialogFooter>
             <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>{t('common.cancel')}</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleteTask.isPending}>
-              {deleteTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.delete')}
+              {deleteTask.isPending ? <Spinner color="inherit" size="2xs"  /> : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

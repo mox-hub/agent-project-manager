@@ -53,7 +53,7 @@ export function LinearProjectsTable({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent keepDefaultWidth={false} className="max-w-3xl">
+      <DialogContent keepDefaultWidth={false} >
         <DialogHeader>
           <DialogTitle>
             {/* 布局下沉：图标+标题行由调用方结构承载（span 合法于 h2 内） */}
@@ -76,7 +76,7 @@ export function LinearProjectsTable({
             loadingFallback={
               <div className="space-y-2 p-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-14" />
+                  <Skeleton key={i}  />
                 ))}
               </div>
             }
@@ -124,7 +124,7 @@ function ProjectRow({
   const teams = project.teams ?? [];
   return (
     <li>
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onSelect}
         className={`w-full text-left transition-colors hover:bg-muted/40 ${
@@ -144,7 +144,7 @@ function ProjectRow({
             <div className="flex items-center gap-2">
               <h4 className="truncate font-medium">{project.name}</h4>
               {project.state ? (
-                <Badge variant="secondary" className="text-3xs">
+                <Badge fontSize="3xs" variant="secondary" >
                   {project.state}
                 </Badge>
               ) : null}
@@ -171,7 +171,7 @@ function ProjectRow({
             }`}
           />
         </div>
-      </button>
+      </Button>
     </li>
   );
 }

@@ -74,15 +74,15 @@ const components: Components = {
     </pre>
   ),
   table: ({ children }) => (
-    <Table className="my-2 border-y border-border last:mb-0 [&_th]:border-border [&_td]:border-border/60">
+    <Table className="my-2 last:mb-0">
       {children}
     </Table>
   ),
-  thead: ({ children }) => <TableHeader className="[&_th]:bg-muted/40 [&_th]:text-xs [&_th]:font-semibold">{children}</TableHeader>,
+  thead: ({ children }) => <TableHeader >{children}</TableHeader>,
   tbody: ({ children }) => <TableBody>{children}</TableBody>,
   tr: ({ children }) => <TableRow>{children}</TableRow>,
-  th: ({ children }) => <TableHead className="px-2.5 py-1.5 text-left">{children}</TableHead>,
-  td: ({ children }) => <TableCell padding="py-1.5" className="px-2.5">{children}</TableCell>,
+  th: ({ children }) => <TableHead >{children}</TableHead>,
+  td: ({ children }) => <TableCell padding="py-1.5" >{children}</TableCell>,
   a: ({ children, href, ...rest }) => {
     if (href && isApmRef(href)) {
       return (

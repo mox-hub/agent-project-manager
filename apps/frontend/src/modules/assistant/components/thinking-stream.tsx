@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { BrainCircuit, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -45,10 +46,10 @@ export function ThinkingStream({
       data-ai-state={isThinking ? 'thinking' : 'done'}
     >
       {/* 26px 紧凑折叠条 */}
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-muted/30"
+        className="flex items-center justify-between transition-colors"
         aria-expanded={expanded}
       >
         <div className="flex min-w-0 items-center gap-2">
@@ -77,7 +78,7 @@ export function ThinkingStream({
             <ChevronRight className="size-3.5 shrink-0" />
           )}
         </div>
-      </button>
+      </Button>
 
       {/* 展开态：思维链清单 */}
       {expanded && (

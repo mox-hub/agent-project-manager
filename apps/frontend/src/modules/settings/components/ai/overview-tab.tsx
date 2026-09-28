@@ -6,6 +6,7 @@
  * 同批追加（CAP-A-20）：快捷设置卡——工作区内置模型（provider+model 持久化，
  * AI 调用链无显式偏好时的默认目标）与模型服务厂家启停，一处配置。
  */
+import { FieldLabel } from '@/components/ui/field';
 import { AlertCircle, Brain, Cpu, Server, Terminal, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +45,7 @@ function HealthStatusBadge({ status }: { status: 'online' | 'offline' | 'disable
     unknown: t('aiHub.statusUnknown'),
   } as const;
   return (
-    <StatusPill tone={tone} className="gap-1.5">
+    <StatusPill tone={tone} >
       <span
         className={cn(
           'h-1.5 w-1.5 rounded-full',
@@ -73,7 +74,7 @@ function KpiCard({
 }) {
   return (
     <Card surface="flat" size="sm">
-      <CardContent className="flex items-center gap-3">
+      <CardContent className="flex items-center">
         <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', danger ? 'bg-accent-red-light' : 'bg-muted')}>
           <Icon size={16} className={danger ? 'text-accent-red' : 'text-muted-foreground'} />
         </div>
@@ -133,18 +134,18 @@ function QuickSettingsCard({ onNavigateTab }: { onNavigateTab: (tab: AiManagemen
   return (
     <Card surface="flat">
       <CardHeader>
-        <CardTitle className="text-base">{t('aiHub.quickSettings')}</CardTitle>
+        <CardTitle size="base" >{t('aiHub.quickSettings')}</CardTitle>
         <CardDescription>{t('aiHub.quickSettingsDesc')}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent >
         {/* 内置模型：AI 调用链无显式偏好时的默认 provider + model */}
         <div>
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+          <FieldLabel size="xs" variant="muted" className="mb-2 flex items-center">
             <Brain className="size-3.5 text-muted-foreground" />
             {t('aiHub.defaultModel')}
-          </label>
+          </FieldLabel>
           {providersLoading ? (
-            <Skeleton className="h-9 w-full" />
+            <Skeleton  />
           ) : providers.length === 0 ? (
             <div className="flex items-center justify-between gap-2 rounded-lg border border-dashed border-border px-3 py-2.5">
               <p className="text-sm text-muted-foreground">{t('aiHub.defaultModelNoProviders')}</p>
@@ -158,7 +159,7 @@ function QuickSettingsCard({ onNavigateTab }: { onNavigateTab: (tab: AiManagemen
                 value={effective?.provider ?? ''}
                 onValueChange={(v) => setDraft({ provider: v, model: modelOptionsFor(v)[0] ?? '' })}
               >
-                <SelectTrigger className="w-44">
+                <SelectTrigger >
                   <SelectValue placeholder={t('aiHub.selectProvider')}>
                     {effective?.provider ? nameOf(effective.provider) : t('aiHub.selectProvider')}
                   </SelectValue>
@@ -181,7 +182,7 @@ function QuickSettingsCard({ onNavigateTab }: { onNavigateTab: (tab: AiManagemen
                 }
                 disabled={!effective?.provider || modelOptions.length === 0}
               >
-                <SelectTrigger className="w-52">
+                <SelectTrigger >
                   <SelectValue placeholder={t('aiHub.selectModel')}>
                     {effective?.model || t('aiHub.selectModel')}
                   </SelectValue>
@@ -205,7 +206,7 @@ function QuickSettingsCard({ onNavigateTab }: { onNavigateTab: (tab: AiManagemen
               ) : (
                 !isDirty &&
                 saved && (
-                  <Badge className="bg-accent-green/10 text-accent-green">
+                  <Badge color="green" >
                     <Zap className="mr-1 size-3" />
                     {t('aiHub.defaultModelBadge')}
                   </Badge>
@@ -218,10 +219,10 @@ function QuickSettingsCard({ onNavigateTab }: { onNavigateTab: (tab: AiManagemen
 
         {/* 模型服务厂家启停 */}
         <div>
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+          <FieldLabel size="xs" variant="muted" className="mb-2 flex items-center">
             <Cpu className="size-3.5 text-muted-foreground" />
             {t('aiHub.providerToggles')}
-          </label>
+          </FieldLabel>
           {providers.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t('aiHub.defaultModelNoProviders')}</p>
           ) : (
@@ -294,7 +295,7 @@ export function OverviewTab({ onNavigateTab }: { onNavigateTab: (tab: AiManageme
     return (
       <div className="grid gap-3 grid-cols-2 xl:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-20" />
+          <Skeleton key={i}  />
         ))}
       </div>
     );
@@ -321,17 +322,17 @@ export function OverviewTab({ onNavigateTab }: { onNavigateTab: (tab: AiManageme
 
       <Card surface="flat">
         <CardHeader>
-          <CardTitle className="text-base">{t('aiHub.cliHealthTitle')}</CardTitle>
+          <CardTitle size="base" >{t('aiHub.cliHealthTitle')}</CardTitle>
           <CardDescription>{t('aiHub.cliHealthDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-3">
             {cliProviders.map((provider) => (
-              <button
+              <Button variant="ghost"
                 key={provider.providerId}
                 type="button"
                 onClick={() => onNavigateTab('tools')}
-                className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:bg-muted/50"
+                className="flex items-center transition-colors"
               >
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
                   <CliBrandIcon providerId={provider.providerId} size={18} />
@@ -345,7 +346,7 @@ export function OverviewTab({ onNavigateTab }: { onNavigateTab: (tab: AiManageme
                   </span>
                 </span>
                 <HealthStatusBadge status={cliProviderStatus(provider)} />
-              </button>
+              </Button>
             ))}
           </div>
         </CardContent>
@@ -353,7 +354,7 @@ export function OverviewTab({ onNavigateTab }: { onNavigateTab: (tab: AiManageme
 
       <Card surface="flat">
         <CardHeader>
-          <CardTitle className="text-base">{t('aiHub.mcpHealthTitle')}</CardTitle>
+          <CardTitle size="base" >{t('aiHub.mcpHealthTitle')}</CardTitle>
           <CardDescription>{t('aiHub.mcpHealthDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -362,18 +363,18 @@ export function OverviewTab({ onNavigateTab }: { onNavigateTab: (tab: AiManageme
           ) : (
             <div className="space-y-2">
               {servers.map((server) => (
-                <button
+                <Button variant="ghost"
                   key={server.id}
                   type="button"
                   onClick={() => onNavigateTab('mcp')}
-                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50"
+                  className="flex items-center justify-between transition-colors"
                 >
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">{server.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">
                     {typeof server.toolCount === 'number' ? t('aiHub.toolsCount', { count: server.toolCount }) : server.transport}
                   </span>
                   <HealthStatusBadge status={mcpServerStatus(server)} />
-                </button>
+                </Button>
               ))}
             </div>
           )}

@@ -95,7 +95,7 @@ export function DecisionReviewModal({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="size-9 rounded-full"
+            
             aria-label={t('common.close')}
             title="Esc"
           >

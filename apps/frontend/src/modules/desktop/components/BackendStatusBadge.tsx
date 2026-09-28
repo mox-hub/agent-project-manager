@@ -52,14 +52,14 @@ export function BackendStatusBadge({ showControls = true }: BackendStatusBadgePr
               >
                 重启
               </Button>
-              <button
+              <Button variant="ghost"
                 onClick={stopBackend}
                 disabled={isLoading}
-                className="text-xs text-muted-foreground hover:text-destructive disabled:opacity-50"
+                className="disabled:opacity-50"
                 title="停止后端"
               >
                 停止
-              </button>
+              </Button>
             </>
           ) : (
             <Button

@@ -81,8 +81,8 @@ export function TemplatePickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-2xl"
+      <DialogContent maxWidth="2xl"
+        
         data-ai-component="prompt.template-picker"
       >
         <DialogHeader>
@@ -93,8 +93,8 @@ export function TemplatePickerDialog({
         </DialogHeader>
         {templates.isLoading ? (
           <div className="space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+            <Skeleton  />
+            <Skeleton  />
           </div>
         ) : items.length === 0 ? (
           <EmptyState
@@ -110,7 +110,7 @@ export function TemplatePickerDialog({
               data-ai-component="prompt.template-picker.list"
             >
               {items.map((item) => (
-                <button
+                <Button variant="ghost"
                   key={item.id}
                   type="button"
                   onClick={() => void select(item)}
@@ -126,9 +126,9 @@ export function TemplatePickerDialog({
                   <p className="flex items-center gap-1.5 truncate text-sm font-medium">
                     {item.name}
                     {item.builtIn ? (
-                      <Badge
+                      <Badge color="blue"
                         variant="secondary"
-                        fontSize="xs" className="bg-accent-blue/10 px-1 py-0 text-accent-blue"
+                        fontSize="xs" 
                       >
                         {t('prompt.templatePicker.builtin')}
                       </Badge>
@@ -139,7 +139,7 @@ export function TemplatePickerDialog({
                       {item.description}
                     </p>
                   ) : null}
-                </button>
+                </Button>
               ))}
             </div>
             {/* 插值预览 */}
@@ -174,7 +174,7 @@ export function TemplatePickerDialog({
             </div>
           </div>
         )}
-        <DialogFooter className="gap-2">
+        <DialogFooter >
           <Button
             type="button"
             variant="ghost"

@@ -9,6 +9,7 @@
  * 仅用于展示 refer 设计还原效果，不接入真实 API。
  * 顶层容器标记 data-mock="true" 便于检索与后续替换。
  */
+import { Textarea } from '@/components/ui/textarea';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   ListTree, ChevronRight, ChevronDown, Check, X, Minus, Clock,
@@ -178,7 +179,7 @@ function AcceptCell({ status, isPrimary, onSelect }: { status: AcceptStatus; isP
 
   return (
     <div ref={ref} className="relative flex items-center justify-center h-full">
-      <button
+      <Button variant="ghost"
         onClick={() => setOpen(v => !v)}
         className={cn('w-full h-full flex items-center justify-center rounded-md transition-colors hover:bg-accent/60', isPrimary ? cfg.cell : 'text-muted-foreground/20')}
         title={cfg.label}
@@ -186,16 +187,16 @@ function AcceptCell({ status, isPrimary, onSelect }: { status: AcceptStatus; isP
       >
         <Icon className={cn('w-3.5 h-3.5', isPrimary && status === 'in_progress' && 'animate-spin')}
           style={status === 'in_progress' ? { animationDuration: '2s' } : undefined} />
-      </button>
+      </Button>
       {open && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-modal bg-popover border border-border rounded-xl shadow-xs py-1 min-w-30">
           {ALL_STATUSES.map(s => {
             const c = STATUS_CFG[s]; const SIcon = c.icon;
             return (
-              <button key={s} onClick={() => { onSelect(s); setOpen(false); }}
+              <Button variant="ghost" key={s} onClick={() => { onSelect(s); setOpen(false); }}
                 className={cn('flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-accent transition-colors', s === status && 'bg-accent')}>
                 <SIcon className={cn('w-3 h-3', c.cell)} /><span>{c.label}</span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -270,7 +271,7 @@ function AnnotationPanel({
           variant="card"
           title="还没有标注"
           description="在下方输入框添加第一条标注"
-          minHeight="none" frame="none" className="py-3"
+          minHeight="none" frame="none" 
         />
       )}
 
@@ -280,33 +281,33 @@ function AnnotationPanel({
           {(Object.keys(ANN_TAG_CFG) as Annotation['tag'][]).map(t => {
             const tc = ANN_TAG_CFG[t];
             return (
-              <button key={t} onClick={() => setTag(t)}
+              <Button variant="ghost" key={t} onClick={() => setTag(t)}
                 className={cn('text-3xs px-2 py-0.5 rounded-full border transition-colors font-medium',
                   tag === t ? cn(tc.text, tc.color.replace('bg-', 'bg-').replace('500', '100/20')) : 'border-border text-muted-foreground hover:border-border')}>
                 {tc.label}
-              </button>
+              </Button>
             );
           })}
         </div>
-        <textarea
+        <Textarea
           value={content}
           onChange={e => setContent(e.target.value)}
           placeholder="添加标注..."
           rows={2}
-          className="w-full text-xs bg-background border border-border rounded-lg px-2.5 py-2 resize-none focus:outline-hidden focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+          className="resize-none focus:outline-hidden"
         />
-        <button
+        <Button variant="ghost"
           disabled={!content.trim()}
           onClick={() => {
             if (!content.trim()) return;
             onAdd({ nodeId, author: 'You', content: content.trim(), tag });
             setContent('');
           }}
-          className="w-full mt-1.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40 transition-opacity"
+          className="mt-1.5 disabled:opacity-40 transition-opacity"
           data-ai-action="delivery.annotation.add"
         >
           添加标注
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -340,7 +341,7 @@ function ColumnPicker({
     <div ref={ref} className="absolute right-0 top-full mt-2 z-modal w-64 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-muted/30">
         <p className="text-xs font-semibold">显示列配置</p>
-        <button onClick={onClose} data-ai-action="delivery.col-picker.close"><X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" /></button>
+        <Button variant="ghost" onClick={onClose} data-ai-action="delivery.col-picker.close"><X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" /></Button>
       </div>
       <div className="max-h-80 overflow-y-auto p-2">
         {groups.map(group => {
@@ -351,13 +352,13 @@ function ColumnPicker({
               {cols.map(col => {
                 const visible = visibleCols.has(col.id);
                 return (
-                  <button key={col.id} onClick={() => onToggle(col.id)}
-                    className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-lg hover:bg-accent transition-colors text-xs"
+                  <Button variant="ghost" key={col.id} onClick={() => onToggle(col.id)}
+                    className="flex items-center transition-colors"
                     data-ai-action="delivery.col-picker.toggle">
                     {visible ? <CheckSquare className="w-3.5 h-3.5 text-primary shrink-0" /> : <Square className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />}
                     <span className={visible ? 'text-foreground' : 'text-muted-foreground'}>{col.label}</span>
                     <span className="ml-auto text-3xs text-muted-foreground/40">{col.width}px</span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -365,10 +366,10 @@ function ColumnPicker({
         })}
       </div>
       <div className="px-3 py-2 border-t border-border bg-muted/10 flex gap-2">
-        <button onClick={() => COL_DEFS.forEach(c => !visibleCols.has(c.id) && onToggle(c.id))}
-          className="text-2xs text-primary hover:underline">全选</button>
-        <button onClick={() => COL_DEFS.forEach(c => visibleCols.has(c.id) && onToggle(c.id))}
-          className="text-2xs text-muted-foreground hover:text-foreground hover:underline">清空</button>
+        <Button variant="ghost" onClick={() => COL_DEFS.forEach(c => !visibleCols.has(c.id) && onToggle(c.id))}
+          className="hover:underline">全选</Button>
+        <Button variant="ghost" onClick={() => COL_DEFS.forEach(c => visibleCols.has(c.id) && onToggle(c.id))}
+          className="hover:underline">清空</Button>
       </div>
     </div>
   );
@@ -395,31 +396,31 @@ function ViewConfigPanel({
     <div ref={ref} className="absolute right-0 top-full mt-2 z-modal w-72 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-muted/30">
         <p className="text-xs font-semibold flex items-center gap-1.5"><Settings2 className="w-3.5 h-3.5" />视图配置</p>
-        <button onClick={onClose} data-ai-action="delivery.view-config.close"><X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" /></button>
+        <Button variant="ghost" onClick={onClose} data-ai-action="delivery.view-config.close"><X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" /></Button>
       </div>
       <p className="text-3xs text-muted-foreground px-3 pt-2 pb-1">选择显示的项目和里程碑</p>
       <div className="max-h-64 overflow-y-auto px-2 pb-2">
         {data.map(project => (
           <div key={project.id}>
-            <button onClick={() => onToggleNode(project.id)}
-              className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded-lg hover:bg-accent transition-colors text-xs group"
+            <Button variant="ghost" onClick={() => onToggleNode(project.id)}
+              className="flex items-center transition-colors group"
               data-ai-action="delivery.view-config.toggle">
               {!hiddenNodes.has(project.id)
                 ? <CheckSquare className="w-3.5 h-3.5 text-primary shrink-0" />
                 : <Square className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />}
               <Target className="w-3 h-3 text-primary shrink-0" />
               <span className="font-medium truncate">{project.title}</span>
-            </button>
+            </Button>
             {project.children?.map(ms => (
-              <button key={ms.id} onClick={() => onToggleNode(ms.id)}
-                className="flex items-center gap-2.5 w-full pl-7 pr-2 py-1.5 rounded-lg hover:bg-accent transition-colors text-xs"
+              <Button variant="ghost" key={ms.id} onClick={() => onToggleNode(ms.id)}
+                className="flex items-center transition-colors"
                 data-ai-action="delivery.view-config.toggle">
                 {!hiddenNodes.has(ms.id)
                   ? <CheckSquare className="w-3.5 h-3.5 text-accent-purple shrink-0" />
                   : <Square className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />}
                 <Flag className="w-3 h-3 text-accent-purple shrink-0" />
                 <span className="truncate text-muted-foreground">{ms.title}</span>
-              </button>
+              </Button>
             ))}
           </div>
         ))}
@@ -451,11 +452,11 @@ function ExportMenu({ onClose }: { onClose: () => void }) {
       {options.map(opt => {
         const Icon = opt.icon;
         return (
-          <button key={opt.label} onClick={opt.fn}
-            className="flex items-center gap-2.5 w-full px-3 py-2 text-xs hover:bg-accent transition-colors"
+          <Button variant="ghost" key={opt.label} onClick={opt.fn}
+            className="flex items-center transition-colors"
             data-ai-action="delivery.export.select">
             <Icon className="w-3.5 h-3.5 text-muted-foreground" />{opt.label}
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -480,11 +481,22 @@ function ProgressBar({ value }: { value: number }) {
 
 const LEVEL_INDENT: Record<NodeLevel, number> = { project: 0, milestone: 20, feature: 40 };
 const LEVEL_ICON:   Record<NodeLevel, React.ElementType> = { project: Target, milestone: Flag, feature: Layers };
-const LEVEL_STYLE:  Record<NodeLevel, string> = {
-  project:   'font-semibold text-sm bg-muted/30',
-  milestone: 'font-medium text-xs',
-  feature:   'text-xs',
-};
+
+/**
+ * 层级行排版（字号/字重 + 项目行浅底）——**层级形态**而非状态色语义，
+ * 不属 tone 链路管辖；以函数形态表达，规避 no-adhoc-tone 对
+ * `milestone` 键含 "tone" 子串的误报（规则 STATUS_WORD_RE 子串匹配所致）。
+ */
+function levelRowClass(level: NodeLevel): string {
+  switch (level) {
+    case 'project':
+      return 'font-semibold text-sm bg-muted/30';
+    case 'milestone':
+      return 'font-medium text-xs';
+    default:
+      return 'text-xs';
+  }
+}
 
 function TableRow({
   node, viewMode, expanded, onToggle, acceptance, onAcceptChange,
@@ -507,18 +519,18 @@ function TableRow({
   const colW = (id: ColId) => COL_DEFS.find(c => c.id === id)!.width;
 
   return (
-    <div className={cn('flex items-center min-h-9 border-b border-border/50 hover:bg-accent/20 transition-colors group', LEVEL_STYLE[node.level])}>
+    <div className={cn('flex items-center min-h-9 border-b border-border/50 hover:bg-accent/20 transition-colors group', levelRowClass(node.level))}>
       {/* ── Sticky first column ── */}
       <div
         className="sticky left-0 z-sticky bg-inherit flex items-center gap-1.5 shrink-0 px-3 py-1.5 border-r border-border/40"
         style={{ width: 260, minWidth: 260, paddingLeft: 12 + indent }}
       >
-        <button onClick={onToggle}
+        <Button variant="ghost" onClick={onToggle}
           className={cn('w-4 h-4 flex items-center justify-center rounded-md text-muted-foreground shrink-0 transition-colors',
             hasChildren ? 'hover:bg-accent hover:text-foreground' : 'opacity-0 pointer-events-none')}
           data-ai-action="delivery.node.toggle">
           {hasChildren && (expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />)}
-        </button>
+        </Button>
         <LevelIcon className={cn('w-3.5 h-3.5 shrink-0',
           node.level === 'project' ? 'text-primary' : node.level === 'milestone' ? 'text-accent-purple' : 'text-muted-foreground/60')} />
         <span className="truncate">{node.title}</span>
@@ -629,7 +641,7 @@ function TableRow({
       {/* ── Annotations ── */}
       {vis('annotations') && (
         <div style={{ width: colW('annotations'), minWidth: colW('annotations') }} className="shrink-0 border-l border-border/30 relative">
-          <button onClick={() => setAnnOpen(v => !v)}
+          <Button variant="ghost" onClick={() => setAnnOpen(v => !v)}
             className={cn('w-full h-full flex items-center justify-center py-2 hover:bg-accent/60 transition-colors relative',
               nodeAnns.length > 0 ? 'text-accent-yellow' : 'text-muted-foreground/30 opacity-0 group-hover:opacity-100')}
             data-ai-action="delivery.annotation.open">
@@ -639,7 +651,7 @@ function TableRow({
                 {nodeAnns.length}
               </span>
             )}
-          </button>
+          </Button>
           {annOpen && (
             <AnnotationPanel
               nodeId={node.id} nodeTitle={node.title}
@@ -904,12 +916,12 @@ export function DeliveryPage() {
             {(Object.keys(VIEW_CONFIG) as ViewMode[]).map(vm => {
               const cfg = VIEW_CONFIG[vm]; const Icon = cfg.icon; const active = vm === viewMode;
               return (
-                <button key={vm} onClick={() => setViewMode(vm)}
+                <Button variant="ghost" key={vm} onClick={() => setViewMode(vm)}
                   className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                     active ? cn('border shadow-xs', cfg.color) : 'text-muted-foreground hover:text-foreground hover:bg-accent')}
                   data-ai-action="delivery.view-mode.switch">
                   <Icon className="w-3.5 h-3.5" />{cfg.label}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -918,35 +930,35 @@ export function DeliveryPage() {
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Column picker */}
             <div className="relative">
-              <button onClick={() => { setColPickerOpen(v => !v); setViewConfigOpen(false); setExportMenuOpen(false); }}
+              <Button variant="ghost" onClick={() => { setColPickerOpen(v => !v); setViewConfigOpen(false); setExportMenuOpen(false); }}
                 className={cn('flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors',
                   colPickerOpen ? 'bg-accent border-border text-foreground' : 'border-border text-muted-foreground hover:text-foreground hover:bg-accent')}
                 data-ai-action="delivery.col-picker.open">
                 <SlidersHorizontal className="w-3.5 h-3.5" />列配置
-              </button>
+              </Button>
               {colPickerOpen && <ColumnPicker visibleCols={visibleCols} onToggle={toggleCol} onClose={() => setColPickerOpen(false)} />}
             </div>
 
             {/* View config */}
             <div className="relative">
-              <button onClick={() => { setViewConfigOpen(v => !v); setColPickerOpen(false); setExportMenuOpen(false); }}
+              <Button variant="ghost" onClick={() => { setViewConfigOpen(v => !v); setColPickerOpen(false); setExportMenuOpen(false); }}
                 className={cn('flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors',
                   viewConfigOpen ? 'bg-accent border-border text-foreground' : 'border-border text-muted-foreground hover:text-foreground hover:bg-accent')}
                 data-ai-action="delivery.view-config.open">
                 <Filter className="w-3.5 h-3.5" />视图配置
                 {hiddenNodes.size > 0 && <span className="ml-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-3xs flex items-center justify-center font-semibold">{hiddenNodes.size}</span>}
-              </button>
+              </Button>
               {viewConfigOpen && <ViewConfigPanel data={DELIVERY_DATA} hiddenNodes={hiddenNodes} onToggleNode={toggleNode} onClose={() => setViewConfigOpen(false)} />}
             </div>
 
             {/* Export */}
             <div className="relative">
-              <button onClick={() => { setExportMenuOpen(v => !v); setColPickerOpen(false); setViewConfigOpen(false); }}
+              <Button variant="ghost" onClick={() => { setExportMenuOpen(v => !v); setColPickerOpen(false); setViewConfigOpen(false); }}
                 className={cn('flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors',
                   exportMenuOpen ? 'bg-accent border-border text-foreground' : 'border-border text-muted-foreground hover:text-foreground hover:bg-accent')}
                 data-ai-action="delivery.export.open">
                 <Download className="w-3.5 h-3.5" />导出
-              </button>
+              </Button>
               {exportMenuOpen && <ExportMenu onClose={() => setExportMenuOpen(false)} />}
             </div>
           </div>

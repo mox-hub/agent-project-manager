@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBranches, useCreateBranch, useDeleteBranch, useCheckoutBranch } from '../hooks/use-branches';
@@ -117,21 +118,21 @@ export function BranchList({ repoId }: BranchListProps) {
       </div>
 
       {/* 搜索框 */}
-      <Input
+      <Input fontSize="xs" size="h-8"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         placeholder={t('git.branches.filter')}
-        className="h-8 text-xs"
+        
       />
 
       {/* 远程分支开关 */}
-      <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+      <FieldLabel size="xs" variant="muted" className="flex cursor-pointer items-center">
         <Checkbox
           checked={includeRemote}
           onCheckedChange={(v) => setIncludeRemote(v === true)}
         />
         {t('git.branches.includeRemote')}
-      </label>
+      </FieldLabel>
 
       {/* 分支列表 */}
       <div className="space-y-1">
@@ -223,13 +224,13 @@ export function BranchList({ repoId }: BranchListProps) {
                 placeholder="main, develop, or commit hash"
               />
             </div>
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <FieldLabel size="xs" variant="muted" className="flex cursor-pointer items-center">
               <Checkbox
                 checked={createCheckout}
                 onCheckedChange={(v) => setCreateCheckout(v === true)}
               />
               {t('git.branches.checkoutAfterCreate')}
-            </label>
+            </FieldLabel>
           </div>
           <DialogFooter>
             <Button variant="secondary" size="sm" onClick={() => setShowCreateDialog(false)}>
@@ -316,7 +317,7 @@ function BranchItem({
               variant="ghost"
               onClick={onCheckout}
               disabled={isPending}
-              className="size-6"
+              
               title={checkoutLabel}
             >
               <ArrowRightLeft size={12} />
@@ -327,7 +328,7 @@ function BranchItem({
             variant="ghost"
             onClick={onDelete}
             disabled={isPending}
-            className="size-6 text-accent-red hover:bg-accent-red/10"
+            
             title={deleteLabel}
           >
             <Trash2 size={12} />

@@ -3,6 +3,7 @@
  *
  * 从 teams-page 抽出：名称（自动生成 slug）+ Slug 双字段表单。
  */
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,7 @@ export function TeamCreateDialog({ open, onOpenChange }: TeamCreateDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent >
         <DialogHeader>
           <DialogTitle>{t('teams.create.title', '新建团队')}</DialogTitle>
           <DialogDescription>
@@ -67,7 +68,7 @@ export function TeamCreateDialog({ open, onOpenChange }: TeamCreateDialogProps) 
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">{t('teams.create.name', '团队名称')} *</label>
+            <FieldLabel size="xs" variant="muted" >{t('teams.create.name', '团队名称')} *</FieldLabel>
             <Input
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
@@ -75,7 +76,7 @@ export function TeamCreateDialog({ open, onOpenChange }: TeamCreateDialogProps) 
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">Slug *</label>
+            <FieldLabel size="xs" variant="muted" >Slug *</FieldLabel>
             <Input
               value={slug}
               onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}

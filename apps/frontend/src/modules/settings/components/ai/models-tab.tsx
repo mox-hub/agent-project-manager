@@ -6,6 +6,7 @@
  * 替换原仅本地 state 的假切换器）；详情区补模型真实查询（/models 端点）与
  * 可配置查询链接（metadata.modelsEndpoint）。
  */
+import { FieldLabel } from '@/components/ui/field';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Brain, Check, CircleCheck, CircleX, Coins, Key, Link2, RefreshCw, RotateCcw, Save, Search, Sparkles, Trash2, Wallet, Zap, Cpu } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
@@ -146,7 +147,7 @@ function ProviderBalanceCard({
 
   let body: React.ReactNode;
   if (isLoading) {
-    body = <Skeleton className="h-10 w-full" />;
+    body = <Skeleton  />;
   } else if (isError) {
     body = (
       <div className="flex items-center justify-between gap-2 rounded-lg border border-dashed border-border px-3 py-2.5">
@@ -170,7 +171,7 @@ function ProviderBalanceCard({
           <span className="text-muted-foreground">
             {t('aiHub.balanceRemainingLabel')}
             {data.isAvailable === false && (
-              <Badge variant="destructive" fontSize="3xs" className="ml-2 h-4 px-1.5">
+              <Badge variant="destructive" fontSize="3xs" className="ml-2">
                 {t('aiHub.balanceUnavailable')}
               </Badge>
             )}
@@ -224,15 +225,15 @@ function ProviderBalanceCard({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <FieldLabel size="xs" variant="muted" className="flex items-center">
           <Wallet className="size-3.5 text-muted-foreground" />
           {t('aiHub.balanceTitle')}
-        </label>
+        </FieldLabel>
         {!isLoading && !isError && (
-          <Button
+          <Button padding="p-0"
             variant="ghost"
             size="sm"
-            className="h-6 w-6 p-0"
+            
             onClick={() => refetch()}
             disabled={isRefetching}
             title={t('aiHub.balanceRefresh')}
@@ -286,14 +287,14 @@ function PricingSourceCard() {
 
   return (
     <Card surface="flat">
-      <CardContent inset="md" className="space-y-1">
+      <CardContent inset="md" >
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <Coins className="size-4 shrink-0 text-accent-yellow" />
             <div className="min-w-0 text-xs">
               <p className="font-medium text-foreground">{t('aiHub.pricingSourceTitle')}</p>
               {isLoading ? (
-                <Skeleton className="mt-0.5 h-3 w-48" />
+                <Skeleton className="mt-0.5" />
               ) : (
                 <p className="truncate text-muted-foreground">
                   {data?.available ? (
@@ -318,7 +319,7 @@ function PricingSourceCard() {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {data?.stale && (
-              <Badge variant="outline" fontSize="3xs" className="px-1.5">
+              <Badge variant="outline" fontSize="3xs" >
                 {t('aiHub.pricingSourceStale')}
               </Badge>
             )}
@@ -779,8 +780,8 @@ export function ModelsTab() {
     <div className="space-y-6">
       {/* Default Model Card（工作区内置模型：持久化，AI 调用链默认目标） */}
       <Card surface="flat">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
-          <CardTitle size="base" className="flex items-center gap-2">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle size="base" className="flex items-center">
             <Cpu size={16} className="text-accent-purple" />
             {t('aiHub.defaultModel')}
           </CardTitle>
@@ -812,7 +813,7 @@ export function ModelsTab() {
                 value={effective?.provider ?? ''}
                 onValueChange={(v) => setDraft({ provider: v, model: modelOptionsFor(v)[0] ?? '' })}
               >
-                <SelectTrigger className="w-40">
+                <SelectTrigger >
                   <SelectValue placeholder={t('aiHub.selectProvider')}>
                     {nameOfKey(effective?.provider) ?? t('aiHub.selectProvider')}
                   </SelectValue>
@@ -835,7 +836,7 @@ export function ModelsTab() {
                 }
                 disabled={!effective?.provider || (effective?.provider ? modelOptionsFor(effective.provider).length === 0 : true)}
               >
-                <SelectTrigger className="w-50">
+                <SelectTrigger >
                   <SelectValue placeholder={t('aiHub.selectModel')}>
                     {effective?.model || t('aiHub.selectModel')}
                   </SelectValue>
@@ -851,7 +852,7 @@ export function ModelsTab() {
               {isDirty && effective?.model ? (
                 <Button
                   size="sm"
-                  className="gap-1"
+                  
                   onClick={handleSaveDefaultModel}
                   disabled={setDefaultModelMutation.isPending}
                 >
@@ -865,7 +866,7 @@ export function ModelsTab() {
               ) : (
                 !isDirty &&
                 saved && (
-                  <Badge className="bg-accent-green/10 text-accent-green">
+                  <Badge color="green" >
                     <Zap className="mr-1 size-3" />
                     {t('aiHub.defaultModelBadge')}
                   </Badge>
@@ -887,14 +888,14 @@ export function ModelsTab() {
           {isLoadingProviders ? (
             Array.from({ length: 5 }).map((_, i) => (
               <Card key={i}>
-                <CardHeader className="pb-2">
+                <CardHeader >
                   <div className="flex flex-col items-center gap-2">
-                    <Skeleton className="size-12 rounded-full" />
-                    <Skeleton className="h-4 w-20" />
+                    <Skeleton  />
+                    <Skeleton  />
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <Skeleton className="h-3 w-full" />
+                <CardContent >
+                  <Skeleton  />
                 </CardContent>
               </Card>
             ))
@@ -902,7 +903,7 @@ export function ModelsTab() {
             // 空态：无任何厂家配置时按内置清单展示未连接占位
             Object.entries(PROVIDER_INFO).map(([key, info]) => (
               <Card key={key} className="opacity-60">
-                <CardHeader className="pb-2">
+                <CardHeader >
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex size-12 items-center justify-center">
                       <ProviderBrandIcon provider={key} size={40} />
@@ -929,7 +930,7 @@ export function ModelsTab() {
                   )}
                   onClick={() => handleProviderSelect(provider.id)}
                 >
-                  <CardHeader className="pb-2">
+                  <CardHeader >
                     <div className="flex flex-col items-center gap-2">
                       <div className="flex size-12 items-center justify-center">
                         <ProviderBrandIcon provider={provider.provider} size={40} />
@@ -956,10 +957,10 @@ export function ModelsTab() {
                       </div>
                     </div>
                     <div className="absolute right-2 top-2">
-                      <Button
+                      <Button padding="p-0"
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0"
+                        
                         onClick={(e) => {
                           e.stopPropagation();
                           handleTestConnection(provider);
@@ -994,7 +995,7 @@ export function ModelsTab() {
               <CardTitle size="base">{nameOf(selectedProvider)}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent >
             {/* Balance（充值型单进度 / 套餐型 5h·周·月多进度，自适应厂家返回） */}
             <ProviderBalanceCard
               provider={selectedProvider}
@@ -1005,7 +1006,7 @@ export function ModelsTab() {
             {/* Model Selection + real query - Only available after API key is configured */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <FieldLabel size="xs" variant="muted" className="flex items-center">
                   <Brain className="size-3.5 text-muted-foreground" />
                   {t('aiHub.availableModels')}
                   {!selectedProvider.hasApiKey && (
@@ -1013,7 +1014,7 @@ export function ModelsTab() {
                       ({t('aiHub.configureKeyFirst')})
                     </span>
                   )}
-                </label>
+                </FieldLabel>
                 <Button
                   variant="outline"
                   size="2sm"
@@ -1082,16 +1083,16 @@ export function ModelsTab() {
               return (
                 <div>
                   <div className="mb-2 flex items-center justify-between">
-                    <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <FieldLabel size="xs" variant="muted" className="flex items-center">
                       <Link2 className="size-3.5 text-muted-foreground" />
                       {t('aiHub.baseUrl')}
                       {isUsingDefault && (
                         <Badge variant="outline" fontSize="xs"
-                                        className="h-4 px-1.5 font-normal">
+                                        >
                           {t('aiHub.default')}
                         </Badge>
                       )}
-                    </label>
+                    </FieldLabel>
                   </div>
                   <div className="relative">
                     <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -1105,23 +1106,23 @@ export function ModelsTab() {
                         }
                       }}
                       placeholder={defaultUrl || 'https://api.example.com/v1'}
-                      paddingStart="pl-9" className="pr-28"
+                      paddingStart="pl-9" 
                     />
                     <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
                       {saveStatus === 'saving' && (
-                        <Badge variant="secondary" fontSize="xs" className="h-6 gap-1">
+                        <Badge variant="secondary" fontSize="xs" >
                           <Spinner size="2xs" color="inherit" />
                           {t('aiHub.saving')}
                         </Badge>
                       )}
                       {saveStatus === 'saved' && (
-                        <Badge fontSize="xs" className="h-6 gap-1 bg-accent-green/10 text-accent-green">
+                        <Badge color="green" fontSize="xs" >
                           <CircleCheck className="size-3" />
                           {t('aiHub.saved')}
                         </Badge>
                       )}
                       {saveStatus === 'error' && (
-                        <Badge variant="destructive" fontSize="xs" className="h-6 gap-1">
+                        <Badge variant="destructive" fontSize="xs" >
                           <CircleX className="size-3" />
                           {t('aiHub.error')}
                         </Badge>
@@ -1131,7 +1132,7 @@ export function ModelsTab() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            fontSize="xs" className="h-6 gap-1 px-1.5"
+                            fontSize="xs" 
                             onClick={() => handleResetBaseUrl(selectedProvider.id, providerKey)}
                           >
                             <RotateCcw className="size-3" />
@@ -1139,7 +1140,7 @@ export function ModelsTab() {
                           <Button
                             variant="default"
                             size="sm"
-                            fontSize="xs" className="h-6 gap-1 px-2"
+                            fontSize="xs" 
                             onClick={() => handleSaveBaseUrl(selectedProvider.id)}
                           >
                             <Save className="size-3" />
@@ -1161,47 +1162,47 @@ export function ModelsTab() {
 
             {/* API Configuration */}
             <div>
-              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+              <FieldLabel size="xs" variant="muted" className="mb-2 flex items-center">
                 <Key className="size-3.5 text-muted-foreground" />
                 {t('aiHub.apiKey')}
                 {selectedProvider.hasApiKey && (
-                  <Badge variant="outline" fontSize="xs"
-                                        className="h-4 border-accent-green/30 px-1.5 font-normal text-accent-green">
+                  <Badge color="green" variant="outline" fontSize="xs"
+                                        >
                     {t('aiHub.saved')}
                   </Badge>
                 )}
-              </label>
+              </FieldLabel>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Key className="absolute left-3 top-1/2 z-sticky -translate-y-1/2 size-4 text-muted-foreground" />
                   <PasswordInput
                     placeholder={selectedProvider.hasApiKey ? t('aiHub.apiKeySavedPlaceholder') : t('aiHub.apiKeyNewPlaceholder')}
-                    paddingStart="pl-9" className="pr-28"
+                    paddingStart="pl-9" 
                     value={apiKeyInput}
                     onChange={(e) => !selectedProvider.hasApiKey && setApiKeyInput(e.target.value)}
                     disabled={!!selectedProvider.hasApiKey}
                   />
                   <div className="pointer-events-none absolute right-9 top-1/2 flex -translate-y-1/2 items-center gap-1">
                     {apiKeySaveStatus === 'saving' && (
-                      <Badge variant="secondary" fontSize="xs" className="h-6 gap-1">
+                      <Badge variant="secondary" fontSize="xs" >
                         <Spinner size="2xs" color="inherit" />
                         {t('aiHub.saving')}
                       </Badge>
                     )}
                     {apiKeySaveStatus === 'saved' && (
-                      <Badge fontSize="xs" className="h-6 gap-1 bg-accent-green/10 text-accent-green">
+                      <Badge color="green" fontSize="xs" >
                         <CircleCheck className="size-3" />
                         {t('aiHub.saved')}
                       </Badge>
                     )}
                     {apiKeySaveStatus === 'deleting' && (
-                      <Badge variant="secondary" fontSize="xs" className="h-6 gap-1">
+                      <Badge variant="secondary" fontSize="xs" >
                         <Spinner size="2xs" color="inherit" />
                         {t('aiHub.deleting')}
                       </Badge>
                     )}
                     {apiKeySaveStatus === 'error' && (
-                      <Badge variant="destructive" fontSize="xs" className="h-6 gap-1">
+                      <Badge variant="destructive" fontSize="xs" >
                         <CircleX className="size-3" />
                         {t('aiHub.error')}
                       </Badge>
@@ -1209,19 +1210,19 @@ export function ModelsTab() {
                     {apiKeySaveStatus === 'idle' && (
                       <>
                         {status === 'validating' && (
-                          <Badge variant="secondary" fontSize="xs" className="h-6 gap-1">
+                          <Badge variant="secondary" fontSize="xs" >
                             <Spinner size="2xs" color="inherit" />
                             {t('aiHub.checking')}
                           </Badge>
                         )}
                         {(status === 'valid' || (selectedProvider.hasApiKey && status !== 'invalid')) && (
-                          <Badge fontSize="xs" className="h-6 gap-1 bg-accent-green/10 text-accent-green">
+                          <Badge color="green" fontSize="xs" >
                             <CircleCheck className="size-3" />
                             {t('aiHub.valid')}
                           </Badge>
                         )}
                         {status === 'invalid' && (
-                          <Badge variant="destructive" fontSize="xs" className="h-6 gap-1">
+                          <Badge variant="destructive" fontSize="xs" >
                             <CircleX className="size-3" />
                             {t('aiHub.invalid')}
                           </Badge>
@@ -1236,7 +1237,7 @@ export function ModelsTab() {
                     size="sm"
                     onClick={handleValidateApiKey}
                     disabled={status === 'validating' || apiKeySaveStatus === 'saving'}
-                    className="gap-1"
+                    
                   >
                     {status === 'validating' || apiKeySaveStatus === 'saving' ? (
                       <Spinner size="2xs" color="inherit" />
@@ -1251,7 +1252,7 @@ export function ModelsTab() {
                     size="sm"
                     onClick={handleDeleteApiKey}
                     disabled={apiKeySaveStatus === 'deleting'}
-                    className="gap-1"
+                    
                     title={t('aiHub.deleteSavedKey')}
                   >
                     {apiKeySaveStatus === 'deleting' ? <Spinner size="2xs" color="inherit" /> : <Trash2 className="size-3" />}

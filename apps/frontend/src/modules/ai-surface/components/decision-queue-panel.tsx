@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -226,10 +227,10 @@ function QueueRow({
       // 的那一半。注意前缀：决策卡壳的既有约定是 `decision:`，不能裸用 data-decision-id
       data-ai-entity={`decision:${decision.id}`}
     >
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onToggle}
-        className="flex w-full cursor-pointer items-center gap-2 px-2.5 py-2 text-left transition-colors hover:bg-foreground/10"
+        className="flex cursor-pointer items-center transition-colors"
         aria-expanded={expanded}
         data-ai-action={`ai-surface.decision.${decision.kind}.toggle`}
       >
@@ -259,7 +260,7 @@ function QueueRow({
         >
           {waiting ?? '—'}
         </span>
-      </button>
+      </Button>
 
       {/* 就地展开：既有决策卡文法（五段式 + 各 kind 槽位），写路径同收件箱 */}
       {expanded && (

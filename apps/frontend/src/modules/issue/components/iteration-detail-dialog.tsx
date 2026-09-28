@@ -20,6 +20,8 @@ import {
 } from '../lib/iteration-status';
 import { formatDate } from '@/shared/lib/date-format';
 import { cn } from '@/lib/utils';
+import { TONE_CLASS } from '@/components/ui/tone';
+import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals';
 
 interface IterationDetailDialogProps {
   open: boolean;
@@ -31,12 +33,10 @@ interface IterationDetailDialogProps {
   onEdit?: (iteration: IterationRef) => void;
 }
 
-/** 工单状态徽标色（克制复用 muted 语义，避免引入新色板） */
-const ISSUE_STATUS_BADGE: Record<string, string> = {
-  todo: 'bg-muted text-muted-foreground border-border',
-  in_progress: 'bg-accent-blue-light text-accent-blue border-accent-blue/30',
-  in_review: 'bg-accent-yellow-light text-accent-yellow border-accent-yellow/30',
-  done: 'bg-accent-green-light text-accent-green border-accent-green/30',
+/** 工单状态徽标配色：tone 唯一链路（浅底 + 描边槽，键登记于 status-visuals.TASK_STATUS_VISUALS） */
+const issueStatusBadgeClass = (status: string): string => {
+  const tone = TASK_STATUS_VISUALS[status]?.tone ?? 'default';
+  return cn(TONE_CLASS[tone].light, TONE_CLASS[tone].border);
 };
 
 /**
@@ -67,7 +67,7 @@ export function IterationDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-110">
+      <DialogContent >
         {iteration && tone ? (
           <>
             <DialogHeader>
@@ -116,7 +116,7 @@ export function IterationDetailDialog({
                       'project.milestonesPage.iterationEmptyIssuesDesc',
                       '在任务工作台把工单的迭代字段设为本迭代',
                     )}
-                    className="min-h-0 border-0 py-6"
+                    
                   />
                 ) : (
                   issues.map((issue) => (
@@ -130,8 +130,7 @@ export function IterationDetailDialog({
                       <Badge
                         className={cn(
                           'shrink-0 text-3xs',
-                          ISSUE_STATUS_BADGE[issue.status] ??
-                            ISSUE_STATUS_BADGE.todo,
+                          issueStatusBadgeClass(issue.status),
                         )}
                       >
                         {issue.status}

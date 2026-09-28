@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,15 +82,15 @@ function TerminalToolStatusCard() {
             size="sm"
             onClick={handleTestTerminal}
             disabled={testing || isLoading}
-            className="gap-1.5"
+            
           >
-            {testing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={14} />}
+            {testing ? <Spinner color="inherit" size="xs"  /> : <RefreshCw size={14} />}
             {testing ? t('settings.terminalTesting') : t('settings.terminalTest')}
           </Button>
         </div>
         <CardDescription>{t('settings.terminalStatusDesc')}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent >
         {isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Spinner size="sm" />
@@ -124,15 +125,15 @@ function TerminalToolStatusCard() {
                 <p className="mb-2 text-xs text-muted-foreground">{t('settings.terminalAvailableShells')}</p>
                 <div className="flex flex-wrap gap-2">
                   {terminalStatus.availableShells.map((shellPath) => (
-                    <button
+                    <Button variant="ghost"
                       key={shellPath}
                       type="button"
                       onClick={() => setShellPathInput(shellPath)}
-                      className="rounded-full border border-border bg-background px-2 py-0.5 text-xs hover:border-muted-foreground"
+                      
                       title={shellPath}
                     >
                       {shellPath}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -159,11 +160,11 @@ function TerminalToolStatusCard() {
             <p className="text-xs text-muted-foreground">{t('settings.terminalShellPathDesc')}</p>
           </div>
           <div className="flex gap-2">
-            <Input
+            <Input fontVariant="mono"
               value={shellPathInput}
               onChange={(e) => setShellPathInput(e.target.value)}
               placeholder={t('settings.terminalShellPlaceholder')}
-              className="font-mono text-sm"
+              
             />
             <Button
               variant="outline"
@@ -257,7 +258,7 @@ export function TerminalSettingsSection() {
               </CardTitle>
               <CardDescription>{t('settings.terminalDesc')}</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent className="grid md:grid-cols-2">
               <Form {...terminalForm}>
                 <div className="contents">
                   <FormField
@@ -339,26 +340,26 @@ export function TerminalSettingsSection() {
                       control={terminalForm.control}
                       name="autoSaveOutput"
                       render={({ field }) => (
-                        <label className={checkboxLabelClassName}>
+                        <FieldLabel size="xs" variant="muted" className={checkboxLabelClassName}>
                           <Checkbox
                             checked={field.value}
                             onChange={(event) => field.onChange(event.target.checked)}
                           />
                           {t('settings.terminalAutoSave')}
-                        </label>
+                        </FieldLabel>
                       )}
                     />
                     <FormField
                       control={terminalForm.control}
                       name="aiDiagnostics"
                       render={({ field }) => (
-                        <label className={checkboxLabelClassName}>
+                        <FieldLabel size="xs" variant="muted" className={checkboxLabelClassName}>
                           <Checkbox
                             checked={field.value}
                             onChange={(event) => field.onChange(event.target.checked)}
                           />
                           {t('settings.terminalAiDiag')}
-                        </label>
+                        </FieldLabel>
                       )}
                     />
                   </div>

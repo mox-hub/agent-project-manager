@@ -85,15 +85,15 @@ function GitToolStatusCard() {
             size="sm"
             onClick={handleTestGit}
             disabled={testing || isLoading}
-            className="gap-1.5"
+            
           >
-            {testing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={14} />}
+            {testing ? <Spinner color="inherit" size="xs"  /> : <RefreshCw size={14} />}
             {testing ? t('settings.gitTesting') : t('settings.gitTest')}
           </Button>
         </div>
         <CardDescription>{t('settings.gitToolStatusDesc')}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent >
         {isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Spinner size="sm" />
@@ -137,11 +137,11 @@ function GitToolStatusCard() {
         <div className="space-y-3 pt-2">
           <p className="text-sm font-medium text-foreground">{t('settings.gitPathInput')}</p>
           <div className="flex gap-2">
-            <Input
+            <Input fontVariant="mono"
               value={gitPathInput}
               onChange={(e) => setGitPathInput(e.target.value)}
               placeholder={t('settings.gitPathPlaceholder')}
-              className="font-mono text-sm"
+              
             />
             <Button
               onClick={handleSaveGitPath}
@@ -149,7 +149,7 @@ function GitToolStatusCard() {
               className="shrink-0"
             >
               {setGitPath.isPending ? (
-                <Spinner className="size-3.5 text-inherit" />
+                <Spinner color="inherit" size="xs"  />
               ) : (
                 t('settings.gitPathSave')
               )}
@@ -168,14 +168,14 @@ function GitToolStatusCard() {
                 { label: 'C:\\Program Files\\Git\\bin\\git.exe', value: 'C:\\Program Files\\Git\\bin\\git.exe' },
                 { label: 'C:\\Program Files (x86)\\Git\\bin\\git.exe', value: 'C:\\Program Files (x86)\\Git\\bin\\git.exe' },
               ].map((option) => (
-                <button
+                <Button variant="ghost"
                   key={option.value}
                   type="button"
                   onClick={() => setGitPathInput(option.value)}
-                  className="block w-full rounded-md px-2 py-1 text-left font-mono text-xs hover:bg-muted/50"
+                  className="block"
                 >
                   {option.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -264,7 +264,7 @@ export function GitSettingsSection() {
               </CardTitle>
               <CardDescription>{t('settings.gitDesc')}</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent className="grid md:grid-cols-2">
               <Form {...gitForm}>
                 <div className="contents">
                   <FormField
@@ -356,26 +356,26 @@ export function GitSettingsSection() {
                     control={gitForm.control}
                     name="autoSync"
                     render={({ field }) => (
-                      <label className={checkboxLabelClassName}>
+                      <FieldLabel size="xs" variant="muted" className={checkboxLabelClassName}>
                         <Checkbox
                           checked={field.value}
                           onChange={(event) => field.onChange(event.target.checked)}
                         />
                         {t('settings.gitAutoSync')}
-                      </label>
+                      </FieldLabel>
                     )}
                   />
                   <FormField
                     control={gitForm.control}
                     name="diffShowWhitespace"
                     render={({ field }) => (
-                      <label className={checkboxLabelClassName}>
+                      <FieldLabel size="xs" variant="muted" className={checkboxLabelClassName}>
                         <Checkbox
                           checked={field.value}
                           onChange={(event) => field.onChange(event.target.checked)}
                         />
                         {t('settings.gitShowWhitespace')}
-                      </label>
+                      </FieldLabel>
                     )}
                   />
                 </div>

@@ -211,9 +211,9 @@ function AISlotAnswerCard({
         </span>
         <div className="ml-auto flex items-center gap-1">
           {insight?.title ? (
-            <button
+            <Button variant="ghost"
               type="button"
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="inline-flex items-center"
               onClick={() => {
                 openAssistantWithDraft(
                   t('aiSlot.askDraft', { title: insight.title ?? '' }),
@@ -223,7 +223,7 @@ function AISlotAnswerCard({
             >
               <MessageCircleQuestion className="size-3.5" aria-hidden />
               {t('aiSlot.askMore')}
-            </button>
+            </Button>
           ) : null}
           <Button
             type="button"
@@ -241,13 +241,13 @@ function AISlotAnswerCard({
         {isError ? (
           <div className="flex flex-col items-start gap-2 py-2">
             <p className="text-sm text-destructive">{t('aiSlot.error')}</p>
-            <button
+            <Button variant="ghost"
               type="button"
-              className="rounded-md border px-2 py-1 text-xs hover:bg-muted"
+              
               onClick={() => explainCard({ kind, id })}
             >
               {t('aiSlot.retry')}
-            </button>
+            </Button>
           </div>
         ) : null}
         {insight ? <AnswerBody insight={insight} /> : null}

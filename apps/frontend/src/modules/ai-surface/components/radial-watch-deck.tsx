@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import type { RuntimeUsagePayload } from '@apm/shared/events/domain-events';
 import type { MemoryAtom, ArtifactItem, CognitiveMessage } from '../types';
@@ -810,11 +811,11 @@ export function RadialWatchDeck({
           {/* 全部记忆原子标签列表 */}
           <div className="flex flex-wrap gap-1">
             {memoryAtoms.map((atom) => (
-              <button
+              <Button variant="ghost"
                 key={atom.id}
                 type="button"
                 onClick={() => setActiveMemory(activeMemory?.id === atom.id ? null : atom)}
-                className="px-1.5 py-0.5 rounded-sm font-mono transition-colors text-left cursor-pointer"
+                className="transition-colors cursor-pointer"
                 style={{
                   fontSize: 8.5,
                   background:
@@ -833,7 +834,7 @@ export function RadialWatchDeck({
                 title={atom.summary}
               >
                 #{atom.key}
-              </button>
+              </Button>
             ))}
           </div>
 

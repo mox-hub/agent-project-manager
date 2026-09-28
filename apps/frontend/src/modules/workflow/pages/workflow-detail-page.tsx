@@ -5,6 +5,7 @@
  * 编辑：主区左侧浮出节点库（v1）或 JSON 源码模式（v2 节点树文法）。
  * 进度失效经 socket 推送 + suspended/running 时 5s 轮询兜底双通道。
  */
+import { Textarea } from '@/components/ui/textarea';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -242,7 +243,7 @@ export function WorkflowDetailPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  fontSize="xs" className="h-7 px-2.5 text-muted-foreground"
+                  fontSize="xs" 
                   onClick={() => setEditing(false)}
                 >
                   {t('workflow.editor.cancel')}
@@ -287,7 +288,7 @@ export function WorkflowDetailPage() {
 
       {isLoading || !workflow ? (
         <div className="min-h-0 flex-1 p-4">
-          <Skeleton className="h-full w-full rounded-lg" />
+          <Skeleton  />
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 gap-0">
@@ -296,8 +297,8 @@ export function WorkflowDetailPage() {
             {!editing && activeRunId ? (
               <WorkflowRunPanel runId={activeRunId} onClose={closeRun} />
             ) : !editing && isV2Doc ? (
-              <Card className="min-h-0 flex-1 overflow-y-auto">
-                <CardContent inset="md" className="flex flex-col gap-3">
+              <Card className="flex-1 overflow-y-auto">
+                <CardContent inset="md" className="flex flex-col">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground">
                       {t('workflow.runPanel.previewTitle')}
@@ -349,14 +350,14 @@ export function WorkflowDetailPage() {
                       <p className="text-2xs text-muted-foreground">
                         {t('workflow.editor.jsonModeHint')}
                       </p>
-                      <textarea
+                      <Textarea
                         value={jsonDraft}
                         onChange={(e) => {
                           setJsonDraft(e.target.value);
                           setJsonError(null);
                         }}
                         spellCheck={false}
-                        className="min-h-0 flex-1 resize-none rounded-lg border border-border bg-card p-3 font-mono text-xs leading-relaxed outline-none focus:border-primary/50"
+                        className="flex-1 resize-none outline-none"
                         data-ai-component="workflow.detail.v2-json-editor"
                       />
                       {jsonError ? (
@@ -456,7 +457,7 @@ function RunsPanel({
       <h2 className="text-xs font-medium text-muted-foreground">{t('workflow.runs')}</h2>
       <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
         {runsLoading ? (
-          <Skeleton className="h-16 rounded-lg" />
+          <Skeleton  />
         ) : !runsPage || runsPage.data.length === 0 ? (
           <p className="py-4 text-center text-xs text-muted-foreground">
             {t('workflow.noRuns')}
@@ -490,7 +491,7 @@ function RunRow({
   const Icon = meta.icon;
   const runnable = (RUNNABLE as readonly string[]).includes(run.status);
   return (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={onClick}
       className={cn(
@@ -507,6 +508,6 @@ function RunRow({
       {runnable ? (
         <Play className="size-3 shrink-0 text-content-text-muted" aria-hidden />
       ) : null}
-    </button>
+    </Button>
   );
 }

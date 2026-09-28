@@ -217,7 +217,7 @@ export function InboxItemRow({
         <Button
           variant="ghost"
           size="icon"
-          className="size-7 rounded-md bg-background/90 shadow-xs"
+          
           title={item.isUnread ? '标记已读' : '标记未读'}
           aria-label={item.isUnread ? '标记已读' : '标记未读'}
           onClick={handleReadClick}
@@ -233,7 +233,7 @@ export function InboxItemRow({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-7 rounded-md bg-background/90 shadow-xs"
+                  
                   title="稍后提醒"
                   aria-label="稍后提醒"
                 />
@@ -241,7 +241,7 @@ export function InboxItemRow({
             >
               <Clock className="size-3.5 text-muted-foreground" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuContent align="end" >
               <DropdownMenuItem onClick={() => onSnooze(item.id, 60 * 60 * 1000)}>
                 <Clock className="mr-2 size-3.5" />
                 1 小时后

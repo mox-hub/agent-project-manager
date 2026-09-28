@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -82,7 +83,7 @@ function ShortIdSettingsCard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Hash size={16} className="text-accent-blue" />
-              <CardTitle className="text-base">{t('settings.shortIdStatsTitle')}</CardTitle>
+              <CardTitle size="base" >{t('settings.shortIdStatsTitle')}</CardTitle>
             </div>
             <Button
               variant="ghost"
@@ -90,7 +91,7 @@ function ShortIdSettingsCard() {
               onClick={() => refetchStats()}
               disabled={statsLoading}
             >
-              {statsLoading ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={14} />}
+              {statsLoading ? <Spinner color="inherit" size="xs"  /> : <RefreshCw size={14} />}
             </Button>
           </div>
           <CardDescription>
@@ -100,7 +101,7 @@ function ShortIdSettingsCard() {
         <CardContent>
           {statsLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Spinner className="size-3.5" />
+              <Spinner size="xs"  />
               {t('common.loading')}
             </div>
           ) : stats ? (
@@ -142,11 +143,11 @@ function ShortIdSettingsCard() {
                 size="sm"
                 onClick={handleBackfill}
                 disabled={backfillMutation.isPending}
-                className="gap-1.5"
+                
               >
                 {backfillMutation.isPending ? (
                   <>
-                    <Spinner className="size-3.5 text-inherit" />
+                    <Spinner color="inherit" size="xs"  />
                     {t('settings.backfillRunning')}
                   </>
                 ) : (
@@ -173,19 +174,19 @@ function ShortIdSettingsCard() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Hash size={16} className="text-accent-blue" />
-            <CardTitle className="text-base">{t('settings.shortIdPrefixTitle')}</CardTitle>
+            <CardTitle size="base" >{t('settings.shortIdPrefixTitle')}</CardTitle>
           </div>
           <CardDescription>
             {t('settings.shortIdPrefixDesc')}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent >
           {prefixLoading ? (
             <div className="text-sm text-muted-foreground">{t('common.loading')}</div>
           ) : (
             <>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">{t('settings.shortIdPrefixLabel')}</label>
+                <FieldLabel size="xs" variant="muted" >{t('settings.shortIdPrefixLabel')}</FieldLabel>
                 <div className="flex gap-2">
                   <Input
                     value={inputValue}

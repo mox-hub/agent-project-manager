@@ -31,7 +31,7 @@ export function GeneratedPasswordDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent >
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <KeyRound size={16} className="mr-2 text-accent-yellow" />
@@ -48,10 +48,10 @@ export function GeneratedPasswordDialog({
             </p>
           ) : null}
           <div className="flex gap-2">
-            <Input
+            <Input fontVariant="mono"
               readOnly
               value={password}
-              className="font-mono"
+              
               onFocus={(e) => e.target.select()}
             />
             <Button

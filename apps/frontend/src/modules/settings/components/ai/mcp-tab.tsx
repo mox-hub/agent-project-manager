@@ -2,6 +2,7 @@
  * MCP 服务 Tab —— 外部 MCP 服务器注册表（新增 / 编辑 / 删除 / 探活 / 启停）。
  * @description 由原 ai-agents-section mcp 页签迁移（2026-09-19 页面合并）。
  */
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from 'react';
 import { AlertCircle, Globe, Pencil, Plus, RefreshCw, Server, Terminal, Trash2 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
@@ -45,7 +46,7 @@ function McpStatusBadge({ status }: { status: 'online' | 'offline' | 'disabled' 
     unknown: t('aiHub.statusUnknown'),
   } as const;
   return (
-    <StatusPill tone={tone} className="gap-1.5">
+    <StatusPill tone={tone} >
       <span
         className={cn(
           'h-1.5 w-1.5 rounded-full',
@@ -94,7 +95,7 @@ function McpServerCard({
     <Card surface="flat">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex min-w-0 items-center">
+          <CardTitle className="flex items-center">
             {server.transport === 'stdio' ? <Terminal size={15} className="mr-2 shrink-0 text-accent-blue" /> : <Globe size={15} className="mr-2 shrink-0 text-accent-blue" />}
             <span className="truncate">{server.name}</span>
           </CardTitle>
@@ -127,18 +128,18 @@ function McpServerCard({
           </p>
         ) : null}
         <div className="flex items-center gap-1.5">
-          <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing} className="gap-1.5">
-            {refreshing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={13} />}
+          <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing} >
+            {refreshing ? <Spinner color="inherit" size="xs"  /> : <RefreshCw size={13} />}
             {t('aiHub.probe')}
           </Button>
-          <Button variant="outline" size="sm" onClick={onEdit} className="gap-1.5">
+          <Button variant="outline" size="sm" onClick={onEdit} >
             <Pencil size={13} />
             {t('common.edit')}
           </Button>
           <Button variant="secondary" size="sm" onClick={onToggle}>
             {server.enabled ? t('aiHub.disable') : t('aiHub.enable')}
           </Button>
-          <Button variant="ghost" size="sm" onClick={onDelete} className="ml-auto text-accent-red hover:bg-accent-red-light/50 hover:text-accent-red">
+          <Button variant="ghost" size="sm" onClick={onDelete} className="ml-auto">
             <Trash2 size={13} />
           </Button>
         </div>
@@ -200,22 +201,22 @@ function McpServerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent >
         <DialogHeader>
           <DialogTitle>{server ? t('aiHub.editServerTitle') : t('aiHub.addServerTitle')}</DialogTitle>
           <DialogDescription>{t('aiHub.mcpDialogDesc')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldName')}</label>
+            <FieldLabel size="xs" variant="muted" >{t('aiHub.mcpFieldName')}</FieldLabel>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="filesystem" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldDescription')}</label>
+            <FieldLabel size="xs" variant="muted" >{t('aiHub.mcpFieldDescription')}</FieldLabel>
             <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('aiHub.mcpOptionalDescription')} />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldTransport')}</label>
+            <FieldLabel size="xs" variant="muted" >{t('aiHub.mcpFieldTransport')}</FieldLabel>
             <SegmentedControl
               value={transport}
               onChange={(value) => setTransport(value as McpTransportType)}
@@ -225,25 +226,25 @@ function McpServerDialog({
           {transport === 'stdio' ? (
             <>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldCommand')}</label>
-                <Input value={command} onChange={(e) => setCommand(e.target.value)} placeholder="npx" className="font-mono" />
+                <FieldLabel size="xs" variant="muted" >{t('aiHub.mcpFieldCommand')}</FieldLabel>
+                <Input fontVariant="mono" value={command} onChange={(e) => setCommand(e.target.value)} placeholder="npx"  />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldArgs')}</label>
-                <Input value={args} onChange={(e) => setArgs(e.target.value)} placeholder="-y @modelcontextprotocol/server-filesystem ." className="font-mono" />
+                <FieldLabel size="xs" variant="muted" >{t('aiHub.mcpFieldArgs')}</FieldLabel>
+                <Input fontVariant="mono" value={args} onChange={(e) => setArgs(e.target.value)} placeholder="-y @modelcontextprotocol/server-filesystem ."  />
               </div>
             </>
           ) : (
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldUrl')}</label>
-              <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://mcp.example.com/mcp" className="font-mono" />
+              <FieldLabel size="xs" variant="muted" >{t('aiHub.mcpFieldUrl')}</FieldLabel>
+              <Input fontVariant="mono" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://mcp.example.com/mcp"  />
             </div>
           )}
         </div>
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
-          <Button size="sm" onClick={handleSubmit} disabled={!valid || pending} className="gap-1.5">
-            {pending ? <Spinner className="size-3.5 text-inherit" /> : null}
+          <Button size="sm" onClick={handleSubmit} disabled={!valid || pending} >
+            {pending ? <Spinner color="inherit" size="xs"  /> : null}
             {server ? t('aiHub.saveProbe') : t('aiHub.addProbe')}
           </Button>
         </DialogFooter>
@@ -300,12 +301,12 @@ export function McpTab() {
               })
             }
             disabled={refreshAllServersMutation.isPending || servers.length === 0}
-            className="gap-1.5"
+            
           >
-            {refreshAllServersMutation.isPending ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={14} />}
+            {refreshAllServersMutation.isPending ? <Spinner color="inherit" size="xs"  /> : <RefreshCw size={14} />}
             {t('aiHub.refreshAll')}
           </Button>
-          <Button size="sm" onClick={() => { setEditingServer(null); setServerDialogOpen(true); }} className="gap-1.5">
+          <Button size="sm" onClick={() => { setEditingServer(null); setServerDialogOpen(true); }} >
             <Plus size={14} />
             {t('aiHub.addServer')}
           </Button>
@@ -315,7 +316,7 @@ export function McpTab() {
       {mcpLoading ? (
         <div className="grid gap-3 lg:grid-cols-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-32" />
+            <Skeleton key={i}  />
           ))}
         </div>
       ) : servers.length === 0 ? (

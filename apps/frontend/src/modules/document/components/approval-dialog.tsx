@@ -102,7 +102,7 @@ export function ApprovalDialog({
           </div>
         </div>
 
-        <DialogFooter className="sm:gap-0">
+        <DialogFooter >
           <Button
             type="button"
             variant="secondary"

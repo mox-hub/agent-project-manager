@@ -66,7 +66,7 @@ export function DockSettingsSection() {
       icon={LayoutList}
       iconColor="text-accent-blue"
       title={t('settings.dock')}
-      className="bg-background text-foreground"
+      
       contentClassName="space-y-6"
     >
       <DockPreviewCard />
@@ -164,7 +164,7 @@ function DockActionsCard() {
         </div>
         <CardDescription>{t('settings.dockActionsDesc')}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent >
         <ul className="divide-y divide-border rounded-lg border border-border">
           {DOCK_ITEM_IDS.map((id) => {
             const Icon = DOCK_ITEM_ICONS[id];
@@ -188,10 +188,10 @@ function DockActionsCard() {
                 >
                   {t(DOCK_ITEM_LABEL_KEYS[id])}
                 </span>
-                <Button
+                <Button padding="p-0"
                   variant="ghost"
                   size="sm"
-                  className="size-7 p-0"
+                  
                   disabled={!visible || index <= 0}
                   onClick={() => moveDockItem(id, -1)}
                   title={t('settings.dockMoveUp')}
@@ -200,10 +200,10 @@ function DockActionsCard() {
                 >
                   <ChevronUp className="size-4" />
                 </Button>
-                <Button
+                <Button padding="p-0"
                   variant="ghost"
                   size="sm"
-                  className="size-7 p-0"
+                  
                   disabled={!visible || index === dockItems.length - 1}
                   onClick={() => moveDockItem(id, 1)}
                   title={t('settings.dockMoveDown')}
@@ -228,7 +228,7 @@ function DockActionsCard() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5"
+            
             onClick={resetDockSettings}
             data-testid="dock-reset"
           >
@@ -280,7 +280,7 @@ function DockAiColleaguesCard() {
             <Button
               variant="ghost"
               size="sm"
-              fontSize="xs" className="h-7"
+              fontSize="xs" 
               onClick={() => setHiddenIds([])}
               data-testid="dock-ai-show-all"
             >

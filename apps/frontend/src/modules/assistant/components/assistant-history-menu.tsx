@@ -50,12 +50,12 @@ export function AssistantHistoryList({
 
   return (
     <div className="flex flex-col gap-1" data-ai-component="assistant.history-list">
-      <Button
+      <Button size="sm"
         type="button"
         variant="outline"
         disabled={isLoading}
         onClick={onCreate}
-        fontSize="xs" className="h-8 justify-start gap-2"
+        fontSize="xs" className="justify-start"
         data-ai-action="assistant.history.new.click"
       >
         <SquarePen className="size-3.5" />
@@ -126,7 +126,7 @@ export function AssistantHistoryMenu({
           <HeaderActionButton icon={History} label={t('assistant.history.open')} />
         }
       />
-      <PopoverContent align="end" className="w-72 p-2">
+      <PopoverContent align="end" >
         <AssistantHistoryList
           conversations={conversations}
           isLoading={isLoading}

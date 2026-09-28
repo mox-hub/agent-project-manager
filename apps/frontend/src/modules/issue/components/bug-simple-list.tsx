@@ -166,7 +166,7 @@ export function BugSimpleList({
             <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{idOf(bug)}</span>
             {/* 标题（带 Bug 图标） */}
             <Bug className="size-4 shrink-0 text-destructive" />
-            <ListText className="min-w-0 flex-1">{bug.title}</ListText>
+            <ListText className="flex-1">{bug.title}</ListText>
             {aiExecution ? (
               <AiExecutionBadge execution={aiExecution} size="xs" variant="compact" />
             ) : null}
@@ -185,7 +185,7 @@ export function BugSimpleList({
               <AiExecutionBadge execution={aiExecution} size="sm" variant="pill" />
             ) : null}
             {/* 项目 */}
-            <ListChip className="border border-border bg-muted/40 text-muted-foreground">{getProjectName?.(bug.projectId) ?? ''}</ListChip>
+            <ListChip >{getProjectName?.(bug.projectId) ?? ''}</ListChip>
             {/* 严重度标签（点击即改严重度） */}
             <SeverityCell task={bug}>
               <span className="flex shrink-0 items-center gap-1.5">
@@ -198,7 +198,7 @@ export function BugSimpleList({
               {shown.map(({ tag }) => (
                 <ListChip key={tag.id} color={tag.color}>{tag.name}</ListChip>
               ))}
-              {extra > 0 ? <ListChip className="opacity-80 text-muted-foreground">+{extra}</ListChip> : null}
+              {extra > 0 ? <ListChip className="opacity-80">+{extra}</ListChip> : null}
             </div>
             {/* 责任人（点击即改指派） */}
             <AssigneeCell task={bug}>

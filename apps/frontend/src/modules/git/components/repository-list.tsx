@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/ui/field';
 import { useState } from "react";
 import { AsyncState } from "@/components/ui/async-state";
 import { Button } from "@/components/ui/button";
@@ -95,7 +96,7 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
 
           {!propProjectId && (
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Project</label>
+              <FieldLabel size="xs" variant="muted" >Project</FieldLabel>
               <Select
                 value={formData.projectId}
                 onValueChange={(value) => setFormData({ ...formData, projectId: value })}
@@ -115,7 +116,7 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
           )}
 
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Name</label>
+            <FieldLabel size="xs" variant="muted" >Name</FieldLabel>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -126,7 +127,7 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Local Path</label>
+            <FieldLabel size="xs" variant="muted" >Local Path</FieldLabel>
             <Input
               value={formData.localPath || ""}
               onChange={(e) => setFormData({ ...formData, localPath: e.target.value })}
@@ -137,7 +138,7 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Remote URL</label>
+            <FieldLabel size="xs" variant="muted" >Remote URL</FieldLabel>
             <Input
               value={formData.remoteUrl || ""}
               onChange={(e) => setFormData({ ...formData, remoteUrl: e.target.value })}
