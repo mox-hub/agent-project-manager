@@ -27,6 +27,7 @@ import type {
   Acceptance,
   CriterionStatus,
 } from '@/modules/acceptance/api/acceptance-api';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 /** 标准状态视觉：与 acceptance-detail-page 保持同口径（只读回显不引入新形态） */
@@ -96,17 +97,17 @@ export function AcceptanceCriteriaPreview({
               {t('common.edit')}
             </button>
           )}
-          <button
-            type="button"
+          <Button
+            variant="subtle"
+            size="icon-2xs"
             onClick={() => setCollapsed((v) => !v)}
-            className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             aria-label={collapsed ? t('common.expand') : t('common.collapse')}
             aria-expanded={!collapsed}
           >
             <ChevronDown
               className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
             />
-          </button>
+          </Button>
         </div>
       </div>
 

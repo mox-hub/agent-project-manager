@@ -353,17 +353,17 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
           )}
         </div>
         <div className="flex items-center gap-0.5">
-          <button
-            type="button"
+          <Button
+            variant="subtle"
+            size="icon-2xs"
             onClick={() => setCollapsed((v) => !v)}
-            className="inline-flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             aria-label={collapsed ? t('common.expand') : t('common.collapse')}
             aria-expanded={!collapsed}
           >
             <ChevronDown
               className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
             />
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => {
