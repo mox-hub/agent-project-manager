@@ -62,8 +62,6 @@ import {
   ProjectSidebarProvider,
   useProjectSidebar,
   PROJECT_SIDEBAR_DEFAULT_WIDTH,
-  PROJECT_SIDEBAR_MIN_WIDTH,
-  PROJECT_SIDEBAR_MAX_WIDTH,
 } from '@/modules/project/components/dashboard/project-sidebar-context';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
@@ -833,17 +831,13 @@ function PipelineFocusFilter() {
 
 function ShellSidebarProvider({ children }: { children: ReactNode }) {
   const [hidden, setHidden] = useState(false);
-  const [width, setWidth] = useState(PROJECT_SIDEBAR_DEFAULT_WIDTH);
   return (
     <ProjectSidebarProvider
       value={{
         hidden,
         setHidden,
         toggle: () => setHidden((v) => !v),
-        width,
-        setWidth,
-        minWidth: PROJECT_SIDEBAR_MIN_WIDTH,
-        maxWidth: PROJECT_SIDEBAR_MAX_WIDTH,
+        width: PROJECT_SIDEBAR_DEFAULT_WIDTH,
       }}
     >
       {children}

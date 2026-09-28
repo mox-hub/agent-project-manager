@@ -1,6 +1,6 @@
 /**
  * ProjectSidebarContext - 项目页面右侧侧边栏共享状态
- * 暴露隐藏状态 + 宽度 + 拖拽回调
+ * 暴露隐藏状态 + 固定宽度（F 类 F4.2/J8/J9 裁决：全站唯一档 360px，禁拖拽缩放）
  */
 
 import { createContext, useContext, type ReactNode } from 'react';
@@ -10,16 +10,11 @@ export interface ProjectSidebarContextValue {
   setHidden: (next: boolean) => void;
   toggle: () => void;
   width: number;
-  setWidth: (next: number) => void;
-  minWidth: number;
-  maxWidth: number;
 }
 
 const ProjectSidebarContext = createContext<ProjectSidebarContextValue | null>(null);
 
-export const PROJECT_SIDEBAR_DEFAULT_WIDTH = 320;
-export const PROJECT_SIDEBAR_MIN_WIDTH = 200;
-export const PROJECT_SIDEBAR_MAX_WIDTH = 480;
+export const PROJECT_SIDEBAR_DEFAULT_WIDTH = 360;
 
 export function ProjectSidebarProvider({
   value,
