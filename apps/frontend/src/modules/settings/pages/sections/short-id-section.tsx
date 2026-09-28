@@ -21,7 +21,6 @@ export function ShortIdSettingsSection() {
       icon={Hash}
       iconColor="text-accent-blue"
       title={t('settings.shortId')}
-      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
       <ShortIdSettingsCard />
@@ -78,7 +77,7 @@ function ShortIdSettingsCard() {
   return (
     <div className="space-y-6">
       {/* 统计卡片 */}
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -170,7 +169,7 @@ function ShortIdSettingsCard() {
       </Card>
 
       {/* 前缀设置卡片 */}
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Hash size={16} className="text-accent-blue" />

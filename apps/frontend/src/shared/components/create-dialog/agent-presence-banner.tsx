@@ -155,7 +155,7 @@ export function AgentPresenceBanner({
         <PopoverContent
           align="end"
           sideOffset={6}
-          className="w-48 p-1 shadow-xs border border-border/70 bg-popover/95 backdrop-blur-md"
+          className="w-48 p-1 border border-border/70 bg-popover/95 backdrop-blur-md"
         >
           <div className="flex flex-col gap-0.5">
             <button

@@ -103,7 +103,7 @@ export function DockUserPopover() {
         side="top"
         align="start"
         sideOffset={14}
-        className="w-72 p-2 overflow-hidden shadow-xs rounded-xl border-border/80 bg-popover/95 backdrop-blur-2xl"
+        className="w-72 p-2 overflow-hidden rounded-xl bg-popover/95 backdrop-blur-2xl"
       >
         {/* 1. 一体化紧凑身份条：头像 + 姓名/角色 + 快捷设置与登出 */}
         <div className="flex items-center gap-2.5 rounded-xl bg-accent/40 px-3 py-2 border border-border/40">

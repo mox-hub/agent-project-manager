@@ -72,7 +72,7 @@ function KpiCard({
   danger?: boolean;
 }) {
   return (
-    <Card className="border-border shadow-none" size="sm">
+    <Card surface="flat" size="sm">
       <CardContent className="flex items-center gap-3">
         <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', danger ? 'bg-accent-red-light' : 'bg-muted')}>
           <Icon size={16} className={danger ? 'text-accent-red' : 'text-muted-foreground'} />
@@ -131,7 +131,7 @@ function QuickSettingsCard({ onNavigateTab }: { onNavigateTab: (tab: AiManagemen
   };
 
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <CardTitle className="text-base">{t('aiHub.quickSettings')}</CardTitle>
         <CardDescription>{t('aiHub.quickSettingsDesc')}</CardDescription>
@@ -319,7 +319,7 @@ export function OverviewTab({ onNavigateTab }: { onNavigateTab: (tab: AiManageme
         />
       </div>
 
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardHeader>
           <CardTitle className="text-base">{t('aiHub.cliHealthTitle')}</CardTitle>
           <CardDescription>{t('aiHub.cliHealthDesc')}</CardDescription>
@@ -351,7 +351,7 @@ export function OverviewTab({ onNavigateTab }: { onNavigateTab: (tab: AiManageme
         </CardContent>
       </Card>
 
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardHeader>
           <CardTitle className="text-base">{t('aiHub.mcpHealthTitle')}</CardTitle>
           <CardDescription>{t('aiHub.mcpHealthDesc')}</CardDescription>

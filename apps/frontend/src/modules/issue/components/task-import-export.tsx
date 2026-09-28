@@ -212,7 +212,7 @@ export function ImportModal({
               type="file"
               accept=".csv"
               onChange={handleFileChange}
-              className="w-full rounded-md border border-dashed border-border bg-background px-3 py-2 text-sm text-foreground"
+              className="w-full rounded-md border-dashed bg-background px-3 py-2 text-sm text-foreground"
             />
           </div>
 

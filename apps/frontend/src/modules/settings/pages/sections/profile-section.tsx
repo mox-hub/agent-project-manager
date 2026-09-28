@@ -95,7 +95,6 @@ export function ProfileSettingsSection() {
       icon={UserRound}
       iconColor="text-accent-blue"
       title={t('settings.profile')}
-      className="bg-background text-foreground"
       contentClassName="space-y-6"
       actions={
         <HeaderActionButton
@@ -107,7 +106,7 @@ export function ProfileSettingsSection() {
         />
       }
     >
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <UserRound size={16} className="text-accent-blue" />
@@ -236,7 +235,7 @@ function PasswordCard() {
   };
 
   return (
-    <Card className="border-border shadow-none">
+    <Card surface="flat">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <KeyRound size={16} className="text-accent-yellow" />

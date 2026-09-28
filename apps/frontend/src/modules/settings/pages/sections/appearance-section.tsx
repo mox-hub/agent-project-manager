@@ -143,11 +143,10 @@ export function AppearanceSettingsSection() {
       icon={Palette}
       iconColor="text-accent-purple"
       title={t('settings.appearance')}
-      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
       {/* 主题模式 */}
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <SunMoon size={16} className="text-accent-blue" />
@@ -192,7 +191,7 @@ export function AppearanceSettingsSection() {
           </Card>
 
           {/* 界面缩放 */}
-          <Card className="border-border shadow-none">
+          <Card surface="flat">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <ZoomIn size={16} className="text-accent-green" />
@@ -235,7 +234,7 @@ export function AppearanceSettingsSection() {
           </Card>
 
           {/* 字体选择（批 2.5：--font-user-* 变量，字体只管 family，字号缩放走独立机制） */}
-          <Card className="border-border shadow-none">
+          <Card surface="flat">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Type size={16} className="text-accent-purple" />
@@ -261,7 +260,7 @@ export function AppearanceSettingsSection() {
           </Card>
 
           {/* 字号调整 */}
-          <Card className="border-border shadow-none">
+          <Card surface="flat">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <ALargeSmall size={16} className="text-accent-yellow" />
@@ -302,7 +301,7 @@ export function AppearanceSettingsSection() {
           </Card>
 
           {/* 语言设置 */}
-          <Card className="border-border shadow-none">
+          <Card surface="flat">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Languages size={16} className="text-accent-blue" />

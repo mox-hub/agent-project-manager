@@ -217,7 +217,7 @@ export function InboxItemRow({
         <Button
           variant="ghost"
           size="icon"
-          className="size-7 rounded-md bg-background/90 shadow-xs hover:bg-muted"
+          className="size-7 rounded-md bg-background/90 shadow-xs"
           title={item.isUnread ? '标记已读' : '标记未读'}
           aria-label={item.isUnread ? '标记已读' : '标记未读'}
           onClick={handleReadClick}
@@ -233,7 +233,7 @@ export function InboxItemRow({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-7 rounded-md bg-background/90 shadow-xs hover:bg-muted"
+                  className="size-7 rounded-md bg-background/90 shadow-xs"
                   title="稍后提醒"
                   aria-label="稍后提醒"
                 />

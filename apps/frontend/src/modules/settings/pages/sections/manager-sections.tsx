@@ -36,7 +36,6 @@ export function StorageSettingsSection() {
       icon={FolderOpen}
       iconColor="text-accent-yellow"
       title={t('settings.storageSection')}
-      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
       <StorageSettings />

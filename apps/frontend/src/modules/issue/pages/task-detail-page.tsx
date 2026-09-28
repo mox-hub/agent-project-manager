@@ -484,7 +484,7 @@ export function TaskDetailPage() {
                 rows={1}
                 placeholder={t('taskDetail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40"
               />
             </div>
             {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}
@@ -1188,14 +1188,14 @@ function SubTaskSection({
                     placeholder={t('taskDetail.subtaskTitle')}
                     value={subTitle}
                     onChange={(e) => setSubTitle(e.target.value)}
-                    className="w-full text-sm font-semibold placeholder:text-muted-foreground/50 focus-visible:ring-0"
+                    className="w-full text-sm font-semibold placeholder:text-muted-foreground/50"
                   />
                   <AutoSizeTextarea
                     rows={1}
                     placeholder={t('taskDetail.addDescription')}
                     value={subDesc}
                     onChange={(e) => setSubDesc(e.target.value)}
-                    className="w-full text-xs font-normal placeholder:text-muted-foreground/50 focus-visible:ring-0"
+                    className="w-full text-xs font-normal placeholder:text-muted-foreground/50"
                   />
                 </div>
                 {mutationError && (

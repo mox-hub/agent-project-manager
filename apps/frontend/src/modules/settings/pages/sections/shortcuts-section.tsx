@@ -186,10 +186,9 @@ export function ShortcutsSettingsSection() {
       icon={Keyboard}
       iconColor="text-accent-blue"
       title={t('settings.shortcuts')}
-      className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardHeader className="flex-row items-center gap-2">
           <Keyboard className="size-4 text-muted-foreground" />
           <div className="flex-1">
@@ -216,7 +215,7 @@ export function ShortcutsSettingsSection() {
         </CardContent>
       </Card>
 
-      <Card className="border-border shadow-none">
+      <Card surface="flat">
         <CardHeader>
           <CardTitle className="text-base">{t('settings.shortcutsContextTitle')}</CardTitle>
           <CardDescription>{t('settings.shortcutsContextDesc')}</CardDescription>

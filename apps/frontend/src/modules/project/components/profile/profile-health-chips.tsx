@@ -56,7 +56,7 @@ export function ProfileHealthChips({ profile }: { profile: ProfileResponse }) {
       ) : null}
       {staleSlots > 0 ? (
         <Badge
-          className="gap-1 rounded-full border border-accent-yellow/40 bg-accent-yellow-light text-3xs text-accent-yellow"
+          className="gap-1 rounded-full border-accent-yellow/40 bg-accent-yellow-light text-3xs text-accent-yellow"
           title={t('project.profilePage.staleHint')}
         >
           <Clock3 className="size-3" />

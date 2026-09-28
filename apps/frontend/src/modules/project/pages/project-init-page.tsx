@@ -100,7 +100,6 @@ export function ProjectInitPage() {
         {grilled && grillSummary ? (
           <Card
             data-ai-component="project.init.grilled"
-            className="border-primary/30"
           >
             <CardHeader className="border-b border-border pb-3">
               <CardTitle className="flex items-center gap-2 text-base">

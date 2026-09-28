@@ -305,7 +305,7 @@ export function BugDetailPage() {
                 rows={1}
                 placeholder={t('bugDetail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40"
               />
             </div>
             {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}

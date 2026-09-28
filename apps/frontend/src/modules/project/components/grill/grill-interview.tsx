@@ -248,7 +248,7 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
         rows={6}
         autoFocus
         placeholder="例如：想给我们小组做一个记录会议决定的小工具，现在每次开完会都记不清谁答应了什么"
-        className="flex-1 resize-none rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus-visible:ring-0 focus-visible:border-primary/50"
+        className="flex-1 resize-none rounded-lg px-3 py-2.5 text-sm outline-none focus-visible:ring-0 focus-visible:border-primary/50"
       />
       <div className="flex items-center">
         <Button size="sm" className="gap-1.5" disabled={!draft.trim() || grill.isPending} onClick={start}>
