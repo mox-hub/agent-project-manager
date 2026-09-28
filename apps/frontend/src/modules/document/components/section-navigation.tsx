@@ -1,6 +1,7 @@
 // Section Navigation Component - 章节导航组件
 import React, { memo, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
 import { ChevronRight, Search, ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentSection } from '../api/document-section-api';
@@ -90,10 +91,18 @@ const SectionItemComponent = memo(function SectionItemComponent({
         onKeyDown={handleKeyDown}
         data-heading-level={section.level}
       >
+        {/* 展开/折叠钮（E 类批 6）：原裸钮的样式 token 逐字落在既有轴上——
+            `text-muted-foreground hover:text-foreground` = `variant="quiet"`，
+            `p-0.5` = `padding="p-0.5"`（内距驱动高度；原无 `h-*`，故按 Button 约定不给 `size`），
+            `shrink-0` 由 Button 基线自带，故不再显式传。
+            图标上的 `size-3.5` 不是新样式：Button 基线带
+            `[&_svg:not([class*='size-'])]:size-4`，会把本处 14px 的图标归一成 16px；
+            显式钉住 `size-3.5`(14px) 才是几何不变（仓内既有先例：acceptance 的图标钮）。 */}
         {hasChildren ? (
-          <button
+          <Button
             type="button"
-            className="shrink-0 p-0.5 text-muted-foreground hover:text-foreground"
+            variant="quiet"
+            padding="p-0.5"
             onClick={(e) => {
               e.stopPropagation();
               toggleExpand(section.id);
@@ -102,9 +111,9 @@ const SectionItemComponent = memo(function SectionItemComponent({
           >
             <ChevronRight
               size={14}
-              className={cn('transition-transform', isExpanded && 'rotate-90')}
+              className={cn('size-3.5', 'transition-transform', isExpanded && 'rotate-90')}
             />
-          </button>
+          </Button>
         ) : (
           <span className="w-5 shrink-0" />
         )}
