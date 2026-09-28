@@ -50,7 +50,7 @@ export function AssistantFab() {
       className={cn(
         'fixed bottom-28 left-1/2 -translate-x-1/2 z-modal pointer-events-auto transition-all duration-normal',
         assistantExpanded
-          ? 'h-[85vh] w-[min(96vw,1000px)]'
+          ? 'h-dialog-scroll w-[min(96vw,1000px)]'
           : 'h-[560px] w-auto max-w-[calc(100vw-2rem)]',
         !aiPanelOpen && 'pointer-events-none hidden',
       )}

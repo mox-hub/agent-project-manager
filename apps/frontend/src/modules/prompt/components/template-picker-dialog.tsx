@@ -148,7 +148,7 @@ export function TemplatePickerDialog({
                 {t('prompt.templatePicker.preview')}
               </p>
               <div
-                className="max-h-56 overflow-y-auto rounded-lg border border-border bg-muted/20 px-3 py-2"
+                className="max-h-64 overflow-y-auto rounded-lg border border-border bg-muted/20 px-3 py-2"
                 data-ai-component="prompt.template-picker.preview"
               >
                 {previewLoading ? (

@@ -202,7 +202,7 @@ export function PromptEditor({
               <p className="text-xs font-medium text-muted-foreground">
                 {t('promptEditor.draftCurrent')}
               </p>
-              <div className="max-h-72 overflow-y-auto rounded-lg border border-border bg-muted/20 px-3 py-2">
+              <div className="max-h-80 overflow-y-auto rounded-lg border border-border bg-muted/20 px-3 py-2">
                 {value.trim() ? (
                   <MarkdownView content={value} />
                 ) : (
@@ -217,7 +217,7 @@ export function PromptEditor({
                 {t('promptEditor.draftSuggestion')}
               </p>
               <div
-                className="max-h-72 overflow-y-auto rounded-lg border border-accent-blue/30 bg-accent-blue/5 px-3 py-2"
+                className="max-h-80 overflow-y-auto rounded-lg border border-accent-blue/30 bg-accent-blue/5 px-3 py-2"
                 data-ai-component="shared.prompt-editor.draft-body"
               >
                 {draftLoading ? (

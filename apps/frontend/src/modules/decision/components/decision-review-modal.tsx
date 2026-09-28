@@ -63,7 +63,7 @@ export function DecisionReviewModal({
       className="fixed inset-0 z-modal flex flex-col bg-background/85 backdrop-blur-md transition-all duration-normal"
     >
       {/* ── 顶部导航条 ── */}
-      <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/60 px-6">
+      <header className="flex h-12 shrink-0 items-center justify-between border-b border-border/60 px-6">
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Layers className="size-5" />

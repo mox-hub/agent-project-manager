@@ -154,7 +154,7 @@ export function MemberPicker({
             )}
           </div>
 
-          <div className="max-h-72 overflow-y-auto py-1">
+          <div className="max-h-80 overflow-y-auto py-1">
             {loadingFull && !query ? (
               <div className="text-center text-xs text-muted-foreground py-6">加载中…</div>
             ) : items.length === 0 ? (

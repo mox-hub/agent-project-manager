@@ -154,7 +154,7 @@
   --spacing-dialog: 95vw;
   --spacing-dialog-wide: 90vw;
   --spacing-dialog-screen: 95vh;
-  --spacing-dialog-scroll: 80vh;
+  --spacing-dialog-scroll: 85vh;
   --spacing-dialog-full: 90vh;
 
   /* 层级（z-index）七档（契约见宪法 §8.4）：工具类是 `z-base` … `z-toast`。

@@ -99,7 +99,7 @@ export function ProjectTeamBindings({ projectId }: { projectId: string }) {
                 className="h-7 pl-8 text-xs"
               />
             </div>
-            <div className="mt-1.5 max-h-56 overflow-y-auto">
+            <div className="mt-1.5 max-h-64 overflow-y-auto">
               {candidates.length === 0 ? (
                 <p className="px-2 py-4 text-center text-xs text-muted-foreground">
                   {t('project.team.bindings.noneLeft')}

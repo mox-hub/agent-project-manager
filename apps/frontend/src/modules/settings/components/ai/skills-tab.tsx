@@ -132,7 +132,7 @@ function SkillDialog({
             {mode === 'import' ? t('aiHub.skillImportDesc') : t('aiHub.skillDialogDesc')}
           </DialogDescription>
         </DialogHeader>
-        <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+        <div className="max-h-96 space-y-4 overflow-y-auto pr-1">
           {mode === 'import' ? (
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-foreground">{t('aiHub.skillFieldSourcePath')}</label>

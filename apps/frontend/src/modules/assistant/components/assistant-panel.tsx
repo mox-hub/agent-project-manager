@@ -310,7 +310,7 @@ export function AssistantPanel() {
       >
 
         {/* 头部：人格名 + 状态 + 决策开关 + 模型选择 + 历史 + 放大/还原 + 关闭 */}
-        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
+        <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-purple-light text-accent-purple">
             <Bot className="size-4.5" />
           </span>

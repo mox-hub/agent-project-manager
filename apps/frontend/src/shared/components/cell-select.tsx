@@ -73,7 +73,7 @@ export function CellSelect({
       </MenuTrigger>
       <MenuPopup side={side} align={align} className={menuClassName}>
         {/* 弹层内层限高滚动：候选超一屏时不撑爆视口（与右键菜单子菜单同口径） */}
-        <div className="max-h-72 w-full overflow-y-auto">
+        <div className="max-h-80 w-full overflow-y-auto">
           {options.map((option) => (
             <MenuItem key={option.value} className="gap-2" onClick={() => onChange(option.value)}>
               {option.icon ? (

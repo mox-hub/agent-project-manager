@@ -65,7 +65,7 @@ export function LinearProjectsTable({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto rounded-md border">
+        <div className="max-h-96 overflow-y-auto rounded-md border">
           <AsyncState
             isLoading={isLoading}
             error={error ? (error instanceof Error ? error.message : 'Unknown error') : null}

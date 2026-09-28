@@ -284,7 +284,7 @@ export function SlashRefTextarea({
               {isLoading ? t('entityRef.slash.searching') : t('entityRef.slash.empty')}
             </div>
           ) : (
-            <ul className="max-h-56 overflow-y-auto py-1">
+            <ul className="max-h-64 overflow-y-auto py-1">
               {items.map((candidate, i) => (
                 <li key={`${candidate.kind}-${candidate.kind === 'hit' ? candidate.hit.id : candidate.id}`}>
                   <button

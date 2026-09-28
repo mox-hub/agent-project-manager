@@ -102,7 +102,7 @@ export function InterviewChat({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2" data-ai="playbook.interview.chat">
-      <div className="flex max-h-72 min-h-40 flex-1 flex-col gap-2 overflow-y-auto rounded-lg border border-border bg-content-bg-secondary/40 p-3">
+      <div className="flex max-h-80 min-h-40 flex-1 flex-col gap-2 overflow-y-auto rounded-lg border border-border bg-content-bg-secondary/40 p-3">
         {turns.length === 0 && dynamic.isPending ? (
           <p className="flex items-center gap-1.5 text-xs text-content-text-muted">
             <Sparkles className="size-3 animate-pulse text-accent-purple" />

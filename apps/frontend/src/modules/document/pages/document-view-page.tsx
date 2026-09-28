@@ -343,7 +343,7 @@ export function DocumentViewPage() {
         {/* 左侧边栏 - 章节导航和任务关联 */}
         <aside className="hidden w-75 shrink-0 border-r border-border bg-muted/20 xl:flex xl:flex-col">
           {/* 标签页切换 */}
-          <div className="flex h-14 shrink-0 items-center gap-1 border-b border-border px-3">
+          <div className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-3">
             <button
               type="button"
               onClick={() => setActiveTab('toc')}

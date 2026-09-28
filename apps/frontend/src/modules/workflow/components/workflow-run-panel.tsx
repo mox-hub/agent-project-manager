@@ -310,7 +310,7 @@ export function WorkflowRunPanel({
             <summary className="cursor-pointer text-2xs text-muted-foreground">
               {t('workflow.runPanel.outputDetail')}
             </summary>
-            <pre className="mt-1 max-h-48 max-w-140 overflow-auto text-2xs leading-relaxed">
+            <pre className="mt-1 max-h-40 max-w-140 overflow-auto text-2xs leading-relaxed">
               {JSON.stringify(stepsOutput ?? run.output, null, 2)}
             </pre>
           </details>

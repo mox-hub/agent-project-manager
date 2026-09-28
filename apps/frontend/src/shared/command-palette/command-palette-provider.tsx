@@ -656,7 +656,7 @@ export function CommandPaletteProvider({
                   </div>
                 ) : null}
                 {/* base-ui ScrollArea 坑：max-h 挂根无效（viewport h-full 在 auto 高度父级失效不可滚），约束须任意变体打 viewport */}
-                <CommandList scrollAreaClassName="[&_[data-slot=scroll-area-viewport]]:max-h-72">
+                <CommandList scrollAreaClassName="[&_[data-slot=scroll-area-viewport]]:max-h-80">
                   {(group: PaletteGroup) => (
                     <CommandGroup items={group.items} key={group.value}>
                       <CommandGroupLabel>{group.label}</CommandGroupLabel>
