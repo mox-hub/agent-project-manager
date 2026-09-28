@@ -116,7 +116,7 @@ export function NotificationSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] sm:max-w-xl overflow-y-auto" showCloseButton>
+      <DialogContent className="max-h-dialog-scroll sm:max-w-xl overflow-y-auto" showCloseButton>
         <div className="space-y-6">
           <div>
             <DialogTitle className="text-lg font-semibold">通知</DialogTitle>

@@ -391,7 +391,7 @@ export function BatchCreateTasksDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-dialog-scroll flex flex-col">
         <DialogHeader>
           <DialogTitle>Batch Create Tasks</DialogTitle>
           <DialogDescription>

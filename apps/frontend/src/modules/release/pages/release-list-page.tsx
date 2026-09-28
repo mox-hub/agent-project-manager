@@ -386,7 +386,7 @@ function CreateReleaseDialog({
         if (!next) onClose();
       }}
     >
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-dialog-scroll overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('release.create.title')}</DialogTitle>
           <DialogDescription>{t('release.create.desc')}</DialogDescription>

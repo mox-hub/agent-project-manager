@@ -79,7 +79,9 @@ export function DocumentPreviewDialog({
 
   if (!document) return null;
 
-  const dialogWidth = isFullscreen ? 'max-w-dialog w-dialog h-dialog-screen' : 'max-w-5xl w-dialog-wide h-[85vh]';
+  // max-w-5xl：F3.1 宽度五档唯一豁免（文档预览宽幅特例，F 方案附录登记 2026-09-29；
+  // keepDefaultWidth 逃生舱 + 用户裁决）。h-dialog-scroll = 85vh token（J16 收编）。
+  const dialogWidth = isFullscreen ? 'max-w-dialog w-dialog h-dialog-screen' : 'max-w-5xl w-dialog-wide h-dialog-scroll';
   const sidebarWidth = isFullscreen ? 'w-64' : 'w-56';
 
   return (

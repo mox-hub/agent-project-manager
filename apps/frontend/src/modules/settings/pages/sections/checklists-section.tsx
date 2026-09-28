@@ -271,7 +271,7 @@ function ChecklistsCard() {
       </CardContent>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="max-h-dialog-scroll overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {editingId ? t('settings.checklistsEdit') : t('settings.checklistsCreate')}

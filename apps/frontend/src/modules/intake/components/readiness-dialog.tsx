@@ -72,7 +72,7 @@ export function ReadinessDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent keepDefaultWidth={false} className="max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent keepDefaultWidth={false} className="max-h-dialog-scroll max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ShieldCheck size={16} />

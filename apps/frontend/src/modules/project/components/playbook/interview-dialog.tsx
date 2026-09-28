@@ -134,7 +134,7 @@ export function InterviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
+      <DialogContent className="max-h-dialog-scroll overflow-y-auto sm:max-w-xl">
         {!result ? (
           <>
             <DialogHeader>

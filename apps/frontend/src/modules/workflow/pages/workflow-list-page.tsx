@@ -359,7 +359,7 @@ function CreateWorkflowDialog({
         }
       }}
     >
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-dialog-scroll overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('workflow.createDialog.title')}</DialogTitle>
           <DialogDescription>{t('workflow.createDialog.desc')}</DialogDescription>

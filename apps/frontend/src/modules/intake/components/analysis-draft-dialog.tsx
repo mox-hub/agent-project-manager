@@ -106,7 +106,7 @@ export function AnalysisDraftDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* keepDefaultWidth={false}：丢掉基类 sm:max-w-md，否则 max-w-2xl 在桌面端被覆盖回 448px，报告内容被压窄 */}
-      <DialogContent keepDefaultWidth={false} className="max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent keepDefaultWidth={false} className="max-h-dialog-scroll max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles size={16} />
