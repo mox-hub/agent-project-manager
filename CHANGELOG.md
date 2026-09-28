@@ -21,6 +21,20 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——F 类组件侧批次落地（2026-09-29）：J1/J6/J7 默认值、J2 wide 档、J5 行高轴、J11/J12 标题图标，五笔提交
+
+> 承接同日纯结构批次：用户解除「组件内部样式」限制，F 方案批 F1 项 1/4 与批 F2 项 2/4/5 落地。宪法升格（批 F1 项 3，PRINCIPLES.md §11.2）与 F3.6 表单容器迁移（9 项 12 处，含 J15 页面退役/文档模式扩展，属交互重组非样式改造）仍待 E 类三层解耦路线收口后另批执行。
+
+| 提交 | 项 | 内容与证据 |
+|---|---|---|
+| `45304dd0` | J1/J6/J7（批 F1 项 1） | DialogTitle 升 `text-base font-semibold`（78 处弹窗标题与正文同档收口）；CardFooter 补 `gap-2`（对齐 DialogFooter，60 importer 零破坏）；Tabs line 变体内聚贴边六件套为默认值（F5.1），唯一手写消费方（孤儿死件）卸下手写 |
+| `e0e9071e` | J2（批 F2 项 2） | PageShell 补 `wide` 档（max-w-7xl）——F1.3 主栏宽度四档总表收齐；F2.2 口径结案：project-detail-frame 主栏 7xl 为 L2 母版自管分发（F1.2 条文本就规定详情页结构自管），非手写补位，X1 分叉随 wide 档落位消解 |
+| `d8f3cf47` | J5（批 F2 项 4） | DataList/table 补 `size` 轴（dense 32 默认 / comfortable 40，F7.2 宪法 §4.2 实现落地）；data-list 三条渲染路径全穿线、table 走 Context 下发；comfortable 启用场景留批 F2 项 7 逐列表评审，本批只立轴不启用（渲染零变化） |
+| `edefc891` | J11/J12（批 F2 项 5） | SubPageToolbar 增 `titleIcon` 槽——面包屑末项升「icon+标题」与 L1 对齐（F2.5②），icon 强制消费 entity-icons 唯一源（与 E8 合流）；task/bug/acceptance/repository/team/member 六详情页接线；linear-integration-section 页面标题图标改走 PageHeader icon 槽（J12/X8 唯一迁移项，骨架头豁免） |
+| `c87a544e` | 批 F1 项 4 | 正向 `space-x-*` 封禁并入 check-spacing-governance（F9.1/F3.3 机器化）；实测校准：全仓正向 0 实例纯防回流，7 处现存均为负向 `-space-x-N` 叠层惯用法（lookbehind 排除不误伤）；`space-y-*` 为 F3.5/F6.5/F10.4 点名合法档不封 |
+
+test_evidence：每笔过五治理脚本 + eslint 0 error + tsc -b 0 错；收口前端全量 Vitest 192 文件 1436 用例全绿。doc_impact：F 类方案批次表/状态同步。
+
 ### 前端设计治理——F 类「布局与组合」纯结构批次落地（2026-09-29）：J8/J9/J10 + F3.1 宽度阶梯 + J16–J18 高度，六笔提交零组件实现改动
 
 > 承接 F 类方案（`docs/design/修改方案-F类-布局与组合-2026-09-28.md`，J1–J18 已全裁决）与 E 类裸组件路线废止裁决：先落 F 类中「只动结构、不动组件内部实现」的部分，为 E 类三层解耦路线重修让出 ui 层。2026-09-28 首轮 F 类代码改动随裁决撤下，本批为同口径重落地（`scripts/f-class/` 迁移脚本未入 git 已失传、存 stash 可找，本批改逐点手工迁移）；`ui/right-sidebar` 默认宽度常量是全批唯一 ui 层触点（J8 裁决实体本身），已独立成笔便于单独回滚。
