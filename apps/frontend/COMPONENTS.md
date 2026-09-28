@@ -14,11 +14,11 @@
 
 | 状态 | 数量 | 计入 LU 分母 | 必须在画廊展示 | 是否需消费方 |
 |---|---|---|---|---|
-| ✅ canonical | 299 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
+| ✅ canonical | 300 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
 | 📦 standby | 17 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
 | 🔶 review | 17 | ❌ 暂不计 | ✅ 必须（带醒目标记） | ❌ 暂不要求 |
 | ⛔ deprecated | 1 | ❌ 不计 | ✅ 标记 deprecated | — |
-| **合计** | **334** | | | |
+| **合计** | **335** | | | |
 
 > 当前 0 条的状态：`internal`。注：`ui/menu-surface.ts` 实测有模块层消费方（document 模块页面直接 import 其中的常量），故按实测登记为 `canonical` 而非方案 §三 E6 建议的 `internal`（差异见批 1 报告）。
 
@@ -26,7 +26,7 @@
 
 | 分区 | 数量 |
 |---|---|
-| Primitives | 63 |
+| Primitives | 64 |
 | App Components | 246 |
 | AI Execution | 25 |
 
@@ -74,9 +74,9 @@
 
 ## 完整清单
 
-### Primitives（63）
+### Primitives（64）
 
-#### UI 原子层 `src/components/ui/`（63）
+#### UI 原子层 `src/components/ui/`（64）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
@@ -142,6 +142,7 @@
 | toast | `src/components/ui/toast.tsx` | ✅ canonical | — | — |
 | toggle | `src/components/ui/toggle.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
 | toggle-group | `src/components/ui/toggle-group.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
+| tone | `src/components/ui/tone.ts` | ✅ canonical | — | — |
 | tooltip | `src/components/ui/tooltip.tsx` | ✅ canonical | — | — |
 
 ### App Components（246）

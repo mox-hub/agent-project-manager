@@ -21,6 +21,36 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——E 类批 0b「能力二次补档」交付：Card 描边/表面两轴 + Button `tone` 轴 + `ui/tone.ts` 词表下沉
+
+> 三笔提交（均显式路径、**未 push**），**零迁移**——未替换任何消费方（替换是批 6/7 的活）。**⚠️ 交付范围与裁决 #1 不符**：授权的是「Button 字号/内距/布局/tone **四轴** + Card 第二·三轴」，实落 Card 两轴 + Button **仅 `tone` 一轴**，另三轴未交付 ⇒ 批 6 可无损迁移量**仍锁在 0.6%–1.0%**。沿线记录：`docs/design/修改方案-E类-2026-09-27.md` §七之二（五）。
+
+| 提交 | 内容 | 规模 | 纯增补证据 |
+|---|---|---|---|
+| `43d30aed` | **Card 第二·三轴**：`border`（`ring`/`solid`/`dashed`）+ `surface`（`default`/`flat`/`translucent`），并挂 `data-border`/`data-surface` 供语义断言 | 2 文件 / +83 −0 | `--numstat` **0 删除行**；既有 4 组属性组合的 twMerge 终串逐字全等（漂移 0/4）|
+| `b0e91a58` | **Button `tone` 轴**（`default`/`info`/`danger`），`default` 为空串 ⇒ 既有 variant×size 输出逐字节不变；`data-tone` 由组件挂载，默认档传 `undefined` ⇒ 属性不落 DOM | 2 文件 / +109 −1 | 唯一删除行 = `className` 那一行（保持调用方最终覆盖权）|
+| `960d01ed` | **`components/ui/tone.ts` 词表下沉**：`Tone`（五档）+ `TONE_CLASS = { text, dot, light, bg, border }`；`status-pill`（原子层）与 `status-visuals`（业务层）共同消费，分层方向无反向 import | 4 文件 / +124 −31 | 20 槽位与抽取前两份原映射**逐字全等**（见核验 3）|
+
+**协调方独立复算（不采信代理自述）**：
+
+1. **Card**：`ui/card` 生产消费方复算 **= 55**，与源码注释「既有 55 个消费方」逐整数吻合；7 个新增类串（含 `bg-card\/60`、`border-border\/60`）在 `dist` 产物中**全部生成**，无幽灵类。
+2. **Button**：「裸色类会被任何设色 variant 静默吞掉」这一立项前提**经构建产物字节复现成立**——`text-xs 251354 < text-2xs 251446 < text-accent-blue 253286 < text-accent-red 253870 < text-content-text-muted 254782 < text-foreground 255845 < text-muted-foreground 257193`；作用域类实际生成为 `.data-\[tone\=danger\]\:text-accent-red[data-tone=danger]{…}`（特异性 (0,2,0)，hover (0,3,0)）。
+3. **`tone.ts` 抽取零视觉变更：独立复算通过**（承重：26 个 `status-visuals` 消费方 + 36 个 `status-pill` 消费方）。取抽取前两文件（字面父提交 `b0e91a58`），**5 路来源 × 各 5 个非空值**，比对 **20 个槽位差异数 = 0**；两份原「重复映射」（`status-pill.toneClass` vs `status-visuals.TONE_LIGHT_CLASS`）**互相差异 = 0**，代理「无需人裁决统一值」的结论成立。
+
+**取证脚本自身修掉两处「假通过」隐患（自曝）**：① `git show <rev>^:path` 在 Windows 经 `cmd.exe` 时 `^` 是转义符被吞 → git 实收 `<rev>:path`（**变更后**的文件）→ 抽 0 档 → 比较退化为「空对空」仍报 PASS；改为**字面父哈希** + 短输出即抛错。② 来源守卫只查**键数**，而 `Object.fromEntries(TONES.map(t => [t, x?.light]))` 在 `x` 为 `undefined` 时仍产出 5 个**键** ⇒ 已升级为**值非空**守卫（现输出「5 键 / 5 个非空值」，任一来源全空即 `exit 3` 并声明「比较结果无效，不得据此判 PASS」）。
+
+**⚠️ 交付范围缺口（据实登记，不静默覆盖）**：裁决 #1 授权 **Button 字号 / 内距 / 布局 / tone 四轴**，实落**仅 `tone`**（派工时即窄于裁决范围，属协调方缺口）。而这三轴正是批 6 复核里 90 个候选的**主要缺档**（`text-xs/sm`、`px-*/py-*`、`flex/gap-*`）⇒ 批 6 **仍不应按「替换工程」派工**。同源问题在 Card 侧：批 7 卡片壳 40 行中 **34 行带 `p-*`**，Card 新轴不表达内距/布局，卡片壳半边亦未真正解锁。
+
+**新增待裁 3 项**：① **Button 三轴如何补**——补「字阶轴 + 内距轴」还是改走「内层 div 承载布局类」的统一形态（建议先定形态再补轴）；② **`tone.ts` 的 `bg`/`border` 两槽零消费方**——实测 `TONE_CLASS` 消费点仅 `.text` 5 / `.dot` 5 / `.light` 6，`bg` 与 `border` 各 **0**。**代理并未隐瞒**：`tone.ts:32` 已自述「两槽当前零消费方，属性可供后续批次接线；取值待人工确认」。协调方的异议在于**是否该造槽**——同批 Button 轴以「无证据不造档」为由拒了 `success`/`warning`，若另一路可以凭「仓内既有写法」先造两条无人用的槽，两者标准就不一致了（建议删两槽或补消费方，待人裁）；③ **tone 值两处持有**——`button.tsx` 的 tone 轴把 `text-accent-blue`/`text-accent-red` 又硬写一遍且**未** import `tone.ts`，§19.5「tone → class 视觉层唯一持有」尚未达成；直接换裸类会**无声失效**（Button 提交已留「须连同 data 作用域一起搬」的连带契约），建议本轮**只记账不返工**。
+
+**合流验证（三代理改动首次同跑全量）**：`apps/frontend` 全量套件 **`192 文件 / 1401 用例 passed`，exit 0**（`vitest run`，691s）。此前三笔提交各自只跑了子集（A/B 各 `src/components/ui` 26 文件 / 275 用例；C 跑消费方目录 92 文件 / 771 用例），**全量合流是本轮才做的**。运行期有一条 jsdom `Not implemented: navigation (except hash changes)` 告警，属既有环境噪声，非用例失败。
+
+**另**：`COMPONENTS.md` 由协调方再生（registry 335 条 vs 生成物 334 条的 1 行滞后已消除，差异恰为 `ui/tone.ts` 一行；canonical 299 → **300**，Primitives 63 → **64**，合计 334 → **335**）。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` 设计系统（`components/ui/card.tsx` / `button.tsx` / `tone.ts` / `shared/status/status-visuals.ts`） | E 类方案 §七之二 #1（批 0b）；能力清单 B 治理线 | **全量前端套件 192 文件 / 1401 用例 passed（exit 0）**；三轴纯增补取证（Card 0 删除行 / Button 唯一删除行 = `className`）；20 槽位等价脚本 `差异数 = 0`；九项设计门禁 exit 0 | `docs/design/修改方案-E类-2026-09-27.md` §七之二（五）新增「批 0b 交付与核验」（含范围缺口与 3 项待裁）；`apps/frontend/COMPONENTS.md` 再生 |
+
 ### 前端设计治理——2026-09-28 十二项裁决的「小项」执行：宪法 v2.4（§4.5 胶囊例外）+ 扩生成器置 `deprecated` + 删数留结论 + 删死 mock
 
 > 四项裁决（#4 / #7 / #9 / #11）落地，**零行为变更、零视觉变更**；`#7` 附带解除一处工具互斥。沿线记录：`docs/design/修改方案-E类-2026-09-27.md` §七之二。
