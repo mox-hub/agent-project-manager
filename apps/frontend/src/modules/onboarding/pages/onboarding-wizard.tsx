@@ -534,7 +534,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-140">
+      <DialogContent className="sm:max-w-xl">
         {/* 步骤条（可点击回跳已走过的步骤；未来步骤禁用）——受控 value，导航走 goToStep */}
         <Stepper value={state.currentStep + 1} className="mb-6">
           <StepperNav>

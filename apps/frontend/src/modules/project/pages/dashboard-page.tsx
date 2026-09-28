@@ -105,7 +105,7 @@ function TeamDialog({ data, open, onClose }: { data: DashboardOverview['team']; 
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="size-4" />
@@ -143,7 +143,7 @@ function AIDialog({ data, open, onClose }: { data: DashboardOverview['ai']; open
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot className="size-4" />
@@ -174,7 +174,7 @@ function CostDialog({ data, open, onClose }: { data: DashboardOverview['cost']; 
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <DollarSign className="size-4" />
@@ -211,7 +211,7 @@ function BugsDialog({ data, open, onClose }: { data: DashboardOverview['delivery
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bug className="size-4" />
@@ -232,7 +232,7 @@ function TasksDialog({ data, open, onClose }: { data: DashboardOverview['deliver
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckSquare className="size-4" />
@@ -263,7 +263,7 @@ function HealthDialog({ data, open, onClose }: { data: DashboardOverview['health
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Activity className="size-4" />
@@ -301,7 +301,7 @@ function RisksDialog({ data, open, onClose }: { data: DashboardOverview['risks']
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
+      <DialogContent className="sm:max-w-xl max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="size-4" />
