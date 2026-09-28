@@ -25,6 +25,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
@@ -182,108 +183,110 @@ function AcceptanceCard({
   const riskLevel = acceptance.auditReport?.riskLevel;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-3 space-y-2">
-      <div className="flex items-center gap-2">
-        <Icon size={14} className="text-accent-purple shrink-0" />
-        <div className="flex-1 min-w-0">
-          <Link
-            to={`/app/acceptance/${acceptance.id}`}
-            className="text-sm font-medium truncate hover:underline flex items-center gap-1"
-          >
-            <span className="truncate">
-              {acceptance.title || t('acceptance.titleFallback', { id: acceptance.id.slice(0, 8) })}
-            </span>
-            <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
-          </Link>
-          <div className="text-3xs text-muted-foreground flex items-center gap-1.5">
-            <span>{t(`acceptance.completionType.${acceptance.completionType}`)}</span>
-            <span>·</span>
-            <span className={statusColor}>
-              {t(`acceptance.status.${acceptance.status}`)}
-            </span>
-            {isActiveAcceptance(acceptance) && (
-              <Badge variant="secondary" className="text-3xs px-1 py-0">
-                {t('acceptance.activeBadge')}
-              </Badge>
+    <Card variant="outline" inset="sm">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Icon size={14} className="text-accent-purple shrink-0" />
+          <div className="flex-1 min-w-0">
+            <Link
+              to={`/app/acceptance/${acceptance.id}`}
+              className="text-sm font-medium truncate hover:underline flex items-center gap-1"
+            >
+              <span className="truncate">
+                {acceptance.title || t('acceptance.titleFallback', { id: acceptance.id.slice(0, 8) })}
+              </span>
+              <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
+            </Link>
+            <div className="text-3xs text-muted-foreground flex items-center gap-1.5">
+              <span>{t(`acceptance.completionType.${acceptance.completionType}`)}</span>
+              <span>·</span>
+              <span className={statusColor}>
+                {t(`acceptance.status.${acceptance.status}`)}
+              </span>
+              {isActiveAcceptance(acceptance) && (
+                <Badge variant="secondary" className="text-3xs px-1 py-0">
+                  {t('acceptance.activeBadge')}
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* criteria 进度 + 审计风险点 */}
+        {criteria.length > 0 && (
+          <div className="flex items-center gap-2 text-3xs text-muted-foreground">
+            <div className="h-1 flex-1 overflow-hidden rounded-xs bg-muted">
+              <div
+                className="h-full bg-accent-green"
+                style={{ width: `${Math.round((passedCount / criteria.length) * 100)}%` }}
+              />
+            </div>
+            <span>{t('acceptanceDetail.criteria.progress', { passed: passedCount, total: criteria.length })}</span>
+            {blockingCriteria > 0 && (
+              <span className="text-accent-red">⚑{blockingCriteria}</span>
             )}
+            {riskLevel === 'red' && <span className="text-accent-red">●</span>}
+            {riskLevel === 'yellow' && <span className="text-accent-yellow">●</span>}
           </div>
-        </div>
+        )}
+
+        <EvidencePreview acceptance={acceptance} />
+
+        {acceptance.rejectionReason && (
+          <div className="text-2xs text-accent-red flex gap-1 items-start">
+            <AlertCircle size={12} className="shrink-0 mt-0.5" />
+            <span>{t('acceptance.rejectionReason', { reason: acceptance.rejectionReason })}</span>
+          </div>
+        )}
+        {acceptance.waiverReason && (
+          <div className="text-2xs text-muted-foreground flex gap-1 items-start">
+            <span>{t('acceptance.waiverReason', { reason: acceptance.waiverReason })}</span>
+          </div>
+        )}
+
+        {canReview && (
+          <div className="flex gap-1.5 pt-1">
+            <Button
+              size="sm"
+              variant="default"
+              className="bg-accent-green hover:bg-accent-green/90 text-white"
+              onClick={onAccept}
+              disabled={isAccepting || isRejecting}
+            >
+              {isAccepting ? <Spinner className="size-3 mr-1 text-inherit" /> : <CheckCircle2 size={12} className="mr-1" />}
+              {t('acceptance.accept')}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-accent-red border-accent-red/50"
+              onClick={onReject}
+              disabled={isAccepting || isRejecting}
+            >
+              <XCircle size={12} className="mr-1" />
+              {t('acceptance.reject')}
+            </Button>
+          </div>
+        )}
+
+        {acceptance.status === 'passed' && (
+          <div className="flex items-center gap-1 text-2xs text-accent-green">
+            <CheckCircle2 size={12} />
+            {t('acceptance.acceptedAt', {
+              time: acceptance.completedAt ? new Date(acceptance.completedAt).toLocaleString() : '',
+            })}
+          </div>
+        )}
+        {acceptance.status === 'failed' && (
+          <div className="flex items-center gap-1 text-2xs text-accent-red">
+            <XCircle size={12} />
+            {t('acceptance.rejectedAt', {
+              time: acceptance.rejectedAt ? new Date(acceptance.rejectedAt).toLocaleString() : '',
+            })}
+          </div>
+        )}
       </div>
-
-      {/* criteria 进度 + 审计风险点 */}
-      {criteria.length > 0 && (
-        <div className="flex items-center gap-2 text-3xs text-muted-foreground">
-          <div className="h-1 flex-1 overflow-hidden rounded-xs bg-muted">
-            <div
-              className="h-full bg-accent-green"
-              style={{ width: `${Math.round((passedCount / criteria.length) * 100)}%` }}
-            />
-          </div>
-          <span>{t('acceptanceDetail.criteria.progress', { passed: passedCount, total: criteria.length })}</span>
-          {blockingCriteria > 0 && (
-            <span className="text-accent-red">⚑{blockingCriteria}</span>
-          )}
-          {riskLevel === 'red' && <span className="text-accent-red">●</span>}
-          {riskLevel === 'yellow' && <span className="text-accent-yellow">●</span>}
-        </div>
-      )}
-
-      <EvidencePreview acceptance={acceptance} />
-
-      {acceptance.rejectionReason && (
-        <div className="text-2xs text-accent-red flex gap-1 items-start">
-          <AlertCircle size={12} className="shrink-0 mt-0.5" />
-          <span>{t('acceptance.rejectionReason', { reason: acceptance.rejectionReason })}</span>
-        </div>
-      )}
-      {acceptance.waiverReason && (
-        <div className="text-2xs text-muted-foreground flex gap-1 items-start">
-          <span>{t('acceptance.waiverReason', { reason: acceptance.waiverReason })}</span>
-        </div>
-      )}
-
-      {canReview && (
-        <div className="flex gap-1.5 pt-1">
-          <Button
-            size="sm"
-            variant="default"
-            className="bg-accent-green hover:bg-accent-green/90 text-white"
-            onClick={onAccept}
-            disabled={isAccepting || isRejecting}
-          >
-            {isAccepting ? <Spinner className="size-3 mr-1 text-inherit" /> : <CheckCircle2 size={12} className="mr-1" />}
-            {t('acceptance.accept')}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-accent-red border-accent-red/50"
-            onClick={onReject}
-            disabled={isAccepting || isRejecting}
-          >
-            <XCircle size={12} className="mr-1" />
-            {t('acceptance.reject')}
-          </Button>
-        </div>
-      )}
-
-      {acceptance.status === 'passed' && (
-        <div className="flex items-center gap-1 text-2xs text-accent-green">
-          <CheckCircle2 size={12} />
-          {t('acceptance.acceptedAt', {
-            time: acceptance.completedAt ? new Date(acceptance.completedAt).toLocaleString() : '',
-          })}
-        </div>
-      )}
-      {acceptance.status === 'failed' && (
-        <div className="flex items-center gap-1 text-2xs text-accent-red">
-          <XCircle size={12} />
-          {t('acceptance.rejectedAt', {
-            time: acceptance.rejectedAt ? new Date(acceptance.rejectedAt).toLocaleString() : '',
-          })}
-        </div>
-      )}
-    </div>
+    </Card>
   );
 }
 

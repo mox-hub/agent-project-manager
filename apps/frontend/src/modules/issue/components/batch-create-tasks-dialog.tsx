@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCreateTask } from '../hooks/use-project-tasks';
 import type { CreateTaskRequest } from '../api/issue-api';
@@ -141,44 +142,46 @@ function ManualBatchCreate({ tasks, onTasksChange }: {
         <ScrollArea className="h-75">
           <div className="space-y-2 pr-4">
             {tasks.map((task, index) => (
-              <div key={task.id} className="flex gap-2 items-start p-3 border rounded-lg bg-card">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                  {index + 1}
-                </span>
-                <div className="flex-1 space-y-2">
-                  <Input
-                    placeholder="Task title"
-                    value={task.title}
-                    onChange={(e) => updateTask(task.id, 'title', e.target.value)}
-                    className="h-8"
-                  />
-                  <div className="flex gap-2">
-                    <select
-                      className="h-8 rounded-md border border-input bg-background px-2 text-sm"
-                      value={task.priority}
-                      onChange={(e) => updateTask(task.id, 'priority', e.target.value)}
-                    >
-                      {PRIORITIES.map(p => (
-                        <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-                      ))}
-                    </select>
+              <Card key={task.id} variant="outline" inset="sm">
+                <div className="flex gap-2 items-start">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                    {index + 1}
+                  </span>
+                  <div className="flex-1 space-y-2">
                     <Input
-                      placeholder="Description (optional)"
-                      value={task.description}
-                      onChange={(e) => updateTask(task.id, 'description', e.target.value)}
-                      className="h-8 flex-1"
+                      placeholder="Task title"
+                      value={task.title}
+                      onChange={(e) => updateTask(task.id, 'title', e.target.value)}
+                      className="h-8"
                     />
+                    <div className="flex gap-2">
+                      <select
+                        className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                        value={task.priority}
+                        onChange={(e) => updateTask(task.id, 'priority', e.target.value)}
+                      >
+                        {PRIORITIES.map(p => (
+                          <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                        ))}
+                      </select>
+                      <Input
+                        placeholder="Description (optional)"
+                        value={task.description}
+                        onChange={(e) => updateTask(task.id, 'description', e.target.value)}
+                        className="h-8 flex-1"
+                      />
+                    </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeTask(task.id)}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeTask(task.id)}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              </Card>
             ))}
           </div>
         </ScrollArea>
