@@ -21,6 +21,23 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——E 类交接单执行轮（2026-09-28 第六轮）：豁免机制落地 + padding zero 档八处落轴；两项「可先做」被实测证伪转决策简报
+
+> 执行 `docs/design/交接-E类剩余工作-2026-09-28.md`，总账见 `docs/design/修改方案-E类-2026-09-27.md` **§七之七**。三笔提交（显式路径、未 push）：`cf6772c4`（任务 E）、`207fee56`（任务 A）、本轮 docs。**任务 C/D 零迁移**——实测发现交接单「label 40 处无争议可先做」「17 处可收编 StatusIconFrame」均存在无损性缺口，按证据转人裁简报（§3.4 纪律），不硬迁。
+
+| 项 | 内容 | 证据要点 |
+|---|---|---|
+| 任务 E（交付） | `design-governance.allowlist.json` 豁免机制：schema + 机器实现 + 首条登记（design-system，宪法 A.1 A6 同源、90 天滚动复登）；fail-closed（坏行/超期 → lint 抛错；过期自动失效） | 全仓告警 2287→2102（−185 = design-system 子树三规则告警实测）；负向实测超期登记 → eslint 装载即抛错 |
+| 任务 A（交付） | `Button.padding` 补 zero 档 `"p-0": "h-auto gap-0 border-0 p-0"`（gap/border 是参与几何的基线残留，`h-auto` 下边框 +2px 必须归零）；八处零内距裸钮落轴 | 双证：twMerge 终串现场打印 + Playwright 真实浏览器七对盒几何逐对相等（末对 0.02px 亚像素舍入）；button.test 72 绿；全仓告警 2102→2094、裸 button 287→279 |
+| 任务 B（简报） | 圆角钳位实为**两档**（xs/icon-xs 8px），sm/icon-sm 的 min(…,10px) 在默认主题 = rounded-md 不生效——交接单「四档」修正；被卡量级由「26 处」修正为个位数（h-8 系可直走 sm） | token 链逐层复算（`--radius-md`=`--radius-control`=10px）+ 行级近似计数；方案 (a) 改钳位（消费面 xs 65 行 + icon-xs 26 行）/(b) 维持+宪法豁免，须人批 |
+| 任务 C（证伪→简报） | 「text-xs 两族 40 处可先做」不成立：复算 42 处，探针实测块级表单行语境迁移后**输入框上移 1.5px**（FieldLabel 基线 flex 为块级，裸 label 是 inline）；flex 行仅 +0.5px 行盒。阻断 1 复算：`content-text-secondary` 与 `muted-foreground` **两主题皆不逐值等** | 四场景 Playwright 实测表（§七之七（五））；三选项待裁（接受位移 / 立 inline 窄档 / 块流豁免） |
+| 任务 D（证伪→简报） | 「17 处收编 StatusIconFrame」零无损：5 处带自定义时长 2s/3s（Frame 无时长档，收编即能力丢失，与 §七之三 #2 Loader 2s 同型）；其余为裸图标语境，收编=加 tone 浅底圆框的可见变化；Frame 本体实居 `shared/status/`（交接单误写 `ui/`），扩展正则前须先决其位置 | 逐处审计分类表（§七之七（六））；须人裁形态统一 + 时长档 |
+| 任务 F（评估） | §19 入宪维持阻塞：三规则存量 2085（naked 493 / override 1548 / adhoc 44），转 error 须逐处 §7 归因级裁决 + 90 天滚动登记，A.3 语义不变 | 实测计数；正确时点在数轮清剿战役之后 |
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend` 设计系统（eslint-rules + 8 个生产文件 + button 轴） | E 类方案 §七之七；能力清单 B 治理线 | `tsc -b` exit 0；`button.test` 72 绿；filter-panel/project-list 关联测试绿；改动文件 eslint 0 error；Playwright 盒几何七对逐对相等 | `docs/design/PRINCIPLES.md` 附录 A.1 新增机制说明 + A6 行（成对改动）；`docs/design/修改方案-E类-2026-09-27.md` 新增 §七之七（四处修正/三份简报/待裁增量） |
+
 ### 前端设计治理——2026-09-28 第二轮三项裁决落地：缺档补齐政策（批 0c 开工）+ spin 收口 + 逃生舱收窄；并迁画廊加载态样本
 
 > 裁决记录见 `docs/design/修改方案-E类-2026-09-27.md` **§七之三**。三项**均采纳协调方建议**；同轮内协调方**自我更正两条**（见下）。**批 0c 已派工**（3 个代理：`Button` 内距+字阶轴 / `Card` 内距轴 / 逃生舱收窄），交付另行入账。
