@@ -27,10 +27,12 @@ const tabsListVariants = cva(
     variants: {
       variant: {
         default: "bg-muted/70 backdrop-blur-xs border border-border/50",
-        line: "gap-1 bg-transparent",
         // 项目扩展变体：胶囊滑块页签（delivery 风格）
         segmented:
           "relative gap-0 rounded-full border border-border/60 bg-background/80 backdrop-blur-sm p-0.5 shadow-xs group-data-[orientation=horizontal]/tabs:h-8 dark:bg-input/30",
+        // line：详情页 body 内的次级切换——下划线贴边六件套内聚为默认（F 类 J7/F5.1），
+        // 消费面无需再手写 w-full/justify-start/border-b/p-0/h-auto
+        line: "w-full justify-start gap-1 border-b bg-transparent p-0 group-data-horizontal/tabs:h-auto",
       },
     },
     defaultVariants: {

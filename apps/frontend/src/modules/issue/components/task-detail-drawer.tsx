@@ -1102,7 +1102,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
 
               {/* Tabbed Section: Execution, Approvals, AI Suggestion, Discussion, Documents */}
               <Tabs defaultValue="execution" className="mt-4">
-                <TabsList variant="line" className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto">
+                <TabsList variant="line">
                   <TabsTrigger value="execution" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Activity className="mr-1 h-3 w-3" />
                     {t('task.detailDrawer.execution')}
