@@ -25,12 +25,14 @@ function Card({
       className={cn(
         "group/card flex flex-col gap-3 overflow-hidden rounded-xl bg-card py-3.5 text-sm text-card-foreground shadow-xs ring-1 ring-border/50 [--card-spacing:--spacing(4)] has-[>img:first-child]:pt-0 data-[size=sm]:py-2.5 data-[size=sm]:gap-2 data-[size=sm]:[--card-spacing:--spacing(3)] *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
         // —— E 类批 0 增补（2026-09-27）：纯增补，variant=default 时下面整行不生效 ——
-        // 归纳自 27 个文件 / 40 行手写卡片壳（口径：同一 class 串内「圆角档 + bg-card」
-        // 且未 import ui/card）。主形态 = 「描边 + 无投影 + rounded-lg」23 行 / 16 文件：
-        // 手写壳 40/40 用 border 描边（0/40 用 ring），30/40 无 shadow，
-        // 26/40 用 rounded-lg——正是 §4.5「卡片/面板 = rounded-lg」那一档。
+        // 归纳自手写卡片壳的形态聚类（口径：同一 class 串内「圆角档 + bg-card」且未
+        // import ui/card）。主形态 = 「描边 + 无投影 + rounded-lg」——正是 §4.5
+        // 「卡片/面板 = rounded-lg」那一档；手写壳以 border 描边为主（几乎不用 ring），
+        // 多数无 shadow。**本注释刻意不写逐类「N 行 / M 文件」先例数**（2026-09-28
+        // 裁决「删数留结论」）：同型计数在不同口径下不可复现——本仓实测同一靶子出现过
+        // 「39 行」与「40 行」两种结果，写进源码即变成无法核对的噪声。
         // 故 outline 一次给出「描边 + 去投影 + 卡片圆角」三件事；default 保留
-        // rounded-xl + ring-1 + shadow-xs 不动，既有 55 个消费方渲染不变。
+        // rounded-xl + ring-1 + shadow-xs 不动，既有 55 个消费方渲染不变（已复算：55）。
         // 置于 className 之前，保留调用方的最终覆盖权。
         variant === "outline" &&
           "rounded-lg border border-border ring-0 shadow-none",
