@@ -1,17 +1,18 @@
 /**
- * 运行详情面板 —— CLI 工具运行与内置 AI 助理运行共用的大号 Dialog（对照运行详情设计稿）。
+ * 运行详情面板 —— CLI 工具运行与内置 AI 助理运行共用的右滑 Sheet（对照运行详情设计稿）。
  * 头部（状态/目标/tokens/费用）→ 错误横幅 → 产出 chips → 时间轴 →
  * 主区（事件流/原始日志页签）+ 右栏（步骤详情 / 运行信息面板）。
  * 数据：run 详情（steps 优先）+ events 流水轮询 + token 原始日志轮询。
+ * 容器：日志流归 Sheet 不归 Dialog（F 类 F3.1 裁决，2xl 档）。
  */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, Copy, Coins, FolderKanban, Info, ScrollText, TriangleAlert } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { StatusPill } from '@/components/ui/status-pill';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
@@ -196,10 +197,10 @@ export function RunDetailsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        keepDefaultWidth={false}
-        className="flex h-[85vh] max-w-5xl flex-col gap-0 overflow-hidden p-0"
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl"
       >
         {!data ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3">
@@ -216,7 +217,7 @@ export function RunDetailsDialog({
                 </p>
               </>
             )}
-            <DialogTitle className="sr-only">{t('runDetails.title')}</DialogTitle>
+            <SheetTitle className="sr-only">{t('runDetails.title')}</SheetTitle>
           </div>
         ) : (
           <>
@@ -224,9 +225,9 @@ export function RunDetailsDialog({
             <div className="shrink-0 space-y-1.5 border-b p-4 pr-12">
               <div className="flex items-center gap-2">
                 <StatusPillFor status={data.status} />
-                <DialogTitle className="min-w-0 truncate text-sm font-medium">
+                <SheetTitle className="min-w-0 truncate text-sm font-medium">
                   {data.goal}
-                </DialogTitle>
+                </SheetTitle>
               </div>
               <div className="flex items-center gap-3 text-2xs text-content-text-muted">
                 {subjectLabel ? (
@@ -397,8 +398,8 @@ export function RunDetailsDialog({
             </div>
           </>
         )}
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 
