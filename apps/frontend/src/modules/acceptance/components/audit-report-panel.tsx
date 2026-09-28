@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import type { AuditReport, AuditItem } from '../api/acceptance-api';
 
 interface Props {
@@ -159,7 +160,7 @@ function AuditItemCard({ item, showApply, onApply, loading }: AuditItemCardProps
   const { t } = useTranslation();
 
   return (
-    <div className="rounded-lg border bg-card p-3">
+    <Card variant="outline" inset="sm">
       <div className="flex items-start gap-3">
         <div className="flex-1 space-y-1">
           <p className="text-sm font-medium">{item.content}</p>
@@ -186,6 +187,6 @@ function AuditItemCard({ item, showApply, onApply, loading }: AuditItemCardProps
           </Button>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
