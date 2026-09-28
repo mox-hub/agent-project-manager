@@ -8,6 +8,20 @@
       "reason": "设计系统展示页的存在意义就是陈列 token 名与各档对照，必然出现规范禁止的裸控件/覆盖类/对照色（宪法附录 A.1 A4 同源：A4 管文本层 check-*.mjs，本条把同一裁决落到 AST 层 ESLint 三规则）",
       "owner": "APM 前端设计治理",
       "expiresAt": "2026-12-27"
+    },
+    {
+      "rule": "no-naked-controls",
+      "file": "src/shared/components/markdown-view.tsx",
+      "reason": "react-markdown GFM 任务清单 checkbox 的内容渲染（- [x] 语法产出的只读展示元素，非用户交互控件）；替换 ui/checkbox 会改变 markdown 语义渲染且无交互收益",
+      "owner": "APM 前端设计治理",
+      "expiresAt": "2026-12-27"
+    },
+    {
+      "rule": "no-naked-controls",
+      "file": "src/shared/mdx/components/mdx-table.tsx",
+      "reason": "MDX prose 表格内容渲染场景（文档正文的 markdown 表格，非 UI 数据表格）；换 ui/table 套件会破坏 prose 排版语义",
+      "owner": "APM 前端设计治理",
+      "expiresAt": "2026-12-27"
     }
   ]
 }

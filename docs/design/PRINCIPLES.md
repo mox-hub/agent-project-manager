@@ -538,6 +538,7 @@ AI 会话开工前必读（由 `frontend-page` skill 强制）。
 | # | 范围 | 豁免规则 | 原因 | 清除计划 |
 |---|------|---------|------|---------|
 | A6 | `src/modules/design-system/**` | `*`（ESLint 三规则，登记于 `design-governance.allowlist.json`） | 展示页陈列 token 名与各档对照，必然出现规范禁止的形态——同 A4 的展示页属性；A4 管 `check-*.mjs` 文本层，本条把同一裁决落到 AST 层 | 90 天滚动复登记（`expiresAt` 强制）；展示页属性不变则续登 |
+| A7 | `src/shared/components/markdown-view.tsx`、`src/shared/mdx/components/mdx-table.tsx` | `no-naked-controls`（登记于 `design-governance.allowlist.json`，2026-09-28 存量清剿轮） | 均为**内容渲染**场景：前者是 react-markdown GFM 任务清单 checkbox 的只读展示（`- [x]` 语法产物，非交互控件）；后者是 MDX prose 表格（文档正文 markdown 表格，非 UI 数据表格）——替换原子组件会破坏 markdown/prose 语义渲染 | 90 天滚动复登记（`expiresAt` 强制）；渲染属性不变则续登 |
 
 ### A.2 交互态裁决登记（非豁免，是决策留档）
 
