@@ -52,8 +52,31 @@ function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
   return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
 }
 
-function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
-  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
+/**
+ * 尺寸档（E 类第二轮增补，2026-09-28 第八轮裁决 #1-⑤，纯增补 default 不变）。
+ * 归因出处：`docs/design/修改方案-E类-2026-09-27.md` §七之九 #1。`sm` 档逐类取自
+ * assistant-model-picker:66 的实测形态（`inline-flex h-7 items-center gap-1
+ * rounded-md px-2 text-2xs`）——只收**结构性**类（定高/内距/字阶/圆角/flex 排布），
+ * 该调用方特有的 `max-w-30 shrink-0`、配色与 transition/hover 类**不入档**
+ * （它们不是「小触发钮」形态的公共部分，仍由调用方 className 表达）。
+ * default 档不生成任何类 ⇒ 与原裸透传输出逐字节一致。
+ */
+function DropdownMenuTrigger({
+  size = "default",
+  className,
+  ...props
+}: MenuPrimitive.Trigger.Props & { size?: "default" | "sm" }) {
+  return (
+    <MenuPrimitive.Trigger
+      data-slot="dropdown-menu-trigger"
+      className={
+        size === "sm"
+          ? cn("inline-flex h-7 items-center gap-1 rounded-md px-2 text-2xs", className)
+          : className
+      }
+      {...props}
+    />
+  )
 }
 
 function DropdownMenuContent({

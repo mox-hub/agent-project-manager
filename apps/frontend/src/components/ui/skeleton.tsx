@@ -4,11 +4,29 @@ import { cn } from "@/lib/utils"
    Base Skeleton
    ============================================ */
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+/**
+ * 高度档（E 类第二轮增补，2026-09-28 第八轮裁决 #1-④，纯增补 default 不变）。
+ * 归因出处：`docs/design/修改方案-E类-2026-09-27.md` §七之九 #1；逐值取自清剿报告
+ * `docs/design/清剿报告-E类四桶-2026-09-28.md` 留报——骨架条高度是视觉本体属性，
+ * 不可下沉内层（桶2 留报：linear-projects-table `h-14`），裁决点名 `h-14`/`h-32`
+ * 两档。档名即类值（同 ui/button padding 轴先例）；default 档不生成任何类，
+ * 既有渲染逐字节不变。后续新档须先有生产实测先例再扩（「无证据不造档」）。
+ */
+type SkeletonHeight = "default" | "h-14" | "h-32"
+
+function Skeleton({
+  className,
+  height = "default",
+  ...props
+}: React.ComponentProps<"div"> & { height?: SkeletonHeight }) {
   return (
     <div
       data-slot="skeleton"
-      className={cn("animate-pulse rounded-md bg-muted", className)}
+      className={cn(
+        "animate-pulse rounded-md bg-muted",
+        height !== "default" && height,
+        className
+      )}
       {...props}
     />
   )

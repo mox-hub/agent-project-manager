@@ -30,10 +30,36 @@ const badgeVariants = cva(
         "3xs": "text-3xs",
         xs: "text-xs",
       },
+      // —— E 类第二轮增补（2026-09-28 第八轮裁决 #1-⑥）：accent 色轴 ——
+      // 裁决原文：accent-* → 语义色档，**逐值同源**（不引入新色）。出处：
+      // `docs/design/修改方案-E类-2026-09-27.md` §七之九 #1。
+      // 归因（生产面 Badge 的 accent-* 覆盖实测，两类配对）：
+      // · 弱底配对（主流）：`bg-accent-{c}/10 text-accent-{c}` —— models-tab、
+      //   prompts-section、route-preview 等多处；
+      // · 实底配对（裁决点名）：`bg-accent-{c} hover:bg-accent-{c}` —— github-panel
+      //   PR 状态徽标（裁决 #1-⑥ 点名的取证行）。
+      // 色域只收 Badge 级实测有量级的 green / blue / purple 三色：yellow / orange 的
+      // Badge 形态都带 border-* 与 /15 一类个性化组合，不是「同值类组合」，不硬塞
+      // （沿用批 0 的「不硬塞」清单纪律）；red 未在 Badge 上出现，不造档。
+      // 命名：轴名与档名**避开状态语境词表**（§七之八（四）spinner `tone`→`color`
+      // 正名先例——no-adhoc-tone 规则对 ui/ 原子层同样生效，语境词表含 tone/status），
+      // 用 CSS color 语义的 `color` + 色相词；`-solid` 后缀区分实底配对与弱底配对。
+      // ⚠️ 与 tone.ts 五档状态词表的关系：本轴是**分类/装饰强调**色，不是状态 tone
+      // （purple 不入 tone 词表的既有裁决 §七之四 3-3 同口径）。
+      // 默认档为空串 ⇒ 既有全部 variant × fontSize 档输出逐字节不变（纯增补）。
+      color: {
+        default: "",
+        green: "bg-accent-green/10 text-accent-green",
+        blue: "bg-accent-blue/10 text-accent-blue",
+        purple: "bg-accent-purple/10 text-accent-purple",
+        "green-solid": "bg-accent-green hover:bg-accent-green",
+        "purple-solid": "bg-accent-purple hover:bg-accent-purple",
+      },
     },
     defaultVariants: {
       variant: "default",
       fontSize: "default",
+      color: "default",
     },
   }
 )
@@ -41,8 +67,9 @@ const badgeVariants = cva(
 function Badge({
   className,
   variant = "default",
-  // fontSize 是只给 cva 用的轴，必须在此解构（否则透传 DOM）。
+  // fontSize / color 是只给 cva 用的轴，必须在此解构（否则透传 DOM 属性）。
   fontSize = "default",
+  color = "default",
   render,
   ...props
 }: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
@@ -50,7 +77,7 @@ function Badge({
     defaultTagName: "span",
     props: mergeProps<"span">(
       {
-        className: cn(badgeVariants({ variant, fontSize }), className),
+        className: cn(badgeVariants({ variant, fontSize, color }), className),
       },
       props
     ),

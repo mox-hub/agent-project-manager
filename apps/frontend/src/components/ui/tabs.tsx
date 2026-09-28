@@ -42,13 +42,27 @@ const tabsListVariants = cva(
 function TabsList({
   className,
   variant = "default",
+  width = "default",
   ...props
-}: TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>) {
+}: TabsPrimitive.List.Props &
+  VariantProps<typeof tabsListVariants> & {
+    /**
+     * 全宽档（E 类第二轮增补，2026-09-28 第八轮裁决 #1-④，纯增补 default 不变）：
+     * `full` = `w-full`，接管基线 `w-fit`（同组类 twMerge 后者胜出）。归因：
+     * 生产面 TabsList 上的 `w-full` 覆盖（等宽分页签形态），此前只能 className 表达。
+     * 出处：`docs/design/修改方案-E类-2026-09-27.md` §七之九 #1。
+     */
+    width?: "default" | "full"
+  }) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
       data-variant={variant}
-      className={cn(tabsListVariants({ variant }), className)}
+      className={cn(
+        tabsListVariants({ variant }),
+        width === "full" && "w-full",
+        className
+      )}
       {...props}
     >
       {variant === "segmented" && (
