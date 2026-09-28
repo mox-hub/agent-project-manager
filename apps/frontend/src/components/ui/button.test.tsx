@@ -118,6 +118,80 @@ describe('Button 批 0 增补档（语义与既有档一致）', () => {
   );
 });
 
+describe('Button tone 轴（E 类批 0b 增补，语义与既有档一致）', () => {
+  // 口径与既有用例一致：§18.2 明令**不断言 className**（jsdom 也不执行 Tailwind），
+  // 故这里只验三件事——(1) tone 不改语义/交互/可访问名；(2) data-tone 的挂载接线
+  // 正确（tone 色类靠它拿特异性，属性一丢色即失效）；(3) 默认档不落属性（纯增补）。
+
+  it.each(['info', 'danger'] as const)(
+    'tone=%s 保留文字可访问名且点击照常冒泡',
+    async (tone) => {
+      const onClick = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <Button variant="ghost" tone={tone} onClick={onClick}>
+          移除
+        </Button>,
+      );
+
+      await user.click(screen.getByRole('button', { name: '移除' }));
+
+      expect(onClick).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(['info', 'danger'] as const)(
+    'tone=%s 挂载 data-tone（tone 色类的特异性依赖此属性）',
+    (tone) => {
+      render(
+        <Button variant="ghost" tone={tone}>
+          移除
+        </Button>,
+      );
+
+      expect(screen.getByRole('button', { name: '移除' })).toHaveAttribute(
+        'data-tone',
+        tone,
+      );
+    },
+  );
+
+  it('默认档不落 data-tone：既有用法的 DOM 零变化（纯增补）', () => {
+    render(<Button>确定</Button>);
+
+    expect(screen.getByRole('button', { name: '确定' })).not.toHaveAttribute(
+      'data-tone',
+    );
+  });
+
+  it('tone 与 variant 正交：ghost + danger 同时生效且不吞可访问名', () => {
+    render(
+      <Button variant="ghost" tone="danger" aria-label="删除工单">
+        删除工单
+      </Button>,
+    );
+
+    const btn = screen.getByRole('button', { name: '删除工单' });
+    expect(btn).toBeEnabled();
+    expect(btn).toHaveAttribute('data-tone', 'danger');
+  });
+
+  it('tone 不影响禁用语义', async () => {
+    const onClick = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <Button tone="danger" disabled onClick={onClick}>
+        删除
+      </Button>,
+    );
+
+    const btn = screen.getByRole('button', { name: '删除' });
+    expect(btn).toBeDisabled();
+    await user.click(btn);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+});
+
 describe('Button 交互（§18.2 点击/键盘/受控回调）', () => {
   it('点击触发 onClick 一次', async () => {
     const onClick = vi.fn();

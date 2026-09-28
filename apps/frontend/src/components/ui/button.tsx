@@ -61,10 +61,40 @@ const buttonVariants = cva(
         "icon-2xs": "size-5",
         "icon-2sm": "size-7",
       },
+      // —— E 类批 0b 增补（2026-09-28）：语义色 tone 轴 ——
+      // 立项与靶子口径见 `docs/design/修改方案-E类-2026-09-27.md`（§七之二 #1「批 0b 能力
+      // 二次补档」）。**本注释刻意不写逐档先例数**（2026-09-28 裁决「删数留结论」）。
+      //
+      // 值域只收「生产裸 <button> 实测有量级证据、且已被 E 类方案 §19.4/§19.5 点名」的语义档：
+      //   · info   = 信息/中性动作（accent-blue）
+      //   · danger = 危险/破坏性动作（accent-red）
+      // 刻意**不设** success / warning（实测零先例 ⇒ 依「无证据不造档」不立档），
+      // 也刻意**不设** accent-purple（实测确有量级，但紫不在 tone 词表内，属词表扩容，
+      // 已上呈人裁）。要补成功/警告档时，须先有先例，再按下方同名规则追加。
+      //
+      // 为何写成 `data-[tone=…]:` 作用域而不是裸色类：Tailwind 同一 utility 的胜出由
+      // **样式表内规则先后**决定，不由 className 书写顺序决定；本仓构建产物实测
+      // `text-muted-foreground` 排在所有 accent 色之后 ⇒ 若 tone 与任何设色的 variant
+      // （quiet / ghost / destructive …）并存，裸色类会被静默吞掉。加一档 `data-tone`
+      // 属性把选择器特异性从 (0,1,0) 提到 (0,2,0)（hover 态 (0,3,0)）即可稳压，
+      // 与 size 档既有的 `in-data-[slot=button-group]:` 是同一手法。
+      //
+      // ⚠️ 连带契约：这组类**离开 `data-tone` 属性即为死类**（写了不生效，同幽灵类）。
+      // 属性由下方 `Button` 组件统一挂载，已有测试守卫「非默认档必带属性 / 默认档必不带」。
+      // 后续若把这些类改由 `components/ui/tone.ts` 供给，**必须连同 data 作用域一起搬**，
+      // 否则 tone 会无声失效（§19.5 的 tone 下沉改造请注意此点）。
+      tone: {
+        default: "",
+        info: "data-[tone=info]:text-accent-blue data-[tone=info]:hover:text-accent-blue data-[tone=info]:hover:bg-accent-blue-light",
+        danger:
+          "data-[tone=danger]:text-accent-red data-[tone=danger]:hover:text-accent-red data-[tone=danger]:hover:bg-accent-red-light",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      // 默认档为空串 ⇒ 既有全部 variant × size 档的输出**逐字节不变**（纯增补）。
+      tone: "default",
     },
   }
 )
@@ -79,13 +109,17 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  tone = "default",
   children,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      // tone 档的色类靠本属性拿到特异性（见上方 tone 轴注释）。
+      // 默认档传 undefined ⇒ 属性不落 DOM，既有用法的渲染结果零变化。
+      data-tone={tone === "default" ? undefined : tone}
+      className={cn(buttonVariants({ variant, size, tone, className }))}
       {...props}
     >
       {children}
