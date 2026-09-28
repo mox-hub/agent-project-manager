@@ -3,16 +3,18 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PageHeader, type PageHeaderMetric } from "./page-header";
 
-export type PageShellVariant = 'full' | 'standard' | 'reading';
+export type PageShellVariant = 'full' | 'wide' | 'standard' | 'reading';
 
 const VARIANT_CONTAINER_CLASSES: Record<PageShellVariant, string> = {
   full: 'w-full',
+  wide: 'w-full max-w-7xl mx-auto',
   standard: 'w-full max-w-5xl mx-auto',
   reading: 'w-full max-w-4xl mx-auto',
 };
 
 const VARIANT_PADDING_CLASSES: Record<PageShellVariant, string> = {
   full: 'px-4 sm:px-6 py-4',
+  wide: 'px-4 sm:px-6 py-6 sm:py-8',
   standard: 'px-4 sm:px-6 py-6 sm:py-8',
   reading: 'px-6 sm:px-8 py-8 sm:py-10',
 };
@@ -21,10 +23,14 @@ export interface PageShellProps {
   children: ReactNode;
   className?: string;
   /**
-   * 页面规格变体（DESIGN.md §3.4 规范）：
+   * 页面规格变体（F 类 F1.3 主栏宽度四档总表；DESIGN.md §3.4 转正）：
    * - 'full' (默认): 全宽高密，视口 100% 展开，适合看板、工单列表、甘特图、多 Agent 协作大厅
+   * - 'wide': 聚合宽档（max-w-7xl ~1280px 居中），适合聚合型详情主栏、仪表盘、多卡片网格
    * - 'standard': 舒适限制（max-w-5xl ~1024px 居中），适合设置页、表单配置、管理面板、个人中心
    * - 'reading': 阅读聚焦（max-w-4xl ~896px 黄金阅读宽），适合文档详情阅读、帮助中心、日志审阅
+   *
+   * 注：L2 详情母版（project-detail-frame 等）按 F1.2 结构自管双栏、不走本组件
+   * 居中滚动——其主栏宽度自管 max-w-7xl（同 wide 档），属母版分发而非手写补位。
    */
   variant?: PageShellVariant;
   /**
