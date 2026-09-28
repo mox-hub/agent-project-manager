@@ -21,6 +21,25 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——2026-09-28 十二项裁决的「小项」执行：宪法 v2.4（§4.5 胶囊例外）+ 扩生成器置 `deprecated` + 删数留结论 + 删死 mock
+
+> 四项裁决（#4 / #7 / #9 / #11）落地，**零行为变更、零视觉变更**；`#7` 附带解除一处工具互斥。沿线记录：`docs/design/修改方案-E类-2026-09-27.md` §七之二。
+
+| 项 | 改动 | 验证 |
+|---|---|---|
+| #9（宪法）| `docs/design/PRINCIPLES.md` **v2.3 → v2.4**：§4.5 新增「**chip / toggle 语义的按钮可用胶囊档**」例外，承认既有形态合法（不清退），并**限定语义、禁止泛化**（普通动作按钮仍一律 `rounded-md`）| 版本串各出现 1 次；§11.2 第 3 步**无可同步项**——圆角维度自始无 `check-*.mjs` / ESLint 规则（已 grep 确认）|
+| #7（工具链）| `apps/frontend/scripts/gen-components-md.mjs` 扩 `ENTRY_RE` 解析 `expiresAt`，并以新 `expNote()` 渲染进两张表；`registry.ts` 的 `dropdown-menu` 正式置 `status: 'deprecated', expiresAt: '2026-12-31'`；`COMPONENTS.md` 再生 | 条目数 **334 不变**（无丢失）；`dropdown-menu` 在待裁决清单与完整清单**均显示「清退期限 2026-12-31 · §19.6」**；`check-component-registry` / `check-duplicate` / `check-layers` 均 exit 0 |
+| #4（清噪）| `src/components/ui/button.tsx` 删去逐档「实测先例数」（`quiet 57 处 / 34 文件`、`subtle 48 处 / 30 文件`、`ghost-danger 7 处 / 7 文件`、`icon-2xs 10 处 / 8 文件`、`icon-2sm 6 处 / 6 文件`），**保留「来源＝形态聚类 + 档位语义」结论与全部档位边界说明**；靶子规模改标口径（正则行级 315 / 元素级 314，差 1 为 JSX 注释误命中）| 纯注释改动，**非注释行 = 0** |
+| #11（清噪）| `src/modules/project/pages/project-list-page.test.tsx` 删去死 mock `vi.mock('@/components/view-switcher', …)`（该路径**磁盘不存在**，且页面仅 `import type` 走 `@/shared/components/view-switcher` ⇒ mock 从未生效）| 该测试文件 **1 passed (1)** |
+
+**协调方复算（含一次自我更正）**：裁决记录中「胶囊按钮 35 处 / 27 文件」经复算——**仅小写 `<button>`** 为 **37 处 / 28 文件**，**含 `<Button>`/`<Badge>`** 为 **53 处 / 36 文件**（`<button` 37 / `<Button` 10 / `<Badge` 6），口径 = 生产文件（排除 `components/ui/`、`*.test.*`、`*.stories.*`）中胶囊类名与控件标签的**元素级**共现。原记 35/27 与前者差 **2 处 / 1 文件**（未定位）。首次复算时我把该差异表述为「**不可复现**」并据此落笔宪法，属**取证未竟即定性**，同批更正为「量级同阶、差异属口径/误命中」。宪法条文**不固化数量**（宪法管规则、`COMPONENTS.md` 管清单），只登记两个口径供后人对齐。
+
+**另修一处自身缺陷**：`gen-components-md.mjs` 的 `entryNote()` 自 2026-09-27 起即为**无调用点的死函数**（上一轮我曾改它而它根本不生效）——本轮改为真正被两张表调用的 `expNote()`，死函数删除。
+
+| 模块 | linked_fr | test_evidence | doc_impact |
+|---|---|---|---|
+| `apps/frontend`（设计治理 / 工具链 / 宪法）| E 类方案 §七之二 #4 · #7 · #9 · #11 | `vitest run project-list-page.test.tsx` → 1 passed；三脚本 exit 0；生成器重跑条目数 334 | `docs/design/PRINCIPLES.md` v2.4；`docs/design/修改方案-E类-2026-09-27.md` §七之二（执行状态回填）|
+
 ### 前端设计治理——E 类批 3 唯一实现收口（①②④⑤ 已交付）：`native-select` 改名 `select-field` + 两处「不合流」实物比对结论
 
 > 三笔提交（均显式路径、未 push）：`3f84855e`（40 文件 / +326 −326，纯改名）、`4e22154c`（3 文件 / +41 −3，注释 + registry reason + 生成物）、`ee5c0da4`（1 文件 / +26 −0，纯注释）。**零删除**（`--diff-filter=D` 为空，仅 2 处 `git mv`）；④ `view-switcher` **零改动无 commit**（实测早已是 `SegmentedControl` 薄封装）。

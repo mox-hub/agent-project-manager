@@ -14,6 +14,10 @@
  *   （Buttons / Cards / Forms …）留待批 4 拆分画廊时再细化。
  * - consumers 由 lint 脚本回填，本文件**不写静态值**（防推测值污染 LU 指标）。
  * - review 态必带 reviewBy；逾期须降级 deprecated 或升级 canonical（§19.3 防滥用条款）。
+ * - deprecated 态必带 `expiresAt`（§19.6；由 `check-component-registry.mjs` 机器强制，逾期 CI 失败）。
+ *   书写位置：紧跟 status 之后、review 块之前，如
+ *   `status: 'deprecated', expiresAt: '2026-12-31', review: { … }`；`gen-components-md.mjs`
+ *   与 `check-component-registry.mjs` 均已解析该槽位（2026-09-28 补齐）。
  * - `status: 'standby'` 且带 `review` 数据的条目 = 方案 §七 D 项裁决的
  *   「先标记、不删除，待人工在设计系统页审阅后裁决」集合。
  *
@@ -79,7 +83,7 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'direction', file: 'ui/direction.tsx', section: 'Primitives', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求', proposal: 'delete' } },
   { name: 'document-preview-dialog', file: 'ui/document-preview-dialog.tsx', section: 'App Components', status: 'canonical' },
   { name: 'drawer', file: 'ui/drawer.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'dropdown-menu', file: 'ui/dropdown-menu.tsx', section: 'Primitives', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。故未机械合流（决策 B：差异大先标记后限期迁移）。因 scripts/gen-components-md.mjs 尚不解析 expiresAt，本件暂无法置 deprecated（实测会令 entry 被生成器丢弃并使 lint:registry 失败），故留在 review 限期；迁移指引见 ui/dropdown-menu.tsx 文件头。', proposal: 'merge', target: 'menu' } },
+  { name: 'dropdown-menu', file: 'ui/dropdown-menu.tsx', section: 'Primitives', status: 'deprecated', expiresAt: '2026-12-31', review: { pending: true, reason: '与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。2026-09-28 裁决 A：已扩 gen-components-md.mjs 解析 expiresAt，原先「生成器不认该槽位、写入即被丢弃」的工具互斥**已解除**，本件正式置 deprecated 限期迁移（至 2026-12-31）；迁移指引见 ui/dropdown-menu.tsx 文件头。', proposal: 'merge', target: 'menu' } },
   { name: 'dual-track-metric-pill', file: 'ui/dual-track-metric-pill.tsx', section: 'App Components', status: 'canonical' },
   { name: 'empty-state', file: 'ui/empty-state.tsx', section: 'App Components', status: 'canonical' },
   { name: 'error-boundary', file: 'ui/error-boundary.tsx', section: 'App Components', status: 'canonical' },

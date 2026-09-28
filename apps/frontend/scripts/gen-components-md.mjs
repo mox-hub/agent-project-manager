@@ -34,7 +34,7 @@ const DOC = join(PKG_ROOT, "COMPONENTS.md");
 // ① 解析 registry.ts 的字面量条目（严格单行格式，见 registry.ts 文件头）
 // ---------------------------------------------------------------------------
 const ENTRY_RE =
-  /^\s*\{ name: '([^']+)', file: '([^']+)', section: '([^']+)', status: '([^']+)'(?:, reviewBy: '([^']+)')?(?:, review: \{ pending: true, reason: '([^']+)', proposal: '([^']+)'(?:, target: '([^']+)')? \})? \},?$/;
+  /^\s*\{ name: '([^']+)', file: '([^']+)', section: '([^']+)', status: '([^']+)'(?:, reviewBy: '([^']+)')?(?:, expiresAt: '([^']+)')?(?:, review: \{ pending: true, reason: '([^']+)', proposal: '([^']+)'(?:, target: '([^']+)')? \})? \},?$/;
 
 const src = readFileSync(REGISTRY, "utf8");
 const entries = [];
@@ -47,9 +47,10 @@ for (const line of src.split(/\r?\n/)) {
     section: m[3],
     status: m[4],
     reviewBy: m[5],
-    reason: m[6],
-    proposal: m[7],
-    target: m[8],
+    expiresAt: m[6],
+    reason: m[7],
+    proposal: m[8],
+    target: m[9],
   });
 }
 if (entries.length === 0) {
@@ -97,11 +98,9 @@ function renderPath(file) {
 function esc(s) {
   return String(s).replace(/\|/g, "\\|");
 }
-function entryNote(e) {
-  if (!e.reason) return "—";
-  const proposal = e.proposal ? `【建议 ${e.proposal}${e.target ? ` → ${e.target}` : ""}】` : "";
-  const by = e.reviewBy ? `（裁决期限 ${e.reviewBy}）` : "";
-  return `${proposal}${e.reason}${by}`;
+/** `expiresAt`（§19.6 清退期限）渲染后缀：两处表格的说明列共用，保证机器槽位**可见**。 */
+function expNote(e) {
+  return e.expiresAt ? `（**清退期限 ${e.expiresAt}** · §19.6，逾期 CI 失败）` : "";
 }
 
 const lines = [];
@@ -190,7 +189,7 @@ for (const e of reviewList) {
   push(
     `| ${esc(e.name)} | ${renderPath(e.file)} | ${STATUS_MARK[e.status]} | ${e.proposal || "—"}${
       e.target ? ` → ${e.target}` : ""
-    } | ${esc(e.reason)} | ${e.reviewBy || "—"} |`
+    } | ${esc(e.reason)}${expNote(e)} | ${e.reviewBy || "—"} |`
   );
 }
 push();
@@ -219,7 +218,7 @@ for (const section of sectionsToRender) {
       push(
         `| ${esc(e.name)} | ${renderPath(e.file)} | ${STATUS_MARK[e.status]} | — | ${esc(
           e.reason || "—"
-        )} |`
+        )}${expNote(e)} |`
       );
     }
     push();

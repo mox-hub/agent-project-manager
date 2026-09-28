@@ -22,14 +22,17 @@ const buttonVariants = cva(
         primary: "bg-primary text-primary-foreground hover:bg-primary/90",
         danger: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         // —— E 类批 0 增补（2026-09-27）：纯增补，不改任何既有档位的类值 ——
-        // 来源：全库 315 个生产裸 <button> 的 className 形态聚类（每档均附实测先例数，
-        // 见 docs/design 交付报告）。分界口径：
-        // · quiet：文字色变化，**无 hover 底色**（裸用法 57 处 / 34 文件，最大缺口）
-        // · subtle：文字色变化 + **弱底色**（裸用法 48 处 / 30 文件）；
+        // 来源：生产裸 <button>（`components/ui/` 之外）className 的**形态聚类 + 档位语义**。
+        // 靶子规模与口径见 `docs/design/修改方案-E类-2026-09-27.md`（正则行级 315 处 /
+        // 元素级真值 314 处，差 1 处为 JSX 注释误命中）。**本注释刻意不写逐档先例数**：
+        // 2026-09-28 裁决「删数留结论」——逐档计数在不同口径下不可复现（含/不含
+        // `components/ui/`、元素级 vs 行级），写进源码即变成无法核对的噪声。分界口径：
+        // · quiet：文字色变化，**无 hover 底色**（批 6 实测的最大缺口）
+        // · subtle：文字色变化 + **弱底色**；
         //   与 ghost 的唯一差别是「基色为内容弱色」——ghost 不设基色，靠继承，
         //   因此需要弱色基色的调用方此前只能写 className 覆盖。
         //   hover 底用 bg-muted（bg-accent 与 bg-muted 是同一 token 值，见报告）。
-        // · ghost-danger：静默态 + 悬停/聚焦才转危险色（裸用法 7 处 / 7 文件）；
+        // · ghost-danger：静默态 + 悬停/聚焦才转危险色；
         //   与既有 destructive 的区别是 **无基色底**，故不与 destructive 重复。
         quiet: "text-muted-foreground hover:text-foreground",
         subtle: "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -51,10 +54,8 @@ const buttonVariants = cva(
         // —— E 类批 0 增补（2026-09-27）：纯增补，不改任何既有档位的类值 ——
         // 档名规则：`2<档>` = 该档的下一档，沿用字阶 3xs / 2xs 的既有命名约定
         // （`2xs` 即「xs 的下一档」）。
-        // · icon-2xs = 20px（裸用法 `size-5`/`h-5 w-5` 共 10 处 / 8 文件；
-        //   既有最小档 icon-xs 是 24px，此前 20px 只能写裸 <button>）
-        // · icon-2sm = 28px（裸用法 `h-7 w-7`/`size-7` 共 6 处 / 6 文件，
-        //   落在 xs(24px) 与 sm(32px) 之间的空档）
+        // · icon-2xs = 20px：既有最小档 icon-xs 是 24px，此前 20px 只能写裸 <button>
+        // · icon-2sm = 28px：落在 xs(24px) 与 sm(32px) 之间的空档
         // 圆角刻意不写：基线已是 rounded-md（§4.5「按钮一律 rounded-md，不因尺寸降档」），
         // 与 icon / icon-lg 同口径；既有 xs/icon-xs/icon-sm 的 min() 钳位是历史存量，未改动。
         "icon-2xs": "size-5",

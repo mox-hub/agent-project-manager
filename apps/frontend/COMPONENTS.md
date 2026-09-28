@@ -16,10 +16,11 @@
 |---|---|---|---|---|
 | ✅ canonical | 299 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
 | 📦 standby | 17 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
-| 🔶 review | 18 | ❌ 暂不计 | ✅ 必须（带醒目标记） | ❌ 暂不要求 |
+| 🔶 review | 17 | ❌ 暂不计 | ✅ 必须（带醒目标记） | ❌ 暂不要求 |
+| ⛔ deprecated | 1 | ❌ 不计 | ✅ 标记 deprecated | — |
 | **合计** | **334** | | | |
 
-> 当前 0 条的状态：`internal` / `deprecated`。注：`ui/menu-surface.ts` 实测有模块层消费方（document 模块页面直接 import 其中的常量），故按实测登记为 `canonical` 而非方案 §三 E6 建议的 `internal`（差异见批 1 报告）。
+> 当前 0 条的状态：`internal`。注：`ui/menu-surface.ts` 实测有模块层消费方（document 模块页面直接 import 其中的常量），故按实测登记为 `canonical` 而非方案 §三 E6 建议的 `internal`（差异见批 1 报告）。
 
 分区分布（画廊四分区口径）：
 
@@ -31,7 +32,7 @@
 
 ## 待裁决清单（设计系统页「只看待裁决」视图同源）
 
-共 **35** 项：`status: review`（18）或 `status: standby` 但带 review 数据（17）。按方案 §七 D 项裁决：**先标记、不删除**，人工在 `/app/design-system` 审阅后由批 9 执行清退（决策写入 `component-review-decisions.json`）。
+共 **35** 项：`status: review`（17）或 `status: standby` 但带 review 数据（18）。按方案 §七 D 项裁决：**先标记、不删除**，人工在 `/app/design-system` 审阅后由批 9 执行清退（决策写入 `component-review-decisions.json`）。
 
 | 组件 | 路径 | 状态 | 建议 | 理由 | 裁决期限 |
 |---|---|---|---|---|---|
@@ -46,7 +47,7 @@
 | collapsible | `src/components/ui/collapsible.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | direction | `src/components/ui/direction.tsx` | 🔶 review | delete | 零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求 | 2026-10-31 |
 | drawer | `src/components/ui/drawer.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | 🔶 review | merge → menu | 与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。故未机械合流（决策 B：差异大先标记后限期迁移）。因 scripts/gen-components-md.mjs 尚不解析 expiresAt，本件暂无法置 deprecated（实测会令 entry 被生成器丢弃并使 lint:registry 失败），故留在 review 限期；迁移指引见 ui/dropdown-menu.tsx 文件头。 | 2026-10-31 |
+| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | ⛔ deprecated | merge → menu | 与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。2026-09-28 裁决 A：已扩 gen-components-md.mjs 解析 expiresAt，原先「生成器不认该槽位、写入即被丢弃」的工具互斥**已解除**，本件正式置 deprecated 限期迁移（至 2026-12-31）；迁移指引见 ui/dropdown-menu.tsx 文件头。（**清退期限 2026-12-31** · §19.6，逾期 CI 失败） | — |
 | floating-dock | `src/components/ui/floating-dock.tsx` | 📦 standby | delete | 自研长尾：零引用（仅画廊），与 shared/components/bottom-dock 能力重叠 | 2026-10-31 |
 | input-otp | `src/components/ui/input-otp.tsx` | 📦 standby | keep | 官方注册表基线件（input-otp 库封装），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | menubar | `src/components/ui/menubar.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
@@ -104,7 +105,7 @@
 | dialog | `src/components/ui/dialog.tsx` | ✅ canonical | — | — |
 | direction | `src/components/ui/direction.tsx` | 🔶 review | — | 零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求 |
 | drawer | `src/components/ui/drawer.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
-| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | 🔶 review | — | 与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。故未机械合流（决策 B：差异大先标记后限期迁移）。因 scripts/gen-components-md.mjs 尚不解析 expiresAt，本件暂无法置 deprecated（实测会令 entry 被生成器丢弃并使 lint:registry 失败），故留在 review 限期；迁移指引见 ui/dropdown-menu.tsx 文件头。 |
+| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | ⛔ deprecated | — | 与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。2026-09-28 裁决 A：已扩 gen-components-md.mjs 解析 expiresAt，原先「生成器不认该槽位、写入即被丢弃」的工具互斥**已解除**，本件正式置 deprecated 限期迁移（至 2026-12-31）；迁移指引见 ui/dropdown-menu.tsx 文件头。（**清退期限 2026-12-31** · §19.6，逾期 CI 失败） |
 | field | `src/components/ui/field.tsx` | ✅ canonical | — | — |
 | form | `src/components/ui/form.tsx` | ✅ canonical | — | — |
 | hover-card | `src/components/ui/hover-card.tsx` | ✅ canonical | — | — |

@@ -74,20 +74,6 @@ vi.mock('../components/project-gantt', () => ({
   ProjectGantt: () => <div data-testid="project-view-gantt">GANTT_VIEW</div>,
 }));
 
-vi.mock('@/components/view-switcher', () => ({
-  ViewSwitcher: ({
-    onValueChange,
-  }: {
-    onValueChange: (value: 'list' | 'board' | 'gantt') => void;
-  }) => (
-    <div>
-      <button type="button" onClick={() => onValueChange('list')}>List</button>
-      <button type="button" onClick={() => onValueChange('board')}>Board</button>
-      <button type="button" onClick={() => onValueChange('gantt')}>Timeline</button>
-    </div>
-  ),
-}));
-
 vi.mock('@/shared/ui/filter-panel', () => ({
   FilterPanel: () => <div data-testid="filter-panel" />,
 }));
