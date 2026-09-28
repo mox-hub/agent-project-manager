@@ -21,6 +21,7 @@ import {
   FileSpreadsheet, FileJson, Copy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from '@/components/ui/toast';
 
@@ -241,9 +242,9 @@ function AnnotationPanel({
     <div ref={ref} className="absolute right-0 top-full mt-1 z-modal w-72 bg-popover border border-border rounded-xl shadow-xs overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30">
         <p className="text-xs font-semibold truncate max-w-45">{nodeTitle}</p>
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground" data-ai-action="delivery.annotation.close">
-          <X className="w-3.5 h-3.5" />
-        </button>
+        <Button variant="quiet" padding="p-0" onClick={onClose} data-ai-action="delivery.annotation.close">
+          <X className="size-3.5" />
+        </Button>
       </div>
 
       {/* Existing annotations */}

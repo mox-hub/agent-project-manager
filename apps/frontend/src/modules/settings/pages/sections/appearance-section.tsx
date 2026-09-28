@@ -68,9 +68,9 @@ function FontPickerField({
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">{label}</p>
         {value && (
-          <button type="button" onClick={() => onChange('')} className="text-xs text-muted-foreground hover:text-foreground">
+          <Button type="button" variant="quiet" fontSize="xs" padding="p-0" onClick={() => onChange('')}>
             {t('settings.fontDefault')}
-          </button>
+          </Button>
         )}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">

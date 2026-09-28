@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 import { MemberAvatar } from './member-avatar';
 import { TrustLevelBadge } from './trust-level-badge';
 import {
@@ -374,11 +375,7 @@ export function MemberCardPopover({
     <Popover>
       <PopoverTrigger>
         {trigger || children || (
-          <button
-            type="button"
-            className="inline-flex items-center"
-            aria-label="Member card"
-          >
+          <Button type="button" variant="quiet" padding="p-0" aria-label="Member card">
             <MemberAvatar
               member={
                 card
@@ -392,7 +389,7 @@ export function MemberCardPopover({
                   : undefined
               }
             />
-          </button>
+          </Button>
         )}
       </PopoverTrigger>
       <PopoverContent side={side} align={align} className="p-0">

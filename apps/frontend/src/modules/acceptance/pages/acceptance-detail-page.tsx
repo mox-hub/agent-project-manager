@@ -339,8 +339,10 @@ export function AcceptanceDetailPage() {
               )}
             >
               <div className="flex items-start gap-3 p-3">
-                <button
-                  className="mt-0.5 shrink-0"
+                <Button
+                  variant="quiet"
+                  padding="p-0"
+                  className="mt-0.5"
                   title={t('acceptanceDetail.criteria.toggleHint')}
                   onClick={() => handleToggleCriterion(c.id, c.status)}
                   disabled={updateCriterion.isPending}
@@ -351,7 +353,7 @@ export function AcceptanceDetailPage() {
                       CRITERION_TONE[c.status] ?? 'text-muted-foreground',
                     )}
                   />
-                </button>
+                </Button>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm">{c.content}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-3xs text-muted-foreground">

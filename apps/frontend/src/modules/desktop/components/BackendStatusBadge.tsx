@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button';
+
 import { useDesktop } from '../hooks/useDesktop';
 
 export interface BackendStatusBadgeProps {
@@ -40,14 +42,16 @@ export function BackendStatusBadge({ showControls = true }: BackendStatusBadgePr
         <div className="flex items-center gap-1">
           {isRunning ? (
             <>
-              <button
+              <Button
+                variant="quiet"
+                fontSize="xs"
+                padding="p-0"
                 onClick={restartBackend}
                 disabled={isLoading}
-                className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
                 title="重启后端"
               >
                 重启
-              </button>
+              </Button>
               <button
                 onClick={stopBackend}
                 disabled={isLoading}
@@ -58,14 +62,16 @@ export function BackendStatusBadge({ showControls = true }: BackendStatusBadgePr
               </button>
             </>
           ) : (
-            <button
+            <Button
+              variant="quiet"
+              fontSize="xs"
+              padding="p-0"
               onClick={startBackend}
               disabled={isLoading}
-              className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
               title="启动后端"
             >
               启动
-            </button>
+            </Button>
           )}
         </div>
       )}

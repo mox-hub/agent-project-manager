@@ -134,6 +134,18 @@ const buttonVariants = cva(
       // 默认档为空串 ⇒ 既有全部 variant × size × tone 档的输出**逐字节不变**（纯增补）。
       padding: {
         default: "",
+        // zero 档（2026-09-28 增补）：承接「不写任何内距/定高、靠文字行高撑起来」的裸钮
+        // （纯文本钮 / 裸图标钮）。只写 `h-auto p-0` 并不等价，size 默认档残留的 `h-9` /
+        // `px-2.5` 会被 twMerge 压掉，但基线还有两类**参与几何**的类必须一并中和——
+        //   · `gap-1.5`：裸钮没有 flex gap（子元素间距 0）；不中和，多子元素钮平白多出间距；
+        //   · `border`（1px 透明边框）：preflight 全量重置是 `border: 0 solid`，裸钮边框宽
+        //     为 0；`h-auto` 下边框宽计入盒高（content + padding + border），不中和即整体
+        //     +2px。定高档（size / icon-*）走 border-box 由定高吸收边框，无此问题——故只有
+        //     内距驱动档需要显式归零。
+        // 即：zero 档 = 「撤掉基线全部几何、回到 preflight 裸几何」的档，不是省略档。
+        // 档值经构建产物 + Playwright 实测双证（原/迁两形态盒高逐像素相等），证据见
+        // 方案 §七之七。
+        "p-0": "h-auto gap-0 border-0 p-0",
         // 方形内距（图标钮 / 紧凑方钮）
         "p-0.5": "h-auto p-0.5",
         "p-1": "h-auto p-1",

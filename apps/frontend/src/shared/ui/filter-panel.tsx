@@ -275,13 +275,15 @@ export function FilterPanel({
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <span className="text-xs font-medium text-foreground">已筛选条件</span>
             {hasFilters && (
-              <button
+              <Button
                 type="button"
+                variant="quiet"
+                fontSize="xs"
+                padding="p-0"
                 onClick={handleRemoveAllFilters}
-                className="text-xs text-muted-foreground hover:text-foreground"
               >
                 清除全部
-              </button>
+              </Button>
             )}
           </div>
           <div className="max-h-50 overflow-y-auto p-2">

@@ -227,12 +227,14 @@ export function HelpPage() {
           <div className="mx-auto w-full max-w-4xl space-y-6">
           {currentArticle ? (
             <div>
-              <button
+              <Button
+                variant="quiet"
+                padding="p-0"
+                className="mb-4"
                 onClick={() => setSelectedArticle(null)}
-                className="text-sm text-muted-foreground hover:text-foreground mb-4"
               >
                 ← {t('help.backTo', { section: currentSection ? t(`help.sections.${currentSection.id}`) : '' })}
-              </button>
+              </Button>
               <h2 className="text-2xl font-semibold mb-2">
                 {t(articleKey(currentSection?.id ?? '', currentArticle.id, 'title'))}
               </h2>
