@@ -30,13 +30,16 @@ describe('MemberAvatar', () => {
         member={{ ...baseMember, type: 'ai_agent', displayName: 'GPT Bot', handle: 'gpt' }}
       />,
     );
-    // Renders Avvvatars/Bot svg
+    // Renders Avvvatars svg
     expect(container.querySelectorAll('svg').length).toBeGreaterThan(0);
   });
 
-  it('falls back to "?" when member is null', () => {
-    render(<MemberAvatar member={null} />);
-    expect(screen.getByText('?')).toBeInTheDocument();
+  it('renders dashed placeholder frame when member is null (empty preset)', () => {
+    const { container } = render(<MemberAvatar member={null} />);
+    // 空头像预设：附件式虚框 + 人形剪影，不再渲染 '?' 文本
+    expect(container.querySelector('.border-dashed')).toBeInTheDocument();
+    expect(container.querySelector('svg')).toBeInTheDocument();
+    expect(screen.queryByText('?')).not.toBeInTheDocument();
   });
 
   it('renders img when avatarUrl is provided', () => {
@@ -59,6 +62,22 @@ describe('MemberAvatar', () => {
     // Online dot is the only absolute child; with showBadge=false none should be present
     const absoluteDots = container.querySelectorAll('.absolute.-bottom-0\\.5');
     expect(absoluteDots.length).toBe(0);
+  });
+
+  it('renders the online dot for AI agents too (unified presence badge)', () => {
+    const { container } = render(
+      <MemberAvatar
+        member={{
+          ...baseMember,
+          type: 'ai_agent',
+          displayName: 'Claude Coder',
+          handle: 'claude-coder',
+          isOnline: true,
+        }}
+      />,
+    );
+    // 右下角唯一徽标位 = 在线状态，人类与 AI 同一语义
+    expect(container.querySelectorAll('.absolute.-bottom-0\\.5').length).toBe(1);
   });
 
   it('renders Avvvatars when avatarUrl starts with avvvatars: or useAvvvatars is true', () => {

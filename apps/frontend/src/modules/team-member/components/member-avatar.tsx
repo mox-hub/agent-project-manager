@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { Bot } from 'lucide-react';
+import { User } from 'lucide-react';
 import Avvvatars from 'avvvatars-react';
 import NiceAvatar, { genConfig } from 'react-nice-avatar';
 import type { Member } from '../types';
@@ -42,6 +42,15 @@ const BADGE_SIZES = {
   xl: 'h-4 w-4',
 };
 
+/** 空头像预设：附件式虚框占位（虚线圆框 + 人形剪影），图标按外框比例缩放 */
+const EMPTY_ICON_SIZES = {
+  xs: 'h-2.5 w-2.5',
+  sm: 'h-3 w-3',
+  md: 'h-4 w-4',
+  lg: 'h-5 w-5',
+  xl: 'h-7 w-7',
+};
+
 function getInitials(name: string): string {
   if (!name) return '?';
   const parts = name.trim().split(/\s+/);
@@ -74,6 +83,8 @@ export function MemberAvatar({
   const resolvedHandle = member?.handle || '';
   const resolvedAvatarUrl = avatarUrl !== undefined ? avatarUrl : member?.avatarUrl;
   const hasMemberInfo = Boolean(member || name || fallbackInitials);
+  // 空头像预设：完全无身份信息（无 member/name/initials）→ 附件式虚框占位
+  const isEmpty = !hasMemberInfo;
   const isAI = member?.type === 'ai_agent' || resolvedAvatarUrl?.startsWith('avvvatars:');
   const isNiceAvatarUri = Boolean(resolvedAvatarUrl?.startsWith('nice-avatar:'));
   const isAvvvatarsUri = Boolean(resolvedAvatarUrl?.startsWith('avvvatars:'));
@@ -98,13 +109,15 @@ export function MemberAvatar({
   return (
     <div
       className={cn(
-        'relative inline-flex items-center justify-center rounded-full font-semibold text-white shrink-0 overflow-hidden border border-border/50',
+        'relative inline-flex items-center justify-center rounded-full font-semibold text-white shrink-0 border border-border/50',
         SIZE_CLASSES[size],
-        !hasCustomImg && !shouldRenderAvvvatars && !shouldRenderNiceAvatar && 'ring-1 ring-inset ring-border/40',
+        isEmpty
+          ? 'border-dashed border-border bg-transparent text-muted-foreground'
+          : !hasCustomImg && !shouldRenderAvvvatars && !shouldRenderNiceAvatar && 'ring-1 ring-inset ring-border/40',
         className,
       )}
       style={
-        hasCustomImg || shouldRenderAvvvatars || shouldRenderNiceAvatar
+        isEmpty || hasCustomImg || shouldRenderAvvvatars || shouldRenderNiceAvatar
           ? undefined
           : {
               background: `linear-gradient(135deg, hsl(${hue} 65% 55%), hsl(${(hue + 40) % 360} 65% 45%))`,
@@ -119,48 +132,39 @@ export function MemberAvatar({
           : resolvedDisplayName || ''
       }
     >
-      {hasCustomImg ? (
-        <img
-          src={resolvedAvatarUrl!}
-          alt={resolvedDisplayName}
-          className="h-full w-full object-cover"
-        />
-      ) : shouldRenderAvvvatars ? (
-        <div className="size-full flex items-center justify-center overflow-hidden">
+      {/* 内容层独占裁剪（圆形头像），根容器不做 overflow-hidden，右下角徽标才能浮出头像框 */}
+      <div className="size-full overflow-hidden rounded-full flex items-center justify-center">
+        {hasCustomImg ? (
+          <img
+            src={resolvedAvatarUrl!}
+            alt={resolvedDisplayName}
+            className="h-full w-full object-cover"
+          />
+        ) : shouldRenderAvvvatars ? (
           <Avvvatars
             value={seed}
             size={NUMERIC_SIZES[size]}
             style={avvvatarsStyleResolved}
             shadow={false}
           />
-        </div>
-      ) : shouldRenderNiceAvatar ? (
-        <div className="size-full flex items-center justify-center overflow-hidden">
+        ) : shouldRenderNiceAvatar ? (
           <NiceAvatar
             style={{ width: '100%', height: '100%' }}
             shape="circle"
             {...genConfig(seed)}
           />
-        </div>
-      ) : (
-        <span className="leading-none tracking-tight">{initials}</span>
-      )}
+        ) : isEmpty ? (
+          <User className={cn(EMPTY_ICON_SIZES[size], 'text-muted-foreground/70')} />
+        ) : (
+          <span className="leading-none tracking-tight">{initials}</span>
+        )}
+      </div>
 
-      {showBadge && isAI && (
+      {/* 右下角唯一徽标位：在线状态（人类与 AI 统一） */}
+      {showBadge && member?.isOnline && (
         <span
           className={cn(
-            'absolute -bottom-0.5 -right-0.5 rounded-full bg-background flex items-center justify-center border border-border',
-            BADGE_SIZES[size],
-          )}
-        >
-          <Bot className="h-full w-full text-accent-purple" />
-        </span>
-      )}
-
-      {showBadge && !isAI && member?.isOnline && (
-        <span
-          className={cn(
-            'absolute -bottom-0.5 -right-0.5 rounded-full bg-accent-green border-2 border-background',
+            'absolute -bottom-0.5 -right-0.5 z-10 rounded-full bg-accent-green border-2 border-background',
             BADGE_SIZES[size],
           )}
         />

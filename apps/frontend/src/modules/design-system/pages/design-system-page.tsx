@@ -208,8 +208,9 @@ import {
 } from '@/components/ui/sortable'
 import { IconStack } from '@/components/semantic/icon-stack'
 import { StatusPill } from '@/components/semantic/status-pill'
+import { SubtaskBadge } from '@/components/semantic/subtask-badge'
 import { StatusIconFrame } from '@/shared/status/status-icon-frame'
-import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals'
+import { PRIORITY_VISUALS, TASK_STATUS_VISUALS } from '@/shared/status/status-visuals'
 import { MarkdownView } from '@/shared/components/markdown-view'
 import { MarkdownEditor } from '@/shared/components/markdown-editor'
 import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor'
@@ -1426,25 +1427,31 @@ function ChapterScrubberDemo() {
   )
 }
 
+/** 演示件 = 业务映射薄包装：视觉全部来自真组件 StatusIconFrame（list 档）+ tone 唯一链路 */
 function StatusChip({ status }: { status: TaskStatus }) {
-  const cfg = STATUS_CFG[status]
+  const visual = TASK_STATUS_VISUALS[status]
   return (
-    <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0 border border-border/40', cfg.bg)} title={cfg.label}>
-      <cfg.Icon className={cn('w-3.5 h-3.5', cfg.color, status === 'in_progress' && 'animate-spin')}
-        style={status === 'in_progress' ? { animationDuration: '2s' } : undefined} />
-    </div>
+    <StatusIconFrame
+      icon={visual.icon}
+      tone={visual.tone}
+      size="list"
+      spin={status === 'in_progress'}
+      title={STATUS_CFG[status].label}
+    />
   )
 }
 
 function PriorityIcon({ priority }: { priority: Priority }) {
-  const cfg = PRIORITY_CFG[priority]
-  return <cfg.Icon className={cn('w-3.5 h-3.5 shrink-0', cfg.color)} title={cfg.label} />
+  const visual = PRIORITY_VISUALS[priority]
+  return (
+    <StatusIconFrame icon={visual.icon} tone={visual.tone} size="list" title={PRIORITY_CFG[priority].label} />
+  )
 }
 
 function MilestonePill({ name, idx = 0 }: { name: string; idx?: number }) {
   const c = MILESTONE_COLORS[idx % MILESTONE_COLORS.length]
   return (
-    <span className={cn('inline-flex items-center text-2xs font-medium px-2 py-0.5 rounded-md border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
+    <span className={cn('inline-flex items-center text-2xs font-medium h-5.5 px-2 rounded-md border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
       {name}
     </span>
   )
@@ -1452,41 +1459,20 @@ function MilestonePill({ name, idx = 0 }: { name: string; idx?: number }) {
 
 function LabelChip({ name, color }: { name: string; color: string }) {
   return (
-    <span className="inline-flex items-center text-3xs px-1.5 py-0.5 rounded-sm font-medium whitespace-nowrap bg-muted/60 text-foreground border border-border/40"
+    <span className="inline-flex items-center text-3xs h-5.5 px-1.5 rounded-sm font-medium whitespace-nowrap bg-muted/60 text-foreground border border-border/40"
       style={{ color }}>
       {name}
     </span>
   )
 }
 
-function ProgressRing({ done, total, size = 14 }: { done: number; total: number; size?: number }) {
-  const r = (size - 2.5) / 2
-  const circ = 2 * Math.PI * r
-  const ratio = total > 0 ? done / total : 0
-  const stroke = ratio === 1 ? 'var(--color-accent-green, #10B981)' : ratio > 0 ? 'var(--color-accent-blue, #3B82F6)' : 'var(--color-muted-foreground, #94A3B8)'
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground/20" />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={stroke} strokeWidth="2.2"
-        strokeDasharray={`${ratio * circ} ${circ}`} strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function SubtaskBadge({ done, total }: { done: number; total: number }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-border/80 bg-muted/50 text-3xs font-medium text-muted-foreground shrink-0 ml-1.5 font-mono">
-      <ProgressRing done={done} total={total} />
-      <span>{done}/{total}</span>
-    </span>
-  )
-}
+// SubtaskBadge：语义组件 semantic/subtask-badge（22px 标准，进度环与边框等距贴合）——画廊直接演示真件
 
 function AssigneeAvatar({ initials, color }: { initials?: string; color?: string }) {
   if (!initials) {
     return (
-      <div className="w-5.5 h-5.5 rounded-full bg-muted/60 border border-border/40 flex items-center justify-center shrink-0">
-        <User className="h-3 w-3 text-muted-foreground/60" />
+      <div className="w-5.5 h-5.5 rounded-full border border-dashed border-border flex items-center justify-center shrink-0">
+        <User className="h-3 w-3 text-muted-foreground/40" />
       </div>
     )
   }
@@ -1843,7 +1829,7 @@ function SeverityBar({ severity }: { severity: Severity }) {
   const cfg = SEVERITY_CFG[severity]
   return (
     <div className="flex items-center gap-1.5">
-      <div className={cn('w-1 h-5 rounded-full shrink-0', cfg.bar)} />
+      <div className={cn('w-1 h-5.5 rounded-full shrink-0', cfg.bar)} />
       <span className={cn('text-xs font-medium', cfg.text)}>{cfg.label}</span>
     </div>
   )
@@ -1853,20 +1839,20 @@ function AcceptPill({ stage, passed }: { stage: string; passed: boolean | null }
   const cfg = ACCEPT_STAGES[stage]
   if (passed === null) {
     return (
-      <span className="inline-flex items-center text-2xs px-2 py-0.5 rounded-md border border-dashed border-border text-muted-foreground/50">
+      <span className="inline-flex items-center text-2xs h-5.5 px-2 rounded-md border border-dashed border-border text-muted-foreground/50">
         {cfg.label}
       </span>
     )
   }
   if (passed) {
     return (
-      <span className={cn('inline-flex items-center gap-1 text-2xs px-2 py-0.5 rounded-md border border-transparent', cfg.bg, cfg.color)}>
+      <span className={cn('inline-flex items-center gap-1 text-2xs h-5.5 px-2 rounded-md border border-transparent', cfg.bg, cfg.color)}>
         <Check className="w-2.5 h-2.5" /> {cfg.label}
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 text-2xs px-2 py-0.5 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
+    <span className="inline-flex items-center gap-1 text-2xs h-5.5 px-2 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
       <X className="w-2.5 h-2.5" /> {cfg.label}
     </span>
   )
@@ -1880,7 +1866,7 @@ function AgentPill({ name, status }: { name: string; status: 'active' | 'contrib
     not_used: 'bg-muted text-muted-foreground border-border',
   }
   return (
-    <span className={cn('inline-flex items-center text-2xs font-medium px-2 py-0.5 rounded-md border', colors[status])}>
+    <span className={cn('inline-flex items-center text-2xs font-medium h-5.5 px-2 rounded-md border', colors[status])}>
       {name}
     </span>
   )
@@ -2964,7 +2950,7 @@ export function DesignSystemPage() {
                 <SubLabel>Segmented slider (fixed-height panel below)</SubLabel>
                 <div className="w-full max-w-md">
                   <Tabs defaultValue="overview" className="h-60">
-                    <TabsList variant="segmented" className="w-full">
+                    <TabsList variant="segmented">
                       <TabsTrigger value="overview">Overview</TabsTrigger>
                       <TabsTrigger value="activity">Activity</TabsTrigger>
                       <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -4871,9 +4857,10 @@ export function DesignSystemPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <StatusIconFrame icon={CircleCheck} tone="success" size="xs" />
                 <StatusIconFrame icon={CircleCheck} tone="success" size="sm" />
+                <StatusIconFrame icon={CircleCheck} tone="success" size="list" />
                 <StatusIconFrame icon={CircleCheck} tone="success" size="md" />
                 <StatusIconFrame icon={CircleCheck} tone="success" size="lg" />
-                <span className="text-xs text-muted-foreground">xs / sm / md / lg</span>
+                <span className="text-xs text-muted-foreground">xs / sm / list / md / lg（list = Task Atoms 22px 标准芯片）</span>
               </div>
             </div>
           </SectionAnchor>
@@ -5524,7 +5511,7 @@ export function DesignSystemPage() {
             <div className="space-y-6">
 
               <div>
-                <SubLabel>StatusChip — 22 × 22 icon chip</SubLabel>
+                <SubLabel>StatusChip — 22×22 标准芯片（StatusIconFrame list 档 · tone 唯一链路）</SubLabel>
                 <div className="flex flex-wrap gap-4">
                   {(Object.keys(STATUS_CFG) as TaskStatus[]).map((s) => (
                     <div key={s} className="flex items-center gap-2">
@@ -5591,7 +5578,7 @@ export function DesignSystemPage() {
               </div>
 
               <div>
-                <SubLabel>SubtaskBadge — progress ring + count capsule</SubLabel>
+                <SubLabel>SubtaskBadge — progress ring + count capsule（semantic/subtask-badge · 环与左/上/下边框等距）</SubLabel>
                 <div className="flex items-center gap-4">
                   <SubtaskBadge done={3} total={3} />
                   <SubtaskBadge done={2} total={3} />
@@ -5601,13 +5588,13 @@ export function DesignSystemPage() {
               </div>
 
               <div>
-                <SubLabel>AssigneeAvatar — 22 × 22 mini avatar</SubLabel>
+                <SubLabel>MemberAvatar — 实体头像（sm 实档 24px）+ 空头像预设</SubLabel>
                 <div className="flex items-center gap-3">
-                  <AssigneeAvatar initials="AK" color="#6366F1" />
-                  <AssigneeAvatar initials="ML" color="#F59E0B" />
-                  <AssigneeAvatar initials="BK" color="#EF4444" />
-                  <AssigneeAvatar initials="CR" color="#10B981" />
-                  <AssigneeAvatar />
+                  <MemberAvatar size="sm" member={{ type: 'human', displayName: 'Alex Chen', handle: 'alex' }} />
+                  <MemberAvatar size="sm" member={{ type: 'ai_agent', displayName: 'Claude Coder', handle: 'claude-coder' }} />
+                  <MemberAvatar size="sm" useInitials member={{ type: 'human', displayName: 'Sarah Connor', handle: 'sarah' }} />
+                  <MemberAvatar size="sm" member={null} />
+                  <span className="text-xs text-muted-foreground">末位为空头像预设（member 为空 → ? 回落）</span>
                 </div>
               </div>
 
@@ -5649,9 +5636,13 @@ export function DesignSystemPage() {
                   <button className="w-4 h-4 flex items-center justify-center text-muted-foreground shrink-0">
                     {groupCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </button>
-                  <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0', STATUS_CFG.in_progress.bg)}>
-                    <Loader className="w-3.5 h-3.5 text-blue-500 animate-spin" style={{ animationDuration: '2s' }} />
-                  </div>
+                  <StatusIconFrame
+                    icon={TASK_STATUS_VISUALS.in_progress.icon}
+                    tone={TASK_STATUS_VISUALS.in_progress.tone}
+                    size="list"
+                    spin
+                    title="In Progress"
+                  />
                   <span className="text-xs font-semibold text-muted-foreground">In Progress</span>
                   <span className="text-2xs text-muted-foreground/50 font-mono">3</span>
                   <div className="flex items-center gap-2 flex-1 max-w-45">

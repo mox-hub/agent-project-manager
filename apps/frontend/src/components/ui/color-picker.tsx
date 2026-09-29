@@ -21,12 +21,14 @@ import {
 
 /**
  * 项目预设色板（Tailwind 500 阶，原 core-config TAG_COLORS 收编为全局缺省）。
+ * 16 色 = 8 列 × 2 整行（色相连续补 yellow-500，灰收尾）；用户新增须保持 8 的倍数。
  * 用户自选色板：存库的用户数据色值，非 UI 语义色（宪法 §5 豁免，见 PRINCIPLES 附录登记）。
  */
 export const DEFAULT_SWATCHES = [
   "#ef4444",
   "#f97316",
   "#f59e0b",
+  "#eab308",
   "#84cc16",
   "#22c55e",
   "#14b8a6",
@@ -161,7 +163,10 @@ export function ColorPicker({
               <HexColorPicker
                 color={value ?? "#6b7280"}
                 onChange={(color) => onValueChange?.(color)}
-                className="h-36 w-56"
+                // react-colorful 挂载时向 head 注入 .react-colorful{width:200px;height:200px}，
+                // 晚于 Tailwind 样式表且同特异性，宽高 Tailwind 类会被吞——几何必须内联钉住。
+                // 234 = 8 列色板网格自然宽（8×24 + 7×6），弹层内色板/色域/色条三段同宽。
+                style={{ width: 234, height: 200 }}
               />
             </div>
             <Input

@@ -10,12 +10,13 @@ import { cn } from '@/lib/utils';
 import { TONE_LIGHT_CLASS, type StatusTone } from './status-visuals';
 
 const FRAME_SIZES = {
-  /** xs/sm 外框为正圆形，md/lg 为圆角方框 */
-  xs: { frame: 'size-4 rounded-full', icon: 'size-2.5' },
-  sm: { frame: 'size-5 rounded-full', icon: 'size-3' },
-  md: { frame: 'size-6 rounded-md', icon: 'size-3.5' },
-  /** 标题档：内图 18px 与 text-lg 标题字号一致，外框 28px（=标题行高）自然包裹 */
-  lg: { frame: 'size-7 rounded-md', icon: 'size-4.5' },
+  /** xs/sm 外框为正圆形，list/md/lg 为圆角方框；各档图标均按「内边距 2px」撑满外框 */
+  xs: { frame: 'size-4 rounded-full', icon: 'size-3' },
+  sm: { frame: 'size-5 rounded-full', icon: 'size-4' },
+  /** Task Atoms 列表行标准芯片（22×22，StatusChip 同规）——任务/BUG 列表行首统一档 */
+  list: { frame: 'size-5.5 rounded-md', icon: 'size-4.5' },
+  md: { frame: 'size-6 rounded-md', icon: 'size-5' },
+  lg: { frame: 'size-7 rounded-md', icon: 'size-6' },
 } as const;
 
 export type StatusIconFrameSize = keyof typeof FRAME_SIZES;
@@ -25,6 +26,7 @@ export function StatusIconFrame({
   tone,
   size = 'md',
   spin = false,
+  title,
   className,
   iconClassName,
 }: {
@@ -33,12 +35,15 @@ export function StatusIconFrame({
   size?: StatusIconFrameSize;
   /** in_progress 等旋转图标需要自旋（Loader2） */
   spin?: boolean;
+  /** 悬停提示（状态名等），透传原生 title */
+  title?: string;
   className?: string;
   iconClassName?: string;
 }) {
   const sizes = FRAME_SIZES[size];
   return (
     <span
+      title={title}
       className={cn(
         'inline-flex shrink-0 items-center justify-center',
         sizes.frame,

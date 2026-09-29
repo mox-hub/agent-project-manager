@@ -4,6 +4,7 @@ import { Dialog as CommandDialogPrimitive } from "@base-ui/react/dialog"
 import { SearchIcon } from "lucide-react"
 import type * as React from "react"
 import { cn } from "@/lib/utils"
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -90,7 +91,8 @@ export function CommandDialogPopup({
       <CommandDialogViewport>
         <CommandDialogPrimitive.Popup
           className={cn(
-            "relative row-start-2 flex max-h-105 min-h-0 w-full min-w-0 max-w-xl -translate-y-[calc(1.25rem*var(--nested-dialogs))] scale-[calc(1-0.1*var(--nested-dialogs))] flex-col rounded-xl border bg-popover not-dark:bg-clip-padding text-popover-foreground opacity-[calc(1-0.1*var(--nested-dialogs))] shadow-xs/5 outline-none transition-[scale,opacity,translate] duration-normal ease-in-out will-change-transform before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-xl)-1px)] before:bg-muted/72 before:shadow-[0_1px_--theme(--color-black/4%)] data-nested:data-ending-style:translate-y-8 data-nested:data-starting-style:translate-y-8 data-nested-dialog-open:origin-top data-ending-style:scale-98 data-starting-style:scale-98 data-ending-style:opacity-0 data-starting-style:opacity-0 **:data-[slot=scroll-area-viewport]:data-has-overflow-y:pe-1 dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
+            // overflow-hidden：头部条/内容板裁进弹层圆角——否则方角色块顶出圆角形成「上角小角」
+            "relative row-start-2 flex max-h-105 min-h-0 w-full min-w-0 max-w-xl -translate-y-[calc(1.25rem*var(--nested-dialogs))] scale-[calc(1-0.1*var(--nested-dialogs))] flex-col overflow-hidden rounded-xl border bg-popover not-dark:bg-clip-padding text-popover-foreground opacity-[calc(1-0.1*var(--nested-dialogs))] shadow-xs/5 outline-none transition-[scale,opacity,translate] duration-normal ease-in-out will-change-transform before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-xl)-1px)] before:bg-muted/72 before:shadow-[0_1px_--theme(--color-black/4%)] data-nested:data-ending-style:translate-y-8 data-nested:data-starting-style:translate-y-8 data-nested-dialog-open:origin-top data-ending-style:scale-98 data-starting-style:scale-98 data-ending-style:opacity-0 data-starting-style:opacity-0 **:data-[slot=scroll-area-viewport]:data-has-overflow-y:pe-1 dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
             className
           )}
           data-slot="command-dialog-popup"
@@ -249,17 +251,31 @@ export function CommandSeparator({
 
 export function CommandShortcut({
   className,
+  children,
   ...props
 }: React.ComponentProps<"kbd">): React.ReactElement {
+  // 快捷键一律走系统 Kbd 标准件（槽位 API 保持 CommandShortcut 不变，视觉收敛到 kbd 基线）。
+  // 组合键按空格拆为多枚 Kbd（"Alt A" = Alt、A 两枚物理键；formatComboForDisplay 产出即空格分隔），
+  // 单键保持单 Kbd。
+  const parts =
+    typeof children === "string" ? children.trim().split(/\s+/) : []
+  if (parts.length > 1) {
+    return (
+      <KbdGroup className={cn("ms-auto", className)} data-slot="command-shortcut">
+        {parts.map((part) => (
+          <Kbd key={part}>{part}</Kbd>
+        ))}
+      </KbdGroup>
+    )
+  }
   return (
-    <kbd
-      className={cn(
-        "ms-auto font-medium font-sans text-muted-foreground/72 text-xs tracking-widest",
-        className
-      )}
+    <Kbd
+      className={cn("ms-auto", className)}
       data-slot="command-shortcut"
       {...props}
-    />
+    >
+      {children}
+    </Kbd>
   )
 }
 
@@ -270,7 +286,7 @@ export function CommandFooter({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-2 rounded-b-[calc(var(--radius-xl)-1px)] border-t bg-muted/50 px-5 py-3 text-muted-foreground text-xs",
+        "flex items-center justify-between gap-2 rounded-b-[calc(var(--radius-xl)-1px)] border-t bg-muted/50 px-4 py-1.5 text-muted-foreground text-xs",
         className
       )}
       data-slot="command-footer"
