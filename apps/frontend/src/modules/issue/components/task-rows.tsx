@@ -24,8 +24,8 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DataListSkeleton } from '@/components/ui/data-list';
-import { EmptyState } from '@/components/ui/empty-state';
+import { DataListSkeleton } from '@/shared/components/data-list';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import type { BugSeverity, Task } from '../api/issue-api';
 

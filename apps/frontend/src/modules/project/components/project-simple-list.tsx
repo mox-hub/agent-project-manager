@@ -20,8 +20,8 @@ import {
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { DataList, ListActionButton, ListChip, ListText, ListAvatar, ListDate } from '@/components/ui/data-list';
-import { StatusPill } from '@/components/ui/status-pill';
+import { DataList, ListActionButton, ListChip, ListText, ListAvatar, ListDate } from '@/shared/components/data-list';
+import { StatusPill } from '@/components/semantic/status-pill';
 import type { MenuItem } from '@/components/ui/context-menu';
 import { buildProjectRowMenu } from '@/shared/context-menu/row-context-menu';
 import {

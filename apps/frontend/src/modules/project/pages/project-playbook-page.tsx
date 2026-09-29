@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { SkeletonList } from '@/components/ui/skeleton';
-import { AsyncState } from '@/components/ui/async-state';
+import { AsyncState } from '@/components/semantic/async-state';
 import { toast } from '@/components/ui/toast';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Pencil, RefreshCw, Terminal, Trash2 } from 'lucide-react';
-import { SectionCard } from '@/components/ui/section-card';
+import { SectionCard } from '@/components/semantic/section-card';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

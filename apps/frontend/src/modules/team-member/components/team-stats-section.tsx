@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {

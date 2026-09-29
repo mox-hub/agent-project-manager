@@ -33,19 +33,19 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PageShell } from '@/components/ui/page-shell';
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { PageShell } from '@/components/semantic/page-shell';
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import {
   RightSidebar,
   SidebarButton,
   SidebarButtonGroup,
-} from '@/components/ui/right-sidebar';
-import { PropsCard, PropertyRow } from '@/components/ui/property-panel';
+} from '@/components/semantic/right-sidebar';
+import { PropsCard, PropertyRow } from '@/shared/components/property-panel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -61,7 +61,7 @@ import { toast } from '@/components/ui/toast';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import {
   useAcceptanceDetail,
   useAudit,

@@ -6,15 +6,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { GitBranch, LayoutGrid, List, Play, Plus, SearchX, Sparkles, Workflow as WorkflowIcon } from 'lucide-react';
-import { PageHeader } from '@/components/ui/page-header';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { PageShell } from '@/components/ui/page-shell';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { PageShell } from '@/components/semantic/page-shell';
+import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
+import { EmptyState } from '@/components/semantic/empty-state';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
@@ -90,6 +91,7 @@ export function WorkflowListPage() {
       <PageHeader
         aiId="workflow.workflow-list"
         title={t('workflow.title')}
+        favorites={<FavoriteToggle label={nodeToText(t('workflow.title')).trim()} aiId="workflow.workflow-list" />}
         icon={WorkflowIcon}
         iconColor="text-accent-purple"
         metrics={[{ id: 'total', label: t('workflow.title'), value: filteredWorkflows.length }]}
