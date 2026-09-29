@@ -64,9 +64,11 @@ describe('DesignSystemPage', () => {
     // 改造前本页不 import registry.ts，18 条 review 在页面上完全看不到 ⇒ 第②步「人看」卡死。
     // 断言口径：逐条比对 registry 里每条 review 的「文件路径 · 登记分区」元数据行——
     // 该行在整页内唯一，且与 registry 逐字对齐 ⇒ 能证伪「页面上看不到」。
+    // 2026-09-29 裁决收口：review 态清零是合法终态（36 条已全部裁决入账
+    // component-review-decisions.json），故只断言「页面与 registry 同源一致」，
+    // 不再断言 review 非空；若未来新增 review 条目此断言自动恢复约束力。
     expect(screen.getByText('组件裁决面 (Component Review Board)')).toBeInTheDocument();
     const reviewEntries = COMPONENT_REGISTRY.filter((e) => e.status === 'review');
-    expect(reviewEntries.length).toBeGreaterThan(0);
     for (const entry of reviewEntries) {
       expect(
         screen.getByText(`${entry.file} · 登记分区 ${entry.section}`),

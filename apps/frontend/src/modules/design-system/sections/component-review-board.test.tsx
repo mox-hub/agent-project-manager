@@ -34,11 +34,13 @@ describe('ComponentReviewBoard（组件裁决面）', () => {
   it('渲染出的 review / standby 条数与 registry 完全一致（一条都不许漏）', () => {
     render(<ComponentReviewBoard />);
 
-    expect(REVIEW_ENTRIES.length).toBeGreaterThan(0);
+    // 2026-09-29 裁决收口：review 态清零是合法终态（36 条已全部裁决入账
+    // component-review-decisions.json），不再断言非空；standby 仍有 17 条作非空锚点。
     expect(STANDBY_ENTRIES.length).toBeGreaterThan(0);
 
-    expect(screen.getAllByText(/^R#\d+$/)).toHaveLength(REVIEW_ENTRIES.length);
-    expect(screen.getAllByText(/^S#\d+$/)).toHaveLength(STANDBY_ENTRIES.length);
+    // query 而非 get：review=0 时页面无 R# 序号，getAllByText 会抛错而非返回空数组
+    expect(screen.queryAllByText(/^R#\d+$/)).toHaveLength(REVIEW_ENTRIES.length);
+    expect(screen.queryAllByText(/^S#\d+$/)).toHaveLength(STANDBY_ENTRIES.length);
   });
 
   it('registry 的每一条 review 都逐条呈现在页面上（名 / 路径 / 期限 / 理由）', () => {
@@ -67,11 +69,12 @@ describe('ComponentReviewBoard（组件裁决面）', () => {
     );
   });
 
-  it('「只看待裁决」筛选：standby 组隐藏，review 的 18 条仍在', () => {
+  it('「只看待裁决」筛选：standby 组隐藏，review 组条数与 registry 一致', () => {
     render(<ComponentReviewBoard />);
 
-    // 初始：两个组都在
-    expect(screen.getAllByText(/^S#\d+$/)).toHaveLength(STANDBY_ENTRIES.length);
+    // 初始：两个组都在（standby 非空；review 组条数与 registry 一致，0 条合法）
+    expect(screen.queryAllByText(/^S#\d+$/)).toHaveLength(STANDBY_ENTRIES.length);
+    expect(screen.queryAllByText(/^R#\d+$/)).toHaveLength(REVIEW_ENTRIES.length);
 
     // 包在 act 内：状态更新必须被 React 冲洗完再断言（否则测试通过但输出 act 警告）
     act(() => {
@@ -80,7 +83,7 @@ describe('ComponentReviewBoard（组件裁决面）', () => {
 
     // 筛选后：standby 组整块隐藏，review 组一条不少
     expect(screen.queryAllByText(/^S#\d+$/)).toHaveLength(0);
-    expect(screen.getAllByText(/^R#\d+$/)).toHaveLength(REVIEW_ENTRIES.length);
+    expect(screen.queryAllByText(/^R#\d+$/)).toHaveLength(REVIEW_ENTRIES.length);
     for (const entry of REVIEW_ENTRIES) expectEntryVisible(entry);
   });
 

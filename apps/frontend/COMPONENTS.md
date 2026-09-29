@@ -14,11 +14,10 @@
 
 | 状态 | 数量 | 计入 LU 分母 | 必须在画廊展示 | 是否需消费方 |
 |---|---|---|---|---|
-| ✅ canonical | 301 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
-| 📦 standby | 18 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
-| 🔒 internal | 2 | ❌ 不计 | ❌ 免 | — |
-| 🔶 review | 17 | ❌ 暂不计 | ✅ 必须（带醒目标记） | ❌ 暂不要求 |
-| ⛔ deprecated | 1 | ❌ 不计 | ✅ 标记 deprecated | — |
+| ✅ canonical | 306 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
+| 📦 standby | 17 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
+| 🔒 internal | 4 | ❌ 不计 | ❌ 免 | — |
+| ⛔ deprecated | 12 | ❌ 不计 | ✅ 标记 deprecated | — |
 | **合计** | **339** | | | |
 
 > **画廊豁免（H 类，2026-09-29 裁决）**：任何状态条目可登记 `galleryExempt`（一句话理由）豁免画廊 demo——豁免后不入覆盖率分母（`check-component-registry.mjs` §4.2 ④ 机器强制），但在设计系统页 Registry 对账区可见；**demo 豁免 ≠ 清退豁免**，五态裁决面不受影响。
@@ -41,46 +40,21 @@
 
 ## 待裁决清单（设计系统页「只看待裁决」视图同源）
 
-共 **36** 项：`status: review`（17）或 `status: standby` 但带 review 数据（19）。按方案 §七 D 项裁决：**先标记、不删除**，人工在 `/app/design-system` 审阅后由批 9 执行清退（决策写入 `component-review-decisions.json`）。
+共 **11** 项：`status: review`（0）或 `status: standby` 但带 review 数据（11）。按方案 §七 D 项裁决：**先标记、不删除**，人工在 `/app/design-system` 审阅后由批 9 执行清退（决策写入 `component-review-decisions.json`）。
 
 | 组件 | 路径 | 状态 | 建议 | 理由 | 裁决期限 |
 |---|---|---|---|---|---|
-| accordion | `src/components/ui/accordion.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| anchored-menu | `src/components/ui/anchored-menu.tsx` | 🔶 review | delete | 零引用（实测）——与 ui/menu 能力重叠，锚定下拉统一走 menu / dropdown-menu（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） | 2026-10-31 |
-| aspect-ratio | `src/components/ui/aspect-ratio.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| autocomplete | `src/components/ui/autocomplete.tsx` | 🔶 review | merge → combobox | 消费方仅 1（命令面板），与 ui/combobox 能力重叠（输入过滤 + 建议列表） | 2026-10-31 |
-| breadcrumb | `src/components/ui/breadcrumb.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| button-group | `src/components/ui/button-group.tsx` | 📦 standby | keep | F 类 F9.3 已结案（2026-09-29）：分裂按钮（主动作+下拉变体）是唯一合法场景，休眠原语不推广不清退；首个分裂按钮场景出现时启用 | 2026-10-31 |
-| calendar | `src/components/ui/calendar.tsx` | 📦 standby | keep | 官方注册表基线件（react-day-picker 封装），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| collapsible | `src/components/ui/collapsible.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| direction | `src/components/ui/direction.tsx` | 🔶 review | delete | 零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） | 2026-10-31 |
-| drawer | `src/components/ui/drawer.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | ⛔ deprecated | merge → menu | 与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。2026-09-28 裁决 A：已扩 gen-components-md.mjs 解析 expiresAt，原先「生成器不认该槽位、写入即被丢弃」的工具互斥**已解除**，本件正式置 deprecated 限期迁移（至 2026-12-31）；迁移指引见 ui/dropdown-menu.tsx 文件头。（**清退期限 2026-12-31** · §19.6，逾期 CI 失败） | — |
-| input-otp | `src/components/ui/input-otp.tsx` | 📦 standby | keep | 官方注册表基线件（input-otp 库封装），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| menubar | `src/components/ui/menubar.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| meter | `src/components/ui/meter.tsx` | 📦 standby | standby | 自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby | 2026-10-31 |
-| navigation-menu | `src/components/ui/navigation-menu.tsx` | 🔶 review | delete | 零引用（实测）——横向导航由 menu / breadcrumb / tabs 承载（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） | 2026-10-31 |
-| number-field | `src/components/ui/number-field.tsx` | 📦 standby | standby | 自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby | 2026-10-31 |
-| sidebar | `src/components/ui/sidebar.tsx` | 🔶 review | delete | 零引用（实测）——与 ui/sidebar-panel（消费方 6）能力重叠（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） | 2026-10-31 |
-| slider | `src/components/ui/slider.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| toggle | `src/components/ui/toggle.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| toggle-group | `src/components/ui/toggle-group.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| view-display-popover | `src/components/semantic/view-display-popover.tsx` | 🔶 review | delete | 零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） | 2026-10-31 |
-| chip | `src/components/semantic/chip.tsx` | 📦 standby | keep | G5 裁决示范组件：三层链路端到端样板；已接首个业务消费（decision-card-shell 驳回原因 chips，2026-09-29，方案立项点名的原始场景），后续消费按簇另批 | 2026-10-31 |
-| chart-card | `src/components/semantic/chart-card.tsx` | 📦 standby | keep | 抽象自 Card+CardTitle+卡头 hint/action+定高图表容器组合（project-overview-charts / analytics / team-stats 等 8+ 处手写）；首消费 project-overview-charts 两块（燃尽 md / 分布 lg） | 2026-10-31 |
-| stat-tile | `src/components/semantic/stat-tile.tsx` | 📦 standby | keep | 抽象自 dashboard-page 本地 StatTile（bg-muted/50 灰底 mini 统计块，7 个下钻弹窗 14 实例）；首消费 dashboard-page 删本地定义全量换用，形态 class 全等拷贝 | 2026-10-31 |
-| metric-row | `src/components/semantic/metric-row.tsx` | 📦 standby | keep | 抽象自 label+Progress+数值行（analytics ProfileHealthRow/成本占比、dashboard 面板、team-stats 进度列等 8+ 处）；首消费 team-stats-section 项目进度列 1 处 | 2026-10-31 |
-| bug-template-helper | `src/shared/components/create-dialog/entity-templates/bug-template-helper.tsx` | 🔶 review | delete | 零引用（实测）——仅被自身 __tests__ 引用，无生产消费方 | 2026-10-31 |
-| doc-category-chips | `src/shared/components/create-dialog/entity-templates/doc-category-chips.tsx` | 🔶 review | delete | 零引用（实测）——仅被自身 __tests__ 引用，无生产消费方 | 2026-10-31 |
-| filter-panel | `src/shared/ui/filter-panel.tsx` | 🔶 review | delete | 零引用（实测）——唯一引用是 project-list-page.test.tsx 的 vi.mock；且构成第二个 ui 命名空间 | 2026-10-31 |
-| thinking-stream | `src/modules/assistant/components/thinking-stream.tsx` | 🔶 review | delete | 零引用（实测）——仅被设计系统页引用，无模块内消费方 | 2026-10-31 |
-| batch-create-tasks-dialog | `src/modules/issue/components/batch-create-tasks-dialog.tsx` | 🔶 review | delete | 零引用（实测）——全库无 import，且不在画廊 | 2026-10-31 |
-| task-board | `src/modules/issue/components/task-board.tsx` | 🔶 review | delete | 零引用（实测）——全库无 import（看板能力由 shared/components/board-view 承载），且不在画廊 | 2026-10-31 |
-| task-detail-drawer | `src/modules/issue/components/task-detail-drawer.tsx` | 🔶 review | delete | 孤儿组件：全库 0 importer（仅自身与测试文件引用）；F 类 §1.4 顺带发现，按 E1 制度转公示、公示期无人认领则清退 | 2026-10-31 |
-| task-rows | `src/modules/issue/components/task-rows.tsx` | 🔶 review | delete | 零引用（实测）——仅被自身测试与设计系统页引用 | 2026-10-31 |
-| agent-handoff-card | `src/modules/office/components/agent-handoff-card.tsx` | 🔶 review | delete | 零引用（实测）——仅被设计系统页引用，无模块内消费方 | 2026-10-31 |
-| mention-renderer | `src/modules/team-member/components/mention-renderer.tsx` | 🔶 review | delete | 零引用（实测）——仅被设计系统页引用；mention 渲染实际走 MarkdownView | 2026-10-31 |
-| mention-textarea | `src/modules/team-member/components/mention-textarea.tsx` | 🔶 review | delete | 零引用（实测）——仅被设计系统页与一处 vi.mock 引用 | 2026-10-31 |
+| direction | `src/components/ui/direction.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求（**清退期限 2026-10-31** · §19.6，逾期 CI 失败）（**画廊豁免**：2026-09-29 人工裁决批准删除：随批 9 清退，不补 demo） | — |
+| navigation-menu | `src/components/ui/navigation-menu.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：零引用（实测）——横向导航由 menu / breadcrumb / tabs 承载（**清退期限 2026-10-31** · §19.6，逾期 CI 失败）（**画廊豁免**：2026-09-29 人工裁决批准删除：随批 9 清退，不补 demo） | — |
+| sidebar | `src/components/ui/sidebar.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：零引用（实测）——与 ui/sidebar-panel（消费方 6）能力重叠（**清退期限 2026-10-31** · §19.6，逾期 CI 失败）（**画廊豁免**：2026-09-29 人工裁决批准删除：随批 9 清退，不补 demo） | — |
+| bug-template-helper | `src/shared/components/create-dialog/entity-templates/bug-template-helper.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：零引用（实测）——仅被自身 __tests__ 引用，无生产消费方（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） | — |
+| doc-category-chips | `src/shared/components/create-dialog/entity-templates/doc-category-chips.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：零引用（实测）——仅被自身 __tests__ 引用，无生产消费方（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） | — |
+| filter-panel | `src/shared/ui/filter-panel.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：零引用（实测）——唯一引用是 project-list-page.test.tsx 的 vi.mock；且构成第二个 ui 命名空间（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） | — |
+| thinking-stream | `src/modules/assistant/components/thinking-stream.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：零引用（实测）——仅被设计系统页引用，无模块内消费方（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） | — |
+| batch-create-tasks-dialog | `src/modules/issue/components/batch-create-tasks-dialog.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：零引用（实测）——全库无 import，且不在画廊（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） | — |
+| task-board | `src/modules/issue/components/task-board.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：零引用（实测）——全库无 import（看板能力由 shared/components/board-view 承载），且不在画廊（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） | — |
+| task-detail-drawer | `src/modules/issue/components/task-detail-drawer.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：孤儿组件：全库 0 importer（仅自身与测试文件引用）（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） | — |
+| task-rows | `src/modules/issue/components/task-rows.tsx` | ⛔ deprecated | delete | 2026-09-29 人工裁决批准删除：零引用（实测）——仅被自身测试与设计系统页引用（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） | — |
 
 ## 完整清单
 
@@ -98,10 +72,10 @@
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
-| autocomplete | `src/components/ui/autocomplete.tsx` | 🔶 review | — | 消费方仅 1（命令面板），与 ui/combobox 能力重叠（输入过滤 + 建议列表） |
+| autocomplete | `src/components/ui/autocomplete.tsx` | ✅ canonical | — | — |
 | button | `src/components/ui/button.tsx` | ✅ canonical | — | — |
-| button-group | `src/components/ui/button-group.tsx` | 📦 standby | — | F 类 F9.3 已结案（2026-09-29）：分裂按钮（主动作+下拉变体）是唯一合法场景，休眠原语不推广不清退；首个分裂按钮场景出现时启用 |
-| calendar | `src/components/ui/calendar.tsx` | 📦 standby | — | 官方注册表基线件（react-day-picker 封装），零引用（仅画廊），零维护成本 |
+| button-group | `src/components/ui/button-group.tsx` | 📦 standby | — | — |
+| calendar | `src/components/ui/calendar.tsx` | 📦 standby | — | — |
 | checkbox | `src/components/ui/checkbox.tsx` | ✅ canonical | — | — |
 | checkbox-group | `src/components/ui/checkbox-group.tsx` | ✅ canonical | — | — |
 | color-picker | `src/components/ui/color-picker.tsx` | ✅ canonical | — | — |
@@ -111,18 +85,18 @@
 | form | `src/components/ui/form.tsx` | ✅ canonical | — | — |
 | input | `src/components/ui/input.tsx` | ✅ canonical | — | — |
 | input-group | `src/components/ui/input-group.tsx` | ✅ canonical | — | — |
-| input-otp | `src/components/ui/input-otp.tsx` | 📦 standby | — | 官方注册表基线件（input-otp 库封装），零引用（仅画廊），零维护成本 |
+| input-otp | `src/components/ui/input-otp.tsx` | 📦 standby | — | — |
 | label | `src/components/ui/label.tsx` | ✅ canonical | — | — |
 | select-field | `src/components/ui/select-field.tsx` | ✅ canonical | — | — |
-| number-field | `src/components/ui/number-field.tsx` | 📦 standby | — | 自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby |
+| number-field | `src/components/ui/number-field.tsx` | 📦 standby | — | — |
 | radio-group | `src/components/ui/radio-group.tsx` | ✅ canonical | — | — |
 | segmented-control | `src/components/ui/segmented-control.tsx` | ✅ canonical | — | — |
 | select | `src/components/ui/select.tsx` | ✅ canonical | — | — |
-| slider | `src/components/ui/slider.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
+| slider | `src/components/ui/slider.tsx` | 📦 standby | — | — |
 | switch | `src/components/ui/switch.tsx` | ✅ canonical | — | — |
 | textarea | `src/components/ui/textarea.tsx` | ✅ canonical | — | — |
-| toggle | `src/components/ui/toggle.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
-| toggle-group | `src/components/ui/toggle-group.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
+| toggle | `src/components/ui/toggle.tsx` | 📦 standby | — | — |
+| toggle-group | `src/components/ui/toggle-group.tsx` | 📦 standby | — | — |
 
 #### 原语层 `src/components/raw/`（G 类：非动作交互元素具名直通出口，internal 态不出画廊）（2）
 
@@ -143,7 +117,7 @@
 | chart | `src/components/ui/chart.tsx` | ✅ canonical | — | — |
 | data-table | `src/components/ui/data-table.tsx` | ✅ canonical | — | — |
 | kbd | `src/components/ui/kbd.tsx` | ✅ canonical | — | — |
-| meter | `src/components/ui/meter.tsx` | 📦 standby | — | 自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby |
+| meter | `src/components/ui/meter.tsx` | 📦 standby | — | — |
 | mock-badge | `src/components/ui/mock-badge.tsx` | ✅ canonical | — | —（**画廊豁免**：运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态） |
 | progress | `src/components/ui/progress.tsx` | ✅ canonical | — | — |
 | table | `src/components/ui/table.tsx` | ✅ canonical | — | — |
@@ -186,14 +160,14 @@
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
-| accordion | `src/components/ui/accordion.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
-| breadcrumb | `src/components/ui/breadcrumb.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
-| collapsible | `src/components/ui/collapsible.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
+| accordion | `src/components/ui/accordion.tsx` | 📦 standby | — | — |
+| breadcrumb | `src/components/ui/breadcrumb.tsx` | 📦 standby | — | — |
+| collapsible | `src/components/ui/collapsible.tsx` | 📦 standby | — | — |
 | command | `src/components/ui/command.tsx` | ✅ canonical | — | — |
-| direction | `src/components/ui/direction.tsx` | 🔶 review | — | 零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） |
+| direction | `src/components/ui/direction.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求（**清退期限 2026-10-31** · §19.6，逾期 CI 失败）（**画廊豁免**：2026-09-29 人工裁决批准删除：随批 9 清退，不补 demo） |
 | menu | `src/components/ui/menu.tsx` | ✅ canonical | — | — |
-| menubar | `src/components/ui/menubar.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
-| navigation-menu | `src/components/ui/navigation-menu.tsx` | 🔶 review | — | 零引用（实测）——横向导航由 menu / breadcrumb / tabs 承载（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） |
+| menubar | `src/components/ui/menubar.tsx` | 📦 standby | — | — |
+| navigation-menu | `src/components/ui/navigation-menu.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：零引用（实测）——横向导航由 menu / breadcrumb / tabs 承载（**清退期限 2026-10-31** · §19.6，逾期 CI 失败）（**画廊豁免**：2026-09-29 人工裁决批准删除：随批 9 清退，不补 demo） |
 | pagination | `src/components/ui/pagination.tsx` | ✅ canonical | — | — |
 | sortable | `src/components/ui/sortable.tsx` | ✅ canonical | — | — |
 | stepper | `src/components/ui/stepper.tsx` | ✅ canonical | — | — |
@@ -212,11 +186,11 @@
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
 | alert-dialog | `src/components/ui/alert-dialog.tsx` | ✅ canonical | — | — |
-| anchored-menu | `src/components/ui/anchored-menu.tsx` | 🔶 review | — | 零引用（实测）——与 ui/menu 能力重叠，锚定下拉统一走 menu / dropdown-menu（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） |
+| anchored-menu | `src/components/ui/anchored-menu.tsx` | 🔒 internal | — | — |
 | context-menu | `src/components/ui/context-menu.tsx` | ✅ canonical | — | — |
 | dialog | `src/components/ui/dialog.tsx` | ✅ canonical | — | — |
-| drawer | `src/components/ui/drawer.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
-| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | ⛔ deprecated | — | 与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。2026-09-28 裁决 A：已扩 gen-components-md.mjs 解析 expiresAt，原先「生成器不认该槽位、写入即被丢弃」的工具互斥**已解除**，本件正式置 deprecated 限期迁移（至 2026-12-31）；迁移指引见 ui/dropdown-menu.tsx 文件头。（**清退期限 2026-12-31** · §19.6，逾期 CI 失败） |
+| drawer | `src/components/ui/drawer.tsx` | 📦 standby | — | — |
+| dropdown-menu | `src/components/ui/dropdown-menu.tsx` | ⛔ deprecated | — | —（**清退期限 2026-12-31** · §19.6，逾期 CI 失败） |
 | hover-card | `src/components/ui/hover-card.tsx` | ✅ canonical | — | — |
 | menu-surface | `src/components/ui/menu-surface.ts` | ✅ canonical | — | —（**画廊豁免**：非可视组件（菜单定位工具，.ts），无可视 demo） |
 | popover | `src/components/ui/popover.tsx` | ✅ canonical | — | — |
@@ -227,7 +201,7 @@
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
-| view-display-popover | `src/components/semantic/view-display-popover.tsx` | 🔶 review | — | 零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） |
+| view-display-popover | `src/components/semantic/view-display-popover.tsx` | 🔒 internal | — | — |
 
 ### Layout & Shells（12）
 
@@ -235,12 +209,12 @@
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
-| aspect-ratio | `src/components/ui/aspect-ratio.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
+| aspect-ratio | `src/components/ui/aspect-ratio.tsx` | 📦 standby | — | — |
 | card | `src/components/ui/card.tsx` | ✅ canonical | — | — |
 | item | `src/components/ui/item.tsx` | ✅ canonical | — | — |
 | scroll-area | `src/components/ui/scroll-area.tsx` | ✅ canonical | — | — |
 | separator | `src/components/ui/separator.tsx` | ✅ canonical | — | — |
-| sidebar | `src/components/ui/sidebar.tsx` | 🔶 review | — | 零引用（实测）——与 ui/sidebar-panel（消费方 6）能力重叠（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） |
+| sidebar | `src/components/ui/sidebar.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：零引用（实测）——与 ui/sidebar-panel（消费方 6）能力重叠（**清退期限 2026-10-31** · §19.6，逾期 CI 失败）（**画廊豁免**：2026-09-29 人工裁决批准删除：随批 9 清退，不补 demo） |
 
 #### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（5）
 
@@ -290,7 +264,7 @@
 | assistant-run-line | `src/modules/assistant/components/assistant-run-line.tsx` | ✅ canonical | — | — |
 | assistant-status-dot | `src/modules/assistant/components/assistant-status-dot.tsx` | ✅ canonical | — | — |
 | assistant-tool-card | `src/modules/assistant/components/assistant-tool-card.tsx` | ✅ canonical | — | — |
-| thinking-stream | `src/modules/assistant/components/thinking-stream.tsx` | 🔶 review | — | 零引用（实测）——仅被设计系统页引用，无模块内消费方 |
+| thinking-stream | `src/modules/assistant/components/thinking-stream.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：零引用（实测）——仅被设计系统页引用，无模块内消费方（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） |
 
 ### App Patterns（6）
 
@@ -311,12 +285,12 @@
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
-| chip | `src/components/semantic/chip.tsx` | 📦 standby | — | G5 裁决示范组件：三层链路端到端样板；已接首个业务消费（decision-card-shell 驳回原因 chips，2026-09-29，方案立项点名的原始场景），后续消费按簇另批 |
+| chip | `src/components/semantic/chip.tsx` | ✅ canonical | — | — |
 | nav-status-dot | `src/components/semantic/nav-status-dot.tsx` | ✅ canonical | — | — |
 | theme-mode-card | `src/components/semantic/theme-mode-card.tsx` | ✅ canonical | — | — |
-| chart-card | `src/components/semantic/chart-card.tsx` | 📦 standby | — | 抽象自 Card+CardTitle+卡头 hint/action+定高图表容器组合（project-overview-charts / analytics / team-stats 等 8+ 处手写）；首消费 project-overview-charts 两块（燃尽 md / 分布 lg） |
-| stat-tile | `src/components/semantic/stat-tile.tsx` | 📦 standby | — | 抽象自 dashboard-page 本地 StatTile（bg-muted/50 灰底 mini 统计块，7 个下钻弹窗 14 实例）；首消费 dashboard-page 删本地定义全量换用，形态 class 全等拷贝 |
-| metric-row | `src/components/semantic/metric-row.tsx` | 📦 standby | — | 抽象自 label+Progress+数值行（analytics ProfileHealthRow/成本占比、dashboard 面板、team-stats 进度列等 8+ 处）；首消费 team-stats-section 项目进度列 1 处 |
+| chart-card | `src/components/semantic/chart-card.tsx` | ✅ canonical | — | — |
+| stat-tile | `src/components/semantic/stat-tile.tsx` | ✅ canonical | — | — |
+| metric-row | `src/components/semantic/metric-row.tsx` | ✅ canonical | — | — |
 | stats-card | `src/components/semantic/stats-card.tsx` | ✅ canonical | — | — |
 
 ### App Components（209）
@@ -325,7 +299,7 @@
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
-| filter-panel | `src/shared/ui/filter-panel.tsx` | 🔶 review | — | 零引用（实测）——唯一引用是 project-list-page.test.tsx 的 vi.mock；且构成第二个 ui 命名空间 |
+| filter-panel | `src/shared/ui/filter-panel.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：零引用（实测）——唯一引用是 project-list-page.test.tsx 的 vi.mock；且构成第二个 ui 命名空间（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） |
 
 #### 跨模块业务组件 `src/shared/components/`（29）
 
@@ -341,8 +315,8 @@
 | connection-banner | `src/shared/components/connection-banner.tsx` | ✅ canonical | — | — |
 | acceptance-criteria-field | `src/shared/components/create-dialog/acceptance-criteria-field.tsx` | ✅ canonical | — | — |
 | agent-presence-banner | `src/shared/components/create-dialog/agent-presence-banner.tsx` | ✅ canonical | — | — |
-| bug-template-helper | `src/shared/components/create-dialog/entity-templates/bug-template-helper.tsx` | 🔶 review | — | 零引用（实测）——仅被自身 __tests__ 引用，无生产消费方 |
-| doc-category-chips | `src/shared/components/create-dialog/entity-templates/doc-category-chips.tsx` | 🔶 review | — | 零引用（实测）——仅被自身 __tests__ 引用，无生产消费方 |
+| bug-template-helper | `src/shared/components/create-dialog/entity-templates/bug-template-helper.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：零引用（实测）——仅被自身 __tests__ 引用，无生产消费方（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） |
+| doc-category-chips | `src/shared/components/create-dialog/entity-templates/doc-category-chips.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：零引用（实测）——仅被自身 __tests__ 引用，无生产消费方（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） |
 | project-source-tabs | `src/shared/components/create-dialog/entity-templates/project-source-tabs.tsx` | ✅ canonical | — | — |
 | create-dialog/index | `src/shared/components/create-dialog/index.tsx` | ✅ canonical | — | — |
 | mode-shuttle-button | `src/shared/components/create-dialog/mode-shuttle-button.tsx` | ✅ canonical | — | — |
@@ -444,7 +418,7 @@
 | readiness-dialog | `src/modules/intake/components/readiness-dialog.tsx` | ✅ canonical | — | — |
 | acceptance-criteria-preview | `src/modules/issue/components/acceptance-criteria-preview.tsx` | ✅ canonical | — | — |
 | ai-assign-dialog | `src/modules/issue/components/ai-assign-dialog.tsx` | ✅ canonical | — | — |
-| batch-create-tasks-dialog | `src/modules/issue/components/batch-create-tasks-dialog.tsx` | 🔶 review | — | 零引用（实测）——全库无 import，且不在画廊 |
+| batch-create-tasks-dialog | `src/modules/issue/components/batch-create-tasks-dialog.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：零引用（实测）——全库无 import，且不在画廊（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） |
 | batch-update-issues-dialog | `src/modules/issue/components/batch-update-issues-dialog.tsx` | ✅ canonical | — | — |
 | board-presets | `src/modules/issue/components/board-presets.tsx` | ✅ canonical | — | — |
 | bug-simple-list | `src/modules/issue/components/bug-simple-list.tsx` | ✅ canonical | — | — |
@@ -457,12 +431,12 @@
 | issue-type-switcher | `src/modules/issue/components/issue-type-switcher.tsx` | ✅ canonical | — | — |
 | iteration-detail-dialog | `src/modules/issue/components/iteration-detail-dialog.tsx` | ✅ canonical | — | — |
 | iteration-form-dialog | `src/modules/issue/components/iteration-form-dialog.tsx` | ✅ canonical | — | — |
-| task-board | `src/modules/issue/components/task-board.tsx` | 🔶 review | — | 零引用（实测）——全库无 import（看板能力由 shared/components/board-view 承载），且不在画廊 |
-| task-detail-drawer | `src/modules/issue/components/task-detail-drawer.tsx` | 🔶 review | — | 孤儿组件：全库 0 importer（仅自身与测试文件引用）；F 类 §1.4 顺带发现，按 E1 制度转公示、公示期无人认领则清退 |
+| task-board | `src/modules/issue/components/task-board.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：零引用（实测）——全库无 import（看板能力由 shared/components/board-view 承载），且不在画廊（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） |
+| task-detail-drawer | `src/modules/issue/components/task-detail-drawer.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：孤儿组件：全库 0 importer（仅自身与测试文件引用）（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） |
 | task-gantt | `src/modules/issue/components/task-gantt.tsx` | ✅ canonical | — | — |
 | task-import-export | `src/modules/issue/components/task-import-export.tsx` | ✅ canonical | — | — |
 | task-prompt-panel | `src/modules/issue/components/task-prompt-panel.tsx` | ✅ canonical | — | — |
-| task-rows | `src/modules/issue/components/task-rows.tsx` | 🔶 review | — | 零引用（实测）——仅被自身测试与设计系统页引用 |
+| task-rows | `src/modules/issue/components/task-rows.tsx` | ⛔ deprecated | — | 2026-09-29 人工裁决批准删除：零引用（实测）——仅被自身测试与设计系统页引用（**清退期限 2026-10-31** · §19.6，逾期 CI 失败） |
 | task-simple-list | `src/modules/issue/components/task-simple-list.tsx` | ✅ canonical | — | — |
 | task-table-view | `src/modules/issue/components/task-table-view.tsx` | ✅ canonical | — | — |
 | linear-config-form | `src/modules/linear/components/linear-config-form.tsx` | ✅ canonical | — | — |
@@ -476,7 +450,7 @@
 | task-linear-panel | `src/modules/linear/components/task-linear-panel.tsx` | ✅ canonical | — | — |
 | inbox-item-row | `src/modules/notification/components/inbox-item-row.tsx` | ✅ canonical | — | — |
 | notification-settings-dialog | `src/modules/notification/components/notification-settings-dialog.tsx` | ✅ canonical | — | — |
-| agent-handoff-card | `src/modules/office/components/agent-handoff-card.tsx` | 🔶 review | — | 零引用（实测）——仅被设计系统页引用，无模块内消费方 |
+| agent-handoff-card | `src/modules/office/components/agent-handoff-card.tsx` | 📦 standby | — | — |
 | collaboration-section | `src/modules/office/components/collaboration-section.tsx` | ✅ canonical | — | — |
 | colleague-card | `src/modules/office/components/colleague-card.tsx` | ✅ canonical | — | — |
 | onboarding-gate | `src/modules/onboarding/components/onboarding-gate.tsx` | ✅ canonical | — | — |
@@ -529,8 +503,8 @@
 | member-list | `src/modules/team-member/components/member-list.tsx` | ✅ canonical | — | — |
 | member-picker | `src/modules/team-member/components/member-picker.tsx` | ✅ canonical | — | — |
 | member-tool-grants | `src/modules/team-member/components/member-tool-grants.tsx` | ✅ canonical | — | — |
-| mention-renderer | `src/modules/team-member/components/mention-renderer.tsx` | 🔶 review | — | 零引用（实测）——仅被设计系统页引用；mention 渲染实际走 MarkdownView |
-| mention-textarea | `src/modules/team-member/components/mention-textarea.tsx` | 🔶 review | — | 零引用（实测）——仅被设计系统页与一处 vi.mock 引用 |
+| mention-renderer | `src/modules/team-member/components/mention-renderer.tsx` | 📦 standby | — | — |
+| mention-textarea | `src/modules/team-member/components/mention-textarea.tsx` | 📦 standby | — | — |
 | team-card | `src/modules/team-member/components/team-card.tsx` | ✅ canonical | — | — |
 | team-create-dialog | `src/modules/team-member/components/team-create-dialog.tsx` | ✅ canonical | — | — |
 | team-hierarchy-section | `src/modules/team-member/components/team-hierarchy-section.tsx` | ✅ canonical | — | — |

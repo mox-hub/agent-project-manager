@@ -302,10 +302,6 @@ const LU_BASELINE = new Map([
     "仅被原子层内部（ui/global-loading-state.tsx）与 app 入口引用 ⇒ 按 §19.3 表应改判 internal",
   ],
   ["mock-badge", "仅被 app 入口 src/main.tsx 引用 ⇒ 同上"],
-  [
-    "task-detail-drawer",
-    "全库零引用（实测，仅注释中提及）——canonical 但无消费方，属真·孤儿件",
-  ],
 ]);
 
 const canonicalEntries = registryEntries.filter((e) => e.status === "canonical");
