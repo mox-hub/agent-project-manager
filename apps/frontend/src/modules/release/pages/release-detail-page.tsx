@@ -18,8 +18,8 @@ import {
   Sparkles,
   XCircle,
 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { PageShell } from '@/components/semantic/page-shell';
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

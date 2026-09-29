@@ -9,7 +9,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 // PageShell 内嵌 PageHeader 依赖收藏/标签页上下文，section 测试只关注卡片内容
-vi.mock('@/components/ui/page-shell', () => ({
+vi.mock('@/components/semantic/page-shell', () => ({
   PageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 

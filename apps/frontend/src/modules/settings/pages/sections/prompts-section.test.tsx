@@ -26,7 +26,7 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
-vi.mock('@/components/ui/page-shell', () => ({
+vi.mock('@/components/semantic/page-shell', () => ({
   PageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 

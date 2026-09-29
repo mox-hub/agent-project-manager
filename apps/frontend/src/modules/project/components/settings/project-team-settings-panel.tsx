@@ -4,7 +4,7 @@ import { ExternalLink, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { SectionCard } from '@/components/ui/section-card';
+import { SectionCard } from '@/components/semantic/section-card';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useProjectDashboardSummary } from '../../hooks/use-project-dashboard-summary';

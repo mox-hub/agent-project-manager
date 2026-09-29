@@ -1,7 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PageHeader, type PageHeaderMetric } from "./page-header";
+import { PageHeader, type PageHeaderMetric } from "@/components/semantic/page-header";
 
 export type PageShellVariant = 'full' | 'wide' | 'standard' | 'reading';
 
@@ -48,7 +48,12 @@ export interface PageShellProps {
   iconColor?: string;
   actions?: ReactNode;
   metrics?: PageHeaderMetric[];
-  favoriteId?: string;
+  /**
+   * 标题右侧收藏/订阅槽位：由业务调用方构造节点（如 <FavoriteToggle /> / <SubscribeButton />），
+   * 透传给内嵌 PageHeader，不传则不渲染（收藏标识未传时默认取当前路由 path）。
+   */
+  favorites?: ReactNode;
+  subscribe?: ReactNode;
 }
 
 export function PageShell({
@@ -63,7 +68,8 @@ export function PageShell({
   iconColor,
   actions,
   metrics,
-  favoriteId,
+  favorites,
+  subscribe,
 }: PageShellProps) {
   const hasHeader = Boolean(title || icon || actions || metrics);
   const shouldPad = padded ?? (variant !== 'full');
@@ -82,7 +88,8 @@ export function PageShell({
           iconColor={iconColor}
           actions={actions}
           metrics={metrics}
-          favoriteId={favoriteId}
+          favorites={favorites}
+          subscribe={subscribe}
           aiId={aiPage}
           className="border-content-border"
         />

@@ -10,7 +10,7 @@ import {
   SkipForward,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SectionCard } from '@/components/ui/section-card';
+import { SectionCard } from '@/components/semantic/section-card';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import {

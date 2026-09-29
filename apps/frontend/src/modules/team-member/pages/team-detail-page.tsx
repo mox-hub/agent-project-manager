@@ -23,12 +23,12 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { PageShell } from '@/components/semantic/page-shell';
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
-import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui/right-sidebar';
+import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/semantic/right-sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,13 +41,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import {
   AutoSizeTextarea,
   CapsuleSelect,
   PropertyRow,
   PropsCard,
-} from '@/components/ui/property-panel';
+} from '@/shared/components/property-panel';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { toast } from '@/components/ui/toast';

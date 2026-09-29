@@ -17,8 +17,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { RightSidebar, SidebarButtonGroup } from '@/components/ui/right-sidebar';
-import { SidebarPanel } from '@/components/ui/sidebar-panel';
+import { RightSidebar, SidebarButtonGroup } from '@/components/semantic/right-sidebar';
+import { SidebarPanel } from '@/components/semantic/sidebar-panel';
 import {
   LinearSourceBadge,
   LinearSyncStatusBadge,

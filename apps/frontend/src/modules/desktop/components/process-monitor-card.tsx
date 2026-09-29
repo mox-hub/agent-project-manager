@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { AppWindow, Bot, Cpu, Monitor, RefreshCw, Server } from 'lucide-react';
 import { isDesktopShellAvailable, type DesktopProcessStat } from '@/shared/types/electron-api';
 import { useProcessStats } from '../hooks/use-process-stats';
-import { SectionCard } from '@/components/ui/section-card';
-import { StatusPill } from '@/components/ui/status-pill';
+import { SectionCard } from '@/components/semantic/section-card';
+import { StatusPill } from '@/components/semantic/status-pill';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import {

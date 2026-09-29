@@ -9,10 +9,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Monitor, Power, RefreshCw, Server } from 'lucide-react';
-import { PageShell, PageBody } from '@/components/ui/page-shell';
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
-import { SectionCard } from '@/components/ui/section-card';
-import { StatusPill } from '@/components/ui/status-pill';
+import { PageShell, PageBody } from '@/components/semantic/page-shell';
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
+import { SectionCard } from '@/components/semantic/section-card';
+import { StatusPill } from '@/components/semantic/status-pill';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
@@ -25,10 +25,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DataTableShell } from '@/components/ui/data-table-shell';
-import { AsyncState } from '@/components/ui/async-state';
+import { DataTableShell } from '@/components/semantic/data-table-shell';
+import { AsyncState } from '@/components/semantic/async-state';
 import { SkeletonTable } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { getProviderMeta } from '@/shared/ai-providers/provider-meta';
 import {
   invoke,

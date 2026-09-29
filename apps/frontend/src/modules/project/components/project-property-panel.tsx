@@ -15,8 +15,8 @@ import {
   CapsuleSelect,
   DateCapsuleField,
   PropertyRow,
-} from '@/components/ui/property-panel';
-import { SidebarPanel } from '@/components/ui/sidebar-panel';
+} from '@/shared/components/property-panel';
+import { SidebarPanel } from '@/components/semantic/sidebar-panel';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { useUpdateProject } from '../hooks/use-project-mutations';
 import { useMembers } from '@/modules/team-member/hooks';

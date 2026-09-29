@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SectionCard } from '@/components/ui/section-card';
+import { SectionCard } from '@/components/semantic/section-card';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { playbookApi } from '@/modules/project/api/playbook-api';

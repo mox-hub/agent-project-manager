@@ -1,6 +1,7 @@
 import type { ReactNode, ComponentProps } from 'react';
 import { PanelRight, PanelRightClose, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RawButton } from '@/components/raw/raw-button';
 
 /**
  * RightSidebar - 统一右侧栏容器
@@ -76,7 +77,7 @@ export function SidebarButton({
 } & Omit<ComponentProps<'button'>, 'children'>) {
   if (variant === 'capsule') {
     return (
-      <button
+      <RawButton
         type={type}
         onClick={onClick}
         aria-label={label}
@@ -89,11 +90,11 @@ export function SidebarButton({
       >
         <Icon className="size-3.5 shrink-0" />
         <span className="truncate">{label}</span>
-      </button>
+      </RawButton>
     );
   }
   return (
-    <button
+    <RawButton
       type={type}
       onClick={onClick}
       aria-label={label}
@@ -105,7 +106,7 @@ export function SidebarButton({
       {...rest}
     >
       <Icon className="size-3.5 shrink-0" />
-    </button>
+    </RawButton>
   );
 }
 
@@ -124,7 +125,7 @@ export function SidebarToggle({
   className?: string;
 }) {
   return (
-    <button
+    <RawButton
       type="button"
       onClick={onToggle}
       aria-label={open ? '收起侧边栏' : '展开侧边栏'}
@@ -136,6 +137,6 @@ export function SidebarToggle({
       )}
     >
       {open ? <PanelRightClose className="size-3.5" /> : <PanelRight className="size-3.5" />}
-    </button>
+    </RawButton>
   );
 }

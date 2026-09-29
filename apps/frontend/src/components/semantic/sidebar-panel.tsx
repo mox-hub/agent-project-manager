@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RawButton } from '@/components/raw/raw-button';
 
 /**
  * SidebarPanel - 右侧栏统一「圆角矩形 ↔ 圆角胶囊」折叠面板
@@ -62,7 +63,7 @@ export function SidebarPanel({
           {title}
         </span>
         {action ? <span className="flex shrink-0 items-center">{action}</span> : null}
-        <button
+        <RawButton
           type="button"
           onClick={toggle}
           className="size-5 inline-flex shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -75,7 +76,7 @@ export function SidebarPanel({
               !collapsed && 'rotate-180',
             )}
           />
-        </button>
+        </RawButton>
       </div>
 
       {/* 内容区：grid-rows 动画实现流畅展开 / 收起 */}

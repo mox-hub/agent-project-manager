@@ -11,7 +11,7 @@ import {
   type DesktopPersistentState,
   type DesktopUpdateStatus,
 } from '@/shared/types/electron-api';
-import { SectionCard } from '@/components/ui/section-card';
+import { SectionCard } from '@/components/semantic/section-card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';

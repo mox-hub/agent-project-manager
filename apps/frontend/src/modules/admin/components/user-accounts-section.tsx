@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import {
   Table,
   TableBody,
@@ -22,9 +22,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DataTableShell } from '@/components/ui/data-table-shell';
+import { DataTableShell } from '@/components/semantic/data-table-shell';
 import { Menu, MenuTrigger, MenuPopup, MenuItem } from '@/components/ui/menu';
-import { AsyncState } from '@/components/ui/async-state';
+import { AsyncState } from '@/components/semantic/async-state';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { toast } from '@/components/ui/toast';
 import { useAdminUsers, useToggleAdminRole, useUpdateAdminUser } from '../hooks/use-admin';

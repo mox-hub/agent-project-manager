@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { GitCommit } from 'lucide-react';
-import { AsyncState } from '@/components/ui/async-state';
-import { SectionCard } from '@/components/ui/section-card';
+import { AsyncState } from '@/components/semantic/async-state';
+import { SectionCard } from '@/components/semantic/section-card';
 import { SkeletonText } from '@/components/ui/skeleton';
 import { useCommits } from '../hooks/use-commits';
 import type { Commit } from '../api/git-api';

@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowDown, Copy, ScrollText, Search, Trash2 } from 'lucide-react';
 import { isDesktopShellAvailable } from '@/shared/types/electron-api';
 import { useDesktopLogs, type LogLevelFilter } from '../hooks/use-desktop-logs';
-import { SectionCard } from '@/components/ui/section-card';
+import { SectionCard } from '@/components/semantic/section-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';

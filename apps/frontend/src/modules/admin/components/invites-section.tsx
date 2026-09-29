@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Copy, Undo2, Info } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import {
   Table,
   TableBody,
@@ -13,8 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DataTableShell } from '@/components/ui/data-table-shell';
-import { AsyncState } from '@/components/ui/async-state';
+import { DataTableShell } from '@/components/semantic/data-table-shell';
+import { AsyncState } from '@/components/semantic/async-state';
 import { toast } from '@/components/ui/toast';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { authApi } from '@/modules/auth/api/auth-api';

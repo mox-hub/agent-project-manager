@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { AsyncState } from "@/components/ui/async-state";
+import { AsyncState } from "@/components/semantic/async-state";
 import { Button } from "@/components/ui/button";
-import { DataTableShell } from "@/components/ui/data-table-shell";
+import { DataTableShell } from "@/components/semantic/data-table-shell";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { SectionCard } from "@/components/ui/section-card";
+import { SectionCard } from "@/components/semantic/section-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateRepository, useRepositories } from "../hooks/use-repositories";
 import { useProjectList } from "@/modules/project/hooks/use-project-list";

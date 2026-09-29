@@ -26,16 +26,16 @@ import {
   UserX,
   Users,
 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { PageShell } from '@/components/semantic/page-shell';
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
-import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui/right-sidebar';
+import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/semantic/right-sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { SectionCard } from '@/components/ui/section-card';
-import { EmptyState } from '@/components/ui/empty-state';
+import { SectionCard } from '@/components/semantic/section-card';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { StatsCard } from '@/components/semantic/stats-card';
 import {
   AutoSizeTextarea,

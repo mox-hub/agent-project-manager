@@ -13,8 +13,8 @@ import { Plus, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { SectionCard } from '@/components/ui/section-card';
-import { EmptyState } from '@/components/ui/empty-state';
+import { SectionCard } from '@/components/semantic/section-card';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { toast } from '@/hooks/use-toast';
 import {
   useBindTeamProject,

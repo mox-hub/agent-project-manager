@@ -22,14 +22,14 @@ import {
   User as UserIcon,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
-import { PageShell } from '@/components/ui/page-shell';
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { PageShell } from '@/components/semantic/page-shell';
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { MarkdownView } from '@/shared/components/markdown-view';
-import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/ui/right-sidebar';
-import { SidebarPanel } from '@/components/ui/sidebar-panel';
+import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/semantic/right-sidebar';
+import { SidebarPanel } from '@/components/semantic/sidebar-panel';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
@@ -38,7 +38,7 @@ import {
 import {
   CapsuleSelect, DateCapsuleField, AutoSizeTextarea,
   PropertyRow, PropsCard, MemberAvatar,
-} from '@/components/ui/property-panel';
+} from '@/shared/components/property-panel';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor';

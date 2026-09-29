@@ -39,8 +39,8 @@ import {
 } from '@/components/ui/combobox';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
-import { PropertyRow } from '@/components/ui/property-panel';
-import { SidebarPanel } from '@/components/ui/sidebar-panel';
+import { PropertyRow } from '@/shared/components/property-panel';
+import { SidebarPanel } from '@/components/semantic/sidebar-panel';
 import { cn } from '@/lib/utils';
 import {
   getPropertyKeyType,

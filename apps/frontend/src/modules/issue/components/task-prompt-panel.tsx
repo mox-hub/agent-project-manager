@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LayoutTemplate, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SidebarPanel } from '@/components/ui/sidebar-panel';
+import { SidebarPanel } from '@/components/semantic/sidebar-panel';
 import { PromptEditor } from '@/shared/components/prompt-editor';
 import { TemplatePickerDialog } from '@/modules/prompt/components/template-picker-dialog';
 import { useSilentPromptDraft } from '@/modules/assistant/hooks/use-silent-ai';

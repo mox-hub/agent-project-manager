@@ -9,8 +9,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HeaderActionButton } from "./header-action-button";
-import { SegmentedControl, type SegmentedTone } from "./segmented-control";
+import { HeaderActionButton } from "@/components/semantic/header-action-button";
+import { SegmentedControl, type SegmentedTone } from "@/components/ui/segmented-control";
 
 export interface SubPageBreadcrumb {
   label: ReactNode;
