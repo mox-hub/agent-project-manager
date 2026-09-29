@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Logo } from '@/components/brand/logo';
 import { Button } from '@/components/ui/button';
-import { useTheme, type ThemeMode } from '@/shared/theme/theme-context';
+import { useTheme, type ResolvedTheme } from '@/shared/theme/theme-context';
 import { useDesktopCompactWindow } from '@/modules/desktop';
 import { BlueprintCanvas } from './visuals/blueprint-canvas';
 import { PrismCanvas } from './visuals/prism-canvas';
@@ -22,17 +22,18 @@ export type SurfaceMode = 'human' | 'ai';
 
 const SURFACE_STORAGE_KEY = 'apm_auth_surface_mode';
 
-function useSafeTheme(): { mode: ThemeMode; toggleTheme: () => void } {
+function useSafeTheme(): { resolvedMode: ResolvedTheme; toggleTheme: () => void } {
   try {
     const theme = useTheme();
-    return { mode: theme.mode, toggleTheme: theme.toggleTheme };
+    return { resolvedMode: theme.resolvedMode, toggleTheme: theme.toggleTheme };
   } catch {
-    // 单元测试或环境无 ThemeProvider 时的安全兜底
+    // 单元测试或环境无 ThemeProvider 时的安全兜底：
+    // 无 Context 就拿不到意图，但 DOM 上的生效主题类始终是真相，直接读它。
     const isDark =
       typeof document !== 'undefined' &&
       document.documentElement.classList.contains('dark');
     return {
-      mode: isDark ? 'dark' : 'light',
+      resolvedMode: isDark ? 'dark' : 'light',
       toggleTheme: () => {
         if (typeof document !== 'undefined') {
           document.documentElement.classList.toggle('dark');
@@ -56,8 +57,8 @@ export function AuthVisualCard({
   aiPage,
 }: AuthVisualCardProps) {
   const { i18n } = useTranslation();
-  const { mode, toggleTheme } = useSafeTheme();
-  const isDark = mode === 'dark';
+  const { resolvedMode, toggleTheme } = useSafeTheme();
+  const isDark = resolvedMode === 'dark';
   // 桌面壳：认证面期间主窗口收缩为紧凑小窗并隐藏标题栏（web 端 no-op）
   useDesktopCompactWindow();
 

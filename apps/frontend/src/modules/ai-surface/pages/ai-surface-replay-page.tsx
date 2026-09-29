@@ -39,8 +39,8 @@ const PARSED = parseScreenplay(FIRST_DELIVERY_SCREENPLAY);
 
 export function AiSurfaceReplayPage() {
   const navigate = useNavigate();
-  const { mode, toggleTheme } = useTheme();
-  const isDark = mode === 'dark';
+  const { resolvedMode, toggleTheme } = useTheme();
+  const isDark = resolvedMode === 'dark';
 
   const screenplay = PARSED.screenplay;
   const frames = useMemo(() => screenplay?.frames ?? [], [screenplay]);

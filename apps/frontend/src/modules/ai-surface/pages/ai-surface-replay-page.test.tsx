@@ -25,7 +25,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('@/shared/theme/theme-context', () => ({
-  useTheme: () => ({ mode: 'dark', toggleTheme: vi.fn() }),
+  useTheme: () => ({ mode: 'dark', resolvedMode: 'dark', toggleTheme: vi.fn() }),
 }));
 
 /** 回放页**不该**连任何实时通道；这条替身一旦被调用就说明这条纪律被破了 */

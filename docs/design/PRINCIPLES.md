@@ -558,6 +558,7 @@ AI 会话开工前必读（由 `frontend-page` skill 强制）。
 | A3 | `components/ui/number-field.tsx` | `leading` | **结构性行高**：`leading-8.5/9.5/7.5` 与同串 `h-8.5/9.5/7.5` 逐档配对做输入框文字垂直居中，非排版行高；机械语义化会破坏居中 | 不计划清除——改的是几何，不是排版 |
 | A4 | `modules/design-system/**` | `*`（全部） | **设计系统展示页**的存在意义就是陈列 token 名与各档对照，必然出现规范禁止的档位（同 `check-palette.mjs` 的既有白名单惯例） | 不计划清除（展示页属性） |
 | A5 | `modules/linear/**`、`appearance-section.tsx`、`ui/spinner.tsx` | 颜色（`check-palette.mjs`） | linear 品牌色需原值；外观设置的主题预览缩略图**预览即字面色**；spinner 的色环属其实现细节 | 不计划清除（均为设计上可解释的用例） |
+| A8 | `components/semantic/theme-mode-card.tsx` | 颜色（`check-palette.mjs`，**整文件粒度**——脚本的 `EXEMPT` 只提供整文件放行，本行覆盖范围即整个文件） | ① **预览缩略图的字面色**（`bg-white` / `bg-zinc-950` / `bg-gray-700`）：预览要回答「日间 / 夜间分别长什么样」，必须与当前主题无关——改成随主题走的 token，则浅色主题下画不出深色预览块，预览即失真。性质同 A5 中「外观设置的主题预览缩略图」；该件 2026-09-29 从 `appearance-section.tsx` 提取为独立语义组件，故单列而不并入 A5，使两条范围在审计时各自可见。② **顺带覆盖**选中徽标的 `text-white`（`bg-accent-blue` 底白字，与 C2 legacy 白名单 (b) 组同类）——提取时按「不夹带视觉变更」原样搬运；改配对的 `accent-foreground` 在**浅色主题下是近黑色**（`240 5.9% 10%`），会实打实换掉观感，故不属零视觉变更，未做 | ① 不计划清除——是预览语义的边界，不是债务（范围随组件文件走）。② 待配套前景 token 补齐后收窄（口径同 C2 legacy (b) 组）——届时要么把本行拆成「预览字面色」与「徽标前景」两条，要么给脚本补 per-token 粒度；**在此之前②是登记在案的越界，不是已批准的设计** |
 
 > **A2+A4 曾导致一次方案否决**：A 类方案 §3.6 第 3 步建议设 `--shadow-*: initial` 让违规档「物理上无法生成 CSS」。经裁决**不实施**——命名空间闭合会连带抹掉 A2/A4 已豁免的投影，把「豁免」变成静默破版。**物理闭合与豁免机制不可并存**，取「豁免 + lint 拦截」（§3.6）。同一原因，`check-palette.mjs` 中的 `RAW_SHADOW` 系列正则已整体删除，阴影治理单点收敛到 `check-spacing-governance.mjs`。
 

@@ -28,8 +28,8 @@ import { Sparkles, ArrowLeft, Sun, Moon, Maximize2, Minimize2, Rewind } from 'lu
 
 export function AiSurfacePage() {
   const navigate = useNavigate();
-  const { mode, toggleTheme } = useTheme();
-  const isDark = mode === 'dark';
+  const { resolvedMode, toggleTheme } = useTheme();
+  const isDark = resolvedMode === 'dark';
   // 项目范围：沿用 CAP-A-15 的管道项目聚焦（URL ?project 优先），派发需要有项目作用域
   const { focusProjectId } = usePipelineProjectFilter();
   const dispatch = useDispatchAssistantMessage(focusProjectId ?? undefined);

@@ -47,14 +47,31 @@ const INLINE_COLOR = /#[0-9a-fA-F]{3,8}\b|\brgba?\([^)]*\)/g;
 //    胶囊底色会与背景**完全同色 → 选中态隐形**（2026-09-14 实测）。
 const RAW_NEUTRAL = /\b(?:bg|text|border|fill|stroke)-(?:white|black)\b/g;
 
+// 主题预览豁免（2026-09-29 新增，对应宪法附录 A.1 行 A8）：
+// 语义组件层「主题模式卡片」的预览缩略图。预览要展示「日间 / 夜间分别长什么样」，
+// 必须与当前主题无关——改成随主题走的 token，浅色主题下就画不出深色预览块，预览即失真。
+// 性质同 `appearance-section.tsx` 那条（预览即字面色），但该件已独立成组件，
+// 故单列一条、不并入 A5 的历史遗留整文件放行，便于审计时看清它与 A5 各自的范围。
+//
+// ⚠️ 范围诚实声明：本谓词落在 `EXEMPT`（**整文件**粒度，非 per-token），故实际覆盖
+// 不止「预览的字面色」。本文件当前还命中一处：选中徽标的 `text-white`（C2 无编号
+// 裸色，`bg-accent-blue` 底白字，与 NEUTRAL_LEGACY_ALLOWLIST (b) 组同类）。该处是
+// 提取时按「不夹带视觉变更」原样搬运的存量，改配对的 `accent-foreground` 在浅色
+// 主题下是近黑色（`240 5.9% 10%`），**会实打实换观感**，故未改。
+// 这一处属**登记在案的越界**（宪法附录 A.1 行 A8 已同文声明），不是已批准的设计；
+// 待配套前景 token 补齐后收窄——届时或拆两条，或给本脚本补 per-token 粒度。
+const THEME_PREVIEW_EXEMPT = (relUnix) =>
+  relUnix.endsWith("components/semantic/theme-mode-card.tsx");
+
 // 整文件豁免（既有，批 7a 保留）：按**子树/文件**放行色板类与内联裸色两条规则。
 // linear 品牌色、design-system 展示页（职责即展示色板）、外观设置的主题预览缩略图
-// （预览即字面色）、ui/spinner（vendored 原语）。
+// （预览即字面色）、ui/spinner（vendored 原语）、主题模式卡片预览（A.1 行 A8）。
 const EXEMPT = (relUnix) =>
   relUnix.includes("modules/linear/") ||
   relUnix.includes("modules/design-system/") ||
   relUnix.endsWith("appearance-section.tsx") ||
-  relUnix.includes("ui/spinner.tsx");
+  relUnix.includes("ui/spinner.tsx") ||
+  THEME_PREVIEW_EXEMPT(relUnix);
 
 // ---- 具名豁免（批 7a 新增）：按「性质」分类，只作用于 C2/C3 两条裸色规则 ----
 // 与 EXEMPT 的区别：EXEMPT 是历史遗留的整文件放行；这里每一类都有**性质上的理由**，

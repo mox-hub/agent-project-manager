@@ -15,7 +15,9 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('@/shared/theme/theme-context', () => ({
   useTheme: () => ({
+    // 注入「钉死深色」：意图与生效同档
     mode: 'dark',
+    resolvedMode: 'dark',
     toggleTheme: vi.fn(),
   }),
 }));

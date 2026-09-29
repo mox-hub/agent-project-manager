@@ -28,8 +28,8 @@ export interface SettingsNavItem {
   to: string;
   labelKey: string;
   icon: LucideIcon;
-  /** 菜单项右侧展示工具可用性状态点 */
-  status?: 'git' | 'terminal';
+  /** 菜单项右侧展示工具可用性状态点（仅挂有真实数据源的状态，见 settings-page 的 NavStatusDot） */
+  status?: 'git' | 'runtime';
 }
 
 export interface SettingsNavGroup {
@@ -70,7 +70,8 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
     labelKey: 'settings.groupTools',
     items: [
       { to: '/app/settings/git', labelKey: 'settings.git', icon: GitBranch, status: 'git' },
-      { to: '/app/settings/terminal', labelKey: 'settings.terminal', icon: Terminal, status: 'terminal' },
+      // 终端模块已废弃并入 Runtime，且无任何真实状态接口，故不挂状态点
+      { to: '/app/settings/terminal', labelKey: 'settings.terminal', icon: Terminal },
     ],
   },
   {
@@ -81,7 +82,7 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
       { to: '/app/settings/ai/executions', labelKey: 'settings.aiExecutions', icon: Play },
       { to: '/app/settings/memory', labelKey: 'settings.memory', icon: Brain },
       { to: '/app/settings/prompts', labelKey: 'settings.prompts', icon: ScrollText },
-      { to: '/app/settings/runtime', labelKey: 'settings.runtime', icon: Server },
+      { to: '/app/settings/runtime', labelKey: 'settings.runtime', icon: Server, status: 'runtime' },
     ],
   },
   {

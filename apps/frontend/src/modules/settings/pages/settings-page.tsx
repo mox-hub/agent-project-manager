@@ -3,10 +3,15 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { NavStatusDot } from '@/components/semantic/nav-status-dot';
+import type { Tone } from '@/components/ui/tone';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { readHistoryIdx, resolveBackSteps } from '@/shared/lib/history-back';
 import { useGitToolStatus } from '@/modules/git/hooks/use-git-tool';
-import { useTerminalStatus } from '@/modules/runtime/hooks/use-terminal-status';
+import {
+  pickRepresentativeRegistrations,
+  useRuntimeRegistrations,
+} from '@/shared/runtime/runtime-api';
 import { ArrowLeft, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -21,81 +26,29 @@ interface RenderedNavGroup {
   items: RenderedNavItem[];
 }
 
-function GitStatusIndicator({
-  status,
-  isLoading,
-}: {
-  status?: { available?: boolean; error?: string };
-  isLoading: boolean;
-}) {
-  if (isLoading) {
-    return (
-      <span className="flex h-2 w-2">
-        <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-muted-foreground opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-muted-foreground" />
-      </span>
-    );
-  }
-
-  if (!status) {
-    return <span className="h-2 w-2 rounded-full bg-accent-red" />;
-  }
-
-  return (
-    <span
-      className={cn(
-        'h-2 w-2 rounded-full',
-        status.available ? 'bg-accent-green' : 'bg-accent-yellow'
-      )}
-    />
-  );
-}
-
-function TerminalStatusIndicator({
-  status,
-  isLoading,
-}: {
-  status?: { available?: boolean };
-  isLoading: boolean;
-}) {
-  if (isLoading) {
-    return (
-      <span className="flex h-2 w-2">
-        <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-muted-foreground opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-muted-foreground" />
-      </span>
-    );
-  }
-
-  if (!status) {
-    return <span className="h-2 w-2 rounded-full bg-accent-red" />;
-  }
-
-  return (
-    <span
-      className={cn(
-        'h-2 w-2 rounded-full',
-        status.available ? 'bg-accent-green' : 'bg-accent-red'
-      )}
-    />
-  );
+/**
+ * 业务层产出的状态点描述（渲染交给 `@/components/semantic/nav-status-dot`）。
+ *
+ * 状态色链路遵 §19.5 的分工：这里只做**业务层映射**（导航状态 → tone），
+ * tone → class 由 `components/ui/tone.ts` 唯一持有，本文件不得出现颜色字面量。
+ *   loading = default（灰 + 动画）    ok = success（绿，就绪）
+ *   down    = danger（红，不可用·需处理）  idle = default（灰，未接入或无人在线——中性，非错误）
+ *
+ * §8.5#4 要求「不得只靠颜色传达状态」，故 `label` 必填——它是颜色之外的第二信号。
+ * 新增状态点前先确认该状态有真实数据源（§9.1 禁假常量），再由本文件的映射块选档。
+ */
+interface NavDot {
+  tone: Tone;
+  label: string;
+  loading?: boolean;
 }
 
 interface SettingsNavItemLinkProps {
   item: RenderedNavItem;
-  gitStatus?: { available?: boolean; error?: string };
-  gitStatusLoading: boolean;
-  terminalStatus?: { available?: boolean };
-  terminalStatusLoading: boolean;
+  dot?: NavDot;
 }
 
-function SettingsNavItemLink({
-  item,
-  gitStatus,
-  gitStatusLoading,
-  terminalStatus,
-  terminalStatusLoading,
-}: SettingsNavItemLinkProps) {
+function SettingsNavItemLink({ item, dot }: SettingsNavItemLinkProps) {
   const Icon = item.icon;
 
   return (
@@ -113,12 +66,7 @@ function SettingsNavItemLink({
     >
       <Icon size={16} className="shrink-0" />
       <span className="flex-1 truncate">{item.label}</span>
-      {item.status === 'git' && (
-        <GitStatusIndicator status={gitStatus} isLoading={gitStatusLoading} />
-      )}
-      {item.status === 'terminal' && (
-        <TerminalStatusIndicator status={terminalStatus} isLoading={terminalStatusLoading} />
-      )}
+      {dot && <NavStatusDot tone={dot.tone} label={dot.label} loading={dot.loading} />}
     </NavLink>
   );
 }
@@ -132,7 +80,7 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { data: gitStatus, isLoading: gitStatusLoading } = useGitToolStatus();
-  const { data: terminalStatus, isLoading: terminalStatusLoading } = useTerminalStatus();
+  const { data: registrations, isLoading: runtimeLoading } = useRuntimeRegistrations();
 
   const groups = useMemo<RenderedNavGroup[]>(
     () =>
@@ -142,6 +90,38 @@ export function SettingsPage() {
       })),
     [t],
   );
+
+  // 在线机器数：按设备去重（同一设备多注册只算一台），与运行时页同口径
+  const runtimeOnlineCount = useMemo(
+    () =>
+      pickRepresentativeRegistrations(registrations ?? []).filter(
+        (machine) => machine.status === 'online',
+      ).length,
+    [registrations],
+  );
+
+  // 业务层映射：status → tone + 文案（§19.5 上层；tone → class 由语义组件内的 tone.ts 负责）
+  const gitDot: NavDot = gitStatusLoading
+    ? { tone: 'default', label: t('settings.gitChecking'), loading: true }
+    : gitStatus?.available
+      ? { tone: 'success', label: t('settings.gitAvailable') }
+      : {
+          tone: 'danger',
+          label: gitStatus?.error
+            ? t('settings.gitUnavailableError', { error: gitStatus.error })
+            : t('settings.gitUnavailable'),
+        };
+
+  const runtimeDot: NavDot = runtimeLoading
+    ? { tone: 'default', label: t('settings.runtimeChecking'), loading: true }
+    : runtimeOnlineCount > 0
+      ? { tone: 'success', label: t('settings.runtimeNavOnline', { n: runtimeOnlineCount }) }
+      : { tone: 'default', label: t('settings.runtimeNavOffline') };
+
+  const dotByStatus: Record<'git' | 'runtime', NavDot> = {
+    git: gitDot,
+    runtime: runtimeDot,
+  };
 
   // 搜索过滤：按菜单项名称 / 路径过滤，过滤后为空的分组整体隐藏
   const visibleGroups = useMemo(() => {
@@ -236,10 +216,7 @@ export function SettingsPage() {
                     <SettingsNavItemLink
                       key={item.to}
                       item={item}
-                      gitStatus={gitStatus}
-                      gitStatusLoading={gitStatusLoading}
-                      terminalStatus={terminalStatus}
-                      terminalStatusLoading={terminalStatusLoading}
+                      dot={item.status ? dotByStatus[item.status] : undefined}
                     />
                   ))}
                 </div>

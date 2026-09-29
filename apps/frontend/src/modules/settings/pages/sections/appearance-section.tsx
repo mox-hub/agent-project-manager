@@ -1,15 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { ThemeModeCard } from '@/components/semantic/theme-mode-card';
 import { useTheme } from '@/shared/theme/theme-context';
 import { LanguageSwitcher } from '@/shared/components/language-switcher';
 import {
   ALargeSmall,
-  CheckCircle2,
   Languages,
   Palette,
-  SunMoon,
   Type,
   ZoomIn,
 } from 'lucide-react';
@@ -143,53 +144,21 @@ export function AppearanceSettingsSection() {
       icon={Palette}
       iconColor="text-accent-purple"
       title={t('settings.appearance')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.appearance')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
-      {/* 主题模式 */}
-      <Card className="border-border shadow-none">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <SunMoon size={16} className="text-accent-blue" />
-                {t('settings.themeMode')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                {[
-                  { id: 'light', label: t('settings.lightMode'), desc: t('settings.lightModeDesc'), bg: 'bg-white', text: 'text-muted-foreground', border: 'border-border', preview: 'bg-muted/40' },
-                  { id: 'dark', label: t('settings.darkMode'), desc: t('settings.darkModeDesc'), bg: 'bg-zinc-950', text: 'text-muted-foreground', border: 'border-border', preview: 'bg-muted' },
-                ].map((item) => {
-                  const isActive = mode === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setTheme(item.id as 'light' | 'dark')}
-                      className={`relative rounded-xl border-2 p-4 text-left transition-all hover:scale-102 ${
-                        isActive ? `${item.border} ring-2 ring-accent-blue` : 'border-border hover:border-muted-foreground'
-                      }`}
-                    >
-                      {/* 预览窗口 */}
-                      <div className={`aspect-video w-full rounded-lg ${item.bg} ${item.border} border p-2 mb-3`}>
-                        <div className={`h-full ${item.preview} rounded-md p-1.5`}>
-                          <div className={`h-2 w-3/4 rounded-xs ${item.id === 'light' ? 'bg-muted' : 'bg-gray-700'} mb-1`} />
-                          <div className={`h-1.5 w-1/2 rounded-xs ${item.id === 'light' ? 'bg-muted' : 'bg-muted'}`} />
-                        </div>
-                      </div>
-                      <p className={`font-medium ${isActive ? item.text : 'text-foreground'}`}>{item.label}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{item.desc}</p>
-                      {isActive && (
-                        <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-accent-blue">
-                          <CheckCircle2 size={12} className="text-white" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+      {/* 主题模式：三档（日间 / 夜间 / 跟随系统），实现收在语义组件层 */}
+      <ThemeModeCard
+        value={mode}
+        onChange={setTheme}
+        title={t('settings.themeMode')}
+        options={{
+          light: { label: t('settings.lightMode'), desc: t('settings.lightModeDesc') },
+          dark: { label: t('settings.darkMode'), desc: t('settings.darkModeDesc') },
+          system: { label: t('settings.systemMode'), desc: t('settings.systemModeDesc') },
+        }}
+      />
 
           {/* 界面缩放 */}
           <Card className="border-border shadow-none">
