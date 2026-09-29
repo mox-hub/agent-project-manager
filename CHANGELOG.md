@@ -21,6 +21,20 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——组件裁决 36 条收口 + 画廊意见批 + Linear 呼吸感批 + 死选择器修复批（2026-09-30 夜航收口）
+
+> 2026-09-29 三大会话成果（组件裁决三轮提问逐条拍板、画廊实机验收四~五轮、死选择器五件排查）的夜航托管收口：五笔提交（4e795c23 / 33555f99 / b20fe108 / 8149e33d / d7596124）。
+
+| 批 | 内容 | 证据要点 |
+|---|---|---|
+| 组件裁决 36 条收口 | `component-review-decisions.json` 首建（批 9 唯一驱动文件）；registry 状态总账落位：11 件 deprecated 限期 2026-10-31（direction/navigation-menu/sidebar/batch-create-tasks-dialog/task-board/task-detail-drawer/task-rows/bug-template-helper/doc-category-chips/filter-panel/thinking-stream）、2 件改判 internal（anchored-menu/view-display-popover）、5 件 canonical 转正（autocomplete/chip/chart-card/stat-tile/metric-row）、17 件 standby、dropdown-menu 维持限期 2026-12-31；**批 9 物理删除未执行，待用户晨会批准后逐项单独 commit** | check-component-registry 同源一致断言改写；COMPONENTS.md 再生（canonical 306/standby 17/internal 4/review 0/deprecated 12） |
+| 画廊意见批（组件级） | StatusIconFrame 新增 list 档 22×22（StatusChip 唯一实现）；`semantic/subtask-badge` 新件（环 18px + text-xs 计数，G8 封闭 props）；IssueTypePill 增 `icon` 变体（裸图标+类型色）；MemberAvatar 在场徽标统一为在线状态 + overflow-hidden 截断修复（裁剪内移内容层）+ 空态附件式虚框；ColorPicker 色板 15→16（8×2 整行护栏）+ 选色器 234px 三段同宽；Tabs segmented 死选择器修复（base-ui 无布尔 data-horizontal，8 处裸选择器纠正为 `data-[orientation=…]`）并规范化对齐 segmented-control | tsc -b 0 错；改动测试 66 用例绿（component-review-board/design-system-page/member-avatar/subtask-badge/data-list/tasks-page/release-pages/command-palette） |
+| Linear 呼吸感批（列表行为） | DataList：checkbox 判定区铺满整槽（28px×行高 stopPropagation）、树线挂行级 absolute 贯穿（left-[55px] 与行首列宽强耦合，已三次同步）、分组/非分组双平面化解除卡片面、visibleItems 扁平化含子行（键盘遍历与批量选中不漏子任务）、hover 统一 bg-accent；TaskSimpleList 子任务挂树（列表内归簇 + renderChildren 递归）；tasks-page 分页器拆除（PAGE_SIZE 50→1000 滚动全量，?page 深链忽略，i18n 六键→两键）；release-list-page 换 DataList 基座（RELEASE_STATUS_VISUALS 六态）；status-visuals PRIORITY medium info→default 降灰（颜色只留给高优先级） | 同上测试绿 + tsc 0 错 + eslint 0 error；行首元数据 hover-only 方案经用户否定（「行内元数据勿用 hover-only」偏好入账） |
+| 死选择器修复批 | base-ui data 口径实锤纠正六文件（证据链：getStateAttributesProps 布尔 state 渲染空串、枚举 state 渲染带值）：field 三处布尔 `=true`→存在性、toggle-group `data-[state=on]`→`data-pressed`（radix 残留）+ 十处裸命名、separator/slider/button-group/tabs-line 十七处裸 `data-horizontal|vertical`→`data-[orientation=…]`；测试自证陷阱警示（field.test 手动 `data-invalid="true"` 喂活死选择器） | tsc -b 0 错；field 13 + design-system-page 1 用例绿；eslint 六文件 0 error；全库另 9 文件疑同源（data-[x=true] 形态）留晨会裁决清剿批 |
+| 任意值白名单补录 | check-tailwind-arbitrary 补 `text-[15px]`（用户拍板标题档）与 `left-[55px]`（树线锚点几何硬编码）两条并注明理由 | frontend 全 lint 链 0 error |
+
+test_evidence：`pnpm quality:gate` 除 server e2e 4 条长寿库 local-only 用例外全绿（office 1 + playbook 3 经 origin/develop 基线 detach 复跑完全同挂实证豁免，assistant-cli-chat EPERM 为已知 Windows 环境 flake 单跑即过）；contract:check 契约零漂移；api:audit 97.3%。doc_impact：本文件 + component-review-decisions.json + registry.ts 状态标注。
+
 ### 前端设计治理——H 类批 H1-H3：画廊覆盖率门禁落地，registry ↔ 画廊闭环 100%（2026-09-29）
 
 > 承接 H 类方案（docs/design/修改方案-H类-画廊遍历渲染-2026-09-29.md，六项决策含排版两项当日全部落定）：兑现 registry.ts / gen-components-md.mjs 两处头注宣称的「画廊覆盖率恒 100%」——实测起点 73/97 = 75.3%（24 件未收录），收官 **93/93 = 100% 且机器强制**。
