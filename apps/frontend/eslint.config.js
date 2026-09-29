@@ -103,9 +103,9 @@ export default defineConfig([
   // ══ F 类批 F3：布局与组合机器强制（f-class-governance）══════════════════════
   // 依据 docs/design/修改方案-F类-布局与组合-2026-09-28.md 批 F3 + §五 ⚠️-2
   // （门禁默认 ESLint 化）。规则实现见 ./eslint-rules/f-class-governance.js
-  // （6 条：no-dialog-width-escape / no-page-handwritten-maxw / no-card-nesting /
-  // no-overlay-nesting / no-section-card-in-dialog / require-page-header-icon）；
-  // 第 7 条 no-standalone-form（F3.6 原地 form 检测）待 F3.6 存量迁移完成后启用。
+  // （7 条：no-dialog-width-escape / no-page-handwritten-maxw / no-card-nesting /
+  // no-overlay-nesting / no-section-card-in-dialog / require-page-header-icon /
+  // no-standalone-form——末条随 F3.6 九项存量迁移完成后启用，2026-09-29）。
   // 存量豁免为文件级内联白名单（插件内常量，方案附二/附三双登记），迁移完成后删行收紧。
   // 与 E 块同款 warn 口径：先 warn 一轮，存量清零后转 error。
   {
@@ -120,6 +120,7 @@ export default defineConfig([
       'f-class-governance/no-overlay-nesting': 'warn',
       'f-class-governance/no-section-card-in-dialog': 'warn',
       'f-class-governance/require-page-header-icon': 'warn',
+      'f-class-governance/no-standalone-form': 'warn',
     },
   },
 ])

@@ -11,9 +11,7 @@
  *   - `no-overlay-nesting`        F0     浮层互嵌（Dialog/Sheet/Drawer 内容件套内容件）
  *   - `no-section-card-in-dialog` F3.5   弹窗内禁 SectionCard（区块卡是页面层原语）
  *   - `require-page-header-icon`  F2.5①  L1 页面标题必带图标（骨架头豁免）
- *
- * 第 7 条 `no-standalone-form`（F3.6 原地 <form 检测）在 F3.6 存量迁移完成后另行
- * 启用——先落规则会把 9 项已知迁移靶全部打红，属「拿规则圈已有账」而非防回流。
+ *   - `no-standalone-form`        F3.6   实体表单必须以 Dialog 为容器（祖先链判定）
  *
  * ## 口径
  *
@@ -367,6 +365,51 @@ const requirePageHeaderIcon = {
   },
 };
 
+/** F3.6 白名单：搜索/输入 dock、认证流、向导等非「实体新增/修改」表单场景 */
+const STANDALONE_FORM_WHITELIST = [
+  'modules/ai-surface/components/omni-dock.tsx', // 全局输入 dock（AI 追问/检索输入，非实体表单）
+  'modules/auth/pages/login-page.tsx', // 认证流整页表单（登录）
+  'modules/auth/pages/register-page.tsx', // 认证流整页表单（注册）
+  'modules/onboarding/pages/onboarding-wizard.tsx', // 首启向导步骤表单（多步流页面形态）
+  'modules/project/pages/project-dashboard-page.tsx', // 快捷建任务单字段行——F3.6 判据表「单项修改豁免」点名例举
+  'shared/prompt/prompt-provider.tsx', // AI 助理追问输入框
+];
+
+const OVERLAY_ANCESTOR_NAMES = ['DialogContent', 'SheetContent', 'DrawerContent'];
+
+const noStandaloneForm = {
+  meta: {
+    type: 'suggestion',
+    docs: {
+      description: '实体新增/修改的 <form> 必须以 Dialog 为容器（祖先链须有浮层内容件，F3.6）',
+      url: 'docs/design/修改方案-F类-布局与组合-2026-09-28.md#f36-表单容器铁律实体新增修改必须走模态-dialog--must',
+    },
+    schema: [],
+    messages: {
+      standalone:
+        '原地 <form>（F3.6 表单容器铁律）：实体创建/修改表单唯一容器是模态 Dialog；单项修改与内容编辑器豁免，' +
+        '搜索/筛选类 form 走插件白名单登记。',
+    },
+  },
+  create(context) {
+    const filename = toPosix(context.filename ?? context.getFilename());
+    if (isTestFile(filename) || isUiAtomFile(filename)) return {};
+    if (STANDALONE_FORM_WHITELIST.some((w) => filename.includes(w))) return {};
+    return {
+      JSXOpeningElement(node) {
+        if (jsxElementName(node) !== 'form') return;
+        const inOverlay = hasAncestorOpening(
+          node.parent,
+          (o) => OVERLAY_ANCESTOR_NAMES.includes(jsxElementName(o) ?? ''),
+        );
+        if (!inOverlay) {
+          context.report({ node, messageId: 'standalone' });
+        }
+      },
+    };
+  },
+};
+
 // ---------------------------------------------------------------------------
 // 插件出口（flat config 形态）
 // ---------------------------------------------------------------------------
@@ -383,5 +426,6 @@ export default {
     'no-overlay-nesting': noOverlayNesting,
     'no-section-card-in-dialog': noSectionCardInDialog,
     'require-page-header-icon': requirePageHeaderIcon,
+    'no-standalone-form': noStandaloneForm,
   },
 };

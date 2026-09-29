@@ -21,6 +21,26 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——F 类收官批落地（2026-09-29）：F3.6 表单容器迁移九项全清 + 批 F3 机器强制七条 + registry/DESIGN 善后，十四笔提交
+
+> 承接组件侧批次：用户裁决「表单 9 项一次做完、document-preview 宽档豁免登记、批 F3 现在做、实机验收后再 push」。F 方案批 F1/F2/F3 三批代码工作至此全部落地（余宪法升格与 comfortable 启用评审两项非代码项）。
+
+| 提交 | 项 | 内容与证据 |
+|---|---|---|
+| `f40f5ca0` | J16 收编余量 | 弹窗级 `max-h-[85vh]` ×9 迁 `max-h-dialog-scroll`（等值零视觉）；document-preview-dialog 宽档豁免登记（方案附二名册，F3.1 唯一剩余越界经用户裁决豁免） |
+| `02dc35e6` | F×A-E 善后 | registry 三笔账：tab-bar standby→canonical（F 🔴-2 收编为准）、button-group 待查凭 F9.3 结案、task-detail-drawer canonical→review 公示（孤儿 0 importer，E1 制度）；DESIGN.md 地位勘正追加四行收编偏差 |
+| `51e06807` | 批 F3 机器强制 | 新建 `f-class-governance` ESLint 插件六规则（宽度逃逸/页面手写居中/Card 嵌套/浮层互嵌/弹窗内 SectionCard/PageHeader 无 icon，warn 级），落地即对现网 0 命中；存量豁免内联白名单+方案附三双登记 |
+| `951bb091` | F3.6 ①② | template-manager 项目/任务模板原地 form 迁 Dialog（新建/编辑两用，footer 改 DialogFooter 语义序） |
+| `97a33275` | F3.6 ④ | repository-list 新建仓库 5 字段 form 迁 Dialog |
+| `2a898b8e` | F3.6 ⑤ | github-panel 新建 PR ×2（完整版+侧栏嵌入版）内嵌面板迁 Dialog，按钮改纯入口 |
+| `4e6f845a` | F3.6 ③ | task-detail 自定义字段批量编辑迁 Dialog，分区常驻只读 |
+| `c784bb63` | F3.6 ⑦⑧（J14） | profile 资料卡转只读+「编辑」弹窗（页头全局 Save 卸除）、密码表单迁弹窗（关闭清字段） |
+| `931b4e27` | F3.6 ⑨（J14） | project-settings 项目主档/git+terminal 两组保存各拆分组 Dialog，页面转只读键值行+分组「编辑」入口 |
+| `615f5790` | F3.6 ⑥（J15） | document-new-page 跳页退役：unified doc 模式扩展 status 字段（胶囊选择；CreateDocumentDto 契约无 status，非 draft 创建后补 update），documents-page 入口改开弹窗，路由/页签/文件三退役 |
+| `51e06807`→末笔 | 批 F3 第 7 条 | `no-standalone-form` 随九项迁移完成启用（祖先链判 Dialog，dashboard 快捷建任务单字段行按 F3.6 判据表「单项修改豁免」白名单）+ tabs-registry 断言随 J15 更新 |
+
+test_evidence：每笔五治理脚本 + eslint 0 error + tsc 0 错；收口前端全量 192 文件 1436 用例全绿；docs-sync 过。doc_impact：F 方案批 F2 项 6/批 F3 状态与附三同步。余量：宪法升格（等 E 类收口定章号）、comfortable 启用逐列表评审、DESIGN.md「已由 F 类收编」标注仅完成偏差清单部分。
+
 ### 前端设计治理——F 类组件侧批次落地（2026-09-29）：J1/J6/J7 默认值、J2 wide 档、J5 行高轴、J11/J12 标题图标，五笔提交
 
 > 承接同日纯结构批次：用户解除「组件内部样式」限制，F 方案批 F1 项 1/4 与批 F2 项 2/4/5 落地。宪法升格（批 F1 项 3，PRINCIPLES.md §11.2）与 F3.6 表单容器迁移（9 项 12 处，含 J15 页面退役/文档模式扩展，属交互重组非样式改造）仍待 E 类三层解耦路线收口后另批执行。
