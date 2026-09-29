@@ -2,7 +2,7 @@ import { ArrowUpRight, BookOpen, FileText, GitBranch, Link2, Users } from 'lucid
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { IconMetric } from '@/components/ui/icon-metric';
+import { IconMetric } from '@/components/semantic/icon-metric';
 
 interface IntegrationStatusStripProps {
   repositoryCount: number;

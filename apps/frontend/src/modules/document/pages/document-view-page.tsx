@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Bookmark,
@@ -24,12 +24,12 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { PageShell } from '@/components/ui/page-shell';
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
-import { ChapterScrubber, type Chapter } from '@/components/ui/chapter-scrubber';
+import { PageShell } from '@/components/semantic/page-shell';
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
+import { ChapterScrubber, type Chapter } from '@/modules/document/components/chapter-scrubber';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { MENU_ITEM_CLASS, MENU_SEPARATOR_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';

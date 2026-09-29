@@ -1,7 +1,7 @@
 import { ArrowRight, CheckCircle2, Clock, FileCode, ShieldAlert, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { DualTrackMetricPill } from '@/components/ui/dual-track-metric-pill';
+import { DualTrackMetricPill } from '@/components/semantic/dual-track-metric-pill';
 
 export interface HandoffGate {
   id: string;

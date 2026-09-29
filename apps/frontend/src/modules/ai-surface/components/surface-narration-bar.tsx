@@ -1,6 +1,6 @@
 import { RefreshCw, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DualTrackMetricPill } from '@/components/ui/dual-track-metric-pill';
+import { DualTrackMetricPill } from '@/components/semantic/dual-track-metric-pill';
 import type { SurfaceNarration } from '../adapters/surface-narration';
 import type { UseSurfaceNarrationResult } from '../hooks/use-surface-narration';
 

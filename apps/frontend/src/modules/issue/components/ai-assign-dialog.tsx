@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { AiAgentBadge } from '@/components/ui/ai-agent-badge';
+import { AiAgentBadge } from '@/modules/issue/components/ai-agent-badge';
 import {
   useMembers,
 } from '@/modules/team-member/hooks';
