@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell, Search, Sun, Moon, Plus, Send, X, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { AppDockItem, AppDockSeparator } from '@/components/ui/app-dock';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DockUserPopover } from './dock-user-popover';
 import { DockMetricBadge } from './dock-metric-badge';
 import { STATUS_DOT_CLASS, useDockAiColleagues, type DockAiColleague } from './use-dock-ai-colleagues';
@@ -27,10 +27,72 @@ export interface BottomDockProps {
   preview?: boolean;
 }
 
+/**
+ * Dock 功能按钮（原 ui/app-dock 的 AppDockItem 内联收编，2026-09-29 dock 清退归一）：
+ * Tooltip + spring 动效 + 徽章，motion props、类名、徽章 tone 与原实现逐字等效。
+ * 必须留在模块级——组件函数内定义会让每次渲染产生新组件类型，导致子树重挂载。
+ */
+interface DockActionButtonProps {
+  label: string;
+  badge?: number | string;
+  badgeTone?: 'destructive' | 'primary' | 'warning';
+  onClick: () => void;
+  testId: string;
+  children: ReactNode;
+}
+
+function DockActionButton({
+  label,
+  badge,
+  badgeTone = 'destructive',
+  onClick,
+  testId,
+  children,
+}: DockActionButtonProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.12, y: -2 }}
+            whileTap={{ scale: 0.92, y: 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            onClick={onClick}
+            data-testid={testId}
+            className={cn(
+              'relative flex size-9 shrink-0 items-center justify-center rounded-full',
+              'text-muted-foreground hover:text-foreground transition-colors',
+              'hover:bg-accent/70 active:bg-accent',
+            )}
+          >
+            {children}
+            {badge !== undefined && badge !== null && (
+              <span
+                className={cn(
+                  'absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-3xs font-semibold tabular-nums ring-2 ring-popover',
+                  badgeTone === 'destructive' && 'bg-destructive text-destructive-foreground',
+                  badgeTone === 'primary' && 'bg-primary text-primary-foreground',
+                  badgeTone === 'warning' && 'bg-accent-yellow text-foreground',
+                )}
+              >
+                {badge}
+              </span>
+            )}
+          </motion.button>
+        }
+      />
+      <TooltipContent side="top" sideOffset={8}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function BottomDock({ preview = false }: BottomDockProps = {}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { mode, toggleTheme } = useTheme();
+  const { resolvedMode, toggleTheme } = useTheme();
   const openAssistantWithDraft = useAppStore((s) => s.openAssistantWithDraft);
   const setAiPanelOpen = useAppStore((s) => s.setAiPanelOpen);
   const openCreateDialog = useAppStore((s) => s.openCreateDialog);
@@ -206,9 +268,9 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
       onClick: () => navigate('/app/notifications'),
     },
     theme: {
-      label: mode === 'dark' ? t('dock.lightMode') : t('dock.darkMode'),
+      label: resolvedMode === 'dark' ? t('dock.lightMode') : t('dock.darkMode'),
       node:
-        mode === 'dark' ? (
+        resolvedMode === 'dark' ? (
           <Sun className="size-4 text-accent-yellow" />
         ) : (
           <Moon className="size-4" />
@@ -372,27 +434,29 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
               {/* ① 人类控制面：定制化工作区 & 真实身份 Popover */}
               <DockUserPopover />
 
-              <AppDockSeparator />
+              <div className="h-4 w-px bg-border/70 mx-1 shrink-0" aria-hidden="true" />
 
               {/* ② 常用全局操作（可见项与顺序由「设置 · Dock 栏」决定） */}
               {dockItems.map((id) => {
                 const action = dockActions[id];
                 if (!action) return null;
                 return (
-                  <AppDockItem
+                  <DockActionButton
                     key={id}
                     label={action.label}
                     badge={action.badge}
                     badgeTone={action.badgeTone}
                     onClick={action.onClick}
-                    data-testid={`dock-item-${id}`}
+                    testId={`dock-item-${id}`}
                   >
                     {action.node}
-                  </AppDockItem>
+                  </DockActionButton>
                 );
               })}
 
-              {dockItems.length > 0 && <AppDockSeparator />}
+              {dockItems.length > 0 && (
+                <div className="h-4 w-px bg-border/70 mx-1 shrink-0" aria-hidden="true" />
+              )}
 
               {/* ③ AI 协同执行面：Sparkles 快捷呼出 | 真实 AI 成员头像群 */}
               <div className="flex items-center gap-1.5 pl-0.5 pr-1">

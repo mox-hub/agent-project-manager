@@ -15,11 +15,11 @@
 | 状态 | 数量 | 计入 LU 分母 | 必须在画廊展示 | 是否需消费方 |
 |---|---|---|---|---|
 | ✅ canonical | 301 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
-| 📦 standby | 20 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
+| 📦 standby | 18 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
 | 🔒 internal | 2 | ❌ 不计 | ❌ 免 | — |
 | 🔶 review | 17 | ❌ 暂不计 | ✅ 必须（带醒目标记） | ❌ 暂不要求 |
 | ⛔ deprecated | 1 | ❌ 不计 | ✅ 标记 deprecated | — |
-| **合计** | **341** | | | |
+| **合计** | **339** | | | |
 
 > **画廊豁免（H 类，2026-09-29 裁决）**：任何状态条目可登记 `galleryExempt`（一句话理由）豁免画廊 demo——豁免后不入覆盖率分母（`check-component-registry.mjs` §4.2 ④ 机器强制），但在设计系统页 Registry 对账区可见；**demo 豁免 ≠ 清退豁免**，五态裁决面不受影响。
 
@@ -33,7 +33,7 @@
 | Feedback | 10 |
 | Navigation | 13 |
 | Overlays | 12 |
-| Layout & Shells | 14 |
+| Layout & Shells | 12 |
 | AI Execution | 27 |
 | App Patterns | 6 |
 | Semantic | 7 |
@@ -41,13 +41,12 @@
 
 ## 待裁决清单（设计系统页「只看待裁决」视图同源）
 
-共 **38** 项：`status: review`（17）或 `status: standby` 但带 review 数据（21）。按方案 §七 D 项裁决：**先标记、不删除**，人工在 `/app/design-system` 审阅后由批 9 执行清退（决策写入 `component-review-decisions.json`）。
+共 **36** 项：`status: review`（17）或 `status: standby` 但带 review 数据（19）。按方案 §七 D 项裁决：**先标记、不删除**，人工在 `/app/design-system` 审阅后由批 9 执行清退（决策写入 `component-review-decisions.json`）。
 
 | 组件 | 路径 | 状态 | 建议 | 理由 | 裁决期限 |
 |---|---|---|---|---|---|
 | accordion | `src/components/ui/accordion.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | anchored-menu | `src/components/ui/anchored-menu.tsx` | 🔶 review | delete | 零引用（实测）——与 ui/menu 能力重叠，锚定下拉统一走 menu / dropdown-menu（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） | 2026-10-31 |
-| app-dock | `src/components/ui/app-dock.tsx` | 📦 standby | delete | 自研长尾：消费方 1（bottom-dock），与 shared/components/bottom-dock 能力重叠（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） | 2026-10-31 |
 | aspect-ratio | `src/components/ui/aspect-ratio.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | autocomplete | `src/components/ui/autocomplete.tsx` | 🔶 review | merge → combobox | 消费方仅 1（命令面板），与 ui/combobox 能力重叠（输入过滤 + 建议列表） | 2026-10-31 |
 | breadcrumb | `src/components/ui/breadcrumb.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
@@ -57,7 +56,6 @@
 | direction | `src/components/ui/direction.tsx` | 🔶 review | delete | 零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） | 2026-10-31 |
 | drawer | `src/components/ui/drawer.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | dropdown-menu | `src/components/ui/dropdown-menu.tsx` | ⛔ deprecated | merge → menu | 与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。2026-09-28 裁决 A：已扩 gen-components-md.mjs 解析 expiresAt，原先「生成器不认该槽位、写入即被丢弃」的工具互斥**已解除**，本件正式置 deprecated 限期迁移（至 2026-12-31）；迁移指引见 ui/dropdown-menu.tsx 文件头。（**清退期限 2026-12-31** · §19.6，逾期 CI 失败） | — |
-| floating-dock | `src/components/ui/floating-dock.tsx` | 📦 standby | delete | 自研长尾：零引用（仅画廊），与 shared/components/bottom-dock 能力重叠 | 2026-10-31 |
 | input-otp | `src/components/ui/input-otp.tsx` | 📦 standby | keep | 官方注册表基线件（input-otp 库封装），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | menubar | `src/components/ui/menubar.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | meter | `src/components/ui/meter.tsx` | 📦 standby | standby | 自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby | 2026-10-31 |
@@ -67,7 +65,7 @@
 | slider | `src/components/ui/slider.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | toggle | `src/components/ui/toggle.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
 | toggle-group | `src/components/ui/toggle-group.tsx` | 📦 standby | keep | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 | 2026-10-31 |
-| view-display-popover | `src/components/ui/view-display-popover.tsx` | 🔶 review | delete | 零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） | 2026-10-31 |
+| view-display-popover | `src/components/semantic/view-display-popover.tsx` | 🔶 review | delete | 零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） | 2026-10-31 |
 | chip | `src/components/semantic/chip.tsx` | 📦 standby | keep | G5 裁决示范组件：三层链路端到端样板；已接首个业务消费（decision-card-shell 驳回原因 chips，2026-09-29，方案立项点名的原始场景），后续消费按簇另批 | 2026-10-31 |
 | chart-card | `src/components/semantic/chart-card.tsx` | 📦 standby | keep | 抽象自 Card+CardTitle+卡头 hint/action+定高图表容器组合（project-overview-charts / analytics / team-stats 等 8+ 处手写）；首消费 project-overview-charts 两块（燃尽 md / 分布 lg） | 2026-10-31 |
 | stat-tile | `src/components/semantic/stat-tile.tsx` | 📦 standby | keep | 抽象自 dashboard-page 本地 StatTile（bg-muted/50 灰底 mini 统计块，7 个下钻弹窗 14 实例）；首消费 dashboard-page 删本地定义全量换用，形态 class 全等拷贝 | 2026-10-31 |
@@ -135,7 +133,7 @@
 
 ### Data Display（15）
 
-#### UI 原子层 `src/components/ui/`（12）
+#### UI 原子层 `src/components/ui/`（10）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
@@ -144,42 +142,47 @@
 | badge | `src/components/ui/badge.tsx` | ✅ canonical | — | — |
 | chart | `src/components/ui/chart.tsx` | ✅ canonical | — | — |
 | data-table | `src/components/ui/data-table.tsx` | ✅ canonical | — | — |
-| dual-track-metric-pill | `src/components/ui/dual-track-metric-pill.tsx` | ✅ canonical | — | — |
-| icon-metric | `src/components/ui/icon-metric.tsx` | ✅ canonical | — | — |
 | kbd | `src/components/ui/kbd.tsx` | ✅ canonical | — | — |
 | meter | `src/components/ui/meter.tsx` | 📦 standby | — | 自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby |
 | mock-badge | `src/components/ui/mock-badge.tsx` | ✅ canonical | — | —（**画廊豁免**：运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态） |
 | progress | `src/components/ui/progress.tsx` | ✅ canonical | — | — |
 | table | `src/components/ui/table.tsx` | ✅ canonical | — | — |
 
-#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（3）
+#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（5）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
 | activity-heatmap | `src/components/semantic/activity-heatmap.tsx` | ✅ canonical | — | — |
+| dual-track-metric-pill | `src/components/semantic/dual-track-metric-pill.tsx` | ✅ canonical | — | — |
+| icon-metric | `src/components/semantic/icon-metric.tsx` | ✅ canonical | — | — |
 | icon-stack | `src/components/semantic/icon-stack.tsx` | ✅ canonical | — | — |
 | status-pill | `src/components/semantic/status-pill.tsx` | ✅ canonical | — | — |
 
 ### Feedback（10）
 
-#### UI 原子层 `src/components/ui/`（10）
+#### UI 原子层 `src/components/ui/`（4）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
 | alert | `src/components/ui/alert.tsx` | ✅ canonical | — | — |
-| async-state | `src/components/ui/async-state.tsx` | ✅ canonical | — | — |
-| empty-state | `src/components/ui/empty-state.tsx` | ✅ canonical | — | — |
-| error-boundary | `src/components/ui/error-boundary.tsx` | ✅ canonical | — | —（**画廊豁免**：运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态） |
-| global-loading-state | `src/components/ui/global-loading-state.tsx` | ✅ canonical | — | —（**画廊豁免**：运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态） |
-| loading-overlay | `src/components/ui/loading-overlay.tsx` | ✅ canonical | — | — |
-| page-error-fallback | `src/components/ui/page-error-fallback.tsx` | ✅ canonical | — | —（**画廊豁免**：运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态） |
 | skeleton | `src/components/ui/skeleton.tsx` | ✅ canonical | — | — |
 | spinner | `src/components/ui/spinner.tsx` | ✅ canonical | — | — |
 | toast | `src/components/ui/toast.tsx` | ✅ canonical | — | — |
 
+#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（6）
+
+| 组件 | 路径 | 状态 | 消费方 | 治理说明 |
+|---|---|---|---|---|
+| async-state | `src/components/semantic/async-state.tsx` | ✅ canonical | — | — |
+| empty-state | `src/components/semantic/empty-state.tsx` | ✅ canonical | — | — |
+| error-boundary | `src/components/semantic/error-boundary.tsx` | ✅ canonical | — | —（**画廊豁免**：运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态） |
+| global-loading-state | `src/components/semantic/global-loading-state.tsx` | ✅ canonical | — | —（**画廊豁免**：运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态） |
+| loading-overlay | `src/components/semantic/loading-overlay.tsx` | ✅ canonical | — | — |
+| page-error-fallback | `src/components/semantic/page-error-fallback.tsx` | ✅ canonical | — | —（**画廊豁免**：运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态） |
+
 ### Navigation（13）
 
-#### UI 原子层 `src/components/ui/`（13）
+#### UI 原子层 `src/components/ui/`（12）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
@@ -194,12 +197,17 @@
 | pagination | `src/components/ui/pagination.tsx` | ✅ canonical | — | — |
 | sortable | `src/components/ui/sortable.tsx` | ✅ canonical | — | — |
 | stepper | `src/components/ui/stepper.tsx` | ✅ canonical | — | — |
-| tab-bar | `src/components/ui/tab-bar.tsx` | ✅ canonical | — | — |
 | tabs | `src/components/ui/tabs.tsx` | ✅ canonical | — | — |
+
+#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（1）
+
+| 组件 | 路径 | 状态 | 消费方 | 治理说明 |
+|---|---|---|---|---|
+| tab-bar | `src/components/semantic/tab-bar.tsx` | ✅ canonical | — | — |
 
 ### Overlays（12）
 
-#### UI 原子层 `src/components/ui/`（12）
+#### UI 原子层 `src/components/ui/`（11）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
@@ -214,42 +222,50 @@
 | popover | `src/components/ui/popover.tsx` | ✅ canonical | — | — |
 | sheet | `src/components/ui/sheet.tsx` | ✅ canonical | — | — |
 | tooltip | `src/components/ui/tooltip.tsx` | ✅ canonical | — | — |
-| view-display-popover | `src/components/ui/view-display-popover.tsx` | 🔶 review | — | 零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） |
 
-### Layout & Shells（14）
-
-#### UI 原子层 `src/components/ui/`（14）
+#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（1）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
-| app-dock | `src/components/ui/app-dock.tsx` | 📦 standby | — | 自研长尾：消费方 1（bottom-dock），与 shared/components/bottom-dock 能力重叠（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） |
+| view-display-popover | `src/components/semantic/view-display-popover.tsx` | 🔶 review | — | 零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） |
+
+### Layout & Shells（12）
+
+#### UI 原子层 `src/components/ui/`（6）
+
+| 组件 | 路径 | 状态 | 消费方 | 治理说明 |
+|---|---|---|---|---|
 | aspect-ratio | `src/components/ui/aspect-ratio.tsx` | 📦 standby | — | 官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本 |
 | card | `src/components/ui/card.tsx` | ✅ canonical | — | — |
-| chapter-scrubber | `src/components/ui/chapter-scrubber.tsx` | ✅ canonical | — | — |
-| data-table-shell | `src/components/ui/data-table-shell.tsx` | ✅ canonical | — | — |
-| floating-dock | `src/components/ui/floating-dock.tsx` | 📦 standby | — | 自研长尾：零引用（仅画廊），与 shared/components/bottom-dock 能力重叠 |
 | item | `src/components/ui/item.tsx` | ✅ canonical | — | — |
-| page-shell | `src/components/ui/page-shell.tsx` | ✅ canonical | — | — |
-| right-sidebar | `src/components/ui/right-sidebar.tsx` | ✅ canonical | — | — |
 | scroll-area | `src/components/ui/scroll-area.tsx` | ✅ canonical | — | — |
-| section-card | `src/components/ui/section-card.tsx` | ✅ canonical | — | — |
 | separator | `src/components/ui/separator.tsx` | ✅ canonical | — | — |
 | sidebar | `src/components/ui/sidebar.tsx` | 🔶 review | — | 零引用（实测）——与 ui/sidebar-panel（消费方 6）能力重叠（**画廊豁免**：待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效） |
-| sidebar-panel | `src/components/ui/sidebar-panel.tsx` | ✅ canonical | — | — |
+
+#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（5）
+
+| 组件 | 路径 | 状态 | 消费方 | 治理说明 |
+|---|---|---|---|---|
+| data-table-shell | `src/components/semantic/data-table-shell.tsx` | ✅ canonical | — | — |
+| page-shell | `src/components/semantic/page-shell.tsx` | ✅ canonical | — | — |
+| right-sidebar | `src/components/semantic/right-sidebar.tsx` | ✅ canonical | — | — |
+| section-card | `src/components/semantic/section-card.tsx` | ✅ canonical | — | — |
+| sidebar-panel | `src/components/semantic/sidebar-panel.tsx` | ✅ canonical | — | — |
+
+#### 模块专用组件 `src/modules/*/components/`（1）
+
+| 组件 | 路径 | 状态 | 消费方 | 治理说明 |
+|---|---|---|---|---|
+| chapter-scrubber | `src/modules/document/components/chapter-scrubber.tsx` | ✅ canonical | — | — |
 
 ### AI Execution（27）
 
-#### UI 原子层 `src/components/ui/`（2）
+#### 模块专用组件 `src/modules/*/components/`（27）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
-| ai-agent-badge | `src/components/ui/ai-agent-badge.tsx` | ✅ canonical | — | — |
-| ai-context-summary | `src/components/ui/ai-context-summary.tsx` | ✅ canonical | — | — |
-
-#### 模块专用组件 `src/modules/*/components/`（25）
-
-| 组件 | 路径 | 状态 | 消费方 | 治理说明 |
-|---|---|---|---|---|
+| ai-agent-badge | `src/modules/issue/components/ai-agent-badge.tsx` | ✅ canonical | — | — |
+| ai-context-summary | `src/modules/project/components/ai-context-summary.tsx` | ✅ canonical | — | — |
 | central-watch-dial | `src/modules/ai-surface/components/central-watch-dial.tsx` | ✅ canonical | — | — |
 | decision-queue-panel | `src/modules/ai-surface/components/decision-queue-panel.tsx` | ✅ canonical | — | — |
 | omni-dock | `src/modules/ai-surface/components/omni-dock.tsx` | ✅ canonical | — | — |
@@ -278,16 +294,16 @@
 
 ### App Patterns（6）
 
-#### UI 原子层 `src/components/ui/`（6）
+#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（6）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
-| filter-chips | `src/components/ui/filter-chips.tsx` | ✅ canonical | — | — |
-| header-action-button | `src/components/ui/header-action-button.tsx` | ✅ canonical | — | — |
-| page-header | `src/components/ui/page-header.tsx` | ✅ canonical | — | — |
-| quick-cards-toggle | `src/components/ui/quick-cards-toggle.tsx` | ✅ canonical | — | — |
-| sub-page-toolbar | `src/components/ui/sub-page-toolbar.tsx` | ✅ canonical | — | — |
-| toolbar-row | `src/components/ui/toolbar-row.tsx` | ✅ canonical | — | — |
+| filter-chips | `src/components/semantic/filter-chips.tsx` | ✅ canonical | — | — |
+| header-action-button | `src/components/semantic/header-action-button.tsx` | ✅ canonical | — | — |
+| page-header | `src/components/semantic/page-header.tsx` | ✅ canonical | — | — |
+| quick-cards-toggle | `src/components/semantic/quick-cards-toggle.tsx` | ✅ canonical | — | — |
+| sub-page-toolbar | `src/components/semantic/sub-page-toolbar.tsx` | ✅ canonical | — | — |
+| toolbar-row | `src/components/semantic/toolbar-row.tsx` | ✅ canonical | — | — |
 
 ### Semantic（7）
 

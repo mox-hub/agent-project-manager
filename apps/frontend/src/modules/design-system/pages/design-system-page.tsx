@@ -39,7 +39,6 @@ import {
   Inbox,
   GitPullRequest,
   GitCommit,
-  Home,
   Info,
   Kanban,
   Layers,
@@ -216,8 +215,7 @@ import { MarkdownEditor } from '@/shared/components/markdown-editor'
 import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor'
 import { PromptEditor } from '@/shared/components/prompt-editor'
 import { EmojiPicker } from '@/shared/components/emoji-picker/emoji-picker'
-import { ChapterScrubber, type Chapter } from '@/components/ui/chapter-scrubber'
-import { FloatingDock, type DockItem } from '@/components/ui/floating-dock'
+import { ChapterScrubber, type Chapter } from '@/modules/document/components/chapter-scrubber'
 import {
   Pagination,
   PaginationContent,
@@ -252,18 +250,19 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { PageHeader } from '@/components/ui/page-header'
-import { PageShell } from '@/components/ui/page-shell'
-import { HeaderActionButton } from '@/components/ui/header-action-button'
-import { ToolbarRow, useToolbarViews, type ToolbarViewStyleOption } from '@/components/ui/toolbar-row'
+import { PageHeader, nodeToText } from '@/components/semantic/page-header'
+import { FavoriteToggle } from '@/shared/components/favorite-toggle'
+import { PageShell } from '@/components/semantic/page-shell'
+import { HeaderActionButton } from '@/components/semantic/header-action-button'
+import { ToolbarRow, useToolbarViews, type ToolbarViewStyleOption } from '@/components/semantic/toolbar-row'
 import {
   FilterChipsRow,
   FilterCascadeMenu,
   type FilterCondition,
   type FilterFieldDef,
-} from '@/components/ui/filter-chips'
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
-import { SectionCard } from '@/components/ui/section-card'
+} from '@/components/semantic/filter-chips'
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar'
+import { SectionCard } from '@/components/semantic/section-card'
 import { Chip } from '@/components/semantic/chip'
 import { NavStatusDot } from '@/components/semantic/nav-status-dot'
 import { ThemeModeCard } from '@/components/semantic/theme-mode-card'
@@ -271,16 +270,16 @@ import { ChartCard } from '@/components/semantic/chart-card'
 import { StatTile } from '@/components/semantic/stat-tile'
 import { MetricRow } from '@/components/semantic/metric-row'
 // H 类批 H2：画廊覆盖率补齐——12 件 canonical 缺口的 demo 收录（check-component-registry §4.2 ④ 门禁配套）
-import { AiAgentBadge } from '@/components/ui/ai-agent-badge'
-import { AiContextSummary } from '@/components/ui/ai-context-summary'
-import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle'
+import { AiAgentBadge } from '@/modules/issue/components/ai-agent-badge'
+import { AiContextSummary } from '@/modules/project/components/ai-context-summary'
+import { QuickCardsToggle } from '@/components/semantic/quick-cards-toggle'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
-import { SidebarPanel } from '@/components/ui/sidebar-panel'
-import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui/right-sidebar'
-import { TabBar } from '@/components/ui/tab-bar'
+import { SidebarPanel } from '@/components/semantic/sidebar-panel'
+import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/semantic/right-sidebar'
+import { TabBar } from '@/components/semantic/tab-bar'
 import { TabsProvider } from '@/shared/tabs/tabs-context'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 import { DataTable, type ColumnDef } from '@/components/ui/data-table'
@@ -324,13 +323,13 @@ import { CheckboxGroup } from '@/components/ui/checkbox-group'
 import { Meter, MeterIndicator, MeterLabel, MeterTrack, MeterValue } from '@/components/ui/meter'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { StatsCard } from '@/components/semantic/stats-card'
-import { IconMetric } from '@/components/ui/icon-metric'
-import { DataTableShell } from '@/components/ui/data-table-shell'
-import { EmptyState } from '@/components/ui/empty-state'
-import { AsyncState } from '@/components/ui/async-state'
+import { IconMetric } from '@/components/semantic/icon-metric'
+import { DataTableShell } from '@/components/semantic/data-table-shell'
+import { EmptyState } from '@/components/semantic/empty-state'
+import { AsyncState } from '@/components/semantic/async-state'
 import { DataList } from '@/shared/components/data-list'
 import { PropsCard, PropertyRow } from '@/shared/components/property-panel'
-import { LoadingOverlay } from '@/components/ui/loading-overlay'
+import { LoadingOverlay } from '@/components/semantic/loading-overlay'
 import { cn } from '@/lib/utils'
 import {
   Area,
@@ -351,7 +350,7 @@ import {
 } from 'recharts'
 import { ThinkingStream } from '@/modules/assistant/components/thinking-stream'
 import { AgentHandoffCard } from '@/modules/office/components/agent-handoff-card'
-import { DualTrackMetricPill } from '@/components/ui/dual-track-metric-pill'
+import { DualTrackMetricPill } from '@/components/semantic/dual-track-metric-pill'
 import { IssueTypePill } from '@/shared/components/issue-type-pill'
 import { AssistantToolCard } from '@/modules/assistant/components/assistant-tool-card'
 import { WorkflowRunTimeline } from '@/modules/workflow/components/workflow-run-timeline'
@@ -440,7 +439,6 @@ const SECTIONS = [
   { id: 'scroll-area', label: 'Scroll Area', group: 'Layout & Shells' },
   { id: 'aspect-ratio', label: 'Aspect Ratio', group: 'Layout & Shells' },
   { id: 'chapter-scrubber', label: 'Chapter Scrubber', group: 'Layout & Shells' },
-  { id: 'floating-dock', label: 'Floating Dock', group: 'Layout & Shells' },
   { id: 'page-layout', label: 'Page Layout', group: 'Layout & Shells' },
   { id: 'sidebar-panel', label: 'Sidebar Panel', group: 'Layout & Shells' },
   { id: 'ai-density-cards', label: 'AI High-Density Cards [AI]', group: 'AI Execution' },
@@ -1423,29 +1421,6 @@ function ChapterScrubberDemo() {
         <p className="mt-3 text-3xs text-muted-foreground">
           {active ? 'hover 预览中 — 点击切换 current（主色刻度）' : '悬停刻度出现放大波与预览卡，点击/方向键切换章节'}
         </p>
-      </div>
-    </div>
-  )
-}
-
-const DOCK_ITEMS: DockItem[] = [
-  { title: 'Home', icon: <Home className="h-full w-full text-muted-foreground" />, href: '#' },
-  { title: 'Projects', icon: <Kanban className="h-full w-full text-muted-foreground" />, href: '#' },
-  { title: 'Tasks', icon: <FileText className="h-full w-full text-muted-foreground" />, href: '#' },
-  { title: 'Bugs', icon: <Bug className="h-full w-full text-muted-foreground" />, href: '#' },
-  { title: 'Team', icon: <Users className="h-full w-full text-muted-foreground" />, href: '#' },
-  { title: 'Search', icon: <Search className="h-full w-full text-muted-foreground" />, href: '#' },
-  { title: 'Settings', icon: <Settings className="h-full w-full text-muted-foreground" />, href: '#' },
-]
-
-function FloatingDockDemo() {
-  return (
-    <div className="rounded-xl border border-border overflow-hidden bg-background">
-      <div className="flex min-h-56 items-end justify-center bg-muted/20 px-6 pb-8 pt-6">
-        <FloatingDock items={DOCK_ITEMS} />
-      </div>
-      <div className="px-6 py-4 text-xs text-muted-foreground">
-        桌面端 hover 图标磁性放大并弹出 tooltip；md 以下折叠为展开按钮
       </div>
     </div>
   )
@@ -5399,7 +5374,7 @@ export function DesignSystemPage() {
                   <CardDescription className="text-xs">config 驱动 tooltip 文案与 CSS 变量着色</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <ChartContainer config={DEMO_CHART_CONFIG} className="h-[200px] w-full">
+                  <ChartContainer config={DEMO_CHART_CONFIG} className="h-50 w-full">
                     <BarChart data={CHART_DATA} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -5426,18 +5401,6 @@ export function DesignSystemPage() {
 
           <Separator />
 
-          <SectionAnchor id="floating-dock">
-            <SectionTitle>Floating Dock</SectionTitle>
-            <div className="space-y-4">
-              <FloatingDockDemo />
-              <p className="text-xs text-muted-foreground">
-                macOS 风格浮动 Dock：指针距离映射到尺寸弹簧（40↔80px 磁性放大 + tooltip）；窄视口（md 以下）自动切换为纵向展开按钮组。
-              </p>
-            </div>
-          </SectionAnchor>
-
-          <Separator />
-
           <SectionAnchor id="page-header">
             <SectionTitle>Page Header</SectionTitle>
             <div className="space-y-4">
@@ -5445,6 +5408,7 @@ export function DesignSystemPage() {
               <div className="rounded-xl border border-border overflow-hidden">
                 <PageHeader
                   title="All Tasks"
+                  favorites={<FavoriteToggle label={nodeToText("All Tasks").trim()} />}
                   icon={CheckSquare}
                   iconColor="text-accent-blue"
                   metrics={[{ id: 'tasks', label: 'Tasks', value: 248 }]}
@@ -5456,6 +5420,7 @@ export function DesignSystemPage() {
               <div className="rounded-xl border border-border overflow-hidden">
                 <PageHeader
                   title="Project Roles"
+                  favorites={<FavoriteToggle label={nodeToText("Project Roles").trim()} />}
                   icon={Briefcase}
                   metrics={[{ id: 'roles', label: 'Roles', value: 6 }]}
                   actions={
@@ -5471,6 +5436,7 @@ export function DesignSystemPage() {
               <div className="rounded-xl border border-border overflow-hidden">
                 <PageHeader
                   title="All Bugs"
+                  favorites={<FavoriteToggle label={nodeToText("All Bugs").trim()} />}
                   icon={Bug}
                   iconColor="text-accent-red"
                   metrics={[
@@ -6153,6 +6119,7 @@ export function DesignSystemPage() {
                 <PageShell className="bg-background">
                   <PageHeader
                     title="Projects"
+                    favorites={<FavoriteToggle label={nodeToText("Projects").trim()} />}
                     icon={FolderKanban}
                     metrics={[{ id: 'projects', label: 'Projects', value: 12 }]}
                     actions={<HeaderActionButton icon={Plus} label="New Project" />}

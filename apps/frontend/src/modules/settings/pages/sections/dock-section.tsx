@@ -15,7 +15,9 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { useTranslation } from 'react-i18next';
 import {
   Bell,
@@ -66,6 +68,7 @@ export function DockSettingsSection() {
       icon={LayoutList}
       iconColor="text-accent-blue"
       title={t('settings.dock')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.dock')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
@@ -103,7 +106,6 @@ function DockDisplayCard() {
             </p>
           </div>
           <Switch
-            size="sm"
             checked={dockAlwaysVisible}
             onCheckedChange={setDockAlwaysVisible}
             aria-label={t('settings.dockAlwaysVisible')}
@@ -213,7 +215,6 @@ function DockActionsCard() {
                   <ChevronDown className="size-4" />
                 </Button>
                 <Switch
-                  size="sm"
                   checked={visible}
                   onCheckedChange={(checked) => setDockItemVisible(id, checked)}
                   aria-label={`${t(DOCK_ITEM_LABEL_KEYS[id])} ${t('settings.dockVisible')}`}
@@ -337,7 +338,6 @@ function DockAiColleaguesCard() {
                       )}
                     </span>
                     <Switch
-                      size="sm"
                       checked={visible}
                       disabled={locked}
                       onCheckedChange={(checked) => setVisible(colleague.id, checked)}

@@ -12,7 +12,7 @@ import { useSyncProgress } from '@/modules/linear/hooks/use-sync-progress';
 import {
   SyncProgressDialog,
 } from '@/modules/linear/components/sync-progress-dialog';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
 import { commandEntries, COMMAND_GROUP_LABEL_KEYS, type CommandActionId } from '@/shared/command-palette/commands';
 import { OPEN_COMMAND_PALETTE_EVENT } from '@/shared/command-palette/command-palette-provider';
@@ -22,7 +22,7 @@ import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { AISlotLayer } from '@/shared/ai-slot/ai-slot-layer';
 import { OnboardingGate } from '@/modules/onboarding/components/onboarding-gate';
 import { cn } from '@/lib/utils';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SelectField } from '@/components/ui/select-field';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -54,9 +54,9 @@ import {
   PROJECT_DETAIL_BASE_SEGMENT,
   PROJECT_DETAIL_TABS,
 } from '@/shared/layout/project-detail-tabs';
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { Logo } from '@/components/brand/logo';
-import { TabBar } from '@/components/ui/tab-bar';
+import { TabBar } from '@/components/semantic/tab-bar';
 import { TabsProvider } from '@/shared/tabs/tabs-context';
 import {
   ProjectSidebarProvider,
@@ -65,8 +65,8 @@ import {
 } from '@/modules/project/components/dashboard/project-sidebar-context';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
-import { ErrorBoundary } from '@/components/ui/error-boundary';
-import { PageErrorFallback } from '@/components/ui/page-error-fallback';
+import { ErrorBoundary } from '@/components/semantic/error-boundary';
+import { PageErrorFallback } from '@/components/semantic/page-error-fallback';
 import { AssistantFab } from '@/modules/assistant';
 import { ConnectionBanner } from '@/shared/components/connection-banner';
 import { useGlobalHotkey } from '@/shared/hotkeys/use-global-hotkey';
@@ -115,7 +115,7 @@ export function ShellLayout() {
     setAiPanelOpen,
   } = useAppStore();
   const favoritePages = useAppStore((s) => s.favoritePages);
-  const { mode, toggleTheme } = useTheme();
+  const { resolvedMode, toggleTheme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   // 管理后台入口仅对全局 admin 角色可见
   const isAdminRole = roles.some(
@@ -338,7 +338,7 @@ export function ShellLayout() {
         .map((entry) => ({
           id: entry.id,
           label: t(
-            entry.darkModeLabelKey && mode === 'dark'
+            entry.darkModeLabelKey && resolvedMode === 'dark'
               ? entry.darkModeLabelKey
               : entry.labelKey,
           ),
@@ -357,7 +357,7 @@ export function ShellLayout() {
           iconColor: entry.to ? PAGE_REGISTRY[entry.to]?.color : undefined,
           onSelect: entry.action ? commandActions[entry.action] : undefined,
         })),
-    [commandActions, isAdminRole, mode, t],
+    [commandActions, isAdminRole, resolvedMode, t],
   );
 
   return (

@@ -7,9 +7,9 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-// useTheme 需 ThemeProvider；本测试只关心 Dock 行为，直接注入固定主题
+// useTheme 需 ThemeProvider；本测试只关心 Dock 行为，直接注入固定主题（意图与生效同档）
 vi.mock('@/shared/theme/theme-context', () => ({
-  useTheme: () => ({ mode: 'light', toggleTheme: vi.fn() }),
+  useTheme: () => ({ mode: 'light', resolvedMode: 'light', toggleTheme: vi.fn() }),
 }));
 
 // Dock 现在只用到 useNavigate（路由由测试直接断言其未被调用）
