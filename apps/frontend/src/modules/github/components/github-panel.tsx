@@ -17,6 +17,7 @@ import {
   RefreshCcw,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useGithubPulls, useCreatePull } from '../hooks/use-github';
 import type { GitHubPullRequest as Pr } from '../api/github-api';
 import { cn } from '@/lib/utils';
@@ -63,6 +64,7 @@ export function GithubPanel({
   const createMut = useCreatePull(integrationId);
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
@@ -114,98 +116,15 @@ export function GithubPanel({
             <Button
               size="sm"
               variant="default"
-              onClick={() => setShowCreate((v) => !v)}
+              onClick={() => setShowCreate(true)}
               disabled={!repo}
               className="h-8"
             >
-              {showCreate ? <X className="h-3 w-3" /> : <GitPullRequest className="h-3 w-3" />}
+              <GitPullRequest className="h-3 w-3" />
               <span className="ml-1">新建 PR</span>
             </Button>
           </div>
         </div>
-
-        {showCreate && (
-          <div className="rounded-md border bg-muted/30 p-3 space-y-2">
-            <div className="space-y-1">
-              <Label className="text-xs">PR 标题</Label>
-              <Input
-                value={createInput.title}
-                onChange={(e) => setCreateInput((s) => ({ ...s, title: e.target.value }))}
-                placeholder="feat(scope): ..."
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Head 分支</Label>
-                <Input
-                  value={createInput.head}
-                  onChange={(e) => setCreateInput((s) => ({ ...s, head: e.target.value }))}
-                  placeholder="feat/xxx"
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Base 分支</Label>
-                <Input
-                  value={createInput.base}
-                  onChange={(e) => setCreateInput((s) => ({ ...s, base: e.target.value }))}
-                  placeholder="main"
-                  className="h-8 text-sm"
-                />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">描述（可选）</Label>
-              <Input
-                value={createInput.body}
-                onChange={(e) => setCreateInput((s) => ({ ...s, body: e.target.value }))}
-                placeholder="关联任务：..."
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="flex items-center justify-end gap-2 pt-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowCreate(false)}
-                className="h-8"
-              >
-                取消
-              </Button>
-              <Button
-                size="sm"
-                onClick={async () => {
-                  const [owner, repoName] = repo.split('/');
-                  await createMut.mutateAsync({
-                    owner,
-                    repo: repoName,
-                    title: createInput.title,
-                    head: createInput.head,
-                    base: createInput.base,
-                    body: createInput.body || undefined,
-                  });
-                  setShowCreate(false);
-                  refetch();
-                }}
-                disabled={
-                  createMut.isPending ||
-                  !createInput.title ||
-                  !createInput.head ||
-                  !createInput.base
-                }
-                className="h-8"
-              >
-                {createMut.isPending ? (
-                  <Spinner className="h-3 w-3 mr-1 text-inherit" />
-                ) : (
-                  <GitPullRequest className="h-3 w-3 mr-1" />
-                )}
-                提交
-              </Button>
-            </div>
-          </div>
-        )}
 
         {isError && (
           <div className="text-xs text-muted-foreground flex items-center gap-1">
@@ -235,6 +154,90 @@ export function GithubPanel({
         </div>
       </CardContent>
     </Card>
+
+    {/* 新建 PR 弹窗（F3.6 表单容器铁律：实体表单走模态 Dialog） */}
+    <Dialog open={showCreate} onOpenChange={setShowCreate}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>新建 PR</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label className="text-xs">PR 标题</Label>
+            <Input
+              value={createInput.title}
+              onChange={(e) => setCreateInput((s) => ({ ...s, title: e.target.value }))}
+              placeholder="feat(scope): ..."
+              className="text-sm"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Head 分支</Label>
+              <Input
+                value={createInput.head}
+                onChange={(e) => setCreateInput((s) => ({ ...s, head: e.target.value }))}
+                placeholder="feat/xxx"
+                className="text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Base 分支</Label>
+              <Input
+                value={createInput.base}
+                onChange={(e) => setCreateInput((s) => ({ ...s, base: e.target.value }))}
+                placeholder="main"
+                className="text-sm"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">描述（可选）</Label>
+            <Input
+              value={createInput.body}
+              onChange={(e) => setCreateInput((s) => ({ ...s, body: e.target.value }))}
+              placeholder="关联任务：..."
+              className="text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button size="sm" variant="ghost" onClick={() => setShowCreate(false)}>
+              取消
+            </Button>
+            <Button
+              size="sm"
+              onClick={async () => {
+                const [owner, repoName] = repo.split('/');
+                await createMut.mutateAsync({
+                  owner,
+                  repo: repoName,
+                  title: createInput.title,
+                  head: createInput.head,
+                  base: createInput.base,
+                  body: createInput.body || undefined,
+                });
+                setShowCreate(false);
+                refetch();
+              }}
+              disabled={
+                createMut.isPending ||
+                !createInput.title ||
+                !createInput.head ||
+                !createInput.base
+              }
+            >
+              {createMut.isPending ? (
+                <Spinner className="h-3 w-3 mr-1 text-inherit" />
+              ) : (
+                <GitPullRequest className="h-3 w-3 mr-1" />
+              )}
+              提交
+            </Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
@@ -355,92 +358,17 @@ export function GithubPanelEmbedded({
         </button>
       </div>
 
-      {/* 新建 PR 开关 */}
+      {/* 新建 PR 入口（弹窗承载，F3.6） */}
       <Button
         variant="ghost"
         size="xs"
         className="h-6 px-2"
-        onClick={() => setShowCreate((v) => !v)}
+        onClick={() => setShowCreate(true)}
         disabled={!repo}
       >
-        {showCreate ? <X className="mr-1 size-3" /> : <GitPullRequest className="mr-1 size-3" />}
-        {showCreate ? t('common.cancel') : t('github.panel.newPr')}
+        <GitPullRequest className="mr-1 size-3" />
+        {t('github.panel.newPr')}
       </Button>
-
-      {showCreate && (
-        <div className="space-y-1.5 rounded-md border bg-muted/30 p-2">
-          <div className="space-y-0.5">
-            <Label className="text-xs">{t('github.panel.prTitleLabel')}</Label>
-            <Input
-              value={createInput.title}
-              onChange={(e) => setCreateInput((s) => ({ ...s, title: e.target.value }))}
-              placeholder="feat(scope): ..."
-              className="h-6 px-2 text-xs"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="space-y-0.5">
-              <Label className="text-xs">{t('github.panel.headBranch')}</Label>
-              <Input
-                value={createInput.head}
-                onChange={(e) => setCreateInput((s) => ({ ...s, head: e.target.value }))}
-                placeholder="feat/xxx"
-                className="h-6 px-2 text-xs"
-              />
-            </div>
-            <div className="space-y-0.5">
-              <Label className="text-xs">{t('github.panel.baseBranch')}</Label>
-              <Input
-                value={createInput.base}
-                onChange={(e) => setCreateInput((s) => ({ ...s, base: e.target.value }))}
-                placeholder="main"
-                className="h-6 px-2 text-xs"
-              />
-            </div>
-          </div>
-          <div className="space-y-0.5">
-            <Label className="text-xs">{t('github.panel.descOptional')}</Label>
-            <Input
-              value={createInput.body}
-              onChange={(e) => setCreateInput((s) => ({ ...s, body: e.target.value }))}
-              placeholder={t('github.panel.descPlaceholder')}
-              className="h-6 px-2 text-xs"
-            />
-          </div>
-          <div className="flex items-center justify-end pt-0.5">
-            <Button
-              size="xs"
-              className="h-6 px-2"
-              onClick={async () => {
-                const [owner, repoName] = repo.split('/');
-                await createMut.mutateAsync({
-                  owner,
-                  repo: repoName,
-                  title: createInput.title,
-                  head: createInput.head,
-                  base: createInput.base,
-                  body: createInput.body || undefined,
-                });
-                setShowCreate(false);
-                refetch();
-              }}
-              disabled={
-                createMut.isPending ||
-                !createInput.title ||
-                !createInput.head ||
-                !createInput.base
-              }
-            >
-              {createMut.isPending ? (
-                <Spinner className="mr-1 size-3 text-inherit" />
-              ) : (
-                <GitPullRequest className="mr-1 size-3" />
-              )}
-              {t('github.panel.submit')}
-            </Button>
-          </div>
-        </div>
-      )}
 
       {isError && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -470,6 +398,89 @@ export function GithubPanelEmbedded({
           ))}
         </div>
       )}
+
+      {/* 新建 PR 弹窗（F3.6 表单容器铁律） */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t('github.panel.newPr')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-xs">{t('github.panel.prTitleLabel')}</Label>
+              <Input
+                value={createInput.title}
+                onChange={(e) => setCreateInput((s) => ({ ...s, title: e.target.value }))}
+                placeholder="feat(scope): ..."
+                className="text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs">{t('github.panel.headBranch')}</Label>
+                <Input
+                  value={createInput.head}
+                  onChange={(e) => setCreateInput((s) => ({ ...s, head: e.target.value }))}
+                  placeholder="feat/xxx"
+                  className="text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">{t('github.panel.baseBranch')}</Label>
+                <Input
+                  value={createInput.base}
+                  onChange={(e) => setCreateInput((s) => ({ ...s, base: e.target.value }))}
+                  placeholder="main"
+                  className="text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{t('github.panel.descOptional')}</Label>
+              <Input
+                value={createInput.body}
+                onChange={(e) => setCreateInput((s) => ({ ...s, body: e.target.value }))}
+                placeholder={t('github.panel.descPlaceholder')}
+                className="text-sm"
+              />
+            </div>
+            <DialogFooter>
+              <Button size="sm" variant="ghost" onClick={() => setShowCreate(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button
+                size="sm"
+                onClick={async () => {
+                  const [owner, repoName] = repo.split('/');
+                  await createMut.mutateAsync({
+                    owner,
+                    repo: repoName,
+                    title: createInput.title,
+                    head: createInput.head,
+                    base: createInput.base,
+                    body: createInput.body || undefined,
+                  });
+                  setShowCreate(false);
+                  refetch();
+                }}
+                disabled={
+                  createMut.isPending ||
+                  !createInput.title ||
+                  !createInput.head ||
+                  !createInput.base
+                }
+              >
+                {createMut.isPending ? (
+                  <Spinner className="mr-1 size-3 text-inherit" />
+                ) : (
+                  <GitPullRequest className="mr-1 size-3" />
+                )}
+                {t('github.panel.submit')}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
