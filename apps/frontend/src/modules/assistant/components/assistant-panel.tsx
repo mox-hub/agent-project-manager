@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Bot, Clock, DoorOpen, Maximize2, Minimize2, X, Inbox, PanelLeftClose, PanelLeftOpen, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SkeletonText } from '@/components/ui/skeleton';
 import { useAppStore } from '@/infrastructure/store/app-store';

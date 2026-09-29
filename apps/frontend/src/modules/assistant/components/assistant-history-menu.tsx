@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import type { AssistantConversationSummary } from '../api/assistant-api';
 
 function formatRelativeParts(iso: string): { key: string; n?: number } | null {

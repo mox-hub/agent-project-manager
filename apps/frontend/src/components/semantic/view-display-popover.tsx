@@ -12,7 +12,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Switch } from "./switch";
+import { RawButton } from "@/components/raw/raw-button";
+import { RawSelect } from "@/components/raw/raw-select";
+import { Switch } from "@/components/ui/switch";
 
 export interface ViewDisplayPropertyItem {
   key: string;
@@ -202,7 +204,7 @@ export function ViewDisplayPopover({
             const isActive = viewMode === opt.value;
             const label = t(`viewDisplay.views.${opt.value}`, opt.label);
             return (
-              <button
+              <RawButton
                 key={opt.value}
                 type="button"
                 onClick={() => onViewModeChange(opt.value)}
@@ -215,7 +217,7 @@ export function ViewDisplayPopover({
               >
                 {Icon ? <Icon className="size-3.5 shrink-0" strokeWidth={1.75} /> : null}
                 <span>{label}</span>
-              </button>
+              </RawButton>
             );
           })}
         </div>
@@ -230,7 +232,7 @@ export function ViewDisplayPopover({
             <span className="text-muted-foreground font-medium">
               {t("viewDisplay.sections.grouping", "Grouping")}
             </span>
-            <select
+            <RawSelect
               value={groupBy}
               onChange={(e) => onGroupByChange(e.target.value)}
               className="h-7 rounded-md border border-border bg-card px-2 text-xs font-medium text-foreground outline-none focus:border-primary"
@@ -240,7 +242,7 @@ export function ViewDisplayPopover({
                   {t(`viewDisplay.groupOptions.${opt.value}`, opt.label)}
                 </option>
               ))}
-            </select>
+            </RawSelect>
           </div>
         ) : null}
 
@@ -249,7 +251,7 @@ export function ViewDisplayPopover({
             <span className="text-muted-foreground font-medium">
               {t("viewDisplay.sections.subGrouping", "Sub-grouping")}
             </span>
-            <select
+            <RawSelect
               value={subGroupBy}
               onChange={(e) => onSubGroupByChange(e.target.value)}
               className="h-7 rounded-md border border-border bg-card px-2 text-xs font-medium text-foreground outline-none focus:border-primary"
@@ -259,7 +261,7 @@ export function ViewDisplayPopover({
                   {t(`viewDisplay.groupOptions.${opt.value}`, opt.label)}
                 </option>
               ))}
-            </select>
+            </RawSelect>
           </div>
         ) : null}
 
@@ -270,7 +272,7 @@ export function ViewDisplayPopover({
             </span>
             <div className="flex items-center gap-1">
               {onOrderDirectionToggle ? (
-                <button
+                <RawButton
                   type="button"
                   onClick={onOrderDirectionToggle}
                   title={
@@ -285,9 +287,9 @@ export function ViewDisplayPopover({
                   ) : (
                     <ArrowDownWideNarrow className="size-3.5" />
                   )}
-                </button>
+                </RawButton>
               ) : null}
-              <select
+              <RawSelect
                 value={orderBy}
                 onChange={(e) => onOrderByChange(e.target.value)}
                 className="h-7 rounded-md border border-border bg-card px-2 text-xs font-medium text-foreground outline-none focus:border-primary"
@@ -297,7 +299,7 @@ export function ViewDisplayPopover({
                     {t(`viewDisplay.orderOptions.${opt.value}`, opt.label)}
                   </option>
                 ))}
-              </select>
+              </RawSelect>
             </div>
           </div>
         ) : null}
@@ -310,7 +312,7 @@ export function ViewDisplayPopover({
             <span className="text-muted-foreground font-medium">
               {t("viewDisplay.sections.completedIssues", "Completed issues")}
             </span>
-            <select
+            <RawSelect
               value={completedFilter}
               onChange={(e) =>
                 onCompletedFilterChange(e.target.value as "all" | "active" | "completed")
@@ -320,7 +322,7 @@ export function ViewDisplayPopover({
               <option value="all">{t("viewDisplay.completedFilters.all", "All")}</option>
               <option value="active">{t("viewDisplay.completedFilters.active", "Active only")}</option>
               <option value="completed">{t("viewDisplay.completedFilters.completed", "Completed only")}</option>
-            </select>
+            </RawSelect>
           </div>
         ) : null}
 
@@ -330,7 +332,6 @@ export function ViewDisplayPopover({
               {t("viewDisplay.switches.showSubIssues", "Show sub-issues")}
             </span>
             <Switch
-              size="sm"
               checked={showSubIssues}
               onCheckedChange={onShowSubIssuesChange}
             />
@@ -348,7 +349,6 @@ export function ViewDisplayPopover({
               {t("viewDisplay.switches.showEmptyGroups", "Show empty groups")}
             </span>
             <Switch
-              size="sm"
               checked={showEmptyGroups}
               onCheckedChange={onShowEmptyGroupsChange}
             />
@@ -365,7 +365,7 @@ export function ViewDisplayPopover({
                 const isActive = activePropsMap[prop.key] !== false;
                 const propLabel = t(`viewDisplay.properties.${prop.key}`, prop.label);
                 return (
-                  <button
+                  <RawButton
                     key={prop.key}
                     type="button"
                     onClick={() => onToggleDisplayProperty(prop.key)}
@@ -380,7 +380,7 @@ export function ViewDisplayPopover({
                       <span className="mr-1 inline-block size-1.5 rounded-full bg-accent-purple" />
                     )}
                     {propLabel}
-                  </button>
+                  </RawButton>
                 );
               })}
             </div>

@@ -12,11 +12,12 @@ import { Fragment, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, t
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, Filter, Plus, X, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AnchoredMenu } from "./anchored-menu";
-import { Button } from "./button";
-import { Checkbox } from "./checkbox";
-import { HeaderActionButton } from "./header-action-button";
-import { Input } from "./input";
+import { RawButton } from "@/components/raw/raw-button";
+import { AnchoredMenu } from "@/components/ui/anchored-menu";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { HeaderActionButton } from "@/components/semantic/header-action-button";
+import { Input } from "@/components/ui/input";
 import {
   Menu,
   MenuCheckboxItem,
@@ -25,7 +26,7 @@ import {
   MenuSubPopup,
   MenuSubTrigger,
   MenuTrigger,
-} from "./menu";
+} from "@/components/ui/menu";
 import {
   Command,
   CommandCollection,
@@ -35,9 +36,9 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "./command";
-import { useAutocompleteFilter } from "./autocomplete";
-import { MENU_ITEM_CLASS } from "./menu-surface";
+} from "@/components/ui/command";
+import { useAutocompleteFilter } from "@/components/ui/autocomplete";
+import { MENU_ITEM_CLASS } from "@/components/ui/menu-surface";
 
 /* ────────────────────────────── 模型 ────────────────────────────── */
 
@@ -154,7 +155,7 @@ function OperatorMenu({
 
   return (
     <>
-      <button
+      <RawButton
         ref={anchorRef}
         type="button"
         onClick={() => setOpen((prev) => !prev)}
@@ -163,11 +164,11 @@ function OperatorMenu({
         className={cn(SEGMENT_CLASS, "px-1.5")}
       >
         {t(OPERATOR_I18N_KEY[operator])}
-      </button>
+      </RawButton>
       <AnchoredMenu open={open} onClose={() => setOpen(false)} anchor={anchorRef}>
         <div className="min-w-24">
           {field.operators.map((op) => (
-            <button
+            <RawButton
               key={op}
               type="button"
               className={cn(MENU_ITEM_CLASS, "text-xs")}
@@ -180,7 +181,7 @@ function OperatorMenu({
               {op === operator ? (
                 <Check className="ml-2 size-3.5 shrink-0 text-primary" strokeWidth={2.5} />
               ) : null}
-            </button>
+            </RawButton>
           ))}
         </div>
       </AnchoredMenu>
@@ -255,7 +256,7 @@ function ValueMenu({
 
   return (
     <>
-      <button
+      <RawButton
         ref={anchorRef}
         type="button"
         onClick={() => setOpen((prev) => !prev)}
@@ -281,7 +282,7 @@ function ValueMenu({
         ) : (
           <span>{t("common.filterSelectValue")}</span>
         )}
-      </button>
+      </RawButton>
       <AnchoredMenu open={open} onClose={close} anchor={anchorRef}>
         <div className="w-56">
           <Command
@@ -353,7 +354,7 @@ function FilterChip({
         autoOpen={condition.values.length === 0}
         onValuesChange={(values) => onChange({ values })}
       />
-      <button
+      <RawButton
         type="button"
         aria-label={t("common.delete")}
         title={t("common.delete")}
@@ -361,7 +362,7 @@ function FilterChip({
         className={cn(SEGMENT_CLASS, "w-6 justify-center rounded-r-md")}
       >
         <X className="size-3" />
-      </button>
+      </RawButton>
     </div>
   );
 }
@@ -526,7 +527,7 @@ export function FilterFieldMenuList({
       {fields.map((field) => {
         const Icon = field.icon;
         return (
-          <button
+          <RawButton
             key={field.id}
             type="button"
             className={cn(MENU_ITEM_CLASS, "text-xs")}
@@ -535,7 +536,7 @@ export function FilterFieldMenuList({
             {Icon ? <Icon className="mr-2 size-4 shrink-0" strokeWidth={1.75} /> : null}
             <span className="flex-1 truncate">{field.label}</span>
             <Plus className="ml-2 size-3.5 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-          </button>
+          </RawButton>
         );
       })}
     </div>
@@ -615,7 +616,7 @@ export function FilterChipsRow({
           );
         })}
         <span className="relative shrink-0">
-          <button
+          <RawButton
             ref={addAnchorRef}
             type="button"
             aria-label={t("common.filterAdd")}
@@ -626,7 +627,7 @@ export function FilterChipsRow({
             className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <Plus className="size-3.5" strokeWidth={1.75} />
-          </button>
+          </RawButton>
           <AnchoredMenu open={addOpen} onClose={() => setAddOpen(false)} anchor={addAnchorRef}>
             <FilterFieldMenuList fields={fields} onSelect={addCondition} />
           </AnchoredMenu>
@@ -680,7 +681,7 @@ export function FilterChipsRow({
               ) : (
                 <div className="min-w-40">
                   {onSaveToView ? (
-                    <button
+                    <RawButton
                       type="button"
                       className={cn(MENU_ITEM_CLASS, "text-xs")}
                       onClick={() => {
@@ -689,16 +690,16 @@ export function FilterChipsRow({
                       }}
                     >
                       <span className="flex-1">{t("common.filterSaveToView")}</span>
-                    </button>
+                    </RawButton>
                   ) : null}
                   {onSaveAsNewView ? (
-                    <button
+                    <RawButton
                       type="button"
                       className={cn(MENU_ITEM_CLASS, "text-xs")}
                       onClick={() => setSaveAsOpen(true)}
                     >
                       <span className="flex-1">{t("common.filterSaveAsView")}</span>
-                    </button>
+                    </RawButton>
                   ) : null}
                 </div>
               )}

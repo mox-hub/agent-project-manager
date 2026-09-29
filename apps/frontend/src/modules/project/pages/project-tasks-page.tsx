@@ -17,7 +17,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/semantic/toolbar-row';
 import {
   FilterChipsRow,
   FilterCascadeMenu,
@@ -26,10 +26,10 @@ import {
   countBy,
   type FilterCondition,
   type FilterFieldDef,
-} from '@/components/ui/filter-chips';
+} from '@/components/semantic/filter-chips';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
-import { ListActionButton } from '@/components/ui/data-list';
+import { ListActionButton } from '@/shared/components/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useProjectDetail } from '../hooks/use-project-detail';

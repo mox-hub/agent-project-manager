@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { FolderGit2, ScanSearch } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { SkeletonList } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { isTerminalRunStatus, useExecutionRunDetail, useExecutionRunEvents } from '@/modules/executions/api/execution-api';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';

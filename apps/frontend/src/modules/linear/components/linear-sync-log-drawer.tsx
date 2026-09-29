@@ -9,7 +9,7 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { History, RefreshCw, X } from 'lucide-react';
 import { LinearIcon } from '@/components/icons/linear';
 import { LinearSyncLog } from './linear-sync-log';

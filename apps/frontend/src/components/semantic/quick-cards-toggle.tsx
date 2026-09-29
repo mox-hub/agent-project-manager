@@ -1,5 +1,5 @@
 import { LayoutGrid } from 'lucide-react';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { cn } from '@/lib/utils';
 
 /**
