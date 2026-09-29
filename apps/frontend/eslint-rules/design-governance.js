@@ -46,6 +46,18 @@ const isTestFile = (filename) => {
 /** 原子层唯一命名空间：src/components/ui/（§19.1） */
 const isUiAtomFile = (filename) => toPosix(filename).includes("/components/ui/");
 
+/**
+ * 原语层：src/components/raw/（G 类方案 docs/design/修改方案-G类-分层解耦-2026-09-29.md §2.3）。
+ * no-naked-controls 对该目录**整目录豁免**——原语（RawButton/RawInput）的全部意义就是
+ * 承载裸元素，扫它无意义；「非动作钮必须具名」由 lint:layers 出口规则（R1/R4/R5）守门，
+ * 不由本规则守门。
+ *
+ * ⚠️ `components/semantic/` **不在豁免之列**：语义组件内部必须用 RawButton 等**具名出口**
+ * 承载交互元素，不得裸写 `<button>`——本规则对 semantic/ 继续扫描，且在 eslint.config.js
+ * 中对该目录配置为 **error** 级（裁决 G3：semantic 全新零存量，一步 error 无清账成本）。
+ */
+const isRawPrimitiveFile = (filename) => toPosix(filename).includes("/components/raw/");
+
 // ---------------------------------------------------------------------------
 // §19.2 禁止裸组件
 // ---------------------------------------------------------------------------
@@ -88,8 +100,10 @@ const noNakedControls = {
   create(context) {
     const filename = context.filename ?? context.getFilename();
     // 原子层自身就是这些标签的实现处（ui/table 内部必然写 <table>），豁免；
+    // 原语层（raw/）同理整目录豁免（注释见 isRawPrimitiveFile，G 类方案 §2.3）。
+    // semantic/ 不豁免：语义组件必须用具名出口承载交互元素（error 级，见 eslint.config.js）。
     // allowlist 已登记的范围（如设计系统展示页，附录 A.1）整文件豁免本规则。
-    if (isUiAtomFile(filename) || isTestFile(filename)) return {};
+    if (isUiAtomFile(filename) || isRawPrimitiveFile(filename) || isTestFile(filename)) return {};
     if (isExempt("no-naked-controls", filename)) return {};
     return {
       JSXOpeningElement(node) {

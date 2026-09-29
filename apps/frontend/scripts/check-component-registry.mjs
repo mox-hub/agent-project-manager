@@ -201,8 +201,12 @@ for (const entry of registryEntries) {
 const SRC_DIR = join(PKG_ROOT, "src");
 const toPosix = (p) => p.split("\\").join("/");
 
-/** registry 的 `file` 是 src 相对路径，但 `ui/` 实际位于 `src/components/ui/` */
-const toSrcPath = (file) => (file.startsWith("ui/") ? `src/components/${file}` : `src/${file}`);
+/**
+ * registry 的 `file` 是 src 相对路径，但 ui / raw / semantic 三层实际位于 `src/components/`
+ * （G 类批 G0 起三分目录：raw 前缀文件同样相对 src/components/ 解析）。
+ */
+const toSrcPath = (file) =>
+  /^(ui|raw|semantic)\//.test(file) ? `src/components/${file}` : `src/${file}`;
 
 /** 归一：消 `.` / `..`，去掉 `.ts` / `.tsx` 扩展名 */
 function normalizePath(p) {

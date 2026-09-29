@@ -65,20 +65,41 @@ if (entries.length === 0) {
 // ---------------------------------------------------------------------------
 // ② 渲染辅助
 // ---------------------------------------------------------------------------
-const SECTION_ORDER = ["Tokens", "Primitives", "App Components", "AI Execution"];
+// 画廊分区体系（2026-09-29 重组）：按组件类型的 11 组，与 design-system 页 SECTIONS /
+// SECTION_GROUPS 同口径。modules/ 与 shared/ 组件不在画廊分区体系内（保留 'App Components'，
+// AI 执行面模块件沿用 'AI Execution'），其分区归属由该页 SECTIONS 承载、本清单由 LAYER 维度承载。
+const SECTION_ORDER = [
+  "Governance",
+  "Foundations",
+  "Controls",
+  "Data Display",
+  "Feedback",
+  "Navigation",
+  "Overlays",
+  "Layout & Shells",
+  "AI Execution",
+  "App Patterns",
+  "Semantic",
+];
+// G 类批 G0（分层解耦）起 components/ 下为三分目录：ui 存量冻结、raw 原语、semantic
+// 语义组件（新增默认落点）。两新前缀单列成层，避免被误归「模块专用组件」。
 const LAYER_OF = (file) => {
   if (file.startsWith("ui/")) return "ui";
+  if (file.startsWith("raw/")) return "raw";
+  if (file.startsWith("semantic/")) return "semantic";
   if (file.startsWith("shared/ui/")) return "shared-ui";
   if (file.startsWith("shared/")) return "shared";
   return "module";
 };
 const LAYER_LABEL = {
   ui: "UI 原子层 `src/components/ui/`",
+  raw: "原语层 `src/components/raw/`（G 类：非动作交互元素具名直通出口，internal 态不出画廊）",
+  semantic: "语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）",
   "shared-ui": "错位目录 `src/shared/ui/`（E7 清退候选）",
   shared: "跨模块业务组件 `src/shared/components/`",
   module: "模块专用组件 `src/modules/*/components/`",
 };
-const LAYER_ORDER = ["ui", "shared-ui", "shared", "module"];
+const LAYER_ORDER = ["ui", "raw", "semantic", "shared-ui", "shared", "module"];
 
 const STATUS_MARK = {
   canonical: "✅ canonical",
@@ -88,9 +109,9 @@ const STATUS_MARK = {
   deprecated: "⛔ deprecated",
 };
 
-/** registry 的 file 是 src 相对路径；ui 层以 `ui/` 简写存储 → 统一补成 `src/components/ui/` */
+/** registry 的 file 是 src 相对路径；ui / raw / semantic 三层以目录名简写存储 → 统一补成 `src/components/` */
 function fullPath(file) {
-  if (file.startsWith("ui/")) return `src/components/${file}`;
+  if (/^(ui|raw|semantic)\//.test(file)) return `src/components/${file}`;
   return `src/${file}`;
 }
 /** 路径列渲染：一律直写全路径。非 components/ui 的 `ui/` 路径由校验脚本的正则锚点排除。 */
@@ -170,7 +191,7 @@ if (zeroStatuses.length) {
   );
   push();
 }
-push("分区分布（画廊四分区口径）：");
+push("分区分布（画廊组件类型 11 组分区口径，2026-09-29 重组；modules / shared 组件不在画廊分区体系、保留 'App Components'）：");
 push();
 push("| 分区 | 数量 |");
 push("|---|---|");

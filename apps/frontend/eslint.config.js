@@ -100,6 +100,19 @@ export default defineConfig([
       'design-governance/no-adhoc-tone': 'warn',
     },
   },
+  // ══ G 类批 G0：semantic/ 内裸控件一步 error（裁决 G3）════════════════════════
+  // 依据 docs/design/修改方案-G类-分层解耦-2026-09-29.md §2.3 与裁决 G3：
+  // components/semantic/ 全新零存量，「先 warn 取全貌」没有全貌可取——该目录内的
+  // 裸原子控件直接 error（语义组件必须用 RawButton 等具名出口承载交互元素）；
+  // flat config 后块覆盖前块，其余范围维持上方批 5 的 warn 口径不变。
+  // raw/ 整目录豁免不经 severity 表达（豁免 = 不报），在规则实现内：
+  // ./eslint-rules/design-governance.js isRawPrimitiveFile。
+  {
+    files: ['src/components/semantic/**'],
+    rules: {
+      'design-governance/no-naked-controls': 'error',
+    },
+  },
   // ══ F 类批 F3：布局与组合机器强制（f-class-governance）══════════════════════
   // 依据 docs/design/修改方案-F类-布局与组合-2026-09-28.md 批 F3 + §五 ⚠️-2
   // （门禁默认 ESLint 化）。规则实现见 ./eslint-rules/f-class-governance.js
