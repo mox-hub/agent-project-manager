@@ -1,0 +1,202 @@
+# dependencies
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# build output
+**/dist/
+**/build/
+# 例外：Electron 桌面壳 buildResources（icon.ico/品牌位图/installer.nsh——源资产非构建产物）；
+# 曾被上方 **/build/ 静默排除出库，CI 打包报 cannot find build/installerHeader.bmp
+!apps/desktop/build/
+!apps/desktop/build/**
+**/out/
+.next/
+refers/
+
+# coverage
+**/coverage/
+**/nyc_output/
+
+# logs
+**/*.log
+
+# env files (keep *.env.example committed)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Windows reserved-name artifact
+nul
+Thumbs.db
+.cursor/
+
+# database
+*.db
+*.db-journal
+**/prisma/dev.db
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-journal
+
+# SQLite WAL/SHM artifacts and ad-hoc backups
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-shm
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-wal
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json.bak-*
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-*
+
+# temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.tmp-*
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# TypeScript
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# Prisma
+!**/prisma/migrations/**/migration.sql
+
+# Test scripts (temporary)
+**/create-test-*.ps1
+**/test-create*.json
+**/.tmp-*.txt
+**/check-users.cjs
+**/query-db.js
+**/query.sql
+**/test-linear-*.js
+
+# Test artifacts
+**/coverage/
+**/.nyc_output/
+**/test-results/
+**/playwright-report/
+**/playwright/.cache/
+**/.playwright-cli/
+**/junit-*.xml
+**/lcov.info
+**/.vitest-cache/
+**/apps/server/.playwright-cli/
+
+apps/desktop/electron/dist/
+apps/desktop/electron-resources/
+
+# Agent Tools (should not be version controlled)
+.claude/
+.codex/
+.codegraph/
+.dsh/
+.opencode/
+.trae/
+.trae-cn/
+.pi/
+.playwright-mcp/
+.multica/
+.zcode/
+
+# Local Documents (not version controlled)
+# 例外：docs/design/ 是设计宪法（PRINCIPLES.md）所在地，必须入库受版本控制
+# （宪法若不在 git 里，则无评审、无历史、无法回滚，无法作为「最高真相源」）
+docs/*
+!docs/design/
+
+# One-off integration diagnostics & log dumps
+linear-tasks.md
+linear_out.txt
+
+# Brand preview / scratch assets (kept out of repo)
+apps/frontend/public/logo.preview-*.svg
+apps/frontend/public/logo-preview.html
+
+# One-off PowerShell/Python diagnostic scripts
+test-dispatch.ps1
+scripts/check_icon_tools.py
+
+# Turbo 本地任务缓存
+.turbo
+
+# 本地 AI 协作目录（不进版本库）
+.agents/
+.openbitfun/
+.worktrees/
+
+# 桌面壳打包 staging（pack.mjs 产物；electron-builder extraResources 源）
+apps/desktop/build/desktop-pack/
+
+# 夜航体验测试产物（截图/一次性脚本，2026-09-20）
+tmp/
+tmp-apm-*.py
+
+# cleanup-e2e-users 等脚本的本地产物备份（含用户数据，禁止入库）
+scripts/backups/
+
+# 通知收件箱分支遗留的本地依赖目录（pnpm workspace 正规依赖在根 node_modules）
+apps/frontend/node_modules/
+
+# ===== ↑ 以上同步自 .gitignore（「从 .gitignore 同步」只重写以上部分）=====
+.git/
+.hg/
+.svn/
+node_modules/
+bower_components/
+jspm_packages/
+__pycache__/
+site-packages/
+venv/
+coverage/
+htmlcov/
+lcov-report/
+cmakefiles/
+cmake-build-*/
+bazel-*/
+pods/
+deriveddata/
+storybook-static/
+playwright-report/
+test-results/
+allure-results/
+allure-report/
+cdk.out/
+*.egg-info/
+*.dist-info/
+eggs/
+pip-wheel-metadata/
+wheels/
+# ----- ↑ 以上为 ZCode 默认排除规则（自定义规则请写在本行下方，不会被同步/恢复改动）-----
+# 自定义规则写在下方（本行提示可删除）

@@ -15,7 +15,6 @@ export function BootToggle({ checked, onChange, className }: BootToggleProps) {
     >
       <Switch
         id="boot-skip-toggle"
-        size="sm"
         checked={checked}
         onCheckedChange={onChange}
       />
