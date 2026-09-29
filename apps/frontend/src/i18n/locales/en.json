@@ -3758,6 +3758,11 @@
       "project": "Create Project",
       "milestone": "Create Milestone"
     },
+    "docStatus": {
+      "draft": "Draft",
+      "reviewing": "Reviewing",
+      "published": "Published"
+    },
     "labels": {
       "task": "Task",
       "bug": "Bug",

@@ -3,7 +3,7 @@ import { StatusPill } from '@/components/ui/status-pill';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { IconStack } from '@/components/ui/icon-stack';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   AlertCircle,
@@ -35,6 +35,7 @@ import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { DocumentPreviewDialog } from '@/components/ui/document-preview-dialog';
+import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useDocuments } from '../hooks/use-documents';
@@ -77,13 +78,13 @@ function resolveCategory(key?: string | null) {
 }
 
 export function DocumentsPage() {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [previewDocument, setPreviewDocument] = useState<DocumentListItem | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
   // 已保存视图：快照记忆搜索/状态/分类/视图样式
@@ -181,7 +182,7 @@ export function DocumentsPage() {
               label={t('document.newDocument')}
               data-ai-component="document.document-list.header.new"
               data-ai-role="nav"
-              onClick={() => navigate('/app/documents/new')}
+              onClick={() => setCreateOpen(true)}
             />
           )}
         />
@@ -366,6 +367,9 @@ export function DocumentsPage() {
         onOpenChange={(open) => !open && setPreviewDocument(null)}
         document={previewDocument}
       />
+
+      {/* 创建文档（J15：原 document-new-page 跳页并入统一创建弹窗 doc 模式；正文编辑仍在文档页原位） */}
+      <UnifiedCreateDialog open={createOpen} onOpenChange={setCreateOpen} defaultType="doc" />
     </PageShell>
   );
 }

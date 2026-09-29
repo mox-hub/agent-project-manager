@@ -95,6 +95,8 @@ vi.mock('@/modules/project/hooks/use-project-dashboard-summary', () => ({
 }));
 vi.mock('@/modules/document/hooks/use-document-mutations', () => ({
   useCreateDocument: () => ({ mutateAsync: createDocumentMutate, isPending: false }),
+  // J15 doc 模式状态回填（非 draft 创建后补 update）；现有用例默认 draft 不会触达
+  useUpdateDocument: () => ({ mutateAsync: vi.fn(async () => ({})), isPending: false }),
 }));
 
 // 保留真实 parseCreateDraft/parseCreateSuggestions，仅替换两个 mutation hook

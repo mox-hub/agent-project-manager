@@ -58,6 +58,10 @@ export interface PropertyPillsBarProps {
   docCategory?: DocCategory;
   onDocCategoryChange?: (cat: DocCategory) => void;
   docCategoryOptions?: { value: DocCategory }[];
+  /** 文档状态（J15：原 document-new-page 侧栏状态选择并入） */
+  docStatus?: string;
+  onDocStatusChange?: (s: string) => void;
+  docStatusOptions?: { value: string }[];
 
   // Project specific
   projectPriority?: string;
@@ -99,6 +103,9 @@ export function PropertyPillsBar({
   docCategory,
   onDocCategoryChange,
   docCategoryOptions = [],
+  docStatus,
+  onDocStatusChange,
+  docStatusOptions = [],
   projectPriority,
   onProjectPriorityChange,
   milestoneStatus,
@@ -369,6 +376,22 @@ export function PropertyPillsBar({
               }))}
               onChange={(v) => onDocCategoryChange(v as DocCategory)}
               active
+            />
+          </div>
+        )}
+
+        {/* 状态（J15：原 document-new-page 侧栏状态选择并入；draft 走服务端默认） */}
+        {onDocStatusChange && (
+          <div className="inline-flex items-center">
+            <span className="sr-only">{t('unifiedCreate.field.status')}</span>
+            <CapsuleSelect
+              value={docStatus || 'draft'}
+              options={docStatusOptions.map((s) => ({
+                value: s.value,
+                label: t(`unifiedCreate.docStatus.${s.value}`, { defaultValue: s.value }),
+              }))}
+              onChange={(v) => onDocStatusChange(v || 'draft')}
+              active={docStatus !== 'draft'}
             />
           </div>
         )}

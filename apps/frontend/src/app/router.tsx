@@ -52,7 +52,6 @@ import { AnalyticsPage } from '@/modules/analytics/pages/analytics-page';
 import { DocumentsPage } from '@/modules/document/pages/documents-page';
 import { DocumentViewPage } from '@/modules/document/pages/document-view-page';
 import { DocumentEditPage } from '@/modules/document/pages/document-edit-page';
-import { DocumentNewPage } from '@/modules/document/pages/document-new-page';
 import { DesktopInitPage } from '@/modules/desktop/pages/desktop-init-page';
 import { BootPage } from '@/modules/boot/pages/boot-page';
 import { TasksPage } from '@/modules/issue/pages/tasks-page';
@@ -623,12 +622,6 @@ export const router = createBrowserRouter([
         path: 'documents',
         handle: { selfScroll: true },
         element: <DocumentsPage />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        handle: { selfScroll: true },
-        path: 'documents/new',
-        element: <DocumentNewPage />,
         errorElement: <ErrorPage />,
       },
       {

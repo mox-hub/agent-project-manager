@@ -56,7 +56,6 @@ const EXACT_ROUTES: Record<string, TabRouteConfig> = {
   '/app/issues': { titleKey: 'nav.tasks', icon: entityIcon('issue') },
   '/app/bugs': { titleKey: 'task.bug.title', icon: entityIcon('bug') },
   '/app/documents': { titleKey: 'document.title', icon: entityIcon('document') },
-  '/app/documents/new': { titleKey: 'document.tab.new', icon: entityIcon('document') },
   '/app/analytics': { titleKey: 'nav.analytics', icon: BarChart3 },
   '/app/notifications': { titleKey: 'nav.notifications', icon: Bell },
   '/app/acceptance': { titleKey: 'nav.acceptance', icon: entityIcon('acceptance') },

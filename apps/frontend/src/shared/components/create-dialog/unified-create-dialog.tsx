@@ -72,7 +72,7 @@ import { useCreateProject } from '@/modules/project/hooks/use-project-mutations'
 import { useProjectModules } from '@/modules/project/hooks/use-project-modules';
 import { useCreateTask } from '@/modules/issue/hooks/use-project-tasks';
 import { useCreateProjectMilestone } from '@/modules/project/hooks/use-project-dashboard-summary';
-import { useCreateDocument } from '@/modules/document/hooks/use-document-mutations';
+import { useCreateDocument, useUpdateDocument } from '@/modules/document/hooks/use-document-mutations';
 import { listProjectMembers } from '@/modules/team-member/api/team-member-api';
 import type { Member } from '@/modules/team-member/types';
 import { cn } from '@/lib/utils';
@@ -100,7 +100,7 @@ import type {
   ProjectType,
   ProjectVisibility,
 } from '@/modules/project/api/project-api';
-import type { DocumentCategory as DocCategory } from '@/modules/document/api/document-api';
+import type { DocumentCategory as DocCategory, DocumentStatus } from '@/modules/document/api/document-api';
 import {
   X,
   Plus,
@@ -181,6 +181,13 @@ const DOC_CATEGORY_OPTIONS: { value: DocCategory }[] = [
   { value: 'guide' },
 ];
 
+/** 文档状态（J15：原 document-new-page 侧栏状态选择并入 doc 模式；archived 不可创建不列） */
+const DOC_STATUS_OPTIONS: { value: DocumentStatus }[] = [
+  { value: 'draft' },
+  { value: 'reviewing' },
+  { value: 'published' },
+];
+
 /** 优先级选项展示序（取 PRIORITY_VISUALS 四档；urgent 为项目侧叫法不入创建面板） */
 const PRIORITY_ORDER: TaskPriority[] = ['critical', 'high', 'medium', 'low'];
 
@@ -225,6 +232,7 @@ interface DocFormValues {
   title: string;
   description: string;
   category: DocCategory;
+  status: DocumentStatus;
   projectId: string;
   /** 无手动入口，仅 AI 建议（create-suggestions）回填 */
   labels: string[];
@@ -254,7 +262,7 @@ const DEFAULT_BUG: BugFormValues = {
   projectId: '', assigneeId: '', dueDate: '', labels: [],
 };
 const DEFAULT_DOC: DocFormValues = {
-  title: '', description: '', category: 'custom', projectId: '', labels: [],
+  title: '', description: '', category: 'custom', status: 'draft', projectId: '', labels: [],
 };
 const DEFAULT_PROJECT: ProjectFormValues = {
   name: '', description: '', visibility: 'internal', priority: 'medium',
@@ -320,6 +328,7 @@ export function UnifiedCreateDialog({
   const milestoneProjectId = milestoneForm.watch('projectId') || projectId || '';
   const createMilestone = useCreateProjectMilestone(milestoneProjectId || undefined);
   const createDocument = useCreateDocument();
+  const updateDocument = useUpdateDocument();
 
   const { t } = useTranslation();
   // 状态/优先级选项派生自 status-visuals 注册表（批2：禁本地枚举与原始色，label 走 i18n）
@@ -555,6 +564,10 @@ export function UnifiedCreateDialog({
         projectId: values.projectId || projectId || undefined,
         tags: values.labels,
       });
+      // J15：CreateDocumentDto 契约无 status（服务端默认 draft），非 draft 创建后补一次更新
+      if (resp?.id && values.status && values.status !== 'draft') {
+        await updateDocument.mutateAsync({ documentId: resp.id, data: { status: values.status } });
+      }
       if (resp?.id) handleSuccess('doc', resp.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('unifiedCreate.error.createFailed'));
@@ -1317,6 +1330,11 @@ export function UnifiedCreateDialog({
                       if (activeType === 'doc') docForm.setValue('category', cat);
                     }}
                     docCategoryOptions={DOC_CATEGORY_OPTIONS}
+                    docStatus={activeType === 'doc' ? docForm.watch('status') : undefined}
+                    onDocStatusChange={(s) => {
+                      if (activeType === 'doc') docForm.setValue('status', s as DocumentStatus);
+                    }}
+                    docStatusOptions={DOC_STATUS_OPTIONS}
                     projectPriority={activeType === 'project' ? projectForm.watch('priority') : undefined}
                     onProjectPriorityChange={(pp) => {
                       if (activeType === 'project') projectForm.setValue('priority', pp as ProjectPriority);

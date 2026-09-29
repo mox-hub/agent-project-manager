@@ -3758,6 +3758,11 @@
       "project": "创建项目",
       "milestone": "创建里程碑"
     },
+    "docStatus": {
+      "draft": "草稿",
+      "reviewing": "审核中",
+      "published": "已发布"
+    },
     "labels": {
       "task": "任务",
       "bug": "Bug",
