@@ -21,6 +21,16 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.6] - 2026-09-30
+
+### v0.7.6 发版总览——设计系统三层分层收口：语义组件层与画廊覆盖率门禁 + 列表呼吸感改版 + 组件裁决清账
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **设计系统语义层大批（G 类 + H 类 + 统计卡归一）**：物理搬移八簇收官（raw 3 / semantic 31 / ui 69，R1–R6 零违例）；semantic 组件层九件落地（stats-card 双形态标准件、chart-card/stat-tile/metric-row、status-pill/icon-stack/activity-heatmap、nav-status-dot/theme-mode-card、subtask-badge）；画廊覆盖率门禁 ui+semantic 双层 93/93=100% 机器强制（galleryExempt 豁免槽位 fail-closed + 12 件补 demo + Registry 对账区）；统计卡七套并行实现归一（ui/stat-card 收编 featured 变种、ui/stats-card 退役）；page-header 51 渲染点全量补槽 | 组件治理线 | 339 用例绿；门禁 93/93=100%；tsc -b 0 错；registry 342 条双向对账零缺失 | docs/design G/H 类方案五份；COMPONENTS.md 全量再生；PRINCIPLES §19.4 语义组件优先 |
+| frontend | **列表 Linear 呼吸感改版 + 组件裁决 36 条收口 + 画廊意见批**：DataList 判定区整槽/树线行级 absolute/双平面化/visibleItems 扁平化/hover bg-accent；任务列表分页器拆除滚动全量、子任务挂树；发版列表换 DataList 基座；StatusIconFrame list 档 22px + semantic/subtask-badge 新件 + MemberAvatar 在线点统一 + ColorPicker 16 色三段同宽 + Tabs segmented 死选择器修复；组件裁决 11 删（限期 2026-10-31，物理删除待批）/2 internal/5 canonical/17 standby，decisions.json 首建 | 组件治理线 | 改动测试 66 用例绿；registry 门禁 90/90=100%；COMPONENTS.md 再生（canonical 306/standby 17/internal 4） | component-review-decisions.json 首建；registry 状态总账；PRINCIPLES 排版裁决回写 |
+| frontend | **base-ui data 口径死选择器修复批**：实锤三类死法（布尔 state 空串渲染 / radix 残留属性名 / 裸命名形态）纠正六文件二十七处（field/toggle-group/separator/slider/button-group/tabs 漏网）；测试自证陷阱（field.test 手动喂活属性）入账 | 组件治理线 | tsc -b 0 错；field 13 + design-system-page 1 用例绿；eslint 0 error | 全库另 9 文件同源形态留晨会裁决清剿批 |
+
 ### 前端设计治理——组件裁决 36 条收口 + 画廊意见批 + Linear 呼吸感批 + 死选择器修复批（2026-09-30 夜航收口）
 
 > 2026-09-29 三大会话成果（组件裁决三轮提问逐条拍板、画廊实机验收四~五轮、死选择器五件排查）的夜航托管收口：五笔提交（4e795c23 / 33555f99 / b20fe108 / 8149e33d / d7596124）。
