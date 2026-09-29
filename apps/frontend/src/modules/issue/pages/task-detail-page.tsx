@@ -1304,42 +1304,46 @@ function CustomFieldsPanel({
         )}
       >
         <div className="overflow-hidden">
-          {editing ? (
-            <div className="px-6 pb-3 space-y-3">
-              <CustomFieldsSection
-                fields={schema}
-                values={draft}
-                onChange={(key, value) => setDraft((prev) => ({ ...prev, [key]: value }))}
-              />
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" size="xs" onClick={() => setEditing(false)}>
-                  {t('common.cancel')}
-                </Button>
-                <Button size="xs" onClick={() => void handleSave()} disabled={updateTask.isPending}>
-                  {updateTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.save')}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="px-6 pb-2 flex flex-col">
-              {schema.map((field) => {
-                const text = formatCustomFieldValue(customFields?.[field.key]);
-                return (
-                  <div
-                    key={field.key}
-                    className="flex items-start justify-between gap-3 px-2 py-1.5 text-xs"
-                  >
-                    <span className="shrink-0 text-muted-foreground">{field.label}</span>
-                    <span className="min-w-0 flex-1 break-words text-right text-foreground">
-                      {text || '-'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <div className="px-6 pb-2 flex flex-col">
+            {schema.map((field) => {
+              const text = formatCustomFieldValue(customFields?.[field.key]);
+              return (
+                <div
+                  key={field.key}
+                  className="flex items-start justify-between gap-3 px-2 py-1.5 text-xs"
+                >
+                  <span className="shrink-0 text-muted-foreground">{field.label}</span>
+                  <span className="min-w-0 flex-1 break-words text-right text-foreground">
+                    {text || '-'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
+
+      {/* 批量编辑弹窗（F3.6 表单容器铁律：多字段实体修改走模态 Dialog） */}
+      <Dialog open={editing} onOpenChange={(open) => { if (!open) setEditing(false); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t('taskDetail.customFields')}</DialogTitle>
+          </DialogHeader>
+          <CustomFieldsSection
+            fields={schema}
+            values={draft}
+            onChange={(key, value) => setDraft((prev) => ({ ...prev, [key]: value }))}
+          />
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button size="sm" onClick={() => void handleSave()} disabled={updateTask.isPending}>
+              {updateTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
