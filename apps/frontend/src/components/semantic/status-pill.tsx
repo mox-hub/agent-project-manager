@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { TONE_CLASS, type Tone } from "./tone";
+import { TONE_CLASS, type Tone } from "@/components/ui/tone";
 
 interface StatusPillProps {
   children: ReactNode;

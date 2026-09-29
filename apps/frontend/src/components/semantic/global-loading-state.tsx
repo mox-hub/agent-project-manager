@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { useLoadingContext } from "./loading-overlay"
-import { LoadingOverlay } from "./loading-overlay"
+import { useLoadingContext } from "@/components/semantic/loading-overlay"
+import { LoadingOverlay } from "@/components/semantic/loading-overlay"
 
 /* ============================================
    GlobalLoadingState — TanStack Query 全局请求拦截

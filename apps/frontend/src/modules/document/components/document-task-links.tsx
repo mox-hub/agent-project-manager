@@ -1,6 +1,6 @@
 // Document Task Links Component - 文档任务关联组件
 import React, { memo, useState } from 'react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import * as Icons from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import type { DocumentTaskLink, LinkType } from '../api/document-task-link-api';

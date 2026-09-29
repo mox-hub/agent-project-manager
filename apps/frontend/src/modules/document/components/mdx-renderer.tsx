@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { compileMdx, extractHeadings } from '@/shared/mdx/mdx-pipeline';
 import { useSectionTaskLinksByDoc } from '@/modules/document/hooks/use-section-task-links';
 import { useDocumentSections } from '@/modules/document/hooks/use-document-sections';

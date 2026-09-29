@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Search, Plus, CheckSquare, Bug } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
-import { AsyncState } from '@/components/ui/async-state';
+import { AsyncState } from '@/components/semantic/async-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';

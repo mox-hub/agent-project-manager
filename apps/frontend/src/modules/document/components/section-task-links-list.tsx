@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckSquare, Bug, ExternalLink, Plus, X, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AsyncState } from '@/components/ui/async-state';
+import { AsyncState } from '@/components/semantic/async-state';
 import { cn } from '@/lib/utils';
 import type { DocumentTaskLink } from '@/modules/document/api/document-task-link-api';
 import {

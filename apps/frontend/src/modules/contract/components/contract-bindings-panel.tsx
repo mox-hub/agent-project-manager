@@ -9,7 +9,7 @@ import {
   SelectField,
   SelectFieldOption,
 } from '@/components/ui/select-field';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { cn } from '@/lib/utils';
 import type {
   ContractAlignmentReport,

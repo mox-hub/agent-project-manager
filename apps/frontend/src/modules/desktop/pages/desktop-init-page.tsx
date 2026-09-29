@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import { useNavigate } from 'react-router-dom';
 import { useDesktop } from '@/modules/desktop';
 import { Spinner } from '@/components/ui/spinner';

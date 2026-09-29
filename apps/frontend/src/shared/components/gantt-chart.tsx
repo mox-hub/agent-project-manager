@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointer
 import { cn } from '@/lib/utils';
 
 import { Bot, CalendarRange } from 'lucide-react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

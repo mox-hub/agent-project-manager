@@ -1,5 +1,5 @@
 import { ShieldCheck, Package } from 'lucide-react';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import {
   PreviewFooterMeta,
   PreviewRow,

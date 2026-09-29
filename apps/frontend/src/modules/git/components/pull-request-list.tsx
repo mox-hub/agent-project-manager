@@ -4,7 +4,7 @@ import { GitPullRequest } from 'lucide-react';
 import { usePullRequests } from '../hooks/use-pull-requests';
 import { PullRequestCard } from './pull-request-card';
 import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { SkeletonList } from '@/components/ui/skeleton';
 
 interface PullRequestListProps {

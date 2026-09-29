@@ -21,7 +21,7 @@ import {
   StepperTrigger,
 } from '@/components/ui/stepper';
 import { invoke } from '@/shared/types/electron-api';
-import { IconStack } from '@/components/ui/icon-stack';
+import { IconStack } from '@/components/semantic/icon-stack';
 import {
   Rocket,
   FolderPlus,

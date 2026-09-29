@@ -1,6 +1,6 @@
 // Approval Dialog Component - 审批对话框组件
 import React, { useState } from 'react';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import * as Icons from 'lucide-react';
 import {
   Dialog,

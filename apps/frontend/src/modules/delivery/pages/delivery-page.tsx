@@ -21,7 +21,7 @@ import {
   FileSpreadsheet, FileJson, Copy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { toast } from '@/components/ui/toast';
 
 // ── Types ──────────────────────────────────────────────────────────────────────

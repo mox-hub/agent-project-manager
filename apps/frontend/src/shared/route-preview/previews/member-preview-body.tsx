@@ -17,7 +17,7 @@ import {
 import { TONE_DOT_CLASS, type StatusTone } from '@/shared/status/status-visuals';
 import { cn } from '@/lib/utils';
 import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import {
   PreviewBodyError,
   PreviewBodySkeleton,

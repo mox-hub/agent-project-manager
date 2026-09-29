@@ -2,7 +2,7 @@ import React from 'react';
 import { type PullRequest } from '../api/git-api';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 
 interface PullRequestCardProps {
   pullRequest: PullRequest;

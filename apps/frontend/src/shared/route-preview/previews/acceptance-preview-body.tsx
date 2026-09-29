@@ -2,7 +2,7 @@ import { ShieldCheck, Clock } from 'lucide-react';
 import { useAcceptanceDetail } from '@/modules/acceptance/hooks/use-acceptance';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import {
   PreviewBodyError,
   PreviewBodySkeleton,

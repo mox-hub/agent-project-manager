@@ -1,7 +1,7 @@
 import { Clock, Bot } from 'lucide-react';
 import { useExecutionRunDetail } from '@/modules/executions/api/execution-api';
 import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import {
   PreviewBodyError,
   PreviewBodySkeleton,

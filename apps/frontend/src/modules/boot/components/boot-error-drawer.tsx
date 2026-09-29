@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { Clipboard, ClipboardCheck, FileWarning } from 'lucide-react';
 import { toast } from '@/components/ui/toast';
 import {

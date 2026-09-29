@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MarkdownView } from '@/shared/components/markdown-view';
 import {

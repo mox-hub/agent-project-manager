@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { SkeletonList } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { useProjectTasks } from '../hooks/use-project-tasks';
 import type { IterationRef } from '../api/issue-api';
 import {

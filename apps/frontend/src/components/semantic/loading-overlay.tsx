@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
 import { cn } from "@/lib/utils"
-import { Spinner, type SpinnerSize } from "./spinner"
+import { Spinner, type SpinnerSize } from "@/components/ui/spinner"
+import { RawButton } from "@/components/raw/raw-button"
 import { XCircleIcon } from "lucide-react"
 
 /* ============================================
@@ -138,20 +139,20 @@ function ErrorOverlay({
         </div>
         <div className="flex gap-2 pt-1">
           {onRetry && (
-            <button
+            <RawButton
               onClick={onRetry}
               className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
             >
               重试
-            </button>
+            </RawButton>
           )}
           {onDismiss && (
-            <button
+            <RawButton
               onClick={onDismiss}
               className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors"
             >
               关闭
-            </button>
+            </RawButton>
           )}
         </div>
       </div>

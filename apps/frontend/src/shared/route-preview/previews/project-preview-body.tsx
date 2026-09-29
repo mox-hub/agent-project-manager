@@ -1,7 +1,7 @@
 import { Progress } from '@/components/ui/progress';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useTranslation } from '@/hooks/useTranslation';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import {
   PreviewBodyError,
   PreviewBodySkeleton,

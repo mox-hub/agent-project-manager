@@ -1,7 +1,7 @@
 /**
  * 创建面板 · AI 建议卡（业务组件）
  *
- * 与 components/ui/property-panel 的只读版 SuggestionsCard 分工：
+ * 与 shared/components/property-panel 的只读版 SuggestionsCard 分工：
  * 本卡承载静默 AI 场景 create-suggestions 的拉取与应用（点击 chip 回填表单）。
  * CAP-A-18 批4：移除原四条不可点的静态假建议（死可供性），未生成时渲染 EmptyState 引导。
  */
@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import type { CreateSuggestion } from '@/modules/assistant/hooks/use-silent-ai';
 
 export function SuggestionsCard({
