@@ -201,6 +201,11 @@ const ALLOWED_TOKENS = new Set([
   "rounded-b-[calc(var(--radius-xl)-1px)]",
   "px-[0.3rem]",
   "py-[0.2rem]",
+  // Linear 呼吸感批（2026-09-29 用户拍板）：列表标题/编号字号升 14→15px，Tailwind 无对应
+  // 字号档；是否升格为正式 token 待评审。left-[55px] 是 DataList 树线轨道锚点，与行首列宽
+  // 强耦合（checkbox 28 + 轨道中线 8 + px-4 16）的几何硬编码，行首件增删必须同步，已三次。
+  "text-[15px]",
+  "left-[55px]",
 ]);
 
 // 变体前缀的方括号不是任意值（data-[...]、aria-[...]、has-[...] 等）
