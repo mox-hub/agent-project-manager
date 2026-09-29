@@ -36,7 +36,7 @@ const tabsListVariants = cva(
           "relative gap-0 overflow-hidden rounded-full border border-border bg-background p-0.5 group-data-[orientation=horizontal]/tabs:h-8",
         // line：详情页 body 内的次级切换——下划线贴边六件套内聚为默认（F 类 J7/F5.1），
         // 消费面无需再手写 w-full/justify-start/border-b/p-0/h-auto
-        line: "w-full justify-start gap-1 border-b bg-transparent p-0 group-data-horizontal/tabs:h-auto",
+        line: "w-full justify-start gap-1 border-b bg-transparent p-0 group-data-[orientation=horizontal]/tabs:h-auto",
       },
     },
     defaultVariants: {
