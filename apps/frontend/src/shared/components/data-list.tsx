@@ -230,7 +230,8 @@ function SelectCell({
 }) {
   if (hidden) return <div className="w-7 shrink-0" />;
   return (
-    <div className="w-7 shrink-0 flex items-center justify-center">
+    // 判定区 = 整个槽位（w-7 × 行高），16px 视觉框居中：槽内任意点都切换选中且不冒泡进行点击
+    <div className="flex w-7 shrink-0 self-stretch items-center justify-center">
       <button
         type="button"
         role="checkbox"
@@ -239,14 +240,18 @@ function SelectCell({
           e.stopPropagation();
           onToggle();
         }}
-        className={cn(
-          'flex size-4 items-center justify-center rounded-xs border transition-all outline-hidden',
-          selected
-            ? 'border-primary bg-primary text-primary-foreground opacity-100'
-            : 'border-muted-foreground/40 text-transparent opacity-0 group-hover:opacity-100 hover:opacity-100',
-        )}
+        className="flex h-full w-full items-center justify-center outline-hidden"
       >
-        <Check className="size-3" strokeWidth={3} />
+        <span
+          className={cn(
+            'flex size-4 items-center justify-center rounded-sm border transition-all',
+            selected
+              ? 'border-primary bg-primary text-primary-foreground opacity-100'
+              : 'border-muted-foreground/40 text-transparent opacity-0 group-hover:opacity-100',
+          )}
+        >
+          <Check className="size-3" strokeWidth={3} />
+        </span>
       </button>
     </div>
   );
@@ -268,6 +273,8 @@ function Row<T extends DataListItem>({
   onItemClick,
   onItemContextMenu,
   indent,
+  /** 子行链中的最后一行：树线竖线止于行中点（└ 形），非末行贯穿全行（├ 形） */
+  isLastChild,
   isActive,
 }: {
   item: T;
@@ -281,6 +288,7 @@ function Row<T extends DataListItem>({
   onItemClick?: (item: T) => void;
   onItemContextMenu?: (item: T) => MenuItem[] | undefined;
   indent?: boolean;
+  isLastChild?: boolean;
   /** 键盘行光标（宪法 §8.2）：bg-accent 与 selected 同 token */
   isActive?: boolean;
 }) {
@@ -289,15 +297,26 @@ function Row<T extends DataListItem>({
     <div
       data-row-id={item.id}
       className={cn(
-        'group flex items-center gap-2.5 px-2 transition-colors',
+        'group relative flex items-center gap-2.5 px-4 transition-colors',
         size === 'comfortable' ? 'py-2.5' : 'py-2',
-        indent ? 'bg-muted/5 pl-7' : '',
-        onItemClick ? 'cursor-pointer hover:bg-accent/20' : 'hover:bg-accent/10',
+        // §8.1 三态 token 固定：hover = bg-accent 全档（禁稀释档）；可点击性由 cursor 表达
+        onItemClick ? 'cursor-pointer hover:bg-accent' : 'hover:bg-accent',
         isActive && 'bg-accent',
       )}
       onClick={onItemClick ? () => onItemClick(item) : undefined}
     >
       <SelectCell hidden={!selectable} selected={isSelected(item)} onToggle={() => onToggleSelect(item.id)} />
+      {indent ? (
+        <>
+          {/* 树线：仅竖线，对齐状态列中心（left 55 = px-4 16 + 多选槽 28 + 状态半宽 11，行内列宽改动须同步）；
+              挂行级 absolute 贯穿含 py 整行保证相邻子行连续，末行止于行中收尾 */}
+          <span
+            aria-hidden
+            className={cn('absolute top-0 left-[55px] w-0.5 bg-border', isLastChild ? 'h-1/2' : 'bottom-0')}
+          />
+          <span aria-hidden className="w-9 shrink-0 self-stretch" />
+        </>
+      ) : null}
       <div className="flex min-w-0 flex-1 items-center gap-2">
         {renderLeading ? renderLeading(item) : null}
       </div>
@@ -318,7 +337,7 @@ function Row<T extends DataListItem>({
       ) : (
         rowContent
       )}
-      {children.map((child) => (
+      {children.map((child, index) => (
         <Row
           key={child.id}
           item={child}
@@ -332,6 +351,7 @@ function Row<T extends DataListItem>({
           onItemClick={onItemClick}
           onItemContextMenu={onItemContextMenu}
           indent
+          isLastChild={index === children.length - 1}
         />
       ))}
     </>
@@ -360,7 +380,7 @@ function GroupBar({
   const pct = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : null;
   return (
     <div
-      className="flex w-full cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-muted/40 transition-colors"
+      className="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 hover:bg-accent transition-colors"
       onClick={onToggle}
       data-ai-role="group"
     >
@@ -462,12 +482,12 @@ function SelectionBar<T extends DataListItem>({
 /** 骨架行标题条的宽度档位（交错宽度更接近真实数据的长短分布） */
 const ROW_TITLE_WIDTHS = ['w-1/4', 'w-2/5', 'w-1/3', 'w-1/2', 'w-1/5', 'w-1/3'];
 
-export function DataListSkeleton({ grouping }: { grouping: boolean }) {
+export function DataListSkeleton({ grouping = false }: { grouping?: boolean }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background" aria-busy="true">
+    <div className="bg-background" aria-busy="true">
       {grouping ? (
         // 分组条骨架：展开符 + 圆点图标 + 标签 + 计数 + 右侧进度条
-        <div className="flex items-center gap-3 px-3 py-2.5">
+        <div className="flex items-center gap-3 px-4 py-2.5">
           <Skeleton className="size-4 rounded-sm" />
           <Skeleton className="size-3.5 rounded-full" />
           <Skeleton className="h-4 w-20" />
@@ -478,7 +498,7 @@ export function DataListSkeleton({ grouping }: { grouping: boolean }) {
         </div>
       ) : null}
       {ROW_TITLE_WIDTHS.map((width, index) => (
-        <div key={index} className="flex items-center gap-2.5 px-2 py-2">
+        <div key={index} className="flex items-center gap-2.5 px-4 py-2">
           <div className="w-7 shrink-0" />
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <Skeleton className="size-7 shrink-0 rounded-md" />
@@ -539,7 +559,6 @@ export function DataList<T extends DataListItem>({
   };
 
   const clearSelection = () => setSelected(new Set());
-  const selectedItems = useMemo(() => items.filter((it) => selected.has(it.id)), [items, selected]);
 
   // 分组
   const isGrouping = !!groupBy;
@@ -573,12 +592,23 @@ export function DataList<T extends DataListItem>({
 
   const toggleGroup = (key: string) => setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
 
+  // 可见行 = 顶层项展开后的扁平序列（子行一并纳入键盘流与多选集合）
   const visibleItems = useMemo(() => {
-    if (isGrouping) {
-      return groups.flatMap(({ meta, items: list }) => (collapsed[meta.key] ? [] : list));
-    }
-    return items;
-  }, [isGrouping, groups, collapsed, items]);
+    const tops = isGrouping
+      ? groups.flatMap(({ meta, items: list }) => (collapsed[meta.key] ? [] : list))
+      : items;
+    if (!renderChildren) return tops;
+    const out: T[] = [];
+    const walk = (list: T[]) =>
+      list.forEach((it) => {
+        out.push(it);
+        walk(renderChildren?.(it) ?? []);
+      });
+    walk(tops);
+    return out;
+  }, [isGrouping, groups, collapsed, items, renderChildren]);
+
+  const selectedItems = useMemo(() => visibleItems.filter((it) => selected.has(it.id)), [visibleItems, selected]);
 
   const moveActive = (delta: number) => {
     if (visibleItems.length === 0) return;
@@ -668,24 +698,22 @@ export function DataList<T extends DataListItem>({
   }
 
   const renderRowList = (list: T[]) => (
-    <div className={cn(!isGrouping && 'rounded-lg border border-border bg-background overflow-hidden')}>
-      {list.map((item) => (
-        <Row
-          key={item.id}
-          item={item}
-          size={size}
-          selectable={selectable}
-          isSelected={(it) => selected.has(it.id)}
-          onToggleSelect={toggleSelect}
-          renderLeading={renderLeading}
-          renderTrailing={renderTrailing}
-          renderChildren={renderChildren}
-          onItemClick={onItemClick}
-          onItemContextMenu={onItemContextMenu}
-          isActive={activeId === item.id}
-        />
-      ))}
-    </div>
+    <>{list.map((item) => (
+      <Row
+        key={item.id}
+        item={item}
+        size={size}
+        selectable={selectable}
+        isSelected={(it) => selected.has(it.id)}
+        onToggleSelect={toggleSelect}
+        renderLeading={renderLeading}
+        renderTrailing={renderTrailing}
+        renderChildren={renderChildren}
+        onItemClick={onItemClick}
+        onItemContextMenu={onItemContextMenu}
+        isActive={activeId === item.id}
+      />
+    ))}</>
   );
 
   return (
@@ -699,17 +727,13 @@ export function DataList<T extends DataListItem>({
       aria-label="List. Use arrow keys or j/k to navigate, Enter to open, x or space to select, Escape to clear."
     >
       {isGrouping ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {groups.map(({ meta, items: list }) => {
             const isCollapsed = collapsed[meta.key] ?? false;
             const progress = renderGroupProgress?.(list) ?? null;
             return (
-              <div
-                key={meta.key}
-                className={cn('rounded-lg border border-border bg-background transition-all', isCollapsed && '')}
-                data-group={meta.key}
-              >
-                <div className="group sticky top-0 z-sticky rounded-t-lg bg-background/95 backdrop-blur-xs border-b border-border/40 shadow-xs transition-shadow">
+              <div key={meta.key} data-group={meta.key}>
+                <div className="group sticky top-0 z-sticky bg-background">
                   <GroupBar
                     meta={meta}
                     count={list.length}
@@ -720,7 +744,7 @@ export function DataList<T extends DataListItem>({
                   />
                 </div>
                 {!isCollapsed ? (
-                  <div className="border-t border-border/40">
+                  <div>
                     {list.map((item) => (
                       <Row
                         key={item.id}

@@ -1623,12 +1623,8 @@
       "assignPrimaryFailed": "指派负责人失败: {{message}}"
     },
     "pagination": {
-      "range": "第 {{from}}–{{to}} 条 · 共 {{total}} 条",
-      "filterScopeNote": "筛选仅作用于当前页",
-      "prev": "上一页",
-      "next": "下一页",
-      "exportScope": "导出范围：当前页中的筛选结果（{{count}} 条）——与列表当前的搜索、筛选和排序一致，不含其他页数据。",
-      "exportPageNote": "当前为第 {{page}} / {{totalPages}} 页，导出仅含本页数据；如需其余数据请翻页后再次导出。"
+      "total": "共 {{total}} 条",
+      "exportScope": "导出范围：当前筛选结果（{{count}} 条）——与列表当前的搜索、筛选和排序一致。"
     },
     "bug": {
       "title": "Bug 列表",

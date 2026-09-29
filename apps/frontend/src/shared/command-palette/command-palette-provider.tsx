@@ -26,7 +26,6 @@ import {
   Command,
   CommandDialog,
   CommandDialogPopup,
-  CommandEmpty,
   CommandFooter,
   CommandGroup,
   CommandGroupLabel,
@@ -55,6 +54,9 @@ import {
 } from "@/shared/entity-icons/entity-icons"
 import { searchApi, type SearchResultType } from "@/modules/search/api/search-api"
 import { assistantApi } from "@/modules/assistant/api/assistant-api"
+import { listMembers } from "@/modules/team-member/api/team-member-api"
+import { MemberAvatar } from "@/modules/team-member/components/member-avatar"
+import { isSystemAssistantMember } from "@/shared/member/types"
 import { OPEN_COMMAND_PALETTE_EVENT } from "./open-command-palette-event"
 
 // 兼容既有消费方（TabBar 等）从 provider 模块取事件名
@@ -202,6 +204,19 @@ export function CommandPaletteProvider({
         isSearchHit: true,
       }))
   }, [searchData, t])
+
+  // 系统内置 AI 助理（handle=xiaozhou / metadata.isSystemAssistant）：AI 模式头像+名称的身份来源。
+  // 面板打开才取数；查询键与 useMembers 对齐共享缓存。
+  const { data: assistantMembers } = useQuery({
+    queryKey: ['members', undefined],
+    queryFn: () => listMembers(),
+    enabled: open,
+    staleTime: 60_000,
+  })
+  const assistantMember = useMemo(
+    () => assistantMembers?.items.find((member) => isSystemAssistantMember(member)),
+    [assistantMembers]
+  )
 
   const registerCommands = useCallback((scope: string, items: CommandPaletteItem[]) => {
     setRegistry((prev) => ({ ...prev, [scope]: items }))
@@ -477,10 +492,26 @@ export function CommandPaletteProvider({
                     setAi((prev) => ({ ...prev, input: event.target.value }))
                   }
                   onKeyDown={handleAiInputKeyDown}
-                  placeholder={t('commandPalette.aiPlaceholder', '问问 AI…')}
+                  placeholder={
+                    assistantMember
+                      ? t('commandPalette.aiAskNamed', '问问 {{name}}…', {
+                          name: assistantMember.displayName,
+                        })
+                      : t('commandPalette.aiPlaceholder', '问问 AI…')
+                  }
                   value={ai.input}
                   aria-label={t('commandPalette.aiPlaceholder', '问问 AI…')}
-                  startAddon={<SparklesIcon />}
+                  startAddon={
+                    assistantMember ? (
+                      <MemberAvatar
+                        member={assistantMember}
+                        size="xs"
+                        showBadge={false}
+                      />
+                    ) : (
+                      <SparklesIcon />
+                    )
+                  }
                 />
                 <Button
                   className="me-2.5 rounded-md text-sm not-hover:text-muted-foreground sm:text-xs"
@@ -495,7 +526,8 @@ export function CommandPaletteProvider({
               </div>
               <CommandPanel>
                 <ScrollArea
-                  className="[&_[data-slot=scroll-area-viewport]]:max-h-80"
+                  // 主体定高（非 max-h）：搜索 ↔ AI 双模式切换时面板总高恒定
+                  className="[&_[data-slot=scroll-area-viewport]]:h-80"
                   overscrollContain
                   scrollbarGutter
                   scrollFade
@@ -623,8 +655,13 @@ export function CommandPaletteProvider({
                 </Button>
               </div>
               <CommandPanel>
-                <CommandEmpty className="not-empty:py-12">
-                  {trimmedQuery ? (
+                {/* 空态/搜索提示行绝对定位：不参与流式高度，主体高度由下方定高列表锁定（与 AI 模式等高）。
+                    base-ui AutocompleteEmpty 挂在 List 外不生效，零命中空态由本条件块自持。 */}
+                {trimmedQuery && !searchFetching && !hasResults ? (
+                  <div
+                    className="absolute inset-x-0 top-0 z-10 bg-popover py-12"
+                    data-testid="palette-zero-hits"
+                  >
                     <div className="wrap-break-word flex flex-col items-center gap-2">
                       <EmptySearchMedia />
                       <p>{t('commandPalette.empty')}</p>
@@ -634,29 +671,27 @@ export function CommandPaletteProvider({
                         <strong className="font-medium text-foreground">{trimmedQuery}</strong>
                       </p>
                     </div>
-                  ) : (
-                    t('commandPalette.empty')
-                  )}
-                </CommandEmpty>
+                  </div>
+                ) : null}
                 {trimmedQuery && searchFetching ? (
                   <div
-                    className="px-3 py-2 text-xs text-muted-foreground"
+                    className="absolute inset-x-0 top-0 z-20 bg-popover px-3 py-2 text-xs text-muted-foreground"
                     data-testid="palette-entity-searching"
                   >
                     {t('commandPalette.searching', '搜索中…')}
                   </div>
                 ) : null}
-                {!searchFetching && searchItems.length === 0 ? (
-                  // 空态提示：说明面板除命令外还支持搜工单/项目
+                {!trimmedQuery && !searchFetching && searchItems.length === 0 ? (
+                  // 空态提示：说明面板除命令外还支持搜工单/项目（带词无命中由上方 Empty 块接管）
                   <div
-                    className="px-3 py-2 text-xs text-muted-foreground"
+                    className="absolute inset-x-0 top-0 z-10 bg-popover px-3 py-2 text-xs text-muted-foreground"
                     data-testid="palette-entity-search-hint"
                   >
                     {t('commandPalette.searchHint', '输入以搜索工单/项目')}
                   </div>
                 ) : null}
-                {/* base-ui ScrollArea 坑：max-h 挂根无效（viewport h-full 在 auto 高度父级失效不可滚），约束须任意变体打 viewport */}
-                <CommandList scrollAreaClassName="[&_[data-slot=scroll-area-viewport]]:max-h-80">
+                {/* base-ui ScrollArea 坑：max-h 挂根无效（viewport h-full 在 auto 高度父级失效不可滚），约束须任意变体打 viewport；主体 h-80 定高保证双模切换总高恒定 */}
+                <CommandList scrollAreaClassName="[&_[data-slot=scroll-area-viewport]]:h-80">
                   {(group: PaletteGroup) => (
                     <CommandGroup items={group.items} key={group.value}>
                       <CommandGroupLabel>{group.label}</CommandGroupLabel>
@@ -727,7 +762,12 @@ export function CommandPaletteProvider({
                 )}
                 <div className="flex items-center gap-1.5">
                   <CircleHelpIcon className="size-3" />
-                  <Kbd>{triggerKeys}</Kbd>
+                  {/* 组合键拆分展示：triggerKeys 为空格分隔的键位串（如 "⌘ K" / "Ctrl K"） */}
+                  <KbdGroup>
+                    {triggerKeys.split(" ").map((part) => (
+                      <Kbd key={part}>{part}</Kbd>
+                    ))}
+                  </KbdGroup>
                 </div>
               </CommandFooter>
             </Command>

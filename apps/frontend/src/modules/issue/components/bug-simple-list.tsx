@@ -8,7 +8,6 @@
  */
 
 import { Bug } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals';
 import {
@@ -97,7 +96,6 @@ export function BugSimpleList({
   selectionActions,
   className,
 }: BugSimpleListProps) {
-  const { t } = useTranslation();
   const groupFn = groupBy === 'none' ? undefined : (bug: Task) => groupValue(groupBy, bug);
 
   const groupMeta = (key: string) => {
@@ -144,20 +142,9 @@ export function BugSimpleList({
       onItemContextMenu={onItemContextMenu}
       selectionActions={selectionActions}
       renderLeading={(bug) => {
-        const sev = SEV_C[severityOf(bug)];
         const aiExecution = getAiExecution?.(bug);
         return (
           <>
-            {aiExecution ? (
-              <span
-                className="h-6 w-1 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
-                title={`${t('task.aiTakeover.title')}: ${aiExecution.agentName} (${aiExecution.stepSummary || t('task.aiTakeover.executing')})`}
-              />
-            ) : null}
-            {/* 严重度指示条（点击即改严重度） */}
-            <SeverityCell task={bug}>
-              <span className={cn('h-6 w-1.5 shrink-0 rounded-full', sev.dotColor)} />
-            </SeverityCell>
             {/* 状态图标（点击即改状态） */}
             <StatusCell task={bug}>
               <StatusGlyph status={statusOf(bug)} />
@@ -217,7 +204,7 @@ function StatusGlyph({ status }: { status: TaskStatus }) {
     <StatusIconFrame
       icon={visual.icon}
       tone={visual.tone}
-      size="sm"
+      size="list"
       spin={status === 'in_progress'}
       className="shrink-0"
     />

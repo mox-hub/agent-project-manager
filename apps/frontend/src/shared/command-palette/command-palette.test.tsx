@@ -368,7 +368,7 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
     expect(screen.getByTestId('palette-open').textContent).toBe('false');
   });
 
-  it('返回零命中时不渲染搜索分组，保留「输入以搜索」空态提示', async () => {
+  it('返回零命中时不渲染搜索分组，空态提示让位「询问 AI」空态块', async () => {
     searchMock.mockResolvedValue({ items: [], total: 0 });
     renderProvider();
     const input = await openPaletteReal();
@@ -378,7 +378,13 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
       timeout: 2000,
     });
     expect(screen.queryByText('task')).toBeNull();
-    expect(screen.getByTestId('palette-entity-search-hint')).toBeTruthy();
+    // 提示行与空态块均绝对定位在定高主体上，二者互斥防重叠：带词零命中由零命中块接管
+    await waitFor(() =>
+      expect(screen.getByTestId('palette-zero-hits')).toBeTruthy(),
+    );
+    expect(screen.queryByTestId('palette-entity-search-hint')).toBeNull();
+    // t() mock 优先返回 defaultValue：askAiAbout 与插值 strong 同段，取孤立的 empty 文案断言
+    expect(screen.getByText('commandPalette.empty')).toBeTruthy();
   });
 });
 

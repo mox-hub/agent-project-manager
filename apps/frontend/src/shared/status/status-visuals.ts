@@ -102,10 +102,11 @@ export const HEALTH_VISUALS: Record<string, StatusVisual> = {
   off_track: { labelKey: 'status.health.off_track', tone: 'danger', icon: CircleX },
 };
 
-/** 优先级（任务与项目共用；urgent 为项目侧叫法） */
+/** 优先级（任务与项目共用；urgent 为项目侧叫法）。
+ *  medium/low 降灰（default）——颜色只留给高优先级（high 黄 / critical·urgent 红），对齐 Linear「无信息则灰」 */
 export const PRIORITY_VISUALS: Record<string, StatusVisual> = {
   low: { labelKey: 'status.priority.low', tone: 'default', icon: ArrowDown },
-  medium: { labelKey: 'status.priority.medium', tone: 'info', icon: Minus },
+  medium: { labelKey: 'status.priority.medium', tone: 'default', icon: Minus },
   high: { labelKey: 'status.priority.high', tone: 'warning', icon: ArrowUp },
   critical: { labelKey: 'status.priority.critical', tone: 'danger', icon: Flame },
   urgent: { labelKey: 'status.priority.urgent', tone: 'danger', icon: Flame },

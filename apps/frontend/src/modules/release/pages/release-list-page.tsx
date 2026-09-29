@@ -6,7 +6,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { List, Rocket, Sparkles } from 'lucide-react';
+import {
+  List, Rocket, Sparkles,
+  CircleAlert, CircleCheck, CircleDashed, CircleX, Loader2,
+  type LucideIcon,
+} from 'lucide-react';
 import { PageShell } from '@/components/semantic/page-shell';
 import { PageHeader, nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
@@ -15,11 +19,9 @@ import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SelectField } from '@/components/ui/select-field';
-import { Card, CardContent } from '@/components/ui/card';
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { DataList, DataListSkeleton, ListChip, ListDate, ListText } from '@/shared/components/data-list';
+import { StatusIconFrame } from '@/shared/status/status-icon-frame';
+import type { StatusTone } from '@/shared/status/status-visuals';
 import {
   Dialog,
   DialogContent,
@@ -28,7 +30,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { SkeletonTable } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
 import { toast } from '@/components/ui/toast';
@@ -49,6 +50,16 @@ export const RELEASE_STATUS_TONE: Record<ReleaseStatus, string> = {
   publishing: 'bg-accent-yellow-light text-accent-yellow animate-pulse',
   released: 'bg-accent-green-light text-accent-green',
   failed: 'bg-accent-red-light text-accent-red',
+};
+
+/** 发版状态 → 行首图标/tone（与任务列表行首 StatusIconFrame 同构；tone 色系对齐 RELEASE_STATUS_TONE） */
+const RELEASE_STATUS_VISUALS: Record<ReleaseStatus, { icon: LucideIcon; tone: StatusTone }> = {
+  draft: { icon: CircleDashed, tone: 'default' },
+  gated: { icon: CircleAlert, tone: 'warning' },
+  approved: { icon: CircleCheck, tone: 'info' },
+  publishing: { icon: Loader2, tone: 'warning' },
+  released: { icon: Rocket, tone: 'success' },
+  failed: { icon: CircleX, tone: 'danger' },
 };
 
 export const RELEASE_STATUSES = Object.keys(RELEASE_STATUS_TONE) as ReleaseStatus[];
@@ -214,11 +225,11 @@ export function ReleaseListPage() {
         }}
       />
 
-      {/* 内容区：状态分支 = 加载骨架 / 空发版（带创建动作）/ 筛选无结果 / 表格。
+      {/* 内容区：状态分支 = 加载骨架 / 空发版（带创建动作）/ 筛选无结果 / 任务列表基座（DataList）。
           CAP-A-15：无 ?project 时仍发起请求（后端返回全部项目），不再渲染“先选项目”引导 */}
       <div className="flex-1 overflow-auto p-6">
         {releasesQuery.isLoading ? (
-          <SkeletonTable rows={4} columns={6} />
+          <DataListSkeleton />
         ) : filtered.length === 0 ? (
           releases.length === 0 ? (
             <EmptyState
@@ -256,59 +267,45 @@ export function ReleaseListPage() {
             />
           )
         ) : (
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-32">{t('release.table.version')}</TableHead>
-                    <TableHead>{t('release.table.name')}</TableHead>
-                    <TableHead className="w-36">{t('release.table.project')}</TableHead>
-                    <TableHead className="w-28">{t('release.table.status')}</TableHead>
-                    <TableHead className="w-36">{t('release.table.milestone')}</TableHead>
-                    <TableHead className="w-32">{t('release.table.tag')}</TableHead>
-                    <TableHead className="w-40">{t('release.table.releasedAt')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((r) => (
-                    <TableRow
-                      key={r.id}
-                      className="cursor-pointer"
-                      onClick={() => navigate(`/app/releases/${r.id}`)}
-                    >
-                      <TableCell className="font-mono text-xs font-medium">
-                        v{r.version}
-                      </TableCell>
-                      <TableCell className="text-xs">{r.name || '—'}</TableCell>
-                      <TableCell className="text-xs text-content-text-secondary">
-                        {r.project?.name || '—'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={cn('text-3xs', RELEASE_STATUS_TONE[r.status])}
-                        >
-                          {t(statusLabelKey(r.status))}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-content-text-secondary">
-                        {r.milestone?.name || '—'}
-                      </TableCell>
-                      <TableCell className="font-mono text-2xs text-content-text-muted">
-                        {r.gitTag || '—'}
-                      </TableCell>
-                      <TableCell className="text-2xs text-content-text-muted">
-                        {r.releasedAt
-                          ? new Date(r.releasedAt).toLocaleDateString()
-                          : '—'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <DataList
+            items={filtered}
+            onItemClick={(r) => navigate(`/app/releases/${r.id}`)}
+            renderLeading={(r) => {
+              const visual = RELEASE_STATUS_VISUALS[r.status];
+              return (
+                <>
+                  <StatusIconFrame
+                    icon={visual.icon}
+                    tone={visual.tone}
+                    size="list"
+                    spin={r.status === 'publishing'}
+                    title={t(statusLabelKey(r.status))}
+                  />
+                  <span className="shrink-0 whitespace-nowrap font-mono text-sm font-medium text-muted-foreground/50">
+                    v{r.version}
+                  </span>
+                  <ListText className="min-w-0 flex-1 text-[15px] font-medium">{r.name || '—'}</ListText>
+                </>
+              );
+            }}
+            renderTrailing={(r) => (
+              <>
+                {/* 尾列流式贴右（与任务列表同口径）：无值不渲染，头像位由状态日期兜底 */}
+                {r.project?.name ? (
+                  <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">{r.project.name}</span>
+                ) : null}
+                {r.milestone?.name ? (
+                  <ListChip className="max-w-27.5 truncate border border-border bg-muted/40 text-muted-foreground">
+                    {r.milestone.name}
+                  </ListChip>
+                ) : null}
+                {r.gitTag ? (
+                  <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{r.gitTag}</span>
+                ) : null}
+                {r.releasedAt ? <ListDate value={r.releasedAt} /> : null}
+              </>
+            )}
+          />
         )}
       </div>
 

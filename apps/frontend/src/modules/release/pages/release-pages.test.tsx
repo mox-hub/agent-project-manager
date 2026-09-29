@@ -86,6 +86,7 @@ vi.mock('../hooks/use-releases', () => ({
         name: '首个发版',
         status: 'released',
         gitTag: 'v1.0.0',
+        milestone: { id: 'ms-9', name: '首个里程碑' },
         releasedAt: '2026-09-13T00:00:00Z',
         tagPushed: true,
         githubReleased: false,
@@ -121,7 +122,7 @@ describe('ReleaseListPage', () => {
     renderWithRouter(<ReleaseListPage />, '/?project=p-1');
     const versions = screen.getAllByText('v1.0.0');
     expect(versions.length).toBeGreaterThan(0);
-    expect(screen.getByText('已发布')).toBeTruthy();
+    expect(screen.getByTitle('已发布')).toBeTruthy();
   });
 
   it('无 ?project 时仍渲染全部项目发版列表（不再要求先选项目）', () => {
@@ -130,14 +131,13 @@ describe('ReleaseListPage', () => {
     expect(versions.length).toBeGreaterThan(0);
   });
 
-  it('列表行显示所属里程碑列（CAP-A-16）', () => {
+  it('列表行显示所属里程碑（CAP-A-16）', () => {
     renderWithRouter(<ReleaseListPage />, '/?project=p-1');
-    expect(screen.getByText('里程碑')).toBeTruthy();
+    expect(screen.getByText('首个里程碑')).toBeTruthy();
   });
 
   it('列表行渲染项目列实际名称而非关联 ID（绑定关系可读名）', () => {
     renderWithRouter(<ReleaseListPage />, '/');
-    expect(screen.getByText('项目')).toBeTruthy();
     expect(screen.getByText('示例项目')).toBeTruthy();
   });
 

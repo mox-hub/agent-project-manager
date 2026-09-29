@@ -253,7 +253,8 @@ export function TaskTableView({
                 <StatusIconFrame
                   icon={visual.icon}
                   tone={visual.tone}
-                  size="xs"
+                  size="list"
+                  spin={status === 'in_progress'}
                 />
                 <span className={cn('text-xs capitalize', TONE_TEXT_CLASS[visual.tone])}>
                   {status.replace('_', ' ')}

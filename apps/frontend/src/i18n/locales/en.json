@@ -1623,12 +1623,8 @@
       "assignPrimaryFailed": "Failed to assign primary member: {{message}}"
     },
     "pagination": {
-      "range": "Showing {{from}}–{{to}} of {{total}}",
-      "filterScopeNote": "Filters apply to the current page only",
-      "prev": "Previous",
-      "next": "Next",
-      "exportScope": "Scope: filtered results on the current page ({{count}}) — matches the list's current search, filters and sorting; other pages are not included.",
-      "exportPageNote": "You are on page {{page}} of {{totalPages}}; the export contains this page only — go to another page and export again for more."
+      "total": "{{total}} in total",
+      "exportScope": "Scope: filtered results ({{count}}) — matches the list's current search, filters and sorting."
     },
     "bug": {
       "title": "Bug List",

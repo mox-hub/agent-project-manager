@@ -10,36 +10,25 @@
  */
 
 import { useMemo, useState } from 'react';
-import type { ElementType } from 'react';
 import {
-  ArrowDown,
-  ArrowUp,
   ChevronDown,
   ChevronRight,
-  ChevronsUp,
   Clock,
-  Minus,
   Plus,
   User,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DataListSkeleton } from '@/shared/components/data-list';
 import { EmptyState } from '@/components/semantic/empty-state';
-import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
-import type { BugSeverity, Task } from '../api/issue-api';
+import { SubtaskBadge } from '@/components/semantic/subtask-badge';
+import { StatusIconFrame } from '@/shared/status/status-icon-frame';
+import { PRIORITY_VISUALS, TASK_STATUS_VISUALS } from '@/shared/status/status-visuals';
+import type { Task } from '../api/issue-api';
 
 type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
 type RowPriority = 'urgent' | 'high' | 'medium' | 'low';
 
 const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'canceled'];
-
-interface StatusCfg {
-  label: string;
-  Icon: LucideIcon;
-  color: string;
-  bg: string;
-}
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
   todo: 'Todo',
@@ -47,44 +36,6 @@ const STATUS_LABEL: Record<TaskStatus, string> = {
   in_review: 'In Review',
   done: 'Done',
   canceled: 'Canceled',
-};
-
-/** 分组头底色为本组件排版细节；图标与文字色统一取 status-visuals 唯一映射源 */
-const STATUS_BG: Record<TaskStatus, string> = {
-  todo: 'bg-muted/40',
-  in_progress: 'bg-accent-blue/10',
-  in_review: 'bg-accent-yellow/10',
-  done: 'bg-accent-green/10',
-  canceled: 'bg-muted',
-};
-
-const STATUS_CFG: Record<TaskStatus, StatusCfg> = Object.fromEntries(
-  (Object.keys(TASK_STATUS_VISUALS) as TaskStatus[]).map((status) => {
-    const visual = TASK_STATUS_VISUALS[status];
-    return [
-      status,
-      {
-        label: STATUS_LABEL[status],
-        Icon: visual.icon,
-        color: TONE_TEXT_CLASS[visual.tone],
-        bg: STATUS_BG[status],
-      },
-    ];
-  }),
-) as Record<TaskStatus, StatusCfg>;
-
-const PRIORITY_CFG: Record<RowPriority, { label: string; Icon: ElementType; color: string }> = {
-  urgent: { label: 'Urgent', Icon: ChevronsUp, color: 'text-destructive' },
-  high: { label: 'High', Icon: ArrowUp, color: 'text-accent-orange' },
-  medium: { label: 'Medium', Icon: Minus, color: 'text-accent-blue' },
-  low: { label: 'Low', Icon: ArrowDown, color: 'text-muted-foreground' },
-};
-
-const SEVERITY_BAR: Record<BugSeverity, string> = {
-  critical: 'bg-destructive',
-  high: 'bg-accent-orange',
-  medium: 'bg-accent-yellow',
-  low: 'bg-muted',
 };
 
 const MILESTONE_COLORS = [
@@ -146,21 +97,23 @@ function formatDue(dueDate: string): string {
   return new Date(dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+/** 业务层映射包装：status → tone/icon（status-visuals 唯一链路），视觉由 StatusIconFrame 统一承载 */
 function StatusChip({ status }: { status: TaskStatus }) {
-  const cfg = STATUS_CFG[status];
+  const visual = TASK_STATUS_VISUALS[status];
   return (
-    <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0', cfg.bg)} title={cfg.label}>
-      <cfg.Icon
-        className={cn('w-3.5 h-3.5', cfg.color, status === 'in_progress' && 'animate-spin')}
-        style={status === 'in_progress' ? { animationDuration: '2s' } : undefined}
-      />
-    </div>
+    <StatusIconFrame
+      icon={visual.icon}
+      tone={visual.tone}
+      size="list"
+      spin={status === 'in_progress'}
+      title={STATUS_LABEL[status]}
+    />
   );
 }
 
 function PriorityIcon({ priority }: { priority: RowPriority }) {
-  const cfg = PRIORITY_CFG[priority];
-  return <cfg.Icon className={cn('w-3.5 h-3.5 shrink-0', cfg.color)} title={cfg.label} />;
+  const visual = PRIORITY_VISUALS[priority];
+  return <StatusIconFrame icon={visual.icon} tone={visual.tone} size="list" title={priority} />;
 }
 
 function MilestoneSlot({ name, idx = 0 }: { name?: string | null; idx?: number }) {
@@ -186,46 +139,10 @@ function LabelChip({ name, color }: { name: string; color?: string | null }) {
   );
 }
 
-function ProgressRing({ done, total, size = 14 }: { done: number; total: number; size?: number }) {
-  const r = (size - 2.5) / 2;
-  const circ = 2 * Math.PI * r;
-  const ratio = total > 0 ? done / total : 0;
-  const stroke =
-    ratio === 1
-      ? 'hsl(var(--accent-green))'
-      : ratio > 0
-        ? 'hsl(var(--accent-blue))'
-        : 'hsl(var(--muted-foreground))';
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground/20" />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        fill="none"
-        stroke={stroke}
-        strokeWidth="2.2"
-        strokeDasharray={`${ratio * circ} ${circ}`}
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function SubtaskBadge({ done, total }: { done: number; total: number }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border bg-muted/60 text-3xs font-medium text-muted-foreground shrink-0 ml-1.5">
-      <ProgressRing done={done} total={total} />
-      <span>{done}/{total}</span>
-    </span>
-  );
-}
-
 function AssigneeAvatar({ initials, color }: { initials?: string; color?: string }) {
   if (!initials) {
     return (
-      <div className="w-5.5 h-5.5 rounded-full bg-muted flex items-center justify-center shrink-0">
+      <div className="w-5.5 h-5.5 rounded-full border border-dashed border-border flex items-center justify-center shrink-0">
         <User className="h-3 w-3 text-muted-foreground/40" />
       </div>
     );
@@ -273,16 +190,13 @@ function TaskRowItem({ task, milestoneIdx, nameOf, onTaskClick }: TaskRowItemPro
   return (
     <div
       className={cn(
-        'flex items-center gap-2 px-4 py-1.5 hover:bg-accent/20 transition-colors',
+        'flex items-center gap-2 px-4 py-1.5 hover:bg-accent transition-colors',
         onTaskClick ? 'cursor-pointer' : 'cursor-default',
       )}
       onClick={onTaskClick ? () => onTaskClick(task) : undefined}
     >
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <span className="w-4 h-4 shrink-0" />
-        {task.type === 'bug' && task.severity ? (
-          <div className={cn('w-1 h-5 rounded-full shrink-0', SEVERITY_BAR[task.severity])} title={`Severity: ${task.severity}`} />
-        ) : null}
         <StatusChip status={status} />
         <span className="w-15 shrink-0 text-2xs font-mono text-muted-foreground/50 truncate">{idLabel}</span>
         <PriorityIcon priority={priority} />
@@ -322,7 +236,7 @@ function SubTaskRowItem({ task, milestoneIdx, nameOf, onTaskClick }: TaskRowItem
   return (
     <div
       className={cn(
-        'flex items-center gap-2 px-4 py-1 hover:bg-accent/20 transition-colors bg-muted/5',
+        'flex items-center gap-2 px-4 py-1 hover:bg-accent transition-colors bg-muted/5',
         onTaskClick ? 'cursor-pointer' : 'cursor-default',
       )}
       onClick={onTaskClick ? () => onTaskClick(task) : undefined}
@@ -425,7 +339,6 @@ export function TaskRowsList({
     <div className={cn('rounded-lg border border-border overflow-hidden bg-background', className)}>
       {STATUS_ORDER.filter((status) => groups.get(status)?.length).map((status) => {
         const rows = groups.get(status)!;
-        const cfg = STATUS_CFG[status];
         const collapsed = collapsedGroups[status] ?? false;
 
         const groupTaskCount = rows.reduce((sum, row) => sum + 1 + row.children.length, 0);
@@ -453,13 +366,14 @@ export function TaskRowsList({
               >
                 {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
-              <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0', cfg.bg)}>
-                <cfg.Icon
-                  className={cn('w-3.5 h-3.5', cfg.color, status === 'in_progress' && 'animate-spin')}
-                  style={status === 'in_progress' ? { animationDuration: '2s' } : undefined}
-                />
-              </div>
-              <span className="text-xs font-semibold text-muted-foreground">{cfg.label}</span>
+              <StatusIconFrame
+                icon={TASK_STATUS_VISUALS[status].icon}
+                tone={TASK_STATUS_VISUALS[status].tone}
+                size="list"
+                spin={status === 'in_progress'}
+                title={STATUS_LABEL[status]}
+              />
+              <span className="text-xs font-semibold text-muted-foreground">{STATUS_LABEL[status]}</span>
               <span className="text-2xs text-muted-foreground/50 font-mono">{groupTaskCount}</span>
               {subTotal > 0 ? (
                 <div className="flex items-center gap-2 flex-1 max-w-45">
@@ -475,7 +389,7 @@ export function TaskRowsList({
               {onCreateTask ? (
                 <button
                   className="ml-auto opacity-0 group-hover/status:opacity-100 p-1 rounded-md hover:bg-accent transition-colors"
-                  title={`Add task to ${cfg.label}`}
+                  title={`Add task to ${STATUS_LABEL[status]}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     onCreateTask(status);
@@ -509,7 +423,7 @@ export function TaskRowsList({
                 ))}
                 {onCreateTask ? (
                   <div
-                    className="flex items-center gap-2 px-4 py-1.5 border-t border-border/50 text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent/10 cursor-pointer transition-colors"
+                    className="flex items-center gap-2 px-4 py-1.5 border-t border-border/50 text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent cursor-pointer transition-colors"
                     onClick={() => onCreateTask(status)}
                   >
                     <span className="w-4 shrink-0" />

@@ -8,17 +8,13 @@
  * - 多选：DataList 内置悬浮胶囊，快捷操作由页面通过 onBatchActions 提供
  */
 
-import {
-  ArrowDown,
-  ArrowUp,
-  ChevronsUp,
-  Minus,
-} from 'lucide-react';
+import { useCallback, useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ListAvatar, ListChip, ListDate, ListIcon, ListText, DataList } from '@/shared/components/data-list';
+import { ListAvatar, ListChip, ListDate, ListText, DataList } from '@/shared/components/data-list';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
-import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
+import { SubtaskBadge } from '@/components/semantic/subtask-badge';
+import { PRIORITY_VISUALS, TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
@@ -73,20 +69,6 @@ const SEVERITY_CONFIG: Record<Severity, { label: string; dotColor: string; order
   low: { label: 'Low', dotColor: 'bg-muted-foreground', order: 3 },
 };
 
-const PRIORITY_CONFIG: Record<RowPriority, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  urgent: { icon: ChevronsUp, color: 'text-accent-red' },
-  high: { icon: ArrowUp, color: 'text-accent-yellow' },
-  medium: { icon: Minus, color: 'text-accent-blue' },
-  low: { icon: ArrowDown, color: 'text-muted-foreground' },
-};
-
-const SEVERITY_BAR: Record<Severity, string> = {
-  critical: 'bg-destructive',
-  high: 'bg-accent-orange',
-  medium: 'bg-accent-yellow',
-  low: 'bg-muted',
-};
-
 function normalizeStatus(status: string | undefined): TaskStatus {
   return (STATUS_ORDER as string[]).includes(status ?? '') ? (status as TaskStatus) : 'todo';
 }
@@ -137,44 +119,6 @@ function colorOf(name: string): string {
   let hash = 0;
   for (let i = 0; i < name.length; i += 1) hash = (hash * 31 + name.charCodeAt(i)) % 997;
   return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
-}
-
-// ===== 子任务胶囊（对齐 design-system「SubtaskBadge — progress ring + count capsule」标准） =====
-
-function ProgressRing({ done, total, size = 14 }: { done: number; total: number; size?: number }) {
-  const r = (size - 2.5) / 2;
-  const circ = 2 * Math.PI * r;
-  const ratio = total > 0 ? done / total : 0;
-  const stroke =
-    ratio === 1
-      ? 'hsl(var(--accent-green))'
-      : ratio > 0
-        ? 'hsl(var(--accent-blue))'
-        : 'hsl(var(--muted-foreground))';
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground/20" />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        fill="none"
-        stroke={stroke}
-        strokeWidth="2.2"
-        strokeDasharray={`${ratio * circ} ${circ}`}
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function SubtaskBadge({ done, total }: { done: number; total: number }) {
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted/60 px-2 py-0.5 text-xs font-medium text-muted-foreground ml-1.5">
-      <ProgressRing done={done} total={total} size={16} />
-      <span>{done}/{total}</span>
-    </span>
-  );
 }
 
 export type TaskSimpleGroupBy = 'status' | 'severity' | 'project' | 'none';
@@ -246,12 +190,32 @@ export function TaskSimpleList({
   // —— 统一行右键菜单（list / kanban 共用 useIssueRowMenu，菜单内容一致） ——
   const onItemContextMenu = useIssueRowMenu();
 
+  // 子任务挂树（Linear 式）：父任务在本列表内时子行缩进挂其下，否则平铺。
+  // items 只喂顶层任务，子行经 renderChildren 递归渲染（树线样式随 DataList indent 生效）
+  const { topTasks, childrenMap } = useMemo(() => {
+    const idSet = new Set(tasks.map((task) => task.id));
+    const childrenMap = new Map<string, Task[]>();
+    const topTasks: Task[] = [];
+    tasks.forEach((task) => {
+      const parentId = task.parentIssueId;
+      if (parentId && idSet.has(parentId)) {
+        if (!childrenMap.has(parentId)) childrenMap.set(parentId, []);
+        childrenMap.get(parentId)!.push(task);
+      } else {
+        topTasks.push(task);
+      }
+    });
+    return { topTasks, childrenMap };
+  }, [tasks]);
+
+  const renderChildren = useCallback((task: Task) => childrenMap.get(task.id) ?? [], [childrenMap]);
+
   // 类型图标（Linear 式行首标识）：统一工单视图下区分 task/bug/自定义类型
   const issueTypeOf = useIssueTypeOf();
 
   return (
     <DataList
-      items={tasks}
+      items={topTasks}
       loading={loading}
       emptyMessage={emptyText}
       className={className}
@@ -263,6 +227,7 @@ export function TaskSimpleList({
       onItemClick={onTaskClick}
       onItemContextMenu={onItemContextMenu}
       selectionActions={selectionActions}
+      renderChildren={renderChildren}
       renderLeading={(task) => {
         const todoTotal = task.todoItems?.length ?? task._count?.subIssues ?? 0;
         const todoDone = task.todoItems?.filter((item) => item.completed).length ?? 0;
@@ -270,30 +235,31 @@ export function TaskSimpleList({
         const statusVisual = TASK_STATUS_VISUALS[normalizeStatus(task.status)] ?? TASK_STATUS_VISUALS.todo;
         return (
           <>
-            {aiExecution ? (
-              <span
-                className="h-6 w-1 shrink-0 rounded-full bg-accent-purple ring-2 ring-accent-purple/30 animate-pulse"
-                title={`${t('task.aiTakeover.title')}: ${aiExecution.agentName} (${aiExecution.stepSummary || t('task.aiTakeover.executing')})`}
-              />
-            ) : null}
-            {task.type === 'bug' ? (
-              <span className={cn('h-6 w-1.5 shrink-0 rounded-full', SEVERITY_BAR[severityOf(task)])} />
-            ) : null}
-            <IssueTypeCell task={task}>
-              <IssueTypePill meta={issueTypeOf(task)} />
-            </IssueTypeCell>
             {/* 进度状态图标紧跟类型之后（Linear 式行首链）；点击图标即改状态 */}
             <StatusCell task={task}>
-              <span className="inline-flex" title={STATUS_CONFIG[normalizeStatus(task.status)]?.label}>
-                <StatusIconFrame icon={statusVisual.icon} tone={statusVisual.tone} size="xs" />
-              </span>
+              <StatusIconFrame
+                icon={statusVisual.icon}
+                tone={statusVisual.tone}
+                size="list"
+                spin={normalizeStatus(task.status) === 'in_progress'}
+                title={STATUS_CONFIG[normalizeStatus(task.status)]?.label}
+              />
             </StatusCell>
             {/* ID 完整展示，不截断 */}
-            <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{idOf(task)}</span>
+            <span className="shrink-0 whitespace-nowrap font-mono text-sm font-medium text-muted-foreground/50">{idOf(task)}</span>
             <PriorityCell task={task}>
-              <ListIcon icon={PRIORITY_CONFIG[priorityOf(task)].icon} className={PRIORITY_CONFIG[priorityOf(task)].color} />
+              <StatusIconFrame
+                icon={PRIORITY_VISUALS[priorityOf(task)].icon}
+                tone={PRIORITY_VISUALS[priorityOf(task)].tone}
+                size="list"
+                title={priorityOf(task)}
+              />
             </PriorityCell>
-            <ListText className="min-w-0 flex-1">{task.title}</ListText>
+            {/* 类型裸图标（icon 变体）紧贴标题左侧，点击即改类型 */}
+            <IssueTypeCell task={task}>
+              <IssueTypePill meta={issueTypeOf(task)} variant="icon" />
+            </IssueTypeCell>
+            <ListText className="min-w-0 flex-1 text-[15px] font-medium">{task.title}</ListText>
             {aiExecution ? (
               <AiExecutionBadge execution={aiExecution} size="xs" variant="compact" />
             ) : null}
@@ -319,14 +285,13 @@ export function TaskSimpleList({
                 {extraTags > 0 ? <ListChip className="opacity-80 text-muted-foreground">+{extraTags}</ListChip> : null}
               </div>
             ) : null}
+            {/* 尾列流式贴右（Linear 式）：无值不占位，避免空槽在标签与头像之间留白；头像恒最右对齐 */}
             {task.milestone?.name && density !== 'dense' ? (
               <MilestoneCell task={task}>
-                <ListChip className="border border-border bg-muted/40 text-muted-foreground">{task.milestone.name}</ListChip>
+                <ListChip className="max-w-27.5 truncate border border-border bg-muted/40 text-muted-foreground">{task.milestone.name}</ListChip>
               </MilestoneCell>
-            ) : (
-              <span className="w-0" />
-            )}
-            <ListDate value={task.dueDate} overdue={isOverdue(task)} />
+            ) : null}
+            {task.dueDate ? <ListDate value={task.dueDate} overdue={isOverdue(task)} /> : null}
             {aiExecution ? (
               <AiExecutionBadge execution={aiExecution} size="xs" variant="pill" />
             ) : (
