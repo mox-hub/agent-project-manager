@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ListAvatar, ListChip, ListDate, ListIcon, ListText, DataList } from '@/components/ui/data-list';
+import { ListAvatar, ListChip, ListDate, ListIcon, ListText, DataList } from '@/shared/components/data-list';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
@@ -24,7 +24,7 @@ import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
 import { IssueTypePill } from '@/shared/components/issue-type-pill';
 import { cn } from '@/lib/utils';
-import { AiExecutionBadge } from '@/components/ui/ai-execution-badge';
+import { AiExecutionBadge } from '@/modules/issue/components/ai-execution-badge';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
 import { StatusCell, PriorityCell, AssigneeCell, MilestoneCell, IssueTypeCell } from './cell-editors';
 

@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { SidebarPanel } from './sidebar-panel';
+import { SidebarPanel } from '@/components/semantic/sidebar-panel';
 import {
   Popover,
   PopoverContent,

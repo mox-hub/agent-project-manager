@@ -5,8 +5,8 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { StatusPill } from '@/components/ui/status-pill';
-import { EmptyState } from '@/components/ui/empty-state';
+import { StatusPill } from '@/components/semantic/status-pill';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import {
   Dialog,

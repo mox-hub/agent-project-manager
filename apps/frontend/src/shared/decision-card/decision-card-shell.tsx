@@ -23,6 +23,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Chip } from '@/components/semantic/chip';
 import { formatI18nRelativeTime } from '@/shared/lib/date-format';
 import type {
   Decision,
@@ -150,17 +151,17 @@ function ActionBar({
         </p>
         <div className="flex flex-wrap gap-1.5">
           {REASON_CHIPS.map((chipKey) => (
-            <button
+            <Chip
               key={chipKey}
+              tone="danger"
               disabled={busy}
               onClick={() => {
                 onOpenReason(null);
                 onAction(reasonDef.action, decision, { reason: t(chipKey) });
               }}
-              className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs text-content-text-secondary whitespace-nowrap transition-colors hover:border-accent-red/40 hover:bg-accent-red-light hover:text-accent-red disabled:opacity-40"
             >
-              <span className="whitespace-nowrap">{t(chipKey)}</span>
-            </button>
+              {t(chipKey)}
+            </Chip>
           ))}
         </div>
       </div>

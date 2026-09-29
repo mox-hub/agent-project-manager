@@ -8,7 +8,7 @@
  */
 import { Archive, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { DataList, ListAvatar, type DataListItem } from '@/components/ui/data-list';
+import { DataList, ListAvatar, type DataListItem } from '@/shared/components/data-list';
 import type { MenuItem } from '@/components/ui/context-menu';
 import { Badge } from '@/components/ui/badge';
 import type { Team } from '../types';

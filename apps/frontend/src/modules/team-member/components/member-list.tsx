@@ -8,7 +8,7 @@
  */
 import { Bot, User as UserIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { DataList, type DataListItem } from '@/components/ui/data-list';
+import { DataList, type DataListItem } from '@/shared/components/data-list';
 import type { MenuItem } from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
 import type { Member } from '../types';

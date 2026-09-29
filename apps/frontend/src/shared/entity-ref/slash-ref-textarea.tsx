@@ -25,7 +25,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
-import { AutoSizeTextarea } from '@/components/ui/property-panel';
+import { AutoSizeTextarea } from '@/shared/components/property-panel';
 import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
 import { suggestMentions } from '@/modules/team-member/api/team-member-api';
 import {

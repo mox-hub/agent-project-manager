@@ -4,8 +4,8 @@ import { type ColumnDef, type OnChangeFn, type SortingState } from '@tanstack/re
 import { DataTable } from '@/components/ui/data-table';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
-import { ListAvatar, ListDate } from '@/components/ui/data-list';
-import { AiExecutionBadge } from '@/components/ui/ai-execution-badge';
+import { ListAvatar, ListDate } from '@/shared/components/data-list';
+import { AiExecutionBadge } from '@/modules/issue/components/ai-execution-badge';
 import { IssueTypePill } from '@/shared/components/issue-type-pill';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import { StatusCell, PriorityCell, AssigneeCell } from './cell-editors';

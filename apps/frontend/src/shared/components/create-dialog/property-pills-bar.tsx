@@ -12,7 +12,7 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CapsuleSelect, DateCapsuleField } from '@/components/ui/property-panel';
+import { CapsuleSelect, DateCapsuleField } from '@/shared/components/property-panel';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { Member } from '@/modules/team-member/types';
 import type { BugSeverity, TaskPriority } from '@/modules/issue/api/issue-api';

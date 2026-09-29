@@ -8,7 +8,7 @@ import { zhCN } from 'date-fns/locale';
 import { Pencil, Reply, Trash2 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
-import { MemberAvatar } from '@/components/ui/property-panel';
+import { MemberAvatar } from '@/shared/components/property-panel';
 import { MarkdownView } from '@/shared/components/markdown-view';
 import { MarkdownEditor } from '@/shared/components/markdown-editor';
 import { useAppStore } from '@/infrastructure/store/app-store';

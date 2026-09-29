@@ -17,11 +17,11 @@ import {
   ListChip,
   ListText,
   type DataListProgress,
-} from '@/components/ui/data-list';
+} from '@/shared/components/data-list';
 import type { Task } from '../api/issue-api';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import { StatusCell, SeverityCell, AssigneeCell } from './cell-editors';
-import { AiExecutionBadge, type IssueAiExecutionState } from '@/components/ui/ai-execution-badge';
+import { AiExecutionBadge, type IssueAiExecutionState } from '@/modules/issue/components/ai-execution-badge';
 import { cn } from '@/lib/utils';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';

@@ -8,7 +8,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bot, Zap, Shield, Pause, ChevronDown } from 'lucide-react';
 import type { Member } from '@/modules/team-member/types';
-import { MemberAvatar } from '@/components/ui/property-panel';
+import { MemberAvatar } from '@/shared/components/property-panel';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { CreateType } from './unified-create-dialog';

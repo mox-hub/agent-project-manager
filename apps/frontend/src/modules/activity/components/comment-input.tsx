@@ -8,7 +8,7 @@ import { ArrowUp, Smile } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { MemberAvatar } from '@/components/ui/property-panel';
+import { MemberAvatar } from '@/shared/components/property-panel';
 import { MarkdownEditor } from '@/shared/components/markdown-editor';
 import { EmojiPicker } from '@/shared/components/emoji-picker/emoji-picker';
 import { useAppStore } from '@/infrastructure/store/app-store';

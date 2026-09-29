@@ -21,7 +21,7 @@
  * │  📎    [Create more ⬜]                [Cancel] [Create]│  Footer
  * └─────────────────────────────────────────────────────────┘
  *
- * 胶囊 (Capsule) 等原子一律取自 components/ui/property-panel（单一来源，
+ * 胶囊 (Capsule) 等原子一律取自 shared/components/property-panel（单一来源，
  * 与详情页属性面板共版，禁止在本文件重写原子）；AI 建议卡为业务组件见 ./suggestions-card。
  */
 import * as React from 'react';
@@ -50,7 +50,7 @@ import {
   SubTaskCard,
   DateCapsuleField,
   PropertyPanelIcons,
-} from '@/components/ui/property-panel';
+} from '@/shared/components/property-panel';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {

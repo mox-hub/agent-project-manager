@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ContextMenu, type MenuItem } from '@/components/ui/context-menu';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MemberAvatar } from '@/modules/team-member/components/member-avatar';
 
