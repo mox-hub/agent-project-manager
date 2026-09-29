@@ -329,6 +329,50 @@ for (const { entry, relaxed } of luAdded) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// §四 4.2 ④ 门禁计算（H 类批 H3）：必须在 exit 之前 —— missing 计入 errors 阻断。
+// ---------------------------------------------------------------------------
+const GALLERY_PAGE = join(
+  PKG_ROOT,
+  "src",
+  "modules",
+  "design-system",
+  "pages",
+  "design-system-page.tsx"
+);
+let galleryCoverage = null;
+try {
+  const pageSource = readFileSync(GALLERY_PAGE, "utf8");
+  const importedStems = new Set(
+    [...pageSource.matchAll(/from\s+['"]@\/components\/(?:ui|semantic)\/([a-z0-9-]+)['"]/g)].map((m) => m[1])
+  );
+  // 分母：ui/ + semantic/ 双层；internal（裁决 G6）与 galleryExempt（H1 显式豁免）排除
+  const mustShow = registryEntries.filter(
+    (e) => /^(ui|semantic)\//.test(e.file) && e.status !== "internal" && !e.galleryExempt
+  );
+  const covered = mustShow.filter((e) =>
+    importedStems.has(e.file.split("/")[1].replace(/\.tsx?$/, ""))
+  );
+  galleryCoverage = {
+    covered: covered.length,
+    total: mustShow.length,
+    missing: mustShow.filter((e) => !covered.includes(e)),
+  };
+  if (galleryCoverage.missing.length > 0) {
+    errors.push(
+      `画廊覆盖率门禁失败（§4.2 ④，H 类批 H3 起 error）：registry 登记 ${mustShow.length} 件中 ` +
+        `${galleryCoverage.missing.length} 件未在 design-system 页收录：\n` +
+        galleryCoverage.missing
+          .map((e) => `  - ${e.name}（${e.status}，${e.file}）`)
+          .join("\n") +
+        `\n  处置：补画廊 demo，或按 H 类方案 §2.1 登记 galleryExempt 豁免理由（fail-closed）。`
+    );
+  }
+} catch {
+  // 页面文件缺失不阻断（本项降级为报告）：显式说明而非静默跳过
+  galleryCoverage = null;
+}
+
 if (errors.length > 0) {
   console.error("Component registry check failed:\n" + errors.join("\n\n"));
   process.exit(1);
@@ -359,41 +403,18 @@ for (const entry of registryEntries) {
 }
 
 // ---------------------------------------------------------------------------
-// §四 4.2 ④：设计系统页覆盖率（lint:gallery）—— **本轮不做门禁，只报告当前覆盖数**
+// §四 4.2 ④：设计系统页覆盖率门禁（lint:gallery）—— H 类批 H3 起为 **error**
 //
-// 方案 §5.1 曾记「覆盖 77/96」并列出 19 个未收录件；该页此后被批 2 改过、registry 也已增长。
-// 本轮先把**实测值**报出来，作为转 error 前的基线；门禁本身留待画廊改为
-// 「按 registry 遍历渲染」（registry.ts 头注宣称的恒 100% 形态）后再落地——
-// 否则手写清单与 registry 的漂移会每天假红（这正是该页 6255 行手写 import 的结构问题）。
+// 口径（H 类方案 §2.2，2026-09-29 裁决）：
+// - 分母 = registry 中 file 为 `ui/` 或 `semantic/` 前缀、status ≠ internal、且无
+//   `galleryExempt` 的条目（raw 原语按裁决 G6 internal 不出画廊；semantic 首次纳入机查；
+//   galleryExempt 槽位本身即缓冲，不再设 LU_BASELINE 式过渡账）。
+// - 分子 = 画廊页 import 命中（`@/components/ui/<stem>` 或 `@/components/semantic/<stem>`）。
+// - 任何缺失条目 → 退出码 1。galleryExempt 为显式槽位（fail-closed）：豁免必须带理由
+//   登记，且对账区可见；「改判 keep 则豁免失效」（H 类方案 §四 裁决 2）。
+//
+// 计算位于上方 exit 之前（missing 会进 errors 阻断），此处仅承载口径注释。
 // ---------------------------------------------------------------------------
-const GALLERY_PAGE = join(
-  PKG_ROOT,
-  "src",
-  "modules",
-  "design-system",
-  "pages",
-  "design-system-page.tsx"
-);
-let galleryCoverage = null;
-try {
-  const pageSource = readFileSync(GALLERY_PAGE, "utf8");
-  const importedStems = new Set(
-    [...pageSource.matchAll(/from\s+['"]@\/components\/ui\/([a-z0-9-]+)['"]/g)].map((m) => m[1])
-  );
-  const uiEntries = registryEntries.filter((e) => e.file.startsWith("ui/"));
-  const mustShow = uiEntries.filter((e) => e.status !== "internal"); // internal 按 §19.3 表豁免
-  const covered = mustShow.filter((e) =>
-    importedStems.has(e.file.slice(3).replace(/\.tsx?$/, ""))
-  );
-  galleryCoverage = {
-    covered: covered.length,
-    total: mustShow.length,
-    missing: mustShow.filter((e) => !covered.includes(e)),
-  };
-} catch {
-  // 页面文件缺失不阻断（本项是报告项）：显式说明而非静默跳过
-  galleryCoverage = null;
-}
 
 console.log(
   `Component registry check passed (${actual.length} components). ` +
@@ -423,12 +444,12 @@ for (const { entry, due, late } of overdue) {
   console.log(`  ○ ${entry.status} '${entry.name}' 期限 ${due} 已逾期 ${late} 天（${entry.file}）`);
 }
 
-// —— ④ 画廊覆盖率报告（本轮不做门禁）——
+// —— ④ 画廊覆盖率报告（门禁已生效，missing 计入 errors；此处打印明细）——
 if (galleryCoverage) {
   const pct = ((galleryCoverage.covered / galleryCoverage.total) * 100).toFixed(1);
   console.log(
-    `\n[§4.2 ④ 画廊覆盖率 · 报告项，本轮不做门禁] 设计系统页覆盖 ` +
-      `${galleryCoverage.covered}/${galleryCoverage.total} = ${pct}%（已排除 internal）；` +
+    `\n[§4.2 ④ 画廊覆盖率门禁 · H 类批 H3 起 error] 设计系统页覆盖 ` +
+      `${galleryCoverage.covered}/${galleryCoverage.total} = ${pct}%（已排除 internal 与 galleryExempt）；` +
       `未收录 ${galleryCoverage.missing.length} 个。`
   );
   for (const e of galleryCoverage.missing) console.log(`  ○ ${e.name}（${e.status}，${e.file}）`);

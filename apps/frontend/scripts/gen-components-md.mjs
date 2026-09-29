@@ -16,7 +16,8 @@
  *   `(?<!shared/)` 锚定，文档侧恢复自然写法。
  *
  * 同源链的另外两环（本脚本不负责）：
- *   ② registry.ts ──渲染──► design-system 页（按 section 遍历，覆盖率恒 100%）
+ *   ② registry.ts ──渲染──► design-system 页（正文 demo 手写 + Registry 对账区遍历豁免账；
+ *      覆盖率由 check-component-registry.mjs §4.2 ④ 门禁强制恒 100%，H 类批 H3 起 error）
  *   ③ registry.ts ──校验──► lint:registry（扫真实引用回填 consumers，判定 §19.3 的 LU）
  */
 

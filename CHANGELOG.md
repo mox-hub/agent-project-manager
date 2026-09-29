@@ -21,6 +21,20 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——H 类批 H1-H3：画廊覆盖率门禁落地，registry ↔ 画廊闭环 100%（2026-09-29）
+
+> 承接 H 类方案（docs/design/修改方案-H类-画廊遍历渲染-2026-09-29.md，六项决策含排版两项当日全部落定）：兑现 registry.ts / gen-components-md.mjs 两处头注宣称的「画廊覆盖率恒 100%」——实测起点 73/97 = 75.3%（24 件未收录），收官 **93/93 = 100% 且机器强制**。
+
+| 批 | 内容 | 证据要点 |
+|---|---|---|
+| H1 · 豁免槽位与对账闭环 | registry 增显式 `galleryExempt` 槽位（fail-closed：一句话理由、单行字面量、demo 豁免 ≠ 清退豁免）；12 件豁免登记（6 件 review/standby 待裁决死件「proposal=delete 随裁决清退，改判 keep 则豁免失效」+ 4 件运行时挂载件 + 2 件 .ts 工具件）；两脚本解析同步（check 用 tail 提取、gen 的 ENTRY_RE 扩非捕获组）+ 生成器豁免列（`画廊豁免` 说明后缀 + 治理计数表口径注释） | check-component-registry 341 条解析对账过；COMPONENTS.md 再生含豁免标记 |
+| H2 · 补 12 件 demo | canonical 缺口全部收录：6 件并入既有分区（form+field→Forms、table→Table、chart→Charts、right-sidebar→Page Layout、quick-cards-toggle→Page Header、ai-agent-badge+ai-context-summary→AI High-Density Cards）+ 4 个新 section（data-table / item / sidebar-panel / tab-bar）；覆盖 73/97 → 83/95（门禁前口径） | `tsc -b` 0 错；eslint 改动文件 0 error 0 warning（RhfFormDemo 按 F3.6 铁律不经 `<form>`，handleSubmit 按钮直调） |
+| H3 · 门禁转 error + 对账区 | §4.2 ④ 升级硬门禁：分母扩 **ui+semantic 双层**（semantic 首次纳入机查；internal 按 G6、galleryExempt 显式豁免排除）、无基线缓冲、missing 计入 errors 阻断；画廊新增「Registry 对账区」section（Governance 组、正文末尾、紧凑表格——按 COMPONENT_REGISTRY 遍历渲染豁免账，排版经用户裁决）；两处头注修订为如实兑现形态 | 门禁自证闭环：删 data-table import → check 红并点名缺失件 → 恢复 → **93/93 = 100% 绿** |
+
+test_evidence：`check-component-registry.mjs` exit 0（341 条五态校验 + 画廊门禁 93/93）；`tsc -b` 0 错；eslint 改动文件 0 error 0 warning；生成器幂等再生过。doc_impact：本文件 + registry.ts 头注（② 同源链兑现形态）+ gen-components-md.mjs 头注 + H 类方案落地勾记。
+
+交接备注：semantic/stats-card 曾短暂未登记（归一批半成品），本批收官时归一批已自行完成登记与画廊收录，门禁双口径未打出误报；「semantic/raw 目录双向对账」未纳入门禁（归一批并行期内避免误伤，登记为 H 类余留，随归一批收口后可补）。
+
 ### 前端设计治理——统计卡归一批：ui/stats-card 升格语义层标准件，ui/stat-card 收编为 featured 变种，七套并行实现归一（2026-09-29）
 
 > 用户裁决：「以 1 号场景 StatsCard 作为标准场景，将 stats-card 移动到语义层，并作为绝大多数同类场景的唯一选择；2 号项目详情页的摘要大卡作为 stats-card 的变种，承载更复杂的信息；卡片背景色和数字彩色作为可选项进行合并；字号等统一按 1 号场景为主。」调研基线：全库 7 套统计卡实现（ui/stat-card + ui/stats-card 双轨、semantic/stat-tile、analytics/dashboard/settings 三处本地 KPI/Stat 卡、acceptance 内联裸 JSX）+ 4 邻接件。
