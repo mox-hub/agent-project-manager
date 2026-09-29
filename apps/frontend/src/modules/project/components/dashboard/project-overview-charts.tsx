@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartCard } from '@/components/semantic/chart-card';
 import {
   ChartContainer,
   ChartTooltip,
@@ -60,17 +60,15 @@ export function ProjectOverviewCharts({ summary }: ProjectOverviewChartsProps) {
 
   return (
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <Card className="lg:col-span-2" data-mock="true">
-        <CardHeader className="p-4">
-          <CardTitle className="flex items-center justify-between text-sm font-medium">
-            {t('project.detail.sprintBurndown')}
-            <span className="text-xs font-normal text-muted-foreground">
-              {t('project.detail.last7Days')}
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-2 pb-3">
-          <ChartContainer config={burndownConfig} className="h-40 w-full">
+      {/* 卡壳换 semantic/chart-card（2026-09-29）：col-span 与 data-mock 标记留在网格包装层；
+          内容内距由原 px-2 pb-3 就近映射到卡壳基线 px-4 pb-4，定高 h-40 移交卡壳 height="md" */}
+      <div className="lg:col-span-2" data-mock="true">
+        <ChartCard
+          title={t('project.detail.sprintBurndown')}
+          hint={t('project.detail.last7Days')}
+          height="md"
+        >
+          <ChartContainer config={burndownConfig} className="h-full w-full">
             <AreaChart data={burndownData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="day" tickLine={false} axisLine={false} />
@@ -94,18 +92,15 @@ export function ProjectOverviewCharts({ summary }: ProjectOverviewChartsProps) {
               />
             </AreaChart>
           </ChartContainer>
-        </CardContent>
-      </Card>
+        </ChartCard>
+      </div>
 
-      <Card>
-        <CardHeader className="p-4">
-          <CardTitle className="text-sm font-medium">
-            {t('project.detail.taskDistribution')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4">
-          <div className="flex items-center justify-center">
-            <ChartContainer config={distributionConfig} className="h-30 w-full">
+      <ChartCard title={t('project.detail.taskDistribution')} height="lg">
+        {/* 分布卡：图 + 图例两段，children 内 flex 填满卡壳定高区（h-56），
+            图表实现不动，仅高度从自带 h-30 改为随卡壳填充 */}
+        <div className="flex h-full flex-col">
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            <ChartContainer config={distributionConfig} className="h-full w-full">
               <PieChart>
                 <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                 <Pie
@@ -130,8 +125,8 @@ export function ProjectOverviewCharts({ summary }: ProjectOverviewChartsProps) {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </ChartCard>
     </section>
   );
 }
