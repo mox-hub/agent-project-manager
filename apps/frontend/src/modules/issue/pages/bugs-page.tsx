@@ -10,13 +10,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   Plus, CheckCircle2, Bug, AlertTriangle, List, Kanban, CalendarRange, TableProperties, Bot, Trash2, CircleDashed,
 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
+import { PageShell } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { QuickCardsToggle } from '@/components/semantic/quick-cards-toggle';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
 import { StatsCard } from '@/components/semantic/stats-card';
-import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/semantic/toolbar-row';
 import {
   FilterChipsRow,
   FilterCascadeMenu,
@@ -25,10 +26,10 @@ import {
   countBy,
   type FilterCondition,
   type FilterFieldDef,
-} from '@/components/ui/filter-chips';
+} from '@/components/semantic/filter-chips';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
-import { AsyncState } from '@/components/ui/async-state';
+import { AsyncState } from '@/components/semantic/async-state';
 import { useAllBugs, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import type { Task } from '../api/issue-api';
@@ -323,6 +324,7 @@ export function BugsPage() {
       {/* Header */}
       <PageHeader
         title={t("task.bug.title") || "All Bugs"}
+        favorites={<FavoriteToggle label={nodeToText(t("task.bug.title") || "All Bugs").trim()} aiId="bugs.bugs-list.stats-toggle" />}
         icon={BUG_ENTITY.icon}
         iconColor={TONE_TEXT_CLASS[BUG_ENTITY.tone]}
         metrics={[

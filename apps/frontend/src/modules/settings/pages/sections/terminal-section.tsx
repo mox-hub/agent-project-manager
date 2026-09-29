@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Spinner } from '@/components/ui/spinner';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useTerminalStatus, useTestShell } from '@/modules/runtime/hooks/use-terminal-status';
 import { Terminal, RefreshCw, CheckCircle2, XCircle, Save, Settings2 } from 'lucide-react';
@@ -229,6 +231,7 @@ export function TerminalSettingsSection() {
       icon={Terminal}
       iconColor="text-accent-purple"
       title={t('settings.terminal')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.terminal')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
       actions={

@@ -8,11 +8,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { KeyRound, Plus, Copy, Check, Trash2, Terminal } from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
-import { PageShell } from '@/components/ui/page-shell';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SectionCard } from '@/components/ui/section-card';
-import { StatusPill } from '@/components/ui/status-pill';
+import { SectionCard } from '@/components/semantic/section-card';
+import { StatusPill } from '@/components/semantic/status-pill';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -32,8 +34,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DataTableShell } from '@/components/ui/data-table-shell';
-import { AsyncState } from '@/components/ui/async-state';
+import { DataTableShell } from '@/components/semantic/data-table-shell';
+import { AsyncState } from '@/components/semantic/async-state';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/toast';
 import { useConfirm } from '@/shared/confirm/use-confirm';
@@ -128,6 +130,7 @@ export function AccessTokensSettingsSection() {
       contentClassName="space-y-6"
       aiPage="settings.tokens"
       title={t('settings.tokensTitle')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.tokensTitle')).trim()} />}
       icon={KeyRound}
       iconColor="text-accent-yellow"
       actions={

@@ -11,7 +11,9 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
 import { useTranslation } from 'react-i18next';
 import { Keyboard, Pencil, RotateCcw } from 'lucide-react';
@@ -186,6 +188,7 @@ export function ShortcutsSettingsSection() {
       icon={Keyboard}
       iconColor="text-accent-blue"
       title={t('settings.shortcuts')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.shortcuts')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >

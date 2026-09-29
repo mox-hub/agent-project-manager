@@ -14,13 +14,15 @@ import {
   PinOff,
   Trash2,
 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SelectField } from '@/components/ui/select-field';
 import { Skeleton } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { projectApi } from '@/modules/project/api/project-api';
 import {
@@ -118,6 +120,7 @@ export function MemorySection() {
     <PageShell
       variant="standard"
       title={t('memory.title')}
+      favorites={<FavoriteToggle label={nodeToText(t('memory.title')).trim()} />}
       icon={Brain}
       iconColor="text-accent-yellow"
       aiPage={CORE_AI_PAGE_IDS.settings}

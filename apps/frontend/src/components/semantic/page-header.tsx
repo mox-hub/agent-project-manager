@@ -1,8 +1,6 @@
 import { isValidElement, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FavoriteToggle } from "@/shared/components/favorite-toggle";
-import { SubscribeButton } from "@/shared/subscription/subscribe-button";
 
 export interface PageHeaderMetric {
   id?: string;
@@ -24,16 +22,24 @@ interface PageHeaderProps {
   actions?: ReactNode;
   /** 最右侧计数器标签（文本 + 数字），如任务数量、项目健康度 */
   metrics?: PageHeaderMetric[];
-  /** 收藏标识，默认取当前路由 path */
-  favoriteId?: string;
+  /**
+   * 标题右侧收藏槽位：由业务调用方自行构造节点（如 <FavoriteToggle />），
+   * 不传则不渲染。FavoriteToggle 未传 favoriteId 时收藏标识默认取当前路由 path。
+   */
+  favorites?: ReactNode;
+  /**
+   * 收藏槽位右侧订阅槽位：由业务调用方自行构造节点（如 <SubscribeButton />），
+   * 不传则不渲染。订阅作用域按路由自动推导，无法推导（列表页等）时按钮内部返回 null。
+   */
+  subscribe?: ReactNode;
   className?: string;
   aiId?: string;
   icon?: LucideIcon;
   iconColor?: string;
 }
 
-/** 从 ReactNode 提取纯文本，作为收藏到侧边栏时的页面名称 */
-function nodeToText(node: ReactNode): string {
+/** 从 ReactNode 提取纯文本，作为收藏到侧边栏时的页面名称（导出供业务调用方构造收藏槽位 label） */
+export function nodeToText(node: ReactNode): string {
   if (node === null || node === undefined || typeof node === "boolean") return "";
   if (typeof node === "string" || typeof node === "number") return String(node);
   if (Array.isArray(node)) return node.map(nodeToText).join("");
@@ -48,7 +54,8 @@ export function PageHeader({
   title,
   actions,
   metrics,
-  favoriteId,
+  favorites,
+  subscribe,
   className,
   aiId,
   icon: Icon,
@@ -67,9 +74,8 @@ export function PageHeader({
       {Icon ? <Icon className={cn("size-5 shrink-0", iconColor)} strokeWidth={1.75} /> : null}
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <h1 className="m-0 min-w-0 truncate text-lg font-semibold leading-tight text-foreground">{title}</h1>
-        <FavoriteToggle favoriteId={favoriteId} label={nodeToText(title).trim()} aiId={aiId} />
-        {/* 订阅按钮：作用域按路由自动推导，无法推导（列表页等）时按钮内部返回 null */}
-        <SubscribeButton />
+        {favorites}
+        {subscribe}
         {metrics && metrics.length > 0 ? (
           <div className="flex shrink-0 items-center gap-2">
             {metrics.map((metric, index) => {

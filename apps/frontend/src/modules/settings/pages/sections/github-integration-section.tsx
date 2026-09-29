@@ -6,7 +6,9 @@
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
 import { GithubPanel } from '@/modules/github/components/github-panel';
 import { GithubSetupCard } from '@/modules/github/components/github-setup-card';
@@ -29,6 +31,7 @@ export function GithubIntegrationSection() {
     <PageShell
       variant="standard"
       title={t('settings.integration.githubIntegration.title')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.integration.githubIntegration.title')).trim()} />}
       icon={Github}
       actions={
         <Button size="sm" className="h-7" onClick={() => setConnectOpen(true)}>

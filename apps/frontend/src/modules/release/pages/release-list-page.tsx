@@ -7,10 +7,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { List, Rocket, Sparkles } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { PageShell } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SelectField } from '@/components/ui/select-field';
@@ -28,8 +29,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { SkeletonTable } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
+import { EmptyState } from '@/components/semantic/empty-state';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { toast } from '@/components/ui/toast';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useProjectMilestones } from '@/modules/issue/hooks/use-project-tasks';
@@ -148,6 +149,7 @@ export function ReleaseListPage() {
       <PageHeader
         aiId="releases.list"
         title={t('release.title')}
+        favorites={<FavoriteToggle label={nodeToText(t('release.title')).trim()} aiId="releases.list" />}
         icon={Rocket}
         iconColor="text-accent-green"
         metrics={[{ id: 'total', label: t('release.title'), value: filtered.length }]}

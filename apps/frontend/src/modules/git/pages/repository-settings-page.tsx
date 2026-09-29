@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRepository, useUpdateRepository, useDeleteRepository } from '../hooks/use-repositories';
-import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
+import { PageShell } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { Button } from '@/components/ui/button';
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -84,7 +86,8 @@ export function RepositorySettingsPage() {
   if (isLoading) {
     return (
       <PageShell aiPage="repository-settings">
-        <PageHeader title="Loading..." aiId="" />
+        <PageHeader title="Loading..."
+        favorites={<FavoriteToggle label={nodeToText("Loading...").trim()} />} subscribe={<SubscribeButton />} aiId="" />
         <div className="flex items-center justify-center p-12">
           <Spinner />
         </div>
@@ -119,6 +122,8 @@ export function RepositorySettingsPage() {
       <PageHeader
         aiId="git.repository-settings"
         title="Repository Settings"
+        favorites={<FavoriteToggle label={nodeToText("Repository Settings").trim()} aiId="git.repository-settings" />}
+        subscribe={<SubscribeButton />}
         icon={Settings}
         iconColor="text-accent-blue"
       />

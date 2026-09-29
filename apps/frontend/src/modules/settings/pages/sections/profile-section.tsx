@@ -10,7 +10,9 @@ import { Field, FieldContent, FieldLabel } from '@/components/ui/field';
 import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { toast } from '@/components/ui/toast';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { authApi } from '@/modules/auth/api/auth-api';
@@ -113,6 +115,7 @@ export function ProfileSettingsSection() {
       icon={UserRound}
       iconColor="text-accent-blue"
       title={t('settings.profile')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.profile')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >

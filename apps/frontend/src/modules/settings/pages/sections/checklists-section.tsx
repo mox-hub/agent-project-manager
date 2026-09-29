@@ -14,7 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { useTranslation } from 'react-i18next';
 import { ClipboardCheck, Lock, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from '@/components/ui/toast';
@@ -60,6 +62,7 @@ export function ChecklistsSettingsSection() {
       icon={ClipboardCheck}
       iconColor="text-accent-blue"
       title={t('settings.checklists')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.checklists')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >

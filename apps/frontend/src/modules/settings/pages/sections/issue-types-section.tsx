@@ -14,9 +14,11 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { PageShell } from '@/components/ui/page-shell';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { SectionCard } from '@/components/ui/section-card';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { SectionCard } from '@/components/semantic/section-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ColorPicker } from '@/components/ui/color-picker';
@@ -32,7 +34,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu';
-import { AsyncState } from '@/components/ui/async-state';
+import { AsyncState } from '@/components/semantic/async-state';
 import {
   useIssueTypes,
   useCreateIssueType,
@@ -62,6 +64,7 @@ export function IssueTypesSettingsSection() {
       icon={Shapes}
       iconColor="text-accent-blue"
       title={t('settings.issueTypesTitle', '任务类型 & 状态')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.issueTypesTitle', '任务类型 & 状态')).trim()} />}
       actions={
         <HeaderActionButton icon={Plus} label={t('settings.addIssueType', '添加任务类型')} />
       }

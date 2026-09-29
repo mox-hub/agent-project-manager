@@ -25,9 +25,11 @@ import {
 import { api } from '@/infrastructure/api-client';
 import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
 import { useDesktop, ProcessMonitorCard, DesktopLogCard, DesktopPreferencesCard } from '@/modules/desktop';
-import { PageShell } from '@/components/ui/page-shell';
-import { SectionCard } from '@/components/ui/section-card';
-import { StatusPill } from '@/components/ui/status-pill';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SectionCard } from '@/components/semantic/section-card';
+import { StatusPill } from '@/components/semantic/status-pill';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
@@ -40,8 +42,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DataTableShell } from '@/components/ui/data-table-shell';
-import { AsyncState } from '@/components/ui/async-state';
+import { DataTableShell } from '@/components/semantic/data-table-shell';
+import { AsyncState } from '@/components/semantic/async-state';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/toast';
 import { getProviderMeta } from '@/shared/ai-providers/provider-meta';
@@ -252,6 +254,7 @@ export function RuntimeSettingsSection() {
       contentClassName="space-y-6"
       aiPage="settings.runtime"
       title={t('settings.runtimeTitle')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.runtimeTitle')).trim()} />}
       icon={Cpu}
       iconColor="text-accent-blue"
       metrics={[

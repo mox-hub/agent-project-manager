@@ -9,12 +9,13 @@ import { ProjectGantt } from '../components/project-gantt';
 import type { ProjectListParams, ProjectWorkflowStatus } from '../api/project-api';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { Button } from '@/components/ui/button';
-import { IconStack } from '@/components/ui/icon-stack';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { PageShell } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import {
   Pagination,
   PaginationContent,
@@ -26,7 +27,7 @@ import {
 } from '@/components/ui/pagination';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import type { FilterState } from '@/shared/filters/types';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { useActiveExecutionsMap } from '@/modules/execution/hooks/use-active-executions-map';
@@ -40,7 +41,7 @@ import {
   Bot,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ListActionButton } from '@/components/ui/data-list';
+import { ListActionButton } from '@/shared/components/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 
@@ -222,6 +223,7 @@ export function ProjectListPage() {
       <PageHeader
         aiId="project.project-list"
         title={t("project.title")}
+        favorites={<FavoriteToggle label={nodeToText(t("project.title")).trim()} aiId="project.project-list" />}
         icon={PROJECT_ENTITY.icon}
         iconColor="text-accent-blue"
         metrics={[{ id: 'total', label: t("project.title"), value: total }]}

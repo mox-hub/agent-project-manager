@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { useForm } from 'react-hook-form';
 import { useProjectTemplates, useCreateProjectTemplate, useUpdateProjectTemplate, useTaskTemplates, useCreateTaskTemplate, useUpdateTaskTemplate, useDeleteTaskTemplate, type ProjectTemplate, type TaskTemplate } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PageShell, PageBody } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
+import { PageShell, PageBody } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -216,6 +217,7 @@ export function TemplateManager() {
       <PageHeader
         aiId="settings.templates"
         title={t('settings.templates')}
+        favorites={<FavoriteToggle label={nodeToText(t('settings.templates')).trim()} aiId="settings.templates" />}
         icon={LayoutTemplate}
         iconColor="text-accent-blue"
       />

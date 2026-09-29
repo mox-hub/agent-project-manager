@@ -1,4 +1,6 @@
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { FolderOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TagManager } from '@/modules/core-config/components/tag-manager';
@@ -36,6 +38,7 @@ export function StorageSettingsSection() {
       icon={FolderOpen}
       iconColor="text-accent-yellow"
       title={t('settings.storageSection')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.storageSection')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >

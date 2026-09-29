@@ -13,13 +13,15 @@ import {
   TrendingUp, Sparkles, GitBranch, Shield,
   LayoutDashboard,
 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AsyncState } from '@/components/ui/async-state';
+import { AsyncState } from '@/components/semantic/async-state';
 import { StatusPill } from '@/components/semantic/status-pill';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatTile } from '@/components/semantic/stat-tile';
@@ -303,6 +305,7 @@ export function DashboardPage() {
       className="overflow-hidden"
       aiPage={CORE_AI_PAGE_IDS.dashboardOverview}
       title={t('dashboard.title')}
+      favorites={<FavoriteToggle label={nodeToText(t('dashboard.title')).trim()} />}
       icon={LayoutDashboard}
       iconColor="text-accent-blue"
     >

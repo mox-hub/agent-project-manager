@@ -9,16 +9,17 @@ import {
   Plus, AlertCircle, ListTodo, Bot as BotIcon, List, Kanban, CalendarRange, TableProperties, Trash2, CircleDashed, SearchX, Flag, Users, Target, Upload, SlidersHorizontal, Tag as TagIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AsyncState } from '@/components/ui/async-state';
-import { EmptyState } from '@/components/ui/empty-state';
+import { AsyncState } from '@/components/semantic/async-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
-import { PageHeader } from '@/components/ui/page-header';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { QuickCardsToggle } from '@/components/semantic/quick-cards-toggle';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
 import { StatsCard } from '@/components/semantic/stats-card';
-import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/semantic/toolbar-row';
 import {
   FilterChipsRow,
   FilterCascadeMenu,
@@ -27,7 +28,7 @@ import {
   countBy,
   type FilterCondition,
   type FilterFieldDef,
-} from '@/components/ui/filter-chips';
+} from '@/components/semantic/filter-chips';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useAllTasks, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
@@ -796,6 +797,7 @@ export function TasksPage() {
       <PageHeader
         aiId="task.tasks-list"
         title={t("task.title")}
+        favorites={<FavoriteToggle label={nodeToText(t("task.title")).trim()} aiId="task.tasks-list" />}
         icon={ISSUE_ENTITY.icon}
         iconColor={TONE_TEXT_CLASS[ISSUE_ENTITY.tone]}
         // P1-16/P2-17：计数如实标注——筛选生效时为「当前显示」（本页命中数）；

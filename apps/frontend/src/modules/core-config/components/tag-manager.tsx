@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Archive, ArchiveRestore, GripVertical, Pencil, Plus, Tags, Trash2 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { AsyncState } from '@/components/ui/async-state';
-import { DataTableShell } from '@/components/ui/data-table-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { AsyncState } from '@/components/semantic/async-state';
+import { DataTableShell } from '@/components/semantic/data-table-shell';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -176,6 +178,7 @@ export function TagManager() {
       aiPage="settings.labels"
       className="bg-background text-foreground"
       title={t('settings.labels')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.labels')).trim()} />}
       icon={Tags}
       iconColor="text-accent-blue"
       metrics={[{ id: 'total', label: t('settings.labels'), value: filteredTags.length }]}

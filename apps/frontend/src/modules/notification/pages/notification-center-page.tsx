@@ -16,11 +16,13 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
-import { PageShell } from '@/components/ui/page-shell';
+import { EmptyState } from '@/components/semantic/empty-state';
+import { IconStack } from '@/components/semantic/icon-stack';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SkeletonCard } from '@/components/ui/skeleton';
-import { AsyncState } from '@/components/ui/async-state';
+import { AsyncState } from '@/components/semantic/async-state';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -99,6 +101,7 @@ export function NotificationCenterPage() {
       className="overflow-hidden p-0"
       aiPage={CORE_AI_PAGE_IDS.notificationCenter}
       title={t('notification.title')}
+      favorites={<FavoriteToggle label={nodeToText(t('notification.title')).trim()} />}
       icon={Bell}
       actions={
         <>

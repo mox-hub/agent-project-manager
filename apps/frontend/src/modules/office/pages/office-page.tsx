@@ -7,10 +7,11 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Bot, DoorOpen } from 'lucide-react';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageShell } from '@/components/ui/page-shell';
-import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { PageShell } from '@/components/semantic/page-shell';
+import { EmptyState } from '@/components/semantic/empty-state';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SelectField } from '@/components/ui/select-field';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -37,6 +38,7 @@ export function OfficePage() {
     <PageShell aiPage={CORE_AI_PAGE_IDS.office}>
       <PageHeader
         title={t('office.title')}
+        favorites={<FavoriteToggle label={nodeToText(t('office.title')).trim()} />}
         icon={DoorOpen}
         iconColor="text-accent-purple"
       />

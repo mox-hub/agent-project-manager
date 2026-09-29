@@ -9,14 +9,15 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { PageShell } from '@/components/semantic/page-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { QuickCardsToggle } from '@/components/semantic/quick-cards-toggle';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,7 +44,7 @@ import {
   ArrowUpRight,
   SearchX,
 } from 'lucide-react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
 import { useAcceptanceList } from '../hooks/use-acceptance';
 import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
@@ -542,6 +543,7 @@ export function AcceptanceListPage() {
     <PageShell aiPage="acceptance-list">
       <PageHeader
         title={t('acceptance.title')}
+        favorites={<FavoriteToggle label={nodeToText(t('acceptance.title')).trim()} aiId="acceptance.acceptance-list.stats-toggle" />}
         icon={getEntityIcon('acceptance').icon}
         iconColor="text-accent-green"
         metrics={[

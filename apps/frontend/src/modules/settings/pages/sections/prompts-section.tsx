@@ -24,13 +24,15 @@ import {
   Trash2,
   UserRound,
 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { SectionCard } from '@/components/ui/section-card';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SectionCard } from '@/components/semantic/section-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import {
   Dialog,
   DialogContent,
@@ -528,7 +530,8 @@ export function PromptsSettingsSection() {
   const toggles = config.data?.toggles;
 
   return (
-    <PageShell title={t('settings.prompts')} icon={ScrollText}>
+    <PageShell title={t('settings.prompts')}
+          favorites={<FavoriteToggle label={nodeToText(t('settings.prompts')).trim()} />} icon={ScrollText}>
       <div className="mx-auto w-full max-w-4xl space-y-6 px-6 py-6">
         {/* 注入开关 */}
         <SectionCard

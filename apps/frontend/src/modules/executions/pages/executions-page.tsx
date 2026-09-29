@@ -29,17 +29,18 @@ import {
   Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { PageShell } from '@/components/semantic/page-shell';
 import { Button } from '@/components/ui/button';
 import { DataList, ListText } from '@/shared/components/data-list';
 import type { MenuItem } from '@/components/ui/context-menu';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { QuickCardsToggle } from '@/components/semantic/quick-cards-toggle';
 import { StatsCard, type StatsCardItem } from '@/components/semantic/stats-card';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { toast } from '@/components/ui/toast';
 import {
   isTerminalRunStatus,
@@ -352,6 +353,7 @@ export function ExecutionsPage() {
       <PageHeader
         aiId="executions.list"
         title={t('nav.executions')}
+        favorites={<FavoriteToggle label={nodeToText(t('nav.executions')).trim()} aiId="executions.list" />}
         icon={entity.icon}
         iconColor={TONE_TEXT_CLASS[entity.tone]}
         metrics={[{ id: 'total', label: t('nav.executions'), value: filteredRuns.length }]}

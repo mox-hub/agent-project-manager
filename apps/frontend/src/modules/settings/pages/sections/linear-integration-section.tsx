@@ -9,10 +9,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Trash2, Power, PowerOff, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
-import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { PageShell } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { useIntegration, useUpdateIntegration, useDeleteIntegration } from '@/modules/integration/hooks/use-integrations';
 import { LinearIcon } from '@/components/icons/linear';
 import { LinearProjectsTable } from '@/modules/linear/components/linear-projects-table';
@@ -45,6 +46,7 @@ export function LinearIntegrationSection() {
       <PageShell>
         <PageHeader
           title={t('settings.integration.linearIntegration.notFound')}
+          favorites={<FavoriteToggle label={nodeToText(t('settings.integration.linearIntegration.notFound')).trim()} />}
           actions={
             <HeaderActionButton
               variant="secondary"
@@ -90,6 +92,7 @@ export function LinearIntegrationSection() {
         icon={LinearIcon as LucideIcon}
         iconColor=""
         title={data.name}
+        favorites={<FavoriteToggle label={nodeToText(data.name).trim()} />}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={toggleEnabled}>

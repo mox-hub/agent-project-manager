@@ -29,7 +29,8 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageHeader } from '@/components/ui/page-header';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import {
   Table,
   TableBody,
@@ -38,9 +39,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { PageShell } from '@/components/ui/page-shell';
-import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
+import { PageShell } from '@/components/semantic/page-shell';
+import { EmptyState } from '@/components/semantic/empty-state';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
 import { useTranslation } from '@/hooks/useTranslation';
 import { HOTKEY_DEFINITIONS } from '@/shared/hotkeys/hotkey-definitions';
@@ -159,6 +160,7 @@ export function HelpPage() {
       {/* Header - 使用 PageHeader 组件 */}
       <PageHeader
         title={t('help.title')}
+        favorites={<FavoriteToggle label={nodeToText(t('help.title')).trim()} />}
         icon={HelpCircle}
         iconColor="text-accent-blue"
       />

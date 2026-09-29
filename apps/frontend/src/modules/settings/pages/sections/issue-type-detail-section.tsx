@@ -17,9 +17,10 @@ import {
   Shapes,
   Sparkles,
 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
-import { ToolbarRow } from '@/components/ui/toolbar-row';
+import { PageShell } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { ToolbarRow } from '@/components/semantic/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -36,7 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { AsyncState } from '@/components/ui/async-state';
+import { AsyncState } from '@/components/semantic/async-state';
 import { useIssueTypes, useUpdateIssueType } from '@/modules/issue/hooks/use-issue-types';
 import type {
   FieldSchemaDef,
@@ -92,6 +93,7 @@ export function IssueTypeDetailSection() {
         icon={Shapes}
         iconColor="text-accent-blue"
         title={type ? type.name : t('settings.issueTypeDetail', '任务类型详情')}
+        favorites={<FavoriteToggle label={nodeToText(type ? type.name : t('settings.issueTypeDetail', '任务类型详情')).trim()} />}
       />
       <AsyncState
         isLoading={isLoading}

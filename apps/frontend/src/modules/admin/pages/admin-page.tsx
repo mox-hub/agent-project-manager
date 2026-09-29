@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UserCog, UserPlus, MailPlus, Plus, User, Mail, UsersRound } from 'lucide-react';
 
-import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { PageShell } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { AdminGuard } from '@/modules/auth/components/admin-guard';
 import { useAdminUsers, useRegistrationInvites } from '../hooks/use-admin';
 import { useMembers } from '@/modules/team-member/hooks';
@@ -200,6 +201,7 @@ function AdminPageContent() {
         icon={UserCog}
         iconColor="text-accent-red"
         title={t('nav.admin', '管理后台')}
+        favorites={<FavoriteToggle label={nodeToText(t('nav.admin', '管理后台')).trim()} />}
         metrics={[
           { id: 'users', label: t('admin.accounts', '账号'), value: users?.length ?? 0 },
           {

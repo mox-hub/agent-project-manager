@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StatusPill } from '@/components/semantic/status-pill';
 import { Badge } from '@/components/ui/badge';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -27,12 +27,13 @@ import {
   X,
 } from 'lucide-react';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
-import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { PageShell } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '@/components/semantic/stats-card';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { DocumentPreviewDialog } from '@/modules/document/components/document-preview-dialog';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
@@ -173,6 +174,7 @@ export function DocumentsPage() {
         <PageHeader
           aiId="document.document-list"
           title={t('document.title')}
+          favorites={<FavoriteToggle label={nodeToText(t('document.title')).trim()} aiId="document.document-list" />}
           icon={getEntityIcon('document').icon}
           iconColor="text-accent-blue"
           metrics={[{ id: 'total', label: t('document.title'), value: stats.total }]}

@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Spinner } from '@/components/ui/spinner';
 import { useUpdateShortIdPrefix, useShortIdPrefix } from '@/modules/config/hooks/use-global-config';
 import { useBackfillShortIds, useShortIdStats } from '@/modules/issue/hooks/use-project-tasks';
@@ -21,6 +23,7 @@ export function ShortIdSettingsSection() {
       icon={Hash}
       iconColor="text-accent-blue"
       title={t('settings.shortId')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.shortId')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >

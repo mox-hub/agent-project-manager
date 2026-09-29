@@ -15,17 +15,18 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageShell } from '@/components/ui/page-shell';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { PageShell } from '@/components/semantic/page-shell';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { QuickCardsToggle } from '@/components/semantic/quick-cards-toggle';
 import { StatsCard } from '@/components/semantic/stats-card';
 import {
   ToolbarRow,
   useToolbarViews,
   normalizeFilterSelection,
   toggleFilterValue,
-} from '@/components/ui/toolbar-row';
+} from '@/components/semantic/toolbar-row';
 import {
   DataList,
   ListActionButton,
@@ -34,8 +35,8 @@ import {
   ListIcon,
   ListText,
 } from '@/shared/components/data-list';
-import { AsyncState } from '@/components/ui/async-state';
-import { EmptyState } from '@/components/ui/empty-state';
+import { AsyncState } from '@/components/semantic/async-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { Spinner } from '@/components/ui/spinner';
 import { IconStack } from '@/components/semantic/icon-stack';
 import { Button } from '@/components/ui/button';
@@ -249,6 +250,7 @@ export function RepositoryListPage() {
       <PageHeader
         aiId="git.repository-list"
         title={t('git.title')}
+        favorites={<FavoriteToggle label={nodeToText(t('git.title')).trim()} aiId="git.repository-list" />}
         icon={GitBranch}
         iconColor="text-accent-blue"
         metrics={[{ id: 'total', label: t('git.title'), value: filteredRepositories.length }]}

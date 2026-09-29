@@ -10,10 +10,11 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Brain, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from '@/components/ui/toast';
-import { PageShell, PageBody } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { ToolbarRow } from '@/components/ui/toolbar-row';
+import { PageShell, PageBody } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { ToolbarRow } from '@/components/semantic/toolbar-row';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -59,7 +60,8 @@ export function AiManagementSection() {
 
   return (
     <PageShell aiPage="ai-hub.ai-management" className="overflow-hidden">
-      <PageHeader aiId="ai-hub.ai-management" title={t('aiHub.title')} icon={Brain} iconColor="text-accent-purple" />
+      <PageHeader aiId="ai-hub.ai-management" title={t('aiHub.title')}
+        favorites={<FavoriteToggle label={nodeToText(t('aiHub.title')).trim()} aiId="ai-hub.ai-management" />} icon={Brain} iconColor="text-accent-purple" />
 
       {/* 纯样式切换页：不传 views（视图管理整体隐藏），仅居中页签切换 */}
       <ToolbarRow

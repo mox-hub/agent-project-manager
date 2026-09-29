@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Check, CircleUser, Minus, Pencil, Plus, Trash2 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { AsyncState } from '@/components/ui/async-state';
-import { DataTableShell } from '@/components/ui/data-table-shell';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { AsyncState } from '@/components/semantic/async-state';
+import { DataTableShell } from '@/components/semantic/data-table-shell';
 import { SkeletonTable } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -147,6 +149,7 @@ export function RoleManager() {
       aiPage="settings.roles"
       className="bg-background text-foreground"
       title={t('settings.roles')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.roles')).trim()} />}
       icon={CircleUser}
       iconColor="text-accent-purple"
       metrics={[{ id: 'total', label: t('settings.roles'), value: displayRoles.length }]}

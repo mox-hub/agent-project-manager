@@ -13,11 +13,13 @@ import {
   FileText,
   Sparkles,
 } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { Button } from '@/components/ui/button';
-import { SectionCard } from '@/components/ui/section-card';
-import { AsyncState } from '@/components/ui/async-state';
+import { SectionCard } from '@/components/semantic/section-card';
+import { AsyncState } from '@/components/semantic/async-state';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useDocuments } from '@/modules/document/hooks/use-documents';
@@ -110,6 +112,7 @@ export function RequirementIntakePage() {
       icon={Inbox}
       iconColor="text-accent-blue"
       title={t('intake.title', '需求承接')}
+      favorites={<FavoriteToggle label={nodeToText(t('intake.title', '需求承接')).trim()} />}
       actions={
         <HeaderActionButton
           icon={Plus}

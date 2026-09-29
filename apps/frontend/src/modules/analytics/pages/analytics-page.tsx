@@ -12,13 +12,14 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowDown, ArrowUp, BarChart3, DollarSign, Activity, ShieldAlert, Users, Zap, AlertTriangle, XCircle, TrendingUp, TrendingDown, Target, Minus, Coins, MessageSquare, Bot, Terminal, type LucideIcon } from 'lucide-react';
-import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { ToolbarRow } from '@/components/ui/toolbar-row';
+import { PageShell } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { ToolbarRow } from '@/components/semantic/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { Progress } from '@/components/ui/progress';
 import { StatsCard } from '@/components/semantic/stats-card';
 import { ActivityHeatmap } from '@/components/semantic/activity-heatmap';
@@ -755,6 +756,7 @@ export function AnalyticsPage() {
       <PageHeader
         aiId="analytics.overview"
         title={t('analytics.title', '分析')}
+        favorites={<FavoriteToggle label={nodeToText(t('analytics.title', '分析')).trim()} aiId="analytics.overview" />}
         icon={BarChart3}
         iconColor="text-accent-blue"
         metrics={metrics}

@@ -7,8 +7,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
-import { PageShell } from '@/components/ui/page-shell';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { Spinner } from '@/components/ui/spinner';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-tool';
@@ -236,6 +238,7 @@ export function GitSettingsSection() {
       icon={GitBranch}
       iconColor="text-accent-blue"
       title={t('settings.git')}
+      favorites={<FavoriteToggle label={nodeToText(t('settings.git')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
       actions={

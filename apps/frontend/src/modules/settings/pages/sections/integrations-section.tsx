@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import { useNavigate } from 'react-router-dom';
 import {
   Plug2,
@@ -32,8 +32,9 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { PageShell, PageBody } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
+import { PageShell, PageBody } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
 import { Spinner } from '@/components/ui/spinner';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -41,7 +42,7 @@ import { useIntegrations, useDeleteIntegration } from '@/modules/integration/hoo
 import type { IntegrationConfig } from '@/modules/integration/api/integration-api';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from '@/components/ui/toast';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { LinearConfigForm } from '@/modules/linear/components/linear-config-form';
 import { GithubConfigForm } from '@/modules/github/components/github-config-form';
 
@@ -621,6 +622,7 @@ export function IntegrationsSettingsSection() {
         {/* Header */}
         <PageHeader
           title={t('settings.integration.title')}
+          favorites={<FavoriteToggle label={nodeToText(t('settings.integration.title')).trim()} aiId="integration.integration-list.main" />}
           icon={Plug2}
           aiId="integration.integration-list.main"
           metrics={[

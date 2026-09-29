@@ -22,8 +22,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PageShell, PageBody } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
+import { PageShell, PageBody } from '@/components/semantic/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
@@ -958,6 +959,7 @@ export function AiExecutionCenterSection() {
       <PageHeader
         aiId="settings.ai-execution-center"
         title={t('settings.aiExecutionCenter.pageTitle')}
+        favorites={<FavoriteToggle label={nodeToText(t('settings.aiExecutionCenter.pageTitle')).trim()} aiId="settings.ai-execution-center" />}
         icon={Cpu}
         iconColor="text-accent-purple"
       />

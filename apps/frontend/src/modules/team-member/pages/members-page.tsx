@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bot, LayoutGrid, List, Plus, User, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { PageHeader } from '@/components/ui/page-header';
-import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
-import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
+import { QuickCardsToggle } from '@/components/semantic/quick-cards-toggle';
+import { PageShell } from '@/components/semantic/page-shell';
 import { StatsCard, type StatsCardItem } from '@/components/semantic/stats-card';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { ListActionButton } from '@/shared/components/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
@@ -130,6 +131,7 @@ export default function MembersPage() {
       <PageHeader
         aiId="team-member.members"
         title={t('members.title', '成员管理')}
+        favorites={<FavoriteToggle label={nodeToText(t('members.title', '成员管理')).trim()} aiId="team-member.members" />}
         icon={Users}
         iconColor="text-accent-blue"
         metrics={[{ id: 'total', label: t('members.title', '成员'), value: members.length }]}

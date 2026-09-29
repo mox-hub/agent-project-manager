@@ -3,6 +3,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FolderGit2 } from 'lucide-react';
 import { PageHeader } from './page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { renderWithProviders } from '@/test-utils/providers';
 import { useAppStore } from '@/infrastructure/store/app-store';
 
@@ -17,19 +18,14 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
-// 订阅按钮需要后端订阅接口与成员清单；其自身契约由 subscribe-button.test.tsx 覆盖，
-// 这里只关心 PageHeader 的装配，故以空节点替身隔离（避免把网络/作用域逻辑混进来）
-vi.mock('@/shared/subscription/subscribe-button', () => ({
-  SubscribeButton: () => null,
-}));
-
 /**
  * D14 测试基线（宪法 §18）。page-header 引用数 23，P2「装配原语」。
  *
  * 页面头是全站最稳定的地标之一，硬契约有三条：
  * ① 标题必须是**唯一 h1**（§8.5 #7 语义标签，页面只有一个一级标题）；
  * ② actions/metrics 两个插槽不被吞（装配回归高发区）；
- * ③ 收藏按钮有 `aria-pressed` 且点击可切换（§18.2 受控回调 + §8.5 #1）。
+ * ③ 收藏/订阅按钮由业务调用方经 favorites/subscribe 槽位注入（ui→shared 分层倒置
+ *    收编：PageHeader 不再内置构造），槽位节点装配在标题行原内置位置。
  */
 const renderHeader = (props?: Partial<Parameters<typeof PageHeader>[0]>) =>
   renderWithProviders(<PageHeader title="项目详情" {...props} />);
@@ -82,7 +78,8 @@ describe('PageHeader 插槽装配', () => {
   it('不传 actions 时不产生空操作区', () => {
     const { container } = renderHeader();
 
-    expect(container.querySelectorAll('button')).toHaveLength(1); // 只剩收藏按钮
+    // 收藏/订阅构造已移交业务调用方（favorites/subscribe 槽位），不传槽位则标题行无按钮
+    expect(container.querySelectorAll('button')).toHaveLength(0);
   });
 
   it.each(['default', 'success', 'warning', 'danger'] as const)(
@@ -122,9 +119,11 @@ describe('PageHeader 插槽装配', () => {
   });
 });
 
-describe('PageHeader 收藏交互（§18.2 受控回调）', () => {
-  it('收藏按钮是图标按钮，靠 aria-label 获得可访问名（§8.5 #1）', () => {
-    renderHeader({ favoriteId: '/app/projects/p1' });
+describe('PageHeader 收藏槽位（§18.2 受控回调）', () => {
+  it('favorites 槽位渲染调用方构造的收藏按钮，靠 aria-label 获得可访问名（§8.5 #1）', () => {
+    renderHeader({
+      favorites: <FavoriteToggle favoriteId="/app/projects/p1" label="项目详情" />,
+    });
 
     const star = screen.getByRole('button', { pressed: false });
     expect(star.getAttribute('aria-label')).toBeTruthy();
@@ -132,7 +131,9 @@ describe('PageHeader 收藏交互（§18.2 受控回调）', () => {
 
   it('收藏按钮带 aria-pressed，点击后状态翻转', async () => {
     const user = userEvent.setup();
-    renderHeader({ favoriteId: '/app/projects/p1' });
+    renderHeader({
+      favorites: <FavoriteToggle favoriteId="/app/projects/p1" label="项目详情" />,
+    });
 
     const star = screen.getByRole('button', { pressed: false });
     expect(star).toHaveAttribute('aria-pressed', 'false');
@@ -145,13 +146,17 @@ describe('PageHeader 收藏交互（§18.2 受控回调）', () => {
 
   it('收藏状态按 favoriteId 隔离：不同页面互不影响', async () => {
     const user = userEvent.setup();
-    const { unmount } = renderHeader({ favoriteId: '/app/projects/p1' });
+    const { unmount } = renderHeader({
+      favorites: <FavoriteToggle favoriteId="/app/projects/p1" label="项目详情" />,
+    });
 
     const star = screen.getByRole('button', { pressed: false });
     await user.click(star);
     unmount();
 
-    renderHeader({ favoriteId: '/app/projects/p2' });
+    renderHeader({
+      favorites: <FavoriteToggle favoriteId="/app/projects/p2" label="项目详情" />,
+    });
     expect(screen.getByRole('button', { pressed: false })).toBeInTheDocument();
   });
 });
