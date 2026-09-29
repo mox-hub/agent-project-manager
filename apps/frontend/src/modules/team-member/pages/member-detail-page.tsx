@@ -36,14 +36,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/ui/section-card';
 import { EmptyState } from '@/components/ui/empty-state';
-import { StatsCard } from '@/components/ui/stats-card';
+import { StatsCard } from '@/components/semantic/stats-card';
 import {
   AutoSizeTextarea,
   Capsule,
   CapsuleSelect,
   PropertyRow,
   PropsCard,
-} from '@/components/ui/property-panel';
+} from '@/shared/components/property-panel';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
@@ -293,9 +293,9 @@ export default function MemberDetailPage() {
                 <StatsCard
                   columns={4}
                   items={[
-                    { key: 'todo', value: card?.load.todo ?? 0, label: t('memberDetail.stats.todo', '待办任务'), icon: ListTodo, iconColorClass: 'text-accent-yellow' },
-                    { key: 'inProgress', value: card?.load.inProgress ?? 0, label: t('memberDetail.stats.inProgress', '进行中'), icon: LoaderCircle, iconColorClass: 'text-accent-blue' },
-                    { key: 'completed', value: card?.load.completed ?? 0, label: t('memberDetail.stats.completed', '已完成'), icon: CheckCircle2, iconColorClass: 'text-accent-green' },
+                    { key: 'todo', value: card?.load.todo ?? 0, label: t('memberDetail.stats.todo', '待办任务'), icon: ListTodo, tone: 'yellow' },
+                    { key: 'inProgress', value: card?.load.inProgress ?? 0, label: t('memberDetail.stats.inProgress', '进行中'), icon: LoaderCircle, tone: 'blue' },
+                    { key: 'completed', value: card?.load.completed ?? 0, label: t('memberDetail.stats.completed', '已完成'), icon: CheckCircle2, tone: 'green' },
                     {
                       key: 'lastActive',
                       value: member.lastActiveAt

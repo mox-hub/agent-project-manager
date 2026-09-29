@@ -32,13 +32,13 @@ import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
-import { DataList, ListText } from '@/components/ui/data-list';
+import { DataList, ListText } from '@/shared/components/data-list';
 import type { MenuItem } from '@/components/ui/context-menu';
 import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
-import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
+import { StatsCard, type StatsCardItem } from '@/components/semantic/stats-card';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { toast } from '@/components/ui/toast';
 import {
@@ -157,7 +157,7 @@ export function ExecutionsPage() {
   });
 
   // 快捷统计卡（KPI 派生自当前项目/状态口径下的 runs）
-  const statsItems = useMemo(() => {
+  const statsItems = useMemo<StatsCardItem[]>(() => {
     const runningCount = runs.filter((r) => r.status === 'in_progress').length;
     const completedCount = runs.filter((r) => r.status === 'completed').length;
     const failedCount = runs.filter(
@@ -169,12 +169,12 @@ export function ExecutionsPage() {
         ? Math.round((completedCount / (completedCount + failedCount || 1)) * 100)
         : 0;
     return [
-      { key: 'total', value: runs.length, label: t('execution.kpi.total'), icon: Activity, ...STATS_THEMES.default },
-      { key: 'running', value: runningCount, label: t('execution.kpi.running'), icon: Clock, ...STATS_THEMES.blue },
-      { key: 'completed', value: completedCount, label: t('execution.kpi.completed'), icon: CheckCircle2, ...STATS_THEMES.green },
-      { key: 'failed', value: failedCount, label: t('execution.kpi.failed'), icon: XCircle, ...STATS_THEMES.red },
-      { key: 'successRate', value: `${successRate}%`, label: t('execution.kpi.successRate'), icon: Target, ...STATS_THEMES.yellow },
-      { key: 'cost', value: `$${totalCost.toFixed(2)}`, label: t('execution.kpi.cost'), icon: DollarSign, ...STATS_THEMES.purple },
+      { key: 'total', value: runs.length, label: t('execution.kpi.total'), icon: Activity },
+      { key: 'running', value: runningCount, label: t('execution.kpi.running'), icon: Clock, tone: 'blue' },
+      { key: 'completed', value: completedCount, label: t('execution.kpi.completed'), icon: CheckCircle2, tone: 'green' },
+      { key: 'failed', value: failedCount, label: t('execution.kpi.failed'), icon: XCircle, tone: 'red' },
+      { key: 'successRate', value: `${successRate}%`, label: t('execution.kpi.successRate'), icon: Target, tone: 'yellow' },
+      { key: 'cost', value: `$${totalCost.toFixed(2)}`, label: t('execution.kpi.cost'), icon: DollarSign, tone: 'purple' },
     ];
   }, [runs, t]);
 

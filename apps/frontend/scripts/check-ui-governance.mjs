@@ -77,6 +77,8 @@ const OVERLAY_ALLOWLIST = new Set([
   "src/modules/project/pages/project-profile-page.tsx",
   "src/modules/release/pages/release-list-page.tsx",
   "src/modules/workflow/pages/workflow-list-page.tsx",
+  // F3.6 表单迁移⑨（931b4e27）把 project-settings 编辑表单迁入 Dialog 时漏登记，2026-09-29 补录
+  "src/modules/project/pages/project-settings-page.tsx",
 ]);
 
 // 动态色值白名单（页面内 `style={{ ... #hex }}`）：扩面后实测 0 命中

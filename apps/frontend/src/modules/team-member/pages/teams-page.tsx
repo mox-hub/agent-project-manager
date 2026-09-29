@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Archive, CheckCircle2, LayoutGrid, List, Plus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -8,9 +8,9 @@ import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { PageShell } from '@/components/ui/page-shell';
-import { StatsCard } from '@/components/ui/stats-card';
+import { StatsCard, type StatsCardItem } from '@/components/semantic/stats-card';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
-import { ListActionButton } from '@/components/ui/data-list';
+import { ListActionButton } from '@/shared/components/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
 import { useTeams, useArchiveTeam } from '../hooks';
@@ -88,17 +88,17 @@ export default function TeamsPage() {
   const teams = useMemo(() => (data?.teams ?? []) as TeamListItem[], [data]);
 
   // 快捷统计卡：总数 / 活跃 / 归档 / 成员合计
-  const statsItems = useMemo(
+  const statsItems = useMemo<StatsCardItem[]>(
     () => [
       { key: 'total', value: teams.length, label: t('teams.stats.total', '全部团队'), icon: Users },
-      { key: 'active', value: teams.filter((tm) => tm.status === 'active').length, label: t('teams.status.active', '活跃'), icon: CheckCircle2, iconColorClass: 'text-accent-green' },
-      { key: 'archived', value: teams.filter((tm) => tm.status === 'archived').length, label: t('teams.status.archived', '已归档'), icon: Archive, iconColorClass: 'text-muted-foreground' },
+      { key: 'active', value: teams.filter((tm) => tm.status === 'active').length, label: t('teams.status.active', '活跃'), icon: CheckCircle2, tone: 'green' },
+      { key: 'archived', value: teams.filter((tm) => tm.status === 'archived').length, label: t('teams.status.archived', '已归档'), icon: Archive },
       {
         key: 'members',
         value: teams.reduce((sum, tm) => sum + (tm.memberCount ?? tm._count?.members ?? 0), 0),
         label: t('teams.stats.memberSum', '成员合计'),
         icon: Users,
-        iconColorClass: 'text-accent-blue',
+        tone: 'blue',
       },
     ],
     [teams, t],

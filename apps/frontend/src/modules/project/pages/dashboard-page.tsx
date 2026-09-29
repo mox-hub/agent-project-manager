@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Bot, DollarSign, Bug, CheckSquare, Activity, AlertTriangle,
-  TrendingUp, TrendingDown, ArrowUpRight, Sparkles, GitBranch, Shield,
+  TrendingUp, Sparkles, GitBranch, Shield,
   LayoutDashboard,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
@@ -20,11 +20,12 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AsyncState } from '@/components/ui/async-state';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatTile } from '@/components/semantic/stat-tile';
+import { StatsCard } from '@/components/semantic/stats-card';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useTranslation } from '@/hooks/useTranslation';
-import { cn } from '@/lib/utils';
 import { useDashboardOverview } from '../hooks/use-dashboard-overview';
 import type { DashboardOverview, DashboardHealthStatus, DashboardRiskSeverity } from '../api/dashboard-api';
 
@@ -42,63 +43,11 @@ const RISK_SEVERITY_TONE: Record<DashboardRiskSeverity, 'danger' | 'warning' | '
   medium: 'default',
 };
 
-// ─── KPI 卡（点击下钻）───────────────────────────────────────────────────────
-interface KpiCardProps {
-  title: string;
-  value: string | number;
-  subtitle: string;
-  icon: React.ElementType;
-  trend?: 'up' | 'down';
-  trendValue?: string;
-  color: string;
-  bgColor: string;
-  onClick: () => void;
-}
+// ─── KPI 卡（点击下钻）：semantic/stats-card featured 变种（2026-09-29 统计卡归一批，
+//     本地 KpiCard 退役；hover 抬升环改 hover 背景反馈，ArrowUpRight 角标不保留）───────
 
-function KpiCard({
-  title, value, subtitle, icon: Icon, trend, trendValue,
-  color, bgColor, onClick,
-}: KpiCardProps) {
-  return (
-    <Card
-      className="cursor-pointer hover:ring-2 hover:ring-ring/30 transition-all group py-0"
-      onClick={onClick}
-    >
-      <CardContent className="p-3.5">
-        <div className="flex items-start justify-between mb-2">
-          <div className={cn('size-8 rounded-lg flex items-center justify-center shrink-0', bgColor)}>
-            <Icon className={cn('size-4', color)} />
-          </div>
-          <ArrowUpRight className="size-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground mb-0.5">{title}</p>
-          <p className="text-2xl font-semibold text-foreground mb-0.5 tracking-tight">{value}</p>
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
-          {trend && trendValue && (
-            <div className={cn(
-              'flex items-center gap-1 text-xs mt-1.5 font-medium',
-              trend === 'up' ? 'text-accent-green' : 'text-destructive',
-            )}>
-              {trend === 'up' ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
-              {trendValue}
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ─── 弹窗内的统计块 ──────────────────────────────────────────────────────────
-function StatTile({ label, value, className }: { label: string; value: string | number; className?: string }) {
-  return (
-    <div className="bg-muted/50 rounded-lg p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn('text-2xl font-semibold mt-1', className)}>{value}</p>
-    </div>
-  );
-}
+// ─── 弹窗内的统计块：semantic/stat-tile（2026-09-29 等价迁移，形态 class 全等拷贝；
+//     原本地 StatTile 的 value 着色 className 改由调用方包 span 注入）────────────────
 
 // ─── Drill-down 弹窗 ─────────────────────────────────────────────────────────
 function TeamDialog({ data, open, onClose }: { data: DashboardOverview['team']; open: boolean; onClose: () => void }) {
@@ -152,8 +101,8 @@ function AIDialog({ data, open, onClose }: { data: DashboardOverview['ai']; open
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-2 gap-3">
-            <StatTile label={t('dashboard.ai.conversations')} value={data.conversations} className="text-accent-purple" />
-            <StatTile label={t('dashboard.ai.tokens')} value={`${Math.round(data.tokensUsed / 1000)}K`} className="text-accent-purple" />
+            <StatTile label={t('dashboard.ai.conversations')} value={<span className="text-accent-purple">{data.conversations}</span>} />
+            <StatTile label={t('dashboard.ai.tokens')} value={<span className="text-accent-purple">{`${Math.round(data.tokensUsed / 1000)}K`}</span>} />
           </div>
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">{t('dashboard.ai.topActivities')}</p>
@@ -184,7 +133,7 @@ function CostDialog({ data, open, onClose }: { data: DashboardOverview['cost']; 
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-3 gap-3">
             <StatTile label={t('dashboard.cost.monthTotal')} value={`$${data.monthTotal.toLocaleString()}`} />
-            <StatTile label={t('dashboard.cost.vsBudget')} value={`${data.budgetDeltaPct}%`} className={data.budgetDeltaPct <= 0 ? 'text-accent-green' : 'text-destructive'} />
+            <StatTile label={t('dashboard.cost.vsBudget')} value={<span className={data.budgetDeltaPct <= 0 ? 'text-accent-green' : 'text-destructive'}>{`${data.budgetDeltaPct}%`}</span>} />
           </div>
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">{t('dashboard.cost.categories')}</p>
@@ -219,9 +168,9 @@ function BugsDialog({ data, open, onClose }: { data: DashboardOverview['delivery
           </DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-3 gap-3 py-2">
-          <StatTile label={t('dashboard.bugs.critical')} value={data.criticalBugs} className="text-destructive" />
-          <StatTile label={t('dashboard.bugs.open')} value={data.openBugs} className="text-accent-blue" />
-          <StatTile label={t('dashboard.bugs.resolved')} value={data.resolvedBugs} className="text-accent-green" />
+          <StatTile label={t('dashboard.bugs.critical')} value={<span className="text-destructive">{data.criticalBugs}</span>} />
+          <StatTile label={t('dashboard.bugs.open')} value={<span className="text-accent-blue">{data.openBugs}</span>} />
+          <StatTile label={t('dashboard.bugs.resolved')} value={<span className="text-accent-green">{data.resolvedBugs}</span>} />
         </div>
       </DialogContent>
     </Dialog>
@@ -272,9 +221,9 @@ function HealthDialog({ data, open, onClose }: { data: DashboardOverview['health
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-3 gap-3">
-            <StatTile label={t('dashboard.health.healthy')} value={data.projects.filter((p) => p.status === 'on_track').length} className="text-accent-green" />
-            <StatTile label={t('dashboard.health.atRisk')} value={data.projects.filter((p) => p.status === 'at_risk').length} className="text-accent-yellow" />
-            <StatTile label={t('dashboard.health.critical')} value={data.projects.filter((p) => p.status === 'off_track').length} className="text-destructive" />
+            <StatTile label={t('dashboard.health.healthy')} value={<span className="text-accent-green">{data.projects.filter((p) => p.status === 'on_track').length}</span>} />
+            <StatTile label={t('dashboard.health.atRisk')} value={<span className="text-accent-yellow">{data.projects.filter((p) => p.status === 'at_risk').length}</span>} />
+            <StatTile label={t('dashboard.health.critical')} value={<span className="text-destructive">{data.projects.filter((p) => p.status === 'off_track').length}</span>} />
           </div>
           <div className="space-y-3">
             <p className="text-xs font-medium text-muted-foreground">{t('dashboard.health.projects')}</p>
@@ -386,77 +335,85 @@ export function DashboardPage() {
               {/* KPI Cards - 两排聚合在一个紧凑模块内，行距紧缩为 space-y-3 */}
               <div className="space-y-3">
                 {/* KPI Cards - Row 1 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <KpiCard
-                    title={t('dashboard.kpis.team')}
-                    value={data.team.totalMembers}
-                    subtitle={t('dashboard.kpis.teamSub')}
-                    icon={Users}
-                    color="text-accent-blue"
-                    bgColor="bg-accent-blue/10"
-                    onClick={() => setOpenDialog('team')}
-                  />
-                  <KpiCard
-                    title={t('dashboard.kpis.ai')}
-                    value={data.ai.conversations}
-                    subtitle={t('dashboard.kpis.aiSub', { count: data.ai.weeklyGrowth })}
-                    icon={Bot}
-                    color="text-accent-purple"
-                    bgColor="bg-accent-purple/10"
-                    onClick={() => setOpenDialog('ai')}
-                  />
-                  <KpiCard
-                    title={t('dashboard.kpis.cost')}
-                    value={`$${data.cost.monthTotal.toLocaleString()}`}
-                    subtitle={t('dashboard.kpis.costSub', { pct: Math.abs(data.cost.budgetDeltaPct) })}
-                    icon={DollarSign}
-                    trend={data.cost.budgetDeltaPct <= 0 ? 'down' : 'up'}
-                    trendValue={t('dashboard.kpis.costTrend', { pct: Math.abs(data.cost.budgetDeltaPct) })}
-                    color="text-accent-green"
-                    bgColor="bg-accent-green/10"
-                    onClick={() => setOpenDialog('cost')}
-                  />
-                  <KpiCard
-                    title={t('dashboard.kpis.bugs')}
-                    value={data.delivery.criticalBugs}
-                    subtitle={t('dashboard.kpis.bugsSub', { count: data.delivery.openBugs })}
-                    icon={Bug}
-                    color="text-destructive"
-                    bgColor="bg-destructive/10"
-                    onClick={() => setOpenDialog('bugs')}
-                  />
-                </div>
+                <StatsCard
+                  layout="featured"
+                  columns={4}
+                  items={[
+                    {
+                      key: 'team',
+                      label: t('dashboard.kpis.team'),
+                      value: data.team.totalMembers,
+                      hint: t('dashboard.kpis.teamSub'),
+                      icon: Users,
+                      tone: 'blue',
+                      onClick: () => setOpenDialog('team'),
+                    },
+                    {
+                      key: 'ai',
+                      label: t('dashboard.kpis.ai'),
+                      value: data.ai.conversations,
+                      hint: t('dashboard.kpis.aiSub', { count: data.ai.weeklyGrowth }),
+                      icon: Bot,
+                      tone: 'purple',
+                      onClick: () => setOpenDialog('ai'),
+                    },
+                    {
+                      key: 'cost',
+                      label: t('dashboard.kpis.cost'),
+                      value: `$${data.cost.monthTotal.toLocaleString()}`,
+                      hint: t('dashboard.kpis.costSub', { pct: Math.abs(data.cost.budgetDeltaPct) }),
+                      icon: DollarSign,
+                      tone: 'green',
+                      trend: data.cost.budgetDeltaPct <= 0 ? 'down' : 'up',
+                      trendValue: t('dashboard.kpis.costTrend', { pct: Math.abs(data.cost.budgetDeltaPct) }),
+                      onClick: () => setOpenDialog('cost'),
+                    },
+                    {
+                      key: 'bugs',
+                      label: t('dashboard.kpis.bugs'),
+                      value: data.delivery.criticalBugs,
+                      hint: t('dashboard.kpis.bugsSub', { count: data.delivery.openBugs }),
+                      icon: Bug,
+                      tone: 'red',
+                      onClick: () => setOpenDialog('bugs'),
+                    },
+                  ]}
+                />
 
                 {/* KPI Cards - Row 2 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <KpiCard
-                    title={t('dashboard.kpis.tasks')}
-                    value={data.delivery.activeTasks}
-                    subtitle={t('dashboard.kpis.tasksSub', { count: data.delivery.totalTasks })}
-                    icon={CheckSquare}
-                    color="text-accent-blue"
-                    bgColor="bg-accent-blue/10"
-                    onClick={() => setOpenDialog('tasks')}
-                  />
-                  <KpiCard
-                    title={t('dashboard.kpis.health')}
-                    value={data.health.avgScore}
-                    subtitle={t('dashboard.kpis.healthSub')}
-                    icon={Activity}
-                    color="text-accent-green"
-                    bgColor="bg-accent-green/10"
-                    onClick={() => setOpenDialog('health')}
-                  />
-                  <KpiCard
-                    title={t('dashboard.kpis.risks')}
-                    value={data.risks.items.length}
-                    subtitle={t('dashboard.kpis.risksSub')}
-                    icon={AlertTriangle}
-                    color="text-accent-yellow"
-                    bgColor="bg-accent-yellow/10"
-                    onClick={() => setOpenDialog('risks')}
-                  />
-                </div>
+                <StatsCard
+                  layout="featured"
+                  columns={3}
+                  items={[
+                    {
+                      key: 'tasks',
+                      label: t('dashboard.kpis.tasks'),
+                      value: data.delivery.activeTasks,
+                      hint: t('dashboard.kpis.tasksSub', { count: data.delivery.totalTasks }),
+                      icon: CheckSquare,
+                      tone: 'blue',
+                      onClick: () => setOpenDialog('tasks'),
+                    },
+                    {
+                      key: 'health',
+                      label: t('dashboard.kpis.health'),
+                      value: data.health.avgScore,
+                      hint: t('dashboard.kpis.healthSub'),
+                      icon: Activity,
+                      tone: 'green',
+                      onClick: () => setOpenDialog('health'),
+                    },
+                    {
+                      key: 'risks',
+                      label: t('dashboard.kpis.risks'),
+                      value: data.risks.items.length,
+                      hint: t('dashboard.kpis.risksSub'),
+                      icon: AlertTriangle,
+                      tone: 'yellow',
+                      onClick: () => setOpenDialog('risks'),
+                    },
+                  ]}
+                />
               </div>
 
               {/* Trends - Row 3 */}

@@ -19,8 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatCard } from '@/components/ui/stat-card';
-import { STATS_THEMES } from '@/components/ui/stats-card';
+import { StatsCard } from '@/components/semantic/stats-card';
 import { Progress } from '@/components/ui/progress';
 import { useCreateTask } from '@/modules/issue/hooks/use-project-tasks';
 import { useRefreshAIContext } from '../hooks/use-project-health';
@@ -209,38 +208,48 @@ export function ProjectDashboardPage() {
         ) : null}
 
         {/* ── Stats Row (4 cards) ───────────────────────────────────── */}
-        <section className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4" data-ai-component="stat-cards">
-          <StatCard
-            label={t('project.detail.tasksCompleted')}
-            value={taskStats.done}
-            hint={`${taskStats.total} ${t('project.detail.tasksCount')}`}
-            icon={<CheckSquare className={cn('size-4', STATS_THEMES.green.iconColorClass)} />}
-            iconBg={STATS_THEMES.green.colorClass}
-          />
-          <StatCard
-            label={t('project.detail.projectHealth')}
-            value={summary.health.currentScore}
-            hint={healthLabel(summary.health.currentScore)}
-            icon={<Activity className={cn('size-4', STATS_THEMES.blue.iconColorClass)} />}
-            iconBg={STATS_THEMES.blue.colorClass}
-            trend={summary.health.trend30d >= 0 ? 'up' : 'down'}
-            trendValue={`${Math.abs(summary.health.trend30d)} ${t('project.detail.pointsShort')}`}
-            onClick={() => setShowHealthDialog(true)}
-          />
-          <StatCard
-            label={t('project.detail.teamVelocity')}
-            value={taskStats.inProgress + taskStats.inReview}
-            hint={`${taskStats.inProgress} ${t('project.detail.active')} · ${taskStats.inReview} ${t('project.detail.inReview')}`}
-            icon={<Zap className={cn('size-4', STATS_THEMES.yellow.iconColorClass)} />}
-            iconBg={STATS_THEMES.yellow.colorClass}
-          />
-          <StatCard
-            label={t('project.detail.overdueTasks')}
-            value={taskStats.overdue}
-            hint={taskStats.overdue > 0 ? t('project.detail.requiresAttention') : t('project.detail.allOnTrack')}
-            icon={<Clock className={cn('size-4', STATS_THEMES.red.iconColorClass)} />}
-            iconBg={STATS_THEMES.red.colorClass}
-            onClick={() => navigate(`/app/projects/${projectId}/issues`)}
+        <section className="mb-4" data-ai-component="stat-cards">
+          <StatsCard
+            layout="featured"
+            columns={4}
+            items={[
+              {
+                key: 'tasks-done',
+                label: t('project.detail.tasksCompleted'),
+                value: taskStats.done,
+                hint: `${taskStats.total} ${t('project.detail.tasksCount')}`,
+                icon: CheckSquare,
+                tone: 'green',
+              },
+              {
+                key: 'health',
+                label: t('project.detail.projectHealth'),
+                value: summary.health.currentScore,
+                hint: healthLabel(summary.health.currentScore),
+                icon: Activity,
+                tone: 'blue',
+                trend: summary.health.trend30d >= 0 ? 'up' : 'down',
+                trendValue: `${Math.abs(summary.health.trend30d)} ${t('project.detail.pointsShort')}`,
+                onClick: () => setShowHealthDialog(true),
+              },
+              {
+                key: 'velocity',
+                label: t('project.detail.teamVelocity'),
+                value: taskStats.inProgress + taskStats.inReview,
+                hint: `${taskStats.inProgress} ${t('project.detail.active')} · ${taskStats.inReview} ${t('project.detail.inReview')}`,
+                icon: Zap,
+                tone: 'yellow',
+              },
+              {
+                key: 'overdue',
+                label: t('project.detail.overdueTasks'),
+                value: taskStats.overdue,
+                hint: taskStats.overdue > 0 ? t('project.detail.requiresAttention') : t('project.detail.allOnTrack'),
+                icon: Clock,
+                tone: 'red',
+                onClick: () => navigate(`/app/projects/${projectId}/issues`),
+              },
+            ]}
           />
         </section>
 

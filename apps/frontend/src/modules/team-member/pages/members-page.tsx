@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bot, LayoutGrid, List, Plus, User, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -8,9 +8,9 @@ import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { PageShell } from '@/components/ui/page-shell';
-import { StatsCard } from '@/components/ui/stats-card';
+import { StatsCard, type StatsCardItem } from '@/components/semantic/stats-card';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
-import { ListActionButton } from '@/components/ui/data-list';
+import { ListActionButton } from '@/shared/components/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
 import { useMembers, useDeactivateMember } from '../hooks';
@@ -89,12 +89,12 @@ export default function MembersPage() {
   const members = useMemo(() => (data?.items ?? []) as MemberListItem[], [data]);
 
   // 快捷统计卡：全部 / 人类 / AI / 在线
-  const statsItems = useMemo(
+  const statsItems = useMemo<StatsCardItem[]>(
     () => [
       { key: 'total', value: members.length, label: t('members.stats.total', '全部'), icon: Users },
-      { key: 'human', value: members.filter((m) => m.type === 'human').length, label: t('members.stats.human', '人类'), icon: User, iconColorClass: 'text-accent-blue' },
-      { key: 'ai', value: members.filter((m) => m.type === 'ai_agent').length, label: t('members.stats.ai', 'AI'), icon: Bot, iconColorClass: 'text-accent-purple' },
-      { key: 'online', value: members.filter((m) => m.isOnline && m.status === 'active').length, label: t('members.stats.online', '在线'), icon: Users, iconColorClass: 'text-accent-green' },
+      { key: 'human', value: members.filter((m) => m.type === 'human').length, label: t('members.stats.human', '人类'), icon: User, tone: 'blue' },
+      { key: 'ai', value: members.filter((m) => m.type === 'ai_agent').length, label: t('members.stats.ai', 'AI'), icon: Bot, tone: 'purple' },
+      { key: 'online', value: members.filter((m) => m.isOnline && m.status === 'active').length, label: t('members.stats.online', '在线'), icon: Users, tone: 'green' },
     ],
     [members, t],
   );

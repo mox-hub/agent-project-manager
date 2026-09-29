@@ -3,7 +3,8 @@
  * PageHeader(新建入口) > QuickCards(KPI/状态分布/审计风险) > ToolbarRow(视图+筛选) > 行列表 + 分页
  */
 import { useEffect, useMemo, useState } from 'react';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
+import { StatsCard } from '@/components/semantic/stats-card';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -43,11 +44,11 @@ import {
   SearchX,
 } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { useAcceptanceList } from '../hooks/use-acceptance';
 import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { AcceptanceFormDialog } from '../components/acceptance-form-dialog';
-import { DataList, ListActionButton } from '@/components/ui/data-list';
+import { DataList, ListActionButton } from '@/shared/components/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { toast } from '@/components/ui/toast';
 import {
@@ -163,57 +164,60 @@ function KPIStats({ acceptances }: { acceptances: Acceptance[] }) {
   ).length;
   const totalCost = acceptances.reduce((sum, a) => sum + (a.totalCost ?? 0), 0);
 
-  const items = [
-    {
-      label: t('acceptance.metrics.total'),
-      value: acceptances.length,
-      icon: ShieldCheck,
-      color: 'text-foreground',
-    },
-    {
-      label: t('acceptance.metrics.active'),
-      value: activeCount,
-      icon: Clock,
-      color: 'text-accent-blue',
-    },
-    {
-      label: t('acceptance.metrics.inReview'),
-      value: inReviewCount,
-      icon: Eye,
-      color: 'text-accent-blue',
-    },
-    {
-      label: t('acceptance.metrics.passed'),
-      value: passedCount,
-      icon: CheckCircle2,
-      color: 'text-accent-green',
-    },
-    {
-      label: t('acceptance.metrics.failedOrWaived'),
-      value: failedOrWaivedCount,
-      icon: ShieldAlert,
-      color: 'text-accent-red',
-    },
-    {
-      label: t('acceptanceDetail.props.cost'),
-      value: `$${totalCost.toFixed(1)}`,
-      icon: DollarSign,
-      color: 'text-accent-purple',
-    },
-  ];
-
+  // 2026-09-29 统计卡归一批：内联裸 JSX 退役换 semantic/stats-card compact；
+  // 数值随 tone 着色（coloredValue），圆角/字号随基线统一（rounded-xl→lg、2xl→xl mono）
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
-      {items.map(({ label, value, icon: Icon, color }) => (
-        <div key={label} className="rounded-xl border bg-card p-4">
-          <div className="mb-1 flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <Icon className={cn('size-4', color)} />
-          </div>
-          <p className={cn('text-2xl font-semibold', color)}>{value}</p>
-        </div>
-      ))}
-    </div>
+    <StatsCard
+      columns={6}
+      items={[
+        {
+          key: 'total',
+          label: t('acceptance.metrics.total'),
+          value: acceptances.length,
+          icon: ShieldCheck,
+        },
+        {
+          key: 'active',
+          label: t('acceptance.metrics.active'),
+          value: activeCount,
+          icon: Clock,
+          tone: 'blue',
+          coloredValue: true,
+        },
+        {
+          key: 'inReview',
+          label: t('acceptance.metrics.inReview'),
+          value: inReviewCount,
+          icon: Eye,
+          tone: 'blue',
+          coloredValue: true,
+        },
+        {
+          key: 'passed',
+          label: t('acceptance.metrics.passed'),
+          value: passedCount,
+          icon: CheckCircle2,
+          tone: 'green',
+          coloredValue: true,
+        },
+        {
+          key: 'failedOrWaived',
+          label: t('acceptance.metrics.failedOrWaived'),
+          value: failedOrWaivedCount,
+          icon: ShieldAlert,
+          tone: 'red',
+          coloredValue: true,
+        },
+        {
+          key: 'cost',
+          label: t('acceptanceDetail.props.cost'),
+          value: `$${totalCost.toFixed(1)}`,
+          icon: DollarSign,
+          tone: 'purple',
+          coloredValue: true,
+        },
+      ]}
+    />
   );
 }
 

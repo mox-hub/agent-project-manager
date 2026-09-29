@@ -21,6 +21,42 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 前端设计治理——统计卡归一批：ui/stats-card 升格语义层标准件，ui/stat-card 收编为 featured 变种，七套并行实现归一（2026-09-29）
+
+> 用户裁决：「以 1 号场景 StatsCard 作为标准场景，将 stats-card 移动到语义层，并作为绝大多数同类场景的唯一选择；2 号项目详情页的摘要大卡作为 stats-card 的变种，承载更复杂的信息；卡片背景色和数字彩色作为可选项进行合并；字号等统一按 1 号场景为主。」调研基线：全库 7 套统计卡实现（ui/stat-card + ui/stats-card 双轨、semantic/stat-tile、analytics/dashboard/settings 三处本地 KPI/Stat 卡、acceptance 内联裸 JSX）+ 4 邻接件。
+
+| 项 | 内容 | 证据要点 |
+|---|---|---|
+| 新增 `semantic/stats-card`（canonical） | 双形态：`compact`（原 ui/stats-card 横排瓦片，形态 class 逐字沿袭）+ `featured`（原 ui/stat-card 竖排摘要大卡，hint/trend/onClick 槽位）；卡底 `surface: card\|muted` 与数值彩色 `coloredValue` 为封闭可选项（分别收编 team-stats 灰底瓦片与 acceptance 数值着色先例）；装饰色 `tone` 八档封闭枚举（原 STATS_THEMES 词表 + orange 沿 metric-row）；字号统一 compact 基线 `text-xl font-mono tabular-nums`。props 面封闭（G8：无 className、无 HTMLAttributes），columns 为固定列 | registry 341 条（stat-card 条目删除、stats-card 转落 Semantic 区 canonical）；COMPONENTS.md 再生 |
+| 退役 `ui/stat-card` + `ui/stats-card` | 双文件删除；registry 上 stat-card 的 `merge → stats-card` review 提案就此落账 | 全库零残留引用（仅registry/画廊/新件头注释留谱系记录） |
+| 三处本地 KPI/Stat 卡收编 | dashboard-page 本地 `KpiCard`×7 → featured（下钻 onClick 保留）；settings ai overview-tab 本地 `KpiCard`×5 → compact（「label · hint」调用方拼装，danger→tone red）；analytics 本地 `StatCard`×16（Overview/Quality/Risk/Team 四 tab）→ featured | analytics 与 ui 同名的本地 StatCard（命名事故主角）就此消失 |
+| acceptance KPIStats 内联收编 | 裸 JSX map 退役 → compact + `coloredValue`；数值彩色口径从「数值直染」收编为 tone 派生 | 圆角/字号随基线统一（rounded-xl→lg、2xl→xl mono） |
+| team-stats-section 两处手写收编 | 4 张 Card 汇总卡 → compact（无图标）；4 张灰底居中瓦片 → compact + `surface: 'muted'`（完成率/逾期彩底改 coloredValue 数值着色） | 居中→左对齐、text-lg→xl mono 属归一统一代价 |
+| 十页存量消费改道 | tasks/bugs/documents/executions/git repo-list/members/teams/member-detail/analytics cost/画廊：import 改 `@/components/semantic/stats-card`，`STATS_THEMES` 展开、`colorClass`/`iconColorClass` 自由串全部转 `tone` 封闭档；画廊 stat-cards 区改版（compact/featured/muted+彩色三段演示） | useMemory 三处 `statsItems` 补 `useMemo<StatsCardItem[]>` 显式标注（tone 联合类型防推宽） |
+| 附带修复 | `check-ui-governance.mjs` overlay allowlist 补录 `project-settings-page.tsx`——F3.6 表单迁移⑨（931b4e27）迁 Dialog 时漏登记，lint:ui-governance 由此全程挂红（G1 批 test_evidence 已记为存量），本批按「只登记不改造」判例补录解锁 lint 链 | lint 十项治理脚本首次全过 |
+
+test_evidence：`tsc -b` 0 错；frontend lint 十项治理脚本 PASS + eslint 全库 0 error（2066 warning 全为存量，改动文件净增 0）；受影响 5 测试文件（acceptance-list / analytics / project-dashboard / tasks / documents）33 用例全绿；`check-component-registry` 341 条五态校验过。doc_impact：本文件 + registry.ts（stat-card 退役、stats-card 转 Semantic）。
+
+已知形态变化（归一统一代价，待实机验收）：① 数值字号全库统一 xl mono（原 2xl/lg 档页面变小）；② featured 可点卡 hover 抬升环改背景色反馈（§3.6 口径）、ArrowUpRight 角标不保留；③ analytics cost / dashboard 两排 KPI / settings overview / acceptance KPI 的响应式栅格档退化为固定列（G8 无 className 口径的交换，需要时另批裁决响应式档）；④ analytics 旧 trend 反向语义（up=红表恶化）不保留，Quality/Risk/Team 12 张 mock 演示卡的裸箭头丢弃、色彩信号由 tone 承接（真实数据的 project-dashboard 健康卡 trend 语义不变）；⑤ team-stats 项目瓦片居中→左对齐。semantic/stat-tile（弹窗灰底 mini 块）按裁决不并入本件，场景分工保留。
+
+### 前端设计治理——G 类批 G1 语义组件层：NavStatusDot + ThemeModeCard 两件提取，主题状态模型补「跟随系统」三档（2026-09-29）
+
+> 用户指令：「这个点有没有抽出来作为一个单独的语义组件 NavStatusDot？请帮我在对应位置注册，替换，并在 design system 页面注册」「设置页-外观-主题模式卡片应该抽出为语义组件，支持三个种类，日间、夜间、跟随系统三种模式，并改造当前组件」。两件按同一口径落地：`components/semantic/` 为新增组件默认落点，三源同源链（registry → COMPONENTS.md / registry → 设计系统页 / registry → lint:registry）一次接满。
+
+| 项 | 内容 | 证据要点 |
+|---|---|---|
+| 新增 `semantic/nav-status-dot` | 提取自设置页导航圆点的内联实现；`label` 必填（§8.5#4 颜色之外的第二信号）、`role="img"` + `aria-label`/`title`；tone→class 走 §19.5 唯一色链（`ui/tone.ts`）；loading 态双层 ping 结构。提取时修掉两处存量缺陷：缺 `relative`（ping 层无定位祖先）、缺 `shrink-0`（被相邻 flex-1 文案挤扁） | 7 用例；`semantic/` 目录第二件，登记 `status: canonical` |
+| 新增 `semantic/theme-mode-card` | 提取自 `appearance-section.tsx` 内联主题卡片（**连 Card 外壳一起抽**，用户裁决）；支持**日间 / 夜间 / 跟随系统**三档，`options` 键域与 `value` 同域（缺档编译期报错）；每档为 `RawButton` + `aria-pressed` 开关，选中另有 ✓ 徽标（非颜色信号）；`system` 档预览走左右分屏同时画两种主题 | 9 用例；`semantic/` 目录第三件，登记 `status: canonical` |
+| 主题状态模型补「跟随系统」 | `ThemeMode` `'light' \| 'dark'` → 加 `'system'`；**意图与生效分离**：新增 `resolvedMode`（`system` 按 `prefers-color-scheme` 解析后的 light/dark）。落盘的始终是**意图**（否则「跟随系统」这个选择刷新即丢）；首屏无存量时默认 `system`（非行为变更——旧版首屏也取系统偏好，区别只是取完即写死）；监听媒体查询 `change` 实时换肤；`toggleTheme` 改为按**生效主题**取反（否则跟随系统 + 系统深色时点一下仍深色，观感像失灵） | `shared/theme/theme-context.test.tsx` 15 用例（jsdom 无 `matchMedia`，测试显式装桩，否则 system 档全部退化为「只测了 light」） |
+| 消费方重指 5 处 | `mode === 'dark'` → `resolvedMode === 'dark'`：`ai-surface-page` / `ai-surface-replay-page` / `bottom-dock` / `shell-layout`（含依赖数组）/ `auth-visual-card`（`useSafeTheme` 同步改）；3 个测试 mock 补齐 `resolvedMode` | 修掉存量错档：跟随系统 + 系统深色时上述位置一律判成浅色 |
+| 宪法附录 A.1 行 A8 | 新增豁免行 A8：`components/semantic/theme-mode-card.tsx` 的**预览缩略图字面色**（预览即字面色——改随主题走则浅色主题下画不出深色预览块，预览失真）。与 A5 中 `appearance-section.tsx` 同名性质，因该件已独立成组件故单列，范围随组件文件走 | 与 `check-palette.mjs` 的 `THEME_PREVIEW_EXEMPT` 谓词成对改动（附录与脚本必须同批） |
+| ↑ A8 的范围诚实声明 | 该谓词落在 `EXEMPT`（**整文件**粒度，脚本只提供这一档），故实际覆盖不止预览字面色：本文件还命中**选中徽标的 `text-white`**（`bg-accent-blue` 底白字，与 C2 legacy 白名单 (b) 组同类）。此为提取时按「不夹带视觉变更」原样搬运的存量；改配对 `accent-foreground` 在浅色主题下是近黑色（`240 5.9% 10%`），会实打实换观感，故未改。附录行与脚本注释均已写明**这是登记在案的越界，不是已批准的设计**，清除计划为「待配套前景 token 补齐后收窄或拆两条」 | 主动披露，避免「豁免理由只写预览、实际放行整文件」成为不可见缺口 |
+| i18n | 新增 `settings.systemMode` / `settings.systemModeDesc`，中英双包 | zh-CN / en 同步 |
+
+test_evidence：`tsc -b` 0 错；eslint 改动文件 0 error（21 warning 全为既有形态告警，其中主题卡片两条 `no-visual-override` 系随标记从 `appearance-section.tsx` 平移而来，净增 0）；六治理脚本 PASS（`check-palette` / `check-semantic-classes` / `check-component-registry` / `check-layers` / `check-spacing-governance` / `check-tailwind-arbitrary`）；`check-ui-governance` 唯一失败 `project-settings-page.tsx: overlay import requires allowlist approval` 系**存量**（该文件本批未改、git 未修改）；触及域全量 38 文件 406 用例全绿。doc_impact：本文件 + `PRINCIPLES.md` 附录 A.1。
+
+已知余项（未在本批处理，须另裁）：① **G8 props 闭包机械化已逾期**——语义组件已三件，`no-visual-override` 现开始命中语义组件内部的 `Card`/`CardTitle` className（本批两条平移而非新增），转 lint 的触发条件已满足；② 主题卡片**选中档文案色比未选中更淡**（疑似原三元写反）按「不夹带视觉变更」原样保留，属独立裁决项；③ 设置页各子路由新增的 30s `refetchInterval` 轮询与 `terminal-section` 假状态卡（§9.1 假常量）为并行会话在办事项。
+
 ### 前端设计治理——宪法 v2.5 升格：F 类九条入宪新章 §20「布局与组合」，Sheet 定位收窄（2026-09-29）：纯文档轮零代码改动
 
 > 用户指令「完成宪法升格」，承接 F 类代码三批全量落地（前两条）。按 §11.2 修订流程五步走：①用户确认（J1–J18 裁决 + 本指令）；②版本号单点改 **v2.5**；③机器强制同步——六条由 `f-class-governance` 七规则与 `check-spacing-governance.mjs`（space-x 封禁）承载（均先行落地），20.7 形态可用性律 / 20.9 窗口二态制为 `评审` 强制并登记机器化候选；④本条即 CHANGELOG 声明；⑤存量违规经七规则全量扫描为 **0**，无豁免新增。

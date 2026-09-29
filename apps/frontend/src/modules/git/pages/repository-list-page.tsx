@@ -19,7 +19,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
-import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
+import { StatsCard } from '@/components/semantic/stats-card';
 import {
   ToolbarRow,
   useToolbarViews,
@@ -33,11 +33,11 @@ import {
   ListDate,
   ListIcon,
   ListText,
-} from '@/components/ui/data-list';
+} from '@/shared/components/data-list';
 import { AsyncState } from '@/components/ui/async-state';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Spinner } from '@/components/ui/spinner';
-import { IconStack } from '@/components/ui/icon-stack';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { Button } from '@/components/ui/button';
 import type { MenuItem } from '@/components/ui/context-menu';
 import { useConfirm } from '@/shared/confirm/use-confirm';
@@ -276,10 +276,10 @@ export function RepositoryListPage() {
         <div className="border-b border-border bg-background px-6 py-4">
           <StatsCard
             items={[
-              { key: 'total', value: overview.total, label: t('git.stats.total'), icon: GitBranch, ...STATS_THEMES.blue },
-              { key: 'local', value: overview.withLocal, label: t('git.stats.local'), icon: FolderGit2, ...STATS_THEMES.green },
-              { key: 'remote', value: overview.withRemote, label: t('git.stats.remote'), icon: Globe, ...STATS_THEMES.purple },
-              { key: 'providers', value: overview.providerCount, label: t('git.stats.providers'), icon: GitFork, ...STATS_THEMES.gray },
+              { key: 'total', value: overview.total, label: t('git.stats.total'), icon: GitBranch, tone: 'blue' },
+              { key: 'local', value: overview.withLocal, label: t('git.stats.local'), icon: FolderGit2, tone: 'green' },
+              { key: 'remote', value: overview.withRemote, label: t('git.stats.remote'), icon: Globe, tone: 'purple' },
+              { key: 'providers', value: overview.providerCount, label: t('git.stats.providers'), icon: GitFork, tone: 'gray' },
             ]}
             columns={4}
           />

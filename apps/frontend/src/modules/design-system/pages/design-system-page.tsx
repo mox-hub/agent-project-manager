@@ -53,12 +53,14 @@ import {
   Minus,
   MoreHorizontal,
   Palette,
+  PanelRight,
   Plus,
   RefreshCw,
   Rocket,
   Search,
   Settings,
   Share2,
+  SlidersHorizontal,
   Sparkles,
   Star,
   SunMoon,
@@ -109,7 +111,7 @@ import { MemberAvatar } from '@/modules/team-member/components/member-avatar'
 import { TrustLevelBadge } from '@/modules/team-member/components/trust-level-badge'
 import { MentionTextarea } from '@/modules/team-member/components/mention-textarea'
 import { MentionRenderer } from '@/modules/team-member/components/mention-renderer'
-import { ActivityHeatmap } from '@/components/ui/activity-heatmap'
+import { ActivityHeatmap } from '@/components/semantic/activity-heatmap'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -205,8 +207,8 @@ import {
   SortableItem,
   SortableItemHandle,
 } from '@/components/ui/sortable'
-import { IconStack } from '@/components/ui/icon-stack'
-import { StatusPill } from '@/components/ui/status-pill'
+import { IconStack } from '@/components/semantic/icon-stack'
+import { StatusPill } from '@/components/semantic/status-pill'
 import { StatusIconFrame } from '@/shared/status/status-icon-frame'
 import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals'
 import { MarkdownView } from '@/shared/components/markdown-view'
@@ -262,6 +264,28 @@ import {
 } from '@/components/ui/filter-chips'
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
 import { SectionCard } from '@/components/ui/section-card'
+import { Chip } from '@/components/semantic/chip'
+import { NavStatusDot } from '@/components/semantic/nav-status-dot'
+import { ThemeModeCard } from '@/components/semantic/theme-mode-card'
+import { ChartCard } from '@/components/semantic/chart-card'
+import { StatTile } from '@/components/semantic/stat-tile'
+import { MetricRow } from '@/components/semantic/metric-row'
+// H 类批 H2：画廊覆盖率补齐——12 件 canonical 缺口的 demo 收录（check-component-registry §4.2 ④ 门禁配套）
+import { AiAgentBadge } from '@/components/ui/ai-agent-badge'
+import { AiContextSummary } from '@/components/ui/ai-context-summary'
+import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
+import { SidebarPanel } from '@/components/ui/sidebar-panel'
+import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui/right-sidebar'
+import { TabBar } from '@/components/ui/tab-bar'
+import { TabsProvider } from '@/shared/tabs/tabs-context'
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
+import { DataTable, type ColumnDef } from '@/components/ui/data-table'
+import { useForm } from 'react-hook-form'
+import { COMPONENT_REGISTRY } from '@/modules/design-system/registry'
 import { toast } from '@/components/ui/toast'
 import {
   Menu,
@@ -299,14 +323,13 @@ import {
 import { CheckboxGroup } from '@/components/ui/checkbox-group'
 import { Meter, MeterIndicator, MeterLabel, MeterTrack, MeterValue } from '@/components/ui/meter'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { StatCard } from '@/components/ui/stat-card'
-import { StatsCard } from '@/components/ui/stats-card'
+import { StatsCard } from '@/components/semantic/stats-card'
 import { IconMetric } from '@/components/ui/icon-metric'
 import { DataTableShell } from '@/components/ui/data-table-shell'
 import { EmptyState } from '@/components/ui/empty-state'
 import { AsyncState } from '@/components/ui/async-state'
-import { DataList } from '@/components/ui/data-list'
-import { PropsCard, PropertyRow } from '@/components/ui/property-panel'
+import { DataList } from '@/shared/components/data-list'
+import { PropsCard, PropertyRow } from '@/shared/components/property-panel'
 import { LoadingOverlay } from '@/components/ui/loading-overlay'
 import { cn } from '@/lib/utils'
 import {
@@ -344,82 +367,96 @@ import { ComponentReviewBoard } from '@/modules/design-system/sections/component
 const SECTIONS = [
   // 组件裁决面置首：人类原话「组件仍然不删除，但是要在 design-system 页面标记，我看过后再删」
   // ——② 人看必须在第一屏可达；本区只读，不改任何组件、不做裁决。
+  // 分区体系（2026-09-29）：由「层」维度（Governance/Tokens/Primitives/App Components/AI
+  // Execution/语义组件）重组为「组件类型」维度（11 组，见 SECTION_GROUPS）。本批为数据重标：
+  // 仅改 group 字段与本数组排序，下方正文 JSX 锚块物理序未动（数组顺序 ≠ 正文物理序，
+  // 滚动判定与物理序的再对齐随物理搬移批一并处理）；物理重排登记为后续独立批。
   { id: 'component-review', label: '组件裁决面', group: 'Governance' },
-  { id: 'colors', label: 'Color Tokens', group: 'Tokens' },
-  { id: 'typography', label: 'Typography', group: 'Tokens' },
-  { id: 'spacing', label: 'Spacing', group: 'Tokens' },
-  { id: 'radius', label: 'Border Radius', group: 'Tokens' },
-  { id: 'shadows', label: 'Shadows', group: 'Tokens' },
-  { id: 'buttons', label: 'Buttons', group: 'Primitives' },
-  { id: 'badges', label: 'Badges', group: 'Primitives' },
-  { id: 'tags', label: 'Tags / Chips', group: 'Primitives' },
-  { id: 'avatars', label: 'Avatars', group: 'Primitives' },
-  { id: 'member-identity', label: 'Member Identity', group: 'Primitives' },
-  { id: 'cards', label: 'Cards', group: 'Primitives' },
-  { id: 'forms', label: 'Forms', group: 'Primitives' },
-  { id: 'number-field', label: 'Number Field', group: 'Primitives' },
-  { id: 'autocomplete', label: 'Autocomplete', group: 'Primitives' },
-  { id: 'checkbox-group', label: 'Checkbox Group', group: 'Primitives' },
-  { id: 'alerts', label: 'Alerts', group: 'Primitives' },
-  { id: 'toast', label: 'Toast', group: 'Primitives' },
-  { id: 'progress', label: 'Progress', group: 'Primitives' },
-  { id: 'stepper', label: 'Stepper', group: 'Primitives' },
-  { id: 'sortable', label: 'Sortable', group: 'Primitives' },
-  { id: 'icon-stack', label: 'Icon Stack', group: 'Primitives' },
-  { id: 'auth-surface', label: 'Auth Surface', group: 'Primitives' },
-  { id: 'meter', label: 'Meter', group: 'Primitives' },
-  { id: 'tabs', label: 'Tabs', group: 'Primitives' },
-  { id: 'accordion', label: 'Accordion', group: 'Primitives' },
-  { id: 'table', label: 'Table', group: 'Primitives' },
-  { id: 'tooltip', label: 'Tooltip & Menu', group: 'Primitives' },
-  { id: 'menu', label: 'Menu (coss)', group: 'Primitives' },
-  { id: 'overlays', label: 'Overlays', group: 'Primitives' },
-  { id: 'popover', label: 'Popover & Combobox', group: 'Primitives' },
-  { id: 'hover-card', label: 'Hover Card', group: 'Primitives' },
-  { id: 'breadcrumb', label: 'Breadcrumb', group: 'Primitives' },
-  { id: 'button-group', label: 'Button Group', group: 'Primitives' },
-  { id: 'toggle', label: 'Toggle & Segmented', group: 'Primitives' },
-  { id: 'kbd', label: 'Kbd', group: 'Primitives' },
-  { id: 'spinner', label: 'Spinner', group: 'Primitives' },
-  { id: 'status-pill', label: 'Status Pill', group: 'Primitives' },
-  { id: 'status-icon-frame', label: 'Status Icon Frame', group: 'Primitives' },
-  { id: 'markdown', label: 'Markdown View', group: 'Primitives' },
-  { id: 'markdown-editor', label: 'Markdown Editor', group: 'Primitives' },
-  { id: 'markdown-live-editor', label: 'Markdown Live Editor', group: 'Primitives' },
-  { id: 'entity-ref', label: 'Entity Ref System', group: 'Primitives' },
-  { id: 'emoji-picker', label: 'Emoji Picker', group: 'Primitives' },
-  { id: 'pagination', label: 'Pagination', group: 'Primitives' },
-  { id: 'calendar', label: 'Calendar', group: 'Primitives' },
-  { id: 'date-picker', label: 'Date Picker', group: 'Primitives' },
-  { id: 'input-otp', label: 'Input OTP', group: 'Primitives' },
-  { id: 'input-group', label: 'Input Group', group: 'Primitives' },
-  { id: 'select-field', label: 'Select Field', group: 'Primitives' },
-  { id: 'scroll-area', label: 'Scroll Area', group: 'Primitives' },
-  { id: 'aspect-ratio', label: 'Aspect Ratio', group: 'Primitives' },
-  { id: 'menubar', label: 'Menubar', group: 'Primitives' },
-  { id: 'collapsible', label: 'Collapsible', group: 'Primitives' },
-  { id: 'skeleton', label: 'Skeleton', group: 'Primitives' },
-  { id: 'empty', label: 'Empty States', group: 'Primitives' },
-  { id: 'stat-tiles', label: 'Stat Tiles', group: 'Primitives' },
-  { id: 'charts', label: 'Charts', group: 'Primitives' },
-  { id: 'chapter-scrubber', label: 'Chapter Scrubber', group: 'Primitives' },
-  { id: 'floating-dock', label: 'Floating Dock', group: 'Primitives' },
-  { id: 'page-header', label: 'Page Header', group: 'App Components' },
-  { id: 'toolbar', label: 'Toolbar Row', group: 'App Components' },
-  { id: 'filter-chips', label: 'Filter Chips', group: 'App Components' },
-  { id: 'sub-page-toolbar', label: 'Sub Page Toolbar', group: 'App Components' },
-  { id: 'task-atoms', label: 'Task Atoms', group: 'App Components' },
-  { id: 'task-rows', label: 'Task Rows', group: 'App Components' },
-  { id: 'create-card', label: 'Create / CTA', group: 'App Components' },
-  { id: 'delivery-row', label: 'Delivery Row', group: 'App Components' },
-  { id: 'doc-cards', label: 'Document Cards', group: 'App Components' },
-  { id: 'command', label: 'Command Palette', group: 'App Components' },
-  { id: 'page-layout', label: 'Page Layout', group: 'App Components' },
-  { id: 'stat-cards', label: 'Stat Cards', group: 'App Components' },
-  { id: 'loading-states', label: 'Loading & Empty', group: 'App Components' },
-  { id: 'assembly-primitives', label: 'Assembly Primitives', group: 'App Components' },
-  { id: 'workflow-run-timeline', label: 'Workflow Run Timeline', group: 'App Components' },
+  { id: 'registry-audit', label: 'Registry 对账区', group: 'Governance' },
+  { id: 'colors', label: 'Color Tokens', group: 'Foundations' },
+  { id: 'typography', label: 'Typography', group: 'Foundations' },
+  { id: 'spacing', label: 'Spacing', group: 'Foundations' },
+  { id: 'radius', label: 'Border Radius', group: 'Foundations' },
+  { id: 'shadows', label: 'Shadows', group: 'Foundations' },
+  { id: 'buttons', label: 'Buttons', group: 'Controls' },
+  { id: 'forms', label: 'Forms', group: 'Controls' },
+  { id: 'number-field', label: 'Number Field', group: 'Controls' },
+  { id: 'autocomplete', label: 'Autocomplete', group: 'Controls' },
+  { id: 'checkbox-group', label: 'Checkbox Group', group: 'Controls' },
+  { id: 'button-group', label: 'Button Group', group: 'Controls' },
+  { id: 'toggle', label: 'Toggle & Segmented', group: 'Controls' },
+  { id: 'calendar', label: 'Calendar', group: 'Controls' },
+  { id: 'date-picker', label: 'Date Picker', group: 'Controls' },
+  { id: 'input-otp', label: 'Input OTP', group: 'Controls' },
+  { id: 'input-group', label: 'Input Group', group: 'Controls' },
+  { id: 'select-field', label: 'Select Field', group: 'Controls' },
+  { id: 'badges', label: 'Badges', group: 'Data Display' },
+  { id: 'tags', label: 'Tags / Chips', group: 'Data Display' },
+  { id: 'avatars', label: 'Avatars', group: 'Data Display' },
+  { id: 'member-identity', label: 'Member Identity', group: 'Data Display' },
+  { id: 'progress', label: 'Progress', group: 'Data Display' },
+  { id: 'icon-stack', label: 'Icon Stack', group: 'Data Display' },
+  { id: 'meter', label: 'Meter', group: 'Data Display' },
+  { id: 'table', label: 'Table', group: 'Data Display' },
+  { id: 'data-table', label: 'Data Table', group: 'Data Display' },
+  { id: 'kbd', label: 'Kbd', group: 'Data Display' },
+  { id: 'status-pill', label: 'Status Pill', group: 'Data Display' },
+  { id: 'status-icon-frame', label: 'Status Icon Frame', group: 'Data Display' },
+  { id: 'markdown', label: 'Markdown View', group: 'Data Display' },
+  { id: 'markdown-editor', label: 'Markdown Editor', group: 'Data Display' },
+  { id: 'markdown-live-editor', label: 'Markdown Live Editor', group: 'Data Display' },
+  // 存量补注册（2026-09-29）：正文 prompt-editor 锚块早已存在（PromptEditor 演示段），
+  // SECTIONS 漏登导致导航不可达，此处补齐（位于正文 markdown-live-editor 与 entity-ref 之间）。
+  { id: 'prompt-editor', label: 'Prompt Editor', group: 'Data Display' },
+  { id: 'entity-ref', label: 'Entity Ref System', group: 'Data Display' },
+  { id: 'stat-tiles', label: 'Stat Tiles', group: 'Data Display' },
+  { id: 'charts', label: 'Charts', group: 'Data Display' },
+  { id: 'stat-cards', label: 'Stat Cards', group: 'Data Display' },
+  { id: 'alerts', label: 'Alerts', group: 'Feedback' },
+  { id: 'toast', label: 'Toast', group: 'Feedback' },
+  { id: 'spinner', label: 'Spinner', group: 'Feedback' },
+  { id: 'skeleton', label: 'Skeleton', group: 'Feedback' },
+  { id: 'empty', label: 'Empty States', group: 'Feedback' },
+  { id: 'loading-states', label: 'Loading & Empty', group: 'Feedback' },
+  { id: 'stepper', label: 'Stepper', group: 'Navigation' },
+  { id: 'sortable', label: 'Sortable', group: 'Navigation' },
+  { id: 'tabs', label: 'Tabs', group: 'Navigation' },
+  { id: 'tab-bar', label: 'Tab Bar', group: 'Navigation' },
+  { id: 'accordion', label: 'Accordion', group: 'Navigation' },
+  { id: 'menu', label: 'Menu (coss)', group: 'Navigation' },
+  { id: 'breadcrumb', label: 'Breadcrumb', group: 'Navigation' },
+  { id: 'pagination', label: 'Pagination', group: 'Navigation' },
+  { id: 'menubar', label: 'Menubar', group: 'Navigation' },
+  { id: 'collapsible', label: 'Collapsible', group: 'Navigation' },
+  { id: 'command', label: 'Command Palette', group: 'Navigation' },
+  { id: 'tooltip', label: 'Tooltip & Menu', group: 'Overlays' },
+  { id: 'overlays', label: 'Overlays', group: 'Overlays' },
+  { id: 'popover', label: 'Popover & Combobox', group: 'Overlays' },
+  { id: 'hover-card', label: 'Hover Card', group: 'Overlays' },
+  { id: 'emoji-picker', label: 'Emoji Picker', group: 'Overlays' },
+  { id: 'cards', label: 'Cards', group: 'Layout & Shells' },
+  { id: 'item', label: 'Item', group: 'Layout & Shells' },
+  { id: 'auth-surface', label: 'Auth Surface', group: 'Layout & Shells' },
+  { id: 'scroll-area', label: 'Scroll Area', group: 'Layout & Shells' },
+  { id: 'aspect-ratio', label: 'Aspect Ratio', group: 'Layout & Shells' },
+  { id: 'chapter-scrubber', label: 'Chapter Scrubber', group: 'Layout & Shells' },
+  { id: 'floating-dock', label: 'Floating Dock', group: 'Layout & Shells' },
+  { id: 'page-layout', label: 'Page Layout', group: 'Layout & Shells' },
+  { id: 'sidebar-panel', label: 'Sidebar Panel', group: 'Layout & Shells' },
   { id: 'ai-density-cards', label: 'AI High-Density Cards [AI]', group: 'AI Execution' },
+  { id: 'page-header', label: 'Page Header', group: 'App Patterns' },
+  { id: 'toolbar', label: 'Toolbar Row', group: 'App Patterns' },
+  { id: 'filter-chips', label: 'Filter Chips', group: 'App Patterns' },
+  { id: 'sub-page-toolbar', label: 'Sub Page Toolbar', group: 'App Patterns' },
+  { id: 'task-atoms', label: 'Task Atoms', group: 'App Patterns' },
+  { id: 'task-rows', label: 'Task Rows', group: 'App Patterns' },
+  { id: 'create-card', label: 'Create / CTA', group: 'App Patterns' },
+  { id: 'delivery-row', label: 'Delivery Row', group: 'App Patterns' },
+  { id: 'doc-cards', label: 'Document Cards', group: 'App Patterns' },
+  { id: 'assembly-primitives', label: 'Assembly Primitives', group: 'App Patterns' },
+  { id: 'workflow-run-timeline', label: 'Workflow Run Timeline', group: 'App Patterns' },
+  // G 类批 G0：语义组件分区框架（首批收录随批 G1 Chip 示范组件落地。raw 原语按裁决 G6 不出画廊。）
+  { id: 'semantic-components', label: '语义组件', group: 'Semantic' },
 ]
 
 const WORKFLOW_TIMELINE_STATIC: RunStation[] = [
@@ -515,7 +552,8 @@ function SortableGridDemo() {
   )
 }
 
-const SECTION_GROUPS = ['Governance', 'Tokens', 'Primitives', 'App Components', 'AI Execution']
+// 画廊分区体系（2026-09-29 重组）：按组件类型的 11 组，顺序即导航组序与 SECTIONS 数组组间序
+const SECTION_GROUPS = ['Governance', 'Foundations', 'Controls', 'Data Display', 'Feedback', 'Navigation', 'Overlays', 'Layout & Shells', 'AI Execution', 'App Patterns', 'Semantic']
 
 /** SubPageToolbar 演示：返回 + 面包屑 + 居中页签 + 翻页器/按钮组/侧栏开关 */
 function SubPageToolbarDemo({ withPager, withSidebar }: { withPager?: boolean; withSidebar?: boolean }) {
@@ -724,6 +762,114 @@ const SHADOW_VALUES = [
 ]
 
 const SPACING_SCALE = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64]
+
+// ── H 类批 H2：覆盖率补齐 demo（12 件 canonical 缺口，registry §4.2 ④ 门禁配套）──
+
+/** QuickCardsToggle：页头快捷卡片显隐开关（幽灵钮，激活态主色高亮） */
+function QuickCardsToggleDemo() {
+  const [visible, setVisible] = useState(true)
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2">
+      <QuickCardsToggle visible={visible} onToggle={() => setVisible((v) => !v)} />
+      <span className="text-xs text-muted-foreground">
+        {visible ? 'Cards visible — aria-pressed=true，主色高亮' : 'Cards hidden'}
+      </span>
+    </div>
+  )
+}
+
+/** RHF Form 套件：FormField/FormItem/FormLabel/FormControl/FormDescription/FormMessage 全链
+ *  （画廊演示不经 <form> 提交——F3.6 表单容器铁律，handleSubmit 由按钮直调） */
+function RhfFormDemo() {
+  const form = useForm<{ name: string }>({ defaultValues: { name: '' } })
+  return (
+    <Form {...form}>
+      <div className="max-w-sm space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          rules={{ required: 'Name is required' }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Project name</FormLabel>
+              <FormControl>
+                <Input placeholder="Acme Inc." {...field} />
+              </FormControl>
+              <FormDescription>Shown across the workspace.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="button" size="sm" onClick={form.handleSubmit(() => {})}>Submit</Button>
+      </div>
+    </Form>
+  )
+}
+
+/** TabBar：浏览器式页签栏（路由驱动自动建签；完整交互挂在主框架 TabsProvider 下） */
+function TabBarDemo() {
+  return (
+    <TabsProvider>
+      <div className="h-9 w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-sidebar">
+        <TabBar />
+      </div>
+    </TabsProvider>
+  )
+}
+
+const DEMO_CHART_CONFIG = {
+  value: { label: 'Completions', color: 'var(--color-primary)' },
+} satisfies ChartConfig
+
+/** H 类批 H3：Registry 对账区——galleryExempt 豁免清单（门禁 fail-closed 的实机可见面） */
+function RegistryAuditTable() {
+  const exempt = COMPONENT_REGISTRY.filter((e) => e.galleryExempt)
+  if (exempt.length === 0) return null
+  return (
+    <div className="max-w-3xl">
+      <SubLabel>
+        画廊豁免清单（galleryExempt）— {exempt.length} 件 · demo 豁免 ≠ 清退豁免，改判 keep 则豁免失效
+      </SubLabel>
+      <div className="rounded-lg border border-border bg-background">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>组件</TableHead>
+              <TableHead>状态</TableHead>
+              <TableHead>文件</TableHead>
+              <TableHead>豁免理由</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {exempt.map((e) => (
+              <TableRow key={e.name}>
+                <TableCell className="font-medium">{e.name}</TableCell>
+                <TableCell className="text-muted-foreground">{e.status}</TableCell>
+                <TableCell className="font-mono text-2xs text-muted-foreground">{e.file}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{e.galleryExempt}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  )
+}
+
+interface DemoIssueRow { id: string; title: string; status: string; points: number }
+const DEMO_ISSUE_ROWS: DemoIssueRow[] = [
+  { id: 'APM-1', title: 'AI chat interface', status: 'done', points: 5 },
+  { id: 'APM-2', title: 'Kanban board view', status: 'in_progress', points: 8 },
+  { id: 'APM-4', title: 'AI velocity scoring', status: 'in_review', points: 3 },
+  { id: 'ACR-1', title: 'Stripe webhook handler', status: 'todo', points: 2 },
+  { id: 'APM-10', title: 'Concurrent state updates', status: 'canceled', points: 13 },
+]
+const DEMO_ISSUE_COLUMNS: ColumnDef<DemoIssueRow, unknown>[] = [
+  { accessorKey: 'id', header: 'ID' },
+  { accessorKey: 'title', header: 'Title' },
+  { accessorKey: 'status', header: 'Status' },
+  { accessorKey: 'points', header: 'Points' },
+]
 
 const CHART_DATA = [
   { month: 'Jan', value: 42, bugs: 8, revenue: 12400 },
@@ -2434,6 +2580,37 @@ export function DesignSystemPage() {
 
           <Separator />
 
+          <SectionAnchor id="item">
+            <SectionTitle>Item</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              通用条目组合件（media/content/actions 槽 + variant/size 轴），列表项、设置行、结果行的统一形态。
+            </p>
+            <ItemGroup className="max-w-xl">
+              <Item variant="outline" size="sm">
+                <ItemMedia variant="icon"><GitBranch /></ItemMedia>
+                <ItemContent>
+                  <ItemTitle>origin/main</ItemTitle>
+                  <ItemDescription>Last synced 2 minutes ago</ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Button variant="ghost" size="xs">Sync</Button>
+                </ItemActions>
+              </Item>
+              <Item variant="muted" size="sm">
+                <ItemMedia variant="icon"><Bot /></ItemMedia>
+                <ItemContent>
+                  <ItemTitle>Claude — platform AI member</ItemTitle>
+                  <ItemDescription>Running: acceptance evidence collection</ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Button variant="outline" size="xs">Open</Button>
+                </ItemActions>
+              </Item>
+            </ItemGroup>
+          </SectionAnchor>
+
+          <Separator />
+
           <SectionAnchor id="forms">
             <SectionTitle>Forms</SectionTitle>
             <div className="grid grid-cols-2 gap-8">
@@ -2519,6 +2696,22 @@ export function DesignSystemPage() {
                   <Slider min={0} max={100} value={sliderVal} onValueChange={(v) => setSliderVal(Number(v))} />
                   <p className="text-xs text-muted-foreground">Value: {sliderVal}</p>
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <SubLabel>Form 套件（RHF）— FormField / FormItem / FormLabel / FormControl / FormDescription / FormMessage</SubLabel>
+              <RhfFormDemo />
+              <SubLabel>Field — 表单域布局槽（label/description/error 三件套，label 支持 xs 字号与 muted 色调轴）</SubLabel>
+              <div className="max-w-sm">
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel size="xs" variant="muted">Workspace slug</FieldLabel>
+                    <FieldDescription>Used in API paths and CLI commands.</FieldDescription>
+                    <Input placeholder="acme-inc" />
+                    <FieldError>Only lowercase letters and dashes are allowed.</FieldError>
+                  </Field>
+                </FieldGroup>
               </div>
             </div>
           </SectionAnchor>
@@ -2844,6 +3037,17 @@ export function DesignSystemPage() {
 
           <Separator />
 
+          <SectionAnchor id="tab-bar">
+            <SectionTitle>Tab Bar</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              浏览器式页签栏（固定页 pin / 右键菜单 / 滚动箭头）。路由驱动自动建签——完整交互挂在主框架
+              TabsProvider 下，此处为空态形态演示。
+            </p>
+            <TabBarDemo />
+          </SectionAnchor>
+
+          <Separator />
+
           <SectionAnchor id="accordion">
             <SectionTitle>Accordion</SectionTitle>
             <Accordion>
@@ -2887,6 +3091,44 @@ export function DesignSystemPage() {
                 ))}
               </div>
             </div>
+
+            <SubLabel>Table 套件 — semantic 元素封装（dense/comfortable 两档行高，表头固定 h-10）</SubLabel>
+            <div className="rounded-lg border border-border bg-background">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Due</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[
+                    { id: 'APM-1', title: 'AI chat interface', status: 'Done', due: 'Mar 8' },
+                    { id: 'APM-2', title: 'Kanban board view', status: 'In Progress', due: 'Mar 20' },
+                    { id: 'APM-4', title: 'AI velocity scoring', status: 'In Review', due: 'Mar 25' },
+                  ].map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="font-mono text-2xs text-muted-foreground">{row.id}</TableCell>
+                      <TableCell className="font-medium">{row.title}</TableCell>
+                      <TableCell className="text-muted-foreground">{row.status}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{row.due}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="data-table">
+            <SectionTitle>Data Table</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              TanStack Table 封装：列定义驱动、排序/选择/分页内建，配合 DataTableShell 做外壳。
+            </p>
+            <DataTable columns={DEMO_ISSUE_COLUMNS} data={DEMO_ISSUE_ROWS} maxHeight="220px" />
           </SectionAnchor>
 
           <Separator />
@@ -5150,6 +5392,23 @@ export function DesignSystemPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader className="pb-0">
+                  <CardTitle className="text-sm font-medium">ChartContainer — theme-aware chart 套件</CardTitle>
+                  <CardDescription className="text-xs">config 驱动 tooltip 文案与 CSS 变量着色</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <ChartContainer config={DEMO_CHART_CONFIG} className="h-[200px] w-full">
+                    <BarChart data={CHART_DATA} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="month" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="value" fill="var(--color-primary)" radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
             </div>
           </SectionAnchor>
 
@@ -5222,6 +5481,11 @@ export function DesignSystemPage() {
                   ]}
                   actions={<HeaderActionButton icon={Plus} label="Report Bug" variant="danger" />}
                 />
+              </div>
+
+              <SubLabel>QuickCardsToggle — 页头快捷卡片显隐开关（幽灵钮，激活态主色高亮 + aria-pressed）</SubLabel>
+              <div className="rounded-xl border border-border overflow-hidden px-4 py-3">
+                <QuickCardsToggleDemo />
               </div>
 
             </div>
@@ -5911,6 +6175,36 @@ export function DesignSystemPage() {
                   </div>
                 </PageShell>
               </div>
+
+              <SubLabel>RightSidebar — 详情右栏容器（360px 全站唯一档，收起不占位）+ SidebarButtonGroup / SidebarButton</SubLabel>
+              <div className="flex h-44 overflow-hidden rounded-lg border border-border">
+                <div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">Main content area</div>
+                <RightSidebar className="h-full">
+                  <SidebarButtonGroup>
+                    <SidebarButton icon={PanelRight} label="Panels" />
+                    <SidebarButton icon={User} label="Assignee" />
+                    <SidebarButton icon={Sparkles} label="Ask AI" variant="capsule" />
+                  </SidebarButtonGroup>
+                  <p className="text-xs text-muted-foreground">Sidebar content — buttons fixed in one row.</p>
+                </RightSidebar>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="sidebar-panel">
+            <SectionTitle>Sidebar Panel</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              右侧栏统一折叠面板：展开圆角矩形 ↔ 收起紧凑胶囊，grid-rows 动画；支持受控与不受控。
+            </p>
+            <div className="max-w-sm space-y-3">
+              <SidebarPanel title="Properties" icon={<SlidersHorizontal className="size-3.5" />} iconClassName="text-accent-blue">
+                <p className="px-1 py-1 text-xs text-muted-foreground">Expand / collapse via the chevron.</p>
+              </SidebarPanel>
+              <SidebarPanel title="Collapsed by default" defaultCollapsed>
+                <p className="px-1 py-1 text-xs text-muted-foreground">Compact pill while collapsed.</p>
+              </SidebarPanel>
             </div>
           </SectionAnchor>
 
@@ -5920,44 +6214,38 @@ export function DesignSystemPage() {
             <SectionTitle>Stat Cards</SectionTitle>
             <div className="space-y-5">
               <div>
-                <SubLabel>StatCard</SubLabel>
-                <div className="grid grid-cols-3 gap-3">
-                  <StatCard
-                    label="Total Tasks"
-                    value="248"
-                    hint="Across all projects"
-                    trend="up"
-                    trendValue="12%"
-                    icon={<CheckSquare className="w-4 h-4" />}
-                    iconBg="bg-accent-green/10 text-accent-green"
-                  />
-                  <StatCard
-                    label="Open Bugs"
-                    value="13"
-                    hint="Needs triage"
-                    trend="down"
-                    trendValue="3"
-                    icon={<AlertCircle className="w-4 h-4" />}
-                    iconBg="bg-accent-red/10 text-accent-red"
-                  />
-                  <StatCard
-                    label="AI Executions"
-                    value="1.2k"
-                    hint="This quarter"
-                    icon={<Sparkles className="w-4 h-4" />}
-                    iconBg="bg-accent-purple/10 text-accent-purple"
-                  />
-                </div>
-              </div>
-              <div>
-                <SubLabel>StatsCard</SubLabel>
+                <SubLabel>StatsCard · compact（标准形态，原 ui/stats-card）</SubLabel>
                 <StatsCard
                   columns={4}
                   items={[
-                    { key: 'tasks', value: 248, label: 'Tasks', icon: CheckSquare, colorClass: 'bg-accent-blue/10 border-accent-blue/20', iconColorClass: 'text-accent-blue' },
-                    { key: 'bugs', value: 13, label: 'Open Bugs', icon: AlertCircle, colorClass: 'bg-accent-red/10 border-accent-red/20', iconColorClass: 'text-accent-red' },
-                    { key: 'milestones', value: '4/6', label: 'Milestones', icon: Star, colorClass: 'bg-accent-yellow/10 border-accent-yellow/20', iconColorClass: 'text-accent-yellow' },
-                    { key: 'ai', value: '1.2k', label: 'AI Runs', icon: Sparkles, colorClass: 'bg-accent-purple/10 border-accent-purple/20', iconColorClass: 'text-accent-purple' },
+                    { key: 'tasks', value: 248, label: 'Tasks', icon: CheckSquare, tone: 'blue' },
+                    { key: 'bugs', value: 13, label: 'Open Bugs', icon: AlertCircle, tone: 'red' },
+                    { key: 'milestones', value: '4/6', label: 'Milestones', icon: Star, tone: 'yellow' },
+                    { key: 'ai', value: '1.2k', label: 'AI Runs', icon: Sparkles, tone: 'purple' },
+                  ]}
+                />
+              </div>
+              <div>
+                <SubLabel>StatsCard · featured（摘要大卡变种，原 ui/stat-card 收编）</SubLabel>
+                <StatsCard
+                  layout="featured"
+                  columns={3}
+                  items={[
+                    { key: 'total', value: 248, label: 'Total Tasks', hint: 'Across all projects', icon: CheckSquare, tone: 'green', trend: 'up', trendValue: '12%' },
+                    { key: 'bugs', value: 13, label: 'Open Bugs', hint: 'Needs triage', icon: AlertCircle, tone: 'red', trend: 'down', trendValue: '3' },
+                    { key: 'ai', value: '1.2k', label: 'AI Executions', hint: 'This quarter', icon: Sparkles, tone: 'purple' },
+                  ]}
+                />
+              </div>
+              <div>
+                <SubLabel>StatsCard · muted 卡底 + 数值彩色（coloredValue）</SubLabel>
+                <StatsCard
+                  columns={4}
+                  items={[
+                    { key: 'progress', value: '82%', label: 'Avg Progress', surface: 'muted' },
+                    { key: 'done', value: '91%', label: 'Done Rate', tone: 'green', coloredValue: true, surface: 'muted' },
+                    { key: 'overdue', value: 7, label: 'Overdue', tone: 'red', coloredValue: true, surface: 'muted' },
+                    { key: 'cost', value: '$128.40', label: 'Cost', tone: 'purple', coloredValue: true },
                   ]}
                 />
               </div>
@@ -6244,7 +6532,189 @@ export function DesignSystemPage() {
                   />
                 </div>
               </div>
+
+              <div>
+                <SubLabel>AiAgentBadge — AI 执行者徽标（sm/md 双档，可携带执行者名）</SubLabel>
+                <div className="flex items-center gap-3">
+                  <AiAgentBadge />
+                  <AiAgentBadge agentName="Claude" />
+                  <AiAgentBadge agentName="Codex" size="md" />
+                </div>
+              </div>
+
+              <div>
+                <SubLabel>AiContextSummary — 项目 AI 上下文摘要（chips + meta + health 进度）</SubLabel>
+                <div className="max-w-md rounded-lg border border-border bg-background p-3">
+                  <AiContextSummary
+                    context={{
+                      techStack: ['React 19', 'NestJS', 'Prisma'],
+                      frameworks: ['Vite', 'Turbo'],
+                      lifecyclePhase: 'growth',
+                      complexityLevel: 'high',
+                      teamSizeCategory: 'small',
+                      healthScore: 86,
+                    }}
+                  />
+                </div>
+              </div>
             </div>
+          </SectionAnchor>
+
+          <SectionAnchor id="semantic-components">
+            <SectionTitle>语义组件 (Semantic)</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              G 类分层解耦的语义组件层（src/components/semantic/，今后新增组件的默认落点）。
+              现有六件：Chip（批 G1 示范）、NavStatusDot、ThemeModeCard、ChartCard / StatTile / MetricRow（批二三件）。
+              三件均 props 面封闭——不接 className / variant，判例见 semantic/README.md；
+              raw 原语按裁决 G6 不出画廊（registry internal 态）。
+              画廊分区已按组件类型分组（2026-09-29 重组：正文物理序未动，物理搬移登记为后续独立批）。
+            </p>
+            <div className="mb-4">
+              <SubLabel>Chip — 标签 / 胶囊 / 可关闭标签</SubLabel>
+              <div className="flex flex-wrap items-center gap-2">
+                <Chip>默认标签</Chip>
+                <Chip shape="soft">soft 标签</Chip>
+                <Chip tone="danger" onRemove={() => {}}>
+                  驳回原因（悬停转红）
+                </Chip>
+                <Chip tone="primary" onClick={() => {}}>
+                  <Plus className="size-3" /> Add tag
+                </Chip>
+                <Chip onRemove={() => {}} icon={<GitBranch className="size-3" />}>
+                  带图标
+                </Chip>
+                <Chip onClick={() => {}} disabled>
+                  禁用态
+                </Chip>
+              </div>
+            </div>
+            <div className="mb-4">
+              <SubLabel>NavStatusDot — 导航条目状态点（8px）</SubLabel>
+              <div className="mb-2 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <NavStatusDot tone="success" label="就绪" />
+                  success — 就绪
+                </span>
+                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <NavStatusDot tone="danger" label="不可用" />
+                  danger — 不可用 · 需处理
+                </span>
+                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <NavStatusDot tone="default" label="无人在线" />
+                  default — 中性（未接入 / 无人在线）
+                </span>
+                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <NavStatusDot tone="default" label="检查中" loading />
+                  loading — 检查中（ping 动画）
+                </span>
+              </div>
+              <p className="text-2xs text-muted-foreground/70">
+                三个 props（tone / label / loading）封闭，不接 className；label 必填，同时作
+                aria-label 与 title——§8.5#4 要求颜色之外必须有第二信号。status → tone 由业务层
+                负责（§19.5 上层），本件只做 tone → class。
+              </p>
+            </div>
+            <div className="mb-4">
+              <SubLabel>ThemeModeCard — 主题模式卡片（日间 / 夜间 / 跟随系统）</SubLabel>
+              {/* 静态陈列：本组件不碰 i18n 也不依赖 ThemeProvider，文案由调用方注入 */}
+              <div className="mb-2 max-w-3xl">
+                <ThemeModeCard
+                  value="system"
+                  onChange={() => {}}
+                  title="主题模式"
+                  options={{
+                    light: { label: '浅色模式', desc: '清爽明亮，适合白天使用' },
+                    dark: { label: '深色模式', desc: '柔和护眼，适合夜间使用' },
+                    system: { label: '跟随系统', desc: '自动匹配系统的外观设置' },
+                  }}
+                />
+              </div>
+              <p className="text-2xs text-muted-foreground/70">
+                选中「跟随系统」态（✓ 徽标落在第三档）。预览缩略图用字面色（bg-white / bg-zinc-950）
+                而非 token——预览要展示「那个主题长什么样」，随当前主题走就失真；该豁免单列登记
+                宪法附录 A.1 行 A8 + check-palette.mjs 同名谓词（成对改动），行内已声明该谓词是
+                整文件粒度、顺带覆盖了选中徽标的 text-white（**登记在案的越界，非已批准设计**）。
+                每档为 RawButton + aria-pressed；选中态除色环外还有 ✓ 徽标与 aria-pressed 两个
+                非颜色信号（§8.5#4）。
+              </p>
+            </div>
+            <div className="mb-4">
+              <SubLabel>ChartCard — 图表卡壳（定高图表容器）</SubLabel>
+              <div className="mb-2 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <ChartCard title="迭代燃尽" hint="近 7 天" height="md">
+                  <div className="flex h-full items-center justify-center rounded-md border border-dashed border-border text-xs text-muted-foreground">
+                    图表区（children 自组，md = h-40）
+                  </div>
+                </ChartCard>
+                <ChartCard
+                  title="任务分布"
+                  action={
+                    <Chip shape="soft" onClick={() => {}}>
+                      周报
+                    </Chip>
+                  }
+                  height="sm"
+                >
+                  <div className="flex h-full items-center justify-center rounded-md border border-dashed border-border text-xs text-muted-foreground">
+                    图表区（children 自组，sm = h-30）
+                  </div>
+                </ChartCard>
+              </div>
+              <p className="text-2xs text-muted-foreground/70">
+                卡壳 = ui/card + CardTitle(text-sm) 基线，卡头左标题右 hint/action，children 容器
+                按 height 档定高（sm=h-30 / md=h-40 / lg=h-56，映射自现用图表容器实测值）；
+                图表实现留 children，内部用 h-full 填充。
+              </p>
+            </div>
+            <div className="mb-4">
+              <SubLabel>StatTile — mini 统计块</SubLabel>
+              <div className="mb-2 grid max-w-2xl grid-cols-3 gap-3">
+                <StatTile label="成员总数" value={12} />
+                <StatTile
+                  label="AI 会话"
+                  value={<span className="text-accent-purple">{48}</span>}
+                />
+                <StatTile
+                  label="平均负载"
+                  value="64%"
+                  icon={<Activity className="size-3.5" />}
+                  hint="近 7 天均值"
+                />
+              </div>
+              <p className="text-2xs text-muted-foreground/70">
+                形态照抄 dashboard 下钻弹窗原本地 StatTile（bg-muted/50 + text-2xl 值）；
+                值语义色不设样式口子，由调用方包 span 注入（第二例 accent-purple）。
+              </p>
+            </div>
+            <div className="mb-4">
+              <SubLabel>MetricRow — 标签 + 进度条 + 数值行</SubLabel>
+              <div className="mb-2 max-w-xl space-y-2.5">
+                <MetricRow label="档案完备度" value={72} tone="blue" />
+                <MetricRow label="验收通过率" value={58} max={100} tone="green" />
+                <MetricRow
+                  value={85}
+                  tone="red"
+                  icon={<span className="size-2.5 shrink-0 rounded-full bg-accent-red" />}
+                  trailing={<span className="text-3xs text-muted-foreground">9/20 槽位</span>}
+                />
+              </div>
+              <p className="text-2xs text-muted-foreground/70">
+                value/max 换算为百分数（max 默认 100），tone 走 ui/progress indicator
+                既有色档选择器；label 可选（表格进度列形态），trailing 放原文案附加。
+              </p>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="registry-audit">
+            <SectionTitle>Registry 对账区（Registry Audit）</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              按 COMPONENT_REGISTRY 遍历生成（H 类批 H3）：画廊覆盖率门禁（check-component-registry §4.2 ④，
+              ui + semantic 双层、排除 internal 与 galleryExempt）的实机对账面——豁免账在此可见；
+              未收录缺口由门禁机器强制（缺失即 CI 红），常态应为零。
+            </p>
+            <RegistryAuditTable />
           </SectionAnchor>
 
           <div className="h-12" />

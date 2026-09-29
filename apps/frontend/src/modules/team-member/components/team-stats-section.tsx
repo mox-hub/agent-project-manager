@@ -15,8 +15,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { ActivityHeatmap } from '@/components/ui/activity-heatmap';
+import { MetricRow } from '@/components/semantic/metric-row';
+import { StatsCard } from '@/components/semantic/stats-card';
+import { ActivityHeatmap } from '@/components/semantic/activity-heatmap';
 import { getTeamStats } from '../api/team-member-api';
 import { useTeamProjectStats } from '../hooks';
 
@@ -48,45 +49,46 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
 
   return (
     <div className="space-y-3">
-      {/* 汇总卡片 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card>
-          <CardContent className="py-3">
-            <div className="text-xs text-muted-foreground">成员</div>
-            <div className="text-xl font-semibold">
-              {stats.memberCount}
-              <span className="ml-1.5 text-xs text-muted-foreground">
-                人类 {stats.humanCount} / AI {stats.aiCount}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-3">
-            <div className="text-xs text-muted-foreground">30 天 Token 用量</div>
-            <div className="text-xl font-semibold">{fmtTokens(stats.tokenUsage.totals.totalTokens)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-3">
-            <div className="text-xs text-muted-foreground">30 天估算成本</div>
-            <div className="text-xl font-semibold">
-              ${stats.tokenUsage.totals.estimatedCost.toFixed(2)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-3">
-            <div className="text-xs text-muted-foreground">30 天人天成本</div>
-            <div className="text-xl font-semibold">
-              {fenToYuan(stats.personDays.totalCostCents)}
-              {anyDefaultRate && (
-                <span className="ml-1.5 text-3xs text-muted-foreground">部分按默认费率</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* 汇总卡片：semantic/stats-card compact（2026-09-29 统计卡归一批，手写 Card 汇总卡退役） */}
+      <StatsCard
+        columns={4}
+        items={[
+          {
+            key: 'members',
+            label: '成员',
+            value: (
+              <>
+                {stats.memberCount}
+                <span className="ml-1.5 text-xs font-sans font-normal text-muted-foreground">
+                  人类 {stats.humanCount} / AI {stats.aiCount}
+                </span>
+              </>
+            ),
+          },
+          {
+            key: 'tokens',
+            label: '30 天 Token 用量',
+            value: fmtTokens(stats.tokenUsage.totals.totalTokens),
+          },
+          {
+            key: 'cost',
+            label: '30 天估算成本',
+            value: `$${stats.tokenUsage.totals.estimatedCost.toFixed(2)}`,
+          },
+          {
+            key: 'personDays',
+            label: '30 天人天成本',
+            value: (
+              <>
+                {fenToYuan(stats.personDays.totalCostCents)}
+                {anyDefaultRate && (
+                  <span className="ml-1.5 text-3xs font-sans font-normal text-muted-foreground">部分按默认费率</span>
+                )}
+              </>
+            ),
+          },
+        ]}
+      />
 
       {/* Token 用量折线 */}
       <Card>
@@ -236,40 +238,17 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
         <CardContent className="space-y-3">
           {projectStats && projectStats.projects.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                <div className="rounded-lg bg-muted/50 p-2 text-center">
-                  <p className="text-lg font-semibold leading-none text-foreground">
-                    {projectStats.totals.avgProgress}%
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t('teamDetail.stats.projects.avgProgress', '平均进度')}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-muted/50 p-2 text-center">
-                  <p className="text-lg font-semibold leading-none text-foreground">
-                    {projectStats.totals.taskCount}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t('teamDetail.stats.projects.taskCount', '任务总数')}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-accent-green-light/30 p-2 text-center">
-                  <p className="text-lg font-semibold leading-none text-accent-green">
-                    {projectStats.totals.doneRate}%
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t('teamDetail.stats.projects.doneRate', '完成率')}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-accent-red-light/30 p-2 text-center">
-                  <p className="text-lg font-semibold leading-none text-accent-red">
-                    {projectStats.totals.overdueCount}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t('teamDetail.stats.projects.overdue', '逾期任务')}
-                  </p>
-                </div>
-              </div>
+              {/* 项目汇总瓦片：semantic/stats-card compact + surface=muted（2026-09-29 统计卡归一批；
+                  完成率/逾期的彩底改数值着色 coloredValue，居中改左对齐随基线统一） */}
+              <StatsCard
+                columns={4}
+                items={[
+                  { key: 'avgProgress', label: t('teamDetail.stats.projects.avgProgress', '平均进度'), value: `${projectStats.totals.avgProgress}%`, surface: 'muted' },
+                  { key: 'taskCount', label: t('teamDetail.stats.projects.taskCount', '任务总数'), value: projectStats.totals.taskCount, surface: 'muted' },
+                  { key: 'doneRate', label: t('teamDetail.stats.projects.doneRate', '完成率'), value: `${projectStats.totals.doneRate}%`, tone: 'green', coloredValue: true, surface: 'muted' },
+                  { key: 'overdue', label: t('teamDetail.stats.projects.overdue', '逾期任务'), value: projectStats.totals.overdueCount, tone: 'red', coloredValue: true, surface: 'muted' },
+                ]}
+              />
               <div className="text-xs text-muted-foreground">
                 {t('teamDetail.stats.projects.projectCount', { count: projectStats.projectCount })}
               </div>
@@ -306,12 +285,9 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                         </Badge>
                       </TableCell>
                       <TableCell className="p-2">
-                        <div className="flex items-center gap-2">
-                          <Progress value={p.progress} className="flex-1" />
-                          <span className="w-8 shrink-0 text-right text-xs text-muted-foreground">
-                            {p.progress}%
-                          </span>
-                        </div>
+                        {/* 首消费 semantic/metric-row（2026-09-29）：label 缺省形态（label 在表格首列），
+                            行形态与原手写等价（Progress flex-1 + w-8 右对齐数值），数值增 tabular-nums 基线 */}
+                        <MetricRow value={p.progress} />
                       </TableCell>
                       <TableCell className="p-2 text-right">{p.taskCount}</TableCell>
                       <TableCell className="p-2 text-right">{p.inProgressCount}</TableCell>

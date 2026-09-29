@@ -13,7 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
+import { StatsCard } from '@/components/semantic/stats-card';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/toast';
 import { useTranslation } from 'react-i18next';
@@ -58,33 +59,8 @@ function HealthStatusBadge({ status }: { status: 'online' | 'offline' | 'disable
   );
 }
 
-function KpiCard({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  danger = false,
-}: {
-  label: string;
-  value: string;
-  hint: string;
-  icon: typeof Terminal;
-  danger?: boolean;
-}) {
-  return (
-    <Card className="border-border shadow-none" size="sm">
-      <CardContent className="flex items-center gap-3">
-        <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', danger ? 'bg-accent-red-light' : 'bg-muted')}>
-          <Icon size={16} className={danger ? 'text-accent-red' : 'text-muted-foreground'} />
-        </div>
-        <div className="min-w-0">
-          <p className="text-lg font-semibold leading-tight tabular-nums">{value}</p>
-          <p className="truncate text-xs text-muted-foreground">{label} · {hint}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+// KPI 卡：semantic/stats-card compact（2026-09-29 统计卡归一批，本地 KpiCard 退役；
+// danger 变体改走 tone='red'，图标框彩底统一为灰底微框架，「label · hint」由调用方拼装）
 
 /**
  * 快捷设置卡：工作区内置模型（provider+model 持久化）+ 模型服务厂家启停
@@ -245,7 +221,6 @@ function QuickSettingsCard({ onNavigateTab }: { onNavigateTab: (tab: AiManagemen
                     </span>
                   </span>
                   <Switch
-                    size="sm"
                     checked={p.enabled}
                     disabled={updateProviderMutation.isPending}
                     onCheckedChange={(v) =>
@@ -305,19 +280,42 @@ export function OverviewTab({ onNavigateTab }: { onNavigateTab: (tab: AiManageme
       {/* 快捷设置：内置模型 + 厂家启停（一次性配置面） */}
       <QuickSettingsCard onNavigateTab={onNavigateTab} />
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
-        <KpiCard label={t('aiHub.tabModels')} value={`${connectedProviders}/${aiProviders.length}`} hint={t('aiHub.connected')} icon={Cpu} />
-        <KpiCard label={t('aiHub.cliTools')} value={`${onlineProviders}/${cliProviders.length}`} hint={t('aiHub.statusOnline')} icon={Terminal} />
-        <KpiCard label={t('aiHub.mcpServers')} value={`${onlineServers}/${servers.length}`} hint={t('aiHub.statusOnline')} icon={Server} />
-        <KpiCard label={t('aiHub.skills')} value={`${enabledSkills}/${skills.length}`} hint={t('aiHub.active')} icon={Zap} />
-        <KpiCard
-          label={t('aiHub.kpiErrors')}
-          value={String(errors)}
-          hint={errors > 0 ? t('aiHub.needsAttention') : t('aiHub.allGood')}
-          icon={AlertCircle}
-          danger={errors > 0}
-        />
-      </div>
+      <StatsCard
+        columns={5}
+        items={[
+          {
+            key: 'models',
+            value: `${connectedProviders}/${aiProviders.length}`,
+            label: `${t('aiHub.tabModels')} · ${t('aiHub.connected')}`,
+            icon: Cpu,
+          },
+          {
+            key: 'cli',
+            value: `${onlineProviders}/${cliProviders.length}`,
+            label: `${t('aiHub.cliTools')} · ${t('aiHub.statusOnline')}`,
+            icon: Terminal,
+          },
+          {
+            key: 'mcp',
+            value: `${onlineServers}/${servers.length}`,
+            label: `${t('aiHub.mcpServers')} · ${t('aiHub.statusOnline')}`,
+            icon: Server,
+          },
+          {
+            key: 'skills',
+            value: `${enabledSkills}/${skills.length}`,
+            label: `${t('aiHub.skills')} · ${t('aiHub.active')}`,
+            icon: Zap,
+          },
+          {
+            key: 'errors',
+            value: String(errors),
+            label: `${t('aiHub.kpiErrors')} · ${errors > 0 ? t('aiHub.needsAttention') : t('aiHub.allGood')}`,
+            icon: AlertCircle,
+            tone: errors > 0 ? 'red' : 'default',
+          },
+        ]}
+      />
 
       <Card className="border-border shadow-none">
         <CardHeader>

@@ -15,7 +15,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
-import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
+import { StatsCard } from '@/components/semantic/stats-card';
 import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/ui/toolbar-row';
 import {
   FilterChipsRow,
@@ -33,12 +33,12 @@ import { useAllBugs, useDeleteTask, useUpdateTask } from '../hooks/use-project-t
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import type { Task } from '../api/issue-api';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
-import { ListActionButton } from '@/components/ui/data-list';
+import { ListActionButton } from '@/shared/components/data-list';
 import { BugSimpleList } from '../components/bug-simple-list';
 import { TaskTableView } from '../components/task-table-view';
 import { TaskGantt } from '../components/task-gantt';
 import { useActiveExecutionsMap } from '@/modules/execution/hooks/use-active-executions-map';
-import { AiExecutionBadge, type IssueAiExecutionState } from '@/components/ui/ai-execution-badge';
+import { AiExecutionBadge, type IssueAiExecutionState } from '@/modules/issue/components/ai-execution-badge';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -379,25 +379,24 @@ export function BugsPage() {
                 value: stats.critical,
                 label: t("task.bug.severity.critical"),
                 icon: AlertTriangle,
-                ...STATS_THEMES.red,
+                tone: 'red',
               },
               {
                 key: 'open',
                 value: stats.open,
                 label: t("task.bug.status.open"),
                 icon: Bug,
-                ...STATS_THEMES.blue,
+                tone: 'blue',
               },
               {
                 key: 'resolved',
                 value: stats.resolved,
                 label: t("task.bug.resolved"),
                 icon: CheckCircle2,
-                ...STATS_THEMES.green,
+                tone: 'green',
               },
             ]}
             columns={3}
-            className="grid grid-cols-3 gap-3"
           />
         </div>
       ) : null}

@@ -20,8 +20,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
-import { StatsCard } from '@/components/ui/stats-card';
-import { ActivityHeatmap } from '@/components/ui/activity-heatmap';
+import { StatsCard } from '@/components/semantic/stats-card';
+import { ActivityHeatmap } from '@/components/semantic/activity-heatmap';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import {
@@ -46,41 +46,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 // Overview 数据：GET /dashboard/overview（真实端点）；其余 Tab 形态数据走 msw mock（见 use-analytics-overview 注释）
 const TOOLTIP_STYLE = { fontSize: 11, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-card)' };
-
-
-
-
-
-
-
-
-
-
-
-// ── Stat card ─────────────────────────────────────────────────────────────────
-
-function StatCard({ label, value, sub, icon: Icon, color = 'text-foreground', trend }: {
-  label: string; value: string | number; sub: string;
-  icon: React.ElementType; color?: string; trend?: 'up' | 'down' | 'neutral';
-}) {
-  const TrendIcon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : Minus;
-  const trendColor = trend === 'up' ? 'text-destructive' : trend === 'down' ? 'text-accent-green' : 'text-muted-foreground';
-  return (
-    <Card className="py-0">
-      <CardContent className="p-3.5">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <Icon className={cn('size-4', color)} />
-        </div>
-        <div className="flex items-end gap-1.5">
-          <p className={cn('text-2xl font-semibold tracking-tight', color)}>{value}</p>
-          {trend && <TrendIcon className={cn('size-3.5 mb-0.5', trendColor)} />}
-        </div>
-        <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
-      </CardContent>
-    </Card>
-  );
-}
 
 // ── Overview（真实 API：GET /dashboard/overview，仅取回顾性字段）──────────────
 
@@ -120,9 +85,22 @@ function OverviewTab() {
   // 此处保留 analytics 独有的回顾性内容：项目总数 + 档案健康 + 剧本健康。
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="项目总数" value={data.health.projects.length} sub="全部项目" icon={Target} color="text-accent-blue" />
-      </div>
+      {/* 统计卡：semantic/stats-card featured（2026-09-29 统计卡归一批，本地 StatCard 退役；
+          CAP-C-06 消费面去重后仅余回顾性「项目总数」一卡） */}
+      <StatsCard
+        layout="featured"
+        columns={4}
+        items={[
+          {
+            key: 'projects',
+            label: '项目总数',
+            value: data.health.projects.length,
+            hint: '全部项目',
+            icon: Target,
+            tone: 'blue',
+          },
+        ]}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ProfileHealthCard />
@@ -338,49 +316,48 @@ function CostTab() {
 
       <StatsCard
         columns={6}
-        className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
         items={[
           {
             key: 'tokens',
             label: t('analytics.cost.totalTokens'),
             value: usage.totalTokens.toLocaleString(),
             icon: Zap,
-            colorClass: 'text-accent-blue',
+            tone: 'blue',
           },
           {
             key: 'cost',
             label: t('analytics.cost.totalCost'),
             value: formatCost(usage.totalCost ?? 0),
             icon: Coins,
-            colorClass: 'text-accent-green',
+            tone: 'green',
           },
           {
             key: 'totalCalls',
             label: t('analytics.cost.totalCalls'),
             value: (usage.totalCalls ?? 0).toLocaleString(),
             icon: Activity,
-            colorClass: 'text-accent-purple',
+            tone: 'purple',
           },
           {
             key: 'conversationCalls',
             label: t('analytics.cost.conversationCalls'),
             value: (usage.conversationCalls ?? 0).toLocaleString(),
             icon: MessageSquare,
-            colorClass: 'text-accent-blue',
+            tone: 'blue',
           },
           {
             key: 'silentCalls',
             label: t('analytics.cost.silentCalls'),
             value: (usage.silentCalls ?? 0).toLocaleString(),
             icon: Bot,
-            colorClass: 'text-accent-yellow',
+            tone: 'yellow',
           },
           {
             key: 'executionCalls',
             label: t('analytics.cost.executionCalls'),
             value: (usage.executionCalls ?? 0).toLocaleString(),
             icon: Terminal,
-            colorClass: 'text-accent-orange',
+            tone: 'orange',
           },
         ]}
       />
@@ -493,12 +470,16 @@ function QualityTab() {
   return (
     <div className="space-y-5">
       <MockDataBadge />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label={t('analytics.quality.avgScore', '平均质量分')} value="80" sub={t('analytics.quality.avgScoreSub', '全部项目综合')} icon={Activity} color="text-accent-green" />
-        <StatCard label={t('analytics.quality.refactorRatio', '重构占比')} value="32%" sub={t('analytics.quality.refactorRatioSub', 'AI 变更中重构的比例')} icon={TrendingUp} color="text-accent-blue" trend="down" />
-        <StatCard label={t('analytics.quality.patchRatio', '补丁占比')} value="30%" sub={t('analytics.quality.patchRatioSub', '较 W08 的 52% 回落')} icon={Minus} color="text-accent-yellow" trend="down" />
-        <StatCard label={t('analytics.quality.complexityDrift', '复杂度漂移')} value="-12" sub={t('analytics.quality.complexityDriftSub', '平均复杂度下降（向好）')} icon={BarChart3} color="text-accent-purple" trend="down" />
-      </div>
+      <StatsCard
+        layout="featured"
+        columns={4}
+        items={[
+          { key: 'avgScore', label: t('analytics.quality.avgScore', '平均质量分'), value: '80', hint: t('analytics.quality.avgScoreSub', '全部项目综合'), icon: Activity, tone: 'green' },
+          { key: 'refactorRatio', label: t('analytics.quality.refactorRatio', '重构占比'), value: '32%', hint: t('analytics.quality.refactorRatioSub', 'AI 变更中重构的比例'), icon: TrendingUp, tone: 'blue' },
+          { key: 'patchRatio', label: t('analytics.quality.patchRatio', '补丁占比'), value: '30%', hint: t('analytics.quality.patchRatioSub', '较 W08 的 52% 回落'), icon: Minus, tone: 'yellow' },
+          { key: 'complexityDrift', label: t('analytics.quality.complexityDrift', '复杂度漂移'), value: '-12', hint: t('analytics.quality.complexityDriftSub', '平均复杂度下降（向好）'), icon: BarChart3, tone: 'purple' },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
@@ -565,12 +546,16 @@ function RiskTab() {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="High Risk Items" value={(ov?.riskItems ?? []).filter(r => r.risk >= 80).length} sub="risk score ≥ 80" icon={ShieldAlert} color="text-destructive" />
-        <StatCard label="Medium Risk" value={(ov?.riskItems ?? []).filter(r => r.risk >= 50 && r.risk < 80).length} sub="risk score 50–79" icon={AlertTriangle} color="text-accent-yellow" />
-        <StatCard label="Trending Up" value={(ov?.riskItems ?? []).filter(r => r.trend === 'up').length} sub="worsening risks" icon={TrendingUp} color="text-destructive" trend="up" />
-        <StatCard label="Improving" value={(ov?.riskItems ?? []).filter(r => r.trend === 'down').length} sub="risk declining" icon={TrendingDown} color="text-accent-green" trend="down" />
-      </div>
+      <StatsCard
+        layout="featured"
+        columns={4}
+        items={[
+          { key: 'highRisk', label: 'High Risk Items', value: (ov?.riskItems ?? []).filter(r => r.risk >= 80).length, hint: 'risk score ≥ 80', icon: ShieldAlert, tone: 'red' },
+          { key: 'mediumRisk', label: 'Medium Risk', value: (ov?.riskItems ?? []).filter(r => r.risk >= 50 && r.risk < 80).length, hint: 'risk score 50–79', icon: AlertTriangle, tone: 'yellow' },
+          { key: 'trendingUp', label: 'Trending Up', value: (ov?.riskItems ?? []).filter(r => r.trend === 'up').length, hint: 'worsening risks', icon: TrendingUp, tone: 'red' },
+          { key: 'improving', label: 'Improving', value: (ov?.riskItems ?? []).filter(r => r.trend === 'down').length, hint: 'risk declining', icon: TrendingDown, tone: 'green' },
+        ]}
+      />
 
       <Card>
         <CardHeader className="pb-2 pt-4 px-4">
@@ -623,12 +608,16 @@ function TeamActivityTab() {
   return (
     <div className="space-y-5">
       <MockDataBadge />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label={t('analytics.team.activeMembers', '活跃成员')} value={4} sub={t('analytics.team.activeMembersSub', '今日有贡献')} icon={Users} color="text-accent-blue" />
-        <StatCard label={t('analytics.team.aiExecutions', 'AI 执行次数')} value={36} sub={t('analytics.team.aiExecutionsSub', '今日全部 Agent 合计')} icon={Zap} color="text-accent-purple" />
-        <StatCard label={t('analytics.team.conflictsDetected', '检测到冲突')} value={2} sub={t('analytics.team.conflictsSub', 'Agent 工作重叠区间')} icon={AlertTriangle} color="text-accent-yellow" />
-        <StatCard label={t('analytics.team.stuckTasks', '停滞任务')} value={3} sub={t('analytics.team.stuckTasksSub', '超 5 天无进展')} icon={XCircle} color="text-destructive" />
-      </div>
+      <StatsCard
+        layout="featured"
+        columns={4}
+        items={[
+          { key: 'activeMembers', label: t('analytics.team.activeMembers', '活跃成员'), value: 4, hint: t('analytics.team.activeMembersSub', '今日有贡献'), icon: Users, tone: 'blue' },
+          { key: 'aiExecutions', label: t('analytics.team.aiExecutions', 'AI 执行次数'), value: 36, hint: t('analytics.team.aiExecutionsSub', '今日全部 Agent 合计'), icon: Zap, tone: 'purple' },
+          { key: 'conflicts', label: t('analytics.team.conflictsDetected', '检测到冲突'), value: 2, hint: t('analytics.team.conflictsSub', 'Agent 工作重叠区间'), icon: AlertTriangle, tone: 'yellow' },
+          { key: 'stuckTasks', label: t('analytics.team.stuckTasks', '停滞任务'), value: 3, hint: t('analytics.team.stuckTasksSub', '超 5 天无进展'), icon: XCircle, tone: 'red' },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>

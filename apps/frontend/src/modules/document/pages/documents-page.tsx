@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/semantic/status-pill';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -31,10 +31,10 @@ import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Button } from '@/components/ui/button';
-import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
+import { StatsCard } from '@/components/semantic/stats-card';
 import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
-import { DocumentPreviewDialog } from '@/components/ui/document-preview-dialog';
+import { DocumentPreviewDialog } from '@/modules/document/components/document-preview-dialog';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -239,12 +239,11 @@ export function DocumentsPage() {
           <StatsCard
             items={[
               { key: 'total', value: stats.total, label: t('document.totalDocuments') },
-              { key: 'published', value: stats.published, label: t('document.published'), icon: FileText, ...STATS_THEMES.green },
-              { key: 'reviewing', value: stats.reviewing, label: t('document.reviewing'), icon: Clock, ...STATS_THEMES.yellow },
-              { key: 'draft', value: stats.draft, label: t('document.draft'), icon: FileEdit, ...STATS_THEMES.blue },
+              { key: 'published', value: stats.published, label: t('document.published'), icon: FileText, tone: 'green' },
+              { key: 'reviewing', value: stats.reviewing, label: t('document.reviewing'), icon: Clock, tone: 'yellow' },
+              { key: 'draft', value: stats.draft, label: t('document.draft'), icon: FileEdit, tone: 'blue' },
             ]}
             columns={4}
-            className="grid grid-cols-4 gap-3"
           />
         </div>
 

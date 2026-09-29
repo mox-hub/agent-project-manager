@@ -11,13 +11,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { AsyncState } from '@/components/ui/async-state';
 import { EmptyState } from '@/components/ui/empty-state';
-import { IconStack } from '@/components/ui/icon-stack';
+import { IconStack } from '@/components/semantic/icon-stack';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
 import { PageShell } from '@/components/ui/page-shell';
-import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
+import { StatsCard } from '@/components/semantic/stats-card';
 import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/ui/toolbar-row';
 import {
   FilterChipsRow,
@@ -51,8 +51,8 @@ import { ImportModal } from '../components/task-import-export';
 import { useIterationNameMap } from '../hooks/use-iteration-name-map';
 import { TaskGantt } from '../components/task-gantt';
 import { useActiveExecutionsMap, type ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
-import { AiExecutionBadge } from '@/components/ui/ai-execution-badge';
-import { ListActionButton } from '@/components/ui/data-list';
+import { AiExecutionBadge } from '@/modules/issue/components/ai-execution-badge';
+import { ListActionButton } from '@/shared/components/data-list';
 import {
   Pagination,
   PaginationContent,
@@ -907,16 +907,15 @@ export function TasksPage() {
         <div className="border-b border-border bg-background px-6 py-4">
           <StatsCard
           items={[
-            { key: 'total', value: (tasksData?.meta?.total ?? filteredTasks.length), label: t("task.stats.total"), icon: ListTodo, ...STATS_THEMES.blue },
+            { key: 'total', value: (tasksData?.meta?.total ?? filteredTasks.length), label: t("task.stats.total"), icon: ListTodo, tone: 'blue' },
             // 状态图标统一取 status-visuals.TASK_STATUS_VISUALS（唯一映射源，规范 v0 对齐）
-            { key: 'todo', value: allTasks.filter(task => task.status === 'todo').length, label: t("task.stats.todo"), icon: TASK_STATUS_VISUALS.todo.icon, ...STATS_THEMES.default },
-            { key: 'inProgress', value: allTasks.filter(task => task.status === 'in_progress').length, label: t("task.stats.inProgress"), icon: TASK_STATUS_VISUALS.in_progress.icon, ...STATS_THEMES.yellow },
-            { key: 'inReview', value: allTasks.filter(task => task.status === 'in_review').length, label: t("task.stats.inReview") , icon: TASK_STATUS_VISUALS.in_review.icon, ...STATS_THEMES.purple },
-            { key: 'done', value: allTasks.filter(task => task.status === 'done').length, label: t("task.stats.done"), icon: TASK_STATUS_VISUALS.done.icon, ...STATS_THEMES.green },
-            { key: 'canceled', value: allTasks.filter(task => task.status === 'canceled').length, label: t("task.stats.canceled") , icon: TASK_STATUS_VISUALS.canceled.icon, ...STATS_THEMES.gray },
+            { key: 'todo', value: allTasks.filter(task => task.status === 'todo').length, label: t("task.stats.todo"), icon: TASK_STATUS_VISUALS.todo.icon },
+            { key: 'inProgress', value: allTasks.filter(task => task.status === 'in_progress').length, label: t("task.stats.inProgress"), icon: TASK_STATUS_VISUALS.in_progress.icon, tone: 'yellow' },
+            { key: 'inReview', value: allTasks.filter(task => task.status === 'in_review').length, label: t("task.stats.inReview") , icon: TASK_STATUS_VISUALS.in_review.icon, tone: 'purple' },
+            { key: 'done', value: allTasks.filter(task => task.status === 'done').length, label: t("task.stats.done"), icon: TASK_STATUS_VISUALS.done.icon, tone: 'green' },
+            { key: 'canceled', value: allTasks.filter(task => task.status === 'canceled').length, label: t("task.stats.canceled") , icon: TASK_STATUS_VISUALS.canceled.icon, tone: 'gray' },
           ]}
           columns={6}
-          className="grid grid-cols-6 gap-3"
         />
         </div>
       ) : null}

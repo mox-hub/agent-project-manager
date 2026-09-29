@@ -3,15 +3,21 @@
  *
  * 三条同源链（单向再生，禁止反向手工编辑）：
  *   ① registry.ts ──生成──► COMPONENTS.md（`node scripts/gen-components-md.mjs`）
- *   ② registry.ts ──渲染──► design-system 页（按 section 遍历 registry，覆盖率恒 100%）
+ *   ② registry.ts ──渲染──► design-system 页（正文 demo 手写 + Registry 对账区遍历
+ *      galleryExempt 豁免账；画廊覆盖率由 `check-component-registry.mjs` §4.2 ④ 门禁
+ *      机器强制恒 100%——H 类批 H3 起 error，分母 ui+semantic 双层、排除 internal 与
+ *      galleryExempt，2026-09-29 兑现）
  *   ③ registry.ts ──校验──► lint:registry（扫描真实引用回填 consumers，判定 LU）
  *
  * 字段口径：
  * - status 五态（canonical / standby / internal / review / deprecated）定义见
  *   docs/design/修改方案-E类-2026-09-27.md §19.3。
- * - section 采用设计系统页的四个顶层分区（Tokens / Primitives / App Components /
- *   AI Execution），组件归属按该页 SECTIONS 数组的 group 口径归类；更细的 75 个分区标签
- *   （Buttons / Cards / Forms …）留待批 4 拆分画廊时再细化。
+ * - section 采用设计系统页的 11 组组件类型分区（2026-09-29 由「层」维度重组，组序见该页
+ *   SECTION_GROUPS：Governance / Foundations / Controls / Data Display / Feedback /
+ *   Navigation / Overlays / Layout & Shells / AI Execution / App Patterns / Semantic）。
+ *   ui/ raw/ semantic/ 三层共 103 条按该页 SECTIONS 数组的 group 口径归类；modules/ 与
+ *   shared/ 组件不在画廊分区体系内，保留 'App Components'（AI 执行面模块件沿用
+ *   'AI Execution'），画廊分区由该页 SECTIONS 承载，COMPONENTS.md 由 LAYER 维度承载。
  * - consumers 由 lint 脚本回填，本文件**不写静态值**（防推测值污染 LU 指标）。
  * - review 态必带 reviewBy；逾期须降级 deprecated 或升级 canonical（§19.3 防滥用条款）。
  * - deprecated 态必带 `expiresAt`（§19.6；由 `check-component-registry.mjs` 机器强制，逾期 CI 失败）。
@@ -20,8 +26,13 @@
  *   与 `check-component-registry.mjs` 均已解析该槽位（2026-09-28 补齐）。
  * - `status: 'standby'` 且带 `review` 数据的条目 = 方案 §七 D 项裁决的
  *   「先标记、不删除，待人工在设计系统页审阅后裁决」集合。
+ * - `galleryExempt` = 画廊豁免槽位（H 类方案 §2.1，2026-09-29 裁决）：登记一句话理由后
+ *   该件不计入画廊覆盖率分母（check-component-registry.mjs §4.2 ④ 机器强制），
+ *   但仍在 Registry 对账区可见。书写位置紧跟 status，条目保持严格单行。
  *
  * 维护约定：新增 components/ui 组件必须先在此登记，否则 lint:registry 双向对账失败。
+ * G 类批 G0 起，`components/raw/`（登记 internal 态、不出画廊，裁决 G6）与
+ * `components/semantic/` 的组件同样必须先在此登记（三分目录治理链，见 G 类方案 §四）。
  */
 
 export type ComponentStatus =
@@ -30,11 +41,12 @@ export type ComponentStatus =
 export interface ComponentEntry {
   name: string          // 'button'
   file: string          // 'ui/button.tsx'
-  section: string       // '表单' | '反馈' | '导航' | ...
+  section: string       // 组件类型分区（11 组口径；modules/shared 件为 'App Components'）
   status: ComponentStatus
   variants?: string[]   // 变体轴登记（§19.4）
   consumers?: number    // 由 lint 脚本回填
   expiresAt?: string    // deprecated 必填
+  galleryExempt?: string // 画廊豁免槽位（H 类方案 §2.1）：登记理由后不计入画廊覆盖率分母；demo 豁免 ≠ 清退豁免，五态裁决面不受影响
   reviewBy?: string     // review 必填（§19.3 防滥用）
   review?: {            // ★ 裁决面数据（承接 〇之二 三段式）
     pending: true
@@ -46,110 +58,143 @@ export interface ComponentEntry {
 
 export const COMPONENT_REGISTRY: ComponentEntry[] = [
   // ── UI 原子层：src/components/ui/ ─────────────────────────────────────────
-  { name: 'accordion', file: 'ui/accordion.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'activity-heatmap', file: 'ui/activity-heatmap.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'ai-agent-badge', file: 'ui/ai-agent-badge.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'ai-context-summary', file: 'ui/ai-context-summary.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'ai-execution-badge', file: 'ui/ai-execution-badge.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'alert', file: 'ui/alert.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'alert-dialog', file: 'ui/alert-dialog.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'anchored-menu', file: 'ui/anchored-menu.tsx', section: 'Primitives', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——与 ui/menu 能力重叠，锚定下拉统一走 menu / dropdown-menu', proposal: 'delete' } },
-  { name: 'app-dock', file: 'ui/app-dock.tsx', section: 'App Components', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '自研长尾：消费方 1（bottom-dock），与 shared/components/bottom-dock 能力重叠', proposal: 'delete' } },
-  { name: 'aspect-ratio', file: 'ui/aspect-ratio.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'async-state', file: 'ui/async-state.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'autocomplete', file: 'ui/autocomplete.tsx', section: 'Primitives', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '消费方仅 1（命令面板），与 ui/combobox 能力重叠（输入过滤 + 建议列表）', proposal: 'merge', target: 'combobox' } },
-  { name: 'avatar', file: 'ui/avatar.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'avatar-picker-field', file: 'ui/avatar-picker-field.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'badge', file: 'ui/badge.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'breadcrumb', file: 'ui/breadcrumb.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'button', file: 'ui/button.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'button-group', file: 'ui/button-group.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: 'F 类 F9.3 已结案（2026-09-29）：分裂按钮（主动作+下拉变体）是唯一合法场景，休眠原语不推广不清退；首个分裂按钮场景出现时启用', proposal: 'keep' } },
-  { name: 'calendar', file: 'ui/calendar.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（react-day-picker 封装），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'card', file: 'ui/card.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'chapter-scrubber', file: 'ui/chapter-scrubber.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'chart', file: 'ui/chart.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'checkbox', file: 'ui/checkbox.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'checkbox-group', file: 'ui/checkbox-group.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'collapsible', file: 'ui/collapsible.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'color-picker', file: 'ui/color-picker.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'combobox', file: 'ui/combobox.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'command', file: 'ui/command.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'context-menu', file: 'ui/context-menu.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'data-list', file: 'ui/data-list.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'data-table', file: 'ui/data-table.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'data-table-shell', file: 'ui/data-table-shell.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'date-picker', file: 'ui/date-picker.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'dialog', file: 'ui/dialog.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'direction', file: 'ui/direction.tsx', section: 'Primitives', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求', proposal: 'delete' } },
-  { name: 'document-preview-dialog', file: 'ui/document-preview-dialog.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'drawer', file: 'ui/drawer.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'dropdown-menu', file: 'ui/dropdown-menu.tsx', section: 'Primitives', status: 'deprecated', expiresAt: '2026-12-31', review: { pending: true, reason: '与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。2026-09-28 裁决 A：已扩 gen-components-md.mjs 解析 expiresAt，原先「生成器不认该槽位、写入即被丢弃」的工具互斥**已解除**，本件正式置 deprecated 限期迁移（至 2026-12-31）；迁移指引见 ui/dropdown-menu.tsx 文件头。', proposal: 'merge', target: 'menu' } },
-  { name: 'dual-track-metric-pill', file: 'ui/dual-track-metric-pill.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'empty-state', file: 'ui/empty-state.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'error-boundary', file: 'ui/error-boundary.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'field', file: 'ui/field.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'filter-chips', file: 'ui/filter-chips.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'floating-dock', file: 'ui/floating-dock.tsx', section: 'App Components', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '自研长尾：零引用（仅画廊），与 shared/components/bottom-dock 能力重叠', proposal: 'delete' } },
-  { name: 'form', file: 'ui/form.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'global-loading-state', file: 'ui/global-loading-state.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'header-action-button', file: 'ui/header-action-button.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'hover-card', file: 'ui/hover-card.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'icon-metric', file: 'ui/icon-metric.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'icon-stack', file: 'ui/icon-stack.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'input', file: 'ui/input.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'input-group', file: 'ui/input-group.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'input-otp', file: 'ui/input-otp.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（input-otp 库封装），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'item', file: 'ui/item.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'kbd', file: 'ui/kbd.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'label', file: 'ui/label.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'loading-overlay', file: 'ui/loading-overlay.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'menu', file: 'ui/menu.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'menu-surface', file: 'ui/menu-surface.ts', section: 'Primitives', status: 'canonical' },
-  { name: 'menubar', file: 'ui/menubar.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'meter', file: 'ui/meter.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby', proposal: 'standby' } },
-  { name: 'mock-badge', file: 'ui/mock-badge.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'select-field', file: 'ui/select-field.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'navigation-menu', file: 'ui/navigation-menu.tsx', section: 'Primitives', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——横向导航由 menu / breadcrumb / tabs 承载', proposal: 'delete' } },
-  { name: 'number-field', file: 'ui/number-field.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby', proposal: 'standby' } },
-  { name: 'page-error-fallback', file: 'ui/page-error-fallback.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'page-header', file: 'ui/page-header.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'page-shell', file: 'ui/page-shell.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'pagination', file: 'ui/pagination.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'popover', file: 'ui/popover.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'progress', file: 'ui/progress.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'property-panel', file: 'ui/property-panel.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'quick-cards-toggle', file: 'ui/quick-cards-toggle.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'radio-group', file: 'ui/radio-group.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'right-sidebar', file: 'ui/right-sidebar.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'scroll-area', file: 'ui/scroll-area.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'section-card', file: 'ui/section-card.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'segmented-control', file: 'ui/segmented-control.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'select', file: 'ui/select.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'separator', file: 'ui/separator.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'sheet', file: 'ui/sheet.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'sidebar', file: 'ui/sidebar.tsx', section: 'App Components', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——与 ui/sidebar-panel（消费方 6）能力重叠', proposal: 'delete' } },
-  { name: 'sidebar-panel', file: 'ui/sidebar-panel.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'skeleton', file: 'ui/skeleton.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'slider', file: 'ui/slider.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'sortable', file: 'ui/sortable.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'spinner', file: 'ui/spinner.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'stat-card', file: 'ui/stat-card.tsx', section: 'App Components', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '命名双轨：与 ui/stats-card（消费方 10）能力重叠，本件消费方仅 1', proposal: 'merge', target: 'stats-card' } },
-  { name: 'stats-card', file: 'ui/stats-card.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'status-pill', file: 'ui/status-pill.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'stepper', file: 'ui/stepper.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'sub-page-toolbar', file: 'ui/sub-page-toolbar.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'switch', file: 'ui/switch.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'tab-bar', file: 'ui/tab-bar.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'table', file: 'ui/table.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'tabs', file: 'ui/tabs.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'textarea', file: 'ui/textarea.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'toast', file: 'ui/toast.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'toggle', file: 'ui/toggle.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'toggle-group', file: 'ui/toggle-group.tsx', section: 'Primitives', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
-  { name: 'tone', file: 'ui/tone.ts', section: 'Primitives', status: 'canonical' },
-  { name: 'toolbar-row', file: 'ui/toolbar-row.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'tooltip', file: 'ui/tooltip.tsx', section: 'Primitives', status: 'canonical' },
-  { name: 'view-display-popover', file: 'ui/view-display-popover.tsx', section: 'App Components', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选', proposal: 'delete' } },
+  { name: 'accordion', file: 'ui/accordion.tsx', section: 'Navigation', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'activity-heatmap', file: 'semantic/activity-heatmap.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'ai-agent-badge', file: 'ui/ai-agent-badge.tsx', section: 'AI Execution', status: 'canonical' },
+  { name: 'ai-context-summary', file: 'ui/ai-context-summary.tsx', section: 'AI Execution', status: 'canonical' },
+  // G7 倒置收编迁出 ui/，保留登记保 LU（2026-09-29）
+  { name: 'ai-execution-badge', file: 'modules/issue/components/ai-execution-badge.tsx', section: 'App Components', status: 'canonical' },
+  { name: 'alert', file: 'ui/alert.tsx', section: 'Feedback', status: 'canonical' },
+  { name: 'alert-dialog', file: 'ui/alert-dialog.tsx', section: 'Overlays', status: 'canonical' },
+  { name: 'anchored-menu', file: 'ui/anchored-menu.tsx', section: 'Overlays', status: 'review', galleryExempt: '待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——与 ui/menu 能力重叠，锚定下拉统一走 menu / dropdown-menu', proposal: 'delete' } },
+  { name: 'app-dock', file: 'ui/app-dock.tsx', section: 'Layout & Shells', status: 'standby', galleryExempt: '待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效', reviewBy: '2026-10-31', review: { pending: true, reason: '自研长尾：消费方 1（bottom-dock），与 shared/components/bottom-dock 能力重叠', proposal: 'delete' } },
+  { name: 'aspect-ratio', file: 'ui/aspect-ratio.tsx', section: 'Layout & Shells', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'async-state', file: 'ui/async-state.tsx', section: 'Feedback', status: 'canonical' },
+  { name: 'autocomplete', file: 'ui/autocomplete.tsx', section: 'Controls', status: 'review', reviewBy: '2026-10-31', review: { pending: true, reason: '消费方仅 1（命令面板），与 ui/combobox 能力重叠（输入过滤 + 建议列表）', proposal: 'merge', target: 'combobox' } },
+  { name: 'avatar', file: 'ui/avatar.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'avatar-picker-field', file: 'ui/avatar-picker-field.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'badge', file: 'ui/badge.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'breadcrumb', file: 'ui/breadcrumb.tsx', section: 'Navigation', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'button', file: 'ui/button.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'button-group', file: 'ui/button-group.tsx', section: 'Controls', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: 'F 类 F9.3 已结案（2026-09-29）：分裂按钮（主动作+下拉变体）是唯一合法场景，休眠原语不推广不清退；首个分裂按钮场景出现时启用', proposal: 'keep' } },
+  { name: 'calendar', file: 'ui/calendar.tsx', section: 'Controls', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（react-day-picker 封装），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'card', file: 'ui/card.tsx', section: 'Layout & Shells', status: 'canonical' },
+  { name: 'chapter-scrubber', file: 'ui/chapter-scrubber.tsx', section: 'Layout & Shells', status: 'canonical' },
+  { name: 'chart', file: 'ui/chart.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'checkbox', file: 'ui/checkbox.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'checkbox-group', file: 'ui/checkbox-group.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'collapsible', file: 'ui/collapsible.tsx', section: 'Navigation', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'color-picker', file: 'ui/color-picker.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'combobox', file: 'ui/combobox.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'command', file: 'ui/command.tsx', section: 'Navigation', status: 'canonical' },
+  { name: 'context-menu', file: 'ui/context-menu.tsx', section: 'Overlays', status: 'canonical' },
+  // G7 倒置收编迁出 ui/，保留登记保 LU（2026-09-29）
+  { name: 'data-list', file: 'shared/components/data-list.tsx', section: 'App Components', status: 'canonical' },
+  { name: 'data-table', file: 'ui/data-table.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'data-table-shell', file: 'ui/data-table-shell.tsx', section: 'Layout & Shells', status: 'canonical' },
+  { name: 'date-picker', file: 'ui/date-picker.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'dialog', file: 'ui/dialog.tsx', section: 'Overlays', status: 'canonical' },
+  { name: 'direction', file: 'ui/direction.tsx', section: 'Navigation', status: 'review', galleryExempt: '待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求', proposal: 'delete' } },
+  // G7 倒置收编迁出 ui/，保留登记保 LU（2026-09-29）
+  { name: 'document-preview-dialog', file: 'modules/document/components/document-preview-dialog.tsx', section: 'App Components', status: 'canonical' },
+  { name: 'drawer', file: 'ui/drawer.tsx', section: 'Overlays', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'dropdown-menu', file: 'ui/dropdown-menu.tsx', section: 'Overlays', status: 'deprecated', expiresAt: '2026-12-31', review: { pending: true, reason: '与 ui/menu（coss 配方，唯一菜单实现）双轨。2026-09-27 批 3 实物 API 比对结论：**差异大、非直接替换件**——Content 缺省 align 为 start 对 center、条目排版成体系不同、Checkbox/RadioItem 缺 inset、Shortcut 为 span 对 kbd、SubContent 定位不同，且本件 data-slot 槽位被 shared/lib/floating-layers.ts 生产依赖。2026-09-28 裁决 A：已扩 gen-components-md.mjs 解析 expiresAt，原先「生成器不认该槽位、写入即被丢弃」的工具互斥**已解除**，本件正式置 deprecated 限期迁移（至 2026-12-31）；迁移指引见 ui/dropdown-menu.tsx 文件头。', proposal: 'merge', target: 'menu' } },
+  { name: 'dual-track-metric-pill', file: 'ui/dual-track-metric-pill.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'empty-state', file: 'ui/empty-state.tsx', section: 'Feedback', status: 'canonical' },
+  { name: 'error-boundary', file: 'ui/error-boundary.tsx', section: 'Feedback', status: 'canonical', galleryExempt: '运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态' },
+  { name: 'field', file: 'ui/field.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'filter-chips', file: 'ui/filter-chips.tsx', section: 'App Patterns', status: 'canonical' },
+  { name: 'floating-dock', file: 'ui/floating-dock.tsx', section: 'Layout & Shells', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '自研长尾：零引用（仅画廊），与 shared/components/bottom-dock 能力重叠', proposal: 'delete' } },
+  { name: 'form', file: 'ui/form.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'global-loading-state', file: 'ui/global-loading-state.tsx', section: 'Feedback', status: 'canonical', galleryExempt: '运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态' },
+  { name: 'header-action-button', file: 'ui/header-action-button.tsx', section: 'App Patterns', status: 'canonical' },
+  { name: 'hover-card', file: 'ui/hover-card.tsx', section: 'Overlays', status: 'canonical' },
+  { name: 'icon-metric', file: 'ui/icon-metric.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'icon-stack', file: 'semantic/icon-stack.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'input', file: 'ui/input.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'input-group', file: 'ui/input-group.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'input-otp', file: 'ui/input-otp.tsx', section: 'Controls', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（input-otp 库封装），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'item', file: 'ui/item.tsx', section: 'Layout & Shells', status: 'canonical' },
+  { name: 'kbd', file: 'ui/kbd.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'label', file: 'ui/label.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'loading-overlay', file: 'ui/loading-overlay.tsx', section: 'Feedback', status: 'canonical' },
+  { name: 'menu', file: 'ui/menu.tsx', section: 'Navigation', status: 'canonical' },
+  { name: 'menu-surface', file: 'ui/menu-surface.ts', section: 'Overlays', status: 'canonical', galleryExempt: '非可视组件（菜单定位工具，.ts），无可视 demo' },
+  { name: 'menubar', file: 'ui/menubar.tsx', section: 'Navigation', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'meter', file: 'ui/meter.tsx', section: 'Data Display', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby', proposal: 'standby' } },
+  { name: 'mock-badge', file: 'ui/mock-badge.tsx', section: 'Data Display', status: 'canonical', galleryExempt: '运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态' },
+  { name: 'select-field', file: 'ui/select-field.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'navigation-menu', file: 'ui/navigation-menu.tsx', section: 'Navigation', status: 'review', galleryExempt: '待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——横向导航由 menu / breadcrumb / tabs 承载', proposal: 'delete' } },
+  { name: 'number-field', file: 'ui/number-field.tsx', section: 'Controls', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '自研长尾：零引用（仅画廊），coss 来源件，方案倾向保留为 standby', proposal: 'standby' } },
+  { name: 'page-error-fallback', file: 'ui/page-error-fallback.tsx', section: 'Feedback', status: 'canonical', galleryExempt: '运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态' },
+  { name: 'page-header', file: 'ui/page-header.tsx', section: 'App Patterns', status: 'canonical' },
+  { name: 'page-shell', file: 'ui/page-shell.tsx', section: 'Layout & Shells', status: 'canonical' },
+  { name: 'pagination', file: 'ui/pagination.tsx', section: 'Navigation', status: 'canonical' },
+  { name: 'popover', file: 'ui/popover.tsx', section: 'Overlays', status: 'canonical' },
+  { name: 'progress', file: 'ui/progress.tsx', section: 'Data Display', status: 'canonical' },
+  // G7 倒置收编迁出 ui/，保留登记保 LU（2026-09-29）
+  { name: 'property-panel', file: 'shared/components/property-panel.tsx', section: 'App Components', status: 'canonical' },
+  { name: 'quick-cards-toggle', file: 'ui/quick-cards-toggle.tsx', section: 'App Patterns', status: 'canonical' },
+  { name: 'radio-group', file: 'ui/radio-group.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'right-sidebar', file: 'ui/right-sidebar.tsx', section: 'Layout & Shells', status: 'canonical' },
+  { name: 'scroll-area', file: 'ui/scroll-area.tsx', section: 'Layout & Shells', status: 'canonical' },
+  { name: 'section-card', file: 'ui/section-card.tsx', section: 'Layout & Shells', status: 'canonical' },
+  { name: 'segmented-control', file: 'ui/segmented-control.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'select', file: 'ui/select.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'separator', file: 'ui/separator.tsx', section: 'Layout & Shells', status: 'canonical' },
+  { name: 'sheet', file: 'ui/sheet.tsx', section: 'Overlays', status: 'canonical' },
+  { name: 'sidebar', file: 'ui/sidebar.tsx', section: 'Layout & Shells', status: 'review', galleryExempt: '待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——与 ui/sidebar-panel（消费方 6）能力重叠', proposal: 'delete' } },
+  { name: 'sidebar-panel', file: 'ui/sidebar-panel.tsx', section: 'Layout & Shells', status: 'canonical' },
+  { name: 'skeleton', file: 'ui/skeleton.tsx', section: 'Feedback', status: 'canonical' },
+  { name: 'slider', file: 'ui/slider.tsx', section: 'Controls', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'sortable', file: 'ui/sortable.tsx', section: 'Navigation', status: 'canonical' },
+  { name: 'spinner', file: 'ui/spinner.tsx', section: 'Feedback', status: 'canonical' },
+  { name: 'status-pill', file: 'semantic/status-pill.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'stepper', file: 'ui/stepper.tsx', section: 'Navigation', status: 'canonical' },
+  { name: 'sub-page-toolbar', file: 'ui/sub-page-toolbar.tsx', section: 'App Patterns', status: 'canonical' },
+  { name: 'switch', file: 'ui/switch.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'tab-bar', file: 'ui/tab-bar.tsx', section: 'Navigation', status: 'canonical' },
+  { name: 'table', file: 'ui/table.tsx', section: 'Data Display', status: 'canonical' },
+  { name: 'tabs', file: 'ui/tabs.tsx', section: 'Navigation', status: 'canonical' },
+  { name: 'textarea', file: 'ui/textarea.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'toast', file: 'ui/toast.tsx', section: 'Feedback', status: 'canonical' },
+  { name: 'toggle', file: 'ui/toggle.tsx', section: 'Controls', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'toggle-group', file: 'ui/toggle-group.tsx', section: 'Controls', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '官方注册表基线件（base-ui 配方），零引用（仅画廊），零维护成本', proposal: 'keep' } },
+  { name: 'tone', file: 'ui/tone.ts', section: 'Foundations', status: 'canonical', galleryExempt: '非可视组件（色彩工具，.ts），无可视 demo' },
+  { name: 'toolbar-row', file: 'ui/toolbar-row.tsx', section: 'App Patterns', status: 'canonical' },
+  { name: 'tooltip', file: 'ui/tooltip.tsx', section: 'Overlays', status: 'canonical' },
+  { name: 'view-display-popover', file: 'ui/view-display-popover.tsx', section: 'Overlays', status: 'review', galleryExempt: '待裁决死件（proposal=delete）：随裁决清退，不补 demo；改判 keep 则豁免失效', reviewBy: '2026-10-31', review: { pending: true, reason: '零引用（实测）——与 ui/popover 能力重叠；唯一带测试的死件，测试一并列为候选', proposal: 'delete' } },
+
+  // ── 原语层：src/components/raw/（G 类批 G0：非动作交互元素的具名直通出口）──
+  // 裁决 G6：raw 原语登记 internal 态（registry 数得上、不重演无治理区）、不出画廊；
+  // 与 ui/menu-surface（ts 文件）先例同型。section 按组件类型归 'Controls'
+  // （2026-09-29 分区重组），不出画廊故不参与分区渲染。
+  { name: 'raw-button', file: 'raw/raw-button.tsx', section: 'Controls', status: 'internal' },
+  { name: 'raw-input', file: 'raw/raw-input.tsx', section: 'Controls', status: 'internal' },
+
+  // ── 语义组件层：src/components/semantic/（G 类批 G1 起：新增组件默认落点）──
+  // props 面封闭（不接 className/variant，口径见 semantic/README.md）；业务面可直接消费。
+  { name: 'chip', file: 'semantic/chip.tsx', section: 'Semantic', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: 'G5 裁决示范组件：三层链路端到端样板；已接首个业务消费（decision-card-shell 驳回原因 chips，2026-09-29，方案立项点名的原始场景），后续消费按簇另批', proposal: 'keep' } },
+  // 第二件语义组件，且与 Chip 不同：chip 登记 standby 的原因是「业务接入前零引用属预期」，
+  // 本件提取时两个消费方（设置页导航的 git / runtime 状态点）同批接好，standby 的理由不成立，
+  // 故按 §19.3 轴二 LU 的正常口径登记 canonical（消费方 =1 文件、2 处调用，实测非 0）。
+  // G8 机械化（props 封闭转 lint）的触发条件已由本件满足，属二期机械化的输入，见方案 §五。
+  { name: 'nav-status-dot', file: 'semantic/nav-status-dot.tsx', section: 'Semantic', status: 'canonical' },
+  // 第三件语义组件：主题模式卡片（三档意图）。提取自 appearance-section 的内联 JSX，
+  // 消费方同批接好（设置页外观分区），故同 nav-status-dot 登记 canonical。
+  // 预览缩略图的字面色单列豁免：宪法附录 A.1 行 A8 + check-palette.mjs 同名谓词。
+  { name: 'theme-mode-card', file: 'semantic/theme-mode-card.tsx', section: 'Semantic', status: 'canonical' },
+  // 批二三件（chart-card / stat-tile / metric-row）登记 standby：首消费同批接入
+  // （project-overview-charts 两块 / dashboard-page 弹窗 tile 簇 / team-stats-section 进度列），
+  // 消费簇尚小，按 chip 先例留复核窗口观察泛化形态是否立得住。
+  { name: 'chart-card', file: 'semantic/chart-card.tsx', section: 'Semantic', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '抽象自 Card+CardTitle+卡头 hint/action+定高图表容器组合（project-overview-charts / analytics / team-stats 等 8+ 处手写）；首消费 project-overview-charts 两块（燃尽 md / 分布 lg）', proposal: 'keep' } },
+  { name: 'stat-tile', file: 'semantic/stat-tile.tsx', section: 'Semantic', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '抽象自 dashboard-page 本地 StatTile（bg-muted/50 灰底 mini 统计块，7 个下钻弹窗 14 实例）；首消费 dashboard-page 删本地定义全量换用，形态 class 全等拷贝', proposal: 'keep' } },
+  { name: 'metric-row', file: 'semantic/metric-row.tsx', section: 'Semantic', status: 'standby', reviewBy: '2026-10-31', review: { pending: true, reason: '抽象自 label+Progress+数值行（analytics ProfileHealthRow/成本占比、dashboard 面板、team-stats 进度列等 8+ 处）；首消费 team-stats-section 项目进度列 1 处', proposal: 'keep' } },
+  // 统计卡归一批（2026-09-29）：原 ui/stats-card 升格语义层标准件 + 原 ui/stat-card 收编为
+  // featured 变种（layout 封闭枚举，非样式透传）；卡底（surface）与数值彩色（coloredValue）
+  // 为封闭可选项。analytics / dashboard-page / settings ai overview / acceptance / team-stats
+  // 五处本地与内联实现同批退役，旧 ui/stats-card 十页消费全部改道本件。
+  { name: 'stats-card', file: 'semantic/stats-card.tsx', section: 'Semantic', status: 'canonical' },
 
   // ── 跨模块业务组件：src/shared/components/ ───────────────────────────────
   { name: 'board-view', file: 'shared/components/board-view/board-view.tsx', section: 'App Components', status: 'canonical' },
