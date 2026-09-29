@@ -99,8 +99,8 @@ describe('matchTabRoute 标签页注册覆盖率', () => {
     expect(matchTabRoute('/app/projects/proj-1/team')?.titleKey).toBe('project.team.title');
   });
 
-  it('文档新建/编辑态有独立标题', () => {
-    expect(matchTabRoute('/app/documents/new')?.titleKey).toBe('document.tab.new');
+  it('文档编辑态有独立标题；new 路由已随 J15 退役（并入统一创建弹窗，回落列表页标题）', () => {
+    expect(matchTabRoute('/app/documents/new')?.titleKey).toBe('document.title');
     expect(matchTabRoute('/app/documents/doc-1/edit')?.titleKey).toBe('document.tab.edit');
   });
 
