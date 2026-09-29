@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings2, GitBranch, Cloud, BookOpen, Archive, ScrollText, Route, Users, Sparkles } from 'lucide-react';
+import { Settings2, GitBranch, Cloud, BookOpen, Archive, ScrollText, Route, Users, Sparkles, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { useUpdateProject, useArchiveProject } from '../hooks/use-project-mutations';
@@ -17,7 +17,7 @@ import { DocLinksManager } from '../components/doc-links-manager';
 import { ApiDocLinksManager } from '../components/api-doc-links-manager';
 import { ProjectLinearSyncStatus } from '../components/project-linear-sync-status';
 import { ContractBindingsPanel } from '@/modules/contract/components/contract-bindings-panel';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardAction, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
@@ -26,6 +26,7 @@ import {
   SelectFieldOption,
 } from '@/components/ui/select-field';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { ProjectType, ProjectVisibility } from '../api/project-api';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -56,6 +57,16 @@ const SETTINGS_TABS: Array<{
 const sectionClasses = 'mb-5';
 const fieldLabelClasses = 'mb-1 block text-sm text-muted-foreground font-medium';
 
+/** 设置分组只读键值行（F3.6/J14：页面转只读+分组「编辑」入口） */
+function SettingsRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 px-2 py-2 text-sm">
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span className="min-w-0 break-words text-right text-foreground">{value || '—'}</span>
+    </div>
+  );
+}
+
 export function ProjectSettingsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { t } = useTranslation();
@@ -76,6 +87,8 @@ export function ProjectSettingsPage() {
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [isSaving, setIsSaving] = useState(false);
+  const [projectEditOpen, setProjectEditOpen] = useState(false);
+  const [configEditOpen, setConfigEditOpen] = useState(false);
   const projectForm = useForm<{
     name: string;
     description: string;
@@ -137,6 +150,7 @@ export function ProjectSettingsPage() {
         projectId,
         data: projectForm.getValues(),
       });
+      setProjectEditOpen(false);
     } finally {
       setIsSaving(false);
     }
@@ -161,6 +175,7 @@ export function ProjectSettingsPage() {
         }
       }
       await updateConfig.mutateAsync(configToSave);
+      setConfigEditOpen(false);
     } finally {
       setIsSaving(false);
     }
@@ -295,8 +310,43 @@ export function ProjectSettingsPage() {
                   <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.info.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.info.desc')}</CardDescription>
+                    <CardAction>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setProjectEditOpen(true)}
+                        disabled={projectLoading}
+                        data-ai-component="project.project-settings.general.edit"
+                        data-ai-action="project.project-settings.general.edit.click"
+                        data-ai-role="action"
+                      >
+                        <Pencil className="size-3.5" />
+                        {t('common.edit')}
+                      </Button>
+                    </CardAction>
                   </CardHeader>
-                  <CardContent className="pt-4">
+                  <CardContent className="pt-2">
+                    <div className="divide-y divide-border">
+                      <SettingsRow label={t('projectSettings.projectName')} value={project?.name ?? ''} />
+                      <SettingsRow label={t('projectSettings.description')} value={project?.description || ''} />
+                      <SettingsRow
+                        label={t('projectSettings.type')}
+                        value={project ? t(`project.type.${project.type}`) : ''}
+                      />
+                      <SettingsRow
+                        label={t('projectSettings.visibility')}
+                        value={project ? t(`project.visibility.${project.visibility}`) : ''}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 项目主档编辑弹窗（F3.6/J14：分组设置表单迁 Dialog，页面转只读+编辑入口） */}
+                <Dialog open={projectEditOpen} onOpenChange={setProjectEditOpen}>
+                  <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>{t('projectSettings.info.title')}</DialogTitle>
+                    </DialogHeader>
                     <Form {...projectForm}>
                       <div className="space-y-1">
                         <FormField
@@ -382,22 +432,24 @@ export function ProjectSettingsPage() {
                             )}
                           />
                         </div>
-
-                        <div className="flex justify-end pt-2">
-                          <Button
-                            onClick={handleSaveProject}
-                            disabled={isSaving}
-                            data-ai-component="project.project-settings.general.save"
-                            data-ai-action="project.project-settings.general.save.click"
-                            data-ai-role="submit"
-                          >
-                            {isSaving ? 'Saving...' : 'Save Changes'}
-                          </Button>
-                        </div>
                       </div>
                     </Form>
-                  </CardContent>
-                </Card>
+                    <DialogFooter>
+                      <Button variant="ghost" onClick={() => setProjectEditOpen(false)}>
+                        {t('common.cancel')}
+                      </Button>
+                      <Button
+                        onClick={handleSaveProject}
+                        disabled={isSaving}
+                        data-ai-component="project.project-settings.general.save"
+                        data-ai-action="project.project-settings.general.save.click"
+                        data-ai-role="submit"
+                      >
+                        {isSaving ? 'Saving...' : 'Save Changes'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
                 <Card>
                   <CardHeader className="border-b border-border">
@@ -470,8 +522,44 @@ export function ProjectSettingsPage() {
                   <CardHeader className="border-b border-border">
                     <CardTitle>{t('projectSettings.gitConfig.title')}</CardTitle>
                     <CardDescription>{t('projectSettings.gitConfig.desc')}</CardDescription>
+                    <CardAction>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setConfigEditOpen(true)}
+                        data-ai-component="project.project-settings.git.edit"
+                        data-ai-action="project.project-settings.git.edit.click"
+                        data-ai-role="action"
+                      >
+                        <Pencil className="size-3.5" />
+                        {t('common.edit')}
+                      </Button>
+                    </CardAction>
                   </CardHeader>
-                  <CardContent className="pt-4">
+                  <CardContent className="pt-2">
+                    <div className="divide-y divide-border">
+                      <SettingsRow label={t('projectSettings.defaultBranch')} value={config['project.git.defaultBranch'] || ''} />
+                      <SettingsRow label={t('projectSettings.commitTemplate')} value={config['project.git.commitTemplate'] || ''} />
+                      <SettingsRow label={t('projectSettings.branchNaming')} value={config['project.git.branchNaming'] || ''} />
+                      <SettingsRow label={t('projectSettings.defaultCwd')} value={config['project.terminal.defaultCwd'] || ''} />
+                      <SettingsRow
+                        label={t('projectSettings.defaultShell')}
+                        value={
+                          config['project.terminal.defaultShell']
+                          || t('projectSettings.shellUseGlobal')
+                        }
+                      />
+                      <SettingsRow label={t('projectSettings.envVars')} value={config['project.terminal.env'] || ''} />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* git/terminal 配置编辑弹窗（F3.6/J14：分组设置表单迁 Dialog） */}
+                <Dialog open={configEditOpen} onOpenChange={setConfigEditOpen}>
+                  <DialogContent className="sm:max-w-lg max-h-dialog-scroll overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>{t('projectSettings.gitConfig.title')}</DialogTitle>
+                    </DialogHeader>
                     <Form {...configForm}>
                       <div className="space-y-1">
                         <FormField
@@ -590,22 +678,24 @@ export function ProjectSettingsPage() {
                             </FormItem>
                           )}
                         />
-
-                        <div className="flex justify-end pt-2">
-                          <Button
-                            onClick={handleSaveConfig}
-                            disabled={isSaving}
-                            data-ai-component="project.project-settings.git.save"
-                            data-ai-action="project.project-settings.git.save.click"
-                            data-ai-role="submit"
-                          >
-                            {isSaving ? t('projectSettings.saving') : t('projectSettings.save')}
-                          </Button>
-                        </div>
                       </div>
                     </Form>
-                  </CardContent>
-                </Card>
+                    <DialogFooter>
+                      <Button variant="ghost" onClick={() => setConfigEditOpen(false)}>
+                        {t('common.cancel')}
+                      </Button>
+                      <Button
+                        onClick={handleSaveConfig}
+                        disabled={isSaving}
+                        data-ai-component="project.project-settings.git.save"
+                        data-ai-action="project.project-settings.git.save.click"
+                        data-ai-role="submit"
+                      >
+                        {isSaving ? t('projectSettings.saving') : t('projectSettings.save')}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             )}
 
