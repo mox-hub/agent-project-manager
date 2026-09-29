@@ -109,6 +109,7 @@ for (const line of registrySource.split(/\r?\n/)) {
     status: m[4],
     reviewBy: tail.match(/reviewBy: '([^']*)'/)?.[1],
     expiresAt: tail.match(/expiresAt: '([^']*)'/)?.[1],
+    galleryExempt: tail.match(/galleryExempt: '([^']*)'/)?.[1],
     proposal: reviewBlock?.[2],
     target: reviewBlock?.[3],
     hasReviewBlock: Boolean(reviewBlock),

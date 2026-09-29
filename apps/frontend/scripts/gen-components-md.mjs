@@ -34,7 +34,7 @@ const DOC = join(PKG_ROOT, "COMPONENTS.md");
 // ① 解析 registry.ts 的字面量条目（严格单行格式，见 registry.ts 文件头）
 // ---------------------------------------------------------------------------
 const ENTRY_RE =
-  /^\s*\{ name: '([^']+)', file: '([^']+)', section: '([^']+)', status: '([^']+)'(?:, reviewBy: '([^']+)')?(?:, expiresAt: '([^']+)')?(?:, review: \{ pending: true, reason: '([^']+)', proposal: '([^']+)'(?:, target: '([^']+)')? \})? \},?$/;
+  /^\s*\{ name: '([^']+)', file: '([^']+)', section: '([^']+)', status: '([^']+)'(?:, galleryExempt: '([^']+)')?(?:, reviewBy: '([^']+)')?(?:, expiresAt: '([^']+)')?(?:, review: \{ pending: true, reason: '([^']+)', proposal: '([^']+)'(?:, target: '([^']+)')? \})? \},?$/;
 
 const src = readFileSync(REGISTRY, "utf8");
 const entries = [];
@@ -46,11 +46,12 @@ for (const line of src.split(/\r?\n/)) {
     file: m[2],
     section: m[3],
     status: m[4],
-    reviewBy: m[5],
-    expiresAt: m[6],
-    reason: m[7],
-    proposal: m[8],
-    target: m[9],
+    galleryExempt: m[5],
+    reviewBy: m[6],
+    expiresAt: m[7],
+    reason: m[8],
+    proposal: m[9],
+    target: m[10],
   });
 }
 if (entries.length === 0) {
@@ -102,6 +103,10 @@ function esc(s) {
 function expNote(e) {
   return e.expiresAt ? `（**清退期限 ${e.expiresAt}** · §19.6，逾期 CI 失败）` : "";
 }
+/** `galleryExempt`（H 类画廊豁免槽位）渲染后缀：两处表格的说明列共用，保证豁免**可见**。 */
+function gallNote(e) {
+  return e.galleryExempt ? `（**画廊豁免**：${esc(e.galleryExempt)}）` : "";
+}
 
 const lines = [];
 const push = (s = "") => lines.push(s);
@@ -151,6 +156,10 @@ for (const s of ["canonical", "standby", "internal", "review", "deprecated"]) {
 }
 push(`| **合计** | **${entries.length}** | | | |`);
 push();
+push(
+  "> **画廊豁免（H 类，2026-09-29 裁决）**：任何状态条目可登记 `galleryExempt`（一句话理由）豁免画廊 demo——豁免后不入覆盖率分母（`check-component-registry.mjs` §4.2 ④ 机器强制），但在设计系统页 Registry 对账区可见；**demo 豁免 ≠ 清退豁免**，五态裁决面不受影响。"
+);
+push();
 const zeroStatuses = ["internal", "deprecated"].filter((s) => !counts[s]);
 if (zeroStatuses.length) {
   push(
@@ -189,7 +198,7 @@ for (const e of reviewList) {
   push(
     `| ${esc(e.name)} | ${renderPath(e.file)} | ${STATUS_MARK[e.status]} | ${e.proposal || "—"}${
       e.target ? ` → ${e.target}` : ""
-    } | ${esc(e.reason)}${expNote(e)} | ${e.reviewBy || "—"} |`
+    } | ${esc(e.reason)}${expNote(e)}${gallNote(e)} | ${e.reviewBy || "—"} |`
   );
 }
 push();
@@ -218,7 +227,7 @@ for (const section of sectionsToRender) {
       push(
         `| ${esc(e.name)} | ${renderPath(e.file)} | ${STATUS_MARK[e.status]} | — | ${esc(
           e.reason || "—"
-        )}${expNote(e)} |`
+        )}${expNote(e)}${gallNote(e)} |`
       );
     }
     push();
