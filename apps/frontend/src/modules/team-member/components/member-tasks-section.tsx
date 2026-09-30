@@ -20,7 +20,7 @@ function statusTone(status: string): string {
   if (['in_progress', 'inprogress', 'started'].includes(s)) {
     return 'bg-accent-blue';
   }
-  return 'bg-amber-500';
+  return 'bg-accent-yellow';
 }
 
 export function MemberTasksSection({ memberId }: { memberId: string }) {
