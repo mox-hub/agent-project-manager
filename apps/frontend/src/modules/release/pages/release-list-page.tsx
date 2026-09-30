@@ -284,7 +284,7 @@ export function ReleaseListPage() {
                   <span className="shrink-0 whitespace-nowrap font-mono text-sm font-medium text-muted-foreground/50">
                     v{r.version}
                   </span>
-                  <ListText className="min-w-0 flex-1 text-[15px] font-medium">{r.name || '—'}</ListText>
+                  <ListText className="min-w-0 flex-1 text-md font-medium">{r.name || '—'}</ListText>
                 </>
               );
             }}

@@ -259,7 +259,7 @@ export function TaskSimpleList({
             <IssueTypeCell task={task}>
               <IssueTypePill meta={issueTypeOf(task)} variant="icon" />
             </IssueTypeCell>
-            <ListText className="min-w-0 flex-1 text-[15px] font-medium">{task.title}</ListText>
+            <ListText className="min-w-0 flex-1 text-md font-medium">{task.title}</ListText>
             {aiExecution ? (
               <AiExecutionBadge execution={aiExecution} size="xs" variant="compact" />
             ) : null}

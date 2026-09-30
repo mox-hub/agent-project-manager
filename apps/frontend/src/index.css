@@ -114,10 +114,14 @@
   /* 字号（语义档，宪法 §3.1）
      text-3xs = 10px 徽标内数字 / 图表轴 / 微元数据（非中文）
      text-2xs = 11px badge / 辅助标签 / 密集元数据（非中文正文）
-     xs / sm / base / lg / xl / 2xl 六档沿用 Tailwind 默认 theme（12/14/16/18/20/24）
+     xs / sm / md / base / lg / xl / 2xl 沿用 Tailwind 默认 theme（12/14/15/16/18/20/24）
      不带 --line-height 配对 = 行高继承，与迁移前的 text-10/11 行为逐位一致 */
   --text-3xs: 10px;
   --text-2xs: 11px;
+  /* text-md = 15px 列表标题档（Linear 对标）：sm(14) 与 base(16) 之间的唯一中间档，
+     2026-09-30 由任意值白名单特例升格正式档（晨会裁决）。md 是 t-shirt 标准尺码，
+     twMerge 天然识别，无需 utils.ts 登记 */
+  --text-md: 15px;
 
   /* 圆角（语义档）：xs = 2px 最小档；sm/md/lg/xl/chip 见 @theme inline 桥接 */
   --radius-xs: 2px;
