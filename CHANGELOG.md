@@ -21,6 +21,18 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 晨会裁决执行批——批 9 十一件物理删除 + 死选择器晨批 + text-md 升格（宪法 v2.6）+ 统计卡余留收口 + comfortable 档启用（2026-09-30）
+
+> 2026-09-30 晨会 11 项裁决的代码批兑现（分支 chore/design-batch9-and-fixes）；桌面 v0.7.6 已代发布（Latest）、旧 draft 五份清理、stash 与已合流分支清理。
+
+| 批 | 内容 | 证据要点 |
+|---|---|---|
+| 批 9 物理删除 11/11 | direction / navigation-menu / sidebar / batch-create-tasks-dialog / task-board / task-detail-drawer / task-rows（含自身测试，晨会复核维持：三处字样均为注释非 import）/ bug-template-helper / doc-category-chips（连带 entity-templates.test 两组用例）/ filter-panel（含自身测试与 project-list-page.test vi.mock）/ thinking-stream（含画廊 ① 段 demo 与断言改 4 类）；逐项单独 commit + registry/decisions 双账同步销（action=deleted + executedAt） | 每笔 tsc -b 0 错；触及测试绿；check-component-registry 门禁 90/90=100%；COMPONENTS.md 再生（329 条目，待裁决 0） |
+| 死选择器晨批 | 夜航波及 9 文件逐文件核实 data 属性来源（诚实降级）：仅 3 处真死修复——label / input-group addon 的 `group-data-[disabled=true]`→存在性 `group-data-disabled`、画廊 Collapsible demo `data-[panel-open=true]`→`data-[panel-open]`；其余 6 文件（combobox chips / select align-trigger / drawer modal / calendar 全族 / input-otp active）经核实为 React 手写布尔或第三方字面值渲染，`=true` 形态存活有意保留；navigation-menu 已随批 9 出清单 | tsc 0 错；画廊 1 用例绿；check-tailwind-arbitrary 过；视觉复活预告：表单禁用 label/addon 变灰、画廊箭头旋转 |
+| text-md 升格（宪法 v2.6） | `--text-md: 15px` 入 @theme（sm/base 间唯一中间档，Linear 对标列表标题档）；task-simple-list / release-list-page 两处 `text-[15px]`→`text-md`；check-tailwind-arbitrary 白名单移除该条目；twMerge 对 t-shirt 尺码天然识别无需登记；PRINCIPLES v2.5→v2.6（§3.1 表 / §十二 D3 / 头部版本说明，字阶 8 档→9 档） | tsc 0 错；受影响 10 用例绿；任意值门禁过 |
+| 统计卡批二余留 | ① trend/trendValue 槽位消亡移除（up=绿/down=红 对「成本/错误上升」类指标语义反向无法统一）：dashboard 成本卡顺带修反向 bug（原渲染「成本上升=绿色+」且 budgetDeltaPct 恒 0 假数据）、project-dashboard 健康卡 30d 趋势真值并入 hint 不丢信息、画廊 demo 去 trend 字段；② columns 封闭响应式档：新增 responsive prop（默认 false 零变化，md 以下 3 列及以上降 2 列），页面侧待验收按需接 | tsc 抓出 2 个真实消费方（纠正晨会「业务零消费」前提，处置入账）；tsc 0 错；两 dashboard 3 用例绿 |
+| comfortable 档启用（F 类收官） | 两步：member-list / team-list DataList 传 size=comfortable；admin 三区（用户账号/邀请/成员）Table 传 size=comfortable（ui/table Context 透传链 F 类已就绪，本批接线） | tsc 0 错；触及 15 用例绿；视觉变化：五处列表行高 32→40px |
+
 ## [0.7.6] - 2026-09-30
 
 ### v0.7.6 发版总览——设计系统三层分层收口：语义组件层与画廊覆盖率门禁 + 列表呼吸感改版 + 组件裁决清账
