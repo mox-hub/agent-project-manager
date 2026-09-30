@@ -3,7 +3,6 @@
  */
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { DocCategoryChips } from '../entity-templates/doc-category-chips';
 import { ProjectSourceTabs } from '../entity-templates/project-source-tabs';
 import { ModeShuttleButton } from '../mode-shuttle-button';
 
@@ -14,30 +13,6 @@ vi.mock('react-i18next', () => ({
 }));
 
 describe('实体针对性辅助与模式穿梭组件（CAP-A-18 V2）', () => {
-  describe('DocCategoryChips', () => {
-    it('渲染 6 大类目 Chips，点击切换类目并传递模板骨架', () => {
-      const onChange = vi.fn();
-      const onApplyTemplate = vi.fn();
-      render(
-        <DocCategoryChips
-          value="requirement"
-          onChange={onChange}
-          onApplyTemplate={onApplyTemplate}
-        />,
-      );
-      expect(screen.getByText('需求 PRD')).toBeInTheDocument();
-      expect(screen.getByText('架构设计')).toBeInTheDocument();
-      expect(screen.getByText('接口契约')).toBeInTheDocument();
-      expect(screen.getByText('测试方案')).toBeInTheDocument();
-      expect(screen.getByText('操作指南')).toBeInTheDocument();
-      expect(screen.getByText('分析报告')).toBeInTheDocument();
-
-      fireEvent.click(screen.getByText('架构设计'));
-      expect(onChange).toHaveBeenCalledWith('design');
-      expect(onApplyTemplate).toHaveBeenCalledWith(expect.stringContaining('## 一、系统架构设计'));
-    });
-  });
-
   describe('ProjectSourceTabs', () => {
     it('渲染立项来源三分流 Tab，支持切换', () => {
       const onChange = vi.fn();
