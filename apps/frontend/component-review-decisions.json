@@ -10,7 +10,7 @@
     {"name": "autocomplete", "file": "ui/autocomplete.tsx", "action": "keep-as-canonical", "reason": "消费方实测 3 处（command.tsx、command-palette-provider.tsx、semantic/filter-chips.tsx 均用 useAutocompleteFilter），merge→combobox 成本上升；改判保留观察"},
     {"name": "direction", "file": "ui/direction.tsx", "action": "deleted", "reason": "零引用属实——base-ui DirectionProvider 再导出，无 RTL 需求", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
     {"name": "navigation-menu", "file": "ui/navigation-menu.tsx", "action": "deleted", "reason": "零引用属实——横向导航由 menu / breadcrumb / tabs 承载", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
-    {"name": "sidebar", "file": "ui/sidebar.tsx", "action": "delete", "reason": "零引用属实——与 ui/sidebar-panel（消费方 6）能力重叠"},
+    {"name": "sidebar", "file": "ui/sidebar.tsx", "action": "deleted", "reason": "零引用属实——与 ui/sidebar-panel（消费方 6）能力重叠", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
     {"name": "batch-create-tasks-dialog", "file": "modules/issue/components/batch-create-tasks-dialog.tsx", "action": "delete", "reason": "全库无 import 且不在画廊"},
     {"name": "task-board", "file": "modules/issue/components/task-board.tsx", "action": "delete", "reason": "全库无 import（看板能力由 shared/components/board-view 承载）且不在画廊"},
     {"name": "task-detail-drawer", "file": "modules/issue/components/task-detail-drawer.tsx", "action": "delete", "reason": "孤儿组件，0 importer（F 类 §1.4 发现）"},

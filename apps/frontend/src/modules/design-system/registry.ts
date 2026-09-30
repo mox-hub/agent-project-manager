@@ -139,7 +139,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'select', file: 'ui/select.tsx', section: 'Controls', status: 'canonical' },
   { name: 'separator', file: 'ui/separator.tsx', section: 'Layout & Shells', status: 'canonical' },
   { name: 'sheet', file: 'ui/sheet.tsx', section: 'Overlays', status: 'canonical' },
-  { name: 'sidebar', file: 'ui/sidebar.tsx', section: 'Layout & Shells', status: 'deprecated', galleryExempt: '2026-09-29 人工裁决批准删除：随批 9 清退，不补 demo', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：零引用（实测）——与 ui/sidebar-panel（消费方 6）能力重叠', proposal: 'delete' } },
   { name: 'sidebar-panel', file: 'semantic/sidebar-panel.tsx', section: 'Layout & Shells', status: 'canonical' },
   { name: 'skeleton', file: 'ui/skeleton.tsx', section: 'Feedback', status: 'canonical' },
   { name: 'slider', file: 'ui/slider.tsx', section: 'Controls', status: 'standby' },
