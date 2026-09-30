@@ -82,9 +82,27 @@ describe("ChartCard（semantic 层）", () => {
         <div />
       </ChartCard>,
     )
-    expect(container.querySelector('[data-slot="chart-card"]')).not.toBeNull()
+    expect(container.querySelector('[data-slot="chart-card"]')).toBeTruthy()
     const title = container.querySelector('[data-slot="card-title"]')
     expect(title?.className).toContain("text-sm")
     expect(title?.className).toContain("font-medium")
+  })
+
+  it("footer 来源行：不传不渲染；传入渲染 data-slot=chart-card-footer（lieflat 签名行）", () => {
+    const bare = render(
+      <ChartCard title="t">
+        <div />
+      </ChartCard>,
+    )
+    expect(bare.container.querySelector('[data-slot="chart-card-footer"]')).toBeNull()
+    bare.unmount()
+
+    const withFooter = render(
+      <ChartCard title="t" footer="DELIVERY · LAST 7 DAYS">
+        <div />
+      </ChartCard>,
+    )
+    const footer = withFooter.container.querySelector('[data-slot="chart-card-footer"]')
+    expect(footer?.textContent).toBe("DELIVERY · LAST 7 DAYS")
   })
 })

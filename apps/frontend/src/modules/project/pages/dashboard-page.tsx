@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Bot, DollarSign, Bug, CheckSquare, Activity, AlertTriangle,
-  TrendingUp, Sparkles, GitBranch, Shield,
+  Sparkles, GitBranch, Shield,
   LayoutDashboard,
 } from 'lucide-react';
 import { PageShell } from '@/components/semantic/page-shell';
@@ -29,6 +29,7 @@ import { StatsCard } from '@/components/semantic/stats-card';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useDashboardOverview } from '../hooks/use-dashboard-overview';
+import { GlobalOverviewPanels } from '../components/dashboard/global-overview-charts';
 import type { DashboardOverview, DashboardHealthStatus, DashboardRiskSeverity } from '../api/dashboard-api';
 
 type DialogType = 'team' | 'ai' | 'cost' | 'bugs' | 'tasks' | 'health' | 'risks' | null;
@@ -417,119 +418,9 @@ export function DashboardPage() {
                 />
               </div>
 
-              {/* Trends - Row 3 */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
-                <Card className="py-0">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-sm font-medium">{t('dashboard.panel.productivity')}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.productivitySub')}</p>
-                      </div>
-                      <TrendingUp className="size-4 text-accent-green" />
-                    </div>
-                    <div className="space-y-2">
-                      {data.trends.productivity.slice(-6).map((item) => (
-                        <div key={item.date} className="flex items-center gap-4">
-                          <span className="text-xs text-muted-foreground w-16">{item.date}</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-accent-blue rounded-full" style={{ width: `${(item.tasks / 25) * 100}%` }} />
-                          </div>
-                          <span className="text-xs font-medium w-8 text-right">{item.tasks}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-center gap-6 mt-3 pt-3 border-t border-border">
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <div className="size-2.5 rounded-full bg-accent-blue" />
-                        <span className="text-muted-foreground">{t('dashboard.panel.legendTasks')}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <div className="size-2.5 rounded-full bg-accent-green" />
-                        <span className="text-muted-foreground">{t('dashboard.panel.legendVelocity')}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <div className="size-2.5 rounded-full bg-accent-purple" />
-                        <span className="text-muted-foreground">{t('dashboard.panel.legendQuality')}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="py-0">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-sm font-medium">{t('dashboard.panel.healthTrend')}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.healthTrendSub')}</p>
-                      </div>
-                      <Activity className="size-4 text-accent-blue" />
-                    </div>
-                    <div className="flex items-end justify-between h-40 gap-2">
-                      {data.trends.health.map((item) => (
-                        <div key={item.week} className="flex-1 flex flex-col items-center gap-2">
-                          <span className="text-xs font-semibold">{item.score}</span>
-                          <div className="w-full flex-1 flex items-end">
-                            <div className="w-full bg-accent-green/70 rounded-t-sm" style={{ height: `${item.score}%` }} />
-                          </div>
-                          <span className="text-3xs text-muted-foreground">{item.week}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Row 4 */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
-                <Card className="lg:col-span-1 py-0">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-sm font-medium">{t('dashboard.panel.performance')}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.performanceSub')}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      {data.trends.performance.map((item) => (
-                        <div key={item.metric} className="flex items-center gap-3">
-                          <span className="text-xs text-muted-foreground w-24">{item.metric}</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-accent-purple rounded-full" style={{ width: `${item.value}%` }} />
-                          </div>
-                          <span className="text-xs font-medium w-8 text-right">{item.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="lg:col-span-2 py-0">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-sm font-medium">{t('dashboard.panel.cost')}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.costSub')}</p>
-                      </div>
-                      <DollarSign className="size-4 text-accent-green" />
-                    </div>
-                    <div className="space-y-3">
-                      {data.cost.byCategory.slice(0, 3).map((item) => (
-                        <div key={item.name} className="space-y-1">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">{item.name}</span>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">${item.amount}</span>
-                              <span className="text-xs text-muted-foreground">{item.percentage}%</span>
-                            </div>
-                          </div>
-                          <Progress value={item.percentage} className="h-1.5" />
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Trends Rows 3-4：四张趋势面板统一走 ChartCard + ChartContainer 正式图表栈
+                  （2026-09-30 图表栈升级批，手搓 div 条/柱退役） */}
+              <GlobalOverviewPanels trends={data.trends} costByCategory={data.cost.byCategory} />
 
               {/* Quick Actions */}
               <Card className="py-0">

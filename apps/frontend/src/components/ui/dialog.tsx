@@ -42,19 +42,30 @@ function DialogContent({
   children,
   showCloseButton = true,
   keepDefaultWidth = true,
+  size = "default",
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
   keepDefaultWidth?: boolean
+  /**
+   * 形态档（§19.4 D2：新形态在组件内新增变体轴，不靠消费方 className 覆盖）：
+   * - default：居中呼吸弹窗（基线）
+   * - full：全屏工作面（图表精读/大内容承载）——inset-0 整屏 flex 列
+   */
+  size?: "default" | "full"
 }) {
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
+        data-size={size}
         className={cn(
+          size === "full"
+            ? "fixed inset-0 z-modal flex h-dvh w-full flex-col gap-0 rounded-none border-0 bg-background p-0 text-sm text-popover-foreground shadow-none duration-normal outline-none data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+            :
           "fixed top-1/2 left-1/2 z-modal grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-xl bg-popover/95 backdrop-blur-xl p-6 text-sm text-popover-foreground border border-border/70 shadow-xs ring-1 ring-border/40 duration-normal outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          keepDefaultWidth && "sm:max-w-md",
+          keepDefaultWidth && size === "default" && "sm:max-w-md",
           className
         )}
         {...props}

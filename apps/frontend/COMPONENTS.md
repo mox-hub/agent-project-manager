@@ -435,6 +435,8 @@
 | project-detail-header-card | `src/modules/project/components/dashboard/project-detail-header-card.tsx` | ✅ canonical | — | — |
 | project-detail-nav | `src/modules/project/components/dashboard/project-detail-nav.tsx` | ✅ canonical | — | — |
 | project-health-score-dialog | `src/modules/project/components/dashboard/project-health-score-dialog.tsx` | ✅ canonical | — | — |
+| global-overview-charts | `src/modules/project/components/dashboard/global-overview-charts.tsx` | ✅ canonical | — | — |
+| lupi-chart-dialog | `src/modules/project/components/dashboard/lupi-chart-dialog.tsx` | ✅ canonical | — | — |
 | project-overview-charts | `src/modules/project/components/dashboard/project-overview-charts.tsx` | ✅ canonical | — | — |
 | project-right-sidebar | `src/modules/project/components/dashboard/project-right-sidebar.tsx` | ✅ canonical | — | — |
 | project-sidebar-context | `src/modules/project/components/dashboard/project-sidebar-context.tsx` | ✅ canonical | — | — |

@@ -1,0 +1,109 @@
+<!doctype html>
+<!-- Lieflat Charts · C2 paired rungs 参数化单图（CAP-C-06 图表双引擎切片 2026-09-30）
+     骨架/几何/动画节奏遵 basics-gallery.html C2 真实实现：每日两梯并肩，淡档=新建、
+     实档=完成，差值一眼可数，1 档 = 1 个任务。数据由宿主以 __CHART_DATA__ 注入，
+     未注入时回落演示数据。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{--bg:#F0EFEB;--ink:#1C1C1A;--muted:#8F8E88;--faint:#C6C5BF;--grid:#DEDDD6}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);font-family:'Inter',system-ui,sans-serif;color:var(--ink);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px}
+  .stage{width:100%;max-width:860px}
+  h2{font-weight:700;font-size:16px;letter-spacing:-.02em;margin-bottom:3px}
+  .sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+  svg{width:100%;max-height:min(64vh,560px);display:block;margin:0 auto}
+  svg text{font-family:'Inter',system-ui,sans-serif}
+  .src{margin-top:14px;font-size:9px;font-weight:600;letter-spacing:.14em;color:var(--faint)}
+  .fade{animation:fade .9s ease both}
+  @keyframes fade{from{opacity:0}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <h2 id="t"></h2>
+  <div class="sub" id="s"></div>
+  <svg id="chart" viewBox="0 0 400 320" preserveAspectRatio="xMidYMid meet"></svg>
+  <div class="src" id="src"></div>
+</div>
+<script>
+// ── Lieflat mono tokens（与 basics-gallery 同源内联）──
+const INK = '#1C1C1A', PAPER = '#F0EFEB', MUTED = '#8F8E88', GRID = '#DEDDD6', FAINT = '#B0AFA9';
+const NS = 'http://www.w3.org/2000/svg';
+const el = (p, t, a) => { const n = document.createElementNS(NS, t); for (const k in a) n.setAttribute(k, a[k]); p.appendChild(n); return n; };
+const txt = (p, a, s) => { const n = el(p, 'text', a); n.textContent = s; return n; };
+const tip = (n, s) => { const t = document.createElementNS(NS, 'title'); t.textContent = s; n.appendChild(t); };
+const rnd = (i, k) => Math.abs(((i * 73856093) ^ (k * 19349663)) % 1000) / 1000;
+const obsReveal = (id, fn) => {
+  const n = document.getElementById(id);
+  const go = () => { n.innerHTML = ''; fn(n); };
+  const io = new IntersectionObserver((es) => { if (es[0].isIntersecting) { go(); io.disconnect(); } }, { threshold: .3 });
+  io.observe(n); n.style.cursor = 'pointer'; n.addEventListener('click', go);
+};
+
+// 宿主注入槽：srcDoc 渲染时替换为 JSON 字面量；未注入时回落演示数据
+const CHART_DATA = /*__CHART_DATA__*/null;
+
+const DEMO = {
+  title: '交付节奏，六天对比',
+  sub: '淡梯 = 新建 · 实梯 = 完成 · 1 档 = 1 个任务 · 点击图重播',
+  src: 'PAIRED RUNGS · LIEFLAT · DELIVERY',
+  items: [
+    { label: '9-25', created: 6, done: 4 },
+    { label: '9-26', created: 5, done: 3 },
+    { label: '9-27', created: 7, done: 5 },
+    { label: '9-28', created: 4, done: 6 },
+    { label: '9-29', created: 6, done: 4 },
+    { label: '9-30', created: 5, done: 2 },
+  ],
+};
+const D = CHART_DATA && Array.isArray(CHART_DATA.items) && CHART_DATA.items.length ? CHART_DATA : DEMO;
+
+document.getElementById('t').textContent = D.title;
+document.getElementById('s').textContent = D.sub;
+document.getElementById('src').textContent = D.src;
+
+obsReveal('chart', (s) => {
+  const IT = D.items, N = IT.length;
+  const base = 258, rung = 5.4, HW = 14;
+  const step = N > 1 ? Math.min(66, (360 - 88) / (N - 1)) : 0;
+  const x0 = (i) => (N > 1 ? 44 + i * step : 200);
+  IT.forEach((it, i) => {
+    const xa = x0(i) - 13, xb = x0(i) + 13;
+    const cCap = Math.min(it.created, 30), dCap = Math.min(it.done, 30);
+    for (let k = 0; k < cCap; k++) {
+      const y = base - k * rung, w = HW - 1.2 + rnd(k + 1, i + 2) * 2.4;
+      el(s, 'line', { x1: xa - w, y1: y, x2: xa + w, y2: y, stroke: FAINT, 'stroke-width': 1,
+        opacity: .5 + rnd(k + 2, i + 3) * .4, class: 'fade', style: 'animation-delay:' + (i * .08 + k * .01) + 's' });
+    }
+    for (let k = 0; k < dCap; k++) {
+      const y = base - k * rung, w = HW - 1.2 + rnd(k + 1, i + 7) * 2.4;
+      el(s, 'line', { x1: xb - w, y1: y, x2: xb + w, y2: y, stroke: INK, 'stroke-width': 1,
+        opacity: .6 + rnd(k + 2, i + 8) * .4, class: 'fade', style: 'animation-delay:' + (.15 + i * .08 + k * .01) + 's' });
+    }
+    if (dCap > 0) {
+      const topB = base - (dCap - 1) * rung;
+      const num = txt(s, { x: xb, y: topB - 9, 'font-size': 10.5, 'font-weight': 800, fill: INK,
+        'text-anchor': 'middle', class: 'fade', style: 'animation-delay:' + (.5 + i * .08) + 's' }, dCap);
+      tip(num, it.label + ' — 完成 ' + it.done + ' · 新建 ' + it.created);
+    }
+    if (cCap > 0) {
+      txt(s, { x: xa, y: base - (cCap - 1) * rung - 9, 'font-size': 8.5, 'font-weight': 700, fill: FAINT,
+        'text-anchor': 'middle', class: 'fade', style: 'animation-delay:' + (.5 + i * .08) + 's' }, cCap);
+    }
+    txt(s, { x: x0(i), y: base + 18, 'font-size': 7.5, 'font-weight': 700, fill: MUTED,
+      'text-anchor': 'middle', 'letter-spacing': '.08em', class: 'fade',
+      style: 'animation-delay:' + (i * .08) + 's' }, it.label);
+  });
+  el(s, 'line', { x1: 30, y1: base + 4, x2: 370, y2: base + 4, stroke: GRID, 'stroke-width': .8, class: 'fade' });
+  txt(s, { x: 200, y: 306, 'font-size': 7, 'font-weight': 600, fill: '#B0AFA9', 'text-anchor': 'middle',
+    'letter-spacing': '.12em', class: 'fade', style: 'animation-delay:1s' },
+    'FAINT = CREATED · INK = DONE · ONE RUNG = ONE TASK');
+});
+</script>
+</body>
+</html>
