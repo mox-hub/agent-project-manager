@@ -121,7 +121,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'meter', file: 'ui/meter.tsx', section: 'Data Display', status: 'standby' },
   { name: 'mock-badge', file: 'ui/mock-badge.tsx', section: 'Data Display', status: 'canonical', galleryExempt: '运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态' },
   { name: 'select-field', file: 'ui/select-field.tsx', section: 'Controls', status: 'canonical' },
-  { name: 'navigation-menu', file: 'ui/navigation-menu.tsx', section: 'Navigation', status: 'deprecated', galleryExempt: '2026-09-29 人工裁决批准删除：随批 9 清退，不补 demo', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：零引用（实测）——横向导航由 menu / breadcrumb / tabs 承载', proposal: 'delete' } },
   { name: 'number-field', file: 'ui/number-field.tsx', section: 'Controls', status: 'standby' },
   { name: 'page-error-fallback', file: 'semantic/page-error-fallback.tsx', section: 'Feedback', status: 'canonical', galleryExempt: '运行时挂载件（入口/错误边界挂载），非画廊可 demo 形态' },
   { name: 'page-header', file: 'semantic/page-header.tsx', section: 'App Patterns', status: 'canonical' },

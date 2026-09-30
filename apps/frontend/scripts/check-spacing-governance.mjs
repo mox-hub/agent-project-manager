@@ -104,8 +104,7 @@ const FILE_EXEMPTIONS = [
   },
   {
     rules: ["motion", "shadow"],
-    match: (rel) =>
-      rel === "components/ui/drawer.tsx" || rel === "components/ui/navigation-menu.tsx",
+    match: (rel) => rel === "components/ui/drawer.tsx",
     reason:
       "上游 vendored 原语（coss / base-ui）：动效常量与手势物理耦合，浮层投影亦属其官方配方（宪法 §11.1）",
   },
