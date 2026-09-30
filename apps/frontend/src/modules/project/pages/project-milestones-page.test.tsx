@@ -254,13 +254,16 @@ describe('ProjectMilestonesPage 迭代区可用性（P1-19）', () => {
 
   it('日期已开始的迭代按推导显示「进行中」（后端默认 planned 不再覆盖日期）', () => {
     milestonesState.data = [];
+    // 日期相对 now 动态生成：写死日期会在真实时钟越过 endDate 后翻转推导态
+    // （2026-10-01 实锤：09-30 当天绿、10-01 起挂）。
+    const dayMs = 24 * 60 * 60 * 1000;
     iterationsState.data = [
       {
         id: 'it-1',
         name: 'Sprint 1',
         status: 'planned',
-        startDate: '2026-09-01T00:00:00Z',
-        endDate: '2026-09-30T00:00:00Z',
+        startDate: new Date(Date.now() - 7 * dayMs).toISOString(),
+        endDate: new Date(Date.now() + 7 * dayMs).toISOString(),
         _count: { issues: 5 },
       },
     ];
