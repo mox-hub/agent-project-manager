@@ -14,7 +14,7 @@
     {"name": "batch-create-tasks-dialog", "file": "modules/issue/components/batch-create-tasks-dialog.tsx", "action": "deleted", "reason": "全库无 import 且不在画廊", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
     {"name": "task-board", "file": "modules/issue/components/task-board.tsx", "action": "deleted", "reason": "全库无 import（看板能力由 shared/components/board-view 承载）且不在画廊", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
     {"name": "task-detail-drawer", "file": "modules/issue/components/task-detail-drawer.tsx", "action": "deleted", "reason": "孤儿组件，0 importer（F 类 §1.4 发现）", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
-    {"name": "task-rows", "file": "modules/issue/components/task-rows.tsx", "action": "delete", "reason": "仅自身测试与设计系统页引用"},
+    {"name": "task-rows", "file": "modules/issue/components/task-rows.tsx", "action": "deleted", "reason": "仅自身测试与设计系统页引用", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
     {"name": "bug-template-helper", "file": "shared/components/create-dialog/entity-templates/bug-template-helper.tsx", "action": "delete", "reason": "仅自身 __tests__ 引用"},
     {"name": "doc-category-chips", "file": "shared/components/create-dialog/entity-templates/doc-category-chips.tsx", "action": "delete", "reason": "仅自身 __tests__ 引用"},
     {"name": "filter-panel", "file": "shared/ui/filter-panel.tsx", "action": "delete", "reason": "唯一引用是 project-list-page.test.tsx 的 vi.mock；构成第二个 ui 命名空间"},

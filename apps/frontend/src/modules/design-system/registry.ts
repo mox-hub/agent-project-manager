@@ -344,7 +344,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'task-gantt', file: 'modules/issue/components/task-gantt.tsx', section: 'App Components', status: 'canonical' },
   { name: 'task-import-export', file: 'modules/issue/components/task-import-export.tsx', section: 'App Components', status: 'canonical' },
   { name: 'task-prompt-panel', file: 'modules/issue/components/task-prompt-panel.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'task-rows', file: 'modules/issue/components/task-rows.tsx', section: 'App Components', status: 'deprecated', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：零引用（实测）——仅被自身测试与设计系统页引用', proposal: 'delete' } },
   { name: 'task-simple-list', file: 'modules/issue/components/task-simple-list.tsx', section: 'App Components', status: 'canonical' },
   { name: 'task-table-view', file: 'modules/issue/components/task-table-view.tsx', section: 'App Components', status: 'canonical' },
   { name: 'linear-config-form', file: 'modules/linear/components/linear-config-form.tsx', section: 'App Components', status: 'canonical' },
