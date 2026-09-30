@@ -3401,11 +3401,14 @@
     "addDescription": "添加描述…",
     "tabs": {
       "overview": "概览",
+      "tasks": "任务",
+      "teamProjects": "团队与项目",
       "projects": "参与项目",
       "teams": "所属团队",
       "activities": "活动",
       "grants": "工具授权"
     },
+    "saving": "保存中…",
     "stats": {
       "todo": "待办任务",
       "inProgress": "进行中",
@@ -3441,6 +3444,65 @@
       "thinkingLevel": "思考强度",
       "default": "默认",
       "avatar": "头像"
+    },
+    "tasks": {
+      "title": "参与的任务",
+      "desc": "{{count}} 个任务（按指派关系）",
+      "empty": "还没有参与任何任务",
+      "emptyDesc": "该成员被指派任务后，任务会出现在这里"
+    },
+    "teamProjects": {
+      "teams": "所属团队与项目",
+      "teamsDesc": "先参与的团队，团队再参与项目",
+      "projectCount": "{{count}} 项目",
+      "noDirect": "无直绑项目（项目经团队参与）",
+      "allEmptyHint": "加入团队或直绑项目后展示",
+      "owner": "创始人",
+      "admin": "管理员",
+      "member": "成员"
+    },
+    "usage": {
+      "title": "成本预览",
+      "totalTokens": "总 Token",
+      "totalCost": "总成本",
+      "executions": "执行次数",
+      "lastExecution": "最近执行",
+      "never": "从未",
+      "byModel": "按模型分解",
+      "humanNote": "人类成员无 CLI 执行用量；成本口径为日费率（工时），见右侧属性栏"
+    },
+    "activity": {
+      "cliRuns": "CLI 调用记录",
+      "cliRunsDesc": "派发给该成员的执行记录（含 token 与成本）",
+      "noRuns": "还没有执行记录",
+      "noRunsDesc": "派发任务给该成员后，CLI 调用记录会出现在这里"
+    },
+    "grants": {
+      "title": "工具与访问授权",
+      "save": "保存授权",
+      "saving": "保存中…",
+      "saved": "授权已保存",
+      "saveFailed": "保存失败",
+      "whitelistMode": "当前为白名单模式：仅选定的对象可用，派发任务时按此收敛工具集。",
+      "unrestrictedMode": "尚未配置授权（不限制）。选择对象后即切换为白名单模式。",
+      "cliTool": "CLI 工具",
+      "cliToolHint": "派发任务时该成员使用的 CLI Provider",
+      "mcp": "外部 MCP Server",
+      "mcpHint": "该成员可访问的外部 MCP 服务（平台配置 + CLI 本机资产）",
+      "skill": "技能",
+      "skillHint": "该成员可启用的技能（平台配置 + CLI 本机资产）",
+      "singleSelect": "（单选白名单）",
+      "unrestricted": "不限制（可用全部 CLI 工具）",
+      "unrestrictedShort": "不限制",
+      "serverLocal": "服务器本地",
+      "noRuntime": "该机器未上报 CLI 运行时",
+      "cliConfigHint": "执行配置（可选）：为该成员覆盖此 CLI 的模型与思考强度；留空使用 CLI 默认配置。",
+      "modelOverride": "模型",
+      "modelPlaceholder": "留空使用 CLI 默认模型",
+      "thinkingOverride": "思考强度",
+      "cliDefault": "CLI 默认",
+      "cliSource": "CLI 本机资产（从 CLI 工具读取）",
+      "disabled": "（未启用）"
     }
   },
   "teams": {

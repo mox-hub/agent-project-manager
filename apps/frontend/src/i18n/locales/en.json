@@ -3401,11 +3401,14 @@
     "addDescription": "Add a description…",
     "tabs": {
       "overview": "Overview",
+      "tasks": "Tasks",
+      "teamProjects": "Teams & Projects",
       "projects": "Projects",
       "teams": "Teams",
       "activities": "Activity",
       "grants": "Tool Grants"
     },
+    "saving": "Saving…",
     "stats": {
       "todo": "To do",
       "inProgress": "In progress",
@@ -3441,6 +3444,65 @@
       "thinkingLevel": "Thinking level",
       "default": "Default",
       "avatar": "Avatar"
+    },
+    "tasks": {
+      "title": "Assigned tasks",
+      "desc": "{{count}} task(s) by assignment",
+      "empty": "No tasks yet",
+      "emptyDesc": "Tasks appear here once this member gets assigned"
+    },
+    "teamProjects": {
+      "teams": "Teams & their projects",
+      "teamsDesc": "Members join teams first; teams participate in projects",
+      "projectCount": "{{count}} project(s)",
+      "noDirect": "No directly bound projects (projects come via teams)",
+      "allEmptyHint": "Join a team or bind a project directly to see it here",
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member"
+    },
+    "usage": {
+      "title": "Cost preview",
+      "totalTokens": "Total tokens",
+      "totalCost": "Total cost",
+      "executions": "Executions",
+      "lastExecution": "Last execution",
+      "never": "Never",
+      "byModel": "By model",
+      "humanNote": "Human members have no CLI usage; cost is tracked as daily rate (see properties)"
+    },
+    "activity": {
+      "cliRuns": "CLI runs",
+      "cliRunsDesc": "Executions dispatched to this member (with tokens & cost)",
+      "noRuns": "No execution records yet",
+      "noRunsDesc": "CLI run records appear here once a task is dispatched to this member"
+    },
+    "grants": {
+      "title": "Tools & access grants",
+      "save": "Save grants",
+      "saving": "Saving…",
+      "saved": "Grants saved",
+      "saveFailed": "Failed to save",
+      "whitelistMode": "Whitelist mode: only selected items are available; dispatches are narrowed accordingly.",
+      "unrestrictedMode": "No grants configured (unrestricted). Selecting any item switches to whitelist mode.",
+      "cliTool": "CLI tool",
+      "cliToolHint": "The CLI provider this member uses for dispatches",
+      "mcp": "External MCP servers",
+      "mcpHint": "MCP services this member can access (platform config + CLI local assets)",
+      "skill": "Skills",
+      "skillHint": "Skills this member can use (platform config + CLI local assets)",
+      "singleSelect": " (single select)",
+      "unrestricted": "Unrestricted (all CLI tools)",
+      "unrestrictedShort": "Unrestricted",
+      "serverLocal": "Server local",
+      "noRuntime": "No CLI runtime reported by this machine",
+      "cliConfigHint": "Execution overrides (optional): override model & thinking level for this member; leave empty to use the CLI default config.",
+      "modelOverride": "Model",
+      "modelPlaceholder": "Empty = CLI default model",
+      "thinkingOverride": "Thinking",
+      "cliDefault": "CLI default",
+      "cliSource": "CLI local assets (read from the CLI tool)",
+      "disabled": " (disabled)"
     }
   },
   "teams": {

@@ -170,6 +170,8 @@ export interface MemberCard {
     projectName: string;
     color: string | null;
     role: string;
+    /** 绑定来源：direct=成员页直绑；team=经团队传播 */
+    source: string;
   }>;
   load: MemberLoad;
   recentActivities: Array<{
@@ -183,6 +185,12 @@ export interface MemberCard {
     teamName: string;
     role: string;
     color: string | null;
+    /** 该团队参与的项目（TeamProject 关联，先团队再项目） */
+    projects: Array<{
+      projectId: string;
+      projectName: string;
+      color: string | null;
+    }>;
   }>;
 }
 

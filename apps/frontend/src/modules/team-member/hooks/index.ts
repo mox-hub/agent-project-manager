@@ -320,6 +320,26 @@ export function useMemberLoad(memberId: string | undefined, projectId?: string) 
   });
 }
 
+/** 成员参与的任务列表（GET /issue-assignees/member/:id，个人页任务清单 tab） */
+export function useMemberTasks(memberId: string | undefined) {
+  return useQuery({
+    queryKey: ['member-tasks', memberId],
+    queryFn: () => api.listMemberTasks(memberId!),
+    enabled: !!memberId,
+    staleTime: 30 * 1000,
+  });
+}
+
+/** 成员维度 token/成本聚合（GET /members/:id/usage-summary，个人页成本预览） */
+export function useMemberUsageSummary(memberId: string | undefined) {
+  return useQuery({
+    queryKey: ['member-usage-summary', memberId],
+    queryFn: () => api.getMemberUsageSummary(memberId!),
+    enabled: !!memberId,
+    staleTime: 60 * 1000,
+  });
+}
+
 // ========== Document Authors / Reviewers ==========
 
 export function useDocumentAuthors(documentId: string | undefined) {

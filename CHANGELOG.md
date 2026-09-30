@@ -21,6 +21,22 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-A-02 增强「AI 成员个人页结构重构」——任务清单/真实活动流+成本预览/团队→项目层级/PromptEditor/工具授权三层化/技能 MCP 双源（2026-09-30）
+
+> 用户 /goal 开工令（分支 feat/ai-member-page-restructure）；requirement-intake 五步登记（能力清单 CAP-A-02 增强注记 + GAP-T-49）。AI 成员个人页从静态档案升级为工作台。
+
+| 变更 | 内容 | 证据要点 |
+|---|---|---|
+| 任务清单 tab | 前端新 tab 接现成 `GET /issue-assignees/member/:id`（指派 + 任务/项目摘要，状态点/优先级/项目色点），`useMemberTasks` hook | team-member 模块 8 用例绿 |
+| 个人提示词 PromptEditor | overview tab 裸 `<pre>` 只读换 `shared/prompt-editor`（MarkdownLiveEditor 编辑态 + 字数 + 保存中指示），防抖 1.5s PATCH `personalPrompt`，服务端值变化重置草稿防回写竞态 | 渲染期 prevData 同步模式（无 effect setState） |
+| 团队与项目合并 | 「参与项目+所属团队」两 tab 合并为层级视图：团队节点下挂 `TeamProject` 关联项目（先团队、团队再项目），直绑项目单列（`card.projects[].source` 区分 direct/team）；member card `teams[].projects` 后端补齐 | member-card 单测 +4（层级/usage 3 例） |
+| 活动真实数据 + 成本预览 | 活动 tab 升级三段：成本预览 StatsCard（总 Token/成本/执行次数/最近执行 + 按模型分解）+ CLI 调用记录（`GET /execution/runs` 新增 `subjectType`+`subjectId` 过滤）+ MemberActivity 流；新端点 `GET /members/:id/usage-summary`（AIUsageLog 按 executionRunId 聚合；人类成员诚实零值 scope=human） | member-card 单测覆盖 AI 聚合/人类零值/无 run 短路三路径 |
+| 工具授权三层化 | `MemberToolGrant` +`config Json` 列（cli_tool 行存 `{model, thinkingLevel}` 覆盖，空=回落 CLI 默认）；`GET/PUT /members/:id/tool-grants` DTO 透传 config；派发链消费：`runDispatch` 步骤 5.5 成员授权行模型覆盖（优先级：请求显式 > 授权行 > CliProviderConfig.model），`buildMemberPromptContext` 思考强度覆盖（授权行 > Member.thinkingLevel）；UI 选中 CLI 后展开模型（自由输入）+思考强度（CapsuleSelect）覆盖配置 | 迁移 `20260930000000_member_tool_grant_config`（dev.db+template.db 双库登记）；cli-dispatch+team 107 用例绿 |
+| 技能/MCP 双源 | 新 `CliAssetScannerService`（best-effort 读本机 CLI 资产：claude-code/zcode/opencode skills 目录+SKILL.md frontmatter、claude-code `.claude.json`/codex `config.toml` mcpServers；读不到=空+note 不抛错）+ 端点 `GET /cli-providers/:id/assets`；tool-grants catalog 合并 CLI 条目（refKey 命名空间 `cli:<providerId>:<key>`，`source: platform|cli`）分组展示；技能提示词段双源合并：平台 SkillConfig 全文注入（现状）+ CLI 授权条目聚合为「本机可用资产」清单段（技能+MCP），`buildSkillsPromptSection(projectId, memberId)` | scanner 纯 node:fs 无新依赖；i18n 双语 4871 键同步 |
+| 契约三件套 | openapi.json（+530：usage-summary/assets 端点、card teams[].projects、grants config/source、runs subjectId）+ 前端/apm-shared 双份 api-types.gen.ts 重生成 | `contract:check` 零漂移 |
+
+> 诚实降级：AIConversation/AIMessage 无 memberId 维度（createdBy 是 User），「对话数据」对 AI 成员的口径 = 执行记录（CLI 会话），对话级混流留待接入层演进；远端 runtime 场景的 CLI 资产发现通道同（本轮 standalone 同机扫描）。
+
 ### CAP-A-15「管道项目聚焦」切片废弃——六站项目筛选回归页内自治（2026-09-30）
 
 > 用户裁决「直接删掉聚焦功能，留给各个页面自己调整」；能力清单 A-15 卡切片置 gap（GAP-T-27 关账）。废弃根因：全局聚焦与六站「仅初值」消费模式天然脱节（页内筛选改动不回写、跨站即弹回）、入口 text-3xs 藏分组头难发现、侧边栏折叠后选择器消失而过滤仍生效（盲飞）。

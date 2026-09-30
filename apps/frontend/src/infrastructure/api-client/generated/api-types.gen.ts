@@ -2169,6 +2169,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/members/{id}/usage-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Member 用量/成本聚合（AI 成员=Execution subject 聚合；人类=诚实零值） */
+        get: operations["MemberController_getUsageSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/members/{id}/deactivate": {
         parameters: {
             query?: never;
@@ -6565,6 +6582,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/cli-providers/{id}/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 发现 CLI 工具本机的技能与 MCP Server（best-effort，读不到=空+note） */
+        get: operations["CliProviderController_listAssets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/cli-providers/{id}": {
         parameters: {
             query?: never;
@@ -10418,6 +10452,11 @@ export interface components {
             color?: string | null;
             /** @description 绑定角色 */
             role: string;
+            /**
+             * @description 绑定来源：direct=成员页直绑；team=经团队传播
+             * @enum {string}
+             */
+            source: "direct" | "team";
         };
         MemberLoadResponseDto: {
             /** @description 待办任务数（todo/backlog） */
@@ -10439,6 +10478,13 @@ export interface components {
             /** @description 发生时间（ISO） */
             createdAt: string;
         };
+        MemberCardTeamProjectDto: {
+            /** @description 项目 ID */
+            projectId: string;
+            /** @description 项目名 */
+            projectName: string;
+            color?: string | null;
+        };
         MemberCardTeamDto: {
             /** @description 团队 ID */
             teamId: string;
@@ -10446,6 +10492,8 @@ export interface components {
             teamName: string;
             role: string;
             color?: string | null;
+            /** @description 该团队参与的项目（TeamProject 关联） */
+            projects: components["schemas"]["MemberCardTeamProjectDto"][];
         };
         MemberCardResponseDto: {
             id: string;
@@ -10483,6 +10531,35 @@ export interface components {
             /** @description 最近 5 条活动 */
             recentActivities: components["schemas"]["MemberCardActivityDto"][];
             teams: components["schemas"]["MemberCardTeamDto"][];
+        };
+        MemberUsageTotalsDto: {
+            totalTokens: number;
+            promptTokens: number;
+            completionTokens: number;
+            totalCost: number;
+        };
+        MemberUsageByModelDto: {
+            /** @description 模型名 */
+            model: string;
+            tokens: number;
+            cost: number;
+        };
+        MemberUsageExecutionsDto: {
+            total: number;
+            completed: number;
+            failed: number;
+            inProgress: number;
+        };
+        MemberUsageSummaryResponseDto: {
+            /**
+             * @description 聚合口径：ai_agent=Execution subject 聚合；human=诚实零值
+             * @enum {string}
+             */
+            scope: "ai_agent" | "human";
+            totals: components["schemas"]["MemberUsageTotalsDto"];
+            byModel: components["schemas"]["MemberUsageByModelDto"][];
+            executions: components["schemas"]["MemberUsageExecutionsDto"];
+            lastExecutionAt?: string | null;
         };
         UpdateMemberDto: {
             displayName?: string;
@@ -10533,6 +10610,10 @@ export interface components {
             /** @description 目标引用键（providerId / server id / skill key） */
             refKey: string;
             granted: boolean;
+            /** @description 授权配置：cli_tool 行可存 { model, thinkingLevel } 覆盖，空=回落 CLI 默认 */
+            config?: {
+                [key: string]: unknown;
+            } | null;
             grantedBy?: string | null;
             /** @description 创建时间（ISO） */
             createdAt: string;
@@ -10546,6 +10627,13 @@ export interface components {
             label: string;
             /** @description 目录项是否可用 */
             enabled: boolean;
+            /**
+             * @description 条目来源：platform=平台配置；cli=从 CLI 工具本地配置读取
+             * @enum {string}
+             */
+            source?: "platform" | "cli";
+            /** @description source=cli 时所属的 CLI providerId */
+            cliProviderId?: string;
         };
         ToolGrantCatalogDto: {
             /** @description CLI provider 目录 */
@@ -10559,6 +10647,12 @@ export interface components {
             grants: components["schemas"]["MemberToolGrantResponseDto"][];
             catalog: components["schemas"]["ToolGrantCatalogDto"];
         };
+        MemberToolGrantConfigDto: {
+            /** @description 模型覆盖（cli_tool 行）；缺省=回落该 CLI 默认配置 */
+            model?: string;
+            /** @description 思考强度覆盖（cli_tool 行）；minimal|low|medium|high|max */
+            thinkingLevel?: string;
+        };
         MemberToolGrantItemDto: {
             /** @enum {string} */
             scope: "cli_tool" | "mcp_server" | "skill";
@@ -10566,6 +10660,8 @@ export interface components {
             refKey: string;
             /** @default true */
             granted: boolean;
+            /** @description 授权配置（仅 cli_tool 行有意义）：{ model?, thinkingLevel? }，空/缺省=回落 CLI 默认配置 */
+            config?: components["schemas"]["MemberToolGrantConfigDto"];
         };
         SetMemberToolGrantsDto: {
             /** @description 全量覆盖的授权清单 */
@@ -14922,6 +15018,20 @@ export interface components {
         CliProviderDetectResponseDto: {
             /** @description 重新探测后的 Provider 状态列表 */
             providers: components["schemas"]["CliProviderStatusDto"][];
+        };
+        CliAssetItemDto: {
+            /** @description 资产键（技能目录名 / mcpServers 键名） */
+            key: string;
+            /** @description 展示名 */
+            name: string;
+            description?: string | null;
+        };
+        CliAssetsResponseDto: {
+            providerId: string;
+            skills: components["schemas"]["CliAssetItemDto"][];
+            mcpServers: components["schemas"]["CliAssetItemDto"][];
+            /** @description 各路扫描的降级说明 */
+            notes: string[];
         };
         ConfigureCliProviderDto: {
             /**
@@ -21647,6 +21757,8 @@ export interface operations {
                 offset?: unknown;
                 limit?: unknown;
                 status?: unknown;
+                /** @description 执行主体 ID（AI 成员传 memberId，与 subjectType 搭配按成员过滤） */
+                subjectId?: unknown;
                 subjectType?: unknown;
                 issueId?: unknown;
                 /** @description 缺省返回用户为成员的全部项目 */
@@ -26162,6 +26274,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MemberCardResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    MemberController_getUsageSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Member ID 或 shortId */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回 token/成本聚合（个人页成本预览数据源） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberUsageSummaryResponseDto"];
                 };
             };
             /** @description 请求参数错误 */
@@ -46152,6 +46342,83 @@ export interface operations {
              *
              *     资源不存在
              */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    CliProviderController_listAssets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: "claude-code" | "codex" | "zcode" | "opencode";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回该 CLI 本地技能/MCP 清单（成员工具授权「CLI 来源」目录） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CliAssetsResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
             404: {
                 headers: {
                     [name: string]: unknown;

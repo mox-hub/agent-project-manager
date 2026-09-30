@@ -150,12 +150,19 @@ export async function deleteMember(id: string) {
 
 export type MemberToolGrantScope = 'cli_tool' | 'mcp_server' | 'skill';
 
+/** cli_tool 行授权配置：模型/思考强度覆盖，空 = 回落该 CLI 默认配置 */
+export interface MemberToolGrantConfig {
+  model?: string;
+  thinkingLevel?: string;
+}
+
 export interface MemberToolGrant {
   id: string;
   memberId: string;
   scope: MemberToolGrantScope;
   refKey: string;
   granted: boolean;
+  config?: Record<string, unknown> | null;
   grantedBy: string | null;
   createdAt: string;
   updatedAt: string;
@@ -165,6 +172,10 @@ export interface MemberToolGrantCatalogItem {
   refKey: string;
   label: string;
   enabled: boolean;
+  /** 条目来源：platform=平台配置；cli=从 CLI 工具本地配置读取 */
+  source?: 'platform' | 'cli';
+  /** source=cli 时所属的 CLI providerId */
+  cliProviderId?: string;
 }
 
 export interface MemberToolGrantsResponse {
@@ -179,9 +190,56 @@ export async function getMemberToolGrants(memberId: string): Promise<MemberToolG
 
 export async function setMemberToolGrants(
   memberId: string,
-  items: RequestBodyOf<'MemberController_setToolGrants'>['items'],
+  items: Array<{
+    scope: MemberToolGrantScope;
+    refKey: string;
+    granted: boolean;
+    config?: MemberToolGrantConfig | null;
+  }>,
 ) {
   const res = await api.put<MemberToolGrant[]>(`/members/${memberId}/tool-grants`, { items });
+  return res;
+}
+
+// ========== 成员任务 / 用量（个人页 2026-09-30 重构） ==========
+
+/** GET /issue-assignees/member/:id 返回项：指派 + 任务摘要 */
+export interface MemberTaskRef {
+  id: string;
+  issueId: string;
+  memberId: string;
+  createdAt: string;
+  task?: {
+    id: string;
+    title: string;
+    status: string;
+    priority: string;
+    projectId: string | null;
+    project?: { id: string; name: string; color?: string | null } | null;
+  } | null;
+}
+
+export async function listMemberTasks(memberId: string): Promise<MemberTaskRef[]> {
+  const res = await api.get<MemberTaskRef[]>(`/issue-assignees/member/${memberId}`);
+  return res;
+}
+
+/** GET /members/:id/usage-summary 返回：成员维度 token/成本聚合 */
+export interface MemberUsageSummary {
+  scope: 'ai_agent' | 'human';
+  totals: {
+    totalTokens: number;
+    promptTokens: number;
+    completionTokens: number;
+    totalCost: number;
+  };
+  byModel: Array<{ model: string; tokens: number; cost: number }>;
+  executions: { total: number; completed: number; failed: number; inProgress: number };
+  lastExecutionAt: string | null;
+}
+
+export async function getMemberUsageSummary(memberId: string): Promise<MemberUsageSummary> {
+  const res = await api.get<MemberUsageSummary>(`/members/${memberId}/usage-summary`);
   return res;
 }
 

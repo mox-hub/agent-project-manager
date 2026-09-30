@@ -1,14 +1,14 @@
 /**
- * 成员详情页 — 按 detail-page 模板重写
+ * 成员详情页 — 按 detail-page 模板重写（2026-09-30 AI 成员工作台重构）
  *
  * 骨架：PageShell > SubPageToolbar(返回/面包屑/居中页签/翻页/侧栏开关)
  *      > Body(主区纵向滚动 + RightSidebar)
- * 主区：标题热编辑 > 描述热编辑 > 页签内容（概览/项目/团队/活动/AI 工具授权）
- * 右栏：SidebarButtonGroup(复制短ID/停用) + PropsCard(属性胶囊)
+ * 主区：标题热编辑 > 描述热编辑 > 页签内容
+ *   （概览[负载+PromptEditor 个人提示词] / 任务 / 团队与项目 / 活动[成本+CLI 记录] / AI 工具授权）
+ * 右栏：SidebarButtonGroup(复制短ID/停用) + PropsCard(属性胶囊) + 团队与项目速览
  */
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   Bot,
@@ -33,9 +33,7 @@ import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/semantic/right-sidebar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/semantic/section-card';
-import { EmptyState } from '@/components/semantic/empty-state';
 import { StatsCard } from '@/components/semantic/stats-card';
 import {
   AutoSizeTextarea,
@@ -44,17 +42,15 @@ import {
   PropertyRow,
   PropsCard,
 } from '@/shared/components/property-panel';
+import { PromptEditor } from '@/shared/components/prompt-editor';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
-import { api } from '@/infrastructure/api-client';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import {
   useMemberDetail,
   useMemberCard,
-  useBindMemberProject,
-  useUnbindMemberProject,
   useUpdateMember,
   useDeactivateMember,
   useMembers,
@@ -66,10 +62,18 @@ import {
 } from '@/shared/member/types';
 import { MemberAvatar } from '../components/member-avatar';
 import { MemberToolGrants } from '../components/member-tool-grants';
+import { MemberTasksSection } from '../components/member-tasks-section';
+import { MemberTeamProjectSection } from '../components/member-team-project-section';
+import { MemberActivitySection } from '../components/member-activity-section';
 import { useSetViewingContext } from '@/shared/viewing-context';
 import { isSystemAssistantMember } from '@/shared/member/types';
 
-type DetailTab = 'overview' | 'projects' | 'teams' | 'activities' | 'grants';
+type DetailTab =
+  | 'overview'
+  | 'tasks'
+  | 'teamProjects'
+  | 'activities'
+  | 'grants';
 
 export default function MemberDetailPage() {
   const { memberId } = useParams<{ memberId: string }>();
@@ -85,8 +89,6 @@ export default function MemberDetailPage() {
     member ? { type: 'member', id: member.id, title: member.displayName } : null,
   );
   const { data: card } = useMemberCard(memberId);
-  const bind = useBindMemberProject(memberId!);
-  const unbind = useUnbindMemberProject(memberId!);
   const updateMember = useUpdateMember();
   const deactivate = useDeactivateMember();
 
@@ -109,6 +111,15 @@ export default function MemberDetailPage() {
   const [propsCollapsed, setPropsCollapsed] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
 
+  // 个人提示词草稿（PromptEditor 受控值）：服务端值变化时重置，防回写竞态
+  const [promptDraft, setPromptDraft] = useState<string | null>(null);
+  const [prevServerPrompt, setPrevServerPrompt] = useState(member?.personalPrompt ?? null);
+  if (member && prevServerPrompt !== (member.personalPrompt ?? null)) {
+    setPrevServerPrompt(member.personalPrompt ?? null);
+    setPromptDraft(null);
+  }
+  const promptValue = promptDraft ?? member?.personalPrompt ?? '';
+
   const updateField = async (patch: Partial<Member>) => {
     if (!memberId || !patch) return;
     setMutationError(null);
@@ -129,6 +140,11 @@ export default function MemberDetailPage() {
     updateField({ description: value });
   }, 1500);
 
+  const persistPrompt = useDebouncedCallback((value: string) => {
+    if (!memberId || value === (member?.personalPrompt ?? '')) return;
+    updateField({ personalPrompt: value });
+  }, 1500);
+
   const handleDeactivate = async () => {
     if (!member) return;
     const ok = await confirmDialog({
@@ -141,14 +157,6 @@ export default function MemberDetailPage() {
     });
     if (ok) deactivate.mutate(member.id);
   };
-
-  const { data: projectsData } = useQuery({
-    queryKey: ['projects-for-bind', memberId],
-    queryFn: async () => {
-      return api.get<{ items: Array<{ id: string; name: string; color: string | null }> }>('/projects', { limit: 100 });
-    },
-    staleTime: 60 * 1000,
-  });
 
   if (isLoading) {
     return (
@@ -171,13 +179,14 @@ export default function MemberDetailPage() {
 
   const isAI = member.type === 'ai_agent';
   const isAdmin = roles.some((r) => r.role === 'admin' || r.role === 'maintainer');
-  const boundIds = new Set((card?.projects ?? []).map((p) => p.projectId));
-  const availableProjects = (projectsData?.items ?? []).filter((p) => !boundIds.has(p.id));
 
   const tabItems: Array<{ value: DetailTab; label: string }> = [
     { value: 'overview', label: t('memberDetail.tabs.overview', '概览') },
-    { value: 'projects', label: t('memberDetail.tabs.projects', '参与项目') },
-    { value: 'teams', label: t('memberDetail.tabs.teams', '所属团队') },
+    { value: 'tasks', label: t('memberDetail.tabs.tasks', '任务') },
+    {
+      value: 'teamProjects',
+      label: t('memberDetail.tabs.teamProjects', '团队与项目'),
+    },
     { value: 'activities', label: t('memberDetail.tabs.activities', '活动') },
     ...(isAI
       ? [{ value: 'grants' as DetailTab, label: t('memberDetail.tabs.grants', '工具授权') }]
@@ -306,15 +315,27 @@ export default function MemberDetailPage() {
                     },
                   ]}
                 />
-
                 {isAI && (
                   <SectionCard
                     title={t('memberDetail.personalPrompt', '个人提示词（执行者个人补充）')}
-                                      description={t('memberDetail.personalPromptDesc', '与所属角色的共享约定合并为一个「执行者段」注入派发 prompt')}
+                    description={t('memberDetail.personalPromptDesc', '与所属角色的共享约定合并为一个「执行者段」注入派发 prompt')}
                   >
-                    <pre className="whitespace-pre-wrap rounded-md bg-muted/50 p-2 font-mono text-xs">
-                      {member.personalPrompt ?? t('memberDetail.personalPromptEmpty', '（未配置）')}
-                    </pre>
+                    <PromptEditor
+                      value={promptValue}
+                      onChange={(v) => {
+                        setPromptDraft(v);
+                        persistPrompt(v);
+                      }}
+                      placeholder={t('memberDetail.personalPromptEmpty', '（未配置）')}
+                      maxHeight={280}
+                      actions={
+                        updateMember.isPending ? (
+                          <span className="text-xs text-muted-foreground">
+                            {t('memberDetail.saving', '保存中…')}
+                          </span>
+                        ) : null
+                      }
+                    />
                   </SectionCard>
                 )}
 
@@ -331,132 +352,14 @@ export default function MemberDetailPage() {
               </>
             )}
 
-            {activeTab === 'projects' && (
-              <>
-                <SectionCard title={t('memberDetail.boundProjects', '已参与项目')}>
-                  {(card?.projects ?? []).length === 0 ? (
-                    <p className="py-4 text-center text-sm text-muted-foreground">
-                      {t('memberDetail.noProjects', '暂未参与任何项目')}
-                    </p>
-                  ) : (
-                    <ul className="space-y-1">
-                      {(card?.projects ?? []).map((p) => (
-                        <li
-                          key={p.projectId}
-                          className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/30"
-                        >
-                          <Link
-                            to={`/app/projects/${p.projectId}`}
-                            className="flex items-center gap-2 text-sm hover:underline"
-                          >
-                            <span
-                              className="size-2.5 rounded-full"
-                              style={{ backgroundColor: p.color || 'var(--color-brand-linear)' }}
-                            />
-                            {p.projectName}
-                          </Link>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-3xs">{p.role}</Badge>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-5 px-1.5 text-3xs text-accent-red"
-                              onClick={() => unbind.mutate(p.projectId)}
-                            >
-                              {t('memberDetail.unbind', '解除')}
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </SectionCard>
+            {activeTab === 'tasks' && <MemberTasksSection memberId={member.id} />}
 
-                {availableProjects.length > 0 && (
-                  <SectionCard title={t('memberDetail.bindNewProject', '绑定到新项目')}>
-                    <ul className="space-y-1">
-                      {availableProjects.slice(0, 10).map((p) => (
-                        <li
-                          key={p.id}
-                          className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/30"
-                        >
-                          <div className="flex items-center gap-2 text-sm">
-                            <span
-                              className="size-2.5 rounded-full"
-                              style={{ backgroundColor: p.color || 'var(--color-brand-linear)' }}
-                            />
-                            {p.name}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-5 px-1.5 text-3xs"
-                            onClick={() => bind.mutate({ projectId: p.id, role: 'member' })}
-                          >
-                            {t('memberDetail.bind', '绑定')}
-                          </Button>
-                        </li>
-                      ))}
-                    </ul>
-                  </SectionCard>
-                )}
-              </>
-            )}
-
-            {activeTab === 'teams' && (
-              <SectionCard title={t('memberDetail.memberTeams', '所属团队')}>
-                {(card?.teams ?? []).length === 0 ? (
-                  <p className="py-4 text-center text-sm text-muted-foreground">
-                    {t('memberDetail.noTeams', '不在任何团队')}
-                  </p>
-                ) : (
-                  <ul className="space-y-1">
-                    {(card?.teams ?? []).map((tm) => (
-                      <li
-                        key={tm.teamId}
-                        className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/30"
-                      >
-                        <Link
-                          to={`/app/teams/${tm.teamId}`}
-                          className="flex items-center gap-2 text-sm hover:underline"
-                        >
-                          <span
-                            className="size-2.5 rounded-full"
-                            style={{ backgroundColor: tm.color || 'var(--color-brand-linear)' }}
-                          />
-                          {tm.teamName}
-                        </Link>
-                        <Badge variant="outline" className="text-3xs">{tm.role}</Badge>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </SectionCard>
+            {activeTab === 'teamProjects' && (
+              <MemberTeamProjectSection memberId={member.id} />
             )}
 
             {activeTab === 'activities' && (
-              <SectionCard title={t('memberDetail.recentActivities', '活动记录')}>
-                {(card?.recentActivities ?? []).length === 0 ? (
-                  <EmptyState
-                    variant="card"
-                    title={t('memberDetail.noActivities', '还没有活动记录')}
-                    description={t('memberDetail.noActivitiesDesc', '该成员产生操作后，记录会出现在这里')}
-                    className="min-h-0 border-0"
-                  />
-                ) : (
-                  <ul className="space-y-2">
-                    {(card?.recentActivities ?? []).map((a) => (
-                      <li
-                        key={a.id}
-                        className="flex items-center justify-between gap-2 text-xs text-muted-foreground"
-                      >
-                        <span>{a.type}</span>
-                        <span>{new Date(a.createdAt).toLocaleString()}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </SectionCard>
+              <MemberActivitySection memberId={member.id} />
             )}
 
             {activeTab === 'grants' && isAI && <MemberToolGrants memberId={member.id} />}
@@ -558,6 +461,29 @@ export default function MemberDetailPage() {
             </PropertyRow>
           </PropsCard>
 
+          {(card?.teams ?? []).length > 0 && (
+            <PropsCard
+              title={t('memberDetail.memberTeams', '所属团队')}
+              collapsed={propsCollapsed}
+              onToggleCollapse={() => setPropsCollapsed((v) => !v)}
+            >
+              {(card?.teams ?? []).map((tm) => (
+                <PropertyRow
+                  key={tm.teamId}
+                  icon={<Users className="size-3.5" />}
+                  label={tm.teamName}
+                >
+                  <span className="text-3xs text-muted-foreground">
+                    {t('memberDetail.teamProjects.projectCount', {
+                      count: tm.projects.length,
+                      defaultValue: '{{count}} 项目',
+                    })}
+                  </span>
+                </PropertyRow>
+              ))}
+            </PropsCard>
+          )}
+
           {(card?.projects ?? []).length > 0 && (
             <PropsCard
               title={t('memberDetail.boundProjects', '参与项目')}
@@ -571,22 +497,9 @@ export default function MemberDetailPage() {
               ))}
             </PropsCard>
           )}
-
-          {(card?.teams ?? []).length > 0 && (
-            <PropsCard
-              title={t('memberDetail.memberTeams', '所属团队')}
-              collapsed={propsCollapsed}
-              onToggleCollapse={() => setPropsCollapsed((v) => !v)}
-            >
-              {(card?.teams ?? []).map((tm) => (
-                <PropertyRow key={tm.teamId} icon={<Users className="size-3.5" />} label={tm.teamName}>
-                  <Badge variant="outline" className="text-3xs">{tm.role}</Badge>
-                </PropertyRow>
-              ))}
-            </PropsCard>
-          )}
         </RightSidebar>
       </div>
     </PageShell>
   );
 }
+

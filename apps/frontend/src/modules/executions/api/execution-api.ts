@@ -161,6 +161,9 @@ export function useExecutionRuns(params?: {
   status?: string;
   /** 按任务过滤运行记录（后端 /execution/runs 已支持） */
   issueId?: string;
+  /** 按执行主体过滤（subjectType=platform_ai_member + subjectId=memberId，个人页活动流） */
+  subjectType?: string;
+  subjectId?: string;
   limit?: number;
   offset?: number;
 }) {
