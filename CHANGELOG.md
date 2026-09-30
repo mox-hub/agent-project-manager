@@ -21,6 +21,21 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.7] - 2026-10-01
+
+### v0.7.7 发版总览——收纳版：AI 成员个人页工作台重构 + 图表双引擎 + PromptEditor 统一 + 上线套装前全量收编
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend/server | **CAP-A-02 增强「AI 成员个人页结构重构」六项**：任务清单 tab（`/issue-assignees/member/:id`）· 团队与项目层级 tab（TeamProject 关联）· 活动 tab 真实数据流（`/execution/runs` subjectId 过滤 + `/members/:id/usage-summary` 成本聚合）· PromptEditor 落地 member 层 · 工具授权三层化（MemberToolGrant +config Json 列，`resolveForMember` 消费）· 技能/MCP 双来源（CLI 本地资产发现 cli-asset-scanner） | CAP-A-02 / GAP-T-49 | member-card.service.spec 117 行改动 + 前端三新组件；契约三件套同步（openapi +532 行） | openapi.json / 双份 api-types.gen 再生 |
+| frontend | **CAP-A-15 管道项目聚焦切片废弃**：全局聚焦器与六站联动全删，六站筛选回归页内自治；?project 深链与后端 projectId 参数保留 | CAP-A-15 / GAP-T-27 关账 | pipeline-focus 测试随删；六站页自治 | 能力清单切片置 gap |
+| frontend | **批 9 十一件死组件物理删除** + 晨批（text-md 升格正式 token / 统计卡余留 / comfortable 档启用）：direction/navigation-menu/sidebar/thinking-stream/batch-create-tasks-dialog/task-board/task-detail-drawer/task-rows/bug-template-helper/doc-category-chips/filter-panel | 组件治理线 | 全库零引用核实后删；registry/decisions.json 同步 | component-review-decisions.json 对账 |
+| frontend | **CAP-C-06 图表双引擎切片**：全局仪表盘四趋势面板收编 ChartCard+ui/chart 正式栈（Glance 结论标题/编码 hint/footer 签名行/动画 stagger）+ Lupi 全屏精读弹窗（lupi-chart-dialog + health-hairline/delivery-paired-rungs 双模板 iframe 参数化，点击重播）+ ChartCard 内间距归一 16px + ui/dialog 新增 size=full 档 | CAP-C-06 / GAP-T-50 | dashboard-page.test 新建 + chart-card.test +1；模板 stub-DOM 实跑双模式几何验证；前端全量 1499 用例绿 | lieflat-charts skill 语法入产品 |
+| frontend | **PromptEditor 四条调整 + 五消费方接线**：编辑态固定高度（缺省 240）+ 拖拽手柄调高（160~800）+ meta 行「字符·约 tokens」+ injectionKey 注入徽标 + defaultValue 空值回落；member/team/project/settings/project-role/issue 六处消费方统一 | CAP-A-24 延伸 | prompt-editor.test 167 行扩展；i18n promptEditor 段双语言 | 编辑组件统一收敛 |
+| frontend | **Sheet 宽度覆盖失效修复**：基件宽度默认档从 data 双变体链改按 side JS 注入纯类（tailwind-merge 不去重变体链、属性选择器特异性反杀消费方覆盖） | 用户实机反馈 | twMerge 实测三消费方输出 | — |
+| frontend | **死选择器 `data-[x=true]` 形态全库排查批**：9 文件 29 处逐一核实渲染端——calendar/input-otp/combobox/select/drawer 均为自写渲染端输出 "true" 的配套活选择器（React 布尔 data-* 不折叠），navigation-menu 已随批 9 删除，**零需修**；base-ui 空串死法确认已于 d7596124 收口 | 夜航遗留裁决项 | 渲染端逐处证据（calendar.tsx:206-208 等 + react-day-picker 9.14.0 内部输出） | CHANGELOG 排查结论入账，禁止按形态盲改 |
+| frontend | **测试时钟炸弹拆除**：里程碑页迭代状态用例日期写死 09-30，真实时钟 10-01 翻转「已结束」恒挂——quality:gate 2026-10-01 实锤；改相对 now ±7 天动态化 | — | 单文件 7/7 绿 + 全量重跑绿 | 依赖真实时钟的写死日期用例教训入账 |
+
 ### 死选择器 `data-[x=true]` 形态全库排查批——9 文件 29 处逐一核实渲染端，零需修（2026-09-30）
 
 > 夜航报告 2026-09-30 §四遗留待裁决项的收口。判定规则（继承 d7596124 修复批证据链）：base-ui 布尔 state 渲染空串属性（`data-pressed=""`），`=true` 形态选择器恒不匹配；但 React 对自写 `data-x={true}` 输出 `"true"` 字符串，配套选择器存活。
