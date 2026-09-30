@@ -349,7 +349,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { ThinkingStream } from '@/modules/assistant/components/thinking-stream'
 import { AgentHandoffCard } from '@/modules/office/components/agent-handoff-card'
 import { DualTrackMetricPill } from '@/components/semantic/dual-track-metric-pill'
 import { IssueTypePill } from '@/shared/components/issue-type-pill'
@@ -6352,29 +6351,6 @@ export function DesignSystemPage() {
             </p>
 
             <div className="space-y-6">
-              {/* ① 思考折叠核 (ThinkingStream) */}
-              <div>
-                <SubLabel>① 思考折叠核 (ThinkingStream) — 26px 胶囊 · 烟熏紫脉冲 · 展开就地查看思维链</SubLabel>
-                <div className="space-y-2 max-w-xl">
-                  <ThinkingStream
-                    isThinking={true}
-                    steps={[
-                      { step: 1, title: '解析用户指令与架构契约', durationMs: 420 },
-                    ]}
-                  />
-                  <ThinkingStream
-                    isThinking={false}
-                    totalDurationMs={1850}
-                    defaultExpanded={true}
-                    steps={[
-                      { step: 1, title: '解析用户指令与架构契约', detail: '已验证 DESIGN.md 与 modules.md 架构对齐', durationMs: 420 },
-                      { step: 2, title: '静态扫描组件依赖树', detail: '确认 99 个 UI 原语与 150 个业务模块组件边界', durationMs: 680 },
-                      { step: 3, title: '构建低饱和 5 色阶与外舒内紧卡片方案', detail: '已生成 14px 标准 / 13px 密集自适应规则', durationMs: 750 },
-                    ]}
-                  />
-                </div>
-              </div>
-
               {/* ② 工具与命令执行胶囊 (AssistantToolCard) */}
               <div>
                 <SubLabel>② 工具与命令执行胶囊 (AssistantToolCard) — 单行折叠 · 动词×实体 · 结果常显</SubLabel>

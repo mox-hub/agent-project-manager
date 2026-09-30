@@ -262,7 +262,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'assistant-run-line', file: 'modules/assistant/components/assistant-run-line.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'assistant-status-dot', file: 'modules/assistant/components/assistant-status-dot.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'assistant-tool-card', file: 'modules/assistant/components/assistant-tool-card.tsx', section: 'AI Execution', status: 'canonical' },
-  { name: 'thinking-stream', file: 'modules/assistant/components/thinking-stream.tsx', section: 'AI Execution', status: 'deprecated', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：零引用（实测）——仅被设计系统页引用，无模块内消费方', proposal: 'delete' } },
   { name: 'admin-guard', file: 'modules/auth/components/admin-guard.tsx', section: 'App Components', status: 'canonical' },
   { name: 'auth-guard', file: 'modules/auth/components/auth-guard.tsx', section: 'App Components', status: 'canonical' },
   { name: 'auth-shell', file: 'modules/auth/components/auth-shell.tsx', section: 'App Components', status: 'canonical' },

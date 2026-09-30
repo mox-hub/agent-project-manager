@@ -18,7 +18,7 @@
     {"name": "bug-template-helper", "file": "shared/components/create-dialog/entity-templates/bug-template-helper.tsx", "action": "deleted", "reason": "仅自身 __tests__ 引用", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
     {"name": "doc-category-chips", "file": "shared/components/create-dialog/entity-templates/doc-category-chips.tsx", "action": "deleted", "reason": "仅自身 __tests__ 引用", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
     {"name": "filter-panel", "file": "shared/ui/filter-panel.tsx", "action": "deleted", "reason": "唯一引用是 project-list-page.test.tsx 的 vi.mock；构成第二个 ui 命名空间", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
-    {"name": "thinking-stream", "file": "modules/assistant/components/thinking-stream.tsx", "action": "delete", "reason": "仅设计系统页引用，无模块内消费方"},
+    {"name": "thinking-stream", "file": "modules/assistant/components/thinking-stream.tsx", "action": "deleted", "reason": "仅设计系统页引用，无模块内消费方", "executedAt": "2026-09-30", "executedIn": "批 9（chore/design-batch9-and-fixes）"},
     {"name": "agent-handoff-card", "file": "modules/office/components/agent-handoff-card.tsx", "action": "keep-as-standby", "reason": "用户裁决：业务需要（AI 交接卡）但尚未接入生产，休眠 standby 待接入"},
     {"name": "mention-renderer", "file": "modules/team-member/components/mention-renderer.tsx", "action": "keep-as-standby", "reason": "用户裁决：业务需要（@提及）但尚未接入生产，休眠 standby 待接入"},
     {"name": "mention-textarea", "file": "modules/team-member/components/mention-textarea.tsx", "action": "keep-as-standby", "reason": "用户裁决：业务需要（@提及）但尚未接入生产，休眠 standby 待接入"},
