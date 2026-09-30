@@ -327,7 +327,8 @@ export function makeDashboardOverview() {
     },
     cost: {
       monthTotal: 2310,
-      budgetDeltaPct: -8,
+      // 预算基线未配置：null 诚实降级（CAP-C-06），演示模式同样展示「预算基线未设置」文案
+      budgetDeltaPct: null,
       byCategory: [
         { name: 'Infrastructure', amount: 3830, percentage: 58 },
         { name: 'AI Services', amount: 1650, percentage: 25 },

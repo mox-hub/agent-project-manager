@@ -114,4 +114,23 @@ describe('DashboardPage overview panels', () => {
     expect(screen.getAllByText('No data').length).toBeGreaterThan(0);
     expect(screen.queryByRole('img', { name: 'Tasks completed vs created per day recently' })).toBeNull();
   });
+
+  it('成本卡预算基线未设置（null）：显示诚实降级文案而非虚假 0%（CAP-C-06）', () => {
+    mockData = {
+      ...overview,
+      cost: { ...overview.cost, budgetDeltaPct: null },
+    };
+    renderPage();
+
+    // 测试环境语言探测解析为 en（jsdom navigator），断言英文文案
+    expect(screen.getByText('Budget baseline not set')).toBeTruthy();
+    // 不再出现虚假的百分比口径
+    expect(screen.queryByText('0% under budget')).toBeNull();
+  });
+
+  it('成本卡预算基线有值时仍显示偏差百分比', () => {
+    renderPage();
+
+    expect(screen.getByText('8% under budget')).toBeTruthy();
+  });
 });

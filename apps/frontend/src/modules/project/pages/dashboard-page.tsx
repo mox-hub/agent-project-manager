@@ -32,7 +32,8 @@ import { useDashboardOverview } from '../hooks/use-dashboard-overview';
 import { GlobalOverviewPanels } from '../components/dashboard/global-overview-charts';
 import type { DashboardOverview, DashboardHealthStatus, DashboardRiskSeverity } from '../api/dashboard-api';
 
-type DialogType = 'team' | 'ai' | 'cost' | 'bugs' | 'tasks' | 'health' | 'risks' | null;
+// 成本卡不再有本地弹窗：点击直接跳 analytics 成本 Tab（验收归因明细在那里，CAP-C-06）
+type DialogType = 'team' | 'ai' | 'bugs' | 'tasks' | 'health' | 'risks' | null;
 
 const HEALTH_TONE: Record<DashboardHealthStatus, 'success' | 'warning' | 'danger'> = {
   on_track: 'success',
@@ -113,43 +114,6 @@ function AIDialog({ data, open, onClose }: { data: DashboardOverview['ai']; open
               <div key={item.activity} className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{item.activity}</span>
                 <Badge variant="secondary">{item.count}</Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function CostDialog({ data, open, onClose }: { data: DashboardOverview['cost']; open: boolean; onClose: () => void }) {
-  const { t } = useTranslation();
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl max-h-dialog-scroll overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <DollarSign className="size-4" />
-            {t('dashboard.dialog.cost')}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="grid grid-cols-3 gap-3">
-            <StatTile label={t('dashboard.cost.monthTotal')} value={`$${data.monthTotal.toLocaleString()}`} />
-            <StatTile label={t('dashboard.cost.vsBudget')} value={<span className={data.budgetDeltaPct <= 0 ? 'text-accent-green' : 'text-destructive'}>{`${data.budgetDeltaPct}%`}</span>} />
-          </div>
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">{t('dashboard.cost.categories')}</p>
-            {data.byCategory.map((item) => (
-              <div key={item.name} className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{item.name}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">${item.amount}</span>
-                    <span className="text-xs text-muted-foreground">{item.percentage}%</span>
-                  </div>
-                </div>
-                <Progress value={item.percentage} className="h-1.5" />
               </div>
             ))}
           </div>
@@ -365,10 +329,14 @@ export function DashboardPage() {
                       key: 'cost',
                       label: t('dashboard.kpis.cost'),
                       value: `$${data.cost.monthTotal.toLocaleString()}`,
-                      hint: t('dashboard.kpis.costSub', { pct: Math.abs(data.cost.budgetDeltaPct) }),
+                      // 预算基线未配置（null）：诚实显示「预算基线未设置」，不再显示虚假的 0%
+                      hint: data.cost.budgetDeltaPct == null
+                        ? t('dashboard.kpis.costNotSet')
+                        : t('dashboard.kpis.costSub', { pct: Math.abs(data.cost.budgetDeltaPct) }),
                       icon: DollarSign,
                       tone: 'green',
-                      onClick: () => setOpenDialog('cost'),
+                      // 下钻直达 analytics 成本 Tab（既有 ?tab=cost 路由），成本弹窗已退役
+                      onClick: () => navigate('/app/analytics?tab=cost'),
                     },
                     {
                       key: 'bugs',
@@ -456,7 +424,6 @@ export function DashboardPage() {
         <>
           <TeamDialog data={data.team} open={openDialog === 'team'} onClose={() => setOpenDialog(null)} />
           <AIDialog data={data.ai} open={openDialog === 'ai'} onClose={() => setOpenDialog(null)} />
-          <CostDialog data={data.cost} open={openDialog === 'cost'} onClose={() => setOpenDialog(null)} />
           <BugsDialog data={data.delivery} open={openDialog === 'bugs'} onClose={() => setOpenDialog(null)} />
           <TasksDialog data={data.delivery} open={openDialog === 'tasks'} onClose={() => setOpenDialog(null)} />
           <HealthDialog data={data.health} open={openDialog === 'health'} onClose={() => setOpenDialog(null)} />

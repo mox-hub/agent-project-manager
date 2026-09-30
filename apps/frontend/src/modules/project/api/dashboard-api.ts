@@ -27,7 +27,8 @@ export interface DashboardOverview {
   };
   cost: {
     monthTotal: number;
-    budgetDeltaPct: number;
+    /** 预算基线未配置时为 null（诚实空态），UI 显示「预算基线未设置」降级文案 */
+    budgetDeltaPct: number | null;
     byCategory: Array<{ name: string; amount: number; percentage: number }>;
   };
   delivery: {
