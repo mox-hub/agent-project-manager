@@ -21,6 +21,7 @@ import {
   LayoutList,
   Keyboard,
   ScrollText,
+  DatabaseBackup,
 } from 'lucide-react';
 
 export interface SettingsNavItem {
@@ -64,6 +65,8 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
       { to: '/app/settings/roles', labelKey: 'settings.roles', icon: CircleUser },
       { to: '/app/settings/templates', labelKey: 'settings.templates', icon: LayoutTemplate },
       { to: '/app/settings/short-id', labelKey: 'settings.shortId', icon: Hash },
+      // CAP-A-03 工作区备份与恢复（G7-a）
+      { to: '/app/settings/backups', labelKey: 'settings.backups', icon: DatabaseBackup },
     ],
   },
   {
