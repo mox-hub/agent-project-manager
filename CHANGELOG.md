@@ -21,6 +21,18 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 死选择器 `data-[x=true]` 形态全库排查批——9 文件 29 处逐一核实渲染端，零需修（2026-09-30）
+
+> 夜航报告 2026-09-30 §四遗留待裁决项的收口。判定规则（继承 d7596124 修复批证据链）：base-ui 布尔 state 渲染空串属性（`data-pressed=""`），`=true` 形态选择器恒不匹配；但 React 对自写 `data-x={true}` 输出 `"true"` 字符串，配套选择器存活。
+
+| 文件 | 判定 | 证据 |
+|---|---|---|
+| calendar（2 行 13 处） | **活，不动** | 渲染端自写 `data-range-start={modifiers.range_start}`（calendar.tsx:206-208）+ react-day-picker 9.14.0 内部输出 `"data-focused": modifiers.focused \|\| undefined`（布尔 true → `data-focused="true"`），与 `data-[range-*=true]`/`group-data-[focused=true]/day` 配套 |
+| input-otp / combobox / select / drawer | **活，不动** | 各自渲染端自写布尔：`data-active={isActive}`、`data-chips={!!anchor}`、`data-align-trigger={alignItemWithTrigger}`、`data-modal={modal}`——React 布尔 data-* 输出 "true"，选择器配套 |
+| navigation-menu | 已随批 9 物理删除（2026-09-30 晨批） | 文件不存在，账面清零 |
+
+**结论**：base-ui 空串死法已于 d7596124（六文件 27 处）收口；剩余 `data-[x=true]` 形态均为 coss 配方「自写渲染端 + 配套选择器」活模式，禁止按形态盲改（改存在性选择器虽兼容 "true" 字符串，但破坏配方与上游一致性且无收益）。
+
 ### CAP-C-06 图表双引擎切片——Glance 层 lieflat 语法重设计 + Lupi 全屏精读弹窗（2026-09-30）
 
 > requirement-intake 五步落账（能力清单 CAP-C-06 切片注记 + GAP-T-50）。仪表盘图卡二分升级：产品内 Glance 层按 lieflat-charts skill 语法重设计；Lupi 精读层进全屏弹窗；报告导出仅预留按钮（用户三向裁决）。
