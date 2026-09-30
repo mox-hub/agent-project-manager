@@ -5127,7 +5127,7 @@ export function DesignSystemPage() {
           <SectionAnchor id="collapsible">
             <SectionTitle>Collapsible</SectionTitle>
             <Collapsible className="w-full max-w-md">
-              <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent transition-colors [&>svg]:transition-transform data-[panel-open=true]:[&>svg]:rotate-180">
+              <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent transition-colors [&>svg]:transition-transform data-[panel-open]:[&>svg]:rotate-180">
                 <ChevronDown className="w-4 h-4" />
                 Show details
               </CollapsibleTrigger>
