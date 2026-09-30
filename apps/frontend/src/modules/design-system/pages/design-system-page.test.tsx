@@ -52,8 +52,7 @@ describe('DesignSystemPage', () => {
     expect(screen.getByText('AI Execution')).toBeInTheDocument();
     expect(screen.getAllByText('AI High-Density Cards [AI]')).toHaveLength(2);
 
-    // 验证 5 类 AI 专属卡片渲染挂载
-    expect(screen.getByText(/思考折叠核 \(ThinkingStream\)/)).toBeInTheDocument();
+    // 验证 4 类 AI 专属卡片渲染挂载（① 思考折叠核 ThinkingStream 已随批 9 清退，2026-09-30）
     expect(screen.getByText(/工具与命令执行胶囊 \(AssistantToolCard\)/)).toBeInTheDocument();
     expect(screen.getByText(/多 Agent 协作交接卡 \(AgentHandoffCard\)/)).toBeInTheDocument();
     expect(screen.getByText(/决策证据抽屉卡 \(DecisionCardShell\)/)).toBeInTheDocument();
