@@ -329,7 +329,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'readiness-dialog', file: 'modules/intake/components/readiness-dialog.tsx', section: 'App Components', status: 'canonical' },
   { name: 'acceptance-criteria-preview', file: 'modules/issue/components/acceptance-criteria-preview.tsx', section: 'App Components', status: 'canonical' },
   { name: 'ai-assign-dialog', file: 'modules/issue/components/ai-assign-dialog.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'batch-create-tasks-dialog', file: 'modules/issue/components/batch-create-tasks-dialog.tsx', section: 'App Components', status: 'deprecated', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：零引用（实测）——全库无 import，且不在画廊', proposal: 'delete' } },
   { name: 'batch-update-issues-dialog', file: 'modules/issue/components/batch-update-issues-dialog.tsx', section: 'App Components', status: 'canonical' },
   { name: 'board-presets', file: 'modules/issue/components/board-presets.tsx', section: 'App Components', status: 'canonical' },
   { name: 'bug-simple-list', file: 'modules/issue/components/bug-simple-list.tsx', section: 'App Components', status: 'canonical' },
