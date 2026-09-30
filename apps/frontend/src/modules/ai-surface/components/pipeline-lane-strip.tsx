@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { TONE_LIGHT_CLASS } from '@/shared/status/status-visuals';
-import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { usePipelineLanes, type PipelineLane } from '../hooks/use-pipeline-lanes';
 
 /**
@@ -20,18 +19,16 @@ import { usePipelineLanes, type PipelineLane } from '../hooks/use-pipeline-lanes
  */
 export function PipelineLaneStrip() {
   const navigate = useNavigate();
-  const { focusProjectId } = usePipelineProjectFilter();
-  const { lanes, isPending, isError } = usePipelineLanes(focusProjectId ?? undefined);
+  const { lanes, isPending, isError } = usePipelineLanes();
 
   const openStage = (lane: PipelineLane) => {
-    // 保持项目聚焦：管道六站本就以 ?project 联动（CAP-A-15）
-    navigate(focusProjectId ? `${lane.to}?project=${focusProjectId}` : lane.to);
+    navigate(lane.to);
   };
 
   return (
     <PipelineLaneStripView
       lanes={lanes}
-      scopeNote={focusProjectId ? '项目聚焦' : '全部项目'}
+      scopeNote="全部项目"
       // 拓扑/取数状态如实报：未就绪时破折号是"还没取到"，不是"没有"
       statusNote={
         isError ? '部分站取数失败（破折号=未取到）' : isPending ? '正在取数…' : '取自各站既有服务'

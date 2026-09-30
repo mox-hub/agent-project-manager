@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { RequirementIntakePage } from './requirement-intake-page';
-import { usePipelineFocusStore } from '@/shared/layout/pipeline-focus';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string, fallback?: string) => fallback ?? key }),
@@ -57,8 +56,6 @@ describe('需求承接页（CAP-A-15 / GAP-T-24）', () => {
   beforeEach(() => {
     openCreateDialog.mockClear();
     documentQuerySpy.mockClear();
-    // 管道项目聚焦 store 为模块级单例：逐用例重置，避免 URL 覆盖写回互相污染
-    usePipelineFocusStore.setState({ focusProjectId: null });
   });
 
   it('CTA 唤起统一创建面板并预置 project 类型（grill 入口）', () => {
@@ -77,14 +74,7 @@ describe('需求承接页（CAP-A-15 / GAP-T-24）', () => {
     expect(screen.getByText('尚无需求纪要')).toBeInTheDocument();
   });
 
-  it('管道聚焦项目时（?project=p1）查询携带 projectId（CAP-A-15）', () => {
-    renderPage('/app/intake?project=p1');
-    expect(documentQuerySpy).toHaveBeenCalledWith(
-      expect.objectContaining({ category: 'requirement', projectId: 'p1' }),
-    );
-  });
-
-  it('无聚焦时不携带 projectId 参数键', () => {
+  it('文档查询不携带 projectId（项目过滤回归页内自治，聚焦已废弃）', () => {
     renderPage('/app/intake');
     const query = documentQuerySpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(query.projectId).toBeUndefined();

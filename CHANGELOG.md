@@ -21,6 +21,18 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-A-15「管道项目聚焦」切片废弃——六站项目筛选回归页内自治（2026-09-30）
+
+> 用户裁决「直接删掉聚焦功能，留给各个页面自己调整」；能力清单 A-15 卡切片置 gap（GAP-T-27 关账）。废弃根因：全局聚焦与六站「仅初值」消费模式天然脱节（页内筛选改动不回写、跨站即弹回）、入口 text-3xs 藏分组头难发现、侧边栏折叠后选择器消失而过滤仍生效（盲飞）。
+
+| 变更 | 内容 | 证据要点 |
+|---|---|---|
+| 删除 | `shared/layout/pipeline-focus.ts`（URL/store 双写 hook）及测试、shell-layout `PipelineFocusFilter`（含 SelectField/useProjectList 孤儿 import）、i18n `shell.pipelineFocus.*` 双语键 | tsc -b 0 错；全仓 `pipeline-focus|focusProjectId|pipelineFocus` 零残留 |
+| 六站解耦 | tasks（conditions 聚焦预置分支删）/ executions（projectFilter 初值 'all'）/ acceptance（useAcceptanceList 去 projectId）/ intake（双 useDocuments 去 projectId、AnalysisDraftDialog 去预置归属）/ repository-list（projectIds 初值 []）/ ai-surface 四件（lane-strip 跳转去 ?project 联动、scopeNote 固定「全部项目」、dispatch/summary/lanes/queue/narration 全部无参） | 触及 5 测试文件改写全绿（39 用例）；acceptance/intake 各留一条「查询不携带 projectId」守卫 |
+| 自治保留 | 各页页内项目筛选（issues chips / repositories 多选 / executions 下拉）与 `?project` 深链（release-list 自读消费）不动；后端 documents/acceptances/releases 三端点可选 projectId 参数保留 | release-list 仅注释口径更新；后端零改动 |
+
+## [0.7.6] - 2026-09-30
+
 ### 晨会裁决执行批——批 9 十一件物理删除 + 死选择器晨批 + text-md 升格（宪法 v2.6）+ 统计卡余留收口 + comfortable 档启用（2026-09-30）
 
 > 2026-09-30 晨会 11 项裁决的代码批兑现（分支 chore/design-batch9-and-fixes）；桌面 v0.7.6 已代发布（Latest）、旧 draft 五份清理、stash 与已合流分支清理。

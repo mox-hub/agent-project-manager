@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '@/shared/theme/theme-context';
-import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { useDispatchAssistantMessage } from '@/modules/assistant/hooks/use-assistant-dispatch';
 import { useOfficeSummary } from '@/modules/office/hooks/use-office-summary';
 import { RadialWatchDeck } from '../components/radial-watch-deck';
@@ -30,9 +29,7 @@ export function AiSurfacePage() {
   const navigate = useNavigate();
   const { resolvedMode, toggleTheme } = useTheme();
   const isDark = resolvedMode === 'dark';
-  // 项目范围：沿用 CAP-A-15 的管道项目聚焦（URL ?project 优先），派发需要有项目作用域
-  const { focusProjectId } = usePipelineProjectFilter();
-  const dispatch = useDispatchAssistantMessage(focusProjectId ?? undefined);
+  const dispatch = useDispatchAssistantMessage(undefined);
 
   const [artifacts] = useState(INITIAL_ARTIFACTS);
   const [messages, setMessages] = useState<CognitiveMessage[]>(INITIAL_MESSAGES);
@@ -41,7 +38,7 @@ export function AiSurfacePage() {
 
   // 工位卡接真（S2-b）：office 聚合走**既有服务**（办公室页同一个查询键，命中同一份缓存），
   // 进展走投影层。两条流在此汇合成工位视图模型——不新增数据源、不造第二套口径（§4.7）。
-  const summary = useOfficeSummary(focusProjectId ?? undefined);
+  const summary = useOfficeSummary();
   // 进度匹配按 executionRun.id 精确对齐，故**不**按项目过滤事件：
   // 事件缺 projectId 时若先过滤会让工位悄悄丢掉真实进展（宁多匹配、不静默缺失）。
   const feedItems = useSurfaceFeedItems();
@@ -59,8 +56,8 @@ export function AiSurfacePage() {
   // 叙述层（S3-e）的**事实**来源：下面两块面板此刻正在用的同两个 hook。
   // 查询键完全相同 → 命中同一份缓存，**不产生任何新请求**；也因此叙述所说
   // 必定与同屏内容同源，不可能"AI 说的话和屏幕上的数对不上"（§4.7）。
-  const lanesState = usePipelineLanes(focusProjectId ?? undefined);
-  const queueState = useDecisionQueue(focusProjectId ?? undefined);
+  const lanesState = usePipelineLanes();
+  const queueState = useDecisionQueue();
   const snapshot = useMemo(
     () =>
       buildSurfaceSnapshot({
@@ -82,9 +79,7 @@ export function AiSurfacePage() {
     generatedAt: narrationGeneratedAt,
     usage: narrationUsage,
     refresh: refreshNarration,
-  } = useSurfaceNarration(snapshot, {
-    projectId: focusProjectId ?? undefined,
-  });
+  } = useSurfaceNarration(snapshot);
 
 
   // 面级实时订阅（ARCH-AISURFACE-001 §4.1）：领域事件 → 投影层。

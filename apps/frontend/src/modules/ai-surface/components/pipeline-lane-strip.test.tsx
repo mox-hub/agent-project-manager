@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { PIPELINE_STAGES } from '@/shared/layout/pipeline-stages';
-import { usePipelineFocusStore } from '@/shared/layout/pipeline-focus';
 import { PipelineLaneStrip } from './pipeline-lane-strip';
 
 /**
@@ -95,7 +94,6 @@ describe('PipelineLaneStrip', () => {
       isPending: false,
       isError: false,
     };
-    usePipelineFocusStore.getState().setFocus(null);
   });
 
   it('六站齐出，逐站来自 PIPELINE_STAGES（不另起一份站清单）', () => {
@@ -220,16 +218,5 @@ describe('PipelineLaneStrip', () => {
     fireEvent.click(laneButton(PIPELINE_STAGES[2].labelFallback));
 
     expect(screen.getByTestId('location').textContent).toBe(PIPELINE_STAGES[2].to);
-  });
-
-  it('项目聚焦时跳转带上 ?project（六站联动口径）', () => {
-    // 带参落地：URL 优先于 store
-    renderStrip('/app/ai-surface?project=proj-7');
-
-    fireEvent.click(laneButton(PIPELINE_STAGES[0].labelFallback));
-
-    expect(screen.getByTestId('location').textContent).toBe(
-      `${PIPELINE_STAGES[0].to}?project=proj-7`,
-    );
   });
 });

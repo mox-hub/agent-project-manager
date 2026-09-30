@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@/i18n';
-import { usePipelineFocusStore } from '@/shared/layout/pipeline-focus';
 import type { Decision } from '@/shared/decision-card/types';
 import { DecisionQueuePanel, formatWaiting } from './decision-queue-panel';
 
@@ -97,7 +96,6 @@ describe('DecisionQueuePanel', () => {
   beforeEach(() => {
     handleAction.mockClear();
     busyId.value = null;
-    usePipelineFocusStore.getState().setFocus(null);
     setQueue([]);
   });
 

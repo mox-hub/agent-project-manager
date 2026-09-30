@@ -24,7 +24,6 @@ import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useDocuments } from '@/modules/document/hooks/use-documents';
 import type { DocumentListItem } from '@/modules/document/api/document-api';
-import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { AnalysisDraftDialog } from '../components/analysis-draft-dialog';
 import { PipelineOverviewCards } from '../components/pipeline-overview-cards';
 
@@ -61,17 +60,14 @@ export function RequirementIntakePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const openCreateDialog = useAppStore((s) => s.openCreateDialog);
-  const { focusProjectId } = usePipelineProjectFilter();
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const docsQuery = useDocuments({
     category: 'requirement',
     pageSize: 20,
-    projectId: focusProjectId ?? undefined,
   });
   const analysisQuery = useDocuments({
     category: 'analysis',
     pageSize: 20,
-    projectId: focusProjectId ?? undefined,
   });
 
   const steps = [
@@ -224,7 +220,6 @@ export function RequirementIntakePage() {
       <AnalysisDraftDialog
         open={analysisOpen}
         onOpenChange={setAnalysisOpen}
-        projectId={focusProjectId ?? undefined}
         docs={docs.map((d) => ({
           id: d.id,
           title: d.title,

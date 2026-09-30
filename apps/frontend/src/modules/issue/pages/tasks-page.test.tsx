@@ -40,10 +40,6 @@ vi.mock('@/modules/project/hooks/use-project-list', () => ({
   useProjectList: () => ({ data: undefined }),
 }));
 
-vi.mock('@/shared/layout/pipeline-focus', () => ({
-  usePipelineProjectFilter: () => ({ focusProjectId: undefined }),
-}));
-
 vi.mock('@/modules/execution/hooks/use-active-executions-map', () => ({
   useActiveExecutionsMap: () => ({
     getIssueExecution: () => null,

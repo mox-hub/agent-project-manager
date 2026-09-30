@@ -34,7 +34,6 @@ import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { useAllTasks, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
 import { useIssueTypes, useIssueTypeOf } from '../hooks/use-issue-types';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
-import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import type { Task } from '../api/issue-api';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { useTranslation } from 'react-i18next';
@@ -183,22 +182,13 @@ const ISSUE_ENTITY = getEntityIcon('issue');
 export function TasksPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  // 管道项目聚焦（CAP-A-15）：URL ?project 优先——作为项目筛选 chips 的受控初值
-  const { focusProjectId } = usePipelineProjectFilter();
   // P1-16：筛选状态同步 URL query（useSearchParams）
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
-  // 筛选初值优先级（P1-16）：URL 参数 > 管道聚焦项目 > 默认空
+  // 筛选初值优先级（P1-16）：URL 参数 > 默认空
   const [search, setSearch] = useState(() => searchParams.get(SEARCH_PARAM) ?? '');
-  const [conditions, setConditions] = useState<FilterCondition[]>(() => {
-    const fromUrl = paramsToConditions(searchParams);
-    if (fromUrl.length > 0) return fromUrl;
-    // 聚焦项目时初值预置 project is <focusProjectId>（仅初值，用户可在页内再改）
-    return focusProjectId
-      ? [{ id: 'cond-pipeline-focus-project', fieldId: 'project', operator: 'is', values: [focusProjectId] }]
-      : [];
-  });
+  const [conditions, setConditions] = useState<FilterCondition[]>(() => paramsToConditions(searchParams));
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [presetAssigneeId, setPresetAssigneeId] = useState<string | undefined>(undefined);
   // 派发上下文（P0-5）：issues 多于一条时 AiAssignDialog 进入批量模式

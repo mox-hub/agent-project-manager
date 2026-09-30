@@ -308,13 +308,14 @@ function Row<T extends DataListItem>({
       <SelectCell hidden={!selectable} selected={isSelected(item)} onToggle={() => onToggleSelect(item.id)} />
       {indent ? (
         <>
-          {/* 树线：仅竖线，对齐状态列中心（left 55 = px-4 16 + 多选槽 28 + 状态半宽 11，行内列宽改动须同步）；
+          {/* 树线：仅竖线，对齐父行状态列中心垂下（left 64 = px-4 16 + 多选槽 28 + gap 10 + 状态半宽 11 - 线半宽 1，行内列宽改动须同步）；
+              子行轻缩进 w-4.5（18px，占位居中恰含树线），树线位于子行状态图标左侧不穿图标；
               挂行级 absolute 贯穿含 py 整行保证相邻子行连续，末行止于行中收尾 */}
           <span
             aria-hidden
-            className={cn('absolute top-0 left-[55px] w-0.5 bg-border', isLastChild ? 'h-1/2' : 'bottom-0')}
+            className={cn('absolute top-0 left-[64px] w-0.5 bg-border', isLastChild ? 'h-1/2' : 'bottom-0')}
           />
-          <span aria-hidden className="w-9 shrink-0 self-stretch" />
+          <span aria-hidden className="w-4.5 shrink-0 self-stretch" />
         </>
       ) : null}
       <div className="flex min-w-0 flex-1 items-center gap-2">

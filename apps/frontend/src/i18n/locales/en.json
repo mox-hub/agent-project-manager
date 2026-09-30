@@ -4702,11 +4702,6 @@
     "groupSettings": "Settings",
     "groupCollaboration": "Collaboration & Tools",
     "noTabsOpen": "No tabs open",
-    "pipelineFocus": {
-      "label": "Project focus",
-      "allProjects": "All projects",
-      "selectPlaceholder": "Select project"
-    },
     "appName": "AgentPM"
   },
   "hotkeys": {

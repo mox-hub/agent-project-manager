@@ -4702,11 +4702,6 @@
     "groupSettings": "设置",
     "groupCollaboration": "协作与工具",
     "noTabsOpen": "暂无打开的标签页",
-    "pipelineFocus": {
-      "label": "项目聚焦",
-      "allProjects": "全部项目",
-      "selectPlaceholder": "选择项目"
-    },
     "appName": "AgentPM"
   },
   "hotkeys": {

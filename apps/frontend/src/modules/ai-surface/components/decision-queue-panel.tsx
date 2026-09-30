@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TONE_LIGHT_CLASS } from '@/shared/status/status-visuals';
-import { usePipelineProjectFilter } from '@/shared/layout/pipeline-focus';
 import { DecisionCard } from '@/shared/decision-card/decision-card';
 import type { Decision } from '@/shared/decision-card/types';
 import { useDecisionActions } from '@/modules/decision/hooks/use-decision-actions';
@@ -45,8 +44,7 @@ export function formatWaiting(createdAt: string, nowMs?: number): string | null 
 }
 
 export function DecisionQueuePanel() {
-  const { focusProjectId } = usePipelineProjectFilter();
-  const { queue, isPending, isError } = useDecisionQueue(focusProjectId ?? undefined);
+  const { queue, isPending, isError } = useDecisionQueue();
   // 与收件箱**同一个**动作接线（含成功/失败 toast）——不在此另写一份 mutate
   const { handleAction, busyId } = useDecisionActions();
 

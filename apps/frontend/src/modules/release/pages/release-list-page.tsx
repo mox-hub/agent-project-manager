@@ -72,7 +72,7 @@ export function ReleaseListPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  // 项目聚焦统一参数名 ?project（CAP-A-15，与管道筛选器联动）；无参 = 全部项目
+  // 本页自治的项目深链参数 ?project（CAP-A-15 遗产口径，参数名与各管道页一致）；无参 = 全部项目
   const projectId = searchParams.get('project') ?? '';
   const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState('');
