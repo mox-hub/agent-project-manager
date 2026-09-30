@@ -121,6 +121,31 @@ export interface UsageStats {
   }>;
 }
 
+/** 验收单维度成本明细（GET /ai/usage/acceptance-attribution byAcceptance 项） */
+export interface AcceptanceAttributionItem {
+  acceptanceId: string;
+  /** 验收单标题（未设置时为 null，展示回落工单标题） */
+  acceptanceTitle?: string | null;
+  issueId: string;
+  issueTitle: string;
+  issueTypeName: string;
+  cost: number;
+  executionCount: number;
+  reworkCount: number;
+}
+
+/** 验收归因成本聚合（CAP-C-06「成本归因到验收」） */
+export interface AcceptanceAttributionStats {
+  totalExecutionCost: number;
+  reworkCost: number;
+  reworkPct: number;
+  acceptanceCount: number;
+  /** 单位验收成本；无验收单时为 null（前端显示诚实空态） */
+  avgCostPerAcceptance: number | null;
+  byAcceptance: AcceptanceAttributionItem[];
+  byIssueType: Array<{ issueTypeName: string; reworkCount: number; cost: number }>;
+}
+
 // ============================================
 // AI Worker Types (V3: Member 身份)
 // ============================================
@@ -363,6 +388,15 @@ export const aiHubApi = {
     api.get<AIModel[]>('/ai/models', provider ? { provider } : undefined),
 
   getUsage: (params?: QueryOf<'AiHubController_getUsage'>) => api.get<UsageStats>('/ai/usage', params),
+
+  /** 验收归因成本（CAP-C-06）：执行链成本按验收单/工单类型归因聚合 */
+  getAcceptanceAttribution: (
+    params?: QueryOf<'AiHubController_getAcceptanceAttribution'>,
+  ) =>
+    api.get<AcceptanceAttributionStats>(
+      '/ai/usage/acceptance-attribution',
+      params,
+    ),
 
   // ─── Provider APIs ────────────────────────────────────────────
 

@@ -36,6 +36,7 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { isMockModeEnabled } from '@/mocks';
 import { useAnalyticsOverview, usePlaybookHealth, useProfileHealth } from '../hooks/use-analytics-overview';
 import { useAiUsage, AI_USAGE_RANGE_OPTIONS, type AiUsageRange } from '../hooks/use-ai-usage';
+import { AcceptanceAttributionSection } from '../components/acceptance-attribution-section';
 import { useDashboardOverview } from '@/modules/project/hooks/use-dashboard-overview';
 import type { ProfileHealthItem } from '../api/analytics-api';
 import {
@@ -447,6 +448,9 @@ function CostTab() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* 验收归因（CAP-C-06）：执行链成本按验收单归因，独立全量查询（累计口径，不随 range 变化） */}
+      <AcceptanceAttributionSection />
     </div>
   );
 }

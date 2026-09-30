@@ -7,7 +7,9 @@ import { AnalyticsPage, getAvailableAnalyticsTabs } from './analytics-page';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: string) => fallback ?? key,
+    // 兼容两种第二参：字符串 fallback 直出；对象（插值选项）时回键名
+    t: (key: string, fallbackOrOpts?: string | Record<string, unknown>) =>
+      typeof fallbackOrOpts === 'string' ? fallbackOrOpts : key,
     i18n: { language: 'zh-CN' },
   }),
   // '@/hooks/useTranslation' → '@/i18n' 初始化链需要 initReactI18next 插件对象
@@ -78,6 +80,68 @@ vi.mock('../hooks/use-ai-usage', () => ({
     { id: '30d', days: 30 },
     { id: 'all' },
   ],
+}));
+
+// 验收归因数据源（GET /ai/usage/acceptance-attribution，CAP-C-06）：可变注入
+const attributionMock = vi.hoisted(() => ({
+  data: {
+    totalExecutionCost: 3.75,
+    reworkCost: 2,
+    reworkPct: 53.33,
+    acceptanceCount: 2,
+    avgCostPerAcceptance: 1.875,
+    byAcceptance: [
+      {
+        acceptanceId: 'acc-1',
+        acceptanceTitle: '验收单一',
+        issueId: 'issue-1',
+        issueTitle: '工单一',
+        issueTypeName: '需求拆解',
+        cost: 3.5,
+        executionCount: 3,
+        reworkCount: 2,
+      },
+      {
+        acceptanceId: 'acc-2',
+        acceptanceTitle: null,
+        issueId: 'issue-2',
+        issueTitle: '工单二',
+        issueTypeName: '缺陷修复',
+        cost: 0.25,
+        executionCount: 1,
+        reworkCount: 0,
+      },
+    ],
+    byIssueType: [
+      { issueTypeName: '需求拆解', reworkCount: 2, cost: 3.5 },
+      { issueTypeName: '缺陷修复', reworkCount: 0, cost: 0.25 },
+    ],
+  } as
+    | {
+        totalExecutionCost: number;
+        reworkCost: number;
+        reworkPct: number;
+        acceptanceCount: number;
+        avgCostPerAcceptance: number | null;
+        byAcceptance: Array<{
+          acceptanceId: string;
+          acceptanceTitle?: string | null;
+          issueId: string;
+          issueTitle: string;
+          issueTypeName: string;
+          cost: number;
+          executionCount: number;
+          reworkCount: number;
+        }>;
+        byIssueType: Array<{ issueTypeName: string; reworkCount: number; cost: number }>;
+      }
+    | undefined,
+}));
+vi.mock('../hooks/use-acceptance-attribution', () => ({
+  useAcceptanceAttribution: () => ({
+    data: attributionMock.data,
+    isLoading: false,
+  }),
 }));
 
 function renderPage(initialEntry = '/app/analytics') {
@@ -194,6 +258,46 @@ describe('AnalyticsPage 成本 Tab（AI 用量迁移做实，?tab=cost 定位）
     expect(screen.getByText('100,000')).toBeTruthy();
     // 旧设置页独有内容已并入：不再出现空态
     expect(screen.queryByText('analytics.cost.emptyTitle')).toBeNull();
+  });
+
+  it('验收归因区：汇总卡/明细表/返工分布渲染，成本降序（CAP-C-06）', async () => {
+    renderPage('/app/analytics?tab=cost');
+
+    // 汇总卡三数字 + 区标题
+    expect(await screen.findByText('analytics.cost.attributionTitle')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.attributionAvgCost')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.attributionReworkCost')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.attributionReworkPct')).toBeTruthy();
+    // 单位验收成本有值（acceptanceCount=2 → 3.75/2）
+    expect(screen.getByText('$1.88')).toBeTruthy();
+    // 明细表两行：acc-1 显示验收单标题；acc-2 无标题回落工单标题（两列同文 → 用 AllByText）
+    expect(screen.getByText('验收单一')).toBeTruthy();
+    expect(screen.getAllByText('工单二').length).toBeGreaterThan(0);
+    // 返工分布条形列表（按工单类型；类型名在明细表与分布列表各出现一次 → 用 AllByText）
+    expect(screen.getByText('analytics.cost.attributionReworkDist')).toBeTruthy();
+    expect(screen.getAllByText('需求拆解').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('缺陷修复').length).toBeGreaterThan(0);
+    // 每行一个返工计数（两行类型 → 两处键名文案）
+    expect(screen.getAllByText('analytics.cost.attributionReworkCountUnit').length).toBe(2);
+  });
+
+  it('验收归因空态：无执行链成本时显示诚实空态而非全零假象', async () => {
+    attributionMock.data = {
+      totalExecutionCost: 0,
+      reworkCost: 0,
+      reworkPct: 0,
+      acceptanceCount: 0,
+      avgCostPerAcceptance: null,
+      byAcceptance: [],
+      byIssueType: [],
+    };
+    renderPage('/app/analytics?tab=cost');
+
+    expect(await screen.findByText('analytics.cost.attributionEmptyTitle')).toBeTruthy();
+    expect(screen.getByText('analytics.cost.attributionEmptyHint')).toBeTruthy();
+    // 汇总卡与明细表不渲染（不给虚假 0）
+    expect(screen.queryByText('analytics.cost.attributionAvgCost')).toBeNull();
+    attributionMock.data = undefined; // 还原，避免影响后续用例
   });
 
   it('空态流：范围内无用量记录时展示空态，范围选择器仍保留（不被困在空范围）', async () => {
