@@ -341,7 +341,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'issue-type-switcher', file: 'modules/issue/components/issue-type-switcher.tsx', section: 'App Components', status: 'canonical' },
   { name: 'iteration-detail-dialog', file: 'modules/issue/components/iteration-detail-dialog.tsx', section: 'App Components', status: 'canonical' },
   { name: 'iteration-form-dialog', file: 'modules/issue/components/iteration-form-dialog.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'task-board', file: 'modules/issue/components/task-board.tsx', section: 'App Components', status: 'deprecated', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：零引用（实测）——全库无 import（看板能力由 shared/components/board-view 承载），且不在画廊', proposal: 'delete' } },
   { name: 'task-detail-drawer', file: 'modules/issue/components/task-detail-drawer.tsx', section: 'App Components', status: 'deprecated', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：孤儿组件：全库 0 importer（仅自身与测试文件引用）', proposal: 'delete' } },
   { name: 'task-gantt', file: 'modules/issue/components/task-gantt.tsx', section: 'App Components', status: 'canonical' },
   { name: 'task-import-export', file: 'modules/issue/components/task-import-export.tsx', section: 'App Components', status: 'canonical' },
