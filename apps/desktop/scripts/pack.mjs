@@ -153,6 +153,11 @@ run(
 
 // 4b. 生成干净默认库模板（file: 路径相对 schema 目录解析）：用户机首启直接拷贝，
 //     免现场 db push（实测 ~40s）——与 CLI 剪除配套，见 4c
+//     ⚠️ 记账坑（CAP-A-14 实证 2026-09-30）：db push 生成的模板 schema 最新但
+//     `_prisma_migrations` 记账为空。不能改用 migrate deploy 生成——迁移历史含
+//     重复建表（20260320 与 20260718_init 均建 ExecutionRun），空库重放 P3018。
+//     模板派生用户库由 server 侧迁移执行器（schema-migrator.ts）按「记账空 +
+//     业务表存在 → baseline」消化，本步骤维持 db push 不动。
 run(
   process.execPath,
   [prismaCli, 'db', 'push', '--schema', prismaSchema, '--skip-generate'],

@@ -10,8 +10,7 @@ import net from 'node:net';
 import http from 'node:http';
 import path from 'node:path';
 import { utilityProcess } from 'electron';
-import type { AppConfig } from './config';
-import { getDatabaseUrl } from './config';
+import { getDatabaseUrl, isDevMode, type AppConfig } from './config';
 import { logger } from './logger';
 
 // 60s：server 冷启动耗时抖动大（杀毒扫描/机器负载，实测 8s~31s）——30s 窗口曾把
@@ -34,8 +33,10 @@ export interface ServerHandle {
   stop: () => Promise<void>;
   /**
    * 订阅「未经 stop() 的退出」= 崩溃（ADR-015 自愈依据）。stop() 内部退出不算。
+   * 回调携带退出码：server 升级迁移失败以专用码 42 退出（CAP-A-14），壳据此
+   * 弹「升级迁移失败」指引而非走自愈重启。
    */
-  onUnexpectedExit: (callback: () => void) => void;
+  onUnexpectedExit: (callback: (exitCode: number | null) => void) => void;
 }
 
 export function isPortAvailable(port: number): Promise<boolean> {
@@ -117,6 +118,12 @@ function buildServerEnv(config: AppConfig, port: number): NodeJS.ProcessEnv {
     // 工作区注册表指向用户数据目录：默认按 server cwd 解析会落进安装目录，
     // 升级覆盖安装时随 resources 重写而丢失用户工作区注册（安装冒烟实证）
     WORKSPACE_REGISTRY_PATH: path.join(config.userDataDir, 'workspaces.json'),
+    // 用户数据目录（CAP-A-14）：server 迁移失败标记文件 migration-failure.json
+    // 的落点，壳侧弹窗按同目录读取
+    APM_DATA_DIR: config.userDataDir,
+    // 打包模式信号（CAP-A-14）：server 启动链据此执行 SQLite 升级迁移；dev 链路
+    // schema 由 db push 对齐（setup.ts alignDevDatabaseSchema），不注入零参与
+    ...(isDevMode() ? {} : { APM_PACKAGED: '1' }),
   };
 }
 
@@ -168,10 +175,10 @@ export function startServerProcess(
     pipeLog(proc.stdout, 'backend:stdout', markOutput);
     pipeLog(proc.stderr, 'backend:stderr', markOutput);
     let stopped = false;
-    let onUnexpectedExit: (() => void) | null = null;
-    proc.on('exit', () => {
+    let onUnexpectedExit: ((exitCode: number | null) => void) | null = null;
+    proc.on('exit', (code) => {
       if (!stopped) {
-        onUnexpectedExit?.();
+        onUnexpectedExit?.(code ?? null);
       }
     });
     return {
@@ -206,10 +213,10 @@ export function startServerProcess(
   pipeLog(child.stdout, 'backend:stdout', markOutput);
   pipeLog(child.stderr, 'backend:stderr', markOutput);
   let stopped = false;
-  let onUnexpectedExit: (() => void) | null = null;
-  child.once('exit', () => {
+  let onUnexpectedExit: ((exitCode: number | null) => void) | null = null;
+  child.once('exit', (code) => {
     if (!stopped) {
-      onUnexpectedExit?.();
+      onUnexpectedExit?.(code ?? null);
     }
   });
   return {

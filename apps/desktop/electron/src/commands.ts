@@ -3,9 +3,10 @@
  * 命令名沿用旧壳 snake_case（前端 invoke('get_backend_status') 字面参数不变）；
  * 返回数据字段名一律 camelCase（前端接口契约，见 state.ts 顶部说明）。
  */
-import { BrowserWindow, dialog, Notification, shell } from 'electron';
+import { app, BrowserWindow, dialog, Notification, shell } from 'electron';
 import fs from 'node:fs';
 import net from 'node:net';
+import path from 'node:path';
 import pkg from '../../package.json';
 import {
   pickBackendPort,
@@ -98,6 +99,73 @@ const MAX_SERVER_CONSECUTIVE_CRASHES = 5;
 const SERVER_RESTART_MAX_DELAY_MS = 30_000;
 let serverCrashCount = 0;
 
+/**
+ * server 升级迁移失败专用退出码（CAP-A-14，与 server 侧
+ * core/database/startup-migrations.ts 的 MIGRATION_FAILURE_EXIT_CODE 同值约定）。
+ */
+const SERVER_MIGRATION_FAILURE_EXIT_CODE = 42;
+
+/** server 迁移失败标记文件（APM_DATA_DIR 下，server 写、壳读取后删除） */
+interface MigrationFailureInfo {
+  timestamp: string;
+  database: string;
+  migrationName: string | null;
+  backupDir: string | null;
+  error: string;
+}
+
+function readMigrationFailureMarker(): MigrationFailureInfo | null {
+  try {
+    const file = path.join(state.config.userDataDir, 'migration-failure.json');
+    if (!fs.existsSync(file)) {
+      return null;
+    }
+    return JSON.parse(fs.readFileSync(file, 'utf-8')) as MigrationFailureInfo;
+  } catch {
+    return null; // 标记缺失/损坏按无名崩溃兜底，不阻断弹窗
+  }
+}
+
+/**
+ * 「升级迁移失败」指引弹窗（仅打包模式、server 以 42 退出时触发）：
+ * 展示迁移前备份目录与两条出路（设置页恢复备份 / GitHub 提 issue 附日志），
+ * 用户确认后退出应用。不做自愈重启——迁移失败是确定性的，重启只会 crash loop。
+ */
+async function showMigrationFailureDialog(): Promise<void> {
+  const info = readMigrationFailureMarker();
+  // 弹窗即消费：删标记防残留误导后续一般崩溃的判读
+  try {
+    fs.rmSync(path.join(state.config.userDataDir, 'migration-failure.json'), { force: true });
+  } catch {
+    // 删除失败不影响主流程
+  }
+  const detailLines = [
+    '数据库升级迁移失败，为防数据损坏本次已停止启动。',
+    info?.backupDir
+      ? `迁移前自动备份：${info.backupDir}`
+      : '本次未生成迁移前备份（失败发生在修改数据库之前）。',
+    '',
+    '可选择：',
+    '1. 从设置页「备份与恢复」恢复升级前备份（或将备份目录中的库快照手动覆盖回数据目录后重试）；',
+    '2. 到 GitHub 提 issue 并附日志文件。',
+  ];
+  if (info?.error) {
+    detailLines.push('', `错误详情：${info.error}`);
+  }
+  const detail = detailLines.join('\n');
+  logger.error(`升级迁移失败（server 退出码 ${SERVER_MIGRATION_FAILURE_EXIT_CODE}）:\n${detail}`);
+  await dialog.showMessageBox({
+    type: 'error',
+    title: '升级迁移失败',
+    message: '升级迁移失败',
+    detail,
+    buttons: ['确定'],
+    noLink: true,
+  });
+  state.isQuitting = true;
+  app.quit();
+}
+
 function scheduleServerRestart(delayMs: number): void {
   setTimeout(() => {
     if (state.backend) {
@@ -114,12 +182,18 @@ function scheduleServerRestart(delayMs: number): void {
   }, delayMs);
 }
 
-function handleServerUnexpectedExit(): void {
+function handleServerUnexpectedExit(exitCode: number | null): void {
   if (!state.backend) {
     return;
   }
   const prevPid = state.backend.info.pid;
   state.backend = null;
+  // 升级迁移失败（CAP-A-14）：仅打包模式弹「升级迁移失败」指引后退出；
+  // dev 模式迁移零参与，保持一般崩溃自愈路径
+  if (!isDevMode() && exitCode === SERVER_MIGRATION_FAILURE_EXIT_CODE) {
+    void showMigrationFailureDialog();
+    return;
+  }
   serverCrashCount += 1;
   if (serverCrashCount > MAX_SERVER_CONSECUTIVE_CRASHES) {
     logger.error(
@@ -152,7 +226,7 @@ async function startBackendInternal(): Promise<BackendInfo> {
     state.backend = { handle, info };
     // 自愈链路：崩溃计数清零（人工启动或重启成功都视为恢复）+ 订阅意外退出
     serverCrashCount = 0;
-    handle.onUnexpectedExit(() => handleServerUnexpectedExit());
+    handle.onUnexpectedExit((exitCode) => handleServerUnexpectedExit(exitCode));
     logger.info(`后端启动成功: ${apiBaseUrl}`);
     return info;
   } catch (err) {

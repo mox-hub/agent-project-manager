@@ -176,7 +176,10 @@ export function restoreDefaultDbIfNeeded(config: AppConfig): boolean {
     logger.info(`数据库已存在，跳过建库: ${config.databasePath}`);
     // dev 模式 schema 对齐：代码 schema 持续演进而已有库原地不动 →「新代码+旧库」
     // 缺列 500（CAP-A-14 重审注记「升级迁移路径」缺口，2026-09-21 实锤）。打包模式
-    // （nodeExe 存在、随包无 prisma CLI）绝不触碰用户库，升级迁移走发版路径。
+    // 升级迁移已由 server 侧轻量迁移执行器兑现（CAP-A-14，core/database/
+    // schema-migrator.ts）：启动链在 Prisma 建连前按 _prisma_migrations 记账补齐
+    // 差集，模板派生库（db push 生成、无记账）走 baseline，失败拒启并由壳弹
+    // 「升级迁移失败」指引。dev 模式仍走 db push 对齐（开发机有完整 CLI）。
     if (!config.nodeExe) {
       alignDevDatabaseSchema(config);
     }
