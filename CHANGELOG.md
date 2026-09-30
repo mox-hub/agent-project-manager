@@ -21,6 +21,19 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.8] - 2026-10-01
+
+### v0.7.8 发版总览——上线套装首版：G8 成本归因到验收（批二 C-06 余留切片兑现）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **验收归因成本聚合端点** `GET /ai/usage/acceptance-attribution?projectId=`：AIUsageLog.executionRunId → Execution（retryOfId 返工血缘）→ Issue → Acceptance 一跳链只读内存聚合，零 schema 迁移——summary（totalExecutionCost / reworkCost / reworkPct / acceptanceCount 按有验收单的工单数去重 / avgCostPerAcceptance 单位验收成本）+ byAcceptance 验收单明细（cost 降序上限 50，acceptanceTitle 空回落工单标题）+ byIssueType 返工分布（上限 10） | CAP-C-06 / GAP-T-51 | ai-hub.service.spec 7 用例（空数据/正常归因/返工血缘 2/3 占比/projectId 过滤） | openapi.json +264 行；双份 api-types.gen 再生；能力清单 C-06 置 doing 注记 |
+| server | **dashboard 预算偏差诚实降级**：`budgetDeltaPct` 硬编码 0 改 nullable null（预算基线未配置），响应类型同步 | G8 顺带 | dashboard.service.spec null 断言 | DTO 契约 nullable |
+| frontend | **analytics Cost Tab 新增「验收归因」区**：汇总卡三数字（单位验收成本/返工成本/返工占比）+ 验收单明细表（验收单/工单/类型/执行次数/返工次数/成本）+ 工单类型返工分布条形列表；use-acceptance-attribution hook；空态诚实文案 | CAP-C-06 / GAP-T-51 | analytics-page.test 12 用例（正常流/空态流） | i18n 双语言键；新增组件入 analytics 模块 |
+| frontend | **dashboard 成本卡下钻**：点击跳 `/app/analytics?tab=cost`（CostDialog 弹窗随之退役），budgetDeltaPct null 显示「预算基线未设置」降级 | CAP-C-06 | dashboard-page.test 5 用例 | 孤儿 i18n 键（dashboard.cost.vsBudget 等）留清理批 |
+
+**上线套装进度**：批二余留 C-06 ✅（本版）；A-03/A-14 → v0.7.9/v0.7.10；A-18 → v0.7.13。
+
 ## [0.7.7] - 2026-10-01
 
 ### v0.7.7 发版总览——收纳版：AI 成员个人页工作台重构 + 图表双引擎 + PromptEditor 统一 + 上线套装前全量收编
