@@ -67,6 +67,7 @@ export function MemberList({
       items={members}
       loading={loading}
       emptyMessage={emptyMessage}
+      size="comfortable"
       className={className}
       selectable
       onItemClick={onMemberClick}

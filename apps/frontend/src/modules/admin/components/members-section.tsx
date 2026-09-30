@@ -111,7 +111,7 @@ export function MembersSection({
 
       <AsyncState isLoading={isLoading} isEmpty={filtered.length === 0} error={error?.message ?? null} onRetry={refetch}>
         <DataTableShell>
-          <Table>
+          <Table size="comfortable">
             <TableHeader>
               <TableRow>
                 <TableHead>{t('admin.member', '成员')}</TableHead>

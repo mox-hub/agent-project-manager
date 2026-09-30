@@ -62,6 +62,7 @@ export function TeamList({
       items={teams}
       loading={loading}
       emptyMessage={emptyMessage}
+      size="comfortable"
       className={className}
       selectable
       onItemClick={onTeamClick}

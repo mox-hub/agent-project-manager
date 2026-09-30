@@ -86,7 +86,7 @@ export function InvitesSection({ statusFilter }: { statusFilter: string }) {
 
       <AsyncState isLoading={isLoading} isEmpty={visible.length === 0} error={error?.message ?? null} onRetry={refetch}>
         <DataTableShell>
-          <Table>
+          <Table size="comfortable">
             <TableHeader>
               <TableRow>
                 <TableHead>{t('admin.inviteEmail', '受邀邮箱')}</TableHead>
