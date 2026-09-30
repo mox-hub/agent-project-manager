@@ -93,7 +93,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'data-table-shell', file: 'semantic/data-table-shell.tsx', section: 'Layout & Shells', status: 'canonical' },
   { name: 'date-picker', file: 'ui/date-picker.tsx', section: 'Controls', status: 'canonical' },
   { name: 'dialog', file: 'ui/dialog.tsx', section: 'Overlays', status: 'canonical' },
-  { name: 'direction', file: 'ui/direction.tsx', section: 'Navigation', status: 'deprecated', galleryExempt: '2026-09-29 人工裁决批准删除：随批 9 清退，不补 demo', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：零引用（实测）——base-ui DirectionProvider 再导出，当前无 RTL 需求', proposal: 'delete' } },
   // G7 倒置收编迁出 ui/，保留登记保 LU（2026-09-29）
   { name: 'document-preview-dialog', file: 'modules/document/components/document-preview-dialog.tsx', section: 'App Components', status: 'canonical' },
   { name: 'drawer', file: 'ui/drawer.tsx', section: 'Overlays', status: 'standby' },
