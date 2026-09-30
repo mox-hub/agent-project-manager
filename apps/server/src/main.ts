@@ -14,8 +14,16 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import * as bodyParser from 'body-parser';
 import { workspaceALS } from './core/database/workspace-context';
+import { runPackagedStartupMigrations } from './core/database/startup-migrations';
 
 async function bootstrap() {
+  // 打包模式升级迁移（CAP-A-14）：必须在 Nest DI / Prisma 建连之前——失败时
+  // 写失败标记 + 以退出码 42 主动退出，desktop 壳据此弹「升级迁移失败」指引
+  //（见 core/database/startup-migrations.ts）。dev 模式（未注入 APM_PACKAGED）
+  // 零参与，schema 对齐维持壳侧 db push。引擎类型守卫由 prisma.service /
+  // schema-migrator 模块各自先行设置，无需在此重复。
+  await runPackagedStartupMigrations();
+
   const app = await NestFactory.create(AppModule, {
     abortOnError: false,
     bufferLogs: true,
