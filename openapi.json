@@ -45111,6 +45111,324 @@
         ]
       }
     },
+    "/_api/workspaces/backups": {
+      "post": {
+        "operationId": "WorkspaceController_createBackup",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBackupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "备份元信息（含文件清单与大小）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceBackupDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "创建备份（scope=all 全库注册表+全部工作区库；scope=workspace 单区库）",
+        "tags": [
+          "Workspaces"
+        ]
+      },
+      "get": {
+        "operationId": "WorkspaceController_listBackups",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "备份列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceBackupListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "备份列表（按创建时间倒序）",
+        "tags": [
+          "Workspaces"
+        ]
+      }
+    },
+    "/_api/workspaces/backups/{backupId}/restore": {
+      "post": {
+        "operationId": "WorkspaceController_restoreBackup",
+        "parameters": [
+          {
+            "name": "backupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreBackupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "恢复结果（含恢复前自动备份 ID）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreBackupResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "恢复备份（强确认：scope=workspace 输工作区名称；scope=all 输 RESTORE ALL；恢复前自动全量备份）",
+        "tags": [
+          "Workspaces"
+        ]
+      }
+    },
     "/_api/workflows": {
       "get": {
         "operationId": "WorkflowController_getWorkflows",
@@ -76405,6 +76723,166 @@
         "required": [
           "name",
           "path"
+        ]
+      },
+      "CreateBackupDto": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "all",
+              "workspace"
+            ],
+            "description": "备份范围：all = 全库（注册表 + 全部工作区库）；workspace = 单个工作区库"
+          },
+          "workspaceId": {
+            "type": "string",
+            "description": "scope=workspace 时必填：目标工作区 ID（default 表示默认工作区）"
+          }
+        },
+        "required": [
+          "scope"
+        ]
+      },
+      "WorkspaceBackupFileDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "备份目录内文件名（如 ws-xxx.db / workspaces.json）"
+          },
+          "sizeBytes": {
+            "type": "number",
+            "description": "文件字节数"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "registry",
+              "database"
+            ],
+            "description": "registry = 注册表快照；database = 工作区库快照"
+          },
+          "workspaceId": {
+            "type": "string",
+            "description": "kind=database 时的工作区 ID"
+          }
+        },
+        "required": [
+          "name",
+          "sizeBytes",
+          "kind"
+        ]
+      },
+      "WorkspaceBackupDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "备份 ID（即 .apm-backups 下的目录名）"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "备份创建时间（ISO）"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "all",
+              "workspace"
+            ],
+            "description": "备份范围"
+          },
+          "workspaceId": {
+            "type": "string",
+            "description": "scope=workspace 时的目标工作区 ID"
+          },
+          "workspaceName": {
+            "type": "string",
+            "description": "scope=workspace 时的目标工作区名称"
+          },
+          "reason": {
+            "type": "string",
+            "description": "产生原因（如 pre-restore = 恢复前强制自动备份）；常规备份无此字段"
+          },
+          "files": {
+            "description": "文件清单",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceBackupFileDto"
+            }
+          },
+          "totalBytes": {
+            "type": "number",
+            "description": "全部文件字节总数"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "scope",
+          "files",
+          "totalBytes"
+        ]
+      },
+      "WorkspaceBackupListResponseDto": {
+        "type": "object",
+        "properties": {
+          "backups": {
+            "description": "备份列表（时间倒序）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceBackupDto"
+            }
+          }
+        },
+        "required": [
+          "backups"
+        ]
+      },
+      "RestoreBackupDto": {
+        "type": "object",
+        "properties": {
+          "confirm": {
+            "type": "string",
+            "description": "强确认文案：scope=workspace 时必须精确等于该工作区名称；scope=all 时必须等于 \"RESTORE ALL\"",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "confirm"
+        ]
+      },
+      "RestoreBackupResponseDto": {
+        "type": "object",
+        "properties": {
+          "restoredBackupId": {
+            "type": "string",
+            "description": "被恢复的备份 ID"
+          },
+          "preRestoreBackupId": {
+            "type": "string",
+            "description": "恢复前自动备份的 ID（本次操作的回滚保险）"
+          },
+          "restoredWorkspaces": {
+            "description": "实际覆盖的库对应工作区 ID 列表（含 default）",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "registryRestored": {
+            "type": "boolean",
+            "description": "注册表快照是否已回写（仅 scope=all 为 true）"
+          }
+        },
+        "required": [
+          "restoredBackupId",
+          "preRestoreBackupId",
+          "restoredWorkspaces",
+          "registryRestored"
         ]
       },
       "WorkflowSummaryDto": {

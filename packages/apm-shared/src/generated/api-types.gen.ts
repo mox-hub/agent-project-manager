@@ -3385,6 +3385,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/ai/usage/acceptance-attribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 验收归因成本（CAP-C-06）：执行链成本按验收单/工单类型归因 */
+        get: operations["AiHubController_getAcceptanceAttribution"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/ai/models": {
         parameters: {
             query?: never;
@@ -5404,6 +5421,41 @@ export interface paths {
         put?: never;
         /** 标记工作区最近打开（前端切换时调用） */
         post: operations["WorkspaceController_activate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workspaces/backups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 备份列表（按创建时间倒序） */
+        get: operations["WorkspaceController_listBackups"];
+        put?: never;
+        /** 创建备份（scope=all 全库注册表+全部工作区库；scope=workspace 单区库） */
+        post: operations["WorkspaceController_createBackup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workspaces/backups/{backupId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 恢复备份（强确认：scope=workspace 输工作区名称；scope=all 输 RESTORE ALL；恢复前自动全量备份） */
+        post: operations["WorkspaceController_restoreBackup"];
         delete?: never;
         options?: never;
         head?: never;
@@ -11769,6 +11821,48 @@ export interface components {
             /** @description 按日聚合（最多 370 天，倒序） */
             byDay: components["schemas"]["UsageByDayDto"][];
         };
+        AcceptanceAttributionItemDto: {
+            /** @description 验收单 ID */
+            acceptanceId: string;
+            /** @description 验收单标题（未设置时为 null，前端回落工单标题） */
+            acceptanceTitle?: string | null;
+            /** @description 关联工单 ID */
+            issueId: string;
+            /** @description 工单标题（工单已删除时为占位文案） */
+            issueTitle: string;
+            /** @description 工单类型名（IssueType.name 事实源，缺省回落 legacy type） */
+            issueTypeName: string;
+            /** @description 归因成本（USD，该工单执行链 AIUsageLog.estimatedCost 合计） */
+            cost: number;
+            /** @description 有用量记录的执行次数 */
+            executionCount: number;
+            /** @description 返工执行次数（Execution.retryOfId 血缘非空） */
+            reworkCount: number;
+        };
+        IssueTypeReworkDto: {
+            /** @description 工单类型名（无工单关联的执行归入「未关联工单」） */
+            issueTypeName: string;
+            /** @description 返工执行次数 */
+            reworkCount: number;
+            /** @description 归因成本合计（USD） */
+            cost: number;
+        };
+        AcceptanceAttributionResponseDto: {
+            /** @description 执行链成本合计（挂 executionRunId 的 AIUsageLog.estimatedCost 合计） */
+            totalExecutionCost: number;
+            /** @description 返工成本合计（retry 血缘执行关联的成本） */
+            reworkCost: number;
+            /** @description 返工占比百分数（reworkCost/totalExecutionCost×100；无成本时为 0） */
+            reworkPct: number;
+            /** @description 有验收单的工单数（经执行链成本归因可达的工单） */
+            acceptanceCount: number;
+            /** @description 单位验收成本（totalExecutionCost/acceptanceCount；无验收单时为 null，前端显示诚实空态） */
+            avgCostPerAcceptance: number | null;
+            /** @description 验收单维度明细（按成本降序，上限 50） */
+            byAcceptance: components["schemas"]["AcceptanceAttributionItemDto"][];
+            /** @description 工单类型返工分布（按返工次数降序，上限 10） */
+            byIssueType: components["schemas"]["IssueTypeReworkDto"][];
+        };
         AIModelDto: {
             /** @description 模型标识（配置为 id；适配器为 provider_model） */
             id: string;
@@ -13644,6 +13738,67 @@ export interface components {
             /** @description 工作区数据库文件路径 */
             path: string;
         };
+        CreateBackupDto: {
+            /**
+             * @description 备份范围：all = 全库（注册表 + 全部工作区库）；workspace = 单个工作区库
+             * @enum {string}
+             */
+            scope: "all" | "workspace";
+            /** @description scope=workspace 时必填：目标工作区 ID（default 表示默认工作区） */
+            workspaceId?: string;
+        };
+        WorkspaceBackupFileDto: {
+            /** @description 备份目录内文件名（如 ws-xxx.db / workspaces.json） */
+            name: string;
+            /** @description 文件字节数 */
+            sizeBytes: number;
+            /**
+             * @description registry = 注册表快照；database = 工作区库快照
+             * @enum {string}
+             */
+            kind: "registry" | "database";
+            /** @description kind=database 时的工作区 ID */
+            workspaceId?: string;
+        };
+        WorkspaceBackupDto: {
+            /** @description 备份 ID（即 .apm-backups 下的目录名） */
+            id: string;
+            /** @description 备份创建时间（ISO） */
+            createdAt: string;
+            /**
+             * @description 备份范围
+             * @enum {string}
+             */
+            scope: "all" | "workspace";
+            /** @description scope=workspace 时的目标工作区 ID */
+            workspaceId?: string;
+            /** @description scope=workspace 时的目标工作区名称 */
+            workspaceName?: string;
+            /** @description 产生原因（如 pre-restore = 恢复前强制自动备份）；常规备份无此字段 */
+            reason?: string;
+            /** @description 文件清单 */
+            files: components["schemas"]["WorkspaceBackupFileDto"][];
+            /** @description 全部文件字节总数 */
+            totalBytes: number;
+        };
+        WorkspaceBackupListResponseDto: {
+            /** @description 备份列表（时间倒序） */
+            backups: components["schemas"]["WorkspaceBackupDto"][];
+        };
+        RestoreBackupDto: {
+            /** @description 强确认文案：scope=workspace 时必须精确等于该工作区名称；scope=all 时必须等于 "RESTORE ALL" */
+            confirm: string;
+        };
+        RestoreBackupResponseDto: {
+            /** @description 被恢复的备份 ID */
+            restoredBackupId: string;
+            /** @description 恢复前自动备份的 ID（本次操作的回滚保险） */
+            preRestoreBackupId: string;
+            /** @description 实际覆盖的库对应工作区 ID 列表（含 default） */
+            restoredWorkspaces: string[];
+            /** @description 注册表快照是否已回写（仅 scope=all 为 true） */
+            registryRestored: boolean;
+        };
         WorkflowSummaryDto: {
             id: string;
             /** @description 工作流键（唯一） */
@@ -15394,8 +15549,8 @@ export interface components {
         DashboardCostDto: {
             /** @description 本月成本合计（USD） */
             monthTotal: number;
-            /** @description 预算偏差百分比（预算基线未落地，恒为 0） */
-            budgetDeltaPct: number;
+            /** @description 预算偏差百分比（预算基线未配置时为 null，前端显示「预算基线未设置」降级文案） */
+            budgetDeltaPct: number | null;
             /** @description 按供应商分摊 */
             byCategory: components["schemas"]["DashboardCostCategoryDto"][];
         };
@@ -31083,6 +31238,84 @@ export interface operations {
             };
         };
     };
+    AiHubController_getAcceptanceAttribution: {
+        parameters: {
+            query?: {
+                /** @description 按项目 ID 过滤（缺省为当前工作区全量） */
+                projectId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 归因聚合 { totalExecutionCost, reworkCost, reworkPct, acceptanceCount, avgCostPerAcceptance(无验收单为 null), byAcceptance[](成本降序≤50), byIssueType[](返工降序≤10) } */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcceptanceAttributionResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
     AiHubController_getModels: {
         parameters: {
             query: {
@@ -41094,6 +41327,186 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkspaceRecordResponseDto"];
+                };
+            };
+        };
+    };
+    WorkspaceController_listBackups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 备份列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceBackupListResponseDto"];
+                };
+            };
+        };
+    };
+    WorkspaceController_createBackup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBackupDto"];
+            };
+        };
+        responses: {
+            /** @description 备份元信息（含文件清单与大小） */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceBackupDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    WorkspaceController_restoreBackup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                backupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreBackupDto"];
+            };
+        };
+        responses: {
+            /** @description 恢复结果（含恢复前自动备份 ID） */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreBackupResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
                 };
             };
         };

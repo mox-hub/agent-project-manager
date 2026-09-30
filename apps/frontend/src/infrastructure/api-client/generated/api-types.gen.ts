@@ -5427,6 +5427,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/workspaces/backups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 备份列表（按创建时间倒序） */
+        get: operations["WorkspaceController_listBackups"];
+        put?: never;
+        /** 创建备份（scope=all 全库注册表+全部工作区库；scope=workspace 单区库） */
+        post: operations["WorkspaceController_createBackup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workspaces/backups/{backupId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 恢复备份（强确认：scope=workspace 输工作区名称；scope=all 输 RESTORE ALL；恢复前自动全量备份） */
+        post: operations["WorkspaceController_restoreBackup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/workflows": {
         parameters: {
             query?: never;
@@ -13702,6 +13737,67 @@ export interface components {
             name: string;
             /** @description 工作区数据库文件路径 */
             path: string;
+        };
+        CreateBackupDto: {
+            /**
+             * @description 备份范围：all = 全库（注册表 + 全部工作区库）；workspace = 单个工作区库
+             * @enum {string}
+             */
+            scope: "all" | "workspace";
+            /** @description scope=workspace 时必填：目标工作区 ID（default 表示默认工作区） */
+            workspaceId?: string;
+        };
+        WorkspaceBackupFileDto: {
+            /** @description 备份目录内文件名（如 ws-xxx.db / workspaces.json） */
+            name: string;
+            /** @description 文件字节数 */
+            sizeBytes: number;
+            /**
+             * @description registry = 注册表快照；database = 工作区库快照
+             * @enum {string}
+             */
+            kind: "registry" | "database";
+            /** @description kind=database 时的工作区 ID */
+            workspaceId?: string;
+        };
+        WorkspaceBackupDto: {
+            /** @description 备份 ID（即 .apm-backups 下的目录名） */
+            id: string;
+            /** @description 备份创建时间（ISO） */
+            createdAt: string;
+            /**
+             * @description 备份范围
+             * @enum {string}
+             */
+            scope: "all" | "workspace";
+            /** @description scope=workspace 时的目标工作区 ID */
+            workspaceId?: string;
+            /** @description scope=workspace 时的目标工作区名称 */
+            workspaceName?: string;
+            /** @description 产生原因（如 pre-restore = 恢复前强制自动备份）；常规备份无此字段 */
+            reason?: string;
+            /** @description 文件清单 */
+            files: components["schemas"]["WorkspaceBackupFileDto"][];
+            /** @description 全部文件字节总数 */
+            totalBytes: number;
+        };
+        WorkspaceBackupListResponseDto: {
+            /** @description 备份列表（时间倒序） */
+            backups: components["schemas"]["WorkspaceBackupDto"][];
+        };
+        RestoreBackupDto: {
+            /** @description 强确认文案：scope=workspace 时必须精确等于该工作区名称；scope=all 时必须等于 "RESTORE ALL" */
+            confirm: string;
+        };
+        RestoreBackupResponseDto: {
+            /** @description 被恢复的备份 ID */
+            restoredBackupId: string;
+            /** @description 恢复前自动备份的 ID（本次操作的回滚保险） */
+            preRestoreBackupId: string;
+            /** @description 实际覆盖的库对应工作区 ID 列表（含 default） */
+            restoredWorkspaces: string[];
+            /** @description 注册表快照是否已回写（仅 scope=all 为 true） */
+            registryRestored: boolean;
         };
         WorkflowSummaryDto: {
             id: string;
@@ -41231,6 +41327,186 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkspaceRecordResponseDto"];
+                };
+            };
+        };
+    };
+    WorkspaceController_listBackups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 备份列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceBackupListResponseDto"];
+                };
+            };
+        };
+    };
+    WorkspaceController_createBackup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBackupDto"];
+            };
+        };
+        responses: {
+            /** @description 备份元信息（含文件清单与大小） */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceBackupDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    WorkspaceController_restoreBackup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                backupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreBackupDto"];
+            };
+        };
+        responses: {
+            /** @description 恢复结果（含恢复前自动备份 ID） */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreBackupResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
                 };
             };
         };

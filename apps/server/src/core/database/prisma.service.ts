@@ -152,6 +152,25 @@ export class PrismaService
 }
 
 /**
+ * 数据层连接管理扩展（备份/恢复专用，CAP-A-03）：
+ * createWorkspaceAwarePrismaService 的 Proxy 在标准 Prisma API 之外额外暴露，
+ * PrismaService 本身不声明这两个方法（避免污染常规数据访问面）。
+ * 用法：`prisma as unknown as PrismaService & WorkspaceConnectionAdmin`，
+ * 并以 typeof 守卫兜底（纯 PrismaService 场景下不存在则跳过失效）。
+ */
+export interface WorkspaceConnectionAdmin {
+  /**
+   * 断开并清缓存指定库 URL 的活跃连接（工作区池内 client + default 基座实例），
+   * 供恢复流程在覆盖库文件前释放 Windows 上的 SQLite 文件句柄；
+   * 返回实际执行了断开的标识列表。
+   * 池内条目被删除后，该工作区下次数据访问会自动重建连接。
+   */
+  invalidateWorkspaceConnections(dbUrls: string[]): Promise<string[]>;
+  /** 重连 default 基座实例（恢复 default 库文件后调用；工作区池无需重连） */
+  reconnectBaseConnection(): Promise<void>;
+}
+
+/**
  * 工作区路由 PrismaService 工厂：
  * 返回 Proxy，按请求级 x-workspace-id（AsyncLocalStorage）把数据访问路由到
  * 对应工作区的 SQLite 库；无上下文（未带头）或 'default' 走默认库（DATABASE_URL）。
@@ -220,6 +239,40 @@ export function createWorkspaceAwarePrismaService(
         return typeof value === 'function'
           ? (value as () => unknown).bind(base)
           : value;
+      }
+      // 连接失效（备份/恢复专用）：见 WorkspaceConnectionAdmin 注释
+      if (prop === 'invalidateWorkspaceConnections') {
+        return async (dbUrls: string[]): Promise<string[]> => {
+          const targets = new Set(dbUrls);
+          const disconnected: string[] = [];
+          for (const [url, client] of Array.from(pool.entries())) {
+            if (!targets.has(url)) continue;
+            pool.delete(url);
+            try {
+              await client.$disconnect();
+              disconnected.push(url);
+              logger.log(`Workspace database invalidated for restore: ${url}`);
+            } catch (e) {
+              logger.warn(
+                `workspace invalidate failed: ${(e as Error).message}`,
+              );
+            }
+          }
+          // default 库由基座实例持有连接：覆盖其文件前必须断开（Windows 句柄锁定）
+          const dbUrl = process.env.DATABASE_URL;
+          if (dbUrl && targets.has(dbUrl)) {
+            await base.$disconnect();
+            disconnected.push(dbUrl);
+            logger.log('Default database invalidated for restore');
+          }
+          return disconnected;
+        };
+      }
+      if (prop === 'reconnectBaseConnection') {
+        return async (): Promise<void> => {
+          await base.$connect();
+          logger.log('Default database reconnected after restore');
+        };
       }
 
       const client = getClient();

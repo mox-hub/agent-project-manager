@@ -23,6 +23,19 @@ function registryPath(): string {
   return path.resolve(process.env.WORKSPACE_REGISTRY_PATH ?? 'workspaces.json');
 }
 
+/** 注册表文件绝对路径（备份/恢复需要把快照写回原位，CAP-A-03） */
+export function registryFilePath(): string {
+  return registryPath();
+}
+
+/**
+ * SQLite 库文件 → file: URL（与 resolveWorkspaceDbUrl 内部同一格式）。
+ * 备份/恢复需要拼出与数据层连接池同键的 URL 才能命中失效，勿自行拼接。
+ */
+export function dbFileUrl(p: string): string {
+  return toFileUrl(p);
+}
+
 function templateDbPath(): string {
   return path.resolve(
     process.env.WORKSPACE_TEMPLATE_PATH ?? 'prisma/template.db',

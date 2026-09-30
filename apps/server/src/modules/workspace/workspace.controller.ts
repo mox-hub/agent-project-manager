@@ -31,6 +31,13 @@ import {
   WorkspaceListResponseDto,
   WorkspaceRecordResponseDto,
 } from './dto/workspace-response.dto';
+import {
+  RestoreBackupResponseDto,
+  WorkspaceBackupListResponseDto,
+  WorkspaceBackupDto,
+} from './dto/backup-response.dto';
+import { CreateBackupDto, RestoreBackupDto } from './dto/backup.dto';
+import { WorkspaceBackupService } from './backup.service';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 class CreateWorkspaceDto {
@@ -50,12 +57,13 @@ class CreateWorkspaceDto {
  * 工作区元数据端点（注册表为文件级存储，不经过业务库）。
  * current 仅回显请求头、供启动探测，保持 @Public；
  * 列表与激活需登录（注册表含工作区名与库路径，不向未认证方暴露）；
- * 创建需默认工作区的 admin 身份
+ * 创建/备份/恢复需默认工作区的 admin 身份
  * （客户端调用时不携带 x-workspace-id，即在默认库校验）。
  */
 @ApiTags('Workspaces')
 @Controller('workspaces')
 export class WorkspaceController {
+  constructor(private readonly backupService: WorkspaceBackupService) {}
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @Get()
@@ -111,5 +119,58 @@ export class WorkspaceController {
     const record = activateWorkspace(id);
     if (!record) throw new NotFoundException('工作区不存在');
     return record;
+  }
+
+  // ---------------------------------------------------------------- 备份与恢复（CAP-A-03）
+
+  @Post('backups')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary:
+      '创建备份（scope=all 全库注册表+全部工作区库；scope=workspace 单区库）',
+  })
+  @ApiCreatedResponse({
+    type: WorkspaceBackupDto,
+    description: '备份元信息（含文件清单与大小）',
+  })
+  @ApiStandardErrors()
+  async createBackup(
+    @Body() dto: CreateBackupDto,
+  ): Promise<WorkspaceBackupDto> {
+    return this.backupService.createBackup(dto);
+  }
+
+  @Get('backups')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: '备份列表（按创建时间倒序）' })
+  @ApiOkResponse({
+    type: WorkspaceBackupListResponseDto,
+    description: '备份列表',
+  })
+  listBackups(): WorkspaceBackupListResponseDto {
+    return { backups: this.backupService.listBackups() };
+  }
+
+  @Post('backups/:backupId/restore')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary:
+      '恢复备份（强确认：scope=workspace 输工作区名称；scope=all 输 RESTORE ALL；恢复前自动全量备份）',
+  })
+  @ApiCreatedResponse({
+    type: RestoreBackupResponseDto,
+    description: '恢复结果（含恢复前自动备份 ID）',
+  })
+  @ApiStandardErrors()
+  async restoreBackup(
+    @Param('backupId') backupId: string,
+    @Body() dto: RestoreBackupDto,
+  ): Promise<RestoreBackupResponseDto> {
+    return this.backupService.restoreBackup(backupId, dto);
   }
 }
