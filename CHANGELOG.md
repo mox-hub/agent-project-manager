@@ -21,6 +21,18 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.9] - 2026-10-01
+
+### v0.7.9 发版总览——上线套装：G7-a 工作区备份与恢复（用户数据安全底线兑现）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **备份恢复服务**（modules/workspace/backup.service，584 行）：全库+单区双层备份（注册表 workspaces.json + default 走 DATABASE_URL 解析/非 default 走 `<path>/data/apm.db`）；在线快照 SQLite `VACUUM INTO`（WAL 一致性，路径单引号转义）、静态库 copyFileSync；备份落 `.apm-backups/`（WORKSPACE_BACKUP_DIR 可覆盖）目录式（meta.json 清单）保留 10 份滚动清理；恢复前**强制自动全量备份**（参与滚动，注释说明取舍）；恢复=临时文件+rename 覆盖+清陈旧 -wal/-shm，scope=all 为点时还原/scope=workspace 覆盖当前路径；三端点（POST/GET /workspaces/backups、POST .../restore）admin 门禁 | CAP-A-03 / GAP-T-52 / G7-a | 单测 8 例（快照可查询/全库枚举/滚动清理/meta/confirm 400 无副作用/转义/连接失效断言/点时还原）+ e2e 3 例（单区全链含 400 与自动备份/全库 RESTORE ALL/列表 401 404，环境全隔离临时目录）；数据层既有 13 例复跑绿 | openapi.json +478 行；双份 api-types.gen 再生；能力清单 A-03 置 doing 注记 |
+| server | **数据层连接失效机制**：per-workspace PrismaClient 池（闭包私有 Map）补最小失效接口——`invalidateWorkspaceConnections`（池条目删除）+ `reconnectBaseConnection`（default 基座断/重连，finally 保证不留断连态）；恢复流程先失效→覆盖→重连，下次访问自动重建 | G7-a 支撑 | 恢复链路单测断言失效调用；数据层 13 例回归 | WorkspaceConnectionAdmin 接口导出 |
+| frontend | **设置页「备份与恢复」区块**（/app/settings/backups）：备份列表（时间/范围/大小）、全库立即备份、工作区选择器+行内单区备份、恢复走强确认 Dialog（destructive 语义，输入工作区名/RESTORE ALL 才可确认） | CAP-A-03 / GAP-T-52 | i18n 双语 4938 键同步校验过 | settings-nav 新入口；两新组件入 workspace 模块 |
+
+**上线套装进度**：G8 ✅（v0.7.8）→ G7-a ✅（本版）→ G7-b 升级迁移（v0.7.10，迁移前自动备份复用本版服务）→ G5 → A-18。
+
 ## [0.7.8] - 2026-10-01
 
 ### v0.7.8 发版总览——上线套装首版：G8 成本归因到验收（批二 C-06 余留切片兑现）
