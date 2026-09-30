@@ -75,7 +75,8 @@ function TaskPromptEditor({
         onChange={setText}
         placeholder={t('taskDetail.promptPlaceholder')}
         rows={4}
-        maxHeight={280}
+        height={280}
+        injectionKey="task"
         onDraft={async () => {
           const result = await draft.mutateAsync({
             scenario: 'prompt-draft-task',

@@ -5711,7 +5711,10 @@
   },
   "promptEditor": {
     "empty": "暂无内容",
-    "charCount": "{{count}} 字符",
+    "metaStats": "{{chars}} 字符 · 约 {{tokens}} tokens",
+    "injectionOn": "提示词已启用",
+    "injectionOff": "提示词已停用",
+    "resizeHandle": "拖动调整编辑器高度",
     "draft": "AI 起草",
     "draftTitle": "AI 起草对照",
     "draftDesc": "左侧为当前内容，右侧为 AI 草稿；点「采用」才会写入编辑框，保存仍由你手动确认。",

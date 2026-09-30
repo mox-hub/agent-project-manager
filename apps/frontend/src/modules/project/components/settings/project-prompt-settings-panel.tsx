@@ -149,7 +149,8 @@ function ProjectPromptEditorPanel({
           onChange={setText}
           placeholder={t('projectSettings.prompt.placeholder')}
           rows={6}
-          maxHeight={360}
+          height={360}
+          injectionKey="project"
           onDraft={async () => {
             const result = await draft.mutateAsync({
               scenario: 'prompt-draft-project',

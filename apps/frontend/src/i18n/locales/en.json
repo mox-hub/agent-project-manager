@@ -5711,7 +5711,10 @@
   },
   "promptEditor": {
     "empty": "No content yet",
-    "charCount": "{{count}} characters",
+    "metaStats": "{{chars}} chars · ~{{tokens}} tokens",
+    "injectionOn": "Prompt enabled",
+    "injectionOff": "Prompt disabled",
+    "resizeHandle": "Drag to resize editor height",
     "draft": "AI draft",
     "draftTitle": "AI draft comparison",
     "draftDesc": "Current content on the left, AI draft on the right; clicking \"Apply\" writes it into the editor — saving still requires your confirmation.",

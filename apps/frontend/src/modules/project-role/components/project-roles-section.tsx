@@ -380,6 +380,7 @@ function RoleEditDialog({
               onChange={setPromptHint}
               placeholder="如: 提交前跑 lint 与测试、按团队规范命名..."
               rows={4}
+              injectionKey="executor"
               onDraft={async () => {
                 const result = await draft.mutateAsync({
                   scenario: 'prompt-draft-role',

@@ -178,6 +178,7 @@ function SystemPromptViewer() {
               value={detail.data.content}
               readOnly
               maxHeight={384}
+              injectionKey="system"
             />
           </div>
         )}

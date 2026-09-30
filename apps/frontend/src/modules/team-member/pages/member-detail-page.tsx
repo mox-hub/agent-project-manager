@@ -327,7 +327,8 @@ export default function MemberDetailPage() {
                         persistPrompt(v);
                       }}
                       placeholder={t('memberDetail.personalPromptEmpty', '（未配置）')}
-                      maxHeight={280}
+                      height={280}
+                      injectionKey="executor"
                       actions={
                         updateMember.isPending ? (
                           <span className="text-xs text-muted-foreground">
