@@ -21,6 +21,18 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.10] - 2026-10-01
+
+### v0.7.10 发版总览——上线套装收官开发版：G7-b 桌面升级迁移（用户数据安全闭环最后一环）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **SQLite 轻量迁移执行器**（core/database/schema-migrator，436 行）：读 migrations 目录与 `_prisma_migrations` 记账差集，事务内逐版本执行 migration.sql + 记账（列结构对齐 prisma 官方）；**baseline + 当前性探针**——记账空但库非空时校验最新迁移 DDL 工件（如 MemberToolGrant.config 列）存在才全量补记账，缺失即拒绝静默 baseline 转失败拒启（封住跳版升级误判洞）；**实测依据：迁移历史不可从零重放**（两迁移重复建 ExecutionRun，migrate deploy 空库 P3018），故打包侧维持 db push 模板 + 执行器侧 baseline（pack.mjs 注释写明）；pre-migrate VACUUM INTO 快照（不参与 10 份滚动，注释明示） | CAP-A-14 / G7-b / GAP-T-20 部分 | schema-migrator.spec 13 例（空库全量/旧库增量+备份/baseline 零执行/幂等零备份/失败回滚+备份/多库独立/探针拒绝/**真仓 51 迁移资产级拆分保真回归**等） | pack.mjs 4b 记账坑注释；schema-migrator 纯函数可独立测试 |
+| server | **打包模式启动链迁移编排**（startup-migrations）：APM_PACKAGED=1 门控，main.ts bootstrap 最前一次性迁移 default + 注册表全部已存在工作区库（数据层 client 工厂为同步 Proxy 无法阻塞异步迁移，插桩点移至 bootstrap 前——语义等价：运行期新建工作区源自当版模板天然同版）；失败 → stderr 结构化明细（含备份目录）+ 写 migration-failure.json 到 APM_DATA_DIR + **exit 42 专用码**；dev 链路零参与（alignDevDatabaseSchema 维持） | CAP-A-14 / G7-b | startup-migrations.spec 4 例（门控/非打包零参与/多库迁移+缺库跳过/失败标记+exit 42）；core/database 域 30 例回归绿 | main.ts 启动序注释 |
+| desktop | **升级迁移失败指引弹窗**：backend.ts 注入 APM_PACKAGED 信号 + 退出码透传；commands.ts 拦截 42 且**不走自愈重启**（迁移失败确定性，重启即 crash loop）→ 读标记（读后即删）→ dialog 弹窗含备份目录路径 + 两条出路（恢复备份/提 issue 附日志）→ 确认退出；仅打包模式触发 | CAP-A-14 / G7-b | 双端 type-check 零错；契约零变更 contract:check 过 | setup.ts「发版路径」TODO 兑现已注记 |
+
+**上线套装进度**：G8 ✅（v0.7.8）→ G7-a ✅（v0.7.9）→ **G7-b ✅（本版）**——上线三件套开发全部完成，真机升级冒烟（v0.7.9 安装版 → v0.7.10 覆盖升级 → 数据保留 + 迁移成功）待用户 Publish 双 draft 后执行；余 A-18 上手引导（v0.7.13）→ v0.8.0 内测发布。
+
 ## [0.7.9] - 2026-10-01
 
 ### v0.7.9 发版总览——上线套装：G7-a 工作区备份与恢复（用户数据安全底线兑现）
