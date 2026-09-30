@@ -10,14 +10,17 @@ import { cn } from "@/lib/utils"
  * - compact（默认）＝ 原 ui/stats-card 横排瓦片（10 页消费的事实主力，形态 class 逐字沿袭）；
  * - featured ＝ 原 ui/stat-card 竖排摘要大卡（project-dashboard 摘要行）＋
  *   dashboard-page / settings ai overview / analytics 三处本地 KPI/Stat 卡的公共形态，
- *   hint / trend / onClick 槽位只有 featured 消费；
+ *   hint / onClick 槽位只有 featured 消费；trend/trendValue 槽位已消亡移除
+ *   （2026-09-30 晨会裁决：归一批后业务零消费、仅画廊 demo 持有，且 up=绿/down=红
+ *   的语义映射与「错误数上升」类指标天然反向，不再承载）；
  * - 卡底（surface）与数值彩色（coloredValue）为可选项，分别收编 team-stats 灰底
  *   汇总瓦片与 acceptance KPIStats 数值着色先例。
  * 字号口径统一走 compact 基线：数值 text-xl font-mono tabular-nums，标签 text-xs。
  *
  * props 面封闭（semantic/README.md 裁决 G8）：不接 className、不 extends
  * HTMLAttributes；形态轴全部是封闭枚举（layout/tone/surface），无样式透传口子。
- * columns 为固定列——响应式栅格不做进 props，需要时另批裁决。
+ * columns 为固定列；responsive=true 开启窄屏降档（md 断点以下 3 列及以上降为
+ * 2 列）——2026-09-30 晨会裁决的封闭响应式档，不开 className 口子。
  * 装饰色 tone 词表留在视觉层组件内（同 metric-row 口径；§19.5 状态 tone 链路
  * ui/tone.ts 管业务状态语义，不承接此处 accent 点缀色）。
  */
@@ -60,10 +63,6 @@ export interface StatsCardItem {
   surface?: StatsSurface
   /** featured：数值下方补充说明 */
   hint?: ReactNode
-  /** featured：趋势方向（up=绿 / down=红 / neutral=灰） */
-  trend?: "up" | "down" | "neutral"
-  /** featured：趋势数值文案（与 trend 同时给出才渲染） */
-  trendValue?: string
   /** featured：整卡可点（下钻），hover 反馈由背景色承载（宪法 §3.6） */
   onClick?: () => void
 }
@@ -73,10 +72,13 @@ export interface StatsCardProps {
   items: StatsCardItem[]
   /** 网格列数（固定列，默认 4） */
   columns?: 2 | 3 | 4 | 5 | 6
+  /** 窄屏降档：md 断点以下 3 列及以上降为 2 列（默认关，视觉零变化） */
+  responsive?: boolean
   /** 形态变种，默认 compact */
   layout?: StatsCardLayout
 }
 
+/** 固定列档 */
 const GRID_CLASS: Record<NonNullable<StatsCardProps["columns"]>, string> = {
   2: "grid-cols-2",
   3: "grid-cols-3",
@@ -85,15 +87,21 @@ const GRID_CLASS: Record<NonNullable<StatsCardProps["columns"]>, string> = {
   6: "grid-cols-6",
 }
 
-const TREND_CLASS = {
-  up: "text-accent-green",
-  down: "text-accent-red",
-  neutral: "text-muted-foreground",
-} as const
+/** 窄屏降档（responsive=true）：md 断点以下回 2 列 */
+const GRID_RESPONSIVE_CLASS: Record<NonNullable<StatsCardProps["columns"]>, string> = {
+  2: "grid-cols-2",
+  3: "grid-cols-2 md:grid-cols-3",
+  4: "grid-cols-2 md:grid-cols-4",
+  5: "grid-cols-2 md:grid-cols-5",
+  6: "grid-cols-2 md:grid-cols-6",
+}
 
-export function StatsCard({ items, columns = 4, layout = "compact" }: StatsCardProps) {
+export function StatsCard({ items, columns = 4, responsive = false, layout = "compact" }: StatsCardProps) {
   return (
-    <div data-slot="stats-card" className={cn("grid gap-3", GRID_CLASS[columns])}>
+    <div
+      data-slot="stats-card"
+      className={cn("grid gap-3", (responsive ? GRID_RESPONSIVE_CLASS : GRID_CLASS)[columns])}
+    >
       {items.map((item) => {
         const Icon = item.icon
         const tone = item.tone ?? "default"
@@ -143,12 +151,6 @@ export function StatsCard({ items, columns = 4, layout = "compact" }: StatsCardP
               </p>
               {item.hint != null && (
                 <p className="mt-1 text-xs text-muted-foreground">{item.hint}</p>
-              )}
-              {item.trend && item.trendValue != null && (
-                <div className={cn("mt-2 flex items-center gap-1 text-xs font-medium", TREND_CLASS[item.trend])}>
-                  {item.trend === "up" ? "+" : item.trend === "down" ? "-" : ""}
-                  {item.trendValue}
-                </div>
               )}
             </div>
           )

@@ -367,8 +367,6 @@ export function DashboardPage() {
                       hint: t('dashboard.kpis.costSub', { pct: Math.abs(data.cost.budgetDeltaPct) }),
                       icon: DollarSign,
                       tone: 'green',
-                      trend: data.cost.budgetDeltaPct <= 0 ? 'down' : 'up',
-                      trendValue: t('dashboard.kpis.costTrend', { pct: Math.abs(data.cost.budgetDeltaPct) }),
                       onClick: () => setOpenDialog('cost'),
                     },
                     {

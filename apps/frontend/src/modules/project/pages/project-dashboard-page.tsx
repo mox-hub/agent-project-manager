@@ -225,11 +225,11 @@ export function ProjectDashboardPage() {
                 key: 'health',
                 label: t('project.detail.projectHealth'),
                 value: summary.health.currentScore,
-                hint: healthLabel(summary.health.currentScore),
+                hint: `${healthLabel(summary.health.currentScore)} · 30d ${
+                  summary.health.trend30d >= 0 ? '+' : ''
+                }${Math.abs(summary.health.trend30d)} ${t('project.detail.pointsShort')}`,
                 icon: Activity,
                 tone: 'blue',
-                trend: summary.health.trend30d >= 0 ? 'up' : 'down',
-                trendValue: `${Math.abs(summary.health.trend30d)} ${t('project.detail.pointsShort')}`,
                 onClick: () => setShowHealthDialog(true),
               },
               {

@@ -6188,8 +6188,8 @@ export function DesignSystemPage() {
                   layout="featured"
                   columns={3}
                   items={[
-                    { key: 'total', value: 248, label: 'Total Tasks', hint: 'Across all projects', icon: CheckSquare, tone: 'green', trend: 'up', trendValue: '12%' },
-                    { key: 'bugs', value: 13, label: 'Open Bugs', hint: 'Needs triage', icon: AlertCircle, tone: 'red', trend: 'down', trendValue: '3' },
+                    { key: 'total', value: 248, label: 'Total Tasks', hint: 'Across all projects', icon: CheckSquare, tone: 'green' },
+                    { key: 'bugs', value: 13, label: 'Open Bugs', hint: 'Needs triage', icon: AlertCircle, tone: 'red' },
                     { key: 'ai', value: '1.2k', label: 'AI Executions', hint: 'This quarter', icon: Sparkles, tone: 'purple' },
                   ]}
                 />
