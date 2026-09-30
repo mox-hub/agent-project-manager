@@ -21,6 +21,44 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### CAP-C-06 图表双引擎切片——Glance 层 lieflat 语法重设计 + Lupi 全屏精读弹窗（2026-09-30）
+
+> requirement-intake 五步落账（能力清单 CAP-C-06 切片注记 + GAP-T-50）。仪表盘图卡二分升级：产品内 Glance 层按 lieflat-charts skill 语法重设计；Lupi 精读层进全屏弹窗；报告导出仅预留按钮（用户三向裁决）。
+
+| 变更 | 内容 | 证据要点 |
+|---|---|---|
+| Glance 层语法重设计 | 四张趋势卡：交付节奏卡标题写结论（动态判断「积压消化中/新建快于完成/进出平衡」，sum(tasks) vs sum(velocity)）；hint 升级为编码说明（「一柱 = 一天 · 质量 N%」「满分 100 · 一柱 = 一周」等，原四个装饰性副标题删除）；ChartCard 增 footer 来源行槽（`DELIVERY · LAST 7 DAYS` 式 lieflat 四件套签名，text-3xs tracking-widest 纯拉丁豁免档）；动画对齐宪法 §7（animationDuration 240 + 双柱 stagger 80ms） | dashboard-page.test 更新（结论标题/编码 hint/签名行断言）+ chart-card.test +1（footer 渲染分界） |
+| Lupi 全屏精读弹窗 | 新组件 `lupi-chart-dialog.tsx`（ui/dialog 新增 `size="full"` 全屏档——§19.4 D2 组件内变体轴）：健康分/交付节奏两卡 action 区精读入口 → 全屏弹窗 iframe srcDoc 注入参数化 lieflat 模板；首批两图型 `lupi/health-hairline.html`（B2 hairline line 改周健康分：日历地板发丝+折线 draw+top-2 峰值标数）+ `lupi/delivery-paired-rungs.html`（C2 paired rungs 改日交付节奏：淡梯=新建/实梯=完成、1 档=1 任务）；数据契约 LupiHairlinePayload/LupiPairedRungsPayload，占位符注入空值回落演示数据；模板遵 skill 法典（结论标题四件套/入场动画 stagger/prefers-reduced-motion/纸面观感固定不随主题） | 两模板 stub-DOM 实跑双模式验证（演示 32/58 元素、注入 20/27 元素几何计数精确）；lupi-chart-dialog.test 3 用例（注入 JSON/几何标记/导出预留 disabled） |
+| 导出预留 | 弹窗 footer「导出报告」Button disabled + 即将上线 title；报告 AI workflow 生成显式不在本切片 | 后续按 C 线立项（能力清单注记） |
+| i18n | panel 段增 17 键（编码说明×4/结论标题×4/lupi×9）；删 4 装饰副标题 + productivity 死键 | zh-CN+en 脚本校验（missing 0/dead 0） |
+
+### Sheet 宽度覆盖失效修复——基件宽度默认档从 data 双变体链改为按 side JS 注入纯类（2026-09-30）
+
+> 用户实机反馈执行详情 Sheet 远窄于声明的 `sm:max-w-2xl`。根因：ui/sheet 基件把宽度默认档写成 `data-[side=right]:sm:max-w-sm` 双变体链——tailwind-merge 不去重变体链不同的类，属性选择器特异性 (0,2,0) 反杀消费方单类 `sm:max-w-2xl` (0,1,0)，全部右侧 Sheet 在 sm+ 被钉死在 384px。
+
+| 变更 | 内容 | 证据要点 |
+|---|---|---|
+| 基件修复 | `components/ui/sheet.tsx`：`w-3/4`+`sm:max-w-sm` 从 CSS data 变体改为按 `side` prop 在 JS 条件注入（仅左右侧），`data-side` 属性保留作样式钩子；消费方 `sm:max-w-*` 覆盖经 tailwind-merge 正常去重生效 | frontend `tsc -b`+eslint 零错；notification-center-page 5 用例绿；twMerge 实测三消费方输出：执行详情 `w-full sm:max-w-2xl`(672px)、Linear `sm:max-w-lg`(512px)、画廊 demo `max-w-sm` 不变 |
+
+### ChartCard 内间距归一治理——上下 30/28px 收敛到与左右一致的 16px（2026-09-30）
+
+> 用户实机反馈图表卡上下留白过大。根因：Card 基类 `py-3.5`/`gap-3`（为裸卡设计）与 ChartCard 自带 `p-4` 的 CardHeader/CardContent 叠加计账——卡顶 30px / 标题→图 28px / 卡底 30px，而左右仅 16px。
+
+| 变更 | 内容 | 证据要点 |
+|---|---|---|
+| 组件级治理 | chart-card 壳上 `className="py-0 gap-0"` 归零 Card 基类间距，四边与标题→图全部收敛到 p-4 单一来源（16px），上下与左右一致 | chart-card.test 4 用例绿；全局仪表盘 4 卡 + project-overview-charts 2 卡 + design-system 画廊卡全消费方同步受益（卡总高各降约 26-44px） |
+
+### 全局仪表盘四张趋势面板图表栈升级——ChartCard+ChartContainer 正式栈收编手搓 div 图（2026-09-30）
+
+> 依据设计宪法 §17（图表唯一实现 ui/chart、色板只用 --chart-1..5、空态 EmptyState、aria-label MUST）收编全局仪表盘页四处手搓 div 条/柱为正式图表栈；数据层与钻取弹窗不动。
+
+| 变更 | 内容 | 证据要点 |
+|---|---|---|
+| 新组件 global-overview-charts | 四面板（团队生产力/健康分趋势/团队表现/成本概览）换 semantic/chart-card + ui/chart（recharts 封装）：生产力 grouped 双柱（tasks/velocity；quality 为 0-100 百分比量纲与计数不同轴，不上坐标系、摘要化进卡头 hint「质量 N%」）、健康分单系列柱+柱顶 LabelList+Y 轴 0-100 定域、团队表现/成本概览横向条形图（layout vertical + 条尾 LabelList，成本条尾「金额 · 占比」） | 新增 dashboard-page.test 2 用例（四卡标题/quality hint/aria img role/全零空态）；全量 1483 用例绿 |
+| 宪法 §17 合规 | 色板每图系列按序 --chart-1..5（深浅模式 token 齐备）；四图 aria-label 概括结论；生产力全零（tasks+velocity 全 0）渲染 EmptyState 禁空白坐标系；X 轴日期 formatDateShort | lint:palette/ui-governance/registry（64 组件，新件已登记 COMPONENTS.md）/spacing/icons 全绿 |
+| i18n 双语 | dashboard.panel 增 qualityHint/chartEmpty/aria×4；删 productivitySub/legendQuality（系列信息由图例承接、质量由 hint 承接） | zh-CN+en 双语键同步 |
+| 顺带清障 | member-tasks-section 存量 `bg-amber-500` → `bg-accent-yellow`（分支 HEAD 上 lint:palette 存量红修复；另 data-list.tsx `left-[64px]` 任意值为 Linear 呼吸感批活跃工作区，未动） | lint:palette 全库通过 |
+
 ### CAP-A-02 增强「AI 成员个人页结构重构」——任务清单/真实活动流+成本预览/团队→项目层级/PromptEditor/工具授权三层化/技能 MCP 双源（2026-09-30）
 
 > 用户 /goal 开工令（分支 feat/ai-member-page-restructure）；requirement-intake 五步登记（能力清单 CAP-A-02 增强注记 + GAP-T-49）。AI 成员个人页从静态档案升级为工作台。
