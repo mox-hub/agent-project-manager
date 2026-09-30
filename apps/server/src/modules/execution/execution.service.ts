@@ -432,6 +432,7 @@ export class ExecutionService {
       projectId?: string;
       issueId?: string;
       subjectType?: string;
+      subjectId?: string;
       status?: string;
       limit?: number;
       offset?: number;
@@ -450,6 +451,7 @@ export class ExecutionService {
     }
     if (params.issueId) where.issueId = params.issueId;
     if (params.subjectType) where.subjectType = params.subjectType;
+    if (params.subjectId) where.subjectId = params.subjectId;
     if (params.status) where.status = params.status;
 
     const limit = Number(params.limit ?? 20);

@@ -10,7 +10,7 @@ import {
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CLI_PROVIDER_IDS } from '@/modules/cli-provider/dto/configure-cli-provider.dto';
 import { EXECUTION_ROLES } from '@/modules/role/project-role.dto';
 
@@ -293,6 +293,22 @@ export class BindMemberProjectDto {
   role?: string = 'member';
 }
 
+export class MemberToolGrantConfigDto {
+  @ApiPropertyOptional({
+    description: '模型覆盖（cli_tool 行）；缺省=回落该 CLI 默认配置',
+  })
+  @IsString()
+  @IsOptional()
+  model?: string;
+
+  @ApiPropertyOptional({
+    description: '思考强度覆盖（cli_tool 行）；minimal|low|medium|high|max',
+  })
+  @IsIn(['minimal', 'low', 'medium', 'high', 'max'])
+  @IsOptional()
+  thinkingLevel?: string;
+}
+
 export class MemberToolGrantItemDto {
   @ApiProperty({ enum: ['cli_tool', 'mcp_server', 'skill'] })
   @IsIn(['cli_tool', 'mcp_server', 'skill'])
@@ -308,6 +324,17 @@ export class MemberToolGrantItemDto {
   @IsBoolean()
   @IsOptional()
   granted?: boolean = true;
+
+  @ApiPropertyOptional({
+    description:
+      '授权配置（仅 cli_tool 行有意义）：{ model?, thinkingLevel? }，空/缺省=回落 CLI 默认配置',
+    type: MemberToolGrantConfigDto,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => MemberToolGrantConfigDto)
+  config?: MemberToolGrantConfigDto | null;
 }
 
 export class SetMemberToolGrantsDto {

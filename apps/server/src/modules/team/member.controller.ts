@@ -46,6 +46,7 @@ import {
   MemberSummaryResponseDto,
   MemberToolGrantResponseDto,
   MemberToolGrantsResponseDto,
+  MemberUsageSummaryResponseDto,
 } from './dto/member-response.dto';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
@@ -170,6 +171,21 @@ export class MemberController {
     return this.cardService.getCard(id, projectId);
   }
 
+  @Get(':id/usage-summary')
+  @ApiOperation({
+    summary:
+      'Member 用量/成本聚合（AI 成员=Execution subject 聚合；人类=诚实零值）',
+  })
+  @ApiParam({ name: 'id', description: 'Member ID 或 shortId' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: MemberUsageSummaryResponseDto,
+    description: '返回 token/成本聚合（个人页成本预览数据源）',
+  })
+  async getUsageSummary(@Param('id') id: string) {
+    return this.cardService.getUsageSummary(id);
+  }
+
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles('admin', 'maintainer')
@@ -245,6 +261,7 @@ export class MemberController {
       scope: i.scope as MemberToolGrantItem['scope'],
       refKey: i.refKey,
       granted: i.granted ?? true,
+      config: i.config ?? null,
     }));
     return this.toolGrantService.setGrants(member.id, items, req.user.id);
   }

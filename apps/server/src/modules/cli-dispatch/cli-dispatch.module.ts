@@ -3,6 +3,7 @@ import { CliProviderRegistry } from './cli-provider.registry';
 import { CliExecutorService } from './cli-executor.service';
 import { CliDispatchService } from './dispatch.service';
 import { CliResolutionService } from './cli-resolution.service';
+import { CliAssetScannerService } from '@/modules/cli-provider/cli-asset-scanner.service';
 import { CliDispatchController } from './cli-dispatch.controller';
 import { ExecutionModule } from '@/modules/execution/execution.module';
 import { TrustModule } from '@/modules/trust/trust.module';
@@ -37,6 +38,7 @@ import { OpenCodeAdapter } from './adapters/opencode.adapter';
     CliExecutorService,
     CliDispatchService,
     CliResolutionService,
+    CliAssetScannerService,
   ],
   exports: [
     CliDispatchService,

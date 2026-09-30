@@ -1560,6 +1560,8 @@ model MemberToolGrant {
   scope     String // cli_tool | mcp_server | skill
   refKey    String
   granted   Boolean  @default(true)
+  /// 授权配置：cli_tool 行可存 { model?: string, thinkingLevel?: string }，空/缺省 = 回落该 CLI 默认配置
+  config    Json?
   grantedBy String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

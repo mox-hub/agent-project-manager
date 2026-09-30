@@ -16,6 +16,7 @@ import { InviteController } from './invite.controller';
 import { TeamStatsService } from './team-stats.service';
 import { ProjectMembershipSyncService } from './project-membership-sync.service';
 import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
+import { CliAssetScannerService } from '@/modules/cli-provider/cli-asset-scanner.service';
 import { MailModule } from '@/modules/mail/mail.module';
 import { AuthModule } from '@/modules/auth/auth.module';
 
@@ -37,6 +38,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
     MemberCardService,
     MemberSearchService,
     MemberToolGrantService,
+    CliAssetScannerService,
     InviteService,
     TeamStatsService,
     ProjectMembershipSyncService,

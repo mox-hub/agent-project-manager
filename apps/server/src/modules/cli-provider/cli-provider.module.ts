@@ -9,12 +9,13 @@
 import { Module } from '@nestjs/common';
 import { CliProviderService } from './cli-provider.service';
 import { CliProviderController } from './cli-provider.controller';
+import { CliAssetScannerService } from './cli-asset-scanner.service';
 import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
 
 @Module({
   imports: [CliDispatchModule],
   controllers: [CliProviderController],
-  providers: [CliProviderService],
-  exports: [CliProviderService],
+  providers: [CliProviderService, CliAssetScannerService],
+  exports: [CliProviderService, CliAssetScannerService],
 })
 export class CliProviderModule {}

@@ -34,7 +34,12 @@ import {
   CliProviderStatus,
 } from './cli-provider.service';
 import {
+  CliAssetScannerService,
+  type CliAssetsResult,
+} from './cli-asset-scanner.service';
+import {
   ConfigureCliProviderDto,
+  CliAssetsResponseDto,
   CliProviderDetectResponseDto,
   CliProviderId,
   CliProvidersResponseDto,
@@ -52,7 +57,10 @@ function isCliProviderId(id: string): id is CliProviderId {
 @Controller('cli-providers')
 @UseGuards(JwtAuthGuard)
 export class CliProviderController {
-  constructor(private readonly service: CliProviderService) {}
+  constructor(
+    private readonly service: CliProviderService,
+    private readonly assetScanner: CliAssetScannerService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List all CLI providers with status' })
@@ -93,6 +101,26 @@ export class CliProviderController {
       );
     }
     return this.service.healthCheck(id);
+  }
+
+  @Get(':id/assets')
+  @ApiOperation({
+    summary:
+      '发现 CLI 工具本机的技能与 MCP Server（best-effort，读不到=空+note）',
+  })
+  @ApiParam({ name: 'id', enum: CLI_PROVIDER_IDS })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: CliAssetsResponseDto,
+    description: '返回该 CLI 本地技能/MCP 清单（成员工具授权「CLI 来源」目录）',
+  })
+  async listAssets(@Param('id') id: string): Promise<CliAssetsResult> {
+    if (!isCliProviderId(id)) {
+      throw new (await import('@nestjs/common')).BadRequestException(
+        `Invalid provider id: ${id}`,
+      );
+    }
+    return this.assetScanner.listAssets(id);
   }
 
   @Put(':id')

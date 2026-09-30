@@ -53,6 +53,12 @@ export class ExecutionController {
   })
   @ApiQuery({ name: 'issueId', required: false })
   @ApiQuery({ name: 'subjectType', required: false })
+  @ApiQuery({
+    name: 'subjectId',
+    required: false,
+    description:
+      '执行主体 ID（AI 成员传 memberId，与 subjectType 搭配按成员过滤）',
+  })
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'offset', required: false })
@@ -62,11 +68,20 @@ export class ExecutionController {
     @Query() query: any,
     @Request() req: { user: { id: string } },
   ) {
-    const { projectId, issueId, subjectType, status, limit, offset } = query;
+    const {
+      projectId,
+      issueId,
+      subjectType,
+      subjectId,
+      status,
+      limit,
+      offset,
+    } = query;
     return this.executionService.listExecutionRuns(req.user.id, {
       projectId,
       issueId,
       subjectType,
+      subjectId,
       status,
       limit,
       offset,

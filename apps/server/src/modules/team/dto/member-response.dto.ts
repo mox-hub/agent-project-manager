@@ -196,6 +196,24 @@ export class MemberCardProjectDto {
 
   @ApiProperty({ description: '绑定角色' })
   role: string;
+
+  @ApiProperty({
+    description: '绑定来源：direct=成员页直绑；team=经团队传播',
+    enum: ['direct', 'team'],
+  })
+  source: string;
+}
+
+/** 团队参与的项目（TeamProject 关联，个人页「团队与项目」层级用） */
+export class MemberCardTeamProjectDto {
+  @ApiProperty({ description: '项目 ID' })
+  projectId: string;
+
+  @ApiProperty({ description: '项目名' })
+  projectName: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  color?: string | null;
 }
 
 export class MemberCardActivityDto {
@@ -228,6 +246,12 @@ export class MemberCardTeamDto {
 
   @ApiPropertyOptional({ type: String, nullable: true })
   color?: string | null;
+
+  @ApiProperty({
+    description: '该团队参与的项目（TeamProject 关联）',
+    type: [MemberCardTeamProjectDto],
+  })
+  projects: MemberCardTeamProjectDto[];
 }
 
 /** member-card.service MemberCardDto（聚合卡片） */
@@ -336,6 +360,15 @@ export class MemberToolGrantResponseDto {
   @ApiProperty()
   granted: boolean;
 
+  @ApiPropertyOptional({
+    description:
+      '授权配置：cli_tool 行可存 { model, thinkingLevel } 覆盖，空=回落 CLI 默认',
+    type: 'object',
+    additionalProperties: true,
+    nullable: true,
+  })
+  config?: Record<string, unknown> | null;
+
   @ApiPropertyOptional({ type: String, nullable: true })
   grantedBy: string | null;
 
@@ -355,6 +388,77 @@ export class ToolGrantCatalogItemDto {
 
   @ApiProperty({ description: '目录项是否可用' })
   enabled: boolean;
+
+  @ApiPropertyOptional({
+    description: '条目来源：platform=平台配置；cli=从 CLI 工具本地配置读取',
+    enum: ['platform', 'cli'],
+  })
+  source?: 'platform' | 'cli';
+
+  @ApiPropertyOptional({
+    description: 'source=cli 时所属的 CLI providerId',
+  })
+  cliProviderId?: string;
+}
+
+/** 成员用量/成本聚合（GET /members/:id/usage-summary） */
+export class MemberUsageTotalsDto {
+  @ApiProperty()
+  totalTokens: number;
+
+  @ApiProperty()
+  promptTokens: number;
+
+  @ApiProperty()
+  completionTokens: number;
+
+  @ApiProperty()
+  totalCost: number;
+}
+
+export class MemberUsageByModelDto {
+  @ApiProperty({ description: '模型名' })
+  model: string;
+
+  @ApiProperty()
+  tokens: number;
+
+  @ApiProperty()
+  cost: number;
+}
+
+export class MemberUsageExecutionsDto {
+  @ApiProperty()
+  total: number;
+
+  @ApiProperty()
+  completed: number;
+
+  @ApiProperty()
+  failed: number;
+
+  @ApiProperty()
+  inProgress: number;
+}
+
+export class MemberUsageSummaryResponseDto {
+  @ApiProperty({
+    description: '聚合口径：ai_agent=Execution subject 聚合；human=诚实零值',
+    enum: ['ai_agent', 'human'],
+  })
+  scope: 'ai_agent' | 'human';
+
+  @ApiProperty({ type: MemberUsageTotalsDto })
+  totals: MemberUsageTotalsDto;
+
+  @ApiProperty({ type: [MemberUsageByModelDto] })
+  byModel: MemberUsageByModelDto[];
+
+  @ApiProperty({ type: MemberUsageExecutionsDto })
+  executions: MemberUsageExecutionsDto;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  lastExecutionAt: string | null;
 }
 
 export class ToolGrantCatalogDto {

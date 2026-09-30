@@ -10393,6 +10393,13 @@
             "schema": {}
           },
           {
+            "name": "subjectId",
+            "required": false,
+            "in": "query",
+            "description": "执行主体 ID（AI 成员传 memberId，与 subjectType 搭配按成员过滤）",
+            "schema": {}
+          },
+          {
             "name": "subjectType",
             "required": false,
             "in": "query",
@@ -18462,6 +18469,148 @@
           }
         ],
         "summary": "Member 聚合卡片信息",
+        "tags": [
+          "Members"
+        ]
+      }
+    },
+    "/_api/members/{id}/usage-summary": {
+      "get": {
+        "operationId": "MemberController_getUsageSummary",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Member ID 或 shortId",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回 token/成本聚合（个人页成本预览数据源）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberUsageSummaryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Member 用量/成本聚合（AI 成员=Execution subject 聚合；人类=诚实零值）",
         "tags": [
           "Members"
         ]
@@ -54272,6 +54421,153 @@
         ]
       }
     },
+    "/_api/cli-providers/{id}/assets": {
+      "get": {
+        "operationId": "CliProviderController_listAssets",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "claude-code",
+                "codex",
+                "zcode",
+                "opencode"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回该 CLI 本地技能/MCP 清单（成员工具授权「CLI 来源」目录）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CliAssetsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "发现 CLI 工具本机的技能与 MCP Server（best-effort，读不到=空+note）",
+        "tags": [
+          "CLI Providers"
+        ]
+      }
+    },
     "/_api/cli-providers/{id}": {
       "put": {
         "operationId": "CliProviderController_configureProvider",
@@ -67574,12 +67870,21 @@
           "role": {
             "type": "string",
             "description": "绑定角色"
+          },
+          "source": {
+            "type": "string",
+            "description": "绑定来源：direct=成员页直绑；team=经团队传播",
+            "enum": [
+              "direct",
+              "team"
+            ]
           }
         },
         "required": [
           "projectId",
           "projectName",
-          "role"
+          "role",
+          "source"
         ]
       },
       "MemberLoadResponseDto": {
@@ -67634,6 +67939,27 @@
           "createdAt"
         ]
       },
+      "MemberCardTeamProjectDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "项目 ID"
+          },
+          "projectName": {
+            "type": "string",
+            "description": "项目名"
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "projectId",
+          "projectName"
+        ]
+      },
       "MemberCardTeamDto": {
         "type": "object",
         "properties": {
@@ -67651,12 +67977,20 @@
           "color": {
             "type": "string",
             "nullable": true
+          },
+          "projects": {
+            "description": "该团队参与的项目（TeamProject 关联）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberCardTeamProjectDto"
+            }
           }
         },
         "required": [
           "teamId",
           "teamName",
-          "role"
+          "role",
+          "projects"
         ]
       },
       "MemberCardResponseDto": {
@@ -67802,6 +68136,107 @@
           "teams"
         ]
       },
+      "MemberUsageTotalsDto": {
+        "type": "object",
+        "properties": {
+          "totalTokens": {
+            "type": "number"
+          },
+          "promptTokens": {
+            "type": "number"
+          },
+          "completionTokens": {
+            "type": "number"
+          },
+          "totalCost": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "totalTokens",
+          "promptTokens",
+          "completionTokens",
+          "totalCost"
+        ]
+      },
+      "MemberUsageByModelDto": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "模型名"
+          },
+          "tokens": {
+            "type": "number"
+          },
+          "cost": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "model",
+          "tokens",
+          "cost"
+        ]
+      },
+      "MemberUsageExecutionsDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "completed": {
+            "type": "number"
+          },
+          "failed": {
+            "type": "number"
+          },
+          "inProgress": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total",
+          "completed",
+          "failed",
+          "inProgress"
+        ]
+      },
+      "MemberUsageSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "description": "聚合口径：ai_agent=Execution subject 聚合；human=诚实零值",
+            "enum": [
+              "ai_agent",
+              "human"
+            ]
+          },
+          "totals": {
+            "$ref": "#/components/schemas/MemberUsageTotalsDto"
+          },
+          "byModel": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberUsageByModelDto"
+            }
+          },
+          "executions": {
+            "$ref": "#/components/schemas/MemberUsageExecutionsDto"
+          },
+          "lastExecutionAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "scope",
+          "totals",
+          "byModel",
+          "executions"
+        ]
+      },
       "UpdateMemberDto": {
         "type": "object",
         "properties": {
@@ -67929,6 +68364,12 @@
           "granted": {
             "type": "boolean"
           },
+          "config": {
+            "type": "object",
+            "description": "授权配置：cli_tool 行可存 { model, thinkingLevel } 覆盖，空=回落 CLI 默认",
+            "additionalProperties": true,
+            "nullable": true
+          },
           "grantedBy": {
             "type": "string",
             "nullable": true
@@ -67966,6 +68407,18 @@
           "enabled": {
             "type": "boolean",
             "description": "目录项是否可用"
+          },
+          "source": {
+            "type": "string",
+            "description": "条目来源：platform=平台配置；cli=从 CLI 工具本地配置读取",
+            "enum": [
+              "platform",
+              "cli"
+            ]
+          },
+          "cliProviderId": {
+            "type": "string",
+            "description": "source=cli 时所属的 CLI providerId"
           }
         },
         "required": [
@@ -68023,6 +68476,19 @@
           "catalog"
         ]
       },
+      "MemberToolGrantConfigDto": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "模型覆盖（cli_tool 行）；缺省=回落该 CLI 默认配置"
+          },
+          "thinkingLevel": {
+            "type": "string",
+            "description": "思考强度覆盖（cli_tool 行）；minimal|low|medium|high|max"
+          }
+        }
+      },
       "MemberToolGrantItemDto": {
         "type": "object",
         "properties": {
@@ -68041,6 +68507,14 @@
           "granted": {
             "type": "boolean",
             "default": true
+          },
+          "config": {
+            "description": "授权配置（仅 cli_tool 行有意义）：{ model?, thinkingLevel? }，空/缺省=回落 CLI 默认配置",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MemberToolGrantConfigDto"
+              }
+            ]
           }
         },
         "required": [
@@ -78992,6 +79466,60 @@
         },
         "required": [
           "providers"
+        ]
+      },
+      "CliAssetItemDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "资产键（技能目录名 / mcpServers 键名）"
+          },
+          "name": {
+            "type": "string",
+            "description": "展示名"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "key",
+          "name"
+        ]
+      },
+      "CliAssetsResponseDto": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CliAssetItemDto"
+            }
+          },
+          "mcpServers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CliAssetItemDto"
+            }
+          },
+          "notes": {
+            "description": "各路扫描的降级说明",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "providerId",
+          "skills",
+          "mcpServers",
+          "notes"
         ]
       },
       "ConfigureCliProviderDto": {

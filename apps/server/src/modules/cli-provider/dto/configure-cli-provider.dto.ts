@@ -143,3 +143,29 @@ export class CliProviderDetectResponseDto {
   })
   providers: CliProviderStatusDto[];
 }
+
+/** GET /cli-providers/:id/assets —— CLI 本地资产发现（技能 / MCP Server） */
+export class CliAssetItemDto {
+  @ApiProperty({ description: '资产键（技能目录名 / mcpServers 键名）' })
+  key: string;
+
+  @ApiProperty({ description: '展示名' })
+  name: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  description?: string | null;
+}
+
+export class CliAssetsResponseDto {
+  @ApiProperty()
+  providerId: string;
+
+  @ApiProperty({ type: [CliAssetItemDto] })
+  skills: CliAssetItemDto[];
+
+  @ApiProperty({ type: [CliAssetItemDto] })
+  mcpServers: CliAssetItemDto[];
+
+  @ApiProperty({ type: [String], description: '各路扫描的降级说明' })
+  notes: string[];
+}

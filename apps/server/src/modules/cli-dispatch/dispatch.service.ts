@@ -31,6 +31,7 @@ import {
   evaluateAutoDispatchPermission,
 } from '@/modules/trust/trust.service';
 import { AcceptanceService } from '@/modules/acceptance/acceptance.service';
+import { CliAssetScannerService } from '@/modules/cli-provider/cli-asset-scanner.service';
 import {
   buildEnrichmentSection,
   readBudgetFromEnv,
@@ -169,6 +170,7 @@ export class CliDispatchService {
     private readonly trustService: TrustService,
     private readonly acceptanceService: AcceptanceService,
     private readonly runtimeService: RuntimeService,
+    private readonly assetScanner: CliAssetScannerService,
   ) {}
 
   /**
@@ -510,9 +512,15 @@ export class CliDispatchService {
         }
       : null;
     const memberContext = memberId
-      ? await this.buildMemberPromptContext(memberId)
+      ? await this.buildMemberPromptContext(
+          memberId,
+          resolved?.providerId ?? null,
+        )
       : null;
-    const skillsSection = await this.buildSkillsPromptSection(task.projectId);
+    const skillsSection = await this.buildSkillsPromptSection(
+      task.projectId,
+      memberId,
+    );
 
     const segments = this.buildPromptSegments(
       task,
@@ -644,6 +652,21 @@ export class CliDispatchService {
       );
     }
 
+    // 5.5 成员授权配置（CAP-A-02 增强）：已授权 CLI 行的模型/思考强度覆盖。
+    // 优先级：请求显式 model > 成员授权行 config.model > CLI 默认配置
+    // （CliProviderConfig.model，由 executor 在 input.model 缺省时注入）。
+    let effectiveModel = model;
+    if (memberId) {
+      const grantConfigs = await this.getCliGrantConfigs(memberId);
+      const grantCfg = grantConfigs[resolvedProviderId];
+      if (!effectiveModel && grantCfg?.model) {
+        effectiveModel = grantCfg.model;
+        this.logger.log(
+          `Member ${memberId} grant config overrides model for ${resolvedProviderId}: ${effectiveModel}`,
+        );
+      }
+    }
+
     // 6. Build execution context using ContextBuilder
     const context = await this.contextBuilder.buildTaskExecutionContext(
       issueId,
@@ -651,7 +674,10 @@ export class CliDispatchService {
     );
 
     // 6.5 成员上下文：个人提示词 / 团队规则 / 思考强度；CLI 工具白名单收敛
-    const memberContext = await this.buildMemberPromptContext(memberId ?? null);
+    const memberContext = await this.buildMemberPromptContext(
+      memberId ?? null,
+      resolvedProviderId,
+    );
 
     // 6.8 提示词治理（CAP-A-24）：注入开关 + 系统段 + 项目/任务级提示词。
     // promptOverride（考古等自定义任务包）跳过默认组装，治理层不参与。
@@ -741,7 +767,7 @@ export class CliDispatchService {
               description: task.description,
             },
             context,
-            model,
+            model: effectiveModel,
             allowedTools: effectiveAllowedTools,
           },
         },
@@ -780,7 +806,7 @@ export class CliDispatchService {
             description: task.description,
           },
           context,
-          model,
+          model: effectiveModel,
           allowedTools: effectiveAllowedTools,
         },
         createdBy: userId,
@@ -832,7 +858,7 @@ export class CliDispatchService {
     // 技能注入同属默认组装，override 时由调用方自理）
     const skillsSection = options.promptOverride
       ? null
-      : await this.buildSkillsPromptSection(projectId);
+      : await this.buildSkillsPromptSection(projectId, memberId ?? null);
     const prompt =
       options.promptOverride ??
       this.buildPrompt(
@@ -846,7 +872,7 @@ export class CliDispatchService {
     const cliInput = {
       workspaceRoot,
       prompt,
-      model,
+      model: effectiveModel,
       allowedTools: effectiveAllowedTools,
       timeout: timeout || 600000, // Default 10 minutes
     };
@@ -881,7 +907,7 @@ export class CliDispatchService {
         prompt,
         workspaceRoot,
         providerId: resolvedProviderId,
-        model,
+        model: effectiveModel,
         allowedTools: effectiveAllowedTools,
         timeout: timeout || 600000,
       });
@@ -1684,6 +1710,7 @@ export class CliDispatchService {
    */
   private async buildSkillsPromptSection(
     projectId: string,
+    memberId?: string | null,
   ): Promise<string | null> {
     if (!(await this.isSkillsInjectionEnabled(projectId))) return null;
 
@@ -1705,7 +1732,6 @@ export class CliDispatchService {
       );
       return null;
     }
-    if (!skills || skills.length === 0) return null;
 
     const maxChars = readBudgetFromEnv(
       'DISPATCH_SKILL_MAX_CHARS',
@@ -1716,6 +1742,7 @@ export class CliDispatchService {
       DEFAULT_DISPATCH_SKILLS_BUDGET_TOKENS,
     );
 
+    // 平台来源（SkillConfig）：全文注入（现状语义）
     const sources = skills
       .map((s, i) => {
         const body = (s.content?.trim() || s.description || '').trim();
@@ -1729,16 +1756,77 @@ export class CliDispatchService {
         };
       })
       .filter((s) => s.text);
-    if (sources.length === 0) return null;
 
     const section = buildEnrichmentSection(sources, budgetTokens);
-    if (!section.text) return null;
 
-    return [
+    // CLI 来源（CAP-A-02 增强）：成员授权的 cli: 前缀技能/MCP 条目，
+    // 按所属 CLI 聚合为「本机可用资产」清单（名称+说明，内容由 CLI 本地配置承载）
+    const cliListing = memberId
+      ? await this.buildCliAssetsListing(memberId)
+      : null;
+
+    if (!section.text && !cliListing) return null;
+
+    const parts = [
       '## Project Skills',
       '以下是已启用的项目技能，执行任务时遵循相关技能的方法与约束：',
-      '',
-      section.text,
+    ];
+    if (section.text) parts.push('', section.text);
+    if (cliListing) parts.push('', cliListing);
+    return parts.join('\n');
+  }
+
+  /**
+   * CLI 本机资产清单段（CAP-A-02 增强）：成员授权的 cli: 前缀技能 / MCP 条目，
+   * 按所属 CLI 聚合。内容只列名称与说明（清单提示），正文由 CLI 本地配置承载。
+   * 无授权条目或资产已不可发现时返回 null。
+   */
+  private async buildCliAssetsListing(
+    memberId: string,
+  ): Promise<string | null> {
+    const grants = await this.prisma.memberToolGrant.findMany({
+      where: {
+        memberId,
+        granted: true,
+        scope: { in: ['skill', 'mcp_server'] },
+        refKey: { startsWith: 'cli:' },
+      },
+    });
+    if (grants.length === 0) return null;
+
+    // refKey 形态 cli:<providerId>:<key> → 按 provider 聚合
+    const byProvider = new Map<string, { skills: string[]; mcp: string[] }>();
+    for (const grant of grants) {
+      const [, providerId, ...rest] = grant.refKey.split(':');
+      const key = rest.join(':');
+      if (!providerId || !key) continue;
+      const entry = byProvider.get(providerId) ?? { skills: [], mcp: [] };
+      (grant.scope === 'skill' ? entry.skills : entry.mcp).push(key);
+      byProvider.set(providerId, entry);
+    }
+
+    const lines: string[] = [];
+    for (const [providerId, entry] of byProvider) {
+      const assets = this.assetScanner.listAssets(providerId);
+      for (const key of entry.skills) {
+        const found = assets.skills.find((s) => s.key === key);
+        lines.push(
+          `- 技能「${found?.name ?? key}」(${providerId})${
+            found?.description ? `：${found.description}` : ''
+          }`,
+        );
+      }
+      for (const key of entry.mcp) {
+        const found = assets.mcpServers.find((m) => m.key === key);
+        lines.push(`- MCP 服务「${found?.name ?? key}」(${providerId})`);
+      }
+    }
+    if (lines.length === 0) return null;
+
+    return [
+      '### CLI 本机可用资产',
+      '以下技能 / MCP 服务由本机 CLI 工具自带（成员已授权），执行时可直接使用：',
+      ...lines,
     ].join('\n');
   }
 
@@ -1762,15 +1850,24 @@ export class CliDispatchService {
   /**
    * 成员提示词上下文：按 memberId 聚合个人提示词/团队规则/思考强度
    * 个人提示词、思考强度与所在活跃团队的团队规则。
+   * providerId 传入时，该 CLI 授权行的思考强度覆盖优先于成员级 thinkingLevel。
    */
   private async buildMemberPromptContext(
     memberId: string | null,
+    providerId?: string | null,
   ): Promise<MemberPromptContext | null> {
     if (!memberId) return null;
     const member = await this.prisma.member.findUnique({
       where: { id: memberId },
     });
     if (!member) return null;
+
+    // 授权行思考强度覆盖（CAP-A-02 增强）：cli_tool 行 config.thinkingLevel 优先
+    let thinkingLevel = member.thinkingLevel;
+    if (providerId) {
+      const grantCfg = (await this.getCliGrantConfigs(member.id))[providerId];
+      if (grantCfg?.thinkingLevel) thinkingLevel = grantCfg.thinkingLevel;
+    }
 
     const teamMembers = await this.prisma.teamMember.findMany({
       where: { memberId: member.id },
@@ -1794,9 +1891,38 @@ export class CliDispatchService {
     return {
       memberName: member.displayName,
       personalPrompt: member.personalPrompt,
-      thinkingLevel: member.thinkingLevel,
+      thinkingLevel,
       teamRules,
     };
+  }
+
+  /**
+   * 成员 cli_tool 授权配置表（refKey → { model, thinkingLevel }）。
+   * CAP-A-02 增强：派发据此对已授权 CLI 做成员级模型/思考强度覆盖。
+   */
+  private async getCliGrantConfigs(
+    memberId: string,
+  ): Promise<Record<string, { model?: string; thinkingLevel?: string }>> {
+    const rows = await this.prisma.memberToolGrant.findMany({
+      where: { memberId, scope: 'cli_tool', granted: true },
+    });
+    const result: Record<string, { model?: string; thinkingLevel?: string }> =
+      {};
+    for (const row of rows) {
+      const cfg = (row.config ?? {}) as {
+        model?: unknown;
+        thinkingLevel?: unknown;
+      };
+      const entry: { model?: string; thinkingLevel?: string } = {};
+      if (typeof cfg.model === 'string' && cfg.model.trim()) {
+        entry.model = cfg.model.trim();
+      }
+      if (typeof cfg.thinkingLevel === 'string' && cfg.thinkingLevel.trim()) {
+        entry.thinkingLevel = cfg.thinkingLevel.trim();
+      }
+      if (entry.model || entry.thinkingLevel) result[row.refKey] = entry;
+    }
+    return result;
   }
 
   /**
