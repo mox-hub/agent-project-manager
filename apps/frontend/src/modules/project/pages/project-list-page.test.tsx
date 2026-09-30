@@ -74,10 +74,6 @@ vi.mock('../components/project-gantt', () => ({
   ProjectGantt: () => <div data-testid="project-view-gantt">GANTT_VIEW</div>,
 }));
 
-vi.mock('@/shared/ui/filter-panel', () => ({
-  FilterPanel: () => <div data-testid="filter-panel" />,
-}));
-
 vi.mock('@/shared/components/create-dialog', () => ({
   UnifiedCreateDialog: () => null,
 }));

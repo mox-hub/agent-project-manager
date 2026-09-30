@@ -222,7 +222,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'prompt-editor', file: 'shared/components/prompt-editor.tsx', section: 'App Components', status: 'canonical' },
 
   // ── 错位目录：src/shared/ui/（E7 清退候选） ───────────────────────────────
-  { name: 'filter-panel', file: 'shared/ui/filter-panel.tsx', section: 'App Components', status: 'deprecated', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：零引用（实测）——唯一引用是 project-list-page.test.tsx 的 vi.mock；且构成第二个 ui 命名空间', proposal: 'delete' } },
 
   // ── 模块专用组件：src/modules/*/components/ ──────────────────────────────
   { name: 'acceptance-draft-dialog', file: 'modules/acceptance/components/acceptance-draft-dialog.tsx', section: 'App Components', status: 'canonical' },
