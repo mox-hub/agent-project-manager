@@ -3,7 +3,6 @@
  */
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { BugTemplateHelper, BUG_MARKDOWN_TEMPLATE } from '../entity-templates/bug-template-helper';
 import { DocCategoryChips } from '../entity-templates/doc-category-chips';
 import { ProjectSourceTabs } from '../entity-templates/project-source-tabs';
 import { ModeShuttleButton } from '../mode-shuttle-button';
@@ -15,22 +14,6 @@ vi.mock('react-i18next', () => ({
 }));
 
 describe('实体针对性辅助与模式穿梭组件（CAP-A-18 V2）', () => {
-  describe('BugTemplateHelper', () => {
-    it('无内容时渲染快捷填入模板按钮，点击触发注入', () => {
-      const onInject = vi.fn();
-      render(<BugTemplateHelper hasContent={false} onInject={onInject} />);
-      const btn = screen.getByText('填入标准缺陷排查模板');
-      expect(btn).toBeInTheDocument();
-      fireEvent.click(btn);
-      expect(onInject).toHaveBeenCalledWith(BUG_MARKDOWN_TEMPLATE);
-    });
-
-    it('已有描述时不渲染注入按钮', () => {
-      const { container } = render(<BugTemplateHelper hasContent={true} onInject={vi.fn()} />);
-      expect(container.firstChild).toBeNull();
-    });
-  });
-
   describe('DocCategoryChips', () => {
     it('渲染 6 大类目 Chips，点击切换类目并传递模板骨架', () => {
       const onChange = vi.fn();

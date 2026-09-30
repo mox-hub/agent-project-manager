@@ -203,7 +203,6 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'connection-banner', file: 'shared/components/connection-banner.tsx', section: 'App Components', status: 'canonical' },
   { name: 'acceptance-criteria-field', file: 'shared/components/create-dialog/acceptance-criteria-field.tsx', section: 'App Components', status: 'canonical' },
   { name: 'agent-presence-banner', file: 'shared/components/create-dialog/agent-presence-banner.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'bug-template-helper', file: 'shared/components/create-dialog/entity-templates/bug-template-helper.tsx', section: 'App Components', status: 'deprecated', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：零引用（实测）——仅被自身 __tests__ 引用，无生产消费方', proposal: 'delete' } },
   { name: 'doc-category-chips', file: 'shared/components/create-dialog/entity-templates/doc-category-chips.tsx', section: 'App Components', status: 'deprecated', expiresAt: '2026-10-31', review: { pending: true, reason: '2026-09-29 人工裁决批准删除：零引用（实测）——仅被自身 __tests__ 引用，无生产消费方', proposal: 'delete' } },
   { name: 'project-source-tabs', file: 'shared/components/create-dialog/entity-templates/project-source-tabs.tsx', section: 'App Components', status: 'canonical' },
   { name: 'create-dialog/index', file: 'shared/components/create-dialog/index.tsx', section: 'App Components', status: 'canonical' },
