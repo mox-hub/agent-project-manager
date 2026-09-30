@@ -75,8 +75,13 @@ export class DashboardCostDto {
   @ApiProperty({ description: '本月成本合计（USD）' })
   monthTotal: number;
 
-  @ApiProperty({ description: '预算偏差百分比（预算基线未落地，恒为 0）' })
-  budgetDeltaPct: number;
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    description:
+      '预算偏差百分比（预算基线未配置时为 null，前端显示「预算基线未设置」降级文案）',
+  })
+  budgetDeltaPct: number | null;
 
   @ApiProperty({
     type: [DashboardCostCategoryDto],

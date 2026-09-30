@@ -113,7 +113,8 @@ export interface DashboardOverview {
   };
   cost: {
     monthTotal: number;
-    budgetDeltaPct: number;
+    /** 预算基线未落地：恒为 null（诚实空态），前端显示「预算基线未设置」降级文案 */
+    budgetDeltaPct: number | null;
     byCategory: Array<{ name: string; amount: number; percentage: number }>;
   };
   delivery: {
@@ -439,7 +440,8 @@ export class DashboardService {
       .map(([activity, count]) => ({ activity, count }));
   }
 
-  // ── 成本（AIUsageLog.estimatedCost 按供应商分摊；预算基线未落地，delta 固定 0）──
+  // ── 成本（AIUsageLog.estimatedCost 按供应商分摊；预算基线未配置 → delta 诚实返回 null，
+  //    不再硬编码 0 冒充「刚好符合预算」，前端降级展示「预算基线未设置」）──
 
   private buildCost(
     usages: Array<{
@@ -470,7 +472,7 @@ export class DashboardService {
             monthTotal > 0 ? Math.round((rounded / monthTotal) * 100) : 0,
         };
       });
-    return { monthTotal, budgetDeltaPct: 0, byCategory };
+    return { monthTotal, budgetDeltaPct: null, byCategory };
   }
 
   // ── 交付 ────────────────────────────────────────────────────────────────

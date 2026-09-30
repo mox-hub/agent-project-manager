@@ -31,6 +31,10 @@ import { ModelsDevService } from './services/models-dev.service';
 import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.service';
 import { ChatRequestDto } from './dto/chat.dto';
 import { UsageQueryDto } from './dto/usage-query.dto';
+import {
+  AcceptanceAttributionQueryDto,
+  AcceptanceAttributionResponseDto,
+} from './dto/acceptance-attribution.dto';
 import { ConversationQueryDto } from './dto/conversation-query.dto';
 import {
   CreateProviderConfigDto,
@@ -118,6 +122,22 @@ export class AiHubController {
   @ApiStandardErrors()
   async getUsage(@Query() query: UsageQueryDto) {
     return this.aiHubService.getUsage(query);
+  }
+
+  @Get('usage/acceptance-attribution')
+  @ApiOperation({
+    summary: '验收归因成本（CAP-C-06）：执行链成本按验收单/工单类型归因',
+  })
+  @ApiOkResponse({
+    type: AcceptanceAttributionResponseDto,
+    description:
+      '归因聚合 { totalExecutionCost, reworkCost, reworkPct, acceptanceCount, avgCostPerAcceptance(无验收单为 null), byAcceptance[](成本降序≤50), byIssueType[](返工降序≤10) }',
+  })
+  @ApiStandardErrors()
+  async getAcceptanceAttribution(
+    @Query() query: AcceptanceAttributionQueryDto,
+  ) {
+    return this.aiHubService.getAcceptanceAttribution(query);
   }
 
   @Get('models')

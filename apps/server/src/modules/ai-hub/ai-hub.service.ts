@@ -27,7 +27,19 @@ import {
 import { ChatRequestDto } from './dto/chat.dto';
 import { ConversationQueryDto } from './dto/conversation-query.dto';
 import { UsageQueryDto } from './dto/usage-query.dto';
+import { AcceptanceAttributionQueryDto } from './dto/acceptance-attribution.dto';
 import { AI_DEFAULT_MODEL_CONFIG_KEY } from './services/provider-config.service';
+
+/** 验收单维度明细行数上限（成本降序截断） */
+const ACCEPTANCE_ATTRIBUTION_ROW_LIMIT = 50;
+/** 工单类型返工分布行数上限（返工次数降序截断） */
+const ISSUE_TYPE_REWORK_LIMIT = 10;
+/** 工单已删除时的明细占位标题 */
+const ORPHAN_ISSUE_TITLE = '（工单已删除）';
+/** 无工单类型信息时的类型占位名 */
+const UNCLASSIFIED_TYPE_NAME = '未分类';
+/** 执行未关联工单时的类型占位名（byIssueType 归组用） */
+const UNLINKED_TYPE_NAME = '未关联工单';
 
 @Injectable()
 export class AiHubService {
@@ -627,6 +639,159 @@ export class AiHubService {
       silentCalls,
       byModel: Object.values(byModel),
       byDay,
+    };
+  }
+
+  /**
+   * 验收归因成本聚合（CAP-C-06「成本归因到验收」，G8 缺口兑现）。
+   *
+   * 归因链：AIUsageLog.executionRunId → Execution（retryOfId 非空 = 返工血缘）
+   * → Execution.issueId → Issue → Acceptance（按 issueId 关联验收单）。
+   * 全只读内存聚合（fetch + reduce），本地 SQLite 数据量小，零 schema 迁移不加索引。
+   * avgCostPerAcceptance 在无验收单时返回 null——诚实空态优于虚假数值。
+   */
+  async getAcceptanceAttribution(query: AcceptanceAttributionQueryDto) {
+    const { projectId } = query;
+
+    // 1. 执行链成本记录：只取挂 executionRunId 的用量日志（可选项目过滤）
+    const usageLogs = await this.prisma.aIUsageLog.findMany({
+      where: {
+        executionRunId: { not: null },
+        ...(projectId ? { projectId } : {}),
+      },
+      select: { executionRunId: true, estimatedCost: true },
+    });
+
+    // 2. 用量日志 → 执行（含工单标题/类型名与返工血缘）
+    const executionIds = [
+      ...new Set(usageLogs.map((log) => log.executionRunId as string)),
+    ];
+    const executions = executionIds.length
+      ? await this.prisma.execution.findMany({
+          where: { id: { in: executionIds } },
+          select: {
+            id: true,
+            retryOfId: true,
+            issue: {
+              select: {
+                id: true,
+                title: true,
+                type: true,
+                issueType: { select: { name: true } },
+              },
+            },
+          },
+        })
+      : [];
+
+    // 3. 每次执行的成本合计（同一次执行可挂多条模型调用日志）
+    const costByExecution = new Map<string, number>();
+    for (const log of usageLogs) {
+      const runId = log.executionRunId as string;
+      costByExecution.set(
+        runId,
+        (costByExecution.get(runId) ?? 0) + (log.estimatedCost ?? 0),
+      );
+    }
+
+    // 4. 工单维度归因 + 总量/返工成本累计
+    let totalExecutionCost = 0;
+    let reworkCost = 0;
+    const costByIssue = new Map<string, number>();
+    const executionCountByIssue = new Map<string, number>();
+    const reworkCountByIssue = new Map<string, number>();
+    const issueInfoById = new Map<
+      string,
+      { title: string; typeName: string }
+    >();
+    for (const execution of executions) {
+      const cost = costByExecution.get(execution.id) ?? 0;
+      const isRework = execution.retryOfId != null;
+      totalExecutionCost += cost;
+      if (isRework) reworkCost += cost;
+      const issue = execution.issue;
+      if (!issue) continue;
+      costByIssue.set(issue.id, (costByIssue.get(issue.id) ?? 0) + cost);
+      executionCountByIssue.set(
+        issue.id,
+        (executionCountByIssue.get(issue.id) ?? 0) + 1,
+      );
+      if (isRework) {
+        reworkCountByIssue.set(
+          issue.id,
+          (reworkCountByIssue.get(issue.id) ?? 0) + 1,
+        );
+      }
+      issueInfoById.set(issue.id, {
+        title: issue.title,
+        // 类型事实源 = IssueType.name；未挂自定义类型时回落 legacy type（task/bug，非空）
+        typeName: issue.issueType?.name ?? issue.type,
+      });
+    }
+
+    // 5. 验收单关联（Acceptance.issueId → Issue；一单可多验收，计数按「有验收单的工单」去重）
+    const issueIds = [...costByIssue.keys()];
+    const acceptances = issueIds.length
+      ? await this.prisma.acceptance.findMany({
+          where: { issueId: { in: issueIds } },
+          select: { id: true, issueId: true, title: true },
+        })
+      : [];
+    const issuesWithAcceptance = new Set(acceptances.map((a) => a.issueId));
+    const acceptanceCount = issuesWithAcceptance.size;
+    const avgCostPerAcceptance =
+      acceptanceCount > 0 ? totalExecutionCost / acceptanceCount : null;
+    const reworkPct =
+      totalExecutionCost > 0 ? (reworkCost / totalExecutionCost) * 100 : 0;
+
+    // 6. 验收单维度明细（成本降序，上限 50；行成本 = 该验收单所属工单的归因成本）
+    const byAcceptance = acceptances
+      .map((acceptance) => {
+        const info = issueInfoById.get(acceptance.issueId);
+        return {
+          acceptanceId: acceptance.id,
+          acceptanceTitle: acceptance.title ?? null,
+          issueId: acceptance.issueId,
+          issueTitle: info?.title ?? ORPHAN_ISSUE_TITLE,
+          issueTypeName: info?.typeName ?? UNCLASSIFIED_TYPE_NAME,
+          cost: costByIssue.get(acceptance.issueId) ?? 0,
+          executionCount: executionCountByIssue.get(acceptance.issueId) ?? 0,
+          reworkCount: reworkCountByIssue.get(acceptance.issueId) ?? 0,
+        };
+      })
+      .sort((a, b) => b.cost - a.cost)
+      .slice(0, ACCEPTANCE_ATTRIBUTION_ROW_LIMIT);
+
+    // 7. 工单类型返工分布（返工次数降序、成本次序兜底，上限 10）——回答「哪类任务反复失败」
+    const byIssueTypeAgg = new Map<
+      string,
+      { reworkCount: number; cost: number }
+    >();
+    for (const execution of executions) {
+      const typeName = execution.issue
+        ? (execution.issue.issueType?.name ?? execution.issue.type)
+        : UNLINKED_TYPE_NAME;
+      const entry = byIssueTypeAgg.get(typeName) ?? {
+        reworkCount: 0,
+        cost: 0,
+      };
+      entry.cost += costByExecution.get(execution.id) ?? 0;
+      if (execution.retryOfId != null) entry.reworkCount += 1;
+      byIssueTypeAgg.set(typeName, entry);
+    }
+    const byIssueType = [...byIssueTypeAgg.entries()]
+      .map(([issueTypeName, agg]) => ({ issueTypeName, ...agg }))
+      .sort((a, b) => b.reworkCount - a.reworkCount || b.cost - a.cost)
+      .slice(0, ISSUE_TYPE_REWORK_LIMIT);
+
+    return {
+      totalExecutionCost,
+      reworkCost,
+      reworkPct,
+      acceptanceCount,
+      avgCostPerAcceptance,
+      byAcceptance,
+      byIssueType,
     };
   }
 }

@@ -291,5 +291,7 @@ describe('DashboardService', () => {
     expect(cost.byCategory).toEqual([
       { name: 'openai', amount: 2, percentage: 100 },
     ]);
+    // 预算基线未配置：诚实降级为 null（CAP-C-06），不再硬编码 0 冒充「刚好符合预算」
+    expect(cost.budgetDeltaPct).toBeNull();
   });
 });

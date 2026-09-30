@@ -26917,6 +26917,149 @@
         ]
       }
     },
+    "/_api/ai/usage/acceptance-attribution": {
+      "get": {
+        "operationId": "AiHubController_getAcceptanceAttribution",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "按项目 ID 过滤（缺省为当前工作区全量）",
+            "schema": {
+              "example": "project-123",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "归因聚合 { totalExecutionCost, reworkCost, reworkPct, acceptanceCount, avgCostPerAcceptance(无验收单为 null), byAcceptance[](成本降序≤50), byIssueType[](返工降序≤10) }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptanceAttributionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "验收归因成本（CAP-C-06）：执行链成本按验收单/工单类型归因",
+        "tags": [
+          "AI Hub"
+        ]
+      }
+    },
     "/_api/ai/models": {
       "get": {
         "operationId": "AiHubController_getModels",
@@ -71360,6 +71503,124 @@
           "byDay"
         ]
       },
+      "AcceptanceAttributionItemDto": {
+        "type": "object",
+        "properties": {
+          "acceptanceId": {
+            "type": "string",
+            "description": "验收单 ID"
+          },
+          "acceptanceTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "验收单标题（未设置时为 null，前端回落工单标题）"
+          },
+          "issueId": {
+            "type": "string",
+            "description": "关联工单 ID"
+          },
+          "issueTitle": {
+            "type": "string",
+            "description": "工单标题（工单已删除时为占位文案）"
+          },
+          "issueTypeName": {
+            "type": "string",
+            "description": "工单类型名（IssueType.name 事实源，缺省回落 legacy type）"
+          },
+          "cost": {
+            "type": "number",
+            "description": "归因成本（USD，该工单执行链 AIUsageLog.estimatedCost 合计）"
+          },
+          "executionCount": {
+            "type": "number",
+            "description": "有用量记录的执行次数"
+          },
+          "reworkCount": {
+            "type": "number",
+            "description": "返工执行次数（Execution.retryOfId 血缘非空）"
+          }
+        },
+        "required": [
+          "acceptanceId",
+          "issueId",
+          "issueTitle",
+          "issueTypeName",
+          "cost",
+          "executionCount",
+          "reworkCount"
+        ]
+      },
+      "IssueTypeReworkDto": {
+        "type": "object",
+        "properties": {
+          "issueTypeName": {
+            "type": "string",
+            "description": "工单类型名（无工单关联的执行归入「未关联工单」）"
+          },
+          "reworkCount": {
+            "type": "number",
+            "description": "返工执行次数"
+          },
+          "cost": {
+            "type": "number",
+            "description": "归因成本合计（USD）"
+          }
+        },
+        "required": [
+          "issueTypeName",
+          "reworkCount",
+          "cost"
+        ]
+      },
+      "AcceptanceAttributionResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalExecutionCost": {
+            "type": "number",
+            "description": "执行链成本合计（挂 executionRunId 的 AIUsageLog.estimatedCost 合计）"
+          },
+          "reworkCost": {
+            "type": "number",
+            "description": "返工成本合计（retry 血缘执行关联的成本）"
+          },
+          "reworkPct": {
+            "type": "number",
+            "description": "返工占比百分数（reworkCost/totalExecutionCost×100；无成本时为 0）"
+          },
+          "acceptanceCount": {
+            "type": "number",
+            "description": "有验收单的工单数（经执行链成本归因可达的工单）"
+          },
+          "avgCostPerAcceptance": {
+            "type": "number",
+            "nullable": true,
+            "description": "单位验收成本（totalExecutionCost/acceptanceCount；无验收单时为 null，前端显示诚实空态）"
+          },
+          "byAcceptance": {
+            "description": "验收单维度明细（按成本降序，上限 50）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcceptanceAttributionItemDto"
+            }
+          },
+          "byIssueType": {
+            "description": "工单类型返工分布（按返工次数降序，上限 10）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueTypeReworkDto"
+            }
+          }
+        },
+        "required": [
+          "totalExecutionCost",
+          "reworkCost",
+          "reworkPct",
+          "acceptanceCount",
+          "avgCostPerAcceptance",
+          "byAcceptance",
+          "byIssueType"
+        ]
+      },
       "AIModelDto": {
         "type": "object",
         "properties": {
@@ -80523,7 +80784,8 @@
           },
           "budgetDeltaPct": {
             "type": "number",
-            "description": "预算偏差百分比（预算基线未落地，恒为 0）"
+            "nullable": true,
+            "description": "预算偏差百分比（预算基线未配置时为 null，前端显示「预算基线未设置」降级文案）"
           },
           "byCategory": {
             "description": "按供应商分摊",

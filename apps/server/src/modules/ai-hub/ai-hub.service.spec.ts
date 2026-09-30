@@ -16,6 +16,8 @@ describe('AiHubService', () => {
     aIModelConfig: { findMany: vi.fn() },
     aIConversation: { findUnique: vi.fn(), create: vi.fn() },
     aIUsageLog: { findMany: vi.fn() },
+    execution: { findMany: vi.fn() },
+    acceptance: { findMany: vi.fn() },
     appConfig: { findFirst: vi.fn().mockResolvedValue(null) },
   };
 
@@ -158,5 +160,156 @@ describe('AiHubService', () => {
     expect(usage.conversationCalls).toBe(1);
     expect(usage.executionCalls).toBe(1);
     expect(usage.silentCalls).toBe(1);
+  });
+
+  // ── 验收归因成本聚合（CAP-C-06）：空数据 / 正常归因 / 返工血缘三场景 ──
+
+  it('getAcceptanceAttribution 空数据：全零汇总且单位验收成本为诚实 null', async () => {
+    mockPrismaService.aIUsageLog.findMany.mockResolvedValue([]);
+    mockPrismaService.execution.findMany.mockResolvedValue([]);
+    mockPrismaService.acceptance.findMany.mockResolvedValue([]);
+
+    const result = await service.getAcceptanceAttribution({});
+
+    expect(result).toEqual({
+      totalExecutionCost: 0,
+      reworkCost: 0,
+      reworkPct: 0,
+      acceptanceCount: 0,
+      avgCostPerAcceptance: null,
+      byAcceptance: [],
+      byIssueType: [],
+    });
+    // 不关联执行链的日志（对话/静默）不进归因：where 限定 executionRunId 非空
+    expect(mockPrismaService.aIUsageLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { executionRunId: { not: null } },
+      }),
+    );
+  });
+
+  it('getAcceptanceAttribution 正常归因：按工单聚合成本并映射到验收单', async () => {
+    // 两条日志挂 exec-1（合计 1.5），一条挂 exec-2（0.25）
+    mockPrismaService.aIUsageLog.findMany.mockResolvedValue([
+      { executionRunId: 'exec-1', estimatedCost: 1.0 },
+      { executionRunId: 'exec-1', estimatedCost: 0.5 },
+      { executionRunId: 'exec-2', estimatedCost: 0.25 },
+    ]);
+    mockPrismaService.execution.findMany.mockResolvedValue([
+      {
+        id: 'exec-1',
+        retryOfId: null,
+        issue: {
+          id: 'issue-1',
+          title: '工单一',
+          type: 'task',
+          issueType: { name: '需求拆解' },
+        },
+      },
+      {
+        id: 'exec-2',
+        retryOfId: null,
+        issue: {
+          id: 'issue-2',
+          title: '工单二',
+          type: 'bug',
+          issueType: null,
+        },
+      },
+    ]);
+    mockPrismaService.acceptance.findMany.mockResolvedValue([
+      { id: 'acc-1', issueId: 'issue-1', title: '验收单一' },
+      { id: 'acc-2', issueId: 'issue-2', title: null },
+    ]);
+
+    const result = await service.getAcceptanceAttribution({});
+
+    expect(result.totalExecutionCost).toBeCloseTo(1.75, 6);
+    expect(result.reworkCost).toBe(0);
+    expect(result.reworkPct).toBe(0);
+    expect(result.acceptanceCount).toBe(2);
+    expect(result.avgCostPerAcceptance).toBeCloseTo(0.875, 6);
+    // 按成本降序：issue-1（1.5）在前；类型名事实源 = IssueType.name，未挂回落 legacy type
+    expect(result.byAcceptance).toEqual([
+      {
+        acceptanceId: 'acc-1',
+        acceptanceTitle: '验收单一',
+        issueId: 'issue-1',
+        issueTitle: '工单一',
+        issueTypeName: '需求拆解',
+        cost: 1.5,
+        executionCount: 1,
+        reworkCount: 0,
+      },
+      {
+        acceptanceId: 'acc-2',
+        acceptanceTitle: null,
+        issueId: 'issue-2',
+        issueTitle: '工单二',
+        issueTypeName: 'bug',
+        cost: 0.25,
+        executionCount: 1,
+        reworkCount: 0,
+      },
+    ]);
+  });
+
+  it('getAcceptanceAttribution 返工血缘：retryOfId 非空的执行计入返工成本与占比', async () => {
+    // exec-1 原始执行 1.0；exec-2 是 exec-1 的重试（2.0）→ 返工成本 2.0，占比 2/3
+    mockPrismaService.aIUsageLog.findMany.mockResolvedValue([
+      { executionRunId: 'exec-1', estimatedCost: 1.0 },
+      { executionRunId: 'exec-2', estimatedCost: 2.0 },
+    ]);
+    mockPrismaService.execution.findMany.mockResolvedValue([
+      {
+        id: 'exec-1',
+        retryOfId: null,
+        issue: {
+          id: 'issue-1',
+          title: '反复失败的工单',
+          type: 'bug',
+          issueType: { name: '缺陷修复' },
+        },
+      },
+      {
+        id: 'exec-2',
+        retryOfId: 'exec-1',
+        issue: {
+          id: 'issue-1',
+          title: '反复失败的工单',
+          type: 'bug',
+          issueType: { name: '缺陷修复' },
+        },
+      },
+    ]);
+    mockPrismaService.acceptance.findMany.mockResolvedValue([
+      { id: 'acc-1', issueId: 'issue-1', title: '验收单一' },
+    ]);
+
+    const result = await service.getAcceptanceAttribution({ projectId: 'p1' });
+
+    expect(result.totalExecutionCost).toBeCloseTo(3.0, 6);
+    expect(result.reworkCost).toBeCloseTo(2.0, 6);
+    expect(result.reworkPct).toBeCloseTo((2 / 3) * 100, 6);
+    expect(result.acceptanceCount).toBe(1);
+    // 同工单两执行归并一行：executionCount=2、reworkCount=1
+    expect(result.byAcceptance).toEqual([
+      expect.objectContaining({
+        issueId: 'issue-1',
+        cost: 3.0,
+        executionCount: 2,
+        reworkCount: 1,
+      }),
+    ]);
+    // 返工分布按工单类型归组
+    expect(result.byIssueType).toEqual([
+      { issueTypeName: '缺陷修复', reworkCount: 1, cost: 3.0 },
+    ]);
+    // projectId 过滤透传到用量日志查询
+    expect(mockPrismaService.aIUsageLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { executionRunId: { not: null }, projectId: 'p1' },
+      }),
+    );
   });
 });
