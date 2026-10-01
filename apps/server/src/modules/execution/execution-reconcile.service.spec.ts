@@ -3,6 +3,7 @@ import { ExecutionReconcileService } from './execution-reconcile.service';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { LoggerService } from '@/core/logger/logger.service';
+import { ExecutionWorktreeService } from '@/modules/git/execution-worktree.service';
 
 describe('ExecutionReconcileService', () => {
   let service: ExecutionReconcileService;
@@ -15,7 +16,13 @@ describe('ExecutionReconcileService', () => {
     },
     execution: {
       findMany: vi.fn().mockResolvedValue([]),
+      update: vi.fn().mockResolvedValue({}),
     },
+  };
+
+  const worktreeMock = {
+    cleanup: vi.fn().mockResolvedValue(undefined),
+    inspect: vi.fn().mockResolvedValue({ worktrees: [], pruned: true }),
   };
 
   beforeEach(async () => {
@@ -48,6 +55,7 @@ describe('ExecutionReconcileService', () => {
             error: vi.fn(),
           },
         },
+        { provide: ExecutionWorktreeService, useValue: worktreeMock },
       ],
     }).compile();
 
@@ -178,5 +186,82 @@ describe('ExecutionReconcileService', () => {
         }),
       }),
     );
+  });
+
+  describe('G5-b worktree 巡检', () => {
+    const worktreeIsolation = {
+      mode: 'worktree',
+      worktreePath: 'E:\\repo\\.apm\\worktrees\\old00001',
+      branch: 'apm/exec/old00001',
+      baseRef: 'base_sha',
+      projectRoot: 'E:\\repo',
+      preparedAt: '2026-09-01T00:00:00.000Z',
+    };
+
+    it('失败执行 worktree 超 7 天 TTL：force 清理 + cleanedAt 回填 + 项目根 prune', async () => {
+      const stale = new Date(Date.now() - 8 * 24 * 3600_000);
+      prismaMock.execution.findMany.mockImplementation(
+        async (args: { where?: { status?: unknown } }) => {
+          // 第一次调用 = failed TTL 扫描；第二次 = 活跃扫描
+          if (JSON.stringify(args?.where?.status ?? '').includes('failed')) {
+            return [
+              {
+                id: 'run-old',
+                metadata: { isolation: worktreeIsolation },
+              },
+            ];
+          }
+          return [];
+        },
+      );
+
+      await service.reconcile();
+
+      expect(worktreeMock.cleanup).toHaveBeenCalledWith(
+        'E:\\repo',
+        'E:\\repo\\.apm\\worktrees\\old00001',
+        'apm/exec/old00001',
+        { force: true },
+      );
+      expect(prismaMock.execution.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'run-old' },
+          data: {
+            metadata: expect.objectContaining({
+              isolation: expect.objectContaining({
+                mode: 'worktree',
+                cleanedAt: expect.any(String),
+              }),
+            }),
+          },
+        }),
+      );
+      expect(worktreeMock.inspect).toHaveBeenCalledWith('E:\\repo');
+    });
+
+    it('已清理（cleanedAt 回填）的失败执行幂等跳过', async () => {
+      prismaMock.execution.findMany.mockImplementation(
+        async (args: { where?: { status?: unknown } }) => {
+          if (JSON.stringify(args?.where?.status ?? '').includes('failed')) {
+            return [
+              {
+                id: 'run-cleaned',
+                metadata: {
+                  isolation: {
+                    ...worktreeIsolation,
+                    cleanedAt: '2026-09-20T00:00:00.000Z',
+                  },
+                },
+              },
+            ];
+          }
+          return [];
+        },
+      );
+
+      await service.reconcile();
+
+      expect(worktreeMock.cleanup).not.toHaveBeenCalled();
+    });
   });
 });

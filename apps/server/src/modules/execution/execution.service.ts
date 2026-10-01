@@ -12,6 +12,13 @@ import { ApprovalService } from './approval.service';
 import { Prisma } from '@prisma/client';
 import { inferCompletionType } from '@/modules/cli-dispatch/adapters/test-report.schema';
 import { classifyExecutionFailure } from './failure-classifier';
+import {
+  CommitAuthor,
+  ExecutionIsolationMetadata,
+  ExecutionWorktreeService,
+  EXECUTION_AUTHOR_EMAIL,
+  EXECUTION_AUTHOR_NAME,
+} from '@/modules/git/execution-worktree.service';
 
 export interface CreateExecutionRunDto {
   projectId: string;
@@ -111,6 +118,7 @@ export class ExecutionService {
     private readonly messageBus: MessageBusService,
     private readonly proposalService: ProposalService,
     private readonly approvalService: ApprovalService,
+    private readonly worktree: ExecutionWorktreeService,
   ) {
     this.logger.setContext('ExecutionService');
   }
@@ -619,7 +627,183 @@ export class ExecutionService {
       void this.proposalService.checkSpendOnRunComplete(run.projectId);
     }
 
+    // G5-b 成果收集（设计稿 §5.4）：worktree 隔离执行完成后——空变更直接清理；
+    // 有变更补快照 commit 并创建 integration 决策卡（人工确认合入）。
+    // 旁路语义：收集失败不回滚完成态，落 integration={status:'error'} 留痕。
+    await this.collectWorktreeOutcome(id);
+
     return run;
+  }
+
+  /**
+   * G5-b 成果收集：仅 metadata.isolation.mode==='worktree' 的执行触发
+   * （human 执行天然无此标记；共享根执行不发合入卡——改动已直接发生在
+   * 主工作区，无 branch 可 merge，卡只会造成困惑）。
+   */
+  private async collectWorktreeOutcome(executionId: string): Promise<void> {
+    try {
+      const run = await this.prisma.execution.findUnique({
+        where: { id: executionId },
+      });
+      if (!run) return;
+      const metadata = (run.metadata as Record<string, unknown>) ?? {};
+      const isolation = metadata.isolation as
+        ExecutionIsolationMetadata | undefined;
+      // 幂等：已有 integration 记账（重复完成回调）不再收集
+      if (metadata.integration) return;
+      if (isolation?.mode !== 'worktree' || !isolation.worktreePath) return;
+
+      const projectRoot = isolation.projectRoot;
+      if (!projectRoot) {
+        this.logger.warn(
+          `worktree isolation missing projectRoot for ${executionId}, skip outcome collection`,
+        );
+        return;
+      }
+
+      const shortId = executionId.slice(-8);
+      const author = await this.resolveExecutionAuthor(run);
+      const changes = await this.worktree.collectChanges(
+        isolation.worktreePath,
+        isolation.baseRef,
+        {
+          message: `chore(apm): execution ${shortId} snapshot`,
+          author,
+        },
+      );
+
+      if (!changes.hasChanges) {
+        // 空变更：直接清理现场 + no-changes 记账，不发卡
+        await this.worktree.cleanup(
+          projectRoot,
+          isolation.worktreePath,
+          isolation.branch,
+          { force: true },
+        );
+        await this.mergeExecutionMetadata(executionId, {
+          integration: { status: 'no-changes', at: new Date().toISOString() },
+        });
+        this.logger.log(
+          `worktree outcome empty for ${executionId}, cleaned up`,
+        );
+        return;
+      }
+
+      // 有变更：主工作区脏度预检（决策时刻 applier 会再复核）+ 发 integration 卡
+      const mainDirty =
+        await this.worktree.mainWorkspaceDirtyFiles(projectRoot);
+      const issue = run.issueId
+        ? await this.prisma.issue.findUnique({
+            where: { id: run.issueId },
+            select: { title: true },
+          })
+        : null;
+      const proposal = await this.proposalService.createIntegrationProposal({
+        executionId,
+        issueId: run.issueId,
+        projectId: run.projectId,
+        projectRoot,
+        worktreePath: isolation.worktreePath,
+        branch: isolation.branch,
+        baseRef: isolation.baseRef,
+        headRef: changes.headRef,
+        diffStat: changes.diffStat,
+        insertions: changes.insertions,
+        deletions: changes.deletions,
+        files: changes.files,
+        commitCount: changes.commitCount,
+        mainDirty,
+        taskTitle: issue?.title ?? undefined,
+      });
+      await this.mergeExecutionMetadata(executionId, {
+        integration: {
+          status: 'pending-review',
+          proposalId: proposal.id,
+          at: new Date().toISOString(),
+        },
+      });
+      this.logger.log(
+        `integration proposal ${proposal.id} created for ${executionId} ` +
+          `(${changes.files.length} files, +${changes.insertions} −${changes.deletions})`,
+      );
+    } catch (err) {
+      // 旁路语义：成果收集失败不阻断完成主流程，落 error 留痕（reconcile 不清此场）
+      this.logger.warn(
+        `worktree outcome collection failed for ${executionId}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+      try {
+        await this.mergeExecutionMetadata(executionId, {
+          integration: {
+            status: 'error',
+            reason: err instanceof Error ? err.message : String(err),
+            at: new Date().toISOString(),
+          },
+        });
+      } catch {
+        // 记账也失败则只能依赖日志
+      }
+    }
+  }
+
+  /** 快照 commit 主体：AI 成员/用户邮箱可得则用之，缺省 execution@apm.local（设计稿 §七 开放问题口径） */
+  private async resolveExecutionAuthor(run: {
+    subjectType: string;
+    subjectId: string;
+  }): Promise<CommitAuthor> {
+    const fallback: CommitAuthor = {
+      name: EXECUTION_AUTHOR_NAME,
+      email: EXECUTION_AUTHOR_EMAIL,
+    };
+    try {
+      if (run.subjectType === 'platform_ai_member') {
+        const member = await this.prisma.member.findUnique({
+          where: { id: run.subjectId },
+          select: { displayName: true, email: true },
+        });
+        if (member?.email) {
+          return {
+            name: member.displayName || fallback.name,
+            email: member.email,
+          };
+        }
+        return fallback;
+      }
+      const user = await this.prisma.user.findUnique({
+        where: { id: run.subjectId },
+        select: { displayName: true, email: true },
+      });
+      if (user?.email) {
+        return {
+          name: user.displayName || fallback.name,
+          email: user.email,
+        };
+      }
+    } catch {
+      // 主体查询失败不影响快照提交（走兜底身份）
+    }
+    return fallback;
+  }
+
+  /** 合并式 metadata 更新（直接 set metadata 会抹掉 isolation 等既有键） */
+  private async mergeExecutionMetadata(
+    executionId: string,
+    patch: Record<string, unknown>,
+  ): Promise<void> {
+    const row = await this.prisma.execution.findUnique({
+      where: { id: executionId },
+      select: { metadata: true },
+    });
+    await this.prisma.execution.update({
+      where: { id: executionId },
+      data: {
+        metadata: {
+          ...((row?.metadata as Record<string, unknown>) ?? {}),
+          ...patch,
+        } as Prisma.InputJsonValue,
+      },
+    });
   }
 
   /**
@@ -808,11 +992,47 @@ export class ExecutionService {
 
   async cancelExecution(id: string, reason?: string) {
     // 兜底改造批 2：blocked 是非终态（可回流 in_progress），取消语义应为终态
-    // superseded——用户可区分「失败」「人工阻塞」「已取消」三种情况
+    // superseded——用户可区分「失败」「人工阻塞」「已取消」三种情况。
+    // G5-b：metadata 改为合并式写入（原直接替换会抹掉 isolation 等既有键），
+    // 且 worktree 现场取消即清理（设计稿 §5.4：取消/superseded 立即清理）。
+    const row = await this.prisma.execution.findUnique({
+      where: { id },
+      select: { metadata: true },
+    });
+    const metadata: Record<string, unknown> = {
+      ...((row?.metadata as Record<string, unknown>) ?? {}),
+      cancellationReason: reason,
+    };
+    const isolation = metadata.isolation as
+      ExecutionIsolationMetadata | undefined;
+    if (isolation?.mode === 'worktree' && !isolation.cleanedAt) {
+      try {
+        if (isolation.projectRoot) {
+          await this.worktree.cleanup(
+            isolation.projectRoot,
+            isolation.worktreePath,
+            isolation.branch,
+            { force: true },
+          );
+        }
+        metadata.isolation = {
+          ...isolation,
+          cleanedAt: new Date().toISOString(),
+        };
+      } catch (err) {
+        // 清理失败不阻断取消（reconcile TTL 兜底清扫）
+        this.logger.warn(
+          `worktree cleanup on cancel failed for ${id}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      }
+    }
+
     return this.updateExecutionRun(id, {
       status: 'superseded',
       terminatedAt: new Date(),
-      metadata: { cancellationReason: reason },
+      metadata,
     });
   }
 

@@ -29,6 +29,7 @@ export const PROPOSAL_KIND_VALUES = [
   'workflow_def',
   'release',
   'contract_conflict',
+  'integration',
 ] as const;
 
 /** 决策来源 kind 全集 = 两条实体来源 + 建议类提案 */

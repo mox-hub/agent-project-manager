@@ -7,6 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import * as fs from 'fs';
 import { PrismaService } from '@/core/database/prisma.service';
 import {
   BusinessException,
@@ -32,6 +33,11 @@ import {
   computeProposalFingerprint,
   isApprovalStale,
 } from './decision-fingerprint';
+import {
+  ExecutionWorktreeService,
+  INTEGRATION_FILES_TOP,
+  WORKTREE_BRANCH_PREFIX,
+} from '@/modules/git/execution-worktree.service';
 
 /**
  * 建议类决策卡（DecisionProposal）闭环：
@@ -99,6 +105,51 @@ interface ContractConflictPayload {
   derived?: boolean;
 }
 
+/**
+ * integration 提案 payload（G5-b 成果合入，设计稿 §5.4）。
+ * 由 ExecutionService.completeExecution 成功路径经 createIntegrationProposal 投递。
+ */
+export interface IntegrationProposalPayload {
+  executionId: string;
+  issueId?: string | null;
+  /** 主工作区根（applier merge/cleanup 的工作目录） */
+  projectRoot: string;
+  worktreePath: string;
+  branch: string;
+  baseRef: string;
+  /** 卡创建时刻的分支 HEAD（同时落 approvedFingerprint 作指纹锚） */
+  headRef: string;
+  diffStat: string;
+  insertions: number;
+  deletions: number;
+  /** 变更文件清单（top 20 + 溢出计数，防长清单爆卡） */
+  files: string[];
+  filesTotal: number;
+  commitCount: number;
+  /** 卡创建时刻主工作区未提交变更（porcelain 前 5 行；非空=决策时刻会再复核） */
+  mainDirty: string[];
+  taskTitle?: string;
+}
+
+/** createIntegrationProposal 入参（payload 的必填子集 + 展示上下文） */
+export interface CreateIntegrationProposalInput {
+  executionId: string;
+  issueId?: string | null;
+  projectId?: string;
+  projectRoot: string;
+  worktreePath: string;
+  branch: string;
+  baseRef: string;
+  headRef: string;
+  diffStat: string;
+  insertions: number;
+  deletions: number;
+  files: string[];
+  commitCount: number;
+  mainDirty: string[];
+  taskTitle?: string;
+}
+
 /** 合法冲突裁决动作（与 ContractBindingService.resolveConflict 对齐） */
 const CONFLICT_ACTIONS: readonly ConflictAction[] = [
   'accept_file',
@@ -114,6 +165,7 @@ export class ProposalService {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
     private readonly contractBindings: ContractBindingService,
+    private readonly worktree: ExecutionWorktreeService,
   ) {}
 
   async create(dto: CreateProposalDto, userId?: string) {
@@ -188,8 +240,9 @@ export class ProposalService {
     };
 
     // 副作用先行（失败即抛，状态不变，卡片仍留在待决列表可重试）
+    let sideEffects: Record<string, unknown> | undefined;
     if (dto.action === 'accept') {
-      await this.apply(proposal, dto, userId);
+      sideEffects = await this.apply(proposal, dto, userId);
     } else if (dto.action === 'cancel') {
       if (proposal.kind !== 'resolution') {
         throw new BadRequestException(
@@ -197,6 +250,13 @@ export class ProposalService {
         );
       }
       await this.applyResolution(proposal, 'cancelled');
+    } else if (dto.action === 'reject' && proposal.kind === 'integration') {
+      // G5-b：integration 的 reject 是物理动作（清理 worktree+分支）而非仅留痕，
+      // 与 accept 同走 applier 通道；清理失败不阻断驳回留痕（reconcile 兜底）
+      sideEffects = await this.applyIntegrationReject(proposal);
+    }
+    if (sideEffects) {
+      Object.assign(resolution, sideEffects);
     }
 
     const updated = await this.prisma.decisionProposal.update({
@@ -223,27 +283,37 @@ export class ProposalService {
     return updated;
   }
 
-  /** 按 kind 分发到事务化 applier */
+  /**
+   * 按 kind 分发到事务化 applier。
+   * 返回值（可选键值对）会合入 resolution 落痕（如 integration 的 mergeCommit）。
+   */
   private async apply(
     proposal: Proposal,
     dto: ResolveProposalDto,
     userId: string,
-  ): Promise<void> {
+  ): Promise<Record<string, unknown> | undefined> {
     switch (proposal.kind) {
       case 'plan':
-        return this.applyPlan(proposal);
+        await this.applyPlan(proposal);
+        return;
       case 'assignment':
-        return this.applyAssignment(proposal);
+        await this.applyAssignment(proposal);
+        return;
       case 'resolution':
-        return this.applyResolution(proposal, 'completed');
+        await this.applyResolution(proposal, 'completed');
+        return;
       case 'spend':
-        return this.applySpend(proposal);
+        await this.applySpend(proposal);
+        return;
       case 'gate':
-        return this.applyGate(proposal, dto, userId);
+        await this.applyGate(proposal, dto, userId);
+        return;
       case 'workflow_def':
-        return this.applyWorkflowDef(proposal, userId);
+        await this.applyWorkflowDef(proposal, userId);
+        return;
       case 'release':
-        return this.applyRelease(proposal, dto, userId);
+        await this.applyRelease(proposal, dto, userId);
+        return;
       case 'clarify':
         // 最小版：答案已随 resolution 落痕，AI 侧轮询消费；无领域副作用
         if (!dto.answer) {
@@ -251,7 +321,10 @@ export class ProposalService {
         }
         return;
       case 'contract_conflict':
-        return this.applyContractConflict(proposal, dto);
+        await this.applyContractConflict(proposal, dto);
+        return;
+      case 'integration':
+        return this.applyIntegration(proposal);
       default:
         throw new BadRequestException(
           `Unknown proposal kind: ${proposal.kind}`,
@@ -299,6 +372,226 @@ export class ProposalService {
         `契约冲突裁决失败：${err instanceof Error ? err.message : String(err)}`,
       );
     }
+  }
+
+  /**
+   * integration：执行成果合入主工作区（G5-b，设计稿 §5.5 六步）。
+   *
+   * git 步骤全部在事务外逐步执行（git 无事务）；记账（Execution.metadata.integration
+   * / resolution.mergeCommit）在事务内。中途失败按已发生步骤幂等收拾：
+   * 已 merge 但记账失败 → 重试时复查分支已并入 HEAD，跳过 merge 补记账。
+   *
+   * 六步：①存在性 → ②指纹（approvedFingerprint=卡创建时的分支 HEAD）→
+   * ③主工作区 clean 复核 → ④merge-tree 冲突预检 → ⑤merge --no-ff →
+   * ⑥清理 + 记账。①-④任一失败抛可读 400：卡保持 pending 可重试/改选拒绝。
+   */
+  private async applyIntegration(
+    proposal: Proposal,
+  ): Promise<Record<string, unknown>> {
+    const payload = this.parseIntegrationPayload(proposal);
+
+    // 幂等恢复：记账已完成（merge 成功但决议状态更新失败的窗口）→ 直接返回，
+    // resolve 主流程照常落 accepted
+    const execution = await this.prisma.execution.findUnique({
+      where: { id: payload.executionId },
+      select: { id: true, metadata: true },
+    });
+    if (!execution) {
+      throw new BadRequestException(
+        `执行记录不存在（${payload.executionId}），无法合入`,
+      );
+    }
+    const integration = (
+      execution.metadata as {
+        integration?: { status?: string; mergeCommit?: string };
+      } | null
+    )?.integration;
+    if (integration?.status === 'merged' && integration.mergeCommit) {
+      return { mergeCommit: integration.mergeCommit };
+    }
+
+    // ① 存在性校验：worktree 目录与分支都被外部手动删 → 可读错误
+    let branchHead: string;
+    try {
+      branchHead = await this.worktree.getBranchHead(
+        payload.projectRoot,
+        payload.branch,
+      );
+    } catch {
+      throw new BadRequestException(
+        `执行现场已清理，无法合入（分支 ${payload.branch} 不存在）。` +
+          '可在执行记录中查看变更文件清单，或驳回本卡',
+      );
+    }
+    if (!fs.existsSync(payload.worktreePath)) {
+      throw new BadRequestException(
+        `执行现场已清理，无法合入（worktree 目录已不存在）。` +
+          '可在执行记录中查看变更文件清单，或驳回本卡',
+      );
+    }
+
+    // ② 指纹复核：分支在卡创建后被外部动过 → 拒绝沿用旧印象合入
+    if (
+      proposal.approvedFingerprint &&
+      branchHead !== proposal.approvedFingerprint
+    ) {
+      throw new BadRequestException(
+        '执行现场在批准后发生变化（分支 HEAD 与卡创建时不一致），请重新查看或驳回',
+      );
+    }
+
+    // ③ 主工作区 clean 复核（payload.mainDirty 是卡创建时的预检，此处是决策时刻重查）
+    const dirty = await this.worktree.mainWorkspaceDirtyFiles(
+      payload.projectRoot,
+    );
+    if (dirty.length > 0) {
+      throw new BadRequestException(
+        `主工作区有未提交变更（${dirty.length} 个），请先处理后再合入。` +
+          `前 ${Math.min(5, dirty.length)} 个：${dirty.slice(0, 5).join('、')}`,
+      );
+    }
+
+    // ④ merge-tree 冲突预检：失败不落任何副作用，卡保持 pending 可改选拒绝
+    const conflicts = await this.worktree.detectConflicts(
+      payload.projectRoot,
+      payload.branch,
+    );
+    if (!conflicts.clean) {
+      throw new BadRequestException(
+        `与主工作区当前进度存在冲突（${conflicts.files.length} 个文件），无法自动合入：` +
+          `${conflicts.files.slice(0, 20).join('、')}` +
+          (conflicts.files.length > 20
+            ? ` 等 ${conflicts.files.length} 个`
+            : ''),
+      );
+    }
+
+    // ⑤ 真合入（幂等：分支已并入 HEAD 时跳过 merge，复查补 mergeCommit）
+    let mergeCommit: string;
+    const mergeMessage = `merge: execution ${payload.executionId} (apm/integration)`;
+    if (
+      await this.worktree.isBranchMerged(payload.projectRoot, payload.branch)
+    ) {
+      this.logger.warn(
+        `integration ${proposal.id}: branch ${payload.branch} already merged, recovering bookkeeping`,
+      );
+      mergeCommit = await this.worktree.getHead(payload.projectRoot);
+    } else {
+      ({ mergeCommit } = await this.worktree.integrate(
+        payload.projectRoot,
+        payload.branch,
+        mergeMessage,
+      ));
+    }
+
+    // ⑥ 清理（幂等容错：失败仅告警，reconcile TTL 兜底）+ 事务内记账
+    try {
+      await this.worktree.cleanup(
+        payload.projectRoot,
+        payload.worktreePath,
+        payload.branch,
+        { force: true },
+      );
+    } catch (err) {
+      this.logger.warn(
+        `integration ${proposal.id}: worktree cleanup failed (reconcile will sweep): ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+    await this.prisma.$transaction(async (tx) => {
+      await tx.execution.update({
+        where: { id: payload.executionId },
+        data: {
+          metadata: {
+            ...((execution.metadata as Record<string, unknown>) ?? {}),
+            integration: {
+              status: 'merged',
+              mergedAt: new Date().toISOString(),
+              mergeCommit,
+              proposalId: proposal.id,
+            },
+          },
+        },
+      });
+    });
+    return { mergeCommit };
+  }
+
+  /**
+   * integration reject 分支：force 清理（未合入分支须 -D）+ 记账 status=rejected。
+   * 清理幂等容错（现场可能已被手动清理），记账失败不阻断驳回留痕。
+   */
+  private async applyIntegrationReject(
+    proposal: Proposal,
+  ): Promise<Record<string, unknown>> {
+    const payload = this.parseIntegrationPayload(proposal);
+    try {
+      await this.worktree.cleanup(
+        payload.projectRoot,
+        payload.worktreePath,
+        payload.branch,
+        { force: true },
+      );
+    } catch (err) {
+      this.logger.warn(
+        `integration ${proposal.id}: reject cleanup failed (reconcile will sweep): ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+    try {
+      const execution = await this.prisma.execution.findUnique({
+        where: { id: payload.executionId },
+        select: { id: true, metadata: true },
+      });
+      if (execution) {
+        await this.prisma.$transaction(async (tx) => {
+          await tx.execution.update({
+            where: { id: payload.executionId },
+            data: {
+              metadata: {
+                ...((execution.metadata as Record<string, unknown>) ?? {}),
+                integration: {
+                  status: 'rejected',
+                  rejectedAt: new Date().toISOString(),
+                  proposalId: proposal.id,
+                },
+              },
+            },
+          });
+        });
+      }
+    } catch (err) {
+      this.logger.warn(
+        `integration ${proposal.id}: reject bookkeeping failed: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+    return { cleanedUp: true };
+  }
+
+  /** integration payload 形状守卫（缺关键键即 400，提示检查提案创建方） */
+  private parseIntegrationPayload(
+    proposal: Proposal,
+  ): IntegrationProposalPayload {
+    const payload = (proposal.payload ??
+      {}) as unknown as IntegrationProposalPayload;
+    const missing = (
+      ['executionId', 'projectRoot', 'worktreePath', 'branch'] as const
+    ).filter((key) => !payload?.[key]);
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `integration proposal payload 缺少 ${missing.join('、')}（请检查提案创建方 payload 形状）`,
+      );
+    }
+    if (!payload.branch.startsWith(WORKTREE_BRANCH_PREFIX)) {
+      throw new BadRequestException(
+        `integration proposal 分支不在 ${WORKTREE_BRANCH_PREFIX} 命名空间内，拒绝操作`,
+      );
+    }
+    return payload;
   }
 
   /**
@@ -765,6 +1058,64 @@ export class ProposalService {
 
   // ─── 内置生成器 ───
 
+  /**
+   * integration 决策卡生成器（G5-b 成果合入，ExecutionService.completeExecution
+   * 成功路径投递）：title 人话摘要 + payload 固化现场 + approvedFingerprint=headRef
+   * （分支冻结后不再变，指纹防的是卡创建后分支被外部动过——设计稿 §5.4）。
+   * 去重维度=executionId（同一执行重复完成回调不重复发卡）。
+   */
+  async createIntegrationProposal(
+    input: CreateIntegrationProposalInput,
+  ): Promise<Proposal> {
+    await this.ensureNoPending(
+      input.projectId,
+      'integration',
+      undefined,
+      input.issueId ?? undefined,
+      input.executionId,
+    );
+
+    const filesTop = input.files.slice(0, INTEGRATION_FILES_TOP);
+    const payload: IntegrationProposalPayload = {
+      executionId: input.executionId,
+      issueId: input.issueId ?? null,
+      projectRoot: input.projectRoot,
+      worktreePath: input.worktreePath,
+      branch: input.branch,
+      baseRef: input.baseRef,
+      headRef: input.headRef,
+      diffStat: input.diffStat,
+      insertions: input.insertions,
+      deletions: input.deletions,
+      files: filesTop,
+      filesTotal: input.files.length,
+      commitCount: input.commitCount,
+      mainDirty: input.mainDirty.slice(0, 5),
+      taskTitle: input.taskTitle,
+    };
+
+    const shortBranch = input.branch.replace(WORKTREE_BRANCH_PREFIX, '');
+    return this.prisma.decisionProposal.create({
+      data: {
+        kind: 'integration',
+        projectId: input.projectId,
+        issueId: input.issueId ?? null,
+        title:
+          `AI 执行完成：${input.files.length} 个文件` +
+          ` +${input.insertions} −${input.deletions}，建议合入`,
+        detail:
+          `分支 apm/exec/${shortBranch}（基于 ${input.baseRef.slice(0, 8)}）` +
+          `共 ${input.commitCount} 个提交。合入将对主工作区执行 git merge --no-ff，` +
+          '冲突与脏工作区会在你确认时复核；驳回则清理分支与执行现场。',
+        payload: payload as unknown as Prisma.InputJsonValue,
+        proposerType: 'system',
+        // 指纹锚=分支 HEAD：applier 决策时刻复核分支未被外部动过（设计稿 §5.4）
+        approvedFingerprint: input.headRef,
+        status: 'pending',
+      },
+    });
+  }
+
   /** 规则版分派提案：未分配任务 → 信任分最高的活跃 AI 成员 */
   async generateAssignment(projectId: string, userId?: string) {
     const [tasks, members] = await Promise.all([
@@ -921,12 +1272,13 @@ export class ProposalService {
     }
   }
 
-  /** 同项目同 kind（可带周期/任务）的待决提案去重 */
+  /** 同项目同 kind（可带周期/任务/执行）的待决提案去重 */
   private async ensureNoPending(
     projectId: string | undefined,
     kind: string,
     periodKey?: string,
     issueId?: string,
+    executionId?: string,
   ): Promise<void> {
     const pendings = await this.prisma.decisionProposal.findMany({
       where: {
@@ -939,7 +1291,12 @@ export class ProposalService {
     });
     const conflict = pendings.some((p) => {
       const key = (p.payload as { periodKey?: string } | null)?.periodKey;
-      return periodKey ? key === periodKey : true;
+      const matchesPeriod = periodKey ? key === periodKey : true;
+      const matchesExecution = executionId
+        ? (p.payload as { executionId?: string } | null)?.executionId ===
+          executionId
+        : true;
+      return matchesPeriod && matchesExecution;
     });
     if (conflict) {
       throw new BadRequestException('已存在待处理的同类提案');

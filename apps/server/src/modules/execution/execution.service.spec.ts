@@ -253,3 +253,272 @@ describe('ExecutionService 单活跃互斥（需求重审 G5，2026-09-17 裁决
     expect(prisma.execution.create).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('ExecutionService G5-b worktree 成果收集（completeExecution 成功路径）', () => {
+  const isolation = {
+    mode: 'worktree',
+    worktreePath: 'E:\\repo\\.apm\\worktrees\\abcd1234',
+    branch: 'apm/exec/abcd1234',
+    baseRef: 'base_sha',
+    projectRoot: 'E:\\repo',
+    preparedAt: '2026-10-01T00:00:00.000Z',
+  };
+
+  function integrationUpdateCalls(svc: unknown): any[][] {
+    const calls = (svc as any).prisma.execution.update.mock.calls as any[][];
+    return calls.filter((c) => (c[0]?.data?.metadata as any)?.integration);
+  }
+
+  function makeCollectService(
+    options: {
+      runMetadata?: Record<string, unknown>;
+      changes?: Record<string, unknown> | null;
+      dirty?: string[];
+      collectError?: Error;
+    } = {},
+  ) {
+    const run = {
+      id: 'exec_abcd1234zzzz',
+      projectId: 'p1',
+      issueId: 'i1',
+      subjectType: 'platform_ai_member',
+      subjectId: 'mem_1',
+      status: 'in_progress',
+      goal: 'g',
+      metadata: options.runMetadata ?? { isolation },
+    };
+    const prisma = {
+      execution: {
+        findUnique: vi.fn().mockResolvedValue(run),
+        update: vi
+          .fn()
+          .mockImplementation((opts?: { data?: Record<string, unknown> }) =>
+            Promise.resolve({ ...run, ...(opts?.data ?? {}) }),
+          ),
+      },
+      aIUsageLog: { findMany: vi.fn().mockResolvedValue([]) },
+      issue: { findUnique: vi.fn().mockResolvedValue({ title: '实现登录页' }) },
+      member: {
+        findUnique: vi
+          .fn()
+          .mockResolvedValue({ displayName: 'Coder', email: 'coder@apm.test' }),
+      },
+      user: { findUnique: vi.fn().mockResolvedValue(null) },
+      approvalRequest: { findFirst: vi.fn().mockResolvedValue(null) },
+    };
+    const createIntegrationProposal = vi
+      .fn()
+      .mockResolvedValue({ id: 'prop-1' });
+    const proposalService = {
+      checkSpendOnRunComplete: vi.fn(),
+      createIntegrationProposal,
+    } as unknown as ProposalService;
+    const worktree = {
+      collectChanges: vi.fn().mockImplementation(
+        options.collectError
+          ? async () => {
+              throw options.collectError;
+            }
+          : async () =>
+              options.changes ?? {
+                hasChanges: false,
+                commitCount: 0,
+                diffStat: '',
+                insertions: 0,
+                deletions: 0,
+                files: [],
+                headRef: 'head_sha',
+              },
+      ),
+      cleanup: vi.fn().mockResolvedValue(undefined),
+      mainWorkspaceDirtyFiles: vi.fn().mockResolvedValue(options.dirty ?? []),
+    };
+    const svc = new ExecutionService(
+      prisma as any,
+      { setContext: vi.fn(), log: vi.fn(), warn: vi.fn() } as any,
+      { publish: vi.fn() } as any,
+      proposalService,
+      { createApprovalRequest: vi.fn() } as unknown as ApprovalService,
+      worktree as any,
+    );
+    return { svc, worktree, createIntegrationProposal, prisma };
+  }
+
+  it('空变更：直接清理现场 + integration=no-changes，不发卡', async () => {
+    const { svc, worktree, createIntegrationProposal } = makeCollectService();
+
+    await svc.completeExecution('exec_abcd1234zzzz', { summary: 'done' });
+
+    expect(worktree.cleanup).toHaveBeenCalledWith(
+      'E:\\repo',
+      'E:\\repo\\.apm\\worktrees\\abcd1234',
+      'apm/exec/abcd1234',
+      { force: true },
+    );
+    expect(createIntegrationProposal).not.toHaveBeenCalled();
+    const metadataCalls = integrationUpdateCalls(svc);
+    expect(metadataCalls.length).toBe(1);
+    expect(metadataCalls[0][0].data.metadata.integration.status).toBe(
+      'no-changes',
+    );
+  });
+
+  it('有变更：补快照 commit（author 取成员邮箱）+ 创建 integration 决策卡 + pending-review 记账', async () => {
+    const { svc, worktree, createIntegrationProposal } = makeCollectService({
+      changes: {
+        hasChanges: true,
+        commitCount: 2,
+        diffStat: ' a.ts | 5 ++++\n 1 file changed, 5 insertions(+)',
+        insertions: 5,
+        deletions: 0,
+        files: ['a.ts', 'b.ts'],
+        headRef: 'head_sha',
+      },
+      dirty: ['M notes.md'],
+    });
+
+    await svc.completeExecution('exec_abcd1234zzzz', { summary: 'done' });
+
+    expect(worktree.collectChanges).toHaveBeenCalledWith(
+      'E:\\repo\\.apm\\worktrees\\abcd1234',
+      'base_sha',
+      expect.objectContaining({
+        message: 'chore(apm): execution 1234zzzz snapshot',
+        author: { name: 'Coder', email: 'coder@apm.test' },
+      }),
+    );
+    expect(createIntegrationProposal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        executionId: 'exec_abcd1234zzzz',
+        issueId: 'i1',
+        projectId: 'p1',
+        branch: 'apm/exec/abcd1234',
+        headRef: 'head_sha',
+        insertions: 5,
+        files: ['a.ts', 'b.ts'],
+        mainDirty: ['M notes.md'],
+        taskTitle: '实现登录页',
+      }),
+    );
+    const metadataCalls = integrationUpdateCalls(svc);
+    expect(metadataCalls[0][0].data.metadata.integration).toEqual(
+      expect.objectContaining({
+        status: 'pending-review',
+        proposalId: 'prop-1',
+      }),
+    );
+  });
+
+  it('非 worktree 执行（shared-root / 无 isolation）不触发收集', async () => {
+    const sharedRoot = makeCollectService({
+      runMetadata: {
+        isolation: { mode: 'shared-root', reason: 'not-git-repo' },
+      },
+    });
+    await sharedRoot.svc.completeExecution('exec_abcd1234zzzz', {});
+    expect(sharedRoot.worktree.collectChanges).not.toHaveBeenCalled();
+    expect(sharedRoot.createIntegrationProposal).not.toHaveBeenCalled();
+
+    const noMeta = makeCollectService({ runMetadata: {} });
+    await noMeta.svc.completeExecution('exec_abcd1234zzzz', {});
+    expect(noMeta.worktree.collectChanges).not.toHaveBeenCalled();
+    expect(noMeta.createIntegrationProposal).not.toHaveBeenCalled();
+  });
+
+  it('已有 integration 记账（重复完成回调）幂等跳过', async () => {
+    const { svc, worktree, createIntegrationProposal } = makeCollectService({
+      runMetadata: {
+        isolation,
+        integration: { status: 'pending-review', proposalId: 'prop-0' },
+      },
+    });
+
+    await svc.completeExecution('exec_abcd1234zzzz', {});
+
+    expect(worktree.collectChanges).not.toHaveBeenCalled();
+    expect(createIntegrationProposal).not.toHaveBeenCalled();
+  });
+
+  it('收集失败不阻断完成主流程，落 integration=error 留痕', async () => {
+    const { svc } = makeCollectService({
+      collectError: new Error('git boom'),
+    });
+
+    const run = await svc.completeExecution('exec_abcd1234zzzz', {});
+
+    expect(run.status).toBe('completed');
+    const metadataCalls = integrationUpdateCalls(svc);
+    expect(metadataCalls[0][0].data.metadata.integration).toEqual(
+      expect.objectContaining({ status: 'error', reason: 'git boom' }),
+    );
+  });
+});
+
+describe('ExecutionService G5-b 取消即时清理（cancelExecution）', () => {
+  function makeCancelService(runMetadata: Record<string, unknown>) {
+    const run = {
+      id: 'exec-1',
+      projectId: 'p1',
+      issueId: 'i1',
+      subjectType: 'external_agent',
+      subjectId: 'u1',
+      status: 'in_progress',
+      goal: 'g',
+      metadata: runMetadata,
+    };
+    const prisma = {
+      execution: {
+        findUnique: vi.fn().mockResolvedValue(run),
+        update: vi.fn().mockResolvedValue(run),
+      },
+      approvalRequest: { findFirst: vi.fn().mockResolvedValue(null) },
+    };
+    const worktree = { cleanup: vi.fn().mockResolvedValue(undefined) };
+    const svc = new ExecutionService(
+      prisma as any,
+      { setContext: vi.fn(), log: vi.fn(), warn: vi.fn() } as any,
+      { publish: vi.fn() } as any,
+      { checkSpendOnRunComplete: vi.fn() } as unknown as ProposalService,
+      { createApprovalRequest: vi.fn() } as unknown as ApprovalService,
+      worktree as any,
+    );
+    return { svc, worktree, prisma };
+  }
+
+  it('worktree 执行取消：force 清理 + isolation.cleanedAt 回填 + cancellationReason 保留', async () => {
+    const { svc, worktree, prisma } = makeCancelService({
+      isolation: {
+        mode: 'worktree',
+        worktreePath: 'E:\\repo\\.apm\\worktrees\\abcd1234',
+        branch: 'apm/exec/abcd1234',
+        baseRef: 'base_sha',
+        projectRoot: 'E:\\repo',
+        preparedAt: '2026-10-01T00:00:00.000Z',
+      },
+    });
+
+    await svc.cancelExecution('exec-1', '用户取消');
+
+    expect(worktree.cleanup).toHaveBeenCalledWith(
+      'E:\\repo',
+      'E:\\repo\\.apm\\worktrees\\abcd1234',
+      'apm/exec/abcd1234',
+      { force: true },
+    );
+    const metadata = prisma.execution.update.mock.calls[0][0].data.metadata;
+    expect(metadata.cancellationReason).toBe('用户取消');
+    expect(metadata.isolation.cleanedAt).toBeTruthy();
+    expect(metadata.isolation.mode).toBe('worktree');
+  });
+
+  it('无 isolation 的执行取消：行为与既有语义一致（仅 cancellationReason）', async () => {
+    const { svc, worktree, prisma } = makeCancelService({});
+
+    await svc.cancelExecution('exec-1', '用户取消');
+
+    expect(worktree.cleanup).not.toHaveBeenCalled();
+    expect(prisma.execution.update.mock.calls[0][0].data.metadata).toEqual({
+      cancellationReason: '用户取消',
+    });
+  });
+});

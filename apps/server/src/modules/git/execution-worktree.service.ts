@@ -18,13 +18,19 @@
  *
  * Windows 兼容：路径一律 path.join；execFile 不经 shell，无引号转义问题
  * （与 docs-git.service.ts 同先例）。
+ *
+ * 依赖边界（重要）：本服务**零 DI 依赖**（git 走 PATH 解析，git 二进制探测
+ * 自包含 + 5min 缓存）。曾有注入 GitToolService 的版本，但其所在 GitModule
+ * 的模块链（GitHub → Integration → Linear → Issue）与 decision/execution
+ * 消费方构成 TS 级模块环（contract-export 启动即崩），故解耦为独立零依赖
+ * 模块 ExecutionWorktreeModule——代价是不读用户自配 git 路径（git.tool.path），
+ * 与 docs-git.service.ts 的 PATH 先例一致。
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
-import { GitToolService } from './git-tool.service';
 
 const execFileP = promisify(execFile);
 
@@ -132,8 +138,11 @@ export interface ExecutionWorktreeInitOptions {
 @Injectable()
 export class ExecutionWorktreeService {
   private readonly logger = new Logger(ExecutionWorktreeService.name);
+  /** git 二进制版本探测缓存（5min，与 GitToolService 缓存口径一致） */
+  private cachedVersion: { version?: string; at: number } | null = null;
+  private static readonly VERSION_CACHE_TTL_MS = 5 * 60_000;
 
-  constructor(private readonly gitTool: GitToolService) {}
+  constructor() {}
 
   // ------------------------------------------------------------------ 基础通道
 
@@ -146,10 +155,9 @@ export class ExecutionWorktreeService {
     args: string[],
     opts?: { env?: NodeJS.ProcessEnv; allowFailure?: number[] },
   ): Promise<{ code: number; stdout: string; stderr: string }> {
-    const gitPath = this.gitTool.getGitExecutablePath();
     try {
       const { stdout } = await execFileP(
-        gitPath,
+        'git',
         ['--no-pager', '-c', 'core.quotepath=false', ...args],
         {
           cwd,
@@ -215,21 +223,33 @@ export class ExecutionWorktreeService {
 
   /**
    * git 可用性与 merge-tree 能力探测（设计稿：git < 2.38 视同降级 git-too-old）。
-   * 复用 GitToolService 的可用性检查（含用户自配 git 路径与 5min 缓存）。
+   * 自包含探测（execFile 'git --version'，5min 缓存）——不依赖 GitToolService
+   *（模块环约束见文件头）。
    */
   async checkMergeTreeSupport(): Promise<{
     ready: boolean;
     version?: string;
     reason?: 'git-unavailable' | 'git-too-old';
   }> {
-    let version: string | undefined;
-    try {
-      const info = await this.gitTool.checkGitAvailability();
-      if (!info.available) {
+    let version = this.cachedVersion?.version;
+    if (
+      !this.cachedVersion ||
+      Date.now() - this.cachedVersion.at >
+        ExecutionWorktreeService.VERSION_CACHE_TTL_MS
+    ) {
+      try {
+        const { stdout } = await execFileP('git', ['--version'], {
+          timeout: 5000,
+          windowsHide: true,
+        });
+        version = /git version ([\d.]+)/.exec(stdout)?.[1] ?? stdout.trim();
+        this.cachedVersion = { version, at: Date.now() };
+      } catch {
+        this.cachedVersion = { version: undefined, at: Date.now() };
         return { ready: false, reason: 'git-unavailable' };
       }
-      version = info.version;
-    } catch {
+    }
+    if (!version) {
       return { ready: false, reason: 'git-unavailable' };
     }
     return {

@@ -14,27 +14,13 @@ import {
   compareGitVersion,
   parseDiffStatSummary,
 } from './execution-worktree.service';
-import { GitToolService } from './git-tool.service';
 
 let repoRoot: string;
 let service: ExecutionWorktreeService;
 
-const loggerMock = {
-  setContext: vi.fn(),
-  log: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
-};
-
-/** GitToolService 直构造：prisma 无自配 git 路径（findVO 返回 null），走 PATH 上的 git */
+/** 服务零 DI 依赖（git 走 PATH 解析），直构造即可 */
 function buildWorktreeService(): ExecutionWorktreeService {
-  const gitTool = new GitToolService(
-    loggerMock as never,
-    {
-      appConfig: { findFirst: async () => null },
-    } as never,
-  );
-  return new ExecutionWorktreeService(gitTool);
+  return new ExecutionWorktreeService();
 }
 
 async function git(cwd: string, args: string[]): Promise<string> {

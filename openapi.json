@@ -11069,7 +11069,8 @@
                 "gate",
                 "workflow_def",
                 "release",
-                "contract_conflict"
+                "contract_conflict",
+                "integration"
               ],
               "type": "string"
             }
@@ -65766,7 +65767,8 @@
               "gate",
               "workflow_def",
               "release",
-              "contract_conflict"
+              "contract_conflict",
+              "integration"
             ]
           },
           "sourceId": {
@@ -65938,7 +65940,8 @@
               "gate",
               "workflow_def",
               "release",
-              "contract_conflict"
+              "contract_conflict",
+              "integration"
             ]
           },
           "title": {
@@ -66004,7 +66007,8 @@
               "gate",
               "workflow_def",
               "release",
-              "contract_conflict"
+              "contract_conflict",
+              "integration"
             ]
           },
           "projectId": {

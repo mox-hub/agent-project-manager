@@ -4,11 +4,20 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
+import * as fs from 'fs';
 import { ProposalService } from './proposal.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { ContractBindingService } from '../contract/contract-binding.service';
+import { ExecutionWorktreeService } from '../git/execution-worktree.service';
 import { computeProposalFingerprint } from './decision-fingerprint';
+
+// integration applier 的存在性校验走 fs.existsSync——单测环境不存在真实
+// worktree 目录，统一 mock：默认「存在」，手动删场用例逐次覆写为 false
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
+  return { ...actual, existsSync: vi.fn(() => true) };
+});
 
 describe('ProposalService', () => {
   let service: ProposalService;
@@ -40,6 +49,8 @@ describe('ProposalService', () => {
     execution: {
       aggregate: vi.fn(),
       groupBy: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
     },
     project: {
       findUnique: vi.fn(),
@@ -63,6 +74,17 @@ describe('ProposalService', () => {
     resolveConflict: vi.fn(),
   };
 
+  /** G5-b：integration applier 的受控 git 通道 mock */
+  const mockWorktree = {
+    getBranchHead: vi.fn(),
+    getHead: vi.fn(),
+    mainWorkspaceDirtyFiles: vi.fn().mockResolvedValue([]),
+    detectConflicts: vi.fn().mockResolvedValue({ clean: true, files: [] }),
+    isBranchMerged: vi.fn().mockResolvedValue(false),
+    integrate: vi.fn().mockResolvedValue({ mergeCommit: 'merge123sha' }),
+    cleanup: vi.fn().mockResolvedValue(undefined),
+  };
+
   const tx = {
     issue: {
       create: vi.fn(),
@@ -80,6 +102,9 @@ describe('ProposalService', () => {
     acceptanceCriteria: {
       createMany: vi.fn(),
     },
+    execution: {
+      update: vi.fn(),
+    },
   };
 
   const mockTx = vi.fn();
@@ -94,6 +119,7 @@ describe('ProposalService', () => {
         },
         { provide: MessageBusService, useValue: { publish: vi.fn() } },
         { provide: ContractBindingService, useValue: mockContractBindings },
+        { provide: ExecutionWorktreeService, useValue: mockWorktree },
       ],
     }).compile();
 
@@ -953,6 +979,268 @@ describe('ProposalService', () => {
       const result = await service.get('pr-get-1');
 
       expect(result.approvalStale).toBe(false);
+    });
+  });
+
+  describe('integration accept（G5-b 成果合入 applier 六步）', () => {
+    const integrationProposal = {
+      id: 'pr-int-1',
+      kind: 'integration',
+      status: 'pending',
+      projectId: 'p1',
+      issueId: 't-1',
+      title: 'AI 执行完成：2 个文件 +10 −2，建议合入',
+      approvedFingerprint: 'head_sha_at_card',
+      payload: {
+        executionId: 'exec_1',
+        issueId: 't-1',
+        projectRoot: 'E:\\repo',
+        worktreePath: 'E:\\repo\\.apm\\worktrees\\abcd1234',
+        branch: 'apm/exec/abcd1234',
+        baseRef: 'base_sha',
+        headRef: 'head_sha_at_card',
+        files: ['a.ts'],
+        filesTotal: 1,
+        commitCount: 1,
+        mainDirty: [],
+      },
+    };
+
+    const executionRow = {
+      id: 'exec_1',
+      metadata: { isolation: { mode: 'worktree' } },
+    };
+
+    function expectHappyPath() {
+      mockWorktree.getBranchHead.mockResolvedValue('head_sha_at_card');
+      mockWorktree.mainWorkspaceDirtyFiles.mockResolvedValue([]);
+      mockWorktree.detectConflicts.mockResolvedValue({
+        clean: true,
+        files: [],
+      });
+      mockWorktree.isBranchMerged.mockResolvedValue(false);
+      mockWorktree.integrate.mockResolvedValue({ mergeCommit: 'merge123sha' });
+      mockPrismaService.execution.findUnique.mockResolvedValue(executionRow);
+    }
+
+    it('六步成功：merge --no-ff → force 清理 → 事务内记账 merged，resolution 带 mergeCommit', async () => {
+      expectHappyPath();
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        integrationProposal,
+      );
+
+      await service.resolve('pr-int-1', { action: 'accept' }, 'user_1');
+
+      expect(mockWorktree.integrate).toHaveBeenCalledWith(
+        'E:\\repo',
+        'apm/exec/abcd1234',
+        expect.stringContaining('exec_1'),
+      );
+      expect(mockWorktree.cleanup).toHaveBeenCalledWith(
+        'E:\\repo',
+        'E:\\repo\\.apm\\worktrees\\abcd1234',
+        'apm/exec/abcd1234',
+        { force: true },
+      );
+      // 记账在事务内：metadata.integration={status:merged, mergeCommit}
+      expect(tx.execution.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'exec_1' },
+          data: {
+            metadata: expect.objectContaining({
+              integration: expect.objectContaining({
+                status: 'merged',
+                mergeCommit: 'merge123sha',
+              }),
+            }),
+          },
+        }),
+      );
+      // 决议状态 accepted + resolution 落 mergeCommit
+      const updateArg =
+        mockPrismaService.decisionProposal.update.mock.calls[0][0];
+      expect(updateArg.data.status).toBe('accepted');
+      expect(updateArg.data.resolution).toEqual(
+        expect.objectContaining({
+          action: 'accept',
+          mergeCommit: 'merge123sha',
+        }),
+      );
+    });
+
+    it('① 存在性失败（分支被外部删）：可读 400，卡保持 pending，不碰 git', async () => {
+      expectHappyPath();
+      mockWorktree.getBranchHead.mockRejectedValue(
+        new Error('unknown revision'),
+      );
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        integrationProposal,
+      );
+
+      await expect(
+        service.resolve('pr-int-1', { action: 'accept' }, 'user_1'),
+      ).rejects.toThrow(/执行现场已清理/);
+      expect(mockWorktree.integrate).not.toHaveBeenCalled();
+      expect(mockPrismaService.decisionProposal.update).not.toHaveBeenCalled();
+    });
+
+    it('① worktree 目录被手动删：可读 400', async () => {
+      expectHappyPath();
+      vi.mocked(fs.existsSync).mockReturnValueOnce(false);
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        integrationProposal,
+      );
+      await expect(
+        service.resolve('pr-int-1', { action: 'accept' }, 'user_1'),
+      ).rejects.toThrow(/worktree 目录已不存在/);
+      expect(mockWorktree.integrate).not.toHaveBeenCalled();
+    });
+
+    it('② 指纹不匹配（分支在批准后被外部动过）：400 拒绝沿用旧印象', async () => {
+      expectHappyPath();
+      mockWorktree.getBranchHead.mockResolvedValue('moved_head_sha');
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        integrationProposal,
+      );
+
+      await expect(
+        service.resolve('pr-int-1', { action: 'accept' }, 'user_1'),
+      ).rejects.toThrow(/批准后发生变化/);
+      expect(mockWorktree.integrate).not.toHaveBeenCalled();
+    });
+
+    it('③ 脏工作区复核失败：400 附前 5 个文件，卡保持 pending', async () => {
+      expectHappyPath();
+      mockWorktree.mainWorkspaceDirtyFiles.mockResolvedValue([
+        'M f1.ts',
+        'M f2.ts',
+        '?? f3.ts',
+        'M f4.ts',
+        'M f5.ts',
+        'M f6.ts',
+      ]);
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        integrationProposal,
+      );
+
+      await expect(
+        service.resolve('pr-int-1', { action: 'accept' }, 'user_1'),
+      ).rejects.toThrow(/主工作区有未提交变更/);
+      expect(mockWorktree.detectConflicts).not.toHaveBeenCalled();
+      expect(mockPrismaService.decisionProposal.update).not.toHaveBeenCalled();
+    });
+
+    it('④ 冲突预检失败：400 附冲突清单，不 merge 不清理', async () => {
+      expectHappyPath();
+      mockWorktree.detectConflicts.mockResolvedValue({
+        clean: false,
+        files: ['a.ts', 'b.ts'],
+      });
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        integrationProposal,
+      );
+
+      await expect(
+        service.resolve('pr-int-1', { action: 'accept' }, 'user_1'),
+      ).rejects.toThrow(/存在冲突/);
+      expect(mockWorktree.integrate).not.toHaveBeenCalled();
+      expect(mockWorktree.cleanup).not.toHaveBeenCalled();
+      expect(mockPrismaService.decisionProposal.update).not.toHaveBeenCalled();
+    });
+
+    it('幂等恢复：记账已 merged（merge 成功但状态更新失败的窗口）→ 跳过 git 直接补 mergeCommit', async () => {
+      mockPrismaService.execution.findUnique.mockResolvedValue({
+        ...executionRow,
+        metadata: {
+          integration: { status: 'merged', mergeCommit: 'already_merged' },
+        },
+      });
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
+        integrationProposal,
+      );
+
+      await service.resolve('pr-int-1', { action: 'accept' }, 'user_1');
+
+      expect(mockWorktree.getBranchHead).not.toHaveBeenCalled();
+      expect(mockWorktree.integrate).not.toHaveBeenCalled();
+      const updateArg =
+        mockPrismaService.decisionProposal.update.mock.calls[0][0];
+      expect(updateArg.data.resolution).toEqual(
+        expect.objectContaining({ mergeCommit: 'already_merged' }),
+      );
+    });
+  });
+
+  describe('integration reject（G5-b：force 清理 + 记账 rejected）', () => {
+    it('reject：cleanup(force) 清场 + metadata.integration=rejected + 决议留痕', async () => {
+      const proposal = {
+        id: 'pr-int-2',
+        kind: 'integration',
+        status: 'pending',
+        projectId: 'p1',
+        issueId: 't-1',
+        title: 'AI 执行完成：建议合入',
+        payload: {
+          executionId: 'exec_2',
+          projectRoot: 'E:\\repo',
+          worktreePath: 'E:\\repo\\.apm\\worktrees\\deadbeef',
+          branch: 'apm/exec/deadbeef',
+        },
+      };
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(proposal);
+      mockPrismaService.execution.findUnique.mockResolvedValue({
+        id: 'exec_2',
+        metadata: {},
+      });
+
+      await service.resolve(
+        'pr-int-2',
+        { action: 'reject', reason: '方向不对，重新做' },
+        'user_1',
+      );
+
+      expect(mockWorktree.cleanup).toHaveBeenCalledWith(
+        'E:\\repo',
+        'E:\\repo\\.apm\\worktrees\\deadbeef',
+        'apm/exec/deadbeef',
+        { force: true },
+      );
+      expect(tx.execution.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'exec_2' },
+          data: {
+            metadata: expect.objectContaining({
+              integration: expect.objectContaining({ status: 'rejected' }),
+            }),
+          },
+        }),
+      );
+      const updateArg =
+        mockPrismaService.decisionProposal.update.mock.calls[0][0];
+      expect(updateArg.data.status).toBe('rejected');
+      expect(updateArg.data.resolution).toEqual(
+        expect.objectContaining({ action: 'reject', cleanedUp: true }),
+      );
+    });
+
+    it('非 apm/exec/ 前缀分支的 payload：400 拒绝操作', async () => {
+      const proposal = {
+        id: 'pr-int-3',
+        kind: 'integration',
+        status: 'pending',
+        payload: {
+          executionId: 'exec_3',
+          projectRoot: 'E:\\repo',
+          worktreePath: 'E:\\repo\\.git',
+          branch: 'main',
+        },
+      };
+      mockPrismaService.decisionProposal.findUnique.mockResolvedValue(proposal);
+
+      await expect(
+        service.resolve('pr-int-3', { action: 'accept' }, 'user_1'),
+      ).rejects.toThrow(/命名空间/);
+      expect(mockWorktree.cleanup).not.toHaveBeenCalled();
     });
   });
 });

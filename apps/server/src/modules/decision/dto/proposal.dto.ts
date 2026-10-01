@@ -23,6 +23,7 @@ export const PROPOSAL_KINDS = [
   'workflow_def',
   'release',
   'contract_conflict',
+  'integration',
 ] as const;
 
 export class CreateProposalDto {

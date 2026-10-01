@@ -9557,7 +9557,7 @@ export interface components {
              * @description 决策来源类型
              * @enum {string}
              */
-            kind: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict";
+            kind: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict" | "integration";
             /** @description 原始实体 ID */
             sourceId: string;
             /** @description 原始状态（pending / in_review / …） */
@@ -9627,7 +9627,7 @@ export interface components {
              * @description 提案类型
              * @enum {string}
              */
-            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict";
+            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict" | "integration";
             /** @description 决策陈述（一句话问句） */
             title: string;
             /** @description 提案数据（结构随 kind 而定，见 docs/roadmap/decision-cards-roadmap.md） */
@@ -9656,7 +9656,7 @@ export interface components {
              * @description 提案类型
              * @enum {string}
              */
-            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict";
+            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict" | "integration";
             projectId?: string | null;
             issueId?: string | null;
             /** @description 决策陈述 */
@@ -22414,7 +22414,7 @@ export interface operations {
                 limit?: string;
                 /** @description 默认 0 */
                 offset?: string;
-                kind?: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict";
+                kind?: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify" | "gate" | "workflow_def" | "release" | "contract_conflict" | "integration";
             };
             header?: never;
             path?: never;

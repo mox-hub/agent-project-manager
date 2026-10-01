@@ -22,10 +22,17 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { LoggerService } from '@/core/logger/logger.service';
+import { ACTIVE_EXECUTION_STATUSES } from './execution.service';
+import {
+  ExecutionIsolationMetadata,
+  ExecutionWorktreeService,
+} from '@/modules/git/execution-worktree.service';
 
 const DEFAULT_STALL_THRESHOLD_MS = 5 * 60_000;
 const DEFAULT_PENDING_TTL_MS = 24 * 60 * 60_000;
 const RECONCILE_INTERVAL_MS = 120_000;
+/** G5-b：失败执行的 worktree 诊断保留期（设计稿裁决 5：7 天 TTL 清理） */
+const DEFAULT_WORKTREE_TTL_MS = 7 * 24 * 60 * 60_000;
 
 interface DispatchMetaRow {
   id: string;
@@ -45,6 +52,7 @@ export class ExecutionReconcileService {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
     private readonly logger: LoggerService,
+    private readonly worktree: ExecutionWorktreeService,
   ) {
     this.logger.setContext('ExecutionReconcile');
   }
@@ -67,7 +75,100 @@ export class ExecutionReconcileService {
         err instanceof Error ? err.stack : String(err),
       );
     }
+    try {
+      await this.sweepExecutionWorktrees();
+    } catch (err) {
+      this.logger.error(
+        'sweepExecutionWorktrees failed',
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
     // workflow 悬挂对账在 WorkflowService 内自挂调度（避免模块环依赖）
+  }
+
+  /**
+   * G5-b worktree 巡检（设计稿 §5.1 inspect / 裁决 5）：
+   * 1. 失败执行的 worktree 是诊断资产——保留 7 天 TTL 后 force 清理并回填
+   *    isolation.cleanedAt（重复巡检幂等跳过）；
+   * 2. 悬挂元数据收敛：对仍活跃的 worktree 执行所在项目根做 worktree prune
+   *    （用户手删目录等孤儿场景；成功执行待决卡的场景 prune 不伤活场）。
+   */
+  private async sweepExecutionWorktrees(): Promise<void> {
+    const ttl =
+      Number(process.env.EXEC_WORKTREE_TTL_MS) || DEFAULT_WORKTREE_TTL_MS;
+    const cutoff = new Date(Date.now() - ttl);
+
+    const failedRows = await this.prisma.execution.findMany({
+      where: { status: 'failed', updatedAt: { lt: cutoff } },
+      select: { id: true, metadata: true },
+      take: 500,
+      orderBy: { updatedAt: 'desc' },
+    });
+    const rootsToPrune = new Set<string>();
+    for (const row of failedRows) {
+      const isolation = (
+        row.metadata as { isolation?: ExecutionIsolationMetadata } | null
+      )?.isolation;
+      if (isolation?.mode !== 'worktree' || isolation.cleanedAt) continue;
+      if (!isolation.projectRoot) continue;
+      try {
+        await this.worktree.cleanup(
+          isolation.projectRoot,
+          isolation.worktreePath,
+          isolation.branch,
+          { force: true },
+        );
+        await this.prisma.execution.update({
+          where: { id: row.id },
+          data: {
+            metadata: {
+              ...((row.metadata as Record<string, unknown>) ?? {}),
+              isolation: {
+                ...isolation,
+                cleanedAt: new Date().toISOString(),
+              },
+            },
+          },
+        });
+        this.logger.log(
+          `worktree swept (TTL ${Math.round(ttl / 3600_000)}h): run=${row.id} branch=${isolation.branch}`,
+        );
+      } catch (err) {
+        this.logger.warn(
+          `worktree TTL sweep failed for ${row.id}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      }
+      rootsToPrune.add(isolation.projectRoot);
+    }
+
+    // 活跃执行的 worktree 所在项目根：悬挂 admin 记录收敛（prune 不动活场）
+    const activeRows = await this.prisma.execution.findMany({
+      where: { status: { in: [...ACTIVE_EXECUTION_STATUSES] } },
+      select: { metadata: true },
+      take: 500,
+      orderBy: { updatedAt: 'desc' },
+    });
+    for (const row of activeRows) {
+      const isolation = (
+        row.metadata as { isolation?: ExecutionIsolationMetadata } | null
+      )?.isolation;
+      if (isolation?.mode === 'worktree' && isolation.projectRoot) {
+        rootsToPrune.add(isolation.projectRoot);
+      }
+    }
+    for (const root of rootsToPrune) {
+      try {
+        await this.worktree.inspect(root);
+      } catch (err) {
+        this.logger.warn(
+          `worktree prune failed for ${root}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      }
+    }
   }
 
   /**

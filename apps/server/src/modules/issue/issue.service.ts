@@ -32,6 +32,7 @@ import { validateCustomFields } from '../issue-type/issue-type.service';
 import { IssueIdService } from './services/issue-id.service';
 import { IssueTypeService } from '../issue-type/issue-type.service';
 import { ExecutionService } from '../execution/execution.service';
+import { ACTIVE_EXECUTION_STATUSES } from '../execution/execution.service';
 import { ActivityChange, ActivityService } from '../activity/activity.service';
 
 const TASK_FILTER_KEYS = [
@@ -1935,6 +1936,23 @@ export class IssueService {
       dto.contextPack ?? (await this.buildTaskExecutionContext(issueId));
     const requiresApproval = dto.requiresApproval ?? true;
     const actionType = dto.actionType || 'task.write';
+
+    // G5-b 单活跃互斥收口（设计稿 §5.6 必做项）：此路径此前绕过
+    // createExecutionRun 的活跃检查直创执行——补同款检查（复用同一常量与
+    // 同一指路口径），堵住跨路径绕过单活跃约束的口子。
+    const activeExecution = await this.prisma.execution.findFirst({
+      where: {
+        issueId,
+        status: { in: [...ACTIVE_EXECUTION_STATUSES] },
+      },
+      select: { id: true, title: true, status: true },
+    });
+    if (activeExecution) {
+      throw new BadRequestException(
+        `该工单已存在活跃执行「${activeExecution.title ?? activeExecution.id}」（ID：${activeExecution.id}，状态：${activeExecution.status}），暂不可新建：` +
+          `请先取消它（执行详情「取消执行」动作，或取消接口 POST /_api/ai/execution-runs/${activeExecution.id}/cancel），再重新执行或新建`,
+      );
+    }
 
     const execution = await this.prisma.execution.create({
       data: {
