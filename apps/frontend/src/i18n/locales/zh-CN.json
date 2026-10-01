@@ -998,6 +998,23 @@
       "totalTokens": "总 Tokens",
       "cost": "费用"
     },
+    "isolation": {
+      "worktreeBadge": "隔离执行 · {{branch}}",
+      "worktreeTooltip": "分支 {{branch}}\nworktree 路径：{{path}}",
+      "sharedRootBadge": "未隔离 · 共享目录",
+      "reason": {
+        "not-git-repo": "项目根不是 git 仓库，无法创建隔离 worktree",
+        "worktree-add-failed": "worktree 创建失败，已回落共享目录执行",
+        "disabled": "执行隔离已被配置关闭",
+        "git-too-old": "git 版本过低（merge-tree 冲突预检需要 ≥ 2.38）",
+        "unknown": "未隔离原因未知"
+      },
+      "sectionTitle": "执行隔离",
+      "branchLabel": "分支",
+      "pathLabel": "隔离路径",
+      "baseLabel": "基线",
+      "retentionHint": "失败现场将保留 7 天供诊断，之后由系统自动清理"
+    },
     "truncated": "已截断"
   },
   "execution": {
@@ -1114,7 +1131,8 @@
     },
     "kind": {
       "approval": "审批",
-      "acceptance": "验收"
+      "acceptance": "验收",
+      "integration": "成果合入"
     },
     "proposer": {
       "ai_agent": "AI 成员",
@@ -1149,7 +1167,8 @@
       "approveRelease": "批准发布",
       "acceptFile": "采纳文件侧",
       "acceptDb": "采纳平台侧",
-      "detach": "解绑"
+      "detach": "解绑",
+      "merge": "合入主工作区"
     },
     "conflict": {
       "derivedBadge": "派生型",
@@ -1175,6 +1194,20 @@
       "scopeUnknown": "范围未圈定",
       "gatePassed": "已通过",
       "gateFailed": "{{n}} 项未过"
+    },
+    "integration": {
+      "impactFiles": "变更文件",
+      "filesCount": "{{n}} 个",
+      "impactDiff": "增删",
+      "impactCommits": "提交数",
+      "recommend": "建议合入：改动发生在隔离分支上，确认后将以 merge --no-ff 进入主工作区并清理执行现场；驳回则丢弃分支。",
+      "dirtyWarning": "主工作区有未提交变更，合入前请先处理（确认时会再次复核）：",
+      "expandDetails": "展开细节（{{n}} 个文件）",
+      "collapseDetails": "收起细节",
+      "filesOverflow": "…另有 {{n}} 个文件未展示",
+      "baseLabel": "基于",
+      "headLabel": "分支头",
+      "mergeHint": "合入动作会复核冲突与工作区状态：存在冲突或未提交变更时合入会被拒绝，卡片保留待决，可改选驳回。"
     },
     "workflow": {
       "impactMode": "变更",

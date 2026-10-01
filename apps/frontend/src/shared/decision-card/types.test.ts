@@ -23,6 +23,7 @@ const SERVER_PROPOSAL_KINDS = [
   'workflow_def',
   'release',
   'contract_conflict',
+  'integration',
 ];
 
 describe('PROPOSAL_KINDS', () => {
@@ -48,5 +49,10 @@ describe('PROPOSAL_KINDS', () => {
   it('contract_conflict 必须在列（否则契约冲突卡会被误当「验收通过」路由到验收端点）', () => {
     expect(PROPOSAL_KINDS).toContain('contract_conflict');
     expect(isProposalKind('contract_conflict')).toBe(true);
+  });
+
+  it('integration 必须在列（G5-b：成果合入卡，否则会被误路由到验收端点）', () => {
+    expect(PROPOSAL_KINDS).toContain('integration');
+    expect(isProposalKind('integration')).toBe(true);
   });
 });

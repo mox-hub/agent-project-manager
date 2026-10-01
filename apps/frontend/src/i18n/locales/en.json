@@ -998,6 +998,23 @@
       "totalTokens": "Total tokens",
       "cost": "Cost"
     },
+    "isolation": {
+      "worktreeBadge": "Isolated · {{branch}}",
+      "worktreeTooltip": "Branch {{branch}}\nworktree path: {{path}}",
+      "sharedRootBadge": "Not isolated · shared folder",
+      "reason": {
+        "not-git-repo": "Project root is not a git repository; cannot create an isolated worktree",
+        "worktree-add-failed": "Worktree creation failed; fell back to the shared folder",
+        "disabled": "Execution isolation is disabled by configuration",
+        "git-too-old": "Git is too old (merge-tree conflict precheck needs ≥ 2.38)",
+        "unknown": "Isolation unavailable for an unknown reason"
+      },
+      "sectionTitle": "Execution isolation",
+      "branchLabel": "Branch",
+      "pathLabel": "Worktree path",
+      "baseLabel": "Base",
+      "retentionHint": "The failed-run scene is kept for 7 days for diagnosis, then cleaned up automatically"
+    },
     "truncated": "truncated"
   },
   "execution": {
@@ -1114,7 +1131,8 @@
     },
     "kind": {
       "approval": "Approval",
-      "acceptance": "Acceptance"
+      "acceptance": "Acceptance",
+      "integration": "Integration"
     },
     "proposer": {
       "ai_agent": "AI member",
@@ -1149,7 +1167,8 @@
       "approveRelease": "Approve release",
       "acceptFile": "Keep file version",
       "acceptDb": "Keep platform version",
-      "detach": "Unbind"
+      "detach": "Unbind",
+      "merge": "Merge to workspace"
     },
     "conflict": {
       "derivedBadge": "derived",
@@ -1175,6 +1194,20 @@
       "scopeUnknown": "Scope not set",
       "gatePassed": "passing",
       "gateFailed": "{{n}} failing"
+    },
+    "integration": {
+      "impactFiles": "Changed files",
+      "filesCount": "{{n}}",
+      "impactDiff": "Diff",
+      "impactCommits": "Commits",
+      "recommend": "Merge recommended: changes live on an isolated branch. Confirming merges them into the main workspace with --no-ff and cleans up the execution scene; rejecting discards the branch.",
+      "dirtyWarning": "Main workspace has uncommitted changes — settle them before merging (re-checked on confirm):",
+      "expandDetails": "Details ({{n}} files)",
+      "collapseDetails": "Hide details",
+      "filesOverflow": "…and {{n}} more files",
+      "baseLabel": "base",
+      "headLabel": "head",
+      "mergeHint": "Confirming re-checks conflicts and workspace cleanliness: a dirty workspace or conflicts refuse the merge and keep this card pending, so you can still reject."
     },
     "workflow": {
       "impactMode": "Change",

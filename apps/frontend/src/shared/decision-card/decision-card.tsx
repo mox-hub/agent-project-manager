@@ -17,6 +17,7 @@ import {
   FileCheck,
   FileText,
   GitBranch,
+  GitMerge,
   GitPullRequest,
   Lightbulb,
   ListChecks,
@@ -159,6 +160,27 @@ interface ContractConflictPayload {
   }>;
 }
 
+/** integration 提案 payload（G5-b 成果合入，与服务端 IntegrationProposalPayload 对齐） */
+interface IntegrationProposalPayload {
+  executionId?: string;
+  issueId?: string | null;
+  projectRoot?: string;
+  worktreePath?: string;
+  branch?: string;
+  baseRef?: string;
+  headRef?: string;
+  diffStat?: string;
+  insertions?: number;
+  deletions?: number;
+  /** 文件清单（服务端已截 top 20） */
+  files?: string[];
+  filesTotal?: number;
+  commitCount?: number;
+  /** 卡创建时刻主工作区未提交变更（非空=合入前需先处理，决策时刻会再复核） */
+  mainDirty?: string[];
+  taskTitle?: string;
+}
+
 /** 各 kind 的动作定义（快捷键 = 数组序号；闭环端点见 useResolveDecision） */
 export const KIND_ACTIONS: Record<DecisionKind, DecisionActionDef[]> = {
   approval: [
@@ -209,6 +231,13 @@ export const KIND_ACTIONS: Record<DecisionKind, DecisionActionDef[]> = {
     { action: 'accept_file', label: 'decision.action.acceptFile', icon: FileCheck },
     { action: 'accept_db', label: 'decision.action.acceptDb', icon: Database },
     { action: 'detach', label: 'decision.action.detach', icon: Unlink },
+    { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
+  ],
+  // G5-b 成果合入：accept = 主工作区 merge --no-ff + 清理执行现场（服务端六步
+  // 校验：存在性/指纹/脏工作区/冲突预检，任一失败卡保持 pending 附可读原因）；
+  // reject = 清理分支与 worktree 现场。
+  integration: [
+    { action: 'accept', label: 'decision.action.merge', icon: GitMerge },
     { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
   ],
 };
@@ -1119,6 +1148,138 @@ function buildContractConflictSlots(decision: Decision, t: TFunc): DecisionSlots
   };
 }
 
+/**
+ * integration 主体（G5-b 成果合入）：可展开细节层需要本地状态，
+ * 与 GateBody/ClarifyBody 同构抽成组件（builder 保持纯函数）。
+ */
+function IntegrationBody({ decision }: { decision: Decision }) {
+  const { t } = useTranslation();
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const p = (decision.payload ?? {}) as unknown as IntegrationProposalPayload;
+  const files = p.files ?? [];
+  const filesTotal = p.filesTotal ?? files.length;
+  const overflow = filesTotal - files.length;
+  const mainDirty = p.mainDirty ?? [];
+  const shortBranch = (p.branch ?? '').replace('apm/exec/', '');
+
+  return (
+    <div className="space-y-2" data-ai="decision-integration-body">
+      {/* 结论行：来自哪个工单 + 分支 */}
+      <div className="flex items-center gap-2.5 rounded-lg border border-accent-green/30 bg-accent-green-light/40 px-2.5 py-1.5 text-xs">
+        <GitMerge className="size-4 shrink-0 text-accent-green" />
+        <span className="min-w-0 flex-1 truncate font-medium text-content-text">
+          {p.taskTitle ?? decision.taskTitle ?? p.executionId ?? '—'}
+        </span>
+        <span className="shrink-0 font-mono text-2xs text-content-text-muted">
+          apm/exec/{shortBranch}
+        </span>
+      </div>
+      {/* 推荐语：把「合入会发生什么」用一句话说清 */}
+      <p className="text-2xs leading-relaxed text-content-text-secondary">
+        {t('decision.integration.recommend')}
+      </p>
+
+      {/* 脏工作区警示：卡创建时已预检到主工作区有未提交变更 */}
+      {mainDirty.length > 0 ? (
+        <div
+          className="rounded-lg border border-accent-yellow/40 bg-accent-yellow-light/30 px-2.5 py-1.5 text-2xs leading-relaxed"
+          data-ai="integration-dirty-warning"
+        >
+          <p className="flex items-center gap-1.5 font-medium text-content-text">
+            <AlertTriangle className="size-3 shrink-0 text-accent-yellow" />
+            {t('decision.integration.dirtyWarning')}
+          </p>
+          <p className="mt-0.5 font-mono text-content-text-secondary">
+            {mainDirty.join(' · ')}
+          </p>
+        </div>
+      ) : null}
+
+      {/* 可展开细节层（A-18：展开=主动追问） */}
+      <div className="rounded-lg border border-border/60">
+        <button
+          type="button"
+          onClick={() => setDetailsOpen(!detailsOpen)}
+          className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-2xs font-medium text-content-text-secondary hover:bg-content-bg-secondary/60"
+          data-ai="integration-details-toggle"
+        >
+          <ChevronDown
+            className={cn('size-3 transition-transform', detailsOpen && 'rotate-180')}
+          />
+          {detailsOpen
+            ? t('decision.integration.collapseDetails')
+            : t('decision.integration.expandDetails', { n: filesTotal })}
+        </button>
+        {detailsOpen ? (
+          <div className="space-y-2 border-t border-border/60 px-2.5 py-2">
+            {/* 文件清单（top 20 + 溢出计数） */}
+            <div className="space-y-0.5">
+              {files.map((f) => (
+                <p
+                  key={f}
+                  className="truncate font-mono text-2xs text-content-text-secondary"
+                >
+                  {f}
+                </p>
+              ))}
+              {overflow > 0 ? (
+                <p className="text-2xs text-content-text-muted">
+                  {t('decision.integration.filesOverflow', { n: overflow })}
+                </p>
+              ) : null}
+            </div>
+            {/* 分支/基线/HEAD 溯源 */}
+            <div className="space-y-0.5 font-mono text-2xs text-content-text-muted">
+              <p>
+                {t('decision.integration.baseLabel')} {p.baseRef?.slice(0, 12) ?? '—'}
+              </p>
+              <p>
+                {t('decision.integration.headLabel')} {p.headRef?.slice(0, 12) ?? '—'}
+              </p>
+              <p className="break-all">{p.worktreePath}</p>
+            </div>
+            {/* 合入语义 */}
+            <p className="text-2xs leading-relaxed text-content-text-muted">
+              {t('decision.integration.mergeHint')}
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function buildIntegrationSlots(decision: Decision, t: TFunc): DecisionSlots {
+  const p = (decision.payload ?? {}) as unknown as IntegrationProposalPayload;
+
+  const impact: DecisionImpactItem[] = [
+    {
+      label: t('decision.integration.impactFiles'),
+      value: t('decision.integration.filesCount', {
+        n: p.filesTotal ?? (p.files?.length ?? 0),
+      }),
+      icon: FileText,
+      tone: 'blue',
+    },
+    {
+      label: t('decision.integration.impactDiff'),
+      value: `+${p.insertions ?? 0} −${p.deletions ?? 0}`,
+      icon: GitMerge,
+    },
+    {
+      label: t('decision.integration.impactCommits'),
+      value: String(p.commitCount ?? 0),
+      icon: GitBranch,
+    },
+  ];
+
+  return {
+    body: <IntegrationBody decision={decision} />,
+    impact,
+    evidence: decision.detail ? <p>{decision.detail}</p> : undefined,
+  };
+}
+
 type TFunc = (k: string, o?: Record<string, unknown>) => string;
 
 const SLOT_BUILDERS: Partial<Record<DecisionKind, (d: Decision, t: TFunc) => DecisionSlots>> = {
@@ -1132,6 +1293,7 @@ const SLOT_BUILDERS: Partial<Record<DecisionKind, (d: Decision, t: TFunc) => Dec
   workflow_def: buildWorkflowDefSlots,
   release: buildReleaseSlots,
   contract_conflict: buildContractConflictSlots,
+  integration: buildIntegrationSlots,
 };
 
 export interface DecisionCardProps {

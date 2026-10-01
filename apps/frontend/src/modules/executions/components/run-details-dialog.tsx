@@ -44,6 +44,7 @@ import {
 import { RunEventList } from './run-event-list';
 import { RunDiagnosisSection } from './run-diagnosis-section';
 import { RunInfoPanel } from './run-info-panel';
+import { RunIsolationBadgeFromMetadata } from './run-isolation-badge';
 import { RunTimeline } from './run-timeline';
 import { StepDetailPanel } from './step-detail-panel';
 
@@ -225,6 +226,8 @@ export function RunDetailsDialog({
             <div className="shrink-0 space-y-1.5 border-b p-4 pr-12">
               <div className="flex items-center gap-2">
                 <StatusPillFor status={data.status} />
+                {/* G5-b 隔离徽标：worktree=中性；shared-root=琥珀降级显眼 */}
+                <RunIsolationBadgeFromMetadata metadata={data.metadata} />
                 <SheetTitle className="min-w-0 truncate text-sm font-medium">
                   {data.goal}
                 </SheetTitle>

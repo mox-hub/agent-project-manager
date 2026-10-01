@@ -3,10 +3,14 @@
  * 弹窗右上 ℹ 按钮切换显示；选中步骤详情时让位。
  */
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { Hourglass, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RunDetailsData } from './run-details-format';
 import { formatCost, formatTokens } from './run-details-format';
+import {
+  isWorktreeRetained,
+  parseIsolationMeta,
+} from './run-isolation-badge';
 
 function formatDateTime(iso?: string | null): string {
   if (!iso) return '—';
@@ -59,6 +63,8 @@ export function RunInfoPanel({
   const binding = data.bindings?.[0];
   const byModel = data.costBreakdown?.byModel ?? {};
   const modelRows = Object.entries(byModel);
+  // G5-b：worktree 隔离信息（路径/分支/基线，失败态附 TTL 提示）
+  const isolation = parseIsolationMeta(data.metadata);
 
   return (
     <div className="flex w-64 shrink-0 flex-col overflow-y-auto border-l border-border bg-card">
@@ -95,6 +101,37 @@ export function RunInfoPanel({
           wrap
         />
       </Section>
+
+      {isolation?.mode === 'worktree' ? (
+        <Section>
+          <p className="text-3xs font-semibold uppercase tracking-wider text-content-text-muted">
+            {t('runDetails.isolation.sectionTitle')}
+          </p>
+          <InfoRow
+            label={t('runDetails.isolation.branchLabel')}
+            value={isolation.branch ?? '—'}
+            mono
+            wrap
+          />
+          <InfoRow
+            label={t('runDetails.isolation.pathLabel')}
+            value={isolation.worktreePath ?? '—'}
+            mono
+            wrap
+          />
+          <InfoRow
+            label={t('runDetails.isolation.baseLabel')}
+            value={isolation.baseRef?.slice(0, 12) ?? '—'}
+            mono
+          />
+          {isWorktreeRetained(isolation) ? (
+            <p className="flex items-start gap-1.5 text-2xs leading-relaxed text-content-text-muted">
+              <Hourglass className="mt-0.5 size-3 shrink-0" />
+              {t('runDetails.isolation.retentionHint')}
+            </p>
+          ) : null}
+        </Section>
+      ) : null}
 
       <Section>
         <InfoRow label={t('runDetails.details.created')} value={formatDateTime(data.createdAt)} mono />
