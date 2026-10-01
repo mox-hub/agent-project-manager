@@ -27,7 +27,8 @@ import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { MarkdownView } from '@/shared/components/markdown-view';
-import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/semantic/right-sidebar';
+import { DetailPageFrame } from '@/components/semantic/detail-page-frame';
+import { SidebarButtonGroup, SidebarButton } from '@/components/semantic/right-sidebar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
@@ -88,7 +89,6 @@ export function BugDetailPage() {
   const [propsCollapsed, setPropsCollapsed] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
-  const [asideHidden, setAsideHidden] = useState(false);
 
   const { data: bug, isLoading: bugLoading } = useTaskDetail(bugId);
   // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
@@ -249,40 +249,39 @@ export function BugDetailPage() {
   };
 
   return (
-    <PageShell aiPage="bugs.bug-detail" className="overflow-hidden">
-      {/* SubPageToolbar：返回 + 面包屑 + 翻页器 + 侧栏开关 */}
-      <SubPageToolbar
-        aiId="bugs.bug-detail"
-        backLabel={t('common.back')}
-        breadcrumbs={[
-          { label: t('task.bug.title'), to: '/app/bugs' },
-          ...(project ? [{ label: project.name, to: `/app/projects/${bug.projectId}` }] : []),
-          { label: shortId },
-        ]}
-        titleIcon={<EntityIcon entity="bug" />}
-        actions={<>
-          <FavoriteToggle label={bug?.title ?? ''} />
-          <SubscribeButton />
-        </>}
-        pager={
-          bug.projectId
-            ? {
-                hasPrev: nav.hasPrev && !nav.isLoading,
-                hasNext: nav.hasNext && !nav.isLoading,
-                onPrev: () => nav.prevId && navigate(`/app/bugs/${nav.prevId}`),
-                onNext: () => nav.nextId && navigate(`/app/bugs/${nav.nextId}`),
-                position: nav.currentPosition > 0 ? `${nav.currentPosition}/${nav.total}` : '—',
-              }
-            : undefined
-        }
-        sidebar={{ open: !asideHidden, onToggle: () => setAsideHidden((v) => !v) }}
-      />
-
-      {/* Body */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Main */}
-        <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
-          <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
+    <>
+      <DetailPageFrame
+        aiPage="bugs.bug-detail"
+        toolbar={({ sidebar }) => (
+          <SubPageToolbar
+            aiId="bugs.bug-detail"
+            backLabel={t('common.back')}
+            breadcrumbs={[
+              { label: t('task.bug.title'), to: '/app/bugs' },
+              ...(project ? [{ label: project.name, to: `/app/projects/${bug.projectId}` }] : []),
+              { label: shortId },
+            ]}
+            titleIcon={<EntityIcon entity="bug" />}
+            actions={<>
+              <FavoriteToggle label={bug?.title ?? ''} />
+              <SubscribeButton />
+            </>}
+            pager={
+              bug.projectId
+                ? {
+                    hasPrev: nav.hasPrev && !nav.isLoading,
+                    hasNext: nav.hasNext && !nav.isLoading,
+                    onPrev: () => nav.prevId && navigate(`/app/bugs/${nav.prevId}`),
+                    onNext: () => nav.nextId && navigate(`/app/bugs/${nav.nextId}`),
+                    position: nav.currentPosition > 0 ? `${nav.currentPosition}/${nav.total}` : '—',
+                  }
+                : undefined
+            }
+            sidebar={sidebar}
+          />
+        )}
+        main={
+          <>
           {mutationError && (
             <div className="mx-6 mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {mutationError}
@@ -368,11 +367,10 @@ export function BugDetailPage() {
           <div className="px-6 py-4 flex-1 min-h-0 flex flex-col">
             <ActivityFeed entityType="bug" entityId={bugId} />
           </div>
-          </div>
-        </div>
-
-        {/* Right sidebar */}
-        <RightSidebar hidden={asideHidden}>
+          </>
+        }
+        aside={
+          <>
           {/* Top action bar — 靠右对齐 */}
           <SidebarButtonGroup className="justify-end">
             <SidebarButton
@@ -496,8 +494,9 @@ export function BugDetailPage() {
 
           {/* Linked documents（与 Properties 同一套 SidebarPanel 形态） */}
           <LinkedDocsPanel issueId={bugId} />
-        </RightSidebar>
-      </div>
+          </>
+        }
+      />
 
       {/* Delete dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -514,6 +513,6 @@ export function BugDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </PageShell>
+    </>
   );
 }

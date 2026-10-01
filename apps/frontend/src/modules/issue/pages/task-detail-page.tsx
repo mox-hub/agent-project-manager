@@ -42,14 +42,14 @@ import {
 import type { AnchorQaAction } from '@/modules/assistant/hooks/use-anchor-qa';
 import { Spinner } from '@/components/ui/spinner';
 import { DetailSection } from '@/components/semantic/detail-section';
+import { DetailPageFrame } from '@/components/semantic/detail-page-frame';
 import { PageShell } from '@/components/semantic/page-shell';
 import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
-import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/semantic/right-sidebar';
-import { SidebarPanel } from '@/components/semantic/sidebar-panel';
-import { Button } from '@/components/ui/button';
+import { SidebarButtonGroup, SidebarButton } from '@/components/semantic/right-sidebar';
+import { SidebarPanel } from '@/components/semantic/sidebar-panel';import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
@@ -170,6 +170,7 @@ export function TaskDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAiAssignDialog, setShowAiAssignDialog] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  // 右栏隐藏态受控（Frame 双模）：验收契约「编辑」入口需要命令口展开右栏
   const [asideHidden, setAsideHidden] = useState(false);
   // 行内锚点问答（候选 B）：hover 幽灵提示展开下沉线程
   const [anchorQaOpen, setAnchorQaOpen] = useState(false);
@@ -427,40 +428,41 @@ export function TaskDetailPage() {
   };
 
   return (
-    <PageShell aiPage="task.task-detail" className="overflow-hidden">
-      {/* ─── SubPageToolbar：返回 + 面包屑 + 翻页器 + 侧栏开关 ─── */}
-      <SubPageToolbar
-        aiId="task.task-detail"
-        backLabel={t('common.back')}
-        breadcrumbs={[
-          { label: t('nav.tasks'), to: '/app/issues' },
-          ...(project ? [{ label: project.name, to: `/app/projects/${task.projectId}` }] : []),
-          { label: shortId },
-        ]}
-        titleIcon={<EntityIcon entity="issue" />}
-        actions={<>
-          <FavoriteToggle label={task?.title ?? ''} />
-          <SubscribeButton />
-        </>}
-        pager={
-          task.projectId
-            ? {
-                hasPrev: nav.hasPrev && !nav.isLoading,
-                hasNext: nav.hasNext && !nav.isLoading,
-                onPrev: () => nav.prevId && navigate(`/app/issues/${nav.prevId}`),
-                onNext: () => nav.nextId && navigate(`/app/issues/${nav.nextId}`),
-                position: nav.currentPosition > 0 ? `${nav.currentPosition}/${nav.total}` : '—',
-              }
-            : undefined
-        }
-        sidebar={{ open: !asideHidden, onToggle: () => setAsideHidden((v) => !v) }}
-      />
-
-      {/* ─── Body ─── */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* ── Main ── */}
-        <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
-          <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
+    <>
+      <DetailPageFrame
+        aiPage="task.task-detail"
+        asideHidden={asideHidden}
+        onAsideHiddenChange={setAsideHidden}
+        toolbar={({ sidebar }) => (
+          <SubPageToolbar
+            aiId="task.task-detail"
+            backLabel={t('common.back')}
+            breadcrumbs={[
+              { label: t('nav.tasks'), to: '/app/issues' },
+              ...(project ? [{ label: project.name, to: `/app/projects/${task.projectId}` }] : []),
+              { label: shortId },
+            ]}
+            titleIcon={<EntityIcon entity="issue" />}
+            actions={<>
+              <FavoriteToggle label={task?.title ?? ''} />
+              <SubscribeButton />
+            </>}
+            pager={
+              task.projectId
+                ? {
+                    hasPrev: nav.hasPrev && !nav.isLoading,
+                    hasNext: nav.hasNext && !nav.isLoading,
+                    onPrev: () => nav.prevId && navigate(`/app/issues/${nav.prevId}`),
+                    onNext: () => nav.nextId && navigate(`/app/issues/${nav.nextId}`),
+                    position: nav.currentPosition > 0 ? `${nav.currentPosition}/${nav.total}` : '—',
+                  }
+                : undefined
+            }
+            sidebar={sidebar}
+          />
+        )}
+        main={
+          <>
           {mutationError && (
             <div className="mx-6 mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {mutationError}
@@ -585,11 +587,10 @@ export function TaskDetailPage() {
           <div className="px-6 py-4 flex-1 min-h-0 flex flex-col">
             <ActivityFeed entityType={activityEntityType} entityId={issueId} />
           </div>
-          </div>
-        </div>
-
-        {/* ── Right sidebar ── */}
-        <RightSidebar hidden={asideHidden}>
+          </>
+        }
+        aside={
+          <>
           {/* Top action bar — 按钮固定一行、靠右对齐；幽灵「✨ 问 AI」hover 显形（渐进披露②） */}
           <SidebarButtonGroup className="group/sidebar justify-end">
             <AnchorQaGhostButton
@@ -825,8 +826,9 @@ export function TaskDetailPage() {
           >
             <CompletionReview issueId={task.id} acceptances={acceptances} />
           </SidebarPanel>
-        </RightSidebar>
-      </div>
+          </>
+        }
+      />
 
       {/* ─── Delete dialog ─── */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -853,7 +855,7 @@ export function TaskDetailPage() {
         taskTitle={task.title}
         defaultMemberId={task.aiAgentId ?? undefined}
       />
-    </PageShell>
+    </>
   );
 }
 

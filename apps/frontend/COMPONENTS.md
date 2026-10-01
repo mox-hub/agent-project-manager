@@ -207,6 +207,7 @@
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
 | data-table-shell | `src/components/semantic/data-table-shell.tsx` | ✅ canonical | — | — |
+| detail-page-frame | `src/components/semantic/detail-page-frame.tsx` | ✅ canonical | task/bug/member/team 四详情页 | L2 双栏母版（§20.2），侧栏二态内聚、主栏宽档同表分发 |
 | detail-section | `src/components/semantic/detail-section.tsx` | ✅ canonical | issue 详情页主栏六分区（描述/自定义字段/子任务/执行项/验收预览/依赖） | 与 sidebar-panel 同构不同形（平铺无卡底），各自独立 |
 | page-shell | `src/components/semantic/page-shell.tsx` | ✅ canonical | — | — |
 | right-sidebar | `src/components/semantic/right-sidebar.tsx` | ✅ canonical | — | — |

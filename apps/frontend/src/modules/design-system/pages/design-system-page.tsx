@@ -282,6 +282,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
 import { SidebarPanel } from '@/components/semantic/sidebar-panel'
 import { DetailSection } from '@/components/semantic/detail-section'
+import { DetailPageFrame } from '@/components/semantic/detail-page-frame'
 import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/semantic/right-sidebar'
 import { TabBar } from '@/components/semantic/tab-bar'
 import { TabsProvider } from '@/shared/tabs/tabs-context'
@@ -445,6 +446,7 @@ const SECTIONS = [
   { id: 'page-layout', label: 'Page Layout', group: 'Layout & Shells' },
   { id: 'sidebar-panel', label: 'Sidebar Panel', group: 'Layout & Shells' },
   { id: 'detail-section', label: 'Detail Section', group: 'Layout & Shells' },
+  { id: 'detail-page-frame', label: 'Detail Page Frame', group: 'Layout & Shells' },
   { id: 'ai-density-cards', label: 'AI High-Density Cards [AI]', group: 'AI Execution' },
   { id: 'page-header', label: 'Page Header', group: 'App Patterns' },
   { id: 'toolbar', label: 'Toolbar Row', group: 'App Patterns' },
@@ -6196,6 +6198,32 @@ export function DesignSystemPage() {
               >
                 <p className="text-xs text-muted-foreground">Non-collapsible variant (description-style section).</p>
               </DetailSection>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="detail-page-frame">
+            <SectionTitle>Detail Page Frame</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              L2 详情页双栏母版（§20.2）：SubPageToolbar 槽（sidebar 二态内聚下发）+ 主栏自滚动
+              居中宽档（L1 总表分发）+ RightSidebar；受控/非受控双模。task/bug/member/team 四详情页消费。
+            </p>
+            <div className="flex h-44 overflow-hidden rounded-lg border border-border">
+              <DetailPageFrame
+                aiPage="design-system.preview"
+                toolbar={({ sidebar }) => (
+                  <button
+                    type="button"
+                    className="border-b px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent"
+                    onClick={sidebar.onToggle}
+                  >
+                    toolbar slot · sidebar {sidebar.open ? 'open' : 'closed'}
+                  </button>
+                )}
+                main={<div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">Main（reading 档居中）</div>}
+                aside={<div className="p-3 text-xs text-muted-foreground">Aside content</div>}
+              />
             </div>
           </SectionAnchor>
 

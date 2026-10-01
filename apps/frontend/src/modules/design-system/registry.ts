@@ -197,6 +197,10 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   // 详情六处手写同构（描述/自定义字段/子任务/执行项/验收预览/依赖）。与 sidebar-panel
   // 同构不同形（平铺无卡底 vs 磨砂圆角卡），各自独立登记（裁决①）；标题档 text-xs（裁决②）。
   { name: 'detail-section', file: 'semantic/detail-section.tsx', section: 'Semantic', status: 'canonical' },
+  // 详情页语义化批四（2026-10-02）：L2 详情页双栏母版——收编 task/bug/member/team 四页
+  // 逐字重复骨架（PageShell+SubPageToolbar+主栏自滚动居中宽档+RightSidebar），侧栏二态
+  // 内聚受控/非受控双模，主栏宽度走 page-shell 的 L1 总表分发（§20.2）。
+  { name: 'detail-page-frame', file: 'semantic/detail-page-frame.tsx', section: 'Layout & Shells', status: 'canonical' },
 
   // ── 跨模块业务组件：src/shared/components/ ───────────────────────────────
   { name: 'board-view', file: 'shared/components/board-view/board-view.tsx', section: 'App Components', status: 'canonical' },
