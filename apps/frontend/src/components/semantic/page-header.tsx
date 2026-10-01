@@ -1,5 +1,5 @@
 import { isValidElement, type ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
+import type { StatusIconComponent } from "@/shared/status/status-visuals";
 import { cn } from "@/lib/utils";
 
 export interface PageHeaderMetric {
@@ -34,7 +34,7 @@ interface PageHeaderProps {
   subscribe?: ReactNode;
   className?: string;
   aiId?: string;
-  icon?: LucideIcon;
+  icon?: StatusIconComponent;
   iconColor?: string;
 }
 

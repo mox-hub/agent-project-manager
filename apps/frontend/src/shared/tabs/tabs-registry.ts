@@ -11,7 +11,7 @@
  * （/app/settings、/app/workspaces/new）不经 TabBar，无需注册。
  */
 
-import type { LucideIcon } from 'lucide-react';
+import type { StatusIconComponent } from '@/shared/status/status-visuals';
 import {
   LayoutDashboard,
   BarChart3,
@@ -33,7 +33,7 @@ export interface TabRouteConfig {
   titleKey?: string;
   /** 无 i18n key 的静态标题 */
   title?: string;
-  icon?: LucideIcon;
+  icon?: StatusIconComponent;
   /** 默认固定（可选） */
   pinnedByDefault?: boolean;
   /** 是否可关闭（默认 true） */

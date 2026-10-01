@@ -5,9 +5,8 @@
  * 消费方：任务/BUG 详情标题、子任务行、Activity 时间线事件图标。
  * tone 与图标取值来自 ./status-visuals（唯一映射源）。
  */
-import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { TONE_LIGHT_CLASS, type StatusTone } from './status-visuals';
+import { TONE_LIGHT_CLASS, type StatusIconComponent, type StatusTone } from './status-visuals';
 
 const FRAME_SIZES = {
   /** xs/sm 外框为正圆形，list/md/lg 为圆角方框；各档图标均按「内边距 2px」撑满外框 */
@@ -21,6 +20,9 @@ const FRAME_SIZES = {
 
 export type StatusIconFrameSize = keyof typeof FRAME_SIZES;
 
+/** 状态图标线宽基线（lucide 缺省 2 小尺寸下偏细；规范见 status-visuals.ts STATUS_ICONS 头注） */
+const STROKE_WIDTH = 2.5;
+
 export function StatusIconFrame({
   icon: Icon,
   tone,
@@ -31,7 +33,7 @@ export function StatusIconFrame({
   className,
   iconClassName,
 }: {
-  icon: LucideIcon;
+  icon: StatusIconComponent;
   tone: StatusTone;
   size?: StatusIconFrameSize;
   /** in_progress 等旋转图标需要自旋（Loader2） */
@@ -55,6 +57,7 @@ export function StatusIconFrame({
       )}
     >
       <Icon
+        strokeWidth={STROKE_WIDTH}
         style={color ? { color } : undefined}
         className={cn(sizes.icon, spin && 'animate-spin', iconClassName)}
       />

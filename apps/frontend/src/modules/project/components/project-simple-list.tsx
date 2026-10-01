@@ -227,6 +227,7 @@ export function ProjectSimpleList({
             >
               <StatusPill tone={workflowVisual.tone}>
                 <WorkflowIcon
+                  strokeWidth={2.5}
                   className="size-3"
                   style={workflowVisual.color ? { color: workflowVisual.color } : undefined}
                 />

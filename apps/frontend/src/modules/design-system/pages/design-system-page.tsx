@@ -210,7 +210,7 @@ import { IconStack } from '@/components/semantic/icon-stack'
 import { StatusPill } from '@/components/semantic/status-pill'
 import { SubtaskBadge } from '@/components/semantic/subtask-badge'
 import { StatusIconFrame } from '@/shared/status/status-icon-frame'
-import { PRIORITY_VISUALS, TASK_STATUS_VISUALS } from '@/shared/status/status-visuals'
+import { PRIORITY_VISUALS, TASK_STATUS_VISUALS, type StatusIconComponent } from '@/shared/status/status-visuals'
 import { MarkdownView } from '@/shared/components/markdown-view'
 import { MarkdownEditor } from '@/shared/components/markdown-editor'
 import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor'
@@ -1098,7 +1098,7 @@ type CommandDemoItem = {
   label: string
   keywords?: string[]
   shortcut?: string
-  icon?: LucideIcon
+  icon?: StatusIconComponent
 }
 
 const commandDemoGroups: Array<{ value: string; label: string; items: CommandDemoItem[] }> = [

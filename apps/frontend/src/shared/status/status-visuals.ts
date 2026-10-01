@@ -20,6 +20,7 @@ import {
   Circle,
   CircleAlert,
   CircleCheck,
+  CircleCheckBig,
   CircleDashed,
   CircleDot,
   CircleHelp,
@@ -28,9 +29,21 @@ import {
   Flame,
   Loader2,
   Minus,
-  type LucideIcon,
 } from 'lucide-react';
+import { CircleAlertBig, CircleXBig } from './status-symbol-big-icons';
+
+/**
+ * 状态图标组件消费面签名——lucide 图标与自绘大符号图标（status-symbol-big-icons）的公共子集。
+ * StatusVisual / STATUS_ICONS / StatusIconFrame 统一使用该类型，新增自绘图标无需改消费方。
+ */
+export type StatusIconComponent = ComponentType<{
+  className?: string;
+  strokeWidth?: number | string;
+  style?: CSSProperties;
+  size?: number | string;
+}>;
 import { TONE_CLASS, type Tone } from '@/components/ui/tone';
+import type { ComponentType, CSSProperties } from 'react';
 
 /**
  * 状态色 tone 词表（re-export 视觉层的 `Tone`，§19.5）。
@@ -45,7 +58,7 @@ export interface StatusVisual {
   /** i18n key（status.* 命名空间） */
   labelKey: string;
   tone: StatusTone;
-  icon: LucideIcon;
+  icon: StatusIconComponent;
 }
 
 /** tone → 文字色类（语义 accent token，禁原始色）——值取自 `components/ui/tone.ts` 唯一词表 */
@@ -79,9 +92,9 @@ export const TONE_LIGHT_CLASS: Record<StatusTone, string> = {
 export const TASK_STATUS_VISUALS: Record<string, StatusVisual> = {
   todo: { labelKey: 'status.task.todo', tone: 'default', icon: Circle },
   in_progress: { labelKey: 'status.task.in_progress', tone: 'info', icon: Loader2 },
-  in_review: { labelKey: 'status.task.in_review', tone: 'warning', icon: CircleAlert },
-  done: { labelKey: 'status.task.done', tone: 'success', icon: CircleCheck },
-  canceled: { labelKey: 'status.task.canceled', tone: 'default', icon: CircleX },
+  in_review: { labelKey: 'status.task.in_review', tone: 'warning', icon: CircleAlertBig },
+  done: { labelKey: 'status.task.done', tone: 'success', icon: CircleCheckBig },
+  canceled: { labelKey: 'status.task.canceled', tone: 'default', icon: CircleXBig },
 };
 
 /** 项目工作流状态五态（与任务五态同 tone 词表） */
@@ -89,8 +102,8 @@ export const PROJECT_WORKFLOW_VISUALS: Record<string, StatusVisual> = {
   backlog: { labelKey: 'status.project.backlog', tone: 'default', icon: CircleDashed },
   planned: { labelKey: 'status.project.planned', tone: 'warning', icon: CalendarClock },
   in_progress: { labelKey: 'status.project.in_progress', tone: 'info', icon: Loader2 },
-  completed: { labelKey: 'status.project.completed', tone: 'success', icon: CircleCheck },
-  canceled: { labelKey: 'status.project.canceled', tone: 'default', icon: CircleX },
+  completed: { labelKey: 'status.project.completed', tone: 'success', icon: CircleCheckBig },
+  canceled: { labelKey: 'status.project.canceled', tone: 'default', icon: CircleXBig },
 };
 
 /** 项目归档状态（active/archived） */
@@ -135,23 +148,45 @@ export const RISK_VISUALS: Record<string, StatusVisual> = {
 
 /**
  * 状态图标注册表——设置·状态「图标形状」选择集与 icon 落库解析的唯一词表。
- * 键为 lucide-react 组件名（与 StatusDefinition.icon 存储值一致），新增图标须在此登记。
+ * 键为图标组件名（与 StatusDefinition.icon 存储值一致），新增图标须在此登记。
+ *
+ * ## 视觉基线（2026-10-01 用户验收调整）
+ * - **线宽基线 strokeWidth=2.5**（lucide 缺省 2 在小尺寸下偏细）：由各渲染口
+ *   （StatusIconFrame / 设置·状态语义组件 / 行内 WorkflowIcon）统一携带，
+ *   新增状态图标渲染口必须同步，禁止单点回落缺省线宽。
+ * - **符号可读性优先**：圆内符号类图标一律派发大符号变体——done/completed 用
+ *   CircleCheckBig（lucide 官方）；评审感叹号/取消叉 lucide 无官方变体，用自绘
+ *   CircleAlertBig / CircleXBig（status-symbol-big-icons，几何仿 lucide 圆系）。
+ *   三个小符号旧键（CircleAlert/CircleCheck/CircleX）保留仅为兼容存量落库值解析，
+ *   选择集不派发（STATUS_ICON_CHOICES）。
  */
 export const STATUS_ICONS = {
   CircleDashed,
   Circle,
   CircleDot,
-  CircleAlert,
-  CircleCheck,
-  CircleX,
+  CircleAlertBig,
+  CircleCheckBig,
+  CircleXBig,
   CircleHelp,
   CirclePause,
   Loader2,
   Ban,
   CalendarClock,
-} as const satisfies Record<string, LucideIcon>;
+  // —— 存量兼容键：仅为解析旧落库值保留，弹窗选择集不派发（见 STATUS_ICON_CHOICES）——
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+} as const satisfies Record<string, StatusIconComponent>;
 
 export type StatusIconKey = keyof typeof STATUS_ICONS;
+
+/** 存量兼容键（旧 lucide 小符号变体）：解析仍支持、选择集不再派发 */
+const LEGACY_ICON_KEYS: ReadonlySet<string> = new Set(['CircleAlert', 'CircleCheck', 'CircleX']);
+
+/** 弹窗「图标形状」选择集：注册表去存量兼容键后的派发词表（顺序即展示序） */
+export const STATUS_ICON_CHOICES: StatusIconKey[] = (
+  Object.keys(STATUS_ICONS) as StatusIconKey[]
+).filter((k) => !LEGACY_ICON_KEYS.has(k));
 
 /** 状态分组 → 默认图标（icon 未配置时的兜底；与分组词表同步） */
 export const STATUS_GROUP_DEFAULT_ICON: Record<string, StatusIconKey> = {
@@ -159,15 +194,15 @@ export const STATUS_GROUP_DEFAULT_ICON: Record<string, StatusIconKey> = {
   backlog: 'CircleDashed',
   unstarted: 'Circle',
   started: 'Loader2',
-  completed: 'CircleCheck',
-  canceled: 'CircleX',
+  completed: 'CircleCheckBig',
+  canceled: 'CircleXBig',
 };
 
 /** 按落库 icon 键解析图标组件：注册表键 → 组件；空/未知 → 分组默认 → 空心圆 */
 export function resolveStatusIcon(
   icon: string | null | undefined,
   group?: string,
-): LucideIcon {
+): StatusIconComponent {
   if (icon && icon in STATUS_ICONS) return STATUS_ICONS[icon as StatusIconKey];
   const byGroup = group ? STATUS_GROUP_DEFAULT_ICON[group] : undefined;
   return STATUS_ICONS[byGroup ?? 'Circle'];

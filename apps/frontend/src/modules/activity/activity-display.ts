@@ -2,18 +2,19 @@
  * 动态事件的展示映射：事件图标/tone、字段标签、字段值 i18n key。
  * 状态/优先级等语义值复用 shared/status/status-visuals 的唯一映射源。
  */
-import { Bot, History, Loader2, MessageSquare, Pencil, Plus, UserRound, type LucideIcon } from 'lucide-react';
-import type { StatusTone } from '@/shared/status/status-visuals';
+import { Bot, History, Loader2, MessageSquare, Pencil, Plus, UserRound } from 'lucide-react';
 import {
   PROJECT_STATUS_VISUALS,
   PROJECT_WORKFLOW_VISUALS,
   PRIORITY_VISUALS,
   TASK_STATUS_VISUALS,
+  type StatusIconComponent,
+  type StatusTone,
 } from '@/shared/status/status-visuals';
 import type { ActivityChange, ActivityEntityType, ActivityItem } from './api/activity-api';
 
 export interface EventVisual {
-  icon: LucideIcon;
+  icon: StatusIconComponent;
   tone: StatusTone;
   spin?: boolean;
 }

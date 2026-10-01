@@ -1,3 +1,5 @@
+import type { StatusIconComponent } from '@/shared/status/status-visuals';
+
 import {
   Bell,
   Brain,
@@ -32,7 +34,7 @@ import {
 import { getEntityIcon } from "@/shared/entity-icons/entity-icons";
 
 export interface PageRegistryEntry {
-  icon: LucideIcon;
+  icon: StatusIconComponent;
   /** i18n key，渲染时实时解析（切换语言后侧边栏收藏分区跟随更新） */
   labelKey?: string;
   /** 无 i18n key 的静态名称（如 DEV 页面） */

@@ -29,8 +29,9 @@ import { CheckboxGroup } from '@/components/ui/checkbox-group';
 import { ColorPicker, DEFAULT_SWATCHES } from '@/components/ui/color-picker';
 import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import {
-  STATUS_ICONS,
+  STATUS_ICON_CHOICES,
   STATUS_GROUP_DEFAULT_ICON,
+  STATUS_ICONS,
   type StatusIconKey,
 } from '@/shared/status/status-visuals';
 import { STATUS_GROUP_ORDER, type StatusDefinitionLike } from './status-definition-list';
@@ -267,9 +268,9 @@ export function StatusDefinitionDialog({
                     : 'border-transparent hover:bg-accent'
                 }`}
               >
-                <PreviewIcon className="size-4" style={{ color: draft.color }} />
+                <PreviewIcon strokeWidth={2.5} className="size-4" style={{ color: draft.color }} />
               </RawButton>
-              {(Object.keys(STATUS_ICONS) as StatusIconKey[]).map((iconKey) => {
+              {STATUS_ICON_CHOICES.map((iconKey) => {
                 const Chosen = STATUS_ICONS[iconKey];
                 return (
                   <RawButton
@@ -283,7 +284,7 @@ export function StatusDefinitionDialog({
                         : 'border-transparent hover:bg-accent'
                     }`}
                   >
-                    <Chosen className="size-4" style={{ color: draft.color }} />
+                    <Chosen strokeWidth={2.5} className="size-4" style={{ color: draft.color }} />
                   </RawButton>
                 );
               })}

@@ -197,7 +197,11 @@ function StatusDefinitionRow({
         onClick={onClick}
         className="flex min-w-0 flex-1 items-center gap-2.5 py-0.5 text-left"
       >
-        <Icon className="size-4 shrink-0" style={def.color ? { color: def.color } : undefined} />
+        <Icon
+          strokeWidth={2.5}
+          className="size-4 shrink-0"
+          style={def.color ? { color: def.color } : undefined}
+        />
         <span className="min-w-0">
           <span className="flex items-center gap-2">
             <span className="truncate text-sm font-medium text-foreground">{def.name}</span>

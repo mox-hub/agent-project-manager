@@ -173,7 +173,7 @@ async function main() {
       group: 'started',
       order: 30,
       color: '#f59e0b',
-      icon: 'CircleAlert',
+      icon: 'CircleAlertBig',
       description: '已提交评审，等待验收结论。',
       allowedNextStatusKeys: ['in_progress', 'done', 'canceled'],
     },
@@ -196,7 +196,7 @@ async function main() {
       group: 'completed',
       order: 50,
       color: '#22c55e',
-      icon: 'CircleCheck',
+      icon: 'CircleCheckBig',
       isFinal: true,
       description: '工作完成并通过验收。',
       allowedNextStatusKeys: ['in_progress', 'canceled'],
@@ -208,7 +208,7 @@ async function main() {
       group: 'canceled',
       order: 60,
       color: '#6b7280',
-      icon: 'CircleX',
+      icon: 'CircleXBig',
       isFinal: true,
       description: '决定不做。',
       allowedNextStatusKeys: ['todo', 'in_progress'],
@@ -254,7 +254,7 @@ async function main() {
       group: 'completed',
       order: 40,
       color: '#22c55e',
-      icon: 'CircleCheck',
+      icon: 'CircleCheckBig',
       isFinal: true,
       description: '项目交付完成。',
       allowedNextStatusKeys: ['in_progress'],
@@ -266,7 +266,7 @@ async function main() {
       group: 'canceled',
       order: 50,
       color: '#6b7280',
-      icon: 'CircleX',
+      icon: 'CircleXBig',
       isFinal: true,
       description: '项目终止。',
       allowedNextStatusKeys: ['planned', 'in_progress'],
@@ -287,13 +287,15 @@ async function main() {
         data: status,
       });
     } else {
-      // 存量库升级回填：只补视觉/描述/分组/流转缺列，不覆盖用户已改的名称、排序与终态标记
+      // 存量库升级回填：补视觉/描述/分组/流转缺列，不覆盖用户已改的名称、排序与终态标记。
+      // icon 例外：无条件刷新为内置值——这批 icon 由种子派发（用户尚未实机改过），
+      // 且视觉选型会随规范升级（如 done 从 CircleCheck 换 CircleCheckBig），存量须跟随。
       const patch: Record<string, unknown> = {};
       if (existing.group === 'unstarted' && status.group !== 'unstarted') {
         patch.group = status.group;
       }
       if (!existing.color) patch.color = status.color;
-      if (!existing.icon) patch.icon = status.icon;
+      if (existing.icon !== status.icon) patch.icon = status.icon;
       if (!existing.description) patch.description = status.description;
       if (existing.allowedNextStatusKeys == null) {
         patch.allowedNextStatusKeys = status.allowedNextStatusKeys ?? [];
