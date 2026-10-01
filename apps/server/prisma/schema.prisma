@@ -302,9 +302,11 @@ model Tag {
   name         String
   color        String?
   description  String?
-  /// 标签归属的单一功能域：project | task | bug | document（各功能标签独立，不共享）
+  /// 标签归属的单一功能域：project | task | document（各功能标签独立，不共享；bug 域已随 Issue 统一模型并入 task，2026-10-01）
   resourceType String   @default("task")
   createdAt    DateTime @default(now())
+  /// 最近一次编辑时间（列表「更新时间」列；@updatedAt 由 Prisma 写入）
+  updatedAt    DateTime @updatedAt
   createdBy    String?
   metadata     Json?
 

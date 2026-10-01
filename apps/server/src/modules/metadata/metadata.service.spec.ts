@@ -61,27 +61,47 @@ describe('MetadataService', () => {
   });
 
   describe('getTags', () => {
-    it('should return tags list', async () => {
+    it('should return tags list with usageCount（工单引用 + 文档引用）', async () => {
       const mockTags = [
-        { id: '1', name: 'backend', color: '#FF5733' },
-        { id: '2', name: 'frontend', color: '#33FF57' },
+        {
+          id: '1',
+          name: 'backend',
+          color: '#FF5733',
+          _count: { issueTags: 3, documents: 1 },
+        },
+        {
+          id: '2',
+          name: 'frontend',
+          color: '#33FF57',
+          _count: { issueTags: 0, documents: 0 },
+        },
       ];
 
       mockPrismaService.tag.findMany.mockResolvedValue(mockTags);
 
       const result = await service.getTags();
 
-      expect(result).toEqual(mockTags);
-      expect(mockPrismaService.tag.findMany).toHaveBeenCalled();
+      expect(result).toEqual([
+        { id: '1', name: 'backend', color: '#FF5733', usageCount: 4 },
+        { id: '2', name: 'frontend', color: '#33FF57', usageCount: 0 },
+      ]);
+      expect(mockPrismaService.tag.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: { _count: { select: { issueTags: true, documents: true } } },
+        }),
+      );
     });
 
     it('should filter by projectId', async () => {
+      mockPrismaService.tag.findMany.mockResolvedValue([]);
       await service.getTags('project-1');
 
-      expect(mockPrismaService.tag.findMany).toHaveBeenCalledWith({
-        where: { projectId: 'project-1' },
-        orderBy: { name: 'asc' },
-      });
+      expect(mockPrismaService.tag.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { projectId: 'project-1' },
+          orderBy: { name: 'asc' },
+        }),
+      );
     });
   });
 

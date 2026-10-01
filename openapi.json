@@ -61342,11 +61342,19 @@
           },
           "resourceType": {
             "type": "string",
-            "description": "归属功能域：project | task | bug | document"
+            "description": "归属功能域：project | task | document（bug 域已并入 task）"
           },
           "createdAt": {
             "type": "string",
             "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "最近编辑时间（ISO）"
+          },
+          "usageCount": {
+            "type": "number",
+            "description": "使用数量（工单引用 + 文档引用）"
           },
           "createdBy": {
             "type": "string",
@@ -61364,7 +61372,9 @@
           "id",
           "name",
           "resourceType",
-          "createdAt"
+          "createdAt",
+          "updatedAt",
+          "usageCount"
         ]
       },
       "StatusDefinitionDto": {

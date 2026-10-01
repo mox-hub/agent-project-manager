@@ -32,10 +32,19 @@ export class MetadataService {
       where.resourceType = resourceType;
     }
 
-    return this.prisma.tag.findMany({
+    const tags = await this.prisma.tag.findMany({
       where,
       orderBy: { name: 'asc' },
+      include: {
+        // 使用数量 = 工单引用 + 文档引用（标签列表「使用数量」列）
+        _count: { select: { issueTags: true, documents: true } },
+      },
     });
+
+    return tags.map(({ _count, ...tag }) => ({
+      ...tag,
+      usageCount: _count.issueTags + _count.documents,
+    }));
   }
 
   async createOrUpdateTag(data: any, userId?: string, currentUserId?: string) {

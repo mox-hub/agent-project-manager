@@ -7570,10 +7570,14 @@ export interface components {
             color?: string | null;
             /** @description 描述 */
             description?: string | null;
-            /** @description 归属功能域：project | task | bug | document */
+            /** @description 归属功能域：project | task | document（bug 域已并入 task） */
             resourceType: string;
             /** @description 创建时间（ISO） */
             createdAt: string;
+            /** @description 最近编辑时间（ISO） */
+            updatedAt: string;
+            /** @description 使用数量（工单引用 + 文档引用） */
+            usageCount: number;
             /** @description 创建人 ID */
             createdBy?: string | null;
             /** @description 附加元数据 */

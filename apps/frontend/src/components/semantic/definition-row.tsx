@@ -27,6 +27,10 @@ export interface DefinitionRowProps {
   onClick?: () => void;
   /** 拖拽形态（须置于 <Sortable> 内且实体有 order 能力）；false = 静态行、无手柄 */
   sortable?: boolean;
+  /** 单行模式（表格型列表）：leading + 标题 + 描述并排一行，描述占满余宽；默认双行堆叠 */
+  singleLine?: boolean;
+  /** 单行模式标题列宽类（须与列头同款类保证列对齐；默认 w-40） */
+  titleClassName?: string;
   className?: string;
 }
 
@@ -41,24 +45,50 @@ export function DefinitionRow({
   trailing,
   onClick,
   sortable = true,
+  singleLine = false,
+  titleClassName,
   className,
 }: DefinitionRowProps) {
   const { t } = useTranslation();
 
+  const main = singleLine ? (
+    <RawButton
+      onClick={onClick}
+      className="flex min-w-0 flex-1 items-center gap-3 py-0.5 text-left"
+    >
+      {leading}
+      <span
+        className={cn(
+          'shrink-0 truncate text-sm font-medium text-foreground',
+          titleClassName ?? 'w-40',
+        )}
+      >
+        {title}
+      </span>
+      {description !== undefined && description !== null ? (
+        <span className="min-w-0 flex-1 truncate text-sm text-content-text-secondary">
+          {description}
+        </span>
+      ) : null}
+    </RawButton>
+  ) : (
+    <RawButton
+      onClick={onClick}
+      className="flex min-w-0 flex-1 items-center gap-3 py-0.5 text-left"
+    >
+      {leading}
+      <span className="min-w-0">
+        <span className="flex items-center gap-2">{title}</span>
+        {description !== undefined && description !== null ? (
+          <span className="block truncate text-xs text-content-text-muted">{description}</span>
+        ) : null}
+      </span>
+    </RawButton>
+  );
+
   const body = (
     <>
-      <RawButton
-        onClick={onClick}
-        className="flex min-w-0 flex-1 items-center gap-3 py-0.5 text-left"
-      >
-        {leading}
-        <span className="min-w-0">
-          <span className="flex items-center gap-2">{title}</span>
-          {description !== undefined && description !== null ? (
-            <span className="block truncate text-xs text-content-text-muted">{description}</span>
-          ) : null}
-        </span>
-      </RawButton>
+      {main}
       {trailing ?? null}
     </>
   );

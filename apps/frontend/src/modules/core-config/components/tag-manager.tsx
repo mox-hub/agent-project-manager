@@ -7,8 +7,6 @@ import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { AsyncState } from '@/components/semantic/async-state';
 import { DefinitionRow } from '@/components/semantic/definition-row';
-import { StatusIconFrame } from '@/shared/status/status-icon-frame';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -29,6 +27,8 @@ import { Sortable } from '@/components/ui/sortable';
 import { ColorPicker, DEFAULT_SWATCHES } from '@/components/ui/color-picker';
 import { toast } from '@/components/ui/toast';
 import { useConfirm } from '@/shared/confirm/use-confirm';
+import { cn } from '@/lib/utils';
+import { formatDate } from '@/shared/lib/date-format';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import {
   useTags,
@@ -38,27 +38,30 @@ import {
   type Tag,
 } from '../hooks/use-metadata';
 
-type ResourceType = 'project' | 'task' | 'bug' | 'document';
+type ResourceType = 'project' | 'task' | 'document';
 type TagFilter = ResourceType;
 
 // 标签色板 = ColorPicker 全局缺省 DEFAULT_SWATCHES（用户自选数据色，宪法 §5 豁免登记随组件迁移）
 const TAG_DEFAULT_COLOR = DEFAULT_SWATCHES[0];
 
-const TAG_FILTERS: ResourceType[] = ['project', 'task', 'bug', 'document'];
+const TAG_FILTERS: ResourceType[] = ['project', 'task', 'document'];
 
 const FILTER_I18N_KEY: Record<ResourceType, string> = {
   project: 'settings.typeProject',
   task: 'settings.typeTask',
-  bug: 'settings.typeBug',
   document: 'settings.typeDocument',
 };
 
 const FILTER_TONE: Record<ResourceType, SegmentedTone> = {
   project: 'blue',
   task: 'green',
-  bug: 'red',
   document: 'purple',
 };
+
+/** 单行表格列宽类（行与列头必须同款保证列对齐） */
+const NAME_COL = 'w-40';
+const USAGE_COL = 'w-28';
+const UPDATED_COL = 'w-28';
 
 interface TagDraft {
   name: string;
@@ -169,6 +172,12 @@ export function TagManager() {
       icon={Tags}
       iconColor="text-accent-blue"
       metrics={[{ id: 'total', label: t('settings.labels'), value: filteredTags.length }]}
+      actions={
+        // 标签创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403
+        isAdmin ? (
+          <HeaderActionButton icon={Plus} label={t('settings.addLabel')} onClick={openCreate} />
+        ) : null
+      }
     >
       <div className="flex justify-center">
         <SegmentedControl<TagFilter>
@@ -196,24 +205,18 @@ export function TagManager() {
         }
       >
         <section className="overflow-hidden rounded-lg border border-border bg-card">
-          <header className="flex h-10 items-center justify-between border-b border-border/60 pl-3 pr-1.5">
-            <span className="text-xs font-medium text-content-text-secondary">
-              {t(FILTER_I18N_KEY[filter])}
-              <span className="ml-1.5 text-content-text-muted">{filteredTags.length}</span>
-            </span>
-            {isAdmin ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label={t('settings.addLabel')}
-                title={t('settings.addLabel')}
-                onClick={openCreate}
-              >
-                <Plus />
-              </Button>
-            ) : null}
-          </header>
+          {/* 列头（与行同款列宽类保证对齐） */}
+          <div className="flex items-center gap-2.5 border-b border-border/60 px-1.5 py-2 text-3xs font-medium text-content-text-muted">
+            <span className="w-3.5 shrink-0" />
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <span className="size-3 shrink-0" />
+              <span className={cn('shrink-0', NAME_COL)}>{t('settings.labelName')}</span>
+              <span className="min-w-0 flex-1">{t('settings.labelDesc')}</span>
+            </div>
+            <span className={cn('shrink-0', USAGE_COL)}>{t('settings.labelUsage')}</span>
+            <span className={cn('shrink-0', UPDATED_COL)}>{t('settings.labelUpdatedAt')}</span>
+            <span className="w-14 shrink-0" />
+          </div>
           <Sortable
             value={filteredTags}
             getItemValue={(tag) => tag.id}
@@ -227,56 +230,54 @@ export function TagManager() {
               <DefinitionRow
                 key={tag.id}
                 id={tag.id}
+                singleLine
                 onClick={() => openEdit(tag)}
                 leading={
-                  <StatusIconFrame
-                    icon={Tags}
-                    tone="default"
-                    size="xl"
-                    color={tag.color || TAG_DEFAULT_COLOR}
-                    colorSurface
-                    className="rounded-lg"
+                  <span
+                    className="size-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: tag.color || TAG_DEFAULT_COLOR }}
                   />
                 }
-                title={
-                  <>
-                    <span className="truncate text-sm font-medium text-foreground">
-                      {tag.name}
-                    </span>
-                    {tag.isArchived ? (
-                      <Badge variant="outline">{t('settings.labelArchived')}</Badge>
-                    ) : null}
-                  </>
-                }
+                title={tag.name}
                 description={tag.description || undefined}
                 trailing={
-                  isAdmin ? (
-                    <div className="mr-1 hidden shrink-0 items-center gap-0.5 group-hover:flex">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label={tag.isArchived ? t('settings.restore') : t('common.archive')}
-                        title={tag.isArchived ? t('settings.restore') : t('common.archive')}
-                        disabled={updateTag.isPending}
-                        onClick={() => void handleArchive(tag)}
-                      >
-                        {tag.isArchived ? <ArchiveRestore /> : <Archive />}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label={t('common.delete')}
-                        title={t('common.delete')}
-                        disabled={deleteTag.isPending}
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => void handleDelete(tag)}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </div>
-                  ) : null
+                  <>
+                    <span className={cn('shrink-0 text-xs text-content-text-muted', USAGE_COL)}>
+                      {t('settings.labelUsageCount', { count: tag.usageCount ?? 0 })}
+                    </span>
+                    <span className={cn('shrink-0 text-xs text-content-text-muted', UPDATED_COL)}>
+                      {formatDate(tag.updatedAt)}
+                    </span>
+                    {isAdmin ? (
+                      <div className="mr-1 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={tag.isArchived ? t('settings.restore') : t('common.archive')}
+                          title={tag.isArchived ? t('settings.restore') : t('common.archive')}
+                          disabled={updateTag.isPending}
+                          onClick={() => void handleArchive(tag)}
+                        >
+                          {tag.isArchived ? <ArchiveRestore /> : <Archive />}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={t('common.delete')}
+                          title={t('common.delete')}
+                          disabled={deleteTag.isPending}
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => void handleDelete(tag)}
+                        >
+                          <Trash2 />
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="w-14 shrink-0" />
+                    )}
+                  </>
                 }
               />
             ))}

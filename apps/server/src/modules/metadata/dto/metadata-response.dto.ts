@@ -18,11 +18,15 @@ export class TagDto {
   description?: string | null;
   @ApiProperty({
     type: String,
-    description: '归属功能域：project | task | bug | document',
+    description: '归属功能域：project | task | document（bug 域已并入 task）',
   })
   resourceType: string;
   @ApiProperty({ type: String, description: '创建时间（ISO）' })
   createdAt: string;
+  @ApiProperty({ type: String, description: '最近编辑时间（ISO）' })
+  updatedAt: string;
+  @ApiProperty({ type: Number, description: '使用数量（工单引用 + 文档引用）' })
+  usageCount: number;
   @ApiPropertyOptional({
     type: String,
     nullable: true,

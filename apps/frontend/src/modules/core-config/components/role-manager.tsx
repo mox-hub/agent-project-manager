@@ -184,68 +184,77 @@ export function RoleManager() {
         ) : displayRoles.length === 0 ? (
           <EmptyState title={t('settings.noRolesInScope')} />
         ) : (
-          <section className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border bg-card">
-            {displayRoles.map((role) => (
-              <DefinitionRow
-                key={role.id}
-                id={role.id}
-                sortable={false}
-                onClick={() => openEdit(role)}
-                leading={
-                  <StatusIconFrame
-                    icon={CircleUser}
-                    tone={role.projectId ? 'info' : 'success'}
-                    size="xl"
-                    className="rounded-lg"
-                  />
-                }
-                title={
-                  <>
-                    <span className="truncate text-sm font-medium text-foreground">
-                      {role.name}
-                    </span>
-                    {role.projectId ? (
-                      <Badge variant="outline">{t('settings.projectOnlyRole')}</Badge>
-                    ) : (
-                      <Badge variant="secondary">{t('settings.globalRole')}</Badge>
-                    )}
-                  </>
-                }
-                description={
-                  role.description || (
-                    <span className="font-mono">{role.key}</span>
-                  )
-                }
-                trailing={
-                  isAdmin ? (
-                    <div className="mr-1 hidden shrink-0 items-center gap-0.5 group-hover:flex">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label={t('common.edit')}
-                        title={t('common.edit')}
-                        onClick={() => openEdit(role)}
-                      >
-                        <Pencil />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label={t('common.delete')}
-                        title={t('common.delete')}
-                        disabled={deleteRole.isPending}
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => void handleDelete(role)}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </div>
-                  ) : null
-                }
-              />
-            ))}
+          <section className="overflow-hidden rounded-lg border border-border bg-card">
+            {/* 列头（与行同款列宽类保证对齐） */}
+            <div className="flex items-center gap-2.5 border-b border-border/60 px-3 py-2 text-3xs font-medium text-content-text-muted">
+              <span className="flex w-40 shrink-0 items-center gap-2.5">
+                <span className="size-3 shrink-0" />
+                {t('settings.roleName')}
+              </span>
+              <span className="min-w-0 flex-1">{t('settings.roleScope')}</span>
+              <span className="w-24 shrink-0">{t('settings.roleScopeType')}</span>
+              <span className="w-14 shrink-0" />
+            </div>
+            <div className="divide-y divide-border/60">
+              {displayRoles.map((role) => (
+                <DefinitionRow
+                  key={role.id}
+                  id={role.id}
+                  sortable={false}
+                  singleLine
+                  onClick={() => openEdit(role)}
+                  leading={
+                    <StatusIconFrame
+                      icon={CircleUser}
+                      tone={role.projectId ? 'info' : 'success'}
+                      size="md"
+                      className="rounded-lg"
+                    />
+                  }
+                  title={role.name}
+                  description={role.description || role.key}
+                  trailing={
+                    <>
+                      <span className="w-24 shrink-0 text-xs text-content-text-muted">
+                        {role.projectId ? (
+                          <Badge variant="outline">{t('settings.projectOnlyRole')}</Badge>
+                        ) : (
+                          <Badge variant="secondary">{t('settings.globalRole')}</Badge>
+                        )}
+                      </span>
+                      {isAdmin ? (
+                        <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label={t('common.edit')}
+                            title={t('common.edit')}
+                            onClick={() => openEdit(role)}
+                          >
+                            <Pencil />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label={t('common.delete')}
+                            title={t('common.delete')}
+                            disabled={deleteRole.isPending}
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => void handleDelete(role)}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="w-14 shrink-0" />
+                      )}
+                    </>
+                  }
+                />
+              ))}
+            </div>
           </section>
         )}
       </AsyncState>

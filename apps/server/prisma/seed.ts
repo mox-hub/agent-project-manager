@@ -98,7 +98,7 @@ async function main() {
       description: '前端相关',
       resourceType: 'task',
     },
-    { name: 'bug', color: '#FF3333', description: 'Bug', resourceType: 'bug' },
+    // bug 域标签已废弃（任务/工单统一标签系统，迁移 20261001210000 将存量 bug 域并入 task），不再种子
     {
       name: 'feature',
       color: '#3333FF',
