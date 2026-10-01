@@ -10,6 +10,7 @@ import { TrustModule } from '@/modules/trust/trust.module';
 import { AiHubModule } from '@/modules/ai-hub/ai-hub.module';
 import { AcceptanceModule } from '@/modules/acceptance/acceptance.module';
 import { RuntimeModule } from '@/modules/runtime/runtime.module';
+import { GitModule } from '@/modules/git/git.module';
 
 // Adapters
 import { ClaudeCodeAdapter } from './adapters/claude-code.adapter';
@@ -23,6 +24,7 @@ import { OpenCodeAdapter } from './adapters/opencode.adapter';
     TrustModule,
     AcceptanceModule,
     RuntimeModule,
+    GitModule,
     forwardRef(() => AiHubModule),
   ],
   controllers: [CliDispatchController],

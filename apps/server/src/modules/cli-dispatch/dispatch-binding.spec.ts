@@ -75,6 +75,8 @@ function buildService(
   };
   const runtimeService = { createDispatch: vi.fn() };
   const messageBus = { publish: vi.fn() };
+  // G5-b 隔离准备：默认非 git 仓库 → 降级共享根（workspaceRoot 语义与本文件既有断言一致）
+  const worktree = { isGitRepository: vi.fn().mockResolvedValue(false) };
 
   const service = new CliDispatchService(
     prisma as never,
@@ -87,6 +89,8 @@ function buildService(
     trustService as never,
     acceptanceService as never,
     runtimeService as never,
+    undefined as never,
+    worktree as never,
   );
 
   return {
@@ -96,6 +100,7 @@ function buildService(
     executor,
     runtimeService,
     messageBus,
+    worktree,
   };
 }
 

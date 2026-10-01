@@ -91,6 +91,8 @@ function buildService(options: { member?: MemberOverrides } = {}) {
   };
   const runtimeService = { createDispatch: vi.fn() };
   const messageBus = { publish: vi.fn() };
+  // G5-b 隔离准备：默认非 git 仓库 → 降级共享根（过门禁后的派发路径不因隔离分叉）
+  const worktree = { isGitRepository: vi.fn().mockResolvedValue(false) };
 
   const service = new CliDispatchService(
     prisma as never,
@@ -103,6 +105,8 @@ function buildService(options: { member?: MemberOverrides } = {}) {
     trustService as never,
     acceptanceService as never,
     runtimeService as never,
+    undefined as never,
+    worktree as never,
   );
 
   return { service, prisma, executionService, executor, messageBus };

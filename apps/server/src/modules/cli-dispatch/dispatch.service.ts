@@ -33,6 +33,10 @@ import {
 import { AcceptanceService } from '@/modules/acceptance/acceptance.service';
 import { CliAssetScannerService } from '@/modules/cli-provider/cli-asset-scanner.service';
 import {
+  ExecutionIsolationMetadata,
+  ExecutionWorktreeService,
+} from '@/modules/git/execution-worktree.service';
+import {
   buildEnrichmentSection,
   readBudgetFromEnv,
   DEFAULT_DISPATCH_SKILLS_BUDGET_TOKENS,
@@ -171,6 +175,7 @@ export class CliDispatchService {
     private readonly acceptanceService: AcceptanceService,
     private readonly runtimeService: RuntimeService,
     private readonly assetScanner: CliAssetScannerService,
+    private readonly worktree: ExecutionWorktreeService,
   ) {}
 
   /**
@@ -817,13 +822,41 @@ export class CliDispatchService {
       `ExecutionRun created: ${executionRun.id} for task ${issueId}`,
     );
 
+    // 7.5 G5-b 执行隔离（ADR-017）：worktree 准备。成功 → 执行工作目录替换为
+    // worktree 路径（进程内 cliInput 与 daemon createDispatch 载荷同源生效，
+    // CLI 协议零变更——workspaceRoot 单字段承载工作目录语义）；失败/非 git/
+    // 开关关闭 → 降级共享根并落 isolation 元数据，不阻塞派发。
+    const isolation = await this.prepareExecutionIsolation(
+      projectId,
+      workspaceRoot,
+      executionRun.id,
+    );
+    const execWorkspaceRoot =
+      isolation.mode === 'worktree' ? isolation.worktreePath : workspaceRoot;
+    try {
+      // isolation 落 Execution.metadata（执行详情徽标 / 成果收集 / reconcile 消费）
+      await this.prisma.execution.update({
+        where: { id: executionRun.id },
+        data: {
+          metadata: {
+            ...((executionRun.metadata as Record<string, unknown>) ?? {}),
+            isolation,
+          },
+        },
+      });
+    } catch (e) {
+      this.logger.warn(
+        `Isolation metadata persistence failed for ${executionRun.id}: ${(e as Error).message}`,
+      );
+    }
+
     // 8. Create CliSession
     const runtime = await this.getOrCreateServerRuntime();
     const cliSession = await this.prisma.cliSession.create({
       data: {
         runtimeId: runtime.id,
         providerId: resolvedProviderId,
-        workspaceRoot,
+        workspaceRoot: execWorkspaceRoot,
         status: 'active',
         metadata: {
           executionRunId: executionRun.id,
@@ -840,7 +873,7 @@ export class CliDispatchService {
         cliSessionId: cliSession.id,
         runtimeId: runtime.id,
         providerId: resolvedProviderId,
-        workspaceRoot,
+        workspaceRoot: execWorkspaceRoot,
         status: 'active',
       },
     });
@@ -870,7 +903,7 @@ export class CliDispatchService {
         governance,
       );
     const cliInput = {
-      workspaceRoot,
+      workspaceRoot: execWorkspaceRoot,
       prompt,
       model: effectiveModel,
       allowedTools: effectiveAllowedTools,
@@ -905,7 +938,7 @@ export class CliDispatchService {
         subjectType: executionRun.subjectType,
         subjectId: executionRun.subjectId,
         prompt,
-        workspaceRoot,
+        workspaceRoot: execWorkspaceRoot,
         providerId: resolvedProviderId,
         model: effectiveModel,
         allowedTools: effectiveAllowedTools,
@@ -1364,6 +1397,73 @@ export class CliDispatchService {
     });
 
     return repo?.localPath || null;
+  }
+
+  /**
+   * 执行隔离准备（G5-b，设计稿 §5.2/§5.3）：try/catch 全包，**任何失败都降级
+   * 共享根、不阻塞派发**。判定顺序：配置逃生门 → 是否 git 仓库 → git 版本
+   * （merge-tree 需 ≥ 2.38）→ worktree add。
+   */
+  private async prepareExecutionIsolation(
+    projectId: string,
+    root: string,
+    executionId: string,
+  ): Promise<ExecutionIsolationMetadata> {
+    // 配置逃生门：AppConfig scope='execution' key='isolation.mode'
+    // （worktree 默认 | shared-root；无 UI，文档级配置）。读取失败按默认放行。
+    try {
+      const cfg = await this.prisma.appConfig.findFirst({
+        where: { scope: 'execution', key: 'isolation.mode' },
+      });
+      const mode =
+        typeof cfg?.value === 'string'
+          ? cfg.value
+          : (cfg?.value as { mode?: string } | null)?.mode;
+      if (mode === 'shared-root') {
+        return { mode: 'shared-root', reason: 'disabled' };
+      }
+    } catch (e) {
+      this.logger.warn(
+        `isolation.mode config read failed (default worktree): ${(e as Error).message}`,
+      );
+    }
+
+    try {
+      if (!(await this.worktree.isGitRepository(root))) {
+        return { mode: 'shared-root', reason: 'not-git-repo' };
+      }
+      const support = await this.worktree.checkMergeTreeSupport();
+      if (!support.ready) {
+        return {
+          mode: 'shared-root',
+          reason: 'git-too-old',
+          detail: support.version
+            ? `git ${support.version} < 2.38（merge-tree 冲突预检不可用）`
+            : 'git 不可用',
+        };
+      }
+      const prep = await this.worktree.prepareWorktree(root, executionId);
+      this.logger.log(
+        `Execution isolated in worktree: ${prep.worktreePath} (${prep.branch})`,
+      );
+      return {
+        mode: 'worktree',
+        worktreePath: prep.worktreePath,
+        branch: prep.branch,
+        baseRef: prep.baseRef,
+        projectRoot: root,
+        preparedAt: new Date().toISOString(),
+      };
+    } catch (e) {
+      this.logger.warn(
+        `worktree isolation failed for ${executionId}, falling back to shared root: ${(e as Error).message}`,
+      );
+      return {
+        mode: 'shared-root',
+        reason: 'worktree-add-failed',
+        detail: (e as Error).message,
+      };
+    }
   }
 
   /**
