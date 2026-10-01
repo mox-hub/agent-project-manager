@@ -21,6 +21,16 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.11] - 2026-10-01
+
+### v0.7.11 发版总览——上线套装：G5-a 设计定版（per-Execution worktree 隔离 + 决策卡合入；纯设计交付，无代码变更）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| docs | **G5 设计稿 v1.0.0 入库**（docs/design/设计-G5执行隔离与合入-2026-10-01.md）：现状勘察十项事实全复核（file:line）——CLI 协议 `workspaceRoot` 单字段承载工作目录语义，**协议零变更**；方案=派发链 worktree 注入（`<项目根>/.apm/worktrees/<shortId>` + 幂等补 .gitignore）→ 完成后成果收集补快照 commit → **integration 决策卡人工确认合入**（merge-tree 无副作用冲突预检 + merge --no-ff）→ applier 六步校验（存在性/指纹/脏工作区/冲突预检）→ 清理记账；降级口径（用户裁决）=非 git 项目/worktree 创建失败回落共享根 + `metadata.isolation` 显眼标记，不阻塞派发；受控白名单 ExecutionWorktreeService（分支删除硬编码 `apm/exec/` 前缀校验）；单活跃互斥绕过路径收口（必做）+ SQLite partial unique index（选做） | G5 / ADR-017 | 设计版无代码变更；GAP-T-53 测试义务随 v0.7.12 实现登记 | 决策日志 ADR-017；能力清单变更账开工登记（批一挂账 G5 设计切片定版、v0.7.12 置 doing）；需求重审 G5 缺口设计闭环 |
+
+**上线套装进度**：G8 ✅（v0.7.8）→ G7-a ✅（v0.7.9）→ G7-b ✅（v0.7.10）→ **G5-a 设计 ✅（本版）** → G5-b 实现（v0.7.12）→ A-18 上手引导（v0.7.13）→ v0.8.0 内测发布。本版纯设计交付，桌面 draft 代码与 v0.7.10 相同（Publish 可跳过，装 0.7.12 即覆盖）。
+
 ## [0.7.10] - 2026-10-01
 
 ### v0.7.10 发版总览——上线套装收官开发版：G7-b 桌面升级迁移（用户数据安全闭环最后一环）
