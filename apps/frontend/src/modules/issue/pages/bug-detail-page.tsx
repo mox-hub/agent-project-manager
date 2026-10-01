@@ -7,7 +7,7 @@
  * - Right (320px): 操作条(删除) + Properties(含 Severity) + 关联文档
  */
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   AlignLeft,
@@ -15,7 +15,6 @@ import {
   Diamond as DiamondIcon,
   FileText,
   Flag,
-  ListChecks,
   SlidersHorizontal,
   Tag,
   Trash2,
@@ -29,18 +28,16 @@ import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { MarkdownView } from '@/shared/components/markdown-view';
 import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/semantic/right-sidebar';
-import { SidebarPanel } from '@/components/semantic/sidebar-panel';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  CapsuleSelect, DateCapsuleField, AutoSizeTextarea,
+  CapsuleSelect, DateCapsuleField,
   PropertyRow, PropsCard, MemberAvatar,
 } from '@/shared/components/property-panel';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
-import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor';
 import {
   TONE_TEXT_CLASS,
@@ -63,6 +60,7 @@ import { useTabs } from '@/shared/tabs/tabs-context';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { useEntityNavigation } from '@/shared/hooks/use-entity-navigation';
 import { LinkedDocsPanel } from '../components/linked-docs-panel';
+import { IssueDetailHeading } from '../components/issue-detail-heading';
 import { ActivityFeed } from '@/modules/activity';
 import { useSetViewingContext } from '@/shared/viewing-context';
 import { useTranslation } from 'react-i18next';
@@ -291,49 +289,26 @@ export function BugDetailPage() {
             </div>
           )}
 
-          {/* Title：状态图标内图与标题字号一致（lg 档内图 18px、外框自然包裹），items-center 垂直居中 */}
-          <div className="px-6 pt-5 pb-3 shrink-0">
-            <div className="flex items-center gap-3">
-              <StatusIconFrame
-                icon={statusVisual.icon}
-                tone={statusVisual.tone}
-                size="lg"
-                spin={statusVisual.icon === TASK_STATUS_VISUALS.in_progress.icon}
-              />
-              <AutoSizeTextarea
-                key={`bug-title-${bug.id}`}
-                defaultValue={bug.title}
-                rows={1}
-                placeholder={t('bugDetail.unnamedTitle')}
-                onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0"
-              />
-            </div>
-            {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}
-            {bug.parentIssueId && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <ListChecks className="size-3.5 shrink-0" />
-                <span className="shrink-0">{t('bugDetail.parentTaskLabel')}</span>
-                <RoutePreviewTrigger
-                  path={`/app/issues/${bug.parentIssueId}`}
-                  title={parentTask?.title}
-                  icon={ListChecks}
-                >
-                  <Link
-                    to={`/app/issues/${bug.parentIssueId}`}
-                    className="truncate max-w-75 font-medium text-foreground transition-colors hover:text-primary hover:underline"
-                  >
-                    {parentTask?.title || bug.parentIssueId.slice(0, 8)}
-                  </Link>
-                </RoutePreviewTrigger>
-              </div>
-            )}
-            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-              <span className="font-mono">{shortId}</span>
-              <span className="opacity-50">•</span>
-              <span>{t('common.createdAt')} {formatDate(bug.createdAt)}</span>
-            </div>
-          </div>
+          {/* Title：状态框 + 热编辑标题 + 来源行 + 元信息行（Heading 件收编） */}
+          <IssueDetailHeading
+            title={bug.title}
+            titleKey={`bug-title-${bug.id}`}
+            placeholder={t('bugDetail.unnamedTitle')}
+            onTitleChange={persistTitle}
+            statusVisual={statusVisual}
+            parentIssue={
+              bug.parentIssueId
+                ? { id: bug.parentIssueId, title: parentTask?.title }
+                : undefined
+            }
+            meta={
+              <>
+                <span className="font-mono">{shortId}</span>
+                <span className="opacity-50">•</span>
+                <span>{t('common.createdAt')} {formatDate(bug.createdAt)}</span>
+              </>
+            }
+          />
 
           {/* Description: 块级所见即所得（点哪编哪、输入与渲染同屏，与任务详情页一致） */}
           <div className="px-6 pt-4 pb-4 shrink-0">

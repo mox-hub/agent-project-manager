@@ -59,7 +59,6 @@ import {
   PropertyRow, PropsCard, MemberAvatar,
 } from '@/shared/components/property-panel';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
-import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor';
 import {
   TONE_TEXT_CLASS,
@@ -103,6 +102,7 @@ import { AcceptanceCriteriaPreview } from '../components/acceptance-criteria-pre
 import { IssueDependenciesSection } from '../components/issue-dependencies-section';
 import { useAcceptancesByTask } from '@/modules/acceptance/hooks/use-acceptance';
 import { LinkedDocsPanel } from '../components/linked-docs-panel';
+import { IssueDetailHeading } from '../components/issue-detail-heading';
 import { TaskLinearPanel } from '@/modules/linear/components/task-linear-panel';
 import { LinearConflictResolver } from '@/modules/linear/components/linear-conflict-resolver';
 import { LinearExternalRefBadge, LinearSyncStatusBadge } from '@/modules/linear/components/linear-status-badge';
@@ -467,63 +467,39 @@ export function TaskDetailPage() {
             </div>
           )}
 
-          {/* Title：状态图标内图与标题字号一致（lg 档内图 18px、外框自然包裹），items-center 垂直居中；
-              标题用系统标准页头字号 text-lg(18px)，`!` 防止基类 md:text-sm 覆盖 */}
-          <div className="px-6 pt-5 pb-3 shrink-0">
-            <div className="flex items-center gap-3">
-              <IssueTypeSwitcher task={task} onChanged={invalidateActivities} />
-              <StatusIconFrame
-                icon={statusVisual.icon}
-                tone={statusVisual.tone}
-                size="lg"
-                spin={statusVisual.icon === TASK_STATUS_VISUALS.in_progress.icon}
-              />
-              <AutoSizeTextarea
-                key={`title-${task.id}`}
-                defaultValue={task.title}
-                rows={1}
-                placeholder={t('taskDetail.unnamedTitle')}
-                onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0"
-              />
-            </div>
-            {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}
-            {task.parentIssueId && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <ListChecks className="size-3.5 shrink-0" />
-                <span className="shrink-0">{t('taskDetail.parentTaskLabel')}</span>
-                <RoutePreviewTrigger
-                  path={`/app/issues/${task.parentIssueId}`}
-                  title={parentTask?.title}
-                  icon={ListChecks}
-                >
-                  <Link
-                    to={`/app/issues/${task.parentIssueId}`}
-                    className="truncate max-w-75 font-medium text-foreground transition-colors hover:text-primary hover:underline"
-                  >
-                    {parentTask?.title || task.parentIssueId.slice(0, 8)}
-                  </Link>
-                </RoutePreviewTrigger>
-              </div>
-            )}
-            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-              <span className="font-mono">{shortId}</span>
-              <span className="opacity-50">•</span>
-              <span>{t('common.createdAt')} {formatDate(task.createdAt)}</span>
-              {task.externalIdentifier ? (
-                <>
-                  <span className="opacity-50">•</span>
-                  <LinearExternalRefBadge
-                    identifier={task.externalIdentifier}
-                    url={task.externalUrl}
-                  />
-                </>
-              ) : null}
-              {task.syncStatus ? (
-                <LinearSyncStatusBadge status={task.syncStatus} />
-              ) : null}
-            </div>
-          </div>
+          {/* Title：类型切换 + 状态框 + 热编辑标题 + 来源行 + 元信息行（Heading 件收编） */}
+          <IssueDetailHeading
+            title={task.title}
+            titleKey={`title-${task.id}`}
+            placeholder={t('taskDetail.unnamedTitle')}
+            onTitleChange={persistTitle}
+            statusVisual={statusVisual}
+            left={<IssueTypeSwitcher task={task} onChanged={invalidateActivities} />}
+            parentIssue={
+              task.parentIssueId
+                ? { id: task.parentIssueId, title: parentTask?.title }
+                : undefined
+            }
+            meta={
+              <>
+                <span className="font-mono">{shortId}</span>
+                <span className="opacity-50">•</span>
+                <span>{t('common.createdAt')} {formatDate(task.createdAt)}</span>
+                {task.externalIdentifier ? (
+                  <>
+                    <span className="opacity-50">•</span>
+                    <LinearExternalRefBadge
+                      identifier={task.externalIdentifier}
+                      url={task.externalUrl}
+                    />
+                  </>
+                ) : null}
+                {task.syncStatus ? (
+                  <LinearSyncStatusBadge status={task.syncStatus} />
+                ) : null}
+              </>
+            }
+          />
 
           {/* Description: 块级所见即所得（点哪编哪、输入与渲染同屏）；
               右上 hover 显形「拆分」按钮 = AI 静默子任务拆分（编辑按钮已由就地编辑取代） */}

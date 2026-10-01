@@ -3300,14 +3300,14 @@
     "labelsLabel": "Labels",
     "dueDateLabel": "Due date",
     "propertiesLabel": "Properties",
-    "clearDueDate": "Clear due date",
-    "parentTaskLabel": "Parent task"
+    "clearDueDate": "Clear due date"
   },
   "issueDetail": {
     "linkedDocs": "Linked Documents",
     "noLinkedDocs": "No linked documents yet. Add them from the \"Linked Tasks\" panel on the document page.",
     "documentFallback": "Document {{id}}",
-    "sectionLabel": "Section: {{title}}"
+    "sectionLabel": "Section: {{title}}",
+    "parentTaskLabel": "Parent task"
   },
   "taskDetail": {
     "promptPanel": "Task prompt",
@@ -3408,7 +3408,6 @@
     "execRetryOf": "Retried from",
     "execActionViewLog": "View execution log",
     "execActionMore": "More actions",
-    "parentTaskLabel": "Parent task",
     "customFields": "Fields",
     "drawerNoAgents": "No AI members are available to assign yet. Create one in member management first.",
     "aiGoalTemplate": "Generate a next-step execution plan for \"{{title}}\" and prepare a status write-back",
