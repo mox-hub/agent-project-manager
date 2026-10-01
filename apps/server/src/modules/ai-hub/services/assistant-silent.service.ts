@@ -888,6 +888,84 @@ ${JSON.stringify(context.issues ?? [])}
   },
 
   /**
+   * 发布说明 AI 起草（CAP-A-18 样板推广第二实例，v0.7.13）。
+   *
+   * 与上方 `release-notes`（CAP-K-03 工程 changelog 风格，Keep a Changelog 分节）
+   * 的分工：本场景面向**内测用户**写「这个版本带来了什么、怎么验证」的叙事性
+   * 发版说明——不是工程流水账。输入在范围工单之外加入交付物清单
+   * （Release.deliverables，「在哪拿/怎么验证」是内测用户最需要的两件事）。
+   * 前端草稿对话框（release-notes-draft-dialog）三层范式：AI 建议 → 人编辑确认
+   * → 可展开的输入来源明细；确认经既有 PATCH /releases/:id 写回 notes，
+   * 取消不落库。零新端点，走通用静默触发面。
+   */
+  'release-notes-draft': {
+    description:
+      '发布说明 AI 起草（CAP-A-18 样板推广二）：按发版范围工单（标题与结论状态）与交付物清单，面向内测用户起草「这个版本带来了什么、怎么验证」的叙事性发版说明草稿（非工程 changelog），信息不足时在 gaps 诚实列出；人确认后写回 Release.notes',
+    prepareContext: async (context, { prisma }) => {
+      const releaseId = String(context.releaseId ?? '');
+      if (!releaseId) {
+        throw new BadRequestException('发版说明起草缺少 releaseId');
+      }
+      const release = await prisma.release.findUnique({
+        where: { id: releaseId },
+      });
+      if (!release) {
+        throw new BadRequestException(`发版不存在：${releaseId}`);
+      }
+      const scope =
+        (release.scope as { issueIds?: string[] } | null)?.issueIds ?? [];
+      // 结论状态是诚实叙事的关键：哪些做完、哪些还在路上，指令层按此约束措辞
+      const issues = scope.length
+        ? await prisma.issue.findMany({
+            where: { id: { in: scope } },
+            select: { title: true, type: true, status: true },
+          })
+        : [];
+      const deliverables =
+        (release.deliverables as { items?: unknown[] } | null)?.items ?? [];
+      return {
+        release: {
+          version: release.version,
+          name: release.name,
+          // 现有说明作为改写基础一并给出（人可能已手写过部分内容）
+          currentNotes: release.notes ?? '',
+        },
+        issues,
+        deliverables,
+      };
+    },
+    buildInstructions: (context) => {
+      const release = context.release as
+        | { version: string; name: string | null; currentNotes: string }
+        | undefined;
+      if (!release?.version) {
+        throw new BadRequestException('发版说明起草缺少发版事实');
+      }
+      const issues = Array.isArray(context.issues) ? context.issues : [];
+      const deliverables = Array.isArray(context.deliverables)
+        ? context.deliverables
+        : [];
+      return `你是项目管理系统的 AI 同事「小周」。请为一个即将发给内测用户的版本起草发版说明。读者是不熟悉工程的内测用户：他们想知道「这个版本带来了什么、我该怎么试、遇到问题找谁」，不要写成工程流水账。
+
+版本：${String(release.version)}${release.name ? `「${String(release.name)}」` : ''}
+${release.currentNotes?.trim() ? `已有说明（人手写或上版遗留，改写时保留其中仍然成立的内容）：\n${String(release.currentNotes)}\n` : ''}
+纳入本版本的范围工单（标题与结论状态——status 为 done 的才可写成已完成能力，其余只能写「正在改进/即将到来」或列入缺口）：
+${issues.length ? JSON.stringify(issues) : '（未圈定范围工单）'}
+
+交付物清单（内测用户最关心「在哪拿、怎么验证」，逐条消化进说明）：
+${deliverables.length ? JSON.stringify(deliverables) : '（尚未登记交付物）'}
+
+要求：
+- 用 Markdown，300~600 字：开头一两句说清这个版本给用户带来什么，然后按用户可感知的变化分点写，每点讲「能做什么/哪里能试到」。
+- 有交付物清单时必须写清「在哪拿、怎么验证可用」；没有时把这一点列入 gaps。
+- status 非 done 的工单绝不写成已完成能力；范围与交付物都不足以支撑说明时，notes 可以很短，绝不编造功能。
+- gaps：诚实列出起草时缺什么（如未圈定范围、无交付物、某工单未完成无法写进入口），没有就给空数组。
+
+只输出 JSON：{"notes": "markdown 文本", "gaps": ["..."]}`;
+    },
+  },
+
+  /**
    * 盯盘叙述（ARCH-AISURFACE-001 §3.3 态三）。
    *
    * ## 为什么这个场景**没有** `prepareContext`

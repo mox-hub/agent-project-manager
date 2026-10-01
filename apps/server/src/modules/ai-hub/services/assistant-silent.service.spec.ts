@@ -121,6 +121,7 @@ describe('AssistantSilentService.run', () => {
       'interview-dynamic',
       'workflow-draft',
       'release-notes',
+      'release-notes-draft',
       'surface-narration',
     ]);
   });
@@ -1866,5 +1867,130 @@ describe('AssistantSilentService.run failure-diagnosis（批一 P0 切片 3，�
     expect(instructions.instructions).toContain('登录成功跳转首页');
     expect(instructions.instructions).not.toContain('SHOULD_NOT_LEAK');
     expect(usageCreate).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * 发布说明 AI 起草（CAP-A-18 样板推广第二实例）。
+ * 与 CAP-K-03 的 release-notes（工程 changelog）分工：本场景面向内测用户
+ * 叙事性说明 + 交付物清单输入 + gaps 诚实缺口。守四件事：
+ * 侦查注入（范围工单结论状态 + deliverables）、非 done 红线、gaps 契约、
+ * 缺 releaseId / 发版不存在 400 不触 LLM。
+ */
+describe('AssistantSilentService.run · release-notes-draft（CAP-A-18 样板推广二）', () => {
+  const RELEASE_ROW = {
+    id: 'r1',
+    version: '0.7.13',
+    name: '上手引导收口',
+    notes: '',
+    status: 'draft',
+    scope: { issueIds: ['i1', 'i2'] },
+    deliverables: {
+      items: [
+        {
+          name: '桌面安装包',
+          location: 'GitHub Release',
+          howToVerify: '安装后可启动',
+        },
+      ],
+    },
+  };
+  const ISSUES = [
+    { title: '向导双语化', type: 'task', status: 'done' },
+    { title: '发布说明起草', type: 'task', status: 'in_progress' },
+  ];
+  const PAYLOAD =
+    '{"notes": "# v0.7.13\\n这个版本带来了…", "gaps": ["发布说明起草仍在进行，说明中该点写作「即将到来」"]}';
+
+  const makeNotesDraftService = (
+    releaseRow: Record<string, unknown> | null = RELEASE_ROW,
+    chatContent = PAYLOAD,
+  ) => {
+    const chat = vi.fn().mockResolvedValue({
+      content: chatContent,
+      model: 'test-model',
+      tokens: { prompt: 10, completion: 5, total: 15 },
+    });
+    const usageCreate = vi.fn().mockResolvedValue({});
+    const service = new AssistantSilentService(
+      {
+        aIUsageLog: { create: usageCreate },
+        release: { findUnique: vi.fn().mockResolvedValue(releaseRow) },
+        issue: { findMany: vi.fn().mockResolvedValue(ISSUES) },
+      } as never,
+      {
+        listAdapters: () => [{ provider: 'glm', model: 'm' }],
+        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+      } as never,
+      { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+    );
+    return { service, chat, usageCreate };
+  };
+
+  it('侦查发版/范围工单/交付物注入指令：结论状态与「在哪拿怎么验证」在场，非 done 红线与 gaps 契约在案', async () => {
+    const { service, chat, usageCreate } = makeNotesDraftService();
+    const result = await service.run(
+      'release-notes-draft',
+      { releaseId: 'r1' },
+      'p1',
+      'u1',
+    );
+
+    expect(result.scenario).toBe('release-notes-draft');
+    expect(result.data).toMatchObject({ notes: expect.any(String) });
+    expect(Array.isArray(result.data.gaps)).toBe(true);
+    const [, options] = chat.mock.calls[0];
+    const instructions = (options as { instructions: string }).instructions;
+    // 范围工单标题与结论状态注入（诚实叙事的依据）
+    expect(instructions).toContain('向导双语化');
+    expect(instructions).toContain('"status":"done"');
+    expect(instructions).toContain('in_progress');
+    // 交付物清单注入（在哪拿/怎么验证）
+    expect(instructions).toContain('桌面安装包');
+    expect(instructions).toContain('GitHub Release');
+    // 诚实红线：非 done 不得写成已完成能力 + gaps 缺口账
+    expect(instructions).toContain('绝不写成已完成能力');
+    expect(instructions).toContain('gaps');
+    // 面向内测用户的叙事口径（非工程流水账）
+    expect(instructions).toContain('内测用户');
+    expect(usageCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it('缺 releaseId → 400（不触 LLM）', async () => {
+    const { service, chat } = makeNotesDraftService();
+    await expect(
+      service.run('release-notes-draft', {}, 'p1', 'u1'),
+    ).rejects.toThrow(/releaseId/);
+    expect(chat).not.toHaveBeenCalled();
+  });
+
+  it('发版不存在 → 400（不触 LLM）', async () => {
+    const { service, chat } = makeNotesDraftService(null);
+    await expect(
+      service.run('release-notes-draft', { releaseId: 'nope' }, 'p1', 'u1'),
+    ).rejects.toThrow(/发版不存在/);
+    expect(chat).not.toHaveBeenCalled();
+  });
+
+  it('空范围与空交付物：指令以「未圈定/尚未登记」占位而非报错（信息不足由 gaps 诚实兜底）', async () => {
+    const { service, chat } = makeNotesDraftService({
+      ...RELEASE_ROW,
+      scope: null,
+      deliverables: null,
+    });
+    await service.run('release-notes-draft', { releaseId: 'r1' }, 'p1', 'u1');
+
+    // scope/deliverables 为空时不查 issue 表
+    const prismaIssueFindMany = (
+      service as unknown as {
+        prisma: { issue: { findMany: ReturnType<typeof vi.fn> } };
+      }
+    ).prisma.issue.findMany;
+    expect(prismaIssueFindMany).not.toHaveBeenCalled();
+    const instructions = (
+      (chat.mock.calls[0] as unknown[])[1] as { instructions: string }
+    ).instructions;
+    expect(instructions).toContain('未圈定范围工单');
+    expect(instructions).toContain('尚未登记交付物');
   });
 });
