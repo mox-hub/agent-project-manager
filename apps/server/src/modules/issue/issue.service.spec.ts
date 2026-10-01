@@ -1057,4 +1057,74 @@ describe('IssueService', () => {
       expect(mockPrismaService.issue.findFirst).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe('createExecution 直创路径单活跃互斥收口（G5-b §5.6）', () => {
+    const task = {
+      id: 'issue-1',
+      projectId: 'proj-1',
+      title: '实现登录页',
+      aiAgentId: 'mem-ai-1',
+    };
+    const dto = {
+      subjectType: 'ai_agent' as const,
+      subjectId: 'mem-ai-1',
+      goal: '执行计划',
+      contextPack: { summary: 'ctx' },
+    };
+
+    function setupForCreate() {
+      mockPrismaService.issue.findUnique.mockResolvedValue(task);
+      mockPrismaService.projectMember.findUnique.mockResolvedValue({
+        id: 'pm-1',
+      });
+      mockPrismaService.member = {
+        findFirst: vi.fn().mockResolvedValue({
+          id: 'mem-ai-1',
+          displayName: 'Coder',
+          type: 'ai_agent',
+          defaultExecutionRole: 'coder',
+        }),
+      };
+      mockPrismaService.execution = {
+        findFirst: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue({ id: 'exec-9' }),
+        findUnique: vi.fn().mockResolvedValue({ id: 'exec-9' }),
+      };
+      mockPrismaService.approvalRequest = { create: vi.fn() };
+      mockPrismaService.activity = { create: vi.fn().mockResolvedValue({}) };
+    }
+
+    it('存在活跃执行时 400 拒绝直创（复用 ACTIVE_EXECUTION_STATUSES 词表）', async () => {
+      setupForCreate();
+      mockPrismaService.execution.findFirst.mockResolvedValue({
+        id: 'exec-active',
+        title: '旧执行',
+        status: 'in_progress',
+      });
+
+      await expect(
+        service.createExecution('issue-1', dto, 'user-1'),
+      ).rejects.toThrow(/已存在活跃执行/);
+      expect(mockPrismaService.execution.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            issueId: 'issue-1',
+            status: {
+              in: ['planned', 'in_progress', 'pending_approval', 'blocked'],
+            },
+          }),
+        }),
+      );
+      expect(mockPrismaService.execution.create).not.toHaveBeenCalled();
+    });
+
+    it('无活跃执行时放行直创', async () => {
+      setupForCreate();
+
+      await service.createExecution('issue-1', dto, 'user-1');
+
+      expect(mockPrismaService.execution.findFirst).toHaveBeenCalledTimes(1);
+      expect(mockPrismaService.execution.create).toHaveBeenCalledTimes(1);
+    });
+  });
 });
