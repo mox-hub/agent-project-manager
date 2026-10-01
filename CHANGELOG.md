@@ -21,6 +21,16 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### A-18 上手引导收口 + 样板推广第二实例——上线套装收官开发版（2026-10-01）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | **onboarding 向导全量双语化 + 内容同步**：六步全部用户可见文案迁 `onboarding.*` 命名空间（原全硬编码中文零 i18n 违规实锤修复）；use-onboarding 步骤定义改存 i18n 键渲染时翻译；Welcome 补第五张「数据安全」特性卡（数据在本地+设置页备份恢复，内测语境）；Complete 步补「第一站：决策收件箱」行动指引卡（G5-b integration 合入提议=新手第一个 AI 确认时刻）；完成态链路核查无断链未改码（gate→app-store persist→desktop-session 壳侧镜像回填，刷新重弹历史问题已有修复与回归守卫） | CAP-A-18 主件一 | onboarding 模块 11/11 绿（含新增 3 例结构性回归：**渲染区零中文字符断言**——硬编码文案直接红）；完成态链路核查结论在案 | i18n onboarding 命名空间双语全量（Edit 逐键） |
+| server | **静默场景注册 `release-notes-draft`**（assistant-silent 注册表，与既有 `release-notes` CAP-K-03 工程 changelog 风格分工——本场景面向内测用户叙事「带来了什么/怎么试/遇到问题找谁」）：prepareContext 侦查 release+范围工单（标题/type/**status 结论状态**）+ deliverables 清单+现有 notes（作改写基础）；指令红线=status 非 done 绝不写成已完成、信息不足 notes 可以很短绝不编造、gaps 诚实兜底；零新端点走通用静默触发面（「不再各起端点」约定） | CAP-A-18 样板推广二 | assistant-silent.service.spec 62/62 绿（新增 4 例：侦查注入/缺 releaseId 400/发版不存在 400/空范围 gaps 兜底）；contract:check 零漂移亲跑 | 契约零变更（openapi 未动，UpdateReleaseRequest.notes 现成） |
+| frontend | **发布说明 AI 起草对话框**（release-detail draft 态，替代旧内联 Textarea）：三层范式——生成即进可编辑 Textarea（AI 建议=草稿）、gaps 黄条不藏、输入来源明细默认收起展开才看（IntegrationBody 样板）；确认走既有 useUpdateRelease 写回 notes，取消零写库；生成失败旧 notes 不受影响+就地重试，保存失败编辑内容不丢；旧 `release-notes` 场景零 UI 消费按注册表能力保留（清理留后续裁决） | CAP-A-18 样板推广二 | release 模块 15/15 绿（新增对话框 5 例：生成/确认写回/取消零写库/失败重试/空草稿）；frontend 全量 1525 绿 | i18n release.detail.notesDraft.* 双语全量 |
+
+test_evidence（主线程独立验收）：contract:check 零漂移亲跑 ✓；assistant-silent spec 62 例 + onboarding/release 两模块 26 例亲跑绿；子代理 frontend 全量 1525 绿自报；禁改域（git/execution/decision/cli-dispatch/docs/CHANGELOG/版本号）零触碰核查 ✓。角色分配样板推广如实记余留（需匹配规则设计，内测前不塞弱推荐）。
+
 ## [0.7.12] - 2026-10-01
 
 ### v0.7.12 发版总览——上线套装：G5-b 执行隔离与成果合入（批一挂账 G5 兑现，工程可信闭环最后一块）
