@@ -34,9 +34,7 @@ import {
 } from '@/components/ui/stepper';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
-import { assistantApi } from '@/modules/assistant/api/assistant-api';
 import {
   useApprovalRequest,
   useGateRelease,
@@ -44,8 +42,8 @@ import {
   useRejectRelease,
   useRelease,
   useReopenRelease,
-  useUpdateRelease,
 } from '../hooks/use-releases';
+import { ReleaseNotesDraftDialog } from '../components/release-notes-draft-dialog';
 import { ReleaseTraceSection } from '../components/release-trace-section';
 import { ReleaseDeliverablesCard } from '../components/release-deliverables-card';
 import { RELEASE_STATUS_TONE, statusLabelKey } from './release-list-page';
@@ -81,32 +79,15 @@ export function ReleaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const releaseQuery = useRelease(id);
   const release = releaseQuery.data;
-  const [notesDraft, setNotesDraft] = useState<string | null>(null);
+  // AI 起草说明对话框（CAP-A-18 样板推广二）：draft 态入口，
+  // 生成/编辑/确认都在对话框内，页面 notes 只在确认写回后经 query 失效刷新
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
 
   const gate = useGateRelease(release?.id ?? '');
   const approval = useApprovalRequest(release?.id ?? '');
   const publish = usePublishRelease(release?.id ?? '');
   const reject = useRejectRelease(release?.id ?? '');
   const reopen = useReopenRelease(release?.id ?? '');
-  const updateNotes = useUpdateRelease(release?.id ?? '');
-
-  const draftNotes = async () => {
-    if (!release) return;
-    try {
-      const result = await assistantApi.silent('release-notes', {
-        projectId: release.projectId,
-        context: { releaseId: release.id },
-      });
-      const notes = String(result.data?.notes ?? '');
-      if (!notes) {
-        toast.error(t('release.detail.aiEmpty'));
-        return;
-      }
-      setNotesDraft(notes);
-    } catch (err) {
-      toast.error((err as Error).message || t('release.detail.aiFailed'));
-    }
-  };
 
   return (
     <PageShell className="overflow-hidden" aiPage="releases.detail">
@@ -186,7 +167,7 @@ export function ReleaseDetailPage() {
                 </Alert>
               ) : null}
 
-              {/* 基本信息 + 发版说明（AI 起草） */}
+              {/* 基本信息 + 发版说明（AI 起草对话框：AI 建议 → 人编辑确认 → 可展开输入来源） */}
               <Card>
                 <CardHeader className="flex-row items-center justify-between space-y-0">
                   <CardTitle className="flex items-center gap-1.5 text-sm">
@@ -198,8 +179,7 @@ export function ReleaseDetailPage() {
                       variant="outline"
                       size="sm"
                       className="h-7 text-xs"
-                      disabled={updateNotes.isPending}
-                      onClick={draftNotes}
+                      onClick={() => setNotesDialogOpen(true)}
                     >
                       <Sparkles className="mr-1 size-3 text-accent-purple" />
                       {t('release.detail.aiDraft')}
@@ -207,45 +187,7 @@ export function ReleaseDetailPage() {
                   ) : null}
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {release.status === 'draft' && notesDraft !== null ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={notesDraft}
-                        onChange={(e) => setNotesDraft(e.target.value)}
-                        rows={8}
-                        className="text-xs"
-                      />
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => setNotesDraft(null)}
-                        >
-                          {t('common.cancel')}
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs"
-                          disabled={updateNotes.isPending}
-                          onClick={() =>
-                            updateNotes.mutate(
-                              { notes: notesDraft },
-                              {
-                                onSuccess: () => {
-                                  setNotesDraft(null);
-                                  toast.success(t('release.detail.notesSaved'));
-                                },
-                                onError: (err) => toast.error((err as Error).message),
-                              },
-                            )
-                          }
-                        >
-                          {t('common.save')}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : release.notes ? (
+                  {release.notes ? (
                     <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-content-text">
                       {release.notes}
                     </pre>
@@ -281,6 +223,15 @@ export function ReleaseDetailPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* AI 起草说明对话框（draft 态「AI 起草」按钮触发） */}
+              {release ? (
+                <ReleaseNotesDraftDialog
+                  release={release}
+                  open={notesDialogOpen}
+                  onOpenChange={setNotesDialogOpen}
+                />
+              ) : null}
 
               {/* 交付成果清单（CAP-K-03 批二）：交付了什么/在哪拿/怎么验证/限制/接收人 */}
               <ReleaseDeliverablesCard release={release} />
