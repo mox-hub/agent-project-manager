@@ -4,7 +4,7 @@
  * fixture 红线：临时目录建**真 git 仓库**（git init + 初始 commit），
  * 不 spawn 任何 CLI/LLM——git 命令本身即被测对象。
  */
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';

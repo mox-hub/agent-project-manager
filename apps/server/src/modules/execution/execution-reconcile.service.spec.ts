@@ -199,7 +199,6 @@ describe('ExecutionReconcileService', () => {
     };
 
     it('失败执行 worktree 超 7 天 TTL：force 清理 + cleanedAt 回填 + 项目根 prune', async () => {
-      const stale = new Date(Date.now() - 8 * 24 * 3600_000);
       prismaMock.execution.findMany.mockImplementation(
         async (args: { where?: { status?: unknown } }) => {
           // 第一次调用 = failed TTL 扫描；第二次 = 活跃扫描
