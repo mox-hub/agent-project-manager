@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
+import { EmptyState } from '@/components/semantic/empty-state';
 import { eventClient } from '@/infrastructure/event-client';
 import { cn } from '@/lib/utils';
 import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
@@ -177,12 +178,18 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
                 </DropdownMenuItem>
               ))}
               {canDispatchCli && (
-                <DropdownMenuItem onClick={() => onDispatchCli?.(execution)}>
+                <DropdownMenuItem
+                  data-ai-action="task.task-detail.execution-dispatch.click"
+                  onClick={() => onDispatchCli?.(execution)}
+                >
                   {t('taskDetail.execActionDispatchCli')}
                 </DropdownMenuItem>
               )}
               {canRetryCli && (
-                <DropdownMenuItem onClick={() => onRetryCli?.(execution)}>
+                <DropdownMenuItem
+                  data-ai-action="task.task-detail.execution-retry.click"
+                  onClick={() => onRetryCli?.(execution)}
+                >
                   {t('taskDetail.execActionRetryCli')}
                 </DropdownMenuItem>
               )}
@@ -213,6 +220,7 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
             variant="secondary"
             size="xs"
             className="h-5 px-1.5 text-3xs"
+            data-ai-action="task.task-detail.execution-transition.click"
             disabled={disabled}
             onClick={() => onTransition(execution, primary)}
           >
@@ -435,6 +443,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
             <Button
               size="xs"
               className="h-7"
+              data-ai-action="task.task-detail.execution-create.click"
               disabled={!title.trim() || !subjectId || busy}
               onClick={() => void handleCreate()}
             >
@@ -450,9 +459,12 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
               {t('taskDetail.execItemsLoading')}
             </div>
           ) : executions.length === 0 ? (
-            <div className="px-6 pb-2 text-xs text-muted-foreground">
-              {t('taskDetail.execItemsEmpty')}
-            </div>
+            <EmptyState
+              variant="compact"
+              icon={ListChecks}
+              title={t('taskDetail.execItemsEmpty')}
+              className="mx-6 mb-2"
+            />
           ) : (
             <div className="px-6 pb-3 flex flex-col gap-1">
               {executions.map((execution) => (

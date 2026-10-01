@@ -3279,11 +3279,7 @@
     "emptyValue": "Not filled in",
     "deleteTitle": "Delete Bug",
     "deleteConfirm": "This action cannot be undone. Delete \"{{title}}\"?",
-    "linkedDocs": "Linked Documents",
-    "noLinkedDocs": "No linked documents yet. Add them from the \"Linked Tasks\" panel on the document page.",
     "discussion": "Comments / Discussion",
-    "documentFallback": "Document {{id}}",
-    "sectionLabel": "Section: {{title}}",
     "severityS0": "S0 Critical",
     "severityS1": "S1 High",
     "severityS2": "S2 Medium",
@@ -3306,6 +3302,12 @@
     "propertiesLabel": "Properties",
     "clearDueDate": "Clear due date",
     "parentTaskLabel": "Parent task"
+  },
+  "issueDetail": {
+    "linkedDocs": "Linked Documents",
+    "noLinkedDocs": "No linked documents yet. Add them from the \"Linked Tasks\" panel on the document page.",
+    "documentFallback": "Document {{id}}",
+    "sectionLabel": "Section: {{title}}"
   },
   "taskDetail": {
     "promptPanel": "Task prompt",
@@ -3339,11 +3341,7 @@
     "addSubtask": "Add Subtask",
     "subtaskTitle": "Subtask Title",
     "saveSubtask": "Save Subtask",
-    "linkedDocs": "Linked Documents",
-    "noLinkedDocs": "No linked documents yet. Add them from the \"Linked Tasks\" panel on the document page.",
     "discussion": "Comments / Discussion",
-    "documentFallback": "Document {{id}}",
-    "sectionLabel": "Section: {{title}}",
     "description": "Description",
     "markdownHint": "Markdown supported",
     "priorityLabel": "Priority",

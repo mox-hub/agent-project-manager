@@ -23,7 +23,6 @@ import {
   CheckCircle2,
   ChevronDown,
   Diamond as DiamondIcon,
-  FileText,
   Flag,
   ListChecks,
   ListTree,
@@ -86,6 +85,7 @@ import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useMembers } from '@/modules/team-member/hooks';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
 import { cn } from '@/lib/utils';
+import { formatDate, formatDateShort } from '@/lib/format';
 import { useTabs } from '@/shared/tabs/tabs-context';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { useEntityNavigation } from '@/shared/hooks/use-entity-navigation';
@@ -102,9 +102,7 @@ import { CompletionReview } from '../components/completion-review';
 import { AcceptanceCriteriaPreview } from '../components/acceptance-criteria-preview';
 import { IssueDependenciesSection } from '../components/issue-dependencies-section';
 import { useAcceptancesByTask } from '@/modules/acceptance/hooks/use-acceptance';
-import {
-  useTaskDocumentLinks, LINK_TYPE_LABELS, LINK_TYPE_COLORS,
-} from '@/modules/document/hooks/use-document-task-links';
+import { LinkedDocsPanel } from '../components/linked-docs-panel';
 import { TaskLinearPanel } from '@/modules/linear/components/task-linear-panel';
 import { LinearConflictResolver } from '@/modules/linear/components/linear-conflict-resolver';
 import { LinearExternalRefBadge, LinearSyncStatusBadge } from '@/modules/linear/components/linear-status-badge';
@@ -511,7 +509,7 @@ export function TaskDetailPage() {
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
               <span className="font-mono">{shortId}</span>
               <span className="opacity-50">•</span>
-              <span>{t('common.createdAt')} {new Date(task.createdAt).toLocaleDateString()}</span>
+              <span>{t('common.createdAt')} {formatDate(task.createdAt)}</span>
               {task.externalIdentifier ? (
                 <>
                   <span className="opacity-50">•</span>
@@ -540,6 +538,7 @@ export function TaskDetailPage() {
               <Button
                 variant="ghost"
                 size="icon-xs"
+                data-ai-action="task.task-detail.split-ai.click"
                 title={
                   decompose.isPending
                     ? t('taskDetail.splitRunning')
@@ -632,6 +631,7 @@ export function TaskDetailPage() {
             <SidebarButton
               icon={Trash2}
               label={t('common.delete')}
+              data-ai-action="task.task-detail.delete.click"
               onClick={() => setShowDeleteDialog(true)}
               className="text-destructive hover:text-destructive"
             />
@@ -1058,7 +1058,7 @@ function SubTaskSection({
           {/* AI 拆分待确认建议批：确认/忽略逐条处理，清空自动撤批（不产生真实工单行） */}
           {proposal && (
             <div className="px-6 pb-2">
-              <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
+              <div className="rounded-lg border border-border bg-muted/20 overflow-hidden">
                 <div className="flex items-center justify-between gap-2 px-3 py-2">
                   <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Sparkles className="size-3.5 shrink-0 text-accent-purple" />
@@ -1129,7 +1129,10 @@ function SubTaskSection({
 
           {/* Sub-task list */}
           {isLoading ? (
-            <div className="px-6 pb-2 text-xs text-muted-foreground">{t('common.loading')}</div>
+            <div className="flex items-center gap-2 px-6 pb-2 text-xs text-muted-foreground">
+              <Spinner className="size-3 text-inherit" />
+              {t('common.loading')}
+            </div>
           ) : subIssues.length > 0 ? (
             <div className="px-6 pb-1 flex flex-col gap-0.5">
               {subIssues.map((st) => {
@@ -1164,7 +1167,7 @@ function SubTaskSection({
                     )}
                     {st.dueDate && (
                       <span className="text-3xs text-muted-foreground shrink-0">
-                        {new Date(st.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {formatDateShort(st.dueDate)}
                       </span>
                     )}
                     {st.assignee && (
@@ -1182,7 +1185,7 @@ function SubTaskSection({
           {/* Create sub-task form（图1 创建卡形态） */}
           {subOpen && (
             <div className="px-6 pb-4">
-              <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
+              <div className="rounded-lg border border-border bg-muted/20 overflow-hidden">
                 <div className="p-3 flex flex-col gap-2">
                   <AutoSizeTextarea
                     autoFocus
@@ -1345,59 +1348,5 @@ function CustomFieldsPanel({
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-// ===== Linked Documents（右侧栏面板，形态对齐 Properties/Suggestions） =====
-
-function LinkedDocsPanel({ issueId }: { issueId: string }) {
-  const { t } = useTranslation();
-  const { data: links = [], isLoading } = useTaskDocumentLinks(issueId);
-  return (
-    <SidebarPanel
-      title={t('taskDetail.linkedDocs')}
-      icon={<FileText className="size-3" />}
-      action={
-        links.length > 0 ? (
-          <span className="text-3xs text-muted-foreground">({links.length})</span>
-        ) : undefined
-      }
-    >
-      {isLoading ? (
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">{t('common.loading')}</div>
-      ) : links.length === 0 ? (
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">{t('taskDetail.noLinkedDocs')}</div>
-      ) : (
-        links.map((link) => (
-          <Link
-            key={link.id}
-            to={`/app/documents/${link.documentId}`}
-            className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          >
-            <FileText className="size-3.5 shrink-0" />
-            <span className="flex-1 min-w-0 text-left">
-              <span className="block truncate font-medium text-foreground">
-                {link.document?.title || t('taskDetail.documentFallback', { id: link.documentId })}
-              </span>
-              {link.section && (
-                <span className="block truncate text-3xs">
-                  {t('taskDetail.sectionLabel', { title: link.section.title })}
-                </span>
-              )}
-            </span>
-            <span
-              className={cn(
-                'shrink-0 rounded-sm px-1.5 py-0.5 text-3xs font-medium',
-                LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
-              )}
-            >
-              {t(`document.linkType.${link.linkType}`, {
-                defaultValue: LINK_TYPE_LABELS[link.linkType] || link.linkType,
-              })}
-            </span>
-          </Link>
-        ))
-      )}
-    </SidebarPanel>
   );
 }

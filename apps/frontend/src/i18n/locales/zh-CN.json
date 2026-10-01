@@ -3279,11 +3279,7 @@
     "emptyValue": "未填写",
     "deleteTitle": "删除 Bug",
     "deleteConfirm": "此操作不可撤销，确定要删除 \"{{title}}\" 吗？",
-    "linkedDocs": "关联文档",
-    "noLinkedDocs": "暂无关联文档。在文档详情页的\"关联任务\"面板可添加。",
     "discussion": "评论 / 讨论",
-    "documentFallback": "文档 {{id}}",
-    "sectionLabel": "段落: {{title}}",
     "severityS0": "S0 致命",
     "severityS1": "S1 严重",
     "severityS2": "S2 一般",
@@ -3306,6 +3302,12 @@
     "propertiesLabel": "属性",
     "clearDueDate": "清除截止日期",
     "parentTaskLabel": "父任务"
+  },
+  "issueDetail": {
+    "linkedDocs": "关联文档",
+    "noLinkedDocs": "暂无关联文档。在文档详情页的\"关联任务\"面板可添加。",
+    "documentFallback": "文档 {{id}}",
+    "sectionLabel": "段落: {{title}}"
   },
   "taskDetail": {
     "promptPanel": "任务提示词",
@@ -3339,11 +3341,7 @@
     "addSubtask": "添加子任务",
     "subtaskTitle": "子任务标题",
     "saveSubtask": "保存子任务",
-    "linkedDocs": "关联文档",
-    "noLinkedDocs": "暂无关联文档。在文档详情页的\"关联任务\"面板可添加。",
     "discussion": "评论 / 讨论",
-    "documentFallback": "文档 {{id}}",
-    "sectionLabel": "段落: {{title}}",
     "description": "描述",
     "markdownHint": "支持 Markdown 语法",
     "priorityLabel": "优先级",

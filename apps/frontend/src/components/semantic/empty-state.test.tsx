@@ -34,6 +34,34 @@ describe('EmptyState 三分场景变体', () => {
     // 无 icon 圆块（muted box）
     expect(container.querySelector('span.bg-muted')).toBeNull();
   });
+
+  it('compact 变体：单行无卡底（面板/分区内容内嵌场景）', () => {
+    const { container } = render(
+      <EmptyState variant="compact" icon={FileText} title="暂无执行项" />,
+    );
+    const root = container.querySelector('div');
+    // 一行高 muted 文案：无 dashed 边框、无 min-h 卡底
+    expect(root?.className).toContain('items-center');
+    expect(root?.className).toContain('text-xs');
+    expect(root?.className).not.toContain('border-dashed');
+    expect(root?.className).not.toContain('min-h-40');
+    // icon 行内小尺寸（size-3.5），非 muted 圆块
+    expect(container.querySelector('span.bg-muted')).toBeNull();
+    expect(container.querySelector('.size-3\\.5')).not.toBeNull();
+  });
+
+  it('compact 变体：action 紧凑靠右、description 不渲染', () => {
+    render(
+      <EmptyState
+        variant="compact"
+        title="暂无关联文档"
+        description="这段描述在 compact 档不出现"
+        action={<button type="button">去添加</button>}
+      />,
+    );
+    expect(screen.getByRole('button', { name: '去添加' })).toBeInTheDocument();
+    expect(screen.queryByText('这段描述在 compact 档不出现')).toBeNull();
+  });
 });
 
 describe('AsyncState 空态透传', () => {

@@ -58,12 +58,11 @@ import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useMembers } from '@/modules/team-member/hooks';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format';
 import { useTabs } from '@/shared/tabs/tabs-context';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { useEntityNavigation } from '@/shared/hooks/use-entity-navigation';
-import {
-  useTaskDocumentLinks, LINK_TYPE_LABELS, LINK_TYPE_COLORS,
-} from '@/modules/document/hooks/use-document-task-links';
+import { LinkedDocsPanel } from '../components/linked-docs-panel';
 import { ActivityFeed } from '@/modules/activity';
 import { useSetViewingContext } from '@/shared/viewing-context';
 import { useTranslation } from 'react-i18next';
@@ -332,7 +331,7 @@ export function BugDetailPage() {
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
               <span className="font-mono">{shortId}</span>
               <span className="opacity-50">•</span>
-              <span>{t('common.createdAt')} {new Date(bug.createdAt).toLocaleDateString()}</span>
+              <span>{t('common.createdAt')} {formatDate(bug.createdAt)}</span>
             </div>
           </div>
 
@@ -358,7 +357,7 @@ export function BugDetailPage() {
 
           {/* Bug specific info */}
           <div className="px-6 py-4 space-y-4 shrink-0">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-accent-red flex items-center gap-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
               <FileText className="size-3.5" />
               {t('bugDetail.infoTitle')}
             </h3>
@@ -404,6 +403,7 @@ export function BugDetailPage() {
             <SidebarButton
               icon={Trash2}
               label={t('common.delete')}
+              data-ai-action="bug.bug-detail.delete.click"
               onClick={() => setShowDeleteDialog(true)}
               className="text-destructive hover:text-destructive"
             />
@@ -540,59 +540,5 @@ export function BugDetailPage() {
         </DialogContent>
       </Dialog>
     </PageShell>
-  );
-}
-
-// ===== Linked Documents（右侧栏面板，形态对齐 Properties/Suggestions） =====
-
-function LinkedDocsPanel({ issueId }: { issueId: string }) {
-  const { t } = useTranslation();
-  const { data: links = [], isLoading } = useTaskDocumentLinks(issueId);
-  return (
-    <SidebarPanel
-      title={t('bugDetail.linkedDocs')}
-      icon={<FileText className="size-3" />}
-      action={
-        links.length > 0 ? (
-          <span className="text-3xs text-muted-foreground">({links.length})</span>
-        ) : undefined
-      }
-    >
-      {isLoading ? (
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">{t('common.loading')}</div>
-      ) : links.length === 0 ? (
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">{t('bugDetail.noLinkedDocs')}</div>
-      ) : (
-        links.map((link) => (
-          <Link
-            key={link.id}
-            to={`/app/documents/${link.documentId}`}
-            className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          >
-            <FileText className="size-3.5 shrink-0" />
-            <span className="flex-1 min-w-0 text-left">
-              <span className="block truncate font-medium text-foreground">
-                {link.document?.title || t('bugDetail.documentFallback', { id: link.documentId })}
-              </span>
-              {link.section && (
-                <span className="block truncate text-3xs">
-                  {t('bugDetail.sectionLabel', { title: link.section.title })}
-                </span>
-              )}
-            </span>
-            <span
-              className={cn(
-                'shrink-0 rounded-sm px-1.5 py-0.5 text-3xs font-medium',
-                LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
-              )}
-            >
-              {t(`document.linkType.${link.linkType}`, {
-                defaultValue: LINK_TYPE_LABELS[link.linkType] || link.linkType,
-              })}
-            </span>
-          </Link>
-        ))
-      )}
-    </SidebarPanel>
   );
 }
