@@ -21,9 +21,15 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
-### G5-b 执行隔离与成果合入——批一挂账 G5 兑现（ADR-017 · 2026-10-01）
+## [0.7.12] - 2026-10-01
 
-> per-Execution git worktree 隔离 + 成果经 integration 决策卡人工确认合入；设计稿 `docs/design/设计-G5执行隔离与合入-2026-10-01.md`（v0.7.11 定版），实现七笔 `feat/execution-worktree-isolation` 已 ff 合流。
+### v0.7.12 发版总览——上线套装：G5-b 执行隔离与成果合入（批一挂账 G5 兑现，工程可信闭环最后一块）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server+frontend | **per-Execution git worktree 隔离 + 成果经 integration 决策卡人工确认合入**（设计稿 docs/design/设计-G5执行隔离与合入-2026-10-01.md v1.0.0 + ADR-017，v0.7.11 定版）：受控白名单 ExecutionWorktreeService（六方法，apm/exec/ 前缀硬校验）→ 派发链注入（CLI 协议零变更，workspaceRoot 三处同源替换；降级四 reason 不阻塞+显眼标记）→ 完成后成果收集（空变更清理/有变更补快照 commit 发卡）→ applier 六步（指纹/脏工作区/merge-tree 冲突预检/merge --no-ff）→ 互斥绕过收口 + reconcile 7 天 TTL 巡检；前端隔离徽标双态 + 决策收件箱 integration 卡（A-18 两层样板第三实例） | G5 / ADR-017 / CAP 批一挂账 | server 新增 6 spec 123 例 + frontend 3 spec 15 例主线程亲跑绿；子代理全量自报 server 1145 / frontend 1517 绿；contract:check 零漂移亲跑；quality:gate 等效全绿（server e2e 419/423，4 条 local-only 经基线 d9990da1 detach 复跑完全同挂当日实证豁免；api:audit 97.4%） | 详见下方明细表；能力清单批一挂账 G5 兑现、GAP-T-53 当日清偿；模块环实证入账（GitModule 链环→独立零依赖 ExecutionWorktreeModule） |
+
+### G5-b 明细——五主题（feat/execution-worktree-isolation 七笔 ff 合流）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
 | --- | --- | --- | --- | --- |
@@ -34,6 +40,8 @@ tags: "changelog,release"
 | frontend | **执行隔离徽标与 worktree 信息行 + 决策收件箱 integration 卡**：run-isolation-badge 双态（worktree 中性「隔离执行·分支」/ shared-root 琥珀「未隔离·共享目录」+reason tooltip）+ 解析容错，接入 run-details-dialog 与 run-info-panel（worktree 信息区+失败 TTL 提示）；integration 卡按 A-18「AI 建议→人确认→可展开细节」两层样板——默认层结论+推荐+脏工作区警示，展开层文件清单 top20+溢出计数+分支溯源 | G5 §5.7 / A-18 样板 | 徽标 5 例 + 卡 4 例 + 词表路由回归（frontend 亲跑 15 例绿） | i18n `decision.kind.integration` / `decision.integration.*` / `runDetails.isolation.*` 双语全量（Edit 逐键） |
 
 test_evidence（主线程独立验收）：`pnpm contract:check` 契约零漂移亲跑 ✓；server 六个新增/受影响 spec 123 用例亲跑绿；frontend 新增三 spec 15 用例亲跑绿；子代理全量自报 server 1145 / frontend 1517 绿；schema.prisma 与 runtime/protocol.ts 零变更核查 ✓；关键四处代码审查（前缀守卫/降级兜底/applier 事务边界/human 不触发）通过。
+
+**上线套装进度**：G8 ✅（v0.7.8）→ G7-a ✅（v0.7.9）→ G7-b ✅（v0.7.10）→ G5-a 设计 ✅（v0.7.11）→ **G5-b 实现 ✅（本版，工程可信闭环 G5/G7/G8 三缺口全部兑现）** → A-18 上手引导（v0.7.13）→ v0.8.0 内测发布。已知代价如实记：GitModule 模块链环使 worktree 服务独立零依赖（不读自配 git 路径，PATH 先例）；partial unique index 选做未做（应用层双路径已收口）；实机验收路径=git 项目派发→收件箱 integration 卡→合入/驳回全链 + 非 git 项目琥珀徽标。
 
 ## [0.7.11] - 2026-10-01
 
