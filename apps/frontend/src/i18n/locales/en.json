@@ -2863,6 +2863,7 @@
     "saveFailed": "Failed to save",
     "deleteFailed": "Failed to delete",
     "restore": "Restore",
+    "labelArchived": "Archived",
     "labelFormDesc": "Each tag belongs to a single feature area; tags are independent per area.",
     "addStatus": "New Status",
     "editStatus": "Edit Status",

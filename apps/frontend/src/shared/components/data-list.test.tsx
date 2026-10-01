@@ -163,3 +163,69 @@ describe('DataList 键盘流（P1-11）', () => {
     expect(onItemClick.mock.calls.length).toBe(openCountBefore);
   });
 });
+
+describe('渲染性能阀门（宪法 §21 · GAP-T-55）', () => {
+  const buildItems = (count: number): Item[] =>
+    Array.from({ length: count }, (_, index) => ({ id: `item-${index}`, title: `Item ${index}` }));
+
+  it('§21.1 测试环境短路渐进挂载：超过阈值的清单仍一次性全量渲染（行为级判定依据）', () => {
+    const many = buildItems(200);
+    const { container } = render(
+      <DataList items={many} renderLeading={(item) => <span>{item.title}</span>} />,
+    );
+    expect(container.querySelectorAll('[data-row-id]').length).toBe(200);
+  });
+
+  it('§21.1 行容器挂 content-visibility + contain-intrinsic-size（离屏行免布局/绘制，DOM 保留）', () => {
+    renderList();
+    const className = getRow('Alpha').className;
+    expect(className).toContain('content-visibility:auto');
+    expect(className).toContain('contain-intrinsic-size:auto_32px');
+  });
+
+  it('§21.3 Row memo：同 props 重渲染时行渲染器不重跑（DataList 内部状态变化不波及未受影响行）', () => {
+    const renderLeading = vi.fn((item: Item) => <span>{item.title}</span>);
+    const { rerender } = render(
+      <DataList items={items} renderLeading={renderLeading} />,
+    );
+    const callsAfterMount = renderLeading.mock.calls.length;
+    expect(callsAfterMount).toBe(items.length);
+
+    // 同 props rerender（同数组/同闭包引用）：memo 化的行全部跳过
+    rerender(<DataList items={items} renderLeading={renderLeading} />);
+    expect(renderLeading.mock.calls.length).toBe(callsAfterMount);
+  });
+
+  it('§21.3 右键菜单事件期构建：render 期不构建菜单数组，右键打开时菜单项可达', async () => {
+    const buildMenu = vi.fn(() => [{ id: 'menu-1', label: '删除本行' }]);
+    render(
+      <DataList
+        items={items}
+        renderLeading={(item) => <span>{item.title}</span>}
+        onItemContextMenu={buildMenu}
+      />,
+    );
+    // 关闭态零构建（此前每行每渲染全量重建 609 次即为违例先例）
+    expect(buildMenu).not.toHaveBeenCalled();
+
+    fireEvent.contextMenu(getRow('Alpha'));
+    expect(await screen.findByText('删除本行')).toBeTruthy();
+    expect(buildMenu).toHaveBeenCalled();
+  });
+
+  it('§21.4 数据窗口：Dev 模式超预算行数告警一次，且不静默截断数据', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const many = buildItems(320);
+      const { container } = render(
+        <DataList items={many} renderLeading={(item) => <span>{item.title}</span>} />,
+      );
+      // 数据窗口律：告警但不裁数据
+      expect(container.querySelectorAll('[data-row-id]').length).toBe(320);
+      const warnings = warn.mock.calls.filter((args) => String(args[0]).includes('[DataList]'));
+      expect(warnings.length).toBe(1);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+});

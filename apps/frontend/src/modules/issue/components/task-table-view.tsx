@@ -8,7 +8,7 @@ import { ListAvatar, ListDate } from '@/shared/components/data-list';
 import { AiExecutionBadge } from '@/modules/issue/components/ai-execution-badge';
 import { IssueTypePill } from '@/shared/components/issue-type-pill';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
-import { StatusCell, PriorityCell, AssigneeCell } from './cell-editors';
+import { StatusCell, PriorityCell, AssigneeCell, IssueCellDataProvider } from './cell-editors';
 import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
@@ -413,33 +413,38 @@ export function TaskTableView({
     onSortChange?.(next[0].id, next[0].desc ? 'desc' : 'asc');
   };
 
+  // §21.2 单元格数据收编：成员/类型/里程碑列表级取一次，行内单元格零 observer
+  const projectIds = useMemo(() => tasks.map((task) => task.projectId), [tasks]);
+
   return (
-    <div className={cn('w-full', className)}>
-      <DataTable<Task>
-        columns={visibleColumns}
-        data={displayRows}
-        getRowId={(task) => task.id}
-        onRowClick={onTaskClick}
-        onRowContextMenu={(task) => rowMenu(task)}
-        enableSelection={!!selectionActions}
-        selectedIds={selectedIds}
-        onSelectedIdsChange={setSelectedIds}
-        selectionActions={
-          selectionActions
-            ? (selectedRows, clear) => selectionActions(selectedRows, clear)
-            : undefined
-        }
-        sorting={sortingState}
-        onSortingChange={onSortChange ? handleSortingChange : undefined}
-        pageSize={50}
-        stickyHeader
-        maxHeight={maxHeight}
-        emptyContent={
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            {loading ? t('common.loading') : t('task.messages.noTasks')}
-          </div>
-        }
-      />
-    </div>
+    <IssueCellDataProvider projectIds={projectIds}>
+      <div className={cn('w-full', className)}>
+        <DataTable<Task>
+          columns={visibleColumns}
+          data={displayRows}
+          getRowId={(task) => task.id}
+          onRowClick={onTaskClick}
+          onRowContextMenu={(task) => rowMenu(task)}
+          enableSelection={!!selectionActions}
+          selectedIds={selectedIds}
+          onSelectedIdsChange={setSelectedIds}
+          selectionActions={
+            selectionActions
+              ? (selectedRows, clear) => selectionActions(selectedRows, clear)
+              : undefined
+          }
+          sorting={sortingState}
+          onSortingChange={onSortChange ? handleSortingChange : undefined}
+          pageSize={50}
+          stickyHeader
+          maxHeight={maxHeight}
+          emptyContent={
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              {loading ? t('common.loading') : t('task.messages.noTasks')}
+            </div>
+          }
+        />
+      </div>
+    </IssueCellDataProvider>
   );
 }

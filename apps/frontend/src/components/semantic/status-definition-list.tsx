@@ -9,14 +9,10 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Plus } from 'lucide-react';
-import {
-  Sortable,
-  SortableItem,
-  SortableItemHandle,
-} from '@/components/ui/sortable';
-import { RawButton } from '@/components/raw/raw-button';
+import { Sortable } from '@/components/ui/sortable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { DefinitionRow } from '@/components/semantic/definition-row';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import type { StatusVisualEntry } from '@/shared/status/status-visuals';
 import { STATUS_ICONS, STATUS_GROUP_DEFAULT_ICON, type StatusIconKey } from '@/shared/status/status-visuals';
@@ -181,28 +177,11 @@ function StatusDefinitionRow({
   const nextKeys = allowedKeysOf(def);
 
   return (
-    <SortableItem
-      value={def.id}
-      className="group flex items-center gap-2.5 bg-card px-1.5 py-2 motion-shift"
-    >
-      <SortableItemHandle
-        render={<RawButton aria-label={t('common.reorder', '拖拽排序')} />}
-        className="touch-none text-content-text-muted opacity-0 transition-opacity hover:text-content-text-secondary group-hover:opacity-100"
-      >
-        <svg viewBox="0 0 10 16" className="size-3.5 fill-current" aria-hidden>
-          <circle cx="3" cy="3" r="1.4" />
-          <circle cx="7" cy="3" r="1.4" />
-          <circle cx="3" cy="8" r="1.4" />
-          <circle cx="7" cy="8" r="1.4" />
-          <circle cx="3" cy="13" r="1.4" />
-          <circle cx="7" cy="13" r="1.4" />
-        </svg>
-      </SortableItemHandle>
-      <RawButton
-        onClick={onClick}
-        className="flex min-w-0 flex-1 items-center gap-3 py-0.5 text-left"
-      >
-        {/* 双行文本行首：xl 档（32×32）带底框，自定义色时浅底跟随（colorSurface） */}
+    <DefinitionRow
+      id={def.id}
+      onClick={onClick}
+      leading={
+        /* 双行文本行首：xl 档（32×32）带底框，自定义色时浅底跟随（colorSurface） */
         <StatusIconFrame
           icon={dyn?.icon ?? STATUS_ICONS[groupDefault]}
           tone={dyn?.tone ?? 'default'}
@@ -212,50 +191,50 @@ function StatusDefinitionRow({
           colorSurface
           className="rounded-lg"
         />
-        <span className="min-w-0">
-          <span className="flex items-center gap-2">
-            <span className="truncate text-sm font-medium text-foreground">{def.name}</span>
-            {def.isBlockedState ? (
-              <Badge variant="destructive">{t('settings.isBlockedState')}</Badge>
-            ) : def.isFinal ? (
-              <Badge variant="outline">{t('settings.statusFinalBadge', '终态')}</Badge>
-            ) : null}
-            {nextKeys.length > 0 ? (
-              <Badge
-                variant="outline"
-                className="gap-0.5 text-accent-blue"
-                title={`${t('settings.allowedNextStatuses')}：${nextKeys
-                  .map((k) => groupNames.get(k) ?? k)
-                  .join('、')}`}
-              >
-                <ArrowRight className="size-2.5" />
-                {t('settings.transitionCount', { count: nextKeys.length })}
-              </Badge>
-            ) : null}
-          </span>
-          {def.description ? (
-            <span className="block truncate text-xs text-content-text-muted">
-              {def.description}
+      }
+      title={
+        <>
+          <span className="truncate text-sm font-medium text-foreground">{def.name}</span>
+          {def.isBlockedState ? (
+            <Badge variant="destructive">{t('settings.isBlockedState')}</Badge>
+          ) : def.isFinal ? (
+            <Badge variant="outline">{t('settings.statusFinalBadge', '终态')}</Badge>
+          ) : null}
+          {nextKeys.length > 0 ? (
+            <Badge
+              variant="outline"
+              className="gap-0.5 text-accent-blue"
+              title={`${t('settings.allowedNextStatuses')}：${nextKeys
+                .map((k) => groupNames.get(k) ?? k)
+                .join('、')}`}
+            >
+              <ArrowRight className="size-2.5" />
+              {t('settings.transitionCount', { count: nextKeys.length })}
+            </Badge>
+          ) : null}
+        </>
+      }
+      description={def.description || undefined}
+      trailing={
+        <>
+          {count !== undefined ? (
+            <span className="shrink-0 text-xs text-content-text-muted">
+              {t('settings.statusIssueCount', { count })}
             </span>
           ) : null}
-        </span>
-      </RawButton>
-      {count !== undefined ? (
-        <span className="shrink-0 text-xs text-content-text-muted">
-          {t('settings.statusIssueCount', { count })}
-        </span>
-      ) : null}
-      {onViewTasks ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="mr-1 hidden shrink-0 group-hover:inline-flex"
-          onClick={onViewTasks}
-        >
-          {t('settings.viewIssues')}
-        </Button>
-      ) : null}
-    </SortableItem>
+          {onViewTasks ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mr-1 hidden shrink-0 group-hover:inline-flex"
+              onClick={onViewTasks}
+            >
+              {t('settings.viewIssues')}
+            </Button>
+          ) : null}
+        </>
+      }
+    />
   );
 }

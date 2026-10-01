@@ -2863,6 +2863,7 @@
     "saveFailed": "保存失败",
     "deleteFailed": "删除失败",
     "restore": "恢复归档",
+    "labelArchived": "已归档",
     "labelFormDesc": "标签归属单一功能域，各功能的标签相互独立。",
     "addStatus": "新建状态",
     "editStatus": "编辑状态",

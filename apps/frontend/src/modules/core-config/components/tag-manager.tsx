@@ -1,19 +1,20 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Archive, ArchiveRestore, GripVertical, Pencil, Plus, Tags, Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, Plus, Tags, Trash2 } from 'lucide-react';
 import { PageShell } from '@/components/semantic/page-shell';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { AsyncState } from '@/components/semantic/async-state';
-import { DataTableShell } from '@/components/semantic/data-table-shell';
-import { SkeletonTable } from '@/components/ui/skeleton';
+import { DefinitionRow } from '@/components/semantic/definition-row';
+import { StatusIconFrame } from '@/shared/status/status-icon-frame';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
-import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { SkeletonTable } from '@/components/ui/skeleton';
+import { DataTableShell } from '@/components/semantic/data-table-shell';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import type { SegmentedTone } from '@/components/ui/segmented-control';
 import {
@@ -24,14 +25,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from '@/components/ui/toast';
-import { Spinner } from '@/components/ui/spinner';
-import {
-  Sortable,
-  SortableItem,
-  SortableItemHandle,
-} from '@/components/ui/sortable';
+import { Sortable } from '@/components/ui/sortable';
 import { ColorPicker, DEFAULT_SWATCHES } from '@/components/ui/color-picker';
+import { toast } from '@/components/ui/toast';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import {
@@ -64,14 +60,18 @@ const FILTER_TONE: Record<ResourceType, SegmentedTone> = {
   document: 'purple',
 };
 
-interface TagFormData {
+interface TagDraft {
   name: string;
   color: string;
   description: string;
-  /** 标签归属的单一功能域；创建时默认取当前筛选页签，创建后不可更改 */
+  /** 标签归属的单一功能域；创建时默认取当前筛选域，创建后不可更改 */
   resourceType: string;
 }
 
+/**
+ * 设置·标签（管理面统一批 2026-10-01）：域分段 + DefinitionRow 行卡
+ * （xl 色底框图标 + 双行文本 + hover 操作 + 拖拽排序），行点击编辑。
+ */
 export function TagManager() {
   const { t } = useTranslation();
   const confirmAction = useConfirm();
@@ -82,50 +82,23 @@ export function TagManager() {
   const deleteTag = useDeleteTag();
 
   const [filter, setFilter] = useState<TagFilter>('project');
-  const tagForm = useForm<TagFormData>({
-    defaultValues: { name: '', color: TAG_DEFAULT_COLOR, description: '', resourceType: filter },
-  });
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Tag | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const filteredTags = tags.filter((tag) => tag.resourceType === filter);
+  const filteredTags = useMemo(
+    () => tags.filter((tag) => tag.resourceType === filter),
+    [tags, filter],
+  );
 
   const openCreate = () => {
-    tagForm.reset({ name: '', color: TAG_DEFAULT_COLOR, description: '', resourceType: filter });
     setEditing(null);
-    setIsFormOpen(true);
+    setDialogOpen(true);
   };
 
   const openEdit = (tag: Tag) => {
-    tagForm.reset({
-      name: tag.name,
-      color: tag.color || TAG_DEFAULT_COLOR,
-      description: tag.description || '',
-      resourceType: tag.resourceType || filter,
-    });
+    if (!isAdmin) return;
     setEditing(tag);
-    setIsFormOpen(true);
-  };
-
-  const closeForm = () => {
-    tagForm.reset({ name: '', color: TAG_DEFAULT_COLOR, description: '', resourceType: filter });
-    setEditing(null);
-    setIsFormOpen(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = tagForm.getValues();
-    try {
-      if (editing) {
-        await updateTag.mutateAsync({ id: editing.id, data: formData });
-      } else {
-        await createTag.mutateAsync(formData);
-      }
-      closeForm();
-    } catch {
-      toast.error(t('settings.saveFailed'));
-    }
+    setDialogOpen(true);
   };
 
   const handleArchive = async (tag: Tag) => {
@@ -155,7 +128,7 @@ export function TagManager() {
     }
   };
 
-  // 拖拽排序：落放一次性提交，仅并发回写 order 发生变化的项（对齐 issue-types-section 口径）
+  // 拖拽排序：落放一次性提交，仅并发回写 order 发生变化的项
   const handleReorder = async (next: Tag[]) => {
     try {
       await Promise.all(
@@ -166,6 +139,20 @@ export function TagManager() {
             updateTag.mutateAsync({ id: tag.id, data: { ...tag, order } }),
           ),
       );
+    } catch {
+      toast.error(t('settings.saveFailed'));
+    }
+  };
+
+  const handleSubmit = async (draft: TagDraft) => {
+    try {
+      if (editing) {
+        await updateTag.mutateAsync({ id: editing.id, data: draft });
+      } else {
+        await createTag.mutateAsync(draft);
+      }
+      setDialogOpen(false);
+      setEditing(null);
     } catch {
       toast.error(t('settings.saveFailed'));
     }
@@ -182,239 +169,236 @@ export function TagManager() {
       icon={Tags}
       iconColor="text-accent-blue"
       metrics={[{ id: 'total', label: t('settings.labels'), value: filteredTags.length }]}
-      actions={
-        // 标签创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403
-        isAdmin ? (
-          <HeaderActionButton icon={Plus} label={t('settings.addLabel')} onClick={openCreate} />
-        ) : null
-      }
     >
       <div className="flex justify-center">
         <SegmentedControl<TagFilter>
           variant="rect"
           value={filter}
-              onChange={setFilter}
-              options={TAG_FILTERS.map((f) => ({
-                value: f,
-                label: t(FILTER_I18N_KEY[f]),
-                tone: FILTER_TONE[f],
-              }))}
-            />
-          </div>
+          onChange={setFilter}
+          options={TAG_FILTERS.map((f) => ({
+            value: f,
+            label: t(FILTER_I18N_KEY[f]),
+            tone: FILTER_TONE[f],
+          }))}
+        />
+      </div>
 
-          <AsyncState
-            isLoading={isLoading}
-            error={error ? t('settings.loadFailed') : null}
-            onRetry={() => void refetch()}
-            isEmpty={filteredTags.length === 0}
-            emptyTitle={t('settings.noTags')}
-            loadingFallback={
-              <DataTableShell>
-                <SkeletonTable rows={6} columns={4} />
-              </DataTableShell>
-            }
+      <AsyncState
+        isLoading={isLoading}
+        error={error ? t('settings.loadFailed') : null}
+        onRetry={() => void refetch()}
+        isEmpty={filteredTags.length === 0}
+        emptyTitle={t('settings.noTags')}
+        loadingFallback={
+          <DataTableShell>
+            <SkeletonTable rows={6} columns={3} />
+          </DataTableShell>
+        }
+      >
+        <section className="overflow-hidden rounded-lg border border-border bg-card">
+          <header className="flex h-10 items-center justify-between border-b border-border/60 pl-3 pr-1.5">
+            <span className="text-xs font-medium text-content-text-secondary">
+              {t(FILTER_I18N_KEY[filter])}
+              <span className="ml-1.5 text-content-text-muted">{filteredTags.length}</span>
+            </span>
+            {isAdmin ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                aria-label={t('settings.addLabel')}
+                title={t('settings.addLabel')}
+                onClick={openCreate}
+              >
+                <Plus />
+              </Button>
+            ) : null}
+          </header>
+          <Sortable
+            value={filteredTags}
+            getItemValue={(tag) => tag.id}
+            onValueChange={() => {
+              // 受控源为 React Query：落放经 onValueCommit 持久化后回读生效
+            }}
+            onValueCommit={isAdmin ? (next) => void handleReorder(next) : undefined}
+            render={<div className="divide-y divide-border/60" />}
           >
-            <DataTableShell>
-              <TagTable
-                tags={filteredTags}
-                onEdit={openEdit}
-                onArchive={handleArchive}
-                onDelete={handleDelete}
-                onReorder={handleReorder}
-                deleting={deleteTag.isPending}
-                archiving={updateTag.isPending}
+            {filteredTags.map((tag) => (
+              <DefinitionRow
+                key={tag.id}
+                id={tag.id}
+                onClick={() => openEdit(tag)}
+                leading={
+                  <StatusIconFrame
+                    icon={Tags}
+                    tone="default"
+                    size="xl"
+                    color={tag.color || TAG_DEFAULT_COLOR}
+                    colorSurface
+                    className="rounded-lg"
+                  />
+                }
+                title={
+                  <>
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {tag.name}
+                    </span>
+                    {tag.isArchived ? (
+                      <Badge variant="outline">{t('settings.labelArchived')}</Badge>
+                    ) : null}
+                  </>
+                }
+                description={tag.description || undefined}
+                trailing={
+                  isAdmin ? (
+                    <div className="mr-1 hidden shrink-0 items-center gap-0.5 group-hover:flex">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label={tag.isArchived ? t('settings.restore') : t('common.archive')}
+                        title={tag.isArchived ? t('settings.restore') : t('common.archive')}
+                        disabled={updateTag.isPending}
+                        onClick={() => void handleArchive(tag)}
+                      >
+                        {tag.isArchived ? <ArchiveRestore /> : <Archive />}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label={t('common.delete')}
+                        title={t('common.delete')}
+                        disabled={deleteTag.isPending}
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => void handleDelete(tag)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  ) : null
+                }
               />
-            </DataTableShell>
-          </AsyncState>
+            ))}
+          </Sortable>
+        </section>
+      </AsyncState>
 
-      <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editing ? t('settings.editLabel') : t('settings.addLabel')}</DialogTitle>
-            <DialogDescription>{t('settings.labelFormDesc')}</DialogDescription>
-          </DialogHeader>
-          <Form {...tagForm}>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <FormField
-                control={tagForm.control}
-                name="resourceType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('settings.labelTypes')}</FormLabel>
-                    <SelectField
-                      value={field.value}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      disabled={Boolean(editing)}
-                    >
-                      {TAG_FILTERS.map((type) => (
-                        <SelectFieldOption key={type} value={type}>
-                          {t(FILTER_I18N_KEY[type])}
-                        </SelectFieldOption>
-                      ))}
-                    </SelectField>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={tagForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('settings.labelName')} *</FormLabel>
-                    <Input
-                      value={field.value}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      placeholder={t('settings.labelNamePlaceholder')}
-                      required
-                    />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={tagForm.control}
-                name="color"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('settings.labelColor')}</FormLabel>
-                    <ColorPicker
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      allowCustom={false}
-                      placeholder={t('settings.labelColor')}
-                    />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={tagForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('settings.labelDesc')}</FormLabel>
-                    <Input
-                      value={field.value}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      placeholder={t('settings.labelDescPlaceholder')}
-                    />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button type="button" variant="ghost" onClick={closeForm}>
-                  {t('common.cancel')}
-                </Button>
-                <Button type="submit" disabled={createTag.isPending || updateTag.isPending}>
-                  {(createTag.isPending || updateTag.isPending) && <Spinner size="sm" />}
-                  {editing ? t('common.save') : t('common.create')}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <TagDialog
+        key={`${editing?.id ?? 'new'}-${String(dialogOpen)}`}
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditing(null);
+        }}
+        editing={editing}
+        defaultResourceType={filter}
+        onSubmit={handleSubmit}
+        saving={createTag.isPending || updateTag.isPending}
+      />
     </PageShell>
   );
 }
 
-interface TagTableProps {
-  tags: Tag[];
-  onEdit: (tag: Tag) => void;
-  onArchive: (tag: Tag) => void;
-  onDelete: (tag: Tag) => void;
-  onReorder: (next: Tag[]) => void;
-  deleting: boolean;
-  archiving: boolean;
-}
-
-/** 标签表（Sort 语义 = 同列表重排）：tbody/tr 经 render 槽渲染为表格元素，把手承载拖拽（键盘可达） */
-function TagTable({ tags, onEdit, onArchive, onDelete, onReorder, deleting, archiving }: TagTableProps) {
+function TagDialog({
+  open,
+  onOpenChange,
+  editing,
+  defaultResourceType,
+  onSubmit,
+  saving,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editing: Tag | null;
+  defaultResourceType: TagFilter;
+  onSubmit: (draft: TagDraft) => void | Promise<void>;
+  saving?: boolean;
+}) {
   const { t } = useTranslation();
+  const [draft, setDraft] = useState<TagDraft>(() =>
+    editing
+      ? {
+          name: editing.name,
+          color: editing.color || TAG_DEFAULT_COLOR,
+          description: editing.description || '',
+          resourceType: editing.resourceType || defaultResourceType,
+        }
+      : { name: '', color: TAG_DEFAULT_COLOR, description: '', resourceType: defaultResourceType },
+  );
+
+  const submit = async () => {
+    if (!draft.name.trim()) return;
+    await onSubmit({ ...draft, name: draft.name.trim() });
+  };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-muted/50 hover:bg-muted/50">
-          <TableHead className="w-8 px-2" />
-          <TableHead>{t('settings.labelName')}</TableHead>
-          <TableHead>{t('settings.labelDesc')}</TableHead>
-          <TableHead className="w-28 text-right">{t('common.actions')}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <Sortable
-        value={tags}
-        getItemValue={(tag) => tag.id}
-        onValueChange={onReorder}
-        render={<TableBody />}
-      >
-        {tags.map((tag) => (
-          <SortableItem key={tag.id} value={tag.id} render={<TableRow />}>
-            <TableCell className="px-2 py-1.5">
-              <SortableItemHandle
-                render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label={t('common.dragToSort')}
-                    title={t('common.dragToSort')}
-                  />
-                }
-                className="touch-none text-muted-foreground"
-              >
-                <GripVertical />
-              </SortableItemHandle>
-            </TableCell>
-            <TableCell className="py-1.5">
-              <span
-                className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                style={{ backgroundColor: tag.color || '#6b7280' }}
-              >
-                {tag.name}
-              </span>
-            </TableCell>
-            <TableCell className="max-w-50 truncate py-1.5 text-muted-foreground">
-              {tag.description || '—'}
-            </TableCell>
-            <TableCell className="py-1.5 text-right">
-              <div className="flex items-center justify-end gap-0.5">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={t('common.edit')}
-                  title={t('common.edit')}
-                  onClick={() => onEdit(tag)}
-                >
-                  <Pencil />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={tag.isArchived ? t('settings.restore') : t('common.archive')}
-                  title={tag.isArchived ? t('settings.restore') : t('common.archive')}
-                  disabled={archiving}
-                  onClick={() => onArchive(tag)}
-                >
-                  {tag.isArchived ? <ArchiveRestore /> : <Archive />}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={t('common.delete')}
-                  title={t('common.delete')}
-                  disabled={deleting}
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => onDelete(tag)}
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-            </TableCell>
-          </SortableItem>
-        ))}
-      </Sortable>
-    </Table>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{editing ? t('settings.editLabel') : t('settings.addLabel')}</DialogTitle>
+          <DialogDescription>{t('settings.labelFormDesc')}</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <div className="space-y-1.5">
+            <div className="text-xs text-content-text-secondary">
+              {t('settings.labelTypes')}
+            </div>
+            <SelectField
+              value={draft.resourceType}
+              onChange={(e) => setDraft({ ...draft, resourceType: e.target.value })}
+              disabled={Boolean(editing)}
+            >
+              {TAG_FILTERS.map((type) => (
+                <SelectFieldOption key={type} value={type}>
+                  {t(FILTER_I18N_KEY[type])}
+                </SelectFieldOption>
+              ))}
+            </SelectField>
+          </div>
+          <div className="space-y-1.5">
+            <div className="text-xs text-content-text-secondary">
+              {t('settings.labelName')} *
+            </div>
+            <Input
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              placeholder={t('settings.labelNamePlaceholder')}
+              maxLength={30}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <div className="text-xs text-content-text-secondary">
+              {t('settings.labelColor')}
+            </div>
+            <ColorPicker
+              value={draft.color}
+              onValueChange={(color) => setDraft({ ...draft, color })}
+              allowCustom={false}
+              placeholder={t('settings.labelColor')}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <div className="text-xs text-content-text-secondary">
+              {t('settings.labelDesc')}
+            </div>
+            <Textarea
+              value={draft.description}
+              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              placeholder={t('settings.labelDescPlaceholder')}
+              rows={2}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button type="button" onClick={() => void submit()} disabled={saving || !draft.name.trim()}>
+            {editing ? t('common.save') : t('common.create')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

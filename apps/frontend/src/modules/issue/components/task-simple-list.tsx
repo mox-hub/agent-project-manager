@@ -23,7 +23,7 @@ import { IssueTypePill } from '@/shared/components/issue-type-pill';
 import { cn } from '@/lib/utils';
 import { AiExecutionBadge } from '@/modules/issue/components/ai-execution-badge';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
-import { StatusCell, PriorityCell, AssigneeCell, MilestoneCell, IssueTypeCell } from './cell-editors';
+import { IssueCellDataProvider, StatusCell, PriorityCell, AssigneeCell, MilestoneCell, IssueTypeCell } from './cell-editors';
 
 type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
 type RowPriority = 'urgent' | 'high' | 'medium' | 'low';
@@ -222,7 +222,11 @@ export function TaskSimpleList({
   // 类型图标（Linear 式行首标识）：统一工单视图下区分 task/bug/自定义类型
   const issueTypeOf = useIssueTypeOf();
 
+  // §21.2 单元格数据收编：成员/类型/里程碑列表级取一次，行内单元格零 observer
+  const projectIds = useMemo(() => tasks.map((task) => task.projectId), [tasks]);
+
   return (
+    <IssueCellDataProvider projectIds={projectIds}>
     <DataList
       items={topTasks}
       loading={loading}
@@ -318,7 +322,8 @@ export function TaskSimpleList({
           </>
         );
       }}
-    />
+      />
+    </IssueCellDataProvider>
   );
 }
 

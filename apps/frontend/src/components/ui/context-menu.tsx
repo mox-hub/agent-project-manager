@@ -319,6 +319,9 @@ export interface MenuItem {
 interface ContextMenuProps {
   children?: React.ReactNode
   items?: MenuItem[]
+  /** 惰性菜单构建口（宪法 §21.3）：菜单数组在菜单打开的事件期才构建，禁止列表逐行在 render 期构建。
+   *  与 items 二选一；两者都传时 getItems 优先。 */
+  getItems?: () => MenuItem[]
   onItemClick?: (item: MenuItem) => void
   className?: string
 }
@@ -328,6 +331,9 @@ function genMenuId() {
   menuIdCounter += 1
   return `menu-${menuIdCounter}`
 }
+
+/** 关闭态惰性菜单的稳定空数组（避免每渲染新数组触发下游 memo 失效） */
+const EMPTY_MENU_ITEMS: MenuItem[] = []
 
 export function createMenuItems(
   config: Array<{
@@ -478,15 +484,18 @@ function renderMenuItems(items: MenuItem[], onItemClick?: (item: MenuItem) => vo
   ))
 }
 
-function ContextMenu({ children, items = [], onItemClick }: ContextMenuProps) {
+function ContextMenu({ children, items, getItems, onItemClick }: ContextMenuProps) {
   // className 仅作历史 API 兼容保留：旧包裹层时代用于 display:contents，
   // 现在若转发给 popup 会令其 display:contents，背景/边框/阴影全部失效
   // 注意：本层用 cloneElement 把右键菜单 props（含 ref）注入 children——children 必须是
   // DOM 元素或能透传 props/ref 的组件。children 自带触发器 ref 时会被覆盖（如把 hover
   // 卡 props 直接展开在 div 上再交给本层克隆），嵌套其它 cloneElement 型包装时应让它
   // 克隆一个「转发 props 的组件」（参考 tab-bar 的 RoutePreviewTrigger 用法）。
+  // getItems 惰性口（宪法 §21.3）：关闭态不构建菜单数组，打开瞬间才调用一次。
+  const [open, setOpen] = useState(false)
+  const resolvedItems = getItems ? (open ? getItems() : EMPTY_MENU_ITEMS) : (items ?? [])
   return (
-    <ContextMenuRoot>
+    <ContextMenuRoot onOpenChange={setOpen}>
       <ContextMenuTrigger
         render={(triggerProps: Record<string, unknown>) =>
           React.isValidElement(children)
@@ -502,7 +511,7 @@ function ContextMenu({ children, items = [], onItemClick }: ContextMenuProps) {
             : React.cloneElement(<div>{children}</div>, triggerProps as never)
         }
       />
-      <ContextMenuContent>{renderMenuItems(items, onItemClick)}</ContextMenuContent>
+      <ContextMenuContent>{renderMenuItems(resolvedItems, onItemClick)}</ContextMenuContent>
     </ContextMenuRoot>
   )
 }

@@ -35,6 +35,7 @@ import {
   type StatusIconKey,
 } from '@/shared/status/status-visuals';
 import { STATUS_GROUP_ORDER, type StatusDefinitionLike } from './status-definition-list';
+import { deriveSlugKey } from '@/shared/lib/slug-key';
 
 /** 新建默认色：取项目预设色板第 9 格（#3b82f6，与参考形态一致；色值单一来源是色板常量） */
 const DEFAULT_COLOR = DEFAULT_SWATCHES[8];
@@ -74,21 +75,6 @@ export interface StatusDefinitionDialogProps {
 function allowedKeysOf(def: StatusDefinitionLike): string[] {
   const v = def.allowedNextStatusKeys;
   return Array.isArray(v) ? (v as string[]) : [];
-}
-
-/** 名称 → 内部 key（小写 snake；非 ASCII 名自动生成随机键；与存量撞车加序号） */
-function deriveKey(name: string, definitions: StatusDefinitionLike[]): string {
-  const taken = new Set(definitions.map((d) => d.key));
-  const base = name
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-    .replace(/[^a-z0-9_]/g, '');
-  const root = base || `status_${Date.now().toString(36)}`;
-  let key = root;
-  let n = 2;
-  while (taken.has(key)) key = `${root}_${n++}`;
-  return key;
 }
 
 function nextOrderOf(group: string, definitions: StatusDefinitionLike[]): number {
@@ -156,7 +142,10 @@ export function StatusDefinitionDialog({
 
   // 编辑态 key 冻结；新建态随名称派生（派生是纯函数，无防抖必要）
   const effectiveKey = useMemo(
-    () => (editing ? editing.key : deriveKey(draft.name, definitions)),
+    () =>
+      editing
+        ? editing.key
+        : deriveSlugKey(draft.name, definitions.map((d) => d.key)),
     [editing, draft.name, definitions],
   );
 

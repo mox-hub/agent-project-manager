@@ -13,7 +13,7 @@
  * 所有信息均为页面传入的内嵌节点，另附几个常见格式的单元格组件：ListText / ListChip / ListDate / ListIcon / ListAvatar。
  */
 
-import { isValidElement, useMemo, useRef, useState, type ReactNode } from 'react';
+import { isValidElement, memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Check,
@@ -52,6 +52,22 @@ export interface DataListProgress {
 
 /** 行高两档（F 类 F7.2 / 宪法 §4.2）：同一列表只选一档 */
 export type DataListSize = 'dense' | 'comfortable';
+
+// ============================================================================
+// 渲染性能阀门（宪法 §21，CAP-B-10）：渲染窗口 / 渲染期开销 / 数据窗口
+// ============================================================================
+
+/** §21.1 渐进挂载：单清单首屏行数上限（超过才启用分批补挂） */
+const PROGRESSIVE_MOUNT_THRESHOLD = 120;
+/** §21.1 渐进挂载：每帧补挂行数 */
+const PROGRESSIVE_MOUNT_CHUNK = 60;
+/** §21.4 数据窗口 Dev 告警阈值：超过提示接筛选/分组/分页，禁止静默截断数据 */
+const DEV_ROW_BUDGET_WARN = 300;
+/** 渐进挂载未挂区的占位行高（F7.2 行高两档；占位只撑滚动条，允许近似） */
+const ROW_PLACEHOLDER_HEIGHT: Record<DataListSize, number> = { dense: 32, comfortable: 40 };
+/** 测试环境短路渐进挂载：jsdom 无真实帧调度，行为级用例判定全量渲染（GAP-T-55） */
+const IS_TEST_ENV =
+  typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
 
 export interface DataListProps<T extends DataListItem> {
   items: T[];
@@ -261,11 +277,30 @@ function SelectCell({
 // 内部：单行
 // ============================================================================
 
-function Row<T extends DataListItem>({
+interface RowProps<T extends DataListItem> {
+  item: T;
+  size?: DataListSize;
+  selectable: boolean;
+  /** 多选集合按引用下发（stable identity），行内自查选中态——避免逐行传闭包打穿 memo */
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  renderLeading?: (item: T) => ReactNode;
+  renderTrailing?: (item: T) => ReactNode;
+  renderChildren?: (item: T) => T[];
+  onItemClick?: (item: T) => void;
+  onItemContextMenu?: (item: T) => MenuItem[] | undefined;
+  indent?: boolean;
+  /** 子行链中的最后一行：树线竖线止于行中点（└ 形），非末行贯穿全行（├ 形） */
+  isLastChild?: boolean;
+  /** 键盘行光标（宪法 §8.2）：bg-accent 与 selected 同 token */
+  isActive?: boolean;
+}
+
+function RowImpl<T extends DataListItem>({
   item,
   size = 'dense',
   selectable,
-  isSelected,
+  selectedIds,
   onToggleSelect,
   renderLeading,
   renderTrailing,
@@ -276,22 +311,7 @@ function Row<T extends DataListItem>({
   /** 子行链中的最后一行：树线竖线止于行中点（└ 形），非末行贯穿全行（├ 形） */
   isLastChild,
   isActive,
-}: {
-  item: T;
-  size?: DataListSize;
-  selectable: boolean;
-  isSelected: (item: T) => boolean;
-  onToggleSelect: (id: string) => void;
-  renderLeading?: (item: T) => ReactNode;
-  renderTrailing?: (item: T) => ReactNode;
-  renderChildren?: (item: T) => T[];
-  onItemClick?: (item: T) => void;
-  onItemContextMenu?: (item: T) => MenuItem[] | undefined;
-  indent?: boolean;
-  isLastChild?: boolean;
-  /** 键盘行光标（宪法 §8.2）：bg-accent 与 selected 同 token */
-  isActive?: boolean;
-}) {
+}: RowProps<T>) {
   const children = renderChildren?.(item) ?? [];
   const rowContent = (
     <div
@@ -302,10 +322,18 @@ function Row<T extends DataListItem>({
         // §8.1 三态 token 固定：hover = bg-accent 全档（禁稀释档）；可点击性由 cursor 表达
         onItemClick ? 'cursor-pointer hover:bg-accent' : 'hover:bg-accent',
         isActive && 'bg-accent',
+        // §21.1 渲染窗口：离屏行免布局/绘制（DOM 保留，Ctrl+F/锚点不丢）；
+        // contain-intrinsic-size 按 F7.2 行高档位给占位尺寸，滚动条不漂移
+        '[content-visibility:auto]',
+        size === 'comfortable' ? '[contain-intrinsic-size:auto_40px]' : '[contain-intrinsic-size:auto_32px]',
       )}
       onClick={onItemClick ? () => onItemClick(item) : undefined}
     >
-      <SelectCell hidden={!selectable} selected={isSelected(item)} onToggle={() => onToggleSelect(item.id)} />
+      <SelectCell
+        hidden={!selectable}
+        selected={selectedIds.has(item.id)}
+        onToggle={() => onToggleSelect(item.id)}
+      />
       {indent ? (
         <>
           {/* 树线：仅竖线，对齐父行状态列中心垂下（left 64 = px-4 16 + 多选槽 28 + gap 10 + 状态半宽 11 - 线半宽 1，行内列宽改动须同步）；
@@ -327,12 +355,11 @@ function Row<T extends DataListItem>({
     </div>
   );
 
-  const menuItems = onItemContextMenu?.(item);
-
+  // §21.3 渲染期开销：菜单数组走 getItems 惰性口，右键打开的事件期才构建（禁止 render 期逐行重建）
   return (
     <>
-      {menuItems?.length ? (
-        <ContextMenu items={menuItems}>
+      {onItemContextMenu ? (
+        <ContextMenu getItems={() => onItemContextMenu(item) ?? []}>
           {rowContent}
         </ContextMenu>
       ) : (
@@ -344,7 +371,7 @@ function Row<T extends DataListItem>({
           item={child}
           size={size}
           selectable={selectable}
-          isSelected={isSelected}
+          selectedIds={selectedIds}
           onToggleSelect={onToggleSelect}
           renderLeading={renderLeading}
           renderTrailing={renderTrailing}
@@ -358,6 +385,8 @@ function Row<T extends DataListItem>({
     </>
   );
 }
+
+const Row = memo(RowImpl) as typeof RowImpl;
 
 // ============================================================================
 // 内部：grouping bar
@@ -552,14 +581,52 @@ export function DataList<T extends DataListItem>({
     setInternalSelected(next);
   };
 
-  const toggleSelect = (id: string) => {
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelected(next);
-  };
+  // §21.3：toggleSelect 引用稳定（deps 只随选中集变化），Row memo 才能在渐进补挂/键盘流时跳过未受影响行
+  const toggleSelect = useCallback(
+    (id: string) => {
+      const next = new Set(selected);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      setSelected(next);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selected, onSelectionChange],
+  );
 
   const clearSelection = () => setSelected(new Set());
+
+  // §21.1 渐进挂载（渲染窗口阀门）：超阈值清单首屏只挂 THRESHOLD 行，按帧分批补齐；
+  // items 变化（新数据/新筛选）重置首屏预算；测试环境短路全量渲染（GAP-T-55 判定依据）
+  const initialBudget = Math.min(
+    items.length,
+    IS_TEST_ENV ? items.length : PROGRESSIVE_MOUNT_THRESHOLD,
+  );
+  const [mountBudget, setMountBudget] = useState(initialBudget);
+  useEffect(() => {
+    setMountBudget(initialBudget);
+  }, [initialBudget]);
+  useEffect(() => {
+    if (mountBudget >= items.length || typeof requestAnimationFrame !== 'function') return;
+    const raf = requestAnimationFrame(() => {
+      setMountBudget((prev) => Math.min(items.length, prev + PROGRESSIVE_MOUNT_CHUNK));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [mountBudget, items.length]);
+
+  // §21.4 数据窗口：Dev 模式超预算告警一次（提示走筛选/分组/分页，不静默截断数据）
+  const budgetWarnedRef = useRef(false);
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (items.length <= DEV_ROW_BUDGET_WARN) {
+      budgetWarnedRef.current = false;
+      return;
+    }
+    if (budgetWarnedRef.current) return;
+    budgetWarnedRef.current = true;
+    console.warn(
+      `[DataList] ${items.length} 行超过渲染预算（${DEV_ROW_BUDGET_WARN}）：渲染阀门已生效（宪法 §21），如仍卡顿请为页面接筛选/分组/分页——勿静默截断数据。`,
+    );
+  }, [items.length]);
 
   // 分组
   const isGrouping = !!groupBy;
@@ -698,14 +765,19 @@ export function DataList<T extends DataListItem>({
     );
   }
 
-  const renderRowList = (list: T[]) => (
-    <>{list.map((item) => (
+  // §21.1 渲染窗口：全局渐进预算按渲染段顺序扣减（未分组=整表一段；分组=各组各一段），
+  // 未挂区以行高档位估算高度的占位撑住滚动条，滚动条不随批次跳动
+  let budgetLeft = Math.min(mountBudget, items.length);
+  const renderSegment = (list: T[]) => {
+    const take = Math.min(list.length, budgetLeft);
+    budgetLeft -= take;
+    const rows = list.slice(0, take).map((item) => (
       <Row
         key={item.id}
         item={item}
         size={size}
         selectable={selectable}
-        isSelected={(it) => selected.has(it.id)}
+        selectedIds={selected}
         onToggleSelect={toggleSelect}
         renderLeading={renderLeading}
         renderTrailing={renderTrailing}
@@ -714,8 +786,17 @@ export function DataList<T extends DataListItem>({
         onItemContextMenu={onItemContextMenu}
         isActive={activeId === item.id}
       />
-    ))}</>
-  );
+    ));
+    const rest = list.length - take;
+    return rest > 0 ? (
+      <>
+        {rows}
+        <div aria-hidden="true" style={{ height: rest * ROW_PLACEHOLDER_HEIGHT[size] }} />
+      </>
+    ) : (
+      <>{rows}</>
+    );
+  };
 
   return (
     <div
@@ -745,31 +826,14 @@ export function DataList<T extends DataListItem>({
                   />
                 </div>
                 {!isCollapsed ? (
-                  <div>
-                    {list.map((item) => (
-                      <Row
-                        key={item.id}
-                        item={item}
-                        size={size}
-                        selectable={selectable}
-                        isSelected={(it) => selected.has(it.id)}
-                        onToggleSelect={toggleSelect}
-                        renderLeading={renderLeading}
-                        renderTrailing={renderTrailing}
-                        renderChildren={renderChildren}
-                        onItemClick={onItemClick}
-                        onItemContextMenu={onItemContextMenu}
-                        isActive={activeId === item.id}
-                      />
-                    ))}
-                  </div>
+                  <div>{renderSegment(list)}</div>
                 ) : null}
               </div>
             );
           })}
         </div>
       ) : (
-        renderRowList(items)
+        renderSegment(items)
       )}
 
       {selectable && selected.size > 0 ? (

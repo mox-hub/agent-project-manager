@@ -1,7 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TaskTableView } from './task-table-view';
 import type { Task } from '../api/issue-api';
+
+/** TaskTableView 现挂 IssueCellDataProvider（§21.2 单元格数据收编，内部 useQueries），须挂 Query Client */
+const renderView = (ui: React.ReactElement) => {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+};
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -56,7 +63,7 @@ const tasks: Task[] = [
 describe('TaskTableView（P1-14 表格排序与列显隐）', () => {
   it('reports header sort clicks to the page-level onSortChange callback', () => {
     const onSortChange = vi.fn();
-    render(
+    renderView(
       <TaskTableView
         tasks={tasks}
         sorting={{ orderBy: 'priority', orderDirection: 'desc' }}
@@ -72,7 +79,7 @@ describe('TaskTableView（P1-14 表格排序与列显隐）', () => {
   });
 
   it('reorders rows according to the controlled sorting prop (desc by priority rank)', () => {
-    render(
+    renderView(
       <TaskTableView tasks={tasks} sorting={{ orderBy: 'priority', orderDirection: 'desc' }} />,
     );
 
@@ -83,7 +90,7 @@ describe('TaskTableView（P1-14 表格排序与列显隐）', () => {
   });
 
   it('hides columns toggled off by displayProperties and keeps the rest', () => {
-    render(<TaskTableView tasks={tasks} displayProperties={{ status: false, aiExecution: false }} />);
+    renderView(<TaskTableView tasks={tasks} displayProperties={{ status: false, aiExecution: false }} />);
 
     expect(screen.queryByText('Status')).toBeNull();
     expect(screen.queryByText('AI 执行态')).toBeNull();
@@ -92,7 +99,7 @@ describe('TaskTableView（P1-14 表格排序与列显隐）', () => {
   });
 
   it('shows every property column by default when displayProperties is omitted', () => {
-    render(<TaskTableView tasks={tasks} />);
+    renderView(<TaskTableView tasks={tasks} />);
 
     for (const header of ['ID', 'Title', 'AI 执行态', 'Status', 'Priority', 'Assignee', 'Project', 'Estimate', 'Due Date', 'Labels', 'Created', 'Updated']) {
       expect(screen.getByText(header)).toBeTruthy();
@@ -106,7 +113,7 @@ describe('TaskTableView 子任务缩进与折叠（P1-17）', () => {
   const standalone = buildTask({ title: 'Standalone', id: 's1', priority: 'low' });
 
   it('子任务行按 parentIssueId 跟随父行缩进展示（父行后紧跟子行）', () => {
-    render(<TaskTableView tasks={[parent, child, standalone]} />);
+    renderView(<TaskTableView tasks={[parent, child, standalone]} />);
 
     // 渲染顺序：父行 → 子行 → 独立任务（树化平铺）
     const titles = screen.getAllByText(/Parent|Child|Standalone/).map((el) => el.textContent);
@@ -122,7 +129,7 @@ describe('TaskTableView 子任务缩进与折叠（P1-17）', () => {
   });
 
   it('父行折叠 chevron 收起子任务，再展开恢复', () => {
-    render(<TaskTableView tasks={[parent, child]} />);
+    renderView(<TaskTableView tasks={[parent, child]} />);
 
     expect(screen.getByRole('button', { name: 'Collapse Parent' }).getAttribute('aria-expanded')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Collapse Parent' }));
@@ -137,13 +144,13 @@ describe('TaskTableView 子任务缩进与折叠（P1-17）', () => {
   });
 
   it('无子任务的父行不渲染折叠 chevron（仅占位对齐）', () => {
-    render(<TaskTableView tasks={[standalone]} />);
+    renderView(<TaskTableView tasks={[standalone]} />);
     expect(screen.queryByRole('button', { name: /Collapse|Expand/ })).toBeNull();
   });
 
   it('孤儿子任务（父不在当前列表）按普通行展示，不缩进', () => {
     const orphan = buildTask({ title: 'Orphan', id: 'o1', parentIssueId: 'ghost-parent' });
-    render(<TaskTableView tasks={[orphan]} />);
+    renderView(<TaskTableView tasks={[orphan]} />);
     const cell = screen.getByText('Orphan').closest('[data-subtask-depth]') as HTMLElement;
     expect(cell.dataset.subtaskDepth).toBe('0');
   });
@@ -151,7 +158,7 @@ describe('TaskTableView 子任务缩进与折叠（P1-17）', () => {
   it('排序回声：客户端排序下子行取父行排序值，紧贴父行不被甩出相邻位', () => {
     // priority desc：Parent(high) → Child 回声 high（自身 low），Standalone(low)
     // 若无回声，Child(low) 会被排到 Standalone 旁而脱离父行
-    render(
+    renderView(
       <TaskTableView tasks={[parent, child, standalone]} sorting={{ orderBy: 'priority', orderDirection: 'desc' }} />,
     );
     const titles = screen.getAllByText(/Parent|Child|Standalone/).map((el) => el.textContent);

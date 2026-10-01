@@ -6,6 +6,7 @@ import { describe, expect, it, vi, beforeAll } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TaskSimpleList } from './task-simple-list';
+import { AssigneeCell, IssueCellDataProvider, StatusCell } from './cell-editors';
 import type { Task } from '../api/issue-api';
 
 const updateMutate = vi.fn();
@@ -119,5 +120,44 @@ describe('列表行属性下拉即时修改', () => {
     fireEvent.click(screen.getByTitle('状态'));
     await screen.findByText('Done');
     expect(onTaskClick).not.toHaveBeenCalled();
+  });
+});
+
+describe('§21.2 单元格数据收编（IssueCellDataProvider · GAP-T-55）', () => {
+  it('未挂 Provider：单元格只读降级——children 原样渲染，不挂编辑器触发器', () => {
+    render(
+      <>
+        <StatusCell task={task}>
+          <span data-testid="static-status">静态状态</span>
+        </StatusCell>
+        <AssigneeCell task={task}>
+          <span data-testid="static-assignee">静态头像</span>
+        </AssigneeCell>
+      </>,
+    );
+    expect(screen.getByTestId('static-status')).toBeTruthy();
+    expect(screen.getByTestId('static-assignee')).toBeTruthy();
+    // 只读降级 = 无 CellSelect 触发器（禁止新消费方走此形态）
+    expect(screen.queryByTitle('状态')).toBeNull();
+    expect(screen.queryByTitle('负责人')).toBeNull();
+  });
+
+  it('挂 Provider：单元格可编辑，点选即走列表级单例 mutation', async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <IssueCellDataProvider projectIds={[task.projectId ?? null]}>
+          <StatusCell task={task}>
+            <span>静态状态</span>
+          </StatusCell>
+        </IssueCellDataProvider>
+      </QueryClientProvider>,
+    );
+    fireEvent.click(screen.getByTitle('状态'));
+    const done = await screen.findByText('Done');
+    fireEvent.click(done);
+    await waitFor(() => {
+      expect(updateMutate).toHaveBeenCalledWith({ issueId: 't1', data: { status: 'done' } });
+    });
   });
 });

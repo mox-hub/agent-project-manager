@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Check, CircleUser, Minus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CircleUser, Pencil, Plus, Trash2 } from 'lucide-react';
 import { PageShell } from '@/components/semantic/page-shell';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
@@ -10,10 +9,12 @@ import { AsyncState } from '@/components/semantic/async-state';
 import { DataTableShell } from '@/components/semantic/data-table-shell';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/semantic/empty-state';
+import { DefinitionRow } from '@/components/semantic/definition-row';
+import { StatusIconFrame } from '@/shared/status/status-icon-frame';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -23,10 +24,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
-import { Spinner } from '@/components/ui/spinner';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
+import { deriveSlugKey } from '@/shared/lib/slug-key';
 import {
   useProjectRoles,
   useCreateProjectRole,
@@ -35,17 +36,11 @@ import {
   type ProjectRoleDefinition,
 } from '../hooks/use-metadata';
 
-interface RoleFormData {
+interface RoleDraft {
   key: string;
   name: string;
   description: string;
 }
-
-const initialFormData: RoleFormData = {
-  key: '',
-  name: '',
-  description: '',
-};
 
 const DEFAULT_ROLES = [
   { key: 'frontend-dev', name: 'Frontend Developer' },
@@ -59,6 +54,11 @@ const DEFAULT_ROLES = [
 
 type RoleScopeFilter = 'all' | 'global' | 'project';
 
+/**
+ * 设置·角色（管理面统一批 2026-10-01）：作用域分段 + DefinitionRow 行卡
+ * （xl 底框图标 + 双行文本 + hover 操作），行点击编辑；角色无 order 能力，不做拖拽。
+ * key 由名称自动派生（内部标识，弹窗只读展示）。
+ */
 export function RoleManager() {
   const { t } = useTranslation();
   const confirmAction = useConfirm();
@@ -68,11 +68,8 @@ export function RoleManager() {
   const updateRole = useUpdateProjectRole();
   const deleteRole = useDeleteProjectRole();
 
-  const roleForm = useForm<RoleFormData>({
-    defaultValues: initialFormData,
-  });
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ProjectRoleDefinition | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [scopeFilter, setScopeFilter] = useState<RoleScopeFilter>('all');
 
   const displayRoles = roles.filter((role) => {
@@ -82,37 +79,25 @@ export function RoleManager() {
   });
 
   const openCreate = () => {
-    roleForm.reset(initialFormData);
     setEditing(null);
-    setIsFormOpen(true);
+    setDialogOpen(true);
   };
 
   const openEdit = (role: ProjectRoleDefinition) => {
-    roleForm.reset({
-      key: role.key,
-      name: role.name,
-      description: role.description || '',
-    });
+    if (!isAdmin) return;
     setEditing(role);
-    setIsFormOpen(true);
+    setDialogOpen(true);
   };
 
-  const closeForm = () => {
-    roleForm.reset(initialFormData);
-    setEditing(null);
-    setIsFormOpen(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = roleForm.getValues();
+  const handleSubmit = async (draft: RoleDraft) => {
     try {
       if (editing) {
-        await updateRole.mutateAsync({ id: editing.id, data: formData });
+        await updateRole.mutateAsync({ id: editing.id, data: draft });
       } else {
-        await createRole.mutateAsync(formData);
+        await createRole.mutateAsync(draft);
       }
-      closeForm();
+      setDialogOpen(false);
+      setEditing(null);
     } catch {
       toast.error(t('settings.saveFailed'));
     }
@@ -153,199 +138,209 @@ export function RoleManager() {
       icon={CircleUser}
       iconColor="text-accent-purple"
       metrics={[{ id: 'total', label: t('settings.roles'), value: displayRoles.length }]}
-      actions={
-        // 角色创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403
-        isAdmin ? (
-          <HeaderActionButton icon={Plus} label={t('settings.addRole')} onClick={openCreate} />
-        ) : null
-      }
     >
       <div className="flex justify-center">
         <SegmentedControl<RoleScopeFilter>
           variant="rect"
           value={scopeFilter}
           onChange={setScopeFilter}
-              options={[
-                { value: 'all', label: t('common.all') },
-                { value: 'global', label: t('settings.globalAccess'), tone: 'green' },
-                { value: 'project', label: t('settings.projectOnlyRole'), tone: 'blue' },
-              ]}
+          options={[
+            { value: 'all', label: t('common.all') },
+            { value: 'global', label: t('settings.globalAccess'), tone: 'green' },
+            { value: 'project', label: t('settings.projectOnlyRole'), tone: 'blue' },
+          ]}
+        />
+      </div>
+
+      <AsyncState
+        isLoading={isLoading}
+        error={error ? t('settings.roleLoadFailed') : null}
+        onRetry={() => void refetch()}
+        loadingFallback={
+          <DataTableShell>
+            <SkeletonTable rows={6} columns={3} />
+          </DataTableShell>
+        }
+      >
+        {roles.length === 0 ? (
+          <div className="flex flex-col gap-4">
+            <EmptyState title={t('settings.noRoles')} description={t('settings.rolesDesc')} />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">{t('settings.quickAdd')}</span>
+              {DEFAULT_ROLES.slice(0, 5).map((role) => (
+                <Button
+                  key={role.key}
+                  variant="outline"
+                  size="xs"
+                  disabled={createRole.isPending}
+                  onClick={() => void addDefaultRole(role)}
+                >
+                  <Plus className="size-3" />
+                  {role.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        ) : displayRoles.length === 0 ? (
+          <EmptyState title={t('settings.noRolesInScope')} />
+        ) : (
+          <section className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border bg-card">
+            {displayRoles.map((role) => (
+              <DefinitionRow
+                key={role.id}
+                id={role.id}
+                sortable={false}
+                onClick={() => openEdit(role)}
+                leading={
+                  <StatusIconFrame
+                    icon={CircleUser}
+                    tone={role.projectId ? 'info' : 'success'}
+                    size="xl"
+                    className="rounded-lg"
+                  />
+                }
+                title={
+                  <>
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {role.name}
+                    </span>
+                    {role.projectId ? (
+                      <Badge variant="outline">{t('settings.projectOnlyRole')}</Badge>
+                    ) : (
+                      <Badge variant="secondary">{t('settings.globalRole')}</Badge>
+                    )}
+                  </>
+                }
+                description={
+                  role.description || (
+                    <span className="font-mono">{role.key}</span>
+                  )
+                }
+                trailing={
+                  isAdmin ? (
+                    <div className="mr-1 hidden shrink-0 items-center gap-0.5 group-hover:flex">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label={t('common.edit')}
+                        title={t('common.edit')}
+                        onClick={() => openEdit(role)}
+                      >
+                        <Pencil />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label={t('common.delete')}
+                        title={t('common.delete')}
+                        disabled={deleteRole.isPending}
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => void handleDelete(role)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  ) : null
+                }
+              />
+            ))}
+          </section>
+        )}
+      </AsyncState>
+
+      <RoleDialog
+        key={`${editing?.id ?? 'new'}-${String(dialogOpen)}`}
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditing(null);
+        }}
+        editing={editing}
+        existingKeys={roles.map((r) => r.key)}
+        onSubmit={handleSubmit}
+        saving={createRole.isPending || updateRole.isPending}
+      />
+    </PageShell>
+  );
+}
+
+function RoleDialog({
+  open,
+  onOpenChange,
+  editing,
+  existingKeys,
+  onSubmit,
+  saving,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editing: ProjectRoleDefinition | null;
+  existingKeys: string[];
+  onSubmit: (draft: RoleDraft) => void | Promise<void>;
+  saving?: boolean;
+}) {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState<RoleDraft>(() =>
+    editing
+      ? { key: editing.key, name: editing.name, description: editing.description || '' }
+      : { key: '', name: '', description: '' },
+  );
+
+  // 编辑态 key 冻结；新建态随名称派生（deriveSlugKey 纯函数，与状态弹窗同源）
+  const effectiveKey = editing
+    ? editing.key
+    : deriveSlugKey(draft.name, existingKeys, 'role');
+
+  const submit = async () => {
+    if (!draft.name.trim()) return;
+    await onSubmit({ ...draft, name: draft.name.trim() });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{editing ? t('settings.editRole') : t('settings.addRole')}</DialogTitle>
+          <DialogDescription>{t('settings.rolesDesc')}</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <div className="space-y-1.5">
+            <div className="text-xs text-content-text-secondary">
+              {t('settings.roleName')} *
+            </div>
+            <Input
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              placeholder={t('settings.roleNamePlaceholder')}
+              maxLength={50}
             />
           </div>
-
-          <AsyncState
-            isLoading={isLoading}
-            error={error ? t('settings.roleLoadFailed') : null}
-            onRetry={() => void refetch()}
-            loadingFallback={
-              <DataTableShell>
-                <SkeletonTable rows={6} columns={5} />
-              </DataTableShell>
-            }
-          >
-            {roles.length === 0 ? (
-              <div className="flex flex-col gap-4">
-                <EmptyState title={t('settings.noRoles')} description={t('settings.rolesDesc')} />
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm text-muted-foreground">{t('settings.quickAdd')}</span>
-                  {DEFAULT_ROLES.slice(0, 5).map((role) => (
-                    <Button
-                      key={role.key}
-                      variant="outline"
-                      size="xs"
-                      disabled={createRole.isPending}
-                      onClick={() => addDefaultRole(role)}
-                    >
-                      <Plus className="size-3" />
-                      {role.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            ) : displayRoles.length === 0 ? (
-              <EmptyState title={t('settings.noRolesInScope')} />
-            ) : (
-              <DataTableShell>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50 hover:bg-muted/50">
-                      <TableHead>{t('settings.roleName')}</TableHead>
-                      <TableHead>Key</TableHead>
-                      <TableHead>{t('settings.roleScope')}</TableHead>
-                      <TableHead className="w-20">{t('settings.globalAccess')}</TableHead>
-                      <TableHead className="w-20 text-right">{t('common.actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {displayRoles.map((role) => (
-                      <TableRow key={role.id}>
-                        <TableCell className="py-1.5 font-medium text-foreground">{role.name}</TableCell>
-                        <TableCell className="py-1.5 font-mono text-xs text-muted-foreground">
-                          {role.key}
-                        </TableCell>
-                        <TableCell className="max-w-60 truncate py-1.5 text-muted-foreground">
-                          {role.description || '—'}
-                        </TableCell>
-                        <TableCell className="py-1.5">
-                          {!role.projectId ? (
-                            <span
-                              className="inline-flex items-center text-accent-green"
-                              title={t('settings.globalRole')}
-                            >
-                              <Check className="size-4" />
-                            </span>
-                          ) : (
-                            <span
-                              className="inline-flex items-center text-muted-foreground"
-                              title={t('settings.projectOnlyRole')}
-                            >
-                              <Minus className="size-4 opacity-60" />
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="py-1.5 text-right">
-                          <div className="flex items-center justify-end gap-0.5">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-xs"
-                              aria-label={t('common.edit')}
-                              title={t('common.edit')}
-                              onClick={() => openEdit(role)}
-                            >
-                              <Pencil />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-xs"
-                              aria-label={t('common.delete')}
-                              title={t('common.delete')}
-                              disabled={deleteRole.isPending}
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => handleDelete(role)}
-                            >
-                              <Trash2 />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </DataTableShell>
-            )}
-          </AsyncState>
-
-      <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editing ? t('settings.editRole') : t('settings.addRole')}</DialogTitle>
-            <DialogDescription>{t('settings.rolesDesc')}</DialogDescription>
-          </DialogHeader>
-          <Form {...roleForm}>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={roleForm.control}
-                  name="key"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Key *</FormLabel>
-                      <Input
-                        value={field.value}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toLowerCase().replace(/\s+/g, '_'))
-                        }
-                        placeholder={t('settings.roleKeyPlaceholder')}
-                        required
-                      />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={roleForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('settings.roleName')} *</FormLabel>
-                      <Input
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        placeholder={t('settings.roleNamePlaceholder')}
-                        required
-                      />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={roleForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('settings.roleScope')}</FormLabel>
-                    <Input
-                      value={field.value}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      placeholder={t('settings.roleScopePlaceholder')}
-                    />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button type="button" variant="ghost" onClick={closeForm}>
-                  {t('common.cancel')}
-                </Button>
-                <Button type="submit" disabled={createRole.isPending || updateRole.isPending}>
-                  {(createRole.isPending || updateRole.isPending) && <Spinner size="sm" />}
-                  {editing ? t('common.save') : t('common.create')}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </PageShell>
+          <div className="space-y-1.5">
+            <div className="text-xs text-content-text-secondary">
+              {t('settings.roleScope')}
+            </div>
+            <Textarea
+              value={draft.description}
+              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              placeholder={t('settings.roleScopePlaceholder')}
+              rows={2}
+            />
+          </div>
+          <p className="font-mono text-3xs text-content-text-muted">
+            {t('settings.statusKeyDisplay', { key: effectiveKey })}
+          </p>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button type="button" onClick={() => void submit()} disabled={saving || !draft.name.trim()}>
+            {editing ? t('common.save') : t('common.create')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

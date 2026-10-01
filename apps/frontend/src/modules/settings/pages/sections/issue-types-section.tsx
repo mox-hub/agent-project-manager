@@ -1,13 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Sortable,
-  SortableItem,
-  SortableItemHandle,
-} from '@/components/ui/sortable';
+import { Sortable } from '@/components/ui/sortable';
 import {
   ChevronRight,
-  GripVertical,
   MoreHorizontal,
   Plus,
   Shapes,
@@ -19,6 +14,8 @@ import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { SectionCard } from '@/components/semantic/section-card';
+import { DefinitionRow } from '@/components/semantic/definition-row';
+import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ColorPicker } from '@/components/ui/color-picker';
@@ -43,7 +40,7 @@ import {
 } from '@/modules/issue/hooks/use-issue-types';
 import { RECOMMENDED_ISSUE_TYPES } from '@/modules/issue/constants/recommended-issue-types';
 import type { IssueTypeMeta } from '@/modules/issue/api/issue-type-api';
-import { ISSUE_TYPE_ICONS, IssueTypeIcon, issueTypeIcon } from '@/shared/components/issue-type-icon';
+import { ISSUE_TYPE_ICONS, issueTypeIcon } from '@/shared/components/issue-type-icon';
 import { useStatuses } from '@/modules/core-config/hooks/use-metadata';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { toast } from '@/components/ui/toast';
@@ -198,78 +195,77 @@ function SortableTypeRow({
   const { t } = useTranslation();
 
   return (
-    <SortableItem
-      value={type.id}
-      className={`flex items-center gap-3 bg-card px-3 py-2.5 motion-shift ${
-        type.enabled ? '' : 'opacity-60'
-      }`}
-    >
-      <SortableItemHandle
-        render={<button type="button" aria-label={t('common.reorder', '拖拽排序')} />}
-        className="touch-none text-content-text-muted hover:text-content-text-secondary"
-      >
-        <GripVertical size={14} />
-      </SortableItemHandle>
-      <IssueTypeIcon meta={type} />
-      <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
-        <div className="flex items-center gap-2">
+    <DefinitionRow
+      id={type.id}
+      onClick={onOpen}
+      className={`motion-shift ${type.enabled ? '' : 'opacity-60'}`}
+      leading={
+        /* 行首 xl 底框图标：自定义类型色浅底（colorSurface），与设置·状态行形态统一 */
+        <StatusIconFrame
+          icon={issueTypeIcon(type.icon)}
+          tone="default"
+          size="xl"
+          color={type.color}
+          colorSurface
+          className="rounded-lg"
+        />
+      }
+      title={
+        <>
           <span className="truncate text-sm font-medium text-foreground">{type.name}</span>
           {isDefault ? <Badge variant="secondary">{t('settings.defaultType', '默认')}</Badge> : null}
           {!type.enabled ? <Badge variant="outline">{t('settings.typeDisabled', '已停用')}</Badge> : null}
-        </div>
-        <div className="truncate text-xs text-content-text-secondary">
-          {type.description || t('settings.issueTypesStats', '{{status}} 个状态 · {{fields}} 个自定义字段 · {{tasks}} 个任务', {
-            status: statusCount,
-            fields: type.fieldSchema?.length ?? 0,
-            tasks: type._count?.tasks ?? 0,
-          })}
-        </div>
-        {type.description ? (
-          <div className="truncate text-xs text-content-text-muted">
-            {t('settings.issueTypesStats', '{{status}} 个状态 · {{fields}} 个自定义字段 · {{tasks}} 个任务', {
-              status: statusCount,
-              fields: type.fieldSchema?.length ?? 0,
-              tasks: type._count?.tasks ?? 0,
-            })}
-          </div>
-        ) : null}
-      </button>
-      <Switch
-        checked={type.enabled}
-        disabled={isDefault}
-        onCheckedChange={onEnabledChange}
-        aria-label={t('settings.enabled', '启用')}
-      />
-      <Menu>
-        <MenuTrigger
-          render={
-            <Button variant="ghost" size="icon-sm" aria-label={t('common.more', '更多')}>
-              <MoreHorizontal size={14} />
-            </Button>
-          }
-        />
-        <MenuPopup align="end">
-          <MenuItem
-            variant="destructive"
-            disabled={isDefault || type.isSystem}
-            onSelect={onDelete}
+        </>
+      }
+      /* 第二行：描述优先，无描述回退统计行（修原三行渲染漂移） */
+      description={
+        type.description ||
+        t('settings.issueTypesStats', '{{status}} 个状态 · {{fields}} 个自定义字段 · {{tasks}} 个任务', {
+          status: statusCount,
+          fields: type.fieldSchema?.length ?? 0,
+          tasks: type._count?.tasks ?? 0,
+        })
+      }
+      trailing={
+        <>
+          <Switch
+            checked={type.enabled}
+            disabled={isDefault}
+            onCheckedChange={onEnabledChange}
+            aria-label={t('settings.enabled', '启用')}
+          />
+          <Menu>
+            <MenuTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" aria-label={t('common.more', '更多')}>
+                  <MoreHorizontal size={14} />
+                </Button>
+              }
+            />
+            <MenuPopup align="end">
+              <MenuItem
+                variant="destructive"
+                disabled={isDefault || type.isSystem}
+                onSelect={onDelete}
+              >
+                <Trash2 size={14} />
+                {type.isSystem || isDefault
+                  ? t('settings.builtinTypeNoDelete', '内置类型不可删除')
+                  : t('common.delete')}
+              </MenuItem>
+            </MenuPopup>
+          </Menu>
+          <button
+            type="button"
+            onClick={onOpen}
+            className="text-content-text-muted hover:text-content-text-secondary"
+            aria-label={t('settings.openTypeDetail', '查看类型详情')}
           >
-            <Trash2 size={14} />
-            {type.isSystem || isDefault
-              ? t('settings.builtinTypeNoDelete', '内置类型不可删除')
-              : t('common.delete')}
-          </MenuItem>
-        </MenuPopup>
-      </Menu>
-      <button
-        type="button"
-        onClick={onOpen}
-        className="text-content-text-muted hover:text-content-text-secondary"
-        aria-label={t('settings.openTypeDetail', '查看类型详情')}
-      >
-        <ChevronRight size={14} />
-      </button>
-    </SortableItem>
+            <ChevronRight size={14} />
+          </button>
+        </>
+      }
+    />
   );
 }
 
