@@ -1,19 +1,18 @@
 /**
- * 工作区「备份与恢复」设置区块（CAP-A-03 / G7-a）。
+ * 设置·「备份与恢复」区块（CAP-A-03 / G7-a；2026-10-01 按设置页规范改造：
+ * PageShell standard 骨架对齐 26 个既有 sections——页面级 icon/标题/收藏槽收归
+ * PageHeader，Card 分区只承担内容分组；数据 hooks 与恢复确认对话框留 workspace 域）。
  *
- * 结构：全库立即备份 + 按工作区备份（工作区选择器 + 行内按钮）
- * + 备份列表（时间/范围/大小）+ 恢复入口（RestoreConfirmDialog 强确认）。
- * 恢复按钮用 destructive 语义色；无备份时空态给诚实文案（不假装有数据）。
+ * 结构：备份分区（全库立即备份 + 按工作区备份选择器）+ 备份列表（时间/范围/大小）
+ * + 恢复入口（RestoreConfirmDialog 强确认，destructive 语义）；无备份空态给诚实文案。
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  DatabaseBackup,
-  HardDriveDownload,
-  Inbox,
-  RefreshCw,
-} from 'lucide-react';
+import { DatabaseBackup, HardDriveDownload, Inbox, RefreshCw } from 'lucide-react';
 
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import {
   Card,
   CardContent,
@@ -25,13 +24,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { SelectField } from '@/components/ui/select-field';
-import { useWorkspaceList } from '../hooks/use-workspace-list';
+import { SkeletonList } from '@/components/ui/skeleton';
+import { useWorkspaceList } from '@/modules/workspace/hooks/use-workspace-list';
 import {
   useCreateWorkspaceBackup,
   useWorkspaceBackups,
-} from '../hooks/use-workspace-backups';
-import type { WorkspaceBackup } from '../api/workspace-api';
-import { RestoreConfirmDialog } from './restore-confirm-dialog';
+} from '@/modules/workspace/hooks/use-workspace-backups';
+import type { WorkspaceBackup } from '@/modules/workspace/api/workspace-api';
+import { RestoreConfirmDialog } from '@/modules/workspace/components/restore-confirm-dialog';
 
 /** 字节数人性化展示（本区块专用，避免为一次展示引入共享工具） */
 function formatBytes(bytes: number): string {
@@ -46,7 +46,7 @@ function formatBytes(bytes: number): string {
   return `${value >= 100 ? Math.round(value) : value.toFixed(1)} ${units[unit]}`;
 }
 
-export function WorkspaceBackupSection() {
+export function BackupsSection() {
   const { t } = useTranslation();
   const { data: backups, isLoading, refetch, isFetching } = useWorkspaceBackups();
   const { data: workspacesRes } = useWorkspaceList();
@@ -63,32 +63,31 @@ export function WorkspaceBackupSection() {
   };
 
   return (
-    <div className="space-y-6">
+    <PageShell
+      variant="standard"
+      icon={DatabaseBackup}
+      iconColor="text-accent-blue"
+      title={t('workspace.backups.title')}
+      favorites={<FavoriteToggle label={nodeToText(t('workspace.backups.title')).trim()} />}
+      contentClassName="space-y-6"
+    >
       <RestoreConfirmDialog
         backup={restoreTarget}
         open={restoreOpen}
         onOpenChange={setRestoreOpen}
       />
 
-      <Card className="border-border shadow-none">
+      <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <DatabaseBackup size={16} className="text-accent-yellow" />
-            <CardTitle className="text-base">{t('workspace.backups.title')}</CardTitle>
-          </div>
+          <CardTitle>{t('workspace.backups.backupAllTitle')}</CardTitle>
           <CardDescription>{t('workspace.backups.desc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           {/* 全库备份 */}
           <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                {t('workspace.backups.backupAllTitle')}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t('workspace.backups.backupAllDesc')}
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              {t('workspace.backups.backupAllDesc')}
+            </p>
             <Button
               onClick={() => createBackup.mutate({ scope: 'all' })}
               disabled={createBackup.isPending}
@@ -144,13 +143,10 @@ export function WorkspaceBackupSection() {
       </Card>
 
       {/* 备份列表 */}
-      <Card className="border-border shadow-none">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <HardDriveDownload size={16} className="text-accent-yellow" />
-              <CardTitle className="text-base">{t('workspace.backups.listTitle')}</CardTitle>
-            </div>
+            <CardTitle>{t('workspace.backups.listTitle')}</CardTitle>
             <Button
               variant="outline"
               size="sm"
@@ -168,10 +164,7 @@ export function WorkspaceBackupSection() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-              <Spinner size="sm" />
-              {t('common.loading')}
-            </div>
+            <SkeletonList count={3} />
           ) : !backups || backups.length === 0 ? (
             <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
               <Inbox className="h-4 w-4" />
@@ -220,6 +213,6 @@ export function WorkspaceBackupSection() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 }

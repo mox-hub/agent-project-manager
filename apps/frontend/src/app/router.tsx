@@ -29,7 +29,7 @@ import {
   StorageSettingsSection,
 } from '@/modules/settings/pages/sections/manager-sections';
 import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-id-section';
-import { WorkspaceBackupSection } from '@/modules/workspace/components/backup-restore-section';
+import { BackupsSection } from '@/modules/settings/pages/sections/backups-section';
 import { IssueTypesSettingsSection } from '@/modules/settings/pages/sections/issue-types-section';
 import { IssueTypeDetailSection } from '@/modules/settings/pages/sections/issue-type-detail-section';
 import { ChecklistsSettingsSection } from '@/modules/settings/pages/sections/checklists-section';
@@ -683,8 +683,8 @@ export const router = createBrowserRouter([
       { path: 'roles', element: <RolesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'templates', element: <TemplatesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'short-id', element: <ShortIdSettingsSection />, errorElement: <ErrorPage /> },
-      // CAP-A-03 工作区备份与恢复（组件归 workspace 模块域）
-      { path: 'backups', element: <WorkspaceBackupSection />, errorElement: <ErrorPage /> },
+      // CAP-A-03 工作区备份与恢复（2026-10-01 迁 settings sections 并对齐 PageShell 规范）
+      { path: 'backups', element: <BackupsSection />, errorElement: <ErrorPage /> },
       { path: 'storage', element: <StorageSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'ai', element: <AiManagementSection />, errorElement: <ErrorPage /> },
       // 「Agent 管理」已并入本页页签（2026-09-19 合并）：旧路径重定向保书签，?tab=overview 贴近原页落地
