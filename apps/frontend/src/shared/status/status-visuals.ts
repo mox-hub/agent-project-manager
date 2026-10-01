@@ -208,6 +208,9 @@ export function resolveStatusIcon(
   return STATUS_ICONS[byGroup ?? 'Circle'];
 }
 
+/** 动态视觉表条目：静态语义 + 定义落库的展示色（useStatusVisualMap / 设置·状态列表行共用） */
+export type StatusVisualEntry = StatusVisual & { color?: string };
+
 /** 参与动态视觉解析的状态定义最小形状（StatusDefinition 响应的结构子集） */
 export interface StatusVisualDefinition {
   key: string;

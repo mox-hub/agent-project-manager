@@ -19,6 +19,7 @@ import {
   useUpdateStatus,
   useDeleteStatus,
 } from '../hooks/use-metadata';
+import { useStatusVisualMap } from '../hooks/use-status-visual-map';
 import { useAllTasks } from '@/modules/issue/hooks/use-project-tasks';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 
@@ -54,6 +55,8 @@ export function StatusFamilyPanel({
   const confirmAction = useConfirm();
   const { isAdmin } = useAuth();
   const { data: statuses = [], isLoading, error, refetch } = useStatuses(undefined, family);
+  // 动态视觉映射：行内 Frame 的 tone / 兜底 icon 来源（定义 color/icon 优先）
+  const visualMap = useStatusVisualMap(family);
   const createStatus = useCreateStatus();
   const updateStatus = useUpdateStatus();
   const deleteStatus = useDeleteStatus();
@@ -161,6 +164,7 @@ export function StatusFamilyPanel({
       >
         <StatusDefinitionList
           definitions={statuses}
+          visualMap={visualMap}
           counts={counts}
           onCreate={isAdmin ? openCreate : undefined}
           onEdit={openEdit}

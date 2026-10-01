@@ -3,12 +3,12 @@ import {
   buildStatusVisualMap,
   PROJECT_WORKFLOW_VISUALS,
   TASK_STATUS_VISUALS,
-  type StatusVisual,
+  type StatusVisualEntry,
   type StatusVisualDefinition,
 } from '@/shared/status/status-visuals';
 import { useStatuses } from './use-metadata';
 
-export type StatusVisualEntry = StatusVisual & { color?: string };
+export type { StatusVisualEntry };
 
 /**
  * 动态状态视觉映射（设置·状态真实化）：StatusDefinition 落库的 color/icon 优先，

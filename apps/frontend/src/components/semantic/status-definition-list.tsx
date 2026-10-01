@@ -17,6 +17,8 @@ import {
 import { RawButton } from '@/components/raw/raw-button';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { StatusIconFrame } from '@/shared/status/status-icon-frame';
+import type { StatusVisualEntry } from '@/shared/status/status-visuals';
 import { STATUS_ICONS, STATUS_GROUP_DEFAULT_ICON, type StatusIconKey } from '@/shared/status/status-visuals';
 import { cn } from '@/lib/utils';
 
@@ -47,6 +49,8 @@ export interface StatusDefinitionLike {
 
 export interface StatusDefinitionListProps {
   definitions: StatusDefinitionLike[];
+  /** 动态视觉映射（useStatusVisualMap）：行内 Frame 的 tone/兜底 icon 来源 */
+  visualMap?: Map<string, StatusVisualEntry>;
   /** 组头「+」新建（参数为目标分组）；不传隐藏按钮 */
   onCreate?: (group: string) => void;
   /** 行点击编辑 */
@@ -67,6 +71,7 @@ function allowedKeysOf(def: StatusDefinitionLike): string[] {
 
 export function StatusDefinitionList({
   definitions,
+  visualMap,
   onCreate,
   onEdit,
   onViewTasks,
@@ -135,6 +140,7 @@ export function StatusDefinitionList({
                   <StatusDefinitionRow
                     key={def.id}
                     def={def}
+                    visualMap={visualMap}
                     groupNames={nameByKey}
                     count={counts?.[def.key]}
                     onClick={() => onEdit?.(def)}
@@ -152,27 +158,26 @@ export function StatusDefinitionList({
 
 function StatusDefinitionRow({
   def,
+  visualMap,
   groupNames,
   count,
   onClick,
   onViewTasks,
 }: {
   def: StatusDefinitionLike;
+  visualMap?: Map<string, StatusVisualEntry>;
   groupNames: Map<string, string>;
   count?: number;
   onClick?: () => void;
   onViewTasks?: () => void;
 }) {
   const { t } = useTranslation();
-  // 注册表查表取引用（非 render 期创建，react-hooks/static-components）
+  // 动态视觉优先（tone/兜底 icon 来自 useStatusVisualMap），未命中走注册表分组默认
+  const dyn = visualMap?.get(def.key);
   const groupDefault: StatusIconKey =
     (def.group && def.group in STATUS_GROUP_DEFAULT_ICON
       ? STATUS_GROUP_DEFAULT_ICON[def.group]
       : undefined) ?? 'Circle';
-  const Icon =
-    STATUS_ICONS[
-      (def.icon && def.icon in STATUS_ICONS ? def.icon : groupDefault) as StatusIconKey
-    ];
   const nextKeys = allowedKeysOf(def);
 
   return (
@@ -195,12 +200,17 @@ function StatusDefinitionRow({
       </SortableItemHandle>
       <RawButton
         onClick={onClick}
-        className="flex min-w-0 flex-1 items-center gap-2.5 py-0.5 text-left"
+        className="flex min-w-0 flex-1 items-center gap-3 py-0.5 text-left"
       >
-        <Icon
-          strokeWidth={2.5}
-          className="size-4 shrink-0"
-          style={def.color ? { color: def.color } : undefined}
+        {/* 双行文本行首：xl 档（32×32）带底框，自定义色时浅底跟随（colorSurface） */}
+        <StatusIconFrame
+          icon={dyn?.icon ?? STATUS_ICONS[groupDefault]}
+          tone={dyn?.tone ?? 'default'}
+          size="xl"
+          spin={dyn?.icon === STATUS_ICONS.Loader2}
+          color={def.color || undefined}
+          colorSurface
+          className="rounded-lg"
         />
         <span className="min-w-0">
           <span className="flex items-center gap-2">
