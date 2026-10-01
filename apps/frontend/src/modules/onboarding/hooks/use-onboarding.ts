@@ -8,6 +8,7 @@ import { persistOnboardingToShell } from '@/shared/lib/desktop-session';
 
 export interface OnboardingStep {
   id: string;
+  /** i18n 键（onboarding.steps.*，渲染时 t() 消费）——文案不落本文件（CAP-A-18 i18n 收口） */
   title: string;
   description: string;
   status: 'pending' | 'current' | 'completed' | 'skipped';
@@ -23,32 +24,32 @@ export interface OnboardingState {
 const DEFAULT_STEPS: OnboardingStep[] = [
   {
     id: 'welcome',
-    title: '欢迎',
-    description: '了解 APM 的核心功能',
+    title: 'onboarding.steps.welcome.title',
+    description: 'onboarding.steps.welcome.description',
     status: 'pending',
   },
   {
     id: 'create-project',
-    title: '创建项目',
-    description: '建立您的第一个项目',
+    title: 'onboarding.steps.createProject.title',
+    description: 'onboarding.steps.createProject.description',
     status: 'pending',
   },
   {
     id: 'connect-repository',
-    title: '连接仓库',
-    description: '关联 Git 仓库',
+    title: 'onboarding.steps.connectRepository.title',
+    description: 'onboarding.steps.connectRepository.description',
     status: 'pending',
   },
   {
     id: 'add-ai',
-    title: '配置 AI',
-    description: '连接 AI 模型服务',
+    title: 'onboarding.steps.configureAi.title',
+    description: 'onboarding.steps.configureAi.description',
     status: 'pending',
   },
   {
     id: 'complete',
-    title: '完成设置',
-    description: '开始使用 APM',
+    title: 'onboarding.steps.complete.title',
+    description: 'onboarding.steps.complete.description',
     status: 'pending',
   },
 ];
@@ -57,8 +58,8 @@ const DEFAULT_STEPS: OnboardingStep[] = [
 const DESKTOP_INSERT_AFTER = 'welcome';
 const DESKTOP_EXTRA_STEP: Omit<OnboardingStep, 'status'> = {
   id: 'workspace-root',
-  title: '工作目录',
-  description: '设置 AI 同事执行任务的工作目录',
+  title: 'onboarding.steps.workspaceRoot.title',
+  description: 'onboarding.steps.workspaceRoot.description',
 };
 
 export function buildSteps(isDesktop: boolean): OnboardingStep[] {

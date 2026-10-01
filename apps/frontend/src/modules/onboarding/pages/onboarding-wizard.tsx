@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOnboarding } from '../hooks/use-onboarding';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +32,7 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
+  Inbox,
   SkipForward,
   Sparkles,
   Users,
@@ -48,11 +50,15 @@ interface StepContentProps {
 }
 
 function WelcomeStep({ onNext, onSkip }: StepContentProps) {
+  const { t } = useTranslation();
   const features = [
-    { icon: FolderPlus, title: '项目管理', description: '创建和管理项目，跟踪进度' },
-    { icon: GitBranch, title: 'Git 集成', description: '连接仓库，管理分支和提交' },
-    { icon: Bot, title: 'AI 同事', description: '读写任务、执行代码、发起审批' },
-    { icon: Zap, title: '治理闭环', description: 'AI 代写方案，您只需确认把关' },
+    { icon: FolderPlus, titleKey: 'onboarding.welcome.features.projects.title', descriptionKey: 'onboarding.welcome.features.projects.description' },
+    { icon: GitBranch, titleKey: 'onboarding.welcome.features.git.title', descriptionKey: 'onboarding.welcome.features.git.description' },
+    { icon: Bot, titleKey: 'onboarding.welcome.features.ai.title', descriptionKey: 'onboarding.welcome.features.ai.description' },
+    // 治理闭环是主叙事（产品主轴：AI 同事是手段，工程治理是目的），保留首位权重
+    { icon: Zap, titleKey: 'onboarding.welcome.features.governance.title', descriptionKey: 'onboarding.welcome.features.governance.description' },
+    // 内测语境引导：数据安全（CAP-A-18 上手收口——新用户最先问的是"我的数据在哪"）
+    { icon: Shield, titleKey: 'onboarding.welcome.features.dataSafety.title', descriptionKey: 'onboarding.welcome.features.dataSafety.description' },
   ];
 
   return (
@@ -61,21 +67,21 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
         <IconStack aria-hidden="true" className="mx-auto mb-4 text-primary">
           <Rocket className="size-4 text-primary" />
         </IconStack>
-        <h2 className="text-2xl font-semibold">欢迎使用 APM</h2>
+        <h2 className="text-2xl font-semibold">{t('onboarding.welcome.title')}</h2>
         <p className="mt-2 text-muted-foreground">
-          AI 驱动的项目管理平台，让团队协作更高效
+          {t('onboarding.welcome.subtitle')}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         {features.map((feature) => (
           <div
-            key={feature.title}
+            key={feature.titleKey}
             className="rounded-lg border border-border bg-muted/30 p-4 transition-colors hover:bg-muted/50"
           >
             <feature.icon className="mb-2 h-5 w-5 text-primary" />
-            <h3 className="font-medium">{feature.title}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">{feature.description}</p>
+            <h3 className="font-medium">{t(feature.titleKey)}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{t(feature.descriptionKey)}</p>
           </div>
         ))}
       </div>
@@ -84,11 +90,9 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
         <div className="flex items-start gap-3">
           <Bot className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
-            <p className="text-sm font-medium">认识您的 AI 同事</p>
+            <p className="text-sm font-medium">{t('onboarding.welcome.aiIntro.title')}</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              APM 内置 AI 同事可以像团队成员一样接任务、写代码、提交验收证据；
-              所有执行都在验收门禁与您的审批之下进行——AI 负责干活，您负责决策。
-              后续步骤中配置好 AI 服务即可启用。
+              {t('onboarding.welcome.aiIntro.body')}
             </p>
           </div>
         </div>
@@ -97,16 +101,16 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
       <div className="flex items-center gap-2 rounded-lg bg-muted/30 p-4">
         <Sparkles className="h-5 w-5 text-primary" />
         <p className="text-sm text-muted-foreground">
-          完成初始设置需要约 3 分钟，您随时可以跳过不感兴趣的部分
+          {t('onboarding.welcome.durationHint')}
         </p>
       </div>
 
       <DialogFooter className="gap-2 sm:gap-0">
         <Button variant="outline" onClick={onSkip}>
-          稍后设置
+          {t('onboarding.welcome.later')}
         </Button>
         <Button onClick={onNext}>
-          开始设置
+          {t('onboarding.welcome.start')}
           <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </DialogFooter>
@@ -115,6 +119,7 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
 }
 
 function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
+  const { t } = useTranslation();
   const [roots, setRoots] = useState<string[]>([]);
   const [isChoosing, setIsChoosing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,7 +135,7 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
     setIsChoosing(true);
     try {
       const { path } = await invoke<{ path: string | null }>('choose_directory', {
-        title: '选择 AI 执行的工作目录',
+        title: t('onboarding.workspaceRoot.chooseDialogTitle'),
       });
       if (path && !roots.includes(path)) {
         const next = [...roots, path];
@@ -164,15 +169,15 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <FolderOpen className="h-7 w-7 text-primary" />
         </div>
-        <DialogTitle className="text-center text-xl">配置工作目录</DialogTitle>
+        <DialogTitle className="text-center text-xl">{t('onboarding.workspaceRoot.heading')}</DialogTitle>
         <DialogDescription className="text-center">
-          AI 同事将在这些目录内读写代码、执行命令
+          {t('onboarding.workspaceRoot.description')}
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          选择一个存放项目代码的文件夹。您可以稍后在「设置 → 运行时」中随时修改。
+          {t('onboarding.workspaceRoot.hint')}
         </p>
 
         {roots.length > 0 && (
@@ -187,7 +192,7 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
                   type="button"
                   onClick={() => void handleRemove(root)}
                   className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  aria-label={`移除 ${root}`}
+                  aria-label={t('onboarding.workspaceRoot.removeAria', { root })}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -198,7 +203,7 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
 
         <Button type="button" variant="outline" onClick={() => void handleChoose()} disabled={isChoosing} className="w-full">
           <Plus className="mr-1 h-4 w-4" />
-          {isChoosing ? '选择中...' : '选择目录'}
+          {isChoosing ? t('onboarding.workspaceRoot.choosing') : t('onboarding.workspaceRoot.choose')}
         </Button>
 
         {error && (
@@ -208,10 +213,10 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
 
       <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onSkip}>
-          跳过
+          {t('onboarding.common.skip')}
         </Button>
         <Button onClick={onNext}>
-          下一步
+          {t('onboarding.common.next')}
           <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </DialogFooter>
@@ -224,6 +229,7 @@ function CreateProjectStep({
   onSkip,
   isPending,
 }: StepContentProps & { isPending: boolean }) {
+  const { t } = useTranslation();
   const { createProject } = useOnboarding();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -246,46 +252,46 @@ function CreateProjectStep({
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <FolderPlus className="h-7 w-7 text-primary" />
         </div>
-        <DialogTitle className="text-center text-xl">创建您的第一个项目</DialogTitle>
+        <DialogTitle className="text-center text-xl">{t('onboarding.createProject.heading')}</DialogTitle>
         <DialogDescription className="text-center">
-          项目是您管理任务、成员和目标的容器
+          {t('onboarding.createProject.description')}
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-4">
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="project-name">
-            项目名称 <span className="text-destructive">*</span>
+            {t('onboarding.createProject.nameLabel')} <span className="text-destructive">*</span>
           </label>
           <Input
             id="project-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="例如：我的项目"
+            placeholder={t('onboarding.createProject.namePlaceholder')}
             required
           />
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="project-description">
-            项目描述
+            {t('onboarding.createProject.descriptionLabel')}
           </label>
           <Textarea
             id="project-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="简要描述项目目标和范围..."
+            placeholder={t('onboarding.createProject.descriptionPlaceholder')}
             rows={3}
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">项目类型</label>
+          <label className="text-sm font-medium">{t('onboarding.createProject.typeLabel')}</label>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { value: 'team', label: '团队', icon: Users },
-              { value: 'personal', label: '个人', icon: Sparkles },
-              { value: 'enterprise', label: '企业', icon: Shield },
+              { value: 'team', labelKey: 'onboarding.createProject.type.team', icon: Users },
+              { value: 'personal', labelKey: 'onboarding.createProject.type.personal', icon: Sparkles },
+              { value: 'enterprise', labelKey: 'onboarding.createProject.type.enterprise', icon: Shield },
             ].map((option) => (
               <button
                 key={option.value}
@@ -298,7 +304,7 @@ function CreateProjectStep({
                 }`}
               >
                 <option.icon className="h-5 w-5" />
-                <span className="text-xs font-medium">{option.label}</span>
+                <span className="text-xs font-medium">{t(option.labelKey)}</span>
               </button>
             ))}
           </div>
@@ -307,10 +313,10 @@ function CreateProjectStep({
 
       <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onSkip}>
-          跳过
+          {t('onboarding.common.skip')}
         </Button>
         <Button type="submit" disabled={!name.trim() || isPending}>
-          {isPending ? '创建中...' : '创建项目'}
+          {isPending ? t('onboarding.createProject.creating') : t('onboarding.createProject.submit')}
         </Button>
       </DialogFooter>
     </form>
@@ -323,29 +329,29 @@ function CreateProjectStep({
  * 仓库连接在契约面没有单一端点，真实入口在项目内，此处只做引导。
  */
 function ConnectRepositoryStep({ onNext, onSkip }: StepContentProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       <DialogHeader>
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <GitBranch className="h-7 w-7 text-primary" />
         </div>
-        <DialogTitle className="text-center text-xl">连接 Git 仓库</DialogTitle>
+        <DialogTitle className="text-center text-xl">{t('onboarding.connectRepository.heading')}</DialogTitle>
         <DialogDescription className="text-center">
-          关联您的代码仓库，跟踪代码变更和分支
+          {t('onboarding.connectRepository.description')}
         </DialogDescription>
       </DialogHeader>
 
       <div className="rounded-lg bg-muted/30 p-4 text-sm text-muted-foreground">
-        仓库连接支持 GitHub、GitLab、Gitee 等平台，可在进入 APM
-        后于项目内随时完成——此步可以先跳过，不影响使用。
+        {t('onboarding.connectRepository.hint')}
       </div>
 
       <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onSkip}>
-          跳过
+          {t('onboarding.common.skip')}
         </Button>
         <Button onClick={onNext}>
-          下一步
+          {t('onboarding.common.next')}
           <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </DialogFooter>
@@ -359,29 +365,29 @@ function ConnectRepositoryStep({ onNext, onSkip }: StepContentProps) {
  * 配置入口在「设置 → AI 管理」（作用于既有 provider 记录），此处只做引导。
  */
 function ConfigureAiStep({ onNext, onSkip }: StepContentProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       <DialogHeader>
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <Bot className="h-7 w-7 text-primary" />
         </div>
-        <DialogTitle className="text-center text-xl">配置 AI 模型</DialogTitle>
+        <DialogTitle className="text-center text-xl">{t('onboarding.configureAi.heading')}</DialogTitle>
         <DialogDescription className="text-center">
-          连接 AI 服务，启用智能辅助
+          {t('onboarding.configureAi.description')}
         </DialogDescription>
       </DialogHeader>
 
       <div className="rounded-lg bg-muted/30 p-4 text-sm text-muted-foreground">
-        支持 OpenAI、Anthropic、智谱 GLM、DeepSeek
-        等模型服务。进入 APM 后可在「设置 → AI 管理」中随时配置 API Key 与端点——此步可以先跳过。
+        {t('onboarding.configureAi.hint')}
       </div>
 
       <DialogFooter className="gap-2 sm:gap-0">
         <Button type="button" variant="outline" onClick={onSkip}>
-          跳过
+          {t('onboarding.common.skip')}
         </Button>
         <Button onClick={onNext}>
-          下一步
+          {t('onboarding.common.next')}
           <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </DialogFooter>
@@ -397,6 +403,7 @@ function CompleteStep({
   /** 向导完成 → 先看回放（S6）。次序见 `use-onboarding.watchReplayThenStart` */
   onWatchReplay: () => void;
 }) {
+  const { t } = useTranslation();
 
   const handleFinish = () => {
     onFinish();
@@ -412,12 +419,12 @@ function CompleteStep({
         <IconStack aria-hidden="true" className="mx-auto mb-4 text-accent-green">
           <CheckCircle className="size-4 text-accent-green" />
         </IconStack>
-        <h2 className="text-2xl font-semibold">设置完成！</h2>
+        <h2 className="text-2xl font-semibold">{t('onboarding.complete.heading')}</h2>
         {/* 原来这里写的是「您已准备好开始使用 APM」——一句没有依据的断言：
             上一步「配置 AI」是**可跳过**的，跳过之后这条链路一步也跑不起来。
             改为说清"现在能做什么、还差什么"，而"还差什么"由下方那张卡自己去说 */}
         <p className="mt-2 text-muted-foreground">
-          工作区已经建好了。下一步建议先花 90 秒看一遍这条管道怎么干活
+          {t('onboarding.complete.subtitle')}
         </p>
       </div>
 
@@ -427,8 +434,8 @@ function CompleteStep({
             <FolderPlus className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="font-medium">项目空间已就绪</p>
-            <p className="text-xs text-muted-foreground">随时创建项目，管理任务、文档与成员</p>
+            <p className="font-medium">{t('onboarding.complete.projectReady.title')}</p>
+            <p className="text-xs text-muted-foreground">{t('onboarding.complete.projectReady.description')}</p>
           </div>
           <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
         </div>
@@ -438,8 +445,8 @@ function CompleteStep({
             <GitBranch className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="font-medium">代码仓库可随时连接</p>
-            <p className="text-xs text-muted-foreground">连接后开始跟踪代码变更和分支</p>
+            <p className="font-medium">{t('onboarding.complete.repoReady.title')}</p>
+            <p className="text-xs text-muted-foreground">{t('onboarding.complete.repoReady.description')}</p>
           </div>
           <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
         </div>
@@ -449,10 +456,25 @@ function CompleteStep({
             <Bot className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="font-medium">AI 同事整装待发</p>
-            <p className="text-xs text-muted-foreground">在「设置 → AI 管理」配置模型后即可执行任务</p>
+            <p className="font-medium">{t('onboarding.complete.aiReady.title')}</p>
+            <p className="text-xs text-muted-foreground">{t('onboarding.complete.aiReady.description')}</p>
           </div>
           <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
+        </div>
+
+        {/* 完成后第一站指引（CAP-A-18 内容同步）：G5-b integration 卡是新手
+            第一个 AI 确认时刻——AI 干完活发来合入提议，人确认才生效。
+            形态与上面三张「已就绪」卡区分：行动引导（Inbox 图标），非完成态 */}
+        <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+            <Inbox className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="font-medium">{t('onboarding.complete.inboxHint.title')}</p>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {t('onboarding.complete.inboxHint.description')}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -464,14 +486,14 @@ function CompleteStep({
             按钮文案承担全部说明责任（含"不需要配置"），避免主键变成一个语焉不详的跳转 */}
         <Button onClick={onWatchReplay} size="lg" className="w-full">
           <Sparkles className="mr-2 h-4 w-4" />
-          先看一遍它怎么干活（90 秒 · 不需要配置模型）
+          {t('onboarding.complete.watchReplay')}
         </Button>
         <Button variant="outline" onClick={handleFinish} className="w-full">
           <Rocket className="mr-2 h-4 w-4" />
-          直接进入 APM
+          {t('onboarding.complete.enterApp')}
         </Button>
         <Button variant="ghost" onClick={handleGoToDocs} className="w-full">
-          查看文档
+          {t('onboarding.complete.viewDocs')}
         </Button>
       </div>
     </div>
@@ -484,6 +506,7 @@ interface OnboardingWizardProps {
 }
 
 export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizardProps) {
+  const { t } = useTranslation();
   const {
     state,
     currentStepData,
@@ -555,7 +578,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
                     )}
                   </StepperIndicator>
                   <StepperTitle className="text-xs whitespace-nowrap">
-                    {step.title}
+                    {t(step.title)}
                   </StepperTitle>
                 </StepperTrigger>
                 {i < state.steps.length - 1 && <StepperSeparator />}
@@ -575,10 +598,10 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
               disabled={state.currentStep === 0}
             >
               <ChevronLeft className="mr-1 h-4 w-4" />
-              上一步
+              {t('onboarding.common.prev')}
             </Button>
             <span className="text-xs text-muted-foreground">
-              按 ESC 关闭
+              {t('onboarding.common.escClose')}
             </span>
           </div>
         )}

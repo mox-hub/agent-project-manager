@@ -5929,5 +5929,130 @@
       "role": "Role hint — Workspace settings → Roles → edit role",
       "member": "Member personal prompt — Team member profile (existing entry)"
     }
+  },
+  "onboarding": {
+    "steps": {
+      "welcome": {
+        "title": "Welcome",
+        "description": "Get to know APM's core capabilities"
+      },
+      "workspaceRoot": {
+        "title": "Working folders",
+        "description": "Set where your AI teammate works"
+      },
+      "createProject": {
+        "title": "Create project",
+        "description": "Set up your first project"
+      },
+      "connectRepository": {
+        "title": "Connect repo",
+        "description": "Link a Git repository"
+      },
+      "configureAi": {
+        "title": "Configure AI",
+        "description": "Connect an AI model service"
+      },
+      "complete": {
+        "title": "All set",
+        "description": "Start using APM"
+      }
+    },
+    "common": {
+      "skip": "Skip",
+      "next": "Next",
+      "prev": "Back",
+      "escClose": "Press ESC to close"
+    },
+    "welcome": {
+      "title": "Welcome to APM",
+      "subtitle": "The AI-powered project management platform for better teamwork",
+      "features": {
+        "projects": {
+          "title": "Projects & tasks",
+          "description": "Create projects, manage work, track progress at a glance"
+        },
+        "git": {
+          "title": "Git integration",
+          "description": "Connect repositories, track branches and commits"
+        },
+        "ai": {
+          "title": "AI teammate",
+          "description": "Takes tasks, writes code, delivers acceptance evidence"
+        },
+        "governance": {
+          "title": "Governance loop",
+          "description": "AI drafts the plan, you just review and approve"
+        },
+        "dataSafety": {
+          "title": "Data safety",
+          "description": "Your data stays on your machine — backup & restore in Settings"
+        }
+      },
+      "aiIntro": {
+        "title": "Meet your AI teammate",
+        "body": "The built-in AI teammate picks up tasks, writes code and submits acceptance evidence just like a team member; every execution runs under acceptance gates and your approvals — AI does the work, you make the decisions. Configure the AI service in a later step to enable it."
+      },
+      "durationHint": "Initial setup takes about 3 minutes — skip anything you're not interested in",
+      "later": "Set up later",
+      "start": "Get started"
+    },
+    "workspaceRoot": {
+      "heading": "Configure working folders",
+      "description": "Your AI teammate will read/write code and run commands inside these folders",
+      "hint": "Pick a folder to store project code. You can change this anytime in Settings → Runtime.",
+      "removeAria": "Remove {{root}}",
+      "choose": "Choose folder",
+      "choosing": "Choosing...",
+      "chooseDialogTitle": "Choose the working folder for AI execution"
+    },
+    "createProject": {
+      "heading": "Create your first project",
+      "description": "A project is the container for your tasks, members and goals",
+      "nameLabel": "Project name",
+      "namePlaceholder": "e.g. My project",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Briefly describe the project goals and scope...",
+      "typeLabel": "Project type",
+      "type": {
+        "team": "Team",
+        "personal": "Personal",
+        "enterprise": "Enterprise"
+      },
+      "creating": "Creating...",
+      "submit": "Create project"
+    },
+    "connectRepository": {
+      "heading": "Connect a Git repository",
+      "description": "Link your code repository to track changes and branches",
+      "hint": "Works with GitHub, GitLab, Gitee and more — you can connect inside a project anytime after entering APM. It's safe to skip this step for now."
+    },
+    "configureAi": {
+      "heading": "Configure AI models",
+      "description": "Connect AI services to enable intelligent assistance",
+      "hint": "Supports OpenAI, Anthropic, Zhipu GLM, DeepSeek and more. After entering APM, configure API keys and endpoints anytime in Settings → AI Management — it's safe to skip this step for now."
+    },
+    "complete": {
+      "heading": "You're all set!",
+      "subtitle": "Your workspace is ready. Next, spend 90 seconds watching how the pipeline works",
+      "projectReady": {
+        "title": "Project space is ready",
+        "description": "Create projects anytime, manage tasks, docs and members"
+      },
+      "repoReady": {
+        "title": "Repositories can be connected anytime",
+        "description": "Connect to start tracking code changes and branches"
+      },
+      "aiReady": {
+        "title": "AI teammate is standing by",
+        "description": "Configure a model in Settings → AI Management to start executing tasks"
+      },
+      "inboxHint": {
+        "title": "First stop: the decision inbox",
+        "description": "When the AI finishes work it sends a merge proposal that only takes effect after your approval — check the decision inbox to see your first AI proposal, your first confirmation moment"
+      },
+      "watchReplay": "Watch how it works first (90 sec · no model config needed)",
+      "enterApp": "Enter APM directly",
+      "viewDocs": "View documentation"
+    }
   }
 }

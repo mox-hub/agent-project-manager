@@ -5929,5 +5929,130 @@
       "role": "角色提示 — 工作区设置 → 角色管理 → 编辑角色",
       "member": "成员个人提示词 — 团队成员资料（既有入口）"
     }
+  },
+  "onboarding": {
+    "steps": {
+      "welcome": {
+        "title": "欢迎",
+        "description": "了解 APM 的核心功能"
+      },
+      "workspaceRoot": {
+        "title": "工作目录",
+        "description": "设置 AI 同事执行任务的工作目录"
+      },
+      "createProject": {
+        "title": "创建项目",
+        "description": "建立您的第一个项目"
+      },
+      "connectRepository": {
+        "title": "连接仓库",
+        "description": "关联 Git 仓库"
+      },
+      "configureAi": {
+        "title": "配置 AI",
+        "description": "连接 AI 模型服务"
+      },
+      "complete": {
+        "title": "完成设置",
+        "description": "开始使用 APM"
+      }
+    },
+    "common": {
+      "skip": "跳过",
+      "next": "下一步",
+      "prev": "上一步",
+      "escClose": "按 ESC 关闭"
+    },
+    "welcome": {
+      "title": "欢迎使用 APM",
+      "subtitle": "AI 驱动的项目管理平台，让团队协作更高效",
+      "features": {
+        "projects": {
+          "title": "项目与任务",
+          "description": "创建项目、管理工单，进度一目了然"
+        },
+        "git": {
+          "title": "Git 集成",
+          "description": "连接仓库，跟踪分支与提交"
+        },
+        "ai": {
+          "title": "AI 同事",
+          "description": "接任务、写代码、交验收证据"
+        },
+        "governance": {
+          "title": "治理闭环",
+          "description": "AI 代写方案，您只需确认把关"
+        },
+        "dataSafety": {
+          "title": "数据安全",
+          "description": "数据都在您自己的电脑上，设置页支持备份与恢复"
+        }
+      },
+      "aiIntro": {
+        "title": "认识您的 AI 同事",
+        "body": "APM 内置 AI 同事可以像团队成员一样接任务、写代码、提交验收证据；所有执行都在验收门禁与您的审批之下进行——AI 负责干活，您负责决策。后续步骤中配置好 AI 服务即可启用。"
+      },
+      "durationHint": "完成初始设置需要约 3 分钟，您随时可以跳过不感兴趣的部分",
+      "later": "稍后设置",
+      "start": "开始设置"
+    },
+    "workspaceRoot": {
+      "heading": "配置工作目录",
+      "description": "AI 同事将在这些目录内读写代码、执行命令",
+      "hint": "选择一个存放项目代码的文件夹。您可以稍后在「设置 → 运行时」中随时修改。",
+      "removeAria": "移除 {{root}}",
+      "choose": "选择目录",
+      "choosing": "选择中...",
+      "chooseDialogTitle": "选择 AI 执行的工作目录"
+    },
+    "createProject": {
+      "heading": "创建您的第一个项目",
+      "description": "项目是您管理任务、成员和目标的容器",
+      "nameLabel": "项目名称",
+      "namePlaceholder": "例如：我的项目",
+      "descriptionLabel": "项目描述",
+      "descriptionPlaceholder": "简要描述项目目标和范围...",
+      "typeLabel": "项目类型",
+      "type": {
+        "team": "团队",
+        "personal": "个人",
+        "enterprise": "企业"
+      },
+      "creating": "创建中...",
+      "submit": "创建项目"
+    },
+    "connectRepository": {
+      "heading": "连接 Git 仓库",
+      "description": "关联您的代码仓库，跟踪代码变更和分支",
+      "hint": "仓库连接支持 GitHub、GitLab、Gitee 等平台，可在进入 APM 后于项目内随时完成——此步可以先跳过，不影响使用。"
+    },
+    "configureAi": {
+      "heading": "配置 AI 模型",
+      "description": "连接 AI 服务，启用智能辅助",
+      "hint": "支持 OpenAI、Anthropic、智谱 GLM、DeepSeek 等模型服务。进入 APM 后可在「设置 → AI 管理」中随时配置 API Key 与端点——此步可以先跳过。"
+    },
+    "complete": {
+      "heading": "设置完成！",
+      "subtitle": "工作区已经建好了。下一步建议先花 90 秒看一遍这条管道怎么干活",
+      "projectReady": {
+        "title": "项目空间已就绪",
+        "description": "随时创建项目，管理任务、文档与成员"
+      },
+      "repoReady": {
+        "title": "代码仓库可随时连接",
+        "description": "连接后开始跟踪代码变更和分支"
+      },
+      "aiReady": {
+        "title": "AI 同事整装待发",
+        "description": "在「设置 → AI 管理」配置模型后即可执行任务"
+      },
+      "inboxHint": {
+        "title": "第一站：决策收件箱",
+        "description": "AI 完成工作后会发来合入提议，您确认后才会真正生效——去决策收件箱看看 AI 的合入提议，这是您的第一个确认时刻"
+      },
+      "watchReplay": "先看一遍它怎么干活（90 秒 · 不需要配置模型）",
+      "enterApp": "直接进入 APM",
+      "viewDocs": "查看文档"
+    }
   }
 }
