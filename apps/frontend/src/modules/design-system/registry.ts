@@ -193,6 +193,10 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   // 为封闭可选项。analytics / dashboard-page / settings ai overview / acceptance / team-stats
   // 五处本地与内联实现同批退役，旧 ui/stats-card 十页消费全部改道本件。
   { name: 'stats-card', file: 'semantic/stats-card.tsx', section: 'Semantic', status: 'canonical' },
+  // 详情页语义化批（2026-10-02）：详情页主栏统一「可收缩分区」平铺件——收编 task/bug
+  // 详情六处手写同构（描述/自定义字段/子任务/执行项/验收预览/依赖）。与 sidebar-panel
+  // 同构不同形（平铺无卡底 vs 磨砂圆角卡），各自独立登记（裁决①）；标题档 text-xs（裁决②）。
+  { name: 'detail-section', file: 'semantic/detail-section.tsx', section: 'Semantic', status: 'canonical' },
 
   // ── 跨模块业务组件：src/shared/components/ ───────────────────────────────
   { name: 'board-view', file: 'shared/components/board-view/board-view.tsx', section: 'App Components', status: 'canonical' },

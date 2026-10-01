@@ -16,11 +16,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Link2 } from 'lucide-react';
+import { Link2 } from 'lucide-react';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals';
 import type { TaskDependencyRef } from '../api/issue-api';
-import { cn } from '@/lib/utils';
+import { DetailSection } from '@/components/semantic/detail-section';
 
 /** 依赖条目投影：工单摘要（title + status），来自关系记录上的对侧工单 */
 interface DependencyIssueRef {
@@ -105,57 +105,33 @@ export function IssueDependenciesSection({
   const totalCount = upstream.length + downstream.length;
 
   return (
-    <div className="shrink-0" data-testid="issue-dependencies-section">
-      {/* Section header：与描述/验收契约/子任务分区同形态 */}
-      <div className="px-6 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <Link2 className="size-3.5" />
-          <span>{t('task.detailDrawer.dependencies')}</span>
-          <span className="text-3xs font-normal normal-case tabular-nums">({totalCount})</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => setCollapsed((v) => !v)}
-          className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          aria-label={collapsed ? t('common.expand') : t('common.collapse')}
-          aria-expanded={!collapsed}
-        >
-          <ChevronDown
-            className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
-          />
-        </button>
-      </div>
-
-      {/* 分区内容：grid-rows 动画展开 / 收起（与正文其他分区同一手势） */}
-      <div
-        className={cn(
-          'grid transition-[grid-template-rows] duration-slow ease-out',
-          collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className="px-6 pb-3 flex flex-col gap-2">
-            {upstream.length > 0 ? (
-              <div className="rounded-lg border border-border bg-card px-2 py-2">
-                <div className="px-1 pb-1 text-3xs font-medium text-muted-foreground">
-                  {t('task.detailDrawer.blockedBy')}
-                  <span className="ml-1 tabular-nums">({upstream.length})</span>
-                </div>
-                <DependencyList issues={upstream} />
-              </div>
-            ) : null}
-            {downstream.length > 0 ? (
-              <div className="rounded-lg border border-border bg-card px-2 py-2">
-                <div className="px-1 pb-1 text-3xs font-medium text-muted-foreground">
-                  {t('document.linkType.blocks')}
-                  <span className="ml-1 tabular-nums">({downstream.length})</span>
-                </div>
-                <DependencyList issues={downstream} />
-              </div>
-            ) : null}
+    <DetailSection
+      icon={<Link2 className="size-3.5" />}
+      title={t('task.detailDrawer.dependencies')}
+      count={`(${totalCount})`}
+      collapsed={collapsed}
+      onToggle={() => setCollapsed((v) => !v)}
+      contentClassName="px-6 pb-3 flex flex-col gap-2"
+      data-testid="issue-dependencies-section"
+    >
+      {upstream.length > 0 ? (
+        <div className="rounded-lg border border-border bg-card px-2 py-2">
+          <div className="px-1 pb-1 text-3xs font-medium text-muted-foreground">
+            {t('task.detailDrawer.blockedBy')}
+            <span className="ml-1 tabular-nums">({upstream.length})</span>
           </div>
+          <DependencyList issues={upstream} />
         </div>
-      </div>
-    </div>
+      ) : null}
+      {downstream.length > 0 ? (
+        <div className="rounded-lg border border-border bg-card px-2 py-2">
+          <div className="px-1 pb-1 text-3xs font-medium text-muted-foreground">
+            {t('document.linkType.blocks')}
+            <span className="ml-1 tabular-nums">({downstream.length})</span>
+          </div>
+          <DependencyList issues={downstream} />
+        </div>
+      ) : null}
+    </DetailSection>
   );
 }

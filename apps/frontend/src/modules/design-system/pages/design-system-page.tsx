@@ -75,6 +75,8 @@ import {
   Zap,
   CircleCheck,
   ShieldCheck,
+  ListChecks,
+  AlignLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -279,6 +281,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item'
 import { SidebarPanel } from '@/components/semantic/sidebar-panel'
+import { DetailSection } from '@/components/semantic/detail-section'
 import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/semantic/right-sidebar'
 import { TabBar } from '@/components/semantic/tab-bar'
 import { TabsProvider } from '@/shared/tabs/tabs-context'
@@ -441,6 +444,7 @@ const SECTIONS = [
   { id: 'chapter-scrubber', label: 'Chapter Scrubber', group: 'Layout & Shells' },
   { id: 'page-layout', label: 'Page Layout', group: 'Layout & Shells' },
   { id: 'sidebar-panel', label: 'Sidebar Panel', group: 'Layout & Shells' },
+  { id: 'detail-section', label: 'Detail Section', group: 'Layout & Shells' },
   { id: 'ai-density-cards', label: 'AI High-Density Cards [AI]', group: 'AI Execution' },
   { id: 'page-header', label: 'Page Header', group: 'App Patterns' },
   { id: 'toolbar', label: 'Toolbar Row', group: 'App Patterns' },
@@ -6162,6 +6166,36 @@ export function DesignSystemPage() {
               <SidebarPanel title="Collapsed by default" defaultCollapsed>
                 <p className="px-1 py-1 text-xs text-muted-foreground">Compact pill while collapsed.</p>
               </SidebarPanel>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="detail-section">
+            <SectionTitle>Detail Section</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-4">
+              详情页主栏统一「可收缩分区」平铺件（与 SidebarPanel 同构不同形：无卡底）：分区头
+              icon + uppercase 小标题（text-xs）+ 计数 + action 槽 + 内置收缩三角，grid-rows 动画；
+              collapsible=false 供描述区等常开分区。
+            </p>
+            <div className="max-w-2xl space-y-1">
+              <DetailSection
+                icon={<ListChecks className="size-3.5" />}
+                title="Subtasks"
+                count="2/5"
+              >
+                <p className="pb-2 text-xs text-muted-foreground">Collapsible section content.</p>
+              </DetailSection>
+              <DetailSection
+                icon={<AlignLeft className="size-3.5" />}
+                title="Description"
+                collapsible={false}
+                headerClassName="px-6 pt-4 pb-2"
+                contentClassName="px-6 pb-4"
+                action={<Badge variant="outline">action</Badge>}
+              >
+                <p className="text-xs text-muted-foreground">Non-collapsible variant (description-style section).</p>
+              </DetailSection>
             </div>
           </SectionAnchor>
 

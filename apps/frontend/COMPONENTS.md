@@ -207,6 +207,7 @@
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
 | data-table-shell | `src/components/semantic/data-table-shell.tsx` | ✅ canonical | — | — |
+| detail-section | `src/components/semantic/detail-section.tsx` | ✅ canonical | issue 详情页主栏六分区（描述/自定义字段/子任务/执行项/验收预览/依赖） | 与 sidebar-panel 同构不同形（平铺无卡底），各自独立 |
 | page-shell | `src/components/semantic/page-shell.tsx` | ✅ canonical | — | — |
 | right-sidebar | `src/components/semantic/right-sidebar.tsx` | ✅ canonical | — | — |
 | section-card | `src/components/semantic/section-card.tsx` | ✅ canonical | — | — |
