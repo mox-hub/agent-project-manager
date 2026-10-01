@@ -4,6 +4,7 @@ import { GitService } from './git.service';
 import { GitToolService } from './git-tool.service';
 import { ProjectWorkspaceService } from './project-workspace.service';
 import { GitCommandService } from './git-command.service';
+import { ExecutionWorktreeService } from './execution-worktree.service';
 import { GitHubModule } from '../integration/providers/github/github.module';
 
 @Module({
@@ -14,12 +15,14 @@ import { GitHubModule } from '../integration/providers/github/github.module';
     GitToolService,
     ProjectWorkspaceService,
     GitCommandService,
+    ExecutionWorktreeService,
   ],
   exports: [
     GitService,
     GitToolService,
     ProjectWorkspaceService,
     GitCommandService,
+    ExecutionWorktreeService,
   ],
 })
 export class GitModule {}
