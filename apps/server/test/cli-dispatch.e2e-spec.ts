@@ -194,6 +194,16 @@ describe('CLI Dispatch (e2e)', () => {
     expect(picked!.workspaceRoot).toBe(ws.root);
     expect(picked!.providerId).toBe('claude-code');
 
+    // G5-b 隔离准备落痕：e2e 工作区非 git 仓库 → 降级共享根（字段形状断言，
+    // 设计稿 §六：既有派发 e2e 增断言 metadata.isolation）
+    const dispatched = await ws.db.execution.findUnique({
+      where: { id: executionRunId },
+    });
+    const isolation = (dispatched!.metadata as Record<string, unknown>)[
+      'isolation'
+    ] as Record<string, unknown>;
+    expect(isolation).toEqual({ mode: 'shared-root', reason: 'not-git-repo' });
+
     // 上报 started 事件
     await runtimeAuth(
       wsHttp.post(`/_api/runtime/executions/${executionRunId}/events`),
