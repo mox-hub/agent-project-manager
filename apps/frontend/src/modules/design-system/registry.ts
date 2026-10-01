@@ -81,7 +81,7 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'chapter-scrubber', file: 'modules/document/components/chapter-scrubber.tsx', section: 'Layout & Shells', status: 'canonical' },
   { name: 'chart', file: 'ui/chart.tsx', section: 'Data Display', status: 'canonical' },
   { name: 'checkbox', file: 'ui/checkbox.tsx', section: 'Controls', status: 'canonical' },
-  { name: 'checkbox-group', file: 'ui/checkbox-group.tsx', section: 'Controls', status: 'canonical' },
+  { name: 'checkbox-group', file: 'ui/checkbox-group.tsx', section: 'Controls', status: 'internal' },
   { name: 'collapsible', file: 'ui/collapsible.tsx', section: 'Navigation', status: 'standby' },
   { name: 'color-picker', file: 'ui/color-picker.tsx', section: 'Controls', status: 'canonical' },
   { name: 'combobox', file: 'ui/combobox.tsx', section: 'Controls', status: 'canonical' },

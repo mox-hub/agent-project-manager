@@ -85,6 +85,74 @@ describe('MetadataService', () => {
     });
   });
 
+  describe('createOrUpdateStatus（视觉字段与部分更新语义）', () => {
+    it('创建透传 color/icon/description/group/allowedNextStatusKeys', async () => {
+      const payload = {
+        type: 'task',
+        key: 'code_review',
+        name: 'Code Review',
+        group: 'started',
+        color: '#3b82f6',
+        icon: 'CircleAlert',
+        description: '评审中',
+        order: 35,
+        allowedNextStatusKeys: ['done'],
+      };
+      mockPrismaService.statusDefinition.findUnique.mockResolvedValue(null);
+      mockPrismaService.statusDefinition.create.mockResolvedValue({
+        id: 'st-new',
+        ...payload,
+      });
+
+      await service.createOrUpdateStatus(payload);
+
+      expect(mockPrismaService.statusDefinition.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          type: 'task',
+          key: 'code_review',
+          group: 'started',
+          color: '#3b82f6',
+          icon: 'CircleAlert',
+          description: '评审中',
+          allowedNextStatusKeys: ['done'],
+        }),
+      });
+    });
+
+    it('部分更新（拖拽排序只传 order）不抹掉 color/icon 等未传字段', async () => {
+      mockPrismaService.statusDefinition.findUnique.mockResolvedValue({
+        id: 'st-1',
+        type: 'task',
+        key: 'todo',
+        name: '待办',
+        color: '#6b7280',
+        icon: 'Circle',
+      });
+      mockPrismaService.statusDefinition.update.mockResolvedValue({
+        id: 'st-1',
+        order: 20,
+      });
+
+      await service.createOrUpdateStatus({
+        id: 'st-1',
+        type: 'task',
+        key: 'todo',
+        name: '待办',
+        order: 20,
+      });
+
+      expect(mockPrismaService.statusDefinition.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'st-1' },
+          data: expect.not.objectContaining({
+            color: expect.anything(),
+            icon: expect.anything(),
+          }),
+        }),
+      );
+    });
+  });
+
   describe('createOrUpdateTag', () => {
     it('should create new tag', async () => {
       const tagData = {

@@ -129,38 +129,147 @@ async function main() {
 
   // Create default status definitions
   // group：状态分组（Linear 式受控词表），类型管理面「状态」页签按组聚合渲染
+  // color：真实展示色（取值对齐前端 ColorPicker DEFAULT_SWATCHES 的 Tailwind 500 阶）；icon：前端状态图标注册表键
+  // allowedNextStatusKeys：流转白名单（工作流真实生效——issue/project 状态变更强校验，force 可放行）
   const statuses = [
+    // ---- 任务状态（type='task'）----
+    {
+      type: 'task',
+      key: 'backlog',
+      name: '待规划',
+      group: 'backlog',
+      order: 5,
+      color: '#6b7280',
+      icon: 'CircleDashed',
+      description: '已记录但尚未规划，暂不投入。',
+      allowedNextStatusKeys: ['todo', 'in_progress', 'canceled'],
+    },
     {
       type: 'task',
       key: 'todo',
       name: '待办',
-      order: 10,
-      isFinal: false,
       group: 'unstarted',
+      order: 10,
+      color: '#6b7280',
+      icon: 'Circle',
+      description: '即将开始，可以认领。',
+      allowedNextStatusKeys: ['in_progress', 'canceled'],
     },
     {
       type: 'task',
       key: 'in_progress',
       name: '进行中',
-      order: 20,
-      isFinal: false,
       group: 'started',
+      order: 20,
+      color: '#3b82f6',
+      icon: 'Loader2',
+      description: '正在执行。',
+      allowedNextStatusKeys: ['in_review', 'blocked', 'done', 'canceled'],
     },
     {
       type: 'task',
       key: 'in_review',
-      name: '待评审',
-      order: 30,
-      isFinal: false,
+      name: '评审中',
       group: 'started',
+      order: 30,
+      color: '#f59e0b',
+      icon: 'CircleAlert',
+      description: '已提交评审，等待验收结论。',
+      allowedNextStatusKeys: ['in_progress', 'done', 'canceled'],
+    },
+    {
+      type: 'task',
+      key: 'blocked',
+      name: '已阻塞',
+      group: 'started',
+      order: 40,
+      color: '#ef4444',
+      icon: 'Ban',
+      isBlockedState: true,
+      description: '被外部依赖阻塞，暂无法推进。',
+      allowedNextStatusKeys: ['in_progress', 'canceled'],
     },
     {
       type: 'task',
       key: 'done',
       name: '已完成',
-      order: 40,
-      isFinal: true,
       group: 'completed',
+      order: 50,
+      color: '#22c55e',
+      icon: 'CircleCheck',
+      isFinal: true,
+      description: '工作完成并通过验收。',
+      allowedNextStatusKeys: ['in_progress', 'canceled'],
+    },
+    {
+      type: 'task',
+      key: 'canceled',
+      name: '已取消',
+      group: 'canceled',
+      order: 60,
+      color: '#6b7280',
+      icon: 'CircleX',
+      isFinal: true,
+      description: '决定不做。',
+      allowedNextStatusKeys: ['todo', 'in_progress'],
+    },
+    // ---- 项目状态（type='project'，与 Project.workflowStatus 词表对齐）----
+    {
+      type: 'project',
+      key: 'backlog',
+      name: '待规划',
+      group: 'backlog',
+      order: 10,
+      color: '#6b7280',
+      icon: 'CircleDashed',
+      description: '已提出但未排期。',
+      allowedNextStatusKeys: ['planned', 'in_progress', 'canceled'],
+    },
+    {
+      type: 'project',
+      key: 'planned',
+      name: '计划中',
+      group: 'unstarted',
+      order: 20,
+      color: '#f59e0b',
+      icon: 'CalendarClock',
+      description: '已排期，尚未启动。',
+      allowedNextStatusKeys: ['in_progress', 'canceled'],
+    },
+    {
+      type: 'project',
+      key: 'in_progress',
+      name: '进行中',
+      group: 'started',
+      order: 30,
+      color: '#3b82f6',
+      icon: 'Loader2',
+      description: '项目正在推进。',
+      allowedNextStatusKeys: ['completed', 'canceled'],
+    },
+    {
+      type: 'project',
+      key: 'completed',
+      name: '已完成',
+      group: 'completed',
+      order: 40,
+      color: '#22c55e',
+      icon: 'CircleCheck',
+      isFinal: true,
+      description: '项目交付完成。',
+      allowedNextStatusKeys: ['in_progress'],
+    },
+    {
+      type: 'project',
+      key: 'canceled',
+      name: '已取消',
+      group: 'canceled',
+      order: 50,
+      color: '#6b7280',
+      icon: 'CircleX',
+      isFinal: true,
+      description: '项目终止。',
+      allowedNextStatusKeys: ['planned', 'in_progress'],
     },
   ];
 
@@ -177,12 +286,24 @@ async function main() {
       await prisma.statusDefinition.create({
         data: status,
       });
-    } else if (existing.group === 'unstarted' && status.group !== 'unstarted') {
-      // 存量库补 group（迁移默认值为 unstarted，内置键按上表回填真实分组）
-      await prisma.statusDefinition.update({
-        where: { id: existing.id },
-        data: { group: status.group },
-      });
+    } else {
+      // 存量库升级回填：只补视觉/描述/分组/流转缺列，不覆盖用户已改的名称、排序与终态标记
+      const patch: Record<string, unknown> = {};
+      if (existing.group === 'unstarted' && status.group !== 'unstarted') {
+        patch.group = status.group;
+      }
+      if (!existing.color) patch.color = status.color;
+      if (!existing.icon) patch.icon = status.icon;
+      if (!existing.description) patch.description = status.description;
+      if (existing.allowedNextStatusKeys == null) {
+        patch.allowedNextStatusKeys = status.allowedNextStatusKeys ?? [];
+      }
+      if (Object.keys(patch).length > 0) {
+        await prisma.statusDefinition.update({
+          where: { id: existing.id },
+          data: patch,
+        });
+      }
     }
   }
 
@@ -214,7 +335,7 @@ async function main() {
         description: '适用于典型 Node.js REST API 项目',
         baseProjectType: 'backend',
         defaultTags: ['backend', 'api'],
-        defaultStatuses: statuses,
+        defaultStatuses: statuses.filter((s) => s.type === 'task'),
         createdBy: adminUser.id,
       },
     });

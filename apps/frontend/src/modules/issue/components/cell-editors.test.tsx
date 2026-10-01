@@ -4,6 +4,7 @@
  */
 import { describe, expect, it, vi, beforeAll } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TaskSimpleList } from './task-simple-list';
 import type { Task } from '../api/issue-api';
 
@@ -55,7 +56,13 @@ const task: Task = {
 } as Task;
 
 function renderList() {
-  return render(<TaskSimpleList tasks={[task]} onTaskClick={vi.fn()} />);
+  // TaskSimpleList 内部消费 useStatusVisualMap（React Query），须挂 Provider
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <TaskSimpleList tasks={[task]} onTaskClick={vi.fn()} />
+    </QueryClientProvider>,
+  );
 }
 
 beforeAll(() => {
@@ -103,7 +110,12 @@ describe('列表行属性下拉即时修改', () => {
 
   it('点击行内单元格不冒泡触发行点击（不打开详情）', async () => {
     const onTaskClick = vi.fn();
-    render(<TaskSimpleList tasks={[task]} onTaskClick={onTaskClick} />);
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <TaskSimpleList tasks={[task]} onTaskClick={onTaskClick} />
+      </QueryClientProvider>,
+    );
     fireEvent.click(screen.getByTitle('状态'));
     await screen.findByText('Done');
     expect(onTaskClick).not.toHaveBeenCalled();

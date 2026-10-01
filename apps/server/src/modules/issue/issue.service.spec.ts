@@ -42,6 +42,7 @@ describe('IssueService', () => {
     },
     acceptance: {
       create: vi.fn(),
+      findMany: vi.fn(),
     },
     acceptanceCriteria: {
       createMany: vi.fn(),
@@ -376,6 +377,78 @@ describe('IssueService', () => {
       await expect(
         service.update('non-existent', { title: 'Updated' }, 'user-1'),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    describe('工作流流转校验（allowedNextStatusKeys 真实生效）', () => {
+      const mockTask = {
+        id: 'task-1',
+        projectId: 'project-1',
+        status: 'todo',
+        reporterId: 'user-1',
+        assigneeId: 'user-1',
+        project: { members: [{ userId: 'user-1' }] },
+      };
+      const mockUpdated = {
+        id: 'task-1',
+        status: 'done',
+        assignee: null,
+        issueTags: [],
+      };
+
+      it('白名单外的目标状态 → 400 且报错含允许去向', async () => {
+        mockPrismaService.issue.findFirst.mockResolvedValue(mockTask);
+        mockPrismaService.statusDefinition.findFirst.mockResolvedValue({
+          key: 'todo',
+          name: '待办',
+          allowedNextStatusKeys: ['in_progress', 'canceled'],
+        });
+        mockPrismaService.statusDefinition.findMany.mockResolvedValue([
+          { key: 'in_progress', name: '进行中' },
+          { key: 'canceled', name: '已取消' },
+        ]);
+
+        await expect(
+          service.update('task-1', { status: 'done' }, 'user-1'),
+        ).rejects.toThrow(/不允许从「待办」流转到「done」.*进行中、已取消/);
+        expect(mockPrismaService.issue.update).not.toHaveBeenCalled();
+      });
+
+      it('force=true 显式放行白名单外流转', async () => {
+        mockPrismaService.issue.findFirst.mockResolvedValue(mockTask);
+        // force 时跳过 fromDef 查询；第二次查询为关单强制的目标状态 def（非终态/null 均放行）
+        mockPrismaService.statusDefinition.findFirst.mockResolvedValue(null);
+        mockPrismaService.acceptance.findMany.mockResolvedValue([]);
+        mockPrismaService.issue.update.mockResolvedValue(mockUpdated);
+
+        const result = await service.update(
+          'task-1',
+          { status: 'done', force: true },
+          'user-1',
+        );
+        expect(result).toBeDefined();
+        expect(mockPrismaService.issue.update).toHaveBeenCalled();
+      });
+
+      it('当前状态未配置白名单（空数组）→ 不限制，正常流转', async () => {
+        mockPrismaService.issue.findFirst.mockResolvedValue(mockTask);
+        mockPrismaService.statusDefinition.findFirst
+          .mockResolvedValueOnce({
+            key: 'todo',
+            name: '待办',
+            allowedNextStatusKeys: [],
+          })
+          .mockResolvedValueOnce(null);
+        mockPrismaService.acceptance.findMany.mockResolvedValue([]);
+        mockPrismaService.issue.update.mockResolvedValue(mockUpdated);
+
+        const result = await service.update(
+          'task-1',
+          { status: 'done' },
+          'user-1',
+        );
+        expect(result).toBeDefined();
+        expect(mockPrismaService.issue.update).toHaveBeenCalled();
+      });
     });
 
     it('切换工单类型：typeId 存在时写入 typeId 并同步遗留 type 列为 key', async () => {

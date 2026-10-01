@@ -59,6 +59,24 @@ export class StatusDefinitionDto {
       '状态分组（triage/backlog/unstarted/started/completed/canceled），类型管理面按组聚合渲染',
   })
   group: string;
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: '展示色（hex）；空 = 前端按静态语义映射兜底',
+  })
+  color?: string | null;
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: '图标（前端状态图标注册表键）；空 = 按分组默认图标',
+  })
+  icon?: string | null;
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: '状态说明文案',
+  })
+  description?: string | null;
   @ApiProperty({ type: Number, description: '排序序号' })
   order: number;
   @ApiProperty({ type: Boolean, description: '是否终态' })
@@ -66,12 +84,11 @@ export class StatusDefinitionDto {
   @ApiProperty({ type: Boolean, description: '是否阻塞态' })
   isBlockedState: boolean;
   @ApiPropertyOptional({
-    description: '允许流转的下一状态键列表',
-    type: Object,
-    additionalProperties: true,
+    description: '允许流转的下一状态键白名单；空/未配置 = 不限制',
+    type: [String],
     nullable: true,
   })
-  allowedNextStatusKeys?: Record<string, unknown> | null;
+  allowedNextStatusKeys?: string[] | null;
   @ApiPropertyOptional({
     description: '附加元数据',
     type: Object,

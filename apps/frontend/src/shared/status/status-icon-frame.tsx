@@ -27,6 +27,7 @@ export function StatusIconFrame({
   size = 'md',
   spin = false,
   title,
+  color,
   className,
   iconClassName,
 }: {
@@ -37,6 +38,8 @@ export function StatusIconFrame({
   spin?: boolean;
   /** 悬停提示（状态名等），透传原生 title */
   title?: string;
+  /** 自定义前景色（StatusDefinition.color 落库值）；浅底框仍按 tone，仅图标着色覆盖 */
+  color?: string;
   className?: string;
   iconClassName?: string;
 }) {
@@ -52,6 +55,7 @@ export function StatusIconFrame({
       )}
     >
       <Icon
+        style={color ? { color } : undefined}
         className={cn(sizes.icon, spin && 'animate-spin', iconClassName)}
       />
     </span>

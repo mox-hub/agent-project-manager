@@ -7593,16 +7593,20 @@ export interface components {
             name: string;
             /** @description 状态分组（triage/backlog/unstarted/started/completed/canceled），类型管理面按组聚合渲染 */
             group: string;
+            /** @description 展示色（hex）；空 = 前端按静态语义映射兜底 */
+            color?: string | null;
+            /** @description 图标（前端状态图标注册表键）；空 = 按分组默认图标 */
+            icon?: string | null;
+            /** @description 状态说明文案 */
+            description?: string | null;
             /** @description 排序序号 */
             order: number;
             /** @description 是否终态 */
             isFinal: boolean;
             /** @description 是否阻塞态 */
             isBlockedState: boolean;
-            /** @description 允许流转的下一状态键列表 */
-            allowedNextStatusKeys?: {
-                [key: string]: unknown;
-            } | null;
+            /** @description 允许流转的下一状态键白名单；空/未配置 = 不限制 */
+            allowedNextStatusKeys?: string[] | null;
             /** @description 附加元数据 */
             metadata?: {
                 [key: string]: unknown;

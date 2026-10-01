@@ -15,11 +15,15 @@ import {
   Archive,
   ArrowDown,
   ArrowUp,
+  Ban,
   CalendarClock,
   Circle,
   CircleAlert,
   CircleCheck,
   CircleDashed,
+  CircleDot,
+  CircleHelp,
+  CirclePause,
   CircleX,
   Flame,
   Loader2,
@@ -119,3 +123,82 @@ export const RISK_VISUALS: Record<string, StatusVisual> = {
   high: { labelKey: 'status.risk.high', tone: 'warning', icon: ArrowUp },
   critical: { labelKey: 'status.risk.critical', tone: 'danger', icon: Flame },
 };
+
+/* ------------------------------------------------------------------
+ * 状态定义动态视觉层（设置·状态真实化 2026-10-01）
+ *
+ * StatusDefinition 落库 color/icon/description 后，状态视觉有了第二真相源：
+ * 定义上配了 color/icon → 用定义；没配 → 回落上方静态语义映射（本文件词表）。
+ * 统一入口是 buildStatusVisualMap（纯函数）+ use-status-visual-map（React 层），
+ * 禁止页面各写一套覆盖映射（§19.5）。
+ * ------------------------------------------------------------------ */
+
+/**
+ * 状态图标注册表——设置·状态「图标形状」选择集与 icon 落库解析的唯一词表。
+ * 键为 lucide-react 组件名（与 StatusDefinition.icon 存储值一致），新增图标须在此登记。
+ */
+export const STATUS_ICONS = {
+  CircleDashed,
+  Circle,
+  CircleDot,
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  CircleHelp,
+  CirclePause,
+  Loader2,
+  Ban,
+  CalendarClock,
+} as const satisfies Record<string, LucideIcon>;
+
+export type StatusIconKey = keyof typeof STATUS_ICONS;
+
+/** 状态分组 → 默认图标（icon 未配置时的兜底；与分组词表同步） */
+export const STATUS_GROUP_DEFAULT_ICON: Record<string, StatusIconKey> = {
+  triage: 'CircleHelp',
+  backlog: 'CircleDashed',
+  unstarted: 'Circle',
+  started: 'Loader2',
+  completed: 'CircleCheck',
+  canceled: 'CircleX',
+};
+
+/** 按落库 icon 键解析图标组件：注册表键 → 组件；空/未知 → 分组默认 → 空心圆 */
+export function resolveStatusIcon(
+  icon: string | null | undefined,
+  group?: string,
+): LucideIcon {
+  if (icon && icon in STATUS_ICONS) return STATUS_ICONS[icon as StatusIconKey];
+  const byGroup = group ? STATUS_GROUP_DEFAULT_ICON[group] : undefined;
+  return STATUS_ICONS[byGroup ?? 'Circle'];
+}
+
+/** 参与动态视觉解析的状态定义最小形状（StatusDefinition 响应的结构子集） */
+export interface StatusVisualDefinition {
+  key: string;
+  group?: string;
+  color?: string | null;
+  icon?: string | null;
+}
+
+/**
+ * 构建动态状态视觉映射：定义 color/icon 优先，静态语义映射兜底。
+ * tone/labelKey 恒取静态词表（浅底胶囊等封闭语义不受自定义色影响）；
+ * color 透传原值（hex）供图标/色点 inline 着色。
+ */
+export function buildStatusVisualMap(
+  definitions: StatusVisualDefinition[],
+  fallback: Record<string, StatusVisual>,
+): Map<string, StatusVisual & { color?: string }> {
+  const map = new Map<string, StatusVisual & { color?: string }>();
+  for (const def of definitions) {
+    const base = fallback[def.key];
+    map.set(def.key, {
+      labelKey: base?.labelKey ?? `status.custom.${def.key}`,
+      tone: base?.tone ?? 'default',
+      icon: resolveStatusIcon(def.icon, def.group),
+      color: def.color || undefined,
+    });
+  }
+  return map;
+}

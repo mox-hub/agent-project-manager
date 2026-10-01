@@ -467,6 +467,44 @@ export class ProjectService {
 
     // Update localUpdatedAt-equivalent for locked projects so that next sync detects drift.
     const baseUpdate = this.toProjectUpdateData(updateProjectDto);
+
+    // 工作流流转校验（type='project'）：当前工作流状态配置了白名单时，
+    // 新 workflowStatus 必须在白名单内；无定义/未配置则不限制（宽松语义，兼容存量）。
+    if (
+      baseUpdate.workflowStatus &&
+      existingProject &&
+      baseUpdate.workflowStatus !== existingProject.workflowStatus
+    ) {
+      const fromDef = await this.prisma.statusDefinition.findFirst({
+        where: {
+          type: 'project',
+          key: existingProject.workflowStatus,
+          OR: [{ projectId: id }, { projectId: null }],
+        },
+      });
+      const allowedKeys = fromDef?.allowedNextStatusKeys;
+      if (
+        Array.isArray(allowedKeys) &&
+        allowedKeys.length > 0 &&
+        !allowedKeys.includes(baseUpdate.workflowStatus)
+      ) {
+        const allowedDefs = await this.prisma.statusDefinition.findMany({
+          where: {
+            type: 'project',
+            key: { in: allowedKeys as string[] },
+            OR: [{ projectId: id }, { projectId: null }],
+          },
+        });
+        const nameOf = (key: string) =>
+          allowedDefs.find((d) => d.key === key)?.name ?? key;
+        throw new BadRequestException(
+          `不允许从「${fromDef?.name ?? existingProject.workflowStatus}」流转到「${baseUpdate.workflowStatus}」。` +
+            `允许的下一状态：${allowedKeys.map((k) => nameOf(String(k))).join('、')}。` +
+            '如需调整请由管理员在设置·状态中修改工作流。',
+        );
+      }
+    }
+
     if (existingProject?.fieldsLockedExternally) {
       (baseUpdate as any).lastActivityAt = new Date();
     }

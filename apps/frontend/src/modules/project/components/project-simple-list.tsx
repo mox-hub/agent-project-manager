@@ -32,6 +32,7 @@ import {
 } from '@/shared/status/status-visuals';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useMembers } from '@/modules/team-member/hooks';
+import { useStatusVisualMap, type StatusVisualEntry } from '@/modules/core-config/hooks/use-status-visual-map';
 import { useUpdateProject } from '../hooks/use-project-mutations';
 import { ProjectEnumCell, ProjectOwnerCell } from './project-cell-editors';
 import type { Project, ProjectPriority } from '../api/project-api';
@@ -91,6 +92,8 @@ export function ProjectSimpleList({
   className,
 }: ProjectSimpleListProps) {
   const { t } = useTranslation();
+  // 动态状态视觉：设置·状态落库的 color/icon 优先，静态语义映射兜底
+  const workflowVisualMap = useStatusVisualMap('project');
   const groupFn = groupBy === 'none' ? undefined : (project: Project) => groupValue(groupBy, project);
 
   const groupLabel = (key: string) => {
@@ -198,7 +201,8 @@ export function ProjectSimpleList({
       }}
       renderTrailing={(project) => {
         const workflowKey = project.workflowStatus || 'planned';
-        const workflowVisual = PROJECT_WORKFLOW_VISUALS[workflowKey] ?? PROJECT_WORKFLOW_VISUALS.planned;
+        const workflowVisual: StatusVisualEntry = workflowVisualMap.get(workflowKey)
+          ?? { ...(PROJECT_WORKFLOW_VISUALS[workflowKey] ?? PROJECT_WORKFLOW_VISUALS.planned) };
         const WorkflowIcon = workflowVisual.icon;
         const healthKey = project.healthStatus || 'at_risk';
         const healthVisual = HEALTH_VISUALS[healthKey] ?? HEALTH_VISUALS.at_risk;
@@ -222,7 +226,10 @@ export function ProjectSimpleList({
               title={t('project.menu.workflowStatus')}
             >
               <StatusPill tone={workflowVisual.tone}>
-                <WorkflowIcon className="size-3" />
+                <WorkflowIcon
+                  className="size-3"
+                  style={workflowVisual.color ? { color: workflowVisual.color } : undefined}
+                />
                 {t(workflowVisual.labelKey)}
               </StatusPill>
             </ProjectEnumCell>

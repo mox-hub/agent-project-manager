@@ -6,10 +6,7 @@ import {
   ArrowUp,
   CheckCircle2,
   ChevronDown,
-  CircleDot,
   Clock,
-  CirclePause,
-  CircleX,
   CopyPlus,
   HelpCircle,
   Layers,
@@ -44,7 +41,8 @@ import type {
   FieldSchemaType,
   IssueTypeMeta,
 } from '@/modules/issue/api/issue-type-api';
-import { useStatuses, useCreateStatus } from '@/modules/core-config/hooks/use-metadata';
+import { useStatuses } from '@/modules/core-config/hooks/use-metadata';
+import { StatusFamilyPanel } from '@/modules/core-config/components/status-family-panel';
 import { ISSUE_TYPE_ICONS, IssueTypeIcon } from '@/shared/components/issue-type-icon';
 import { toast } from '@/components/ui/toast';
 
@@ -62,19 +60,6 @@ const FIELD_TYPE_CHOICES: FieldSchemaType[] = [
   'member',
   'url',
 ];
-
-/** 状态分组受控词表（与 schema 注释同步）＋ 展示序 */
-const STATUS_GROUP_ORDER = ['triage', 'backlog', 'unstarted', 'started', 'completed', 'canceled'] as const;
-
-/** 状态分组 → 语义图标（仅管理面展示用） */
-const STATUS_GROUP_ICONS: Record<string, typeof CircleDot> = {
-  triage: HelpCircle,
-  backlog: Clock,
-  unstarted: CirclePause,
-  started: CircleDot,
-  completed: CheckCircle2,
-  canceled: CircleX,
-};
 
 /**
  * 任务类型详情（设置 · 任务类型 → 类型，CAP-A-04）：
@@ -610,188 +595,17 @@ function FieldDialog({
   );
 }
 
-/* ---------------- 状态分组 ---------------- */
+/* ---------------- 状态分组（收编 StatusFamilyPanel，2026-10-01 真实化） ---------------- */
 
 function StatusesTab() {
   const { t } = useTranslation();
-  const statusesQuery = useStatuses();
-  const createStatus = useCreateStatus();
-  const [addOpen, setAddOpen] = useState(false);
-  const globalStatuses = useMemo(
-    () => (statusesQuery.data ?? []).filter((s) => !s.projectId),
-    [statusesQuery.data],
-  );
-
-  const grouped = useMemo(() => {
-    const map = new Map<string, typeof globalStatuses>();
-    for (const group of STATUS_GROUP_ORDER) map.set(group, []);
-    for (const status of globalStatuses) {
-      const group =
-        status.group && (STATUS_GROUP_ORDER as readonly string[]).includes(status.group)
-          ? status.group
-          : 'unstarted';
-      map.get(group)?.push(status);
-    }
-    return map;
-  }, [globalStatuses]);
-
   return (
     <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-xs text-content-text-secondary">{t('settings.statusGroupsHint', '设置该工作空间可用的状态；顺序即组内展示顺序。')}</p>
-        <Button size="sm" variant="outline" className="gap-1" onClick={() => setAddOpen(true)}>
-          <Plus size={14} />
-          {t('settings.addStatus', '添加状态')}
-        </Button>
-      </div>
-      {STATUS_GROUP_ORDER.map((group) => {
-        const items = grouped.get(group) ?? [];
-        if (items.length === 0) return null;
-        const GroupIcon = STATUS_GROUP_ICONS[group] ?? CircleDot;
-        return (
-          <div key={group} className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <GroupIcon size={14} className="text-content-text-secondary" />
-              <span className="text-sm font-medium text-foreground">
-                {t(`settings.statusGroup.${group}`)}
-              </span>
-            </div>
-            <p className="text-xs text-content-text-muted">{t(`settings.statusGroup.${group}Desc`)}</p>
-            <div className="space-y-1.5">
-              {items.map((status) => (
-                <div
-                  key={status.id}
-                  className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2"
-                >
-                  <CircleDot size={14} className="text-content-text-muted" />
-                  <span className="text-sm text-foreground">{status.name}</span>
-                  {status.key === 'todo' ? (
-                    <Badge variant="secondary">{t('settings.defaultType', '默认')}</Badge>
-                  ) : null}
-                  <span className="flex-1" />
-                  <span className="font-mono text-3xs text-content-text-muted">{status.key}</span>
-                  {status.isFinal ? (
-                    <Badge variant="outline">{t('settings.statusFinalBadge', '终态')}</Badge>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })}
-      {addOpen ? (
-        <AddStatusDialog
-          existingKeys={globalStatuses.map((s) => s.key)}
-          nextOrder={(globalStatuses.reduce((max, s) => Math.max(max, s.order ?? 0), 0) ?? 0) + 10}
-          onCancel={() => setAddOpen(false)}
-          onSubmit={async (data) => {
-            try {
-              await createStatus.mutateAsync(data);
-              toast.success(t('settings.issueTypesUpdated'));
-              setAddOpen(false);
-            } catch (e) {
-              toast.error((e as Error).message || t('settings.updateFailed'));
-            }
-          }}
-          saving={createStatus.isPending}
-        />
-      ) : null}
+      <p className="text-xs text-content-text-secondary">
+        {t('settings.statusGroupsHint', '设置该工作空间可用的状态；状态按分组聚合展示。')}
+      </p>
+      <StatusFamilyPanel family="task" withCounts emptyTitle={t('settings.noStatuses')} />
     </div>
   );
 }
 
-function AddStatusDialog({
-  existingKeys,
-  nextOrder,
-  onCancel,
-  onSubmit,
-  saving,
-}: {
-  existingKeys: string[];
-  nextOrder: number;
-  onCancel: () => void;
-  onSubmit: (data: { type: string; key: string; name: string; group: string; order: number; isFinal: boolean }) => void;
-  saving: boolean;
-}) {
-  const { t } = useTranslation();
-  const [draft, setDraft] = useState({ name: '', key: '', group: 'unstarted', isFinal: false });
-  const [error, setError] = useState('');
-
-  const submit = () => {
-    if (!draft.name.trim() || !draft.key.trim()) {
-      setError(t('settings.issueTypesRequired'));
-      return;
-    }
-    if (existingKeys.includes(draft.key.trim())) {
-      setError(t('settings.statusKeyDup', '状态键已存在'));
-      return;
-    }
-    onSubmit({
-      type: 'task',
-      key: draft.key.trim(),
-      name: draft.name.trim(),
-      group: draft.group,
-      order: nextOrder,
-      isFinal: draft.isFinal,
-    });
-  };
-
-  return (
-    <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('settings.addStatus', '添加状态')}</DialogTitle>
-          <DialogDescription>{t('settings.addStatusDesc', '新增状态将对该空间所有任务类型生效。')}</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs text-content-text-secondary">{t('settings.statusName', '名称')}</label>
-            <Input
-              value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              maxLength={20}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs text-content-text-secondary">{t('settings.statusKey', '键（小写 slug）')}</label>
-            <Input
-              value={draft.key}
-              onChange={(e) => setDraft({ ...draft, key: e.target.value.toLowerCase() })}
-              className="font-mono"
-              maxLength={32}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs text-content-text-secondary">{t('settings.statusGroupLabel', '所属分组')}</label>
-            <SelectField
-              value={draft.group}
-              onChange={(e) => setDraft({ ...draft, group: e.target.value })}
-            >
-              {STATUS_GROUP_ORDER.map((group) => (
-                <option key={group} value={group}>
-                  {t(`settings.statusGroup.${group}`)}
-                </option>
-              ))}
-            </SelectField>
-          </div>
-          <label className="flex cursor-pointer items-center gap-1.5 text-xs text-content-text-secondary">
-            <Checkbox
-              checked={draft.isFinal}
-              onCheckedChange={(checked) => setDraft({ ...draft, isFinal: checked === true })}
-            />
-            {t('settings.statusFinalLabel', '终态（表示工作已完成或关闭）')}
-          </label>
-          {error ? <p className="text-xs text-destructive">{error}</p> : null}
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onCancel}>
-            {t('common.cancel')}
-          </Button>
-          <Button onClick={submit} disabled={saving}>
-            {t('common.create')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
