@@ -21,6 +21,20 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### G5-b 执行隔离与成果合入——批一挂账 G5 兑现（ADR-017 · 2026-10-01）
+
+> per-Execution git worktree 隔离 + 成果经 integration 决策卡人工确认合入；设计稿 `docs/design/设计-G5执行隔离与合入-2026-10-01.md`（v0.7.11 定版），实现七笔 `feat/execution-worktree-isolation` 已 ff 合流。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | **ExecutionWorktreeService 受控 git 封装**（modules/git/execution-worktree.service，600 行 + 独立零依赖 ExecutionWorktreeModule）：prepareWorktree（`worktree add -b apm/exec/<shortId>` + 同 executionId 重派陈旧现场拆场重建 + 幂等补 .gitignore）/ collectChanges（未提交变更补快照 commit，author 缺省 execution@apm.local 双保险）/ detectConflicts（`merge-tree --write-tree` 无副作用预检，git ≥2.38 探测不足视同降级）/ integrate（merge --no-ff）/ cleanup（**apm/exec/ 前缀硬校验，前缀外拒删**）/ inspect（prune 巡检）；白名单 execFile 通道——命令集全程序内构造，不经 shell、不走 GitCommandService 用户输入黑名单 | G5 / ADR-017 / GAP-T-53 | execution-worktree.service.spec 13 例（临时目录真 git 仓 fixture，零 CLI 调用） | **模块环实证**：GitModule 链（GitHub→Integration→Linear→Issue）与 decision/execution 消费方构成 TS 级环，故拆独立零依赖模块；代价=不读用户自配 git 路径（git.tool.path），与 docs-git PATH 先例一致 |
+| server | **派发链隔离注入**（dispatch.service 步骤 7.5）：worktree 准备成功 → workspaceRoot 同源替换三处（CliSession/CliExecutionBinding、进程内 cliInput、daemon createDispatch 载荷）——**CLI 协议零变更**（workspaceRoot 单字段承载，daemon 透明消费）；失败/非 git/git 过旧/开关关闭 → 降级共享根落 `metadata.isolation={mode:'shared-root',reason}`（disabled/not-git-repo/git-too-old/worktree-add-failed）不阻塞派发；配置逃生门 AppConfig `execution.isolation.mode`（worktree 默认） | G5 §5.2/§5.3 | dispatch-isolation.spec 5 例；cli-dispatch.e2e 增 `metadata.isolation` 形状断言（7 用例绿） | Execution.metadata 为 Json 无 openapi 变更 |
+| server | **成果收集与 integration 决策卡合入闭环**：completeExecution 成功路径挂 collectWorktreeOutcome（仅 worktree 隔离执行触发，human 执行天然无标记不触发）——空变更清理+no-changes 记账不发卡；有变更补快照 commit → DecisionProposal **kind=`integration`**（title 人话「N 个文件 +X −Y，建议合入」，payload 含 diffStat/files top20/mainDirty，approvedFingerprint=headRef 分支冻结指纹，ensureNoPending 扩 executionId 维度）；applier 六步（幂等恢复→存在性→指纹复核→主工作区 clean 决策时刻复核→merge-tree 预检→merge --no-ff+清理+事务内记账）+ reject force 清理；取消执行即时清理；PROPOSAL_KINDS 枚举 +integration 走完整契约链 | G5 §5.4/§5.5 | proposal.service.spec 9 例（六步成功/各失败分支/幂等恢复/reject/前缀拒删）；execution.service.spec 成果收集 5 + 取消 2 | openapi.json enum 4 处扩展 + 双份 api-types.gen 再生，contract:check 零漂移（主线程亲跑）；无新端点（复用 proposal resolve） |
+| server | **单活跃互斥收口 + worktree 巡检**：issue.service 直创路径补 ACTIVE_EXECUTION_STATUSES 检查（封 2026-09-17 勘察发现的 G5 绕过路径）；reconcile sweepExecutionWorktrees（失败执行 7 天 TTL 清理 + cleanedAt 回填 + 活跃项目根 prune，EXEC_WORKTREE_TTL_MS 可覆盖） | G5 §5.6 | issue.service.spec 2 例 + reconcile spec 2 例（123 用例亲跑绿） | partial unique index 选做未做（应用层双路径已收口，留后续加固批） |
+| frontend | **执行隔离徽标与 worktree 信息行 + 决策收件箱 integration 卡**：run-isolation-badge 双态（worktree 中性「隔离执行·分支」/ shared-root 琥珀「未隔离·共享目录」+reason tooltip）+ 解析容错，接入 run-details-dialog 与 run-info-panel（worktree 信息区+失败 TTL 提示）；integration 卡按 A-18「AI 建议→人确认→可展开细节」两层样板——默认层结论+推荐+脏工作区警示，展开层文件清单 top20+溢出计数+分支溯源 | G5 §5.7 / A-18 样板 | 徽标 5 例 + 卡 4 例 + 词表路由回归（frontend 亲跑 15 例绿） | i18n `decision.kind.integration` / `decision.integration.*` / `runDetails.isolation.*` 双语全量（Edit 逐键） |
+
+test_evidence（主线程独立验收）：`pnpm contract:check` 契约零漂移亲跑 ✓；server 六个新增/受影响 spec 123 用例亲跑绿；frontend 新增三 spec 15 用例亲跑绿；子代理全量自报 server 1145 / frontend 1517 绿；schema.prisma 与 runtime/protocol.ts 零变更核查 ✓；关键四处代码审查（前缀守卫/降级兜底/applier 事务边界/human 不触发）通过。
+
 ## [0.7.11] - 2026-10-01
 
 ### v0.7.11 发版总览——上线套装：G5-a 设计定版（per-Execution worktree 隔离 + 决策卡合入；纯设计交付，无代码变更）
