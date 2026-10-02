@@ -28612,6 +28612,278 @@
         ]
       }
     },
+    "/_api/ai/quick-judge/settings": {
+      "get": {
+        "operationId": "AiHubController_getQuickJudgeSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "AI 快速判断通道设置 { enabled, provider, model, baseUrl, timeoutMs }——advisory 判断通道（审批风险定级/证据预审）的启停与指向",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuickJudgeSettingsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get quick-judge channel settings (CAP-A-27)",
+        "tags": [
+          "AI Hub"
+        ]
+      },
+      "put": {
+        "operationId": "AiHubController_updateQuickJudgeSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateQuickJudgeSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的通道设置（null/空串字段回落缺省）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuickJudgeSettingsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update quick-judge channel settings (admin only)",
+        "tags": [
+          "AI Hub"
+        ]
+      }
+    },
     "/_api/ai/pricing-source/refresh": {
       "post": {
         "operationId": "AiHubController_refreshPricingSource",
@@ -72588,6 +72860,59 @@
           "modelCount",
           "source"
         ]
+      },
+      "QuickJudgeSettingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "是否启用 AI 快速判断通道（默认关）"
+          },
+          "provider": {
+            "type": "string",
+            "description": "AIProviderConfig 槽位名（key 解密来源）"
+          },
+          "model": {
+            "type": "string",
+            "description": "判断模型固定版本号（忌 latest 别名漂移）"
+          },
+          "baseUrl": {
+            "type": "string",
+            "description": "System One 网关 base URL"
+          },
+          "timeoutMs": {
+            "type": "number",
+            "description": "单次判断超时（毫秒）"
+          }
+        },
+        "required": [
+          "enabled",
+          "provider",
+          "model",
+          "baseUrl",
+          "timeoutMs"
+        ]
+      },
+      "UpdateQuickJudgeSettingsDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "是否启用（缺省不改）"
+          },
+          "provider": {
+            "type": "string",
+            "description": "AIProviderConfig 槽位名（空串回落缺省）"
+          },
+          "model": {
+            "type": "string",
+            "description": "判断模型版本（空串回落缺省）"
+          },
+          "baseUrl": {
+            "type": "string",
+            "description": "网关 base URL（空串回落缺省）"
+          }
+        }
       },
       "DefaultModelResponseDto": {
         "type": "object",

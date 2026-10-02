@@ -27,6 +27,7 @@ import { DocumentEnhanceModule } from '../document/document-enhance.module';
 import { TeamModule } from '../team/team.module';
 import { AcceptanceModule } from '../acceptance/acceptance.module';
 import { SearchModule } from '../search/search.module';
+import { QuickJudgeModule } from './quick-judge/quick-judge.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { SearchModule } from '../search/search.module';
     CollaborationModule,
     forwardRef(() => ProfileModule),
     SearchModule,
+    QuickJudgeModule,
   ],
   controllers: [AiHubController, AssistantController],
   providers: [

@@ -355,3 +355,95 @@ describe('GithubEvidenceSubscriber.onPullRequestReviewSubmitted', () => {
     expect(prisma.acceptanceEvidence.createMany).not.toHaveBeenCalled();
   });
 });
+
+/** CAP-A-27：回流落库后 AI 预审 fire-and-forget 触发 */
+describe('GithubEvidenceSubscriber AI 证据预审触发（CAP-A-27）', () => {
+  const makeSubscriber = (criteriaService?: Record<string, unknown>) => {
+    const prisma = buildPrisma();
+    return {
+      prisma,
+      subscriber: new GithubEvidenceSubscriber(
+        prisma as any,
+        criteriaService as any,
+      ),
+    };
+  };
+
+  it('CI 回流后对每条标准触发预审（evidenceType/content 正确透传）', async () => {
+    const criteriaService = {
+      runAiEvidencePrecheck: vi.fn(async () => undefined),
+    };
+    const { prisma, subscriber } = makeSubscriber(criteriaService);
+    prisma.remotePullRequest.findFirst.mockResolvedValue({
+      acceptanceId: 'acc1',
+      number: 7,
+    });
+    prisma.acceptanceCriteria.findMany.mockResolvedValue([
+      { id: 'c1' },
+      { id: 'c2' },
+    ]);
+    prisma.acceptanceEvidence.findFirst.mockResolvedValue(null);
+
+    await subscriber.onCheckRunCompleted({
+      branch: 'feat/x',
+      checkName: 'quality-gate',
+      conclusion: 'success',
+      sha: 'abc123',
+      repo: 'o/r',
+    });
+
+    expect(criteriaService.runAiEvidencePrecheck).toHaveBeenCalledTimes(2);
+    expect(criteriaService.runAiEvidencePrecheck).toHaveBeenCalledWith('c1', {
+      evidenceType: 'ci_result',
+      content: 'quality-gate:success:abc123',
+    });
+  });
+
+  it('criteriaService 缺失时回流主流程不受影响（预审静默跳过）', async () => {
+    const { prisma, subscriber } = makeSubscriber();
+    prisma.remotePullRequest.findFirst.mockResolvedValue({
+      acceptanceId: 'acc1',
+      number: 7,
+    });
+    prisma.acceptanceCriteria.findMany.mockResolvedValue([{ id: 'c1' }]);
+    prisma.acceptanceEvidence.findFirst.mockResolvedValue(null);
+    prisma.acceptanceEvidence.createMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      subscriber.onCheckRunCompleted({
+        branch: 'feat/x',
+        checkName: 'quality-gate',
+        conclusion: 'success',
+        sha: 'abc123',
+        repo: 'o/r',
+      }),
+    ).resolves.toBeUndefined();
+    expect(prisma.acceptanceEvidence.createMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('pr_review 回流后同样触发预审', async () => {
+    const criteriaService = {
+      runAiEvidencePrecheck: vi.fn(async () => undefined),
+    };
+    const { prisma, subscriber } = makeSubscriber(criteriaService);
+    prisma.remotePullRequest.findUnique.mockResolvedValue({
+      acceptanceId: 'acc1',
+      number: 7,
+    });
+    prisma.acceptanceCriteria.findMany.mockResolvedValue([{ id: 'c9' }]);
+    prisma.acceptanceEvidence.findFirst.mockResolvedValue(null);
+    prisma.acceptanceEvidence.createMany.mockResolvedValue({ count: 1 });
+
+    await subscriber.onPullRequestReviewSubmitted({
+      pullRequestId: 'rpr1',
+      reviewState: 'approved',
+      reviewId: 'rv1',
+      reviewerLogin: 'alice',
+    });
+
+    expect(criteriaService.runAiEvidencePrecheck).toHaveBeenCalledWith('c9', {
+      evidenceType: 'pr_review',
+      content: 'review:rv1:approved:alice',
+    });
+  });
+});
