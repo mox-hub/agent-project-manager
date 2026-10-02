@@ -14,11 +14,11 @@
 
 | 状态 | 数量 | 计入 LU 分母 | 必须在画廊展示 | 是否需消费方 |
 |---|---|---|---|---|
-| ✅ canonical | 307 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
+| ✅ canonical | 314 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
 | 📦 standby | 17 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
-| 🔒 internal | 4 | ❌ 不计 | ❌ 免 | — |
+| 🔒 internal | 5 | ❌ 不计 | ❌ 免 | — |
 | ⛔ deprecated | 1 | ❌ 不计 | ✅ 标记 deprecated | — |
-| **合计** | **329** | | | |
+| **合计** | **337** | | | |
 
 > **画廊豁免（H 类，2026-09-29 裁决）**：任何状态条目可登记 `galleryExempt`（一句话理由）豁免画廊 demo——豁免后不入覆盖率分母（`check-component-registry.mjs` §4.2 ④ 机器强制），但在设计系统页 Registry 对账区可见；**demo 豁免 ≠ 清退豁免**，五态裁决面不受影响。
 
@@ -35,7 +35,7 @@
 | Layout & Shells | 11 |
 | AI Execution | 26 |
 | App Patterns | 6 |
-| Semantic | 8 |
+| Semantic | 16 |
 | App Components | 202 |
 
 ## 待裁决清单（设计系统页「只看待裁决」视图同源）
@@ -66,7 +66,7 @@
 | button-group | `src/components/ui/button-group.tsx` | 📦 standby | — | — |
 | calendar | `src/components/ui/calendar.tsx` | 📦 standby | — | — |
 | checkbox | `src/components/ui/checkbox.tsx` | ✅ canonical | — | — |
-| checkbox-group | `src/components/ui/checkbox-group.tsx` | ✅ canonical | — | — |
+| checkbox-group | `src/components/ui/checkbox-group.tsx` | 🔒 internal | — | — |
 | color-picker | `src/components/ui/color-picker.tsx` | ✅ canonical | — | — |
 | combobox | `src/components/ui/combobox.tsx` | ✅ canonical | — | — |
 | date-picker | `src/components/ui/date-picker.tsx` | ✅ canonical | — | — |
@@ -232,20 +232,19 @@
 | decision-queue-panel | `src/modules/ai-surface/components/decision-queue-panel.tsx` | ✅ canonical | — | — |
 | omni-dock | `src/modules/ai-surface/components/omni-dock.tsx` | ✅ canonical | — | — |
 | pipeline-lane-strip | `src/modules/ai-surface/components/pipeline-lane-strip.tsx` | ✅ canonical | — | — |
-| radial-watch-deck | `src/modules/ai-surface/components/radial-watch-deck.tsx` | ✅ canonical | — | — |
 | sample-tag | `src/modules/ai-surface/components/sample-tag.tsx` | ✅ canonical | — | — |
 | screenplay-controls | `src/modules/ai-surface/components/screenplay-controls.tsx` | ✅ canonical | — | — |
+| station-card | `src/modules/ai-surface/components/station-card.tsx` | ✅ canonical | — | — |
 | surface-liveness | `src/modules/ai-surface/components/surface-liveness.tsx` | ✅ canonical | — | — |
 | surface-narration-bar | `src/modules/ai-surface/components/surface-narration-bar.tsx` | ✅ canonical | — | — |
+| watch-deck | `src/modules/ai-surface/components/watch-deck.tsx` | ✅ canonical | — | 2026-10-02 自 radial-watch-deck 重写：绝对定位拼贴改三栏响应布局（ARCH-AISURFACE-001 §3.1），工位卡抽出为 station-card |
 | anchor-qa-thread | `src/modules/assistant/components/anchor-qa-thread.tsx` | ✅ canonical | — | — |
 | assistant-colleague-slot | `src/modules/assistant/components/assistant-colleague-slot.tsx` | ✅ canonical | — | — |
 | assistant-context-chip | `src/modules/assistant/components/assistant-context-chip.tsx` | ✅ canonical | — | — |
-| assistant-decision-strip | `src/modules/assistant/components/assistant-decision-strip.tsx` | ✅ canonical | — | — |
+| assistant-decision-tab | `src/modules/assistant/components/assistant-decision-tab.tsx` | ✅ canonical | — | — |
 | assistant-fab | `src/modules/assistant/components/assistant-fab.tsx` | ✅ canonical | — | — |
 | assistant-history-menu | `src/modules/assistant/components/assistant-history-menu.tsx` | ✅ canonical | — | — |
-| assistant-message-input | `src/modules/assistant/components/assistant-message-input.tsx` | ✅ canonical | — | — |
 | assistant-message-list | `src/modules/assistant/components/assistant-message-list.tsx` | ✅ canonical | — | — |
-| assistant-model-picker | `src/modules/assistant/components/assistant-model-picker.tsx` | ✅ canonical | — | — |
 | assistant-opening-report | `src/modules/assistant/components/assistant-opening-report.tsx` | ✅ canonical | — | — |
 | assistant-panel | `src/modules/assistant/components/assistant-panel.tsx` | ✅ canonical | — | — |
 | assistant-quick-prompts | `src/modules/assistant/components/assistant-quick-prompts.tsx` | ✅ canonical | — | — |
@@ -266,9 +265,9 @@
 | sub-page-toolbar | `src/components/semantic/sub-page-toolbar.tsx` | ✅ canonical | — | — |
 | toolbar-row | `src/components/semantic/toolbar-row.tsx` | ✅ canonical | — | — |
 
-### Semantic（8）
+### Semantic（16）
 
-#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（8）
+#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（16）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
@@ -280,6 +279,14 @@
 | stat-tile | `src/components/semantic/stat-tile.tsx` | ✅ canonical | — | — |
 | metric-row | `src/components/semantic/metric-row.tsx` | ✅ canonical | — | — |
 | stats-card | `src/components/semantic/stats-card.tsx` | ✅ canonical | — | — |
+| settings-header | `src/components/semantic/settings-header.tsx` | ✅ canonical | — | — |
+| section-scrubber | `src/components/semantic/section-scrubber.tsx` | ✅ canonical | — | — |
+| settings-section-card | `src/components/semantic/settings-section-card.tsx` | ✅ canonical | — | — |
+| definition-row | `src/components/semantic/definition-row.tsx` | ✅ canonical | — | — |
+| status-definition-list | `src/components/semantic/status-definition-list.tsx` | ✅ canonical | — | — |
+| status-definition-dialog | `src/components/semantic/status-definition-dialog.tsx` | ✅ canonical | — | —（**画廊豁免**：受控表单弹窗（候选/回调由消费方注入），画廊以 status-definition-list demo 间接覆盖） |
+| sticky-save-bar | `src/components/semantic/sticky-save-bar.tsx` | ✅ canonical | — | — |
+| settings-field-row | `src/components/semantic/settings-field-row.tsx` | ✅ canonical | — | — |
 
 ### App Components（202）
 
@@ -292,6 +299,7 @@
 | board-view | `src/shared/components/board-view/board-view.tsx` | ✅ canonical | — | — |
 | bottom-dock | `src/shared/components/bottom-dock/bottom-dock.tsx` | ✅ canonical | — | — |
 | dock-metric-badge | `src/shared/components/bottom-dock/dock-metric-badge.tsx` | ✅ canonical | — | — |
+| dock-prompt-bar | `src/shared/components/bottom-dock/dock-prompt-bar.tsx` | ✅ canonical | — | — |
 | dock-user-popover | `src/shared/components/bottom-dock/dock-user-popover.tsx` | ✅ canonical | — | — |
 | cell-select | `src/shared/components/cell-select.tsx` | ✅ canonical | — | — |
 | connection-banner | `src/shared/components/connection-banner.tsx` | ✅ canonical | — | — |
@@ -353,7 +361,7 @@
 | status-manager | `src/modules/core-config/components/status-manager.tsx` | ✅ canonical | — | — |
 | tag-manager | `src/modules/core-config/components/tag-manager.tsx` | ✅ canonical | — | — |
 | template-manager | `src/modules/core-config/components/template-manager.tsx` | ✅ canonical | — | — |
-| decision-review-modal | `src/modules/decision/components/decision-review-modal.tsx` | ✅ canonical | — | — |
+| decision-review-modal | `src/shared/decision-card/decision-review-modal.tsx` | ✅ canonical | — | — |
 | decomposition-review-panel | `src/modules/decision/components/decomposition-review-panel.tsx` | ✅ canonical | — | — |
 | BackendStatusBadge | `src/modules/desktop/components/BackendStatusBadge.tsx` | ✅ canonical | — | — |
 | desktop-gate | `src/modules/desktop/components/desktop-gate.tsx` | ✅ canonical | — | — |
@@ -437,8 +445,6 @@
 | project-detail-header-card | `src/modules/project/components/dashboard/project-detail-header-card.tsx` | ✅ canonical | — | — |
 | project-detail-nav | `src/modules/project/components/dashboard/project-detail-nav.tsx` | ✅ canonical | — | — |
 | project-health-score-dialog | `src/modules/project/components/dashboard/project-health-score-dialog.tsx` | ✅ canonical | — | — |
-| global-overview-charts | `src/modules/project/components/dashboard/global-overview-charts.tsx` | ✅ canonical | — | — |
-| lupi-chart-dialog | `src/modules/project/components/dashboard/lupi-chart-dialog.tsx` | ✅ canonical | — | — |
 | project-overview-charts | `src/modules/project/components/dashboard/project-overview-charts.tsx` | ✅ canonical | — | — |
 | project-right-sidebar | `src/modules/project/components/dashboard/project-right-sidebar.tsx` | ✅ canonical | — | — |
 | project-sidebar-context | `src/modules/project/components/dashboard/project-sidebar-context.tsx` | ✅ canonical | — | — |
