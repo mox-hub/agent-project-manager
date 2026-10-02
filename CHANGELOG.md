@@ -21,6 +21,22 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+## [0.7.14] - 2026-10-02
+
+### v0.7.14 发版总览——工作区多库登录体验闭环 + 桌面壳死循环根治 + 管理面统一收口 + AI 表面交互定型
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| desktop + frontend | **桌面壳认证窗/主窗互踢死循环根治**（API base 钉底前置到入口 + `/` 有 token 直达 /app + 壳内未钉底拒绝发请求 + AuthGuard 三态判定 + 启动失败屏） | CAP-A-25 前端对偶 | frontend tsc -b 0 错；desktop-session 钉底/预算/镜像回写用例绿；实机日志链+端口探活定位 | 详见下方明细（死循环修复三主题） |
+| server + frontend | **工作区多库身份闭环**：CAP-A-25 跨库主体定位（登录区分性报错 + 邀请令牌跨库定位+主体落库）+ CAP-A-26 登录前工作区选择（公开名单端点+管理员开关+登录卡选择器） | CAP-A-25 / CAP-A-26 | server 单测 1176 passed（+21）；frontend 单测 1609 passed（+27）；contract:check 零漂移 | 能力清单两卡 done + GAP-T-57/58 落地登记 |
+| server | **APP_GUARD/APP_INTERCEPTOR 全局注册对 WS 上下文短路**——修 Events/Runtime 网关每条消息一炸 | 缺陷修复 | server tsc -p build 0 错；lint 0 error | 全局守卫/拦截器短路判例沉淀 |
+| frontend | **AI 助理面板交互收口六项**（待决挂条 assistant-decision-tab + 全屏批阅遮罩 + Dock 唯一输入口 + 默认新建会话） | 交互裁决 2026-10-02 | vitest 全量 215 文件 1576 例绿；实机目检六项符 | registry/COMPONENTS.md 三删两增；详见明细 |
+| frontend | **盯盘面 watch-deck 三栏重写 + 工位卡 station-card**（radial-watch-deck 更名退役） | ARCH-AISURFACE-001 §3.1 | tsc -b 0 错；随助理批全量回归 | 组件改名随批登记 |
+| frontend | **设置页语义组件批一+二**（SettingsHeader/SectionScrubber/SettingsSectionCard/StickySaveBar/SettingsFieldRow 五新件 + 17 子页全量迁移 + AI 执行中心退役 + 「关于」页升格 `/app/settings/about`） | 管理面统一收口 | registry 画廊门禁 98/98=100%；e2e 随迁；详见明细四主题 | 宪法 §20/§10.8 档位入章；设置导航两项变更 |
+| frontend | **办公室信任档面板**（trust-tiers-panel 三级可视 + adjust-trust-dialog 首次可用 + Dialog wide 档入宪 §10.8） | CAP-B-07 切片 | vitest 27 例绿；e2e ST11 改验重定向 | 能力清单 B-07 卡注记 + GAP-T-56 |
+| desktop | **自动更新体验补全**（releaseNotes 三形态归一透传 + 更新状态实时广播 + 重入防御） | ADR-015 补记 4 | desktop tsc+eslint+tsup 绿；偏好卡 9 例+关于页 3 例 | i18n 双语 17 新键 |
+| frontend | **列表渲染性能阀门**（DataList content-visibility + 渐进挂载 + Row memo + 菜单惰性构建；609 行进页卡顿根治） | CAP-B-10 | data-list 12 例 + issue 模块 105 例绿 | 宪法 v2.7 §21 四律入章 + GAP-T-55 清偿 |
+
 ### CAP-A-26 登录前工作区选择 + 未认证工作区发现（公开名单可配置，默认关）
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
