@@ -11,6 +11,12 @@ export enum ErrorCode {
   PROVIDER_NOT_FOUND = 'PROVIDER_NOT_FOUND',
   /** 存在未通过（failed 等非 passed/waived）的验收契约，阻断工单完成（决策卡 resolution 路径） */
   ACCEPTANCE_FAILED_BLOCKING = 'ACCEPTANCE_FAILED_BLOCKING',
+  /**
+   * 凭证正确，但**当前选中的工作区里没有该主体**（CAP-A-25 ⑤）。
+   * 与 INVALID_CREDENTIALS 严格区分：后者是「凭证不对」，前者是「人不在这个库」——
+   * 后者可行动（接受邀请 / 切换工作区），前者只能重试。
+   */
+  WORKSPACE_SUBJECT_MISSING = 'WORKSPACE_SUBJECT_MISSING',
 }
 
 export class BusinessException extends HttpException {

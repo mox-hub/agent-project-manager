@@ -19,6 +19,15 @@ import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'node:crypto';
 import { RegisterDto } from './dto/register.dto';
 import { generateMemberShortId } from '@/common/utils/member-short-id.util';
+import {
+  DEFAULT_WORKSPACE_ID,
+  findWorkspace,
+} from '../../core/database/workspace-registry.util';
+import {
+  runInWorkspace,
+  scannableWorkspaceIds,
+} from '../../core/database/workspace-scope.util';
+import { getCurrentWorkspaceId } from '../../core/database/workspace-context';
 
 export type IdentitySource =
   'local' | 'oauth2' | 'cli' | 'mcp' | 'api' | 'plugin';
@@ -73,6 +82,11 @@ export class AuthService {
     }
 
     if (!user || !user.passwordHash) {
+      // 凭证正确但「人不在当前工作区」是可行动的另一种失败，先在失败路径上区分它
+      // （⑤ 区分性提示，CAP-A-25）：仅当密码确实对得上时才抛出，故不引入账号枚举面。
+      if (!user) {
+        await this.rejectIfSubjectMissingInCurrentWorkspace(username, password);
+      }
       throw new BusinessException(
         ErrorCode.INVALID_CREDENTIALS,
         'Invalid credentials',
@@ -100,6 +114,53 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...result } = user;
     return result;
+  }
+
+  /**
+   * ⑤ 区分性提示（CAP-A-25）：凭证正确但**当前选中的工作区**里没有该主体时，
+   * 抛出可行动的 WORKSPACE_SUBJECT_MISSING（「人不在这个库」），而不是笼统的
+   * 「密码错误」——后者会让用户以为密码错了，反复重试，永远出不来。
+   *
+   * 只在「带工作区头且非默认工作区」时探测：默认库是绝大多数账号的家，无头即默认时
+   * 查不到就是真没这个账号，没有第二种解释，无需（也不该）跨库翻找。
+   *
+   * **先验密码再报错**：仅当该标识在别的工作区确实存在、且提交的密码与那边的 hash
+   * 对得上才提示。否则不知道密码的人拿到的仍是 INVALID_CREDENTIALS —— 与既有
+   * 「账号不存在 / 密码错误」不可区分的语义保持一致，不引入账号枚举面。
+   *
+   * 成本：失败登录路径上每库一次查询（+ 每次命中候选一次 bcrypt），
+   * 受全局 Throttler 约束；不得挪到成功路径。
+   */
+  private async rejectIfSubjectMissingInCurrentWorkspace(
+    username: string,
+    password: string,
+  ): Promise<void> {
+    const current = getCurrentWorkspaceId();
+    if (!current || current === DEFAULT_WORKSPACE_ID) return;
+
+    for (const workspaceId of scannableWorkspaceIds()) {
+      if (workspaceId === current) continue;
+
+      // 与 validateUser 同口径：username 精确匹配优先，形如邮箱再按 email 回退。
+      const candidate = await runInWorkspace(workspaceId, async () => {
+        let found = await this.prisma.user.findUnique({ where: { username } });
+        if (!found && username.includes('@')) {
+          found = await this.prisma.user.findUnique({
+            where: { email: username.trim().toLowerCase() },
+          });
+        }
+        return found;
+      });
+
+      if (!candidate?.passwordHash) continue;
+      if (!(await bcrypt.compare(password, candidate.passwordHash))) continue;
+
+      throw new BusinessException(
+        ErrorCode.WORKSPACE_SUBJECT_MISSING,
+        `该账号不属于当前工作区「${findWorkspace(current)?.name ?? current}」，请切换工作区或接受邀请后再试`,
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
   }
 
   async login(user: any) {

@@ -9,6 +9,15 @@ import {
   ErrorCode,
 } from '../../core/exceptions/business.exception';
 import * as bcrypt from 'bcrypt';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import {
+  DEFAULT_WORKSPACE_ID,
+  createWorkspace,
+} from '../../core/database/workspace-registry.util';
+import { runInWorkspace } from '../../core/database/workspace-scope.util';
+import { getCurrentWorkspaceId } from '../../core/database/workspace-context';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -371,6 +380,114 @@ describe('AuthService', () => {
       expect(result.id).toBe('1');
       expect(result.sessionId).toBe('session-1');
       expect(mockPrismaService.session.update).toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * ⑤ 区分性提示（CAP-A-25 / GAP-T-57）：凭证对但「人不在当前工作区」必须与
+   * 「密码错误」区分开——前者可行动（切工作区/接受邀请），后者只能重试。
+   * 并且**不得**因此引入账号枚举面：密码不对时依旧只有 INVALID_CREDENTIALS。
+   */
+  describe('validateUser 工作区区分性提示', () => {
+    let tmpRoot: string;
+    let foreignWsId: string;
+    let previousRegistry: string | undefined;
+    let previousTemplate: string | undefined;
+    let passwordHash: string;
+
+    beforeAll(async () => {
+      tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-auth-ws-test-'));
+      previousRegistry = process.env.WORKSPACE_REGISTRY_PATH;
+      previousTemplate = process.env.WORKSPACE_TEMPLATE_PATH;
+      process.env.WORKSPACE_REGISTRY_PATH = path.join(
+        tmpRoot,
+        'workspaces.json',
+      );
+      process.env.WORKSPACE_TEMPLATE_PATH = path.resolve(
+        process.cwd(),
+        'prisma/template.db',
+      );
+      foreignWsId = createWorkspace({
+        name: 'foreign-ws',
+        path: path.join(tmpRoot, 'ws-a'),
+      }).id;
+      // 测试用低 cost（4）换速度：这里验的是分支逻辑，不是 bcrypt 强度
+      passwordHash = await bcrypt.hash('correct-pw', 4);
+    });
+
+    afterAll(() => {
+      if (previousRegistry === undefined)
+        delete process.env.WORKSPACE_REGISTRY_PATH;
+      else process.env.WORKSPACE_REGISTRY_PATH = previousRegistry;
+      if (previousTemplate === undefined)
+        delete process.env.WORKSPACE_TEMPLATE_PATH;
+      else process.env.WORKSPACE_TEMPLATE_PATH = previousTemplate;
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    });
+
+    /** 主体只住在默认库；在当前（非默认）工作区里查不到 */
+    function stubSubjectOnlyInDefaultWorkspace() {
+      mockPrismaService.user.findUnique.mockImplementation(async () => {
+        const current = getCurrentWorkspaceId();
+        if (current === null || current === DEFAULT_WORKSPACE_ID) {
+          return {
+            id: 'u1',
+            username: 'alice',
+            email: 'a@x.com',
+            displayName: 'Alice',
+            passwordHash,
+            isActive: true,
+          };
+        }
+        return null;
+      });
+    }
+
+    it('当前工作区无此主体但密码在别处对得上 → WORKSPACE_SUBJECT_MISSING', async () => {
+      stubSubjectOnlyInDefaultWorkspace();
+
+      const error = await runInWorkspace(foreignWsId, () =>
+        service.validateUser('alice', 'correct-pw'),
+      ).catch((e: BusinessException) => e);
+
+      expect(error).toBeInstanceOf(BusinessException);
+      expect(error.errorCode).toBe(ErrorCode.WORKSPACE_SUBJECT_MISSING);
+      expect(error.getStatus()).toBe(HttpStatus.UNAUTHORIZED);
+      // 提示里点名当前工作区，用户才知道该切回哪儿
+      expect(error.message).toContain('foreign-ws');
+    });
+
+    it('密码不对时不得区分（不引入账号枚举面）→ 仍是 INVALID_CREDENTIALS', async () => {
+      stubSubjectOnlyInDefaultWorkspace();
+
+      const error = await runInWorkspace(foreignWsId, () =>
+        service.validateUser('alice', 'wrong-pw'),
+      ).catch((e: BusinessException) => e);
+
+      expect(error.errorCode).toBe(ErrorCode.INVALID_CREDENTIALS);
+    });
+
+    it('未选择工作区（走默认库）时不做跨库探测 → INVALID_CREDENTIALS', async () => {
+      // 主体只住在非默认工作区：此时默认库里查不到，但**也不该**去别处翻找——
+      // 没有工作区选择就没有「选错了」这回事，报可行动的提示反而是误导。
+      mockPrismaService.user.findUnique.mockImplementation(async () =>
+        getCurrentWorkspaceId() === foreignWsId
+          ? {
+              id: 'u2',
+              username: 'alice',
+              email: 'a@x.com',
+              displayName: 'Alice',
+              passwordHash,
+              isActive: true,
+            }
+          : null,
+      );
+
+      const error = await service
+        .validateUser('alice', 'correct-pw')
+        .catch((e: BusinessException) => e);
+
+      expect(error.errorCode).toBe(ErrorCode.INVALID_CREDENTIALS);
     });
   });
 });
