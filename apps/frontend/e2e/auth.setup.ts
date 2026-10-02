@@ -26,5 +26,27 @@ setup('authenticate', async ({ page, request }) => {
   await page.waitForURL(/\/(app|boot)/, { timeout: 30_000 })
   await page.waitForURL(/\/app/, { timeout: 30_000 })
   await expect(page.locator('#username')).toHaveCount(0)
+
+  /**
+   * 预置「已完成首次引导」标记后落盘 storageState。
+   *
+   * 首次启动向导（OnboardingGate）是**模态弹层**，会遮蔽整张页面——复用它落盘的用例
+   * （SH02 命令面板、A04 等）因页头按钮不可见而超时。e2e 关注的是功能行为而非「首次访问」，
+   * 故在共享 setup 里统一预置 app-storage.onboardingCompleted=true（zustand persist v1）。
+   * 与既有 app-storage 内容合并写入，不清空其它持久化字段。
+   */
+  await page.evaluate(() => {
+    let state: Record<string, unknown> = {}
+    try {
+      state = JSON.parse(localStorage.getItem('app-storage') ?? '')?.state ?? {}
+    } catch {
+      state = {}
+    }
+    localStorage.setItem(
+      'app-storage',
+      JSON.stringify({ state: { ...state, onboardingCompleted: true }, version: 1 }),
+    )
+  })
+
   await page.context().storageState({ path: authFile })
 })

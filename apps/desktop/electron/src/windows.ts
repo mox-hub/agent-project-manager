@@ -172,6 +172,25 @@ export function registerMainWindowFactory(factory: () => BrowserWindow): void {
 const COMPACT_EXIT_DEBOUNCE_MS = 250;
 let pendingCompactExit: NodeJS.Timeout | null = null;
 
+/**
+ * 主窗落地 URL：带认证窗最后的 SPA 路径（登录/boot 完成后 navigate 的 /app 等）。
+ * 回主窗若落根路径，前端 `/`→`/boot` 无条件重定向会重跑一遍 boot，而 boot 页挂
+ * compact 钩子 → 主窗刚回来又被切小窗跑第二遍初始化（实机「登录后自动弹认证窗」
+ * 根因）。认证窗 URL 与前端源不同源（启动屏阶段/加载失败）时回落根路径（原行为）。
+ */
+function resolveMainLandingUrl(target: string, auth: BrowserWindow): string {
+  try {
+    const landing = new URL(auth.webContents.getURL());
+    const base = new URL(target);
+    if (landing.origin === base.origin) {
+      return target + landing.pathname + landing.search;
+    }
+  } catch {
+    // 解析失败回落根路径
+  }
+  return target;
+}
+
 function exitCompactSurface(): void {
   pendingCompactExit = null;
   if (state.isQuitting) {
@@ -191,10 +210,11 @@ function exitCompactSurface(): void {
     try {
       if (main) {
         const target = await resolveFrontendTarget();
-        await main.loadURL(target);
+        const landingUrl = resolveMainLandingUrl(target, auth);
+        await main.loadURL(landingUrl);
         main.show();
         main.focus();
-        logger.info(`已回到主窗: ${target}`);
+        logger.info(`已回到主窗: ${landingUrl}`);
       }
     } finally {
       // loadURL 失败也必须销毁认证窗：state.authWindow 已置空，留着即成不可达的隐藏窗

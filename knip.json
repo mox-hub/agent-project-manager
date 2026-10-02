@@ -19,7 +19,7 @@
       ]
     },
     "apps/frontend": {
-      "entry": ["src/app/main.tsx", "src/polyfills.ts"]
+      "entry": ["src/polyfills.ts"]
     },
     "apps/cli": {
       "entry": ["src/index.ts"]
