@@ -47,17 +47,31 @@ test('SH02 命令面板 Ctrl+K 开合', async ({ page }) => {
 
 test('SH03 浮动快捷面板：工作区与主题切换', async ({ page }) => {
   await page.goto('/app/projects')
-  await page.getByRole('button', { name: '展开快捷面板' }).click()
-  await expect(page.getByText(/新建工作区/).first()).toBeVisible()
-  await expect(page.getByRole('button', { name: /项目仪表盘/ }).first()).toBeVisible()
-  // 深色模式切换（html.dark class 翻转）
+
+  // Dock 默认「悬浮自动显隐」（设置 · Dock 栏可改为常显）：把指针移到视口底部中央，
+  // 触发 document mousemove 的靠近判定让 Dock 浮出——与真实使用路径一致。
+  // **不能**直接对 Dock 内元素 click/hover：收起态根节点带 pointer-events-none，
+  // Playwright 的命中测试会判失败（区域判定走 document 坐标，不看元素命中，故两者不等价）。
+  const vp = page.viewportSize()!
+  await page.mouse.move(vp.width / 2, vp.height - 24)
+  // 根节点上的 data-dock-visible 是显式测试钩子：收起态不存在该值，天然等得动。
+  await expect(page.locator('[data-dock-visible="true"]')).toBeVisible({ timeout: 10_000 })
+
+  // ① 工作区入口：账号与工作区菜单（DockUserPopover）展开后可见工作区切换区
+  await page.getByRole('button', { name: '账号与工作区菜单' }).click()
+  await expect(page.getByText('工作区切换').first()).toBeVisible()
+  await expect(page.getByText('进入项目仪表盘').first()).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByText('工作区切换')).toHaveCount(0)
+
+  // ② 主题切换：dock-item-theme 是纯图标按钮，无障碍名称来自 Tooltip（非可访问名），
+  // 故用本项目自有的 data-testid 定位；断言 html 根节点 class（dark）翻转。
   const html = page.locator('html')
   const before = await html.getAttribute('class')
-  await page.getByRole('button', { name: /深色|浅色|主题/ }).first().click()
+  await page.getByTestId('dock-item-theme').click()
   await expect
     .poll(async () => await html.getAttribute('class'), { timeout: 10_000 })
     .not.toBe(before)
-  await page.getByRole('button', { name: '收起快捷面板' }).click()
 })
 
 test('SH04 BootPage 启动检查页渲染', async ({ page }) => {

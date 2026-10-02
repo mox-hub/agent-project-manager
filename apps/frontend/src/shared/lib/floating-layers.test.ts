@@ -26,20 +26,27 @@ describe('isWithinAiCollabSurface', () => {
     expect(isWithinAiCollabSurface(host.querySelector('#dock-btn'))).toBe(true);
   });
 
-  it('AI 对话浮窗及其内部按钮（含决策侧栏收起按钮）判定为「交互面内」', () => {
+  it('AI 对话浮窗及其内部按钮（含待决卡片挂条）判定为「交互面内」', () => {
     const { host, target } = mount(
       `<div data-ai-component="assistant.fab-window">
-         <div data-ai-component="assistant.decision-wing">
-           <button data-ai-action="assistant.decision.collapse.click">收起</button>
+         <div data-ai-component="assistant.decision-tab">
+           <button data-ai-action="assistant.decision.tab.click">批阅</button>
          </div>
        </div>`,
     );
     expect(isWithinAiCollabSurface(target)).toBe(true);
     expect(
       isWithinAiCollabSurface(
-        host.querySelector('[data-ai-action="assistant.decision.collapse.click"]'),
+        host.querySelector('[data-ai-action="assistant.decision.tab.click"]'),
       ),
     ).toBe(true);
+  });
+
+  it('AI 协同面内嵌全屏遮罩（决策集中批阅，Portal 到 body）判定为「交互面内」', () => {
+    const { target } = mount(
+      '<div role="dialog" data-ai-collab-overlay=""><p>集中批阅</p></div>',
+    );
+    expect(isWithinAiCollabSurface(target)).toBe(true);
   });
 
   it('就地问答浮层（AISlot，Portal 到 body）判定为「交互面内」', () => {
@@ -85,6 +92,11 @@ describe('hasOpenInnerLayer', () => {
 
   it('存在 Portal 浮层时为 true', () => {
     mount('<div data-slot="popover-content">模型选择器</div>');
+    expect(hasOpenInnerLayer()).toBe(true);
+  });
+
+  it('存在 AI 协同面内嵌全屏遮罩（决策集中批阅）时为 true', () => {
+    mount('<div role="dialog" data-ai-collab-overlay="">集中批阅</div>');
     expect(hasOpenInnerLayer()).toBe(true);
   });
 

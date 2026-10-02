@@ -83,14 +83,28 @@ export async function selectRowByTitle(page: Page, title: string) {
 }
 
 /**
+ * 命令面板弹层（`CommandDialogPopup`）。用本项目自有 `data-slot` 钩子定位：
+ * 面板内**没有标题（heading）元素**——标题只是 popup 上的 `aria-label`，文案还随界面语言变化
+ * （zh-CN「命令面板」），故 heading / 英文文案两类探针都不可用（面板自 cmdk 迁移到 base-ui
+ * Autocomplete 后即如此，见 `components/ui/command.tsx` 头注释）。
+ */
+export function commandPaletteDialog(page: Page): Locator {
+  return page.locator('[data-slot="command-dialog-popup"]').first()
+}
+
+/** 命令面板输入框（`AutocompleteInput`，同样用 data-slot 定位，不依赖语言相关的 placeholder） */
+export function commandPaletteInput(page: Page): Locator {
+  return page.locator('[data-slot="autocomplete-input"]').first()
+}
+
+/**
  * 打开命令面板（Ctrl+K）。崩溃缺陷 #10 已修复；保留短暂重试以吸收慢环境时序。
  * 返回是否成功打开。
  */
 export async function openCommandPalette(page: Page, attempts = 4): Promise<boolean> {
   for (let i = 0; i < attempts; i += 1) {
     await page.keyboard.press('Control+k')
-    const opened = await page
-      .getByRole('heading', { name: 'Command Palette' })
+    const opened = await commandPaletteDialog(page)
       .waitFor({ state: 'visible', timeout: 4000 })
       .then(() => true)
       .catch(() => false)

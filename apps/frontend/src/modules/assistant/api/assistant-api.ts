@@ -70,19 +70,6 @@ export interface AssistantDispatchResult {
   status: string;
 }
 
-export type AssistantModelType = 'runtime' | 'runtime-provider' | 'llm';
-
-export interface AssistantModelOption {
-  id: string;
-  type: AssistantModelType;
-  runtimeId?: string;
-  provider?: string;
-  label: string;
-  model?: string | null;
-  providers?: string[];
-  online: boolean;
-}
-
 /** 请求侧实体上下文，单源于契约 AssistantViewingDto（形状一致） */
 export type AssistantViewing = ApiSchemas['AssistantViewingDto'];
 
@@ -127,8 +114,6 @@ export const assistantApi = {
       ...(payload.model ? { model: payload.model } : {}),
       ...(payload.viewing ? { viewing: payload.viewing } : {}),
     }),
-  /** 可选模型：在线 CLI 守护进程通道 + 已启用 LLM provider */
-  listModels: () => api.get<{ models: AssistantModelOption[] }>('/ai/assistant/models'),
   /** 消息转执行：派发在线 CLI 守护进程（异步跑，结果经建议卡回流） */
   dispatch: (content: string, projectId: string) =>
     api.post<AssistantDispatchResult>('/ai/assistant/dispatches', {

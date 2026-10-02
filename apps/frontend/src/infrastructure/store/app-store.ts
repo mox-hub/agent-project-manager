@@ -260,7 +260,8 @@ export const useAppStore = create<AppState>()(
 
       aiPanelOpen: false,
       setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
-      assistantExpanded: false,
+      // 默认放大模式（2026-10-02 用户裁决：弹出窗口默认改为放大模式）
+      assistantExpanded: true,
       toggleAssistantExpanded: () =>
         set((state) => ({ assistantExpanded: !state.assistantExpanded })),
       assistantOpenRequest: null,

@@ -16,8 +16,6 @@ export const assistantKeys = {
     [...assistantKeys.all, 'messages', projectId ?? null, conversationId ?? 'current'] as const,
   conversations: (projectId: string | undefined) =>
     [...assistantKeys.all, 'conversations', projectId ?? null] as const,
-  models: (projectId: string | undefined) =>
-    [...assistantKeys.all, 'models', projectId ?? null] as const,
 };
 
 export type { AssistantMessage, AssistantSession };

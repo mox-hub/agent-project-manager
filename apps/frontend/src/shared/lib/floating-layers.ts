@@ -22,6 +22,13 @@ export const ASSISTANT_WINDOW_SELECTOR =
   '[data-ai-component="assistant.fab-window"],[data-ai-component="assistant.inline-slot"]';
 
 /**
+ * AI 协同面内嵌的全屏遮罩层（如待决卡片集中批阅 decision-review-modal）：
+ * Portal 到 body（祖先带 transform 时 fixed 会失效），但语义上属于 AI 交互面——
+ * 点击它不触发面板关闭，打开期间 Esc 先由它消费。
+ */
+export const AI_COLLAB_OVERLAY_SELECTOR = '[data-ai-collab-overlay]';
+
+/**
  * Portal 弹出的浮层内容：base-ui 的 popup 仅在打开期间挂载，
  * 因此「存在即打开」。切勿在此加入 `[role="dialog"]`——AI 对话浮窗自身
  * 就是 `role="dialog"`，会被误当作内层浮层。
@@ -54,16 +61,20 @@ export function isWithinAiCollabSurface(target: EventTarget | null): boolean {
   return Boolean(
     el.closest(`[${DOCK_ROOT_ATTR}]`) ||
       el.closest(ASSISTANT_WINDOW_SELECTOR) ||
+      el.closest(AI_COLLAB_OVERLAY_SELECTOR) ||
       el.closest(PORTAL_LAYER_SELECTOR),
   );
 }
 
 /**
  * 是否存在已打开的内层浮层。
- * 用于 ESC 判定：内层浮层（模型选择器/历史菜单/嵌套弹窗等）应先消费 ESC，
- * 不该连带关闭外层 AI 对话面板。
+ * 用于 ESC 判定：内层浮层（模型选择器/历史菜单/嵌套弹窗/全屏批阅遮罩等）
+ * 应先消费 ESC，不该连带关闭外层 AI 对话面板。
  */
 export function hasOpenInnerLayer(): boolean {
   if (typeof document === 'undefined') return false;
-  return document.querySelector(PORTAL_LAYER_SELECTOR) !== null;
+  return (
+    document.querySelector(AI_COLLAB_OVERLAY_SELECTOR) !== null ||
+    document.querySelector(PORTAL_LAYER_SELECTOR) !== null
+  );
 }

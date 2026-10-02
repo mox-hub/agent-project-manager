@@ -14,7 +14,6 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Chat, useChat, type UseChatHelpers } from '@ai-sdk/react';
 import { type ChatTransport, type UIMessage, type UIMessageChunk } from 'ai';
 import { eventClient } from '@/infrastructure/event-client';
@@ -23,7 +22,6 @@ import {
   type AssistantMessage,
   type AssistantViewing,
 } from '../api/assistant-api';
-import { assistantKeys } from './use-assistant-session';
 
 /** 助手消息元数据：CLI 桥占位的运行态 + 模型标注 */
 export interface AssistantChatMetadata {
@@ -233,11 +231,14 @@ const AssistantChatContext = createContext<
 >(null);
 
 export function AssistantChatSession({
+  chatId,
   conversationId,
   initialMessages,
   onFinished,
   children,
 }: {
+  /** Chat 实例客户端 id（含打开轮次，保证「新对话」拿到全新实例）；缺省回落 conversationId */
+  chatId?: string;
   /** 显式历史会话 id；缺省为跟随当前（服务端 updatedAt 最新） */
   conversationId?: string;
   initialMessages: AssistantChatMessage[];
@@ -248,7 +249,7 @@ export function AssistantChatSession({
   const [chat] = useState(
     () =>
       new Chat<AssistantChatMessage>({
-        id: conversationId ?? 'assistant-current',
+        id: chatId ?? conversationId ?? 'assistant-current',
         transport: assistantStreamTransport,
         messages: initialMessages,
         onError: () => {
@@ -288,13 +289,4 @@ export function buildAssistantSendBody(options: {
     ...(options.model ? { model: options.model } : {}),
     ...(options.viewing ? { viewing: options.viewing } : {}),
   };
-}
-
-/** 可选模型清单（在线 CLI 通道 + 已启用 LLM provider） */
-export function useAssistantModels(projectId: string | undefined) {
-  return useQuery({
-    queryKey: assistantKeys.models(projectId),
-    queryFn: () => assistantApi.listModels(),
-    staleTime: 30_000,
-  });
 }

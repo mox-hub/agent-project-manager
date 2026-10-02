@@ -1,13 +1,18 @@
 /**
  * 决策集中批阅全屏悬浮弹窗（Decision Review Modal）
  * 触发后以毛玻璃全屏悬浮弹出卡片堆，支持用户一张一张快速勾选/批阅通过，带堆叠、翻页、翻面与滑出动画。
+ * 消费方：通知中心快速审阅 + 助理面板待决卡片挂条（2026-10-02 起为唯一批阅遮罩形态）。
+ * Portal 到 body：助理浮窗祖先带 transform，fixed 定位会以 transformed 祖先为包含块、
+ * 被裁进浮窗盒内而非铺满视口；根节点带 `data-ai-collab-overlay`，
+ * 供浮层判定（点击不关面板 / Esc 先行消费）。
  */
 import { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Layers, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { Decision, DecisionActionOptions } from '@/shared/decision-card/types';
-import { DecisionDeckStack } from '@/shared/decision-card/decision-deck-stack';
+import type { Decision, DecisionActionOptions } from './types';
+import { DecisionDeckStack } from './decision-deck-stack';
 
 export interface DecisionReviewModalProps {
   open: boolean;
@@ -55,11 +60,12 @@ export function DecisionReviewModal({
   const total = decisions.length;
   const percent = total > 0 ? Math.min(100, Math.round((progress.current / total) * 100)) : 100;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={t('decision.review.modalTitle')}
+      data-ai-collab-overlay=""
       className="fixed inset-0 z-modal flex flex-col bg-background/85 backdrop-blur-md transition-all duration-normal"
     >
       {/* ── 顶部导航条 ── */}
@@ -114,6 +120,7 @@ export function DecisionReviewModal({
           onIndexChange={handleIndexChange}
         />
       </main>
-    </div>
+    </div>,
+    document.body,
   );
 }

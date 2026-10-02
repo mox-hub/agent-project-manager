@@ -2,11 +2,12 @@ import { useState, useRef, useEffect, useMemo, useCallback, type ReactNode } fro
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bell, Search, Sun, Moon, Plus, Send, X, Sparkles } from 'lucide-react';
+import { Bell, Search, Sun, Moon, Plus, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DockUserPopover } from './dock-user-popover';
 import { DockMetricBadge } from './dock-metric-badge';
+import { DockPromptBar } from './dock-prompt-bar';
 import { STATUS_DOT_CLASS, useDockAiColleagues, type DockAiColleague } from './use-dock-ai-colleagues';
 import { useAppStore, type DockItemId } from '@/infrastructure/store/app-store';
 import { DOCK_ROOT_ATTR, isWithinAiCollabSurface } from '@/shared/lib/floating-layers';
@@ -107,7 +108,6 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
   const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [promptText, setPromptText] = useState('');
   const [selectedColleagueId, setSelectedColleagueId] = useState<string>('assistant');
-  const inputRef = useRef<HTMLInputElement>(null);
 
   /**
    * 自动隐藏（默认）：平时只留徽章栏贴底，鼠标靠近底部区域才浮出 Dock，
@@ -187,15 +187,7 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
     [setAiPanelOpen],
   );
 
-  // 展开时自动聚焦输入框
-  useEffect(() => {
-    if (isPromptOpen) {
-      const timer = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [isPromptOpen]);
+  // 展开时自动聚焦输入框的职责已随 DockPromptBar 抽取（挂载即聚焦）
 
   // 点击「AI 协同交互面」之外的区域才收起输入栏并关闭对话面板。
   // 判定不能用 dockContainerRef.contains()——对话浮窗与决策侧栏都在 Dock 容器之外，
@@ -332,95 +324,15 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
       >
         <AnimatePresence mode="wait" initial={false}>
           {isPromptOpen ? (
-            // ================= 状态 B：展开后的 Prompt 输入栏 =================
-            <motion.div
+            // ================= 状态 B：展开后的 Prompt 输入栏（DockPromptBar 语义件） =================
+            <DockPromptBar
               key="prompt-bar"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.15 }}
-              className="flex w-full items-center gap-2"
-            >
-              {/* 左侧：选中的 AI 角色真实头像（带真实在线状态点） */}
-              <div className="relative shrink-0 pl-1">
-                {/* 容器 32px 与头像 md 档对齐，头像完全填满；描边用不占布局的 ring；
-                    状态点在外层 relative 上，不被裁切 */}
-                <div
-                  className="flex size-8 items-center justify-center rounded-full shadow-xs ring-1 ring-border/60"
-                  title={`当前受托角色：${selectedColleague.name} (${selectedColleague.title || 'AI 同事'})`}
-                >
-                  {/* 统一交给 MemberAvatar：成员信息里有真实头像就显示真实头像，
-                      没有则回落双表面规范里 AI 身份该有的确定性头像（与成员管理页一致），
-                      而不是此处另画一个通用图标 */}
-                  <MemberAvatar
-                    member={{
-                      type: 'ai_agent',
-                      displayName: selectedColleague.name,
-                      avatarUrl: selectedColleague.avatarUrl,
-                    }}
-                    size="md"
-                    showBadge={false}
-                  />
-                </div>
-                {/* 真实呼吸状态指示点 */}
-                <span
-                  className={cn(
-                    'absolute -bottom-0.5 -right-0.5 size-2 rounded-full',
-                    STATUS_DOT_CLASS[selectedColleague.status] || STATUS_DOT_CLASS.idle,
-                  )}
-                  aria-hidden="true"
-                />
-              </div>
-
-              {/* 中间：Prompt 输入框 */}
-              <div className="flex-1 min-w-0">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={promptText}
-                  onChange={(e) => setPromptText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendPrompt();
-                    } else if (e.key === 'Escape') {
-                      handleClosePrompt(true);
-                    }
-                  }}
-                  placeholder={selectedColleague.placeholder}
-                  className="w-full bg-transparent px-2 text-xs text-foreground placeholder:text-content-text-muted focus:outline-hidden"
-                />
-              </div>
-
-              {/* 右侧操作：发送按钮 + 收起按钮 (点击同步关闭上方 AI 面板) */}
-              <div className="flex items-center gap-1 shrink-0 pr-0.5">
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.92 }}
-                  onClick={handleSendPrompt}
-                  disabled={!promptText.trim()}
-                  className={cn(
-                    'flex size-8 items-center justify-center rounded-full transition-all shadow-xs',
-                    promptText.trim()
-                      ? 'bg-foreground text-background hover:bg-foreground/90'
-                      : 'bg-muted text-content-text-muted cursor-not-allowed',
-                  )}
-                  title="发送指令 (Enter)"
-                >
-                  <Send className="size-3.5 translate-x-px -translate-y-px" />
-                </motion.button>
-
-                <button
-                  type="button"
-                  onClick={() => handleClosePrompt(true)}
-                  className="flex size-7 items-center justify-center rounded-full text-content-text-muted hover:bg-accent hover:text-foreground transition-colors"
-                  title="收起并关闭 (Esc)"
-                >
-                  <X className="size-3.5" />
-                </button>
-              </div>
-            </motion.div>
+              colleague={selectedColleague}
+              value={promptText}
+              onValueChange={setPromptText}
+              onSend={handleSendPrompt}
+              onClose={() => handleClosePrompt(true)}
+            />
           ) : (
             // ================= 状态 A：常规模式 Dock 栏 =================
             <motion.div

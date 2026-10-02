@@ -99,13 +99,11 @@ test('AS01 助理面板开合与快捷提示', async ({ page }) => {
   await fab.waitFor({ state: 'visible', timeout: 60_000 })
   await fab.click()
 
-  // 面板出现：输入框（给小周留言…）
-  const input = page.getByPlaceholder(/留言/)
-  await expect(input.first()).toBeVisible({ timeout: 15_000 })
-  // 快捷提示 chips
-  await expect(page.getByText(/总结一下项目现状|本周有什么风险|需要我现在决定/).first()).toBeVisible()
+  // 面板出现：快捷提示 chips（2026-10-02 起面板内不再放输入框，输入口在底部 Dock）
+  const quickPrompt = page.getByText(/总结一下项目现状|本周有什么风险|需要我现在决定/).first()
+  await expect(quickPrompt).toBeVisible({ timeout: 15_000 })
 
   // 再次点击关闭
   await fab.click()
-  await expect(input.first()).toBeHidden({ timeout: 10_000 })
+  await expect(quickPrompt).toBeHidden({ timeout: 10_000 })
 })

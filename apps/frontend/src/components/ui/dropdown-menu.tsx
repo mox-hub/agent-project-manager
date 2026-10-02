@@ -29,7 +29,7 @@ import { ChevronRightIcon, CheckIcon } from "lucide-react"
  *      槽位识别本件弹出层 ⇒ 迁移必须同步改该表，否则浮层互斥（Esc / 滚动锁）失灵。
  *
  * 迁移指引（限期，逐消费方）：
- *   - 真实消费方 5 处：modules/assistant/components/assistant-model-picker.tsx、
+ *   - 真实消费方 4 处（assistant-model-picker 已随 2026-10-02 助理面板裁撤模型选择而删除）、
  *     modules/issue/components/execution-items-panel.tsx、
  *     modules/issue/components/issue-type-switcher.tsx、
  *     modules/notification/components/inbox-item-row.tsx、
