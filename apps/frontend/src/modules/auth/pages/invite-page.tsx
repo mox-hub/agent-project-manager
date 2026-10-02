@@ -8,6 +8,22 @@ import { Spinner } from '@/components/ui/spinner';
 import { Logo } from '@/components/brand/logo';
 import { authApi, type InvitePreview } from '../api/auth-api';
 import { useAuth } from '../hooks/use-auth';
+import { ApiClientError } from '@/shared/types/api';
+
+/**
+ * 从错误里取可展示文案。
+ *
+ * 注意：`api.get/post` 抛的是 api-client 拦截器转换后的 `ApiClientError`（顶层
+ * code/status/message），**不是** axios 原始错误——没有 `response.data`。
+ * 原先按 `err.response?.data?.error?.message` 读，恒为 undefined，于是所有失败
+ * （含「邀请不存在」「邮箱不匹配」）都退化成兜底文案，属于静默失修。
+ */
+function inviteErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiClientError) {
+    return err.message || fallback;
+  }
+  return fallback;
+}
 
 /**
  * 邀请落地页（公开路由）：
@@ -27,8 +43,8 @@ export function InvitePage() {
     authApi
       .previewInvite(token)
       .then(setPreview)
-      .catch((err: { response?: { data?: { error?: { message?: string } } } }) => {
-        setError(err.response?.data?.error?.message || '邀请不存在或已失效');
+      .catch((err: unknown) => {
+        setError(inviteErrorMessage(err, '邀请不存在或已失效'));
       });
   }, [token]);
 
@@ -40,9 +56,7 @@ export function InvitePage() {
       setAccepted(true);
       qc.invalidateQueries();
     } catch (err) {
-      type ApiError = { response?: { data?: { error?: { message?: string } } } };
-      const apiError = err as ApiError;
-      setError(apiError.response?.data?.error?.message || '接受邀请失败');
+      setError(inviteErrorMessage(err, '接受邀请失败'));
     } finally {
       setAccepting(false);
     }
