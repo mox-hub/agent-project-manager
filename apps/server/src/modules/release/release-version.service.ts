@@ -15,6 +15,25 @@ export interface VersionRecommendation {
   basis: string;
 }
 
+/** 版本通道（CAP-K-03 批三）：由 semver 预发布后缀推导，不单独入库 */
+export type ReleaseChannel = 'stable' | 'alpha' | 'beta' | 'rc';
+
+/**
+ * 从 semver 后缀推导版本通道（纯函数，前后端口径一致：
+ * -alpha* → alpha、-beta* → beta、-rc* → rc、其余（含无后缀/畸形）→ stable）。
+ * 与仓库分支策略既定后缀档（-alpha / -beta / -rc.N）对齐。
+ */
+export function deriveReleaseChannel(version: string): ReleaseChannel {
+  const v = semver.valid(version) ?? semver.valid(`v${version}`);
+  const prerelease = v ? semver.prerelease(v) : null;
+  if (!prerelease || prerelease.length === 0) return 'stable';
+  const head = String(prerelease[0]).toLowerCase();
+  if (head.startsWith('alpha')) return 'alpha';
+  if (head.startsWith('beta')) return 'beta';
+  if (head.startsWith('rc')) return 'rc';
+  return 'stable';
+}
+
 /**
  * 版本推断（CAP-K-03 一期）：单一版本真相源 = Release 实体集合，
  * git tag（v{version}）是派生面。推荐版本 = max(库内最新版本, git 最新 tag)

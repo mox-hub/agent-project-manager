@@ -82201,6 +82201,35 @@
             "type": "object",
             "description": "所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除）",
             "nullable": true
+          },
+          "plannedAt": {
+            "type": "object",
+            "description": "计划发版时间（ISO；挂里程碑时由 targetDate 预填，传 null 清除）",
+            "nullable": true
+          },
+          "platforms": {
+            "type": "array",
+            "description": "发布平台（封闭枚举 android/ios/windows/macos/linux/web）",
+            "items": {
+              "type": "string",
+              "enum": [
+                "android",
+                "ios",
+                "windows",
+                "macos",
+                "linux",
+                "web"
+              ]
+            }
+          },
+          "upgradeNotes": {
+            "type": "string",
+            "description": "升级/迁移注意事项（markdown；major 版本门禁注记要求补充）"
+          },
+          "hotfixOfId": {
+            "type": "object",
+            "description": "热修复基线发版 ID（须存在/同项目/已发布；传 null 清除）",
+            "nullable": true
           }
         },
         "required": [
@@ -82246,6 +82275,35 @@
             "type": "object",
             "description": "所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除）",
             "nullable": true
+          },
+          "plannedAt": {
+            "type": "object",
+            "description": "计划发版时间（ISO；挂里程碑时由 targetDate 预填，传 null 清除）",
+            "nullable": true
+          },
+          "platforms": {
+            "type": "array",
+            "description": "发布平台（封闭枚举 android/ios/windows/macos/linux/web）",
+            "items": {
+              "type": "string",
+              "enum": [
+                "android",
+                "ios",
+                "windows",
+                "macos",
+                "linux",
+                "web"
+              ]
+            }
+          },
+          "upgradeNotes": {
+            "type": "string",
+            "description": "升级/迁移注意事项（markdown；major 版本门禁注记要求补充）"
+          },
+          "hotfixOfId": {
+            "type": "object",
+            "description": "热修复基线发版 ID（须存在/同项目/已发布；传 null 清除）",
+            "nullable": true
           }
         }
       },
@@ -82271,6 +82329,18 @@
           "receiver": {
             "type": "string",
             "description": "接收人（由谁接收）"
+          },
+          "platform": {
+            "type": "string",
+            "description": "所属发布平台（RELEASE_PLATFORM_VALUES 枚举内；产物为全端时省略）",
+            "enum": [
+              "android",
+              "ios",
+              "windows",
+              "macos",
+              "linux",
+              "web"
+            ]
           }
         },
         "required": [

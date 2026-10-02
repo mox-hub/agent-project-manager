@@ -15852,6 +15852,14 @@ export interface components {
             scopeIssueIds?: string[];
             /** @description 所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除） */
             milestoneId?: Record<string, never> | null;
+            /** @description 计划发版时间（ISO；挂里程碑时由 targetDate 预填，传 null 清除） */
+            plannedAt?: Record<string, never> | null;
+            /** @description 发布平台（封闭枚举 android/ios/windows/macos/linux/web） */
+            platforms?: ("android" | "ios" | "windows" | "macos" | "linux" | "web")[];
+            /** @description 升级/迁移注意事项（markdown；major 版本门禁注记要求补充） */
+            upgradeNotes?: string;
+            /** @description 热修复基线发版 ID（须存在/同项目/已发布；传 null 清除） */
+            hotfixOfId?: Record<string, never> | null;
         };
         VersionRecommendRequestDto: {
             /** @description 项目 ID */
@@ -15868,6 +15876,14 @@ export interface components {
             scopeIssueIds?: string[];
             /** @description 所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除） */
             milestoneId?: Record<string, never> | null;
+            /** @description 计划发版时间（ISO；挂里程碑时由 targetDate 预填，传 null 清除） */
+            plannedAt?: Record<string, never> | null;
+            /** @description 发布平台（封闭枚举 android/ios/windows/macos/linux/web） */
+            platforms?: ("android" | "ios" | "windows" | "macos" | "linux" | "web")[];
+            /** @description 升级/迁移注意事项（markdown；major 版本门禁注记要求补充） */
+            upgradeNotes?: string;
+            /** @description 热修复基线发版 ID（须存在/同项目/已发布；传 null 清除） */
+            hotfixOfId?: Record<string, never> | null;
         };
         ReleaseDeliverableItemDto: {
             /** @description 成果名称（交付了什么） */
@@ -15880,6 +15896,11 @@ export interface components {
             limitations?: string;
             /** @description 接收人（由谁接收） */
             receiver?: string;
+            /**
+             * @description 所属发布平台（RELEASE_PLATFORM_VALUES 枚举内；产物为全端时省略）
+             * @enum {string}
+             */
+            platform?: "android" | "ios" | "windows" | "macos" | "linux" | "web";
         };
         UpdateReleaseDeliverablesDto: {
             /** @description 交付成果清单（全量替换；元素必填 name/location/howToVerify） */

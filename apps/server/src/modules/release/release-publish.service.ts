@@ -6,6 +6,7 @@ import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { GitHubSDKService } from '../integration/providers/github/github-sdk.service';
 import { ContractWorkspaceResolver } from '../contract/contract-workspace-fs';
 import { assertReleaseTransition } from './release-status';
+import { deriveReleaseChannel } from './release-version.service';
 import { ReleaseService } from './release.service';
 
 export interface ExecutionStep {
@@ -178,6 +179,8 @@ export class ReleasePublishService {
           tagName: `v${release.version}`,
           name: release.name ?? `v${release.version}`,
           body: release.notes ?? undefined,
+          // 预发布通道（alpha/beta/rc，semver 后缀推导）→ GitHub prerelease 标志
+          prerelease: deriveReleaseChannel(release.version) !== 'stable',
         });
         githubReleased = true;
         await pushLog(

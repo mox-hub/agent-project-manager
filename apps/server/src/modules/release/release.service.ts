@@ -4,6 +4,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import semver from 'semver';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import {
@@ -24,6 +25,7 @@ import {
 import { ReleaseVersionService } from './release-version.service';
 import { assertReleaseTransition } from './release-status';
 import {
+  RELEASE_PLATFORM_VALUES,
   ReleaseDeliverableItemDto,
   ReleaseDeliverablesDto,
 } from './dto/release.dto';
@@ -58,6 +60,7 @@ export function assertDeliverableItems(items: unknown): void {
 const RELEASE_INCLUDE = {
   project: { select: { id: true, name: true } },
   milestone: { select: { id: true, name: true, status: true } },
+  hotfixOf: { select: { id: true, version: true, name: true } },
 } satisfies Prisma.ReleaseInclude;
 
 export interface CreateReleaseInput {
@@ -68,6 +71,10 @@ export interface CreateReleaseInput {
   createdBy: string;
   scopeIssueIds?: string[];
   milestoneId?: string | null;
+  plannedAt?: string | null;
+  platforms?: string[] | null;
+  upgradeNotes?: string;
+  hotfixOfId?: string | null;
 }
 
 /**
@@ -101,6 +108,12 @@ export class ReleaseService {
     if (input.milestoneId) {
       await this.assertMilestoneUsable(input.projectId, input.milestoneId);
     }
+    if (input.hotfixOfId) {
+      await this.assertHotfixBase(input.projectId, input.hotfixOfId);
+    }
+    if (input.platforms?.length) {
+      this.assertPlatforms(input.platforms);
+    }
     return this.prisma.release.create({
       data: {
         projectId: input.projectId,
@@ -112,9 +125,51 @@ export class ReleaseService {
           ? ({ issueIds: input.scopeIssueIds } as Prisma.InputJsonValue)
           : undefined,
         milestoneId: input.milestoneId ?? undefined,
+        plannedAt: input.plannedAt ? new Date(input.plannedAt) : undefined,
+        platforms:
+          input.platforms && input.platforms.length
+            ? (input.platforms as Prisma.InputJsonValue)
+            : undefined,
+        upgradeNotes: input.upgradeNotes,
+        hotfixOfId: input.hotfixOfId ?? undefined,
       },
       include: RELEASE_INCLUDE,
     });
+  }
+
+  /** 发布平台封闭枚举校验（DTO 已拦一层，服务端兜底：service 直调/未来内部入口） */
+  private assertPlatforms(platforms: string[]): void {
+    const unknown = platforms.filter(
+      (p) => !(RELEASE_PLATFORM_VALUES as readonly string[]).includes(p),
+    );
+    if (unknown.length) {
+      throw new BadRequestException(
+        `未知发布平台: ${unknown.join('、')}（支持 ${RELEASE_PLATFORM_VALUES.join('/')}）`,
+      );
+    }
+  }
+
+  /**
+   * 热修复基线校验（CAP-K-03 批三）：目标存在 + 同项目 + 已发布。
+   * 血缘只指向「已面世」的版本——修复一个从未发布的版本没有交付语义。
+   */
+  private async assertHotfixBase(
+    projectId: string,
+    hotfixOfId: string,
+  ): Promise<void> {
+    const base = await this.prisma.release.findUnique({
+      where: { id: hotfixOfId },
+      select: { projectId: true, status: true },
+    });
+    if (!base) {
+      throw new BadRequestException(`热修基线发版不存在: ${hotfixOfId}`);
+    }
+    if (base.projectId !== projectId) {
+      throw new BadRequestException('热修基线不属于该项目，跨项目血缘被拒绝');
+    }
+    if (base.status !== 'released') {
+      throw new BadRequestException('热修基线须为已发布（released）的发版');
+    }
   }
 
   /** 发版列表：projectId 缺省返回全部（CAP-A-15 跨项目发版流水） */
@@ -185,6 +240,10 @@ export class ReleaseService {
       version?: string;
       scopeIssueIds?: string[];
       milestoneId?: string | null;
+      plannedAt?: string | null;
+      platforms?: string[] | null;
+      upgradeNotes?: string;
+      hotfixOfId?: string | null;
     },
   ) {
     const release = await this.getRelease(releaseId);
@@ -207,6 +266,15 @@ export class ReleaseService {
     if (dto.milestoneId) {
       await this.assertMilestoneUsable(release.projectId, dto.milestoneId);
     }
+    if (dto.hotfixOfId) {
+      if (dto.hotfixOfId === releaseId) {
+        throw new BadRequestException('热修基线不能指向自身');
+      }
+      await this.assertHotfixBase(release.projectId, dto.hotfixOfId);
+    }
+    if (dto.platforms?.length) {
+      this.assertPlatforms(dto.platforms);
+    }
     return this.prisma.release.update({
       where: { id: releaseId },
       data: {
@@ -218,6 +286,20 @@ export class ReleaseService {
             ? ({ issueIds: dto.scopeIssueIds } as Prisma.InputJsonValue)
             : undefined,
         milestoneId: dto.milestoneId,
+        plannedAt:
+          dto.plannedAt === undefined
+            ? undefined
+            : dto.plannedAt
+              ? new Date(dto.plannedAt)
+              : null,
+        platforms:
+          dto.platforms === undefined
+            ? undefined
+            : dto.platforms && dto.platforms.length
+              ? (dto.platforms as Prisma.InputJsonValue)
+              : [],
+        upgradeNotes: dto.upgradeNotes,
+        hotfixOfId: dto.hotfixOfId,
       },
       include: RELEASE_INCLUDE,
     });
@@ -236,6 +318,7 @@ export class ReleaseService {
       release.scope as { issueIds?: string[] } | null,
     );
     result.checks.push(await this.checkChangelogConsistency(release));
+    result.checks.push(await this.checkUpgradeNotes(release));
     result.passed = result.checks.every((c) => c.passed);
 
     await this.prisma.release.update({
@@ -281,6 +364,55 @@ export class ReleaseService {
         actual === expected
           ? 'CHANGELOG 与发版记录一致'
           : 'CHANGELOG.md 与发版记录不一致——发布将自动再生覆盖，请确认本地无手改',
+    };
+  }
+
+  /**
+   * 升级说明注记检查（CAP-K-03 批三）：major 递增（对本项目最近已发布基线）
+   * 而未填 upgradeNotes 时给注记提示——注记阶段不阻断（passed 恒 true），
+   * 观察后再收紧为阻断；缺基线（项目首个发版）诚实跳过。
+   */
+  private async checkUpgradeNotes(release: ReleaseModel): Promise<GateCheck> {
+    const released = await this.prisma.release.findMany({
+      where: {
+        projectId: release.projectId,
+        status: 'released',
+        id: { not: release.id },
+      },
+      select: { version: true },
+    });
+    let baseMajor: number | null = null;
+    for (const r of released) {
+      if (!semver.valid(r.version)) continue;
+      const major = semver.major(r.version);
+      if (baseMajor === null || major > baseMajor) baseMajor = major;
+    }
+    const current = semver.valid(release.version);
+    if (!current || baseMajor === null) {
+      return {
+        key: 'upgrade-notes',
+        label: '升级说明',
+        passed: true,
+        detail: '无已发布基线，跳过升级说明要求',
+      };
+    }
+    const isMajorBump = semver.major(current) > baseMajor;
+    const hasNotes = !!release.upgradeNotes?.trim();
+    if (!isMajorBump) {
+      return {
+        key: 'upgrade-notes',
+        label: '升级说明',
+        passed: true,
+        detail: '非 major 递增，无强制升级说明要求',
+      };
+    }
+    return {
+      key: 'upgrade-notes',
+      label: '升级说明',
+      passed: true,
+      detail: hasNotes
+        ? 'major 递增，已包含升级/迁移说明'
+        : 'major 递增但未填升级/迁移说明——建议在草案中补充 upgradeNotes（注记阶段不阻断）',
     };
   }
 
@@ -372,7 +504,11 @@ export class ReleaseService {
     return this.version.recommendVersion(projectId, excludeReleaseId);
   }
 
-  /** 从 Release 集合全量生成 CHANGELOG 文本（Keep a Changelog 风格）。 */
+  /**
+   * 从 Release 集合全量生成 CHANGELOG 文本（Keep a Changelog 风格）。
+   * 批三扩展：热修血缘行（hotfixOf）与升级注意段（upgradeNotes）随版本块渲染，
+   * 无则不渲染——文件仍是 Release 实体的单向投影，绝不反向导入。
+   */
   async generateChangelog(projectId: string): Promise<string> {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
@@ -391,8 +527,14 @@ export class ReleaseService {
         .slice(0, 10);
       lines.push('', `## [${release.version}] - ${date}`);
       if (release.name) lines.push('', `**${release.name}**`);
+      if (release.hotfixOf) {
+        lines.push('', `> 修复自 [${release.hotfixOf.version}] 的缺陷`);
+      }
       if (release.notes) {
         lines.push('', release.notes.trimEnd());
+      }
+      if (release.upgradeNotes?.trim()) {
+        lines.push('', '### 升级注意事项', '', release.upgradeNotes.trimEnd());
       }
     }
     return `${lines.join('\n')}\n`;

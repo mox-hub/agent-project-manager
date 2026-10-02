@@ -2,7 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 
 export interface GateCheck {
-  key: 'scope' | 'acceptance' | 'ci' | 'contract' | 'changelog' | 'audit';
+  key:
+    | 'scope'
+    | 'acceptance'
+    | 'ci'
+    | 'contract'
+    | 'changelog'
+    | 'audit'
+    | 'upgrade-notes';
   label: string;
   passed: boolean;
   detail: string;

@@ -73,6 +73,10 @@ export class ReleaseController {
       notes: dto.notes,
       scopeIssueIds: dto.scopeIssueIds,
       milestoneId: dto.milestoneId,
+      plannedAt: dto.plannedAt,
+      platforms: dto.platforms,
+      upgradeNotes: dto.upgradeNotes,
+      hotfixOfId: dto.hotfixOfId,
       createdBy: req.user.id,
     });
   }
