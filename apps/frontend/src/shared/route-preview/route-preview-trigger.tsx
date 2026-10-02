@@ -11,7 +11,7 @@
  */
 
 import type { ReactElement } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import type { StatusIconComponent } from '@/shared/status/status-visuals';
 import {
   HoverCard,
   HoverCardTrigger,
@@ -26,7 +26,7 @@ export interface RoutePreviewTriggerProps
   extends Omit<React.ComponentProps<typeof HoverCardTrigger>, 'render' | 'children'> {
   path: string;
   title?: string;
-  icon?: LucideIcon;
+  icon?: StatusIconComponent;
   side?: 'top' | 'bottom' | 'left' | 'right';
   align?: 'start' | 'center' | 'end';
   /** 卡片宽度档位（默认根据路由类型智能分发：acceptance/execution 为 xl，其余为 lg） */

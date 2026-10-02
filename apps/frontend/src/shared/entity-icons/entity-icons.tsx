@@ -64,7 +64,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { TONE_TEXT_CLASS, type StatusTone } from '@/shared/status/status-visuals';
+import { TONE_TEXT_CLASS, type StatusTone, type StatusIconComponent } from '@/shared/status/status-visuals';
 
 /** 注册表覆盖的实体种类（新增实体在此扩联合类型 + 登记一行） */
 export type EntityKind =
@@ -84,7 +84,7 @@ export type EntityKind =
   | 'release'; // 发版（apm-ref chip 首个增量登记：新增实体=一行）
 
 export interface EntityIconEntry {
-  icon: LucideIcon;
+  icon: StatusIconComponent;
   tone: StatusTone;
 }
 

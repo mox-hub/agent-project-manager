@@ -7,6 +7,7 @@
  * - 分组：按页面传入 groupBy（status / severity / project / none）
  */
 
+import { useMemo } from 'react';
 import { Bug } from 'lucide-react';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals';
@@ -19,7 +20,7 @@ import {
 } from '@/shared/components/data-list';
 import type { Task } from '../api/issue-api';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
-import { StatusCell, SeverityCell, AssigneeCell } from './cell-editors';
+import { StatusCell, SeverityCell, AssigneeCell, IssueCellDataProvider } from './cell-editors';
 import { AiExecutionBadge, type IssueAiExecutionState } from '@/modules/issue/components/ai-execution-badge';
 import { cn } from '@/lib/utils';
 
@@ -127,7 +128,11 @@ export function BugSimpleList({
   // —— 统一行右键菜单（list / kanban 共用 useIssueRowMenu，Bug 域隔离标签与链接） ——
   const onItemContextMenu = useIssueRowMenu({ kind: 'bug', entityName: 'Bug' });
 
+  // §21.2 单元格数据收编：成员/类型/里程碑列表级取一次，行内单元格零 observer
+  const projectIds = useMemo(() => bugs.map((bug) => bug.projectId), [bugs]);
+
   return (
+    <IssueCellDataProvider projectIds={projectIds}>
     <DataList
       items={bugs}
       loading={loading}
@@ -194,7 +199,8 @@ export function BugSimpleList({
           </>
         );
       }}
-    />
+      />
+    </IssueCellDataProvider>
   );
 }
 

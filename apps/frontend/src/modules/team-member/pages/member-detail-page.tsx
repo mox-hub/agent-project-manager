@@ -8,7 +8,7 @@
  * 右栏：SidebarButtonGroup(复制短ID/停用) + PropsCard(属性胶囊) + 团队与项目速览
  */
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Bot,
@@ -31,7 +31,8 @@ import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
-import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/semantic/right-sidebar';
+import { SidebarButton, SidebarButtonGroup } from '@/components/semantic/right-sidebar';
+import { DetailPageFrame } from '@/components/semantic/detail-page-frame';
 import { Badge } from '@/components/ui/badge';
 import { SectionCard } from '@/components/semantic/section-card';
 import { StatsCard } from '@/components/semantic/stats-card';
@@ -107,7 +108,6 @@ export default function MemberDetailPage() {
   }, [membersData, memberId, navigate]);
 
   const [activeTab, setActiveTab] = useState<DetailTab>('overview');
-  const [asideHidden, setAsideHidden] = useState(false);
   const [propsCollapsed, setPropsCollapsed] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
 
@@ -200,31 +200,30 @@ export default function MemberDetailPage() {
   }));
 
   return (
-    <PageShell aiPage="member-detail" className="overflow-hidden">
-      {/* SubPageToolbar：返回 + 面包屑 + 居中页签 + 翻页器 + 侧栏开关 */}
-      <SubPageToolbar
-        aiId="team-member.member-detail"
-        onBack={() => navigate('/app/members')}
-        backLabel={t('common.back', '返回')}
-        breadcrumbs={[
-          { label: t('members.title', '成员管理'), to: '/app/members' },
-          { label: member.displayName },
-        ]}
-        titleIcon={<EntityIcon entity="member" />}
-        tabs={{ value: activeTab, onChange: (v) => setActiveTab(v as DetailTab), items: tabItems }}
-        actions={<>
-          <FavoriteToggle label={member.displayName} />
-          <SubscribeButton />
-        </>}
-        pager={pager}
-        sidebar={{ open: !asideHidden, onToggle: () => setAsideHidden((v) => !v) }}
-      />
-
-      {/* Body：主区 + 右栏并列 */}
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        {/* 主区（纵向滚动） */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-          <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
+    <>
+      <DetailPageFrame
+        aiPage="member-detail"
+        toolbar={({ sidebar }) => (
+          <SubPageToolbar
+            aiId="team-member.member-detail"
+            onBack={() => navigate('/app/members')}
+            backLabel={t('common.back', '返回')}
+            breadcrumbs={[
+              { label: t('members.title', '成员管理'), to: '/app/members' },
+              { label: member.displayName },
+            ]}
+            titleIcon={<EntityIcon entity="member" />}
+            tabs={{ value: activeTab, onChange: (v) => setActiveTab(v as DetailTab), items: tabItems }}
+            actions={<>
+              <FavoriteToggle label={member.displayName} />
+              <SubscribeButton />
+            </>}
+            pager={pager}
+            sidebar={sidebar}
+          />
+        )}
+        main={
+          <>
           {mutationError && (
             <div className="mx-6 mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {mutationError}
@@ -365,11 +364,10 @@ export default function MemberDetailPage() {
 
             {activeTab === 'grants' && isAI && <MemberToolGrants memberId={member.id} />}
           </div>
-          </div>
-        </div>
-
-        {/* 右侧栏（360px，可收起） */}
-        <RightSidebar hidden={asideHidden}>
+          </>
+        }
+        aside={
+          <>
           <SidebarButtonGroup className="px-1">
             <SidebarButton
               icon={IdCard}
@@ -498,9 +496,10 @@ export default function MemberDetailPage() {
               ))}
             </PropsCard>
           )}
-        </RightSidebar>
-      </div>
-    </PageShell>
+          </>
+        }
+      />
+    </>
   );
 }
 

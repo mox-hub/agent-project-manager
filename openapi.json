@@ -61342,11 +61342,19 @@
           },
           "resourceType": {
             "type": "string",
-            "description": "归属功能域：project | task | bug | document"
+            "description": "归属功能域：project | task | document（bug 域已并入 task）"
           },
           "createdAt": {
             "type": "string",
             "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "最近编辑时间（ISO）"
+          },
+          "usageCount": {
+            "type": "number",
+            "description": "使用数量（工单引用 + 文档引用）"
           },
           "createdBy": {
             "type": "string",
@@ -61364,7 +61372,9 @@
           "id",
           "name",
           "resourceType",
-          "createdAt"
+          "createdAt",
+          "updatedAt",
+          "usageCount"
         ]
       },
       "StatusDefinitionDto": {
@@ -61394,6 +61404,21 @@
             "type": "string",
             "description": "状态分组（triage/backlog/unstarted/started/completed/canceled），类型管理面按组聚合渲染"
           },
+          "color": {
+            "type": "string",
+            "nullable": true,
+            "description": "展示色（hex）；空 = 前端按静态语义映射兜底"
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true,
+            "description": "图标（前端状态图标注册表键）；空 = 按分组默认图标"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "状态说明文案"
+          },
           "order": {
             "type": "number",
             "description": "排序序号"
@@ -61407,10 +61432,12 @@
             "description": "是否阻塞态"
           },
           "allowedNextStatusKeys": {
-            "type": "object",
-            "description": "允许流转的下一状态键列表",
-            "additionalProperties": true,
-            "nullable": true
+            "description": "允许流转的下一状态键白名单；空/未配置 = 不限制",
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "metadata": {
             "type": "object",

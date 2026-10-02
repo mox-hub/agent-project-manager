@@ -7,10 +7,12 @@ export interface Tag {
   name: string;
   color?: string;
   description?: string;
-  /** 标签归属的单一功能域：project | task | bug | document（各功能标签独立，不共享） */
+  /** 标签归属的单一功能域：project | task | document（bug 域已并入 task） */
   resourceType?: string;
   createdAt?: string;
   updatedAt?: string;
+  /** 使用数量（工单引用 + 文档引用） */
+  usageCount?: number;
   isArchived?: boolean;
   order?: number;
 }

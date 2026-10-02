@@ -7,7 +7,7 @@
  * - Right (320px): 操作条(删除) + Properties(含 Severity) + 关联文档
  */
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   AlignLeft,
@@ -15,7 +15,6 @@ import {
   Diamond as DiamondIcon,
   FileText,
   Flag,
-  ListChecks,
   SlidersHorizontal,
   Tag,
   Trash2,
@@ -28,19 +27,18 @@ import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { MarkdownView } from '@/shared/components/markdown-view';
-import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/semantic/right-sidebar';
-import { SidebarPanel } from '@/components/semantic/sidebar-panel';
+import { DetailPageFrame } from '@/components/semantic/detail-page-frame';
+import { SidebarButtonGroup, SidebarButton } from '@/components/semantic/right-sidebar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  CapsuleSelect, DateCapsuleField, AutoSizeTextarea,
+  CapsuleSelect, DateCapsuleField,
   PropertyRow, PropsCard, MemberAvatar,
 } from '@/shared/components/property-panel';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
-import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor';
 import {
   TONE_TEXT_CLASS,
@@ -58,12 +56,12 @@ import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useMembers } from '@/modules/team-member/hooks';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format';
 import { useTabs } from '@/shared/tabs/tabs-context';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { useEntityNavigation } from '@/shared/hooks/use-entity-navigation';
-import {
-  useTaskDocumentLinks, LINK_TYPE_LABELS, LINK_TYPE_COLORS,
-} from '@/modules/document/hooks/use-document-task-links';
+import { LinkedDocsPanel } from '../components/linked-docs-panel';
+import { IssueDetailHeading } from '../components/issue-detail-heading';
 import { ActivityFeed } from '@/modules/activity';
 import { useSetViewingContext } from '@/shared/viewing-context';
 import { useTranslation } from 'react-i18next';
@@ -91,7 +89,6 @@ export function BugDetailPage() {
   const [propsCollapsed, setPropsCollapsed] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
-  const [asideHidden, setAsideHidden] = useState(false);
 
   const { data: bug, isLoading: bugLoading } = useTaskDetail(bugId);
   // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
@@ -252,89 +249,65 @@ export function BugDetailPage() {
   };
 
   return (
-    <PageShell aiPage="bugs.bug-detail" className="overflow-hidden">
-      {/* SubPageToolbar：返回 + 面包屑 + 翻页器 + 侧栏开关 */}
-      <SubPageToolbar
-        aiId="bugs.bug-detail"
-        backLabel={t('common.back')}
-        breadcrumbs={[
-          { label: t('task.bug.title'), to: '/app/bugs' },
-          ...(project ? [{ label: project.name, to: `/app/projects/${bug.projectId}` }] : []),
-          { label: shortId },
-        ]}
-        titleIcon={<EntityIcon entity="bug" />}
-        actions={<>
-          <FavoriteToggle label={bug?.title ?? ''} />
-          <SubscribeButton />
-        </>}
-        pager={
-          bug.projectId
-            ? {
-                hasPrev: nav.hasPrev && !nav.isLoading,
-                hasNext: nav.hasNext && !nav.isLoading,
-                onPrev: () => nav.prevId && navigate(`/app/bugs/${nav.prevId}`),
-                onNext: () => nav.nextId && navigate(`/app/bugs/${nav.nextId}`),
-                position: nav.currentPosition > 0 ? `${nav.currentPosition}/${nav.total}` : '—',
-              }
-            : undefined
-        }
-        sidebar={{ open: !asideHidden, onToggle: () => setAsideHidden((v) => !v) }}
-      />
-
-      {/* Body */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Main */}
-        <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
-          <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
+    <>
+      <DetailPageFrame
+        aiPage="bugs.bug-detail"
+        toolbar={({ sidebar }) => (
+          <SubPageToolbar
+            aiId="bugs.bug-detail"
+            backLabel={t('common.back')}
+            breadcrumbs={[
+              { label: t('task.bug.title'), to: '/app/bugs' },
+              ...(project ? [{ label: project.name, to: `/app/projects/${bug.projectId}` }] : []),
+              { label: shortId },
+            ]}
+            titleIcon={<EntityIcon entity="bug" />}
+            actions={<>
+              <FavoriteToggle label={bug?.title ?? ''} />
+              <SubscribeButton />
+            </>}
+            pager={
+              bug.projectId
+                ? {
+                    hasPrev: nav.hasPrev && !nav.isLoading,
+                    hasNext: nav.hasNext && !nav.isLoading,
+                    onPrev: () => nav.prevId && navigate(`/app/bugs/${nav.prevId}`),
+                    onNext: () => nav.nextId && navigate(`/app/bugs/${nav.nextId}`),
+                    position: nav.currentPosition > 0 ? `${nav.currentPosition}/${nav.total}` : '—',
+                  }
+                : undefined
+            }
+            sidebar={sidebar}
+          />
+        )}
+        main={
+          <>
           {mutationError && (
             <div className="mx-6 mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {mutationError}
             </div>
           )}
 
-          {/* Title：状态图标内图与标题字号一致（lg 档内图 18px、外框自然包裹），items-center 垂直居中 */}
-          <div className="px-6 pt-5 pb-3 shrink-0">
-            <div className="flex items-center gap-3">
-              <StatusIconFrame
-                icon={statusVisual.icon}
-                tone={statusVisual.tone}
-                size="lg"
-                spin={statusVisual.icon === TASK_STATUS_VISUALS.in_progress.icon}
-              />
-              <AutoSizeTextarea
-                key={`bug-title-${bug.id}`}
-                defaultValue={bug.title}
-                rows={1}
-                placeholder={t('bugDetail.unnamedTitle')}
-                onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0"
-              />
-            </div>
-            {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}
-            {bug.parentIssueId && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <ListChecks className="size-3.5 shrink-0" />
-                <span className="shrink-0">{t('bugDetail.parentTaskLabel')}</span>
-                <RoutePreviewTrigger
-                  path={`/app/issues/${bug.parentIssueId}`}
-                  title={parentTask?.title}
-                  icon={ListChecks}
-                >
-                  <Link
-                    to={`/app/issues/${bug.parentIssueId}`}
-                    className="truncate max-w-75 font-medium text-foreground transition-colors hover:text-primary hover:underline"
-                  >
-                    {parentTask?.title || bug.parentIssueId.slice(0, 8)}
-                  </Link>
-                </RoutePreviewTrigger>
-              </div>
-            )}
-            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-              <span className="font-mono">{shortId}</span>
-              <span className="opacity-50">•</span>
-              <span>{t('common.createdAt')} {new Date(bug.createdAt).toLocaleDateString()}</span>
-            </div>
-          </div>
+          {/* Title：状态框 + 热编辑标题 + 来源行 + 元信息行（Heading 件收编） */}
+          <IssueDetailHeading
+            title={bug.title}
+            titleKey={`bug-title-${bug.id}`}
+            placeholder={t('bugDetail.unnamedTitle')}
+            onTitleChange={persistTitle}
+            statusVisual={statusVisual}
+            parentIssue={
+              bug.parentIssueId
+                ? { id: bug.parentIssueId, title: parentTask?.title }
+                : undefined
+            }
+            meta={
+              <>
+                <span className="font-mono">{shortId}</span>
+                <span className="opacity-50">•</span>
+                <span>{t('common.createdAt')} {formatDate(bug.createdAt)}</span>
+              </>
+            }
+          />
 
           {/* Description: 块级所见即所得（点哪编哪、输入与渲染同屏，与任务详情页一致） */}
           <div className="px-6 pt-4 pb-4 shrink-0">
@@ -358,7 +331,7 @@ export function BugDetailPage() {
 
           {/* Bug specific info */}
           <div className="px-6 py-4 space-y-4 shrink-0">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-accent-red flex items-center gap-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
               <FileText className="size-3.5" />
               {t('bugDetail.infoTitle')}
             </h3>
@@ -394,16 +367,16 @@ export function BugDetailPage() {
           <div className="px-6 py-4 flex-1 min-h-0 flex flex-col">
             <ActivityFeed entityType="bug" entityId={bugId} />
           </div>
-          </div>
-        </div>
-
-        {/* Right sidebar */}
-        <RightSidebar hidden={asideHidden}>
+          </>
+        }
+        aside={
+          <>
           {/* Top action bar — 靠右对齐 */}
           <SidebarButtonGroup className="justify-end">
             <SidebarButton
               icon={Trash2}
               label={t('common.delete')}
+              data-ai-action="bug.bug-detail.delete.click"
               onClick={() => setShowDeleteDialog(true)}
               className="text-destructive hover:text-destructive"
             />
@@ -521,8 +494,9 @@ export function BugDetailPage() {
 
           {/* Linked documents（与 Properties 同一套 SidebarPanel 形态） */}
           <LinkedDocsPanel issueId={bugId} />
-        </RightSidebar>
-      </div>
+          </>
+        }
+      />
 
       {/* Delete dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -539,60 +513,6 @@ export function BugDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </PageShell>
-  );
-}
-
-// ===== Linked Documents（右侧栏面板，形态对齐 Properties/Suggestions） =====
-
-function LinkedDocsPanel({ issueId }: { issueId: string }) {
-  const { t } = useTranslation();
-  const { data: links = [], isLoading } = useTaskDocumentLinks(issueId);
-  return (
-    <SidebarPanel
-      title={t('bugDetail.linkedDocs')}
-      icon={<FileText className="size-3" />}
-      action={
-        links.length > 0 ? (
-          <span className="text-3xs text-muted-foreground">({links.length})</span>
-        ) : undefined
-      }
-    >
-      {isLoading ? (
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">{t('common.loading')}</div>
-      ) : links.length === 0 ? (
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">{t('bugDetail.noLinkedDocs')}</div>
-      ) : (
-        links.map((link) => (
-          <Link
-            key={link.id}
-            to={`/app/documents/${link.documentId}`}
-            className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          >
-            <FileText className="size-3.5 shrink-0" />
-            <span className="flex-1 min-w-0 text-left">
-              <span className="block truncate font-medium text-foreground">
-                {link.document?.title || t('bugDetail.documentFallback', { id: link.documentId })}
-              </span>
-              {link.section && (
-                <span className="block truncate text-3xs">
-                  {t('bugDetail.sectionLabel', { title: link.section.title })}
-                </span>
-              )}
-            </span>
-            <span
-              className={cn(
-                'shrink-0 rounded-sm px-1.5 py-0.5 text-3xs font-medium',
-                LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
-              )}
-            >
-              {t(`document.linkType.${link.linkType}`, {
-                defaultValue: LINK_TYPE_LABELS[link.linkType] || link.linkType,
-              })}
-            </span>
-          </Link>
-        ))
-      )}
-    </SidebarPanel>
+    </>
   );
 }

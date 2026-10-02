@@ -1,4 +1,5 @@
-import { defineConfig } from 'vite'
+import { fileURLToPath } from 'node:url'
+import { defineConfig, searchForWorkspaceRoot } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
@@ -44,6 +45,14 @@ export default defineConfig({
     },
   },
   server: {
+    // worktree 场景 node_modules 经 junction 指向主仓，依赖文件解析到主仓真实路径
+    // （如 @fontsource 字体），须把 junction 目标根一并加入 serving allow list
+    fs: {
+      allow: [
+        searchForWorkspaceRoot(process.cwd()),
+        fileURLToPath(new URL('../../..', import.meta.url)),
+      ],
+    },
     proxy: {
       '/_api': {
         // worktree 并行场景用 VITE_API_PORT 指向隔离后端（默认 4300）；

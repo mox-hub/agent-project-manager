@@ -15,6 +15,7 @@ import { ListAvatar, ListChip, ListDate, ListText, DataList } from '@/shared/com
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import { SubtaskBadge } from '@/components/semantic/subtask-badge';
 import { PRIORITY_VISUALS, TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
+import { useStatusVisualMap, type StatusVisualEntry } from '@/modules/core-config/hooks/use-status-visual-map';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import type { Task } from '../api/issue-api';
 import { useIssueTypeOf } from '../hooks/use-issue-types';
@@ -22,7 +23,7 @@ import { IssueTypePill } from '@/shared/components/issue-type-pill';
 import { cn } from '@/lib/utils';
 import { AiExecutionBadge } from '@/modules/issue/components/ai-execution-badge';
 import type { ActiveAiExecution } from '@/modules/execution/hooks/use-active-executions-map';
-import { StatusCell, PriorityCell, AssigneeCell, MilestoneCell, IssueTypeCell } from './cell-editors';
+import { IssueCellDataProvider, StatusCell, PriorityCell, AssigneeCell, MilestoneCell, IssueTypeCell } from './cell-editors';
 
 type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
 type RowPriority = 'urgent' | 'high' | 'medium' | 'low';
@@ -160,14 +161,22 @@ export function TaskSimpleList({
 }: TaskSimpleListProps) {
   const { t } = useTranslation();
   const emptyText = emptyMessage ?? t('task.messages.noTasks');
+  // 动态状态视觉：设置·状态落库的 color/icon 优先，静态语义映射兜底
+  const statusVisualMap = useStatusVisualMap('task');
   const groupFn = groupBy === 'none' ? undefined : (task: Task) => groupValue(groupBy, task);
 
   const groupMeta = (key: string, items: Task[]) => {
     switch (groupBy) {
       case 'status': {
-        const cfg = STATUS_CONFIG[normalizeStatus(key)] ?? STATUS_CONFIG.todo;
-        const Icon = cfg.icon;
-        return { label: cfg.label, icon: <Icon className={cn('size-4', cfg.color)} />, order: cfg.order };
+        const normalized = normalizeStatus(key);
+        const cfg = STATUS_CONFIG[normalized] ?? STATUS_CONFIG.todo;
+        const dyn = statusVisualMap.get(normalized);
+        const Icon = dyn?.icon ?? cfg.icon;
+        return {
+          label: cfg.label,
+          icon: <Icon className="size-4" style={dyn?.color ? { color: dyn.color } : undefined} />,
+          order: cfg.order,
+        };
       }
       case 'severity': {
         const cfg = SEVERITY_CONFIG[severityOf({ ...items[0], severity: key } as Task)] ?? SEVERITY_CONFIG.medium;
@@ -213,7 +222,11 @@ export function TaskSimpleList({
   // 类型图标（Linear 式行首标识）：统一工单视图下区分 task/bug/自定义类型
   const issueTypeOf = useIssueTypeOf();
 
+  // §21.2 单元格数据收编：成员/类型/里程碑列表级取一次，行内单元格零 observer
+  const projectIds = useMemo(() => tasks.map((task) => task.projectId), [tasks]);
+
   return (
+    <IssueCellDataProvider projectIds={projectIds}>
     <DataList
       items={topTasks}
       loading={loading}
@@ -232,7 +245,9 @@ export function TaskSimpleList({
         const todoTotal = task.todoItems?.length ?? task._count?.subIssues ?? 0;
         const todoDone = task.todoItems?.filter((item) => item.completed).length ?? 0;
         const aiExecution = getAiExecution?.(task);
-        const statusVisual = TASK_STATUS_VISUALS[normalizeStatus(task.status)] ?? TASK_STATUS_VISUALS.todo;
+        const normalizedStatus = normalizeStatus(task.status);
+        const statusVisual: StatusVisualEntry = statusVisualMap.get(normalizedStatus)
+          ?? { ...(TASK_STATUS_VISUALS[normalizedStatus] ?? TASK_STATUS_VISUALS.todo) };
         return (
           <>
             {/* 进度状态图标紧跟类型之后（Linear 式行首链）；点击图标即改状态 */}
@@ -241,8 +256,9 @@ export function TaskSimpleList({
                 icon={statusVisual.icon}
                 tone={statusVisual.tone}
                 size="list"
-                spin={normalizeStatus(task.status) === 'in_progress'}
-                title={STATUS_CONFIG[normalizeStatus(task.status)]?.label}
+                spin={normalizedStatus === 'in_progress'}
+                color={statusVisual.color}
+                title={STATUS_CONFIG[normalizedStatus]?.label}
               />
             </StatusCell>
             {/* ID 完整展示，不截断 */}
@@ -306,7 +322,8 @@ export function TaskSimpleList({
           </>
         );
       }}
-    />
+      />
+    </IssueCellDataProvider>
   );
 }
 

@@ -32,10 +32,19 @@ export class MetadataService {
       where.resourceType = resourceType;
     }
 
-    return this.prisma.tag.findMany({
+    const tags = await this.prisma.tag.findMany({
       where,
       orderBy: { name: 'asc' },
+      include: {
+        // 使用数量 = 工单引用 + 文档引用（标签列表「使用数量」列）
+        _count: { select: { issueTags: true, documents: true } },
+      },
     });
+
+    return tags.map(({ _count, ...tag }) => ({
+      ...tag,
+      usageCount: _count.issueTags + _count.documents,
+    }));
   }
 
   async createOrUpdateTag(data: any, userId?: string, currentUserId?: string) {
@@ -189,17 +198,28 @@ export class MetadataService {
       await this.checkGlobalAdmin(currentUserId);
     }
 
+    // 字段语义：undefined = 不更新（部分更新安全，如拖拽排序只传 order）；
+    // null/'' = 显式清空。创建分支字段齐备，行为不变。
     const statusData: any = {
-      projectId: data.projectId,
+      projectId: data.projectId ?? null,
       type: data.type,
       key: data.key,
       name: data.name,
       order: data.order,
-      isFinal: data.isFinal ?? false,
-      isBlockedState: data.isBlockedState ?? false,
-      allowedNextStatusKeys: data.allowedNextStatusKeys,
-      metadata: data.metadata,
     };
+    if (data.group !== undefined) statusData.group = data.group;
+    if (data.color !== undefined) statusData.color = data.color;
+    if (data.icon !== undefined) statusData.icon = data.icon;
+    if (data.description !== undefined)
+      statusData.description = data.description;
+    if (data.isFinal !== undefined) statusData.isFinal = data.isFinal;
+    if (data.isBlockedState !== undefined) {
+      statusData.isBlockedState = data.isBlockedState;
+    }
+    if (data.allowedNextStatusKeys !== undefined) {
+      statusData.allowedNextStatusKeys = data.allowedNextStatusKeys;
+    }
+    if (data.metadata !== undefined) statusData.metadata = data.metadata;
 
     if (data.id) {
       const existing = await this.prisma.statusDefinition.findUnique({

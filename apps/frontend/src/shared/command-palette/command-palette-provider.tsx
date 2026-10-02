@@ -1,3 +1,5 @@
+import type { StatusIconComponent } from '@/shared/status/status-visuals';
+
 import {
   createContext,
   useCallback,
@@ -70,7 +72,7 @@ export type CommandPaletteItem = {
   group?: string
   to?: string
   /** 条目图标（shell-layout 已从 entity-icons/注册表解析），缺省无图标 */
-  icon?: LucideIcon
+  icon?: StatusIconComponent
   /** 图标品牌色（page-registry hex，与侧边栏同源）；缺省回退 muted */
   iconColor?: string
   onSelect?: () => void

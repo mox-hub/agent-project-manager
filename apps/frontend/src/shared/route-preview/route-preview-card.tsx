@@ -7,7 +7,8 @@
  */
 
 import { useMemo } from 'react';
-import { Star, type LucideIcon } from 'lucide-react';
+import { Star } from 'lucide-react';
+import type { StatusIconComponent } from '@/shared/status/status-visuals';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
@@ -28,7 +29,7 @@ import { GenericPreviewBody } from './previews/generic-preview-body';
 
 // 预览卡头部图标统一从 entity-icons 注册表取（规范 v0 第二批铺开）；
 // member/team 撞车按注册表口径：member=Users（复数）、team=UsersRound
-const TYPE_ICONS: Record<RoutePreviewType, LucideIcon> = {
+const TYPE_ICONS: Record<RoutePreviewType, StatusIconComponent> = {
   project: getEntityIcon('project').icon,
   task: getEntityIcon('issue').icon,
   bug: getEntityIcon('bug').icon,
@@ -124,7 +125,7 @@ export interface RoutePreviewCardProps {
   /** 头部标题（tab 标题 / 收藏 label，详情页会回写实体名） */
   fallbackTitle?: string;
   /** 头部图标兜底（generic 且 PAGE_REGISTRY 未命中时使用） */
-  fallbackIcon?: LucideIcon;
+  fallbackIcon?: StatusIconComponent;
 }
 
 function PreviewBody({ type, id, path }: { type: RoutePreviewType; id?: string; path: string }) {

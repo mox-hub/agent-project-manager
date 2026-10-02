@@ -1,4 +1,5 @@
-import { Rocket, type LucideIcon } from 'lucide-react';
+import { Rocket } from 'lucide-react';
+import type { StatusIconComponent } from '@/shared/status/status-visuals';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 
 /**
@@ -8,7 +9,7 @@ import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
  */
 export interface PipelineStage {
   to: string;
-  icon: LucideIcon;
+  icon: StatusIconComponent;
   labelKey: string;
   labelFallback: string;
   stageNumber: string;

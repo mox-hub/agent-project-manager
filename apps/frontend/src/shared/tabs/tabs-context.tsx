@@ -7,17 +7,18 @@
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { type LucideIcon } from 'lucide-react';
+
 import { matchTabRoute } from '@/shared/tabs/tabs-registry';
 
 // Tab 接口
+import type { StatusIconComponent } from '@/shared/status/status-visuals';
 export interface Tab {
   id: string;
   path: string;
   title: string;
   titleKey?: string; // 翻译键
-  icon?: LucideIcon;
-  statusIcon?: LucideIcon; // 详情页专用：状态图标（覆盖 icon）
+  icon?: StatusIconComponent;
+  statusIcon?: StatusIconComponent; // 详情页专用：状态图标（覆盖 icon）
   closable: boolean;
   pinned?: boolean; // 固定标签页
 }

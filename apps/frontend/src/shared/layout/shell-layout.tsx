@@ -70,11 +70,12 @@ import { useGlobalHotkey } from '@/shared/hotkeys/use-global-hotkey';
 import { getEffectiveCombo } from '@/shared/hotkeys/hotkey-store';
 import { formatComboForDisplay } from '@/shared/hotkeys/hotkey-utils';
 import { useTranslation } from '@/hooks/useTranslation';
+import type { StatusIconComponent } from '@/shared/status/status-visuals';
 
 /** 侧栏导航项（收藏分区的项带 favorite 标记，渲染时挂 hover 预览卡） */
 interface SidebarNavItem {
   to: string;
-  icon: LucideIcon;
+  icon: StatusIconComponent;
   label: string;
   color?: string;
   capsule?: string;

@@ -1468,6 +1468,39 @@ export class IssueService {
       updateIssueDto.status !== undefined &&
       updateIssueDto.status !== oldStatus
     ) {
+      // 工作流流转校验：当前状态配置了白名单（allowedNextStatusKeys 非空）时，
+      // 目标状态必须在白名单内；当前状态无定义或未配置则不限制（宽松语义，兼容存量数据）。
+      // force=true 显式放行（与关单软强制同语法）。
+      if (!updateIssueDto.force) {
+        const fromDef = await this.prisma.statusDefinition.findFirst({
+          where: {
+            type: 'task',
+            key: oldStatus,
+            OR: [{ projectId: task.projectId }, { projectId: null }],
+          },
+        });
+        const allowedKeys = fromDef?.allowedNextStatusKeys;
+        if (
+          Array.isArray(allowedKeys) &&
+          allowedKeys.length > 0 &&
+          !allowedKeys.includes(updateIssueDto.status)
+        ) {
+          const allowedDefs = await this.prisma.statusDefinition.findMany({
+            where: {
+              type: 'task',
+              key: { in: allowedKeys as string[] },
+              OR: [{ projectId: task.projectId }, { projectId: null }],
+            },
+          });
+          const nameOf = (key: string) =>
+            allowedDefs.find((d) => d.key === key)?.name ?? key;
+          throw new BadRequestException(
+            `不允许从「${fromDef?.name ?? oldStatus}」流转到「${updateIssueDto.status}」。` +
+              `允许的下一状态：${allowedKeys.map((k) => nameOf(String(k))).join('、')}。` +
+              '如需强制流转请携带 force=true（或由管理员在设置·状态中调整工作流）。',
+          );
+        }
+      }
       const statusDef = await this.prisma.statusDefinition.findFirst({
         where: {
           type: 'task',

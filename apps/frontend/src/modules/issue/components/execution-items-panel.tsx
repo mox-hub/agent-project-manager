@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Bot, ChevronDown, ListChecks, MoreHorizontal, Plus, RotateCcw, ScrollText, UserRound } from 'lucide-react';
+import { Bot, ListChecks, MoreHorizontal, Plus, RotateCcw, ScrollText, UserRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
+import { EmptyState } from '@/components/semantic/empty-state';
+import { DetailSection } from '@/components/semantic/detail-section';
 import { eventClient } from '@/infrastructure/event-client';
 import { cn } from '@/lib/utils';
 import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
@@ -177,12 +179,18 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
                 </DropdownMenuItem>
               ))}
               {canDispatchCli && (
-                <DropdownMenuItem onClick={() => onDispatchCli?.(execution)}>
+                <DropdownMenuItem
+                  data-ai-action="task.task-detail.execution-dispatch.click"
+                  onClick={() => onDispatchCli?.(execution)}
+                >
                   {t('taskDetail.execActionDispatchCli')}
                 </DropdownMenuItem>
               )}
               {canRetryCli && (
-                <DropdownMenuItem onClick={() => onRetryCli?.(execution)}>
+                <DropdownMenuItem
+                  data-ai-action="task.task-detail.execution-retry.click"
+                  onClick={() => onRetryCli?.(execution)}
+                >
                   {t('taskDetail.execActionRetryCli')}
                 </DropdownMenuItem>
               )}
@@ -213,6 +221,7 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
             variant="secondary"
             size="xs"
             className="h-5 px-1.5 text-3xs"
+            data-ai-action="task.task-detail.execution-transition.click"
             disabled={disabled}
             onClick={() => onTransition(execution, primary)}
           >
@@ -342,55 +351,33 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
   };
 
   return (
-    // 主栏区块：与子任务区（SubTaskSection）同层级同形态
-    <div className="shrink-0">
-      <div className="px-6 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <ListChecks className="size-3" />
-          {t('taskDetail.executionItemsSection')}
-          {executions.length > 0 && (
-            <span className="text-3xs font-normal">({executions.length})</span>
+    <>
+    {/* 主栏区块：与子任务区（SubTaskSection）同层级同形态 */}
+    <DetailSection
+      icon={<ListChecks className="size-3.5" />}
+      title={t('taskDetail.executionItemsSection')}
+      count={executions.length > 0 ? `(${executions.length})` : undefined}
+      collapsed={collapsed}
+      onToggle={() => setCollapsed((v) => !v)}
+      action={
+        <button
+          type="button"
+          onClick={() => {
+            setCollapsed(false);
+            setFormOpen((v) => !v);
+          }}
+          className={cn(
+            'inline-flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+            formOpen && 'text-accent-blue',
           )}
-        </div>
-        <div className="flex items-center gap-0.5">
-          <button
-            type="button"
-            onClick={() => setCollapsed((v) => !v)}
-            className="inline-flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label={collapsed ? t('common.expand') : t('common.collapse')}
-            aria-expanded={!collapsed}
-          >
-            <ChevronDown
-              className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setCollapsed(false);
-              setFormOpen((v) => !v);
-            }}
-            className={cn(
-              'inline-flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
-              formOpen && 'text-accent-blue',
-            )}
-            title={formOpen ? t('common.cancel') : t('taskDetail.execItemsAdd')}
-          >
-            <Plus className={cn('size-3.5 transition-transform', formOpen && 'rotate-45')} />
-          </button>
-        </div>
-      </div>
-
-      {/* 分区内容：添加表单 + 执行项列表（grid-rows 动画展开 / 收起） */}
-      <div
-        className={cn(
-          'grid transition-[grid-template-rows] duration-slow ease-out',
-          collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
-        )}
-      >
-        <div className="overflow-hidden">
-          {/* 添加人工执行项表单 */}
-          {formOpen && (
+          title={formOpen ? t('common.cancel') : t('taskDetail.execItemsAdd')}
+        >
+          <Plus className={cn('size-3.5 transition-transform', formOpen && 'rotate-45')} />
+        </button>
+      }
+    >
+      {/* 添加人工执行项表单 */}
+      {formOpen && (
         <div className="mx-6 mb-2 flex flex-col gap-1.5 rounded-lg border border-border bg-muted/20 p-2">
           <Input
             autoFocus
@@ -435,6 +422,7 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
             <Button
               size="xs"
               className="h-7"
+              data-ai-action="task.task-detail.execution-create.click"
               disabled={!title.trim() || !subjectId || busy}
               onClick={() => void handleCreate()}
             >
@@ -445,14 +433,17 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
       )}
 
           {isLoading ? (
-            <div className="px-6 py-1.5 text-xs text-muted-foreground">
-              <Spinner className="mr-2 inline size-3 text-inherit" />
+            <div className="flex items-center gap-2 px-6 py-1.5 text-xs text-muted-foreground">
+              <Spinner className="size-3 text-inherit" />
               {t('taskDetail.execItemsLoading')}
             </div>
           ) : executions.length === 0 ? (
-            <div className="px-6 pb-2 text-xs text-muted-foreground">
-              {t('taskDetail.execItemsEmpty')}
-            </div>
+            <EmptyState
+              variant="compact"
+              icon={ListChecks}
+              title={t('taskDetail.execItemsEmpty')}
+              className="mx-6 mb-2"
+            />
           ) : (
             <div className="px-6 pb-3 flex flex-col gap-1">
               {executions.map((execution) => (
@@ -472,17 +463,16 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
               ))}
             </div>
           )}
-        </div>
-      </div>
+    </DetailSection>
 
-      {/* 执行记录弹窗：状态/派发详情/时间线/事件日志（复用执行中心 RunDetailsDialog） */}
-      <RunDetailsDialog
-        runId={logRunId}
-        open={logRunId !== null}
-        onOpenChange={(open) => {
-          if (!open) setLogRunId(null);
-        }}
-      />
-    </div>
+    {/* 执行记录弹窗：状态/派发详情/时间线/事件日志（复用执行中心 RunDetailsDialog） */}
+    <RunDetailsDialog
+      runId={logRunId}
+      open={logRunId !== null}
+      onOpenChange={(open) => {
+        if (!open) setLogRunId(null);
+      }}
+    />
+    </>
   );
 }

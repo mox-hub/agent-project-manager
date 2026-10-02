@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
+import type { StatusIconComponent } from '@/shared/status/status-visuals';
 import { cn } from "@/lib/utils"
 
 /**
@@ -54,7 +55,7 @@ export interface StatsCardItem {
   /** 标签（compact 在数值下、featured 在数值上，text-xs text-muted-foreground 基线） */
   label: ReactNode
   /** 图标组件（size-8 灰底微框架内以 size-16 渲染） */
-  icon?: LucideIcon
+  icon?: StatusIconComponent
   /** 装饰色档（图标着色 + hover 描边点缀；default 不加点缀） */
   tone?: StatsTone
   /** 数值随 tone 着色（acceptance KPIStats 先例；default/gray 无色效不染） */

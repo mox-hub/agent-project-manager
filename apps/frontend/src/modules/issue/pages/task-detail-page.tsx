@@ -21,9 +21,7 @@ import {
   CalendarIcon,
   Check,
   CheckCircle2,
-  ChevronDown,
   Diamond as DiamondIcon,
-  FileText,
   Flag,
   ListChecks,
   ListTree,
@@ -43,14 +41,15 @@ import {
 } from '@/modules/assistant/components/anchor-qa-thread';
 import type { AnchorQaAction } from '@/modules/assistant/hooks/use-anchor-qa';
 import { Spinner } from '@/components/ui/spinner';
+import { DetailSection } from '@/components/semantic/detail-section';
+import { DetailPageFrame } from '@/components/semantic/detail-page-frame';
 import { PageShell } from '@/components/semantic/page-shell';
 import { SubPageToolbar } from '@/components/semantic/sub-page-toolbar';
 import { EntityIcon } from '@/shared/entity-icons/entity-icons';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SubscribeButton } from '@/shared/subscription/subscribe-button';
-import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/semantic/right-sidebar';
-import { SidebarPanel } from '@/components/semantic/sidebar-panel';
-import { Button } from '@/components/ui/button';
+import { SidebarButtonGroup, SidebarButton } from '@/components/semantic/right-sidebar';
+import { SidebarPanel } from '@/components/semantic/sidebar-panel';import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
@@ -60,7 +59,6 @@ import {
   PropertyRow, PropsCard, MemberAvatar,
 } from '@/shared/components/property-panel';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
-import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { MarkdownLiveEditor } from '@/shared/components/markdown-live-editor';
 import {
   TONE_TEXT_CLASS,
@@ -86,6 +84,7 @@ import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useMembers } from '@/modules/team-member/hooks';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
 import { cn } from '@/lib/utils';
+import { formatDate, formatDateShort } from '@/lib/format';
 import { useTabs } from '@/shared/tabs/tabs-context';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { useEntityNavigation } from '@/shared/hooks/use-entity-navigation';
@@ -102,9 +101,8 @@ import { CompletionReview } from '../components/completion-review';
 import { AcceptanceCriteriaPreview } from '../components/acceptance-criteria-preview';
 import { IssueDependenciesSection } from '../components/issue-dependencies-section';
 import { useAcceptancesByTask } from '@/modules/acceptance/hooks/use-acceptance';
-import {
-  useTaskDocumentLinks, LINK_TYPE_LABELS, LINK_TYPE_COLORS,
-} from '@/modules/document/hooks/use-document-task-links';
+import { LinkedDocsPanel } from '../components/linked-docs-panel';
+import { IssueDetailHeading } from '../components/issue-detail-heading';
 import { TaskLinearPanel } from '@/modules/linear/components/task-linear-panel';
 import { LinearConflictResolver } from '@/modules/linear/components/linear-conflict-resolver';
 import { LinearExternalRefBadge, LinearSyncStatusBadge } from '@/modules/linear/components/linear-status-badge';
@@ -172,6 +170,7 @@ export function TaskDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAiAssignDialog, setShowAiAssignDialog] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  // 右栏隐藏态受控（Frame 双模）：验收契约「编辑」入口需要命令口展开右栏
   const [asideHidden, setAsideHidden] = useState(false);
   // 行内锚点问答（候选 B）：hover 幽灵提示展开下沉线程
   const [anchorQaOpen, setAnchorQaOpen] = useState(false);
@@ -429,117 +428,95 @@ export function TaskDetailPage() {
   };
 
   return (
-    <PageShell aiPage="task.task-detail" className="overflow-hidden">
-      {/* ─── SubPageToolbar：返回 + 面包屑 + 翻页器 + 侧栏开关 ─── */}
-      <SubPageToolbar
-        aiId="task.task-detail"
-        backLabel={t('common.back')}
-        breadcrumbs={[
-          { label: t('nav.tasks'), to: '/app/issues' },
-          ...(project ? [{ label: project.name, to: `/app/projects/${task.projectId}` }] : []),
-          { label: shortId },
-        ]}
-        titleIcon={<EntityIcon entity="issue" />}
-        actions={<>
-          <FavoriteToggle label={task?.title ?? ''} />
-          <SubscribeButton />
-        </>}
-        pager={
-          task.projectId
-            ? {
-                hasPrev: nav.hasPrev && !nav.isLoading,
-                hasNext: nav.hasNext && !nav.isLoading,
-                onPrev: () => nav.prevId && navigate(`/app/issues/${nav.prevId}`),
-                onNext: () => nav.nextId && navigate(`/app/issues/${nav.nextId}`),
-                position: nav.currentPosition > 0 ? `${nav.currentPosition}/${nav.total}` : '—',
-              }
-            : undefined
-        }
-        sidebar={{ open: !asideHidden, onToggle: () => setAsideHidden((v) => !v) }}
-      />
-
-      {/* ─── Body ─── */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* ── Main ── */}
-        <div className="flex-1 min-w-0 overflow-y-auto flex flex-col">
-          <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
+    <>
+      <DetailPageFrame
+        aiPage="task.task-detail"
+        asideHidden={asideHidden}
+        onAsideHiddenChange={setAsideHidden}
+        toolbar={({ sidebar }) => (
+          <SubPageToolbar
+            aiId="task.task-detail"
+            backLabel={t('common.back')}
+            breadcrumbs={[
+              { label: t('nav.tasks'), to: '/app/issues' },
+              ...(project ? [{ label: project.name, to: `/app/projects/${task.projectId}` }] : []),
+              { label: shortId },
+            ]}
+            titleIcon={<EntityIcon entity="issue" />}
+            actions={<>
+              <FavoriteToggle label={task?.title ?? ''} />
+              <SubscribeButton />
+            </>}
+            pager={
+              task.projectId
+                ? {
+                    hasPrev: nav.hasPrev && !nav.isLoading,
+                    hasNext: nav.hasNext && !nav.isLoading,
+                    onPrev: () => nav.prevId && navigate(`/app/issues/${nav.prevId}`),
+                    onNext: () => nav.nextId && navigate(`/app/issues/${nav.nextId}`),
+                    position: nav.currentPosition > 0 ? `${nav.currentPosition}/${nav.total}` : '—',
+                  }
+                : undefined
+            }
+            sidebar={sidebar}
+          />
+        )}
+        main={
+          <>
           {mutationError && (
             <div className="mx-6 mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {mutationError}
             </div>
           )}
 
-          {/* Title：状态图标内图与标题字号一致（lg 档内图 18px、外框自然包裹），items-center 垂直居中；
-              标题用系统标准页头字号 text-lg(18px)，`!` 防止基类 md:text-sm 覆盖 */}
-          <div className="px-6 pt-5 pb-3 shrink-0">
-            <div className="flex items-center gap-3">
-              <IssueTypeSwitcher task={task} onChanged={invalidateActivities} />
-              <StatusIconFrame
-                icon={statusVisual.icon}
-                tone={statusVisual.tone}
-                size="lg"
-                spin={statusVisual.icon === TASK_STATUS_VISUALS.in_progress.icon}
-              />
-              <AutoSizeTextarea
-                key={`title-${task.id}`}
-                defaultValue={task.title}
-                rows={1}
-                placeholder={t('taskDetail.unnamedTitle')}
-                onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0"
-              />
-            </div>
-            {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}
-            {task.parentIssueId && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <ListChecks className="size-3.5 shrink-0" />
-                <span className="shrink-0">{t('taskDetail.parentTaskLabel')}</span>
-                <RoutePreviewTrigger
-                  path={`/app/issues/${task.parentIssueId}`}
-                  title={parentTask?.title}
-                  icon={ListChecks}
-                >
-                  <Link
-                    to={`/app/issues/${task.parentIssueId}`}
-                    className="truncate max-w-75 font-medium text-foreground transition-colors hover:text-primary hover:underline"
-                  >
-                    {parentTask?.title || task.parentIssueId.slice(0, 8)}
-                  </Link>
-                </RoutePreviewTrigger>
-              </div>
-            )}
-            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-              <span className="font-mono">{shortId}</span>
-              <span className="opacity-50">•</span>
-              <span>{t('common.createdAt')} {new Date(task.createdAt).toLocaleDateString()}</span>
-              {task.externalIdentifier ? (
-                <>
-                  <span className="opacity-50">•</span>
-                  <LinearExternalRefBadge
-                    identifier={task.externalIdentifier}
-                    url={task.externalUrl}
-                  />
-                </>
-              ) : null}
-              {task.syncStatus ? (
-                <LinearSyncStatusBadge status={task.syncStatus} />
-              ) : null}
-            </div>
-          </div>
+          {/* Title：类型切换 + 状态框 + 热编辑标题 + 来源行 + 元信息行（Heading 件收编） */}
+          <IssueDetailHeading
+            title={task.title}
+            titleKey={`title-${task.id}`}
+            placeholder={t('taskDetail.unnamedTitle')}
+            onTitleChange={persistTitle}
+            statusVisual={statusVisual}
+            left={<IssueTypeSwitcher task={task} onChanged={invalidateActivities} />}
+            parentIssue={
+              task.parentIssueId
+                ? { id: task.parentIssueId, title: parentTask?.title }
+                : undefined
+            }
+            meta={
+              <>
+                <span className="font-mono">{shortId}</span>
+                <span className="opacity-50">•</span>
+                <span>{t('common.createdAt')} {formatDate(task.createdAt)}</span>
+                {task.externalIdentifier ? (
+                  <>
+                    <span className="opacity-50">•</span>
+                    <LinearExternalRefBadge
+                      identifier={task.externalIdentifier}
+                      url={task.externalUrl}
+                    />
+                  </>
+                ) : null}
+                {task.syncStatus ? (
+                  <LinearSyncStatusBadge status={task.syncStatus} />
+                ) : null}
+              </>
+            }
+          />
 
           {/* Description: 块级所见即所得（点哪编哪、输入与渲染同屏）；
               右上 hover 显形「拆分」按钮 = AI 静默子任务拆分（编辑按钮已由就地编辑取代） */}
-          <div className="px-6 pt-4 pb-4 shrink-0 group/desc">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlignLeft className="size-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t('taskDetail.description')}
-                </span>
-              </div>
+          <DetailSection
+            icon={<AlignLeft className="size-3.5 text-muted-foreground" />}
+            title={t('taskDetail.description')}
+            collapsible={false}
+            className="group/desc"
+            headerClassName="px-6 pt-4 pb-2"
+            contentClassName="px-6 pb-4"
+            action={
               <Button
                 variant="ghost"
                 size="icon-xs"
+                data-ai-action="task.task-detail.split-ai.click"
                 title={
                   decompose.isPending
                     ? t('taskDetail.splitRunning')
@@ -555,7 +532,8 @@ export function TaskDetailPage() {
                   <Split className="size-3" />
                 )}
               </Button>
-            </div>
+            }
+          >
             <MarkdownLiveEditor
               value={descriptionDraft ?? task.description ?? ''}
               onChange={(v) => {
@@ -567,7 +545,7 @@ export function TaskDetailPage() {
               className="w-full"
               maxHeight={320}
             />
-          </div>
+          </DetailSection>
 
           {/* 自定义字段（IssueType fieldSchema 驱动，key 挂任务 id 避免切换任务残留草稿；
               正文区描述下方，与执行项/子任务同层级） */}
@@ -609,11 +587,10 @@ export function TaskDetailPage() {
           <div className="px-6 py-4 flex-1 min-h-0 flex flex-col">
             <ActivityFeed entityType={activityEntityType} entityId={issueId} />
           </div>
-          </div>
-        </div>
-
-        {/* ── Right sidebar ── */}
-        <RightSidebar hidden={asideHidden}>
+          </>
+        }
+        aside={
+          <>
           {/* Top action bar — 按钮固定一行、靠右对齐；幽灵「✨ 问 AI」hover 显形（渐进披露②） */}
           <SidebarButtonGroup className="group/sidebar justify-end">
             <AnchorQaGhostButton
@@ -632,6 +609,7 @@ export function TaskDetailPage() {
             <SidebarButton
               icon={Trash2}
               label={t('common.delete')}
+              data-ai-action="task.task-detail.delete.click"
               onClick={() => setShowDeleteDialog(true)}
               className="text-destructive hover:text-destructive"
             />
@@ -848,8 +826,9 @@ export function TaskDetailPage() {
           >
             <CompletionReview issueId={task.id} acceptances={acceptances} />
           </SidebarPanel>
-        </RightSidebar>
-      </div>
+          </>
+        }
+      />
 
       {/* ─── Delete dialog ─── */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -876,7 +855,7 @@ export function TaskDetailPage() {
         taskTitle={task.title}
         defaultMemberId={task.aiAgentId ?? undefined}
       />
-    </PageShell>
+    </>
   );
 }
 
@@ -1009,214 +988,189 @@ function SubTaskSection({
   };
 
   return (
-    <div className="shrink-0">
-      {/* Section header: 标题 + 完成进度 + 收缩/新增 */}
-      <div className="px-6 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <ListChecks className="size-3.5" />
-          {t('taskDetail.subtasks')}
-          {subIssues.length > 0 && (
-            <span className="text-3xs font-normal normal-case tabular-nums">
-              {doneCount}/{subIssues.length}
-            </span>
-          )}
+    <DetailSection
+      icon={<ListChecks className="size-3.5" />}
+      title={t('taskDetail.subtasks')}
+      count={subIssues.length > 0 ? `${doneCount}/${subIssues.length}` : undefined}
+      action={
+        <button
+          type="button"
+          onClick={() => {
+            setCollapsed(false);
+            setSubOpen((v) => !v);
+          }}
+          className="size-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          title={subOpen ? t('taskDetail.collapse') : t('taskDetail.addSubtask')}
+        >
+          {subOpen ? <Plus className="size-3.5 rotate-45" /> : <Plus className="size-3.5" />}
+        </button>
+      }
+      collapsed={collapsed}
+      onToggle={() => setCollapsed((v) => !v)}
+    >
+      {/* AI 拆分待确认建议批：确认/忽略逐条处理，清空自动撤批（不产生真实工单行） */}
+      {proposal && (
+        <div className="px-6 pb-2">
+          <div className="rounded-lg border border-border bg-muted/20 overflow-hidden">
+            <div className="flex items-center justify-between gap-2 px-3 py-2">
+              <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <Sparkles className="size-3.5 shrink-0 text-accent-purple" />
+                {t('taskDetail.splitPendingTitle', { count: proposal.subtasks.length })}
+              </span>
+              <div className="flex shrink-0 items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  disabled={createSubTask.isPending || updateParent.isPending}
+                  onClick={() => void confirmAllProposals()}
+                >
+                  {t('taskDetail.splitAcceptAll')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  disabled={updateParent.isPending}
+                  onClick={() => void dismissAllProposals()}
+                >
+                  {t('taskDetail.splitDismissAll')}
+                </Button>
+              </div>
+            </div>
+            {proposal.subtasks.map((item, index) => (
+              <div
+                key={`${proposal.batchId}-${index}`}
+                className="group flex items-start gap-2 border-t border-border/60 px-3 py-2"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="break-words text-sm leading-relaxed">{item.title}</div>
+                  {item.description && (
+                    <div className="break-words text-xs text-muted-foreground">
+                      {item.description}
+                    </div>
+                  )}
+                </div>
+                <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    title={t('taskDetail.splitAccept')}
+                    disabled={createSubTask.isPending}
+                    onClick={() => void confirmProposalItem(index)}
+                  >
+                    <Check className="size-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    title={t('taskDetail.splitDismiss')}
+                    disabled={updateParent.isPending}
+                    onClick={() => void dismissProposalItem(index)}
+                  >
+                    <X className="size-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {mutationError && (
+              <div className="border-t border-border/60 px-3 py-2 text-xs text-destructive">
+                {mutationError}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-0.5">
-          <button
-            type="button"
-            onClick={() => setCollapsed((v) => !v)}
-            className="inline-flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label={collapsed ? t('common.expand') : t('common.collapse')}
-            aria-expanded={!collapsed}
-          >
-            <ChevronDown
-              className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setCollapsed(false);
-              setSubOpen((v) => !v);
-            }}
-            className="size-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            title={subOpen ? t('taskDetail.collapse') : t('taskDetail.addSubtask')}
-          >
-            {subOpen ? <Plus className="size-3.5 rotate-45" /> : <Plus className="size-3.5" />}
-          </button>
-        </div>
-      </div>
+      )}
 
-      {/* 分区内容：子任务列表 + 新增表单（grid-rows 动画展开 / 收起） */}
-      <div
-        className={cn(
-          'grid transition-[grid-template-rows] duration-slow ease-out',
-          collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
-        )}
-      >
-        <div className="overflow-hidden">
-          {/* AI 拆分待确认建议批：确认/忽略逐条处理，清空自动撤批（不产生真实工单行） */}
-          {proposal && (
-            <div className="px-6 pb-2">
-              <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
-                <div className="flex items-center justify-between gap-2 px-3 py-2">
-                  <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <Sparkles className="size-3.5 shrink-0 text-accent-purple" />
-                    {t('taskDetail.splitPendingTitle', { count: proposal.subtasks.length })}
+      {/* Sub-task list */}
+      {isLoading ? (
+        <div className="flex items-center gap-2 px-6 pb-2 text-xs text-muted-foreground">
+          <Spinner className="size-3 text-inherit" />
+          {t('common.loading')}
+        </div>
+      ) : subIssues.length > 0 ? (
+        <div className="px-6 pb-1 flex flex-col gap-0.5">
+          {subIssues.map((st) => {
+            const visual = TASK_STATUS_VISUALS[st.status] ?? TASK_STATUS_VISUALS.todo;
+            const priorityVisual = PRIORITY_VISUALS[st.priority] ?? null;
+            const firstTag = st.issueTags?.[0]?.tag;
+            return (
+              <Link
+                key={st.id}
+                to={`/app/issues/${st.id}`}
+                className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-muted/40 transition-colors group"
+              >
+                <StatusIconFrame
+                  icon={visual.icon}
+                  tone={visual.tone}
+                  size="sm"
+                  spin={visual.icon === TASK_STATUS_VISUALS.in_progress.icon}
+                />
+                <span className="flex-1 text-sm truncate group-hover:text-primary transition-colors">
+                  {st.title}
+                </span>
+                {firstTag && (
+                  <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-2xs text-muted-foreground shrink-0">
+                    {firstTag.color && (
+                      <span className="size-1.5 rounded-full" style={{ backgroundColor: firstTag.color }} />
+                    )}
+                    {firstTag.name}
                   </span>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="xs"
-                      disabled={createSubTask.isPending || updateParent.isPending}
-                      onClick={() => void confirmAllProposals()}
-                    >
-                      {t('taskDetail.splitAcceptAll')}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="xs"
-                      disabled={updateParent.isPending}
-                      onClick={() => void dismissAllProposals()}
-                    >
-                      {t('taskDetail.splitDismissAll')}
-                    </Button>
-                  </div>
-                </div>
-                {proposal.subtasks.map((item, index) => (
-                  <div
-                    key={`${proposal.batchId}-${index}`}
-                    className="group flex items-start gap-2 border-t border-border/60 px-3 py-2"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="break-words text-sm leading-relaxed">{item.title}</div>
-                      {item.description && (
-                        <div className="break-words text-xs text-muted-foreground">
-                          {item.description}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        title={t('taskDetail.splitAccept')}
-                        disabled={createSubTask.isPending}
-                        onClick={() => void confirmProposalItem(index)}
-                      >
-                        <Check className="size-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        title={t('taskDetail.splitDismiss')}
-                        disabled={updateParent.isPending}
-                        onClick={() => void dismissProposalItem(index)}
-                      >
-                        <X className="size-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                {mutationError && (
-                  <div className="border-t border-border/60 px-3 py-2 text-xs text-destructive">
-                    {mutationError}
-                  </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* Sub-task list */}
-          {isLoading ? (
-            <div className="px-6 pb-2 text-xs text-muted-foreground">{t('common.loading')}</div>
-          ) : subIssues.length > 0 ? (
-            <div className="px-6 pb-1 flex flex-col gap-0.5">
-              {subIssues.map((st) => {
-                const visual = TASK_STATUS_VISUALS[st.status] ?? TASK_STATUS_VISUALS.todo;
-                const priorityVisual = PRIORITY_VISUALS[st.priority] ?? null;
-                const firstTag = st.issueTags?.[0]?.tag;
-                return (
-                  <Link
-                    key={st.id}
-                    to={`/app/issues/${st.id}`}
-                    className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-muted/40 transition-colors group"
-                  >
-                    <StatusIconFrame
-                      icon={visual.icon}
-                      tone={visual.tone}
-                      size="sm"
-                      spin={visual.icon === TASK_STATUS_VISUALS.in_progress.icon}
-                    />
-                    <span className="flex-1 text-sm truncate group-hover:text-primary transition-colors">
-                      {st.title}
-                    </span>
-                    {firstTag && (
-                      <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-2xs text-muted-foreground shrink-0">
-                        {firstTag.color && (
-                          <span className="size-1.5 rounded-full" style={{ backgroundColor: firstTag.color }} />
-                        )}
-                        {firstTag.name}
-                      </span>
-                    )}
-                    {priorityVisual && (
-                      <priorityVisual.icon className={cn('size-3.5 shrink-0', TONE_TEXT_CLASS[priorityVisual.tone])} />
-                    )}
-                    {st.dueDate && (
-                      <span className="text-3xs text-muted-foreground shrink-0">
-                        {new Date(st.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                    )}
-                    {st.assignee && (
-                      <MemberAvatar
-                        name={st.assignee.displayName || st.assignee.username}
-                        avatarUrl={st.assignee.avatarUrl}
-                      />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          ) : null}
-
-          {/* Create sub-task form（图1 创建卡形态） */}
-          {subOpen && (
-            <div className="px-6 pb-4">
-              <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
-                <div className="p-3 flex flex-col gap-2">
-                  <AutoSizeTextarea
-                    autoFocus
-                    rows={1}
-                    placeholder={t('taskDetail.subtaskTitle')}
-                    value={subTitle}
-                    onChange={(e) => setSubTitle(e.target.value)}
-                    className="w-full text-sm font-semibold placeholder:text-muted-foreground/50 focus-visible:ring-0"
-                  />
-                  <AutoSizeTextarea
-                    rows={1}
-                    placeholder={t('taskDetail.addDescription')}
-                    value={subDesc}
-                    onChange={(e) => setSubDesc(e.target.value)}
-                    className="w-full text-xs font-normal placeholder:text-muted-foreground/50 focus-visible:ring-0"
-                  />
-                </div>
-                {mutationError && (
-                  <div className="mx-3 mb-2 text-xs text-destructive">{mutationError}</div>
+                {priorityVisual && (
+                  <priorityVisual.icon className={cn('size-3.5 shrink-0', TONE_TEXT_CLASS[priorityVisual.tone])} />
                 )}
-                <div className="px-3 pb-3 flex justify-end gap-2">
-                  <Button variant="ghost" size="xs" onClick={() => { setSubOpen(false); setSubTitle(''); setSubDesc(''); }}>
-                    {t('common.cancel')}
-                  </Button>
-                  <Button size="xs" onClick={handleSave} disabled={!subTitle.trim() || createSubTask.isPending}>
-                    {createSubTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('taskDetail.saveSubtask')}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+                {st.dueDate && (
+                  <span className="text-3xs text-muted-foreground shrink-0">
+                    {formatDateShort(st.dueDate)}
+                  </span>
+                )}
+                {st.assignee && (
+                  <MemberAvatar
+                    name={st.assignee.displayName || st.assignee.username}
+                    avatarUrl={st.assignee.avatarUrl}
+                  />
+                )}
+              </Link>
+            );
+          })}
         </div>
-      </div>
-    </div>
+      ) : null}
+
+      {/* Create sub-task form（图1 创建卡形态） */}
+      {subOpen && (
+        <div className="px-6 pb-4">
+          <div className="rounded-lg border border-border bg-muted/20 overflow-hidden">
+            <div className="p-3 flex flex-col gap-2">
+              <AutoSizeTextarea
+                autoFocus
+                rows={1}
+                placeholder={t('taskDetail.subtaskTitle')}
+                value={subTitle}
+                onChange={(e) => setSubTitle(e.target.value)}
+                className="w-full text-sm font-semibold placeholder:text-muted-foreground/50 focus-visible:ring-0"
+              />
+              <AutoSizeTextarea
+                rows={1}
+                placeholder={t('taskDetail.addDescription')}
+                value={subDesc}
+                onChange={(e) => setSubDesc(e.target.value)}
+                className="w-full text-xs font-normal placeholder:text-muted-foreground/50 focus-visible:ring-0"
+              />
+            </div>
+            {mutationError && (
+              <div className="mx-3 mb-2 text-xs text-destructive">{mutationError}</div>
+            )}
+            <div className="px-3 pb-3 flex justify-end gap-2">
+              <Button variant="ghost" size="xs" onClick={() => { setSubOpen(false); setSubTitle(''); setSubDesc(''); }}>
+                {t('common.cancel')}
+              </Button>
+              <Button size="xs" onClick={handleSave} disabled={!subTitle.trim() || createSubTask.isPending}>
+                {createSubTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('taskDetail.saveSubtask')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </DetailSection>
   );
 }
 
@@ -1268,60 +1222,35 @@ function CustomFieldsPanel({
   };
 
   return (
-    <div className="shrink-0">
-      {/* Section header：与执行项/子任务分区同形态 */}
-      <div className="px-6 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <ListTree className="size-3" />
-          {t('taskDetail.customFields')}
-          <span className="text-3xs font-normal">({schema.length})</span>
-        </div>
-        <div className="flex items-center gap-0.5">
-          {!editing && (
-            <Button variant="ghost" size="icon-xs" title={t('common.edit')} onClick={startEdit}>
-              <Pencil className="size-3" />
-            </Button>
-          )}
-          <button
-            type="button"
-            onClick={() => setCollapsed((v) => !v)}
-            className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label={collapsed ? t('common.expand') : t('common.collapse')}
-            aria-expanded={!collapsed}
+    <DetailSection
+      icon={<ListTree className="size-3.5" />}
+      title={t('taskDetail.customFields')}
+      count={`(${schema.length})`}
+      action={
+        !editing && (
+          <Button variant="ghost" size="icon-xs" title={t('common.edit')} onClick={startEdit}>
+            <Pencil className="size-3" />
+          </Button>
+        )
+      }
+      collapsed={collapsed}
+      onToggle={() => setCollapsed((v) => !v)}
+      contentClassName="px-6 pb-2 flex flex-col"
+    >
+      {schema.map((field) => {
+        const text = formatCustomFieldValue(customFields?.[field.key]);
+        return (
+          <div
+            key={field.key}
+            className="flex items-start justify-between gap-3 px-2 py-1.5 text-xs"
           >
-            <ChevronDown
-              className={cn('size-3 transition-transform', !collapsed && 'rotate-180')}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* 分区内容：grid-rows 动画展开 / 收起（与 SidebarPanel 同一手势） */}
-      <div
-        className={cn(
-          'grid transition-[grid-template-rows] duration-slow ease-out',
-          collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className="px-6 pb-2 flex flex-col">
-            {schema.map((field) => {
-              const text = formatCustomFieldValue(customFields?.[field.key]);
-              return (
-                <div
-                  key={field.key}
-                  className="flex items-start justify-between gap-3 px-2 py-1.5 text-xs"
-                >
-                  <span className="shrink-0 text-muted-foreground">{field.label}</span>
-                  <span className="min-w-0 flex-1 break-words text-right text-foreground">
-                    {text || '-'}
-                  </span>
-                </div>
-              );
-            })}
+            <span className="shrink-0 text-muted-foreground">{field.label}</span>
+            <span className="min-w-0 flex-1 break-words text-right text-foreground">
+              {text || '-'}
+            </span>
           </div>
-        </div>
-      </div>
+        );
+      })}
 
       {/* 批量编辑弹窗（F3.6 表单容器铁律：多字段实体修改走模态 Dialog） */}
       <Dialog open={editing} onOpenChange={(open) => { if (!open) setEditing(false); }}>
@@ -1344,60 +1273,6 @@ function CustomFieldsPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-// ===== Linked Documents（右侧栏面板，形态对齐 Properties/Suggestions） =====
-
-function LinkedDocsPanel({ issueId }: { issueId: string }) {
-  const { t } = useTranslation();
-  const { data: links = [], isLoading } = useTaskDocumentLinks(issueId);
-  return (
-    <SidebarPanel
-      title={t('taskDetail.linkedDocs')}
-      icon={<FileText className="size-3" />}
-      action={
-        links.length > 0 ? (
-          <span className="text-3xs text-muted-foreground">({links.length})</span>
-        ) : undefined
-      }
-    >
-      {isLoading ? (
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">{t('common.loading')}</div>
-      ) : links.length === 0 ? (
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">{t('taskDetail.noLinkedDocs')}</div>
-      ) : (
-        links.map((link) => (
-          <Link
-            key={link.id}
-            to={`/app/documents/${link.documentId}`}
-            className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          >
-            <FileText className="size-3.5 shrink-0" />
-            <span className="flex-1 min-w-0 text-left">
-              <span className="block truncate font-medium text-foreground">
-                {link.document?.title || t('taskDetail.documentFallback', { id: link.documentId })}
-              </span>
-              {link.section && (
-                <span className="block truncate text-3xs">
-                  {t('taskDetail.sectionLabel', { title: link.section.title })}
-                </span>
-              )}
-            </span>
-            <span
-              className={cn(
-                'shrink-0 rounded-sm px-1.5 py-0.5 text-3xs font-medium',
-                LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
-              )}
-            >
-              {t(`document.linkType.${link.linkType}`, {
-                defaultValue: LINK_TYPE_LABELS[link.linkType] || link.linkType,
-              })}
-            </span>
-          </Link>
-        ))
-      )}
-    </SidebarPanel>
+    </DetailSection>
   );
 }

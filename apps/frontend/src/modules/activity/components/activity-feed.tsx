@@ -11,7 +11,7 @@ import { zhCN } from 'date-fns/locale';
 import { ChevronDown, History } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
-import type { StatusTone } from '@/shared/status/status-visuals';
+import type { StatusTone, StatusIconComponent } from '@/shared/status/status-visuals';
 import type { ActivityEntityType, ActivityItem } from '../api/activity-api';
 import { useActivities } from '../hooks/use-activity';
 import {
@@ -158,7 +158,7 @@ function EventIcon({
   tone,
   spin,
 }: {
-  icon: LucideIcon;
+  icon: StatusIconComponent;
   tone: StatusTone;
   spin?: boolean;
 }) {

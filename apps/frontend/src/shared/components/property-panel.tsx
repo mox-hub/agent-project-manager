@@ -37,7 +37,6 @@ import {
 } from '@/components/ui/popover';
 import { DatePicker } from '@/components/ui/date-picker';
 import { MemberAvatar as StandardMemberAvatar } from '@/modules/team-member/components/member-avatar';
-import { Textarea } from '@/components/ui/textarea';
 
 // ============================================================================
 // Local icon fallbacks (Linear-style status icons)
@@ -276,16 +275,22 @@ export function CapsuleSelect({
 // AutoSizeTextarea
 // ============================================================================
 
+/**
+ * 裸文本域（属性面板/热编辑场景专用）：自适应高度、无表单框。
+ * 不经 ui/textarea（其表单基类 text-base md:text-sm + border + padding 需被逐项
+ * 拆除，还会在 md 断点覆盖消费方传入的字号），直接声明裸语义基类（§10.7：字号等
+ * 视觉一律由消费方 className 传入）。
+ */
 export function AutoSizeTextarea({
   rows = 1,
   className,
   ...props
 }: React.ComponentProps<'textarea'> & { rows?: number }) {
   return (
-    <Textarea
+    <textarea
       rows={rows}
       className={cn(
-        'field-sizing-content bg-transparent dark:bg-transparent [background-color:transparent] !border-0 shadow-none px-0.5 py-0 rounded-none focus-visible:ring-0 focus-visible:border-transparent min-h-0 resize-none',
+        'field-sizing-content w-full bg-transparent border-0 outline-none rounded-none px-0.5 py-0 min-h-0 resize-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...props}

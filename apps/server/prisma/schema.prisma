@@ -302,9 +302,11 @@ model Tag {
   name         String
   color        String?
   description  String?
-  /// 标签归属的单一功能域：project | task | bug | document（各功能标签独立，不共享）
+  /// 标签归属的单一功能域：project | task | document（各功能标签独立，不共享；bug 域已随 Issue 统一模型并入 task，2026-10-01）
   resourceType String   @default("task")
   createdAt    DateTime @default(now())
+  /// 最近一次编辑时间（列表「更新时间」列；@updatedAt 由 Prisma 写入）
+  updatedAt    DateTime @updatedAt
   createdBy    String?
   metadata     Json?
 
@@ -337,9 +339,15 @@ model StatusDefinition {
   name                  String
   /// 状态分组（Linear 式）：triage | backlog | unstarted | started | completed | canceled；分组词表受控，UI 按组聚合渲染
   group                 String  @default("unstarted")
+  /// 展示色（hex，如 #3b82f2）；空 = 前端按静态语义映射兜底
+  color                 String?
+  /// 图标（前端状态图标注册表键，如 CircleCheck）；空 = 按分组默认图标
+  icon                  String?
+  description           String?
   order                 Int
   isFinal               Boolean @default(false)
   isBlockedState        Boolean @default(false)
+  /// 允许流转的下一状态键白名单；NULL/空 = 不限制（宽松语义，兼容存量），非空 = 强校验（force=true 可放行）
   allowedNextStatusKeys Json?
   metadata              Json?
 

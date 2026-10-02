@@ -9,6 +9,7 @@
  * 行尾 + 追加条件（允许同字段多条件），右侧 Clear / Save(保存到当前视图·另存为新视图)。
  */
 import { Fragment, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import type { StatusIconComponent } from '@/shared/status/status-visuals';
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, Filter, Plus, X, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,7 @@ export interface FilterValueOption {
 export interface FilterFieldDef {
   id: string;
   label: string;
-  icon?: LucideIcon;
+  icon?: StatusIconComponent;
   /** 该字段支持的算子，首个为新建条件时的默认值 */
   operators: FilterOperatorId[];
   options: FilterValueOption[];

@@ -5,7 +5,8 @@ import { PageHeader, type PageHeaderMetric } from "@/components/semantic/page-he
 
 export type PageShellVariant = 'full' | 'wide' | 'standard' | 'reading';
 
-const VARIANT_CONTAINER_CLASSES: Record<PageShellVariant, string> = {
+/** L1 主栏宽度四档总表（F1.3）——详情母版 DetailPageFrame 同表分发（§20.2），勿在别处手写 */
+export const VARIANT_CONTAINER_CLASSES: Record<PageShellVariant, string> = {
   full: 'w-full',
   wide: 'w-full max-w-7xl mx-auto',
   standard: 'w-full max-w-5xl mx-auto',

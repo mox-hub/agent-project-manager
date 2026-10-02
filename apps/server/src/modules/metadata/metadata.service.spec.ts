@@ -61,27 +61,115 @@ describe('MetadataService', () => {
   });
 
   describe('getTags', () => {
-    it('should return tags list', async () => {
+    it('should return tags list with usageCount（工单引用 + 文档引用）', async () => {
       const mockTags = [
-        { id: '1', name: 'backend', color: '#FF5733' },
-        { id: '2', name: 'frontend', color: '#33FF57' },
+        {
+          id: '1',
+          name: 'backend',
+          color: '#FF5733',
+          _count: { issueTags: 3, documents: 1 },
+        },
+        {
+          id: '2',
+          name: 'frontend',
+          color: '#33FF57',
+          _count: { issueTags: 0, documents: 0 },
+        },
       ];
 
       mockPrismaService.tag.findMany.mockResolvedValue(mockTags);
 
       const result = await service.getTags();
 
-      expect(result).toEqual(mockTags);
-      expect(mockPrismaService.tag.findMany).toHaveBeenCalled();
+      expect(result).toEqual([
+        { id: '1', name: 'backend', color: '#FF5733', usageCount: 4 },
+        { id: '2', name: 'frontend', color: '#33FF57', usageCount: 0 },
+      ]);
+      expect(mockPrismaService.tag.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: { _count: { select: { issueTags: true, documents: true } } },
+        }),
+      );
     });
 
     it('should filter by projectId', async () => {
+      mockPrismaService.tag.findMany.mockResolvedValue([]);
       await service.getTags('project-1');
 
-      expect(mockPrismaService.tag.findMany).toHaveBeenCalledWith({
-        where: { projectId: 'project-1' },
-        orderBy: { name: 'asc' },
+      expect(mockPrismaService.tag.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { projectId: 'project-1' },
+          orderBy: { name: 'asc' },
+        }),
+      );
+    });
+  });
+
+  describe('createOrUpdateStatus（视觉字段与部分更新语义）', () => {
+    it('创建透传 color/icon/description/group/allowedNextStatusKeys', async () => {
+      const payload = {
+        type: 'task',
+        key: 'code_review',
+        name: 'Code Review',
+        group: 'started',
+        color: '#3b82f6',
+        icon: 'CircleAlert',
+        description: '评审中',
+        order: 35,
+        allowedNextStatusKeys: ['done'],
+      };
+      mockPrismaService.statusDefinition.findUnique.mockResolvedValue(null);
+      mockPrismaService.statusDefinition.create.mockResolvedValue({
+        id: 'st-new',
+        ...payload,
       });
+
+      await service.createOrUpdateStatus(payload);
+
+      expect(mockPrismaService.statusDefinition.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          type: 'task',
+          key: 'code_review',
+          group: 'started',
+          color: '#3b82f6',
+          icon: 'CircleAlert',
+          description: '评审中',
+          allowedNextStatusKeys: ['done'],
+        }),
+      });
+    });
+
+    it('部分更新（拖拽排序只传 order）不抹掉 color/icon 等未传字段', async () => {
+      mockPrismaService.statusDefinition.findUnique.mockResolvedValue({
+        id: 'st-1',
+        type: 'task',
+        key: 'todo',
+        name: '待办',
+        color: '#6b7280',
+        icon: 'Circle',
+      });
+      mockPrismaService.statusDefinition.update.mockResolvedValue({
+        id: 'st-1',
+        order: 20,
+      });
+
+      await service.createOrUpdateStatus({
+        id: 'st-1',
+        type: 'task',
+        key: 'todo',
+        name: '待办',
+        order: 20,
+      });
+
+      expect(mockPrismaService.statusDefinition.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'st-1' },
+          data: expect.not.objectContaining({
+            color: expect.anything(),
+            icon: expect.anything(),
+          }),
+        }),
+      );
     });
   });
 

@@ -12,8 +12,10 @@ interface EmptyStateProps {
    *   挂载要求：必须直挂页面的 `flex-1 overflow-auto` 素块容器；中间套 flex-col 包装、
    *   或经 DataList/自动高度容器隔断都会使 h-full 解析失败回落 min-h-100（半屏）
    * - card：分区内/筛选无结果的紧凑形态（默认，min-h-40）
+   * - compact：面板/分区内容内的单行空态（右栏 SidebarPanel、详情页分区内容等窄容器）——
+   *   无边框无卡底，icon + 一行 muted 文案 + 可选 action，§10.6「禁止内联暂无文案」的合法出口
    */
-  variant?: "page" | "card";
+  variant?: "page" | "card" | "compact";
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
@@ -29,6 +31,20 @@ export function EmptyState({
   action,
   className,
 }: EmptyStateProps) {
+  if (variant === "compact") {
+    return (
+      <div
+        className={cn(
+          "flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground",
+          className
+        )}
+      >
+        {Icon ? <Icon className="size-3.5 shrink-0" /> : null}
+        <span className="min-w-0 flex-1 truncate">{title}</span>
+        {action ? <span className="flex shrink-0 items-center">{action}</span> : null}
+      </div>
+    );
+  }
   return (
     <div
       className={cn(
