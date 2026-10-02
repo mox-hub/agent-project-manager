@@ -13,6 +13,44 @@ export type ReleaseStatus =
   | 'released'
   | 'failed';
 
+/**
+ * 发布平台封闭枚举（CAP-K-03 批三，与 server dto RELEASE_PLATFORM_VALUES 镜像）。
+ * 平台名为专有名词不做 i18n，展示直接用 label。
+ */
+export const RELEASE_PLATFORMS = [
+  'android',
+  'ios',
+  'windows',
+  'macos',
+  'linux',
+  'web',
+] as const;
+export type ReleasePlatform = (typeof RELEASE_PLATFORMS)[number];
+
+export const RELEASE_PLATFORM_LABELS: Record<ReleasePlatform, string> = {
+  android: 'Android',
+  ios: 'iOS',
+  windows: 'Windows',
+  macos: 'macOS',
+  linux: 'Linux',
+  web: 'Web',
+};
+
+/** 版本通道（semver 预发布后缀推导；与 server release-version.service 镜像） */
+export type ReleaseChannel = 'stable' | 'alpha' | 'beta' | 'rc';
+
+export function deriveReleaseChannel(version: string): ReleaseChannel {
+  const m = version.match(
+    /-[._-]?(alpha|beta|rc)\b/i,
+  ) as RegExpMatchArray | null;
+  if (!m) return 'stable';
+  const head = m[1].toLowerCase();
+  if (head === 'alpha') return 'alpha';
+  if (head === 'beta') return 'beta';
+  if (head === 'rc') return 'rc';
+  return 'stable';
+}
+
 export interface GateCheck {
   key: string;
   label: string;
@@ -44,6 +82,8 @@ export interface ReleaseDeliverableItem {
   howToVerify: string;
   limitations?: string;
   receiver?: string;
+  /** 所属发布平台（批三；产物为全端时省略） */
+  platform?: string;
 }
 
 /** 交付成果清单（Release.deliverables Json 列投影：items + 最后更新溯源） */
@@ -58,6 +98,13 @@ export interface ReleaseMilestoneSummary {
   id: string;
   name: string;
   status: string;
+}
+
+/** 热修基线轻量投影（批三血缘：详情「修复自 vX.Y.Z」徽标数据源） */
+export interface ReleaseHotfixOf {
+  id: string;
+  version: string;
+  name?: string | null;
 }
 
 export interface ReleaseRecord {
@@ -85,6 +132,15 @@ export interface ReleaseRecord {
   githubReleased: boolean;
   milestoneId?: string | null;
   milestone?: ReleaseMilestoneSummary | null;
+  /** 计划发版时间（批三；挂里程碑时由 targetDate 预填） */
+  plannedAt?: string | null;
+  /** 发布平台（批三；封闭枚举数组） */
+  platforms?: string[] | null;
+  /** 升级/迁移注意事项（批三；major 版本门禁注记要求） */
+  upgradeNotes?: string | null;
+  /** 热修基线发版 ID（批三） */
+  hotfixOfId?: string | null;
+  hotfixOf?: ReleaseHotfixOf | null;
 }
 
 export interface VersionRecommendation {
@@ -101,6 +157,10 @@ export interface CreateReleaseRequest {
   notes?: string;
   scopeIssueIds?: string[];
   milestoneId?: string | null;
+  plannedAt?: string | null;
+  platforms?: string[] | null;
+  upgradeNotes?: string;
+  hotfixOfId?: string | null;
 }
 
 export interface UpdateReleaseRequest {
@@ -109,6 +169,10 @@ export interface UpdateReleaseRequest {
   version?: string;
   scopeIssueIds?: string[];
   milestoneId?: string | null;
+  plannedAt?: string | null;
+  platforms?: string[] | null;
+  upgradeNotes?: string;
+  hotfixOfId?: string | null;
 }
 
 export interface ApprovalProposal {

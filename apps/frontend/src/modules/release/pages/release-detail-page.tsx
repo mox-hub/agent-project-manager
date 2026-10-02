@@ -12,8 +12,10 @@ import {
   CheckCircle2,
   CircleDashed,
   Clock,
+  CalendarClock,
   Flag,
   FolderKanban,
+  GitPullRequestArrow,
   Rocket,
   Sparkles,
   XCircle,
@@ -24,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SkeletonCard } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Stepper,
   StepperIndicator,
@@ -42,12 +45,15 @@ import {
   useRejectRelease,
   useRelease,
   useReopenRelease,
+  useUpdateRelease,
 } from '../hooks/use-releases';
 import { ReleaseNotesDraftDialog } from '../components/release-notes-draft-dialog';
 import { ReleaseTraceSection } from '../components/release-trace-section';
 import { ReleaseDeliverablesCard } from '../components/release-deliverables-card';
-import { RELEASE_STATUS_TONE, statusLabelKey } from './release-list-page';
-import type { ExecutionStep, GateCheck, ReleaseStatus } from '../api/release-api';
+import { ReleaseChannelChip, ReleasePlatformBadges } from '../components/release-platform-badges';
+import { deriveReleaseChannel } from '../api/release-api';
+import { RELEASE_STATUS_TONE, isPlannedOverdue, statusLabelKey } from '../release-status-meta';
+import type { ExecutionStep, GateCheck, ReleaseRecord, ReleaseStatus } from '../api/release-api';
 import { cn } from '@/lib/utils';
 
 const STATUS_FLOW: ReleaseStatus[] = [
@@ -204,6 +210,8 @@ export function ReleaseDetailPage() {
                       </span>
                     ) : null}
                     <span>{t('release.detail.tag')}: <span className="font-mono">{release.gitTag || `v${release.version}（${t('release.detail.tagPending')}）`}</span></span>
+                    <ReleaseChannelChip channel={deriveReleaseChannel(release.version)} />
+                    <ReleasePlatformBadges platforms={release.platforms} />
                     <span>
                       {t('release.detail.github')}:{' '}
                       {release.githubReleased ? t('release.detail.yes') : t('release.detail.no')}
@@ -214,6 +222,24 @@ export function ReleaseDetailPage() {
                         {t('release.detail.milestone')}: {release.milestone.name}
                       </span>
                     ) : null}
+                    {release.plannedAt ? (
+                      <span
+                        className={cn(
+                          'flex items-center gap-1',
+                          isPlannedOverdue(release) && 'font-medium text-accent-red',
+                        )}
+                      >
+                        <CalendarClock className="size-3" />
+                        {t('release.detail.planned')}: {new Date(release.plannedAt).toLocaleDateString()}
+                      </span>
+                    ) : null}
+                    {release.hotfixOf ? (
+                      <span className="flex items-center gap-1">
+                        <GitPullRequestArrow className="size-3" />
+                        {t('release.detail.hotfixOf')}:
+                        <span className="font-mono">v{release.hotfixOf.version}</span>
+                      </span>
+                    ) : null}
                     {release.releasedAt ? (
                       <span className="flex items-center gap-1">
                         <Clock className="size-3" />
@@ -221,6 +247,7 @@ export function ReleaseDetailPage() {
                       </span>
                     ) : null}
                   </div>
+                  <UpgradeNotesBlock release={release} />
                 </CardContent>
               </Card>
 
@@ -485,6 +512,81 @@ function ExecutionStepRow({ step }: { step: ExecutionStep }) {
         <span className="font-mono font-medium">{step.step}</span>
         <span className="ml-2 text-content-text-muted">{step.detail}</span>
       </span>
+    </div>
+  );
+}
+
+/**
+ * 升级/迁移注意事项（CAP-K-03 批三）：有内容即渲染；草案态可补充编辑
+ * （major 版本门禁 upgrade-notes 检查会注记缺失）——编辑走 updateDraft
+ * 只改 upgradeNotes 字段，保存后 query 失效刷新。
+ */
+function UpgradeNotesBlock({ release }: { release: ReleaseRecord }) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const update = useUpdateRelease(release.id);
+  const isDraft = release.status === 'draft';
+
+  const startEdit = () => {
+    setDraft(release.upgradeNotes ?? '');
+    setEditing(true);
+  };
+
+  const save = () => {
+    update.mutate(
+      { upgradeNotes: draft.trim() || undefined },
+      {
+        onSuccess: () => {
+          setEditing(false);
+          toast.success(t('release.detail.upgradeNotesSaved'));
+        },
+        onError: (err) => toast.error((err as Error).message),
+      },
+    );
+  };
+
+  return (
+    <div className="border-t border-border pt-3" data-testid="release-upgrade-notes">
+      <div className="flex items-center justify-between">
+        <p className="flex items-center gap-1.5 text-2xs font-medium text-content-text-muted">
+          <CalendarClock className="size-3" />
+          {t('release.detail.upgradeNotes')}
+        </p>
+        {isDraft ? (
+          <Button variant="ghost" size="sm" className="h-6 text-2xs" onClick={startEdit}>
+            {release.upgradeNotes
+              ? t('release.detail.upgradeNotesEdit')
+              : t('release.detail.upgradeNotesAdd')}
+          </Button>
+        ) : null}
+      </div>
+      {editing ? (
+        <div className="mt-1.5 space-y-2">
+          <Textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={t('release.detail.upgradeNotesPlaceholder')}
+            className="min-h-20 text-xs"
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setEditing(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button size="sm" className="h-7 text-xs" disabled={update.isPending} onClick={save}>
+              {t('common.save')}
+            </Button>
+          </div>
+        </div>
+      ) : release.upgradeNotes ? (
+        <pre className="mt-1.5 whitespace-pre-wrap font-sans text-xs leading-relaxed text-content-text">
+          {release.upgradeNotes}
+        </pre>
+      ) : (
+        <p className="mt-1 text-2xs text-content-text-muted">
+          {t('release.detail.upgradeNotesEmpty')}
+        </p>
+      )}
     </div>
   );
 }

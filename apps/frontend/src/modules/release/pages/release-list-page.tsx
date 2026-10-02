@@ -1,16 +1,14 @@
 /**
- * 发版列表页（CAP-K-03 驱动型发版，list-page 模板骨架）。
- * ToolbarRow 筛选（项目/状态收进下拉，项目真相源仍在 URL searchParams 深链友好）；
- * 创建草案走对话框（版本可 AI/机械推荐），发布主链路（门禁→审批→执行）在详情页完成。
+ * 发版列表页（CAP-K-03 驱动型发版，list-page 模板骨架；批三发版中心扩展）。
+ * ToolbarRow 筛选（项目/状态/平台/通道收进下拉，项目真相源仍在 URL searchParams 深链友好）；
+ * 创建草案走对话框（版本可 AI/机械推荐，计划时间/平台/热修基线批三补齐），
+ * 发布主链路（门禁→审批→执行）在详情页完成；
+ * 内容区顶部「即将发版」区：未发布且有计划时间的发版按计划升序预告。
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  List, Rocket, Sparkles,
-  CircleAlert, CircleCheck, CircleDashed, CircleX, Loader2,
-  type LucideIcon,
-} from 'lucide-react';
+import { List, Rocket, Sparkles } from 'lucide-react';
 import { PageShell } from '@/components/semantic/page-shell';
 import { PageHeader, nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
@@ -18,55 +16,33 @@ import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DatePicker } from '@/components/ui/date-picker';
 import { SelectField } from '@/components/ui/select-field';
 import { DataList, DataListSkeleton, ListChip, ListDate, ListText } from '@/shared/components/data-list';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
-import type { StatusTone } from '@/shared/status/status-visuals';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
 import { toast } from '@/components/ui/toast';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useProjectMilestones } from '@/modules/issue/hooks/use-project-tasks';
+import { useCreateRelease, useRecommendVersion, useReleases } from '../hooks/use-releases';
 import {
-  useCreateRelease,
-  useRecommendVersion,
-  useReleases,
-} from '../hooks/use-releases';
-import type { ReleaseStatus } from '../api/release-api';
+  deriveReleaseChannel,
+  RELEASE_PLATFORMS,
+  RELEASE_PLATFORM_LABELS,
+  type ReleaseChannel,
+  type ReleasePlatform,
+  type ReleaseStatus,
+} from '../api/release-api';
+import { RELEASE_STATUSES, RELEASE_STATUS_VISUALS, isPlannedOverdue, statusLabelKey } from '../release-status-meta';
+import { ReleaseChannelChip, ReleasePlatformBadges } from '../components/release-platform-badges';
+import { ReleaseUpcomingSection } from '../components/release-upcoming-section';
 import { cn } from '@/lib/utils';
 
-export const RELEASE_STATUS_TONE: Record<ReleaseStatus, string> = {
-  draft: 'bg-muted/50 text-muted-foreground',
-  gated: 'bg-accent-yellow-light text-accent-yellow',
-  approved: 'bg-accent-blue-light text-accent-blue',
-  publishing: 'bg-accent-yellow-light text-accent-yellow animate-pulse',
-  released: 'bg-accent-green-light text-accent-green',
-  failed: 'bg-accent-red-light text-accent-red',
-};
-
-/** 发版状态 → 行首图标/tone（与任务列表行首 StatusIconFrame 同构；tone 色系对齐 RELEASE_STATUS_TONE） */
-const RELEASE_STATUS_VISUALS: Record<ReleaseStatus, { icon: LucideIcon; tone: StatusTone }> = {
-  draft: { icon: CircleDashed, tone: 'default' },
-  gated: { icon: CircleAlert, tone: 'warning' },
-  approved: { icon: CircleCheck, tone: 'info' },
-  publishing: { icon: Loader2, tone: 'warning' },
-  released: { icon: Rocket, tone: 'success' },
-  failed: { icon: CircleX, tone: 'danger' },
-};
-
-export const RELEASE_STATUSES = Object.keys(RELEASE_STATUS_TONE) as ReleaseStatus[];
-
-export function statusLabelKey(status: ReleaseStatus): string {
-  return `release.status.${status}`;
-}
+// 兼容既有消费方（详情页/测试从本页导入）：视觉元信息已抽至 release-status-meta
+export { RELEASE_STATUS_TONE, RELEASE_STATUS_VISUALS, RELEASE_STATUSES, statusLabelKey, isPlannedOverdue } from '../release-status-meta';
 
 export function ReleaseListPage() {
   const { t } = useTranslation();
@@ -77,6 +53,8 @@ export function ReleaseListPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReleaseStatus | 'all'>('all');
+  const [platformFilter, setPlatformFilter] = useState<ReleasePlatform | 'all'>('all');
+  const [channelFilter, setChannelFilter] = useState<ReleaseChannel | 'all'>('all');
 
   const projectsQuery = useProjectList();
   const projects = projectsQuery.data?.items ?? [];
@@ -86,11 +64,21 @@ export function ReleaseListPage() {
     [releasesQuery.data],
   );
 
-  // 客户端过滤（搜索 version/name/tag + 状态）
+  // 客户端过滤（搜索 version/name/tag + 状态/平台/通道）
   const filtered = useMemo(
     () =>
       releases.filter((r) => {
         if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+        if (
+          platformFilter !== 'all' &&
+          !(r.platforms ?? []).includes(platformFilter)
+        )
+          return false;
+        if (
+          channelFilter !== 'all' &&
+          deriveReleaseChannel(r.version) !== channelFilter
+        )
+          return false;
         if (search) {
           const kw = search.toLowerCase();
           const haystack = [`v${r.version}`, r.name ?? '', r.gitTag ?? '', r.project?.name ?? '']
@@ -100,7 +88,7 @@ export function ReleaseListPage() {
         }
         return true;
       }),
-    [releases, statusFilter, search],
+    [releases, statusFilter, platformFilter, channelFilter, search],
   );
 
   // 项目筛选的真相源在 URL（深链/详情页返回/管道聚焦），工具栏快照 apply 时写回 URL；
@@ -125,17 +113,27 @@ export function ReleaseListPage() {
         name: t('common.all'),
         icon: 'list',
         builtIn: true,
-        snapshot: { search: '', status: 'all', projectId: '' },
+        snapshot: {
+          search: '',
+          status: 'all',
+          platform: 'all',
+          channel: 'all',
+          projectId: '',
+        },
       },
     ],
     onApply: (snapshot) => {
       const snap = (snapshot ?? {}) as Partial<{
         search: string;
         status: ReleaseStatus | 'all';
+        platform: ReleasePlatform | 'all';
+        channel: ReleaseChannel | 'all';
         projectId: string;
       }>;
       setSearch(snap.search ?? '');
       setStatusFilter(snap.status ?? 'all');
+      setPlatformFilter(snap.platform ?? 'all');
+      setChannelFilter(snap.channel ?? 'all');
       const nextPid = snap.projectId ?? '';
       if (nextPid !== projectId) setProjectFilter(nextPid);
     },
@@ -143,10 +141,11 @@ export function ReleaseListPage() {
   const { updateActiveSnapshot } = toolbar;
 
   useEffect(() => {
-    updateActiveSnapshot({ search, status: statusFilter, projectId });
-  }, [updateActiveSnapshot, search, statusFilter, projectId]);
+    updateActiveSnapshot({ search, status: statusFilter, platform: platformFilter, channel: channelFilter, projectId });
+  }, [updateActiveSnapshot, search, statusFilter, platformFilter, channelFilter, projectId]);
 
-  const hasActiveFilters = statusFilter !== 'all' || !!search || !!projectId;
+  const hasActiveFilters =
+    statusFilter !== 'all' || !!search || !!projectId || platformFilter !== 'all' || channelFilter !== 'all';
   const openCreate = () => {
     if (!projectId) {
       toast.error(t('release.create.needProject'));
@@ -221,11 +220,43 @@ export function ReleaseListPage() {
               checked: statusFilter === s,
               onSelect: () => setStatusFilter(statusFilter === s ? 'all' : s),
             })),
+            { type: 'separator' },
+            { type: 'label', label: t('release.filter.platformGroup') },
+            {
+              id: 'platform-all',
+              type: 'checkbox',
+              label: t('common.all'),
+              checked: platformFilter === 'all',
+              onSelect: () => setPlatformFilter('all'),
+            },
+            ...RELEASE_PLATFORMS.map((p) => ({
+              id: `platform-${p}`,
+              type: 'checkbox' as const,
+              label: RELEASE_PLATFORM_LABELS[p],
+              checked: platformFilter === p,
+              onSelect: () => setPlatformFilter(platformFilter === p ? 'all' : p),
+            })),
+            { type: 'separator' },
+            { type: 'label', label: t('release.filter.channelGroup') },
+            {
+              id: 'channel-all',
+              type: 'checkbox',
+              label: t('common.all'),
+              checked: channelFilter === 'all',
+              onSelect: () => setChannelFilter('all'),
+            },
+            ...(['alpha', 'beta', 'rc'] as const).map((c) => ({
+              id: `channel-${c}`,
+              type: 'checkbox' as const,
+              label: c,
+              checked: channelFilter === c,
+              onSelect: () => setChannelFilter(channelFilter === c ? 'all' : c),
+            })),
           ],
         }}
       />
 
-      {/* 内容区：状态分支 = 加载骨架 / 空发版（带创建动作）/ 筛选无结果 / 任务列表基座（DataList）。
+      {/* 内容区：即将发版告示条 + 状态分支（加载骨架 / 空发版（带创建动作）/ 筛选无结果 / 任务列表基座 DataList）。
           CAP-A-15：无 ?project 时仍发起请求（后端返回全部项目），不再渲染“先选项目”引导 */}
       <div className="flex-1 overflow-auto p-6">
         {releasesQuery.isLoading ? (
@@ -267,45 +298,56 @@ export function ReleaseListPage() {
             />
           )
         ) : (
-          <DataList
-            items={filtered}
-            onItemClick={(r) => navigate(`/app/releases/${r.id}`)}
-            renderLeading={(r) => {
-              const visual = RELEASE_STATUS_VISUALS[r.status];
-              return (
+          <>
+            <ReleaseUpcomingSection
+              releases={filtered}
+              onItemClick={(r) => navigate(`/app/releases/${r.id}`)}
+            />
+            <DataList
+              items={filtered}
+              onItemClick={(r) => navigate(`/app/releases/${r.id}`)}
+              renderLeading={(r) => {
+                const visual = RELEASE_STATUS_VISUALS[r.status];
+                return (
+                  <>
+                    <StatusIconFrame
+                      icon={visual.icon}
+                      tone={visual.tone}
+                      size="list"
+                      spin={r.status === 'publishing'}
+                      title={t(statusLabelKey(r.status))}
+                    />
+                    <span className="shrink-0 whitespace-nowrap font-mono text-sm font-medium text-muted-foreground/50">
+                      v{r.version}
+                    </span>
+                    <ReleaseChannelChip channel={deriveReleaseChannel(r.version)} />
+                    <ListText className="min-w-0 flex-1 text-md font-medium">{r.name || '—'}</ListText>
+                  </>
+                );
+              }}
+              renderTrailing={(r) => (
                 <>
-                  <StatusIconFrame
-                    icon={visual.icon}
-                    tone={visual.tone}
-                    size="list"
-                    spin={r.status === 'publishing'}
-                    title={t(statusLabelKey(r.status))}
-                  />
-                  <span className="shrink-0 whitespace-nowrap font-mono text-sm font-medium text-muted-foreground/50">
-                    v{r.version}
-                  </span>
-                  <ListText className="min-w-0 flex-1 text-md font-medium">{r.name || '—'}</ListText>
+                  {/* 尾列流式贴右（与任务列表同口径）：无值不渲染，头像位由状态日期兜底 */}
+                  {r.project?.name ? (
+                    <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">{r.project.name}</span>
+                  ) : null}
+                  {r.milestone?.name ? (
+                    <ListChip className="max-w-27.5 truncate border border-border bg-muted/40 text-muted-foreground">
+                      {r.milestone.name}
+                    </ListChip>
+                  ) : null}
+                  <ReleasePlatformBadges platforms={r.platforms} />
+                  {r.plannedAt ? (
+                    <ListDate value={r.plannedAt} overdue={isPlannedOverdue(r)} />
+                  ) : null}
+                  {r.gitTag ? (
+                    <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{r.gitTag}</span>
+                  ) : null}
+                  {r.releasedAt ? <ListDate value={r.releasedAt} /> : null}
                 </>
-              );
-            }}
-            renderTrailing={(r) => (
-              <>
-                {/* 尾列流式贴右（与任务列表同口径）：无值不渲染，头像位由状态日期兜底 */}
-                {r.project?.name ? (
-                  <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">{r.project.name}</span>
-                ) : null}
-                {r.milestone?.name ? (
-                  <ListChip className="max-w-27.5 truncate border border-border bg-muted/40 text-muted-foreground">
-                    {r.milestone.name}
-                  </ListChip>
-                ) : null}
-                {r.gitTag ? (
-                  <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{r.gitTag}</span>
-                ) : null}
-                {r.releasedAt ? <ListDate value={r.releasedAt} /> : null}
-              </>
-            )}
-          />
+              )}
+            />
+          </>
         )}
       </div>
 
@@ -313,6 +355,7 @@ export function ReleaseListPage() {
         open={createOpen}
         projectId={projectId}
         projects={projects.map((p) => ({ id: p.id, name: p.name }))}
+        releases={releases}
         onClose={() => setCreateOpen(false)}
         onCreated={(id) => navigate(`/app/releases/${id}`)}
       />
@@ -324,12 +367,20 @@ function CreateReleaseDialog({
   open,
   projectId,
   projects,
+  releases,
   onClose,
   onCreated,
 }: {
   open: boolean;
   projectId: string;
   projects: Array<{ id: string; name: string }>;
+  releases: Array<{
+    id: string;
+    projectId: string;
+    status: ReleaseStatus;
+    version: string;
+    name?: string | null;
+  }>;
   onClose: () => void;
   onCreated: (id: string) => void;
 }) {
@@ -340,11 +391,37 @@ function CreateReleaseDialog({
   const [name, setName] = useState('');
   const [milestoneId, setMilestoneId] = useState('');
   const [basis, setBasis] = useState('');
+  const [plannedAt, setPlannedAt] = useState<Date | undefined>(undefined);
+  const [platforms, setPlatforms] = useState<ReleasePlatform[]>([]);
+  const [hotfixOfId, setHotfixOfId] = useState('');
 
   const recommend = useRecommendVersion(pid || undefined);
   const create = useCreateRelease();
-  // 所属里程碑（CAP-A-16 计划-交付轴）：数据源 = 该项目的 milestones 列表
+  // 所属里程碑（CAP-A-16 计划-交付轴）：数据源 = 该项目的 milestones 列表；
+  // 选中里程碑且未手选计划时间时预填 targetDate（计划轴单一来源不双填）
   const { data: milestones } = useProjectMilestones(pid || undefined);
+  // 热修基线候选（批三血缘）：同项目已发布发版，版本倒序
+  const hotfixCandidates = useMemo(
+    () =>
+      releases
+        .filter((r) => r.projectId === pid && r.status === 'released')
+        .sort((a, b) => b.version.localeCompare(a.version)),
+    [releases, pid],
+  );
+
+  const handleMilestoneChange = (mid: string) => {
+    setMilestoneId(mid);
+    if (mid) {
+      const target = milestones?.find((m) => m.id === mid)?.targetDate;
+      if (target && !plannedAt) setPlannedAt(new Date(target));
+    }
+  };
+
+  const togglePlatform = (p: ReleasePlatform) => {
+    setPlatforms((prev) =>
+      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
+    );
+  };
 
   const handleRecommend = () => {
     recommend.mutate(undefined, {
@@ -366,6 +443,9 @@ function CreateReleaseDialog({
         version: version.trim(),
         name: name.trim() || undefined,
         milestoneId: milestoneId || null,
+        plannedAt: plannedAt ? plannedAt.toISOString() : null,
+        platforms: platforms.length ? platforms : null,
+        hotfixOfId: hotfixOfId || null,
       },
       {
         onSuccess: (release) => {
@@ -448,7 +528,7 @@ function CreateReleaseDialog({
             </label>
             <SelectField
               value={milestoneId}
-              onChange={(e) => setMilestoneId(e.target.value)}
+              onChange={(e) => handleMilestoneChange(e.target.value)}
               disabled={!pid}
               className="h-8 w-full text-xs"
             >
@@ -457,6 +537,53 @@ function CreateReleaseDialog({
                 <option key={m.id} value={m.id}>{m.name}</option>
               ))}
             </SelectField>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5" data-testid="release-plannedat-picker">
+              <label className="text-xs font-medium text-content-text">
+                {t('release.create.plannedAt')}
+              </label>
+              <DatePicker
+                value={plannedAt}
+                onValueChange={setPlannedAt}
+                placeholder={t('release.create.plannedAtPlaceholder')}
+                buttonClassName="h-8 w-full text-xs"
+              />
+            </div>
+            <div className="space-y-1.5" data-testid="release-hotfix-select">
+              <label className="text-xs font-medium text-content-text">
+                {t('release.create.hotfixOf')}
+              </label>
+              <SelectField
+                value={hotfixOfId}
+                onChange={(e) => setHotfixOfId(e.target.value)}
+                disabled={!pid || hotfixCandidates.length === 0}
+                className="h-8 w-full text-xs"
+              >
+                <option value="">{t('release.create.hotfixNone')}</option>
+                {hotfixCandidates.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    v{r.version}{r.name ? ` ${r.name}` : ''}
+                  </option>
+                ))}
+              </SelectField>
+            </div>
+          </div>
+          <div className="space-y-1.5" data-testid="release-platform-checks">
+            <label className="text-xs font-medium text-content-text">
+              {t('release.create.platforms')}
+            </label>
+            <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+              {RELEASE_PLATFORMS.map((p) => (
+                <label key={p} className="flex cursor-pointer items-center gap-1.5 text-xs text-content-text">
+                  <Checkbox
+                    checked={platforms.includes(p)}
+                    onCheckedChange={() => togglePlatform(p)}
+                  />
+                  {RELEASE_PLATFORM_LABELS[p]}
+                </label>
+              ))}
+            </div>
           </div>
         </div>
         <DialogFooter>

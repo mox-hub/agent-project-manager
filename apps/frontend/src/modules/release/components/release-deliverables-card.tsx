@@ -16,9 +16,15 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { SelectField } from '@/components/ui/select-field';
 import { toast } from '@/components/ui/toast';
 import { useUpdateDeliverables } from '../hooks/use-releases';
-import type { ReleaseDeliverableItem, ReleaseRecord } from '../api/release-api';
+import {
+  RELEASE_PLATFORMS,
+  RELEASE_PLATFORM_LABELS,
+  type ReleaseDeliverableItem,
+  type ReleaseRecord,
+} from '../api/release-api';
 
 const EMPTY_ITEM: ReleaseDeliverableItem = {
   name: '',
@@ -67,6 +73,7 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
         howToVerify: item.howToVerify.trim(),
         limitations: item.limitations?.trim() || undefined,
         receiver: item.receiver?.trim() || undefined,
+        platform: item.platform || undefined,
       })),
       {
         onSuccess: () => {
@@ -157,6 +164,20 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
                       }
                     />
                   </div>
+                  <SelectField
+                    value={item.platform ?? ''}
+                    onChange={(e) =>
+                      patchItem(index, { platform: e.target.value || undefined })
+                    }
+                    className="h-7 w-full text-xs sm:w-45"
+                  >
+                    <option value="">{t('release.deliverables.field.platformNone')}</option>
+                    {RELEASE_PLATFORMS.map((p) => (
+                      <option key={p} value={p}>
+                        {RELEASE_PLATFORM_LABELS[p]}
+                      </option>
+                    ))}
+                  </SelectField>
                 </div>
               ))}
             </div>
@@ -197,7 +218,14 @@ export function ReleaseDeliverablesCard({ release }: { release: ReleaseRecord })
                 key={`deliverable-${item.name}-${index}`}
                 className="space-y-1 rounded-md border border-border p-3"
               >
-                <p className="text-xs font-medium">{item.name}</p>
+                <p className="flex items-center gap-2 text-xs font-medium">
+                  {item.name}
+                  {item.platform ? (
+                    <span className="rounded bg-muted/50 px-1.5 py-px text-2xs font-normal text-muted-foreground">
+                      {RELEASE_PLATFORM_LABELS[item.platform as keyof typeof RELEASE_PLATFORM_LABELS] ?? item.platform}
+                    </span>
+                  ) : null}
+                </p>
                 <p className="text-2xs text-content-text-muted">
                   {t('release.deliverables.field.location')}:{' '}
                   <span className="font-mono">{item.location}</span>
